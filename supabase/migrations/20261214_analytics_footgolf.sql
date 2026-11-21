@@ -1,4 +1,4 @@
--- Futbol Island admin analytics (Nov 21 2026): FootGolf Island's activity key 'arcade_footgolf' (lib/analytics/islandIds.ts ARCADE_GAMES), after Hold the Line's (20261210).
+-- Futbol Island admin analytics (Nov 21 2026): FootGolf Island's activity key 'arcade_footgolf' (lib/analytics/islandIds.ts ARCADE_GAMES), after Flick It's (20261212, which it keeps) and Hold the Line's (20261210).
 -- NOT APPLIED. The owner pastes docs/arcade-aaa/footgolf-supabase.sql instead (the same function plus the board id).
 -- Additive and safe to run twice: analytics_ingest is replaced in place.
 
@@ -37,7 +37,7 @@ begin
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, least(value::numeric, v_e)::integer), '{}'::jsonb)
               from jsonb_each_text(case when jsonb_typeof(p->'activity_ms') = 'object' then p->'activity_ms' else '{}'::jsonb end)
-             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_keepyuppy','arcade_holdtheline','arcade_footgolf','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
+             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_keepyuppy','arcade_holdtheline','arcade_flickit','arcade_footgolf','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, v), '{}'::jsonb) from (
               select key, least(value::integer, v_e / 1000) v
@@ -61,5 +61,5 @@ grant execute on function public.analytics_ingest(jsonb) to service_role;
 
 -- Self-check: the last result of this file.
 select case when exists (select 1 from pg_proc where proname = 'analytics_ingest' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_trophydrop%' and prosrc like '%arcade_clearbox%' and prosrc like '%arcade_streetdash%' and prosrc like '%arcade_rollball%' and prosrc like '%arcade_ballblaster%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%'
-    and prosrc like '%arcade_airhockey%' and prosrc like '%exhibit_throw-in%' and prosrc like '%arcade_keepyuppy%' and prosrc like '%arcade_holdtheline%' and prosrc like '%arcade_footgolf%')
+    and prosrc like '%arcade_airhockey%' and prosrc like '%exhibit_throw-in%' and prosrc like '%arcade_keepyuppy%' and prosrc like '%arcade_holdtheline%' and prosrc like '%arcade_flickit%' and prosrc like '%arcade_footgolf%')
   then 'OK, FootGolf Island activity installed' else 'NOT INSTALLED: analytics_ingest (arcade_footgolf)' end as status;

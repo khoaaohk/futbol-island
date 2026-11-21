@@ -1,0 +1,89 @@
+/* Flick It shell (Nov 21 2026, docs/arcade-aaa/flickit-direction.md): an upright comic page over the 3D scene. Phone: the stage is the whole
+ * screen. Desktop: a centred 9:16 page with an ink border and a hard shadow, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;background:var(--cm-dots),#2f8fd8}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#8fd4ee;isolation:isolate;touch-action:none;overscroll-behavior:none}
+.play{position:absolute;inset:0;z-index:1;touch-action:none;outline:none}
+.play:focus-visible{outline:4px solid var(--cm-ink);outline-offset:-4px}
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.game:is([data-phase=menu],[data-phase=over],[data-phase=between]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over],[data-phase=between]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+
+/* the finger's path while it is down: a chalk line */
+.swipe{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;overflow:visible}
+.swipe path{fill:none;stroke:var(--cm-paper);stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .28s;filter:drop-shadow(2px 2px 0 var(--cm-ink))}
+.swipe path[data-live]{opacity:.9;transition:none}
+
+/* HUD: the place and its stars on a tab under the bar; the flicks left as a rack of balls at the bottom */
+.strip{position:absolute;z-index:3;left:50%;translate:-50% 0;top:calc(var(--arcade-bar-clear,56px) + 6px + env(safe-area-inset-top,0px));display:flex;align-items:stretch;box-sizing:border-box;max-width:calc(100% - 16px);height:32px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap}
+.place{display:flex;align-items:center;padding:0 9px;background:var(--cm-ink);color:var(--cm-paper);font:italic 900 14px/1 var(--cm-title);letter-spacing:.02em}
+.track{display:flex;align-items:center;gap:7px;padding:0 9px 0 7px;font:800 12px/1 var(--cm-ui)}
+.stars{display:inline-flex;gap:2px;vertical-align:middle}
+.stars svg{fill:#d9cdb4;stroke:var(--cm-ink);stroke-width:2;stroke-linejoin:round;overflow:visible}
+.stars svg[data-on]{fill:var(--cm-sun);animation:fkPop .4s cubic-bezier(.2,1.6,.4,1) both}
+.rack{position:absolute;z-index:3;left:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:5px;padding:5px 9px 5px 7px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);pointer-events:none}
+.rack i{width:15px;height:15px;border:2.5px solid var(--cm-ink);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--cm-ink) 0 2.5px,#fffaf0 3px)}
+.rack i[data-off]{background:#d9cdb4;opacity:.45}
+.rack small{margin-left:4px;font:800 12px/1 var(--cm-ui)}
+.foot{position:absolute;z-index:3;right:12px;bottom:calc(60px + env(safe-area-inset-bottom,0px));display:grid;gap:2px;padding:6px 10px 5px;border:3px solid var(--cm-ink);background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink);font:italic 900 15px/1 var(--cm-title);text-align:right;rotate:-2deg;pointer-events:none;animation:fkFoot 1.7s both}
+.foot[data-tone=teal]{background:var(--cm-teal);color:var(--cm-paper)}.foot[data-tone=red]{background:var(--cm-red);color:var(--cm-paper)}
+.foot small{font:800 11px/1 var(--cm-ui);font-style:normal}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(60px + env(safe-area-inset-bottom,0px));translate:-50% 0;box-sizing:border-box;width:max-content;max-width:calc(100% - 28px);margin:0;padding:6px 11px 5px;border:2px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.25 var(--cm-ui);text-align:center;pointer-events:none;animation:fkPop .4s cubic-bezier(.2,1.6,.4,1) both}
+/* the ghost finger of the first kicks: a ring that swipes from the ball along the kick to make */
+.finger{position:absolute;z-index:2;width:38px;height:38px;margin:-19px 0 0 -19px;border:4px solid var(--cm-ink);border-radius:50%;background:#fff3d6cc;box-shadow:3px 3px 0 var(--cm-ink);pointer-events:none;animation:fkFinger var(--fms,1200ms) cubic-bezier(.5,0,.3,1) infinite}
+@keyframes fkFinger{0%,18%{translate:0 0;scale:1;opacity:0}26%{translate:0 0;scale:.86;opacity:1}70%{translate:var(--fx) var(--fy);scale:1;opacity:1}86%,100%{translate:var(--fx) var(--fy);scale:1.2;opacity:0}}
+@keyframes fkFoot{0%{scale:.5;opacity:0}8%{scale:1.1;opacity:1}14%,82%{scale:1;opacity:1}100%{opacity:0;translate:0 8px}}
+@keyframes fkPop{0%{scale:.4}100%{scale:1}}
+
+/* words: a starburst and the points where the thing was hit; the lesson words bigger, in the upper third */
+.words{position:absolute;inset:0;z-index:4;pointer-events:none}
+.word{position:absolute;left:50%;top:30%;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:fkWord .95s cubic-bezier(.2,1.4,.4,1) both}
+.word[data-teach]{left:50%!important;top:24%!important;animation-duration:1.5s}
+.pts{--cm-numeral-size:28px;display:block;color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
+@keyframes fkWord{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%{scale:1}84%{opacity:1;translate:-50% -74%}100%{opacity:0;translate:-50% -92%}}
+
+/* cards */
+.art{display:block;width:min(250px,74%);height:auto;margin:2px auto 8px}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 6px 6px 0;margin-bottom:12px}
+.actions>[data-wide]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 4px}
+.score{--cm-numeral-size:64px;display:block}
+.scoreSmall{--cm-numeral-size:44px;display:block;margin:0 0 8px}
+.score[data-new-best]{animation:fkPop .6s cubic-bezier(.2,1.6,.4,1) both}
+.stamp{position:absolute;right:-16px;top:-20px}
+.near{display:inline-block;margin:4px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardLearn{margin:0 0 6px;text-align:center}
+.tour{display:flex;justify-content:center;gap:6px;margin:2px 0 8px}
+.tour span{display:grid;justify-items:center;gap:2px;padding:4px 3px 3px;border:2px solid var(--cm-ink);background:var(--cm-white);opacity:.45}
+.tour span[data-played]{opacity:1}
+.tour small{font:800 11px/1 var(--cm-ui)}
+.picker{display:grid;gap:8px;margin:0 6px 10px 0}
+.stageBtn{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;padding:6px 10px;border:3px solid var(--cm-ink);background:var(--cm-white);box-shadow:3px 3px 0 var(--cm-ink);color:var(--cm-ink);font:800 14px/1.1 var(--cm-ui);text-align:left;cursor:pointer}
+.stageBtn:disabled{background:#e6dcc6;box-shadow:none;cursor:default}
+.stageBtn:disabled b{opacity:.55}
+.stageBtn small{font:700 11px/1.1 var(--cm-ui);text-align:right}
+.stageBtn:not(:disabled):active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink)}
+
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots),repeating-conic-gradient(from 4deg at 50% 62%,#2a84cc 0 8deg,#2f8fd8 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+}
+@media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:50px}.art{width:min(190px,58%)}}
+@media (max-height:600px){.game [data-flickit-card=start] .chips{display:none}.fact{display:none}}
+@media (max-width:374px){.place{font-size:12px;padding:0 6px}.track small{display:none}.rack small{display:none}}
+@media (prefers-reduced-motion:reduce){.stars svg[data-on],.score[data-new-best],.hint{animation:none}.finger{animation-duration:2.4s}.word{animation-duration:.7s}.foot{rotate:none}}

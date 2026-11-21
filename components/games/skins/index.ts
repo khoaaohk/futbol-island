@@ -9,7 +9,7 @@ import snake from './snake.module.css';
 import airhockey from './airhockey.module.css';
 import lineup from './lineup.module.css';
 import trophydrop from './trophydrop.module.css';
-import rollball from './rollball.module.css';import ballblaster from './ballblaster.module.css';import keepyuppy from './keepyuppy.module.css';import holdtheline from './holdtheline.module.css';import footgolf from './footgolf.module.css';
+import rollball from './rollball.module.css';import ballblaster from './ballblaster.module.css';import keepyuppy from './keepyuppy.module.css';import holdtheline from './holdtheline.module.css';import footgolf from './footgolf.module.css';import flickit from './flickit.module.css';
 
 /** Per-game HUD skin class (COORDINATOR FILE). Put on each game's root element together with data-game="<id>". */
-export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin,lineup:lineup.skin,trophydrop:trophydrop.skin,rollball:rollball.skin,ballblaster:ballblaster.skin,keepyuppy:keepyuppy.skin,holdtheline:holdtheline.skin,footgolf:footgolf.skin};
+export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin,lineup:lineup.skin,trophydrop:trophydrop.skin,rollball:rollball.skin,ballblaster:ballblaster.skin,keepyuppy:keepyuppy.skin,holdtheline:holdtheline.skin,footgolf:footgolf.skin,flickit:flickit.skin};

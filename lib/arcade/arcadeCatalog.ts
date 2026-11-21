@@ -49,6 +49,7 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
  {id:'footgolf',name:'FootGolf Island',short:'FOOTGOLF',lesson:'Laces to go far. Inside of the foot to roll it in.',color:'#3f9a50'},// Nov 21 2026: real footgolf round nine holes of the island (docs/arcade-aaa/footgolf-direction.md); no machine in the room yet
+ {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8'},// Nov 21 2026: the football flick game (docs/arcade-aaa/flickit-direction.md); no machine in the room yet
 ] as const;
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
