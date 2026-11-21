@@ -6916,3 +6916,17 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
   The loop made 0 rAF calls on the results card. **Not measured on a real phone**; no claim about iPhone heat.
 - Tradeoff: the stadium crowd is real geometry (~20k triangles in the one baked mesh) rather than a texture, so the tiers read as
   seats from the low camera; still one draw.
+- **Polish pass (Nov 21 2026, same branch): what the new look costs.** The player's island bean kicks each flick (the shared arcade rig,
+  `lib/arcade/islandArcadePlayer.ts`, as Ball Blaster and FootGolf use it: about 4 draws and ~8-9k visible triangles; sized by its distance
+  to the camera; a rapid second flick restarts the kick with the other boot, one extra rig pose that frame). Per-arena dressing (bunting,
+  shop signs, cafes, bikes, boat rigging, lifebuoys, nets, floodlights, a small stand, ad boards, towels, surfboards, buoys, foreground
+  bags/bollards/tufts) is BAKED into the one scenery mesh, its colours muted toward the arena's air so the targets read first. Birds: one
+  instanced draw (<= 10, matrices only); glints (water sparkle, foam lines, camera flashes in the stands): one instanced draw (<= 28,
+  hidden in arenas without them). Balloons and the gold mascot use a rim-lit copy of the shared material (same draws, +1 program). The
+  stadium crowd's heads became boxes (about -14k triangles) to pay for the kicker. Clouds, haze and the near paving are painted into the
+  existing canvases (no new textures). Per-frame CPU added: the rig's pose, ~40 instance matrices; nothing allocated per frame.
+  **Measured** (headless Chrome, 390x844 phone profile, renderer.info sampled through a round, scripts/shots-popup-polish.cjs, before ->
+  after): plaza 6-12 -> 10-16 draws, 6.8k-15.7k -> 16.2k-25.8k triangles; harbour 6-11 -> 11-17, 5.8k-13.8k -> 16.3k-24.7k; training
+  6-11 -> 10-15, 8.0k-15.5k -> 17.2k-25.4k; beach 6-11 -> 11-16, 3.4k-12.0k -> 11.6k-18.8k; stands 6-11 -> 10-15, 27.9k-36.9k ->
+  21.0k-30.5k. Programs 9 -> 12, textures 4 -> 7 (the rig's). scripts/check-popup-browser.cjs still passes (plaza: 10-15 draws, 16k-24k).
+  Not measured on a real phone; no iPhone temperature claim.

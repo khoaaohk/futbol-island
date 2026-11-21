@@ -74,8 +74,17 @@ function groundTex(a:PopArena){const S=16,W=64*S;return canvasTex(W,W,g=>{const 
  switch(a.groundLook){
   case 'paving':for(let i=0;i<43;i++)for(let j=0;j<43;j++){g.fillStyle=['#e2cfa8','#d6c099','#ead9b6','#cdb78f'][(i*7+j*3+((i*j)%3))%4];g.fillRect(i*1.5*S+1,j*1.5*S+1,1.5*S-2,1.5*S-2);}
    g.fillStyle='#6a6478';g.fillRect(0,Z(-15),W,Z(-9.6)-Z(-15));g.fillStyle='#fff3d6';for(let x=0;x<W;x+=60)g.fillRect(x,Z(-12.4),34,5);g.fillStyle='#b8a27a';g.fillRect(0,Z(-15)-6,W,6);g.fillRect(0,Z(-9.6),W,6);
-   g.strokeStyle='#fff3d6';g.lineWidth=.12*S;g.setLineDash([10,10]);g.beginPath();g.arc(X(0),Z(0),1.1*S,0,7);g.stroke();g.setLineDash([]);flecks(2500,'rgba(120,80,50,.12)','rgba(255,255,255,.14)',2);break;
-  case 'quay':for(let i=0;i<32;i++)for(let j=0;j<32;j++){g.fillStyle=(i+j)%3?c0:c1;g.fillRect(i*2*S+1,j*2*S+1,2*S-2,2*S-2);}flecks(3000,'rgba(0,0,0,.1)','rgba(255,255,255,.12)',2);break;
+   g.strokeStyle='#fff3d6';g.lineWidth=.12*S;g.setLineDash([10,10]);g.beginPath();g.arc(X(0),Z(0),1.1*S,0,7);g.stroke();g.setLineDash([]);flecks(2500,'rgba(120,80,50,.12)','rgba(255,255,255,.14)',2);
+   // the near paving (polish pass): a granite kerb, a drain, a manhole cover, stains and fallen leaves, so the foreground is not bare
+   g.fillStyle='#b8a27a';g.fillRect(0,Z(2.3),W,.5*S);g.fillStyle='#e8dcc0';for(let x=0;x<W;x+=1.2*S)g.fillRect(x+2,Z(2.3)+2,1.2*S-4,.5*S-6);
+   g.fillStyle='#5b6072';g.fillRect(X(.9),Z(.9),.9*S,.45*S);g.fillStyle='#8d93a6';for(let i=0;i<5;i++)g.fillRect(X(.9)+3+i*.17*S,Z(.9)+3,.07*S,.45*S-6);
+   g.fillStyle='#8d93a6';g.beginPath();g.arc(X(-1.9),Z(-2.6),.45*S,0,7);g.fill();g.strokeStyle='#5b6072';g.lineWidth=2;for(let r=.15;r<.45;r+=.12){g.beginPath();g.arc(X(-1.9),Z(-2.6),r*S,0,7);g.stroke();}
+   for(let i=0;i<14;i++){g.fillStyle='rgba(120,90,60,.12)';g.beginPath();g.ellipse(X(-6+rnd()*12),Z(-8+rnd()*10),(.3+rnd()*.6)*S,(.2+rnd()*.3)*S,rnd()*3,0,7);g.fill();}
+   for(let i=0;i<40;i++){g.fillStyle=['#e07a3a','#c9584a','#e9b44a'][i%3];g.beginPath();g.ellipse(X(-4+rnd()*8),Z(-9+rnd()*11.5),.09*S,.05*S,rnd()*3,0,7);g.fill();}break;
+  case 'quay':for(let i=0;i<32;i++)for(let j=0;j<32;j++){g.fillStyle=(i+j)%3?c0:c1;g.fillRect(i*2*S+1,j*2*S+1,2*S-2,2*S-2);}flecks(3000,'rgba(0,0,0,.1)','rgba(255,255,255,.12)',2);
+   // polish pass: oil stains, a painted loading bay and rope marks on the near quay
+   for(let i=0;i<12;i++){g.fillStyle='rgba(40,40,60,.13)';g.beginPath();g.ellipse(X(-5+rnd()*10),Z(-8+rnd()*10),(.3+rnd()*.7)*S,(.2+rnd()*.4)*S,rnd()*3,0,7);g.fill();}
+   g.strokeStyle='#ffc83a';g.lineWidth=.12*S;g.setLineDash([.6*S,.4*S]);g.strokeRect(X(-3.6),Z(-7),7.2*S,5*S);g.setLineDash([]);break;
   case 'grass':for(let i=0;i<16;i++){g.fillStyle=i%2?c0:c1;g.fillRect(0,i*4*S,W,4*S);}flecks(9000,'rgba(30,70,30,.16)','rgba(255,255,220,.12)');
    g.strokeStyle='#fff3d6';g.lineWidth=.14*S;g.lineCap='round';line(-30,-22.9,30,-22.9);line(-6.5,-22.9,-6.5,-16.9);line(11.7,-22.9,11.7,-16.9);line(-6.5,-16.9,11.7,-16.9);g.beginPath();g.arc(X(2.6),Z(-15.9),.2*S,0,7);g.fillStyle='#fff3d6';g.fill();
    g.beginPath();g.arc(X(0),Z(1.2),.35*S,0,7);g.fill();break;
@@ -190,7 +199,7 @@ function scenery(a:PopArena):T.BufferGeometry{const o:Parts=[],rnd=seeded(a.id.l
    for(const [x,z,c,ry] of [[1.7,-3.2,'#ff65c8',.2],[3.9,-8.4,'#2f8fd8',-.15]] as const){B(c,x,.02,z,1,.04,1.9,ry,.02);for(let i=0;i<3;i++)B('#fff3d6',x,.045,z-.6+i*.6,1.01,.01,.16,ry,0);}
    for(const [x,z,c,r] of [[-5.15,-6.8,'#ffc83a',.28],[-2.7,-10,'#ff65c8',.25],[-.2,-13.2,'#19b5a5',.22]] as const)P(o,sph(1,8).scale(.3,1.15,.07),c,x,1.1,z,0,r,.025,true);
    for(let i=0;i<10;i++)P(o,sph(.16,6),i%2?'#fff3d6':'#f0452e',-6+i*1.9,.05,-27.5,0,0,.02,true);
-   Cy('#ffc83a',-1.1,.18,-1.7,.18,.36,.03,.14,8);B('#2f8fd8',-.85,.3,-1.6,.06,.6,.04,0,.01);B('#2f8fd8',-.75,.02,-1.4,.22,.04,.3,0,.01);
+   Cy('#ffc83a',.9,.18,-4.3,.18,.36,.03,.14,8);B('#2f8fd8',1.15,.3,-4.2,.06,.6,.04,0,.01);B('#2f8fd8',1.25,.02,-4,.22,.04,.3,0,.01);
    B('#2f8fd8',3.3,.25,-5,.9,.5,.6,.3,.04);B('#fff3d6',3.3,.53,-5,.94,.08,.64,.3,.02);P(o,sph(.3,8),'#fff3d6',2.5,.3,-4.4,0,0,.03,true);P(o,new T.TorusGeometry(.3,.04,4,12),'#f0452e',2.5,.3,-4.4,.5,0,0);
    for(const [x,z,r] of [[-4.2,1.2,1],[-.6,.9,.7],[-5.2,-2,.8]] as const)P(o,sph(r,7).scale(1.4,.22,1),'#e9c476',x,0,z,0,0,0,true);
    B('#c98a4b',-6.4,.5,1.4,1.4,1,1.2,.3,.05);break;
