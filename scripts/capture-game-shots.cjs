@@ -20,8 +20,9 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
   const swipe=async(x0,y0,x1,y1,ms=160,steps=8)=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y:y0,id:1}]});for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0+(x1-x0)*k/steps,y:y0+(y1-y0)*k/steps,id:1}]});await wait(ms/steps);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
   const G=require(path.join(__dirname,'capture-game-shots-players.cjs'))[GAME];if(!G)throw new Error('unknown game '+GAME);
   await page.goto(`${BASE}/arcade?game=${GAME}`,{waitUntil:'domcontentloaded',timeout:180000});
-  await page.waitForSelector(G.start,{timeout:120000});await wait(1500);
-  await page.locator(G.start).first().tap();await wait(G.settle??1200);
+  if(G.ready)await page.waitForFunction(G.ready,null,{timeout:120000});
+  const startBtn=G.start&&(G.start.startsWith('role:')?page.getByRole('button',{name:new RegExp(G.start.slice(5),'i')}).first():page.locator(G.start).first());
+  if(startBtn){await startBtn.waitFor({timeout:120000});await wait(1500);await startBtn.tap();}else await wait(1500);await wait(G.settle??1200);
   if(SETUP)await page.evaluate(SETUP);
   const H={page,cdp,wait,tap,swipe,stop:false};
   let n=0;const t0=Date.now();
