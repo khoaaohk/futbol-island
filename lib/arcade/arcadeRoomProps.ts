@@ -62,7 +62,7 @@ export function createArcadeRoomProps(scene:T.Scene){
  box(-12,2.96,8.15,1.5,.055,.07,ink);
  const claw=animated('arcade-claw-carriage',()=>{box(-12,2.95,8.15,.22,.1,.18,cream);tube(-12,2.62,8.15,.025,.62,cream);ball(-12,2.3,8.15,.09,ink);for(const x of [-12.13,-11.87])box(x,2.18,8.15,.045,.22,.045,cream);});
  box(-12,.75,8.89,.6,.38,.06,ink);box(-12,1.18,8.99,2.1,.17,.4,cream);tube(-12.4,1.37,8.98,.055,.25,ink);ball(-12.4,1.49,8.98,.1,coral);tube(-11.6,1.3,8.98,.1,.04,teal);sign('CLAW CLUB','BEAN BUDDIES',-12,3.17,8.94,2,.48);
- place(12,8,12,8,-Math.PI/3);
+ place(12,8,12.6,9.6,-Math.PI/3);/* Nov 21 2026: moved 1.7 m toward the south-east corner (was 12,8) so it no longer hides the east wall machines or a player standing at Hold the Line from the room camera */
  // Vending machine: readable bottles, selection buttons, lower collection tray.
  box(12,1.55,8,2,3.1,1.55,teal);box(11.72,1.85,8.81,1.15,1.75,.08,ink);box(12,.47,8.81,1.55,.48,.09,ink);
  for(let row=0;row<3;row++)for(let col=0;col<3;col++){const x=11.32+col*.38,y=1.24+row*.51;box(x,y,8.89,.2,.32,.12,col===1?coral:cream);tube(x,y+.2,8.89,.045,.08,gold);}for(let i=0;i<4;i++)box(12.68,1.48+i*.28,8.82,.19,.13,.1,gold);sign('REFRESH','TAKE A BREATHER',12,2.88,8.83,1.75,.45);
@@ -95,7 +95,7 @@ export function createArcadeRoomProps(scene:T.Scene){
  const attendant=createPlayer('arcade-prize-attendant','neutral',true,true);attendant.root.name='arcade-prize-attendant';attendant.setProfile(profileFor('npc',82));const look=defaultBeanLookFor('arcade-prize-attendant');attendant.setBeanLook(look,{...DEFAULT_CASUAL_OUTFIT,shirt:cream,shirt2:teal});root.add(attendant.root);
  const motion:PlayerMotion={travelMode:'walk',facing:-Math.PI/3,lookX:10,lookZ:-2,lookY:1.4,ready:.2};attendant.update(attendantPosition.x,attendantPosition.z,0,0,false,motion);
  let attentive=false;let disposed=false,social:SocialRoutine|null=null,socialAge=-1;const socialPose=createSocialPose();
- const colliders:ArcadePropCollider[]=[...gashaMachines.map(m=>({x:m.x,z:m.z,halfX:GASHA_STYLE_SIZE[gashaStyleOf(m)].w/2+.03,halfZ:GASHA_STYLE_SIZE[gashaStyleOf(m)].d/2+.03,yaw:m.yaw}))/* each body style its own size (Nov 10 2026) */,{x:counterPosition.x,z:counterPosition.z,halfX:2.75,halfZ:.75,yaw:-Math.PI/3},{x:shelfPosition.x,z:shelfPosition.z,halfX:2.85,halfZ:.55,yaw:-Math.PI/3},{x:-10,z:-1,halfX:1.55,halfZ:2.4},{x:-12,z:8,halfX:1.615,halfZ:1.596},{x:12,z:8,halfX:1.374,halfZ:1.428}];
+ const colliders:ArcadePropCollider[]=[...gashaMachines.map(m=>({x:m.x,z:m.z,halfX:GASHA_STYLE_SIZE[gashaStyleOf(m)].w/2+.03,halfZ:GASHA_STYLE_SIZE[gashaStyleOf(m)].d/2+.03,yaw:m.yaw}))/* each body style its own size (Nov 10 2026) */,{x:counterPosition.x,z:counterPosition.z,halfX:2.75,halfZ:.75,yaw:-Math.PI/3},{x:shelfPosition.x,z:shelfPosition.z,halfX:2.85,halfZ:.55,yaw:-Math.PI/3},{x:-10,z:-1,halfX:1.55,halfZ:2.4},{x:-12,z:8,halfX:1.615,halfZ:1.596},{x:12.6,z:9.6,halfX:1.374,halfZ:1.428}];
  // Triangle reflection gives exact table-edge bounces; paddles arrive at each
  // interception point before the puck instead of orbiting independently.
  const reflect=(phase:number)=>1-Math.abs(((phase%4)+4)%4-2);

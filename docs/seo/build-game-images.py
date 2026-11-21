@@ -29,16 +29,17 @@ GAMES = [
  # Nov 17 2026: Ball Blaster, the shooting game, shot from real drag-and-release play on a 390x844 phone (DPR 2).
  ('ball-blaster-soccer-shooting-game', ['ballblaster-phone', 'ballblaster-aim'], ['ball-blaster-soccer-shooting-game', 'ball-blaster-aim-and-curl'], 'Ball Blaster', 'Free soccer shooting game'),
 ]
-# Nov 21 2026: games with a page but no machine in the room yet (lib/arcade/arcadeCatalog.ts arcadeUnplaced): only the share
-# picture is made (their page pictures are gameplay stills in public/games/shots), at a lower JPEG quality so public/games stays
-# under its cap (tests/seo-games.cjs), and they are NOT counted on the hub picture. Move an entry up into GAMES when it is placed.
-UNPLACED = [
+# Nov 21 2026: Keepy-Uppy Beat and Hold the Line, placed on the arcade room's east wall the same day (thirteen machines): only the
+# share picture is made here (their page pictures are gameplay stills in public/games/shots), at a lower JPEG quality so public/games
+# stays under its cap (tests/seo-games.cjs). They count on the hub picture (COUNT below).
+WALL = [
  ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
  ('hold-the-line-soccer-defending-game', ['holdtheline-offside', 'holdtheline-night'], [], 'Hold the Line', 'Free soccer defending game', 50),
 ]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']
-COUNT = WORDS[len(GAMES)] if len(GAMES) < len(WORDS) else str(len(GAMES))
+N = len(GAMES) + len(WALL)
+COUNT = WORDS[N] if N < len(WORDS) else str(N)
 def shot(n): return Image.open(f'{SRC}/{n}.png').convert('RGB')
 def rounded(im, r):
     m = Image.new('L', im.size, 0); ImageDraw.Draw(m).rounded_rectangle([0, 0, im.width - 1, im.height - 1], r, fill=255); im = im.convert('RGBA'); im.putalpha(m); return im
@@ -73,10 +74,10 @@ for file, shots, outs, name, line in GAMES:
         im = shot(s); w = 960 if im.width > im.height else 480
         im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(f'{OUT}/{o}.webp', quality=74, method=6)
     og(file, shots, name, line)
-for file, shots, outs, name, line, q in UNPLACED:
+for file, shots, outs, name, line, q in WALL:
     if ONLY and not any(file.startswith(o) for o in ONLY): continue
     og(file, shots, name, line, q)
-# the hub: three games side by side (skipped when only unplaced games were asked for: `keepy-uppy`)
+# the hub: three games side by side (skipped when only the wall games were asked for: `keepy-uppy`)
 if ONLY and not any(f.startswith(o) for o in ONLY for f, *_ in GAMES) and 'hub' not in ONLY: sys.exit(0)
 c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); d.rounded_rectangle([560, 40, 1170, 700], 36, fill=TINT)
 for i, s in enumerate(['kitrush-phone', 'snake-fullsquad', 'puzzle-phone']):

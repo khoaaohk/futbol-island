@@ -155,7 +155,7 @@ ok('the device save: stars per match, promotion, the clean-sheet run, the daily;
 
 ok('wiring: playable by /arcade?game=holdtheline, its own board, coins, analytics key, device save; no machine in the room yet',()=>{
  const cat=read('lib/arcade/arcadeCatalog.ts'),room=read('components/ArcadeRoom.tsx'),K=require('../lib/arcade/arcadeCatalog.ts');
- {const c=K.arcadeCabinets.find(c=>c.id==='holdtheline');assert.ok(c&&c.name==='Hold the Line'&&c.x===12.85&&c.z===4.85&&Math.abs(c.yaw+Math.PI/3)<1e-9,'on the east wall, toward the vending machine');}assert.ok(!K.ARCADE_ROW.includes('holdtheline')&&K.ARCADE_WALL_IDS.includes('holdtheline'));assert.equal(K.arcadeCabinets.length,13);
+ {const c=K.arcadeCabinets.find(c=>c.id==='holdtheline');assert.ok(c&&c.name==='Hold the Line'&&c.x===12.85&&c.z===5.2&&Math.abs(c.yaw+Math.PI/3)<1e-9,'on the east wall, toward the vending machine');}assert.ok(!K.ARCADE_ROW.includes('holdtheline')&&K.ARCADE_WALL_IDS.includes('holdtheline'));assert.equal(K.arcadeCabinets.length,13);
  assert.equal(K.arcadeAnalyticsId('holdtheline'),'holdtheline');assert.match(cat,/\{id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE'/);
  assert.match(room,/const HoldTheLine=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/HoldTheLineGame'\)\)/);assert.match(room,/holdtheline:\(\)=>import\('\.\/games\/HoldTheLineGame'\)/);assert.match(room,/arcadeUnplaced\.some\(c=>c\.id===id\)/);assert.match(room,/game==='holdtheline'\?<HoldTheLine onExit=\{back\}\/>/);
  const L=require('../lib/arcade/leaderboard.ts');assert.ok(L.BOARD_GAMES.includes('holdtheline'));assert.equal(L.BOARD_RULES.holdtheline.max,HL.scoreMax);assert.ok(L.HALL_MACHINES.includes('holdtheline'),'in the Hall since it has a machine (Nov 21 2026)');

@@ -35,13 +35,13 @@ export const arcadeCabinets = [
  // Nov 17 2026: Ball Blaster, the football gallery shooter (docs/arcade-aaa/ballblaster-direction.md), after Roll It In at the east end of the row (Nov 18 2026: it took over a retired cabinet's place).
  {id:'ballblaster',name:'Ball Blaster',short:'BALL BLASTER',lesson:'Pick your target. Strike through the ball.',color:'#f0452e',...rowSpot('ballblaster')},
  // Nov 21 2026 (owner: "go ahead and push everything else"): the two new games stand against the EAST wall, between the prize counter and
- // the vending machine (the back row is full). Same upright cabinet as the row, turned like the counter and the vending machine
+ // the vending machine (the back row is full; the vending machine moved 1.7 m into the south-east corner so it hides neither). Same upright cabinet as the row, turned like the counter and the vending machine
  // (yaw -60 degrees: they face the aisle and lean toward the room camera) and staggered so the bodies do not touch. Spots measured
  // against the room's colliders (tests/arcade-room-crowd.cjs "east wall"): Keepy-Uppy Beat, the juggling rhythm game
  // (docs/arcade-aaa/keepyuppy-direction.md), next to the counter; Hold the Line, the defending game
  // (docs/arcade-aaa/holdtheline-direction.md), toward the vending machine.
  {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a',x:11.75,z:2.85,yaw:-Math.PI/3},
- {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e',x:12.85,z:4.85,yaw:-Math.PI/3},
+ {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e',x:12.85,z:5.2,yaw:-Math.PI/3},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet wait here for the

@@ -80,7 +80,7 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
  {const rect=(cx,cz,hx,lo,hi,yaw)=>{const ax=[Math.cos(yaw),-Math.sin(yaw)],az=[Math.sin(yaw),Math.cos(yaw)];return [[-hx,lo],[hx,lo],[hx,hi],[-hx,hi]].map(([u,v])=>[cx+u*ax[0]+v*az[0],cz+u*ax[1]+v*az[1]]);};
   const gap=(P,Q)=>{let best=-Infinity;for(const S of [P,Q])for(let i=0;i<S.length;i++){const p=S[i],q=S[(i+1)%S.length],n=[q[1]-p[1],p[0]-q[0]],l=Math.hypot(...n),pr=X=>X.map(x=>(x[0]*n[0]+x[1]*n[1])/l),A=pr(P),B=pr(Q);best=Math.max(best,Math.min(...B)-Math.max(...A),Math.min(...A)-Math.max(...B));}return best;};
   const P=-Math.PI/3,prize=(x,z)=>{const lx=x-10,lz=z+9.6;return [13+lx*Math.cos(P)+lz*Math.sin(P),-2-lx*Math.sin(P)+lz*Math.cos(P)];};/* arcadeRoomProps.ts place(10,-9.6,13,-2,-PI/3) */
-  const props={counter:rect(...prize(10,-7.9),2.75,-.75,.75,P),shelf:rect(...prize(10,-10.6),2.85,-.55,.55,P),vending:rect(12,8,1.374,-1.428,1.428,0)};
+  const props={counter:rect(...prize(10,-7.9),2.75,-.75,.75,P),shelf:rect(...prize(10,-10.6),2.85,-.55,.55,P),vending:rect(12.6,9.6,1.374,-1.428,1.428,0)/* Nov 21 2026: moved from 12,8 */};
   const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id));assert.equal(wall.map(c=>c.id).join(),'keepyuppy,holdtheline');
   const bodies=wall.map(c=>rect(c.x,c.z,.95,-.63,1.32,c.yaw)),rowEast=row.reduce((m,c)=>c.x>m.x?c:m);
   wall.forEach((c,i)=>{assert(c.x>10&&Math.abs(c.yaw+Math.PI/3)<1e-9,c.id+': on the east wall, turned like the counter');
