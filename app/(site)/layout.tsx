@@ -2,6 +2,7 @@ import HtmlShell from '@/components/site/HtmlShell';
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import SiteNav from '@/components/site/SiteNav';
 import LangSwitch from '@/components/site/LangSwitch';
+import {FOOTER_HUBS} from '@/lib/site/footerHubs';
 import styles from './site.module.css';
 /**
  * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): `/` (home), /about,
@@ -10,9 +11,7 @@ import styles from './site.module.css';
  * from components/learn for motion, clips and filters; its words are still all prerendered. The game itself is at /play (Nov 3 2026; it was `/`): each page has one gold "Play" button (near the
  * top of index pages, at the end of detail pages). Shared type and spacing scale: site.module.css and docs/seo/DESIGN.md.
  */
-const FOOTER_HUBS:readonly (readonly [string,string])[]=[['/learn/lessons','Lessons'],['/learn/soccer-drills','Drills'],['/learn/soccer-practice-plans','Practice plans'],
- ['/learn/soccer-formations','Formations'],['/learn/soccer-positions','Positions'],['/learn/soccer-rules','Rules'],['/learn/soccer-terms','Soccer terms'],
- ['/learn/soccer-age-groups','Age groups'],['/tools','Coach tools'],['/games','Games'],['/videos','Videos'],['/cards','Player cards'],['/fish','Fishbook'],['/exhibits','Museum'],['/books','Story books']];
+/* the footer's link row lives in lib/site/footerHubs.ts (Nov 20 2026): the Library at /library shows the same items as cards */
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <HtmlShell lang="en"><div className={styles.page} data-reading-page="">

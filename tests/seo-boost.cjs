@@ -59,7 +59,8 @@ const L=rel=>load(path.join(root,rel));
   assert(!ids.includes(l.id)&&new Set(ids).size===ids.length&&ids.length>=5,`${l.id}: 5 distinct sibling links`);
   assert([...s.same,s.prev,s.next].every(x=>x.format===l.format),`${l.id}: siblings in the same format`);}
  // hubs from everywhere
- const layout=read('app/(site)/layout.tsx');
+ const layout=read('app/(site)/layout.tsx')+read('lib/site/footerHubs.ts');/* Nov 20 2026: the footer's list lives in lib/site/footerHubs.ts (shared with the Library) */
+ assert(/FOOTER_HUBS\.map\(\(\[href,label\]\)=><a key=\{href\} href=\{href\}>/.test(layout),'the footer renders the shared list');
  for(const h of ['/learn/lessons','/learn/soccer-drills','/learn/soccer-practice-plans','/learn/soccer-formations','/learn/soccer-positions','/learn/soccer-rules','/learn/soccer-terms','/tools','/games'])assert(layout.includes(`'${h}'`),`footer links ${h}`);
  assert.match(read('components/landing/Landing.tsx'),/href="\/learn\/lessons">Guides<\/a>/,'/play links to the guides');
  // JSON-LD builders

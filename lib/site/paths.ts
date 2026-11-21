@@ -13,6 +13,7 @@ import {COMPARISONS,COMPARISONS_UPDATED} from './comparisons';
 import {BOOKS_PATH,BUILT_BOOKS,bookPath} from './books';
 import {VIDEOS_PATH,VIDEOS_UPDATED,videoSitePaths} from './videos';
 import {pageModified} from './lastmod';
+import {LIBRARY_PATH} from './libraryPath';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
  * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
@@ -38,7 +39,7 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
  const U=SITE_UPDATED;
  return [{path:'/',priority:1,lastmod:U.home},{path:'/about',priority:.9,lastmod:U.about},{path:'/play',priority:.3,lastmod:U.play},{path:'/privacy',priority:.5,lastmod:U.privacy},{path:'/marketing',priority:.4,lastmod:U.marketing},
   {path:FACTS_PATH,priority:.5,lastmod:FAMILY_CHECKED.rules},/* the trust page (lib/site/checked.ts, Nov 15 2026) */
-  {path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
+  {path:LIBRARY_PATH,priority:.8,lastmod:U.library},/* the Library (lib/site/library.ts, Nov 20 2026) */{path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
   ...GUIDE_PATHS.map(path=>({path,priority:.8,lastmod:U.hubs})),
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */

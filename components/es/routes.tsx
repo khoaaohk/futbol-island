@@ -13,6 +13,7 @@ import {ES_DRILL_HUBS,esDrill,esDrillGuide,esPlan} from '@/lib/i18n/es/drillsReg
 import {lessonsEsRoute} from './pages/LessonsEs';
 import {hubsEsRoute} from './pages/HubsEs';
 import {toolsEsRoute} from './pages/ToolsEs';
+import {libraryEsRoute} from './pages/LibraryEs';
 import {PositionEsPage,PositionsHubEsPage,RuleEsPage,RulesHubEsPage,TermEsPage,TermsHubEsPage} from './pages/GuidesEs';
 /**
  * The Spanish route table: English path -> metadata + page. Only paths in lib/i18n/esPaths.ts ES_PAGES resolve, so the language
@@ -52,5 +53,5 @@ export function esRoute(enPath:string):EsRoute|null{
   return {meta:()=>esMeta(t.title,t.desc,enPath,{url:diagramUrl(t.picture),alt:`Diagrama: ${t.name.toLowerCase()} en el fútbol`}),render:()=><TermEsPage t={t}/>};}
  if(enPath.startsWith(P)){const p=esPosition(enPath.slice(P.length));if(!p)return null;
   return {meta:()=>esMeta(p.title,p.desc,enPath,{url:positionImage(p.slug),alt:`Diagrama de dónde juega: ${p.name.toLowerCase()}`}),render:()=><PositionEsPage p={p}/>};}
- return lessonsEsRoute(enPath)??hubsEsRoute(enPath)??toolsEsRoute(enPath);/* round D families (each file owns its paths) */
+ return lessonsEsRoute(enPath)??hubsEsRoute(enPath)??toolsEsRoute(enPath)??libraryEsRoute(enPath);/* round D families (each file owns its paths) */
 }

@@ -77,7 +77,7 @@ for(const v of W){
  for(const v of W)assert(hub.includes(`href="${v.path}"`),`/videos links ${v.path}`);assert(!/<video/.test(hub),'/videos has no player');assert(!hasVideoLd(ldOf(hub)),'/videos: no VideoObject');
  assert.equal((hub.match(/<h1[ >]/g)||[]).length,1,'/videos: one h1');
  const m=L('app/(site)/videos/page.tsx').metadata;assert(m.title.endsWith(' · Futbol Island')&&m.title.length<=60&&m.alternates.canonical==='/videos','/videos: title and canonical');}
-assert(read('app/(site)/layout.tsx').includes("['/videos','Videos']"),'the footer links /videos');
+assert(read('lib/site/footerHubs.ts').includes("['/videos','Videos']")&&/FOOTER_HUBS\.map/.test(read('app/(site)/layout.tsx')),'the footer links /videos (the list is lib/site/footerHubs.ts since Nov 20 2026)');
 // ---- 3. sitemap ----------------------------------------------------------------------------------------------------------------
 const xml=vs.videoSitemapXml();
 assert(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')&&xml.includes('xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"'),'video sitemap header');
