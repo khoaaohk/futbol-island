@@ -26,6 +26,19 @@
     "bytes": 12892
    }
   },
+  "matchmix": {
+   "w": 1280,
+   "h": 720,
+   "seconds": 15,
+   "mp4": 4184858,
+   "webm": 2860538,
+   "src": "live matches recorded Nov 20 2026 (canvas capture at 1920x1080, 30 fps, five 3 s cuts)",
+   "poster": {
+    "w": 1920,
+    "h": 1080,
+    "bytes": 76550
+   }
+  },
   "kitstudio": {
    "w": 720,
    "h": 406,

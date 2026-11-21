@@ -29,9 +29,9 @@ for(const v of vids){
 }
 const gameClips=[gm.HERO_CLIP,...games.GAME_PAGES.map(g=>gm.gameClip(g.id)),...gm.islandClips()].filter(Boolean);
 for(const c of gameClips){
- const meta=MEDIA.clips[c.key];
- for(const [f,bytes] of [[c.mp4,meta.mp4],[c.webm,meta.webm],[c.poster,meta.poster.bytes]]){const st=fs.statSync(path.join(root,'public',f));assert(st.size<1_600_000,`${f} is small (${st.size})`);assert.equal(st.size,bytes,`${f}: gameMedia.json has the real size`);}
- assert(c.seconds>=4&&c.seconds<=12,`${c.key}: a 4-12 s loop`);assert(Math.max(c.w,c.h)<=720,`${c.key}: 720 px on the long side at most`);
+ const meta=MEDIA.clips[c.key],lead=c.key===gm.GAMES_LEAD_CLIP;// Nov 20 2026: the /games lead montage is 1280x720, up to 16 s and 5 MB (it fills the lead block on desktop)
+ for(const [f,bytes] of [[c.mp4,meta.mp4],[c.webm,meta.webm],[c.poster,meta.poster.bytes]]){const st=fs.statSync(path.join(root,'public',f));assert(st.size<(lead?5_000_000:1_600_000),`${f} is small (${st.size})`);assert.equal(st.size,bytes,`${f}: gameMedia.json has the real size`);}
+ assert(c.seconds>=4&&c.seconds<=(lead?16:12),`${c.key}: a 4-12 s loop (the lead montage up to 16 s)`);assert(Math.max(c.w,c.h)<=(lead?1280:720),`${c.key}: 720 px on the long side at most (the lead clip 1280)`);
  const first=firstCommit(`public${c.mp4}`);if(first)assert(new Date(c.uploaded)>=new Date(first),`${c.key}: uploaded (${c.uploaded}) is not before the file's first commit (${first})`);
 }
 for(const [k,ss] of Object.entries(MEDIA.shots))for(const s of ss)assert.equal(fs.statSync(path.join(root,'public/games/shots',s.file)).size,s.bytes,`${s.file}: gameMedia.json has the real size`);
