@@ -9,9 +9,9 @@
  *  - one flick's 2nd, 3rd... hit pays more (FK.mult) and tricks (curl, round the wall, over, bank, long range) pay once a flick.
  * World: the ball is kicked from the origin toward -z; x is right, y is up; metres. The ball is drawn toy-size (FK.R).
  */
-export const FK={step:1/120,R:.22,g:11.5,drag:.010,magnus:.4,topK:.2,spinDecay:.3,vMin:9.5,vMax:26,pitchMin:.11,pitchMax:.6,
+export const FK={step:1/120,R:.22,g:11.5,drag:.010,magnus:.55,topK:.2,spinDecay:.3,vMin:9.5,vMax:26,pitchMin:.11,pitchMax:.6,
  /** the flick: the last `window` ms of the path; shorter than lenMin (of the screen's short side) is a tap, not a kick */
- window:280,lenMin:.07,lenLift:.18,lenFull:.8,speedMin:.9,speedFull:6.1,bendDead:.07,bendFull:.62,
+ window:280,lenMin:.07,lenLift:.18,lenFull:.8,speedMin:.9,speedFull:6.1,bendDead:.1,bendFull:.66,
  maxFlight:6.5,teeDelay:.55,settleMax:2.6,spare:150,curlMin:1,curlSpin:.25,dipTop:.25,assistYaw:.1,assistDist:1.7,longMin:20,nearDist:1.5,closeDist:.8,
  trick:{curl:150,around:250,over:200,bank:200,long:100},mult:[1,1.5,2,2.5,3,3.5,4],stars:[.3,.6,1],coinPer:1500,scoreMax:60_000} as const;
 
@@ -40,6 +40,8 @@ function mk(list:Ent[],k:number,x:number,y:number,z:number,o:Opt={}):number{cons
  list.push({id,k,cls:CLS[k],x,y,z,bx:x,by:y,bz:z,hx:o.hx??s.hx,hy:o.hy??s.hy,hz:o.hz??s.hz,ex:o.ex??0,ey:o.ey??0,ez:o.ez??0,yaw:o.yaw??0,pts:o.pts??s.pts,need:o.need??s.need,done:false,mass:s.mass,tough:s.tough,
   mo:o.mo??0,amp:o.amp??0,w:o.w??0,ph:o.ph??0,len:o.len??0,st:0,vx:0,vy:0,vz:0,rot:0,rotV:0,ax:1,az:0,air:0,s1:o.s1??-1,s2:o.s2??-1,hitT:-9,hitV:0,side:0,tone:o.tone??id%4});return id;}
 
+/** Add one thing to a level's list (the stages below and the tests build with it). Returns its id. */
+export const addEnt=mk;
 /* ---- layout pieces ---- */
 /** A pyramid of cans standing on `y0` (rows wide at the bottom). Every can above stands on the two below it. */
 function pyramid(L:Ent[],x:number,y0:number,z:number,rows=3){let below:number[]=[];for(let r=0;r<rows;r++){const n=rows-r,row:number[]=[];for(let i=0;i<n;i++)row.push(mk(L,K.can,x+(i-(n-1)/2)*.36,y0+.2+r*.4,z,r?{s1:below[i],s2:below[i+1]}:{}));below=row;}}
@@ -114,7 +116,11 @@ const wrap=(a:number)=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.
 export const flickScale=(w:number,h:number)=>Math.min(w,h*.62);
 export function flickToShot(path:readonly Pt[],vp:{w:number;h:number},cam:FlickCam):Shot|null{
  const n=path.length;if(n<2)return null;const end=path[n-1];let i0=0;for(let i=n-2;i>=0;i--)if(end.t-path[i].t>FK.window){i0=i+1;break;}
- if(i0>=n-1)i0=n-2;const p0=path[i0],S=flickScale(vp.w,vp.h),dx=end.x-p0.x,up=p0.y-end.y,len=Math.hypot(dx,up)/S;
+ if(i0>=n-1)i0=n-2;
+ // a slow drag before the snap is not part of the kick: go back from the fastest piece only while the finger keeps at least 30% of that pace
+ {let peak=0,pk=n-1;const sp=(i:number)=>Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y)/Math.max(4,path[i].t-path[i-1].t);for(let i=i0+1;i<n;i++){const v=sp(i);if(v>peak){peak=v;pk=i;}}
+  let j=pk-1;while(j>i0&&sp(j)>=peak*.3)j--;i0=j;}
+ const p0=path[i0],S=flickScale(vp.w,vp.h),dx=end.x-p0.x,up=p0.y-end.y,len=Math.hypot(dx,up)/S;
  if(len<FK.lenMin||up<=Math.abs(dx)*.15)return null;// a tap, or a swipe that does not go up the screen
  const dt=Math.max(.03,(end.t-p0.t)/1000),power=Math.pow(c01((len/dt-FK.speedMin)/(FK.speedFull-FK.speedMin)),.85);
  // the first and the last part of the path (by distance): where it starts, where it ends up heading, how fast each was
@@ -125,7 +131,7 @@ export function flickToShot(path:readonly Pt[],vp:{w:number;h:number},cam:FlickC
  if(n-i0>=4&&total>0){const d0=Math.hypot(a.x-p0.x,a.y-p0.y),d1=Math.hypot(end.x-b.x,end.y-b.y);
   if(d0>2&&d1>2){a0=Math.atan2(a.x-p0.x,p0.y-a.y);a1=Math.atan2(end.x-b.x,b.y-end.y);
    const v0=d0/Math.max(8,ta-p0.t),v1=d1/Math.max(8,end.t-tb),r=v1/v0;top=r>1.3?c01((r-1.3)/1.2):r<.75?-c01((.75-r)/.5):0;}}
- const bend=wrap(a1-a0),spin=Math.sign(bend)*c01((Math.abs(bend)-FK.bendDead)/(FK.bendFull-FK.bendDead));
+ const bend=wrap(a1-a0),spin=Math.sign(bend)*c01((Math.abs(bend)-FK.bendDead)/(FK.bendFull-FK.bendDead))||0;
  const yaw=cam.yaw+Math.atan(cam.off+cam.gain*Math.tan(clamp(a0,-1.25,1.25)));
  const pitch=FK.pitchMin+(FK.pitchMax-FK.pitchMin)*Math.pow(c01((len-FK.lenLift)/(FK.lenFull-FK.lenLift)),1.1);
  return {power,yaw,pitch,spin,top};
@@ -153,9 +159,12 @@ export function closest(s:Shot,x:number,y:number,z:number,falling=false,blocks?:
   if(blocks){let hit=false;for(const q of blocks)if(q.cls===6&&q.k!==K.keeper&&boxHit(PB.x,PB.y,PB.z,FK.R,q.x,q.y,q.z,q.hx,q.hy,q.hz)){hit=true;break;}if(hit)break;}if(falling&&(PB.vy>-2||Math.abs(PB.y-y)>.14))continue;const d=Math.hypot(PB.x-x,PB.y-y,PB.z-z);if(d<best)best=d;else if(d>best+3)break;}return best;}
 /** A straight kick that reaches a target: the ghost on the first shots and the test bots. Null when no straight kick gets near. */
 export function solveShot(e:Pick<Ent,'k'|'cls'|'x'|'y'|'z'|'hx'|'hy'|'ex'|'ey'|'tough'>,spin=0,blocks?:readonly Ent[]):Shot|null{
- const falling=e.cls===3,tx=e.x+e.ex/2,ty=falling?e.y+e.hy:e.k===K.goal?e.y*.8:e.y+e.ey/2,tz=e.z,w0=e.tough>0?7:0,y0=Math.atan2(tx,-tz);let best:Shot|null=null,bd=falling?.3:e.cls===2?e.hx*.45:Math.max(.2,Math.min(e.hx,e.hy)*.9);
- for(let pi=0;pi<15;pi++)for(let wi=w0;wi<13;wi++)for(let yi=-3;yi<=3;yi++){const s:Shot={power:.2+wi*.066,yaw:y0+yi*.02-spin*.16,pitch:FK.pitchMin+pi*.035,spin,top:0},d=closest(s,tx,ty,tz,falling,blocks);if(d<bd){bd=d;best=s;}}
- return best;}
+ const falling=e.cls===3,tx=e.x+e.ex/2,ty=falling?e.y+e.hy:e.k===K.goal?e.y*.8:e.y+e.ey/2,tz=e.z,w0=e.tough>0?9:0,y0=Math.atan2(tx,-tz),limit=falling?.3:e.cls===2?e.hx*.45:Math.max(.2,Math.min(e.hx,e.hy)*.9);let best:Shot|null=null,bd=1e9;
+ for(let pi=0;pi<15;pi++)for(let wi=w0;wi<=15;wi++)for(let yi=-3;yi<=3;yi++){const s:Shot={power:wi/15,yaw:y0+yi*.02-spin*.16,pitch:FK.pitchMin+pi*.035,spin,top:0},d=closest(s,tx,ty,tz,falling,blocks);if(d<bd-1e-9){bd=d;best=s;}}
+ if(!best||bd>limit+1.5)return null;
+ // a finer pass round the best kick (a bin's mouth is narrower than the first grid)
+ const c:Shot=best;for(let wi=-10;wi<=10;wi++)for(let yi=-3;yi<=3;yi++){const s:Shot={...c,power:clamp(c.power+wi*.0066,e.tough>0?.6:0,1),yaw:c.yaw+yi*.006},d=closest(s,tx,ty,tz,falling,blocks);if(d<bd-1e-9){bd=d;best=s;}}
+ return bd<limit?best:null;}
 
 /* ---- collisions (results in N: the push direction out of the thing, and how deep) ---- */
 const N={x:0,y:0,z:0,d:0};
