@@ -11,7 +11,9 @@ import LibraryMenuSpy from '../LibraryMenuSpy';
  * section hub, the Library) come first. Server-rendered plain links; LibraryMenuSpy only places the chip bar's pill.
  */
 export default function RailNav({rail,current,id='section-rail'}:{rail:Rail;current:string;id?:string}){
- const cur=(href:string)=>href===current?'page' as const:undefined;
+ // a page link marks the current page with aria-current; an in-page anchor (#top, #rules on the Library) is only lit (data-on),
+ // and the spy moves that light as the reader scrolls
+ const cur=(href:string)=>href===current&&!href.startsWith('#')?'page' as const:undefined,on=(href:string)=>href===current&&href.startsWith('#')?'':undefined;
  return <>
   <nav className={`${l.menu} ${r.rail}`} id={id} data-rail="" data-section-rail="" aria-label={rail.label}>
    {/* the up links stay at the top of the rail while the list below scrolls; phones have the breadcrumb and the onward row instead */}
@@ -19,7 +21,7 @@ export default function RailNav({rail,current,id='section-rail'}:{rail:Rail;curr
    <ul>
     {rail.groups.map((g,i)=>[
      g.title?<li key={`g${i}`} className={r.group}><span>{g.title}</span></li>:null,
-     ...g.items.map(it=><li key={it.href}><a href={it.href} aria-current={cur(it.href)}>{it.name}</a></li>)])}
+     ...g.items.map(it=><li key={it.href}><a href={it.href} aria-current={cur(it.href)} data-on={on(it.href)}>{it.name}</a></li>)])}
    </ul>
   </nav>
   <LibraryMenuSpy menu={id}/>

@@ -69,6 +69,29 @@
  .card a{grid-template-columns:168px minmax(0,1fr);gap:20px;padding:12px 20px 12px 12px}
  .card .pic{align-self:center;aspect-ratio:4/3}
 }
+/* The sections (Nov 20 2026 night; owner: "each section is a little information about that section then cta to drill into internal
+   page"; no mirrored layouts): one template for all fifteen. The band (above) gives the tone and spacing; inside, the picture sits
+   on the left from 900 px and on top below that, the words beside it: the name and its count, a few sentences, example pages as
+   chips, one mint button (the gold Play stays the page's only gold button). */
+.sec{display:grid;gap:var(--s3);align-items:center}
+.secPic{position:relative;display:block;aspect-ratio:16/10;border-radius:var(--r-lg);overflow:hidden;background:var(--paper)}
+.secPic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.secPic[data-diagram]{aspect-ratio:1200/630}/* a diagram is shown whole (pitch panel and title), at its own shape, so nothing is cropped */
+.secPic[data-icon]{display:grid;place-items:center}
+.secText{display:grid;gap:var(--s2);justify-items:start;min-width:0}
+.secHead{display:flex;flex-wrap:wrap;align-items:center;gap:10px var(--s2)}
+.secHead .h2{margin:0;font-size:clamp(30px,2vw + 20px,46px);line-height:1.06;font-weight:600;letter-spacing:-.028em;color:var(--ink)}
+.about{margin:0;max-width:56ch;font-size:var(--t-body);line-height:1.5;color:var(--ink);text-wrap:pretty}
+ul.examples{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.examples li{margin:0;max-width:none}
+.examples a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:40px;padding:6px 14px;border-radius:var(--r-pill);background:var(--card);color:var(--ink);font-size:16px;line-height:1.25;font-weight:600;text-decoration:none;transition:background-color .16s}
+@media(hover:hover){.examples a:hover{background:color-mix(in srgb,var(--gold) 35%,var(--card))}}
+.examples a:focus-visible,.go:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+.go{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap,48px);margin-top:4px;padding:0 22px 2px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d);font-size:17px;line-height:1.2;font-weight:800;text-decoration:none;transition:translate .12s,box-shadow .12s}
+.go:active{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
+@media(hover:hover){.go:hover{background:color-mix(in srgb,var(--gold) 40%,var(--btn-mint,#beded1))}}
+@media(min-width:900px){.sec{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:var(--s5)}}
+@media(min-width:1600px){.sec{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.about{font-size:19px}.examples a{font-size:17px;min-height:44px;padding-inline:16px}}
 /* the close: one way into the game */
 .close{margin-inline:calc(50% - 50vw);padding:var(--s5) max(var(--gutter),calc(50vw - 590px));background:var(--well);display:grid;gap:var(--s3);align-items:center}
 .close .h2{margin:0;font-size:clamp(30px,2vw + 20px,46px);line-height:1.06;font-weight:600;letter-spacing:-.028em}
@@ -132,5 +155,5 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
  .card .name{font-size:22px}.card .line{font-size:17px}
  .feature .name{font-size:38px}
 }
-@media(prefers-reduced-motion:reduce){.grid a,.pic img,.menu ul a,nav.menu li[data-pill]{transition:none}.grid a:hover img{scale:none}}
-@media print{.hero,.band,.close,.shelf{margin-inline:0;padding:0;background:none}.heroArt,.pic,.menu{display:none}.shelf{display:block}.shelfMain{display:block}}
+@media(prefers-reduced-motion:reduce){.examples a,.go,.grid a,.pic img,.menu ul a,nav.menu li[data-pill]{transition:none}.grid a:hover img{scale:none}}
+@media print{.hero,.band,.close,.shelf{margin-inline:0;padding:0;background:none}.heroArt,.pic,.secPic,.menu{display:none}.shelf{display:block}.shelfMain{display:block}}

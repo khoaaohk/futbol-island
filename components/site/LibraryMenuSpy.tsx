@@ -47,7 +47,7 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
    if(list.scrollHeight>list.clientHeight+1){const r=a.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.top<b.top)list.scrollTop-=b.top-r.top+8;else if(r.bottom>b.bottom)list.scrollTop+=r.bottom-b.bottom+8;}
    if(list.scrollWidth>list.clientWidth+1&&Date.now()>=pauseUntil)list.scrollTo({left:Math.max(0,a.offsetLeft-(list.clientWidth-a.offsetWidth)/2),behavior:still()?'auto':'smooth'});
   };
-  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):top&&links[0].hash==='#top'?'top':mid;
+  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):mid||(top&&links[0].hash==='#top'?'top':'');
    const a=links.find(x=>x.hash==='#'+id)??null;if(a===lit)return;
    links.forEach(x=>{if(x===a)x.setAttribute('data-on','');else x.removeAttribute('data-on');});
    if(a){place(a,lit);clearTimeout(centre);centre=window.setTimeout(()=>glide(a),now?0:180);}else pill.style.opacity='0';
@@ -56,9 +56,16 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
   links.forEach(a=>{const s=document.getElementById(a.hash.slice(1));if(s)io.observe(s);});
   const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{end=es[es.length-1].isIntersecting;paint();}):null;
   if(foot&&io2)io2.observe(foot);
-  /* "Overview" (owner, Nov 20 2026 evening; Spanish "Resumen"): lit at load and whenever the page's head block (#top) is on screen, so exactly one entry is
-     always lit; it is server-rendered with data-on, so there is no flash before this runs */
-  const head=document.getElementById('top'),io4=head?new IntersectionObserver(es=>{top=es[es.length-1].isIntersecting;paint();},{rootMargin:'-68px 0px 0px 0px'}):null;
+  /* "Overview" (owner, Nov 20 2026 evening; Spanish "Resumen"): server-rendered with data-on, so there is no flash before this runs. The
+     head block (#top) is watched like a section (the middle line above), so Overview is lit while the head covers the middle of the
+     screen and a section takes over as soon as its heading reaches the top half (Nov 20 2026 night: before, any strip of the hero left
+     on screen kept Overview lit over the first section). This observer only covers the first moments, before anything has crossed
+     the middle line. */
+  /* Nov 20 2026 night: the head counts only while it reaches below the line a tapped section lands on (its scroll-margin-top: under
+     the header, and the chip bar below 1280 px), so after a tap on the first section the hero's last strip under the bar does not
+     light Overview again */
+  const head=document.getElementById('top'),land=head?Math.max(68,parseFloat(getComputedStyle(head).scrollMarginTop)||0)+4:68;
+  const io4=head?new IntersectionObserver(es=>{top=es[es.length-1].isIntersecting;paint();},{rootMargin:`-${land}px 0px 0px 0px`}):null;
   if(head&&io4)io4.observe(head);
   /* edge fades: is the first / last chip fully inside the bar? */
   const first=links[0],last=links[links.length-1];

@@ -1,5 +1,5 @@
 // The Library (/library, owner Nov 20 2026; lib/site/library.ts, components/site/LibraryPage.tsx):
-//  1. It houses exactly the footer's link row (lib/site/footerHubs.ts): every footer link is one card, no more, and the footer reads the same list.
+//  1. It houses exactly the footer's link row (lib/site/footerHubs.ts): every footer link is one section (one card in the data), no more, and the footer reads the same list.
 //  2. Every count on a card is the length of the data behind the linked page, never a typed number.
 //  3. Title <= 60, description 120-155, canonical, hreflang pair, BreadcrumbList + CollectionPage JSON-LD; in the sitemap, both languages.
 //  4. The header: Learn (unchanged) ... About, Library; the home bar and the Spanish bar too. Plain /learn redirects to /library, /learn?q= stays the search.
@@ -36,10 +36,26 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  for(const c of cards)assert(html.includes(`href="${c.href}"`),`${c.href} is linked`);
  assert.equal((html.match(/href="\/play"/g)||[]).length,2,'the Play button, at the top and at the close (none in the group menu: owner, Nov 20 2026)');
  {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library sections"/.test(menu[0]),'the menu is a labelled nav');
-  // Nov 20 2026 night (owner: "we need to ungroup the side nav and place all of them on the left nav. instead of collect and explore. have players cards, fishbooks, museum, storybooks"):
-  // Overview (this page, marked current) and then every section by name, each a link to that section's page; no group names.
-  assert(/<a[^>]*href="\/library"[^>]*aria-current="page"[^>]*>Overview<\/a>|<a[^>]*aria-current="page"[^>]*href="\/library"[^>]*>Overview<\/a>/.test(menu[1]),'Overview is first and current');
-  for(const g of groups){assert(html.includes(`id="group-${g.id}"`),`band ${g.id}`);assert(!menu[1].includes(`>${g.title}<`),`no group name ${g.title} in the menu`);for(const c of g.cards)assert(menu[1].includes(`href="${c.href}"`),`menu lists ${c.name}`);}}
+  // Nov 20 2026 night, sections (owner: "we need to fix the library page. each of the side nav should smooth scroll the user down to that section.
+  // each section is a little information about that section then cta to drill into internal page"): the menu is Overview (#top, lit
+  // from the server) and the fifteen sections as in-page anchors in RAIL_ORDER; the page is one <section id> per item in that order,
+  // each with its picture, H2, count, sentences, 3-5 real example pages and ONE mint button into the section; no group bands.
+  const RO=L('lib/site/railNav.ts').RAIL_ORDER,secs=lib.librarySections(),byPath=Object.fromEntries(secs.map(x=>[x.href,x]));
+  assert.deepEqual(secs.map(x=>x.href).sort(),cards.map(c=>c.href).sort(),'one section per footer link');
+  const items=[...menu[1].matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map(m=>[m[1],m[2]]);
+  assert.deepEqual(items,[['#top','Overview'],...RO.map(p=>['#'+byPath[p].id,byPath[p].name])],'Overview then the 15 sections, as anchors, in RAIL_ORDER');
+  assert(/<a href="#top"[^>]*data-on=""[^>]*>Overview<\/a>/.test(menu[1])&&(menu[1].match(/data-on/g)||[]).length===1&&!/aria-current/.test(menu[1]),'Overview lit from the server, nothing else; anchors are never aria-current');
+  const order=[...html.matchAll(/<section id="([a-z-]+)"[^>]*data-library-section/g)].map(m=>m[1]);
+  assert.deepEqual(order,RO.map(p=>byPath[p].id),'the sections, in the menu order');assert(!/data-library-group|id="group-/.test(html),'no group bands');
+  for(const x of secs){const sec=html.match(new RegExp(`<section id="${x.id}"[\\s\\S]*?</section>`))[0];
+   assert.match(sec,new RegExp(`<h2[^>]*>${x.name}</h2>`),`${x.id}: H2`);assert(sec.includes('<img ')&&/loading="lazy"/.test(sec),`${x.id}: a lazy picture`);
+   assert(x.examples.length>=3&&x.examples.length<=5,`${x.id}: 3-5 examples`);for(const e of x.examples){assert(PATHS.has(e.href.split('#')[0]),`${x.id}: example ${e.href} is a real page`);assert(sec.includes(`href="${e.href}"`));}
+   assert.equal((sec.match(/class="[^"]*go[^"]*" href=/g)||[]).length,1,`${x.id}: one button`);assert(sec.includes(`href="${x.href}">${x.cta}</a>`),`${x.id}: the button opens the section`);
+   if(x.count)assert(!/\d/.test(x.cta)||x.cta.includes(x.count.split(' ')[0]),`${x.id}: the button's number is the count's`);
+   assert(x.more.length>40&&!/\d{2,}/.test(x.more.replace(/11v11|U1[02]|2026-27/g,'')),`${x.id}: more words, no typed count`);}
+  assert.equal(byPath['/learn/soccer-rules'].cta,`See all ${L('lib/site/rules.ts').RULES.length} rules`);
+  // the section hubs' rails still link to the pages, not to anchors
+  {const r=L('lib/site/railNav.ts').libraryRail();assert(r.groups[0].items.every(i=>i.href.startsWith('/')),'hub rails: page links');}}
  assert(!/\/marketing/.test(html)&&!/—/.test(html),'no /marketing link, no em dash');
  const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);assert(imgs.length>=cards.length,'a picture on every card');
  for(const i of imgs)assert(/ alt="[^"]{8,}"/.test(i)&&/ width="\d+"/.test(i)&&/ height="\d+"/.test(i),`alt, width, height: ${i.slice(0,80)}`);
@@ -48,6 +64,10 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const es=L('components/es/routes.tsx').esRoute('/library'),em=es.meta(),eh=render(es.render()),E=L('components/es/pages/LibraryEs.tsx');
  assert(em.title.absolute.length<=60&&em.description.length>=120&&em.description.length<=155,`Spanish title ${em.title.absolute.length}, description ${em.description.length}`);
  assert.equal(em.alternates.canonical,'/es/library');assert.match(eh,/<h1[^>]*>La biblioteca de Futbol Island<\/h1>/);
+ {const es=E.librarySectionsEs();assert.equal(es.length,15);for(const x of es){assert(eh.includes(`<section id="${x.id}"`)&&eh.includes(`href="#${x.id}"`),`es ${x.id}`);assert(eh.includes(`href="${x.href}">${x.cta}</a>`));
+   assert(x.examples.length>=3,`es ${x.id}: examples`);for(const e of x.examples)assert(x.href.startsWith('/es/')?e.href.startsWith('/es/')&&ep.hasEs(ep.toEn(e.href.split('#')[0])):!e.href.startsWith('/es/'),`es ${x.id}: ${e.href}`);
+   if(!x.href.startsWith('/es/'))assert(/\(en inglés\)$/.test(x.cta),`${x.href}: the button says English`);}
+  assert(/<a href="#top"[^>]*data-on=""[^>]*>Resumen<\/a>/.test(eh));}
  for(const c of E.libraryGroupsEs().flatMap(g=>g.cards)){assert(eh.includes(`href="${c.href}"`));if(!c.href.startsWith('/es/'))assert(/\(en inglés\)$/.test(c.name),`${c.href}: an English page says so`);else assert(ep.hasEs(ep.toEn(c.href)),`${c.href}: a Spanish page`);}
  assert.equal(E.libraryGroupsEs().flatMap(g=>g.cards).length,cards.length);assert(!/—/.test(eh));
  // 4
