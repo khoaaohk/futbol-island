@@ -82,12 +82,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 140495,
-   "webm": 225313,
+   "mp4": 200032,
+   "webm": 290276,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 31962
+    "bytes": 29160
    }
   },
   "airhockey": {
@@ -303,19 +303,19 @@
     "file": "snake-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 31962
+    "bytes": 30712
    },
    {
     "file": "snake-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 38708
+    "bytes": 32364
    },
    {
     "file": "snake-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 31064
+    "bytes": 31544
    },
    {
     "file": "snake-4.webp",
