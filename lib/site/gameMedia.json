@@ -118,12 +118,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 650805,
-   "webm": 1216162,
+   "mp4": 500451,
+   "webm": 482380,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 48644
+    "bytes": 50714
    }
   },
   "tennis": {
@@ -381,19 +381,19 @@
     "file": "runner-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 48644
+    "bytes": 40178
    },
    {
     "file": "runner-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 57664
+    "bytes": 39284
    },
    {
     "file": "runner-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 53044
+    "bytes": 51740
    },
    {
     "file": "runner-4.webp",
