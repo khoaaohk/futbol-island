@@ -248,7 +248,7 @@ t('scene wiring: hooks registered / unregistered, friends drawn before render, f
 });
 t('island: "2 in the Kit Shop" over the shop door (Konbini hint mechanism), party list "In the Kit Shop"', () => {
   const town = read('components/Town.tsx'), hint = read('lib/town/shopDoorHint.ts');
-  assert.match(town, /const ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT(?:,ARCADE_DOOR_HINT)?\]/); assert.match(town, /doors:ROOM_DOOR_HINTS\}/);
+  assert.match(town, /const ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT(?:,ARCADE_DOOR_HINT)?(?:,\.\.\.REEF_DOOR_HINTS)?\]/); assert.match(town, /doors:ROOM_DOOR_HINTS\}/);
   assert.match(hint, /room:RoomCode\.Shop,x:SHOP_DOOR\.x,y:SHOP_CANOPY\.y\+2\.6,z:SHOP_DOOR\.front\+\.3/);
   const tb = read('lib/multiplayer/townBridge.ts'); const m = [tb.slice(tb.indexOf('export function doorHintText'), tb.indexOf('export function doorHintText') + 400)]; m[1] = m[0];
   const doorHintText = (k, room) => (k > 0 ? `${k} ${pres.roomText(room).replace(/^In /, 'in ')}` : '');

@@ -8,7 +8,7 @@ import type * as THREE from 'three';
 import { BallState, Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Kit, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { emoteSeconds } from '../town/emoteReact';
 import { createRemoteAvatars, remoteCap, type RemoteAvatars, type RemoteBall } from '../graphics/remoteAvatars';
-import { batterySaverOn } from '../graphics/heatTier';
+import { batterySaverOn, type HeatTier } from '../graphics/heatTier';
 import { loadCustomization } from '../town/customization';
 import { multiplayerEnabled } from './config';
 import { createPartyConnection, type PartyConnection } from './connection';
@@ -70,6 +70,8 @@ export interface FriendCore {
 }
 export function createFriendCore(ctx: {
   scene: THREE.Scene; phone: boolean; fieldScale?: number;
+  /** Rigs drawn at once by heat tier (default remoteCap; Battery saver always 0). A shared reef passes reefCap (3 on phones). */
+  cap?: (tier: HeatTier, phone: boolean) => number;
   /** The island's ground height under x, z (where a flying friend's plume settles). */
   groundAt?: (x: number, z: number) => number;
   /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
@@ -84,7 +86,7 @@ export function createFriendCore(ctx: {
   onSync?: (live: boolean, welcome: boolean) => void;
 }): FriendCore {
   const conn = partyConnection();
-  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt, landAt: ctx.landAt });
+  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => (batterySaverOn() ? 0 : ctx.cap ? ctx.cap(tier, phone) : remoteCap(tier, phone, false)), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt, landAt: ctx.landAt });
   const interp = createInterp();
   // Friends' balls ride their own interpolators (the ball state in the mode slot), sampled at the same render time as the bodies,
   // so a shot leaves the friend's foot when their kick plays here.
@@ -209,6 +211,20 @@ export const ROOM_FIELD_R = 0.6;
 export const ROOM_FIELD_SCALE = 0.8 / 1.15;
 /** Walk-cycle speed by mode (the speed byte is the room code in a room pose, design 2.2). */
 const MODE_SPEED: Partial<Record<number, number>> = { [Mode.Walk]: 2, [Mode.Run]: 4.2 };
+/** Shared reefs (Phase 5): friends drawn as rigs in the dive room. Phones and heat tier 2+ draw the nearest REEF_PHONE_CAP (the dive
+ *  room is the heaviest water scene); desktop keeps remoteCap's 5; Battery saver 0 (createFriendCore). The rest: ring + label only. */
+export const REEF_PHONE_CAP = 3;
+export function reefCap(tier: number, phone: boolean): number {
+  const base = remoteCap(tier as HeatTier, phone, false);
+  return phone || tier >= 2 ? Math.min(REEF_PHONE_CAP, base) : base;
+}
+/** A diver's stroke speed (m/s) from the interpolated position delta, smoothed (the speed byte carries the room code). Pure. */
+export function diveSpeedFrom(prev: { x: number; y: number; z: number; v: number; has: boolean }, x: number, y: number, z: number, dt: number): number {
+  if (!prev.has || !(dt > 0)) { prev.has = true; prev.x = x; prev.y = y; prev.z = z; prev.v = 0; return 0; }
+  const d = Math.hypot(x - prev.x, y - prev.y, z - prev.z), raw = Math.min(8, d / Math.max(dt, 1 / 120)), k = 1 - Math.exp(-dt * 8);
+  prev.v += (raw - prev.v) * k; prev.x = x; prev.y = y; prev.z = z;
+  return prev.v;
+}
 
 export interface RoomParty {
   /** Call once per room frame (dt s, nowMs = performance.now(), the room camera). `hideFriends`: the room's own camera is zoomed onto a
@@ -255,6 +271,11 @@ export interface RoomPartyCtx {
   /** The busy kind at a room-local spot for a busy friend there (STATION.* code), or 0 = plain "Busy". */
   station?: (x: number, z: number) => number;
   onEmoteSeen?: () => void;
+  /** Rigs by heat tier (default remoteCap; a shared reef passes reefCap). */
+  cap?: (tier: HeatTier, phone: boolean) => number;
+  /** False: this layer does not take the connection's beat hook (a shared reef inside the island page: the island runtime keeps the
+   *  hook and asks this layer for the pose through sendNow while it is active, townBridge.ts setRoomLayer). Default true. */
+  ownBeat?: boolean;
 }
 
 /** Null when multiplayer is off or this tab holds no party and no world slot (a room without either costs nothing). Public island:
@@ -276,7 +297,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
   let coreIds: MemberId[] | null = null;
 
   const core = createFriendCore({
-    scene: ctx.scene, phone: ctx.phone, fieldScale: ROOM_FIELD_SCALE, onEmoteSeen: ctx.onEmoteSeen,
+    scene: ctx.scene, phone: ctx.phone, fieldScale: ROOM_FIELD_SCALE, onEmoteSeen: ctx.onEmoteSeen, cap: ctx.cap,
     onFriendEmote(id) { if (last.has(id) && !gone.has(id)) { emoteUntil = now() + ROOM_EMOTE_AWAKE_S * 1000; wake(); } },
     admit(id, b, recvMs) {
       if (roomOf(b) !== room) {
@@ -302,11 +323,22 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
 
   // A sampled room pose -> what the avatar layer draws: room-local height, a walk speed from the mode, no door fade while here (zone
   // Main = "standing in this room"), the busy kind from this room's own layout. A friend who left keeps zone Indoors: the door fade.
+  const dives = new Map<MemberId, { x: number; y: number; z: number; v: number; has: boolean }>(); // reef: one per diver, made once
+  let adaptDt = 0;
   function adapt(id: MemberId, p: RemotePose) {
     p.y = roomLocalY(p.y * 10);
-    if (gone.has(id)) { p.zone = Zone.Indoors; return; }
+    if (gone.has(id)) { p.zone = Zone.Indoors; const d0 = dives.get(id); if (d0) d0.has = false; return; }
     p.zone = Zone.Main;
     const busy = p.mode === Mode.Busy;
+    if (p.mode === Mode.Dive) {
+      // A diver (shared reef): zone Sea (the remote layer draws the wet body off land; the dive room has no land), the stroke from the delta.
+      p.zone = Zone.Sea;
+      let d = dives.get(id);
+      if (!d) { d = { x: 0, y: 0, z: 0, v: 0, has: false }; dives.set(id, d); }
+      p.speed = diveSpeedFrom(d, p.x, p.y, p.z, adaptDt);
+      p.activity = 0;
+      return;
+    }
     p.speed = busy ? 0 : MODE_SPEED[p.mode] ?? 0;
     p.activity = busy ? ctx.station?.(p.x, p.z) ?? 0 : 0;
   }
@@ -315,7 +347,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
     conn.sendPose(fillRoomBody(st, ctx.local(), room, body, nowMs), nowMs);
   }
   // A covered room (overlay, reveal, the cashier) stops its loop: the connection's own 5 s beat sends the Busy room pose (no new timer).
-  conn.onBeforeBeat(() => { if (core.live && now() - lastUpdateAt > SLEEP_SAMPLE_MS) sendLocal(now()); });
+  if (ctx.ownBeat !== false) conn.onBeforeBeat(() => { if (core.live && now() - lastUpdateAt > SLEEP_SAMPLE_MS) sendLocal(now()); });
 
   return {
     room,
@@ -353,6 +385,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
         return false;
       }
       drawnLast = true;
+      adaptDt = dt;
       core.sample(nowMs, adapt);
       // Busy friends here: their fields are obstacles (and no emotes to / from them: remoteAvatars already ignores those).
       fieldX.length = fieldZ.length = 0;
@@ -374,7 +407,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
       return nowMs - lastChangeAt < ROOM_SETTLE_MS || nowMs < emoteUntil || (fading && nowMs - lastChangeAt < ROOM_SETTLE_MS + 700);
     },
     dispose() {
-      core.dispose(); conn.onBeforeBeat(null); last.clear(); gone.clear();
+      core.dispose(); if (ctx.ownBeat !== false) conn.onBeforeBeat(null); last.clear(); gone.clear(); dives.clear();
       // The connection is NOT closed (party persistence): the next page resumes the slot. Only Leave / End / the grown-up switch close it.
     },
   };

@@ -140,7 +140,7 @@ function harness(phone=true){
 //     a simulated heat-tier sequence in a small room (fieldScale 0.8 / 1.15, six friends within 6 m)
 {
  const rp=read0('lib/multiplayer/roomParty.ts');
- assert(/createRemoteAvatars\(ctx\.scene, \{ phone: ctx\.phone, maxFor: \(tier, phone\) => remoteCap\(tier, phone, batterySaverOn\(\)\)/.test(rp),'rooms build the same layer with the same caps (so the same once-a-second recheck)');
+ assert(/createRemoteAvatars\(ctx\.scene, \{ phone: ctx\.phone, maxFor: \(tier, phone\) => \(batterySaverOn\(\) \? 0 : ctx\.cap \? ctx\.cap\(tier, phone\) : remoteCap\(tier, phone, false\)\)/.test(rp),'rooms build the same layer with the same caps (so the same once-a-second recheck)');
  const h=harness(),look=new Array(12).fill(0),cap=[5,5,3,1,0];
  h.poses.clear();for(let i=1;i<=6;i++){h.avatars.upsert(i,look,'F'+i);h.poses.set(i,{x:(i%3-1)*1.5,y:0,z:-i,yaw:0,speed:.4,mode:13,zone:0,fade:1});}
  const seq=[0,1,2,3,4,3,2,0,0],out=[];let t=0;

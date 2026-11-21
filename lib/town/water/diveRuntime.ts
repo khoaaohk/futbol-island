@@ -101,6 +101,11 @@ export type DiveRuntimePorts={
   *  analytics) and the high five's hands meeting ('meet': the pop); today's sparkle found. `date` / `rand` for tests. */
  calm?:()=>boolean;whale?:(event:'pass'|'stamp')=>void;emote?:(kind:DiveEmote,event:'start'|'meet',first:boolean)=>void;sparkle?:()=>void;
  date?:()=>string;rand?:()=>number;
+ /** Shared reefs (lib/multiplayer/reefParty.ts): the prompt's words when others are diving this spot ("Dive in: 2 friends exploring"),
+  *  or null for the usual Explore. Read while the prompt shows (a cached count: no work per frame beyond the lookup). */
+ invite?:(spot:DiveSpot)=>{text:string;aria:string}|null;
+ /** Shared reefs: called once per dive frame right before the room render (the friend layer samples, draws and sends). */
+ beforeRender?:(scene:T.Scene,camera:T.Camera,dt:number)=>void;
 };
 
 export function createDiveRuntime(ports:DiveRuntimePorts){
@@ -185,7 +190,8 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    const el=ports.ui<HTMLButtonElement>('[data-dive-go]');if(!el)return;const s=session.state.near;let hidden=!(s&&allowed&&!session.diving&&roomModule);
    if(!hidden&&s){v.set(s.x,WATER_LEVEL+3.2,s.z).project(camera);hidden=v.z< -1||v.z>1;
     if(!hidden){ports.place(el,Math.max(90,Math.min(width-90,(v.x+1)*width/2)),Math.max(90,Math.min(height-160,(1-v.y)*height/2)));
-     const label=session.ready?DIVE_PROMPT:DIVE_REST_PROMPT;if(label!==promptLabel){promptLabel=label;el.textContent=label;el.setAttribute('aria-label',session.ready?DIVE_PROMPT_LABEL:'Catch your breath first: float here a moment');el.dataset.diveGo=session.ready?'dive':'rest';}}}
+     const inv=session.ready&&ports.invite?ports.invite(s):null;/* shared reefs: others down there */
+     const label=session.ready?inv?inv.text:DIVE_PROMPT:DIVE_REST_PROMPT;if(label!==promptLabel){promptLabel=label;el.textContent=label;el.setAttribute('aria-label',session.ready?inv?inv.aria:DIVE_PROMPT_LABEL:'Catch your breath first: float here a moment');el.dataset.diveGo=session.ready?'dive':'rest';}}}
    if(el.hidden!==hidden)ports.hide(el,hidden);promptShown=!hidden;
   },
   get promptShown(){return promptShown;},
@@ -297,6 +303,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
      if(!hidden){ports.place(el,Math.max(90,Math.min(width-90,(v.x+1)*width/2)),Math.max(90,Math.min(height-160,(1-v.y)*height/2)));
       if(findPrompt!==f.id){findPrompt=f.id;el.textContent=f.prompt;el.setAttribute('aria-label',f.aria);el.dataset.diveGo=f.id;}}}
     if(el.hidden!==hidden)ports.hide(el,hidden);promptShown=!hidden;}
+   ports.beforeRender?.(room.scene,room.camera,dt);
    ports.renderer.render(room.scene,room.camera);
   },
   /** The prompt's tap / E: use the find in reach underwater. */

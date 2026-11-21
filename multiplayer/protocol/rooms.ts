@@ -17,7 +17,7 @@ export const RoomCode = {
   /** The Coral Cay Konbini: a separate room (friends in one Konbini never see the other). New rooms use 32..63: old clients read
    *  unknown codes as plain "Busy". */
   KonbiniCay: 32,
-  /** Reserved (Phase 5, not built): 40 + dive spot area (1..7) = 41..47. */
+  /** Shared reefs (Phase 5, built Nov 21 2026): 40 + dive spot area (1..7) = 41..47 (reefRoom / reefArea below). */
   Reef: 40,
 } as const;
 export type RoomCode = (typeof RoomCode)[keyof typeof RoomCode];
@@ -25,6 +25,18 @@ export type RoomCode = (typeof RoomCode)[keyof typeof RoomCode];
 /** A valid room code (5..8, 32..63). */
 export function isRoomCode(c: number): boolean {
   return Number.isInteger(c) && ((c >= RoomCode.Arcade && c <= RoomCode.Konbini) || (c >= 32 && c <= 63));
+}
+
+/** Dive spots have areas 1..REEF_AREAS (lib/town/water/diveSpots.ts DIVE_SPOTS[].area). */
+export const REEF_AREAS = 7;
+/** The room code of a dive spot's reef (41..47), or -1 for an area outside 1..REEF_AREAS. Divers in the same reef share it. */
+export function reefRoom(area: number): number {
+  return Number.isInteger(area) && area >= 1 && area <= REEF_AREAS ? RoomCode.Reef + area : -1;
+}
+/** The dive spot area (1..7) of a reef room code, or -1 when the code is not a reef. */
+export function reefArea(room: number): number {
+  const a = room - RoomCode.Reef;
+  return Number.isInteger(a) && a >= 1 && a <= REEF_AREAS ? a : -1;
 }
 
 const TAU = Math.PI * 2;

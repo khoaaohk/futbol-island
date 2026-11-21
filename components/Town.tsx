@@ -253,7 +253,7 @@ import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RID
 import SwimLessonToast from './SwimLessonToast';
 import RayLessonToast from './RayLessonToast';import ReefHintToast from './ReefHintToast';import HomeScreenTip from './HomeScreenTip';import {createReefHints,reefStore} from '@/lib/town/water/reefDiscovery';
 import DiveHud from './DiveHud';
-import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {divePixelCap,diveRestFrame} from '@/lib/town/water/diveCurrent';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
+import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {createReefParty,reefPromptAria,reefPromptText,reefRoom,type ReefParty} from '@/lib/multiplayer/reefParty';import {divePixelCap,diveRestFrame} from '@/lib/town/water/diveCurrent';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
 import PaintEasel from './PaintEasel';
 import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';import {createGashaponPrompt} from '@/lib/graphics/gashaponPrompt';import GashaponHud from './GashaponHud';import {gashaponPanel,gashaponOpener} from '@/lib/gashapon/gashaponBrowser';// gashapon capsule machines (Nov 8 2026)// Summit Isle Ball Cannon (Oct 14 2026)
 import {createBeachFinds} from '@/lib/graphics/beachFinds';import BeachcombHud from './BeachcombHud';import {islandJobWallet as beachWallet,islandMarket as beachMarket} from '@/lib/town/jobs/islandWallet';// Beachcombing (Oct 14 2026, docs/beachcombing.md)
@@ -296,7 +296,9 @@ import {installHudFocusRule} from '@/lib/town/hudFocus';
 import {installBackCloses,registerBackCloser} from '@/lib/town/backCloses';
 import {typingTarget} from '@/lib/town/typingTarget';import KeepUpCounter from './KeepUpCounter';import {readBallRecord,recordStreak} from '@/lib/konbini/konbiniBall';import {keepUpStep,keepUpLinger} from '@/lib/town/keepUps';// counted keep-ups + the shared best (lib/town/keepUps.ts)
 /** Party door hints on the island: each Konbini, the Museum and the Kit Shop ("2 in the Kit Shop"; docs/multiplayer-rooms-design.md Phases 1, 2 and 4). */
-const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT] as const;
+/** Shared reefs (lib/multiplayer/reefParty.ts): "2 exploring" over each dive flag (the buoy's flag tops out ~2.8 m over the water). */
+const REEF_HINT_Y=3.9,REEF_DOOR_HINTS=DIVE_SPOTS.map(s=>({room:reefRoom(s.area),x:s.surface.x,y:WATER_LEVEL+REEF_HINT_Y,z:s.surface.z}));
+const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT,...REEF_DOOR_HINTS] as const;
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>retryImport(()=>import('./PositionGuide')),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
@@ -1301,7 +1303,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // The reef's going under / coming up (water audit #6): a short soft blend through the zone's own water colour (the room's fog),
     // never brighter than the water (`.water-under.is-reef`, app/globals.css), instead of the bright splash-down flash.
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};
+    // Shared reefs (docs/multiplayer-rooms-design.md Phase 5): divers in the same reef see each other; the layer lives only while under.
+    let reefParty:ReefParty|null=null;const reefLocal={x:0,y:0,z:0,facing:0,speed:0,busy:false,hidden:false},reefInvite={n:-1,world:false,v:{text:'',aria:''}};
+    const endReefParty=()=>{if(party)party.setRoomLayer(null);reefParty?.dispose();reefParty=null;};disposers.add(endReefParty);
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
+      /* Shared reefs: "Dive in: 2 friends exploring" while others are under at this spot (the door hint's cached count; one object per count) */
+      invite:spot=>{const n=party?party.roomCount(reefRoom(spot.area)):0;if(n<=0)return null;const w=partyStore.get().kind==='world';if(n!==reefInvite.n||w!==reefInvite.world){reefInvite.n=n;reefInvite.world=w;reefInvite.v={text:reefPromptText(n,w),aria:reefPromptAria(n,w)};}return reefInvite.v;},
+      beforeRender:(_s,cam,dt)=>{if(reefParty)reefParty.update(dt,performance.now(),cam);},
       /* Seamless Explore: the way out across the edge lands in water deep enough for the duck-dive (else swims up; never land or a pier) */
       water:(x,z)=>water.edgeWaterAt(x,z),
       /* Explore delight (Oct 21 2026): no whale / a still sparkle at heat tier 3+ / Battery saver (reduced motion is added in the runtime);
@@ -1312,8 +1320,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);reefStore.clearHint();/* Oct 25 2026: a waiting reef hint never shows over the reef (the hint tick sleeps while under) *//* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
         if(edge){showUnderTint(spot.theme.water);}/* Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge: no splash or plunge, only the soft blend through the zone's water colour (none with reduced motion: an instant swap) */
         else{ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();}/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
-        waterStore.set({reef:true,reefLesson:waterStore.get().reefLesson+1});wakeLoop();},
-      surfaced:(spot,reason)=>{if(reason==='edge')countDiveExitEdge();else countDiveSurface();music.setDucked(false);waterStore.set({reef:false});if(reason==='leave')return;
+        waterStore.set({reef:true,reefLesson:waterStore.get().reefLesson+1});
+        /* Shared reefs: the friend layer in the dive scene, sending this reef's room pose (the island runtime forwards its beat to it) */
+        endReefParty();const room0=dive.room;if(party&&room0){reefParty=createReefParty({scene:room0.scene,area:spot.area,phone:quality.phone,reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen,
+          local:()=>{const st=dive.session.state;reefLocal.x=st.x;reefLocal.y=st.y-1.15;reefLocal.z=st.z;reefLocal.facing=st.yaw;reefLocal.speed=Math.hypot(st.vx,st.vz);reefLocal.hidden=document.hidden;return reefLocal;}});if(reefParty)party.setRoomLayer(reefParty);}
+        wakeLoop();},
+      surfaced:(spot,reason)=>{if(reason==='edge')countDiveExitEdge();else countDiveSurface();music.setDucked(false);endReefParty();/* shared reefs: the reef layer ends (the next island pose warps back) */waterStore.set({reef:false});if(reason==='leave')return;
         // Seamless Explore (diveEdge.ts): swum out across the zone's edge. The island wakes with the diver just outside the blob on the
         // bearing they left by, still under (the duck-dive goes on: tint, fog, bubbles, the breath ring, Q to come up), heading on outward;
         // the follow camera moves with them (no swoop across the zone). Too shallow there: they come up and swim.

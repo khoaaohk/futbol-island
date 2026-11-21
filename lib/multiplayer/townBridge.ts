@@ -2,7 +2,7 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Activity, BallState, Cap, Mode, PoseFlag, RoomCode, S, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, BallState, Cap, Mode, PoseFlag, RoomCode, S, Zone, presenceOf, reefArea, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { ballTouches, byteToDir, createKnockGate, dirToByte, fastBall, knockable } from '../town/ballKnock';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
@@ -13,6 +13,7 @@ import type { LocalBump } from '../graphics/friendBump';
 import { beginSeatFrame, clearRemoteSeats, seatFriend } from '../town/stadiumSeatShare';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
 import { displayName, partyStore } from './store';
+import { reefHintText } from './reefParty';
 import { isHiddenStranger, onHiddenStrangers } from './strangers';
 import * as T3 from 'three';
 
@@ -71,7 +72,12 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
    *  cb gets the ball spot and its estimated velocity (from the interpolated samples). No allocation. */
   eachFastFriendBall(cb: (x: number, y: number, z: number, vx: number, vz: number) => void): void;
   /** Friends tumbling right now after a ball knock-over (tests / headless checks). */
-  readonly tumbling: number }
+  readonly tumbling: number;
+  /** Shared reefs: while a room layer lives in this page (the dive room's reefParty.ts), the connection's beat and pagehide send ITS pose
+   *  instead of the island's (the island loop is frozen under the water). null = back on the island: the next island pose is a Warp. */
+  setRoomLayer(layer: { sendNow(): void } | null): void;
+  /** Others counted at room `room`'s door hint right now (the dive prompt's "Dive in: 2 friends exploring"); 0 without a hint there. */
+  roomCount(room: number): number }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -109,6 +115,7 @@ function hintTexture(text: string): T3.CanvasTexture {
 /** The door hint's words: "3 in the Konbini" (pure, exported for tests). */
 export function doorHintText(n: number, room: number): string {
   if (room === RoomCode.Arcade) return arcadeDoorHintText(n); // "2 in the Arcade" (the building's sign name)
+  if (reefArea(room) > 0) return reefHintText(n); // "2 exploring" over a dive flag (shared reefs)
   return n > 0 ? `${n} ${DOOR_WORDS[room] ?? roomText(room).replace(/^In /, 'in ')}` : '';
 }
 /** Door hints that name the building as its sign does ("2 in the Museum"; the party list keeps "In the museum"). */
@@ -231,8 +238,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     if (entryWarpDue(ew, nowMs)) body[7] |= 1;
     return body;
   }
+  let roomLayer: { sendNow(): void } | null = null; // shared reefs: the dive room's layer owns the pose meanwhile
   function sendLocal(nowMs: number) {
     if (conn.status !== 'live') return;
+    if (roomLayer) { roomLayer.sendNow(); return; }
     conn.sendPose(fill(nowMs, ctx.local()), nowMs);
   }
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -251,6 +260,13 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
     get tumbling() { return avatars.tumbling; },
+    setRoomLayer(layer) {
+      if (layer === roomLayer) return;
+      const back = roomLayer !== null && layer === null;
+      roomLayer = layer;
+      if (back) { armEntryWarp(ew); jumpX = jumpZ = NaN; } // reef -> island is a jump: Warp (+ the retry), as after a room page
+    },
+    roomCount(room) { for (const h of hints) if (h.d.room === room) return h.n; return 0; },
     debugEmotes: () => avatars.debugEmotes(),
     duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
     endDuet: (id) => avatars.endDuet(id),

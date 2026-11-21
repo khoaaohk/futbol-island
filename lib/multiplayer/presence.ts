@@ -1,7 +1,7 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
 import { MARKET_STAND } from '../town/fishing/fishSpots';
-import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, SEAT_SPEED_Q, WORLD_BOUNDS, Zone, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, SEAT_SPEED_Q, WORLD_BOUNDS, Zone, reefArea, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */
 export interface TownFlags {
@@ -148,6 +148,7 @@ export function defineStationText(code: number, text: string, icon: string): voi
 /** The Activity a room code reads as in the party list ("In the Konbini"): both Konbinis are the Konbini; unknown rooms: None. */
 export function roomActivity(room: number): number {
   if (room === RoomCode.KonbiniCay) return Activity.Konbini;
+  if (reefArea(room) > 0) return Activity.Reef; // shared reefs 41..47 read "Exploring the reef"
   return room >= Activity.Arcade && room <= Activity.Konbini ? room : Activity.None;
 }
 /** "In the Konbini" / "In the museum" / ... for a room code ('' for an island pose, room -1). */
@@ -232,9 +233,10 @@ export type RoomLocal = { x: number; y: number; z: number; facing: number; speed
 export type RoomPoseState = { warp: EntryWarp };
 export function roomPoseState(): RoomPoseState { return { warp: entryWarp() }; }
 /** The room pose the local player sends (pure). Busy in a room = mode Busy at the room-local spot (no frozen outdoor anchor: the spot
- *  IS the anchor); the speed byte is the room code in every case; zone Indoors; y in the reserved band. */
+ *  IS the anchor); the speed byte is the room code in every case; zone Indoors; y in the reserved band. A shared reef (41..47) sends
+ *  Mode.Dive whatever the speed (receivers take the stroke from the position delta, roomParty.ts adapt). */
 export function fillRoomBody(st: RoomPoseState, l: RoomLocal, room: number, body: PoseBody, nowMs: number): PoseBody {
-  const mode = l.busy ? Mode.Busy : l.speed > 2.6 ? Mode.Run : l.speed > 0.15 ? Mode.Walk : Mode.Idle;
+  const mode = l.busy ? Mode.Busy : reefArea(room) > 0 ? Mode.Dive : l.speed > 2.6 ? Mode.Run : l.speed > 0.15 ? Mode.Walk : Mode.Idle;
   const warp = entryWarpDue(st.warp, nowMs);
   return roomBody(body, room, l.x, l.y, l.z, l.facing, mode, (warp ? 1 : 0) | (l.hidden ? 2 : 0));
 }
