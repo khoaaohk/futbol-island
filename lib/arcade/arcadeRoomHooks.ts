@@ -2,7 +2,7 @@
 // The hub registers itself here (arcadeRoomScene.ts) and the page reports its busy flags (ArcadeRoom.tsx). Until a layer attaches
 // every call is a no-op that returns false: no behaviour change, no allocation, no timers. Kept free of three.js imports so the
 // pure tests can load it; the host passes its own objects through as `unknown`-typed handles the layer casts.
-import type {ArcadeCabinetId} from './arcadeCatalog';
+import {arcadeUnplaced,type ArcadeCabinetId,type ArcadePlayableId} from './arcadeCatalog';
 
 export type ArcadeHubPose={x:number;z:number;yaw:number;moving:boolean;speed:number};
 export interface ArcadeRoomHost{
@@ -53,7 +53,9 @@ export function arcadeLayerPushOut(p:{x:number;z:number},r:number):boolean{retur
 export function arcadeLayerDebug():unknown{return layer?.debug?.()??null;}
 export function arcadeLayerMeasure(n?:number):unknown{return layer?.measure?.(n)??null;}
 /** Page side: ArcadeRoom.tsx reports game / list / hall. */
-export function setArcadeBusy(game:ArcadeCabinetId|null,list:boolean,hall:boolean){
+const UNPLACED:ReadonlySet<string>=new Set(arcadeUnplaced.map(c=>c.id));
+export function setArcadeBusy(playing:ArcadePlayableId|null,list:boolean,hall:boolean){
+ const game=playing&&!UNPLACED.has(playing)?playing as ArcadeCabinetId:null;// Nov 21 2026: a game without a machine (arcadeCatalog.ts arcadeUnplaced) has no spot in the room to show a friend
  if(busyFlags.game===game&&busyFlags.list===list&&busyFlags.hall===hall)return;
  busyFlags.game=game;busyFlags.list=list;busyFlags.hall=hall;layer?.busy?.(busyFlags);
 }

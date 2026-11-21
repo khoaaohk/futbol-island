@@ -54,6 +54,7 @@ import {ISLAND_SQUARE_KONBINI} from './vendingPlaces';
 import {CAY_KONBINI} from './coralCay';
 import {STADIUM_SHOP_X,STADIUM_SHOP_WALL_Z,STADIUM_SHOP_POOL} from './stadiumShops';
 import { Obstacle, trunkCollider } from './simulation';
+import {createNeonFlicker,NEON_FLICKER_DISTANCE} from './arcadeNeonFlicker';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
 /** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
@@ -112,18 +113,21 @@ export function* buildTownSteps(scene: T.Scene) {
       [[[.36,0],[0,0],[0,H],[.36,H],...arc(.36,H/2,.66,H/2,Math.PI/2,-Math.PI/2,14).slice(1)]],
       [[[W-.05,H],[0,H],[0,0],[W-.05,0]],[[0,H/2],[W-.25,H/2]]],
     ],word=[0,1,2,0,3,4],total=word.length*W+(word.length-1)*gap;
-    const strokes:{pts:P[];color:string}[]=[];
+    const strokes:{pts:P[];color:string;letter:number}[]=[];
     // k sizes the letters to the neighbouring STORE sign's lettering (~0.9 m caps).
-    const k=.68;word.forEach((glyph,i)=>{const ox=-total/2+i*(W+gap),oy=-H/2+.04;for(const line of letters[glyph])strokes.push({pts:line.map(([x,y])=>[(x+ox)*k,(y+oy)*k] as P),color:'#ff4fb4'});});
+    const k=.68;word.forEach((glyph,i)=>{const ox=-total/2+i*(W+gap),oy=-H/2+.04;for(const line of letters[glyph])strokes.push({pts:line.map(([x,y])=>[(x+ox)*k,(y+oy)*k] as P),color:'#ff4fb4',letter:i});});
     const bw=7.5,bh=1.56,r=.22;
-    strokes.push({pts:[...arc(bw/2-r,bh/2-r,r,r,0,Math.PI/2,5),...arc(-bw/2+r,bh/2-r,r,r,Math.PI/2,Math.PI,5),...arc(-bw/2+r,-bh/2+r,r,r,Math.PI,Math.PI*1.5,5),...arc(bw/2-r,-bh/2+r,r,r,Math.PI*1.5,Math.PI*2,5),[bw/2,bh/2-r]],color:'#3fe6ff'});
+    strokes.push({pts:[...arc(bw/2-r,bh/2-r,r,r,0,Math.PI/2,5),...arc(-bw/2+r,bh/2-r,r,r,Math.PI/2,Math.PI,5),...arc(-bw/2+r,-bh/2+r,r,r,Math.PI,Math.PI*1.5,5),...arc(bw/2-r,-bh/2+r,r,r,Math.PI*1.5,Math.PI*2,5),[bw/2,bh/2-r]],color:'#3fe6ff',letter:-1});
+    const ranges:{start:number;count:number}[]=[];
     const tube=(radius:number,colored:boolean)=>{
       const parts:T.BufferGeometry[]=[],up=new T.Vector3(0,1,0),c=new T.Color();
+      // Flicker (arcadeNeonFlicker.ts): each letter's vertex slice in the merged buffer (strokes are in word order, so contiguous).
+      let vertex=0;const add=(g:T.BufferGeometry,letter:number)=>{const n=g.getAttribute('position').count;if(colored&&letter>=0){const r=ranges[letter]??(ranges[letter]={start:vertex,count:0});r.count=vertex+n-r.start;}vertex+=n;parts.push(g);};
       const paint=(g:T.BufferGeometry,color:string)=>{if(!colored)return g;c.set(color);const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
-      for(const {pts,color} of strokes)pts.forEach(([x,y],i)=>{
-        parts.push(paint(new T.SphereGeometry(radius,8,6).translate(x,y,0),color));
+      for(const {pts,color,letter} of strokes)pts.forEach(([x,y],i)=>{
+        add(paint(new T.SphereGeometry(radius,8,6).translate(x,y,0),color),letter);
         if(i===0)return;const [px,py]=pts[i-1],a=new T.Vector3(px,py,0),b=new T.Vector3(x,y,0),len=a.distanceTo(b);if(len<1e-3)return;
-        const g=new T.CylinderGeometry(radius,radius,len,8,1,true);g.applyQuaternion(new T.Quaternion().setFromUnitVectors(up,b.clone().sub(a).normalize()));g.translate((px+x)/2,(py+y)/2,0);parts.push(paint(g,color));
+        const g=new T.CylinderGeometry(radius,radius,len,8,1,true);g.applyQuaternion(new T.Quaternion().setFromUnitVectors(up,b.clone().sub(a).normalize()));g.translate((px+x)/2,(py+y)/2,0);add(paint(g,color),letter);
       });
       for(const g of parts)g.deleteAttribute('uv');
       const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;
@@ -141,9 +145,26 @@ export function* buildTownSteps(scene: T.Scene) {
     const glowTexture=new T.CanvasTexture(canvas);glowTexture.colorSpace=T.SRGBColorSpace;textures.push(glowTexture);
     const glow=new T.MeshBasicMaterial({map:glowTexture,transparent:true,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false,opacity:.8});materials.push(glow);
     const halo=new T.Mesh(new T.PlaneGeometry(cw,ch),glow);halo.castShadow=false;halo.receiveShadow=false;halo.renderOrder=1;halo.name='arcade-neon-halo';
-    return {tubes,backing,halo,glow};
+    return {tubes,backing,halo,glow,glass,ranges};
   }
   let arcadeNeonGlow:T.MeshBasicMaterial|null=null;
+  // Arcade neon flicker (Nov 21 2026, lib/town/arcadeNeonFlicker.ts; docs/performance-guide.md "Arcade neon flicker"): a step
+  // scheduler drives values the sign already has (tube material colour, halo opacity, the letters' slice of the tube colour buffer).
+  // Nothing runs between its scheduled changes; it holds steady when far, off screen, under reduced motion or tiers 3-4.
+  const arcadeFlicker=createNeonFlicker(0x4a5c),arcadeNeonSphere=new T.Sphere(new T.Vector3(),5),arcadeNeonFrustum=new T.Frustum(),arcadeNeonView=new T.Matrix4();
+  let arcadeNeonGlass:T.MeshBasicMaterial|null=null,arcadeNeonRanges:{start:number;count:number}[]=[],arcadeNeonTubes:T.Mesh|null=null,arcadeNeonBase:Float32Array|null=null,arcadeNeonMode='day',arcadeNeonHaloBase=.8;
+  function applyArcadeNeon(letters:boolean){
+    const f=arcadeFlicker,n=f.letters.length;let sum=0,min=1;for(let i=0;i<n;i++){sum+=f.letters[i];min=Math.min(min,f.letters[i]);}
+    if(arcadeNeonGlow)arcadeNeonGlow.opacity=arcadeNeonHaloBase*f.breath*(.5+.25*min+.25*sum/n);// the halo sags with a dipped letter so the dip reads through it
+    if(arcadeNeonGlass)arcadeNeonGlass.color.setScalar(f.breath);
+    const colour=arcadeNeonTubes?.geometry.getAttribute('color') as T.BufferAttribute|undefined;
+    if(!letters||!f.dirty||!colour||arcadeNeonRanges.length<n)return;
+    const a=colour.array as Float32Array;
+    if(!arcadeNeonBase){arcadeNeonBase=new Float32Array(n*3);for(let i=0;i<n;i++)arcadeNeonBase.set(a.subarray(arcadeNeonRanges[i].start*3,arcadeNeonRanges[i].start*3+3),i*3);}
+    for(let i=0;i<n;i++){if(!(f.dirty&1<<i))continue;const {start,count}=arcadeNeonRanges[i],k=f.letters[i],r=arcadeNeonBase[i*3]*k,g=arcadeNeonBase[i*3+1]*k,b=arcadeNeonBase[i*3+2]*k;
+      for(let v=start*3,end=(start+count)*3;v<end;v+=3){a[v]=r;a[v+1]=g;a[v+2]=b;}colour.addUpdateRange(start*3,count*3);}
+    colour.needsUpdate=true;
+  }
 
   // A single ocean surrounds the curved foundation on every side.
   const waterRipples=createWaterRipples();textures.push(waterRipples.texture);
@@ -899,7 +920,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // tube mesh + one additive halo plane, drawn once; no lights, no loop.
   for(const dx of [-3,3])box(.16,2,.18,'#385a4e',78+sx+dx,7.2,-.2+sz);
   box(8.3,1.95,.34,'#1c2530',78+sx,8.3,.1+sz);box(8.6,.12,.42,'#385a4e',78+sx,9.3,.1+sz);box(8.6,.12,.42,'#385a4e',78+sx,7.3,.1+sz);
-  const neon=buildArcadeNeon();arcadeNeonGlow=neon.glow;neon.tubes.position.set(78+sx,8.3,.36+sz);neon.backing.position.set(78+sx,8.3,.3+sz);neon.halo.position.set(78+sx,8.3,.28+sz);
+  const neon=buildArcadeNeon();arcadeNeonGlow=neon.glow;arcadeNeonGlass=neon.glass;arcadeNeonRanges=neon.ranges;neon.tubes.position.set(78+sx,8.3,.36+sz);neon.backing.position.set(78+sx,8.3,.3+sz);neon.halo.position.set(78+sx,8.3,.28+sz);
   town.add(neon.backing,neon.halo,neon.tubes);
   box(4.1,3.35,.22,'#eddfbb',78+sx,1.72,.25+sz);box(3.4,2.94,.08,'#274c48',78+sx,1.5,.39+sz);box(.1,2.9,.1,'#d7c49e',78+sx,1.5,.47+sz);
   for(const dx of [-.3,.3])box(.07,.48,.1,'#f8d9a2',78+sx+dx,1.35,.56+sz);
@@ -1759,7 +1780,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const merged=mergeGeometries(geometries);
     // Fishing backdrop (lib/graphics/fishingBackdrop.ts): where each source piece starts in the merged buffer and its prop kind, so the
     // low-detail skyline can drop whole small props (every lamp, bench, sign) instead of half of one. Two small arrays per chunk.
-    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
+    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
     if(++merges%12===0)yield;
   }
@@ -1889,6 +1910,12 @@ export function* buildTownSteps(scene: T.Scene) {
   const westRegion=new T.Box3(new T.Vector3(-420,-2,-330),new T.Vector3(-100,36,300));let westShown=true;
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;for(const m of isleChunks)m.visible=sceneryShown&&isleShown;for(const m of westChunks)m.visible=sceneryShown&&westShown;for(const m of stadiumRoofs.roofs)m.visible=sceneryShown&&westShown;stadiumLights.lamps.visible=sceneryShown&&westShown;};
   const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion),west=sharks.frustum.intersectsBox(westRegion);if(show!==cayShown||isle!==isleShown||west!==westShown){cayShown=show;isleShown=isle;westShown=west;applyCayVisibility();}};
-  return {signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?1.25:dusk?.22:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?2.3:dusk?.5:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
-    updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();stadiumLights.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}plazaFlags.mesh.removeFromParent();plazaFlags.mesh.geometry.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
+  return {signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?1.25:dusk?.22:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?2.3:dusk?.5:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;arcadeNeonMode=mode;arcadeNeonHaloBase=night?1:dusk?.9:.8;applyArcadeNeon(false);},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+    updateArcade:(now:number,steady:boolean,camera:T.Camera)=>{
+      if(!arcadeFlicker.due(now))return;
+      let on=!steady&&!!arcadeNeonTubes;
+      if(on&&camera.position.distanceTo(arcadeNeonSphere.center)>NEON_FLICKER_DISTANCE)on=false;
+      if(on){arcadeNeonView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);arcadeNeonFrustum.setFromProjectionMatrix(arcadeNeonView);on=arcadeNeonFrustum.intersectsSphere(arcadeNeonSphere);}
+      if(arcadeFlicker.step(now,on,arcadeNeonMode))applyArcadeNeon(true);
+    },get arcadeNeon(){return arcadeFlicker;},dispose:()=>{sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();stadiumLights.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}plazaFlags.mesh.removeFromParent();plazaFlags.mesh.geometry.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

@@ -53,7 +53,7 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
 {// Nov 17 2026 (owner: every game side by side in the back, the gashapon pair in the middle): the row helper keeps up to 10 cabinets
  // inside the room, and with the hub's aisleGap no visitor ever walks through the centre pair, even walking out and back in (party).
  const C=load(path.join(ROOT,'lib/arcade/arcadeCatalog.ts')),{GASHAPON_MACHINES,GASHA_SIZE}=load(path.join(ROOT,'lib/gashapon/machines.ts'));
- const row=C.arcadeHubCabinets().filter(c=>c.id!==C.ARCADE_TABLE_ID);assert.equal(JSON.stringify(row.map(c=>c.id).sort()),JSON.stringify([...C.ARCADE_ROW].sort()),'every upright cabinet is in the row');
+ const row=C.arcadeHubCabinets().filter(c=>c.id!==C.ARCADE_TABLE_ID&&!C.ARCADE_WALL_IDS.includes(c.id));/* Nov 21 2026: the two wall machines are checked below */assert.equal(JSON.stringify(row.map(c=>c.id).sort()),JSON.stringify([...C.ARCADE_ROW].sort()),'every upright cabinet is in the row');
  assert(row.every(c=>c.z===C.ARCADE_ROW_Z&&c.yaw===0),'one straight row facing the door');const xs=C.ARCADE_ROW.map(id=>row.find(c=>c.id===id).x);
  for(let i=1;i<xs.length;i++)assert(Math.abs(xs[i]-xs[i-1]-C.arcadeRowPitch())<.011,'evenly spaced, west to east in ARCADE_ROW order');assert(Math.abs(xs[0]+xs.at(-1))<.011,'centred on x 0');
  assert.equal(C.arcadeRowPitch(6),3);for(const n of [9,10]){const p=C.arcadeRowPitch(n);assert((n-1)/2*p<=11+1e-9&&p>1.9+.5,n+' cabinets fit inside x ±11 with a gap between bodies');}
@@ -73,5 +73,22 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
   assert(checked>20&&blockedBefore>0,`visitors at play were checked (${checked}) and the old centre spot was blocked (${blockedBefore})`);crowd.dispose();
   const scn=fs.readFileSync(path.join(ROOT,'lib/arcade/arcadeRoomScene.ts'),'utf8');assert(/arcadeFreeSpot\(walkSpot\.x,walkSpot\.z,walkSpot\.lx,walkSpot\.lz,people,target\)/.test(scn)&&/walkStall>\.6/.test(scn)&&/arcadeDetour\(x,z,target,people,walkDetours<3\)/.test(scn),'the room walk uses the free spot, steps round a visitor who stopped in the lane, and gives up a blocked waypoint');
   {const {arcadeDetour}=load(path.join(ROOT,'lib/arcade/arcadeBodyCollision.ts')),v={x:0,z:-1},d=arcadeDetour(0,0,{x:0,z:-5},[v]);assert(d&&Math.hypot(d.x-v.x,d.z-v.z)>=ARCADE_BODY_SPACING&&d.z<0,'a visitor standing in the lane gets a waypoint round it');assert.equal(arcadeDetour(0,0,{x:0,z:-5},[{x:0,z:1}]),null,'a body behind the walker is not in the way');}}
+ // Nov 21 2026 (owner: "go ahead and push everything else"): the east wall pair, Keepy-Uppy Beat and Hold the Line, upright cabinets
+ // turned -60 degrees between the prize counter and the vending machine. Their bodies (1.9 m wide, 0.63 m behind to 1.32 m in front of
+ // the centre, the console included) must clear the counter, its shelf and the vending machine (the colliders in arcadeRoomProps.ts),
+ // each other and the back row, and each walk-up spot must be on the floor and clear of every prop.
+ {const rect=(cx,cz,hx,lo,hi,yaw)=>{const ax=[Math.cos(yaw),-Math.sin(yaw)],az=[Math.sin(yaw),Math.cos(yaw)];return [[-hx,lo],[hx,lo],[hx,hi],[-hx,hi]].map(([u,v])=>[cx+u*ax[0]+v*az[0],cz+u*ax[1]+v*az[1]]);};
+  const gap=(P,Q)=>{let best=-Infinity;for(const S of [P,Q])for(let i=0;i<S.length;i++){const p=S[i],q=S[(i+1)%S.length],n=[q[1]-p[1],p[0]-q[0]],l=Math.hypot(...n),pr=X=>X.map(x=>(x[0]*n[0]+x[1]*n[1])/l),A=pr(P),B=pr(Q);best=Math.max(best,Math.min(...B)-Math.max(...A),Math.min(...A)-Math.max(...B));}return best;};
+  const P=-Math.PI/3,prize=(x,z)=>{const lx=x-10,lz=z+9.6;return [13+lx*Math.cos(P)+lz*Math.sin(P),-2-lx*Math.sin(P)+lz*Math.cos(P)];};/* arcadeRoomProps.ts place(10,-9.6,13,-2,-PI/3) */
+  const props={counter:rect(...prize(10,-7.9),2.75,-.75,.75,P),shelf:rect(...prize(10,-10.6),2.85,-.55,.55,P),vending:rect(12.6,9.6,1.374,-1.428,1.428,0)/* Nov 21 2026: moved from 12,8 */};
+  const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id));assert.equal(wall.map(c=>c.id).join(),'keepyuppy,holdtheline');
+  const bodies=wall.map(c=>rect(c.x,c.z,.95,-.63,1.32,c.yaw)),rowEast=row.reduce((m,c)=>c.x>m.x?c:m);
+  wall.forEach((c,i)=>{assert(c.x>10&&Math.abs(c.yaw+Math.PI/3)<1e-9,c.id+': on the east wall, turned like the counter');
+   for(const [k,o] of Object.entries(props))assert(gap(bodies[i],o)>=.2,`${c.id} clears the ${k} (${gap(bodies[i],o).toFixed(2)} m)`);
+   assert(gap(bodies[i],rect(rowEast.x,rowEast.z,.95,-.63,3.1,0))>=1,c.id+' is far from the back row and its walk-up spot');
+   const sx=c.x+Math.sin(c.yaw)*1.8,sz=c.z+Math.cos(c.yaw)*1.8,spot=rect(sx,sz,.3,-.3,.3,0);assert(sx<13.7&&sx>-13.7&&sz<11.1&&sz>-10.7,c.id+': walk-up spot on the floor');
+   for(const [k,o] of Object.entries(props))assert(gap(spot,o)>=.2,`${c.id}: walk-up spot clear of the ${k}`);bodies.forEach((b,j)=>assert(gap(spot,b)>=(j===i?.05:.3),c.id+': walk-up spot clear of the cabinet bodies'));});
+  assert(gap(bodies[0],bodies[1])>=.3,'the two wall cabinets do not touch');
+  console.log('ARCADE_EAST_WALL_PASS',JSON.stringify(wall.map((c,i)=>({id:c.id,x:c.x,z:c.z,clear:+Math.min(...Object.values(props).map(o=>gap(bodies[i],o))).toFixed(2)}))));}
  console.log('ARCADE_BACK_ROW_PASS',JSON.stringify({pitch:[6,9,10].map(n=>+C.arcadeRowPitch(n).toFixed(2)),xs}));
 }

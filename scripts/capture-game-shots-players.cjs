@@ -1,7 +1,47 @@
 // Scripted players for scripts/capture-game-shots.cjs: per game, the start button, the game state to log next to each frame, and
 // a loop that plays (real touches through CDP) until H.stop.
 const airState=()=>{const k=window.__airhockey,g=k&&k.game,s=g&&g.state;return s?{phase:k.phase,p:s.phase,px:+s.px.toFixed(1),py:+s.py.toFixed(1),v:+Math.hypot(s.pvx,s.pvy).toFixed(0),sx:+s.sx[0].toFixed(0),sy:+s.sy[0].toFixed(0),goals:[...s.goals],level:s.level,heat:+s.heat.toFixed(2),rally:s.rally,smash:+(s.t-s.smashT).toFixed(2),bank:s.bank}:null;};
+/** Keepy-Uppy Beat (Nov 21 2026): a juggler who plays every ball on the beat with real touches, timed on the game's own song clock
+ *  (as scripts/check-keepyuppy-browser.cjs does): taps, swipes for the swipe tricks, holds for the Neck Stall. It taps through the
+ *  track card and Play again. Seed the save with --ls (every track open, every lesson seen, timing set) and pick a track with --pre. */
+const kuState=()=>{const h=window.__keepyuppy,g=h&&h.game,s=g&&g.state;return s?{ui:h.phase,mode:g.mode,track:g.track.id,t:+h.time.toFixed(2),score:s.score,combo:s.combo,lives:s.lives,next:(g.next()||{}).trick||''}:{ui:h&&h.phase};};
+const keepyuppy={start:'[data-keepyuppy-play]',meta:kuState,async play(H){const {page,cdp,wait}=H;let last=-1,id=0;
+ const touch=(type,x,y,i)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,id:i}]});
+ const until=async at=>{const d=at-Date.now();if(d>4)await wait(d-3);while(Date.now()<at);};
+ while(!H.stop){const t0=Date.now(),s=await page.evaluate(()=>{const h=window.__keepyuppy,g=h&&h.game;if(!h||!g||h.phase!=='playing'||!h.loop)return null;const L=h.view.layout,r=h.stage,n=g.chart.notes.filter(x=>x.st===0)[0];
+   return {time:h.time,n:n&&{i:n.i,t:n.t,tEnd:n.tEnd,lane:n.lane,kind:n.kind,dir:n.dir},x:r.left,y:r.top+L.padTop+L.padH*.45,w:L.laneW};}),t1=Date.now();
+  if(!s){const b=page.locator('[data-keepyuppy-go],[data-keepyuppy-again]').first();if(await b.isVisible().catch(()=>false)){await wait(900);await b.tap().catch(()=>{});}await wait(150);continue;}
+  const n=s.n;if(!n||n.i<=last){await wait(40);continue;}
+  const at=(t0+t1)/2+(n.t-s.time)*1000-8;if(at-Date.now()>380){await wait(Math.min(at-Date.now()-250,400));continue;}
+  last=n.i;const x=s.x+(n.lane+.5)*s.w,y=s.y,k=++id;await until(at);await touch('touchStart',x,y,k);
+  if(n.kind==='swipe'){const dx=n.dir==='side'?(n.lane===0?34:-34):n.dir==='up'?0:26,dy=n.dir==='side'?0:n.dir==='up'?-40:-26;await wait(24);await touch('touchMove',x+dx/2,y+dy/2,k);await wait(24);await touch('touchMove',x+dx,y+dy,k);await wait(24);}
+  else if(n.kind==='hold')await until(at+(n.tEnd-n.t)*1000+50);else await wait(34);await touch('touchEnd');}}};
+/** Hold the Line (Nov 21 2026): a back-line reader who answers what a player can see with real touches, the reader of
+ *  scripts/check-holdtheline-browser.cjs: drag the line up before a through ball or a ball to feet (OFFSIDE), drop for a long ball,
+ *  slide across when the ball is switched wide, tap a defender to press a heavy touch or a passer who waits. Taps through the team
+ *  card and "Next match". Seed the save with --ls (e.g. {"fi2-holdtheline-v1":"{\"v\":1,\"intro\":true,...}"}) to skip the guided step
+ *  or to open the Island Premier (night) matches. */
+const hlState=()=>{const h=window.__holdtheline,g=h&&h.game,s=g&&g.state;return s?{ui:h.phase,phase:s.phase,stage:s.stage,wave:s.wave,res:s.res&&s.res.kind,press:!!s.press,goals:s.goals,stops:s.stops,score:s.score,team:g.team.id,over:s.over}:{ui:h&&h.phase};};
+const holdtheline={start:'[data-holdtheline-play]',meta:hlState,async play(H){const {page,cdp,wait}=H;let wave=-1,seen='';
+ const touch=(type,p)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:p?[{x:p[0],y:p[1],id:1}]:[]});
+ const gesture=async pts=>{await touch('touchStart',pts[0]);for(const p of pts.slice(1)){await wait(12);await touch('touchMove',p);}await wait(12);await touch('touchEnd');};
+ const drag=async(R,dx,dy)=>{const x=R.x+R.w/2,y=R.y+R.h*.8;await gesture([[x,y],[x+dx*.2,y+dy*.2],[x+dx*.6,y+dy*.6],[x+dx,y+dy]]);};
+ const tapAt=async(x,y)=>{await touch('touchStart',[x,y]);await wait(30);await touch('touchEnd');};
+ const read=()=>page.evaluate(()=>{const h=window.__holdtheline,g=h&&h.game;if(!g||h.phase!=='playing'||g.state.phase==='tip')return null;const s=g.state,L=g.look(),r=h.stage,near=g.nearest(),d=s.defs[near],p=h.view.project(d.x,d.y),gn=h.view.gain(s.lineY);
+  return {phase:s.phase,over:s.over,wave:s.wave,wantY:s.wantY,wantX:s.wantX,press:!!s.press,stage:s.stage,L,rect:{x:r.left,y:r.top,w:r.width,h:r.height},def:{x:r.left+p.x,y:r.top+p.y-p.s*1.4},gain:gn};});
+ while(!H.stop){const s=await read().catch(()=>null);
+  if(!s||s.over){const b=page.locator('[data-holdtheline-ack],[data-hs-skip],[data-holdtheline-next],[data-holdtheline-again]').first();if(await b.isVisible().catch(()=>false)){await wait(1200);await b.tap().catch(()=>{});wave=-1;}await wait(200);continue;}
+  if(s.wave!==wave){wave=s.wave;seen='';}const L=s.L;
+  if(L.play){const tag=L.tell?'tell:'+L.tell.kind:L.wide?'wide:'+L.wide:L.heavy?'heavy':L.waiting?'waiting':L.deepPasser?'deep':'';
+   if(tag&&tag!==seen){seen=tag;const R=s.rect;
+    if(L.tell&&(L.tell.kind==='thru'||L.tell.kind==='feet'))await drag(R,0,-2.8*s.gain.y/1.25);
+    else if(L.tell&&L.tell.kind==='long'||(!L.tell&&L.deepPasser))await drag(R,0,Math.max(0,s.wantY-15.5)*s.gain.y/1.25);
+    else if(L.wide)await drag(R,(L.wide*5-s.wantX)*s.gain.x/1.25,0);
+    else if(L.heavy||L.waiting||(L.tell&&L.tell.kind==='shot'))await tapAt(s.def.x,s.def.y);
+    continue;}}
+  await wait(22);}}};
 module.exports={
+ keepyuppy,holdtheline,
  airhockey:{start:'[data-air-play]',meta:airState,async play(H){const {page,cdp,wait}=H;
   await page.waitForFunction(()=>window.__airhockey&&window.__airhockey.phase==='playing',null,{timeout:10000});
   const L=await page.evaluate(()=>{const k=window.__airhockey;const r=document.querySelector('[data-air-stage]').getBoundingClientRect();return {...k.layout,left:r.left,top:r.top};});

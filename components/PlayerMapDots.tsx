@@ -36,9 +36,11 @@ function PlayerMapDots({live,me}:{live:boolean;me?:{x:number;z:number}}){
  if(!dots.length)return null;
  return <g className="map-player-dots" data-player-dots="" pointerEvents="none" aria-hidden="true">{dots.map(d=>{const b=playerBadge(d.n);
   return <g key={d.key} data-player-dot={d.n} transform={`translate(${d.x} ${d.z})`}>
-   <circle r="13" fill="#fff7db" opacity=".28"/>
-   <circle r="5.5" fill="#fff7db" stroke="#294f43" strokeWidth="1.6" opacity=".92"/>
-   {b&&<g transform="translate(7 -7)"><rect x={b.length>1?-7.5:-5.5} y="-5.5" width={b.length>1?15:11} height="11" rx="5.5" fill="#294f43"/><text y="3.4" textAnchor="middle" fill="#fff7db" fontSize="8.5" fontWeight="900" style={{fontFamily:'Arial,Helvetica,sans-serif'}}>{b}</text></g>}
+   {/* Nov 21 2026 (owner: "make the other players indicator not a white color, more visible on the map"): violet stands apart
+       from the teal sea, the sand, the green land, your pink marker and the friends' gold dots */}
+   <circle r="13" fill="#7a4fe0" opacity=".3"/>
+   <circle r="6.5" fill="#7a4fe0" stroke="#ffffff" strokeWidth="2"/>
+   {b&&<g transform="translate(7 -7)"><rect x={b.length>1?-7.5:-5.5} y="-5.5" width={b.length>1?15:11} height="11" rx="5.5" fill="#4b2a9e"/><text y="3.4" textAnchor="middle" fill="#ffffff" fontSize="8.5" fontWeight="900" style={{fontFamily:'Arial,Helvetica,sans-serif'}}>{b}</text></g>}
   </g>;})}</g>;
 }
 export default memo(PlayerMapDots);

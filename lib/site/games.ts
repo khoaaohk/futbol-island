@@ -1,6 +1,6 @@
 import {pageModified} from './lastmod';
 import type {Faq} from './safety';
-import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';
+import {ARCADE_GAME_COUNT,arcadeCabinets} from '../arcade/arcadeCatalog';
 import {NumberWord,numberWord} from '../numberWord';
 import {gameStills,HERO_CLIP,islandStills} from './gameMedia';
 import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
@@ -37,7 +37,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -51,7 +51,11 @@ const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-ter
 const free=(name:string,coins:boolean):Faq=>({q:`Is ${name} free?`,a:`Yes. There is nothing to buy, no advert and no account to create. ${coins?COIN_LINE:'Like every arcade game, Pass Puzzles need no coins: every puzzle is free to try as often as you like.'}`});
 const PARENTS_SAFE='Free, with no ads, no account and no open chat. The high-score board takes a few arcade-style letters, never a full name or a message.';
 
-export const GAME_PAGES:readonly GamePage[]=[
+/** Nov 21 2026: every game page, built or not yet listed. A page is LISTED (the hub, the sitemap, llms.txt, the image and video
+ *  sitemaps, the Library, the drill links, every count) only once its game has a machine in the arcade room, i.e. its id is in
+ *  arcadeCabinets (lib/arcade/arcadeCatalog.ts). A game in arcadeUnplaced (none since Nov 21 2026) keeps a complete page at its URL,
+ *  noindex and reached by no link, so placing the game in the room lists it everywhere with no edit here (tests/seo-games-gate.cjs). */
+export const ALL_GAME_PAGES:readonly GamePage[]=[
  {id:'kitrush',slug:'soccer-swipe-game',path:page('soccer-swipe-game'),name:'Kit Rush',play:play('kitrush'),
   title:'Soccer Swipe Game for Kids: Kit Rush, Free Online',h1:'Soccer swipe game: Kit Rush',
   description:'Kit Rush is a free soccer swipe game for kids. Swipe your team’s kit out of the air, leave the other team’s, and dodge the whistle. No ads, no sign-up.',
@@ -371,29 +375,104 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Ball Blaster?',a:'Press and drag to aim, then let go to kick a ball. Hold longer for a harder shot and flick sideways to curl it. Break the machines before they reach your goal. Three that get through end the run.'},
    {q:'What age is Ball Blaster for?',a:'Futbol Island is made for children aged 7 to 12. The first wave is slow and has only robots. The waves get faster and busier forever, so it is a test for older children and adults too.'},
    {q:'What is the Daily Blast?',a:'A daily challenge on the start card. Everyone gets the same waves that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
+ // Nov 21 2026: Keepy-Uppy Beat, the juggling rhythm game (lib/arcade/keepyuppy/core.ts + charts.ts + save.ts, components/games/KeepyUppyGame.tsx,
+ // docs/arcade-aaa/keepyuppy-direction.md). Placed Nov 21 2026 on the east wall of the arcade room (arcadeCabinets), so the page is listed.
+ {id:'keepyuppy',slug:'soccer-juggling-game',path:page('soccer-juggling-game'),name:'Keepy-Uppy Beat',play:play('keepyuppy'),
+  title:'Soccer Juggling Game for Kids: Keepy-Uppy Beat, Free Online',h1:'Soccer juggling game: Keepy-Uppy Beat',
+  description:'Keepy-Uppy Beat is a free soccer juggling game for kids. Keep the ball up to the beat with feet, thigh and head, learn tricks and train your weak foot.',
+  lead:'Keepy-Uppy Beat is a free football juggling game in your browser, a keepy uppy game set to music. Balls fall towards four pads: left foot, thigh, head and right foot. Tap the matching pad as the ball lands, on the beat, and keep it up to the end of the track.',
+  blurb:'Juggle the ball to the beat with feet, thigh and head',genre:['Arcade','Music','Sports','Educational'],skill:'Juggling: a soft touch, rhythm, the right body part and both feet',
+  og:img('keepy-uppy-beat-soccer-juggling-game-og.jpg'),ogAlt:'Keepy-Uppy Beat, a soccer juggling game: on one phone the juggler plays the ball up off the left foot for SWEET! in the park, on the other AROUND THE WORLD! +240 on the Cup Final track at night',
+  shots:gameStills('keepyuppy',2),
+  about:['Keepy-Uppy Beat is a rhythm game about juggling a football, drawn like a comic book. Your own island bean juggles at the top of the screen; below, balls fall down four lanes into four rings, one for each pad.',
+   'There are six tracks, from a kickabout in the park at 80 beats a minute to the Cup Final at 140, with music made for the game.'],
+  phone:['Hold the phone upright. The left thumb plays the left foot and thigh pads, the right thumb the head and right foot pads.','Tap a pad as its ball lands in the ring. For a trick, swipe on the foot pad (a circle for Around the World, up for a Heel Flick, sideways for a Crossover) or hold the head pad for a Neck Stall.'],
+  desktop:['D, F, J and K (or the arrow keys) are left foot, thigh, head and right foot.','Hold Space with a foot key for a swipe trick, hold a key for a stall, and press P to pause.'],
+  rules:['Tap when the ball lands: Sweet is within about a twentieth of a second, Good a little more. Early and Late keep the ball up but end your run of clean touches.','A ball that is missed is dropped. You have five balls on the first three tracks and three after that, and eight touches in a row that stay up win a ball back.',
+   'Finish a track for one star, and touch cleanly for two or three. The Track of the Day is one of the first three tracks with a twist, such as weak foot only, the same for everyone that day.'],
+  teaches:['Real juggling has a rhythm: touch, touch, touch. Each touch here sits on the beat of the music, and later tracks put touches between the drum hits, so you learn to count and keep time.',
+   'The ball flies in a real arc between two touches, so a higher, softer touch gives you longer before the next one. Every track has a weak-foot part that is scored on its own, and your best weak-foot score is kept.',
+   'There are six real tricks: Thigh-Foot-Thigh, Seal Taps, the Neck Stall, Around the World, the Heel Flick and the Crossover. Each has a 10-second lesson and a Trick Book card that says how it is done.'],
+  guides:[{path:D+'first-touch',name:'First touch drills',line:'Control the ball as it arrives'},{path:D+'thigh-and-chest-control',name:'Thigh and chest control drill',line:'Cushion a high ball with the thigh'},
+   {path:D+'at-home',name:'Drills to do at home',line:'Ball work you can do on your own'},{path:T+'weak-foot',name:'What is a weak foot?',line:'And how to make it stronger'},
+   {path:T+'first-touch',name:'First touch',line:'What a good first touch looks like'},{path:R+'heading-rules-for-kids',name:'Heading rules for kids',line:'The age limits for heading the ball'}],
+  tips:['Watch the ring, not the pad: tap as the ball sits in it.','If you are a little early or late every time, run the timing check again from the start card.','Before a trick, look at its picture on the ball: a circle means swipe round, an arrow means swipe that way.'],
+  harder:['Each track is faster than the last, from 80 to 140 beats a minute, with more touches between the drum hits.','New tricks join from the second track on, and the weak-foot part gets longer.','Medals: Bronze at 4,000 points, Silver at 10,000 and Gold at 20,000.'],
+  parents:[PARENTS_SAFE,'Skill: timing and both feet. The results card says what went wrong most, such as tapping early.','Session length: a track lasts about a minute. The game can be played with the sound off. No day streaks, no timers.'],
+  faq:[free('Keepy-Uppy Beat',true),{q:'Does Keepy-Uppy Beat work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'How do you play Keepy-Uppy Beat?',a:'Tap the foot, thigh and head pads as each ball lands in its ring, on the beat. You can play with the sound off: every ball falls into a ring, so you can play by watching.'},
+   {q:'What age is Keepy-Uppy Beat for?',a:'Futbol Island is made for children aged 7 to 12. The first track is the slowest, at 80 beats a minute; each track after it is faster and adds more touches.'},
+   {q:'Does it teach real juggling?',a:'It teaches the parts you can learn on a screen: the rhythm, which part of the body to use, using both feet and the names of real tricks. Then take a real ball: drop it, one touch, catch it, and count your record.'},
+   {q:'What is a keepy-uppy?',a:'Keepy-uppy is the British word for juggling a football: keeping it in the air with your feet, thighs and head without letting it touch the ground. It is also called kick ups.'},
+]},
+ // Nov 21 2026: Hold the Line, the defending / offside trap game (lib/arcade/holdtheline/core.ts + save.ts, components/games/HoldTheLineGame.tsx,
+ // docs/arcade-aaa/holdtheline-direction.md). Placed Nov 21 2026 on the east wall beside Keepy-Uppy Beat, so the page is listed.
+ {id:'holdtheline',slug:'soccer-defending-game',path:page('soccer-defending-game'),name:'Hold the Line',play:play('holdtheline'),
+  title:'Soccer Defending Game for Kids: Hold the Line, Free Online',h1:'Soccer defending game: Hold the Line',
+  description:'Hold the Line is a free soccer defending game for kids. Move your back line as one, step up to catch attackers offside, slide across and press.',
+  lead:'Hold the Line is a free football defence game in your browser and an offside game for kids. You move the whole back line with one thumb. Step up together just before the pass and the runner is caught offside; drop, slide across and press to stop the rest.',
+  blurb:'Move your back line as one and catch them offside',genre:['Arcade','Sports','Strategy','Educational'],skill:'Defending as a team: the offside line, stepping up together, dropping, sliding and pressing',
+  og:img('hold-the-line-soccer-defending-game-og.jpg'),ogAlt:'Hold the Line, a soccer defending game: on one phone the back line steps up and the runner is caught past the red offside line for OFFSIDE! +150, on the other a defender presses the passer at night and wins the ball: TACKLE! +150',
+  shots:gameStills('holdtheline',2),
+  about:['Hold the Line is a defending game drawn like a comic book. You look up the pitch from behind your own goal: your back line of island beans and the keeper, with the other team attacking you in waves.',
+   'Ten teams each attack in their own way: through balls, wingers, long balls, one-twos and switches of play. Beat all ten in the Coast League and the Island Premier opens, at night.'],
+  phone:['Hold the phone upright. Drag anywhere to move your whole back line: up the pitch to step up, down to drop, sideways to slide.','Tap a defender to send him to press the player on the ball.'],
+  desktop:['W and S move the line up and down the pitch, A and D slide it across.','Keys 1 to 4 send a defender to press, Space sends the nearest one, and P or Escape pauses.'],
+  rules:['Each attack has passes in midfield, then one key moment with a clue you can see, such as the passer’s leg going back.',
+   'Offside is judged when the ball is played, against the second-last defender, as in the real rule (Law 11). Level is onside, and a player in his own half cannot be offside.',
+   'The first teams may score a few goals and you still win; later teams, and every Island Premier match, only one. A win gives one to three stars, and a clean sheet scores the most. Match of the Day is one set of attacks, the same for everyone that day.'],
+  teaches:['The offside line is drawn at your second-last defender, with the assistant referee level with it. Step up together just before the pass and the runner is offside; leave one defender behind and he plays everyone onside.',
+   'Against a long ball from deep you drop, so it runs through to your keeper; sit too deep and they shoot. When the ball goes wide, the line slides across to the ball side and stays compact.',
+   'Pressing wins the ball from a heavy touch or a passer who waits, but the defender who presses leaves a gap behind him.'],
+  guides:[{path:R+'offside',name:'The offside rule',line:'Law 11 in simple words'},{path:T+'offside-trap',name:'Offside trap',line:'Stepping up together to leave a runner offside'},
+   {path:T+'high-line',name:'High line',line:'A back line that plays far up the pitch'},{path:T+'pressing',name:'Pressing',line:'Closing down the player on the ball'},
+   {path:T+'low-block',name:'Low block',line:'Defending deep, close to your own goal'},{path:D+'defending',name:'1v1 defending drills',line:'Stop the attacker, one against one'},
+   {path:P+'center-back',name:'The center back position',line:'The defenders in the middle of the line'},{path:P+'fullback',name:'The fullback position',line:'The defenders on each side'}],
+  tips:['Watch the passer, not the runner: when his leg goes back, step up.','Move early and all together. A small step at the right moment beats a big one too late.','Only press a heavy touch or a passer who waits: a press leaves a gap behind.'],
+  harder:['Each team is quicker: the passer winds up faster, and the pause at the kick gets shorter, then goes.','The Island Premier, at night, gives less time and a smaller margin, and you may let in only one goal.','Medals: Bronze at 1,400 points, Silver at 2,400 and Gold at 3,400.'],
+  parents:[PARENTS_SAFE,'Skill: defending as a team and the offside rule. After each goal the game says why it went in.','Session length: a match lasts about two minutes. The game can be played with the sound off. No day streaks, no timers.'],
+  faq:[free('Hold the Line',true),{q:'Does Hold the Line work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'What is offside, in simple words?',a:'An attacker is offside if, at the moment a teammate passes to him, he is nearer the other team’s goal line than both the ball and the second-last defender (the goalkeeper usually counts as the last). Level is onside, and nobody is offside in his own half. The defending team then gets a free kick.'},
+   {q:'How do you play Hold the Line?',a:'Drag to move your whole back line: up the pitch to step up, down to drop, sideways to slide. Step up together just before a pass to catch the runner offside.'},
+   {q:'What age is Hold the Line for?',a:'Futbol Island is made for children aged 7 to 12. The first match is guided, one move at a time, and the offside line is drawn on the pitch; the teams after it attack faster, up to the Island Premier at night.'},
+   {q:'Does the game follow the real offside rule?',a:'Yes. Offside is judged when the ball is played, against the second-last defender, the goalkeeper included. Level is onside, a player in his own half is onside, and a player standing offside who does not get the ball is not penalised: the game labels him NOT IN THE PLAY.'},
+]},
 ];
+/** The ids of the games that have a machine in the arcade room. Only these pages are listed (see ALL_GAME_PAGES). */
+export const PLACED_GAME_IDS:ReadonlySet<string>=new Set<string>(arcadeCabinets.map(c=>c.id));
+export const listedGamePages=(placed:ReadonlySet<string>)=>ALL_GAME_PAGES.filter(g=>placed.has(g.id));
+/** The listed game pages: the hub, the sitemap, the counts and every link read this. */
+export const GAME_PAGES:readonly GamePage[]=listedGamePages(PLACED_GAME_IDS);
+export const isGameListed=(id:GameId)=>PLACED_GAME_IDS.has(id);
 /** A game page's pictures: the hand-made screenshots, then new gameplay stills up to four (lib/site/gameMedia.ts). */
-export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,Math.max(0,4-g.shots.length))];
-export const gameBySlug=(slug:string)=>GAME_PAGES.find(g=>g.slug===slug);
-export const gameById=(id:GameId)=>GAME_PAGES.find(g=>g.id===id)!;
+export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,4).filter(s=>!g.shots.some(x=>x.src===s.src))].slice(0,Math.max(4,g.shots.length));
+/** Any game page, listed or not (its own route renders an unlisted page, noindex). */
+export const gameBySlug=(slug:string)=>ALL_GAME_PAGES.find(g=>g.slug===slug);
+export const gameById=(id:GameId)=>ALL_GAME_PAGES.find(g=>g.id===id)!;
 /** A ready link to a game page for a guide's own "related" list (lib/site/rules.ts, lib/site/drillLinks.ts, the two hubs). */
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
+/** Nov 21 2026: the hub names the juggling game only once Keepy-Uppy Beat is listed. */
+const JUGGLE_LISTED=isGameListed('keepyuppy');
+/** Nov 21 2026: and the defending game only once Hold the Line is listed. */
+const DEFEND_LISTED=isGameListed('holdtheline');
+/** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns (the description stays 120-155 characters). */
+const NEW_KINDS=[JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending'].filter(Boolean) as string[];
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: pinball, snake, air hockey, a runner and puzzles. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane, the weight of a pass or picking a target.`,
-  'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
+  'Every game opens from its page and gets harder the longer you play; a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
-  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
- faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.`},
-  {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app.'},
-  {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at.'},
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],
+ faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
+  {q:'Can kids play these soccer games at school?',a:'Yes: they run in a web browser on a Chromebook, tablet or phone, if the school’s filter allows futbolisland.app.'},
+  {q:'What ages are the games for?',a:'Children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
+  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

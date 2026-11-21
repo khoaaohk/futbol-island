@@ -2377,7 +2377,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       if(fieldMenu.current||mapRef.current||settingsRef.current&&!onboardingRef.current||lessonRef.current)visibleVenue=null;
 
-      world.updateArcade(elapsed,reduced);
+      world.updateArcade(now,reduced||heat.staticAmbience||!active||!!learning||backgroundFrozen||!!fieldMenu.current||!!lessonRef.current,camera);// Arcade roof neon flicker (lib/town/arcadeNeonFlicker.ts): steady when reduced, tiers 3-4, menus, lessons, matches
       {const stillWater=reduced||heat.staticAmbience||heat.governor.last.state==='slow';world.updateWater(active&&!learning?dt:0,stillWater);setWaterDetail(stillWater?0:quality.phone?1:2);setSunGlitter(sunGlitterLevel(heat.tier,heat.saver,heat.governor.last.state==='slow',reduced));/* tropical water glitter + shallow caustics (docs/TROPICAL_WATER_OCT26.md) */
        clearWin.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),WATER_UNIFORMS.uShore.value,camera);swimClear.hideBed=clearWin.strength>0;
        divePreview.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),!dive.diving);

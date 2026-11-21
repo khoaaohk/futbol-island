@@ -6870,3 +6870,29 @@ Cost, as counted
 
 Tests: `swim-ripples` (rewritten: uniform pool, wake, collar, bounds, no allocation, pool sources), `swim-clear`, `heat-water`,
 `water-tropical-cost` re-pinned as above.
+
+## Nov 21 2026: Arcade neon flicker (branch `arcade-sign-nov21`, local, not deployed)
+
+Owner: "can we make the arcade sign blink and animate so it flickers a little bit to draw more attention to the sign?"
+
+- **What:** the ARCADE roof neon (pink tube letters, cyan frame, canvas halo; `buildArcadeNeon` in `lib/town/world.ts`) breathes slowly
+  (brightness down to −16 % at night, −6 % by day over 5.6 s) and every 2-6 s one or two letters or the whole word dips for
+  60-150 ms, sometimes as a short double flick. Night dips go to 12-30 % brightness, sunset 30-45 %, day 50-65 %. The cyan frame only breathes.
+- **How (no new draw, material, texture, shader, pass or light):** `lib/town/arcadeNeonFlicker.ts` is a seeded step scheduler that keeps
+  the time of its next change; `world.updateArcade(now,steady,camera)` returns at once until then (one comparison per frame). A change
+  writes values the sign already has: the tube material's colour (a uniform, breathing), the halo material's opacity, and, for a
+  dip, the dipped letters' slice of the batched tube mesh's colour buffer (`addUpdateRange`, ≈1-6k vertices, ~12-72 KB, twice per
+  dip). The tubes already had their own batched chunk mesh (their material is unique), so nothing was split or added.
+- **Gating:** steady (one restoring write, then a 2 Hz cheap re-check) under `prefers-reduced-motion`, heat tiers 3-4
+  (`staticAmbience`), map/settings/vending zoom, lessons and learning formats, field menus, fishing focus and live-match focus, when
+  the camera is more than 110 m from the sign or the sign is outside the camera frustum. Diving and other scenes never reach the call;
+  a hidden tab stops rAF and the schedule restarts (no catch-up burst) on return.
+- **Safety:** at most 2 dips per event and events ≥ 2 s apart, so never more than 3 flashes in any second (WCAG 2.3.1); dips never go to black.
+- **Budget, `scripts/gfx-budget.cjs`** (390×844 phone, SwiftShader, tiers 0 and 2, day and night, before = origin/main f886f4ff):
+  town view draw calls / programs / textures / geometries unchanged (tier 0 day 154/44/27/1064, night 159/45/28/1065; tier 2 day
+  150/44/27/1064, night 155/45/28/1065, before and after). Shore, swim and stadium views (sign far) are equal within the usual NPC/traffic noise.
+- **Scheduler cost** (dev server, night, Mac): near the sign 188 value changes/min (≈170 breathing steps, 14 flicker events, 15 dips),
+  ≈2 ms of script per minute, max 0.1 ms per call; facing away or far: 0 changes, ≈1 ms/min (the per-frame early return and 2 Hz re-check).
+- **Tests:** `tests/arcade-neon-flicker.cjs` (seeded: ≤ 3 dips in any second, mean gap 2-6.5 s, steady and write-free when off, no
+  catch-up after a long gap, wiring source checks).
+- Reduced work only, not measured on a real phone; no thermal claim.

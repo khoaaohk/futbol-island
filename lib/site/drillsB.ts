@@ -84,7 +84,7 @@ export const DRILLS_B:RawDrill[]=[
   mistakes:['A stiff leg or chest, so the ball bounces away. The surface has to give.','Arms pulled in near the chest, which risks a handball. Arms stay wide.','Hard or flat throws. The serve must be soft enough that nobody flinches.'],
   game:'Goal kicks, throw-ins and clearances all drop from the air. In US youth soccer, there is no heading at age 10 and under, so the thigh, chest and foot are how a young player wins these balls. Then the receiving lesson takes over: what do you do with it next?',
   home:'One parent serving underarm from five steps away is ideal. Use a size 3 or light ball for the youngest players.',
-  lessons:['learn7_receive','learn9_receive','next9_restartreturn'],links:[G.heading,G.firstTouch,G.throwIn],related:['throw-in-game','receive-across-the-body','wall-passing','first-touch-gates'],
+  lessons:['learn7_receive','learn9_receive','next9_restartreturn'],links:[G.heading,G.firstTouch,G.throwIn,...G.keepyUppy],related:['throw-in-game','receive-across-the-body','wall-passing','first-touch-gates'],
   faq:[{q:'How can kids control a high ball without heading?',a:'With the foot, the thigh or the chest, or by letting it bounce first. This drill teaches all of them with soft, underarm throws.'},
    {q:'At what age can kids head the ball in the US?',a:'Heading is allowed in games from age 11, with limits on heading in practice at 11 and 12. Players aged 10 and under do not head the ball at all.'},
    {q:'Is chest control safe for young kids?',a:'With a soft underarm throw and a ball of the right size, yes. Start with the foot and thigh, and add the chest from about U10 when players are ready.'}]},
