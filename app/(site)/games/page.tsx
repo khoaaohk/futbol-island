@@ -1,13 +1,12 @@
 import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
-import {QA} from '@/components/site/LessonHub';
 import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
-import {LinkList,Section} from '@/lib/site/GuideParts';
+import {Section} from '@/lib/site/GuideParts';
+import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
 import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
-import site from '../site.module.css';
 import lib from '@/components/site/library.module.css';
 import LibraryMenuSpy from '@/components/site/LibraryMenuSpy';
 
@@ -56,25 +55,23 @@ export default function GamesHub(){
   <Section id="play" title="Pick a game and play">
    <ul className={gamesCss.playRow}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
   </Section>
-  <div className={gamesCss.lower}>
-  <Section id="pick" title="Which game to start with">
-   <ul>{H.pick.map(([k,v])=><li key={k}><b>{k}:</b> {v}</li>)}</ul>
-  </Section>
-  <Section id="safe" title="For parents and coaches">
-   <ul>
-    <li>Free, with no pop-up or tracking ads and nothing to buy. Coins on the island are earned by playing and learning, never bought with real money.</li>
-    <li>No account, no sign-up and no open chat. A high-score board takes a few arcade-style letters only.</li>
-    <li>Nothing to install: the games run in the browser on phones, tablets, Chromebooks and computers.</li>
-    <li>Short sessions: a run lasts a few minutes and ends on its own.</li>
-   </ul>
-   <p>More detail is in the <a href="/safe-football-game-for-kids">parents’ guide</a>.</p>
-  </Section>
-  <QA id="faq" title="Questions about the games" faq={H.faq}/>
-  <Section id="guides" title="Learn the ideas behind the games"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'The shapes Squad Snake builds, with a diagram of each'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
-   {path:'/learn/soccer-rules/offside',name:'The offside rule for kids',line:'The line Pass Puzzles draws on the pitch'},{path:'/learn/soccer-drills',name:'Soccer drills for kids',line:'First touch, passing, dribbling and shooting drills'},
-   {path:'/learn/soccer-terms',name:'Soccer terms',line:'Give-and-go, through ball, first touch and more'},{path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz'}]}/></Section>
-  </div>
-  <p className={site.caption}>{GAME_FOOT}</p>{/* Nov 20 2026 evening: inside the right column, beside the rail */}
+  {/* Batch 3 (Nov 20 2026; owner: "these should be their own space and not two columns. if we need to add imagery to both. it's
+      too tight and wall of text"): four full-width bands, each with a heading, a one-line lede and pictures (GamesLower.tsx). */}
+  <PickBand id="pick" title="Which game to start with" line="Nine ways in. Pick the one that sounds like your player." picks={H.pick}/>
+  <SafeBand id="safe" title="For parents and coaches" line="What grown-ups usually ask before a child plays." foot={GAME_FOOT}
+   points={[['Free, nothing to buy','Free, with no pop-up or tracking ads and nothing to buy. Coins on the island are earned by playing and learning, never bought with real money.'],
+    ['No account or chat','No account, no sign-up and no open chat. A high-score board takes a few arcade-style letters only.'],
+    ['Nothing to install','Nothing to install: the games run in the browser on phones, tablets, Chromebooks and computers.'],
+    ['Short sessions','Short sessions: a run lasts a few minutes and ends on its own.']]}
+   guide={<>More detail is in the <a href="/safe-football-game-for-kids">parents’ guide</a>.</>}/>
+  <FaqBand id="faq" title="Questions about the games" line="Short answers for parents, teachers and players." faq={H.faq}/>
+  <GuidesBand id="guides" title="Learn the ideas behind the games" line="Each game rests on a real football idea. Here it is in full." links={[
+   {path:'/learn/soccer-formations',name:'Soccer formations',line:'The shapes Squad Snake builds, with a diagram of each',pic:'/learn/soccer-formations',alt:'A 7v7 soccer formation, 2-3-1, drawn on a pitch'},
+   {path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11',pic:'/learn/soccer-positions',alt:'The eleven positions of a 4-3-3 drawn on a pitch'},
+   {path:'/learn/soccer-rules/offside',name:'The offside rule for kids',line:'The line Pass Puzzles draws on the pitch',pic:'/learn/soccer-rules',alt:'The offside line drawn across a pitch diagram'},
+   {path:'/learn/soccer-drills',name:'Soccer drills for kids',line:'First touch, passing, dribbling and shooting drills',pic:'/learn/soccer-drills',alt:'A pitch diagram of the sharks and minnows dribbling drill'},
+   {path:'/learn/soccer-terms',name:'Soccer terms',line:'Give-and-go, through ball, first touch and more',pic:'/learn/soccer-terms',alt:'A give-and-go between two players drawn on a pitch'},
+   {path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz',pic:'/learn/lessons',alt:'Animated football lessons from Futbol Island, shown as story cards'}]}/>
    </div>
   </div>
  </>;

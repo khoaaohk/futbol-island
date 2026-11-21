@@ -110,15 +110,13 @@
 /* The hub's left menu (Nov 20 2026, owner: "the games page needs a left nav too"): the Library's menu (library.module.css .menu,
    .shelf, .shelfMain; LibraryMenuSpy) with 16 entries. Below 1280 px the chips run in one row that swipes sideways inside the
    menu (never the page). From 1280 px the menu is the locked rail on the left; the page's wide blocks fill the column beside
-   it, and the lower sections sit two across (text keeps its 68ch measure). */
+   it; the lower sections are full-width bands (batch 3, GamesLower.tsx). */
 .gshelf{gap:var(--gap)}
 @media(max-width:1279px){.gshelf>nav{margin-bottom:calc(var(--shell-gap,24px) - var(--gap))}}
 .gmain section:not([data-own-grid]){grid-template-columns:minmax(0,1fr);min-width:0}
-.lower{display:grid;gap:var(--gap);min-width:0}
 @media(min-width:1280px){
  .gmain{gap:var(--gap)}
  .gmain .bleed.bleed{--bw:100%;width:100%;margin-inline:0!important}
- .lower{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s5);align-items:start}
 }
 /* Batch 3 (Nov 20 2026; owner: "i like the way the overview looks on library, can we match that for games?"): the hero is the
    Library's (library.module.css .hero/.heroText/.heroArt/.heroMain/.heroInset, the same classes); only the media differ. The lead
@@ -135,3 +133,40 @@
 .bandText p.bandNote{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
 .bandNote a{color:var(--ink);text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
 @media(min-width:900px){.islandBand{grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:var(--s4);padding:var(--s4);align-items:start}}
+/* The lower sections (batch 3, Nov 20 2026; owner: "these should be their own space and not two columns ... it's too tight and wall
+   of text"; GamesLower.tsx): full-width bands with the Library's band spacing (library.module.css .band/.head), pictures in each. */
+.lband.lband ul{list-style:none;margin:0;padding:0}
+.lband.lband li,.lband.lband p{max-width:none}
+.lband+.lband{margin-top:calc(-1 * var(--gap))}/* bands touch, as on the Library: the tone step separates them */
+.picks{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.pick{display:grid;grid-template-columns:118px minmax(0,1fr);gap:16px;align-items:center;padding:12px 20px 12px 12px;background:var(--card);border-radius:var(--r-md)}
+.pickPics{display:flex;justify-content:center;gap:6px}
+.pickPics img{display:block;width:56px;height:auto;aspect-ratio:480/1039;object-fit:cover;border-radius:var(--r-sm);background:var(--well)}
+.pickWords{display:grid;gap:4px;min-width:0;font-size:var(--t-body);line-height:1.45;color:var(--ink)}
+.pickLabel{font-size:var(--t-h3);line-height:1.25;font-weight:700;letter-spacing:-.015em}
+.pickWords a,.guideLink a{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
+@media(min-width:640px){.picks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1440px){.picks{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.safe{display:grid;gap:var(--s3);align-items:start}
+.safePic{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:var(--r-lg);background:var(--well)}
+.safeWords{display:grid;gap:var(--s3);min-width:0}
+.points{display:grid;gap:var(--s3)}
+.points li{display:grid;gap:4px;align-content:start}
+.points b{font-size:var(--t-h3);line-height:1.25;font-weight:700;letter-spacing:-.015em;color:var(--ink)}
+.points span{font-size:var(--t-body);line-height:1.5;color:var(--ink)}
+.guideLink{font-size:var(--t-body)}
+.guideLink a{display:inline-flex;align-items:center;min-height:var(--tap)}
+.lband p.foot{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft);max-width:62ch}
+@media(min-width:640px){.points{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3) var(--s4)}}
+@media(min-width:900px){.safe{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:var(--s5)}.points{grid-template-columns:minmax(0,1fr)}}
+@media(min-width:1600px){.points{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.faq.faq{max-width:min(72ch,100%)}
+.guides{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.guides>li{grid-column:auto!important;margin:0}
+.guides>li>a{grid-template-columns:clamp(96px,32%,208px) minmax(0,1fr)!important;height:100%;box-sizing:border-box;background:var(--card);color:var(--ink);text-decoration:none;overflow:hidden;transition:background-color .16s,translate .16s}
+@media(hover:hover){.guides>li>a:hover{background:color-mix(in srgb,var(--gold) 30%,var(--card))}}
+.guides>li>a:active{translate:0 2px}
+@media(min-width:640px){.guides{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1440px){.guides{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.guides>li>a{transition:none}}
+@media(max-width:639px){.pick{grid-template-columns:94px minmax(0,1fr);gap:14px}.pickPics img{width:44px}}
