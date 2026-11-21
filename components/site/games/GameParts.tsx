@@ -1,11 +1,12 @@
 import Breadcrumbs from '@/components/site/Breadcrumbs';
-import {allShots,GAME_NAMES,GAMES_NAMES,type GamePage,type GameShot} from '@/lib/site/games';
+import {allShots,gameById,GAME_NAMES,GAMES_NAMES,type GameId,type GamePage,type GameShot} from '@/lib/site/games';
 import {GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
 import {watchPathFor} from '@/lib/site/videos';
 import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import g from './games.module.css';
+import lib from '@/components/site/library.module.css';
 /**
  * Parts of the arcade games' search pages (app/(site)/games; lib/site/games.ts). Server-rendered; the one client island is
  * LoopClip (a gameplay loop that mounts its <video> only when it may play, lib/site/gameMedia.ts). No game canvas. Pictures are
@@ -64,17 +65,41 @@ export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
    <img src={s.src} alt={s.alt} width={s.w} height={s.h} loading="lazy" decoding="async"/></li>)}</ul>}
  </li>;
 }
-/** The top of /games (Nov 20 2026, owner: "a page for games that features futbol island as the primary game and the arcade games
- * below that"): the island game itself, with its beach match clip, two plain lines and the page's biggest Play button (/play). */
+/** The top of /games (layout batch 3, Nov 20 2026; owner: "i like the way the overview looks on library, can we match that for
+ * games?"): the Library's hero composition (library.module.css .hero, the same classes, so the two never drift): breadcrumb, H1,
+ * lede and the gold Play button on the left; on the right the lead clip large (GAMES_LEAD_CLIP, the page's ONLY autoplaying video,
+ * poster preloaded by the page) with a still phone screenshot of an arcade game overlapping its lower-left corner. */
 export {GAMES_LEAD_CLIP as ISLAND_FEATURE_KEY} from '@/lib/site/gameMedia';
-export function IslandFeature({title,lines,play}:{title:string;lines:readonly string[];play:string}){
- const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP);
- return <section className={`${g.island} ${g.bleed}`} aria-labelledby="island-game" data-island-feature="">
-  <div className={g.islandMedia}>{c?<ClipFigure c={c} auto priority/>:<Shot s={islandStills()[0]}/>}</div>
-  <div className={g.islandWords}>
-   <h2 className={g.islandName} id="island-game">{title}</h2>
+const INSET_ID:GameId='kitrush';
+export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:string;lead:string;play:string}){
+ const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP),still=islandStills()[0],inset=gameStills(INSET_ID,1)[0];
+ return <div className={`${lib.hero} ${g.ghero}`} id="top" data-games-page="" data-games-hero="">{/* data-games-page: the header's Games link is the selected one (site.module.css) */}
+  <header className={lib.heroText}>
+   <Breadcrumbs crumbs={crumbs}/>
+   <h1 className={lib.h1}>{h1}</h1>
+   <p className={lib.lead}>{lead}</p>
+   <a className={site.cta} href={PLAY_PATH} data-play="island">{play}</a>
+  </header>
+  <div className={lib.heroArt}>
+   {c?<LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto priority className={`${lib.heroMain} ${g.heroClip}`}/>
+    // eslint-disable-next-line @next/next/no-img-element
+    :<img className={lib.heroMain} src={still.src} alt={still.alt} width={still.w} height={still.h} decoding="async"/>}
+   {/* a still, never a second playing video (AGENTS.md: one player at a time) */}
+   {/* eslint-disable-next-line @next/next/no-img-element */}
+   {inset&&<img className={`${lib.heroInset} ${g.heroPhone}`} src={inset.src} alt={`${gameById(INSET_ID).name} on a phone, one of the eleven free arcade games on the island`} width={inset.w} height={inset.h} loading="lazy" decoding="async"/>}
+  </div>
+ </div>;
+}
+/** Directly under the hero: the island game in a slim band of words (it was the dark green block until batch 3), the lead clip's
+ * caption with its watch page, and the "soccer is called football" line that used to sit under the H1. */
+export function IslandBand({title,lines,note}:{title:string;lines:readonly string[];note:string}){
+ const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP),watch=c&&watchPathFor(c.key);
+ return <section className={`${g.islandBand} ${g.bleed}`} aria-labelledby="island-game" data-island-band="" data-own-grid="">
+  <h2 className={g.bandTitle} id="island-game">{title}</h2>
+  <div className={g.bandText}>
    {lines.map(x=><p key={x}>{x}</p>)}
-   <a className={`${site.cta} ${g.islandPlay}`} href={PLAY_PATH} data-play="island">{play}</a>
+   {c&&<p className={g.bandNote}>{c.caption} <span className={g.secs}>{c.seconds} s, no sound.</span>{watch&&<> <a href={watch} data-watch-link="">Watch the full clip</a></>}</p>}
+   <p className={g.bandNote}>{note}</p>
   </div>
  </section>;
 }

@@ -110,7 +110,7 @@ function check(p,meta,el,game){
  const imgs=[...h.matchAll(/<img\b([^>]*)>/g)].map(m=>Object.fromEntries([...m[1].matchAll(/([a-z-]+)="([^"]*)"/g)].map(a=>[a[1],a[2].replace(/&#x27;/g,"'").replace(/&amp;/g,'&')])));
  assert(imgs.length>=(game?2:6),`${where}: pictures`);
  for(const i of imgs){assert(i.src.startsWith('/games/')&&fs.existsSync(pub(i.src)),`${where}: ${i.src} exists`);const s=size(pub(i.src));
-  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:'/games/clips/match.webp'/* Nov 20 2026: the island's beach match leads the hub */)),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
+  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:L('lib/site/gameMedia.ts').islandClips().find(c=>c.key===L('lib/site/gameMedia.ts').GAMES_LEAD_CLIP).poster/* Nov 20 2026 batch 3 (owner: "i like the way the overview looks on library, can we match that for games?"): the eager poster is the lead clip's (GAMES_LEAD_CLIP, the hero's large media), whatever clip that key names */)),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
  assert.equal(new Set(imgs.map(i=>i.alt)).size,imgs.length,`${where}: every alt text is its own`);
  // links
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1].replace(/&amp;/g,'&'));
@@ -120,6 +120,9 @@ function check(p,meta,el,game){
  /* Nov 20 2026 (SEO foundation, owner approved): the gold buttons still open the game; a game page also has ONE plain text link
     "Play the whole island" to /play in its content (the hub has none). */
  {const toIsland=(h.match(/<a [^>]*href="\/play"[^>]*>/g)||[]).filter(a=>/class="[^"]*cta/.test(a));/* Nov 20 2026 (owner): the hub leads with Futbol Island, so its one island button goes to /play; a game page's buttons open its game */
+  /* Nov 20 2026 batch 3 (owner: "i like the way the overview looks on library, can we match that for games?"): the hub's one gold
+     /play button is the hero's, next to the H1, as on the Library */
+  if(!game)assert(/data-games-hero=""[\s\S]*?<h1[\s\S]*?<a class="cta" href="\/play" data-play="island">/.test(h),`${where}: the gold Play button sits in the hero`);
   if(game)assert(!toIsland.length,`${where}: the buttons open the games, not the island`);else assert(toIsland.length===1&&/data-play="island"/.test(toIsland[0]),`${where}: one button opens the island (the lead), the rest open games`);}
  {const n=links.filter(l=>l==='/play').length,isGame=PAGES.some(g=>g.path===where);assert.equal(n,1,`${where}: one link to the island (a game page's text link; the hub's lead button, Nov 20 2026)`);if(isGame)assert(/<a href="\/play" data-island-link="">Play the whole island<\/a>/.test(h),`${where}: the island link says what it is`);}
  return {h,t,ld,links,by};

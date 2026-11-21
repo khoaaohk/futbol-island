@@ -1,9 +1,9 @@
 import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
-import {ClipFigure,GameFeature,GameIntro,ISLAND_FEATURE_KEY,IslandFeature,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
+import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
-import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
+import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
 import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -16,10 +16,11 @@ import LibraryMenuSpy from '@/components/site/LibraryMenuSpy';
 export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
-const MENU:readonly (readonly [string,string])[]=[['#island-game','Futbol Island'],...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
- ['#island','Inside the island'],['#pick','Which game to start with'],['#safe','For parents and coaches'],['#faq','Questions']];
+// Batch 3 (Nov 20 2026): Overview (the hero, #top) is the first entry; the island game now lives in the hero, so it has no entry of its own.
+const MENU:readonly (readonly [string,string])[]=[...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
+ ['#island','Inside the island'],['#pick','Which game to start with'],['#safe','For parents and coaches'],['#faq','Questions'],['#guides','Learn the ideas']];
 export default function GamesHub(){
- // The island clip's poster is the page's LCP (Nov 20 2026: Futbol Island leads the page): preload it at high priority.
+ // The lead clip's poster (GAMES_LEAD_CLIP, in the hero) is the page's LCP: preload it at high priority.
  const top=islandClips().find(c=>c.key===ISLAND_FEATURE_KEY);
  if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high'});
  const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
@@ -37,9 +38,9 @@ export default function GamesHub(){
    </nav>
    <LibraryMenuSpy menu="games-menu"/>
    <div className={`${lib.shelfMain} ${gamesCss.gmain}`}>
-    <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
-  <IslandFeature title="Futbol Island, the main game" play="Play Futbol Island"
-   lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
+    <GamesHero crumbs={crumbs} h1={H.h1} lead={H.lead} play="Play Futbol Island"/>
+    <IslandBand title="Futbol Island, the main game" note={GAMES_NAMES}
+     lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
   <Section id="games" title={`The ${GAMES_WORD} arcade games`}>
    <div className={`${gamesCss.arcadeIntro} ${gamesCss.bleed}`}>
     <div>{H.intro.map(x=><p key={x}>{x}</p>)}</div>
