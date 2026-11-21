@@ -3,6 +3,7 @@ import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
+import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
@@ -1688,6 +1689,16 @@ export function* buildTownSteps(scene: T.Scene) {
   const stadiumPaintFor=(source:T.Material)=>{const shared=paintMaterials.get(source);if(!shared)return undefined;let twin=stadiumPaints.get(shared);
     if(!twin){twin=patchStadiumNight(shared.clone(),STADIUM_NIGHT_GAIN.paint,STADIUM_NIGHT_GAIN.turf);stadiumPaints.set(shared,twin);materials.push(twin);}return twin;};
   const position=new T.Vector3();
+  // Richer baked light (Nov 20 2026, load time only, vertex colours of the same chunks: no draw, material, shader or per-frame cost).
+  // The sun never moves (islandLighting.ts ISLAND_SUN_POSITION), so walls turned to it take a small warm tint and walls turned away a
+  // cool one; each building gets a few percent of its own value and warmth so neighbours differ. Multipliers are in linear colour.
+  const BAKE_SUN_X=ISLAND_SUN_POSITION[0]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]),BAKE_SUN_Z=ISLAND_SUN_POSITION[2]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
+  const BAKE={warm:.12,cool:.06,jitterValue:.07,jitterWarmth:.04,canopyLow:.9,canopyHigh:1.24} as const;
+  const bakeCells=new Map<string,number[]>();
+  buildings.forEach((b,i)=>{for(let cx=Math.floor((b.x-b.w/2-.7)/16);cx<=Math.floor((b.x+b.w/2+.7)/16);cx++)for(let cz=Math.floor((b.z-b.d/2-.7)/16);cz<=Math.floor((b.z+b.d/2+.7)/16);cz++){const k=cx+':'+cz,list=bakeCells.get(k);if(list)list.push(i);else bakeCells.set(k,[i]);}});
+  const buildingAt=(x:number,z:number)=>{const list=bakeCells.get(Math.floor(x/16)+':'+Math.floor(z/16));if(list)for(const i of list){const b=buildings[i];if(Math.abs(x-b.x)<=b.w/2+.7&&Math.abs(z-b.z)<=b.d/2+.7)return i;}return -1;};
+  const bakeArray=(a:T.BufferAttribute|T.InterleavedBufferAttribute)=>{if(a instanceof T.BufferAttribute&&!a.normalized&&a.itemSize===3)return a.array;const out=new Float32Array(a.count*3);for(let i=0;i<a.count;i++){out[i*3]=a.getX(i);out[i*3+1]=a.getY(i);out[i*3+2]=a.getZ(i);}return out;};
+  const bakeHash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return (v-Math.floor(v))*2-1;};
   // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
   const batchObject=(object:T.Object3D)=>{
     if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.userData.ownDraw||object.parent===ferry||Array.isArray(object.material))return;
@@ -1704,10 +1715,22 @@ export function* buildTownSteps(scene: T.Scene) {
       const colors=new Float32Array(geom.getAttribute('position').count*3);
       // Baked light (Nov 10 2026, load time only): walls darken toward their foot over the lowest 4 m (to 0.68 linear, ~0.84 on
       // screen), undersides 0.62, tops 1.03, measured from the piece's own base (roofs and Summit Isle are not at y=0). Flat trim (< 0.15 m) stays flat.
-      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,nrm=gb.max.y-gy>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
-      for(let i=0,v=0;i<colors.length;i+=3,v++){let f=1;
-        if(nrm){const ny=nrm.getY(v);if(ny<-.5)f=.62;else if(ny>.7)f=1.03;else if(Math.abs(ny)<.5){const t=Math.min(1,Math.max(0,(pos.getY(v)-gy)/4));f=.68+.32*t*t*(3-2*t);}}
-        colors[i]=color.r*f;colors[i+1]=color.g*f;colors[i+2]=color.b*f;}
+      // Nov 20 2026: sun-side warm / far-side cool tint on walls, a per-building jitter, tree and bush canopies on one smooth
+      // foot-to-crown gradient (cooler below, yellower above) in place of the three steps.
+      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,gh=gb.max.y-gy,nrm=gh>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
+      const canopy=object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
+      const home=canopy||stadiumPiece?-1:buildingAt(position.x,position.z),jv=home<0?1:1+BAKE.jitterValue*bakeHash(home),jw=home<0?1:1+BAKE.jitterWarmth*bakeHash(home+.5);
+      const P=bakeArray(pos),N=nrm&&bakeArray(nrm),cr=color.r,cg=color.g,cb=color.b,len=colors.length;
+      if(!N){const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;for(let i=0;i<len;i+=3){colors[i]=r;colors[i+1]=g;colors[i+2]=b;}}
+      else if(canopy){const ih=.5/gh,span=BAKE.canopyHigh-BAKE.canopyLow;
+        for(let i=0;i<len;i+=3){const u=(P[i+1]-gy)*ih+.25*(N[i+1]+1),e=u*u*(3-2*u),f=BAKE.canopyLow+span*e,s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z,w=s>0?BAKE.warm*s:0;
+          colors[i]=cr*f*(.93+.14*e)*(1+w);colors[i+1]=cg*f;colors[i+2]=cb*f*(1.08-.18*e)*(s>0?1-w:1-BAKE.cool*s);}}
+      else{const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw,warm=stadiumPiece?0:BAKE.warm,cool=stadiumPiece?0:BAKE.cool;
+        for(let i=0;i<len;i+=3){const ny=N[i+1];let f=1;
+          if(ny<-.5)f=.62;else if(ny>.7)f=1.03;else if(ny<.5){let t=(P[i+1]-gy)*.25;if(t>1)t=1;f=.68+.32*t*t*(3-2*t);}
+          const s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z;
+          if(s>0){colors[i]=r*f*(1+warm*s);colors[i+2]=b*f*(1-warm*s);}else{colors[i]=r*f;colors[i+2]=b*f*(1-cool*s);}
+          colors[i+1]=g*f;}}
       geom.setAttribute('color',new T.BufferAttribute(colors,3));
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
