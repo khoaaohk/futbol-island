@@ -119,3 +119,10 @@ for kids"), skipped where the grid already links there. The home page and the ti
 | 9 | Title screen links/words for `/play` (a small "Library · Games" text row in "For grown-ups") | `components/landing/*` | `/play` passes weight on; more text | touches the game's first screen | **yes** |
 | 10 | Share pictures for `/library`, `/play` | pictures lane | better social/Discover cards | none | **yes** (picture choice) |
 | 11 | Home H1 "Learn football for kids" → mention "soccer" | home hero | US query wording | home hero copy | **yes** |
+
+## Status (end of Nov 20 2026)
+
+Done, one commit each: actions 1 (titles/descriptions EN + `/es/library`), 2 (Library H1 EN/ES, `/games` section "The eleven soccer
+arcade games"), 3 (Keep reading Library + Games cards, EN/ES), 4 (sitemap .9), 5 (`/games` CollectionPage, game `sameAs`), 6 (llms.txt,
+`/es/library` og:type). Open, waiting for the owner: 7 to 11. Not done: the `/es` home title/description (already "juego de fútbol
+gratis para niños"; left as is), a phone/desktop look at the Keep reading grid with its two new cards.
