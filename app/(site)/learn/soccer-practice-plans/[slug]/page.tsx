@@ -15,6 +15,8 @@ import {DrillList,GridFigure} from '@/lib/site/DrillParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import styles from '../../../site.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {planRail} from '@/lib/site/railNavMore';
 
 /**
  * /learn/soccer-practice-plans/<slug>: one practice plan (lib/site/plans.ts): the clock table (each activity links to its
@@ -37,6 +39,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.h1} (youth soccer coaching)`,teaches:p.goal,image:diagramUrl(p.picture)})}/>
   <JsonLd data={faqLd(p.faq)}/>
+  <RailNav rail={planRail()} current={p.path}/>{/* outside .printPage: the shell keys on a direct child of main; print hides it */}
   <div className={styles.printPage}>
    <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="At a glance">

@@ -1,7 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail,onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {libraryGroupsEs} from '@/components/es/pages/LibraryEs';
+import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
+import {planRailEs} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import GridDiagram from '@/lib/site/GridDiagram';
 import {AGES,SKILLS,drillsBySkill} from '@/lib/site/drills';
@@ -48,7 +48,7 @@ export function DrillsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:h.h1,path:h.path,description:h.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:[...ages,...skills].map(g=>({name:g.h1,path:g.esPath})).concat(drills.map(d=>({name:d.h1,path:d.esPath})))}))}/>
   <JsonLd data={faqLd(h.faq)}/>
-  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={h.path}/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('drills')} current={h.path}/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
   <Section id="by-age" title="Ejercicios de fútbol por edad">
    <p>Cada página por edad es una guía corta: qué pueden hacer los jugadores, cómo agruparlos, los mejores ejercicios y qué evitar.</p>
    <LinkList links={ages.map(guideLink)}/>
@@ -151,7 +151,7 @@ export function PlansHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:h.h1,path:h.path,description:h.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:esPlanOrder().slice(1).map(p=>({name:p.name,path:p.path}))}))}/>
   <JsonLd data={faqLd(h.faq)}/>
-  <EsIntro crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
+  <EsIntro rail={<RailNav rail={planRailEs()} current={h.path}/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
   {AGES.map(a=><Section key={a} id={a.toLowerCase()} title={`Planes de entrenamiento de fútbol ${a} (${AGE_YEARS_ES[a]})`}>
    <LinkList links={esPlansForAge(a).map(p=>({path:p.esPath,name:p.h1,line:`${p.minutes} minutos. ${p.goal}.`}))}/>
   </Section>)}
@@ -181,6 +181,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:p.title,path:p.esPath,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.h1} (entrenamiento de fútbol infantil)`,teaches:p.goal,image:diagramUrl(p.picture)}))}/>
   <JsonLd data={faqLd(p.faq)}/>
+  <RailNav rail={planRailEs()} current={p.esPath}/>
   <div className={styles.printPage}>
    <EsIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="De un vistazo">
