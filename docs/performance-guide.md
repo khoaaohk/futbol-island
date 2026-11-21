@@ -6896,3 +6896,21 @@ Owner: "can we make the arcade sign blink and animate so it flickers a little bi
 - **Tests:** `tests/arcade-neon-flicker.cjs` (seeded: ≤ 3 dips in any second, mean gap 2-6.5 s, steady and write-free when off, no
   catch-up after a long gap, wiring source checks).
 - Reduced work only, not measured on a real phone; no thermal claim.
+
+## Nov 21 2026: FootGolf Island (branch `game-footgolf`, unplaced, local, not deployed)
+A new 3D arcade game (`lib/arcade/footgolf/`, `components/games/FootGolfGame.tsx`, docs/arcade-aaa/footgolf-direction.md). What it costs:
+- **Scene:** one hole at a time. Terrain = the physics grid itself (bilinear, 5,632-5,740 triangles per hole, under the 6k budget,
+  tests/footgolf-core.cjs) with ONE painted canvas ground sheet (at most 1024 px a side, made once per hole); an apron ring (1k triangles) to
+  the coast; every still thing (walls, fences, hedges, rocks, bales, fountain, bridge, the landmark) baked into ONE vertex-colour mesh with
+  comic ink hulls; trees one instanced draw per kind (3); flag cloth 18 vertices moved on the CPU; fixed pools for the preview (90), trail
+  (18) and particles (48); nothing allocated per frame. One sun + a hemisphere, NO shadow map (blob under the ball, tree/wall/post
+  shadows painted into the ground sheet), no post-processing, `powerPreference:'low-power'`, pixel ratio capped at 1.5 on phones.
+- **Loop:** 30 fps on phones (frameCapSlot), 60 on desktop. Sleeps on the start/between/results cards, on pause, on a hidden tab or blur,
+  AND on a still aim view (1.4 s after the last change; a touch, key or button wakes it): measured 0 rAF calls in 0.7 s on the start
+  card, the still aim view and pause (scripts/check-footgolf-browser.cjs). Physics: fixed 1/120 s steps, about 4 steps a frame at 30 fps.
+- **Measured** (headless Chrome, 390x844 phone profile and 1440x900, renderer.info, aim view at each tee): 12-13 draw calls per hole
+  (15 in flight with the trail and bits), 11-28k triangles (jetty 11.2k, coral 11.6k, summit 19.5k, museum 20.8k, stadium 24.5k, farm
+  25.3k, plaza 25.4k, beach 25.9k, boardwalk 27.5k: the baked landmarks and hulls are most of it), 4 textures, 14 programs.
+  Not measured on a real phone; no iPhone temperature claim.
+- **Phone framing:** the aim view uses `camera.setViewOffset` (a sheared frustum) to sit the ball above the kick picker: no extra pass,
+  no zoom. The preview (`predict`) re-runs the real physics only when the aim, power, kick or curl changes.

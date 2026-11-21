@@ -20,14 +20,15 @@ on the island, on real 3D ground: a low-poly heightfield with hills, hollows, ba
 | 9 | Island Stadium | 5 | 140 | downhill, a moat, the gate, the centre circle | all of it |
 
 ## Realism (lib/arcade/footgolf/core.ts, fixed 1/120 s steps, seeded, no library)
-- **Four kicks:** Long kick (laces, 13-25 m/s, 26-30 degrees), Chip (under the ball, 48 degrees, backspin), Pass (inside of the
-  foot, along the ground), Putt (inside of the foot, soft, starts rolling). The lie matters: rough and sand take pace off.
+- **Four kicks:** Long kick (laces, 12-27 m/s, 27 degrees: about 40 m carry, 60 m with the run), Chip (under the ball, 6-18 m/s, 50
+  degrees, backspin: up to 30 m and it checks), Pass (inside of the foot, 3-18 m/s, along the ground: up to about 34 m), Putt (inside of the
+  foot, 0.5-9 m/s, starts rolling: up to about 13 m). The lie matters: rough and sand take pace off.
 - **Flight:** gravity, drag against the moving air (so wind pushes a high ball and not a low one), a Magnus side force from the
   curl, a little lift from backspin. **Bounce:** off the real slope under the ball; each surface has its own bounce and grip, and
   backspin checks the ball on landing. **Roll:** gravity down the slope against the surface's friction; a ball will not stop on a
   slope steeper than the grass can hold. Sand plugs, rough drags, stone runs. Walls, rocks, trunks and bales bank the ball; leaves
   kill it. Water and out of bounds: one penalty kick and a drop where you kicked from.
-- **The cup** (0.42 m, ball 0.16 m): the ball drops only if it is slow enough for the width of cup it crosses. Too quick across
+- **The cup** (real footgolf: 53 cm across, radius 0.265 m; a size 5 ball, radius 0.11 m, a hollow sphere; changed from the first draft's 0.42 m / 0.16 m to the real sizes): the ball drops only if it is slow enough for the width of cup it crosses. Too quick across
   the edge is a lip-out that turns the ball; much too quick hops over. A slow ball on the edge wobbles round the rim, then drops.
 - **Wind:** a flag at the cup that flies with it, and an arrow in the HUD turned to the camera.
 - **Forgiving:** 8 kicks a hole, then pick up. A full flight preview on holes 1-3, 60% on 4-6, 35% on 7-9.
@@ -66,3 +67,10 @@ a rising whistle for birdie or better. Synthesised, one limiter, nothing before 
 One scene, one hole at a time. One sun + a hemisphere, no shadow map (a blob under the ball, tree shadows painted into the ground),
 terrain under 6k triangles, scenery baked into one mesh per hole, trees one instanced draw per kind, fixed pools, nothing allocated
 per frame, pixel ratio 1.5 and 30 fps on phones, the loop sleeps on cards, pause and a hidden tab. Numbers: docs/performance-guide.md.
+
+## Built (Nov 21 2026) and what changed from this draft
+- Real cup and ball sizes (above). The flag lifts out when the ball is within 10 m of the cup, as players take it out to putt.
+- Penalty: one kick and the next kick from where the last one was taken (stroke and distance, simplest for 7-12 year olds).
+- The low cup camera is used only for approaches from more than 7 m; a short putt keeps a low chase view (the cup view flew over the ball).
+- The aim view on an upright phone is framed above the kick picker with a sheared frustum (no zoom, no cost).
+- Daily Hole uses a 35% preview, like holes 7-9. Board minimum time is 60 s (a nine-hole round cannot be quicker).
