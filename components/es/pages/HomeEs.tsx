@@ -4,6 +4,7 @@ import {LEARN_HIGHLIGHTS} from '@/lib/site/learnFeatures';
 import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
 import {faqLd,PLAY_PATH,PUBLISHER,SITE_NAME,SITE_URL} from '@/lib/site/seo';
 import {toEs} from '@/lib/i18n/esPaths';
+import {LIBRARY_PATH} from '@/lib/site/libraryPath';
 import styles from '@/app/(site)/site.module.css';
 
 /**
@@ -76,7 +77,8 @@ export default function HomeEs(){
 
   {HL.map(h=><section key={h.id} className={styles.section} id={h.id} aria-labelledby={`${h.id}-h`}>
    <h2 className={styles.h2} id={`${h.id}-h`}>{h.title}</h2>
-   <p>{h.line}</p>
+   <p>{h.line}{h.id==='learn'&&<> <a href={toEs(LIBRARY_PATH)} data-hub-link="">Lee las reglas, las posiciones y los ejercicios en la Biblioteca</a>.</>}{h.id==='explore'&&<> Y fuera de la isla: <a href="/games" data-hub-link="">juega los once juegos de fútbol gratis (en inglés)</a>.</>}</p>
+   {/* Nov 20 2026 (owner: "go with your recommendations", SEO plan): one body link to each hub, as on the English home */}
    {h.img&&<figure className={styles.figure}><div className={styles.art}><img src={h.img.src} width={h.img.width} height={h.img.height} alt={h.img.alt} loading="lazy" decoding="async"/></div></figure>}
    <p className={styles.caption}>{h.chips.join(' · ')}</p>
    {h.id==='together'&&<p>{GROWNUP_LINE}</p>}

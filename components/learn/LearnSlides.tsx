@@ -21,6 +21,8 @@ export default function LearnSlides(){
  return <section className={s.slides} id="more" aria-labelledby="slides-h" data-slides="">
   <div className={s.slidesHead} data-reveal="">
    <h2 className={s.h2} id="slides-h">Even more to explore</h2>
+   {/* Nov 20 2026 (owner: "go with your recommendations", SEO plan): the home body's one link to the games hub */}
+   <p className={s.sub}>Off the island too: <a className={s.bold} href="/games" data-hub-link="">play the eleven free soccer arcade games</a>.</p>
   </div>
   <div className={s.slideRow} role="region" aria-roledescription="carousel" aria-label="Even more to explore" tabIndex={0} data-slide-row="">
    {slides.map(({x,a},i)=><div key={x.key} className={s.slide} role="group" aria-roledescription="slide" aria-label={`${i+1} of ${n}: ${x.title}`}

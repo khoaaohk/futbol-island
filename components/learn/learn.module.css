@@ -299,6 +299,7 @@
 @media(min-width:740px){.slides{--sw:min(1040px,72vw,(max(100svh,560px) - 340px) * 16 / 9);--sgap:20px}}
 .slidesHead{padding:0 var(--spad);text-align:left}
 .slidesHead .h2{max-width:none}
+.slidesHead .sub{margin-top:clamp(14px,2vh,22px)}/* Nov 20 2026: the line with the games-hub link */
 .slideRow{position:relative;display:flex;gap:var(--sgap);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;
  padding:4px 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .slideRow::-webkit-scrollbar{display:none}

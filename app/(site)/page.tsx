@@ -70,12 +70,12 @@ function Stage({k,label,eager,tags,hero}:{k:string;label:string;eager?:boolean;t
  </figure>;
 }
 
-function Chapter({h,dark,children}:{h:LearnHighlight;dark?:boolean;children?:React.ReactNode}){
+function Chapter({h,dark,more,children}:{h:LearnHighlight;dark?:boolean;more?:React.ReactNode;children?:React.ReactNode}){
  return <section className={`${s.ch} ${dark?s.dark:s.light}`} id={h.id} aria-labelledby={`${h.id}-h`}>
   {dark&&<NavMark/>}
   <div className={s.head} data-reveal="">
    <h2 className={s.h2} id={`${h.id}-h`}>{h.title}</h2>
-   <p className={s.sub}>{h.line}</p>
+   <p className={s.sub}>{h.line}{more&&<> {more}</>}</p>
   </div>
   {children??<Stage k={h.shot} label={h.title} tags={h.chips}/>}
  </section>;
@@ -141,7 +141,10 @@ export default function Home(){
   <LearnReel/>
 
   {/* ---- 2-3. learn, explore ---- */}
-  <Chapter h={hl('learn')} dark/>
+  {/* Nov 20 2026 (owner, on the SEO plan item "Add home-page body links to /library and /games inside the existing chapters":
+      "decision for you, go with your recommendations"): one body link to each hub, the Library here and the games hub in
+      "Even more to explore" (LearnSlides). Hubs only: the body still links no guide, tool, drill or /games/<slug> page. */}
+  <Chapter h={hl('learn')} dark more={<><a className={s.bold} href={LIBRARY_PATH} data-hub-link="">Read the rules, positions and drills in the Library</a>.</>}/>
   <Chapter h={hl('explore')}/>
 
   {/* ---- 3b. Fuel up: Konbini food refills the fuel bar, each item a sourced football-nutrition tip (docs/learn-konbini-facts.md) ---- */}

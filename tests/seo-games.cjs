@@ -8,7 +8,7 @@
 //     ratings; FAQPage that matches the visible questions; ItemList on the hub), no script but JSON-LD, every picture exists with
 //     its real width and height, alt text and loading=lazy, the Play button opens the deep link, links to the hub and the other
 //     five games, every internal link resolves, 450-1250 words of visible text (lists and FAQ included), no Island Strikers.
-//  4. The home page and the game UI link none of them; guides, hubs, llms.txt and llms-full.txt do.
+//  4. The home page (except one body link to the /games hub, owner Nov 20 2026) and the game UI link none of them; guides, hubs, llms.txt and llms-full.txt do.
 //  5. Sitemap, image sitemap, robots, redirects; /arcade stays noindex with the canonical /arcade for every ?game= link.
 // usage: node tests/seo-games.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
@@ -172,7 +172,12 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
     page (owner, Nov 10 2026: SEO-only pages). */
  const bar=/const NAV_PAGES:\[string,string\]\[\]=\[[^;\n]*\['\/games','Games'\][^;\n]*\];/;
  assert(bar.test(home),'the home bar links the games hub once, in NAV_PAGES');
- assert(!/['"`]\/games|GAME_PAGES|GAMES_HUB|GAME_LISTINGS|site\/games/.test(home.replace(bar,'')),'the home page body does NOT link the game pages (owner, Nov 10 2026: SEO-only pages)');
+ /* Nov 20 2026 (owner, on the SEO plan item "Add home-page body links to /library and /games inside the existing chapters":
+    "decision for you, go with your recommendations"): ONE body link to the /games hub is allowed too, in "Even more to explore"
+    (LearnSlides, marked data-hub-link). Still no /games/<slug> page. */
+ const hub=/<a className=\{s\.bold\} href="\/games" data-hub-link="">[^<]+<\/a>/g;
+ assert.equal((home.match(hub)||[]).length,1,'the home body links the games hub exactly once (owner, Nov 20 2026)');
+ assert(!/['"`]\/games|GAME_PAGES|GAMES_HUB|GAME_LISTINGS|site\/games/.test(home.replace(bar,'').replace(hub,'')),'the home page body does NOT link the game pages (owner, Nov 10 2026: SEO-only pages)');
  const ui=['components/ArcadeRoom.tsx',...fs.readdirSync(path.join(root,'components/games')).filter(f=>/\.tsx?$/.test(f)).map(f=>'components/games/'+f)].map(read).join('\n');
  assert(!/['"`]\/games[\/'"`]|site\/games/.test(ui),'the game UI does not link the game pages');}
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
