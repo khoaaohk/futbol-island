@@ -63,6 +63,8 @@
  border-radius:999px;background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590);pointer-events:none;opacity:0;
  transform:translateX(calc(var(--i,0) * 98px)) scale(.86);transition:opacity .2s var(--ease),transform .2s var(--ease),translate .16s}
 .root .subLinks[data-has-current]::before{opacity:1;transform:translateX(calc(var(--i,0) * 98px));transition:opacity .2s var(--ease),transform .32s cubic-bezier(.34,1.56,.64,1),translate .16s}
+/* Nov 20 2026 (owner): Island is this page, so its chip shows from first paint, with no script and no scroll. */
+.root .subLinks:has(a[aria-current="page"])::before{opacity:1;transform:translateX(0)}
 .root .subLinks[data-snap]::before{transition:none}
 .root .subLinks:has(a[aria-current]:active)::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 @media(hover:hover){.root .subLinks a:not([aria-current]):hover{opacity:1;color:var(--pitch)}}

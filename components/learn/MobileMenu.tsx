@@ -41,7 +41,7 @@ export default function MobileMenu({links,pages=[]}:{links:readonly (readonly [s
    <span className={s.menuIco} aria-hidden="true"><i/><i/></span>
   </summary>
   <div className={s.menuPanel} id="learn-menu">
-   <ul className={s.menuList}>{links.map(([id,label])=><li key={id}><a href={`#${id}`}><span>{label}</span></a></li>)}{pages.map(([href,label])=><li key={href}><a href={href}><span>{label}</span></a></li>)}</ul>
+   <ul className={s.menuList}>{links.map(([id,label])=><li key={id}><a href={`#${id}`}><span>{label}</span></a></li>)}{pages.map(([href,label])=><li key={href}><a href={href} aria-current={href==='/'?'page':undefined}><span>{label}</span></a></li>)}</ul>
   </div>
  </details>;
 }

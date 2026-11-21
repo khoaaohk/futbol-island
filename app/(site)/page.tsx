@@ -46,8 +46,8 @@ const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
 /* Nov 20 2026 evening (owner: "yes change the home page bar too"): the site's three links, Learn, Games, Library. Learn still
    scrolls to the Learn chapter; Explore, Friends, Safety and About left the bar (their chapters stay on the page, and About and
    Safety are in the footer). Games and Library are page links, not chapters: they never get the current chip. */
-const NAV:[string,string][]=[['learn','Island']];
-const NAV_PAGES:[string,string][]=[['/games','Games'],[LIBRARY_PATH,'Library']];
+const NAV:[string,string][]=[];
+const NAV_PAGES:[string,string][]=[['/','Island'],['/games','Games'],[LIBRARY_PATH,'Library']];
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
 const isWide=(k:string)=>{const im=learnAsset(k).image;return !!im&&im.width>im.height*.8;};
@@ -115,7 +115,7 @@ export default function Home(){
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a>
-    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}{NAV_PAGES.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
+    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}{NAV_PAGES.map(([href,label])=><li key={href}><a href={href} aria-current={href==='/'?'page':undefined}>{label}</a></li>)}</ul>
     <MobileMenu links={NAV} pages={NAV_PAGES}/>
     <NavPlay className={s.pill} href={PLAY_URL}/>
    </div>
