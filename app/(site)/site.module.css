@@ -77,9 +77,15 @@
 /* The page head is the home chapter head: centred, breadcrumb above a huge tight 600 headline in the system sans (no brush face,
    no text shadow), the lead in soft ink at weight 500. From 1100px it spreads past the reading column so a long title has room. */
 /* Nov 20 2026 evening (owner: "make sure all the breadcrumbs are in the same place so users always know where to find it"): the
-   head is left-aligned on every page, so the breadcrumb is always the first thing at the content's left edge. */
-.intro{display:grid;gap:var(--s2);justify-items:start;text-align:left;padding:clamp(8px,4vh,48px) 0 var(--s2)}
-@media(min-width:1100px){.intro{margin-inline:-140px}}
+   head is left-aligned on every page, so the breadcrumb is always the first thing at the content's left edge.
+   Layout batch 3 (same day): THE CONTENT EDGE. A page without a rail has one edge, the left edge of the centred reading column
+   (--col, 736 px; x = (100vw - 736) / 2 when the window is wider, the gutter otherwise); a page with a rail has the rail shell's
+   edge (below). The head no longer spreads 140 px past the column from 1100 px: breadcrumb, H1 and body share the left edge. The
+   breadcrumb's top is fixed too (main's 24 + the head's 16 under the 68 px header = 108 px, the rail shell's 68 + 40), not 4vh,
+   so it does not move with the window's height. Measured on every page type by scripts/check-page-heads-browser.cjs. */
+.intro{display:grid;gap:var(--s2);justify-items:start;text-align:left;padding:var(--s2) 0 var(--s2)}
+/* a page whose breadcrumb sits straight in .main (the video watch page) puts it at the same place as the head's */
+.main>.crumbs{margin:var(--s2) 0 calc(var(--s2) - var(--gap))}
 .main .intro p{max-width:60ch}
 .crumbs{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:0 var(--s1)}
@@ -397,7 +403,10 @@ details[open]>summary .plus{transform:rotate(45deg)}
    the links begin. Rows have no gap here (the side column spans many auto rows); each block keeps the --gap below it instead.
    Phones and tablets are unchanged: one column. */
 @media screen and (min-width:1100px){
- .main:has(>[data-toc]){--side:288px;max-width:calc(var(--col) + var(--side) + 72px + 2 * var(--gutter));grid-template-columns:minmax(0,var(--col)) var(--side);column-gap:72px;row-gap:0;justify-content:center}
+ .main:has(>[data-toc]){--side:264px;--tocgap:56px;max-width:none;grid-template-columns:minmax(0,var(--col)) var(--side);column-gap:var(--tocgap);row-gap:0;justify-content:start;
+  /* layout batch 3: the reading column keeps the shared content edge ((100vw - --col) / 2) and the side column sits to its right;
+     only when the window is too narrow for both (under about 1410 px) does the pair shift left to fit */
+  padding-left:max(var(--gutter),min((100% - var(--col)) / 2,100% - var(--gutter) - var(--col) - var(--tocgap) - var(--side)))}
  .main:has(>[data-toc])>*,.main:has(>[data-toc])>:is(.printPage,.noPrint)>*{grid-column:1}
  .main:has(>[data-toc])>*:not(:last-child),.main:has(>[data-toc])>:is(.printPage,.noPrint)>*{margin-bottom:var(--gap)}
  .main:has(>[data-toc])>.intro{grid-column:1/-1;margin-inline:0}

@@ -36,6 +36,9 @@ export default function WatchPage({params}:{params:{slug:string}}){
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={watchVideoLd(v)}/>
+  {/* layout batch 3 (Nov 20 2026, owner: "make sure all the breadcrumbs are in the same place"): the breadcrumb is the first thing
+      in the content column, at the shared content edge, above the player (it used to sit in the words beside the clip) */}
+  <Breadcrumbs crumbs={crumbs}/>
   <article className={`${css.watch} ${tall?css.tall:css.wide}`} data-watch={v.slug}>
    <div className={css.screen}>
     <video className={css.player} style={size} controls playsInline preload="metadata" poster={v.posterSrc} width={v.w} height={v.h} aria-describedby="clip-words">
@@ -44,7 +47,6 @@ export default function WatchPage({params}:{params:{slug:string}}){
     </video>
    </div>
    <div className={css.words} id="clip-words">
-    <Breadcrumbs crumbs={crumbs}/>
     <h1 className={css.h1}>{v.title}</h1>
     <p className={css.facts}><span>{v.seconds} seconds</span><span>No sound</span><span>Added <time dateTime={v.uploadDate}>{videoDateLabel(v)}</time></span></p>
     {v.text.map(x=><p key={x}>{x}</p>)}
