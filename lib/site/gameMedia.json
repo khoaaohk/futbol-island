@@ -130,12 +130,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 715188,
-   "webm": 780783,
+   "mp4": 554133,
+   "webm": 422168,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 62232
+    "bytes": 50854
    }
   },
   "puzzle": {
@@ -407,19 +407,19 @@
     "file": "tennis-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 62232
+    "bytes": 50880
    },
    {
     "file": "tennis-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 60978
+    "bytes": 51542
    },
    {
     "file": "tennis-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 62678
+    "bytes": 53328
    },
    {
     "file": "tennis-4.webp",
