@@ -44,5 +44,5 @@
 @media (max-height:500px){.pad{width:116px;height:116px}.knob{width:50px;height:50px;margin:-25px 0 0 -25px}.drop{width:96px;height:96px;font-size:20px}.panel{bottom:10px;padding:12px 16px}.title{font-size:21px}.line,.fact{margin-bottom:8px;font-size:15px}}
 @media (prefers-reduced-motion:reduce){.panel{animation:none}.timer[data-low="true"]{animation:none}.knob{transition:none}}
 /* the win card sits at the top so the toy in the tray stays in view */
-.panel[data-claw-result]{top:calc(max(12px,env(safe-area-inset-top)) + 60px);bottom:auto}
+.panel[data-claw-result]{top:calc(max(12px,env(safe-area-inset-top)) + 96px);bottom:auto}/* under the coins + tries pills */
 @media (max-height:500px){.panel[data-claw-result]{top:auto;bottom:10px;left:auto;right:16px;translate:0 0;width:min(340px,46%)}}

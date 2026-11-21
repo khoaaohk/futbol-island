@@ -6910,8 +6910,14 @@ components/ClawMachineHud.tsx; tests/claw-machine.cjs). Cost rules it keeps:
   RoomEnvironment PMREM (built once, 0.04 blur) feeds the chrome, clearcoat paint, glass and toy reflections: no realtime reflection pass,
   **no extra light** (the inner LED strip and bulbs are emissive; the bulb chase is one InstancedMesh's colours, rewritten 3×/s idle,
   14×/s for 3.5 s after a win). Contact shadows are one InstancedMesh of soft discs.
-- **Toys are the real gashapon HD models**, re-merged per finish (draws per toy = finishes used, 3–9) so a won toy matches the Toy Shelf.
-  They are the bulk of the zoomed triangles (~25k each).
+- **Pile toys are low-poly (fix pass, Nov 21 2026; owner: "lower-detail toy models for the pile").** Each pile toy is the real gashapon
+  model built with the capped low-poly kit (`buildToy(id,{lo:true})` → `createToyKit(toy,{lo:true})`: spheres 10 around, cylinders and
+  cones 8, tori 4×12, lathes 10, 1 bevel segment, 3 curve segments), every part merged into ONE vertex-coloured mesh on one shared
+  material (`pileToy` in clawMachine3d.ts): 1 draw per toy, 12-pile 317k → 78k triangles. The won toy is swapped for the full HD model
+  (`setToy(slot,id,true)`, merged per finish) once it lands in the tray, and the result card's "Look closer" builds its own HD viewer.
+- **Control deck (fix pass):** the joystick, DROP button and credit display sit on a sloped console (`CLAW_DECK`) that juts out of the
+  base front below the glass floor, and the zoom camera looks a little further down (`cy+dist*.22`), so on a phone the controls read under
+  the pile, never over it. Same draws (merged into the existing statics).
 - **Physics only runs while something moves.** Fixed 120 Hz steps, 2 particles per toy (24), typed arrays, no allocation per step;
   `sim.sleeping` (all toys asleep, claw parked, flap still) → no steps and no mesh updates. The pile is settled offline when the machine
   is first built (~4 s of sim in a few ms).
@@ -6930,6 +6936,17 @@ phone**, no thermal claim):
 | Zoomed on the machine, phone | 124 | 469k (machine + toys: 94 draws, 317k) |
 | Zoomed on the machine, desktop | 127 | 481k |
 
-Tradeoff to watch on a real phone: the zoomed view's ~470k triangles come mostly from the 12 HD toy models. If an iPhone runs warm while
-playing, the first lever is building the pile toys with the low-poly toy kit (`createToyKit(toy,{hd:false})`, ~2.6× fewer segments) and
-keeping the HD model for the Toy Shelf only.
+After the fix pass (low-poly pile, same method, same day; **not measured on a real phone**, no thermal claim):
+
+| View | Draw calls | Triangles |
+| --- | --- | --- |
+| Room, standing at the claw (phone / desktop) | 58–59 / 76 | 180k / 208k (unchanged: the LOD is still 4 draws, 3,960 triangles) |
+| Zoomed, phone, idle | 85 | 233k (machine + toys: 53 draws, 80k) |
+| Zoomed, phone, won toy in the tray (HD) | 87 | 251k (55 draws, 98k) |
+| Zoomed, desktop | 86 | 244k |
+
+The machine + toys are now 53 draws / 80k triangles (was 94 / 317k). The remaining ~32 draws / ~150k triangles of a zoomed frame are the
+room's own merged batches seen at the cabinet's sides (the same meshes the room view draws); the target of ≤ 60 draws / ≤ 150k for the
+whole zoomed frame is therefore not met. Tried: hiding room meshes whose bounding sphere sits wholly behind the cabinet's opaque front
+rectangle; it hid nothing (the room's big meshes are room-wide batches), so it was removed. Next levers if a phone runs warm: a shorter
+far plane while zoomed (would clip the room's floor/walls with a visible edge), or merging the claw's 9 finger/knuckle/tip meshes.
