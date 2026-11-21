@@ -118,6 +118,8 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
    if(moving&&!aid.reduced){c.lineWidth=2.5;c.strokeStyle=INK;c.beginPath();for(let k=-1;k<=1;k++){c.moveTo(head.fx+k*head.w*.5,head.y-4);c.lineTo(head.fx+k*head.w*.5,head.y-4-head.s*1.3);}c.stroke();}
    if(holder&&aid.aid>=1){if(T&&T.kind!=='feet')tag(c,T.kind==='long'?'LONG BALL!':T.kind==='shot'?'SHOT!':'WIND-UP!',head.x,head.y-24,{size:10,fill:SUN,align:'center'});else if(L.heavy)tag(c,'HEAVY TOUCH!',head.x,head.y-24,{size:10,fill:SUN,align:'center'});else if(L.waiting)tag(c,'WAITING…',head.x,head.y-24,{size:10,align:'center'});}
    else if(holder&&L.waiting)tag(c,'…',head.x,head.y-24,{size:13,align:'center'});// a passer who waits always shows it (the press is on)
+   // another attacker standing past the line is not flagged: the ball was not played to him (Law 11: only an offence when involved)
+   if(snap&&!runner&&a.y<snap.line-HL.level&&a.y<HL.half)tag(c,'NOT IN THE PLAY',head.x,head.y-22,{size:9,align:'center'});
    if(snap&&runner){tag(c,snap.offside?'OFFSIDE':snap.reason==='level'?'LEVEL = ONSIDE':snap.reason==='ownhalf'?'OWN HALF = ONSIDE':'ONSIDE',head.x,head.y-24,{size:11,fill:snap.offside?RED:TEAL,color:snap.offside?PAPER:INK,align:'center'});}
   }});}
   for(let i=0;i<n;i++){const d=s.defs[i],out=s.press&&s.press.i===i;items.push({y:d.y,draw:()=>{bean(c,d.x,d.y,{body:look.body,skin:look.skin,hair:look.hair,back:true,ring:out?SUN:PAPER,num:String(i+1),lean:out&&s.press!.st==='go'?.8:0});}});}
