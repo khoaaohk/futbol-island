@@ -28,7 +28,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  /** Kick reactions (lib/graphics/propReactions.ts): each post's vertex runs in the two merged fixture meshes. */
  const propSpecs:PropSpec[]=[];
  const roofRoot=new T.Group();roofRoot.name='rooftop-floodlights';roofRoot.position.set(KNOCKOUT_ROOF.x,KNOCKOUT_ROOF.height,KNOCKOUT_ROOF.z);scene.add(roofRoot);
- const roofVenue:LightingVenue={id:'knockout',name:'Rooftop Knockout',x:KNOCKOUT_ROOF.x,z:KNOCKOUT_ROOF.z,elevation:KNOCKOUT_ROOF.height,width:24,length:44,players:7,goalWidth:0,goalHeight:0,surface:'#648c72',shape:''};
+ const roofVenue:LightingVenue={id:'knockout',name:'Rooftop Knockout',x:KNOCKOUT_ROOF.x,z:KNOCKOUT_ROOF.z,elevation:KNOCKOUT_ROOF.height,width:24,length:44,players:7,goalWidth:0,goalHeight:0,surface:'#6e9b67',shape:''};
  for(const v of [...VENUES,roofVenue]){
   const root=v.id==='knockout'?roofRoot:roots.get(v.id)!,body:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[];
   const {height,side,posts}=fieldLightLayout(v);

@@ -298,13 +298,13 @@ export function* buildTownSteps(scene: T.Scene) {
   function planter(x:number,z:number){prop('planter',()=>planterParts(x,z));}
   function planterParts(x:number,z:number){
     assets.push({kind:'planter',x,z,w:1.6,d:1.6,visualW:1.9,visualD:1.9});
-    box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#739568',x,1,z);
+    box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
     obstacles.push({x,z,w:1.6,d:1.6});
   }
   function tree(x:number,z:number){prop('tree',()=>treeParts(x,z));}
   function treeParts(x:number,z:number){
     assets.push({kind:'tree',x,z,w:.45,d:.45,visualW:3.6,visualD:3.6,canopyHeight:4.4});
-    cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#739568',x,3.3,z);
+    cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#5b8c5c',x,3.3,z);
     obstacles.push(trunkCollider(x,z,.18));
   }
   function table(x:number,z:number){prop('table',()=>tableParts(x,z));}
@@ -811,7 +811,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const arenaRails:(Obstacle&{floor:number;top:number})[]=[],ar=KNOCKOUT_ROOF;
   // Rooftop turf in eight 5.5 m mown bands (pitchStripes.ts). Two palette shades of the old turf colour: both batch into the
   // same vertex-colour chunk draw as before, so the stripes add no draw call, material or shader.
-  {const light=shadeHex('#648c72',STRIPE_LIGHT),dark=shadeHex('#648c72',STRIPE_DARK);for(let i=0;i<8;i++)box(24,.035,5.5,i%2?light:dark,ar.x,ar.height+.02,ar.z-22+(i+.5)*5.5);}
+  {const light=shadeHex('#6e9b67',STRIPE_LIGHT),dark=shadeHex('#6e9b67',STRIPE_DARK);for(let i=0;i<8;i++)box(24,.035,5.5,i%2?light:dark,ar.x,ar.height+.02,ar.z-22+(i+.5)*5.5);}
   for(const side of [-1,1]){box(.09,.04,44,'#f8edc9',ar.x+side*12,ar.height+.05,ar.z);box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z+side*22);}
   box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z);
   for(const side of [-1,1]){
@@ -1235,7 +1235,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const coachesSign=sign('COACHES',13.7,2.1,161,9.7,-36.63,'#294f43','#f4cc7c');coachesSign.name='coaches-sign';
   sign('NOW OPEN',5,.6,161,3.5,-36.75,'#477c6a');// Lane 2 (Sep 30 2026): the Coaches Centre is live (Coaches Board + IDP); was OPENING SOON (lib/town/openingSoon.ts)
   path(145,-34,40,4);path(174,-24,6,26);
-  box(28,.035,19.3,'#6e9678',156,-.055,-19.65);
+  box(28,.035,19.3,'#78a970',156,-.055,-19.65);
   for(const x of [142.4,169.6])box(.1,.008,18.5,'#f5eed5',x,-.022,-19.65);
   for(const z of [-28.9,-10.4])box(27.2,.008,.1,'#f5eed5',156,-.022,z);
   box(26,2.3,.35,'#d6b58a',156,1.15,-29.5);

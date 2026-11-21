@@ -42,7 +42,7 @@ export function distanceToShore(x:number,z:number){
 }
 
 /** Southern lawn meets the coastal sand and pier; northern beach keeps its setback. */
-export const INTERIOR_GRASS_COLOR='#6e9678';
+export const INTERIOR_GRASS_COLOR='#608870';// Nov 21 2026: was '#6e9678', the same green as every pitch; lawn a step darker and cooler, pitches '#78a970' (lib/town/venues.ts)
 /** West of x -100 the lawn keeps a fixed 8 m of dry sand behind the beach ribbon (West Beach, 17 m of sand in all) instead of the
  *  centre-scaled setback, which would leave 40+ m of bare sand on the far west coast; blended over 40 m so the edge stays smooth. */
 export const INTERIOR_GRASS=SHORE_SAND.map(({outer,inner})=>{

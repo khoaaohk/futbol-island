@@ -6,9 +6,9 @@ export type Format='futsal'|'7v7'|'9v9'|'11v11';
 export type Venue={id:Format;name:string;x:number;z:number;width:number;length:number;players:number;goalWidth:number;goalHeight:number;surface:string;shape:string;elevation?:number};
 export const VENUES:Venue[]=[
  {id:'futsal',name:'Palm Coast Rooftop',x:11,z:18,elevation:6,width:20*250/270,length:40*380/400,players:5,goalWidth:3,goalHeight:2,surface:'#737c75',shape:'3 + 1'},
- {id:'7v7',name:'Old Town Ground',x:11,z:-80,width:37*250/270,length:55*380/400,players:7,goalWidth:4.9,goalHeight:2.13,surface:'#6e9678',shape:'2–3–1'},
- {id:'9v9',name:'Club Grounds',x:160,z:-110,width:45.7*250/270,length:73.2*380/400,players:9,goalWidth:6.4,goalHeight:2.13,surface:'#6e9678',shape:'3–2–3'},
- {id:'11v11',name:'Eleven Park',x:135,z:100,width:68*250/270,length:105*380/400,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#6e9678',shape:'4–3–3'},
+ {id:'7v7',name:'Old Town Ground',x:11,z:-80,width:37*250/270,length:55*380/400,players:7,goalWidth:4.9,goalHeight:2.13,surface:'#78a970',shape:'2–3–1'},
+ {id:'9v9',name:'Club Grounds',x:160,z:-110,width:45.7*250/270,length:73.2*380/400,players:9,goalWidth:6.4,goalHeight:2.13,surface:'#78a970',shape:'3–2–3'},
+ {id:'11v11',name:'Eleven Park',x:135,z:100,width:68*250/270,length:105*380/400,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#78a970',shape:'4–3–3'},
 ];
 export const venueById=(id:Format)=>VENUES.find(v=>v.id===id)!;
 
@@ -32,7 +32,7 @@ export const BEACH_VENUE:LiveVenue={id:'beach',name:'Sharks Beach Court',x:BEACH
 export const STADIUM_PITCH_Y=-.045;
 /** The DRIP FC Stadium (the west stadium) (westParkLayout STADIUM): 63 × 100 m, full-size 7.32 × 2.44 m goals, long axis north–south. Its
  *  `elevation` puts the rigs (elevation + FIELD_SURFACE_Y) and the goal frames on the stadium grass. */
-export const STADIUM_VENUE:LiveVenue={id:'stadium',name:STADIUM_NAME,x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#6e9678',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */};
+export const STADIUM_VENUE:LiveVenue={id:'stadium',name:STADIUM_NAME,x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#78a970',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */};
 export const LIVE_VENUES:readonly LiveVenue[]=[...VENUES,BEACH_VENUE,STADIUM_VENUE];
 /** Sim y (along the court) of the flags just outside the beach court's touchlines: the halfway flag and the 9 m (penalty-area)
  *  flags (coralCayWorld). A sitting-out player's cheering spot keeps clear of them (liveJoin.clearOfFlags). */
