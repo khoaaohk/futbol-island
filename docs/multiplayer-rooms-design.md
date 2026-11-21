@@ -516,8 +516,22 @@ entry Warp + one retry 5.5 s later, no new message, no protocol change. Relay v1
   The Explore prompt invites: "Dive in: 2 friends exploring" ("players" on the public island), from the same cached count.
 - **Public island limit (found in the local two-player check):** the flag count and the invite work for PARTY friends (the party
   roster keeps everyone). On the public island the relay drops a stranger from my roster when they go into a room (worlds only
-  send same-room strangers), so island strangers do not see "2 exploring" for strangers; divers still see each other underwater.
-  Counting strangers would need a relay change (e.g. a per-room count message): not built, owner decision.
+  send same-room strangers), so island strangers did not see "2 exploring" for strangers; divers still see each other underwater.
+- **Public-island reef counts (BUILT 21 Nov 2026, owner "yes ... go ahead"; NEEDS A RELAY DEPLOY):** new world-only cap `Cap.Reef`
+  (32768, in `CAPS_WORLD`) and frame `S.Reef [46, [n41..n47]]` (`multiplayer/protocol/types.ts`, parser in `validate.ts`, up to
+  `REEF_COUNTS_MAX` 16 entries so a later relay can add reefs). The relay (`roomCore.ts` `reefPass`) counts, per world shard, the
+  connected, not quarantined members whose last pose is in a reef room and not Hidden (a hidden tab, a relay-set away, a dropped
+  socket and C.Leave all stop counting at once); each recipient's list leaves out themself and everyone held apart from them (reports
+  and the following guard, the map-dots rule). It runs on the 1 Hz hint pass and sends only when that recipient's list changed (a new
+  socket: at once after C.Caps if non-zero), so a diver bouncing in and out costs at most one small frame a second per socket.
+  **Privacy:** numbers only; no id, name, look or spot of a stranger in a reef is sent, and they stay hidden on the island as before.
+  **Client:** `lib/multiplayer/reefCounts.ts` (attached by Town to the page connection, kept only while a live world) and
+  `townBridge.ts` syncHints: a dive flag's count = max(roster count, S.Reef count) (`reefFlagCount`; never a sum, since on a world
+  the relay count already includes everyone my roster shows, and neither counts me), redrawn only on a change, so the flag reads
+  "1 exploring" and the prompt "Dive in: 1 player exploring" for strangers. **Compatibility:** an old relay never offers Cap.Reef, so
+  a new client keeps the friends-only count; an old client never answers Cap.Reef, so it is never sent S.Reef (and would drop the
+  unknown type anyway); a party never gets it. Tests: `tests/mp-reef-counts.cjs` (relay + protocol), `tests/mp-reef.cjs` (store, flag,
+  prompt). Deploy: `cd multiplayer/relay && npx wrangler deploy` (no migration, no new binding); the client can ship before or after.
 - Old clients: a reef pose reads Indoors (fade at the door) and plain "Busy"/indoors in the list; they never draw divers.
 - Safety: no chat, no new text on the wire (numbers only); emotes as on land (bubble + arms on the swimming body); Hide / Mute /
   Report apply (same friend core); strangers only in the public world as in every room.
