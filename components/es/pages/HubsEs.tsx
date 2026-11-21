@@ -48,7 +48,7 @@ function GuideVideoEs({enPath,words}:{enPath:string;words?:{name:string;descript
  const v=guideVideo(enPath);if(!v||!words)return null;
  const id=`clip-${v.key}`;
  return <section className={styles.section} aria-labelledby={id} data-guide-video={v.key}>
-  <h2 className={styles.h2} id={id}>Míralo en el juego</h2>
+  <h2 className={`${styles.h2} ${rtEs.target}`} id={id}>Míralo en el juego</h2>
   <ClipPlay name={words.name} poster={learnUrl(v.poster)} webm={v.webm&&learnUrl(v.webm)} mp4={learnUrl(v.mp4!)} width={v.width} height={v.height} describedBy={`${id}-d`} lang="es"/>
   <p className={styles.caption} id={`${id}-d`}>{words.description} {v.seconds} segundos, sin sonido.</p>
  </section>;
@@ -70,7 +70,7 @@ function MoreToLearnEs({except}:{except?:string}){
 function LessonHubEs({hub,children,extra=[]}:{hub:EsHub;children?:React.ReactNode;extra?:readonly RailItem[]}){
  const crumbs=hubCrumbsEs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav, as English (components/site/LessonHub.tsx): Back to the Biblioteca, Resumen, the page's own section, each group, Preguntas, Más para aprender */
- const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
+ const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...(guideVideo(hub.enPath)&&hub.video?[sec(`clip-${guideVideo(hub.enPath)!.key}`,'Míralo en el juego')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -121,7 +121,7 @@ function ChartEsPage({slug}:{slug:string}){
   <JsonLd data={esLd(articleLd({headline:e.title,path,description:e.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:e.h1,teaches:e.lead,image:diagramUrl(c.picture)}))}/>
   <JsonLd data={faqLd(e.faq)}/>
   {/* layout batch 3 (Nov 20 2026): Back to the Biblioteca, Resumen, the page's sections */}
-  <EsIntro crumbs={crumbs} h1={e.h1} lead={e.lead} more={e.more} top rail={<RailNav rail={chartRail({tables:c.tables.map((t,i)=>({id:t.id,title:e.tables[i].title})),fields:c.fields?CHART_FIELDS_ES.title:undefined,sections:c.sections.map((x,i)=>({id:x.id,title:e.sections[i].title}))},true)} current="#top"/>}/>
+  <EsIntro crumbs={crumbs} h1={e.h1} lead={e.lead} more={e.more} top rail={<RailNav rail={chartRail({tables:c.tables.map((t,i)=>({id:t.id,title:e.tables[i].title})),fields:c.fields?CHART_FIELDS_ES.title:undefined,sections:c.sections.map((x,i)=>({id:x.id,title:e.sections[i].title})),sub:c.slug!=='soccer-age-groups'},true)} current="#top"/>}/>
   {c.tables.map((t,i)=>{const x=e.tables[i];return <Section key={t.id} id={t.id} title={x.title}>
    {x.intro&&<p>{x.intro}</p>}
    <DataTable label={x.title} head={x.head} rows={x.rows}/>

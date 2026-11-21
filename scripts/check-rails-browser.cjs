@@ -27,7 +27,7 @@ const T=[
  ['tools','/tools','/library',['/tools/7v7-lineup-builder','/tools/soccer-playing-time-calculator'],'/tools'],
  ['field-diagrams','/tools/soccer-field-diagrams','/tools',['/tools/soccer-field-diagrams/blank-7v7-soccer-field'],'/tools/soccer-field-diagrams'],
  ['age-groups','/learn/soccer-age-groups','/library',['/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age'],'/learn/soccer-age-groups'],
- ['guides','/learn','/library',['/learn/7v7-9v9-11v11','/learn/futsal-for-kids','/learn/football-rules-for-kids','/learn/passing-and-support','/learn/soccer-quiz-for-kids'],'/library'],
+ ['guides','/learn',null,['/learn/7v7-9v9-11v11','/learn/futsal-for-kids','/learn/football-rules-for-kids','/learn/passing-and-support','/learn/soccer-quiz-for-kids'],'/library'],
  ['format-guides',null,null,['/learn/7v7-soccer-formations','/learn/11v11-soccer-formations'],'/learn/soccer-formations'],
  ['compare-positions',null,null,['/learn/soccer-positions/fullback-vs-wingback'],'/learn/soccer-positions'],
  ['compare-formations',null,null,['/learn/soccer-formations/4-3-3-vs-4-4-2'],'/learn/soccer-formations'],

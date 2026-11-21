@@ -27,7 +27,7 @@ export default function ChartView({slug}:{slug:string}){
   <JsonLd data={articleLd({headline:c.title,path:c.path,description:c.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:c.h1,teaches:c.lead,image:diagramUrl(c.picture)})}/>
   <JsonLd data={faqLd(c.faq)}/>
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back to the Library, Overview, the page's sections */}
-  <GuideIntro crumbs={crumbs} h1={c.h1} lead={c.lead} more={c.more} top rail={<RailNav rail={chartRail({tables:c.tables,fields:c.fields?'A 7v7 field next to a full-size field':undefined,sections:c.sections})} current="#top"/>}/>
+  <GuideIntro crumbs={crumbs} h1={c.h1} lead={c.lead} more={c.more} top rail={<RailNav rail={chartRail({tables:c.tables,fields:c.fields?'A 7v7 field next to a full-size field':undefined,sections:c.sections,sub:c.slug!=='soccer-age-groups'})} current="#top"/>}/>
   {c.tables.map(t=><Section key={t.id} id={t.id} title={t.title}>
    {t.intro&&<p>{t.intro}</p>}
    <DataTable label={t.title} head={t.head} rows={t.rows}/>

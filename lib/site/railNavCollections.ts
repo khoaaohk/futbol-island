@@ -69,9 +69,18 @@ export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All stor
 
 /* age groups and the other by-age charts (app/(site)/learn/ChartView.tsx, the Spanish ChartEsPage): Back to the Library, then the
    page's tables and sections in page order */
-export const chartRail=(o:{tables:readonly {id:string;title:string}[];fields?:string;sections:readonly {id:string;title:string}[]},es=false):Rail=>
- hub(L(es,'On this page','En esta página'),[...o.tables.map(t=>[t.id,t.title] as const),...(o.fields?[['fields',o.fields] as const]:[]),
-  ...o.sections.map(x=>[x.id,x.title] as const),qa(es),more(es)],es);
+/* the charts' long table and section titles get short rail labels (owner, Nov 20 2026: chip labels short; the headings on the page stay) */
+const CHART_SHORT:Record<string,readonly [string,string]>={chart:['The chart','La tabla'],measure:['Ball sizes','Tamaños'],pick:['Picking a ball','Elegir balón'],why:['Why smaller','Por qué más pequeño'],
+ full:['Full-size field','Campo grande'],small:['Small fields','Campos pequeños'],how:['Find the age group','Buscar la categoría'],birthyear:['Birth year','Año de nacimiento'],
+ formats:['Game sizes','Tamaños de juego'],fields:['Fields compared','Campos comparados']};
+const short=(id:string,title:string,es:boolean)=>CHART_SHORT[id]?.[es?1:0]??title;
+/** The age groups page and the two by-age charts that share its template: the age groups page is the hub (Back to the Library);
+ *  the ball size and field size charts go Back to it, their real parent (the breadcrumb is Home > chart). */
+export const chartRail=(o:{tables:readonly {id:string;title:string}[];fields?:string;sections:readonly {id:string;title:string}[];sub?:boolean},es=false):Rail=>{
+ const list:Sec[]=[...o.tables.map(t=>[t.id,short(t.id,t.title,es)] as const),...(o.fields?[['fields',short('fields',o.fields,es)] as const]:[]),
+  ...o.sections.map(x=>[x.id,short(x.id,x.title,es)] as const),qa(es),more(es)];
+ return o.sub?page(L(es,'On this page','En esta página'),es?{href:'/es/learn/soccer-age-groups',name:'Categorías por edad'}:{href:'/learn/soccer-age-groups',name:'Soccer age groups'},list,es)
+  :hub(L(es,'On this page','En esta página'),list,es);};
 
 /* Fishbook and player cards: the hub lists its browse-by-group block and its own groups (fish by rarity; cards as their page groups
    them), never the 167 fish or 450 cards; a group page (/fish/sharks, /cards/strikers) goes Back to its hub and lists its groups;

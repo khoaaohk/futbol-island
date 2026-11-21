@@ -56,7 +56,7 @@ export default function LessonHub({hub,children,extra=[]}:{hub:Hub;children?:Rea
  const crumbs=hubCrumbs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to the Library, Overview, then what is on
     this hub in page order: its own sections, each lesson group, the questions and More to learn */
- const rail=hubRail(`${hub.crumb} on this page`,[{items:[...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Questions'),sec('more','More to learn')]}]);
+ const rail=hubRail(`${hub.crumb} on this page`,[{items:[...(guideVideo(hub.path)?[sec(`clip-${guideVideo(hub.path)!.key}`,'See it in the game')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Questions'),sec('more','More to learn')]}]);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
