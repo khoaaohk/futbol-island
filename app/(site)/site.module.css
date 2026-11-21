@@ -59,6 +59,13 @@
 @media(min-width:641px) and (max-width:759px){.navLinks{gap:4px}.page .navLinks a{width:82px}}
 /* Nov 20 2026 (Library added, six links): the brand, six 92px links and Play need about 880px, so 641-899px gets the phone bar too */
 @media(min-width:641px) and (max-width:899px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
+/* Nov 20 2026 (owner: "the library btn needs to be selected"): on the Library the header's Library link is the selected one, with
+   the home bar's pink chip (components/learn/learn.module.css .subLinks::before). The bar is server-rendered in the shared
+   layout with no client code, so the page marks itself ([data-library-hero], components/site/LibraryPage.tsx) and CSS does the
+   rest; href$= also matches /es/library. No other page has the marker, so no other link is ever selected by this rule. */
+.page:has([data-library-hero]) .navLinks a[href$="/library"]{box-sizing:border-box;height:36px;min-height:36px;margin-block:4px;opacity:1;color:var(--ink);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.page:has([data-library-hero]) .navEs .navLinks a[href$="/library"]{padding:0 14px}
+.page:has([data-library-hero]) .menuList a[href$="/library"]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 @media print{.header{display:none}}
 
 /* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */

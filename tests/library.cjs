@@ -46,6 +46,11 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert.match(nav,/\[LESSONS_INDEX,'Learn'\],\['\/#explore','Explore'\],\['\/#together','Friends'\],\[SAFE_GUIDE\.path,'Safety'\],\['\/about','About'\],\[LIBRARY_PATH,'Library'\]\]/,'header: Learn, Explore, Friends, Safety, About, Library');
  assert.match(navEs,/\[toEs\('\/about'\),'Acerca de'\],\[toEs\(ES_LIBRARY\),'Biblioteca'\]\]/,'Spanish header: Biblioteca after Acerca de');
  assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\[LIBRARY_PATH,'Library'\]\];/);assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
+ // the selected state: a server-rendered bar cannot know its page, so the Library marks itself and CSS selects the link (desktop list and phone menu, /library and /es/library); Learn has no selected rule
+ {const css=read('app/(site)/site.module.css');assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[href\$="\/library"\]\{[^}]*background:var\(--btn-pink/,'desktop: Library is the selected link on the Library');
+  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[href\$="\/library"\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
+  assert.equal((css.match(/:has\(\[data-library-hero\]\)/g)||[]).length,3,'only the Library link is selected by the marker');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
+  for(const f of ['app/(site)/learn/lessons/page.tsx','components/site/LessonHub.tsx','lib/site/GuideParts.tsx'])assert(!/data-library-hero/.test(read(f)),`${f}: no marker, so Library is not selected there`);}
  const cfg=await import(require('node:path').join(root,'next.config.mjs')),red=await cfg.default('phase-production-build').redirects();
  const r=red.find(x=>x.source==='/learn'),re=red.find(x=>x.source==='/es/learn');
  assert.deepEqual([r.destination,r.permanent,r.missing],['/library',true,[{type:'query',key:'q'}]],'plain /learn -> /library; /learn?q= is the search');
