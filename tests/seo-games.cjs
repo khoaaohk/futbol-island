@@ -35,6 +35,8 @@ const L=rel=>load(path.join(root,rel));
 const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
 const games=L('lib/site/games.ts'),catalog=L('lib/arcade/arcadeCatalog.ts'),guides=L('lib/site/guides.ts'),tools=L('lib/site/tools/registry.ts'),paths=L('lib/site/paths.ts'),seo=L('lib/site/seo.ts');
 const PATHS=new Set(paths.sitePaths().map(p=>p.path)),G='app/(site)/games',PAGES=games.GAME_PAGES,HUB=games.GAMES_HUB,ALL=games.GAME_LISTINGS;
+// Nov 21 2026: a page whose game has no machine in the room yet (arcadeUnplaced) is built but unlisted (lib/site/games.ts ALL_GAME_PAGES).
+const ALLP=games.ALL_GAME_PAGES,UNLISTED=ALLP.filter(g=>!PAGES.includes(g));
 // Nov 20 2026 (owner: every page's side nav "should list what's on that page"): the rail is navigation, so its words are not counted as page copy.
 const text=h=>h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/g,' ').replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 /** Width and height of a WebP (lossy VP8, lossless VP8L or extended VP8X) or a JPEG, read from the file's own header. */
@@ -73,21 +75,21 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  assert(/free/i.test(g.faq[0].q)&&g.faq.some(f=>/phone/i.test(f.q)&&/Chromebook/i.test(f.q))&&g.faq.some(f=>/^How do you play/.test(f.q))&&g.faq.some(f=>/What age/.test(f.q)),`${g.path}: the four questions people search`);}
 // total weight of the pictures (brief: about 1.2 MB for all), and no stray file
 {const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<2.0*1024*1024/* Nov 17 2026: was 1.25 MB for seven games (about 175 KB a game: two stills and a share picture); three puzzle games added 430 KB (1.65 MB); Nov 18 2026: two games retired and two added, so 2.0 MB still covers eleven games */,`public/games weighs ${Math.round(bytes/1024)} KB`);
- const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
+ const used=new Set([...ALL.flatMap(p=>p.images),...UNLISTED.flatMap(g=>[g.og,...games.allShots(g).map(s=>s.src)])].map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
 // Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 21 MB (Nov 20 2026: was 20 MB; four stills per game added ~0.5 MB).
-{const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
- const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster,c.mp4s]).filter(Boolean).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,4)),...gm.islandStills(),gm.GAMES_HERO_PHONE].map(s=>path.basename(s.src)));
+{const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...ALLP.map(g=>gm.gameClip(g.id))].filter(Boolean);
+ const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster,c.mp4s]).filter(Boolean).map(f=>path.basename(f))),usedS=new Set([...ALLP.flatMap(g=>games.allShots(g)),...ALLP.flatMap(g=>gm.gameStills(g.id,4)),...gm.islandStills(),gm.GAMES_HERO_PHONE].map(s=>path.basename(s.src)));
  // Nov 20 2026 (owner: the /games lead clip must be sharp, "make sure the quality is high and not blurry"): the lead clip's own files
  // (GAMES_LEAD_CLIP: 1280 px mp4 + webm + poster) are weighed apart, under 8 MB, so the 21 MB cap still catches growth everywhere else.
  const lead=new RegExp('^'+gm.GAMES_LEAD_CLIP+'(-s)?\\.');let total=0,leadTotal=0;for(const [d,used] of [['games/clips',usedC],['games/shots',usedS]])for(const f of fs.readdirSync(pub(d))){const n=fs.statSync(pub(d+'/'+f)).size;if(d==='games/clips'&&lead.test(f))leadTotal+=n;else total+=n;assert(used.has(f),`public/${d}/${f} is used by a page`);}
  assert(leadTotal>0&&leadTotal<8*1024*1024,`the lead clip weighs ${Math.round(leadTotal/1024)} KB`);
- assert(clips.length===PAGES.length+1+gm.islandClips().length&&clips.length>=14,`a clip for every game, the hero and the island (${clips.length})`);
+ assert(clips.length===ALLP.length+1+gm.islandClips().length&&clips.length>=14,`a clip for every game, the hero and the island (${clips.length})`);
  assert(total<21*1024*1024,`gameplay media weighs ${Math.round(total/1024)} KB`);}
 
 // ---- 2 + 3. metadata and rendered HTML -------------------------------------------------------------------------------------
 const hubMod=L(`${G}/page.tsx`),pageMod=L(`${G}/[slug]/page.tsx`);
 assert.equal(hubMod.dynamic,'force-static');assert.equal(pageMod.dynamic,'force-static');assert.equal(pageMod.dynamicParams,false);
-assert.deepEqual(pageMod.generateStaticParams().map(x=>x.slug),PAGES.map(g=>g.slug),'game slugs');
+assert.deepEqual(pageMod.generateStaticParams().map(x=>x.slug),ALLP.map(g=>g.slug),'game slugs: every page is built, listed or not');
 const html=new Map();
 function check(p,meta,el,game){
  const where=p.path;
@@ -159,6 +161,20 @@ for(const g of PAGES){
  for(const k of ['How to play','What it teaches','Tips to score higher','How the difficulty grows','For parents and coaches','On a phone','On a computer'])assert(r.t.includes(k),`${g.path}: section "${k}"`);
  assert(/no ads/i.test(r.t)&&/no account/i.test(r.t)&&/no open chat/i.test(r.t)&&!/\bno chat\b/i.test(r.t),`${g.path}: the parents' promise`);
 }
+// Nov 21 2026: an unlisted page (its game is not in the room yet) is complete but noindex, out of the sitemap and linked by nothing
+for(const g of UNLISTED){const meta=pageMod.generateMetadata({params:{slug:g.slug}});
+ assert(meta.robots&&meta.robots.index===false&&meta.robots.follow===true,`${g.path}: noindex while unlisted`);assert.equal(meta.alternates.canonical,g.path);assert.equal(meta.title,g.title);
+ assert(g.title.length>=30&&g.title.length<=60&&g.description.length>=120&&g.description.length<=155,`${g.path}: title ${g.title.length}, description ${g.description.length}`);
+ assert.deepEqual(size(pub(meta.openGraph.images[0].url)),{w:1200,h:630},`${g.path}: share picture 1200x630`);
+ assert(!PATHS.has(g.path)&&!ALL.some(p=>p.path===g.path),`${g.path}: not in the sitemap or the listings`);
+ const h=renderToStaticMarkup(pageMod.default({params:{slug:g.slug}})),t=text(h),n=t.split(' ').length;
+ assert.equal((h.match(/<h1[ >]/g)||[]).length,1);assert(/football/i.test(t.slice(0,700))&&/soccer/i.test(g.h1),`${g.path}: soccer and football`);assert(n>=450&&n<=1334,`${g.path}: ${n} words`);
+ const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));const by=k=>ld.find(x=>x['@type']===k);
+ assert(by('VideoGame')&&by('BreadcrumbList')&&by('FAQPage'),`${g.path}: VideoGame, BreadcrumbList, FAQPage`);assert.deepEqual(by('BreadcrumbList').itemListElement.map(x=>x.name),['Home','Soccer games',g.name]);
+ assert.equal(by('FAQPage').mainEntity.length,g.faq.length);for(const q of g.faq)assert(h.includes(q.q.replace(/'/g,'&#x27;')),`${g.path}: the FAQ is on the page`);
+ for(const l of g.guides)assert(PATHS.has(l.path),`${g.path}: guide ${l.path} is a real page`);
+ for(const [where,other] of html)assert(!other.includes(`href="${g.path}"`),`${where} does not link the unlisted ${g.path}`);
+ assert(!JSON.stringify(HUB).includes(g.name)&&!L('lib/site/llms.ts').llmsText().includes(g.path),`${g.name} is not named on the hub or in llms.txt while unlisted`);}
 // tennis is described without match-length rules (its endless mode was built the same day)
 assert(!/first to \d|best of (three|five|\d)|\d+ points? (wins?|to win)|sets? to \d|\d+ (sets?|games) /i.test(text(html.get('/games/soccer-tennis-game'))),'tennis: no exact match-length rule');
 assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine courts');
@@ -183,7 +199,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
  const inbound=[[`${A}/soccer-positions/page.tsx`,null,'airhockey'],[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
   [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner'],
-  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'partner-passing-through-gates'},'rollball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'world-cup-shooting-game'},'ballblaster']];
+  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'partner-passing-through-gates'},'rollball'],...(games.isGameListed('safehands')?[[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'goalkeeper-angles'},'safehands']]:[]),[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'world-cup-shooting-game'},'ballblaster']];
  const reached=new Set();for(const [file,params,id] of inbound){const g=games.gameById(id);assert(R(file,params).includes(`href="${g.path}"`),`${file} ${params?params.slug:''} links ${g.path}`);reached.add(id);}
  assert.equal(reached.size,PAGES.length,'every game page has a link from a guide page (no orphans)');
  const more=renderToStaticMarkup(React.createElement(L('components/site/LessonHub.tsx').MoreToLearn,{}));assert(more.includes('href="/games"'),'"More to learn" links the games hub');}

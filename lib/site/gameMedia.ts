@@ -22,7 +22,7 @@ export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
 /** The day these clips were first published (VideoObject.uploadDate, video sitemap publication_date). The four clips added on
  *  Nov 17 2026 carry their own first commit time (git log --diff-filter=A, checked by tests/seo-video.cjs). */
 export const GAME_CLIPS_UPLOADED='2026-11-16T12:00:00-08:00';
-const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00'};
+const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00',safehands:'2026-11-21T04:53:11-08:00'};
 export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;mp4s?:string;poster:string;pw:number;ph:number;uploaded:string};
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
@@ -45,10 +45,12 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
  rollball:{name:'Roll It In gameplay: a football rolling through a puzzle',alt:'Roll It In gameplay on a phone: the ball rolls past sliding keeper dummies on a beach path, then at night hits a boost pad for ZOOM!, presses the plate and the gate calls OPEN!',caption:'Roll It In: dodge the sweepers, hit the boost pad, roll it in.'},
  ballblaster:{name:'Ball Blaster gameplay: your own bean kicks footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: the player\'s own bean kicks a multi-ball, then a fire-ball super shot breaks three robots for a trick shot, the wave is cleared and the floodlit boss wave begins',caption:'Ball Blaster: aim, fill the Super bar and break the robots before they reach your goal.'},
+ // Nov 21 2026: Safe Hands (unlisted until it has a machine in the room: the clip is on its own page only, with no watch page).
+ safehands:{name:'Safe Hands gameplay: reading the striker and diving to save',alt:'Safe Hands gameplay on a phone in Sunday league: the striker’s planted foot is ringed and labelled FOOT: LEFT, the keeper dives high to the left for SAVE! +220, then the next striker plants the foot to the right and the shot goes in for a goal',caption:'Safe Hands: watch the planted foot, then dive that way.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
- trophydrop:'/games/soccer-merge-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game'};
+ trophydrop:'/games/soccer-merge-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game',safehands:'/games/soccer-goalkeeper-game'};
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
@@ -63,6 +65,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile','Trophy Drop at level 4: a big silver trophy, a medal and a glove in the cabinet as CHAIN x2! appears'],
  rollball:['Roll It In, Crab Walk: crabs sweep across a wooden plank over the water while the ball rolls between them toward a star','Roll It In: two keeper dummies slide across the path beyond a boost pad, with a plate wired to the gate','Roll It In, Keeper Drill at night: the ball crosses a boost pad for ZOOM! with keeper dummies sliding on each side','Roll It In on the beach: the ball rolls along a narrow wooden plank over the water toward a plate and the goal'],
  ballblaster:['Ball Blaster: SUPER SHOT! The bean\'s fire ball breaks three robots for a +300 trick shot','Ball Blaster boss wave under the floodlights: the Mega Mannequin walks up behind cones, barrels and a glass board as a ball hits for SMASH! +80','Ball Blaster target practice after the boss: a ball hits a target for DING! +75 with five targets left','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
+ safehands:['Safe Hands, Sunday league: the striker’s planted foot is ringed and labelled FOOT: LEFT and CHEST UP: HIGH, and the keeper dives high to the left','Safe Hands, Cup final in the rain: a wall of three stands at the near post and the keeper waits in the open side, with the note Good wall. Now stand in the open side','Safe Hands, Cup final: the keeper catches a cross in the small box and KEEPER’S! +490 bursts over the goal, with the note The right call','Safe Hands, Cup final at night in the rain: the captain plants her foot and swings her leg for the last penalty while the keeper stands on the line'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Twelve clean swipes make a Clean Run.','Read the whole wave: leave the other team’s boot.','The sky darkens as the run goes on.','Your kit can switch mid-run.'],
@@ -76,6 +79,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.','Merge all the way up to a trophy.'],
  rollball:['Time your run between the crabs.','Watch the sweepers, then go.','Arrows make you fast.','Go slow on the narrow planks.'],
  ballblaster:['Fill the Super bar, hold until it is red, then kick.','Boss wave: keep hitting the Mega Mannequin.','Target practice: pick a target and strike through the ball.','Stop them before they reach your goal.'],
+ safehands:['The planted foot points where the shot goes.','Free kick: the wall guards one side, you guard the other.','A cross that lands free in your small box: catch it.','The Cup final ends on a penalty from the captain.'],
 };
 export function gameStills(id:GameId,max=4):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));

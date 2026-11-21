@@ -127,7 +127,7 @@ export function createSafehandsView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,op
   f.restore();return {x:p.x+dx,y:p.y+dy,h,hands:hands.map(([hx,hy])=>({x:p.x+dx+hx,y:p.y+dy+hy}))};}
 
  /** The striker in the close-up, seen from the keeper's eyes. k: 0 far back, 1 at the ball. */
- function striker(st:Striker,o:{x:number;feet:number;h:number;step:number;glance:number;hips:number;plant:{side:number;high:boolean;power:number}|null;kick:number;paused:boolean;head:boolean;side:number;ballX:number;ballY:number}){
+ function striker(st:Striker,o:{x:number;feet:number;h:number;step:number;glance:number;hips:number;plant:{side:number;high:boolean;power:number}|null;kick:number;paused:boolean;head:boolean;side:number;ballX:number;ballY:number;/** 0-1: the outline round the planted boot (the main tell) */ring?:number}){
   const c=f,h=o.h,w=h*.66,r=w/2,pl=o.plant,lean=pl?(pl.high?1:-1):0,sy=1+lean*.07,stepA=Math.sin(o.step),hop=pl||o.paused?0:Math.abs(stepA)*h*.05;
   c.save();c.translate(o.x,o.feet);
   c.fillStyle='#231a2e40';c.beginPath();c.ellipse(0,0,w*.7,w*.16,0,0,TAU);c.fill();
@@ -142,6 +142,10 @@ export function createSafehandsView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,op
   c.strokeStyle=INK;c.lineWidth=h*.12;c.beginPath();c.moveTo(-w*.22,hipY);c.lineTo(lf[0],lf[1]-bl*.3);c.moveTo(w*.22,hipY);c.lineTo(rf[0],rf[1]-bl*.3);c.stroke();
   c.strokeStyle=st.skin;c.lineWidth=h*.06;c.beginPath();c.moveTo(-w*.22,hipY);c.lineTo(lf[0],lf[1]-bl*.3);c.moveTo(w*.22,hipY);c.lineTo(rf[0],rf[1]-bl*.3);c.stroke();
   boot(rf[0],rf[1]-bl*.5,rf[2],bl);boot(lf[0],lf[1]-bl*.5,lf[2],pl&&!o.head?bl*1.25:bl,!!pl&&!o.head);
+  // Nov 21 2026 (verify pass): the main tell is outlined so a child learns where to look: a thick sun ring round the planted boot
+  // (Sunday league: while the foot is down; Academy: a short flash as it lands; later rounds: nothing, the foot alone).
+  if(pl&&!o.head&&(o.ring??0)>0){const len=bl*1.25;c.save();c.globalAlpha=Math.min(1,o.ring!);c.translate(lf[0],lf[1]-bl*.5);c.rotate(lf[2]);c.beginPath();c.ellipse(0,len*.2,len*.62,len*.95,0,0,TAU);
+   c.lineWidth=10;c.strokeStyle=INK;c.stroke();c.lineWidth=5;c.strokeStyle=SUN;c.stroke();c.restore();}
   if(pl&&o.kick<=0&&pl.power>.6){c.strokeStyle=INK;c.lineWidth=2.5;c.beginPath();for(let i=0;i<3;i++){c.moveTo(rf[0]+bl*(.7+i*.35),rf[1]-bl*.9+i*4);c.lineTo(rf[0]+bl*(1.2+i*.35),rf[1]-bl*.2+i*4);}c.stroke();}
   // body: the hips and shoulders open toward the shot (a shear), the lean stretches (back = high) or squashes (over the ball = low)
   c.translate(0,-hop);c.transform(1,0,-o.hips*.2,sy,0,0);const top=-h,yb=-h*.3,rc=r*.6;
@@ -221,7 +225,9 @@ export function createSafehandsView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,op
    f.restore();f.lineWidth=4;f.strokeStyle=INK;f.strokeRect(x0,y0,w,h);
    tag(f,sh.closeIn?'LANDS IN YOUR SMALL BOX':'LANDS FAR OUT',x0+8,y0+8,{fill:sh.closeIn?SUN:PAPER,size:12});tag(f,sh.crowd?'A CROWD':'NO CROWD',x0+w-8,y0+h-30,{fill:sh.crowd?RED:TEAL,color:sh.crowd?PAPER:INK,align:'right',size:12});return;}
   if(show&&!fly)ballArt(f,bx,by,br,one?now*7:0);
-  striker(st,{x:sx,feet,h:bh,step:tl.paused||fly||tl.plant?0:now*(one?11:13),glance:tl.glance,hips:tl.hips??0,plant:head?null:tl.plant,kick:fly?1:0,paused:tl.paused,head,side:tl.plant?tl.plant.side:0,ballX:bx,ballY:by});
+  // how long the foot has been planted (s): the ring is strongest on the easiest rounds and gone from the First team on
+  const since=tl.plant?(s.phase==='run'?s.pt-(total-sh.plant):sh.plant+Math.max(0,s.t-s.strikeT)):-1,ring=since<0||s.daily?0:T.aid>1?(opts.reduced?1:.75+.25*Math.cos(since*14)):T.aid===1?clamp(1-since/.35,0,1):0;
+  striker(st,{x:sx,feet,h:bh,step:tl.paused||fly||tl.plant?0:now*(one?11:13),glance:tl.glance,hips:tl.hips??0,plant:head?null:tl.plant,kick:fly?1:0,paused:tl.paused,head,side:tl.plant?tl.plant.side:0,ballX:bx,ballY:by,ring});
   if(show&&fly)ballArt(f,bx,by,br,now*14);
   // an oversized wall: backs of your own players hide her feet
   if(tl.hidden){for(let i=0;i<4;i++){const xx=x0+w*(.2+i*.2);f.save();f.translate(xx,y0+h+6);const bw=w*.19,bhh=h*.56;f.beginPath();f.moveTo(-bw/2,0);f.lineTo(-bw/2,-bhh+bw/2);f.arc(0,-bhh+bw/2,bw/2,Math.PI,TAU);f.lineTo(bw/2,0);f.closePath();f.fillStyle=look.body;f.fill();f.lineWidth=3;f.strokeStyle=INK;f.stroke();f.fillStyle=look.hair;f.beginPath();f.arc(0,-bhh+bw/2,bw/2-2,Math.PI,TAU);f.fill();f.restore();}}

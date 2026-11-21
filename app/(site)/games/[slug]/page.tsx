@@ -4,7 +4,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {GameIntro,PlayLink,Shots} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
-import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,videoGameLd} from '@/lib/site/games';
+import {ALL_GAME_PAGES,GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,isGameListed,videoGameLd} from '@/lib/site/games';
 import {breadcrumbLd,faqLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
 import site from '../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
@@ -19,10 +19,13 @@ import {gameRail} from '@/lib/site/railNavMore';
  */
 export const dynamic='force-static';
 export const dynamicParams=false;
-export const generateStaticParams=()=>GAME_PAGES.map(g=>({slug:g.slug}));
+// Nov 21 2026: every page is built, listed or not; a game without a machine in the room yet (arcadeUnplaced) is noindex and out of
+// the sitemap until it is placed (lib/site/games.ts ALL_GAME_PAGES).
+export const generateStaticParams=()=>ALL_GAME_PAGES.map(g=>({slug:g.slug}));
 export function generateMetadata({params}:{params:{slug:string}}){
  const g=gameBySlug(params.slug);if(!g)return {};
- return pageMeta(g.title,g.description,g.path,{whole:true,type:'website',image:{url:g.og,alt:g.ogAlt}});
+ const meta=pageMeta(g.title,g.description,g.path,{whole:true,type:'website',image:{url:g.og,alt:g.ogAlt}});
+ return isGameListed(g.id)?meta:{...meta,robots:{index:false,follow:true}};
 }
 const List=({items}:{items:readonly string[]})=><ul>{items.map(x=><li key={x}>{x}</li>)}</ul>;
 export default function GamePageView({params}:{params:{slug:string}}){

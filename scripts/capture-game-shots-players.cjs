@@ -1,7 +1,32 @@
 // Scripted players for scripts/capture-game-shots.cjs: per game, the start button, the game state to log next to each frame, and
 // a loop that plays (real touches through CDP) until H.stop.
 const airState=()=>{const k=window.__airhockey,g=k&&k.game,s=g&&g.state;return s?{phase:k.phase,p:s.phase,px:+s.px.toFixed(1),py:+s.py.toFixed(1),v:+Math.hypot(s.pvx,s.pvy).toFixed(0),sx:+s.sx[0].toFixed(0),sy:+s.sy[0].toFixed(0),goals:[...s.goals],level:s.level,heat:+s.heat.toFixed(2),rally:s.rally,smash:+(s.t-s.smashT).toFixed(2),bank:s.bank}:null;};
+/** Safe Hands (Nov 21 2026): a keeper who reads the tells, with real touches. Before the kick it drags to the ideal spot; on the
+ *  planted foot it swipes the way the foot points (up and across for a high shot), so the clip shows the tell and the save. It
+ *  answers the wall and the cross with the right button and taps "Kick off" on each round card. SH_MISS=n lets every n-th shot in. */
+const shState=()=>{const h=window.__safehands,g=h&&h.game,s=g&&g.state;return s?{ui:h.phase,phase:s.phase,tier:s.tier,shotN:s.shotN,kind:s.shot&&s.shot.kind,score:s.score,lives:s.lives,saves:s.stats.saves,goals:s.stats.goals,res:s.res&&s.res.kind,over:s.over}:null;};
+const safehands={start:'[data-safehands-play]',meta:shState,async play(H){const {page,cdp,wait}=H,MISS=+(process.env.SH_MISS||0);let n=0,mem=null;
+ const touch=(type,x,y)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,id:1}]});
+ const drag=async pts=>{await touch('touchStart',...pts[0]);for(const p of pts.slice(1)){await wait(30);await touch('touchMove',...p);}await wait(20);await touch('touchEnd');};
+ while(!H.stop){const s=await page.evaluate(()=>{const h=window.__safehands,g=h&&h.game;if(!g||h.phase!=='playing')return null;const s=g.state,sh=s.shot,tl=g.tells(),r=h.stage;
+   return {phase:s.phase,pt:s.pt,over:s.over,act:!!s.act,dec:s.decision,wantX:s.wantX,wantD:s.wantD,gain:h.view.gain,r:{x:r.left,y:r.top,w:r.width,h:r.height},plant:tl.plant,hidden:tl.hidden,loose:!!g.looseBall(),
+    sh:sh&&{kind:sh.kind,bx:sh.bx,bz:sh.bz,near:sh.near,wallN:sh.wallN,wallBest:sh.wallBest,closeIn:sh.closeIn,crowd:sh.crowd,wet:sh.wet}};});
+  if(!s){const b=page.locator('[data-safehands-again],[data-safehands-play]').first();if(await b.isVisible().catch(()=>false)){await wait(1500);await b.tap().catch(()=>{});}await wait(150);continue;}
+  if(s.phase==='tip'){await wait(900);await page.locator('[data-safehands-ack]').first().tap().catch(()=>{});await wait(300);continue;}
+  const sh=s.sh;if(!sh||s.over){await wait(100);continue;}
+  if(!mem||mem.sh!==JSON.stringify(sh)){mem={sh:JSON.stringify(sh),placed:false,told:false,done:false,miss:MISS>0&&(++n%MISS===0)};}
+  const cx=s.r.x+s.r.w/2,by=s.r.y+s.r.h-170;
+  if(s.phase==='wall'){await wait(700);await page.locator(`[data-safehands-wall="${sh.wallBest}"]`).first().tap().catch(()=>{});await wait(200);continue;}
+  if(s.phase==='set'&&!mem.placed&&s.pt>.35&&sh.kind!=='reb'){mem.placed=true;const d=sh.kind==='far'?2.5:sh.kind==='one'?sh.bz-5:sh.kind==='cross'?1:0,x=sh.kind==='free'?-sh.near*sh.wallN*.4:sh.kind==='pen'?0:sh.bx*d/sh.bz;
+   const dx=(x-s.wantX)*s.gain.x/1.15,dy=-(d-s.wantD)*s.gain.d;if(Math.abs(dx)>2||Math.abs(dy)>2)await drag([[cx,by],[cx+dx*.35,by+dy*.35],[cx+dx*.7,by+dy*.7],[cx+dx,by+dy]]);continue;}
+  if(s.phase==='set'&&s.loose&&!mem.done){mem.done=true;await page.locator('[data-safehands-smother]').first().tap().catch(()=>{});continue;}
+  if(s.phase==='cross'&&!s.dec&&s.pt>.7&&!mem.done){mem.done=true;await page.locator(`[data-safehands-choose="${sh.closeIn?(sh.crowd?'punch':'claim'):'stay'}"]`).first().tap().catch(()=>{});continue;}
+  if((s.phase==='run'||s.phase==='fly')&&!s.act&&!mem.told&&(s.plant||(s.hidden&&s.phase==='fly'))){mem.told=true;if(mem.miss)continue;await wait(140);// a child's beat to read the foot
+   const p=s.plant||{side:0,high:false,power:.5},hard=p.power>(sh.wet?.5:.72),a=p.side===0?(hard?(p.high?[0,-80]:[-80,0]):null):[p.side*80,p.high?-60:6];
+   if(a)await drag([[cx,by],[cx+a[0]*.5,by+a[1]*.5],[cx+a[0],by+a[1]]]);continue;}
+  await wait(30);}}};
 module.exports={
+ safehands,
  airhockey:{start:'[data-air-play]',meta:airState,async play(H){const {page,cdp,wait}=H;
   await page.waitForFunction(()=>window.__airhockey&&window.__airhockey.phase==='playing',null,{timeout:10000});
   const L=await page.evaluate(()=>{const k=window.__airhockey;const r=document.querySelector('[data-air-stage]').getBoundingClientRect();return {...k.layout,left:r.left,top:r.top};});

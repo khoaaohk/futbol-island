@@ -37,7 +37,7 @@ export const KIND_NAME:Record<Kind,string>={pen:'Penalty',one:'One on one',far:'
 export type Tier={id:string;name:string;venue:number;plant:number;speed:number;aid:number;deflect:number;wet:boolean;tricks:number;kinds:readonly Kind[];pool:readonly number[];lesson:string;tip:string};
 export const TIERS:readonly Tier[]=[
  {id:'sunday',name:'Sunday league',venue:0,plant:.8,speed:.85,aid:2,deflect:0,wet:false,tricks:0,kinds:['pen','one','pen','one','pen','one'],pool:[0,4,6,7],
-  lesson:'Set your position',tip:'Stand between the ball and the middle of your goal. Then watch the foot she plants next to the ball: it points where the shot will go.'},
+  lesson:'Set your position',tip:'Stand between the ball and the middle of your goal. Then watch the foot the striker plants next to the ball: it points where the shot will go.'},
  {id:'academy',name:'Academy',venue:1,plant:.62,speed:1,aid:1,deflect:0,wet:false,tricks:1,kinds:['pen','one','far','pen','far','one'],pool:[0,4,6,7,1,2],
   lesson:'Narrow the angle',tip:'On a long shot, step off your line. The goal gets smaller for the striker. Not too far, or the ball is chipped over you.'},
  {id:'first',name:'First team',venue:2,plant:.5,speed:1.1,aid:0,deflect:.35,wet:false,tricks:2,kinds:['pen','one','far','free','cross','free'],pool:[0,4,6,7,1,2,3,5,8],
@@ -150,7 +150,7 @@ export function bestAct(sh:{side:-1|0|1;high:boolean;power:number;wet:boolean},k
 }
 
 export type SafeHands=ReturnType<typeof createSafeHands>;
-export function createSafeHands(opts:{seed:number;daily?:boolean;startTier?:number;/** tests only */lives?:number}){
+export function createSafeHands(opts:{seed:number;daily?:boolean;startTier?:number;/** tests only */lives?:number;/** the first-ever run: the first penalty is a plain one to a side (the guided save) */intro?:boolean}){
  const rnd=mulberry(opts.seed),daily=!!opts.daily,events:ShEvent[]=[];
  const takers=daily?dailyTakers(opts.seed):[];
  const stats:ShStats={shots:0,saves:0,goals:0,held:0,parries:0,fingertips:0,early:0,posOk:0,bestStreak:0,lowLeftRow:0,smothers:0,claims:0,punches:0,crossRight:0,wallRight:0,rebounds:0,tiersClean:0,lastWhy:'',lastKind:''};
@@ -213,7 +213,11 @@ export function createSafeHands(opts:{seed:number;daily?:boolean;startTier?:numb
    if(clean){stats.tiersClean++;feat('clean-sheet');if(s.lives<SH.lives){s.lives++;emit('life',s.lives,1);}}
    if(s.tier>=TIERS.length-1){const win=1000+300*s.lives;s.score+=win;feat('cup');s.won=true;finish(true,win);return;}
    s.tier++;s.shotN=0;s.tierGoals=0;s.shot=null;s.phase='tip';s.pt=0;planTier();emit('tier',s.tier,0,TIERS[s.tier].name);return;}
-  const p=plan[s.shotN];begin(makeShot(p.kind,p.striker));}
+  const p=plan[s.shotN],sh=makeShot(p.kind,p.striker);if(opts.intro&&stats.shots===0&&sh.kind==='pen')tame(sh);begin(sh);}
+ /** The guided first penalty (Nov 21 2026): low, to a side, catchable pace, no tricks, the long tell window. No extra random draws, so
+  *  the rest of the run is the same game as without the guide. */
+ function tame(sh:Shot){const st=STRIKERS[sh.striker],side:-1|1=sh.side===-1?-1:1;Object.assign(sh,{side,high:false,tx:side*2.3,ty:.45,power:.55,stutter:0,watch:false,fake:false,defl:null,approach:side,
+  glance:st.glance===0?0:(st.glance*side) as -1|1,plant:Math.max(sh.plant,.8)});sh.flight=Math.hypot(sh.tx-sh.bx,sh.bz)/sh.speed;}
  function finish(done:boolean,points=0){s.over=true;s.phase='over';s.pt=0;if(daily&&s.dailySaves>=SH.dailyShots)feat('daily-5');emit('over',done?1:0,s.won?1:0,'',points);}
 
  /* ---- scoring ---- */
