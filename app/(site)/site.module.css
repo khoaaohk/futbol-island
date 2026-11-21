@@ -57,6 +57,8 @@
    360 px the wordmark steps down to 20 px and the gaps to 4 px (313 px with the 16 px gutters). */
 @media(max-width:359px){.nav{gap:4px}.page .brand{font-size:20px}}
 @media(min-width:641px) and (max-width:759px){.navLinks{gap:4px}.page .navLinks a{width:82px}}
+/* Nov 20 2026 (Library added, six links): the brand, six 92px links and Play need about 880px, so 641-899px gets the phone bar too */
+@media(min-width:641px) and (max-width:899px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
 @media print{.header{display:none}}
 
 /* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */

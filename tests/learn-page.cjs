@@ -66,7 +66,7 @@ const red=nc.match(/const redirects = \[(.*)\];/);assert(red,'next.config.mjs ha
 assert.match(red[1],/source: '\/learn\/:slug\(\(\?!lessons\$\)[^']+'/,'old lesson URLs redirect, /learn/lessons excluded');
 assert.match(red[1],/destination: '\/learn\/lessons\/:slug', permanent: true/,'permanent redirect to /learn/lessons/<id>');
 assert.match(nc,/async redirects\(\) \{ return redirects; \}/,'redirects are wired into the config');
-assert.match(red[1],/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/', permanent: true \}/,'/learn is a permanent redirect to the home page / (except /learn?q=, the search)');
+assert.match(red[1],/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/library', permanent: true \}/,'/learn is a permanent redirect to the Library /library (Nov 20 2026; it was the home page), except /learn?q=, the search');
 {const re=new RegExp('^/learn/(?:'+red[1].match(/:slug\((.*)\)', destination/)[1]+')$');
  for(const l of lessons.LESSONS)assert(re.test('/learn/'+l.id),`old URL /learn/${l.id} is caught by the redirect`);
  assert(!re.test('/learn/lessons'),'/learn/lessons is not redirected');}
@@ -324,7 +324,7 @@ const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'monta
  assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');
  // owner, Nov 3: phones get a menu (icon left of Play) instead; <details>/<summary> so the links work with JS off
  {const mm=strip(read('components/learn/MobileMenu.tsx'));
-  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\}\/>\s*<NavPlay className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
+  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>\s*<NavPlay className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
   assert.match(mm,/<details className=\{s\.menu\}[^>]*>\s*<summary className=\{s\.menuBtn\} aria-label="Menu" aria-controls="learn-menu">/,'details + summary, aria-label Menu, aria-controls');
   assert.match(mm,/setAttribute\('aria-expanded',String\(d\.open\)\)/,'aria-expanded follows the panel');
   assert.match(mm,/e\.key==='Escape'/,'Escape closes');assert.match(mm,/'pointerdown'/,'a tap outside closes');

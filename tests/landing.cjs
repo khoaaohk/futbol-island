@@ -32,7 +32,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 //     links (door returns, Stripe returns, party invites, store, dev switches) → /play with the same query; the title screen's
 //     Back goes to `/`; nothing in the game sends a player to a bare `/` or `/?…` any more.
 {const cfg=read('next.config.mjs');
- assert.match(cfg,/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/', permanent: true \}/,'/learn is a permanent redirect to / (except /learn?q=, the search)');
+ assert.match(cfg,/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/library', permanent: true \}/,'/learn is a permanent redirect to /library (except /learn?q=, the search)');
  assert.match(cfg,/source: '\/learn\/:slug\(\(\?!lessons\$\)/,'old lesson URLs still redirect to /learn/lessons/<id>');
  assert.match(cfg,/const GAME_FROM = 'arcade\|konbini\|museum\|shop\|e2e';/);
  for(const k of ['panel','party','store','coffee'])assert(cfg.includes(`'${k}'`),`/?${k}= redirects to /play`);

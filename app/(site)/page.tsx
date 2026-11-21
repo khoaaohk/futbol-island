@@ -1,4 +1,5 @@
 import JsonLd from '@/components/seo/JsonLd';
+import {LIBRARY_PATH} from '@/lib/site/libraryPath';
 import LearnMedia from '@/components/learn/LearnMedia';
 import {learnAsset} from '@/lib/site/learnMedia';
 import LearnEnhance from '@/components/learn/LearnEnhance';
@@ -43,6 +44,8 @@ const PLAY_URL=PLAY_PATH;
 const hl=(id:LearnHighlightId)=>LEARN_HIGHLIGHTS.find(h=>h.id===id)!;
 const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
 const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together','Friends'],['safe','Safety'],['about','About']];
+/* Nov 20 2026 (owner): one page link after the chapter anchors, the Library (/library). Not a chapter: it never gets the current chip. */
+const NAV_PAGES:[string,string][]=[[LIBRARY_PATH,'Library']];
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
 const isWide=(k:string)=>{const im=learnAsset(k).image;return !!im&&im.width>im.height*.8;};
@@ -110,8 +113,8 @@ export default function Home(){
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a>
-    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
-    <MobileMenu links={NAV}/>
+    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}{NAV_PAGES.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
+    <MobileMenu links={NAV} pages={NAV_PAGES}/>
     <NavPlay className={s.pill} href={PLAY_URL}/>
    </div>
   </nav>

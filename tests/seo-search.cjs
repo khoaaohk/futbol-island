@@ -42,7 +42,7 @@ const {root,L,read,render,React,ldOf}=require('./lib/tsLoad.cjs');process.chdir(
  assert(!/sendBeacon|analytics|track\(/.test(c),'no analytics');
  assert(c.includes("from '@/lib/site/searchCore'")&&!/^import/m.test(read('lib/site/searchCore.ts')),'the client imports only the import-free core (no registries in the bundle)');
  const cfg=await import(require('node:path').join(root,'next.config.mjs'));const red=(await cfg.default('phase-production-build').redirects()).find(r=>r.source==='/learn');
- assert.deepEqual(red.missing,[{type:'query',key:'q'}],'plain /learn still redirects; /learn?q= is the search');assert.equal(red.destination,'/');
+ assert.deepEqual(red.missing,[{type:'query',key:'q'}],'plain /learn still redirects; /learn?q= is the search');assert.equal(red.destination,'/library');/* Nov 20 2026: the Library (it was the home page) */
  assert(read('app/(site)/learn/lessons/page.tsx').includes('<LearnSearchForm/>'),'the lesson index has a search box');
  // SearchAction
  const seo=L('lib/site/seo.ts'),w=seo.websiteLd(),a=w.potentialAction;

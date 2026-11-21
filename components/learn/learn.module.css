@@ -79,6 +79,9 @@
 /* QA Nov 14 2026: same 320 px fix as app/(site)/site.module.css .nav: the wordmark steps down so the Play pill stays on screen. */
 @media(max-width:359px){.subnavIn{gap:4px}.root .logo{font-size:20px}}
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 var(--gut) 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
+/* Nov 20 2026 (Library added, six links): logo 157 + six 92px links + Play 76 need about 880px, so the links ran under Play up to
+   there. 641-899px now gets the phone bar: menu button left, logo centred, Play right (the menu lists all six). */
+@media(min-width:641px) and (max-width:899px){.root .subLinks{display:none}.menu{display:block;flex:none;grid-column:1;grid-row:1;justify-self:start}.subnavIn{display:grid;grid-template-columns:1fr auto 1fr}.root .logo{grid-column:2;grid-row:1;margin:0;justify-self:center}.pill{grid-column:3;grid-row:1;justify-self:end}}
 .pill{flex:none}
 /* tap target (audit Nov 3): the 26px wordmark link gets a 44px tall hit area inside the 68px bar; the look is unchanged */
 .root .logo{padding-block:9px}

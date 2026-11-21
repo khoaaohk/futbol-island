@@ -2,6 +2,7 @@ import {LOGO_COLOURS} from '@/lib/site/marketing';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
 import {SAFE_GUIDE} from '@/lib/site/hubs';
 import {PLAY_PATH} from '@/lib/site/seo';
+import {LIBRARY_PATH} from '@/lib/site/libraryPath';
 import done from '@/components/DoneButton.module.css';
 import styles from '@/app/(site)/site.module.css';
 /**
@@ -13,7 +14,7 @@ import styles from '@/app/(site)/site.module.css';
  * phone menu is a bare <details> that opens and closes natively.
  * Links are real destinations: the hubs where a reading page exists, else the home chapter (`/#id`, the ids in page.tsx NAV).
  */
-const NAV:readonly (readonly [string,string])[]=[[LESSONS_INDEX,'Learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety'],['/about','About']];
+const NAV:readonly (readonly [string,string])[]=[[LESSONS_INDEX,'Learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety'],['/about','About'],[LIBRARY_PATH,'Library']]/* Nov 20 2026 (owner): Library, the hub of every footer section, after About */;
 const NAME='Futbol Island';
 export default function SiteNav(){
  return <nav className={styles.nav} aria-label="Site">

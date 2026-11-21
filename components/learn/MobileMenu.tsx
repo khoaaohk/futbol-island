@@ -11,7 +11,7 @@ import s from './learn.module.css';
  * the icon or Escape. The document listeners exist only while the panel is open. The page behind it is locked (overflow hidden on html, restored on close); the panel
  * fits the viewport (svh) and scrolls on a tiny landscape screen. Hidden at >= 641px.
  */
-export default function MobileMenu({links}:{links:readonly (readonly [string,string])[]}){
+export default function MobileMenu({links,pages=[]}:{links:readonly (readonly [string,string])[];/** page links after the chapters ([href,label]; Nov 20 2026: the Library) */pages?:readonly (readonly [string,string])[]}){
  const ref=useRef<HTMLDetailsElement>(null);
  useEffect(()=>{
   const d=ref.current,btn=d?.querySelector('summary');if(!d||!btn)return;
@@ -41,7 +41,7 @@ export default function MobileMenu({links}:{links:readonly (readonly [string,str
    <span className={s.menuIco} aria-hidden="true"><i/><i/></span>
   </summary>
   <div className={s.menuPanel} id="learn-menu">
-   <ul className={s.menuList}>{links.map(([id,label])=><li key={id}><a href={`#${id}`}><span>{label}</span></a></li>)}</ul>
+   <ul className={s.menuList}>{links.map(([id,label])=><li key={id}><a href={`#${id}`}><span>{label}</span></a></li>)}{pages.map(([href,label])=><li key={href}><a href={href}><span>{label}</span></a></li>)}</ul>
   </div>
  </details>;
 }

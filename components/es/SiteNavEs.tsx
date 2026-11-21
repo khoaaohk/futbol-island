@@ -1,12 +1,12 @@
 import {LOGO_COLOURS} from '@/lib/site/marketing';
 import {PLAY_PATH} from '@/lib/site/seo';
-import {toEs} from '@/lib/i18n/esPaths';
+import {ES_LIBRARY,toEs} from '@/lib/i18n/esPaths';
 import LangSwitch from '@/components/site/LangSwitch';
 import done from '@/components/DoneButton.module.css';
 import styles from '@/app/(site)/site.module.css';
 /** The Spanish pages' top bar: components/site/SiteNav.tsx with Spanish labels, Spanish destinations where they exist, and EN | ES. */
 /** Nov 16 2026: 8 links (+ EN | ES) do not fit the 641-1099 px bar, so the Spanish bar keeps the phone menu up to 1099 px (.navEs). */
-const NAV:readonly (readonly [string,string])[]=[[toEs('/learn/lessons'),'Lecciones'],[toEs('/learn/soccer-rules'),'Reglas'],[toEs('/learn/soccer-terms'),'Términos'],[toEs('/learn/soccer-positions'),'Posiciones'],[toEs('/learn/soccer-drills'),'Ejercicios'],[toEs('/learn/soccer-practice-plans'),'Planes'],[toEs('/tools'),'Herramientas'],[toEs('/about'),'Acerca de']];
+const NAV:readonly (readonly [string,string])[]=[[toEs('/learn/lessons'),'Lecciones'],[toEs('/learn/soccer-rules'),'Reglas'],[toEs('/learn/soccer-terms'),'Términos'],[toEs('/learn/soccer-positions'),'Posiciones'],[toEs('/learn/soccer-drills'),'Ejercicios'],[toEs('/learn/soccer-practice-plans'),'Planes'],[toEs('/tools'),'Herramientas'],[toEs('/about'),'Acerca de'],[toEs(ES_LIBRARY),'Biblioteca']]/* Nov 20 2026 (owner): the Library, after About */;
 const NAME='Futbol Island';
 export default function SiteNavEs(){
  return <nav className={`${styles.nav} ${styles.navEs}`} aria-label="Sitio">
