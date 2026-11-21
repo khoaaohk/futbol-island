@@ -172,10 +172,12 @@ export default function FlickItGame({onExit}:{onExit:()=>void}){
   const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;
    const g=game.current;if(!g)return;e.preventDefault();audio.current?.unlock();if(g.state.phase==='done'){endAt.current=1;return;}
    try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}pid.current=e.pointerId;path.current=[local(e)];draw();};
-  const move=(e:PointerEvent)=>{if(e.pointerId!==pid.current)return;e.preventDefault();const p=path.current,q=local(e);p.push(q);while(p.length>2&&q.t-p[0].t>600)p.shift();draw();};
+  const move=(e:PointerEvent)=>{if(e.pointerId!==pid.current)return;e.preventDefault();const p=path.current,q=local(e);p.push(q);while(p.length>2&&q.t-p[0].t>600)p.shift();draw();
+   // the kicker sinks into its run-up as the finger travels (a number handed to the view; the kick itself is read on release)
+   v.setCharge(Math.hypot(q.x-p[0].x,q.y-p[0].y)/(Math.max(1,Math.min(el.clientWidth,el.clientHeight*.62))*.5));};
   const up=(e:PointerEvent)=>{if(e.pointerId!==pid.current)return;pid.current=-1;try{el.releasePointerCapture(e.pointerId);}catch{/* gone */}const p=path.current;path.current=[];if(swipe.current)delete swipe.current.dataset.live;
-   if(e.type==='pointercancel'||phaseRef.current!=='playing')return;p.push(local(e));const g=game.current;if(!g||g.state.phase!=='tee')return;
-   const r=el.getBoundingClientRect(),shot=flickToShot(p,{w:r.width,h:r.height},v.flickCam());if(shot)shoot(shot);};
+   if(e.type==='pointercancel'||phaseRef.current!=='playing'){v.setCharge(0);return;}p.push(local(e));const g=game.current;if(!g||g.state.phase!=='tee'){v.setCharge(0);return;}
+   const r=el.getBoundingClientRect(),shot=flickToShot(p,{w:r.width,h:r.height},v.flickCam());if(shot)shoot(shot);else v.setCharge(0);};
   const opt={passive:false} as const;
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);
