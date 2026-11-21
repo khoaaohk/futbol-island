@@ -153,7 +153,12 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
 
 // ---- 4. who links them ------------------------------------------------------------------------------------------------------
 {const home=read('app/(site)/page.tsx')+fs.readdirSync(path.join(root,'components/learn')).filter(f=>/\.tsx?$/.test(f)).map(f=>read('components/learn/'+f)).join('\n');
- assert(!/['"`]\/games|GAME_PAGES|GAMES_HUB|GAME_LISTINGS|site\/games/.test(home),'the home page does NOT link the game pages (owner, Nov 10 2026: SEO-only pages)');
+ /* Nov 20 2026 evening (owner: "yes change the home page bar too"): the home bar is Learn, Games, Library like every other page, so
+    exactly one link to the /games hub is allowed, in the bar's NAV_PAGES. The body still never links /games or a /games/<slug>
+    page (owner, Nov 10 2026: SEO-only pages). */
+ const bar=/const NAV_PAGES:\[string,string\]\[\]=\[\['\/games','Games'\],\[LIBRARY_PATH,'Library'\]\];/;
+ assert(bar.test(home),'the home bar links the games hub once, in NAV_PAGES');
+ assert(!/['"`]\/games|GAME_PAGES|GAMES_HUB|GAME_LISTINGS|site\/games/.test(home.replace(bar,'')),'the home page body does NOT link the game pages (owner, Nov 10 2026: SEO-only pages)');
  const ui=['components/ArcadeRoom.tsx',...fs.readdirSync(path.join(root,'components/games')).filter(f=>/\.tsx?$/.test(f)).map(f=>'components/games/'+f)].map(read).join('\n');
  assert(!/['"`]\/games[\/'"`]|site\/games/.test(ui),'the game UI does not link the game pages');}
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
