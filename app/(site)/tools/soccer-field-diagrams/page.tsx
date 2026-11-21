@@ -1,3 +1,5 @@
+import RailNav from '@/components/site/shell/RailNav';
+import {printablesHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {Licence,SheetThumb,ToolIntro} from '@/components/site/tools/ToolParts';
@@ -21,6 +23,8 @@ export default function PrintablesHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:H.h1,path:H.path,description:H.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:PRINTABLES.map(p=>({name:p.h1,path:p.path}))})}/>
   <JsonLd data={faqLd(H.faq)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={printablesHubRail()} current="#top"/>
   <ToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   {GROUPS.map(g=><Section key={g.id} id={g.id} title={g.title}>
    <p>{g.line}</p>

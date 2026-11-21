@@ -1,5 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import {notFound} from 'next/navigation';
+import RailNav from '@/components/site/shell/RailNav';
+import {printableRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {Downloads,Licence,PrintStyle,Screen,SheetPreview,SheetThumb,ToolIntro} from '@/components/site/tools/ToolParts';
 import {DataTable,GuideEnd,Section} from '@/lib/site/GuideParts';
@@ -29,6 +31,8 @@ export default function PrintablePage({params}:{params:{sheet:string}}){
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={printableLd(p)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={printableRail({versions:rest.length>0,compare:p.kind==='cheat-sheet'&&!!p.format})} current="#top"/>
   <PrintStyle/>
   <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/></Screen>
   <figure className={site.figure}>

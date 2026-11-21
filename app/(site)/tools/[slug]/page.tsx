@@ -2,6 +2,8 @@ import {planRotation} from '@/lib/site/tools/rotation';
 import KeepReading from '@/components/site/KeepReading';
 import {lineupHeading} from '@/lib/site/tools/lineupHeading';
 import {notFound} from 'next/navigation';
+import RailNav from '@/components/site/shell/RailNav';
+import {lineupRail,plannerRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import LineupBuilder from '@/components/site/tools/LineupBuilder';
@@ -51,6 +53,8 @@ function Lineup({p}:{p:LineupPage}){
   <JsonLd data={webAppLd({name:p.h1[0].toUpperCase()+p.h1.slice(1),path:p.path,description:p.description,image:TOOL_PAGES.find(t=>t.path===p.path)!.image,
    features:['Lineups for 7v7, 9v9, 11v11 and futsal','Drag or tap to swap players and substitutes','One-page print','Picture download','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={lineupRail(!!p.format)} current="#top"/>
   <PrintStyle/>
   <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
   <LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={p.format}/>
@@ -104,6 +108,8 @@ function Planner({p}:{p:PlannerPage}){
   <JsonLd data={webAppLd({name:p.h1[0].toUpperCase()+p.h1.slice(1),path:p.path,description:p.description,image:plannerImage(p),
    features:['Equal playing time for any squad size','Goalkeeper fixed or rotating','Printable table','Copy as text for a team chat','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={plannerRail(!!p.format)} current="#top"/>
   <PrintStyle/>
   <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>

@@ -16,7 +16,7 @@ import t from './tools.module.css';
  */
 /** headingFormat: a lineup format landing; its h1 follows the builder's format select (components/site/tools/LineupHeading.tsx). */
 export function ToolIntro({crumbs,h1,lead,headingFormat,app,facts,first}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string};facts?:readonly Fact[];/** shown right under the h1, before the lead (Nov 20 2026: what goes in, what comes out) */first?:ReactNode}){
- return <header className={site.intro}>
+ return <header className={`${site.intro} ${t.head}`} id="top">{/* #top: the rail's Overview (layout batch 3, Nov 20 2026) */}
   <Breadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title}/>:<h1 className={site.title}>{h1}</h1>}
   {first}

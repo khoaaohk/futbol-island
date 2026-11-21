@@ -3,6 +3,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import {cleanName,decodePlan,encodePlan,MAX_PLAYERS,periodName,planRotation,rotationText,type PlanState} from '@/lib/site/tools/rotation';
 import site from '@/app/(site)/site.module.css';
 import t from './tools.module.css';
+import rt from '@/components/site/railTarget.module.css';
 import {ROTATION_ES as W,periodNameEs,playerNameEs,rotationTextEs} from './toolWordsEs';
 /**
  * The playing-time planner (Nov 10 2026; /tools/soccer-playing-time-calculator and the 7v7 / 9v9 landings). A client component
@@ -66,7 +67,7 @@ export default function RotationPlanner({presets,initial,lockKey,lang}:{presets:
    <p className={t.hint}>{es?W.privacy:'Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server.'}{!s.keeperRotates&&(es?W.firstKeeper:' The first player in the list is the goalkeeper.')}</p>
   </div>
   <section className={site.section} aria-labelledby="plan">
-   <h2 className={site.h2} id="plan">{s.team?(es?W.planOf(s.team):`${s.team}: the plan`):(es?W.plan:'Your substitution plan')}</h2>
+   <h2 className={`${site.h2} ${rt.target}`} id="plan">{s.team?(es?W.planOf(s.team):`${s.team}: the plan`):(es?W.plan:'Your substitution plan')}</h2>
    <p data-summary="">{es?W.summary({players:i.players,onField:i.onField,gameMin:plan.gameMin,bench,rotates:i.keeperRotates,lo:rLo,hi:rHi,block:plan.blocks[0].minutes}):bench<=0?`With ${i.players} players and ${i.onField} on the field there are no substitutes: everyone plays the whole game of ${plan.gameMin} minutes.`
     :`${i.players} players share ${i.onField} places over ${plan.gameMin} minutes. ${i.keeperRotates?'Every player':'Every outfield player'} is on for ${rLo===rHi?`${rLo} minutes`:`${rLo} to ${rHi} minutes`}${i.keeperRotates?'':`, and the goalkeeper plays all ${plan.gameMin}`}. ${bench} sit out in each block of about ${plan.blocks[0].minutes} minutes.`}</p>
    <div className={`${site.tableWrap} ${t.printTable}`} tabIndex={0} role="region" aria-label={es?W.region:'Rotation table'} data-stack="">{/* phones: one card per block (site.module.css [data-stack]) */}<table className={site.table} aria-label={es?W.table:'Who is on the field in each block'}>

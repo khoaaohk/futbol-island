@@ -1,3 +1,5 @@
+import RailNav from '@/components/site/shell/RailNav';
+import {toolsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {ToolCards} from '@/components/site/tools/ToolCards';
@@ -19,6 +21,8 @@ export default function ToolsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:H.h1,path:H.path,description:H.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:TOOL_PAGES.filter(p=>p.path!==H.path).map(p=>({name:cap(p.name),path:p.path}))})}/>
   <JsonLd data={faqLd(H.faq)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={toolsHubRail()} current="#top"/>
   <ToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   <Section id="lineups" title="Lineup builders">
    <p>Put names on a field diagram, swap players with a tap, then print the sheet, save a picture or share a link. {PRIVACY_LINE}</p>

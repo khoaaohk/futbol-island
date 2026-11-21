@@ -1,3 +1,5 @@
+import RailNav from '@/components/site/shell/RailNav';
+import {lineupRail,plannerRail,printableRail,printablesHubRail,toolsHubRail} from '@/lib/site/railNavCollections';
 import KeepReading from '@/components/site/KeepReading';
 import type {EsRoute} from '../routes';
 import JsonLd from '@/components/seo/JsonLd';
@@ -79,7 +81,7 @@ const links=(xs:(Link|null)[])=>xs.filter((x):x is Link=>!!x);
 
 // ---- shared parts ----
 function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:boolean;facts?:readonly Fact[]}){
- return <header className={site.intro}>
+ return <header className={`${site.intro} ${t.head}`} id="top">
   <EsBreadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title} lang="es"/>:<h1 className={site.title}>{h1}</h1>}
   <QuickAnswer lead={lead} facts={facts}/>
@@ -159,6 +161,7 @@ function ToolsHubEs(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:HUB.h1,path:toEs(TOOLS_HUB.path),description:HUB.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:items.map(x=>({name:x.name,path:x.path}))}))}/>
   <JsonLd data={faqLd(HUB.faq)}/>
+  <RailNav rail={toolsHubRail(true)} current="#top"/>
   <EsToolIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead}/>
   <Section id="lineups" title="Creadores de alineaciones">
    <p>Pon los nombres en un diagrama de cancha, cambia jugadores con un toque y luego imprime la hoja, guarda una imagen o comparte un enlace. {PRIVACY_LINE_ES}</p>
@@ -202,6 +205,7 @@ function LineupEs({p}:{p:LineupPage}){
    features:['Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
+  <RailNav rail={lineupRail(!!p.format,true)} current="#top"/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app facts={facts}/></Screen>
   <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
   <Screen>
@@ -250,6 +254,7 @@ function PlannerEs({p}:{p:PlannerPage}){
    features:['Minutos iguales para un plantel de cualquier tamaño','Portero fijo o que rota','Tabla para imprimir','Copiar como texto para el chat del equipo','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
+  <RailNav rail={plannerRail(!!p.format,true)} current="#top"/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app facts={facts}/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
@@ -290,6 +295,7 @@ function PrintablesHubEs(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:toEs(PRINTABLES_HUB_PATH),description:H.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:PRINTABLES.map(p=>({name:printEs(p).h1,path:toEs(p.path)}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
+  <RailNav rail={printablesHubRail(true)} current="#top"/>
   <EsToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   {GROUPS.map(g=><Section key={g.id} id={g.id} title={g.title}>
    <p>{g.line}</p>
@@ -310,6 +316,7 @@ function PrintableEsPage({p}:{p:Printable}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(ld)}/>
   <PrintStyle/>
+  <RailNav rail={printableRail({versions:rest.length>0,compare:p.kind==='cheat-sheet'&&!!fmt},true)} current="#top"/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead}/></Screen>
   <figure className={site.figure}>
    <div className={t.sheet}><SheetSvg id="main" sheet={mainEs.sheet}/></div>
@@ -349,7 +356,7 @@ function ScanEs(){
  const crumbs=toolCrumbsEs({name:SCAN_ES.crumb,path:toEs(SCAN_PATH)});
  const related=SCAN_RELATED_EN.map((l,i)=>({path:toEs(l.path),name:SCAN_RELATED_ES[i][0],line:SCAN_RELATED_ES[i][1]}));
  return <ScanTrainerPage p={SCAN_ES} path={toEs(SCAN_PATH)} crumbs={crumbs} lang="es" related={related}
-  intro={<header className={site.intro}><EsBreadcrumbs crumbs={crumbs}/><h1 className={site.title}>{SCAN_ES.h1}</h1><p className={site.lead} data-answer="">{SCAN_ES.lead}</p>
+  intro={<header className={site.intro} id="top"><EsBreadcrumbs crumbs={crumbs}/><h1 className={site.title}>{SCAN_ES.h1}</h1><p className={site.lead} data-answer="">{SCAN_ES.lead}</p>
    <AppLink href="/scan?lang=es" label={SCAN_ES.openLabel} line={SCAN_ES.openLine}/><p className={site.caption}>{TOOL_NAMES_ES}</p></header>}
   end={<EsToolEnd/>} figure={(id,sc)=><EsGridFigure id={id} scene={sc} small/>}/>;
 }

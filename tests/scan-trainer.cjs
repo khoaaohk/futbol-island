@@ -103,7 +103,7 @@ function checkPage(h,p,where,lang){
  ok(body.indexOf(p.what[0].slice(0,60))>-1&&body.indexOf(p.whatTitle)<body.indexOf(p.howTitle),`${where}: answer first`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);
  ok(links.some(l=>l.startsWith('/scan')),`${where}: opens the app`);
- for(const l of links){const u=l.split('#')[0].split('?')[0];if(u==='/scan')continue;ok(PATHS.has(u)||(lang==='es'&&u.startsWith('/es')&&ep.hasEs(ep.toEn(u))),`${where}: link ${l} resolves`);}
+ for(const l of links){const u=l.split('#')[0].split('?')[0];if(u==='/scan')continue;if(l.startsWith('#')){ok(h.includes(` id="${l.slice(1)}"`),`${where}: in-page link ${l} has its target`);continue;}/* Nov 20 2026 night: the side nav's in-page links (owner: "it should list what's on that page to smooth scroll down") */ok(PATHS.has(u)||(lang==='es'&&u.startsWith('/es')&&ep.hasEs(ep.toEn(u))),`${where}: link ${l} resolves`);}
  ok(h.includes('/embed/soccer-scanning-trainer'),`${where}: the embed snippet`);
  ok((h.match(/class="cta"/g)||[]).length===1,`${where}: one gold button`);
 }

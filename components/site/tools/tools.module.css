@@ -77,3 +77,11 @@ textarea.input{min-height:88px;resize:vertical}
 .appLink span{margin:0}
 .appLink .appBtn,.appLink .appBtn:visited{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 24px;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fbf7ee;font-weight:800;font-size:17px;text-decoration:none;background-image:none}
 .appLink .appBtn:hover{background:#1d6b55;color:#fff}
+/* the rail's in-page links (layout batch 3, Nov 20 2026): a folded section's heading lands under the header, and under the chip bar
+   below 1280 px, like the open ones (components/site/railTarget.module.css) */
+.screen h2[id]{scroll-margin-top:84px}
+@media(max-width:1279px){.screen h2[id]{scroll-margin-top:136px}}
+/* beside the rail the content column is wide (site.module.css rail shell): the tool head stays left-aligned at the content edge like
+   every rail page's head, instead of the quick answer and the app button centring in the wide column */
+main:has(>nav[data-rail]) .head>[data-quick-answer]{margin-inline:0}
+main:has(>nav[data-rail]) .head .appLink{justify-content:flex-start}

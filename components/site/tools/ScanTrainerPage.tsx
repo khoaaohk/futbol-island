@@ -1,4 +1,6 @@
 import KeepReading from '../KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {scanFrontRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
@@ -42,6 +44,8 @@ export default function ScanTrainerPage({p,path,crumbs,intro,end,related,lang,fi
   <JsonLd data={lang==='es'?{...app,inLanguage:'es',audience:{'@type':'Audience',audienceType:'Entrenadores de fútbol infantil, maestros y padres'}}:app}/>
   <JsonLd data={howTo}/>
   <JsonLd data={faqLd(p.faq)}/>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={scanFrontRail(lang==='es')} current="#top"/>
   {intro}
   <Section id="what" title={p.whatTitle}>{p.what.map(x=><p key={x}>{x}</p>)}<Preview p={p} es={lang==='es'}/></Section>
   <Section id="how" title={p.howTitle}><ol>{p.how.map(x=><li key={x}>{x}</li>)}</ol></Section>
