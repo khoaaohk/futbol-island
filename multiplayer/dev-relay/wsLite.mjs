@@ -17,6 +17,7 @@ export function acceptUpgrade(req, socket) {
 
   let msgFn = () => {};
   let closeFn = () => {};
+  let peerCode; // the close code the client sent (undefined: the socket just dropped), handed to onClose (the DO's webSocketClose code)
   let closed = false;
   let buf = Buffer.alloc(0);
   let frag = null; // { opcode, parts, size }
@@ -29,7 +30,7 @@ export function acceptUpgrade(req, socket) {
   const finish = () => {
     if (closed) return;
     closed = true;
-    try { closeFn(); } catch { /* ignore */ }
+    try { closeFn(peerCode); } catch { /* ignore */ }
     socket.destroy();
   };
   const sendClose = (code) => {
@@ -76,7 +77,7 @@ export function acceptUpgrade(req, socket) {
       for (let i = 0; i < data.length; i++) data[i] ^= mask[i & 3];
       buf = buf.subarray(off + 4 + len);
 
-      if (opcode === 8) { sendClose(1000); setTimeout(finish, 50).unref(); return; }
+      if (opcode === 8) { peerCode = data.length >= 2 ? data.readUInt16BE(0) : 1005; sendClose(1000); setTimeout(finish, 50).unref(); return; }
       if (opcode === 9) { socket.write(frame(10, data)); continue; }
       if (opcode === 10) continue;
       if (opcode === 1 || opcode === 2) {

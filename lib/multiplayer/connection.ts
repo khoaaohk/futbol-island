@@ -4,7 +4,7 @@ import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
   Cap, CAPS_ALL, CAPS_PARTY_HI, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, kitForCaps, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
-import { relayWsUrl, relayLobbyUrl, relayWorldWsUrl, validShard } from './config';
+import { relayWsUrl, relayLobbyUrl, relayWorldWsUrl, relayWorldLeaveUrl, validShard } from './config';
 import { admitStrangerEmote, isHiddenStranger, noteStrangerName } from './strangers';
 import { commitPose, governPose, poseGovernor, resetPoseGovernor } from './presence';
 
@@ -157,7 +157,7 @@ const YAW_UNITS = (8 * 256) / 360; // 8 degrees
 type Session = { code: string; resumeToken: string | null; hostKey: string | null; at: number };
 type WorldSession = { shard: number; resumeToken: string | null; at: number };
 type FetchLike = (url: string) => PromiseLike<{ ok: boolean; status: number; json(): PromiseLike<unknown> }>;
-type WSLike = { send(s: string): void; close(): void; readyState: number; onopen: any; onmessage: any; onclose: any; onerror: any };
+type WSLike = { send(s: string): void; close(code?: number, reason?: string): void; readyState: number; onopen: any; onmessage: any; onclose: any; onerror: any };
 type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
 /** The navigator.locks shape used here (injectable: tests pass a fake). */
 export type LockManagerLike = {
@@ -185,6 +185,10 @@ export type ConnectionDeps = {
   /** Public island: fires once when this page really goes away (tab closed, another site; not a room page, a reload or the
    *  back-forward cache). defaultPageExit() by default; null = never (tests, old behaviour). */
   pageExit?: PageExitLike | null;
+  /** Nov 20 2026: a closed tab whose world socket was already shut (15 s hidden, a drop) frees its slot with one POST of its own
+   *  resume token (defaultBeacon: navigator.sendBeacon, else fetch keepalive). null = never. worldLeaveUrl: config.ts by default. */
+  beacon?: ((url: string, body: string) => void) | null;
+  worldLeaveUrl?: (shard: number) => string | null;
 };
 export type PageExitLike = { on(fn: () => void): () => void };
 export const RTT_SAMPLES = 15;
@@ -206,6 +210,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   const lobbyUrlFor = deps.lobbyUrl ?? relayLobbyUrl;
   const worldUrlFor = deps.worldUrl ?? relayWorldWsUrl;
   const tabStorage = deps.tabStorage === undefined ? tabStore() : deps.tabStorage;
+  const beacon = deps.beacon === undefined ? defaultBeacon : deps.beacon;
+  const worldLeaveUrlFor = deps.worldLeaveUrl ?? relayWorldLeaveUrl;
 
   let status: PartyStatus = 'idle';
   let code: string | null = null;
@@ -366,11 +372,12 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     if (beatTimer) { ct(beatTimer); beatTimer = null; }
   }
 
-  function dropSocket() {
+  /** `code`: CloseCode.Leaving only right after C.Leave (the relay frees the slot at once); otherwise a plain close (grace kept). */
+  function dropSocket(code?: number) {
     const w = ws;
     ws = null;
     if (beatTimer) { ct(beatTimer); beatTimer = null; }
-    if (w) { w.onopen = w.onmessage = w.onclose = w.onerror = null; try { w.close(); } catch { /* ignore */ } }
+    if (w) { w.onopen = w.onmessage = w.onclose = w.onerror = null; try { if (code === undefined) w.close(); else w.close(code, 'leave'); } catch { /* ignore */ } }
   }
 
   function connect() {
@@ -590,7 +597,9 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   // more in "N on now". The world slot lives per tab (sessionStorage), so a closed tab can never resume it: say Leave on the way out
   // (best effort, like sendBeacon: one small frame on the open socket) so the others fade me out at once. Never for a code party
   // (its session is kept on the device to rejoin) and never on a same-site page change (a room page or a reload resumes the slot).
-  const offExit = (deps.pageExit === undefined ? defaultPageExit() : deps.pageExit)?.on(() => { if (!disposed && worldOn && open()) leaveWorld(); }) ?? (() => {});
+  // Nov 20 2026: the Leave frame is followed by close code CloseCode.Leaving (a newer relay frees the slot on either); a socket already
+  // shut (15 s hidden, a drop) sends one beacon with this tab's own resume token instead. Hidden, frozen, the bfcache, a drop: nothing.
+  const offExit = (deps.pageExit === undefined ? defaultPageExit() : deps.pageExit)?.on(() => { if (!disposed && worldOn) leaveWorld(true); }) ?? (() => {});
   const offVis = vis.on(() => {
     if (disposed || !hasTarget()) return;
     if (vis.hidden()) {
@@ -669,11 +678,17 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false; resetPoseGovernor(gov);
     beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false; resuming = false; fullRetried = false; near = -1; caps = 0;
   }
-  /** Leave the world (an explicit switch, or a party taking over): Leave is sent so others fade me out at once. */
-  function leaveWorld() {
-    if (open()) raw([C.Leave]);
+  /** Leave the world (an explicit switch, a party taking over, or `exit`: this page really going away): Leave is sent so others fade
+   *  me out at once. On an exit with no open socket, the beacon carries my own resume token (only my slot, only while unconnected). */
+  function leaveWorld(exit = false) {
+    const wasOpen = open();
+    if (wasOpen) raw([C.Leave]);
+    else if (exit && beacon && resumeToken && shard !== null) {
+      const u = worldLeaveUrlFor(shard);
+      if (u) { try { beacon(u, resumeToken); } catch { /* best effort: the relay grace still runs out */ } }
+    }
     lobbyGen++;
-    clearTimers(); dropSocket(); clearWorldSession();
+    clearTimers(); dropSocket(wasOpen ? CloseCode.Leaving : undefined); clearWorldSession();
     worldOn = false; shard = null; resumeToken = null; you = null; caps = 0; near = -1; pendingResume = false; last = null; fullRetried = false;
   }
 
@@ -827,10 +842,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     leave() {
       if (worldOn) { leaveWorld(); setStatus('idle'); return; }
       clearWorldSession(); // the grown-up switch Off in a room: nothing public may resume either
-      if (open()) raw([C.Leave]);
+      const wasOpen = open();
+      if (wasOpen) raw([C.Leave]);
       opGen++; acquiring = false;
       clearTimers();
-      dropSocket();
+      dropSocket(wasOpen ? CloseCode.Leaving : undefined);
       endHere();
       code = null; resumeToken = null; hostKey = null; nick = null; nameLocked = false; renamePending = false; pendingResume = false; last = null; resuming = false;
       setStatus('idle');
@@ -888,6 +904,13 @@ export function defaultPageExit(w: NavWindow | undefined = typeof window === 'un
       return () => { nav.removeEventListener('navigate', onNav); nav.removeEventListener('navigateerror', onErr); w.removeEventListener('pagehide', onHide); };
     },
   };
+}
+
+/** One POST that survives the page going away: sendBeacon (text/plain: no preflight, no cookies needed), else fetch keepalive. */
+function defaultBeacon(url: string, body: string): void {
+  const nav = typeof navigator === 'undefined' ? null : (navigator as Navigator);
+  if (nav && typeof nav.sendBeacon === 'function' && typeof Blob === 'function' && nav.sendBeacon(url, new Blob([body], { type: 'text/plain' }))) return;
+  if (typeof fetch === 'function') fetch(url, { method: 'POST', body, keepalive: true, credentials: 'omit', headers: { 'content-type': 'text/plain' } }).catch(() => {});
 }
 
 function defaultVisibility() {

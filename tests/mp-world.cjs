@@ -75,7 +75,7 @@ t('protocol: world constants, caps, new frames', () => {
   assert.equal(Cap.World, 256); assert.equal(Cap.Quiet, 512); assert.equal(Cap.Report, 1024);
   assert.equal(CAPS_WORLD & (Cap.Rename | Cap.NameLock | Cap.Hit), 0, 'no rename, name lock or knock-over between strangers');
   assert.equal(C.Report, 60); assert.equal(S.Quiet, 41); assert.equal(S.World, 42); assert.equal(LeaveReason.Far, 4);
-  assert.deepEqual({ ...P.CloseCode }, { WorldOff: 4007, Idle: 4008 }); assert.equal(CLOSE.WorldOff, 4007); assert.equal(CLOSE.Idle, 4008);
+  assert.deepEqual({ ...P.CloseCode }, { WorldOff: 4007, Idle: 4008, Leaving: 4009 }); assert.ok(!Object.values(CLOSE).includes(P.CloseCode.Leaving), 'Leaving is a client code, never one the relay sends'); assert.equal(CLOSE.WorldOff, 4007); assert.equal(CLOSE.Idle, 4008);
   const j = JSON.stringify;
   assert.ok(P.parseClient(j([60, 5, 0]))); assert.ok(P.parseClient(j([60, 31, 3]))); assert.equal(P.parseClient(j([60, 5, 4])), null); assert.equal(P.parseClient(j([60, 32, 0])), null);
   assert.equal(P.parseClient(j([60, 5, 'Following'])), null, 'reasons are ints');
@@ -452,6 +452,52 @@ t('kill switch: closeWorld closes every socket with WorldOff; the world opens ag
 });
 
 // ---- the WorldLobby object and the worker routes, with fake Durable Object stubs ----
+// ---- Nov 20 2026: a closed tab frees its slot at once (C.Leave + CloseCode.Leaving, or the token beacon); every drop keeps the grace ----
+t('leave: close code Leaving frees the slot at once; a plain drop / 1001 / 1006 keeps the grace and the same player resumes', () => {
+  const W = world();
+  const a = join(W), b = join(W);
+  at(W, a, 0, 0); at(W, b, 20, 0); W.run(400);
+  assert.ok(known(a).has(b.id), 'a sees b');
+  const n0 = W.room.size, mark = a.msgs.length;
+  W.room.disconnect(b, P.CloseCode.Leaving); // the closing tab's close frame (after its C.Leave)
+  assert.equal(W.room.size, n0 - 1, 'the slot is gone at once (the lobby count drops)');
+  assert.ok(a.msgs.slice(mark).some((m) => m[0] === S.Left && m[1] === b.id && m[2] === LeaveReason.Left), 'others hear Left at once');
+  const back = join(W, { resume: b.token }); assert.notEqual(back.of(S.Welcome)[0][3], b.token, 'a freed slot cannot be resumed');
+  for (const code of [undefined, 1000, 1001, 1005, 1006, 4001, 4100]) { // a drop, a hidden-tab close, going away, an abnormal end, odd codes
+    const c = join(W); at(W, c, 30, 0); W.run(400);
+    const n1 = W.room.size, m1 = a.msgs.length;
+    W.room.disconnect(c, code); W.run(30000);
+    assert.equal(W.room.size, n1, `code ${code}: still seated during the grace`);
+    assert.ok(!a.msgs.slice(m1).some((m) => m[0] === S.Left && m[1] === c.id), `code ${code}: nobody hears Left`);
+    const c2 = join(W, { resume: c.token }); assert.equal(c2.id, c.id, `code ${code}: the same player comes back`);
+    assert.equal(c2.of(S.Welcome)[0][3], c.token, `code ${code}: same slot token`);
+    send(W, c2, [C.Leave]); W.run(200);
+  }
+  const s = join(W); at(W, s, 40, 0, { mode: Mode.Busy }); W.run(400); // an app switch / sleeping phone: the 2 min away grace, unchanged
+  W.room.disconnect(s); W.run(110000);
+  assert.equal(join(W, { resume: s.token }).id, s.id, 'an away player still keeps the seat under 2 min');
+});
+t('leave: the token beacon frees only my own unconnected slot; never a connected player, a wrong token or a party', () => {
+  const W = world();
+  const a = join(W), b = join(W), c = join(W);
+  at(W, a, 0, 0); at(W, b, 20, 0); at(W, c, 10, 0); W.run(400);
+  const n0 = W.room.size;
+  W.room.leaveByToken(b.token); W.run(200);
+  assert.equal(W.room.size, n0, 'b is connected: the beacon cannot remove a live player (even with the right token)');
+  assert.equal(b.closed, null);
+  W.room.disconnect(b); W.run(1000); // b's tab was hidden 15 s (socket shut), then closed
+  W.room.leaveByToken(c.token); assert.equal(W.room.size, n0, "c is connected: someone else's token does nothing");
+  for (const bad of ['', 'x', b.token.slice(0, 10), b.token + 'A', 'A'.repeat(22), null, 42]) W.room.leaveByToken(bad);
+  assert.equal(W.room.size, n0, 'wrong / short / long / non-string tokens do nothing');
+  const mark = a.msgs.length;
+  W.room.leaveByToken(b.token);
+  assert.equal(W.room.size, n0 - 1, 'my own token on my unconnected slot: freed at once');
+  assert.ok(a.msgs.slice(mark).some((m) => m[0] === S.Left && m[1] === b.id && m[2] === LeaveReason.Left));
+  W.room.leaveByToken(b.token); assert.equal(W.room.size, n0 - 1, 'a second beacon is a no-op');
+  const Pw = world('party'); const pa = join(Pw, { nick: 'Emma' }), pb = join(Pw, { nick: 'Noah' }); Pw.room.disconnect(pb);
+  const pn = Pw.room.size; Pw.room.leaveByToken(pb.token); assert.equal(Pw.room.size, pn, 'a code party never takes a beacon'); void pa;
+});
+
 (async () => {
   const { WorldLobby } = loadTs(path.join(ROOT, 'multiplayer/relay/src/worldLobby.ts'));
   const worker = loadTs(path.join(ROOT, 'multiplayer/relay/src/index.ts')).default;
