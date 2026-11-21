@@ -67,18 +67,18 @@
 .thumbs{grid-area:t;list-style:none;padding:0!important;margin:0;display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:var(--s1)!important;align-self:end;min-width:0}
 .thumbs li{max-width:none!important;min-width:0}
 @media(min-width:900px){
- .feature{grid-template-columns:clamp(240px,22vw,320px) minmax(0,1fr);grid-template-areas:'m w' 'm t';grid-template-rows:auto 1fr;gap:var(--s3) var(--s4);padding:var(--s3)}
+ .feature{grid-template-columns:clamp(220px,18vw,300px) minmax(0,1fr);grid-template-areas:'m w' 'm t';grid-template-rows:auto 1fr;gap:var(--s3) var(--s4);padding:var(--s3)}
  .flip{grid-template-columns:minmax(0,1fr) clamp(240px,22vw,320px);grid-template-areas:'w m' 't m'}
  .featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w' 't';grid-template-rows:auto}
  .featureMedia .clipFig figcaption{font-size:var(--t-cap)}
  .featureWords{gap:12px}
  .featureWords .gameLinks{flex-direction:row;align-items:center}
- .thumbs{gap:var(--s2)!important;grid-auto-columns:minmax(0,200px);justify-content:start}/* four fill the column; three keep the four-up size */
+ .thumbs{gap:var(--s2)!important;grid-auto-columns:minmax(0,200px);justify-content:start;align-self:start}/* four fill the column; three keep the four-up size. Nov 20 2026 evening (four stills for every game): the stills sit right under the Play row and the clip column is a little narrower, so the card's two sides end near the same line instead of leaving a hole above the stills */
 }
 @media(min-width:1800px){
  .features{grid-template-columns:repeat(2,minmax(0,1fr))}
- .feature,.flip{grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
- .feature:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:'m w t';grid-template-rows:auto}
+ .feature,.flip{grid-template-columns:clamp(200px,11vw,240px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
+ .feature:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:clamp(200px,11vw,240px) minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:'m w t';grid-template-rows:auto}
  .feature:last-child:nth-child(odd) .thumbs{align-self:center;grid-auto-columns:minmax(0,1fr)}
  .feature:last-child:nth-child(odd) .featureWords{align-self:center}
 }
