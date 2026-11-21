@@ -25,7 +25,7 @@ const W:Omit<LibraryWords,'groups'>&{groups:Record<'game'|'train'|'more',{title:
  description:'Todo lo que enseña Futbol Island en una página: lecciones de fútbol gratis, reglas, posiciones, ejercicios y planes para niños de 7 a 12 años.',
  h1:'La biblioteca de Futbol Island',crumb:'Biblioteca',
  lead:'Futbol Island enseña a niños de 7 a 12 años cómo funciona el fútbol: las reglas, las posiciones, cómo se ordena un equipo y cómo pasar, defender y marcar. Los padres y entrenadores tienen ejercicios, planes de práctica y herramientas para imprimir. Todo aquí es gratis.',
- play:'Juega el juego',heroAlt:'Futbol Island desde arriba: una plaza, una cancha pequeña con reja y jugadores caminando',insetAlt:'El mapa de caminos de lecciones del juego, en la pantalla de un teléfono',
+ play:'Juega gratis',heroAlt:'Futbol Island desde arriba: una plaza, una cancha pequeña con reja y jugadores caminando',insetAlt:'La pantalla Island paths del juego: un camino de lecciones con pestañas para 7v7, 9v9, 11v11 y Futsal',
  playTitle:'Juégalo en la isla',playLine:'Cada lección también se juega en una cancha del juego, con jugadores que se mueven y un quiz corto. Es gratis y funciona en el navegador. El juego está en inglés por ahora.',
  groups:{
   game:{title:'Aprende el juego',line:'Empieza aquí. Lecciones cortas y respuestas claras sobre cómo funciona el fútbol.'},
@@ -41,12 +41,12 @@ const W:Omit<LibraryWords,'groups'>&{groups:Record<'game'|'train'|'more',{title:
   '/learn/soccer-drills':{name:'Ejercicios',alt:'Diagrama del montaje del ejercicio Tiburones y pececitos',line:'Ejercicios divertidos con un diagrama y puntos clave. Para entrenadores y padres.',count:n=>`${n} ejercicios`},
   '/learn/soccer-practice-plans':{name:'Planes de práctica',alt:'Diagrama del montaje de un partido 3v3',line:'Prácticas completas, del calentamiento al partido final. Para entrenadores voluntarios.',count:n=>`${n} planes`},
   '/tools':{name:'Herramientas',alt:'Diagrama de una alineación de 9v9 en 3-2-3',line:'Alineaciones, minutos de juego y diagramas de cancha para imprimir. Para entrenadores.',count:n=>`${n} herramientas`},
-  '/games':{name:'Juegos (en inglés)',alt:'Un juego en una cancha de neón en el arcade de Futbol Island',line:'Juegos de arcade gratis sobre pases, formas de equipo y pensar rápido. Para niños.',count:n=>`${n} juegos`},
-  '/videos':{name:'Videos (en inglés)',alt:'Una imagen de un video de Futbol Island',line:'Clips cortos de los juegos, la isla y las lecciones. Para niños y padres que quieren mirar primero.',count:n=>`${n} videos`},
+  '/games':{name:'Juegos (en inglés)',alt:'Un partido en una cancha de neón en el arcade de Futbol Island, Gold contra Blue, visto desde arriba',line:'Juegos de arcade gratis sobre pases, formas de equipo y pensar rápido. Para niños.',count:n=>`${n} juegos`},
+  '/videos':{name:'Videos (en inglés)',alt:'La plaza de Futbol Island desde arriba, con un mensaje de bienvenida en la pantalla',line:'Clips cortos de los juegos, la isla y las lecciones. Para niños y padres que quieren mirar primero.',count:n=>`${n} videos`},
   '/cards':{name:'Cartas de jugadores (en inglés)',alt:'Una imagen del clip de la colección de cartas del juego',line:'Jugadores de fútbol para coleccionar, cada uno con una posición y una jugada. Para niños.',count:n=>`${n} cartas`},
-  '/fish':{name:'Libro de peces (en inglés)',alt:'Pescando desde el muelle de Futbol Island',line:'Todos los peces que puedes pescar en la isla y dónde viven. Para niños que les gusta explorar.',count:n=>`${n} peces`},
+  '/fish':{name:'Libro de peces (en inglés)',alt:'Pescando desde el muelle de Futbol Island',line:'Todos los peces que puedes pescar en la isla y dónde viven. Para niños a los que les gusta explorar.',count:n=>`${n} peces`},
   '/exhibits':{name:'Museo (en inglés)',alt:'Dentro del museo de fútbol de Futbol Island',line:'Momentos de la historia del fútbol, contados de forma simple. Para niños y familias.',count:n=>`${n} piezas`},
-  '/books':{name:'Cuentos (en inglés)',alt:'Un libro de cuentos desplegable abierto',line:'Libros desplegables sobre jugadores de fútbol. Para niños que les gusta leer.',count:n=>`${n} cuentos`}}};
+  '/books':{name:'Cuentos (en inglés)',alt:'Un libro de cuentos desplegable abierto',line:'Libros desplegables sobre jugadores de fútbol. Para niños a los que les gusta leer.',count:n=>`${n} cuentos`}}};
 export const LIBRARY_ES={title:W.title,description:W.description,h1:W.h1};
 const card=(path:string)=>{const i=LIBRARY_ITEMS.find(x=>x.path===path)!,es=hasEs(path);return libraryCard(i,W.items[path],es?toEs(path):path,es?ES_COUNTS[path]:i.count);};
 export function libraryGroupsEs():LibraryGroup[]{
