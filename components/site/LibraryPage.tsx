@@ -5,6 +5,8 @@ import {PLAY_PATH} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import l from './library.module.css';
 import RailNav from './shell/RailNav';
+import SectionPicPlayer from './SectionPicPlayer';
+import {SECTION_PICTURES,SECTION_SIZE,SectionSvg} from '@/lib/site/sectionImage';
 import {railOrder} from '@/lib/site/railNav';
 /**
  * The Library page (/library and /es/library; owner, Nov 20 2026: "a page that houses all the items at the bottom of the
@@ -16,6 +18,11 @@ import {railOrder} from '@/lib/site/railNav';
  */
 function Pic({c}:{c:LibrarySection}){
  if(!c.pic)return <span className={l.secPic} data-icon=""><FactIcon kind={c.icon} size={72}/></span>;
+ // Nov 20 2026 night (owner: "change these to light colors to match with the marketing side. also if these could animate that would
+ // be nice"): a drawn section picture is the same drawing inline (SectionSvg), so it can play once as it enters view
+ // (SectionPicPlayer); its frame takes the band's opposite tone. The webp file stays for the /games cards and as the fallback.
+ const drawn=/\/learn\/sections\/([a-z]+)\.webp/.exec(c.pic.src)?.[1],pic=drawn?SECTION_PICTURES[drawn]:undefined;
+ if(pic)return <span className={l.secPic} data-drawn=""><SectionSvg draw={pic} size={SECTION_SIZE} label={c.alt} clipId={drawn} frame="var(--card,#fbf7ee)"/></span>;
  // every picture fills the 16:10 frame (the drawn section pictures are made at that shape); a clip's still shows a play mark
  return <span className={l.secPic} data-video={c.pic.video?'':undefined}><img src={c.pic.src} alt={c.alt} width={c.pic.w} height={c.pic.h} style={c.pic.pos?{objectPosition:c.pic.pos}:undefined} loading="lazy" decoding="async"/></span>;
 }
@@ -62,6 +69,7 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
    </div>
   </div>
   {list.map((x,i)=><Section key={x.id} s={x} tone={i%2===0?'tint':'paper'} exLabel={exLabel}/>)}
+  <SectionPicPlayer/>
   <section className={l.close} aria-labelledby="lib-play">
    <div><h2 className={l.h2} id="lib-play">{playTitle}</h2><p>{playLine}</p></div>
    <a className={site.cta} href={PLAY_PATH}>{play}</a>

@@ -1,0 +1,21 @@
+/* The Library's drawn section pictures, played once (Nov 20 2026 night, owner: "also if these could animate that would be nice").
+   lib/site/sectionImage.tsx tags each moving part with a class and its start time (--t); SectionPicPlayer sets [data-play] on the
+   svg as it enters view (one shared IntersectionObserver) and removes it when the last move ends, so at rest no animation exists
+   and the picture is exactly the server HTML. Heat (AGENTS.md): transform, opacity and stroke-dashoffset only, no loops, nothing
+   runs off screen, nothing at all under prefers-reduced-motion. */
+.svg{display:block;width:100%;height:100%}
+@media(prefers-reduced-motion:no-preference){
+ .svg[data-play] .fade{animation:fade .45s ease-out var(--t) both}
+ .svg[data-play] .draw{stroke-dasharray:1;animation:draw .5s cubic-bezier(.45,0,.25,1) var(--t) both}
+ .svg[data-play] .mv{animation:travel var(--d) cubic-bezier(.45,0,.25,1) var(--t) both}
+ .svg[data-play] .back{animation:fade .3s ease-out var(--t) both}
+ .svg[data-play] .pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.45,.5,1) var(--t) both}
+ .svg[data-play] .grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s cubic-bezier(.2,.8,.25,1) var(--t) both}
+ .svg[data-play] .bar{transform-box:fill-box;transform-origin:0 50%;animation:bar .6s cubic-bezier(.3,.7,.25,1) var(--t) both}
+}
+@keyframes fade{from{opacity:0}}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes travel{0%{opacity:0;transform:translate(var(--dx),var(--dy))}8%{opacity:1}80%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.3)}}
+@keyframes grow{from{opacity:0;transform:scale(.3)}}
+@keyframes bar{from{transform:scaleX(0)}}

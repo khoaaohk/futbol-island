@@ -48,7 +48,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
   const order=[...html.matchAll(/<section id="([a-z-]+)"[^>]*data-library-section/g)].map(m=>m[1]);
   assert.deepEqual(order,RO.map(p=>byPath[p].id),'the sections, in the menu order');assert(!/data-library-group|id="group-/.test(html),'no group bands');
   for(const x of secs){const sec=html.match(new RegExp(`<section id="${x.id}"[\\s\\S]*?</section>`))[0];
-   assert.match(sec,new RegExp(`<h2[^>]*>${x.name}</h2>`),`${x.id}: H2`);assert(sec.includes('<img ')&&/loading="lazy"/.test(sec),`${x.id}: a lazy picture`);
+   assert.match(sec,new RegExp(`<h2[^>]*>${x.name}</h2>`),`${x.id}: H2`);assert((sec.includes('<img ')&&/loading="lazy"/.test(sec))||/<svg [^>]*role="img" aria-label="[^"]{8,}"[^>]*data-pic-anim=/.test(sec),`${x.id}: a lazy picture, or the drawn picture inline`);
    assert(x.examples.length>=3&&x.examples.length<=5,`${x.id}: 3-5 examples`);for(const e of x.examples){assert(PATHS.has(e.href.split('#')[0]),`${x.id}: example ${e.href} is a real page`);assert(sec.includes(`href="${e.href}"`));}
    assert.equal((sec.match(/class="[^"]*go[^"]*" href=/g)||[]).length,1,`${x.id}: one button`);assert(sec.includes(`href="${x.href}">${x.cta}</a>`),`${x.id}: the button opens the section`);
    if(x.count)assert(!/\d/.test(x.cta)||x.cta.includes(x.count.split(' ')[0]),`${x.id}: the button's number is the count's`);
@@ -57,7 +57,13 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
   // the section hubs' rails still link to the pages, not to anchors
   {const r=L('lib/site/railNav.ts').libraryRail();assert(r.groups[0].items.every(i=>i.href.startsWith('/')),'hub rails: page links');}}
  assert(!/\/marketing/.test(html)&&!/—/.test(html),'no /marketing link, no em dash');
- const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);assert(imgs.length>=cards.length,'a picture on every card');
+ const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);/* Nov 20 2026 night (owner: "change these to light colors to match with the marketing side. also if these could animate that would
+    be nice"): the eight drawn diagram pictures are inline SVG (lib/site/sectionImage.tsx SectionSvg, played by SectionPicPlayer),
+    the rest are <img> */
+ const svgs=[...html.matchAll(/<svg [^>]*data-pic-anim="[\d.]+"[^>]*>/g)].map(m=>m[0]);assert.equal(svgs.length,8,'eight drawn pictures inline');
+ for(const v of svgs)assert(/role="img"/.test(v)&&/aria-label="[^"]{8,}"/.test(v)&&/viewBox="0 0 1440 900"/.test(v),`drawn picture: role, label, 16:10 ${v.slice(0,80)}`);
+ assert(/<svg [^>]*data-pic-anim[\s\S]*?<\/svg>/.test(html)&&!/data-play/.test(html),'the server HTML is the final state (no play attribute)');
+ assert(imgs.length+svgs.length>=cards.length,'a picture on every card');
  for(const i of imgs)assert(/ alt="[^"]{8,}"/.test(i)&&/ width="\d+"/.test(i)&&/ height="\d+"/.test(i),`alt, width, height: ${i.slice(0,80)}`);
  assert.equal(imgs.filter(i=>!/loading="lazy"/.test(i)).length,2,'only the two hero pictures load eagerly');
  /* Nov 20 2026 (owner: "the visuals need to match more with the title of the section"): every section picture is 16:10 with no
