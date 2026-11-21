@@ -23,3 +23,5 @@
  .group span{display:block}
  .rail a[aria-current=page],.rail ul[data-pill-on] a[aria-current=page]{background:var(--btn-mint,#beded1)}
 }
+/* Phone and tablet chip bar: a one-letter chip (the terms A to Z) is as wide as it is tall, so its pill is a circle, not an oval (owner, Nov 20 2026). */
+@media(max-width:1279.98px){.rail ul a{min-width:40px;justify-content:center;box-sizing:border-box}}
