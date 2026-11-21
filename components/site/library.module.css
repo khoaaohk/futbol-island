@@ -138,7 +138,7 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
     of the window at every scroll position, footer included; the page content and the site footer sit beside it (site.module.css
     .page:has([data-rail])). The window still scrolls normally; only the rail's own list scrolls inside it when it is long. */
  .shelf{display:block;margin:0;padding:0}/* the column beside the rail is the shell's .main (site.module.css) */
- .menu{position:fixed;z-index:15;left:0;top:calc(68px + env(safe-area-inset-top,0px));bottom:0;width:var(--rail,248px);box-sizing:border-box;margin:0;padding:var(--s4) 12px var(--s3);display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 60%,var(--paper));box-shadow:inset -1px 0 0 var(--rule)}
+ .menu{position:fixed;z-index:15;left:0;top:calc(68px + env(safe-area-inset-top,0px));bottom:0;width:var(--rail,248px);box-sizing:border-box;margin:0;padding:34px 12px var(--s3);display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 60%,var(--paper));box-shadow:inset -1px 0 0 var(--rule)}
  nav.menu li[data-pill]{display:none}
  nav.menu ul{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;flex-direction:column;flex-wrap:nowrap;gap:4px}
  .menu ul a{display:flex;align-items:center;box-sizing:border-box;width:100%;min-height:44px;padding:8px 14px;border-radius:var(--r-md);background:transparent;font-size:16px;line-height:1.3;font-weight:700}/* ONE rail entry style on every rail page (owner, Nov 20 2026 evening); long lists scroll inside the rail */
