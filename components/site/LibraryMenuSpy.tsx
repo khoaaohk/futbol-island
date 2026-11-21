@@ -80,6 +80,7 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
   const off=()=>{window.removeEventListener('wheel',release);window.removeEventListener('touchstart',release);window.removeEventListener('keydown',release);};
   const tap=(e:MouseEvent)=>{const a=(e.target as Element).closest?.('a[href^="#"]') as HTMLAnchorElement|null;if(!a||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
    const t=document.getElementById(a.hash.slice(1));if(!t)return;e.preventDefault();
+   for(let d=t.closest('details');d;d=d.parentElement?.closest('details')??null)d.open=true;// a section folded in a <details> (a rule's "By game size") opens first, or there is nothing to land on
    t.scrollIntoView({behavior:still()?'auto':'smooth',block:'start'});history.replaceState(null,'',a.hash);
    pauseUntil=0;off();held=t.id;paint(true);
    /* added after this tap's own touchstart/keydown, so only the reader's next hand scroll lets the light follow the page again */
