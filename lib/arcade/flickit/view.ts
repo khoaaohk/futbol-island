@@ -270,7 +270,7 @@ export function createFlickitView(host:HTMLElement,o:{reduced:boolean;mobile:boo
   // camera: fly in over the layout, sit at the stage's own angle, chase the ball, cut back
   if(introT<1)introT=Math.min(1,introT+dt/2.4);const ie=1-Math.pow(1-introT,3);
   if(flying){held=true;followW=Math.min(1,followW+dt*2.2);}else if(s.phase==='tee'||s.phase==='done')followW=Math.max(0,followW-dt*(o.reduced?9:4.5));
-  if(flying||(held&&s.phase==='wait')){if(flying){const hv=Math.hypot(b.vx,b.vz)||1;V.set(b.x-b.vx/hv*5.2,Math.max(1.3,b.y+1.5),b.z-b.vz/hv*5.2);if(V.z>base.z)V.z=base.z;fl.lerp(V,Math.min(1,dt*5));}lastBall.lerp(V.set(b.x,b.y,b.z),Math.min(1,dt*9));}
+  if(flying||(held&&s.phase==='wait')){if(flying){const hv=Math.hypot(b.vx,b.vz)||1;V.set(b.x-b.vx/hv*5.2,Math.max(1.3,b.y+1.5),b.z-b.vz/hv*5.2);if(V.z>base.z)V.z=base.z;if(V.z<-11)V.z=-11;/* never chase into the scenery behind the targets */V.x=Math.max(-6,Math.min(6,V.x));fl.lerp(V,Math.min(1,dt*5));}lastBall.lerp(V.set(b.x,b.y,b.z),Math.min(1,dt*9));}
   else if(followW===0){fl.copy(base);lastBall.set(0,FK.R,0);}
   const fw=o.reduced?0:followW*followW*(3-2*followW)*.78;cp.copy(base).lerp(fl,fw);cl.copy(look).lerp(lastBall,fw*.9);
   if(ie<1){const a=(1-ie)*1.15,dx=base.x-look.x,dz=base.z-look.z,r=1+(1-ie)*.9;cp.set(look.x+(dx*Math.cos(a)-dz*Math.sin(a))*r,base.y+(1-ie)*7,look.z+(dx*Math.sin(a)+dz*Math.cos(a))*r);cl.copy(look);cl.y*=ie;}

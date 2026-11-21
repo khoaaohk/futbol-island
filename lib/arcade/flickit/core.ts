@@ -245,7 +245,7 @@ export function createFlickIt(o:FlickOptions){
    case 4:{const dx=b.x-e.x,dy=b.y-e.y,dz=b.z-e.z,d=Math.hypot(dx,dy,dz),R=FK.R+e.hx;if(d>=R||d<1e-6)break;N.x=dx/d;N.y=dy/d;N.z=dz/d;N.d=R-d;bounce(.5,.85);e.hitV=sp;if(!e.done)pay(e);else{e.hitT=s.t;emit('ping',e,0,sp);}break;}
    case 5:{if(!boxHit(b.x,b.y,b.z,FK.R,e.x,e.y,e.z,e.hx,e.hy,e.hz))break;bounce(.4,.8);e.hitV=sp;if(!e.done)pay(e);else{e.hitT=s.t;s.banked=true;emit('block',e,0,sp);}break;}
    case 6:{if(!boxHit(b.x,b.y,b.z,FK.R,e.x,e.y,e.z,e.hx,e.hy,e.hz)){if((e.k===K.wall||e.k===K.fence)&&b.y>e.y+e.hy&&Math.abs(b.x-e.x)<e.hx+FK.R&&Math.abs(b.z-e.z)<e.hz+FK.R)s.overs++;break;}
-    const v=bounce(e.k===K.keeper?.3:.45,.85);if(v<.5)break;e.hitT=s.t;e.hitV=sp;if(e.k===K.keeper){s.stats.saved++;emit('saved',e,0,sp);}else{if(e.k===K.wall)s.stats.blocked++;s.banked=true;emit('block',e,0,sp);}break;}
+    const v=bounce(e.k===K.keeper?.3:.45,.85);if(v<.5)break;e.hitT=s.t;e.hitV=sp;if(e.k===K.keeper){s.stats.saved++;emit('saved',e,0,sp);}else{if(e.k===K.wall)s.stats.blocked++;if(e.k!==K.block)s.banked=true;/* a bounce off the table a target stands on is no bank shot */emit('block',e,0,sp);}break;}
    case 7:{if(!capHit(b.x,b.y,b.z,FK.R,e))break;const v=bounce(.6,.92);if(v<.4)break;e.hitT=s.t;e.hitV=sp;emit('ping',e,0,sp);if(e.k===K.bar&&!e.done&&e.pts>0)pay(e);s.banked=true;break;}
    case 8:{if(s.netted||!(pz>e.z&&b.z<=e.z)||Math.abs(b.x-e.x)>e.hx-.05||b.y>e.y+e.hy)break;const corner=Math.abs(b.x-e.x)>e.hx-1.1&&b.y>e.y+e.hy-1.1;
     s.netted=true;s.netZ=e.z-1.5;e.hitV=sp;emit('goal',e,0,corner?1:0,0,corner?'TOP CORNER!':'GOAL!');pay(e,e.pts+(corner?200:0));b.vx*=.2;b.vy*=.2;b.vz*=.2;break;}}}

@@ -6869,3 +6869,31 @@ Owner: "can we make the arcade sign blink and animate so it flickers a little bi
 - **Tests:** `tests/arcade-neon-flicker.cjs` (seeded: ≤ 3 dips in any second, mean gap 2-6.5 s, steady and write-free when off, no
   catch-up after a long gap, wiring source checks).
 - Reduced work only, not measured on a real phone; no thermal claim.
+
+## Flick It, a new arcade game: frame cost and budget (Nov 21 2026, branch `game-flickit`, not placed, not deployed)
+The football flick game (`lib/arcade/flickit/`, `docs/arcade-aaa/flickit-direction.md`): one three.js scene, six places.
+- **Kept from the other 3D cabinets:** `powerPreference:'low-power'`, pixel ratio capped at 1.5 on phones (2 on desktop), 30 draws a
+  second on phones (`frameCapSlot`), no post-processing, the loop runs only while playing (the start, between-stage, results and
+  pause cards draw nothing: 0 rAF calls in 0.7 s, `scripts/check-flickit-browser.cjs`), pause on blur / hidden tab, full disposal.
+- **Cheaper than Ball Blaster by design:** NO shadow map (blob shadows: one instanced quad draw), one sun + one hemisphere, each
+  place (scenery + every wall, fence, post and goal frame) baked into ONE vertex-colour mesh when the stage loads, every target kind
+  one instanced draw (empty kinds are hidden), fixed pools for the trail (40), bits (110), blobs (44), stars and the aim ghost.
+  Nothing is allocated per frame; a stage change builds one geometry and two canvas textures (ground 1024 x 1024, backdrop 2048 x 512)
+  and frees the old ones.
+- **Measured (dev server, headless desktop Chrome/Metal, 390x844 DPR 2 touch, standing on the spot; `renderer.info`):**
+
+  | Stage | Draw calls | Triangles | Textures |
+  | --- | --- | --- | --- |
+  | Back Garden | 12 | 10.1k | 4 |
+  | Town Square | 12 | 11.2k | 4 |
+  | Training Pitch | 14 | 11.8k | 5 |
+  | Palm Beach | 13 | 9.8k | 4 |
+  | Rooftop Cage | 12 | 10.9k | 4 |
+  | Island Stadium | 16 | 11.6k | 5 |
+
+  In flight add up to 3 draws (trail, bits, stars). Same counts at 1440x900 (the stage is a 9:16 page on desktop). 8-10 shader programs.
+- **Physics:** fixed 1/120 s steps, at most 60 a frame; about 40 things a stage, each a box / sphere / capsule / ring test against
+  the one ball, plus flying bodies against standing ones. Slow motion and hit-stop only scale the time handed to the core.
+- **Tradeoffs:** the ink outlines are hulls inside the baked mesh (they double its triangles; no extra draw); the backdrop is a
+  painted half cylinder, soft on purpose; no kicker character is drawn.
+- Desktop counts only: not measured on a real phone; no thermal claim.

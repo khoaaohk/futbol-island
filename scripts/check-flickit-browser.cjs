@@ -4,7 +4,7 @@
 // the ball spin, a level reaches its card, pause stops the loop, every stage loads, no console errors. Prints draw calls and
 // triangles per stage (renderer.info) and the cost of a frame.
 //   node scripts/check-flickit-browser.cjs --port=<n> [--mobile] [--size=390x844] [--shots=<dir>] [--clip=<dir>] [--headed]
-// --shots: writes flickit-*.png into the directory. --clip: records the page (webm) while a few flicks are played.
+// --shots: writes flickit-*.png into the directory. --clip=<dir>: records a few flicks (CDP screencast frames -> mp4 by the system ffmpeg, next to <dir>).
 // Pass your own server; never the owner's dev server on 8092.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const path=require('node:path'),fs=require('node:fs');
@@ -21,7 +21,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:!has('headed'),args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  try{
-  const ctx=await browser.newContext({viewport:{width:vw,height:vh},deviceScaleFactor:mobile?2:1,hasTouch:mobile,isMobile:mobile,...(CLIP?{recordVideo:{dir:CLIP,size:{width:vw,height:vh}}}:{})});
+  const ctx=await browser.newContext({viewport:{width:vw,height:vh},deviceScaleFactor:mobile?2:1,hasTouch:mobile,isMobile:mobile});
   await ctx.addInitScript(seed,{save:has('fresh')?null:SAVE});const page=await ctx.newPage(),errors=[];
   page.on('console',m=>{if(m.type()==='error'&&!/favicon|Failed to load resource|supabase|net::ERR/i.test(m.text()))errors.push(m.text().slice(0,200));});page.on('pageerror',e=>errors.push(String(e).slice(0,200)));
   const cdp=await ctx.newCDPSession(page);
@@ -39,7 +39,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   await page.goto(`${BASE}/arcade?game=flickit`,{waitUntil:'domcontentloaded'});await page.waitForSelector('[data-flickit-card="start"]',{timeout:90000});await wait(1200);
   {const a=await page.evaluate(()=>window.__rafCalls);await wait(700);const b=await page.evaluate(()=>window.__rafCalls);check(b-a<=2,'start card: no frames drawn',`${b-a} rAF calls in 0.7 s`);}
   await shot('menu');
-  const S=Math.min(vw,vh*.62)*(mobile?1:.6),heat=[];
+  const sb=await page.evaluate(()=>{const r=window.__flickit.stage;return {w:r.width,h:r.height};}),S=Math.min(sb.w,sb.h*.62),heat=[];
   const stages=['garden','plaza','pitch','beach','roof','stadium'];
   for(const id of stages){
    await page.click('[data-flickit-practice]');await page.click(`[data-flickit-stage-pick="${id}"]`);await page.waitForFunction(()=>window.__flickit&&window.__flickit.phase==='playing',null,{timeout:20000});
@@ -53,6 +53,14 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
    // out through pause -> restart is not needed: leave by reloading the game card
    await page.goto(`${BASE}/arcade?game=flickit`,{waitUntil:'domcontentloaded'});await page.waitForSelector('[data-flickit-card="start"]',{timeout:60000});await wait(500);}
   for(const h of heat)console.log(`heat ${tag} ${h.id}: ${h.calls} draw calls, ${h.triangles} triangles, ${h.textures} textures, ${h.geometries} geometries, ${h.programs} programs`);
+  if(CLIP){// a clip of the curl stage: the page's own frames (CDP screencast), put together by the system ffmpeg
+   fs.mkdirSync(CLIP,{recursive:true});const frames=[];cdp.on('Page.screencastFrame',f=>{frames.push({d:f.data,t:f.metadata.timestamp});cdp.send('Page.screencastFrameAck',{sessionId:f.sessionId}).catch(()=>{});});
+   await page.click('[data-flickit-practice]');await page.click('[data-flickit-stage-pick="pitch"]');await page.waitForFunction(()=>window.__flickit&&window.__flickit.phase==='playing');await wait(600);
+   await cdp.send('Page.startScreencast',{format:'jpeg',quality:82,everyNthFrame:1});await wait(2300);
+   for(const [dx,dy,bend,ms] of [[-.3,-.5,-.17,120],[.12,-.56,.13,115],[-.05,-.5,0,100],[-.34,-.3,0,90]]){await tee(6000);await flick(dx*S,dy*S,bend*S,ms);await wait(1900);}
+   await cdp.send('Page.stopScreencast');const secs=frames.length>1?frames[frames.length-1].t-frames[0].t:1,fps=Math.max(5,Math.min(60,(frames.length-1)/secs));frames.forEach((f,i)=>fs.writeFileSync(path.join(CLIP,`f${String(i).padStart(4,'0')}.jpg`),Buffer.from(f.d,'base64')));
+   const out=path.join(CLIP,'..',`flickit-${tag}-clip.mp4`);require('node:child_process').execFileSync(process.env.FFMPEG||'/opt/homebrew/bin/ffmpeg',['-loglevel','error','-y','-framerate',fps.toFixed(2),'-i',path.join(CLIP,'f%04d.jpg'),'-vf','scale=trunc(iw/2)*2:trunc(ih/2)*2','-pix_fmt','yuv420p','-r','30',out]);fs.rmSync(CLIP,{recursive:true,force:true});console.log(`clip: ${frames.length} frames, ${secs.toFixed(1)} s, ${fps.toFixed(1)} fps -> ${out}`);
+   await page.goto(`${BASE}/arcade?game=flickit`,{waitUntil:'domcontentloaded'});await page.waitForSelector('[data-flickit-card="start"]',{timeout:60000});await wait(500);}
   if(CLIP||has('level')){// a whole level on the first stage: flicks until its card
    await page.click('[data-flickit-practice]');await page.click('[data-flickit-stage-pick="garden"]');await wait(2900);const plan=[[0,-.42,0,120],[.33,-.52,0,120],[-.3,-.3,0,260],[-.16,-.52,.1,130],[.2,-.6,-.1,120],[.3,-.5,0,120]];
    for(const [dx,dy,bend,ms] of plan){const s=await tee();if(s.phase!=='playing'||s.gp!=='tee')break;await flick(dx*S,dy*S,bend*S,ms);await wait(700);}
