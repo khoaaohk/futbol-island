@@ -37,11 +37,11 @@ export function createClawRoom(opts:{scene:T.Scene;renderer:T.WebGLRenderer;plac
  }
  // ---- camera poses ----
  const start={pos:new T.Vector3(),look:new T.Vector3(),fov:12},end={pos:new T.Vector3(),look:new T.Vector3(),fov:40},look=new T.Vector3(),dir=new T.Vector3(),tmp=new T.Vector3();
- let blend=0,aspect=1,shake=0;
+ let blend=0,aspect=1,shake=0,nearEnd=.05;
  function endPose(){
   const portrait=aspect<1,fov=portrait?44:36,t=Math.tan(T.MathUtils.degToRad(fov/2));
-  const hw=1.22,hh=portrait?1.95:1.62,dist=Math.max(hh/t,hw/(t*aspect)),cy=portrait?1.55:1.95;
-  end.fov=fov;end.look.set(0,cy,0);placement.localToWorld(end.look);
+  const hw=portrait?.98:1.15,hh=portrait?1.95:1.5,dist=Math.max(hh/t,hw/(t*aspect)),cy=portrait?1.62:2.05;
+  end.fov=fov;nearEnd=Math.max(.05,dist-.5);/* the near plane ends just in front of the glass: you, your ball and anyone behind you stay out of the shot */end.look.set(0,cy,0);placement.localToWorld(end.look);
   end.pos.set(0,cy+dist*.16,CLAW_SIZE.front+dist);placement.localToWorld(end.pos);
  }
  function startPose(ortho:T.OrthographicCamera){
@@ -50,7 +50,7 @@ export function createClawRoom(opts:{scene:T.Scene;renderer:T.WebGLRenderer;plac
   start.fov=12;const D=halfH/Math.tan(T.MathUtils.degToRad(start.fov/2));start.pos.copy(start.look).addScaledVector(dir,-D);
  }
  function applyCamera(k:number,time:number){
-  camera.fov=start.fov+(end.fov-start.fov)*k;camera.aspect=aspect;camera.updateProjectionMatrix();
+  camera.fov=start.fov+(end.fov-start.fov)*k;camera.near=.05+(nearEnd-.05)*k*k*k;camera.aspect=aspect;camera.updateProjectionMatrix();
   camera.position.lerpVectors(start.pos,end.pos,k);look.lerpVectors(start.look,end.look,k);
   if(shake>0&&!reduced){const a=.03*shake;camera.position.x+=Math.sin(time*71)*a;camera.position.y+=Math.sin(time*53+1)*a;}
   camera.lookAt(look);camera.updateMatrixWorld();
@@ -140,7 +140,7 @@ export function createClawRoom(opts:{scene:T.Scene;renderer:T.WebGLRenderer;plac
   get busy(){return snap.mode==='in'||snap.mode==='out'||shake>0||!!sim&&(!sim.sleeping||sim.state.phase==='aim')||!!input.pressed;},
   /** Check hook: the zoomed machine's draws / triangles (null before the first zoom). */
   stats:()=>detail?.stats()??null,
-  debug:()=>sim?{phase:sim.state.phase,held:sim.state.held,quality:sim.state.quality,carriage:[sim.state.cx,sim.state.cz],hub:[sim.state.hx,sim.state.hy,sim.state.hz],result:sim.state.result,sleeping:sim.sleeping,pile:[...pile]}:null,
+  debug:()=>sim?{phase:sim.state.phase,held:sim.state.held,quality:sim.state.quality,carriage:[sim.state.cx,sim.state.cz],hub:[sim.state.hx,sim.state.hy,sim.state.hz],result:sim.state.result,sleeping:sim.sleeping,pile:[...pile],toys:pile.map((_,i)=>sim!.active[i]?[(sim!.px[2*i]+sim!.px[2*i+1])/2,(sim!.py[2*i]+sim!.py[2*i+1])/2,(sim!.pz[2*i]+sim!.pz[2*i+1])/2]:null)}:null,
   dispose(){sound.dispose();detail?.dispose();detail=null;sim=null;listeners.clear();},
  };
  function finishClose(){blend=0;if(detail)detail.group.visible=false;lod.visible=true;sound.levels(0,0);sound.suspend();set({mode:'room',ready:false});}

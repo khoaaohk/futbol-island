@@ -27,7 +27,7 @@ export const CHUTE={x0:-.86,x1:-.36,z0:.1,z1:.6,baffle:.15,slopeY0:-.29,slopeK:.
 export const CLAW_HOME={x:-.61,z:.35} as const;
 export const CARRIAGE={minX:-.66,maxX:.66,minZ:-.42,maxZ:.42,vmax:.5,acc:1.7,dec:2.6} as const;
 export const CABLE={min:.26,max:1.36,drop:.6,lift:.42,liftAcc:1.1} as const;
-export const PRONG={knuckle:.042,drop:.03,len:.2,tip:.06,rad:.017,open:.95,closed:.1,rest:.32,k:260,c:22} as const;
+export const PRONG={knuckle:.045,drop:.03,len:.23,tip:.065,rad:.017,open:.95,closed:.1,rest:.32,k:260,c:22} as const;
 const HUB_R=.05;
 export const CLAW_AIM_SECONDS=20;
 /** Grip in g of load for a grab quality q: 0.35 + 1.5 q (q 0.5 holds 1.1 g, q 0.8 holds 1.55 g; carrying adds ~0.1–0.25 g). Firm (pity) ×1.3. */
@@ -81,6 +81,8 @@ export function createClawSim(seed:number,toyBodies:readonly ToyBody[]){
   for(let i=0;i<n;i++){const top=i>=9,c=top?(i*5)%9:i,x=cells[2*c]*(top?.6:1)+(rand()-.5)*.08,z=cells[2*c+1]*(top?.6:1)+(rand()-.5)*.08;
    placeToy(i,x,top?.5+rand()*.3:.16+rand()*.12,z,(rand()-.5)*1.2,rand()*Math.PI*2);}
   settleOffline(4);
+  // a toy that rolled into the chute while the pile settled goes back on top (the tray starts empty)
+  for(let round=0;round<4;round++){let moved=false;for(let i=0;i<n;i++)if(inChute[i]||delivered[i]||py[2*i]<.02){placeToy(i,(rand()-.3)*.7,.7+rand()*.2,(rand()-.6)*.5,(rand()-.5)*.8,rand()*Math.PI*2);moved=true;}if(!moved)break;settleOffline(3);}
  }
  function settleOffline(seconds:number){const keep=s.phase;for(let k=0;k<seconds/CLAW_DT;k++)stepToysOnly();s.phase=keep;evCount=0;}
 
@@ -171,7 +173,7 @@ export function createClawSim(seed:number,toyBodies:readonly ToyBody[]){
     const closing=thetaTarget[k]<theta[k]+.02,wt=held?1:closing?.6:.72,rem=pen*(1-wt);
     shove(p,nx*pen*wt,ny*pen*wt,nz*pen*wt);touch(p,nx,ny,nz);
     // the reaction: a little moves the claw (it swings, or rests on the pile), most pushes the prong back open around its hinge
-    s.hx-=nx*rem*.15;s.hy-=ny*rem*.15;s.hz-=nz*rem*.15;
+    s.hx-=nx*rem*.08;s.hy-=ny*rem*.08;s.hz-=nz*rem*.08;
     const lever=seg===0?Math.max(.03,t*PRONG.len):PRONG.len,c=PCOS[k],sn=PSIN[k],th=theta[k];
     const tr=Math.cos(th),tyv=Math.sin(th),along=-(nx*c+nz*sn)*tr-ny*tyv;// finger's opening direction · (−n)
     theta[k]=Math.max(0,Math.min(PRONG.open+.15,th+along*rem*.85/lever));

@@ -24,7 +24,7 @@ import {clawPrize,clawToyScale} from './clawPrizes';
 /** Machine frame: the play floor's height, the sim → machine offset, and the cabinet's outline. */
 export const CLAW_FLOOR_Y=1.14;
 export const CLAW_SIZE={halfW:1,front:.92,back:-.82,glassZ:.64,glassX:.92,top:3.45,canopy:2.84} as const;
-const PAINT='#c8365f',PAINT_DARK='#8e2443',CREAM='#f4e8d4',FELT='#3d2f6e',INTERIOR='#16121e',BACKDROP='#f6d9e4';
+const PAINT='#c8365f',PAINT_DARK='#8e2443',CREAM='#f4e8d4',FELT='#3d2f6e',INTERIOR='#16121e',BACKDROP='#56a35c';
 const PHI=[-Math.PI/2,Math.PI/6,Math.PI*5/6];
 
 // ---- shared bits --------------------------------------------------------------------------------------------------------------
@@ -157,11 +157,14 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  const streakTex=signTexture(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.globalCompositeOperation='lighter';for(const [x,wd,a] of [[.18,.07,.22],[.3,.02,.3],[.62,.12,.12],[.78,.03,.25]] as const){c.fillStyle=`rgba(255,255,255,${a})`;c.save();c.translate(x*w,0);c.transform(1,0,-.45,1,0,0);c.fillRect(0,0,wd*w,h);c.restore();}});
  textures.push(streakTex);const streakMat=mat(new T.MeshBasicMaterial({map:streakTex,transparent:true,opacity:.35,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false}));
  const streak=add(placed(pane(1.8,H-.04),0,F+H/2,S.glassZ+.003),streakMat,'claw-glass-streaks');streak.renderOrder=5;
- // backdrop: a printed panel (pitch stripes + footballs), so the pile reads against a light, busy ground like a real machine
- const backTex=signTexture(512,384,(c,w,h)=>{c.fillStyle=BACKDROP;c.fillRect(0,0,w,h);for(let i=0;i<8;i++){c.fillStyle=i%2?'#f2c9d8':'#f8e3eb';c.fillRect(i*w/8,0,w/8,h);}
-  c.globalAlpha=.55;for(let i=0;i<9;i++){const x=(i*137)%w,y=40+(i*91)%(h-80),r=16+(i%3)*6;c.fillStyle='#ffffff';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.fillStyle='#2b2140';c.beginPath();c.arc(x,y,r*.35,0,Math.PI*2);c.fill();}
-  c.globalAlpha=1;c.fillStyle='#c8365f';c.font='900 46px "Arial Black",Arial,sans-serif';c.textAlign='center';c.fillText('GRAB · LIFT · SCORE',w/2,h-36);});
- textures.push(backTex);const backMat=mat(new T.MeshStandardMaterial({map:backTex,roughness:.8}));add(placed(pane(1.84,H),0,F+H/2,-.655),backMat,'claw-backdrop');
+ // backdrop: a printed pitch seen from above (mown stripes, the lines, the centre circle and both boxes), so the pile reads
+ // against a light, busy ground like a real machine's poster, and the poster is football (house rule)
+ const backTex=signTexture(512,384,(c,w,h)=>{for(let i=0;i<10;i++){c.fillStyle=i%2?'#4f9a55':'#5aa960';c.fillRect(i*w/10,0,w/10,h);}
+  c.strokeStyle='#eef7e8';c.lineWidth=5;const m=18;c.strokeRect(m,m,w-2*m,h-2*m);c.beginPath();c.moveTo(w/2,m);c.lineTo(w/2,h-m);c.stroke();
+  c.beginPath();c.arc(w/2,h/2,52,0,Math.PI*2);c.stroke();c.fillStyle='#eef7e8';c.beginPath();c.arc(w/2,h/2,5,0,Math.PI*2);c.fill();
+  for(const side of [0,1]){const x=side?w-m:m,dir=side?-1:1;c.strokeRect(side?x-78:x,h/2-92,78,184);c.strokeRect(side?x-28:x,h/2-44,28,88);c.beginPath();c.arc(x+dir*58,h/2,4,0,Math.PI*2);c.fill();
+   c.beginPath();c.arc(x+dir*58,h/2,46,side?Math.PI*.71:-Math.PI*.29,side?Math.PI*1.29:Math.PI*.29);c.stroke();}});
+ textures.push(backTex);const backMat=mat(new T.MeshStandardMaterial({map:backTex,roughness:.8,emissive:'#ffffff',emissiveMap:backTex,emissiveIntensity:.18}));add(placed(pane(1.84,H),0,F+H/2,-.655),backMat,'claw-backdrop');
  // marquee + chase bulbs
  const marqTex=signTexture(1024,300,marquee);textures.push(marqTex);const marqMat=mat(new T.MeshBasicMaterial({map:marqTex,toneMapped:false}));
  add(placed(pane(1.8,.52),0,(S.canopy+S.top)/2,.874),marqMat,'claw-marquee');
@@ -175,6 +178,12 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  let dispText='';
  function display(text:string){if(text===dispText)return;dispText=text;dc.fillStyle='#120a0a';dc.fillRect(0,0,256,72);dc.font='700 40px "Courier New",monospace';dc.textAlign='center';dc.textBaseline='middle';dc.fillStyle='#ff4b3e';dc.shadowColor='#ff2a1a';dc.shadowBlur=10;dc.fillText(text,128,38);dc.shadowBlur=0;dispTex.needsUpdate=true;}
  display('INSERT 10');
+ // printed decals on the base: a band under the prize door and a PRIZE label over it
+ const bandTex=signTexture(1024,128,(c,w,h)=>{c.fillStyle=CREAM;c.fillRect(0,0,w,h);c.fillStyle=PAINT_DARK;c.font='900 54px "Arial Black",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('WIN A BEAN BUDDY',w*.36,h/2+2);
+  for(const x of [w*.78,w*.9]){c.fillStyle='#ffffff';c.beginPath();c.arc(x,h/2,40,0,Math.PI*2);c.fill();c.lineWidth=5;c.strokeStyle=PAINT_DARK;c.stroke();c.fillStyle=PAINT_DARK;c.beginPath();for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;c.lineTo(x+Math.cos(a)*15,h/2+Math.sin(a)*15);}c.fill();}});textures.push(bandTex);
+ const bandMat=mat(new T.MeshStandardMaterial({map:bandTex,roughness:.45,envMap:env,envMapIntensity:.5}));add(placed(pane(1.9,.2),0,.19,S.front+.003),bandMat,'claw-band');
+ const prizeTex=signTexture(256,64,(c,w,h)=>{c.fillStyle=CREAM;c.fillRect(0,0,w,h);c.fillStyle=PAINT_DARK;c.font='900 40px "Arial Black",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('PRIZE',w/2,h/2+2);});textures.push(prizeTex);
+ const prizeMat=mat(new T.MeshStandardMaterial({map:prizeTex,roughness:.45,envMap:env,envMapIntensity:.5}));add(placed(pane(.34,.085),(ox0+ox1)/2,oy1+.1,S.front+.003),prizeMat,'claw-prize-label');
  // the prize flap (hinged at its top edge, swings out toward the tray)
  const flapGeo=new T.BoxGeometry(ox1-ox0-.02,CHUTE.flapLen,.012);flapGeo.translate(0,-CHUTE.flapLen/2,0);geometries.push(flapGeo);
  const flapMat=mat(new T.MeshStandardMaterial({color:'#2a2333',roughness:.3,metalness:.1,transparent:true,opacity:.86,envMap:env,envMapIntensity:.8}));

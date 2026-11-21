@@ -31,7 +31,7 @@ export const clawPrize=(id:string)=>CLAW_PRIZES.find(p=>p.id===id);
 /** Toys in the machine at once (one of each, never two of the same in the pile). */
 export const CLAW_PILE_SIZE=12;
 /** Overall size of a prize in the machine (metres, its longest side). */
-export const CLAW_TOY_SIZE=.34;
+export const CLAW_TOY_SIZE=.4;
 
 /** The model → machine scale, and the physics body (two spheres) that fits inside the model. */
 export function clawToyScale(p:Pick<ClawPrize,'h'|'w'>){return Math.min(CLAW_TOY_SIZE/p.h,CLAW_TOY_SIZE/(1.6*p.w));}
