@@ -35,8 +35,11 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert.equal((html.match(/<h1/g)||[]).length,1);assert.match(html,/<h1[^>]*>The Futbol Island library<\/h1>/);
  for(const c of cards)assert(html.includes(`href="${c.href}"`),`${c.href} is linked`);
  assert.equal((html.match(/href="\/play"/g)||[]).length,2,'the Play button, at the top and at the close (none in the group menu: owner, Nov 20 2026)');
- {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library groups"/.test(menu[0]),'the group menu is a labelled nav');
-  for(const g of groups)assert(menu[1].includes(`href="#group-${g.id}"`)&&html.includes(`id="group-${g.id}"`),`menu jumps to ${g.id}`);}
+ {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library sections"/.test(menu[0]),'the menu is a labelled nav');
+  // Nov 20 2026 night (owner: "we need to ungroup the side nav and place all of them on the left nav. instead of collect and explore. have players cards, fishbooks, museum, storybooks"):
+  // Overview (this page, marked current) and then every section by name, each a link to that section's page; no group names.
+  assert(/<a[^>]*href="\/library"[^>]*aria-current="page"[^>]*>Overview<\/a>|<a[^>]*aria-current="page"[^>]*href="\/library"[^>]*>Overview<\/a>/.test(menu[1]),'Overview is first and current');
+  for(const g of groups){assert(html.includes(`id="group-${g.id}"`),`band ${g.id}`);assert(!menu[1].includes(`>${g.title}<`),`no group name ${g.title} in the menu`);for(const c of g.cards)assert(menu[1].includes(`href="${c.href}"`),`menu lists ${c.name}`);}}
  assert(!/\/marketing/.test(html)&&!/—/.test(html),'no /marketing link, no em dash');
  const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);assert(imgs.length>=cards.length,'a picture on every card');
  for(const i of imgs)assert(/ alt="[^"]{8,}"/.test(i)&&/ width="\d+"/.test(i)&&/ height="\d+"/.test(i),`alt, width, height: ${i.slice(0,80)}`);

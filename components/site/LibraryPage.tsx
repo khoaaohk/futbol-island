@@ -4,7 +4,7 @@ import type {LibraryCard,LibraryGroup,LibraryPic} from '@/lib/site/library';
 import {PLAY_PATH} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import l from './library.module.css';
-import LibraryMenuSpy from './LibraryMenuSpy';
+import RailNav from './shell/RailNav';
 /**
  * The Library page (/library and /es/library; owner, Nov 20 2026: "a page that houses all the items at the bottom of the
  * footer", then "make the new hub page visually appealing"). Server-rendered; the only script is LibraryMenuSpy (the group menu's highlight). A hero with two pictures from the
@@ -27,7 +27,7 @@ function Card({c,big}:{c:LibraryCard;big:boolean}){
   </span>
  </a></li>;
 }
-export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,groups,menuLabel='Library groups',topLabel='Overview'}:{crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
+export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,groups,menuLabel='Library sections',topLabel='Overview',self}:{self:string;crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
  menuLabel?:string;topLabel?:string;hero:{main:LibraryPic;inset:LibraryPic;mainAlt:string;insetAlt:string};groups:readonly LibraryGroup[]}){
  return <div className={l.page}>
   <div className={l.shelf}>
@@ -35,10 +35,10 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
        side. the content on the right is the only thing that scrolls"): from 1280 px a rail locked under the header from the top
        of the page, beside the hero too; below that a row of chips under the hero (the hero comes first by CSS order). Plain
        anchor links; LibraryMenuSpy only marks the band on screen. */}
-   <nav className={l.menu} id="library-menu" data-rail="" aria-label={menuLabel}>
-    <ul><li><a href="#top" data-on="">{topLabel}</a></li>{groups.map(g=><li key={g.id}><a href={`#group-${g.id}`}>{g.title}</a></li>)}</ul>
-   </nav>
-   <LibraryMenuSpy menu="library-menu"/>
+   {/* Nov 20 2026 night (owner: "we need to ungroup the side nav and place all of them on the left nav. instead of collect
+       and explore. have players cards, fishbooks, museum, storybooks"): the menu lists Overview (this page) and then every
+       section by name, each a link to that section's own page; the same list the section hubs show. */}
+   <RailNav id="library-menu" current={self} rail={{label:menuLabel,up:[],groups:[{items:[{href:self,name:topLabel},...groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name})))]}]}}/>
    <div className={l.shelfMain}>
   <div className={l.hero} id="top" data-library-hero="">
    <header className={l.heroText}>

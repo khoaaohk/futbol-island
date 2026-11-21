@@ -15,7 +15,7 @@ export default function RailNav({rail,current,id='section-rail'}:{rail:Rail;curr
  return <>
   <nav className={`${l.menu} ${r.rail}`} id={id} data-rail="" data-section-rail="" aria-label={rail.label}>
    {/* the up links stay at the top of the rail while the list below scrolls; phones have the breadcrumb and the onward row instead */}
-   <p className={r.ups}>{rail.up.map(u=><a key={u.href} href={u.href} aria-current={cur(u.href)}>{u.name}</a>)}</p>
+   {rail.up.length>0&&<p className={r.ups}>{rail.up.map(u=><a key={u.href} href={u.href} aria-current={cur(u.href)}>{u.name}</a>)}</p>}
    <ul>
     {rail.groups.map((g,i)=>[
      g.title?<li key={`g${i}`} className={r.group}><span>{g.title}</span></li>:null,

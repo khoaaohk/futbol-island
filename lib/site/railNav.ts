@@ -48,7 +48,7 @@ export function sectionRailEs(family:RailFamily):Rail{
 }
 /** A section hub's rail: the Library's groups and sections, so a reader can hop between sections. */
 export function libraryRail(groups:{title:string;cards:{href:string;name:string}[]}[]=libraryGroups(),es=false):Rail{
- return {label:es?'Biblioteca':'Library',up:[es?LIB_ES:LIB_EN],groups:groups.map(g=>({title:g.title,items:g.cards.map(c=>({href:c.href,name:c.name}))}))};
+ return {label:es?'Biblioteca':'Library',up:[es?LIB_ES:LIB_EN],groups:[{items:groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name})))}]};// one flat list, no group names (owner, Nov 20 2026: "ungroup the side nav")
 }
 /** The onward row under a guide page's H1 (lib/site/GuideParts.tsx OnwardRow): the page's own lesson in the game, and the Library. */
 export const onwardFor=(lesson?:{id:string}|null,es=false)=>({play:{href:lesson?playLessonHref(lesson.id):PLAY_PATH,label:es?'Pruébalo en el juego':'Try it in the game'},

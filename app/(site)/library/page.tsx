@@ -20,6 +20,6 @@ export default function Library(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={collectionLd({name:W.h1,path:LIBRARY_PATH,description:W.description,published:LIBRARY_PUBLISHED,modified:SITE_UPDATED.library,items:groups.flatMap(g=>g.cards.map(c=>({name:c.name,path:c.href})))})}/>
   <LibraryPage crumbs={<Breadcrumbs crumbs={CRUMBS}/>} h1={W.h1} lead={W.lead} play={W.play} playTitle={W.playTitle} playLine={W.playLine}
-   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} groups={groups}/>
+   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} groups={groups} self={LIBRARY_PATH}/>
  </>;
 }
