@@ -128,6 +128,7 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='keepyuppy'){quiet.push('menu');
    // first run: the kicking foot, the timing check skipped, then the track card (all silent but the button click), then the song
+   await page.evaluate(()=>localStorage.setItem('fi2-keepyuppy-v1',JSON.stringify({v:1,guided:true})));/* Nov 21 2026: the guided first touches (silent, no music) are covered by check-keepyuppy-browser.cjs */
    await page.locator('[data-keepyuppy-foot="R"]').tap({timeout:20000}).catch(()=>errors.push('no foot card'));await wait(500);await page.locator('[data-keepyuppy-card="calib"] [data-keepyuppy-skip]').tap({timeout:20000}).catch(()=>errors.push('no timing card'));
    await page.waitForSelector('[data-keepyuppy-card="tip"]',{timeout:20000}).catch(()=>errors.push('no track card'));await wait(900);await label('track-card');await wait(900);quiet.push('track-card');
    await label('');await page.locator('[data-keepyuppy-go]').tap();await wait(350);await label('count-in');await page.evaluate(()=>{window.__keepyuppy.game.state.lives=99;/* nobody plays here: the run must outlast the probe */});await wait(2500);must.push('count-in');
