@@ -2,6 +2,8 @@ import {FactIcon,type FactIconKind} from './FactIcons';
 import {lessonPath,type SiteLesson} from '../../lib/site/lessons';
 import k from './keep.module.css';
 import rt from './railTarget.module.css';
+import {LIBRARY_PATH} from '../../lib/site/libraryPath';
+import {GAMES_HUB} from '../../lib/site/games';
 /**
  * "Keep reading" (visual pass batch 3, Nov 17 2026; audit shared fix 2): the end of a guide, hub, card, fish or tool page used to
  * stack 4-6 link lists (lessons, drills, related terms, formations, cards, more to learn). Now it is ONE section: one h2, one grid
@@ -38,6 +40,13 @@ export function kindOf(path:string):Kind{
  return KINDS.find(([re])=>re.test(p))?.[1]??{icon:'book',en:'Guide',es:'Guía'};
 }
 const WORDS={en:{title:'Keep reading',more:(n:number)=>`Show ${n} more`},es:{title:'Sigue leyendo',more:(n:number)=>`Ver ${n} más`}};
+/** Nov 20 2026 (new layout SEO, owner: "We need to boost traffic to these three main pages, Island, games, and library"): every Keep
+ *  reading grid ends with one card to the Library and one to the games hub, with the words people search for as the link text, unless
+ *  the grid already links there (docs/seo/NEW-LAYOUT-SEO-PLAN-2026-11-20.md). One group, so shareOut gives it a visible slot. */
+const MAIN={en:[{path:LIBRARY_PATH,name:'Learn soccer: the whole Library',line:'Lessons, rules, positions, drills and more, all free',tag:'Library'},
+  {path:GAMES_HUB.path,name:'Free soccer games for kids',line:GAMES_HUB.blurb}],
+ es:[{path:'/es'+LIBRARY_PATH,name:'Aprende fútbol: toda la biblioteca',line:'Lecciones, reglas, posiciones, ejercicios y más, todo gratis',tag:'Biblioteca'},
+  {path:GAMES_HUB.path,name:'Juegos de fútbol gratis para niños',line:'Juegos de arcade, cada uno sobre una idea del fútbol (en inglés)'}]} as const satisfies Record<'en'|'es',readonly ReadLink[]>;
 
 /** Visible slots per group: one each in turn until `show` is used up or every group is empty. */
 export function shareOut(sizes:readonly number[],show:number):number[]{
@@ -56,7 +65,9 @@ function Card({g,l,id,lang}:{g:ReadGroup;l:ReadLink;id?:string;lang:'en'|'es'}){
  </a></li>;
 }
 export default function KeepReading({groups,title,id='keep-reading',show=8,lang='en'}:{groups:readonly ReadGroup[];title?:string;id?:string;show?:number;lang?:'en'|'es'}){
- const W=WORDS[lang],gs=groups.filter(g=>g.links.length>0);if(!gs.length)return null;
+ const W=WORDS[lang],given=groups.filter(g=>g.links.length>0);if(!given.length)return null;
+ const linked=new Set(given.flatMap(g=>g.links.map(l=>l.path.split('#')[0]))),main=MAIN[lang].filter(l=>!linked.has(l.path));
+ const gs=main.length?[...given,{id:'main-pages',links:main}]:given;
  const q=shareOut(gs.map(g=>g.links.length),show);
  const seen=new Set<string>(),anchor=(g:ReadGroup)=>seen.has(g.id)?undefined:(seen.add(g.id),g.id);
  const first=gs.flatMap((g,i)=>g.links.slice(0,q[i]).map(l=>({g,l}))),rest=gs.flatMap((g,i)=>g.links.slice(q[i]).map(l=>({g,l})));
