@@ -5,6 +5,7 @@ import {PLAY_PATH} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import l from './library.module.css';
 import RailNav from './shell/RailNav';
+import {railOrder} from '@/lib/site/railNav';
 /**
  * The Library page (/library and /es/library; owner, Nov 20 2026: "a page that houses all the items at the bottom of the
  * footer", then "make the new hub page visually appealing"). Server-rendered; the only script is LibraryMenuSpy (the group menu's highlight). A hero with two pictures from the
@@ -38,7 +39,7 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
    {/* Nov 20 2026 night (owner: "we need to ungroup the side nav and place all of them on the left nav. instead of collect
        and explore. have players cards, fishbooks, museum, storybooks"): the menu lists Overview (this page) and then every
        section by name, each a link to that section's own page; the same list the section hubs show. */}
-   <RailNav id="library-menu" current={self} rail={{label:menuLabel,up:[],groups:[{items:[{href:self,name:topLabel},...groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name})))]}]}}/>
+   <RailNav id="library-menu" current={self} rail={{label:menuLabel,up:[],groups:[{items:[{href:self,name:topLabel},...railOrder(groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name}))))]}]}}/>
    <div className={l.shelfMain}>
   <div className={l.hero} id="top" data-library-hero="">
    <header className={l.heroText}>

@@ -46,9 +46,19 @@ export function sectionRailEs(family:RailFamily):Rail{
    groups:FORMAT_ORDER.map(f=>({title:f==='futsal'?'Fútbol sala':f,items:fs.filter(x=>x.format===f).map(x=>({href:x.esPath,name:x.name}))})).filter(g=>g.items.length)};}
  }
 }
+/** The order of the sections in every Library menu (owner, Nov 20 2026: "put them in the best order you think for SEO"). The pages people
+ * search for most come first (lessons, rules, terms, drills, positions, formations), then the coach pages, then play and watch, then the
+ * collections, whose pages answer few football searches. Order in a menu weighs little with search engines; this mostly decides which
+ * links a reader meets first. Spanish paths sort by their English path. */
+export const RAIL_ORDER=['/learn/lessons','/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills','/learn/soccer-positions','/learn/soccer-formations',
+ '/learn/soccer-practice-plans','/tools','/learn/soccer-age-groups','/games','/videos','/cards','/books','/fish','/exhibits'] as const;
+export function railOrder<T extends {href:string}>(items:T[]):T[]{
+ const at=(h:string)=>{const i=(RAIL_ORDER as readonly string[]).indexOf(h.replace(/^\/es(?=\/)/,''));return i<0?RAIL_ORDER.length:i;};
+ return items.map((x,i)=>[x,i] as const).sort((a,b)=>at(a[0].href)-at(b[0].href)||a[1]-b[1]).map(x=>x[0]);
+}
 /** A section hub's rail: the Library's groups and sections, so a reader can hop between sections. */
 export function libraryRail(groups:{title:string;cards:{href:string;name:string}[]}[]=libraryGroups(),es=false):Rail{
- return {label:es?'Biblioteca':'Library',up:[es?LIB_ES:LIB_EN],groups:[{items:groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name})))}]};// one flat list, no group names (owner, Nov 20 2026: "ungroup the side nav")
+ return {label:es?'Biblioteca':'Library',up:[es?LIB_ES:LIB_EN],groups:[{items:railOrder(groups.flatMap(g=>g.cards.map(c=>({href:c.href,name:c.name}))))}]};// one flat list, no group names (owner, Nov 20 2026: "ungroup the side nav")
 }
 /** The onward row under a guide page's H1 (lib/site/GuideParts.tsx OnwardRow): the page's own lesson in the game, and the Library. */
 export const onwardFor=(lesson?:{id:string}|null,es=false)=>({play:{href:lesson?playLessonHref(lesson.id):PLAY_PATH,label:es?'Pruébalo en el juego':'Try it in the game'},
