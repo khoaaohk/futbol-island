@@ -46,8 +46,8 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  // 4
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
  // the header (owner, Nov 20 2026 evening: "Learn, Game, and Library"): three links and Play, in both languages
- assert.match(nav,/\[\[LESSONS_INDEX,'Learn'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
- assert.match(navEs,/\[\[toEs\('\/learn\/lessons'\),'Aprender'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
+ assert.match(nav,/\[\['\/','Learn'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
+ assert.match(navEs,/\[\['\/es','Aprender'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
  for(const l of ['Explore','Friends','Safety','About'])assert(!nav.includes(`'${l}'`),`header has no ${l}`);
  {const lay=read('app/(site)/layout.tsx'),layEs=read('app/es/layout.tsx');assert(/<a href="\/about">About<\/a>/.test(lay)&&/<a href=\{SAFE_GUIDE\.path\}>Safety<\/a>/.test(lay),'About and Safety are in the footer');
   assert(/<a href=\{toEs\('\/about'\)\}>Acerca de<\/a>/.test(layEs)&&/safe-football-game-for-kids'\)\}>Seguridad<\/a>/.test(layEs),'and in the Spanish footer');}

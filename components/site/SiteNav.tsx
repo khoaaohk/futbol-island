@@ -18,7 +18,7 @@ import styles from '@/app/(site)/site.module.css';
  * with aria-current="page" (data-nav-cur) only on its own pages, which mark themselves ([data-games-page] in GameIntro,
  * [data-library-hero] in LibraryPage) so CSS shows one copy (site.module.css). A hidden link is not in the accessibility
  * tree, so a screen reader meets exactly one. Still no client code. */
-const NAV:readonly (readonly [string,string,('games'|'library')?])[]=[[LESSONS_INDEX,'Learn'],['/games','Games','games'],[LIBRARY_PATH,'Library','library']];
+const NAV:readonly (readonly [string,string,('games'|'library')?])[]=[['/','Learn'],['/games','Games','games'],[LIBRARY_PATH,'Library','library']];
 const NAME='Futbol Island';
 export const navLinks=(nav:readonly (readonly [string,string,string?])[])=>nav.map(([href,label,cur])=><li key={href}><a href={href} data-nav-page={cur}>{label}</a>{cur&&<a href={href} data-nav-cur={cur} aria-current="page">{label}</a>}</li>);
 const links=()=>navLinks(NAV);
