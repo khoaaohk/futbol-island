@@ -52,7 +52,15 @@ with every earlier key plus `arcade_flickit`, `arcade_footgolf`, `arcade_popup`.
 arcade room, `arcade_lobby`; plays are saved with the gashapon collection). Until it is pasted, scores save on the device only.
 
 ## Site
-SITE_SECTION
+- Pages: Flick It `/games/soccer-free-kick-game`, FootGolf Island `/games/soccer-golf-game`, Pop-Up Shot `/games/soccer-target-game`
+  (a target game, so it did not keep the defending URL). Watch pages `/videos/flick-it-gameplay`, `/videos/footgolf-island-gameplay`,
+  `/videos/pop-up-shot-gameplay`. Each has a 10 s clip (MP4 + WebM), poster, four stills and a share picture.
+- Redirects (next.config.mjs, permanent; Next answers 308): `/games/soccer-defending-game` -> `/games/soccer-target-game`,
+  `/videos/hold-the-line-gameplay` -> `/videos/pop-up-shot-gameplay`. Hold the Line's page, media, drill links and hub copy are gone.
+- Counts read fifteen everywhere (hub, Library, llms.txt, share picture). Hub pick lines for Flick It and FootGolf were left out to stay
+  under the hub word cap (1866/1899).
+- **Media caps raised, owner to confirm:** public/games share pictures 2.05 -> 2.16 MB (2,205 KB used); gameplay media 21 -> 23 MB
+  (~22.9 MB used). Under 21 MB each new 3D clip would need ~125 KB and the ball blurs.
 
 ## Weak spots that need a real phone and a real child
 - **Flick It:** swipe speed range, lift from swipe length, curl dead zone and aim gain come from synthetic swipes; heat 16-19 draws.
