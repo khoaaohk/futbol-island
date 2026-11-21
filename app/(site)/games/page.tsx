@@ -32,7 +32,7 @@ export default function GamesHub(){
       chips under the intro, from 1280 px a rail locked on the left under the header (the intro comes first by CSS order below
       that). Plain anchor links. */}
   <div className={`${lib.shelf} ${gamesCss.gshelf}`}>
-   <nav className={`${lib.menu} ${gamesCss.menu}`} id="games-menu" aria-label="Games on this page">
+   <nav className={`${lib.menu} ${gamesCss.menu}`} id="games-menu" data-rail="" aria-label="Games on this page">
     <ul>{MENU.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
    </nav>
    <LibraryMenuSpy menu="games-menu"/>
@@ -73,8 +73,8 @@ export default function GamesHub(){
    {path:'/learn/soccer-rules/offside',name:'The offside rule for kids',line:'The line Pass Puzzles draws on the pitch'},{path:'/learn/soccer-drills',name:'Soccer drills for kids',line:'First touch, passing, dribbling and shooting drills'},
    {path:'/learn/soccer-terms',name:'Soccer terms',line:'Give-and-go, through ball, first touch and more'},{path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz'}]}/></Section>
   </div>
+  <p className={site.caption}>{GAME_FOOT}</p>{/* Nov 20 2026 evening: inside the right column, beside the rail */}
    </div>
   </div>
-  <p className={site.caption}>{GAME_FOOT}</p>
  </>;
 }

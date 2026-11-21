@@ -94,8 +94,12 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 .menu ul a[data-on]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
 .menu a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px}
 @media(min-width:1280px){
- .shelf{--rail:248px;margin:calc(-1 * var(--s3)) calc(50% - 50vw) 0;grid-template-columns:var(--rail) minmax(0,1fr);align-items:start}
- .menu{position:sticky;top:calc(68px + env(safe-area-inset-top,0px));height:calc(100dvh - 68px - env(safe-area-inset-top,0px));box-sizing:border-box;margin:0;padding:var(--s4) 12px var(--s3);display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 60%,var(--paper))}
+ /* Nov 20 2026 evening (owner: "the left nav should not scroll up like that. also the footer is weird now with the left nav"): the
+    rail is fixed, not sticky. It fills the left edge from the header's bottom (the header is sticky and always 68 px) to the bottom
+    of the window at every scroll position, footer included; the page content and the site footer sit beside it (site.module.css
+    .page:has([data-rail])). The window still scrolls normally; only the rail's own list scrolls inside it when it is long. */
+ .shelf{display:block;margin:calc(-1 * var(--s3)) calc(50% - 50vw) 0;padding-left:var(--rail,248px)}
+ .menu{position:fixed;z-index:15;left:0;top:calc(68px + env(safe-area-inset-top,0px));bottom:0;width:var(--rail,248px);box-sizing:border-box;margin:0;padding:var(--s4) 12px var(--s3);display:flex;flex-direction:column;background:color-mix(in srgb,var(--surface) 60%,var(--paper));box-shadow:inset -1px 0 0 var(--rule)}
  nav.menu ul{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;flex-direction:column;flex-wrap:nowrap;gap:4px}
  .menu ul a{display:flex;width:100%;min-height:48px;padding:10px 14px;border-radius:var(--r-md);background:transparent;font-size:18px}
  @media(hover:hover){.menu ul a:hover{background:color-mix(in srgb,var(--gold) 35%,transparent)}}

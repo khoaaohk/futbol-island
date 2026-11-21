@@ -165,6 +165,9 @@
 .footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s3);align-items:center;justify-content:center;text-align:center}
 .page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
 .page .footer a:hover{color:var(--ink)}
+/* a page with a left rail (components/site/library.module.css .menu, data-rail; Nov 20 2026 evening): from 1280 px the rail is fixed on
+   the left edge, so the footer sits in the column beside it, centred there, and never passes under it. */
+@media(min-width:1280px){.page{--rail:248px}.page:has([data-rail])>.footer{margin-left:var(--rail)}}
 
 /* Guide pages (formations, positions; Nov 10 2026): pitch diagrams as inline SVG and comparison tables. Same tokens, no new
    colours beyond the pitch green inside the SVG; no scripts, no animation. */

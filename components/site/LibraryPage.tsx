@@ -35,7 +35,7 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
        side. the content on the right is the only thing that scrolls"): from 1280 px a rail locked under the header from the top
        of the page, beside the hero too; below that a row of chips under the hero (the hero comes first by CSS order). Plain
        anchor links; LibraryMenuSpy only marks the band on screen. */}
-   <nav className={l.menu} id="library-menu" aria-label={menuLabel}>
+   <nav className={l.menu} id="library-menu" data-rail="" aria-label={menuLabel}>
     <ul>{groups.map(g=><li key={g.id}><a href={`#group-${g.id}`}>{g.title}</a></li>)}</ul>
    </nav>
    <LibraryMenuSpy menu="library-menu"/>
