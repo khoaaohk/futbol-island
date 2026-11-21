@@ -3,7 +3,7 @@
  * formation a drill is about. Plain paths; tests/seo-drills-plans.cjs checks that every one is a real page.
  * SOURCES (checked Nov 10 2026): the pages themselves (lib/site/rules.ts, positions.ts, terms.ts, formations.ts, sizes.ts).
  */
-import {gameLink} from './games';
+import {gameLink,isGameListed} from './games';
 const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/';
 export const G={
  throwIn:{path:R+'throw-in',name:'The throw-in rule',line:'Both feet down, both hands, from behind and over the head'},
@@ -41,6 +41,8 @@ export const G={
  kitRush:gameLink('kitrush'),pinball:gameLink('pinball'),tennis:gameLink('tennis'),runner:gameLink('runner'),puzzles:gameLink('puzzle'),
  /* Nov 17 2026: the puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),
  /* Nov 17 2026: the rolling-ball puzzle. */ rollBall:gameLink('rollball'), /* Nov 17 2026: the shooting game. */ ballBlaster:gameLink('ballblaster'),
+ /* Nov 21 2026: the goalkeeper game, spread into the goalkeeper drills' links; empty until Safe Hands has a machine in the room
+    (lib/site/games.ts ALL_GAME_PAGES), so an unlisted page is never linked. */ safeHands:(isGameListed('safehands')?[gameLink('safehands')]:[]) as readonly ReturnType<typeof gameLink>[],
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
  /* seo-nov18: the two pages stuck near position 19 get links from the age guides, plans and tool pages. */
  calc:{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time, with equal minutes for every player'},

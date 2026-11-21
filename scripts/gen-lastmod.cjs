@@ -77,7 +77,10 @@ function dateOf(files){
 function build(){
  const {sitePaths}=load(path.join(root,'lib/site/paths.ts'));
  const out={};
- for(const {path:p} of sitePaths()){const deps=(DEPS.find(([re])=>re.test(p))||[,[]])[1];out[p]=dateOf([...routeFiles(p),...deps].sort());}
+ // Nov 21 2026: a game page built before its game is in the room (lib/site/games.ts ALL_GAME_PAGES) is not in the sitemap, but its
+ // date is prepared here so the page's VideoGame dateModified is real and nothing changes when it is listed.
+ const unlisted=load(path.join(root,'lib/site/games.ts')).ALL_GAME_PAGES.map(g=>({path:g.path})).filter(g=>!sitePaths().some(x=>x.path===g.path));
+ for(const {path:p} of [...sitePaths(),...unlisted]){const deps=(DEPS.find(([re])=>re.test(p))||[,[]])[1];out[p]=dateOf([...routeFiles(p),...deps].sort());}
  return out;
 }
 module.exports={build,routeFiles};
