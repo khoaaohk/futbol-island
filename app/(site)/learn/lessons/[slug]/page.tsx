@@ -16,6 +16,8 @@ import {lessonLd} from '@/lib/site/learningLd';
 import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
 import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '../../../site.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {lessonRail} from '@/lib/site/railNavMore';
 
 /** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz shows its questions, options and explanations, never which option is correct. */
 export const dynamic='force-static';
@@ -34,6 +36,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
   <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(faq)}/>
+  <RailNav rail={lessonRail(l.format)} current={lessonPath(l.id)}/>
   <header className={styles.intro}>
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{l.title}</h1>

@@ -24,6 +24,10 @@ import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/Lesso
 import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '@/app/(site)/site.module.css';
 import fx from '@/components/site/siteForms.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {libraryRail} from '@/lib/site/railNav';
+import {lessonRailEs} from '@/lib/site/railNavMore';
+import {libraryGroupsEs} from '@/components/es/pages/LibraryEs';
 /**
  * The Spanish lessons (Spanish round D, Nov 16 2026): /es/learn/lessons (index), /es/learn/lessons/<id> (96 reading pages) and
  * the Spanish guide search /es/learn?q= (not a sitemap page; noindex, like /learn). Same sections and classes as
@@ -60,6 +64,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
    keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(LESSON_FAQ)}/>
+  <RailNav rail={lessonRailEs(l.format)} current={l.esPath}/>
   <header className={styles.intro}>
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{l.title}</h1>
@@ -110,6 +115,7 @@ export function LessonsIndexEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`Lecciones de fútbol de ${SITE_NAME}`,numberOfItems:all.length,
    itemListElement:all.map((l,i)=>({'@type':'ListItem',position:i+1,name:`${l.title} (${l.formatLabel})`,url:abs(l.esPath)}))}}/>
+  <RailNav rail={libraryRail(libraryGroupsEs(),true)} current={INDEX_ES}/>
   <header className={styles.intro}>
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>Lecciones de fútbol para niños</h1>

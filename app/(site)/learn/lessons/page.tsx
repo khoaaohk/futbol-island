@@ -7,6 +7,8 @@ import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import {DEFINITION,HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
 import {SAFE_TRUST_LINE} from '@/lib/site/safety';
 import styles from '../../site.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {libraryRail} from '@/lib/site/railNav';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
@@ -20,6 +22,7 @@ export default function LearnIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} football lessons`,numberOfItems:LESSONS.length,
    itemListElement:LESSONS.map((l,i)=>({'@type':'ListItem',position:i+1,name:`${l.title} (${l.formatLabel})`,url:abs(lessonPath(l.id))}))}}/>
+  <RailNav rail={libraryRail()} current="/learn/lessons"/>
   <header className={styles.intro}>
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football lessons for kids</h1>
