@@ -187,7 +187,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);
   const noMenu=(e:Event)=>e.preventDefault();el.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__footgolf?:unknown}).__footgolf={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get aim(){return aim.current;},shoot,setKind:pickKind,wake:kick};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__footgolf?:unknown}).__footgolf={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get aim(){return aim.current;},shoot,setKind:pickKind,wake:kick,loadHole:(i:number)=>{run.current={...run.current,mode:'hole',done:false,hole:i};begin(createFootGolf({mode:'hole',seed:9,hole:i}));}};
   return()=>{ro.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('touchmove',noScroll);el.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;v.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__footgolf?:unknown}).__footgolf;};
  // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +223,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
     <b className={styles.place}><span className={comicNumeral}>{run.current.mode==='course'?hud.hole:'★'}</span>{hud.name}</b>
     <span className={styles.track}>Par {hud.par}<em>·</em>{hud.dist} m<em>·</em>Kick {Math.min(FG.maxKicks,hud.kicks+(hud.phase==='aim'?1:0))}/{FG.maxKicks}</span>
    </div>}
-   {live&&<div className={styles.side} aria-hidden="true"><WindSock speed={hud.wind} rel={hud.windRel}/><span className={styles.lie} data-lie={hud.lie}>{hud.lie}</span>{run.current.mode==='course'&&<span className={styles.lie}>{hud.total} pts</span>}</div>}
+   {live&&<div className={styles.side} aria-hidden="true"><WindSock speed={hud.wind} rel={hud.windRel}/><span className={styles.lie} data-lie={hud.lie}>{hud.lie}</span></div>}
    {phase==='playing'&&flying&&<p className={styles.hint} data-footgolf-flyover>Tap to skip the flyover</p>}
    {aiming&&hint&&power<0&&<p className={styles.hint} data-footgolf-hint>{hint}</p>}
    {aiming&&power>=0&&<div className={styles.meter} data-footgolf-power={Math.round(power*100)} aria-hidden="true"><i style={{scale:`${Math.max(.02,power)} 1`}}/><b>{Math.round(power*100)}%</b></div>}

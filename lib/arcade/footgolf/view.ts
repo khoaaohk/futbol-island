@@ -95,7 +95,7 @@ function groundTex(H:Hole,toSun:T.Vector3){const d=H.def,[x0,z0,x1,z1]=d.bounds,
   for(let ax=-gr.rx+1;ax<gr.rx;ax+=2.1)for(let az=-gr.rz+1;az<gr.rz;az+=2.1){if((ax/gr.rx)**2+(az/gr.rz)**2>.8)continue;const x=gr.x+ax,z=gr.z+az;if(Math.hypot(x-H.cup[0],z-H.cup[1])<1.1)continue;slopeAt(H,x,z,sl);const m=Math.hypot(sl[0],sl[1]);if(m<.008)continue;
    const ux=-sl[0]/m,uz=-sl[1]/m,len=M(.45+Math.min(.5,m*7)),px=X(x),pz=Z(z),qx=-uz,qz=ux;g.beginPath();g.moveTo(px+ux*len,pz+uz*len);g.lineTo(px-ux*len*.5+qx*len*.6,pz-uz*len*.5+qz*len*.6);g.lineTo(px-ux*len*.15,pz-uz*len*.15);g.lineTo(px-ux*len*.5-qx*len*.6,pz-uz*len*.5-qz*len*.6);g.closePath();g.fill();}
   // 6. the tee box
-  const [tx,tz]=d.tee;g.fillStyle=COMIC_INK;g.fillRect(X(tx-2.6),Z(tz-2.6),M(5.2),M(5.2));g.fillStyle='#74d47a';g.fillRect(X(tx-2.4),Z(tz-2.4),M(4.8),M(4.8));
+  const [tx,tz]=d.tee;g.fillStyle='#74d47a';g.fillRect(X(tx-2.4),Z(tz-2.4),M(4.8),M(4.8));
   // 7. painted shadows (trees, walls, posts) on the sun's far side
   const sx=-toSun.x/toSun.y,sz=-toSun.z/toSun.y;g.fillStyle='rgba(35,26,46,.24)';
   for(let i=0;i<H.nt;i++){const o=i*4,s=H.trees[o+2],k=H.trees[o+3],hh=(k===1?5:k===2?3.6:3.4)*s,r=(k===1?1.8:k===2?1.5:2.1)*s;g.beginPath();g.ellipse(X(H.trees[o]+sx*hh*.7),Z(H.trees[o+1]+sz*hh*.7),M(r*1.15),M(r*.85),Math.atan2(sz,sx),0,7);g.fill();}
@@ -225,9 +225,11 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
  let ghostN=0;const ghostP=new Float32Array(PREVIEW*3);
  function burst(x:number,y:number,z:number,n:number,cols:readonly string[],speed:number,size=.1){if(o.reduced)n=Math.ceil(n/3);for(let i=0;i<n;i++){const j=bi++%BITS,a=Math.random()*6.283,u=Math.random();bp[j*8]=x;bp[j*8+1]=y;bp[j*8+2]=z;bp[j*8+3]=Math.cos(a)*speed*(.3+u);bp[j*8+4]=speed*(.5+Math.random()*.9);bp[j*8+5]=Math.sin(a)*speed*(.3+u);bp[j*8+6]=.6+Math.random()*.5;bp[j*8+7]=size*(.6+Math.random()*.8);CC.set(cols[i%cols.length]);bc[j*3]=CC.r;bc[j*3+1]=CC.g;bc[j*3+2]=CC.b;}}
  // camera state
- const cam={mode:'still' as CamMode,pos:new T.Vector3(0,20,30),look:new T.Vector3(),tPos:new T.Vector3(),tLook:new T.Vector3(),fly:0,flyDur:4.6,yaw:0,kind:'long' as KickKind,lastT:0,orbit:0};
+ const cam={mode:'still' as CamMode,pos:new T.Vector3(0,20,30),look:new T.Vector3(),tPos:new T.Vector3(),tLook:new T.Vector3(),fly:0,flyDur:4.6,yaw:0,kind:'long' as KickKind,lastT:0,orbit:0,cx:0,cz:-1};
  let H:Hole|null=null,W=1,Hh=1,lastBX=0,lastBZ=0,flagWave=0;
- function measure(){camera.aspect=W/Hh;camera.fov=W/Hh<.75?60:50;camera.updateProjectionMatrix();}
+ function measure(){camera.aspect=W/Hh;camera.fov=W/Hh<.75?60:50;
+  // upright phones: the kick picker covers the bottom fifth, so the picture is framed higher (a taller virtual screen, its lower part shown)
+  const lift=W/Hh<.8?Math.round(Hh*.24):0;if(lift)camera.setViewOffset(W,Hh+lift,0,lift,W,Hh);else camera.clearViewOffset();camera.updateProjectionMatrix();}
  function resize(w:number,h:number,dpr:number){W=w;Hh=h;renderer.setPixelRatio(Math.min(o.mobile?1.5:2,dpr));renderer.setSize(w,h,false);comicDotCell(ink,renderer);measure();}
  function setHole(g:FootGolf){const s=g.state;H=s.hole;const p=PLACES[H.def.place]??PLACES.jetty;
   backTex?.dispose();backTex=backdropTex(H.def.place);backTex.wrapS=T.RepeatWrapping;backTex.repeat.set(2,1);backMat.map=backTex;backMat.needsUpdate=true;
@@ -262,8 +264,8 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
    const gy=Math.max(heightAt(H,b.x,b.z),FG.water),air=Math.max(0,b.y-gy),back=b.air?8.5:7;cam.tPos.set(b.x-V.x*back,Math.max(b.y,gy)+3.2+air*.35,b.z-V.z*back);
    const ty=Math.max(heightAt(H,cam.tPos.x,cam.tPos.z),FG.water)+1.2;if(cam.tPos.y<ty)cam.tPos.y=ty;cam.tLook.set(b.x+V.x*3,b.y+.3-air*.1,b.z+V.z*3);k=1-Math.exp(-dt*(b.air?2.6:3.2));
    // a rolling ball near the cup: the low view beside the cup
-   const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz);if(!b.air&&!b.rest&&d<6&&vh>.25&&(dx*b.vx+dz*b.vz)>0)cam.mode='cup';}
-  else if(cam.mode==='cup'){const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz)||1,nx=dx/d,nz=dz/d;cam.tPos.set(H.cup[0]+nx*1.6-nz*1.9,H.cupY+.55,H.cup[1]+nz*1.6+nx*1.9);cam.tLook.set((b.x+H.cup[0]*2)/3,H.cupY+.1,(b.z+H.cup[1]*2)/3);k=1-Math.exp(-dt*3);}
+   const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz);if(!b.air&&!b.rest&&d<6&&vh>.25&&(dx*b.vx+dz*b.vz)>0){cam.mode='cup';cam.cx=dx/d;cam.cz=dz/d;}}
+  else if(cam.mode==='cup'){const nx=cam.cx,nz=cam.cz;cam.tPos.set(H.cup[0]+nx*1.6-nz*1.9,H.cupY+.55,H.cup[1]+nz*1.6+nx*1.9);cam.tLook.set((b.x+H.cup[0]*2)/3,H.cupY+.1,(b.z+H.cup[1]*2)/3);k=1-Math.exp(-dt*3);}
   else{cam.orbit+=dt*.05;}
   cam.pos.lerp(cam.tPos,k);cam.look.lerp(cam.tLook,k);camera.position.copy(cam.pos);camera.lookAt(cam.look);void now;}
  function render(g:FootGolf,now:number){if(!H||g.state.hole!==H)setHole(g);if(!H)return;const s=g.state,b=s.ball,dt=Math.min(.1,cam.lastT?now-cam.lastT:1/30);cam.lastT=now;
@@ -275,7 +277,8 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   blob.visible=ball.visible&&gy>FG.water-.05;blob.position.set(b.x,gy+.03,b.z);const bs=.5+above*.06;blob.scale.set(bs,1,bs);(blob.material as T.MeshBasicMaterial).opacity=Math.max(.12,.42-above*.03);
   slopeAt(H,b.x,b.z,SL);V.set(-SL[0],1,-SL[1]).normalize();blob.quaternion.setFromUnitVectors(UP,V);
   // flag: out when the ball is close on the green, flies with the wind
-  const near=Math.hypot(b.x-H.cup[0],b.z-H.cup[1])<5&&s.phase==='aim';const lift=near?1.6:0;pin.position.y+=((H.cupY+lift)-pin.position.y)*Math.min(1,dt*4);cloth.position.y=pin.position.y+2.1;
+  // the flag comes out (lifted away) when the ball is on the green near the cup, as players take it out to putt
+  const near=Math.hypot(b.x-H.cup[0],b.z-H.cup[1])<10&&s.phase!=='done';const lift=near?3:0;pin.position.y+=((H.cupY+lift)-pin.position.y)*Math.min(1,dt*3);pin.visible=cloth.visible=pin.position.y<H.cupY+2.6;cloth.position.y=pin.position.y+2.1;
   const ws=Math.hypot(H.wind[0],H.wind[1]),wa=Math.atan2(H.wind[0],H.wind[1]);flagWave+=dt*(3+ws*1.4);cloth.rotation.y=wa-Math.PI/2;
   const cp=clothG.attributes.position as T.BufferAttribute,arr=cp.array as Float32Array;for(let i=0;i<cp.count;i++){const x0=clothBase[i*3]+.475,y0=clothBase[i*3+1];arr[i*3]=x0*(.55+Math.min(.45,ws*.1));arr[i*3+1]=y0-(1-Math.min(1,ws/4))*x0*.6;arr[i*3+2]=Math.sin(flagWave-x0*5)*x0*.12*(o.reduced?.3:1);}cp.needsUpdate=true;
   // preview

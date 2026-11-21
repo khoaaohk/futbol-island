@@ -210,11 +210,13 @@ export function ballStep(H:Hole,b:Ball,dt:number,mem:{trees:number;over:boolean;
   }
  }else if(!b.rest){
   const s0=surfaceAt(H,b.x,b.z);if(s0===S.water)return {type:'water',a:0};if(s0===S.oob)return {type:'oob',a:0};
+  // a slow ball already over the hole drops (checked before the stop rule, so a dying putt never rests on the cup)
+  {const cx=b.x-H.cup[0],cz=b.z-H.cup[1],d=Math.sqrt(cx*cx+cz*cz),v=Math.hypot(b.vx,b.vz);if(d<FG.cupR-FG.R*.2&&v<cupMaxSpeed(Math.min(d,FG.cupR*.95))*.5)return {type:'cup',a:v};}
   const P=SURF[s0];slopeAt(H,b.x,b.z,SL);const L2=1+SL[0]*SL[0]+SL[1]*SL[1],ax=-FG.g*SL[0]/L2,az=-FG.g*SL[1]/L2,sp=Math.hypot(b.vx,b.vz);
   const dec=P.roll*FG.g/Math.sqrt(L2)+P.lin*sp;
   if(sp>1e-5&&dec*dt<sp){b.vx+=(ax-dec*b.vx/sp)*dt;b.vz+=(az-dec*b.vz/sp)*dt;}
-  else{const pull=Math.hypot(ax,az);if(pull<=P.hold*FG.g+.02){b.vx=0;b.vz=0;b.rest=true;b.y=heightAt(H,b.x,b.z)+FG.R;return {type:'stop',a:0,k:s0};}b.vx=ax*dt;b.vz=az*dt;}
-  const sp2=Math.hypot(b.vx,b.vz);if(sp2<.05){const pull=Math.hypot(ax,az);if(pull<=P.hold*FG.g+.02){b.vx=0;b.vz=0;b.rest=true;b.y=heightAt(H,b.x,b.z)+FG.R;return {type:'stop',a:0,k:s0};}}
+  else{const pull=Math.hypot(ax,az);if(pull<=P.hold*FG.g+.02){if(Math.hypot(b.x-H.cup[0],b.z-H.cup[1])<FG.cupR+FG.R*.3)return {type:'rim',a:0};b.vx=0;b.vz=0;b.rest=true;b.y=heightAt(H,b.x,b.z)+FG.R;return {type:'stop',a:0,k:s0};}b.vx=ax*dt;b.vz=az*dt;}
+  const sp2=Math.hypot(b.vx,b.vz);if(sp2<.05){const pull=Math.hypot(ax,az);if(pull<=P.hold*FG.g+.02){if(Math.hypot(b.x-H.cup[0],b.z-H.cup[1])<FG.cupR+FG.R*.3)return {type:'rim',a:0};b.vx=0;b.vz=0;b.rest=true;b.y=heightAt(H,b.x,b.z)+FG.R;return {type:'stop',a:0,k:s0};}}
   b.x+=b.vx*dt;b.z+=b.vz*dt;b.y=heightAt(H,b.x,b.z)+FG.R;
   // the cup
   const cx=b.x-H.cup[0],cz=b.z-H.cup[1],d=Math.sqrt(cx*cx+cz*cz),v=Math.hypot(b.vx,b.vz);
