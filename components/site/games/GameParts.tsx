@@ -48,11 +48,11 @@ export function Shots({game}:{game:GamePage}){
 }
 /** The hub's block for one game (Nov 20 2026, owner: "each game should have 4 smaller ones and one large video"): its clip (hover
  * or tap to play), its name, kind, what it teaches and the Play link together at the top, then up to four stills in one row that
- * fills its column (3 or 4, never an empty slot). Layout per width in games.module.css (.feature). */
-export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
+ * fills its column (3 or 4, never an empty slot). The clip is always on the left (batch 3, Nov 20 2026: no alternating). Layout per width in games.module.css (.feature). */
+export function GameFeature({game}:{game:GamePage}){
  const c=gameClip(game.id),kind=game.h1.split(':')[0],stills=gameStills(game.id,4);
  const wide=(c?c.pw:game.shots[0].w)>(c?c.ph:game.shots[0].h);
- return <li id={`game-${game.id}`} className={`${g.feature}${flip?' '+g.flip:''}${wide?' '+g.featureWide:''}`}>
+ return <li id={`game-${game.id}`} className={`${g.feature}${wide?' '+g.featureWide:''}`}>
   <div className={g.featureMedia}>{c?<ClipFigure c={c}/>:<Shot s={game.shots[0]}/>}</div>
   <div className={g.featureWords}>
    <h3 className={g.featureName}><a href={game.path}>{game.name}</a></h3>

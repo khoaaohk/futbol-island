@@ -122,6 +122,9 @@ function check(p,meta,el,game){
  {const toIsland=(h.match(/<a [^>]*href="\/play"[^>]*>/g)||[]).filter(a=>/class="[^"]*cta/.test(a));/* Nov 20 2026 (owner): the hub leads with Futbol Island, so its one island button goes to /play; a game page's buttons open its game */
   /* Nov 20 2026 batch 3 (owner: "i like the way the overview looks on library, can we match that for games?"): the hub's one gold
      /play button is the hero's, next to the H1, as on the Library */
+  /* Nov 20 2026 batch 3 (owner: "each game is alternating, can we keep the main video on the left and screenshots on the right?"):
+     no flipped card on the hub, in the markup or the styles */
+  if(!game){assert(!/class="[^"]*\bflip\b/.test(h),`${where}: no flipped game card`);assert(!/\.flip\b/.test(read('components/site/games/games.module.css')),'games.module.css: no .flip variant');}
   if(!game)assert(/data-games-hero=""[\s\S]*?<h1[\s\S]*?<a class="cta" href="\/play" data-play="island">/.test(h),`${where}: the gold Play button sits in the hero`);
   if(game)assert(!toIsland.length,`${where}: the buttons open the games, not the island`);else assert(toIsland.length===1&&/data-play="island"/.test(toIsland[0]),`${where}: one button opens the island (the lead), the rest open games`);}
  {const n=links.filter(l=>l==='/play').length,isGame=PAGES.some(g=>g.path===where);assert.equal(n,1,`${where}: one link to the island (a game page's text link; the hub's lead button, Nov 20 2026)`);if(isGame)assert(/<a href="\/play" data-island-link="">Play the whole island<\/a>/.test(h),`${where}: the island link says what it is`);}

@@ -46,7 +46,7 @@ export default function GamesHub(){
     <div>{H.intro.map(x=><p key={x}>{x}</p>)}</div>
     {HERO_CLIP&&<ClipFigure c={HERO_CLIP}/>}
    </div>
-   <ul className={`${gamesCss.features} ${gamesCss.bleed}`}>{GAME_PAGES.map((g,i)=><GameFeature key={g.id} game={g} flip={i%2===1}/>)}</ul>
+   <ul className={`${gamesCss.features} ${gamesCss.bleed}`}>{GAME_PAGES.map(g=><GameFeature key={g.id} game={g}/>)}</ul>
   </Section>
   <Section id="island" title="Inside the island">
    <p>The arcade is one room of Futbol Island, a whole 3D island to explore. Walk or fly around it, fish from the pier, play a match on the beach, design a kit and visit the football museum.</p>

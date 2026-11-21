@@ -50,9 +50,11 @@
 /* Hub: one block per game (Nov 20 2026, owner: "each game should have 4 smaller ones and one large video"; "so much white space"
    at 2,000 px). One upright clip, the words with the Play link at the top, and the stills in one row (3 or 4: they share the row,
    so there is never an empty slot). Phone: clip | words side by side, stills across the foot. From 900 px: clip | words, the stills
-   at the foot of the words column, flipped every other. From 1800 px: two games per row beside the left menu (an odd last game runs
-   full width as clip | words | stills). The Play link is in the first screen of every card at every width. */
-.features{list-style:none;padding:0!important;display:grid;gap:var(--s3)!important}
+   at the foot of the words column, the clip always on the left (batch 3, owner: "keep the main video on the left and screenshots on
+   the right"). From 1800 px: two games per row beside the left menu (an odd last game runs full width, same order). The Play link is in the first screen of every card at every width. */
+/* batch 3 (owner: "put more padding between each game. it's too tight"): the gap between cards is twice what it was, 32 px on
+   phones and 48 px from 900 px, the same both ways in the two-per-row grid */
+.features{list-style:none;padding:0!important;display:grid;gap:calc(2 * var(--s2))!important}
 .feature{display:grid;grid-template-columns:minmax(0,44%) minmax(0,1fr);grid-template-areas:'m w' 't t';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
 .featureMedia{grid-area:m;min-width:0;display:grid}
 .featureMedia .clipFig{width:100%}
@@ -68,7 +70,7 @@
 .thumbs li{max-width:none!important;min-width:0}
 @media(min-width:900px){
  .feature{grid-template-columns:clamp(220px,18vw,300px) minmax(0,1fr);grid-template-areas:'m w' 'm t';grid-template-rows:auto 1fr;gap:var(--s3) var(--s4);padding:var(--s3)}
- .flip{grid-template-columns:minmax(0,1fr) clamp(240px,22vw,320px);grid-template-areas:'w m' 't m'}
+ .features{gap:calc(2 * var(--s3))!important}
  .featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w' 't';grid-template-rows:auto}
  .featureMedia .clipFig figcaption{font-size:var(--t-cap)}
  .featureWords{gap:12px}
@@ -77,10 +79,8 @@
 }
 @media(min-width:1800px){
  .features{grid-template-columns:repeat(2,minmax(0,1fr))}
- .feature,.flip{grid-template-columns:clamp(200px,11vw,240px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
- .feature:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:clamp(200px,11vw,240px) minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:'m w t';grid-template-rows:auto}
- .feature:last-child:nth-child(odd) .thumbs{align-self:center;grid-auto-columns:minmax(0,1fr)}
- .feature:last-child:nth-child(odd) .featureWords{align-self:center}
+ .feature{grid-template-columns:clamp(200px,11vw,240px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
+ .feature:last-child:nth-child(odd){grid-column:1/-1}/* an odd last game runs full width, same order: clip left, words and stills right */
 }
 .thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
 /* The arcade's intro: its words beside the three-phone clip from 900 px. */
