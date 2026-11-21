@@ -9,6 +9,7 @@ import {abs,PLAY_PATH,type Crumb} from '@/lib/site/seo';
 import {playLessonHref} from '@/lib/site/playLinks';
 import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {toEs} from '@/lib/i18n/esPaths';
+import {navSection} from '@/lib/site/navSection';
 import type {CoachNotesEs} from '@/lib/i18n/es/types';
 import {esLesson} from '@/lib/i18n/es/lessons';
 import p from '@/components/site/printSheet.module.css';
@@ -24,7 +25,7 @@ export {QA} from '@/components/site/LessonHub';
  * Bullets, DataTable, LinkList, QA) are re-exported as they are.
  */
 export function EsBreadcrumbs({crumbs}:{crumbs:readonly Crumb[]}){
- return <nav aria-label={ES_UI.crumbNav} className={styles.crumbs}><ol>{crumbs.map((c,i)=><li key={c.path}>{i<crumbs.length-1?<a href={c.path}>{c.name}</a>:<span aria-current="page">{c.name}</span>}</li>)}</ol></nav>;
+ return <nav aria-label={ES_UI.crumbNav} className={styles.crumbs} data-nav-section={navSection(crumbs.map(c=>c.path))}><ol>{crumbs.map((c,i)=><li key={c.path}>{i<crumbs.length-1?<a href={c.path}>{c.name}</a>:<span aria-current="page">{c.name}</span>}</li>)}</ol></nav>;
 }
 /** Spanish breadcrumbs start at Inicio (/es); `tail` crumbs are Spanish names with /es paths. */
 export const esCrumbs=(...tail:Crumb[]):Crumb[]=>[{name:ES_UI.home,path:toEs('/')},...tail];

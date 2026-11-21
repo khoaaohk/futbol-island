@@ -14,7 +14,8 @@ import styles from '../(site)/site.module.css';
 export default function EsLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <HtmlShell lang="es"><div className={styles.page} data-reading-page="">
-  <style>{'html,body{background:#fbf7ee;color-scheme:light}'}</style>
+  {/* cross-document view transitions, as app/(site)/layout.tsx */}
+  <style>{'html,body{background:#fbf7ee;color-scheme:light}@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}::view-transition-group(fi-nav-chip){animation-duration:.3s;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}}'}</style>
   <header className={styles.header}><div className={styles.headerInner}><SiteNavEs/></div></header>
   <main className={styles.main}>{children}</main>
   <footer className={styles.footer}>

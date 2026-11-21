@@ -50,7 +50,8 @@
 .page .menuList a{display:flex;align-items:center;min-height:64px;padding:0 4px;color:var(--ink);font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
 @media(max-width:640px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
 /* Spanish bar: three links + EN | ES; the links size to their words. */
-.page .navEs .navLinks a{width:auto;padding:0 12px}
+.page .navEs .navLinks a[data-nav-link]{width:92px;padding:0}/* layout batch 3: the chip's 92 px pitch on both bars */
+.page .navEs .navLinks a[data-lang-switch]{width:auto;padding:0 12px}
 /* QA Nov 14 2026: on a 320 px phone the menu, the 26 px wordmark and the Play pill needed 357 px, so Play ran off the edge. Below
    360 px the wordmark steps down to 20 px and the gaps to 4 px (313 px with the 16 px gutters). */
 @media(max-width:359px){.nav{gap:4px}.page .brand{font-size:20px}}
@@ -59,10 +60,32 @@
    server-rendered in the shared layout with no client code, so a page marks itself ([data-library-hero] in LibraryPage.tsx,
    [data-games-page] in GameIntro on /games and /games/<slug>) and CSS shows the copy of its link that carries
    aria-current="page" (data-nav-cur; SiteNav.tsx renders both copies), with the home bar's pink chip. */
+/* Layout batch 3, Nov 20 2026 (owner: "library will go to all the other items"): Library is the selected link on every page of a
+   section the Library houses and Games on /games and its pages; the page's breadcrumb says which (data-nav-section,
+   lib/site/navSection.ts), the Library and /games keep their own markers. Island is selected only on the home page (its own bar). */
 .page .nav a[data-nav-cur]{display:none}
-.page:has([data-library-hero]) .nav a[data-nav-page=library],.page:has([data-games-page]) .nav a[data-nav-page=games]{display:none}
-.page:has([data-library-hero]) .navLinks a[data-nav-cur=library],.page:has([data-games-page]) .navLinks a[data-nav-cur=games]{display:inline-flex;box-sizing:border-box;height:36px;min-height:36px;margin-block:4px;padding:0 14px;opacity:1;color:var(--ink);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
-.page:has([data-library-hero]) .menuList a[data-nav-cur=library],.page:has([data-games-page]) .menuList a[data-nav-cur=games]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.page:has([data-library-hero],[data-nav-section=library]) .nav a[data-nav-page=library],.page:has([data-games-page],[data-nav-section=games]) .nav a[data-nav-page=games]{display:none}
+.page:has([data-library-hero],[data-nav-section=library]) .nav a[data-nav-cur=library],.page:has([data-games-page],[data-nav-section=games]) .nav a[data-nav-cur=games]{display:inline-flex}
+/* the desktop chip (owner: "on desktop, when selecting island, games, library, that should also animate and move over like the nav
+   btns on mobile"): ONE pink pill behind the links, the home bar's exact geometry (components/learn/learn.module.css .subChip):
+   92 x 36, 3px rim, pink edge, links 92 px on a 98 px pitch, moved by transform only. The section puts it in place at first paint;
+   a click on another header link slides it there at once (SiteNav.tsx NAV_SLIDE: --i + data-going) with the home bar's spring,
+   and the browser navigates as usual. */
+.navLinks{position:relative}
+.page .navLinks a{position:relative;z-index:1}
+.page .navLinks a[aria-current]{opacity:1}
+.navChip{position:absolute;left:0;top:4px;z-index:0;width:92px;height:36px;box-sizing:border-box;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590);pointer-events:none;opacity:0;transform:translateX(calc(var(--i,0) * 98px))}
+.page:has([data-games-page],[data-nav-section=games]) .navLinks{--i:1}
+.page:has([data-library-hero],[data-nav-section=library]) .navLinks{--i:2}
+.page:has([data-library-hero],[data-nav-section=library],[data-games-page],[data-nav-section=games]) .navChip,.navLinks[data-going] .navChip{opacity:1}
+.navLinks[data-going] .navChip{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.navLinks:has(a[aria-current]:active) .navChip{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
+@media(min-width:641px) and (max-width:759px){.navChip{width:82px;transform:translateX(calc(var(--i,0) * 86px))}}
+@media(prefers-reduced-motion:reduce){.navLinks[data-going] .navChip{transition:none}}
+/* cross-document view transitions (the site layouts opt in with @view-transition, reduced motion excluded): the chip glides from
+   the old page's place to the new one's; the bar, wordmark and Play are named so they hold still while the page under them swaps */
+@media(prefers-reduced-motion:no-preference){.navChip{view-transition-name:fi-nav-chip}.page .brand{view-transition-name:fi-nav-logo}.page .nav a.play{view-transition-name:fi-nav-play}.header{view-transition-name:fi-nav-bar}}
+.page:has([data-library-hero],[data-nav-section=library]) .menuList a[data-nav-cur=library],.page:has([data-games-page],[data-nav-section=games]) .menuList a[data-nav-cur=games]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 @media print{.header{display:none}}
 
 /* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */

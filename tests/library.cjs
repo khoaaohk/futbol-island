@@ -59,15 +59,23 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  {const lay=read('app/(site)/layout.tsx'),layEs=read('app/es/layout.tsx');assert(/<a href="\/about">About<\/a>/.test(lay)&&/<a href=\{SAFE_GUIDE\.path\}>Safety<\/a>/.test(lay),'About and Safety are in the footer');
   assert(/<a href=\{toEs\('\/about'\)\}>Acerca de<\/a>/.test(layEs)&&/safe-football-game-for-kids'\)\}>Seguridad<\/a>/.test(layEs),'and in the Spanish footer');}
  assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\['\/','Island'\],\['\/games','Games'\],\[LIBRARY_PATH,'Library'\]\];/,'home bar: Island, Games, Library');assert.match(home,/aria-current=\{href==='\/'\?'page':undefined\}/,'Island is selected on the home page from first paint (owner, Nov 20 2026)');assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
- // the selected state: a server-rendered bar cannot know its page, so the Library ([data-library-hero]) and the games pages ([data-games-page]) mark themselves and CSS shows the selected copy (desktop list and phone menu)
- {const css=read('app/(site)/site.module.css');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[data-nav-cur=library\],\.page:has\(\[data-games-page\]\) \.navLinks a\[data-nav-cur=games\]\{[^}]*background:var\(--btn-pink/,'desktop: Library on the Library, Games on the games pages');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[data-nav-cur=library\],\.page:has\(\[data-games-page\]\) \.menuList a\[data-nav-cur=games\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
-  assert.equal((css.match(/:has\(\[data-(library-hero|games-page)\]\)[^{]*\{[^}]*btn-pink/g)||[]).length,2,'only the marked links are selected');assert(!/href\$="\/library"\]\{/.test(css),'never by href: the Spanish bar\'s English switch also ends in /library');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
-  assert.match(read('components/site/games/GameParts.tsx'),/<header className=\{site\.intro\} (?:id="top" )?data-games-page="">/,'the games pages carry their marker');
-  for(const f of ['app/(site)/learn/lessons/page.tsx','components/site/LessonHub.tsx','lib/site/GuideParts.tsx'])assert(!/data-library-hero|data-games-page/.test(read(f)),`${f}: no marker, so nothing is selected there`);
+ // the selected state. Nov 20 2026 (owner: "library will go to all the other items"; layout batch 3): Library is selected on every
+ // page of a section the Library houses and Games on /games/*, read from the page's breadcrumb (lib/site/navSection.ts ->
+ // data-nav-section); the Library ([data-library-hero]) and the games pages ([data-games-page]) keep their markers. Island only on home.
+ {const css=read('app/(site)/site.module.css'),ns=L('lib/site/navSection.ts');
+  const LIB='.page:has([data-library-hero],[data-nav-section=library])',GAM='.page:has([data-games-page],[data-nav-section=games])';
+  assert(css.includes(`${LIB} .nav a[data-nav-cur=library],${GAM} .nav a[data-nav-cur=games]{display:inline-flex}`),'the selected copy shows on its section');
+  assert(css.includes(`${LIB} .nav a[data-nav-page=library],${GAM} .nav a[data-nav-page=games]{display:none}`),'and the plain copy is hidden there');
+  assert(css.includes(`${LIB} .menuList a[data-nav-cur=library],${GAM} .menuList a[data-nav-cur=games]{`)&&/menuList a\[data-nav-cur=games\]\{[^}]*btn-pink/.test(css),'phone menu too');
+  assert(css.includes(`${GAM} .navLinks{--i:1}`)&&css.includes(`${LIB} .navLinks{--i:2}`)&&/\.navChip\{[^}]*width:92px;height:36px[^}]*btn-pink/.test(css),'desktop: one pink chip on the section\'s link');
   assert.match(css,/\.page \.nav a\[data-nav-cur\]\{display:none\}/,'the selected copies are hidden on every other page');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.nav a\[data-nav-page=library\],\.page:has\(\[data-games-page\]\) \.nav a\[data-nav-page=games\]\{display:none\}/,'and the plain copy is hidden on its own pages');}
+  assert(!/href\$="\/library"\]\{/.test(css),'never by href: the Spanish bar\'s English switch also ends in /library');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
+  assert.match(read('components/site/games/GameParts.tsx'),/<header className=\{site\.intro\} (?:id="top" )?data-games-page="">/,'the games pages carry their marker');
+  for(const p of ['/library','/learn/soccer-rules','/learn/soccer-rules/offside','/learn/soccer-terms/give-and-go','/learn/soccer-drills/sharks-and-minnows','/learn/soccer-positions/goalkeeper','/learn/soccer-formations/7v7-2-3-1','/learn/lessons','/learn/lessons/learn7_roles','/tools/soccer-lineup-builder','/learn/soccer-practice-plans/u6-first-practice','/videos/kit-rush-gameplay','/cards/strikers','/fish/shrimp','/exhibits/laws-1863','/books/messi','/learn/soccer-age-groups','/es/library','/es/learn/soccer-rules/offside','/es/tools/soccer-lineup-builder'])
+   assert.equal(ns.navSection(['/',p]),'library',`${p}: Library is selected`);
+  for(const p of ['/games','/games/soccer-snake-game'])assert.equal(ns.navSection(['/',p]),'games',`${p}: Games is selected`);
+  for(const p of ['/about','/safe-football-game-for-kids','/es/about','/es'])assert.equal(ns.navSection(['/',p]),undefined,`${p}: nothing is selected`);
+  assert(/data-nav-section=\{navSection\(crumbs\.map\(c=>c\.path\)\)\}/.test(read('components/site/Breadcrumbs.tsx'))&&/data-nav-section=\{navSection\(crumbs\.map\(c=>c\.path\)\)\}/.test(read('components/es/EsParts.tsx')),'both breadcrumb trails write it');}
  /* aria-current: only the selected copies carry it, one Games and one Library per list, in both languages */
  {const bar=render(React.createElement(L('components/site/SiteNav.tsx').default)),cur=[...bar.matchAll(/<a href="([^"]+)" data-nav-cur="[a-z]+" aria-current="page">/g)].map(m=>m[1]);
   assert.deepEqual(cur,['/games','/library','/games','/library'],'English bar: Games and Library (desktop list and phone menu)');assert.equal((bar.match(/aria-current/g)||[]).length,4);

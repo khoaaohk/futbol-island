@@ -115,7 +115,7 @@ export default function Home(){
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a>
-    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}{NAV_PAGES.map(([href,label])=><li key={href}><a href={href} aria-current={href==='/'?'page':undefined}>{label}</a></li>)}</ul>
+    <ul className={s.subLinks} data-sublinks="" data-nav-links="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}{NAV_PAGES.map(([href,label])=><li key={href}><a href={href} data-nav-link="" aria-current={href==='/'?'page':undefined}>{label}</a></li>)}<li className={s.subChip} aria-hidden="true" data-nav-chip=""/></ul>
     <MobileMenu links={NAV} pages={NAV_PAGES}/>
     <NavPlay className={s.pill} href={PLAY_URL}/>
    </div>

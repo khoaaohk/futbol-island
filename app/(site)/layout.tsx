@@ -16,7 +16,11 @@ import styles from './site.module.css';
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <HtmlShell lang="en"><div className={styles.page} data-reading-page="">
-  <style>{'html,body{background:#fbf7ee;color-scheme:light}'}</style>
+  {/* Layout batch 3, Nov 20 2026 (owner: the header chip should "animate and move over" between Island, Games and Library):
+      cross-document view transitions for the site's pages only (this layout; /play, /coach and /admin have their own and never opt
+      in), with motion allowed. The pink chip glides to its new link (view-transition-name in site.module.css / learn.module.css),
+      the bar, wordmark and Play hold still, and the page itself cross-fades in 120 ms. Browsers without them just load the page. */}
+  <style>{'html,body{background:#fbf7ee;color-scheme:light}@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}::view-transition-group(fi-nav-chip){animation-duration:.3s;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}}'}</style>
   {/* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): the home page's bar, static (SiteNav). This
       replaces the Oct 16 "brand only, no section navigation" header. It stays a direct <header> child: the home page and
       /marketing bring their own bar and hide this one (learn.module.css / marketing.module.css, `>header`). */}

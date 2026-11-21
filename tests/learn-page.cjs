@@ -88,7 +88,9 @@ assert.match(read('app/(site)/layout.tsx'),/<a href="\/">What’s inside<\/a>\s*
 assert.match(read('components/learn/learn.module.css'),/:global\(\[data-reading-page\]\):has\(\.root\) :global\(footer\) a\[href="\/"\]\{display:none\}/,'the tour hides the footer link to itself');
 // Nov 10 2026 (owner: reading pages match the main site): the Oct 16 "no section navigation" header became the home bar, static.
 assert.match(read('app/(site)/layout.tsx'),/<header className=\{styles\.header\}><div className=\{styles\.headerInner\}><SiteNav\/><\/div><\/header>/,'reading pages: the shared header is the static home bar (a direct <header>, which / and /marketing hide)');
-{const nav=read('components/site/SiteNav.tsx');assert(!/['"]use client['"]|useEffect|useState|addEventListener/.test(nav),'SiteNav is server-rendered: no client code (phone heat)');
+{const nav=read('components/site/SiteNav.tsx');assert(!/['"]use client['"]|useEffect|useState/.test(nav),'SiteNav is server-rendered: no React client code (phone heat)');
+ /* Nov 20 2026 (owner: "on desktop, when selecting island, games, library, that should also animate and move over like the nav btns on mobile"): one tiny inline script slides the chip on a click; it listens to click and pageshow only, never scroll, and runs no loop */
+ assert.deepEqual([...nav.matchAll(/addEventListener\('([a-z]+)'/g)].map(m=>m[1]),['click','pageshow'],'SiteNav: only the chip slide listeners');assert(!/requestAnimationFrame|setInterval|scroll/.test(nav.slice(nav.indexOf('export const NAV_SLIDE'))),'SiteNav: no loop, no scroll work');
  assert.match(nav,/href=\{PLAY_PATH\}/,'SiteNav Play goes to /play');for(const l of ['Island','Games','Library'])assert(nav.includes(`'${l}'`),`SiteNav has the "${l}" link (owner, Nov 20 2026 evening: three links)`);}
 assert.match(read('app/(site)/about/page.tsx'),/<a href="\/">See what’s inside the game<\/a>/,'about links to the tour at /');assert.match(read('app/(site)/about/page.tsx'),/className=\{styles\.cta\} href="\/play"/,'about Play goes to /play');
 assert.match(read('components/GrownUps.tsx'),/<a href="\/" target="_blank" rel="noopener">futbolisland\.app<\/a>/,'in-game Grown-ups panel links to the tour (/) in a new tab');
@@ -324,7 +326,7 @@ const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'monta
  assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');
  // owner, Nov 3: phones get a menu (icon left of Play) instead; <details>/<summary> so the links work with JS off
  {const mm=strip(read('components/learn/MobileMenu.tsx'));
-  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>\s*<NavPlay className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
+  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks=""[^>]*>[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>\s*<NavPlay className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
   assert.match(mm,/<details className=\{s\.menu\}[^>]*>\s*<summary className=\{s\.menuBtn\} aria-label="Menu" aria-controls="learn-menu">/,'details + summary, aria-label Menu, aria-controls');
   assert.match(mm,/setAttribute\('aria-expanded',String\(d\.open\)\)/,'aria-expanded follows the panel');
   assert.match(mm,/e\.key==='Escape'/,'Escape closes');assert.match(mm,/'pointerdown'/,'a tap outside closes');
@@ -340,15 +342,16 @@ const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'monta
   assert.match(css,/\.menuList a\[aria-current\] span\{background:var\(--btn-pink/,'current chapter: the pink chip');
   assert.doesNotMatch(css.match(/\.menu[A-Za-z]*\{[^}]*\}/g).join(''),/IslandBrush/,'no IslandBrush in the menu');}
  // owner, Nov 3: ONE pink chip that moves between the desktop links (transform only, springy), not a fade per link
- {assert.equal((css.match(/\.root \.subLinks::before\{/g)||[]).length,1,'one indicator: the list ::before');
+ {/* Nov 20 2026 (layout batch 3): the chip is a real element (.subChip, a list item) so it can carry view-transition-name across pages */
+  assert.equal((css.match(/\.root \.subLinks>\.subChip\{content/g)||[]).length,1,'one indicator: the list\'s chip');
   assert.doesNotMatch(css,/\.subLinks a(\[aria-current\])?::before/,'no per-link chip any more');
   assert.match(css,/\.root \.subLinks a\{display:inline-flex;align-items:center;justify-content:center;width:92px;/,'links a fixed 92px');
   assert.match(css,/\.root \.subLinks\{position:relative;display:flex;flex:1;min-width:0;gap:6px;/,'6px gap');
-  const ind=[...css.matchAll(/\.root \.subLinks(?:\[[a-z-]+\])?::before\{([^}]*)\}/g)].map(m=>m[1]);
+  const ind=[...css.matchAll(/\.root (?:ul)?\.subLinks(?:\[[a-z-]+\])?>\.subChip(?:\.subChip)?\{([^}]*)\}/g)].map(m=>m[1]);
   for(const b of ind){const tr=(b.match(/transition:([^;}]*)/)||[,''])[1];
    if(tr&&tr!=='none')for(const part of tr.split(/,(?![^(]*\))/))assert.match(part.trim(),/^(opacity|transform|translate) /,`indicator transitions transform / opacity only: ${part}`);}
   assert(ind.some(b=>/transform:translateX\(calc\(var\(--i,0\) \* 98px\)\);transition:[^;]*transform \.32s cubic-bezier\(\.34,1\.56,\.64,1\)/.test(b)),'moves by translateX(--i * 98px), 320ms spring');
-  assert.match(css,/\.root \.subLinks\[data-snap\]::before\{transition:none\}/,'first appearance jumps while hidden');
+  assert.match(css,/\.root \.subLinks\[data-snap\]>\.subChip\{transition:none\}/,'first appearance jumps while hidden');
   assert.match(enh,/list\.style\.setProperty\('--i'/,'LearnEnhance writes --i');assert.match(enh,/'data-has-current'/,'and data-has-current');
   // reduced motion: the global .root *::before{transition:none!important} rule (asserted above) makes the move instant
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,\.root \*::before,/,'reduced motion: the indicator changes instantly');}
