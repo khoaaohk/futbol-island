@@ -410,5 +410,12 @@ export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type'
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
  datePublished:GAMES_UPDATED,dateModified:pageModified(g.path,GAMES_UPDATED),publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** The hub's list of games. */
-export const gameListLd=()=>({'@context':'https://schema.org','@type':'ItemList',name:GAMES_HUB.h1,url:abs(GAMES_HUB.path),numberOfItems:GAME_PAGES.length,
+export const GAMES_LIST_ID=abs(GAMES_PATH)+'#games';
+export const gameListLd=()=>({'@context':'https://schema.org','@type':'ItemList','@id':GAMES_LIST_ID,name:GAMES_HUB.h1,url:abs(GAMES_HUB.path),numberOfItems:GAME_PAGES.length,
  itemListElement:GAME_PAGES.map((g,i)=>({'@type':'ListItem',position:i+1,name:g.name,url:abs(g.path),image:abs(g.shots[0].src)}))});
+/** Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): the hub as a CollectionPage like /library, whose main entity is the
+ *  ItemList above (named by @id, so the list stays one node). Real dates, no ratings. */
+export const gamesHubLd=()=>({'@context':'https://schema.org','@type':'CollectionPage','@id':abs(GAMES_PATH)+'#page',name:GAMES_HUB.h1,url:abs(GAMES_PATH),
+ description:GAMES_HUB.description,inLanguage:'en',isAccessibleForFree:true,audience:KIDS_AUDIENCE,image:abs(GAMES_HUB.og),
+ datePublished:GAMES_UPDATED,dateModified:pageModified(GAMES_PATH,GAMES_UPDATED),
+ isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,mainEntity:{'@id':GAMES_LIST_ID}});

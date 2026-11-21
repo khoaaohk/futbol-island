@@ -3,7 +3,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {Section} from '@/lib/site/GuideParts';
 import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
-import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
+import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd,gamesHubLd} from '@/lib/site/games';
 import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -25,6 +25,7 @@ export default function GamesHub(){
  const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
+  <JsonLd data={gamesHubLd()}/>
   <JsonLd data={gameListLd()}/>
   <JsonLd data={faqLd(H.faq)}/>
   {/* Nov 18 2026: no VideoObject on this page; every clip's one home is its watch page, /videos/<slug> (lib/site/videos.ts) */}
