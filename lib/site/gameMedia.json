@@ -106,12 +106,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 769988,
-   "webm": 735901,
+   "mp4": 496061,
+   "webm": 432817,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 58704
+    "bytes": 51850
    }
   },
   "runner": {
@@ -355,19 +355,19 @@
     "file": "pinball-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 58704
+    "bytes": 54226
    },
    {
     "file": "pinball-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 61096
+    "bytes": 51094
    },
    {
     "file": "pinball-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 57850
+    "bytes": 54098
    },
    {
     "file": "pinball-4.webp",
