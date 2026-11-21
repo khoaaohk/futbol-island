@@ -47,7 +47,7 @@ export function createKeepyAudio(){
  /** One music event at context time t. Each track's lead has its own timbre. */
  function voice(e:MusicEvent,t:number,m:Music){
   switch(e.voice){
-   case 'click':tone('square',e.v?1480:1110,e.v?1480:1110,t,.05,.07,.001,bus);break;
+   case 'click':tone('square',e.v?1480:1110,e.v?1480:1110,t,.05,.11,.001,bus);break;
    case 'kick':tone('sine',e.v?150:132,44,t,.2,e.v?.5:.4,.002,bus);break;
    case 'clap':burst('bandpass',1500,1.1,t,.09,.26,bus);burst('bandpass',1700,1.4,t+.012,.07,.18,bus);break;
    case 'shaker':burst('highpass',6200,.7,t,e.v?.06:.035,e.v?.1:.055,bus);break;

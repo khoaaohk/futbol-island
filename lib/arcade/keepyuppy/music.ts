@@ -27,7 +27,7 @@ export function musicEvents(m:Music,fromBeat:number,toBeat:number,bars:number,mo
  return out;
 }
 /** A steady clock for the game from two unsteady ones. `audio()` is AudioContext.currentTime minus the song's start (null when sound
- *  is off or the context is not running); `perf()` is performance.now() in seconds. The song time follows the smooth perf clock and is
+ *  is off or the context is not running); `perf()` is the page performance clock in seconds. The song time follows the smooth perf clock and is
  *  pulled back onto the audio clock whenever the two drift more than 12 ms, so taps (timed with perf) are judged against what is heard. */
 export function createSongClock(perf:()=>number,audio:()=>number|null){
  let off=0,running=false,held=0;
