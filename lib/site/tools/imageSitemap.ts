@@ -1,6 +1,6 @@
 import {abs,ogPath} from '../seo';
 import {ALL_GUIDE_PAGES} from '../guides';
-import {SITE_FISH,fishArtPath,fishPath} from '../fish';
+import {INDEXED_FISH,fishArtPath,fishPath} from '../fish';
 import {SITE_EXHIBITS,exhibitPath} from '../exhibits';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH} from './printables';
 import {TOOL_PAGES} from './registry';
@@ -20,7 +20,7 @@ export function imageEntries():ImageEntry[]{
   ...ALL_GUIDE_PAGES.filter(g=>g.image).map(g=>({path:g.path,images:[g.image!]})),
   ...TOOL_PAGES.map(t=>({path:t.path,images:printable.get(t.path)??(t.path===PRINTABLES_HUB_PATH?PRINTABLES.map(p=>fileUrl(p.files[0].name,'png')):t.image?[t.image]:[])})).filter(e=>e.images.length>0),
   ...GAME_LISTINGS.map(g=>({path:g.path,images:g.images})),/* the arcade games' screenshots and share pictures (lib/site/games.ts) */
-  ...SITE_FISH.map(f=>({path:fishPath(f.id),images:[fishArtPath(f.id),ogPath(fishPath(f.id))]})),
+  ...INDEXED_FISH.map(f=>({path:fishPath(f.id),images:[fishArtPath(f.id),ogPath(fishPath(f.id))]})),/* Nov 21 2026: the noindex fish pages (lib/site/paths.ts NOINDEX_FISH_PATHS) are not listed */
   ...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),images:[ogPath(exhibitPath(e.id))]})),
   ...COMPARISONS.map(c=>({path:c.path,images:c.images})),/* Nov 15 2026: the two diagrams an "A vs B" page compares */
  ];
