@@ -2,14 +2,23 @@
    menu (library.module.css .menu): fixed on the left from 1280 px, a one-row chip bar under the header below that. Here: group
    names (rail only), the up links (section hub, Library) and the current page. */
 .group{display:none}
-.ups{display:none}
+/* Back button. Phone and tablet bar: a round button fixed at the bar's left; the chip row starts after it and scrolls under it. */
+.back{position:absolute;z-index:3;left:0;top:0;bottom:0;display:flex;align-items:center;margin:0;padding:0 8px 2px max(var(--gutter),calc(50vw - 590px));background:linear-gradient(to right,var(--paper) calc(100% - 8px),transparent)}
+.back a{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:40px;height:40px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:800;text-decoration:none;box-shadow:0 2px 0 var(--rule);transition:translate .12s}
+.back a:active{translate:0 2px}
+.back a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
+.arrow{font-size:18px;line-height:1}
+.backTxt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rail:has(.back) ul{padding-left:calc(max(var(--gutter),calc(50vw - 590px)) + 52px);scroll-padding-inline-start:calc(var(--gutter) + 52px)}
+@media(prefers-reduced-motion:reduce){.back a{transition:none}}
 .rail a[aria-current=page]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
 .rail ul[data-pill-on] a[aria-current=page]{background:transparent}
 @media(min-width:1280px){
- .ups{display:grid;gap:2px;margin:0 0 var(--s1);padding-bottom:var(--s1);box-shadow:0 1px 0 var(--rule)}
- .ups a{display:flex;align-items:center;box-sizing:border-box;min-height:44px;padding:8px 14px;border-radius:var(--r-md);color:var(--ink);font-size:16px;line-height:1.3;font-weight:700;text-decoration:none}
- @media(hover:hover){.ups a:hover{background:color-mix(in srgb,var(--gold) 35%,transparent)}}
- .ups a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px}
+ .back{position:static;display:block;margin:0 0 var(--s1);padding:0 0 var(--s1);background:none;box-shadow:0 1px 0 var(--rule)}
+ .back a{width:auto;height:auto;justify-content:flex-start;gap:8px;min-height:44px;padding:8px 14px;border-radius:var(--r-md);background:transparent;box-shadow:none;font-size:16px;line-height:1.3}
+ .backTxt{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}
+ @media(hover:hover){.back a:hover{background:color-mix(in srgb,var(--gold) 35%,transparent)}}
+ .rail:has(.back) ul{padding-left:0;scroll-padding-inline-start:0}
  .group{display:block;margin:var(--s2) 0 2px;padding:0 14px;font-size:var(--t-label);line-height:1.3;font-weight:700;color:var(--ink-soft)}
  .group span{display:block}
  .rail a[aria-current=page],.rail ul[data-pill-on] a[aria-current=page]{background:var(--btn-mint,#beded1)}

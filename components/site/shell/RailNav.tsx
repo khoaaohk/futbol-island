@@ -17,7 +17,11 @@ export default function RailNav({rail,current,id='section-rail'}:{rail:Rail;curr
  return <>
   <nav className={`${l.menu} ${r.rail}`} id={id} data-rail="" data-section-rail="" aria-label={rail.label}>
    {/* the up links stay at the top of the rail while the list below scrolls; phones have the breadcrumb and the onward row instead */}
-   {rail.up.length>0&&<p className={r.ups}>{rail.up.map(u=><a key={u.href} href={u.href} aria-current={cur(u.href)}>{u.name}</a>)}</p>}
+   {/* Back (owner, Nov 20 2026 night: "for any internal pages i think there should be a back btn at the side nav to go back to the
+       previous screen. on mobile the back btn is locked on the left and everything scrolls under it"): one link to the level
+       above (a page goes to its section; a section goes to the Library). The Library and the games hub pass no `up`, so they
+       have none. In the rail it is the first row; in the phone bar a round button fixed at the left, the chips pass under it. */}
+   {rail.up.length>0&&rail.up[0].href!==current&&<p className={r.back} data-rail-back=""><a href={rail.up[0].href} aria-label={`\u2190 ${rail.up[0].name}`}><span className={r.arrow} aria-hidden="true">{'\u2190'}</span><span className={r.backTxt}>{rail.up[0].name}</span></a></p>}
    <ul>
     {rail.groups.map((g,i)=>[
      g.title?<li key={`g${i}`} className={r.group}><span>{g.title}</span></li>:null,
