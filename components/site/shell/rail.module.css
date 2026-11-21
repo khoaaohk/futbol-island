@@ -15,7 +15,7 @@
 .rail ul[data-pill-on] a[aria-current=page]{background:transparent}
 @media(min-width:1280px){
  /* Rail: the pill form with its word, in the place the first entry (Overview) has on the Library and the games hub: same left edge, same top. */
- .back{position:static;display:block;margin:0 0 var(--s2);padding:0 0 calc(var(--s2) + 2px);background:none;box-shadow:0 1px 0 var(--rule)}
+ .back{position:static;display:block;margin:0 0 var(--s2);padding:0 0 8px;background:none;box-shadow:none}/* no divider under it (owner, Nov 20 2026) */
  .back a{--navigation-width:var(--btn-nav-width,76px);--btn-height:44px;--btn-shadow-gold:0 var(--btn-lift,5px) 0 var(--btn-gold-edge,#a8863d),var(--btn-halo,0 0 0 4px #fff2cd40);--btn-shadow-gold-pressed:0 2px 0 var(--btn-gold-edge,#a8863d),var(--btn-halo,0 0 0 4px #fff2cd40);--btn-press:3px}
  .back a>span:first-child{opacity:1}
  .back a>span:last-child{opacity:0}
