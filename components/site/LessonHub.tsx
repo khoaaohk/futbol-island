@@ -15,7 +15,7 @@ import KeepReading from './KeepReading';
 import {Band,CardGrid,groupIcon,Hero,lessonIcon,type HubCard} from './HubParts';
 import styles from '@/app/(site)/site.module.css';
 import RailNav from './shell/RailNav';
-import {hubRail,sec} from '@/lib/site/railNavMore';
+import {hubGroupLabel,hubRail,sec} from '@/lib/site/railNavMore';
 import type {RailItem} from '@/lib/site/railNav';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
@@ -57,7 +57,7 @@ export default function LessonHub({hub,children,extra=[]}:{hub:Hub;children?:Rea
  const crumbs=hubCrumbs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to the Library, Overview, then what is on
     this hub in page order: its own sections, each lesson group, the questions and More to learn */
- const rail=hubRail(`${hub.crumb} on this page`,[{items:[...(guideVideo(hub.path)?[sec(`clip-${guideVideo(hub.path)!.key}`,'See it in the game')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Questions'),sec('more','More to learn')]}]);
+ const rail=hubRail(`${hub.crumb} on this page`,[{items:[...(guideVideo(hub.path)?[sec(`clip-${guideVideo(hub.path)!.key}`,'See it in the game')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Questions'),sec('more','More to learn')]}]);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>

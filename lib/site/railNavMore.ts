@@ -60,6 +60,28 @@ export function hubRail(label:string,groups:RailGroup[],es=false):Rail{
 export const anchor=(prefix:string,path:string,name:string):RailItem=>({href:`#${railId(prefix,path)}`,name});
 /** A rail entry for a section heading already on the page. */
 export const sec=(id:string,name:string):RailItem=>({href:`#${id}`,name});
+/** Short rail / chip labels for the topic hubs' long lesson-group titles (owner, Nov 20 2026: chip labels short; the headings on
+ *  the page stay). Keyed by the full heading, English and Spanish; a title not listed is short enough already. */
+const HUB_GROUP_SHORT:Readonly<Record<string,string>>={
+ '7v7: Meet the team and restart':'7v7: Team and restart','7v7: Connect around pressure':'7v7: Around pressure',
+ '7v7: Protect the goal together':'7v7: Protect the goal','9v9: Find your unit and receive':'9v9: Find your unit',
+ '9v9: Read the spare option':'9v9: The spare option','9v9: Share the next job':'9v9: The next job',
+ '11v11: Receive inside the team shape':'11v11: Team shape','11v11: Create the next opening':'11v11: Next opening',
+ '11v11: Keep the team connected':'11v11: Stay connected','11v11: Restart and time the run':'11v11: Time the run',
+ 'The build-out line and offside in 7v7':'Build-out and offside','Goal kicks and goal clearances':'Goal kicks',
+ 'Throw-ins, kick-ins and dribble-ins':'Throw-ins and kick-ins','Receive, turn or give it back':'Receive and turn',
+ 'Wall passes and the third player':'Wall passes',
+ '7v7: Conoce al equipo y reanuda el juego':'7v7: Equipo y reanudar','7v7: Conéctate para salir de la presión':'7v7: Salir de la presión',
+ '7v7: Protege el arco con tu equipo':'7v7: Protege el arco','9v9: Encuentra tu línea y recibe':'9v9: Tu línea',
+ '9v9: Lee la opción libre':'9v9: La opción libre','9v9: Reparte la siguiente tarea':'9v9: La siguiente tarea',
+ '9v9: Reanuda y sigue a tu rival':'9v9: Reanuda y sigue','11v11: Recibe dentro de la forma del equipo':'11v11: Forma del equipo',
+ '11v11: Crea el siguiente espacio':'11v11: Crea espacio','11v11: Mantén al equipo conectado':'11v11: Equipo conectado',
+ '11v11: Reanuda y elige el momento de correr':'11v11: Elige el momento',
+ 'La línea de salida y el fuera de juego en 7v7':'Salida y fuera de juego','Saques de meta y saques de portero':'Saques de meta',
+ 'Saques de banda con la mano, con el pie o conduciendo':'Saques de banda','Jugadas a balón parado (futsal)':'Balón parado (futsal)',
+ 'Desmárcate para recibir el pase':'Desmárcate','Recibe, gira o devuélvela':'Recibe y gira','Paredes y el tercer hombre':'Paredes',
+ 'Conducir, regatear o pasar':'Conducir o pasar'};
+export const hubGroupLabel=(title:string)=>HUB_GROUP_SHORT[title]??title;
 
 /** A detail page's rail (owner, Nov 20 2026: "this internal page should not have the list of games. it should list what's on that
  *  page to smooth scroll down"): Back to the level above, then Overview (#top, the head) and the page's own sections in page order.

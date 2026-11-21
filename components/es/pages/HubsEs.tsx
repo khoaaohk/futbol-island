@@ -1,6 +1,6 @@
 import RailNav from '@/components/site/shell/RailNav';
 import {chartRail} from '@/lib/site/railNavCollections';
-import {hubRail,sec} from '@/lib/site/railNavMore';
+import {hubGroupLabel,hubRail,sec} from '@/lib/site/railNavMore';
 import type {RailItem} from '@/lib/site/railNav';
 import rtEs from '@/components/site/railTarget.module.css';
 import JsonLd from '@/components/seo/JsonLd';
@@ -70,7 +70,7 @@ function MoreToLearnEs({except}:{except?:string}){
 function LessonHubEs({hub,children,extra=[]}:{hub:EsHub;children?:React.ReactNode;extra?:readonly RailItem[]}){
  const crumbs=hubCrumbsEs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav, as English (components/site/LessonHub.tsx): Back to the Biblioteca, Resumen, the page's own section, each group, Preguntas, Más para aprender */
- const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...(guideVideo(hub.enPath)&&hub.video?[sec(`clip-${guideVideo(hub.enPath)!.key}`,'Míralo en el juego')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
+ const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...(guideVideo(hub.enPath)&&hub.video?[sec(`clip-${guideVideo(hub.enPath)!.key}`,'Míralo en el juego')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
