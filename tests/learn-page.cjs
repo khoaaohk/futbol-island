@@ -89,7 +89,7 @@ assert.match(read('components/learn/learn.module.css'),/:global\(\[data-reading-
 // Nov 10 2026 (owner: reading pages match the main site): the Oct 16 "no section navigation" header became the home bar, static.
 assert.match(read('app/(site)/layout.tsx'),/<header className=\{styles\.header\}><div className=\{styles\.headerInner\}><SiteNav\/><\/div><\/header>/,'reading pages: the shared header is the static home bar (a direct <header>, which / and /marketing hide)');
 {const nav=read('components/site/SiteNav.tsx');assert(!/['"]use client['"]|useEffect|useState|addEventListener/.test(nav),'SiteNav is server-rendered: no client code (phone heat)');
- assert.match(nav,/href=\{PLAY_PATH\}/,'SiteNav Play goes to /play');for(const l of ['Learn','Games','Library'])assert(nav.includes(`'${l}'`),`SiteNav has the "${l}" link (owner, Nov 20 2026 evening: three links)`);}
+ assert.match(nav,/href=\{PLAY_PATH\}/,'SiteNav Play goes to /play');for(const l of ['Island','Games','Library'])assert(nav.includes(`'${l}'`),`SiteNav has the "${l}" link (owner, Nov 20 2026 evening: three links)`);}
 assert.match(read('app/(site)/about/page.tsx'),/<a href="\/">See what’s inside the game<\/a>/,'about links to the tour at /');assert.match(read('app/(site)/about/page.tsx'),/className=\{styles\.cta\} href="\/play"/,'about Play goes to /play');
 assert.match(read('components/GrownUps.tsx'),/<a href="\/" target="_blank" rel="noopener">futbolisland\.app<\/a>/,'in-game Grown-ups panel links to the tour (/) in a new tab');
 assert.match(page,/href=\{PLAY_URL\}/,'the tour links to Play');assert.match(page,/<a className=\{s\.logo\} href="\/"/,'the logo goes home (/)');assert.match(page,/<NavPlay className=\{s\.pill\} href=\{PLAY_URL\}\/>/,'the bar Play goes to /play');

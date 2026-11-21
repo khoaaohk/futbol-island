@@ -46,12 +46,12 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  // 4
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
  // the header (owner, Nov 20 2026 evening: "Learn, Game, and Library"): three links and Play, in both languages
- assert.match(nav,/\[\['\/','Learn'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
- assert.match(navEs,/\[\['\/es','Aprender'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
+ assert.match(nav,/\[\['\/','Island'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
+ assert.match(navEs,/\[\['\/es','Isla'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
  for(const l of ['Explore','Friends','Safety','About'])assert(!nav.includes(`'${l}'`),`header has no ${l}`);
  {const lay=read('app/(site)/layout.tsx'),layEs=read('app/es/layout.tsx');assert(/<a href="\/about">About<\/a>/.test(lay)&&/<a href=\{SAFE_GUIDE\.path\}>Safety<\/a>/.test(lay),'About and Safety are in the footer');
   assert(/<a href=\{toEs\('\/about'\)\}>Acerca de<\/a>/.test(layEs)&&/safe-football-game-for-kids'\)\}>Seguridad<\/a>/.test(layEs),'and in the Spanish footer');}
- assert.match(home,/const NAV:\[string,string\]\[\]=\[\['learn','Learn'\]\];/,'home bar: Learn scrolls to its chapter');assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\['\/games','Games'\],\[LIBRARY_PATH,'Library'\]\];/,'then Games and Library');assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
+ assert.match(home,/const NAV:\[string,string\]\[\]=\[\['learn','Island'\]\];/,'home bar: Learn scrolls to its chapter');assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\['\/games','Games'\],\[LIBRARY_PATH,'Library'\]\];/,'then Games and Library');assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
  // the selected state: a server-rendered bar cannot know its page, so the Library ([data-library-hero]) and the games pages ([data-games-page]) mark themselves and CSS shows the selected copy (desktop list and phone menu)
  {const css=read('app/(site)/site.module.css');
   assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[data-nav-cur=library\],\.page:has\(\[data-games-page\]\) \.navLinks a\[data-nav-cur=games\]\{[^}]*background:var\(--btn-pink/,'desktop: Library on the Library, Games on the games pages');

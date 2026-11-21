@@ -9,7 +9,7 @@ import {navLinks} from '@/components/site/SiteNav';
 /* Nov 20 2026 evening (owner): the same three links as the English bar. Aprender is the Spanish lessons (the old bar's first link),
    Juegos is the English /games (no Spanish games page yet), Biblioteca the Spanish Library. Rules, terms, positions, drills, plans,
    tools and About are all on the Biblioteca and in the footer. Selected copies as in components/site/SiteNav.tsx. */
-const NAV:readonly (readonly [string,string,('games'|'library')?])[]=[['/es','Aprender'],['/games','Juegos','games'],[toEs(ES_LIBRARY),'Biblioteca','library']];
+const NAV:readonly (readonly [string,string,('games'|'library')?])[]=[['/es','Isla'],['/games','Juegos','games'],[toEs(ES_LIBRARY),'Biblioteca','library']];
 const NAME='Futbol Island';
 const links=()=>navLinks(NAV);
 export default function SiteNavEs(){
