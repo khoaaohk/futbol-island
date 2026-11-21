@@ -132,12 +132,13 @@ function modelFor(k:number):T.BufferGeometry{const o:Parts=[];switch(k){
  * SCENERY_TRIS. Pennants, bunting and fairy lights are not baked: their cloths come back in `flut` (x y z yaw w h tone phase) and
  * flutter in one instanced draw. A phone sees a narrow wedge, so the dressing sits behind and between the targets, never in a kick lane. */
 const SCENERY_TRIS=22000;
-type Scenery={geo:T.BufferGeometry;flut:number[];tris:number};
+/** What the last scenery() bake left besides its geometry: the fluttering cloths and the baked triangle count. */
+const SCENE_OUT={flut:[] as number[],tris:0};
 /** A grass tuft: three two-sided blades, dark at the root (no ink). Copied from FootGolf's polish (branch game-footgolf). */
 function tuftGeo(dark='#2f7a42',lite='#8fd477'){const pos:number[]=[],col:number[]=[],C1=new T.Color(dark),C2=new T.Color(lite);
  for(let i=0;i<3;i++){const a=i/3*Math.PI+.3,c=Math.cos(a),s=Math.sin(a),lean=(i-1.5)*.12,h=.32+(i%2)*.14;const A=[-c*.07,0,-s*.07],B=[c*.07,0,s*.07],Tp=[lean*c+s*.04,h,lean*s];pos.push(...A,...B,...Tp,...B,...A,...Tp);for(let k=0;k<2;k++)col.push(C1.r,C1.g,C1.b,C1.r,C1.g,C1.b,C2.r,C2.g,C2.b);}
  const g=new T.BufferGeometry(),n=new Float32Array(pos.length);for(let i=1;i<n.length;i+=3)n[i]=1;g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(n,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));return g;}
-function scenery(place:string,ents:readonly Ent[]):Scenery{const o:Parts=[],flut:number[]=[],rnd=seeded(place.length*53+11);
+function scenery(place:string,ents:readonly Ent[]):T.BufferGeometry{const o:Parts=[],flut:number[]=[],rnd=seeded(place.length*53+11);
  const tris=()=>{let t=0;for(const g of o)t+=g.attributes.position.count/3;return t;};
  const B=(c:string,x:number,y:number,z:number,w:number,h:number,d:number,ry=0,ink=.05,rz=0)=>P(o,box(w,h,d),c,x,y,z,ry,rz,ink);
  const Cy=(c:string,x:number,y:number,z:number,r:number,h:number,ink=.05,r1=r,n=10)=>P(o,cyl(r1,r,h,n),c,x,y,z,0,0,ink,true);
@@ -303,7 +304,7 @@ function scenery(place:string,ents:readonly Ent[]):Scenery{const o:Parts=[],flut
   case K.hoop:Cy('#8d93a6',e.x,(e.y-e.hx)/2,e.z,.05,e.y-e.hx,.02);B('#5b6072',e.x,.05,e.z,.7,.1,.5,0,.03);break;
   case K.bell:B('#8a5a2e',e.x,e.y+.62,e.z,.9,.12,.12,0,.03);break;
   case K.tyre:if(e.mo===2){const top=e.by+e.len;for(const s of [-1,1])Cy('#8a5a2e',e.x+s*2.6,top/2+.1,e.z,.12,top+.2,.04);B('#8a5a2e',e.x,top+.2,e.z,5.6,.2,.2,0,.04);}else B(COMIC_INK,e.x,e.y+e.hx+.35,e.z,.04,.7,.04,0,0);break;}}
- const t=tris();return {geo:bakeParts(o),flut,tris:t};}
+ SCENE_OUT.flut=flut;SCENE_OUT.tris=tris();return bakeParts(o);}
 
 const BITS=110,TRAIL=40,BLOBS=44,GHOST=26,STARS=6,ROPES=4,FLUT=64,GULLS=3,KICKER_S=.95;
 const FLUT_C=['#f0452e','#19b5a5','#ffc83a','#2f8fd8','#ff65c8'];
@@ -369,7 +370,7 @@ export function createFlickitView(host:HTMLElement,o:{reduced:boolean;mobile:boo
 
  function setStage(g:FlickIt,intro=true){const s=g.state;def=s.stage;const p=PLACES[def.place]??PLACES.garden;
   backTex?.dispose();groundT?.dispose();backTex=backdropTex(def.place);groundT=groundTex(def.place,s.ents);backMat.map=backTex;backMat.needsUpdate=true;groundMat.map=groundT;groundMat.needsUpdate=true;underMat.color.set(p.ground);
-  place.geometry.dispose();{const sc=scenery(def.place,s.ents);place.geometry=sc.geo;sceneryTris=sc.tris;flut=sc.flut;}
+  place.geometry.dispose();place.geometry=scenery(def.place,s.ents);sceneryTris=SCENE_OUT.tris;flut=SCENE_OUT.flut;
   {const vw=VIEW[def.place];if(vw){fog.near=vw.fog[0];fog.far=vw.fog[1];}gullN=vw?.gull&&!o.reduced?GULLS:0;flutN=Math.min(FLUT-gullN*2,flut.length/8);let fi=0;for(let i=0;i<flutN;i++)flutter.setColorAt(fi++,CC.set(FLUT_C[flut[i*8+6]]));for(let i=0;i<gullN*2;i++)flutter.setColorAt(fi++,CC.set(def.place==='beach'?'#fffaf0':'#3a2f58'));flutter.count=fi;flutter.visible=fi>0;if(flutter.instanceColor)flutter.instanceColor.needsUpdate=true;}
   kick.set=false;kick.charge=0;kick.cheer=0;kick.at=-9;
   bg.set(p.fog);fog.color.set(p.fog);sun.intensity=p.sunI;hemi.color.set(p.hemi);hemi.groundColor.set(p.hemiG);hemi.intensity=p.hemiI;ink.uInkShade.value.setRGB(p.shade[0],p.shade[1],p.shade[2]);(blobs.material as T.MeshBasicMaterial).opacity=p.blob;
@@ -428,7 +429,7 @@ export function createFlickitView(host:HTMLElement,o:{reduced:boolean;mobile:boo
   // camera: fly in over the layout, sit at the stage's own angle, chase the ball, cut back
   if(introT<1)introT=Math.min(1,introT+dt/2.4);const ie=1-Math.pow(1-introT,3);
   if(flying){held=true;followW=Math.min(1,followW+dt*2.2);}else if(s.phase==='tee'||s.phase==='done')followW=Math.max(0,followW-dt*(o.reduced?9:4.5));
-  if(flying||(held&&s.phase==='wait')){if(flying){const hv=Math.hypot(b.vx,b.vz)||1;V.set(b.x-b.vx/hv*5.2,Math.max(1.3,b.y+1.5),b.z-b.vz/hv*5.2);if(V.z>base.z)V.z=base.z;if(V.z<-11)V.z=-11;/* never chase into the scenery behind the targets */V.x=Math.max(-6,Math.min(6,V.x));fl.lerp(V,Math.min(1,dt*5));}lastBall.lerp(V.set(b.x,b.y,b.z),Math.min(1,dt*9));}
+  if(flying||(held&&s.phase==='wait')){if(flying&&b.vz<-1){/* a ball knocked back toward the spot: the camera holds (it would fly through what it hit) */const hv=Math.hypot(b.vx,b.vz)||1;V.set(b.x-b.vx/hv*5.2,Math.max(1.3,b.y+1.5),b.z-b.vz/hv*5.2);if(V.z>base.z)V.z=base.z;if(V.z<-11)V.z=-11;/* never chase into the scenery behind the targets */V.x=Math.max(-6,Math.min(6,V.x));fl.lerp(V,Math.min(1,dt*5));}lastBall.lerp(V.set(b.x,b.y,b.z),Math.min(1,dt*9));}
   else if(followW===0){fl.copy(base);lastBall.set(0,FK.R,0);}
   const fw=o.reduced?0:followW*followW*(3-2*followW)*.78;cp.copy(base).lerp(fl,fw);cl.copy(look).lerp(lastBall,fw*.9);
   if(ie<1){const a=(1-ie)*1.15,dx=base.x-look.x,dz=base.z-look.z,r=1+(1-ie)*.9;cp.set(look.x+(dx*Math.cos(a)-dz*Math.sin(a))*r,base.y+(1-ie)*7,look.z+(dx*Math.sin(a)+dz*Math.cos(a))*r);cl.copy(look);cl.y*=ie;}
@@ -451,7 +452,7 @@ export function createFlickitView(host:HTMLElement,o:{reduced:boolean;mobile:boo
    // the follow-through turns the body the way the foot sent the ball: inside of the foot swings across (left), outside opens (right)
    const u=teeing?0:Math.max(0,Math.min(1,(t-kick.at-.06)/.28)),tw=u*u*(3-2*u)*(kick.spin<0?.55:kick.spin>0?-.5:0);
    bean.position.set(kick.x,0,kick.z);kicker.pose(dt,0,kick.f+tw,kick.now?1:0,0,0,kp);bean.position.y=0;kick.now=false;
-   bean.visible=Math.hypot(camera.position.x-kick.x,camera.position.z-kick.z)>1.15||camera.position.y>2.6;}
+   bean.visible=Math.hypot(camera.position.x-kick.x,camera.position.z-kick.z)>1.6||camera.position.y>2.6;}
   // pennants swing on their lines; gulls circle and flap
   if(flutter.count){const ft=o.reduced?t*.3:t;let fi=0;
    for(let i=0;i<flutN;i++){const j=i*8;EF.set(Math.sin(ft*3.1+flut[j+7])*.38,flut[j+3],0);Q.setFromEuler(EF);SC.set(flut[j+4]*(.9+.1*Math.sin(ft*5.3+flut[j+7])),flut[j+5],1);M.compose(V.set(flut[j],flut[j+1],flut[j+2]),Q,SC);flutter.setMatrixAt(fi++,M);}
