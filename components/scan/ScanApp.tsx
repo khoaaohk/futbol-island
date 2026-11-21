@@ -200,7 +200,9 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
 function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
  const leave=()=>{window.location.assign(lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer');};
  return <header className={c.top}>
-  {!embed&&<BackButton data-scan-back label={lang==='es'?'Volver':'Back'} onBack={onBack??leave}/>}
+  {/* key: the button locks itself once pressed (it expects its screen to go away), and React kept the same one from the summary to
+      the settings, so Back was dead on the settings after a session (found Nov 20 2026). A fresh button per screen. */}
+  {!embed&&<BackButton key={onBack?'summary':'settings'} data-scan-back label={lang==='es'?'Volver':'Back'} onBack={onBack??leave}/>}
   <span className={c.topTitle}><b>{w.app}</b><span>Futbol Island</span></span>
   <button type="button" className={c.langBtn} lang={lang==='es'?'en':'es'} onClick={onLang}>{w.lang}</button>
  </header>;
