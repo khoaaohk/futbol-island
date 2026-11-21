@@ -10,6 +10,9 @@ import {allWatchVideos,isPortrait,moreVideos,VIDEOS_PATH,videoCrumbs,videoDateLa
 import {breadcrumbLd,pageMeta} from '@/lib/site/seo';
 import site from '../../site.module.css';
 import css from '../videos.module.css';
+import tgt from '@/components/site/railTarget.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {videoRail} from '@/lib/site/railNavCollections';
 
 /**
  * /videos/<slug> (lib/site/videos.ts, Nov 18 2026): one clip's watch page. The video is the page's main content: a native
@@ -37,8 +40,13 @@ export default function WatchPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={watchVideoLd(v)}/>
   {/* layout batch 3 (Nov 20 2026, owner: "make sure all the breadcrumbs are in the same place"): the breadcrumb is the first thing
-      in the content column, at the shared content edge, above the player (it used to sit in the words beside the clip) */}
-  <Breadcrumbs crumbs={crumbs}/>
+      in the content column, at the shared content edge; the H1 sits right under it, above the player, at every width (owner, Nov 20
+      2026 night). The rail: Back to all videos, Overview and the page's own sections. */}
+  <RailNav rail={videoRail(v.title,about.title)} current="#top"/>
+  <header className={`${site.intro} ${css.head}`} id="top">
+   <Breadcrumbs crumbs={crumbs}/>
+   <h1 className={css.h1}>{v.title}</h1>
+  </header>
   <article className={`${css.watch} ${tall?css.tall:css.wide}`} data-watch={v.slug}>
    <div className={css.screen}>
     <video className={css.player} style={size} controls playsInline preload="metadata" poster={v.posterSrc} width={v.w} height={v.h} aria-describedby="clip-words">
@@ -47,7 +55,6 @@ export default function WatchPage({params}:{params:{slug:string}}){
     </video>
    </div>
    <div className={css.words} id="clip-words">
-    <h1 className={css.h1}>{v.title}</h1>
     <p className={css.facts}><span>{v.seconds} seconds</span><span>No sound</span><span>Added <time dateTime={v.uploadDate}>{videoDateLabel(v)}</time></span></p>
     {v.text.map(x=><p key={x}>{x}</p>)}
     <p className={css.actions}><a className={site.cta} href={v.play.href}>{v.play.label}</a><a href={v.origin.href}>{v.origin.label}</a></p>
@@ -55,12 +62,12 @@ export default function WatchPage({params}:{params:{slug:string}}){
   </article>
   {/* Nov 20 2026 (SEO phase 2): the record of the game or lesson the clip shows, and links to its pages (lib/site/videoPages.ts) */}
   <section className={site.section} aria-labelledby="about">
-   <h2 className={site.h2} id="about">{about.title}</h2>
+   <h2 className={`${site.h2} ${tgt.target}`} id="about">{about.title}</h2>
    {about.lines.map(l=><p key={l.text}>{l.label&&<b>{l.label}: </b>}{l.text}</p>)}
   </section>
   <KeepReading id="go" title="Where to go from this clip" groups={[{id:'clip-links',links}]}/>
   <section className={site.section} aria-labelledby="more">
-   <h2 className={site.h2} id="more">More videos</h2>
+   <h2 className={`${site.h2} ${tgt.target}`} id="more">More videos</h2>
    <VideoThumbs videos={more}/>
    <p><a href={VIDEOS_PATH}>All {total} Futbol Island videos</a></p>
   </section>

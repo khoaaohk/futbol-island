@@ -5,6 +5,9 @@ import {allWatchVideos,isPortrait,VIDEO_GROUPS,VIDEOS_PATH,VIDEOS_UPDATED,videoC
 import {NumberWord} from '@/lib/numberWord';
 import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
+import tgt from '@/components/site/railTarget.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {videosHubRail} from '@/lib/site/railNavCollections';
 
 /** /videos (lib/site/videos.ts, Nov 18 2026): every clip on the site, each linked to its own watch page. Static, no script. */
 export const dynamic='force-static';
@@ -16,14 +19,17 @@ export default function VideosHub(){
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:'Futbol Island videos',path:VIDEOS_PATH,description:DESC,published:VIDEOS_UPDATED,modified:VIDEOS_UPDATED,items:all.map(v=>({name:v.title,path:v.path}))})}/>
-  <header className={site.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back to the Library, Overview
+      and the three groups */}
+  <RailNav rail={videosHubRail()} current="#top"/>
+  <header className={site.intro} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={site.title}>Futbol Island videos</h1>
    <p className={site.lead}>{NumberWord(all.length)} short clips of real play: the arcade games, the island and the football lessons. Each one has its own page.</p>
    <p><a className={site.cta} href="/play">Play Futbol Island</a></p>
   </header>
   {VIDEO_GROUPS.map(g=>{const vs=all.filter(v=>v.group===g.id);return vs.length?<section key={g.id} className={site.section} aria-labelledby={`g-${g.id}`}>
-   <h2 className={site.h2} id={`g-${g.id}`}>{g.title}</h2>
+   <h2 className={`${site.h2} ${tgt.target}`} id={`g-${g.id}`}>{g.title}</h2>
    <p>{g.line}</p>
    {/* tall phone clips and wide island clips in their own rows, so every picture in a row has the same shape */}
    <VideoThumbs videos={vs.filter(v=>!isPortrait(v))}/>

@@ -66,7 +66,7 @@ for(const v of W){
  const tags=html.match(/<video\b[^>]*>/g)||[];assert.equal(tags.length,1,`${at}: one player`);const t=tags[0];
  assert(/\bcontrols\b/.test(t)&&/playsInline|playsinline/i.test(t)&&/preload="metadata"/.test(t)&&/poster="[^"]+"/.test(t)&&new RegExp(`width="${v.w}"`).test(t)&&new RegExp(`height="${v.h}"`).test(t),`${at}: native player with controls, poster and size`);
  assert(!/autoplay/i.test(t),`${at}: no autoplay`);
- assert.equal((html.match(/<h1[ >]/g)||[]).length,1,`${at}: one h1`);assert(html.indexOf('<video')<html.indexOf('<h1'),`${at}: the player comes first`);
+ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,`${at}: one h1`);assert(html.indexOf('<h1')<html.indexOf('<video'),`${at}: the h1 comes first, right under the breadcrumb`);/* Nov 20 2026 night (owner: put the H1 directly under the breadcrumb, above the player, at every width): was 'the player comes first' */
  const h1=html.match(/<h1[^>]*>([^<]*)<\/h1>/)[1].replace(/&#x27;/g,"'").replace(/&amp;/g,'&');assert.equal(h1,v.title,`${at}: the h1 is the title`);
  for(const s of v.text)assert(html.includes(s.replace(/&/g,'&amp;').replace(/'/g,'&#x27;')),`${at}: the description is on the page`);
  assert(html.includes(`href="${v.play.href.replace(/&/g,'&amp;')}"`),`${at}: the play button`);assert(html.includes('href="/videos"'),`${at}: links back to /videos`);

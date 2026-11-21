@@ -28,3 +28,8 @@
 @media(hover:hover){.thumb:hover img{transform:translateY(-3px);opacity:.92}.thumb:hover .thumbTitle{color:var(--link)}}
 .thumb:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:4px;border-radius:var(--r-md)}
 @media(prefers-reduced-motion:reduce){.thumb img{transition:none}.thumb:hover img{transform:none}}
+/* layout batch 3 (Nov 20 2026 night; owner: the H1 right under the breadcrumb, above the player): the head block is the breadcrumb
+   and the H1 (#top, the rail's Overview); beside the rail from 1280 px the player and its words start at the content edge and stay
+   inside the column (the rail shell's .main is already wide, so the well no longer breaks out of it) */
+.head{padding-bottom:0}
+@media(min-width:1280px){main:has(>nav[data-rail]) .watch{--bw:min(1180px,100%);margin-inline:0}}
