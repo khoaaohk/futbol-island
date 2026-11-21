@@ -10,7 +10,7 @@
 // Relay v2.0 public worlds:
 //   node --experimental-websocket multiplayer/bots/bot.mjs --world --url http://127.0.0.1:8790 --n 24 --ms 60000 [--devip p1]
 //        [--spread 3000] [--speed 1.5] [--emote-every 7000] [--follow 2] [--report] [--nick Emma] [--summary] [--room 5 [--room-at 1,2]]
-// --room R (world): the bots stand in room R (Arcade 5, Museum 6, Shop 7, Konbini 8, Cay Konbini 32) and send room poses
+// --room R (world): the bots stand in room R (Arcade 5, Museum 6, Shop 7, Konbini 8, Cay Konbini 32, reefs 41..47 as divers) and send room poses
 // (roomBody: Zone.Indoors, y in the room band, the room code in the speed byte; the first pose is a Warp), wandering inside
 // lib/multiplayer/roomPos.ts ROOM_BOUNDS (kept 1 m in), or standing within ~1 m of --room-at x,z (room-local metres).
 // --in S (world): ask the lobby with ?in=S (rejoin semantics: stay in world S while it has fewer than WORLD_HARD), to fill one world past the soft cap.
@@ -170,7 +170,8 @@ function runWorldBot({ url, ms = 3000, index = 0, spread = 3000, speed = 1.5, em
         if (!roomAt) { rx += Math.sin(yaw) * 0.8 * dt; rz += Math.cos(yaw) * 0.8 * dt; if (rx < RB[0] + 1 || rx > RB[1] - 1 || rz < RB[2] + 1 || rz > RB[3] - 1) yaw += Math.PI; rx = Math.max(RB[0] + 1, Math.min(RB[1] - 1, rx)); rz = Math.max(RB[2] + 1, Math.min(RB[3] - 1, rz)); }
         const warp = roomWarped === 0 || (roomWarped === 1 && tick > 27) ? 1 : 0; if (warp) roomWarped++; // the entry Warp + one retry ~5.5 s later
         x = Math.round(rx * 10); z = Math.round(rz * 10);
-        send([C.Pose, seq, ...roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, rx, 0, rz, yaw, roomAt ? Mode.Idle : Mode.Walk, warp)]);
+        const reef = room >= 41 && room <= 47; // shared reefs: divers send Mode.Dive, 1 m under the room's zero (lib/multiplayer/reefParty.ts)
+        send([C.Pose, seq, ...roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, rx, reef ? -1 : 0, rz, yaw, reef ? Mode.Dive : roomAt ? Mode.Idle : Mode.Walk, warp)]);
       } else
       send([C.Pose, seq, x, 0, z, Math.round(((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) / (2 * Math.PI) * 255) & 255, 8, Mode.Walk, Zone.Main, 0]);
       if (emoteEvery > 0 && now - (out.lastEmoteAt ?? 0) >= emoteEvery) { out.lastEmoteAt = now; send([C.Emote, Emote.Wave]); out.emotesSent++; }

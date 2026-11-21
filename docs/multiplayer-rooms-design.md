@@ -3,6 +3,10 @@
 Owner request (verbatim): "we need to make sure that it works in all places, allow multi players to be in the museum, konbini,
 arcade, and so on".
 
+**Update 21 Nov 2026: Phase 5 (shared reefs) BUILT on branch `reef-mp-nov21`, not deployed.** The owner overturned the earlier
+"reefs no" ("do 1 and 2", "this should be a shared experience"): divers in the same reef see each other swim, and the island shows
+"2 exploring" at each dive flag. What was built is under Phase 5 below.
+
 Status: **Phase 1 BUILT (22 Oct 2026, branch `mp-rooms-phase1`)**: the room party layer + the Konbini, as specified below, with the
 owner's answers to section 6 (door hint yes, reefs no, Leave-only chip, two separate Konbinis, relay v1.1 later). Notes:
 `docs/multiplayer-design.md` 5.8. Phases 2-5 remain design only. Builds on `docs/multiplayer-design.md` (4.4 protocol, 4.4.1
@@ -486,6 +490,36 @@ entry Warp + one retry 5.5 s later, no new message, no protocol change. Relay v1
   `scripts/check-mp-rooms-shop.cjs <app> <relay>` (the Konbini check with the bot `--room 7`).
 
 ### Phase 5: Explore reefs (optional) - effort L, ~10-12 h + 3 h verify, no relay change (v1.1 nice to have)
+
+**BUILT 21 Nov 2026 (branch `reef-mp-nov21`, not deployed; owner: "this should be a shared experience").** No relay change.
+- Room code: `reefRoom(area)` = 40 + the dive spot's area (Captain's Cup 41, Paul's Grotto 42, ... Turtle Pool 47), `reefArea(code)`
+  the inverse (`multiplayer/protocol/rooms.ts`). Divers in different reefs never see each other (the relay's same-room 5 Hz rule,
+  and the client's room filter).
+- Wire: an ordinary room pose (`roomBody`): room-local dive-room metres (x / z within DIVE_ROOM_R 24 m; y = the rig's root, surface
+  3.2 m to the seabed ~-3 m, inside the +-5 m band), yaw, **Mode.Dive** in every case (`fillRoomBody`: busy stays Busy), zone Indoors,
+  speed byte = the room code, the Hidden flag on tab hide as on land. Sent at the normal rate (one pose per dive frame into the
+  connection, which throttles to 5 Hz / delta suppression). Entry: Warp + the 5.5 s retry; the relay v1.1 room flip also accepts it.
+- Where avatars render: `lib/multiplayer/reefParty.ts` wraps the rooms' `createRoomParty` with the **dive room's own scene**: made in
+  Town's `entered` port when going under, disposed in `surfaced` (and on page teardown). The dive runtime calls the new
+  `beforeRender` port once per dive frame right before its one render, so the island loop stays frozen (the dive branch still returns
+  before `party.update`). Remote divers use the same remote layer (one batch, one ring, labels, interpolation, emotes); the room
+  layer's `adapt` sets zone Sea for Mode.Dive (the wet body with `under` .7: the local diver's swim) and the stroke speed from the
+  smoothed position delta (`diveSpeedFrom`), since the speed byte is the room code.
+- Cap: `reefCap` = 3 rigs on phones (tier 0-2; 1 at tier 3, 0 at tier 4), desktop 5 (3 at tier 2+), Battery saver 0; nearest first
+  (remoteAvatars' rig priority by distance from me); the rest of the reef are ring + label, and everyone stays in "Who's here?" as
+  "Exploring the reef" (`roomActivity` maps 41..47 to Activity.Reef).
+- Beat: the island runtime keeps the connection's beat hook; `setRoomLayer(reef)` forwards the beat and pagehide to the reef layer
+  while under; `setRoomLayer(null)` on surfacing arms the island Warp (+ retry).
+- Island side: a diver's reef pose reaches the island runtime as a room pose, so they fade out at their last island spot (the door
+  rule) instead of the old frozen "Exploring the reef" figure; **count only, no marker** at the flag: the door hint mechanism with
+  one hint per dive flag (`REEF_DOOR_HINTS`, over the buoy at the water + 3.9 m): "2 exploring", redrawn only when the count changes.
+  The Explore prompt invites: "Dive in: 2 friends exploring" ("players" on the public island), from the same cached count.
+- Old clients: a reef pose reads Indoors (fade at the door) and plain "Busy"/indoors in the list; they never draw divers.
+- Safety: no chat, no new text on the wire (numbers only); emotes as on land (bubble + arms on the swimming body); Hide / Mute /
+  Report apply (same friend core); strangers only in the public world as in every room.
+- Tests: `tests/mp-reef.cjs` (codes, presence, words, cap + nearest first with the real remote layer, the reef layer's same-reef
+  filter / swim / leave / enter, island fade + hint + beat forwarding + warp back, wiring). Two-player local check and heat numbers:
+  `.claude/worktrees/_recovery-nov20/reef-mp/` (reef-two-local.cjs, dive-mp-budget.cjs) and `docs/performance-guide.md`.
 `Town.tsx` (runtime room switch), `lib/town/water/diveRuntime.ts`, `lib/graphics/diveRoom.ts` (host the friend layer), surface
 proxy on the island. Risk: dive-room heat; Town.tsx is large and shared by every lane (merge conflicts).
 
