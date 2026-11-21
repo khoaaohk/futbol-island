@@ -5,7 +5,7 @@
 /* Back button (owner, Nov 20 2026: "make sure the back btn is the same style as the game btn"): the game's own Back button
    (components/DoneButton.module.css: gold paper pill, cream rim, gold edge, one press effect), from the same tokens.
    Phone and tablet bar: the round form, fixed at the bar's left; the chip row starts after it and scrolls under it. */
-.back{position:absolute;z-index:3;left:0;top:0;bottom:0;display:flex;align-items:center;margin:0;padding:0 8px 4px max(var(--gutter),calc(50vw - 590px));background:linear-gradient(to right,var(--paper) calc(100% - 8px),transparent)}
+.back{position:absolute;z-index:3;left:0;top:0;bottom:0;display:flex;align-items:flex-start;margin:0;padding:5px 8px 0 max(var(--gutter),calc(50vw - 590px));/* 5px = the bar's 3px + the chip row's 2px, so the button's top is the chips' top (owner, Nov 20 2026) */background:linear-gradient(to right,var(--paper) calc(100% - 8px),transparent)}
 /* the button itself is the game's NavigationButton (DoneButton.module.css); here only its phone form: the round arrow */
 .back a{--navigation-width:44px;--btn-height:40px;--btn-shadow-gold:0 3px 0 var(--btn-gold-edge,#a8863d);--btn-shadow-gold-pressed:0 1px 0 var(--btn-gold-edge,#a8863d);--btn-press:2px}
 .back a>span:first-child{opacity:0}
