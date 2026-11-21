@@ -13,7 +13,7 @@ export const FK={step:1/120,R:.22,g:11.5,drag:.010,magnus:.4,topK:.2,spinDecay:.
  /** the flick: the last `window` ms of the path; shorter than lenMin (of the screen's short side) is a tap, not a kick */
  window:280,lenMin:.07,lenLift:.18,lenFull:.8,speedMin:.9,speedFull:6.1,bendDead:.07,bendFull:.62,
  maxFlight:6.5,teeDelay:.55,settleMax:2.6,spare:150,curlMin:1,curlSpin:.25,dipTop:.25,assistYaw:.1,assistDist:1.7,longMin:20,nearDist:1.5,closeDist:.8,
- trick:{curl:150,around:250,over:200,bank:200,long:100},mult:[1,1.5,2,2.5,3,3.5,4],stars:[.3,.6,1],coinPer:1500,scoreMax:200_000} as const;
+ trick:{curl:150,around:250,over:200,bank:200,long:100},mult:[1,1.5,2,2.5,3,3.5,4],stars:[.3,.6,1],coinPer:1500,scoreMax:60_000} as const;
 
 export const K={can:1,crate:2,bottle:3,cone:4,barrel:5,balloon:6,hoop:7,tyre:8,bin:9,bell:10,shutter:11,sign:12,trolley:13,bar:14,goal:15,keeper:16,wall:20,fence:21,block:22,post:23} as const;
 export const KIND_NAME:Record<number,string>={1:'can',2:'crate',3:'bottle',4:'cone',5:'barrel',6:'balloon',7:'hoop',8:'tyre',9:'bin',10:'bell',11:'shutter',12:'whistle sign',13:'trolley',14:'crossbar',15:'goal',16:'keeper',20:'mannequin',21:'fence',22:'wall',23:'post'};
@@ -56,16 +56,16 @@ function wall(L:Ent[],x:number,z:number,n:number){for(let i=0;i<n;i++)mk(L,K.wal
 export type StageDef={id:string;name:string;place:string;flicks:number;/** camera position, look-at point, vertical field of view on a phone */cam:{p:readonly [number,number,number];l:readonly [number,number,number];fov:number};
  /** aim help for young players: how strongly a near-enough kick is pulled onto a target (0..1) */assist:number;lesson:string;build(L:Ent[]):void};
 export const STAGES:readonly StageDef[]=[
- {id:'garden',name:'Back Garden',place:'garden',flicks:6,cam:{p:[0,1.75,4.4],l:[0,1.05,-9],fov:60},assist:.7,lesson:'Pick one target. Swipe straight up through the ball: that is your laces.',build(L){
-  mk(L,K.block,0,.35,-8,{hx:.75,hy:.35,hz:.4});pyramid(L,0,.7,-8,3);shelf(L,K.bottle,4,-11,1.5,.55,3);mk(L,K.bin,-3.3,.55,-7);
-  mk(L,K.balloon,-1.9,2.3,-10,{mo:3,amp:.18,w:1.6});mk(L,K.balloon,2,2.8,-12.5,{mo:3,amp:.2,w:1.3,ph:2});mk(L,K.cone,-1.3,.24,-4.6);mk(L,K.cone,1.6,.24,-5.6);}},
- {id:'plaza',name:'Town Square',place:'plaza',flicks:6,cam:{p:[1.5,.8,3.7],l:[-.5,2.5,-10],fov:68},assist:.6,lesson:'A longer swipe lifts the ball. Follow through at your target.',build(L){
+ {id:'garden',name:'Back Garden',place:'garden',flicks:6,cam:{p:[0,1.6,4.2],l:[0,1.1,-8],fov:54},assist:.7,lesson:'Pick one target. Swipe straight up through the ball: that is your laces.',build(L){
+  mk(L,K.block,0,.35,-6.5,{hx:.75,hy:.35,hz:.4});pyramid(L,0,.7,-6.5,3);shelf(L,K.bottle,2.9,-9.5,1.3,.55,3);mk(L,K.bin,-2.5,.55,-6);
+  mk(L,K.balloon,-1.5,2.2,-8.5,{mo:3,amp:.18,w:1.6});mk(L,K.balloon,1.5,2.7,-10.5,{mo:3,amp:.2,w:1.3,ph:2});mk(L,K.cone,-1.2,.24,-3.8);mk(L,K.cone,1.4,.24,-4.6);}},
+ {id:'plaza',name:'Town Square',place:'plaza',flicks:6,cam:{p:[1.1,.8,3.8],l:[-.4,2.6,-10],fov:68},assist:.6,lesson:'A longer swipe lifts the ball. Follow through at your target.',build(L){
   mk(L,K.post,0,0,-13,{ey:3.7,hx:.1});mk(L,K.bell,0,4.2,-13);mk(L,K.hoop,-3,2.1,-8);mk(L,K.hoop,3.2,3,-10.5);shelf(L,K.can,-4.6,-11.5,.9,.45,3,.4);
   mk(L,K.trolley,0,.55,-15.5,{mo:1,amp:4,w:.8});mk(L,K.balloon,1.6,3.7,-16,{mo:3,amp:.2,w:1.4});mk(L,K.balloon,-1.7,3.2,-15,{mo:3,amp:.2,w:1.1,ph:1});mk(L,K.balloon,5,2.2,-13,{mo:3,amp:.2,w:1.7,ph:3});}},
- {id:'pitch',name:'Training Pitch',place:'pitch',flicks:7,cam:{p:[3.7,2.1,4.3],l:[-1.3,1,-10],fov:56},assist:.45,lesson:'Bend your swipe and the ball bends too. Curl it round the wall.',build(L){
+ {id:'pitch',name:'Training Pitch',place:'pitch',flicks:7,cam:{p:[1.9,2,5],l:[-1.2,1,-10],fov:56},assist:.45,lesson:'Bend your swipe and the ball bends too. Curl it round the wall.',build(L){
   wall(L,-.6,-7,4);goal(L,-.8,-16,6.4,2.6,1.1,true);mk(L,K.tyre,-3.2,1.95,-15.4,{hx:.62});mk(L,K.tyre,1.6,1.95,-15.4,{hx:.62});shelf(L,K.can,-5.4,-10,.9,.4,3,.4);
   mk(L,K.cone,2.6,.24,-5);mk(L,K.cone,3.3,.24,-6.4);mk(L,K.cone,4,.24,-7.8);}},
- {id:'beach',name:'Palm Beach',place:'beach',flicks:7,cam:{p:[-1.9,4.9,5.5],l:[.7,.2,-9],fov:54},assist:.4,lesson:'Weight of shot: barrels need a fast swipe, the bin a soft one.',build(L){
+ {id:'beach',name:'Palm Beach',place:'beach',flicks:7,cam:{p:[-1.5,4.9,5.5],l:[.7,.2,-9],fov:54},assist:.4,lesson:'Weight of shot: barrels need a fast swipe, the bin a soft one.',build(L){
   mk(L,K.barrel,-2.6,.6,-9);mk(L,K.barrel,3.1,.6,-12.5);mk(L,K.balloon,-.6,1.5,-6,{mo:3,amp:.12,w:1.5});mk(L,K.balloon,.2,1.8,-8.6,{mo:3,amp:.12,w:1.2,ph:1});mk(L,K.balloon,1.5,2,-11,{mo:3,amp:.12,w:1.6,ph:2});mk(L,K.balloon,3.3,1.9,-13.4,{mo:3,amp:.12,w:1.3,ph:3});
   crates(L,-4.2,-13);mk(L,K.tyre,.4,1.5,-16.5,{mo:2,amp:.55,w:1.5,len:3.2});mk(L,K.bin,5,.55,-8);}},
  {id:'roof',name:'Rooftop Cage',place:'roof',flicks:7,cam:{p:[1,3.1,6.4],l:[-.2,1.3,-12],fov:46},assist:.35,lesson:'Up and over the fence. Speed up your swipe at the end and the ball dips.',build(L){
@@ -150,7 +150,7 @@ const PB:Ball={x:0,y:0,z:0,vx:0,vy:0,vz:0,spin:0,top:0,t:0};
 export function predict(s:Shot,out:Float32Array,every=6){launch(PB,s);let n=0;const max=Math.floor(out.length/3);for(let i=0;n<max&&i<900;i++){if(i%every===0){out[n*3]=PB.x;out[n*3+1]=PB.y;out[n*3+2]=PB.z;n++;}flyStep(PB,FK.step);if(PB.y<FK.R&&PB.vy<0)break;}return n;}
 /** Closest the ball's centre comes to a point (optionally only while falling: a bin wants the ball coming down). */
 export function closest(s:Shot,x:number,y:number,z:number,falling=false,blocks?:readonly Ent[]){launch(PB,s);let best=1e9;for(let i=0;i<780;i++){flyStep(PB,FK.step);if(PB.y<FK.R&&PB.vy<0)break;
-  if(blocks){let hit=false;for(const q of blocks)if(q.cls===6&&q.k!==K.keeper&&boxHit(PB.x,PB.y,PB.z,FK.R,q.x,q.y,q.z,q.hx,q.hy,q.hz)){hit=true;break;}if(hit)break;}if(falling&&(PB.vy>=0||Math.abs(PB.y-y)>.14))continue;const d=Math.hypot(PB.x-x,PB.y-y,PB.z-z);if(d<best)best=d;else if(d>best+3)break;}return best;}
+  if(blocks){let hit=false;for(const q of blocks)if(q.cls===6&&q.k!==K.keeper&&boxHit(PB.x,PB.y,PB.z,FK.R,q.x,q.y,q.z,q.hx,q.hy,q.hz)){hit=true;break;}if(hit)break;}if(falling&&(PB.vy>-2||Math.abs(PB.y-y)>.14))continue;const d=Math.hypot(PB.x-x,PB.y-y,PB.z-z);if(d<best)best=d;else if(d>best+3)break;}return best;}
 /** A straight kick that reaches a target: the ghost on the first shots and the test bots. Null when no straight kick gets near. */
 export function solveShot(e:Pick<Ent,'k'|'cls'|'x'|'y'|'z'|'hx'|'hy'|'ex'|'ey'|'tough'>,spin=0,blocks?:readonly Ent[]):Shot|null{
  const falling=e.cls===3,tx=e.x+e.ex/2,ty=falling?e.y+e.hy:e.k===K.goal?e.y*.8:e.y+e.ey/2,tz=e.z,w0=e.tough>0?7:0,y0=Math.atan2(tx,-tz);let best:Shot|null=null,bd=falling?.3:e.cls===2?e.hx*.45:Math.max(.2,Math.min(e.hx,e.hy)*.9);
@@ -231,8 +231,8 @@ export function createFlickIt(o:FlickOptions){
      if(e.side!==0&&side!==e.side&&ql<e.hx-e.hy*.4){e.hitV=sp;pay(e);e.side=side;break;}
      if(ql>1e-6){const k=e.hx/ql,cx=rx-qx*k,cy=ry-ry*k,cz=rz-qz*k,d=Math.hypot(cx,cy,cz),R=FK.R+e.hy;if(d<R&&d>1e-6){N.x=cx/d;N.y=cy/d;N.z=cz/d;N.d=R-d;bounce(.5,.9);e.hitT=s.t;e.hitV=sp;s.banked=true;s.stats.rims++;emit('ping',e,0,sp);}}}
     e.side=side;break;}
-   case 3:{const top=e.y+e.hy,rr=Math.hypot(b.x-e.x,b.z-e.z);    if(py>=top&&b.y<top&&b.vy<0&&rr<e.hx+.04){e.hitV=sp;pay(e);b.x=e.x;b.z=e.z;b.y=e.y;emit('net',e,0,1);end();return;}
-    if(b.y<top-.04&&rr<e.hx+FK.R&&rr>1e-6){N.x=(b.x-e.x)/rr;N.y=0;N.z=(b.z-e.z)/rr;N.d=e.hx+FK.R-rr;bounce(.45,.9);e.hitT=s.t;e.hitV=sp;s.banked=true;s.stats.rims++;emit('ping',e,0,sp);}break;}
+   case 3:{const top=e.y+e.hy,rr=Math.hypot(b.x-e.x,b.z-e.z);    if((py>=top&&b.y<top&&b.vy<0&&rr<e.hx+.04)||(b.y<top&&rr<=e.hx-.12)){e.hitV=sp;pay(e);b.x=e.x;b.z=e.z;b.y=e.y;emit('net',e,0,1);end();return;}
+    if(b.y<top+.02&&rr<e.hx+FK.R&&rr>e.hx-.12){N.x=(b.x-e.x)/rr;N.y=0;N.z=(b.z-e.z)/rr;N.d=e.hx+FK.R-rr;bounce(.45,.9);e.hitT=s.t;e.hitV=sp;s.banked=true;s.stats.rims++;emit('ping',e,0,sp);}break;}
    case 4:{const dx=b.x-e.x,dy=b.y-e.y,dz=b.z-e.z,d=Math.hypot(dx,dy,dz),R=FK.R+e.hx;if(d>=R||d<1e-6)break;N.x=dx/d;N.y=dy/d;N.z=dz/d;N.d=R-d;bounce(.5,.85);e.hitV=sp;if(!e.done)pay(e);else{e.hitT=s.t;emit('ping',e,0,sp);}break;}
    case 5:{if(!boxHit(b.x,b.y,b.z,FK.R,e.x,e.y,e.z,e.hx,e.hy,e.hz))break;bounce(.4,.8);e.hitV=sp;if(!e.done)pay(e);else{e.hitT=s.t;s.banked=true;emit('block',e,0,sp);}break;}
    case 6:{if(!boxHit(b.x,b.y,b.z,FK.R,e.x,e.y,e.z,e.hx,e.hy,e.hz)){if((e.k===K.wall||e.k===K.fence)&&b.y>e.y+e.hy&&Math.abs(b.x-e.x)<e.hx+FK.R&&Math.abs(b.z-e.z)<e.hz+FK.R)s.overs++;break;}

@@ -48,7 +48,8 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
  *  owner's decision on their spot: the room, its draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
-] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 21 2026: empty (both new games placed); the mechanism and tests/seo-games-gate.cjs stay for the next game */
+ {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8'},// Nov 21 2026: the football flick game (docs/arcade-aaa/flickit-direction.md); no machine in the room yet
+] as const;
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */

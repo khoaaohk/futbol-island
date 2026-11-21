@@ -5,7 +5,7 @@ import {ARCADE_PLAY_COST as PLAY_COST,ARCADE_COIN_CAPS as COIN_CAPS,PUZZLE_FIRST
 /** `learn`: one-off learning coins (lessons, hidden balls, stories, journeys, explore, paths), paid once ever and never metered. */
 /** Nov 18 2026: 'clearbox' and 'streetdash' are retired (no cabinet, no earn rule); kept here and in lib/economy.ts ARCADE_COIN_CAPS so
  *  coins players already earned in them stay in their saved wallets (sanitize drops runs of unknown games). */
-export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline';
+export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline'|'flickit';
 export const ARCADE_PLAY_COST=PLAY_COST;// lib/economy.ts
 /** Explicit one-time local testing credit; ordinary gameplay caps remain unchanged. */
 export const TEST_COIN_GRANT_ID='testing-credit-2026-09-27';
@@ -24,11 +24,11 @@ type State={version:1;spends:Record<string,ArcadeSpend>;runs:Record<string,Run>;
 export const ARCADE_COIN_CAPS=COIN_CAPS;// lib/economy.ts (never lower: also the save clamp)
 /** Pass Puzzles (economy pass, 28 Sep 2026): free to play, first solve pays PUZZLE_FIRST_SOLVE_COINS + new stars, a repeat pays 0. */
 export const PUZZLE_FIRST_SOLVE_COINS=PUZZLE_FIRST;// lib/economy.ts
-const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn','kitrush','snake','airhockey','lineup','trophydrop','clearbox','streetdash','rollball','ballblaster','keepyuppy','holdtheline'];
+const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn','kitrush','snake','airhockey','lineup','trophydrop','clearbox','streetdash','rollball','ballblaster','keepyuppy','holdtheline','flickit'];
 const integer=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0;
 const key=(s:unknown):s is string=>typeof s==='string'&&s.length>0&&s.length<180&&s!=='__proto__'&&s!=='constructor'&&s!=='prototype';
 const empty=():State=>({version:1,spends:{},runs:{},best:{},attempts:{},visits:{},packs:[]});
-export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0,kitrush:0,snake:0,airhockey:0,lineup:0,trophydrop:0,clearbox:0,streetdash:0,rollball:0,ballblaster:0,keepyuppy:0,holdtheline:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
+export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0,kitrush:0,snake:0,airhockey:0,lineup:0,trophydrop:0,clearbox:0,streetdash:0,rollball:0,ballblaster:0,keepyuppy:0,holdtheline:0,flickit:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
 /** Training coins (metered runs) paid on a local day. */
 const trainingPaidOn=(runs:Record<string,Run>,day:string)=>Object.values(runs).reduce((n,r)=>n+(r.raw!==undefined&&localPlayDay(r.at)===day?r.paid:0),0);
 export function sanitizeArcadeWallet(value:unknown,valid:ReadonlySet<string>):State{
@@ -70,6 +70,7 @@ export function arcadeCoinTarget(game:Exclude<ArcadeCoinGame,'puzzle'|'island'>,
  if(game==='rollball')value=Math.floor(n(s.points)/300);// Roll It In (Nov 17 2026): `points` is the run's score, 1 coin per 300
  if(game==='holdtheline')value=Math.floor(n(s.points)/400);// Hold the Line (Nov 21 2026): `points` is the match's score, 1 coin per 400 (lib/arcade/holdtheline/core.ts holdthelineCoins)
  if(game==='keepyuppy')value=Math.floor(n(s.points)/2000);// Keepy-Uppy Beat (Nov 21 2026): `points` is the track's score, 1 coin per 2,000 (lib/arcade/keepyuppy/core.ts keepyCoins)
+ if(game==='flickit')value=Math.floor(n(s.points)/1500);// Flick It (Nov 21 2026): `points` is the run's total, 1 coin per 1,500 (lib/arcade/flickit/core.ts flickCoins)
  if(game==='ballblaster')value=Math.floor(n(s.points)/2000);// Ball Blaster (Nov 17 2026): `points` is the run's score, 1 coin per 2,000 (lib/arcade/ballblaster/core.ts ballblasterCoins)
  if(game==='kitrush')value=Math.floor(n(s.points)/150);// Kit Rush (Nov 10 2026): `points` is the run's score, 1 coin per 150
  return Math.min(ARCADE_COIN_CAPS[game],value);

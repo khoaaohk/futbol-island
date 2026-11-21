@@ -1,7 +1,7 @@
 import type * as T from 'three';
 
 /** The five arcade games (ids match lib/arcade/arcadeCatalog.ts). */
-export type ArcadeGameId='live'|'runner'|'tennis'|'pinball'|'puzzle'|'kitrush'|'snake'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline';
+export type ArcadeGameId='live'|'runner'|'tennis'|'pinball'|'puzzle'|'kitrush'|'snake'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline'|'flickit';
 
 /** What a look's environment builder may use: the stage's scene plus its shared-geometry primitive helpers
  * (materials are cached per colour and coloured through the look's own `surface`). */
