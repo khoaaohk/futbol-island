@@ -72,12 +72,12 @@ export const HOLDTHELINE_TIPS:readonly HoldthelineTip[]=[
 
 /** One coaching cue for the end of the match, from the last goal let in. */
 export const WHY_LINE:Record<GoalWhy,string>={
- held:'The line did not step. When the passer’s leg goes back, drag up so the runner is left offside.',
+ held:'The runner was onside when the ball was played. When the passer’s leg goes back, step up together, far enough to leave him offside.',
  late:'You stepped after the ball was played. Offside is judged when the ball is kicked: step during the wind-up.',
  ownhalf:'Your line was past halfway. A runner in his own half cannot be offside. Do not push up that far.',
  long:'A long ball went over your line. When the passer is far back in his own half, drag down early.',
  deep:'You sat too deep and gave them room to shoot. Hold your line higher, or press the shooter.',
- gap:'The press left a gap and they passed into it. Only press when the ball runs away from the passer’s feet.',
+ gap:'The press left a gap and they passed into it. Only press a heavy touch or a passer who waits.',
  wide:'The winger was free. When the ball goes wide, drag across so your line is on the ball side.',
  bend:'She bent her run and stayed level. Level is onside! Press the passer who waits, or drop off.',
 };

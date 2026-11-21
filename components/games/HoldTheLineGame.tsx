@@ -47,7 +47,7 @@ const STOP_WORD=['OFFSIDE!','TACKLE!','BLOCKED!','SWEPT UP!','SHUT OUT!','SAVED!
 const KIND_HINT:Record<WaveKind,string>={
  thru:'Through ball: when the passer’s leg goes back, drag UP to step up.',
  decoy:'One runner checks short, one goes. Step up on the wind-up all the same.',
- deep:'A runner from deep: he is still offside if you step during the wind-up.',
+ deep:'A runner from deep: he can still be caught offside if you step up during the wind-up.',
  long:'The passer is far back in his own half: a long ball. Drag DOWN to drop.',
  wide:'Ball out wide: drag ACROSS so your line is on the ball side.',
  switch:'A switch of play is coming. Slide ACROSS to the far side when it is hit.',
@@ -119,7 +119,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    case 'pass':a?.pass(e.word==='wide');if(e.b===1){a?.alert();arcadeFeedback(null,'collect');}break;
    case 'tell':a?.windup(s.tell?.W??.6);break;
    case 'kick':a?.pass(true);if(e.word==='shot'){a?.alert();say('SHOT!',0,'paper',true);}
-    else if(e.word!=='feet'){setHint('');setNote(REASON_NOTE[e.b]??'');if(e.a===0){a?.alert();if(e.word==='thru')say('THROUGH ON GOAL!',0,'paper',true);}
+    else if(e.word!=='feet'||e.a===1){setHint('');const sn=s.snap,behind=!!sn&&!sn.offside&&sn.reason!=='ownhalf'&&sn.line<s.lineY-.3;setNote(behind?'One defender was behind your line and kept him onside. Step up together!':REASON_NOTE[e.b]??'');if(e.a===0){a?.alert();if(e.word==='thru')say('THROUGH ON GOAL!',0,'paper',true);}
      // the decision moment: the world holds for a beat with the offside line drawn (early matches; the helper fades out later)
      const aid=guideRef.current!=='off'?2:g.tn.aid;if(aid>=1)stopUntil.current=performance.now()+(aid>=2?950:650);}break;
    case 'stop':{const k=STOP_KINDS[e.a];if(k==='offside'){a?.flag();a?.cheer(true);arcadeFeedback(null,'perfect');}else if(k==='swept'){a?.sweep();a?.cheer(false);arcadeFeedback(null,'combo');}else if(k==='save'){a?.tackle();a?.cheer(false);}else{a?.tackle();a?.cheer(false);arcadeFeedback(null,'combo');}
@@ -128,7 +128,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    case 'cover':a?.tap();say('COVERED!',e.points,'teal');setNote('Good slide. Stay with the ball.');break;
    case 'goal':a?.goal();arcadeFeedback(null,'slam');setGoals(n=>n+1);say('GOAL',0,'paper');setNote(WHY_LINE[GOAL_WHYS[e.a]]);break;
    case 'press':a?.press();break;
-   case 'feat':a?.prize();run.current.feats.push(e.word as FeatId);say('NEW PAGE!',0,'teal',true);break;
+   case 'feat':a?.prize();run.current.feats.push(e.word as FeatId);break;// the new trap-book page is shown on the results card, not over the pitch
    case 'over':a?.whistle(true);a?.over(e.a===1);endAt.current=performance.now()+(reduced.current?800:1700);say(e.a===1?(e.b===3?'CLEAN SHEET!':'YOU WIN!'):'FULL TIME!',e.points,e.a===1?'red':'paper',true);break;
   }
  },[say]);
@@ -239,7 +239,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
   </aside>
   <aside className={styles.side} data-side="right" aria-hidden="true">
    <ComicPanel tilt={1.2} tone="paper" className={styles.sideMedals}><b>Medals</b>{HL.medals.map((m,i)=><span key={m}><i className={styles.medal} data-level={i+1} data-on/>{MEDAL_NAMES[i]}<em>{m.toLocaleString('en-US')}</em></span>)}</ComicPanel>
-   <ComicPanel tilt={-1} tone="red"><b>Press with care</b><br/>Tap a defender to press only when the ball runs away from the passer. A press leaves a gap.</ComicPanel>
+   <ComicPanel tilt={-1} tone="red"><b>Press with care</b><br/>Tap a defender to press a heavy touch or a passer who waits. A press leaves a gap.</ComicPanel>
    <ComicPanel tilt={.8} tone="sun"><b>Too deep?</b><br/>Drop for a long ball. But sit near your own box and they shoot from distance.</ComicPanel>
   </aside>
   <div className={styles.stage} ref={stage} data-holdtheline-stage>
@@ -255,7 +255,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    {playing&&goals>0&&<i className={styles.flash} key={`f${goals}`} aria-hidden="true"/>}
    {playing&&guide&&<div className={styles.guide} data-holdtheline-guide={guide} aria-live="polite">
     {guide==='watch'?<p><span aria-hidden="true">▲</span> Watch the <b>passer</b>. When the leg goes back, get ready to step up.</p>
-     :<><p><b>Now step up!</b> Drag UP. The runner will be left behind your line.</p><i className={styles.guideHand} aria-hidden="true">☝</i></>}
+     :<><p><b>Now step up!</b> Drag UP. The runner is left past your line: offside!</p><i className={styles.guideHand} aria-hidden="true">☝</i></>}
    </div>}
    {playing&&!guide&&(note||hint)&&<p className={styles.hint} data-holdtheline-hint data-note={note?true:undefined} key={note||hint}>{note||hint}</p>}
    <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} data-teach={w.teach||undefined} onAnimationEnd={()=>setWords(l=>l.filter(x=>x.id!==w.id))}>
@@ -272,7 +272,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
   </ComicCard>}
   {phase==='menu'&&<ComicCard label="Hold the Line" title="Hold the Line" badge="You are the defence" badgeTone="teal" best={save.best>0?`Best ${save.best}`:undefined} data-holdtheline-card="start">
    <TrapArt/>
-   <p className={styles.learn}><b>Drag</b> to move your back line as one. Step up as the pass is played and the runner is <b>offside</b>. <b>Tap</b> a defender to press.</p>
+   <p className={styles.learn}><b>Drag</b> to move your back line as one. Step up just before the pass and the runner is <b>offside</b>. <b>Tap</b> a defender to press.</p>
    {entry.message&&<p className={styles.status} role="status">{entry.message}</p>}
    <div className={styles.actions}>
     <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start({league,match:nextM});}} data-holdtheline-play autoFocus>{allDone?'Play':'Play the season'}<small>{LEAGUES[league].name} · match {nextM+1}: {TEAMS[nextM].name}</small></ComicButton>
@@ -314,7 +314,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    </div>
    <p className={styles.coach} data-holdtheline-coach>{result.coach}</p>
    {result.settled.newFeats.length>0&&<ComicPanel tone="teal" flat className={styles.prizes} data-holdtheline-prizes>
-    {result.settled.newFeats.map(id=>{const f=HL_FEATS.find(x=>x.id===id)!;return <span key={id}><Flag color={f.color} size={24}/><em><b>Trap book: {f.name}</b></em></span>;})}
+    {result.settled.newFeats.map(id=>{const f=HL_FEATS.find(x=>x.id===id)!;return <span key={id}><Flag color={f.color} size={24}/><em><b>New trap book page: {f.name}</b></em></span>;})}
    </ComicPanel>}
    <ComicPanel tone="paper" flat className={styles.fact} data-holdtheline-fact><b>{result.settled.tip.title}</b>{result.settled.tip.line}</ComicPanel>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}</p>}

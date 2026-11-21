@@ -99,7 +99,8 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
   const snap=s.snap&&(s.phase==='res'||aid.frozen)?s.snap:null,live=g.secondLast();
   if(snap){
    if(snap.offside){const a=project(-hw,snap.line),e=project(hw,snap.line),a2=project(-hw,Math.max(0,snap.ry-1.2)),e2=project(hw,Math.max(0,snap.ry-1.2));c.fillStyle='#f0452e3d';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(e.x,e.y);c.lineTo(e2.x,e2.y);c.lineTo(a2.x,a2.y);c.closePath();c.fill();}
-   const {a}=across(snap.line,snap.offside?RED:TEAL,5,[]);tag(c,'OFFSIDE LINE',a.x+8,a.y+8,{size:11,fill:snap.offside?RED:TEAL,color:snap.offside?PAPER:INK});
+   // the line's name goes on the touchline AWAY from the runner, so it never sits under the runner's own OFFSIDE / ONSIDE tag
+   const {a,e}=across(snap.line,snap.offside?RED:TEAL,5,[]),left=snap.rx>=0;tag(c,'OFFSIDE LINE',left?a.x+8:e.x-8,a.y+8,{size:11,fill:snap.offside?RED:TEAL,color:snap.offside?PAPER:INK,align:left?'left':'right'});
   }else if(aid.aid>=2&&s.phase==='play'){const {a}=across(live,TEAL,2.5,[9,7]);tag(c,'OFFSIDE LINE',a.x+8,a.y+7,{size:9,fill:TEAL});}
   // the rope that ties the back line together (a gap shows where a presser left)
   {const y=s.lineY,chest=(i:number)=>{const p=project(s.defs[i].x,s.defs[i].y);return {x:p.x,y:p.y-p.s*1.5};},out=s.press?s.press.i:-1;
