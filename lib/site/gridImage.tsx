@@ -13,7 +13,7 @@ export function gridImage({scene:g,title,sub}:{scene:GridScene;title:string;sub:
  const abs=(left:number,top:number,width:number,height:number,extra:Record<string,string|number>={})=>({position:'absolute' as const,left,top,width,height,display:'flex' as const,...extra});
  const X=(x:number)=>ox+x/100*W,Y=(y:number)=>oy+H-y/100*H;
  const cone=(x:number,y:number,key:string)=><div key={key} style={abs(X(x)-8,Y(y)-8,16,16,{background:GOLD,border:`3px solid ${INK}`,borderRadius:4})}/>;
- return <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',background:GROUND,color:INK,padding:32}}>
+ return <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',background:GROUND,color:INK,padding:32,fontFamily:'Inter'}}>
   <div style={{position:'relative',display:'flex',width:BOX,height:BOX,background:GRASS,borderRadius:18,flexShrink:0}}>
    {g.zones.map((z,i)=><div key={`z${i}`} style={abs(X(z[0]),Y(z[3]),X(z[2])-X(z[0]),Y(z[1])-Y(z[3]),{background:GOLD,opacity:.34})}/>)}
    <div style={abs(ox,oy,W,H,{border:`3px dashed ${PAPER}`})}/>
@@ -25,10 +25,10 @@ export function gridImage({scene:g,title,sub}:{scene:GridScene;title:string;sub:
    {g.balls.map(([x,y],i)=><div key={`b${i}`} style={abs(X(x)-8,Y(y)-8,16,16,{borderRadius:8,border:`3px solid ${INK}`,background:PAPER})}/>)}
   </div>
   <div style={{display:'flex',flexDirection:'column',justifyContent:'center',marginLeft:56,flex:1}}>
-   <div style={{display:'flex',fontSize:title.length>22?56:76,fontWeight:700,lineHeight:1.05}}>{title}</div>
-   <div style={{display:'flex',fontSize:34,marginTop:20,lineHeight:1.25}}>{sub}</div>
-   <div style={{display:'flex',fontSize:30,marginTop:16,lineHeight:1.25}}>{gridSize(g)}</div>
-   <div style={{display:'flex',fontSize:28,marginTop:40,opacity:.8}}>Futbol Island · futbolisland.app</div>
+   <div style={{display:'flex',fontSize:title.length>28?52:title.length>22?56:76,fontWeight:800,letterSpacing:'-0.03em',lineHeight:1.04}}>{title}</div>
+   <div style={{display:'flex',fontSize:32,fontWeight:600,letterSpacing:'-0.01em',marginTop:20,lineHeight:1.25}}>{sub}</div>
+   <div style={{display:'flex',fontSize:28,fontWeight:600,marginTop:14,lineHeight:1.25,opacity:.85}}>{gridSize(g)}</div>
+   <div style={{display:'flex',fontSize:26,fontWeight:600,marginTop:40,opacity:.7}}>Futbol Island · futbolisland.app</div>
   </div>
  </div>;
 }

@@ -24,7 +24,7 @@ export function pitchImage({format,spots,title,sub,mark,scene}:{format:GuideForm
   if(p.buildOut)out.push(<div key="o" style={abs(M,top?M+p.buildOut*k:M+H-p.buildOut*k,W,0,{borderTop:`3px dashed ${PAPER}`})}/>);
   out.push(<div key="g" style={abs(M+(W-p.goal*k)/2,top?M-8:M+H,p.goal*k,8,{background:PAPER})}/>);
   return out;};
- return <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',background:GROUND,color:INK,padding:20}}>
+ return <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',background:GROUND,color:INK,padding:20,fontFamily:'Inter'}}>
   <div style={{position:'relative',display:'flex',width:W+2*M,height:H+2*M,background:GRASS,borderRadius:18,flexShrink:0}}>
    <div style={abs(M,M,W,H,{border:line})}/>
    <div style={abs(M,M+H/2-1,W,0,{borderTop:line})}/>
@@ -37,9 +37,9 @@ export function pitchImage({format,spots,title,sub,mark,scene}:{format:GuideForm
    {scene?.ball&&<div style={abs(M+scene.ball[0]/100*W-9,M+H-scene.ball[1]/100*H-9,18,18,{borderRadius:9,border:`3px solid ${INK}`,background:PAPER})}/>}
   </div>
   <div style={{display:'flex',flexDirection:'column',justifyContent:'center',marginLeft:56,flex:1}}>
-   <div style={{display:'flex',fontSize:title.length>22?64:84,fontWeight:700,lineHeight:1.05}}>{title}</div>
-   <div style={{display:'flex',fontSize:36,marginTop:20,lineHeight:1.25}}>{sub}</div>
-   <div style={{display:'flex',fontSize:28,marginTop:48,opacity:.8}}>Futbol Island · futbolisland.app</div>
+   <div style={{display:'flex',fontSize:title.length>28?58:title.length>22?64:84,fontWeight:800,letterSpacing:'-0.03em',lineHeight:1.04}}>{title}</div>
+   <div style={{display:'flex',fontSize:34,fontWeight:600,letterSpacing:'-0.01em',marginTop:22,lineHeight:1.25}}>{sub}</div>
+   <div style={{display:'flex',fontSize:26,fontWeight:600,marginTop:48,opacity:.7}}>Futbol Island · futbolisland.app</div>
   </div>
  </div>;
 }

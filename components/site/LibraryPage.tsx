@@ -16,8 +16,8 @@ import {railOrder} from '@/lib/site/railNav';
  */
 function Pic({c}:{c:LibrarySection}){
  if(!c.pic)return <span className={l.secPic} data-icon=""><FactIcon kind={c.icon} size={72}/></span>;
- // a diagram (1200 x 630, pitch panel left, title right) is shown whole, never cropped; a photo or game still fills the frame
- return <span className={l.secPic} data-diagram={c.pic.diagram?'':undefined}><img src={c.pic.src} alt={c.alt} width={c.pic.w} height={c.pic.h} style={c.pic.pos?{objectPosition:c.pic.pos}:undefined} loading="lazy" decoding="async"/></span>;
+ // every picture fills the 16:10 frame (the drawn section pictures are made at that shape); a clip's still shows a play mark
+ return <span className={l.secPic} data-video={c.pic.video?'':undefined}><img src={c.pic.src} alt={c.alt} width={c.pic.w} height={c.pic.h} style={c.pic.pos?{objectPosition:c.pic.pos}:undefined} loading="lazy" decoding="async"/></span>;
 }
 /** One section, the same template every time (owner, Nov 20 2026 night: no mirrored layouts): the picture (left from 900 px, on top
  * below), then the name with its count, a few plain sentences, a few example pages and one mint button into the section. */

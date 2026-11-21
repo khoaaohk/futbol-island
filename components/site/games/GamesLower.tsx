@@ -1,8 +1,8 @@
-import type {CSSProperties,ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import FaqEnhance from '@/components/learn/FaqEnhance';
 import {GAME_PAGES,type GamePage} from '@/lib/site/games';
 import {gameStills} from '@/lib/site/gameMedia';
-import {LIBRARY_HERO,LIBRARY_PICS,type LibraryPic} from '@/lib/site/library';
+import {GUIDE_PICS,LIBRARY_HERO,LIBRARY_PICS,type LibraryPic} from '@/lib/site/library';
 import site from '@/app/(site)/site.module.css';
 import lib from '@/components/site/library.module.css';
 import g from './games.module.css';
@@ -68,18 +68,17 @@ export function FaqBand({id,title,line,faq}:{id:string;title:string;line:string;
   <FaqEnhance selector={`[data-faq="${id}"]`}/>
  </Band>;
 }
-/** A guide's picture, as the Library's small card shows it (a diagram shows its pitch panel whole; LibraryPage.tsx Pic). */
-function Pic({pic,alt}:{pic:LibraryPic;alt:string}){
- const d=pic.diagram,vars=d?{'--pa':`${d}/${pic.h}`,'--pc':`${(d/2/pic.w*100).toFixed(2)}%`,'--px':`${((1-d/pic.w)*100).toFixed(2)}%`} as CSSProperties:undefined;
+/** A guide's picture: its text-free 4:3 diagram (lib/site/library.ts GUIDE_PICS) shown whole, or the Library's photo cropped. */
+function Pic({pic,alt,guide}:{pic:LibraryPic;alt:string;guide:boolean}){
  // eslint-disable-next-line @next/next/no-img-element
- return <span className={lib.pic} data-diagram={d?'':undefined} style={vars}><img src={pic.src} alt={alt} width={pic.w} height={pic.h} loading="lazy" decoding="async"/></span>;
+ return <span className={lib.pic} data-guide={guide?'':undefined}><img src={pic.src} alt={alt} width={pic.w} height={pic.h} loading="lazy" decoding="async"/></span>;
 }
 /** "Learn the ideas behind the games": six guide cards in the Library's small-card style, three across on wide screens. */
 export function GuidesBand({id,title,line,links}:{id:string;title:string;line:string;links:readonly {path:string;name:string;line:string;pic:string;alt:string}[]}){
  return <Band id={id} title={title} line={line} tone="paper">
-  <ul className={g.guides}>{links.map(l=>{const pic=LIBRARY_PICS[l.pic];
+  <ul className={g.guides}>{links.map(l=>{const pic=GUIDE_PICS[l.pic]??LIBRARY_PICS[l.pic];
    return <li key={l.path} className={lib.card}><a href={l.path}>
-    {pic&&<Pic pic={pic} alt={l.alt}/>}
+    {pic&&<Pic pic={pic} alt={l.alt} guide={!!GUIDE_PICS[l.pic]}/>}
     <span className={lib.body}><h3 className={lib.name}>{l.name}</h3><span className={lib.line}>{l.line}</span></span>
    </a></li>;})}</ul>
  </Band>;

@@ -60,6 +60,18 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);assert(imgs.length>=cards.length,'a picture on every card');
  for(const i of imgs)assert(/ alt="[^"]{8,}"/.test(i)&&/ width="\d+"/.test(i)&&/ height="\d+"/.test(i),`alt, width, height: ${i.slice(0,80)}`);
  assert.equal(imgs.filter(i=>!/loading="lazy"/.test(i)).length,2,'only the two hero pictures load eagerly');
+ /* Nov 20 2026 (owner: "the visuals need to match more with the title of the section"): every section picture is 16:10 with no
+    baked-in title; the eight diagram sections show their own drawn section picture (lib/site/sectionImage.tsx, a real webp file
+    under public/learn/sections/ made by scripts/build-section-pictures.cjs), never a page's 1200 x 630 share card */
+ {const fs=require('node:fs'),path=require('node:path'),{webpSize}=L('lib/site/learnMedia.ts'),{SECTION_PICTURES}=L('lib/site/sectionImage.tsx');
+  const drawn={'/learn/soccer-rules':'rules','/learn/soccer-terms':'terms','/learn/soccer-drills':'drills','/learn/soccer-positions':'positions','/learn/soccer-formations':'formations',
+   '/learn/soccer-practice-plans':'plans','/learn/soccer-age-groups':'ages','/tools':'tools'};
+  assert.deepEqual(Object.values(drawn).sort(),Object.keys(SECTION_PICTURES).sort(),'one drawn picture per diagram section');
+  for(const [p,pic] of Object.entries(lib.LIBRARY_PICS)){assert(pic,`${p}: a picture`);assert(!pic.src.includes('/learn/diagrams/'),`${p}: not a share card`);
+   assert(Math.abs(pic.w/pic.h-1.6)<.01||pic.pos||pic.h>pic.w||Math.abs(pic.w/pic.h-16/9)<.01,`${p}: 16:10, or a photo the frame crops`);
+   const file=pic.src.split('?')[0];if(drawn[p])assert.equal(file,`/learn/sections/${drawn[p]}.webp`,`${p}: its drawn section picture`);
+   if(file.endsWith('.webp')&&!/^https?:/.test(file)){const sz=webpSize(fs.readFileSync(path.join(root,'public',file)));assert.deepEqual([sz.width,sz.height],[pic.w,pic.h],`${p}: real size ${file}`);}}
+  for(const pic of Object.values(lib.GUIDE_PICS)){const sz=webpSize(fs.readFileSync(path.join(root,'public',pic.src.split('?')[0])));assert.deepEqual([sz.width,sz.height],[480,360],`${pic.src}: a 480x360 guide picture`);}}
  // Spanish
  const es=L('components/es/routes.tsx').esRoute('/library'),em=es.meta(),eh=render(es.render()),E=L('components/es/pages/LibraryEs.tsx');
  assert(em.title.absolute.length<=60&&em.description.length>=120&&em.description.length<=155,`Spanish title ${em.title.absolute.length}, description ${em.description.length}`);

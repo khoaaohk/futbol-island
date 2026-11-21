@@ -30,12 +30,8 @@
 .pic{position:relative;display:block;overflow:hidden;background:var(--band)}
 .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:scale .5s cubic-bezier(.2,.8,.2,1)}
 .pic[data-icon]{display:grid;place-items:center}
-/* a diagram picture (1200 x 630: pitch panel left, title right): the large card shows it whole. A small card shows the pitch panel
-   only, whole and centred on the picture's own paper (--pc: the panel's centre, --px: what lies right of it, --pa: its ratio;
-   lib/site/library.ts). Before Nov 20 2026 evening a cover crop cut through the title ("3-", "Offside"). */
-.pic[data-diagram]{background:var(--paper)}
-.card .pic[data-diagram] img{inset:0 auto 0 50%;width:auto;max-width:none;height:100%;object-fit:fill;translate:calc(var(--pc)*-1) 0;transform-origin:var(--pc) 50%;clip-path:inset(0 var(--px) 0 0)}
-.feature .pic[data-diagram]{flex:none;aspect-ratio:1200/630;min-height:0}
+/* a guide picture (lib/site/library.ts GUIDE_PICS, text-free 4:3 diagrams drawn for the card): shown whole at its own shape */
+.card .pic[data-guide]{background:#134a3a}
 .name{margin:0;font-weight:700;letter-spacing:-.015em;color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em;overflow-wrap:anywhere}
 .count{justify-self:start;padding:4px 11px;border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font-size:var(--t-label);line-height:1.3;font-weight:700;white-space:nowrap}
 .line{margin:0;color:var(--ink)}
@@ -51,8 +47,8 @@
 .card .body{display:grid;gap:5px;padding:4px 0}
 .card .name{font-size:19px;line-height:1.25}
 .card .line{font-size:15px;line-height:1.4}
-/* phones and tablets: a square thumb at the top of the card; a diagram's thumb takes its pitch panel's own shape, so the pitch is whole */
-@media(max-width:899px){.card a{align-items:start}.card .pic[data-diagram]{aspect-ratio:var(--pa)}}
+/* phones and tablets: a square thumb at the top of the card; a guide diagram keeps its 4:3, so the pitch is whole */
+@media(max-width:899px){.card a{align-items:start}.card .pic[data-guide]{aspect-ratio:4/3}}
 /* tablets: the small cards sit two across under the large one (one column made a very long page); an odd last card runs full width */
 @media(min-width:640px) and (max-width:899px){
  .band ul.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.feature{grid-column:1/-1}.grid[data-pair] .feature{grid-column:auto}
@@ -76,7 +72,10 @@
 .sec{display:grid;gap:var(--s3);align-items:center}
 .secPic{position:relative;display:block;aspect-ratio:16/10;border-radius:var(--r-lg);overflow:hidden;background:var(--paper)}
 .secPic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.secPic[data-diagram]{aspect-ratio:1200/630}/* a diagram is shown whole (pitch panel and title), at its own shape, so nothing is cropped */
+/* every section picture is 16:10 (the drawn section pictures are made at 1440 x 900), so the fifteen sections line up; a clip's
+   picture carries a flat play mark so it reads as video */
+.secPic[data-video]::after{content:'';position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6.5v11l9-5.5z' fill='%2314221d'/%3E%3C/svg%3E") center/44px no-repeat}
+@media(max-width:599px){.secPic[data-video]::after{width:56px;height:56px;margin:-28px 0 0 -28px;background-size:32px}}
 .secPic[data-icon]{display:grid;place-items:center}
 .secText{display:grid;gap:var(--s2);justify-items:start;min-width:0}
 .secHead{display:flex;flex-wrap:wrap;align-items:center;gap:10px var(--s2)}

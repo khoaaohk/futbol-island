@@ -114,8 +114,9 @@ function check(p,meta,el,game){
  const imgs=[...h.matchAll(/<img\b([^>]*)>/g)].map(m=>Object.fromEntries([...m[1].matchAll(/([a-z-]+)="([^"]*)"/g)].map(a=>[a[1],a[2].replace(/&#x27;/g,"'").replace(/&amp;/g,'&')])));
  assert(imgs.length>=(game?2:6),`${where}: pictures`);
  /* Nov 20 2026 batch 3 (owner: "if we need to add imagery to both"): the hub's lower bands reuse the Library's optimised pictures
-    (/learn/..., lib/site/library.ts LIBRARY_HERO and LIBRARY_PICS, some with a ?v= cache key); the guide diagrams are drawn by the
-    /learn/diagrams route at 1200x630, so they have no file to measure */
+    (/learn/..., lib/site/library.ts LIBRARY_HERO, LIBRARY_PICS and GUIDE_PICS, some with a ?v= cache key); since Nov 20 2026 night the
+    guide cards show text-free 480x360 webp diagrams (public/learn/sections/*-card.webp) measured like any file; a /learn/diagrams
+    share card (1200x630, no file) is still allowed */
  for(const i of imgs){const file=i.src.split('?')[0];if(!game&&file.startsWith('/learn/diagrams/')){assert(i.width==='1200'&&i.height==='630'&&i.loading==='lazy'&&i.alt.length>=30,`${where}: ${i.src} is a lazy 1200x630 diagram with alt text`);continue;}assert((file.startsWith('/games/')||(!game&&file.startsWith('/learn/')))&&fs.existsSync(pub(file)),`${where}: ${i.src} exists`);const s=size(pub(file));
   assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:L('lib/site/gameMedia.ts').islandClips().find(c=>c.key===L('lib/site/gameMedia.ts').GAMES_LEAD_CLIP).poster/* Nov 20 2026 batch 3 (owner: "i like the way the overview looks on library, can we match that for games?"): the eager poster is the lead clip's (GAMES_LEAD_CLIP, the hero's large media), whatever clip that key names */)),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
  assert.equal(new Set(imgs.map(i=>i.alt)).size,imgs.length,`${where}: every alt text is its own`);
