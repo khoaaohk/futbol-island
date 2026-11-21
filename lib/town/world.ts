@@ -1719,7 +1719,9 @@ export function* buildTownSteps(scene: T.Scene) {
       // foot-to-crown gradient (cooler below, yellower above) in place of the three steps, and window panes sky-blue at the top
       // fading to dark at the sill.
       geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,gh=gb.max.y-gy,nrm=gh>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
-      const pane=paint===windowPaint,canopy=!pane&&object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
+      // Nov 21 2026 (verifier): doors and tall glass (1.7 m and up, e.g. the Arcade's double door) keep their solid colour; the sky
+      // gradient read as pale blue-grey metal on them. Windows and shopfronts (up to 1.65 m) keep the gradient.
+      const pane=paint===windowPaint&&gh<1.7,canopy=!pane&&object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
       const home=pane||canopy||stadiumPiece?-1:buildingAt(position.x,position.z),jv=home<0?1:1+BAKE.jitterValue*bakeHash(home),jw=home<0?1:1+BAKE.jitterWarmth*bakeHash(home+.5);
       const P=bakeArray(pos),N=nrm&&bakeArray(nrm),cr=color.r,cg=color.g,cb=color.b,len=colors.length;
       if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
