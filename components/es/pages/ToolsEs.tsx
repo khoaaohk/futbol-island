@@ -203,7 +203,7 @@ function LineupEs({p}:{p:LineupPage}){
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app facts={facts}/></Screen>
-  <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
+  <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es" teamShare/>
   <Screen>
    <Section id="how" title="Cómo armar tu alineación">
     <ol>
@@ -251,7 +251,7 @@ function PlannerEs({p}:{p:PlannerPage}){
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app facts={facts}/></Screen>
-  <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
+  <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es" teamShare/>
   <Screen>
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
    <Section id="why" title="Por qué importan los minutos iguales a estas edades">

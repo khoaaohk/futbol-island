@@ -1,4 +1,5 @@
 'use client';
+import TeamShare from '@/components/share/TeamShare';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {cleanName,decodePlan,encodePlan,MAX_PLAYERS,periodName,planRotation,rotationText,type PlanState} from '@/lib/site/tools/rotation';
 import site from '@/app/(site)/site.module.css';
@@ -15,7 +16,8 @@ import {ROTATION_ES as W,periodNameEs,playerNameEs,rotationTextEs} from './toolW
 export type Preset={id:string;label:string;onField:number;periods:number;periodMin:number};
 const KEY='fi-rotation-v1';
 /** `lang="es"` (Spanish round D, Nov 16 2026): Spanish words (./toolWordsEs.ts; the page passes Spanish preset labels). English output is unchanged without it. */
-export default function RotationPlanner({presets,initial,lockKey,lang}:{presets:readonly Preset[];initial:PlanState;lockKey?:string;lang?:'es'}){
+/** `teamShare`: the quiet "Send your players the free game" line under the plan (the site pages; not the club embed). */
+export default function RotationPlanner({presets,initial,lockKey,lang,teamShare}:{presets:readonly Preset[];initial:PlanState;lockKey?:string;lang?:'es';teamShare?:boolean}){
  const es=lang==='es';
  const [s,setS]=useState<PlanState>(initial);
  const [namesText,setNamesText]=useState('');
@@ -86,6 +88,7 @@ export default function RotationPlanner({presets,initial,lockKey,lang}:{presets:
    </div>
    {link&&<label className={`${t.fieldLabel} ${t.noPrint}`}>{es?W.linkLabel:'Link to this plan'}<input className={`${t.input} ${t.link}`} readOnly value={link} onFocus={e=>e.currentTarget.select()}/></label>}
    <p className={site.caption}>{es?W.made:'Made with futbolisland.app. Change at the next stoppage your league allows; the times are targets.'}</p>
+   {teamShare&&<TeamShare surface="minutes" lang={es?'es':'en'} format={lockKey} team={s.team}/>}
   </section>
  </div>;
 }
