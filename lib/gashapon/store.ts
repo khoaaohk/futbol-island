@@ -26,7 +26,10 @@ export const RECEIPTS_KEPT=40;
 
 export type OwnedToy={n:number;first:number};
 export type SpinReceipt={m:GashaponMachineId;toy:string;at:number;dup:boolean;refund:number};
-export type GashaponState={version:1;owned:Record<string,OwnedToy>;spins:Record<string,SpinReceipt>;day:string;today:number;last:number};
+/** Claw Club plays (Nov 21 2026, lib/claw/clawStore.ts): receipts per play id (toy won or null) and the misses-in-a-row count (the pity rule). */
+export type ClawReceipt={toy:string|null;at:number;dup:boolean;refund:number};
+export type ClawSave={plays:Record<string,ClawReceipt>;streak:number};
+export type GashaponState={version:1;owned:Record<string,OwnedToy>;spins:Record<string,SpinReceipt>;day:string;today:number;last:number;claw?:ClawSave};
 export const emptyGashapon=():GashaponState=>({version:1,owned:{},spins:{},day:'',today:0,last:0});
 
 export type SpinResult=
@@ -53,6 +56,10 @@ export function sanitizeGashapon(v:unknown):GashaponState{
    .sort((a,b)=>whole(b[1].at,9e15)-whole(a[1].at,9e15)).slice(0,RECEIPTS_KEPT);
   for(const [id,r] of receipts)out.spins[id]={m:r.m,toy:r.toy,at:whole(r.at,9e15),dup:r.dup===true,refund:whole(r.refund,GASHAPON_REFUND)};
   out.day=typeof s.day==='string'&&s.day.length<=16?s.day:'';out.today=whole(s.today,999);out.last=whole(s.last,9e15);
+  const claw=s.claw as Partial<ClawSave>|undefined;
+  if(claw&&typeof claw==='object'){const plays=Object.entries(claw.plays??{}).filter(([id,r])=>isId(id)&&r&&typeof r==='object'&&(r.toy===null||!!gashaponToy(String(r.toy))))
+   .sort((a,b)=>whole(b[1].at,9e15)-whole(a[1].at,9e15)).slice(0,RECEIPTS_KEPT);
+   out.claw={plays:Object.fromEntries(plays.map(([id,r])=>[id,{toy:r.toy===null?null:String(r.toy),at:whole(r.at,9e15),dup:r.dup===true,refund:whole(r.refund,GASHAPON_REFUND)}])),streak:whole(claw.streak,99)};}
  }catch{return emptyGashapon();}
  return out;
 }
@@ -97,7 +104,7 @@ export function createGashaponStore(ports:GashaponPorts){
    const had=s.owned[toy.id],dup=!!had,count=(had?.n??0)+1;
    const spins={...s.spins,[spinId]:{m:machineId,toy:toy.id,at,dup,refund:0}};
    const keep=Object.entries(spins).sort((a,b)=>b[1].at-a[1].at).slice(0,RECEIPTS_KEPT);
-   const next:GashaponState={version:1,owned:{...s.owned,[toy.id]:{n:count,first:had?.first??at}},spins:Object.fromEntries(keep),day,today:today+1,last:at};
+   const next:GashaponState={...s,version:1,owned:{...s.owned,[toy.id]:{n:count,first:had?.first??at}},spins:Object.fromEntries(keep),day,today:today+1,last:at};
    // Coins are already spent under this id: if the save fails, a retry with the same id finishes it without a new charge.
    if(!save(next))return fail(spinId,'save','Your capsule could not be saved. Tap again to open it (no extra coins).');
    const refund=dup?await payRefund(spinId,toy):0;

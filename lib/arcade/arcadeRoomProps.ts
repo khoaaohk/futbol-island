@@ -5,6 +5,7 @@ import {createPlayer,profileFor,type PlayerMotion} from '../graphics/player';
 import {defaultBeanLookFor,DEFAULT_CASUAL_OUTFIT} from '../graphics/beanLook';
 import {mergedGashapon,gashaponGlassMaterial} from '../graphics/gashaponMesh';
 import {GASHAPON_MACHINES,GASHA_STYLE_SIZE,gashaStyleOf} from '../gashapon/machines';
+import {buildClawLod} from '../claw/clawMachine3d';
 
 export type ArcadePropCollider={x:number;z:number;halfX:number;halfZ:number;yaw?:number};
 /** Merged dressing, a few pooled attract parts and one attendant, driven only by the room clock. */
@@ -54,14 +55,10 @@ export function createArcadeRoomProps(scene:T.Scene){
  const ring=new T.TorusGeometry(.52,.024,6,24);ring.rotateX(-Math.PI/2);part(ring,-10,1.5,-1,1,1,1,coral);ring.dispose();
  const paddles=[teal,coral].map((color,i)=>animated(`arcade-hockey-paddle-${i}`,()=>{tube(-10,1.53,-1,.2,.07,color);tube(-10,1.64,-1,.065,.2,color);}));
  const puck=animated('arcade-hockey-puck',()=>tube(-10,1.53,-1,.12,.05,ink));
- place(-12,8,-12,8,Math.PI/3);
- // Claw machine: open front window reveals a toy pile and suspended grabber.
- box(-12,.55,8,2.05,1.1,1.7,coral);box(-12,3.15,8,2.2,.55,1.85,coral);box(-12,1.98,7.22,1.9,2.05,.1,ink);
- for(const x of [-12.97,-11.03])for(const z of [7.22,8.77])box(x,2.02,z,.1,2.14,.1,cream);
- box(-12,1.14,8,1.9,.1,1.6,gold);for(let i=0;i<4;i++)plush(-12.65+i*.4,1.21,7.9+(i%2)*.45,i%2?teal:gold);
- box(-12,2.96,8.15,1.5,.055,.07,ink);
- const claw=animated('arcade-claw-carriage',()=>{box(-12,2.95,8.15,.22,.1,.18,cream);tube(-12,2.62,8.15,.025,.62,cream);ball(-12,2.3,8.15,.09,ink);for(const x of [-12.13,-11.87])box(x,2.18,8.15,.045,.22,.045,cream);});
- box(-12,.75,8.89,.6,.38,.06,ink);box(-12,1.18,8.99,2.1,.17,.4,cream);tube(-12.4,1.37,8.98,.055,.25,ink);ball(-12.4,1.49,8.98,.1,coral);tube(-11.6,1.3,8.98,.1,.04,teal);sign('CLAW CLUB','BEAN BUDDIES',-12,3.17,8.94,2,.48);
+ // Claw machine (Nov 21 2026, lib/claw): its own placed group. The room shows the cheap LOD (4 draws); the playable machine is built
+ // into the same group on the first zoom (lib/claw/clawRoom.ts). The idle carriage still slides while nobody plays.
+ const clawPlacement=new T.Group();clawPlacement.name='arcade-claw';clawPlacement.position.set(-12,0,8);clawPlacement.rotation.y=Math.PI/3;root.add(clawPlacement);
+ const clawLod=buildClawLod();clawPlacement.add(clawLod.group);const claw=clawLod.carriage;
  place(12,8,12.6,9.6,-Math.PI/3);/* Nov 21 2026: moved 1.7 m toward the south-east corner (was 12,8) so it no longer hides the east wall machines or a player standing at Hold the Line from the room camera */
  // Vending machine: readable bottles, selection buttons, lower collection tray.
  box(12,1.55,8,2,3.1,1.55,teal);box(11.72,1.85,8.81,1.15,1.75,.08,ink);box(12,.47,8.81,1.55,.48,.09,ink);
@@ -106,13 +103,13 @@ export function createArcadeRoomProps(scene:T.Scene){
  function animate(time:number,reduced:boolean){const t=reduced?0:time;
   puck.position.set(hockeyX(t),0,reflect(t*.7+1)*1.55);
   for(let i=0;i<2;i++){const impact=(i===0?3:1)/.7,next=impact+Math.ceil((t-impact)/cycle)*cycle,previous=next-cycle,u=(t-previous)/cycle,ease=u*u*(3-2*u);paddles[i].position.set(hockeyX(previous)+(hockeyX(next)-hockeyX(previous))*ease,0,i===0?-1.87:1.87);}
-  const slide=reduced?0:Math.sin(t*.43)*.52;claw.position.set(slide*Math.cos(Math.PI/3),0,-slide*Math.sin(Math.PI/3));
+  const slide=reduced?0:Math.sin(t*.43)*.52;claw.position.set(slide,0,Math.sin(t*.29)*.18);
   for(let i=0;i<2;i++){const end=i===0?-1:1,contact=Math.max(0,1-Math.abs(reflect(t*.7+1)-end)*12);lampMaterials[i].emissiveIntensity=reduced?.4:.35+contact*1.5;}
   ticketFeed.position.y=reduced?0:Math.sin(t*1.7)*.015;
   stockMaterial.emissiveIntensity=reduced?.28:.25+(1+Math.sin(t*.9))*.14;
  }
  animate(0,true);let greeting=0,wasNear=false,greetTime=0;
- return{gashapon:gashaMachines,setAttention(value:boolean){attentive=value;},beginSocial(routine:SocialRoutine){social=routine;socialAge=-1;},setSocialAge(age:number){socialAge=age;},releaseSocial(){social=null;socialAge=-1;},interactionPoint:prizePoint(10,-6.1),colliders,attendantBody:{x:attendantPosition.x,z:attendantPosition.z},get debug(){return{claw:[claw.position.x,claw.position.z],puck:[puck.position.x,puck.position.z],paddles:paddles.map(p=>[p.position.x,p.position.z]),stock:stockMaterial.emissiveIntensity,greeting,attendant:!!attendant.root.userData.beanBody,attendantPosition:{x:attendantPosition.x,z:attendantPosition.z},serviceAisle:1.4,social:!!social,socialAge};},update(dt:number,time:number,playerX=0,playerZ=0,reduced=false){if(disposed||dt<=0)return;animate(time,reduced);const near=Math.hypot(playerX-attendantPosition.x,playerZ-attendantPosition.z)<(wasNear?5.8:5);if(near&&!wasNear)greetTime=2.4;wasNear=near;greetTime=Math.max(0,greetTime-dt);
+ return{gashapon:gashaMachines,claw:{placement:clawPlacement,lod:clawLod.group},setAttention(value:boolean){attentive=value;},beginSocial(routine:SocialRoutine){social=routine;socialAge=-1;},setSocialAge(age:number){socialAge=age;},releaseSocial(){social=null;socialAge=-1;},interactionPoint:prizePoint(10,-6.1),colliders,attendantBody:{x:attendantPosition.x,z:attendantPosition.z},get debug(){return{claw:[claw.position.x,claw.position.z],puck:[puck.position.x,puck.position.z],paddles:paddles.map(p=>[p.position.x,p.position.z]),stock:stockMaterial.emissiveIntensity,greeting,attendant:!!attendant.root.userData.beanBody,attendantPosition:{x:attendantPosition.x,z:attendantPosition.z},serviceAisle:1.4,social:!!social,socialAge};},update(dt:number,time:number,playerX=0,playerZ=0,reduced=false){if(disposed||dt<=0)return;animate(time,reduced);const near=Math.hypot(playerX-attendantPosition.x,playerZ-attendantPosition.z)<(wasNear?5.8:5);if(near&&!wasNear)greetTime=2.4;wasNear=near;greetTime=Math.max(0,greetTime-dt);
   greeting=T.MathUtils.damp(greeting,near&&greetTime>0?1:0,4,Math.min(.1,dt));motion.ready=.2;motion.called=reduced?0:greeting*.85;motion.lookX=near?playerX:10;motion.lookZ=near?playerZ:-2;motion.skill=undefined;motion.jump=undefined;if(!social)motion.facing=attentive?Math.atan2(playerX-attendantPosition.x,playerZ-attendantPosition.z):-Math.PI/3;if(social){motion.facing=Math.atan2(playerX-attendantPosition.x,playerZ-attendantPosition.z);socialPose(motion,social,socialAge,true,reduced);}attendant.setExpression(near||social?'happy':'neutral');attendant.update(attendantPosition.x,attendantPosition.z,Math.min(.1,dt),time,reduced,motion);
- },dispose(){if(disposed)return;disposed=true;attendant.dispose();root.removeFromParent();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();}};
+ },dispose(){if(disposed)return;disposed=true;clawLod.dispose();attendant.dispose();root.removeFromParent();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();}};
 }

@@ -56,8 +56,8 @@ export function createClawSim(seed:number,toyBodies:readonly ToyBody[]){
  const squash=new Float64Array(MAX_TOYS),squashV=new Float64Array(MAX_TOYS),delivered=new Uint8Array(MAX_TOYS),inChute=new Uint8Array(MAX_TOYS);
  const landCool=new Float64Array(MAX_TOYS);
  // ---- claw ----
- const s={phase:'home' as ClawPhase,t:0,aimLeft:CLAW_AIM_SECONDS,cx:CLAW_HOME.x,cz:CLAW_HOME.z,vx:0,vz:0,L:CABLE.min,Lv:0,
-  hx:CLAW_HOME.x,hy:CLAW_BOX.gantryY-.06-CABLE.min,hz:CLAW_HOME.z,hox:0,hoy:0,hoz:0,
+ const s={phase:'home' as ClawPhase,t:0,aimLeft:CLAW_AIM_SECONDS,cx:CLAW_HOME.x as number,cz:CLAW_HOME.z as number,vx:0,vz:0,L:CABLE.min as number,Lv:0,
+  hx:CLAW_HOME.x as number,hy:CLAW_BOX.gantryY-.06-CABLE.min,hz:CLAW_HOME.z as number,hox:0,hoy:0,hoz:0,
   avx:0,avy:0,avz:0,ax:0,ay:0,az:0,load:0,slackSteps:0,moving:false,firm:false,jitter:1,
   held:-1,quality:0,grip:0,slid:0,slipMax:0,wx0:0,wy0:0,wz0:0,wx1:0,wy1:0,wz1:0,result:-1,flap:0,flapV:0,steps:0,carryTo:0,settle:0,bumpCool:0};
  s.hox=s.hx;s.hoy=s.hy;s.hoz=s.hz;
@@ -311,6 +311,8 @@ export function createClawSim(seed:number,toyBodies:readonly ToyBody[]){
   begin(opts:{firm?:boolean;jitterSeed?:number}={}){if(s.phase!=='home'&&s.phase!=='done')return false;s.firm=!!opts.firm;const j=clawRng(opts.jitterSeed??s.steps)();s.jitter=.95+j*.1;
    for(let i=0;i<n;i++)if(delivered[i])active[i]=0;// a prize left in the tray is the player's: it leaves the machine
    s.result=-1;s.aimLeft=CLAW_AIM_SECONDS;s.held=-1;go('aim');return true;},
+  /** Stop a try before the drop (the player left): no result, the claw stays where it is. True when it was stopped. */
+  abort(){if(s.phase!=='aim')return false;s.result=-1;s.held=-1;setTargets(PRONG.rest);go('done');return true;},
   /** Toys asleep, claw parked and the flap shut: nothing to simulate (the caller stops stepping). */
   get sleeping(){if(s.phase!=='home'&&s.phase!=='done')return false;if(Math.abs(s.flapV)>2e-3||Math.hypot(s.vx,s.vz)>1e-4)return false;
    const sw=Math.hypot(s.hx-s.hox,s.hy-s.hoy,s.hz-s.hoz);if(sw>2e-5)return false;for(let k=0;k<3;k++)if(Math.abs(thetaV[k])>1e-3)return false;

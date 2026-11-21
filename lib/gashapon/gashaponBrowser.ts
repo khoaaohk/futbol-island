@@ -12,7 +12,7 @@
 import {useSyncExternalStore} from 'react';
 import {spendArcadeCoins,creditOnce} from '../arcade/arcadeWallet';
 import {localPlayDay} from '../town/dailyPlay';
-import {createGashaponStore,emptyGashapon,GASHAPON_KEY,type GashaponState} from './store';
+import {createGashaponStore,emptyGashapon,GASHAPON_KEY,type GashaponState,type GashaponPorts} from './store';
 
 export const GASHAPON_CHANGED='fi2-gashapon-changed';
 function storage():Storage|null{try{return typeof localStorage==='undefined'?null:localStorage;}catch{return null;}}
@@ -21,7 +21,8 @@ const rawOf=()=>{try{return storage()?.getItem(GASHAPON_KEY)??memory;}catch{retu
 let snapshot:GashaponState|null=null;const listeners=new Set<()=>void>();
 function emit(){snapshot=null;listeners.forEach(fn=>fn());if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent(GASHAPON_CHANGED));}
 
-const store=createGashaponStore({
+/** The save + wallet ports, shared with the Claw Club (lib/claw/clawBrowser.ts writes its plays into the same save). */
+export const gashaponPorts:GashaponPorts={
  read:()=>JSON.parse(rawOf()??'null'),
  // A blocked or full storage throws here, and the store reports 'save' (coins already recorded under the spin id, so the
  // retry with the same id finishes without a second charge). The in-memory copy is only written once storage accepted it.
@@ -30,7 +31,8 @@ const store=createGashaponStore({
  spend:(id,cost,reason)=>spendArcadeCoins(id,cost,reason),
  refund:(id,coins,reason)=>creditOnce(id,'island',coins,reason),
  lock:<T,>(fn:()=>T|Promise<T>)=>typeof navigator!=='undefined'&&navigator.locks?navigator.locks.request(GASHAPON_KEY,fn) as Promise<T>:Promise.resolve().then(fn),
-});
+};
+const store=createGashaponStore(gashaponPorts);
 export const gashapon=store;
 /**
  * A spin whose coins were taken but whose save failed, per machine (QA Nov 8 2026): kept for the session so "Try again", even
