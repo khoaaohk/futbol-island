@@ -120,5 +120,35 @@ ok('device save: best, medal, rounds, gloves, scouting cards, the daily claim; b
  for(const w of C.GOAL_WHYS)assert.ok(S.WHY_LINE[w].length>20);assert.ok(S.SAFEHANDS_TIPS.length>=8);
  assert.match(S.nearMissLine({score:1,best:0,newBest:true,daily:true,dailySaves:3,rounds:0,won:false,gloves:0}),/3 out of 5\. Tomorrow/);assert.match(S.nearMissLine({score:2300,best:0,newBest:true,daily:false,dailySaves:0,rounds:1,won:false,gloves:0}),/200 points from Bronze/);});
 
+ok('wiring: playable by /arcade?game=safehands, its own board, coins, analytics key, device save; no machine in the room yet',()=>{
+ const cat=read('lib/arcade/arcadeCatalog.ts'),room=read('components/ArcadeRoom.tsx'),K=require('../lib/arcade/arcadeCatalog.ts');
+ assert.deepEqual(K.arcadeUnplaced.map(c=>c.id),['safehands']);assert.ok(!K.arcadeCabinets.some(c=>c.id==='safehands'),'the room and every "N games" count are unchanged until the owner places it');assert.ok(!K.ARCADE_ROW.includes('safehands'));
+ assert.equal(K.arcadeAnalyticsId('safehands'),'safehands');assert.match(cat,/export type ArcadePlayableId=ArcadeCabinetId\|typeof arcadeUnplaced\[number\]\['id'\];/);
+ assert.match(room,/const SafeHands=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/SafeHandsGame'\)\)/);assert.match(room,/safehands:\(\)=>import\('\.\/games\/SafeHandsGame'\)/);assert.match(room,/arcadeUnplaced\.some\(c=>c\.id===id\)/);assert.match(room,/game==='safehands'\?<SafeHands onExit=\{back\}\/>/);
+ const L=require('../lib/arcade/leaderboard.ts');assert.ok(L.BOARD_GAMES.includes('safehands'));assert.equal(L.BOARD_RULES.safehands.max,SH.scoreMax);assert.ok(!L.HALL_MACHINES.includes('safehands'));
+ {const best=Math.max(...[11,12,13,14,15,16].map(i=>{const o=B.play(i,'oracle');return o.score/o.secs;}));const r=L.BOARD_RULES.safehands;assert.ok(best<r.perSecond,`the board's rate limit is above the best bot (${best.toFixed(0)} a second)`);assert.ok(r.base+r.perSecond*60>3000);}
+ const W=require('../lib/arcade/arcadeWalletCore.ts');assert.equal(W.arcadeCoinTarget('safehands',{points:2600}),5);assert.equal(W.arcadeCoinTarget('safehands',{points:60000}),12,'capped like the other machines');assert.equal(C.safehandsCoins(2600),5);
+ assert.match(read('lib/analytics/islandIds.ts'),/'ballblaster','safehands'\] as const/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_safehands','Arcade: Safe Hands'\]/);assert.match(read('lib/analytics/countIds.ts'),/'ballblaster','safehands'\] as const/);
+ assert.match(read('lib/saves/snapshot.ts'),/'fi2-safehands-v1'/);assert.match(read('lib/arcade/lastScore.ts'),/safehands_daily:\{game:'safehands',label:'Daily Shootout',today:true\}/);
+ assert.match(read('components/arcade/HighScoreEntry.tsx'),/'ballblaster','safehands','runner'/);assert.match(read('components/games/skins/index.ts'),/safehands:safehands\.skin/);assert.match(read('scripts/check-arcade-load.cjs'),/'ballblaster','safehands'/);
+ const sql=read('docs/arcade-aaa/safehands-supabase.sql');assert.match(sql,/'rollball', 'ballblaster', 'safehands'\)\);/);assert.match(sql,/'arcade_ballblaster','arcade_safehands',/);assert.match(sql,/OK, Safe Hands installed/);assert.match(sql,/drop constraint if exists arcade_scores_game_check/);
+ for(const g of L.BOARD_GAMES)assert.ok(sql.includes(`'${g}'`),`the owner SQL keeps board ${g}`);assert.match(read('supabase/migrations/20261205_safehands_boards.sql'),/'ballblaster', 'safehands'\)\);/);assert.match(read('supabase/migrations/20261206_analytics_safehands.sql'),/'arcade_safehands'/);});
+
+ok('the shell: one thumb, kid-safe come-back hooks, buttons in the UI sans, the loop sleeps off the pitch',()=>{
+ const t=read('components/games/SafeHandsGame.tsx'),css=read('components/games/SafeHandsGame.module.css'),v=read('lib/arcade/safehands/view.ts');
+ assert.match(t,/data-game="safehands" data-arcade-kind="safehands"/);assert.match(t,/useArcadeEntry\('safehands'\)/);assert.match(t,/<ArcadeTopBar game="safehands"[^>]*backTitle="Back to arcade"/);assert.match(t,/<ComicMedalTrack score=\{result\.score\}/);assert.match(t,/data-hs-slot/);
+ assert.match(t,/safehandsDailySeed\(day\)/);assert.match(t,/data-safehands-shelf/);assert.match(t,/data-safehands-scoutlist/);assert.match(t,/data-safehands-near/);assert.match(t,/else if\(s\.phase==='tip'\)return;\/\/ the round card is up: the loop sleeps/);
+ assert.match(t,/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/);assert.match(t,/document\.addEventListener\('visibilitychange',hidden\)/);assert.match(t,/frameMs\.current=1000\/\(mobile\?30:60\)/);
+ assert.match(t,/if\(kind==='fingertip'&&!reduced\.current\)stopUntil\.current=performance\.now\(\)\+340;/,'the close call: one brief freeze');
+ assert.match(t,/beanLookFor\(c\.loadCustomization\(p\.completed,p\.total\)\)/,'the keeper is the player’s own island bean');
+ assert.doesNotMatch(t,/setInterval|Notification|streak\.day|liveStreak/);assert.doesNotMatch(css,/IslandBrush/);assert.doesNotMatch(css,/blur\(|backdrop-filter|linear-gradient\(/);assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
+ assert.match(v,/getContext\('2d',\{alpha:false\}\)/);assert.match(v,/dpr=Math\.min\(2,Math\.max\(1,ratio\)\)/);assert.doesNotMatch(v,/requestAnimationFrame|setTimeout|setInterval|createLinearGradient|createRadialGradient|shadowBlur|filter\s*=/);
+ assert.match(v,/INK='#231a2e',PAPER='#fff3d6',SUN='#ffc83a',ORANGE='#ff8a3c',RED='#f0452e',TEAL='#19b5a5',VIOLET='#8f78b8'/,'the comic kit’s hex values');});
+
+ok('sound: every voice -> master -> ONE limiter -> destination; nothing before a gesture; no loops',()=>{
+ const a=read('lib/arcade/safehands/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);
+ assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true/);assert.match(a,/function unlock\(\)/);assert.match(read('components/games/SafeHandsGame.tsx'),/\(audio\.current\?\?=createSafehandsAudio\(\)\)\.unlock\(\)/);
+ assert.match(read('scripts/check-arcade-audio.cjs'),/game==='safehands'/);});
+
 if(require.main===module)console.log(`safehands-core: ${n} checks ok`);
 module.exports={ok,read,C,S};

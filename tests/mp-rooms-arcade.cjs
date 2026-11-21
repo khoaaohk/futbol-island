@@ -7,7 +7,7 @@ function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.ge
 // vm objects come from another realm: compare by value.
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
 const src=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
-const A=load(path.join(ROOT,'lib/multiplayer/rooms/arcade.ts')),{arcadeCabinets,arcadeHubCabinets}=load(path.join(ROOT,'lib/arcade/arcadeCatalog.ts'));
+const A=load(path.join(ROOT,'lib/multiplayer/rooms/arcade.ts')),{arcadeCabinets,arcadeHubCabinets,arcadeUnplaced}=load(path.join(ROOT,'lib/arcade/arcadeCatalog.ts'));
 const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p.z>=B.minZ-m&&p.z<=B.maxZ+m;
 
 // 1. Descriptor shape and geometry.
@@ -49,7 +49,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  for(const f of flags)assert(busy.includes(f)!==R.notBusy.includes(f),`page flag "${f}" is classified exactly once (busy or not)`);
  for(const f of [...busy,...R.notBusy])assert(flags.includes(f),`descriptor flag "${f}" exists in ArcadeRoom.tsx`);
  same([...busy].sort(),['game','hall','list']);assert(page.includes('setCovered(list||hall||toyCovering)'),'list / hall are the covered overlays (the Today sheet left the room Nov 17 2026)');assert(page.includes('setArcadeBusy(game,list,hall)'),'list and hall are the busy overlays');
- const ids=arcadeCabinets.map(c=>c.id),pageIds=new Set([...page.matchAll(/game===['"](\w+)['"]/g)].map(m=>m[1]));
+ const ids=[...arcadeCabinets,...arcadeUnplaced/* Nov 21 2026: a game the page can open that has no machine in the room */].map(c=>c.id),pageIds=new Set([...page.matchAll(/game===['"](\w+)['"]/g)].map(m=>m[1]));
  for(const id of pageIds)assert(ids.includes(id),`page game "${id}" is a catalog cabinet`);
  const games=fs.readdirSync(path.join(ROOT,'components/games')).join(' ');assert(games.includes('ArcadeGame3D')&&games.includes('PassPuzzleGame'));
  const out=A.createArcadeBusyPose();

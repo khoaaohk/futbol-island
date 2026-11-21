@@ -78,7 +78,7 @@ const CLIENT_COUNTS=new Set([...CID.FIXED_COUNT_IDS,...lessonIds,...BUILT_COUNTS
 (async()=>{
 
 await ok('latest migration parsed',()=>{
- assert.equal(LATEST,'20261204_analytics_ballblaster.sql','the newest analytics_ingest (update this when a newer one lands; Nov 17 2026: Roll It In\'s arcade_rollball activity, a superset of Street Dash\'s arcade_streetdash (20261130); Nov 17 2026: Ball Blaster\'s arcade_ballblaster activity, a superset of Street Dash\'s (20261130); Nov 17 2026: Street Dash\'s arcade_streetdash activity, a superset of Clear the Box\'s arcade_clearbox (20261128); Nov 17 2026: Clear the Box\'s arcade_clearbox activity, a superset of Trophy Drop\'s arcade_trophydrop (20261126) and Line Up!\'s arcade_lineup (20261124); Nov 12 2026: West Stadium places + west cells; Nov 11 2026: Air Futbol\'s arcade_airhockey activity; Nov 10 2026: Squad Snake\'s arcade_snake activity)');
+ assert.equal(LATEST,'20261206_analytics_safehands.sql','the newest analytics_ingest (update this when a newer one lands; Nov 21 2026: Safe Hands\'s arcade_safehands activity, a superset of Ball Blaster\'s (20261204); Nov 17 2026: Roll It In\'s arcade_rollball activity, a superset of Street Dash\'s arcade_streetdash (20261130); Nov 17 2026: Ball Blaster\'s arcade_ballblaster activity, a superset of Street Dash\'s (20261130); Nov 17 2026: Street Dash\'s arcade_streetdash activity, a superset of Clear the Box\'s arcade_clearbox (20261128); Nov 17 2026: Clear the Box\'s arcade_clearbox activity, a superset of Trophy Drop\'s arcade_trophydrop (20261126) and Line Up!\'s arcade_lineup (20261124); Nov 12 2026: West Stadium places + west cells; Nov 11 2026: Air Futbol\'s arcade_airhockey activity; Nov 10 2026: Squad Snake\'s arcade_snake activity)');
  assert.equal(LISTS.length,3,'three allow-lists: area, place, activity');
  assert(COUNT_RE_SRC,'the counts regex is found');
  assert.equal(COUNT_RE_SRC,CID.COUNT_KEY_RE.source,'SQL counts regex = lib/analytics/countIds.ts COUNT_KEY_RE');
@@ -95,7 +95,7 @@ await ok('every area/place/activity the client can send is allowed by the SQL',(
  // Every place in the list is reachable (no dead allow-list entries hiding a renamed place), and the museum/arcade ids agree.
  for(const p of IDS.PLACE_IDS)assert(CLIENT_PLACES.has(p),'place never returned by placeAt: '+p);
  assert.deepEqual(J([...experienceIds].sort()),J([...IDS.MUSEUM_EXHIBITS].sort()),'MUSEUM_EXHIBITS = the museum experiences');
- assert.deepEqual(J(ARCADE.arcadeCabinets.map(c=>ARCADE.arcadeAnalyticsId(c.id)).sort()),J([...IDS.ARCADE_GAMES].sort()),'ARCADE_GAMES = the arcade cabinets');
+ assert.deepEqual(J([...ARCADE.arcadeCabinets,...ARCADE.arcadeUnplaced/* Nov 21 2026: Safe Hands is played by deep link, with no machine yet */].map(c=>ARCADE.arcadeAnalyticsId(c.id)).sort()),J([...IDS.ARCADE_GAMES].sort()),'ARCADE_GAMES = the arcade cabinets');
  assert(CLIENT_ACTIVITIES.has('kit_shop')&&CLIENT_ACTIVITIES.has('kit_studio'),'the Kit Shop has its own activities (not "other")');
  // The server's own validation accepts a beat carrying every one of them at once (and the payload fits).
  const e=300_000,ms=k=>Object.fromEntries(k.map(x=>[x,1000]));
@@ -169,8 +169,8 @@ await ok('sql round trip: nothing the client sends is dropped',async()=>{
   ingest({type:'start',session:'coveragepre000000001',path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct',is_returning:true,has_code:false,player_id:'d'.repeat(32)});
   ingest({type:'beat',session:'coveragepre000000001',engaged_ms:20000,area_ms:{shop:20000},activity_ms:{kit_shop:12000,swim:8000}});
   assert.equal(psql(`select area_ms::text||'|'||activity_ms::text from analytics_beats where session_id='coveragepre000000001'`),'{"shop": 20000}|{"swim": 8000, "kit_shop": 12000}','before the newest ingest: starts and beats count as before');
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, Ball Blaster activity installed','self-check row');/* Nov 17 2026: was 'OK, Street Dash activity installed' (20261130) *//* Nov 17 2026: was 'OK, Street Dash activity installed' (20261130), 'OK, Clear the Box activity installed' (20261128), 'OK, arcade_trophydrop activity installed' (20261126), 'OK, Line Up! activity installed' (20261124), before that 'OK, stadium places and cells installed' (20261119) */
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, Ball Blaster activity installed','idempotent');
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, Safe Hands activity installed','self-check row');/* Nov 21 2026: was 'OK, Ball Blaster activity installed' (20261204) *//* Nov 17 2026: was 'OK, Street Dash activity installed' (20261130) *//* Nov 17 2026: was 'OK, Street Dash activity installed' (20261130), 'OK, Clear the Box activity installed' (20261128), 'OK, arcade_trophydrop activity installed' (20261126), 'OK, Line Up! activity installed' (20261124), before that 'OK, stadium places and cells installed' (20261119) */
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, Safe Hands activity installed','idempotent');
   // Nov 12 2026 (West Stadium): west places and the appended cells 1612..1890 are kept, the cap is exactly CELL_COUNT.
   start('coveragewest00000001');
   ingest({type:'beat',session:'coveragewest00000001',engaged_ms:20000,place_ms:{stadium:9000,stadium_plaza:3000,stadium_park:2000,west_beach:1000,town:1000},cells:{5:4,[IDS.GRID_CELLS]:6,[IDS.CELL_COUNT-1]:3,[IDS.CELL_COUNT]:2}});

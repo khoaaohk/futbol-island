@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|safehands] [--suspended] [--headed]
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -121,6 +121,18 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await page.waitForFunction(()=>window.__ballblaster.game.state.stats.breaks>=1,null,{timeout:3000}).catch(()=>errors.push('no break'));await wait(600);must.push('smash');
    await label('');await wait(300);
    await B(()=>{window.__audioLabel('over');window.__ballblaster.audio.over();});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='safehands'){quiet.push('menu');
+   // safehands (Nov 21 2026): windows whistle (the referee before the first kick: the game's own run-up), kick (the strike that follows),
+   // glove (a parry + the crowd, the game's own cues) and over (the end cue); menu / paused must be SILENT.
+   await page.waitForFunction(()=>window.__safehands&&window.__safehands.phase==='playing',null,{timeout:30000});await page.locator('[data-safehands-ack]').tap().catch(()=>{});await label('');
+   const S=fn=>page.evaluate(fn);
+   await page.waitForFunction(()=>window.__safehands.game.state.phase==='run',null,{timeout:9000,polling:20}).catch(()=>errors.push('no run-up'));await label('whistle');await wait(500);must.push('whistle');
+   await label('');await page.waitForFunction(()=>window.__safehands.game.state.phase==='fly',null,{timeout:6000,polling:10}).catch(()=>errors.push('no kick'));await label('kick');await wait(400);must.push('kick');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('glove');const a=window.__safehands.audio;a.glove(1);a.cheer(false);});await wait(900);must.push('glove');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('over');window.__safehands.audio.over(false);});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='rollball'){quiet.push('menu');
    await page.waitForFunction(()=>window.__rollball&&window.__rollball.phase==='playing',null,{timeout:30000});await label('');await wait(600);
