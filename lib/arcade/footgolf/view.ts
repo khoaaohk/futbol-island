@@ -266,7 +266,7 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   else if(cam.mode==='cup'){const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz)||1,nx=dx/d,nz=dz/d;cam.tPos.set(H.cup[0]+nx*1.6-nz*1.9,H.cupY+.55,H.cup[1]+nz*1.6+nx*1.9);cam.tLook.set((b.x+H.cup[0]*2)/3,H.cupY+.1,(b.z+H.cup[1]*2)/3);k=1-Math.exp(-dt*3);}
   else{cam.orbit+=dt*.05;}
   cam.pos.lerp(cam.tPos,k);cam.look.lerp(cam.tLook,k);camera.position.copy(cam.pos);camera.lookAt(cam.look);void now;}
- function render(g:FootGolf,now:number){if(!H||g.state.hole!==H)setHole(g);const s=g.state,b=s.ball,dt=Math.min(.1,cam.lastT?now-cam.lastT:1/30);cam.lastT=now;
+ function render(g:FootGolf,now:number){if(!H||g.state.hole!==H)setHole(g);if(!H)return;const s=g.state,b=s.ball,dt=Math.min(.1,cam.lastT?now-cam.lastT:1/30);cam.lastT=now;
   if(cam.mode!=='flyover'){if((s.phase==='fly'||s.phase==='roll'))cam.mode=cam.mode==='cup'?'cup':'chase';else if(s.phase==='aim')cam.mode='aim';}
   updateCamera(g,dt,now);
   // the ball: position, roll by distance travelled
