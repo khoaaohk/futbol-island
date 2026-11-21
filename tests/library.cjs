@@ -32,7 +32,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert(PATHS.has('/library')&&ep.hasEs('/library'),'in the sitemap, in both languages');assert(!PATHS.has('/learn'),'/learn is not a page');
  const page=read('app/(site)/library/page.tsx');assert.match(page,/breadcrumbLd\(CRUMBS\)/);assert.match(page,/collectionLd\(\{name:W\.h1,path:LIBRARY_PATH/);assert.match(page,/export const dynamic='force-static'/);
  const html=render(React.createElement(L('app/(site)/library/page.tsx').default));
- assert.equal((html.match(/<h1/g)||[]).length,1);assert.match(html,/<h1[^>]*>The Futbol Island library<\/h1>/);
+ assert.equal((html.match(/<h1/g)||[]).length,1);/* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... library"): the H1 leads with "Learn soccer" */assert.match(html,/<h1[^>]*>Learn soccer: the Futbol Island library<\/h1>/);
  for(const c of cards)assert(html.includes(`href="${c.href}"`),`${c.href} is linked`);
  assert.equal((html.match(/href="\/play"/g)||[]).length,2,'the Play button, at the top and at the close (none in the group menu: owner, Nov 20 2026)');
  {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library sections"/.test(menu[0]),'the menu is a labelled nav');
@@ -75,7 +75,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  // Spanish
  const es=L('components/es/routes.tsx').esRoute('/library'),em=es.meta(),eh=render(es.render()),E=L('components/es/pages/LibraryEs.tsx');
  assert(em.title.absolute.length<=60&&em.description.length>=120&&em.description.length<=155,`Spanish title ${em.title.absolute.length}, description ${em.description.length}`);
- assert.equal(em.alternates.canonical,'/es/library');assert.match(eh,/<h1[^>]*>La biblioteca de Futbol Island<\/h1>/);
+ assert.equal(em.alternates.canonical,'/es/library');assert.match(eh,/<h1[^>]*>Aprende fútbol: la biblioteca de Futbol Island<\/h1>/);
  {const es=E.librarySectionsEs();assert.equal(es.length,15);for(const x of es){assert(eh.includes(`<section id="${x.id}"`)&&eh.includes(`href="#${x.id}"`),`es ${x.id}`);assert(eh.includes(`href="${x.href}">${x.cta}</a>`));
    assert(x.examples.length>=3,`es ${x.id}: examples`);for(const e of x.examples)assert(x.href.startsWith('/es/')?e.href.startsWith('/es/')&&ep.hasEs(ep.toEn(e.href.split('#')[0])):!e.href.startsWith('/es/'),`es ${x.id}: ${e.href}`);
    if(!x.href.startsWith('/es/'))assert(/\(en inglés\)$/.test(x.cta),`${x.href}: the button says English`);}

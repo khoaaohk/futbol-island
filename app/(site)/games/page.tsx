@@ -40,7 +40,7 @@ export default function GamesHub(){
     <GamesHero crumbs={crumbs} h1={H.h1} lead={H.lead} play="Play Futbol Island"/>
     <IslandBand title="Futbol Island, the main game" note={GAMES_NAMES}
      lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
-  <Section id="games" title={`The ${GAMES_WORD} arcade games`}>
+  <Section id="games" title={`The ${GAMES_WORD} soccer arcade games`}>{/* Nov 20 2026 (new layout SEO): "soccer arcade games" is a search */}
    <div className={`${gamesCss.arcadeIntro} ${gamesCss.bleed}`}>
     <div>{H.intro.map(x=><p key={x}>{x}</p>)}</div>
     {HERO_CLIP&&<ClipFigure c={HERO_CLIP}/>}

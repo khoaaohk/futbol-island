@@ -81,7 +81,7 @@ export const LIBRARY_EN:LibraryWords={
     brand; the description names what is inside in search words. docs/seo/NEW-LAYOUT-SEO-PLAN-2026-11-20.md */
  title:'Learn Soccer for Kids: Free Lessons, Rules and Drills',
  description:'Learn soccer for free, for kids 7 to 12: football lessons with quizzes, the rules, positions, formations, drills, practice plans, games and story books.',
- h1:'The Futbol Island library',crumb:'Library',
+ h1:'Learn soccer: the Futbol Island library',/* Nov 20 2026 (new layout SEO): the H1 carries the page's main search, then the name */crumb:'Library',
  lead:'Futbol Island teaches kids aged 7 to 12 how football (soccer) works: the rules, the positions, how a team keeps its shape and how to pass, defend and score. Parents and coaches get drills, practice plans and tools to print. Everything here is free to read and use.',
  play:'Play the game',heroAlt:'Futbol Island from above: a town square, a small caged pitch and players walking around',insetAlt:'The Island paths screen in the game: a path of lessons with tabs for 7v7, 9v9, 11v11 and Futsal',playTitle:'Play it on the island',playLine:'Every lesson here also plays out on a pitch in the game, with moving players and a short quiz. It is free and runs in the web browser.',
  groups:{
