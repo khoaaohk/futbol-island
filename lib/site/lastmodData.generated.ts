@@ -597,5 +597,6 @@ const data:Record<string,string>={"/":"2026-11-20",
 "/books/kante":"2026-11-20",
 "/books/oshoala":"2026-11-20",
 "/games/soccer-goalkeeper-game":"2026-11-21",
-"/games/soccer-juggling-game":"2026-11-21"};
+"/games/soccer-juggling-game":"2026-11-21",
+"/games/soccer-defending-game":"2026-11-21"};
 export default data;
