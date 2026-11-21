@@ -1,0 +1,8 @@
+/* Pop-Up Shot HUD skin (Nov 21 2026, docs/arcade-aaa/popup-direction.md). The class lands on the game root next to data-game="popup"
+ * together with the comic kit's classes (components/games/comic). Only what is the game's own: the page colour behind the stage and
+ * the overlays' accents. */
+.skin{--arcade-skin:popup;background:#f08a5c}
+.skin [data-arcade-pill] span{color:var(--cm-ink)!important}
+.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ed9}
+.skin.skin.skin.skin [data-arcade-pause-score]{border-left:10px solid var(--cm-red)}
+.skin.skin.skin.skin [data-arcade-board]{max-height:min(92dvh,760px)}

@@ -137,8 +137,8 @@ ok('bots: a first-time child scores, better players score more, medals and the b
 });
 ok('device save: best, medal, daily claim and day streak, tips tied to the run, bad data',()=>{
  const st={flicks:40,hits:30,wasted:10,knocks:28,friends:0,friendSeen:2,snaps:5,multis:1,bestMulti:2,bestCombo:6,bestStreak:9,far:6,escaped:8,powers:1,accBonus:450,fairBonus:400};
- let sv=S.emptyPopupSave();let r=S.settlePopup(sv,{score:3000,daily:false,day:'2026-11-21',arena:'plaza',stats:st});assert.ok(r.newBest);assert.equal(r.save.best,3000);assert.equal(r.medal,1);assert.equal(r.save.plays,1);assert.equal(r.save.arenas.plaza,3000);
- r=S.settlePopup(r.save,{score:2000,daily:false,day:'2026-11-21',arena:'plaza',stats:st});assert.ok(!r.newBest);assert.equal(r.save.best,3000);
+ let sv=S.emptyPopupSave();let r=S.settlePopup(sv,{score:4500,daily:false,day:'2026-11-21',arena:'plaza',stats:st});assert.ok(r.newBest);assert.equal(r.save.best,4500);assert.equal(r.medal,1);assert.equal(r.save.plays,1);assert.equal(r.save.arenas.plaza,4500);
+ r=S.settlePopup(r.save,{score:2000,daily:false,day:'2026-11-21',arena:'plaza',stats:st});assert.ok(!r.newBest);assert.equal(r.save.best,4500);
  r=S.settlePopup(r.save,{score:7000,daily:true,day:'2026-11-21',arena:'beach',stats:st});assert.ok(r.dailyFirst);assert.equal(r.save.daily.best,7000);assert.equal(r.save.best,7000,'one best: the daily counts too (one board)');assert.equal(r.streak,1);
  const r2=S.settlePopup(r.save,{score:100,daily:true,day:'2026-11-21',arena:'beach',stats:st});assert.ok(!r2.dailyFirst);assert.equal(r2.save.daily.best,7000);
  const r3=S.settlePopup(r2.save,{score:100,daily:true,day:'2026-11-22',arena:'stands',stats:st});assert.equal(r3.streak,2);assert.equal(S.liveStreak(r3.save,'2026-11-24'),0);
