@@ -40,7 +40,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    {q:'Where are my players’ names stored?',a:'Only in your own browser, so the lineup is still there when you come back on the same device. Nothing is sent to a server. A link you copy holds the lineup inside the link itself, so only people you send it to can open it.'},
    {q:'Can I use it on my phone at the field?',a:'Yes. It is made for one thumb: tap a player, then tap the spot or the substitute to swap with. On a computer you can drag instead, or use the Tab, arrow and Enter keys.'},
    {q:'How do I share a lineup with parents?',a:'Use “Download picture” and post the picture in your team chat, or use “Copy link” and paste the link. Use first names or nicknames only when you share a lineup of children.'}]},
- {kind:'lineup',slug:'7v7-lineup-builder',path:'/tools/7v7-lineup-builder',format:'7v7',crumb:'7v7 lineup builder',title:'7-a-Side Formation Creator: Free 7v7 Soccer Lineup Maker',h1:'7v7 soccer lineup builder',
+ {kind:'lineup',slug:'7v7-lineup-builder',path:'/tools/7v7-lineup-builder',format:'7v7',crumb:'7v7 lineup builder',title:'7-a-Side Football Formation Creator: Free 7v7 Soccer Lineup',h1:'7v7 soccer lineup builder',
   description:'A free 7-a-side football formation creator for 7v7 soccer. Pick a 2-3-1, 3-2-1, 2-2-2 or 3-1-2, type names, drag players, then print or share it.',
   lead:'Set out your seven starters and your substitutes on a 7v7 field with build-out lines. Choose a 2-3-1, 3-2-1, 2-2-2 or 3-1-2, type first names and move players until it looks right. Then show the formation to your team on paper, as a picture or as a link.',
   blurb:'Seven starters and the bench on a 7v7 field',
@@ -88,9 +88,9 @@ export function gameLengths(format:GuideFormat):GameLength[]{
 }
 export type PlannerPage={kind:'planner';slug:string;path:string;format?:Exclude<GuideFormat,'futsal'>;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
 export const PLANNER_PAGES:readonly PlannerPage[]=[
- {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Equal Playing Time Calculator: Free Soccer Sub Calculator',h1:'Soccer playing time calculator',
-  description:'Free equal playing time calculator for soccer: enter your players and game length to get a fair sub rotation with equal minutes for every child, to print.',
-  lead:'A soccer playing time calculator, also called a sub calculator or an equal minutes calculator, works out a substitution plan in which every player gets the same share of the game, to within one change. Tell it how many players came, how many play at once and how long the game is.',
+ {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Equal Playing Time Calculator for Soccer: Free Sub Planner',h1:'Equal playing time calculator for soccer',
+  description:'Free equal playing time calculator for soccer: enter players and game length for a fair sub rotation, with equal minutes and game time for every child.',
+  lead:'A soccer playing time calculator, also called a sub calculator, a game time calculator or an equal minutes calculator, works out a substitution plan in which every player gets the same share of the game, to within one change. Tell it how many players came, how many play at once and how long the game is.',
   blurb:'A fair substitution plan with equal minutes for every player',
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',
    'It works for any game: choose 7v7, 9v9, 11v11 or futsal, or type your own numbers for a tournament with short games.'],
