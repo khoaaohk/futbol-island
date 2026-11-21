@@ -1,4 +1,5 @@
 import JsonLd from '@/components/seo/JsonLd';
+import rt from './railTarget.module.css';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import GuideVideo from '@/components/site/GuideVideo';
 import {guideVideo} from '@/lib/site/guideVideos';
@@ -26,7 +27,7 @@ export const hubCrumbs=(h:{crumb:string;path:string})=>[{name:'Home',path:'/'},{
  *  components/learn/FaqEnhance.tsx animates open / close; without JS the plain <details> works. */
 export function QA({id,title,faq,more=[],children}:{id:string;title:string;faq:readonly {q:string;a:string}[];more?:readonly {q:string;a:string}[];children?:React.ReactNode}){
  const seen=new Set<string>(),items=[...faq,...more].filter(f=>!seen.has(f.q)&&!!seen.add(f.q));
- return <section className={styles.section} aria-labelledby={id}><h2 className={styles.h2} id={id}>{title}</h2>
+ return <section className={styles.section} aria-labelledby={id}><h2 className={`${styles.h2} ${rt.target}`} id={id}>{title}</h2>
   <div className={styles.faqList} data-faq={id}>{items.map((f,i)=><details key={f.q} className={styles.faqItem} open={i===0||undefined} data-x={i===0?'':undefined}>
    <summary className={styles.faqSum}><h3 className={styles.faqQ}>{f.q}</h3><span className={styles.plus} aria-hidden="true"/></summary>
    <div className={styles.faqBody}><div className={styles.faqIn}><p>{f.a}</p></div></div></details>)}</div>

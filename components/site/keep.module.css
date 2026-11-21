@@ -51,3 +51,6 @@ nav.toc li a[aria-current]{color:var(--ink);font-weight:700;background:var(--pap
 nav.toc li a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
 .tocPlay{margin-top:var(--s1);font-size:15px;font-weight:700}
 @media print{.toc{display:none!important}}
+/* a page with a rail lists its sections in the rail (owner, Nov 20 2026: "it should list what's on that page to smooth scroll down"),
+   so "On this page" is not shown twice; it stays in the HTML */
+main:has(>nav[data-rail]) .toc{display:none}

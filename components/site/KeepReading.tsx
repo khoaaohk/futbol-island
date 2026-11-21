@@ -1,6 +1,7 @@
 import {FactIcon,type FactIconKind} from './FactIcons';
 import {lessonPath,type SiteLesson} from '../../lib/site/lessons';
 import k from './keep.module.css';
+import rt from './railTarget.module.css';
 /**
  * "Keep reading" (visual pass batch 3, Nov 17 2026; audit shared fix 2): the end of a guide, hub, card, fish or tool page used to
  * stack 4-6 link lists (lessons, drills, related terms, formations, cards, more to learn). Now it is ONE section: one h2, one grid
@@ -61,7 +62,7 @@ export default function KeepReading({groups,title,id='keep-reading',show=8,lang=
  const first=gs.flatMap((g,i)=>g.links.slice(0,q[i]).map(l=>({g,l}))),rest=gs.flatMap((g,i)=>g.links.slice(q[i]).map(l=>({g,l})));
  const cards=(xs:typeof first)=>xs.map(({g,l},j)=><Card key={`${g.id}-${l.path}-${j}`} g={g} l={l} id={anchor(g)} lang={lang}/>);
  return <section className={k.keep} aria-labelledby={id} data-keep-reading={first.length+rest.length}>
-  <h2 className={k.h2} id={id}>{title??W.title}</h2>
+  <h2 className={`${k.h2} ${rt.target}`} id={id}>{title??W.title}</h2>
   <ul className={k.grid}>{cards(first)}</ul>
   {rest.length>0&&<details className={k.more}><summary className={k.moreSum}><span>{W.more(rest.length)}</span><span className={k.plus} aria-hidden="true"/></summary>
    <ul className={k.grid}>{cards(rest)}</ul></details>}

@@ -2,7 +2,7 @@ import type {Rail,RailGroup,RailItem} from './railNav';
 import {railId} from './railId';
 import {LIBRARY_PATH} from './libraryPath';
 import {toEs} from '@/lib/i18n/esPaths';
-import {GAME_PAGES,GAMES_HUB} from './games';
+import {GAMES_HUB} from './games';
 import {FORMAT_LABEL,FORMAT_ORDER,LESSONS,lessonPath} from './lessons';
 import {HUBS} from './hubs';
 import {esHubLink} from '@/lib/i18n/es/hubs';
@@ -21,9 +21,10 @@ const LIB_EN:RailItem={href:LIBRARY_PATH,name:'Library'},LIB_ES:RailItem={href:t
 const lib=(es=false)=>es?LIB_ES:LIB_EN;
 const rail=(label:string,hub:RailItem,groups:RailGroup[],es=false):Rail=>({label,up:[hub,lib(es)],groups:groups.filter(g=>g.items.length)});
 
-/** /games/<slug>: all games, the Library, then the eleven games. */
-export function gamesRail():Rail{
- return rail('Soccer games',{href:GAMES_HUB.path,name:'All games'},[{items:GAME_PAGES.map(g=>({href:g.path,name:g.name}))}]);
+/** /games/<slug>: Back to all games, then the game page's own sections. */
+export function gameRail(name:string):Rail{
+ return pageRail(`${name} on this page`,{href:GAMES_HUB.path,name:'All games'},[sec('what','What it is'),sec('how','How to play'),sec('teaches','What it teaches'),
+  sec('tips','Tips'),sec('harder','Difficulty'),sec('parents','For parents'),sec('faq','Questions'),sec('more','More games'),sec('island','The whole island')]);
 }
 
 /** A lesson page (96 lessons, too many for one rail): its own format's lessons open (18 to 26), then the other formats (links to
@@ -61,3 +62,10 @@ export function hubRail(label:string,groups:RailGroup[],es=false):Rail{
 export const anchor=(prefix:string,path:string,name:string):RailItem=>({href:`#${railId(prefix,path)}`,name});
 /** A rail entry for a section heading already on the page. */
 export const sec=(id:string,name:string):RailItem=>({href:`#${id}`,name});
+
+/** A detail page's rail (owner, Nov 20 2026: "this internal page should not have the list of games. it should list what's on that
+ *  page to smooth scroll down"): Back to the level above, then Overview (#top, the head) and the page's own sections in page order.
+ *  Pass current="#top" to RailNav. */
+export function pageRail(label:string,back:RailItem,sections:readonly RailItem[],es=false):Rail{
+ return {label,up:[back],groups:[{items:[{href:'#top',name:es?'Resumen':'Overview'},...sections]}]};
+}
