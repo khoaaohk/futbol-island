@@ -35,7 +35,8 @@ const L=rel=>load(path.join(root,rel));
 const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
 const games=L('lib/site/games.ts'),catalog=L('lib/arcade/arcadeCatalog.ts'),guides=L('lib/site/guides.ts'),tools=L('lib/site/tools/registry.ts'),paths=L('lib/site/paths.ts'),seo=L('lib/site/seo.ts');
 const PATHS=new Set(paths.sitePaths().map(p=>p.path)),G='app/(site)/games',PAGES=games.GAME_PAGES,HUB=games.GAMES_HUB,ALL=games.GAME_LISTINGS;
-const text=h=>h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
+// Nov 20 2026 (owner: every page's side nav "should list what's on that page"): the rail is navigation, so its words are not counted as page copy.
+const text=h=>h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/g,' ').replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 /** Width and height of a WebP (lossy VP8, lossless VP8L or extended VP8X) or a JPEG, read from the file's own header. */
 function size(file){
  const b=fs.readFileSync(file);
