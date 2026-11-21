@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {cardsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {CollectionLinks} from '@/components/site/CollectionHub';
 import {CARD_COLLECTIONS} from '@/lib/site/collections';
@@ -19,7 +22,9 @@ export default function CardsIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} player cards`,numberOfItems:SITE_CARDS.length,
    itemListElement:SITE_CARDS.map((c,i)=>({'@type':'ListItem',position:i+1,name:`#${c.number} ${c.displayName}`,url:abs(cardPath(c.number))}))}}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={cardsHubRail(ROLE_ORDER.filter(r=>SITE_CARDS.some(c=>c.role===r)).map(r=>[`role-${r}`,ROLE_LABELS[r]??r] as const))} current="#top"/>
+  <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Player cards</h1>
    <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
@@ -27,11 +32,11 @@ export default function CardsIndex(){
   </header>
   <CollectionLinks list={CARD_COLLECTIONS} title="Browse the cards by collection"/>
   {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
-   <h2 className={styles.h2} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><span className={styles.itemTitle}>#{c.number} {c.displayName}</span><span className={styles.itemMeta}>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>
   </section>;})}
   {/* Nov 20 2026 (SEO foundation): the guides the cards are about, and the referee's cards for readers who wanted the rule */}
-  <section className={styles.section} aria-labelledby="learn-more"><h2 className={styles.h2} id="learn-more">Keep reading</h2>
+  <section className={styles.section} aria-labelledby="learn-more"><h2 className={`${styles.h2} ${tgt.target}`} id="learn-more">Keep reading</h2>
    <ul className={styles.list}>{[{path:'/learn/soccer-positions',name:'Soccer positions explained',line:'What each position on a card does'},REFEREE_CARDS_LINK,{path:'/books',name:'Football pop-up books for kids',line:'True stories about players in the binder'}]
     .map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span><span className={styles.itemMeta}>{l.line}</span></a></li>)}</ul>
   </section>

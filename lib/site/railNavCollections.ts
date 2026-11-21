@@ -81,3 +81,7 @@ export const fishHubRail=(groups:readonly Sec[]):Rail=>hub('Fishbook on this pag
 export const fishRail=(o:{tale:boolean;wild:boolean}):Rail=>page('On this page',FISH_BACK,[['fish-fact','Football fact'],...(o.tale?[['fish-tale','Fish tale'] as const]:[]),
  ...(o.wild?[['wild','In the wild'] as const]:[]),['fish-story','Island story'],['catch','How to catch it'],['more','More from the Fishbook']]);
 export const collectionRail=(parent:'cards'|'fish',groups:readonly Sec[]):Rail=>page('On this page',parent==='fish'?FISH_BACK:CARDS_BACK,[...groups,['learn-more','Keep reading']]);
+export const cardsHubRail=(roles:readonly Sec[]):Rail=>hub('Player cards on this page',[['collections','Browse by collection'],...roles,['learn-more','Keep reading']]);
+export const cardRail=(o:{coach:boolean;why:boolean;career:boolean;play:boolean;learn:boolean;know:boolean}):Rail=>page('On this page',CARDS_BACK,[['facts','On the card'],
+ ...(o.why?[['why','Why they matter'] as const]:[]),...(o.career?[['career',o.coach?'Coaching career':'Clubs'] as const]:[]),...(o.play?[['play','Iconic play'] as const]:[]),
+ ...(o.learn?[['learn','Learn from them'] as const]:[]),...(o.know?[['know','Did you know?'] as const]:[]),['lesson','A lesson'],['more','More cards like this'],['read','Keep reading']]);
