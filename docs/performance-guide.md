@@ -111,6 +111,33 @@ Owner: "enhance the oceans, land and buildings without major heat". No new draws
 - **Buildings (load time only):** per-vertex baked light in the paint batching pass (wall foot 0.68 linear over the lowest 4 m from the piece's base, undersides 0.62, tops 1.03; pieces under 0.15 m skipped); inset roof decks (+12 triangles per building) merged into the existing paint batches. Museum pilasters skipped.
 - **Draw calls (headless Chrome 390x844 DPR 2, same teleports as the study):** plaza 151 -> 145-146, shore 132 -> 131, lawn 102 -> 99, jetpack 33 -> 33, swim 32 -> 32, night shore 174 -> 168 (differences are townsfolk positions; none higher). No thermal measurement; not verified on an iPhone.
 
+## Shared reefs: remote divers in the dive room (Nov 21 2026, branch `reef-mp-nov21`, not deployed)
+
+Divers in the same reef see each other (docs/multiplayer-rooms-design.md Phase 5). Cost model:
+- Nothing exists until a dive starts with a live party / world slot: `lib/multiplayer/reefParty.ts` builds the rooms' friend layer
+  (one remote batch, one instanced ring, labels) in the dive room's scene on the way under and disposes it on the way up. The island
+  stays frozen (the dive branch still returns before `party.update`); the layer updates once per dive frame from the dive runtime's
+  `beforeRender` port, at the dive room's own rest cap (20 / 15 / 12 fps when resting). No new timer: the island's 5 s beat is
+  forwarded to the layer while under.
+- Caps: `reefCap` 3 rigs on phones (tier 0-2), 1 at tier 3, 0 at tier 4, desktop 5 (3 at tier 2+), Battery saver 0; nearest first;
+  others are ring + label only. No new shader code, lights or shadow casters; the avatars use the remote layer's existing materials.
+  My own colour ring is not drawn underwater. Island side: one more door-hint sprite per dive flag (7), visible only when someone is
+  in that reef and the camera is within 120 m, texture redrawn only when the count changes; hidden while the dive prompt shows the invite.
+- Measured (`.claude/worktrees/_recovery-nov20/reef-mp/dive-mp-budget.cjs`, headless Chrome SwiftShader 390x844 DPR 1, Paul's
+  Grotto, world bots as divers 2.5-4 m ahead of the diver; counts exact, ms = CPU submit only):
+
+  | case | draw calls | triangles | programs | textures |
+  |---|---|---|---|---|
+  | tier 0, 0 remote divers (layer live) | 18 | 40,387 | 86 | 43 |
+  | tier 0, 3 remote divers | 27 (+9) | 59,143 (+18.8k) | 91 (+5) | 54 (+11) |
+  | tier 2, 0 remote divers | 19 | 33,270 | 81 | 40 |
+  | tier 2, 5 remote divers (3 rigs + 2 ring-only) | 30 (+11) | 52,414 (+19.1k) | 86 (+5) | 53 (+13) |
+
+  The +5 programs are the remote layer's existing materials compiled once for the dive scene (its fog), on the first dive with
+  friends; the +11-13 textures are name labels (one canvas each, made once per friend). Render submit stayed 0.3-0.4 ms.
+  **Not measured on a real phone**: the dive room is already the heaviest water scene; an owner iPhone run with 3 divers is the
+  remaining check (AGENTS.md: no thermal claim from desktop emulation).
+
 ## Rare activities load on demand: dive room, fishing host, easel tray (Nov 10 2026, local, not deployed)
 
 Goal: a smaller island boot chunk. Code for activities most visits never open now loads when the player comes near them. It follows the Oct 7 pattern ("Load parts of the island when they are opened", below).
