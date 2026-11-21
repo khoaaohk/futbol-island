@@ -1,15 +1,18 @@
 // Nov 21 2026: the unlisted game page gate (lib/site/games.ts ALL_GAME_PAGES). A /games page is listed and counted only while its game
 // has a machine in the arcade room (lib/arcade/arcadeCatalog.ts arcadeCabinets); a game in arcadeUnplaced keeps a complete page that is
 // noindex and linked from nowhere. Since Nov 21 2026 (owner: "go ahead and push everything else") Keepy-Uppy Beat and Hold the Line
-// stand on the east wall and arcadeUnplaced is empty, so this test loads the REAL site modules four times: as they are (thirteen games,
-// both listed everywhere) and with the catalog edited IN MEMORY to take one or both machines out again (their entry moved from
-// arcadeCabinets back into arcadeUnplaced): unplaced, nothing lists, links or counts the game, and the counts read twelve or eleven.
+// stand on the east wall. Since the games4 release (Nov 21 2026) the test covers that release's new games instead (IDS: Flick It and
+// FootGolf Island on the west wall, Pop-Up Shot in Hold the Line's place): it loads the REAL site modules as they are (fifteen games, all listed everywhere) and with the
+// catalog edited IN MEMORY to take any subset of the new machines out again (their entry moved from arcadeCabinets back into
+// arcadeUnplaced): unplaced, nothing lists, links or counts the game, and the counts read fourteen, thirteen or twelve.
 //   node tests/seo-games-gate.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const root=path.join(__dirname,'..');process.chdir(root);
 const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
 const cssProxy=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
 const CATALOG=path.join(root,'lib/arcade/arcadeCatalog.ts');
+/** The games this release adds (Nov 21-22 2026, games4: Pop-Up Shot in Hold the Line's place, Flick It and FootGolf Island on the west wall). */
+const IDS=['popup','flickit','footgolf'];
 /** Taking a machine out, as a source edit: its arcadeCabinets entry (without its spot) moves into arcadeUnplaced. */
 function unplace(src,id){
  const entry=new RegExp(`\\n \\{id:'${id}',[^\\n]*\\n`).exec(src);assert(entry,`arcadeCabinets holds the ${id} entry`);
@@ -39,16 +42,18 @@ function world(gone=[]){
  const arcade=L('lib/site/learnFeatures.ts');const feat=JSON.stringify(arcade).match(/"id":"arcade"[^}]*\}/)?.[0]??JSON.stringify(arcade);
  const watch=L('lib/site/videos.ts').allWatchVideos();
  const game=id=>{const g=games.gameById(id);return {g,meta:slugPage.generateMetadata({params:{slug:g.slug}}),drills:CHECK[id].drills.map(drillHtml)};};
- return {catalog,games,sitemap,llms,hubHtml,feat,watch,statics:slugPage.generateStaticParams().map(x=>x.slug),keepyuppy:game('keepyuppy'),holdtheline:game('holdtheline')};
+ const rule=slug=>renderToStaticMarkup(L('app/(site)/learn/soccer-rules/[slug]/page.tsx').default({params:{slug}}));
+ return {catalog,games,sitemap,llms,hubHtml,feat,watch,rule,statics:slugPage.generateStaticParams().map(x=>x.slug),...Object.fromEntries(IDS.map(id=>[id,game(id)]))};
 }
 /** Per game: the drill pages that link it once placed, the words the hub and the Library use for it. */
-const CHECK={keepyuppy:{drills:['thigh-and-chest-control','toe-taps-and-foundations'],hub:/juggling game|Keepy-Uppy Beat/,name:'Keepy-Uppy Beat',kind:/juggling/},
- holdtheline:{drills:['pressure-and-cover-2v2','recover-goal-side'],hub:/defending game|Hold the Line/,name:'Hold the Line',kind:/defending/}};
+const CHECK={popup:{drills:['shoulder-check-colors'],rules:[],hub:/pop-up target|Pop-Up Shot/,name:'Pop-Up Shot',kind:/pop-up target/},
+ flickit:{drills:['world-cup-shooting-game'],rules:['fouls-and-free-kicks'],hub:/free.kick|Flick It/,name:'Flick It',kind:/free.kick/},
+ footgolf:{drills:['partner-passing-through-gates'],rules:[],hub:/footgolf|FootGolf Island/i,name:'FootGolf Island',kind:/footgolf/}};
 const words=h=>h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/g,' ').replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().split(' ').length;
 
-const IDS=['keepyuppy','holdtheline'],WORD={11:'eleven',12:'twelve',13:'thirteen',14:'fourteen'},CAP=w=>w[0].toUpperCase()+w.slice(1);let hubWords='';
-for(const out of [0,1,2,3].map(m=>IDS.filter((_,i)=>m&(1<<i)))){
- const w=world(out),n=13-out.length,word=WORD[n],tag=out.length?`without ${out.join(' + ')}`:'as released';
+const WORD={12:'twelve',13:'thirteen',14:'fourteen',15:'fifteen'},CAP=w=>w[0].toUpperCase()+w.slice(1);let hubWords='';
+for(const out of [...Array(1<<IDS.length).keys()].map(m=>IDS.filter((_,i)=>m&(1<<i)))){
+ const w=world(out),n=15-out.length,word=WORD[n],tag=out.length?`without ${out.join(' + ')}`:'as released';
  assert.equal(w.catalog.ARCADE_GAME_COUNT,n,tag);assert.equal(w.games.GAMES_WORD,word,tag);assert.equal(w.games.GAME_PAGES.length,n,tag);
  assert(new RegExp(`^${CAP(word)} `).test(w.games.GAMES_HUB.description),`${tag}: the hub description counts ${word}`);
  {const d=w.games.GAMES_HUB.description.length;assert(d>=120&&d<=155,`${tag}: hub description ${d} chars`);}
@@ -60,15 +65,15 @@ for(const out of [0,1,2,3].map(m=>IDS.filter((_,i)=>m&(1<<i)))){
    assert(w.sitemap.includes(g.path)&&w.llms.includes(g.path),`${t}: in the sitemap and llms.txt`);
    assert(w.hubHtml.includes(`href="${g.path}"`)&&w.hubHtml.includes(`href="/arcade?game=${id}"`),`${t}: the hub links the page and the game`);
    assert(c.kind.test(w.games.GAMES_HUB.description+w.games.GAMES_HUB.intro.join(' ')),`${t}: the hub names its kind of game`);
-   assert(drills.every(h=>h.includes(`href="${g.path}"`)),`${t}: its drills link it`);
+   assert(drills.every(h=>h.includes(`href="${g.path}"`))&&c.rules.every(s=>w.rule(s).includes(`href="${g.path}"`)),`${t}: its drills and rule pages link it`);
    assert(w.feat.includes(c.name),`${t}: the Library names it`);assert(w.watch.some(v=>v.key===id),`${t}: its clip gets a watch page`);
   }else{
    assert(!w.games.GAME_PAGES.includes(g),`${t}: not listed`);assert(meta.robots&&meta.robots.index===false,`${t}: noindex`);
    assert(!w.sitemap.includes(g.path)&&!w.llms.includes(g.path),`${t}: not in the sitemap or llms.txt`);
    assert(!w.hubHtml.includes(g.path)&&!c.hub.test(w.hubHtml),`${t}: the hub neither links nor names it`);
-   assert(drills.every(h=>!h.includes(`href="${g.path}"`)),`${t}: no drill links it`);
+   assert(drills.every(h=>!h.includes(`href="${g.path}"`))&&c.rules.every(s=>!w.rule(s).includes(`href="${g.path}"`)),`${t}: no drill or rule page links it`);
    assert(!w.feat.includes(c.name),`${t}: the Library does not name it`);assert(!w.watch.some(v=>v.key===id),`${t}: no watch page for its clip`);}}
  // the hub's words stay inside the bound tests/seo-games.cjs uses for the hub (it grows 40 words a listed game)
  const lim=1300+4*w.watch.filter(v=>v.group!=='lessons').length+15+100+60+40*Math.max(0,w.games.GAME_PAGES.length-7),nw=words(w.hubHtml);assert(nw<=lim,`${tag}: hub ${nw} words (limit ${lim})`);
  hubWords+=` ${word} ${nw}/${lim};`;}
-console.log(`seo-games-gate: ok (as released: thirteen, both listed everywhere; taken out in memory, every subset: built, noindex, unlisted, twelve / eleven; hub words:${hubWords})`);
+console.log(`seo-games-gate: ok (as released: fifteen, ${IDS.join(' + ')} listed everywhere; taken out in memory, every subset: built, noindex, unlisted, fourteen / thirteen / twelve; hub words:${hubWords})`);

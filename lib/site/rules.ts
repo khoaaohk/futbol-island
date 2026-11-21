@@ -2,7 +2,7 @@ import {lessonById,type SiteLesson} from './lessons';
 import {exhibitById,exhibitPath} from './exhibits';
 import type {Faq} from './safety';
 import {FAMILY_CHECKED,longDate} from './checked';
-import {gameLink} from './games';
+import {gameLink,isGameListed} from './games';
 import {scene,type RawScene,type Scene} from './scenes';
 /**
  * The RULES cluster (SEO cluster 2, Nov 10 2026): /learn/soccer-rules and one page per rule under it. All page words live here
@@ -225,7 +225,7 @@ export const RULES:readonly Rule[]=([
    {q:'How far away must the wall be?',a:'At least 9.15 metres, which is 10 yards, from the ball. When the wall has three or more defenders, attackers must stay at least 1 metre (about 1 yard) away from it. In futsal the distance is 5 metres.'},
    {q:'How does the referee show an indirect free kick?',a:'The referee raises one arm straight up and keeps it there until the kick has been taken and the ball touches another player or goes out of play.'},
    {q:'Is a slide tackle a foul?',a:'Not by itself in the Laws of the Game. It is a foul if it is careless, reckless or uses too much force. Youth leagues can add their own rule about slide tackles, so check yours.'}],
-  lessonIds:['exp11_shortfreekick','expf_freekickbalance','trn_11_recover','def_7_goalside'],cta:'exp11_shortfreekick',exhibitIds:['free-kick-wall'],links:[{path:'/learn/soccer-terms/free-kick-wall',name:'Free kick wall in soccer',line:'Where the wall stands, and the 1-yard gap for attackers'},L.cb,L.dm,L.gk]},
+  lessonIds:['exp11_shortfreekick','expf_freekickbalance','trn_11_recover','def_7_goalside'],cta:'exp11_shortfreekick',exhibitIds:['free-kick-wall'],links:[{path:'/learn/soccer-terms/free-kick-wall',name:'Free kick wall in soccer',line:'Where the wall stands, and the 1-yard gap for attackers'},L.cb,L.dm,L.gk,...(isGameListed('flickit')?[gameLink('flickit')]:[])/* Nov 21 2026: the free-kick game */]},
  // ---- penalty kick -------------------------------------------------------------------------------------------------------
  {slug:'penalty-kick',name:'Penalty kick',law:'Law 14',lawPage:'the-penalty-kick/',
   title:'Penalty Kick Rules in Soccer: Diagram for Kids',h1:'Soccer penalty kick rules for kids',

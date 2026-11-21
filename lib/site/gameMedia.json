@@ -282,16 +282,40 @@
     "bytes": 41646
    }
   },
-  "holdtheline": {
+  "flickit": {
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 117002,
-   "webm": 152663,
+   "mp4": 554867,
+   "webm": 503628,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 37380
+    "bytes": 29268
+   }
+  },
+  "footgolf": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 379394,
+   "webm": 412903,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 30416
+   }
+  },
+  "popup": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 475108,
+   "webm": 512585,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 34292
    }
   }
  },
@@ -678,30 +702,82 @@
     "bytes": 56982
    }
   ],
-  "holdtheline": [
+  "flickit": [
    {
-    "file": "holdtheline-1.webp",
+    "file": "flickit-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 37380
+    "bytes": 32302
    },
    {
-    "file": "holdtheline-2.webp",
+    "file": "flickit-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 33104
+    "bytes": 51462
    },
    {
-    "file": "holdtheline-3.webp",
+    "file": "flickit-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 29540
+    "bytes": 50138
    },
    {
-    "file": "holdtheline-4.webp",
+    "file": "flickit-4.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 39140
+    "bytes": 38826
+   }
+  ],
+  "footgolf": [
+   {
+    "file": "footgolf-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 32004
+   },
+   {
+    "file": "footgolf-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 17448
+   },
+   {
+    "file": "footgolf-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 23974
+   },
+   {
+    "file": "footgolf-4.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 18704
+   }
+  ],
+  "popup": [
+   {
+    "file": "popup-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 46666
+   },
+   {
+    "file": "popup-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 43582
+   },
+   {
+    "file": "popup-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 35096
+   },
+   {
+    "file": "popup-4.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 39778
    }
   ]
  }

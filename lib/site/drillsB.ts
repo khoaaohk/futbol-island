@@ -123,7 +123,7 @@ export const DRILLS_B:RawDrill[]=[
   mistakes:['Toe-poke passes. Turn the foot out and use the inside, like a hockey stick.','Standing still after the pass and waiting for the ball to come back.','Partners too far apart, so every pass misses. Five yards is plenty for young players.'],
   game:'A gate is the space between two defenders, and the partner on the far side is a teammate who moved into view. Our support lesson says it this way: move so the defender is no longer between you and the ball.',
   home:'A parent and a child, one gate made of two shoes. Count ten passes through it without a miss, then take a step back each.',
-  lessons:['prn_7_support','prn_7_spread','learn7_receive'],links:[G.cm,G.firstTouch,G.rollBall],related:['gates-dribbling','triangle-passing','give-and-go','wall-passing'],
+  lessons:['prn_7_support','prn_7_spread','learn7_receive'],links:[G.cm,G.firstTouch,G.rollBall,...G.footGolf],related:['gates-dribbling','triangle-passing','give-and-go','wall-passing'],
   faq:[{q:'What is the best passing drill for beginners?',a:'This one. It is a game with a score, every pair is busy the whole time, and it rewards the two habits that matter: an accurate pass and moving afterward.'},
    {q:'How do I teach the inside-of-the-foot pass?',a:'Standing foot beside the ball and pointing at the target, kicking foot turned out with the ankle locked, and strike through the middle of the ball.'},
    {q:'Can U6 players do passing drills?',a:'In short spells. Five-year-olds mostly want their own ball, which is normal for the age, so keep this to a few minutes and return to dribbling games.'}]},
