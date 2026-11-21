@@ -37,7 +37,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline'|'flickit'|'footgolf';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -437,6 +437,68 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What age is Hold the Line for?',a:'Futbol Island is made for children aged 7 to 12. The first match is guided, one move at a time, and the offside line is drawn on the pitch; the teams after it attack faster, up to the Island Premier at night.'},
    {q:'Does the game follow the real offside rule?',a:'Yes. Offside is judged when the ball is played, against the second-last defender, the goalkeeper included. Level is onside, a player in his own half is onside, and a player standing offside who does not get the ball is not penalised: the game labels him NOT IN THE PLAY.'},
 ]},
+ // Nov 21 2026: Flick It, the 3D flick / free-kick trick-shot game (lib/arcade/flickit/core.ts + view.ts + save.ts, components/games/FlickItGame.tsx,
+ // docs/arcade-aaa/flickit-direction.md). Placed Nov 21 2026 on the west wall of the arcade room (arcadeCabinets), so the page is listed.
+ // Slug: "free kick game" is what children and parents type for a game where you curl a still ball round a wall; the page says plainly
+ // that most targets are cans, tyres and balloons, not goals.
+ {id:'flickit',slug:'soccer-free-kick-game',path:page('soccer-free-kick-game'),name:'Flick It',play:play('flickit'),
+  title:'Soccer Free Kick Game for Kids: Flick It, Free Online',h1:'Soccer free kick game: Flick It',
+  description:'Flick It is a free soccer free kick game for kids. Swipe to curl, lift and dip the ball round walls at cans, tyres, balloons and goals in 3D places.',
+  lead:'Flick It is a free football flick game in your browser: a free-kick and trick-shot game in 3D. Swipe up through a still ball and it flies at cans, crates, tyres, balloons, bells and sometimes a goal. Bend it round a wall, lift it over a fence and knock down as much as you can with one kick.',
+  blurb:'Swipe to curl, lift and dip the ball at targets',genre:['Arcade','Sports','Educational'],skill:'Striking a still ball and curling it',
+  og:img('flick-it-soccer-free-kick-game-og.jpg'),ogAlt:'Flick It, a soccer free kick game: on one phone a curled flick goes through the tyre in the top corner at the Training Pitch, on the other a long-range goal at the Island Stadium at night',
+  shots:gameStills('flickit',2),
+  about:['Flick It is a 3D trick-shot game drawn like a comic book. Your own island bean stands over the ball, runs up as your finger moves and strikes it, and the camera follows the ball into the scene.',
+   'There are six places on the island, each seen from its own camera: the Back Garden, Town Square, the Training Pitch, Palm Beach, a Rooftop Cage and the Island Stadium at night. The Daily Flick is one more stage a day, the same on every device.'],
+  phone:['Hold the phone upright and swipe up through the ball with one finger. Only the end of the swipe counts, so a slow drag and then a snap is a snap.','A faster swipe kicks harder, a longer swipe lifts the ball higher, and a swipe that bends left or right bends the ball the same way.'],
+  desktop:['The arrow keys aim and lift the kick, and a dotted line shows where it will go.','Hold Space for power and let go to kick. Q or E adds curl, and P or Escape pauses.'],
+  rules:['Each stage gives you six to eight flicks. Targets have points, and every extra thing one flick hits is worth more: one and a half times, then twice, up to four times.',
+   'Trick bonuses: Curled it, Round the wall, Up and over, Bank shot and Long range. Clear every target with flicks to spare and each spare flick scores too.',
+   'A stage gives up to three stars for its points; one star opens the next place. The Tour plays the six places in order, and its total goes on the island high-score board.'],
+  teaches:['Every kick is named by the part of the foot that would make it: straight through the ball is the laces, a ball that bends one way is the inside of the foot, the other way the outside.',
+   'Weight of shot matters: barrels need a firm strike and only wobble from a soft one, while a bin is scored by dropping the ball in softly from above.',
+   'Walls of mannequins, a fence and a keeper stand in front of some targets, so you learn the real free-kick choices: bend it round, lift it over and dip it, or pick another target.'],
+  guides:[{path:R+'fouls-and-free-kicks',name:'Fouls and free kicks',line:'When a free kick is given, in simple words'},{path:T+'free-kick-wall',name:'Free kick wall',line:'Why defenders stand in a line'},
+   {path:T+'set-piece',name:'Set piece',line:'Free kicks, corners and other planned kicks'},{path:T+'chip',name:'Chip',line:'Lifting the ball over a player'},
+   {path:D+'shooting',name:'Shooting drills',line:'Strike the ball well at a target'},{path:T+'weak-foot',name:'What is a weak foot?',line:'And how to make it stronger'}],
+  tips:['Pick one target before you swipe. The line at the start of each stage says what that place is about.','Look for a row: a flick through two or three targets in a line scores far more than one.','If the ball keeps flying too high, make the swipe shorter, not slower.'],
+  harder:['Each place sets its own problem, from a row of cans to a fence to lift over, and gives a little less help with the aim.','The first kicks show a dotted flight and a finger that draws the swipe; after that you are on your own.','The Island Stadium, at night, has a wall of mannequins and a keeper in front of the goal.'],
+  parents:[PARENTS_SAFE,'Skill: striking a still ball, curl and the weight of a shot. Every curled kick names the part of the foot, and the results card gives one tip from what just happened.','Session length: a stage is six to eight flicks, a couple of minutes. The game can be played with the sound off. No timers.'],
+  faq:[free('Flick It',true),{q:'Does Flick It work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'How do you play Flick It?',a:'Swipe up through the ball. A faster swipe kicks harder, a longer one lifts the ball, and bending the swipe bends the ball. Hit as many targets as you can with each flick.'},
+   {q:'What age is Flick It for?',a:'Futbol Island is made for children aged 7 to 12. The Back Garden is the gentlest place, with the aim shown for the first kicks; the Rooftop Cage and the Island Stadium suit older children.'},
+   {q:'Is Flick It a real free kick game?',a:'It is about the striking part of a free kick: a still ball, a wall to get round or over, and a keeper at the stadium. Most of the targets are not goals but cans, tyres, balloons and bells, so you learn to pick a target and hit it.'},
+   {q:'How do you curl the ball in Flick It?',a:'Bend your swipe. The ball curls the way your finger turns, and the game says which part of the foot that would be: the inside of the foot or the outside.'}]},
+ // Nov 21 2026: FootGolf Island, real footgolf on nine 3D holes (lib/arcade/footgolf/core.ts + view.ts + save.ts, components/games/FootGolfGame.tsx,
+ // docs/arcade-aaa/footgolf-direction.md). Placed Nov 21 2026 on the west wall beside Flick It, so the page is listed.
+ // Slug: "soccer golf" is the US parents' name for footgolf and keeps the pattern of the other pages; "FootGolf" is in the name, title and h1.
+ {id:'footgolf',slug:'soccer-golf-game',path:page('soccer-golf-game'),name:'FootGolf Island',play:play('footgolf'),
+  title:'Soccer Golf Game for Kids: FootGolf Island, Free Online',h1:'Soccer golf game: FootGolf Island',
+  description:'FootGolf Island is a free soccer golf game for kids. Kick a football round nine 3D holes into a big cup with a long kick, chip, pass or putt.',
+  lead:'FootGolf Island is a free footgolf game in your browser: golf played with a football. Kick the ball round nine holes on the island, over hills, sand and water, into a big cup in as few kicks as you can.',
+  blurb:'Kick a football round nine holes into the cup',genre:['Arcade','Sports','Educational'],skill:'Picking a kick and its weight',
+  og:img('footgolf-island-soccer-golf-game-og.jpg'),ogAlt:'FootGolf Island, a soccer golf game: on one phone the player stands at the Lighthouse Jetty tee with the kick picker, on the other the ball drops into the cup at Coral Cay for BIRDIE!',
+  shots:gameStills('footgolf',2),
+  about:['FootGolf Island is real footgolf drawn like a comic book. Nine holes, par 34 in all, are set at places on the island, from the Lighthouse Jetty and Palm Beach to the Farm, the Summit and the Island Stadium.',
+   'The ground is 3D, with hills, hollows, banks, bunkers and water you can kick into. Each hole starts with a flyover from the flag back to the tee, and the Daily Hole is one hole a day, the same on every device.'],
+  phone:['Pick the kick with the four buttons at the bottom; the game suggests one. Then drag back from anywhere like a catapult: the pull is the power, the angle is the aim, and letting go kicks.','A five-step dial adds curl with the inside or the outside of the foot, and the turn buttons swing the view round.'],
+  desktop:['The mouse works the same way as a finger. Left and Right aim, Up and Down set the power, and Space kicks.','Keys 1 to 4 pick the kick, Q and E curl it, and P pauses.'],
+  rules:['Each hole has a par, as in golf, and you score your kicks against it: Ace, Eagle, Birdie, Par or Bogey. After eight kicks on a hole you pick up and move on.',
+   'A ball in the water or out of bounds costs one penalty kick, and you kick again from where you last kicked.','The cup is the real footgolf size, 53 cm across. A ball that is too quick lips out or hops over it; a slow one drops in. Your nine-hole total goes on the island high-score board.'],
+  teaches:['There are four kicks, as real players use: the laces to go far, a chip that lifts the ball and stops it with backspin, a pass along the ground with the inside of the foot, and a soft putt.',
+   'Weight is everything near the cup: the same pass that is perfect on stone runs too far, sand plugs the ball and long grass slows it. Arrows on each green show which way the ball rolls downhill.',
+   'Wind moves a high ball but not a low one, and some holes give a safe way round and a brave way over the water, so you learn to pick a safe target.'],
+  guides:[{path:D+'passing',name:'Passing drills',line:'Pass along the ground with the inside of the foot'},{path:D+'partner-passing-through-gates',name:'Partner passing through gates',line:'The weight and aim of a pass'},
+   {path:T+'chip',name:'Chip',line:'Lifting the ball over a player'},{path:D+'shooting',name:'Shooting drills',line:'Strike the ball well with the laces'},
+   {path:D+'at-home',name:'Drills to do at home',line:'Ball work you can do on your own'}],
+  tips:['Take the kick the game suggests until you know the course: it picks by the distance and the lie.','On the green, read the arrows first, then aim a little uphill of the cup.','A chip stops soon after it lands; a long kick runs on. Use the chip when the cup is near trouble.'],
+  harder:['The holes run from 48 metres to 140, with more hills, more water and wind in your face on the Summit.','The flight preview is shown in full on the first three holes, only partly on the next three and less on the last three.','Par for the course is 34. Matching it takes the right kick and the right weight on almost every hole.'],
+  parents:[PARENTS_SAFE,'Skill: choosing a kick and its weight. Every kick names the part of the foot, and a tip after each hole says what went right or wrong.','Session length: a hole takes a minute or two, and you can play one hole or all nine. The game can be played with the sound off. No timers.'],
+  faq:[free('FootGolf Island',true),{q:'Does FootGolf Island work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'How do you play FootGolf Island?',a:'Pick a kick (long kick, chip, pass or putt), drag back from anywhere like a catapult and let go. Get the ball into the cup in as few kicks as you can.'},
+   {q:'What age is FootGolf Island for?',a:'Futbol Island is made for children aged 7 to 12. The first holes are short and show the whole flight of the ball; the later ones are longer, with less help.'},
+   {q:'What is footgolf?',a:'Footgolf is a real sport: golf played with a football on a course, kicking the ball into a large cup in as few kicks as possible. The cups are about half a metre across.'},
+   {q:'Does FootGolf Island help with real football?',a:'Yes: picking the right kick and its weight is what passing and shooting need too. Try it with a real ball: pick a target in the park and count your kicks.'}]},
 ];
 /** The ids of the games that have a machine in the arcade room. Only these pages are listed (see ALL_GAME_PAGES). */
 export const PLACED_GAME_IDS:ReadonlySet<string>=new Set<string>(arcadeCabinets.map(c=>c.id));
@@ -455,24 +517,26 @@ export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:
 const JUGGLE_LISTED=isGameListed('keepyuppy');
 /** Nov 21 2026: and the defending game only once Hold the Line is listed. */
 const DEFEND_LISTED=isGameListed('holdtheline');
-/** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns (the description stays 120-155 characters). */
-const NEW_KINDS=[JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending'].filter(Boolean) as string[];
+/** Nov 21 2026: the free-kick game and the footgolf game, once Flick It and FootGolf Island are listed (west wall). */
+const FLICK_LISTED=isGameListed('flickit'),GOLF_LISTED=isGameListed('footgolf');
+/** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns, four or more alone (the description stays 120-155 characters). */
+const NEW_KINDS=[JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>3?`${NEW_KINDS.slice(0,-1).join(', ')} and ${NEW_KINDS[NEW_KINDS.length-1]}`:NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':FLICK_LISTED?'a free kick game, pinball, snake and puzzles':GOLF_LISTED?'a footgolf game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}${FLICK_LISTED?'a free-kick game, ':''}${GOLF_LISTED?'footgolf, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
   'Every game opens from its page and gets harder the longer you play; a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
-  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],/* Nov 21 2026: no pick line for the west wall games: the hub is at its word bound (tests/seo-games.cjs) */
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
   {q:'Can kids play these soccer games at school?',a:'Yes: they run in a web browser on a Chromebook, tablet or phone, if the school’s filter allows futbolisland.app.'},
   {q:'What ages are the games for?',a:'Children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}.`},
+  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}${FLICK_LISTED?', curling a free kick':''}${GOLF_LISTED?', the weight of a kick':''}.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

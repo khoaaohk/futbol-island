@@ -43,7 +43,7 @@ export const DRILLS_C:RawDrill[]=[
   harder:'A goal counts only if both partners touched the ball. Or one touch to finish inside the area near the goal.',
   mistakes:['Using the sit-out rules with young players, which leaves the best finishers watching and, in the knockout version, the weakest pairs watching longest.','Both partners chasing the ball. One goes to the ball, the other finds space near the goal.','Waiting for the perfect shot. In a crowd the first clear look is the one to take.'],
   game:'A crowded goal area after a corner or a blocked shot looks just like this game. Our lesson on reacting to a shot is about that moment: read the rebound and arrive while others are watching.',
-  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.gk,G.cutback,G.ballBlaster],related:['follow-the-shot','two-v-one-to-goal','dribble-and-shoot','numbers-game'],
+  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.gk,G.cutback,G.ballBlaster,...G.flickIt],related:['follow-the-shot','two-v-one-to-goal','dribble-and-shoot','numbers-game'],
   faq:[{q:'How do you play World Cup in soccer?',a:'Pairs each choose a country. All pairs attack one goal with one ball. In the classic rules a pair that scores is through to the next round and the last pair is knocked out.'},
    {q:'How do I stop players sitting out?',a:'Keep every pair in and count goals over a timed round. A pair that scores runs around the goal and rejoins, which gives the others a short advantage.'},
    {q:'Who plays goalkeeper?',a:'From U10, players take turns for a round each, or a coach goes in. For U8, play with no goalkeeper and a small goal, because their games have no goalkeepers.'}]},

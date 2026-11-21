@@ -35,6 +35,9 @@ GAMES = [
 WALL = [
  ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
  ('hold-the-line-soccer-defending-game', ['holdtheline-offside', 'holdtheline-night'], [], 'Hold the Line', 'Free soccer defending game', 50),
+ # Nov 21 2026: Flick It and FootGolf Island on the west wall (fifteen with Pop-Up Shot in place of Hold the Line).
+ ('flick-it-soccer-free-kick-game', ['flickit-pitch', 'flickit-stadium'], [], 'Flick It', 'Free soccer free kick game', 50),
+ ('footgolf-island-soccer-golf-game', ['footgolf-tee', 'footgolf-birdie'], [], 'FootGolf Island', 'Free soccer golf game', 50),
 ]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']

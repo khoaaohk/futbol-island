@@ -16,7 +16,9 @@ import {ARCADE_GAME_COUNT,arcadeCabinets} from '../arcade/arcadeCatalog';
 const KEEPY_LISTED=arcadeCabinets.some(c=>(c.id as string)==='keepyuppy');
 /** Nov 21 2026: and Hold the Line, the defending game. The machines after Roll It In are joined as a list ("A, B and C"). */
 const HOLD_LISTED=arcadeCabinets.some(c=>(c.id as string)==='holdtheline');
-const LAST_MACHINES=['Ball Blaster (kick footballs at toy robots before they reach your goal)',...(KEEPY_LISTED?['Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)']:[]),...(HOLD_LISTED?['Hold the Line (move your back line as one and catch the runner offside)']:[])];/* Nov 17 2026: the arcade count follows the catalog */
+const LISTED=(id:string)=>arcadeCabinets.some(c=>(c.id as string)===id);
+const LAST_MACHINES=['Ball Blaster (kick footballs at toy robots before they reach your goal)',...(KEEPY_LISTED?['Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)']:[]),...(HOLD_LISTED?['Hold the Line (move your back line as one and catch the runner offside)']:[]),
+ /* Nov 21 2026: the west wall games */...(LISTED('flickit')?['Flick It (swipe to curl, lift and dip the ball at cans, tyres, balloons and goals)']:[]),...(LISTED('footgolf')?['FootGolf Island (kick a football round nine holes into the cup)']:[])];/* Nov 17 2026: the arcade count follows the catalog */
 import {NumberWord} from '../numberWord';
 /** [PUBLIC-WORLD] Nov 11 2026: with the public-island build flag on, the few lines below that would become untrue switch (the `PUB?new:old`
  *  ternaries); flag off = today's words byte for byte (tests/mp-public-copy.cjs). Old -> new: docs/multiplayer/PUBLIC-COPY-REVIEW.md. */
