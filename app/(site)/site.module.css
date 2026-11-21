@@ -267,6 +267,7 @@
 .page:has(nav[data-rail])>.main>:is(.section,.panel,.pager,.endNote,[data-keep-reading]),
 .page:has(nav[data-rail])>.main>.section>:is(.pair,.panel,.faqList,.quick,dl,ul,ol,div,table,details),
 .page:has(nav[data-rail])>.main>.intro>.quick{max-width:none}
+.page:has(nav[data-rail])>.main .faqList{max-width:none}/* any FAQ, however deep (plans, tools: audit Nov 20 2026), runs full width */
 .page:has(nav[data-rail])>.main .faqList p{max-width:85ch}
 .page:has(nav[data-rail])>.main>.section>.stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
 .page:has(nav[data-rail])>.main>.section>.stack>li{max-width:none}
@@ -276,6 +277,10 @@
  .page:has(nav[data-rail])>.main>.section:has(>figure):has(>p):not(:has(>:is(ul,ol,dl,div,table)))>.h2{grid-column:1/-1}
  .page:has(nav[data-rail])>.main>.section:has(>figure):has(>p):not(:has(>:is(ul,ol,dl,div,table)))>figure{grid-column:2;grid-row:2/span 4;max-width:none}
 }
+/* A hub's tinted bands (HubParts Band, data-band) on a rail page from 1280 px: full bleed to the main column's box (the rail's edge
+   to the window's right edge) with the column's own padding inside, so the band's words keep the content edges. Their
+   calc(50% - 50vw) bleed is for a centred page and pushed them under the rail (audit, Nov 20 2026). */
+@media(min-width:1280px){.page:has(nav[data-rail])>.main>[data-band]{--bleed:max(48px,calc((100vw - var(--rail) - var(--shell-max,1520px)) / 2));margin-inline:calc(-1 * var(--bleed));padding-inline:var(--bleed)}}
 /* Drill setup diagrams use the width (owner, Nov 20 2026, "should drill setup diagrams grow on wide screens? yes": go with the
    recommendation). The diagram is drawn (inline SVG, sharp at any size): it fills its well up to 560 px wide below 1280 px; from
    1280 px it sits beside its "At a glance" (7/12 + 5/12 of the content area, the HTML order unchanged: the main grid places the two

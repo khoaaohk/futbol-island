@@ -8,6 +8,9 @@
 .band[data-tone=paper]{padding-block:var(--s2)}
 .inner{display:grid;gap:var(--s3);align-items:start}
 @media(min-width:1000px){.inner{grid-template-columns:300px minmax(0,1fr);gap:var(--s5)}.head{position:sticky;top:100px}}
+/* on a side-rail page a band is one column, its heading on top (owner rule: no heading alone in a left column; the sticky head also
+   made a rail tap land 96 px low: audit, Nov 20 2026) */
+main:has(>nav[data-rail]) .inner.inner{grid-template-columns:minmax(0,1fr);gap:var(--s3)}main:has(>nav[data-rail]) .head.head{position:static}
 .head{display:grid;gap:var(--s1);align-content:start;justify-items:start}
 .bigIco{display:grid;place-items:center;width:64px;height:64px;margin-bottom:var(--s1);border-radius:var(--r-md);background:var(--card-bg)}
 .art{width:100%;max-width:190px;margin-top:var(--s2);padding:10px;box-sizing:border-box;border-radius:var(--r-md);background:var(--well)}
@@ -60,6 +63,9 @@
  .hero>header p{text-align:left}
  .heroArt{padding-top:var(--s4)}
 }
+/* beside the side rail (from 1280 px) the hero keeps the content column's edges: the centred-page bleed above pushed the
+   breadcrumb under the rail (audit, Nov 20 2026) */
+@media(min-width:1280px){main:has(>nav[data-rail])>.hero{margin-inline:0;padding-inline:0;align-items:start}}
 @media(prefers-reduced-motion:reduce){.cards .item a,.moreSum,.plus{transition:none}}
 @media print{.band{margin-inline:0;padding:0;background:none}.more{display:none}}
 /* phones: shorter cards (one line under the title, a smaller icon tile) so a chapter of six stays about one screen */

@@ -11,6 +11,8 @@ const {chromium}=require('playwright');
 const BASE=(process.env.FUTBOL_BASE_URL||'http://localhost:9032').replace(/\/$/,'');
 const ONLY=(process.argv.find(a=>a.startsWith('--only='))||'').slice(7);
 const QUICK=process.argv.includes('--quick');
+/* --widths=390,1440 limits the main pass; --more=768,1024 limits the wider set (0: skip it) (Nov 20 2026) */
+const ARG=k=>(process.argv.find(a=>a.startsWith(`--${k}=`))||'').slice(k.length+3);
 
 /* page types: [type, hub, back of the hub (null: none), [details], back of a detail] */
 const T=[
@@ -35,7 +37,7 @@ const T=[
  ['es-topics',null,null,['/es/learn/soccer-quiz-for-kids','/es/learn/7v7-9v9-11v11'],'/es/library'],
  ['es-format-guides',null,null,['/es/learn/7v7-soccer-formations'],'/es/learn/soccer-formations'],
  ['books','/books','/library',['/books/messi','/books/marta'],'/books'],
- ['cards','/cards','/library',['/cards/strikers','/cards/messi'],'/cards'],
+ ['cards','/cards','/library',['/cards/strikers','/cards/10'],'/cards'],
  ['fish','/fish','/library',['/fish/sharks','/fish/cod'],'/fish'],
  ['exhibits','/exhibits','/library',['/exhibits/ball-curve','/exhibits/var-2018'],'/exhibits'],
  ['es-library','/es/library',null,[],null],
@@ -51,6 +53,8 @@ const T=[
 ];
 const WIDTHS=[[390,844],[1440,900],[2000,1100]];
 const MORE=[[360,780],[430,932],[600,900],[768,1024],[820,1180],[1024,768],[1024,600],[1180,820],[1280,800],[1366,768],[1536,864],[1728,1117],[1920,1080],[2560,1440]];
+if(ARG('widths'))WIDTHS.splice(0,WIDTHS.length,...WIDTHS.filter(([w])=>ARG('widths').split(',').map(Number).includes(w)));
+if(ARG('more'))MORE.splice(0,MORE.length,...ARG('more').split(',').map(Number).filter(Boolean).map(w=>MORE.find(m=>m[0]===w)||[w,900]));
 const CRUMB_X={390:16,1440:296,2000:364};
 
 const pages=[];
@@ -135,7 +139,8 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
   let maxR=0;for(const e of m.querySelectorAll('*')){if(nav.contains(e))continue;const r=e.getBoundingClientRect();if(r.width<=0||r.height<=0||r.top>document.documentElement.scrollHeight)continue;const st=getComputedStyle(e);if(st.position==='fixed')continue;if(r.right>maxR&&r.right<=innerWidth+1)maxR=r.right;}
   // full-width blocks: the same left and right edge as the content area (owner: Previous/Next, the FAQ and the footer columns too)
   const edges=[];const chk=(sel,L,R)=>{for(const e of document.querySelectorAll(sel)){const r=e.getBoundingClientRect();if(r.width<=0||r.height<=0)continue;if(Math.abs(r.left-L)>2||Math.abs(r.right-R)>2)edges.push(`${sel.split(' ').pop()} ${Math.round(r.left)}-${Math.round(r.right)}`);}};
-  if(innerWidth>=1024){chk('main>[class*=pager]',cl,crt);chk('main [class*=faqList]',cl,crt);chk('main>[data-keep-reading]',cl,crt);chk('main>section[class*=panel]',cl,crt);chk('main>section',cl,crt);
+  if(innerWidth>=1024){chk('main>[class*=pager]',cl,crt);for(const e of document.querySelectorAll('main [class*=faqList]')){const band=e.closest('section[data-tone]');if(!band){continue;}const bs=getComputedStyle(band),br=band.getBoundingClientRect(),r=e.getBoundingClientRect();if(r.width>0&&(Math.abs(r.left-br.left-parseFloat(bs.paddingLeft))>2||Math.abs(br.right-parseFloat(bs.paddingRight)-r.right)>2))edges.push(`faqList in its band ${Math.round(r.left)}-${Math.round(r.right)}`);}chk('main [class*=faqList]:not(section[data-tone] *)',cl,crt);/* a FAQ inside a tinted band (the games hub, Nov 20 2026) fills the band's inner width */chk('main>[data-keep-reading]',cl,crt);chk('main>section[class*=panel]',cl,crt);{const mr=m.getBoundingClientRect();{const pair=innerWidth>=1280&&m.querySelector(':scope>section[aria-labelledby=diagram]+section[aria-labelledby=facts]');if(pair){const a=pair.previousElementSibling.getBoundingClientRect(),b=pair.getBoundingClientRect();if(Math.abs(a.left-cl)>2||Math.abs(b.right-crt)>2||Math.abs(a.top-b.top)>2)edges.push(`drill diagram + At a glance pair ${Math.round(a.left)}-${Math.round(b.right)}`);}
+   chk(pair?'main>section:not([data-band]):not([aria-labelledby=diagram]):not([aria-labelledby=facts])':'main>section:not([data-band])',cl,crt);/* from 1280 px a drill's diagram sits beside At a glance (Nov 20 2026): the pair spans the edges */}chk('main>section[data-band]',mr.left,mr.right);/* a hub band bleeds to the main column's box, its words on the content edges (Nov 20 2026) */}
    const f=document.querySelector('footer'),fh=f&&f.querySelector('[class*=footHubs]');if(fh){const fs=getComputedStyle(f),fr=f.getBoundingClientRect();const fl=fr.left+parseFloat(fs.paddingLeft),frr=fr.right-parseFloat(fs.paddingRight);
     const r=fh.getBoundingClientRect();if(Math.abs(r.left-cl)>2||(frr-r.right)>Math.max(24,(frr-fl)*.04))edges.push(`footer columns ${Math.round(r.left)}-${Math.round(r.right)} (footer ${Math.round(fl)}-${Math.round(frr)})`);}}
   const h1=document.querySelector('main h1');
@@ -204,7 +209,7 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
   await ctx.close();}
  // the wider set of widths: one detail page per template, layout only
  const seen=new Set();
- for(const pg of pages){if(pg.hub||seen.has(pg.type)||pg.type.startsWith('es-'))continue;if(ONLY&&!pg.url.includes(ONLY)&&pg.type!==ONLY)continue;seen.add(pg.type);
+ if(MORE.length)for(const pg of pages){if(pg.hub||seen.has(pg.type)||pg.type.startsWith('es-'))continue;if(ONLY&&!pg.url.includes(ONLY)&&pg.type!==ONLY)continue;seen.add(pg.type);
   const ctx=await b.newContext({viewport:{width:MORE[0][0],height:MORE[0][1]}});const p=await ctx.newPage();
   for(const [W,H] of MORE){await p.setViewportSize({width:W,height:H});await p.waitForTimeout(400);await run(pg,W,H,false,p);}
   await ctx.close();}
