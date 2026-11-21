@@ -44,6 +44,8 @@ const PLACES:Record<string,Place>={
  summit:{sky:{...DAY,top:'#4a8ad0',mid:'#9cc8e8',haze:'#e4eef6',headA:'#6a7a9a',headB:'#9aa8c0'},sunX:.35,fog:'#dde8f2',far:'#7a90a8',hills:16,shade:[.5,.48,.76],hemi:'#f0f4ff',hemiG:'#8a8aa8'},
  stadium:{sky:{top:'#5a3a8a',mid:'#e9825c',haze:'#ffcf7a',sunCore:'#fff1b0',sunRing:'#ffc24a',sunRing2:'#ff8a3c',cloudLit:'#ffe1b0',cloudShade:'#d9707a',headA:'#4a3a6a',headB:'#8a5a80',seaFar:'#3a5a9a',seaNear:'#2a7a96'},sunX:.5,fog:'#f2b48a',far:'#6a6a80',hills:4,shade:[.52,.38,.68],hemi:'#ffd8c0',hemiG:'#7a5a8a'},
 };
+/** Where each place's landmark stands (the flyover frames it behind the flag). */
+const LANDMARK:Record<string,[number,number]>={jetty:[6,-68],beach:[22,-34],plaza:[-48,-30],farm:[-33,-86],boardwalk:[34,-64],museum:[0,-78],coral:[14,-34],summit:[4,-150],stadium:[0,-156]};
 const SKYLINE:Record<string,'palms'|'town'|'trees'|'peaks'|'stands'>={jetty:'trees',beach:'palms',plaza:'town',farm:'trees',boardwalk:'town',museum:'trees',coral:'palms',summit:'peaks',stadium:'stands'};
 function backdropTex(place:string){const W=2048,H=512,hz=.8,p=PLACES[place];return canvasTex(W,H,g=>{
  paintComicCoast(g,W,H,{width:W,height:H,sunX:p.sunX,horizon:hz,palette:p.sky,seed:place.length*13+7});const y0=H*hz,rnd=seeded(place.charCodeAt(0)*31+5),kind=SKYLINE[place];g.lineJoin='round';
@@ -297,7 +299,7 @@ function decalGeo(H:Hole){const gr=H.green,ex=gr.rx+GREEN_PAD,ez=gr.rz+GREEN_PAD
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);return g;}
 
 export type CamMode='flyover'|'aim'|'chase'|'cup'|'still';
-const FLAG_C=['#f0452e','#ffc83a','#19b5a5','#2f8fd8','#ff65c8'],KICKER_S=.95,PREVIEW=90,TRAIL=18,BITS=48,DECO=24,BUSH=44,TUFTS=420,SCENERY_TRIS=11000,FLUT=36,BIRDS=5;
+const FLAG_C=['#f0452e','#ffc83a','#19b5a5','#2f8fd8','#ff65c8'],KICKER_S=.95,PREVIEW=90,TRAIL=18,BITS=48,DECO=24,BUSH=44,TUFTS=420,SCENERY_TRIS=10400,FLUT=36,BIRDS=5;
 export type FootgolfView=ReturnType<typeof createFootgolfView>;
 export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:boolean}){
  const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');canvas.dataset.footgolfCanvas='';canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none';host.prepend(canvas);
@@ -385,9 +387,9 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   if(cam.mode==='flyover'){cam.fly+=dt/cam.flyDur;const u=ease(Math.min(1,cam.fly));
    /* a low cinematic pull-back (polish pass): it opens beside the green with the landmark behind the flag, swings round behind the
     * green's front and backs down the fairway, rising a little over the middle to show the shape, and lands on the aim view at the tee */
-   const r=Math.max(0,.8-u*.8);routePt(Math.min(1,r+.4),V2);routePt(r,V);const dx=V2.x-V.x,dz=V2.z-V.z,dl=Math.hypot(dx,dz)||1,sw=(1-u)*(1-u)*12;
+   const r=Math.max(0,.8-u*.8);routePt(Math.min(1,r+.4),V2);routePt(r,V);const dx=V2.x-V.x,dz=V2.z-V.z,dl=Math.hypot(dx,dz)||1,lm=LANDMARK[H.def.place]??H.cup,side=(-dz*(lm[0]-H.cup[0])+dx*(lm[1]-H.cup[1]))>0?-1:1,sw=(1-u)*(1-u)*12*side;
    const gy=Math.max(heightAt(H,V.x,V.z),FG.water);cam.tPos.set(V.x-dz/dl*sw,gy+3.4+Math.sin(u*Math.PI)*4.5,V.z+dx/dl*sw);
-   const lk=Math.min(1,u*1.25);cam.tLook.set(H.cup[0]*(1-lk)+V2.x*lk,(H.cupY+4.5)*(1-lk)+(Math.max(heightAt(H,V2.x,V2.z),FG.water)+3)*lk,H.cup[1]*(1-lk)+V2.z*lk);
+   const lk=Math.min(1,u*1.25);const fx0=H.cup[0]*.65+lm[0]*.35,fz0=H.cup[1]*.65+lm[1]*.35;cam.tLook.set(fx0*(1-lk)+V2.x*lk,(H.cupY+4.5)*(1-lk)+(Math.max(heightAt(H,V2.x,V2.z),FG.water)+3)*lk,fz0*(1-lk)+V2.z*lk);
    if(u>.8){aimPose(g,V,V2);const t=(u-.8)/.2;cam.tPos.lerp(V,t);cam.tLook.lerp(V2,t);}
    if(cam.fly>=1){cam.mode='aim';aimPose(g,cam.tPos,cam.tLook);}k=cam.fly<.03?1:1-Math.exp(-dt*5);}
   else if(cam.mode==='aim'){aimPose(g,cam.tPos,cam.tLook);k=1-Math.exp(-dt*5);}
@@ -462,7 +464,6 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   skipFlyover(){if(cam.mode==='flyover')cam.fly=1;},
   get flying(){return cam.mode==='flyover';},
   get camMode(){return cam.mode;},
-  get kickerRoot(){return bean;},
   get camInfo(){return {mode:cam.mode,pos:camera.position.toArray().map(v=>+v.toFixed(2)),look:cam.look.toArray().map(v=>+v.toFixed(2)),ground:H?+heightAt(H,camera.position.x,camera.position.z).toFixed(2):0};},
   /** For the drag: the screen-space direction of the aim, so a drag reads the same whichever way the camera looks. */
   project(x:number,y:number,z:number){V.set(x,y,z).project(camera);return {x:(V.x+1)/2*W,y:(1-V.y)/2*Hh,on:V.z<1};},

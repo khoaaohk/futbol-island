@@ -6914,3 +6914,16 @@ A new 3D arcade game (`lib/arcade/footgolf/`, `components/games/FootGolfGame.tsx
   Not measured on a real phone; no iPhone temperature claim.
 - **Phone framing:** the aim view uses `camera.setViewOffset` (a sheared frustum) to sit the ball above the kick picker: no extra pass,
   no zoom. The preview (`predict`) re-runs the real physics only when the aim, power, kick or curl changes.
+- **Polish pass (Nov 21 2026, same branch): what the new look costs.** The player's island bean kicks the ball (the shared arcade rig,
+  `lib/arcade/islandArcadePlayer.ts`, as Ball Blaster uses it: about 9k visible triangles and 4 draws; hidden for a putt; it poses only in
+  frames the shell already draws, so the still-aim sleep is unchanged). Island props, the tee dressing (markers, sign posts, bench, pennant
+  poles), bushes and grass tufts are BAKED into the one scenery mesh, with a per-hole budget (`SCENERY_TRIS` = 10.4k: heavy landmark holes
+  get fewer tufts and bushes). Pennants + gulls: one instanced draw (one triangle each, ~20 matrices a frame, preallocated). The green's
+  slope chevrons and the tee sign's face share ONE 768x960 canvas texture on one draped mesh (970 triangles, one draw); the chevrons left
+  the ground sheet. Decoration trees 36 -> 24 per kind with open-ended trunks (palms 3 segments) to pay for the kicker. Fog starts at 55 m
+  (was 90) for haze. Per-frame CPU added: the rig's pose and ~20 instance matrices; nothing allocated per frame.
+  **Measured** (headless Chrome, 390x844 phone profile, renderer.info, aim view at each tee, before -> after): jetty 13 -> 18 draws,
+  11.2k -> 22.6k triangles; beach 12 -> 17, 25.9k -> 32.0k; plaza 8 -> 13, 25.2k -> 34.4k; farm 12 -> 17, 25.3k -> 34.5k; boardwalk
+  12 -> 17, 27.5k -> 34.6k; museum 13 -> 18, 20.8k -> 31.3k; coral 12 -> 17, 11.6k -> 20.6k; summit 13 -> 18, 20.0k -> 31.0k; stadium
+  12 -> 17, 24.5k -> 34.7k (scripts/shots-footgolf-polish.cjs; scripts/check-footgolf-browser.cjs reports +1 draw and ~+0.8k with the
+  kicker mid-pose). Textures 4 -> 8 (decal + the rig's), programs 11 -> 15. Not measured on a real phone; no iPhone temperature claim.
