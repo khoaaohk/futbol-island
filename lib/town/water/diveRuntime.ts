@@ -106,11 +106,13 @@ export type DiveRuntimePorts={
  invite?:(spot:DiveSpot)=>{text:string;aria:string}|null;
  /** Shared reefs: called once per dive frame right before the room render (the friend layer samples, draws and sends). */
  beforeRender?:(scene:T.Scene,camera:T.Camera,dt:number)=>void;
+ /** Shared reefs: my member id while in a party / public world (null solo): the Dive tap's start slot (diveSession.ts diveEntryAt). */
+ entrySeed?:()=>number|null;
 };
 
 export function createDiveRuntime(ports:DiveRuntimePorts){
  let save=readDiveFinds();
- const session=createDiveSession(DIVE_SPOTS,id=>save.spots[id]??[]);
+ const session=createDiveSession(DIVE_SPOTS,id=>save.spots[id]??[],()=>ports.entrySeed?.()??null);
  const near:DiveSpot[]=[];let slotKey='';
  let room:DiveRoom|null=null,clock=0,promptShown=false,promptLabel='',findPrompt='',lastBreath=-1,breathShown=false;
  const pose:SwimRigPose={w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0};

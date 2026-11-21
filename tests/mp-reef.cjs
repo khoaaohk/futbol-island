@@ -250,7 +250,11 @@ t('wiring: the layer is made on the way under and ended on the way up; the dive 
   assert.ok(branch > 0 && upd > branch, 'island party update after the dive branch (never while under)');
   assert.ok(/disposers\.add\(endReefParty\)/.test(town), 'page teardown ends the layer');
   // no analytics in the reef module
-  assert.ok(!/from '[^']*analytics/.test(read('lib/multiplayer/reefParty.ts')));
+  assert.ok(!/from '[^']*analytics/.test(read('lib/multiplayer/reefParty.ts')));  // names up close (the dive camera is a few metres back): only the reef layer opts in; the island's labels keep their 3.4 m floor
+  const ra = read('lib/graphics/remoteAvatars.ts');
+  assert.ok(/closeLabels: true/.test(read('lib/multiplayer/reefParty.ts')), 'the reef layer asks for close labels');
+  assert.ok(/Math\.max\(opts\.closeLabels\?LABEL_CLOSE_MIN:1,/.test(ra), 'below LABEL_NEAR_M a reef name shrinks with the distance (constant screen size)');
+  assert.ok(!/closeLabels/.test(read('lib/multiplayer/townBridge.ts')), 'the island layer never passes closeLabels');
 });
 
 console.log(`mp-reef: ${n} checks passed`);

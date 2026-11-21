@@ -122,5 +122,17 @@ ok('frame loop + HUD + analytics wiring (Town.tsx)',()=>{
  assert(read('components/DiveHud.tsx').includes('className="dive-edge-chip"')&&read('app/globals.css').includes('@media(prefers-reduced-motion:reduce){.dive-edge-chip{animation:none}}'),'the edge chip (still with reduced motion)');
 });
 
+ok('shared reefs: Dive-tap entry slots are deterministic, apart, inside every rim and clear of the layout (startGap)',()=>{
+ const J=o=>JSON.stringify(o),st=J({x:S.DIVE_START.x,z:S.DIVE_START.z});
+ assert.equal(J(S.diveEntryAt(null)),st,'solo: the start itself');
+ assert.equal(J(S.diveEntryAt(-1)),st,'no id: the start');
+ const slots=[];for(let id=0;id<7;id++){const e=S.diveEntryAt(id);assert.equal(J(S.diveEntryAt(id+7)),J(e),'deterministic by id mod 7');slots.push(e);
+  assert(e.z<=S.DIVE_START.z+1e-9,'never toward the near rim');assert(Math.hypot(e.x-S.DIVE_START.x,e.z-S.DIVE_START.z)<L.DIVE_LAYOUT.startGap-1,'inside startGap with 1 m to spare');}
+ for(let i=0;i<7;i++)for(let j=i+1;j<7;j++)assert(Math.hypot(slots[i].x-slots[j].x,slots[i].z-slots[j].z)>1,`slots ${i} and ${j} at least 1 m apart`);
+ for(const s of D.DIVE_SPOTS)for(const e of slots)assert(E.diveEdgeBeyond(s,e.x,e.z)<-1,s.id+' entry slot well inside the rim');
+ const c=S.createDiveSession(D.DIVE_SPOTS,()=>[],()=>3);assert.equal(typeof c.start,'function');
+ assert(/entrySeed:\(\)=>\{const y=party\?partyStore\.get\(\)\.you/.test(read('components/Town.tsx')),'Town seeds the slot with my member id (party / world only)');
+});
+
 function near(a,b,eps,msg){assert(Math.abs(a-b)<=eps,`${msg} ${a} vs ${b}`);}
 console.log(`\ndive-edge: ${passed} passed`);

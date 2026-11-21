@@ -431,7 +431,7 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.match(src,/if\(e\.wet\)\{/,'the swim pose follows the guard');assert.match(src,/pose\.mode===Mode\.Jetpack&&e\.jet&&e\.door>=1/,'no plume for a grounded jetpack');
  assert.match(src,/root3\.position\.set\(pose\.x,pose\.y\+e\.lift,pose\.z\)/,'a refused swimmer stands on the ground');
  assert.match(read('components/Town.tsx'),/landAt:onLand/,'the island passes its land test');
- assert.match(read('lib/multiplayer/roomParty.ts'),/landAt: ctx\.landAt \}\);/);assert.match(read('lib/multiplayer/townBridge.ts'),/landAt: ctx\.landAt,/);
+ assert.match(read('lib/multiplayer/roomParty.ts'),/landAt: ctx\.landAt(, closeLabels: ctx\.closeLabels)? \}\);/);assert.match(read('lib/multiplayer/townBridge.ts'),/landAt: ctx\.landAt,/);
 }
 { // Rooms Phase 1: rooms draw a smaller dome (r ~0.8 m) through the same instanced field; the island default stays 1.
  const ra=read('lib/graphics/remoteAvatars.ts'),rp=read0('lib/multiplayer/roomParty.ts');

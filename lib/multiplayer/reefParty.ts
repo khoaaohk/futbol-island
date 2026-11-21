@@ -51,7 +51,7 @@ export function createReefParty(ctx: { scene: THREE.Scene; area: number; local: 
   if (room < 0 || reefArea(room) < 0) return null;
   const rp = createRoomParty({ scene: ctx.scene, room, local: ctx.local, phone: ctx.phone, reducedMotion: ctx.reducedMotion,
     wake: () => {}, // the dive room renders every frame (its own rest cap): nothing to wake
-    onEmoteSeen: ctx.onEmoteSeen, cap: reefCap, ownBeat: false });
+    onEmoteSeen: ctx.onEmoteSeen, cap: reefCap, ownBeat: false, closeLabels: true });
   if (!rp) return null;
   rp.warpNext();
   rp.sendNow();

@@ -81,6 +81,15 @@ export const DUCK_DRAIN=1;
 export const DIVE_SURFACE_S=.45;
 /** Where the diver starts (room-local, just under the surface at the reef's deeper edge) and the facing (toward −z, the crest). */
 export const DIVE_START={x:0,y:DIVE_SURFACE_Y-1.2,z:13,yaw:Math.PI} as const;
+/** Shared reefs: divers who tap Dive into the same reef start a step apart instead of stacked on DIVE_START (the other's name label
+ *  filled the screen). Slot = seed mod 7 (seed = my party / world member id): 0 the start itself, 1..6 on a half ring of DIVE_ENTRY_R
+ *  toward the crest (−z, never past the rim side at z 13), all inside diveLayout's startGap (3 m: no coral or rock). null = solo: DIVE_START. */
+export const DIVE_ENTRY_R=1.8;
+export function diveEntryAt(seed:number|null|undefined):{x:number;z:number}{
+ if(seed==null||!Number.isInteger(seed)||seed<0)return{x:DIVE_START.x,z:DIVE_START.z};
+ const k=seed%7;if(k===0)return{x:DIVE_START.x,z:DIVE_START.z};
+ const a=(k-1)/5*Math.PI;return{x:DIVE_START.x+Math.cos(a)*DIVE_ENTRY_R,z:DIVE_START.z-Math.sin(a)*DIVE_ENTRY_R};
+}
 /** The proximity tick at the surface (s): the water probe's own rate. */
 export const DIVE_TICK=1/WATER_PROBE_HZ;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
@@ -112,7 +121,7 @@ export type DiveInput={
  near?:number;
 };
 
-export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(spot:string)=>readonly string[]=()=>[]){
+export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(spot:string)=>readonly string[]=()=>[],entrySeed:()=>number|null=()=>null){
  const p={x:0,y:0,z:0};
  const state={phase:'surface' as DivePhase,spot:null as DiveSpot|null,
   /** The patch the swimmer is in at the surface (the Dive prompt), by the 10 Hz test. */
@@ -189,7 +198,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   /** "Dive": go under at the near spot. False when not in a patch, already diving or out of breath. */
   start(){
    clear();const s=state.near;if(!s||state.phase!=='surface'||state.breath<BREATH_MIN_DIVE)return false;
-   begin(s,DIVE_START.x,DIVE_START.z,DIVE_START.yaw,0,DIVE_START_T);state.lowSaid=false;state.viaEdge=false;state.edgeCd=DIVE_EDGE.cooldown;return true;
+   const e=diveEntryAt(entrySeed());begin(s,e.x,e.z,DIVE_START.yaw,0,DIVE_START_T);state.lowSaid=false;state.viaEdge=false;state.edgeCd=DIVE_EDGE.cooldown;return true;
   },
   /** Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge. Arrives at the room point (x, z) with the facing
    *  and speed carried on and the place in the water column from the island dive; the breath goes on as it was (no refill). False

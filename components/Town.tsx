@@ -1308,6 +1308,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const endReefParty=()=>{if(party)party.setRoomLayer(null);reefParty?.dispose();reefParty=null;};disposers.add(endReefParty);
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
       /* Shared reefs: "Dive in: 2 friends exploring" while others are under at this spot (the door hint's cached count; one object per count) */
+      entrySeed:()=>{const y=party?partyStore.get().you:undefined;return typeof y==='number'&&y>=0?y:null;},/* shared reefs: divers start a step apart */
       invite:spot=>{const n=party?party.roomCount(reefRoom(spot.area)):0;if(n<=0)return null;const w=partyStore.get().kind==='world';if(n!==reefInvite.n||w!==reefInvite.world){reefInvite.n=n;reefInvite.world=w;reefInvite.v={text:reefPromptText(n,w),aria:reefPromptAria(n,w)};}return reefInvite.v;},
       beforeRender:(_s,cam,dt)=>{if(reefParty)reefParty.update(dt,performance.now(),cam);},
       /* Seamless Explore: the way out across the edge lands in water deep enough for the duck-dive (else swims up; never land or a pier) */

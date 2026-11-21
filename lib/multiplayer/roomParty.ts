@@ -72,6 +72,8 @@ export function createFriendCore(ctx: {
   scene: THREE.Scene; phone: boolean; fieldScale?: number;
   /** Rigs drawn at once by heat tier (default remoteCap; Battery saver always 0). A shared reef passes reefCap (3 on phones). */
   cap?: (tier: HeatTier, phone: boolean) => number;
+  /** Names keep a constant screen size up close (remoteAvatars closeLabels; the dive room's near camera). */
+  closeLabels?: boolean;
   /** The island's ground height under x, z (where a flying friend's plume settles). */
   groundAt?: (x: number, z: number) => number;
   /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
@@ -86,7 +88,7 @@ export function createFriendCore(ctx: {
   onSync?: (live: boolean, welcome: boolean) => void;
 }): FriendCore {
   const conn = partyConnection();
-  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => (batterySaverOn() ? 0 : ctx.cap ? ctx.cap(tier, phone) : remoteCap(tier, phone, false)), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt, landAt: ctx.landAt });
+  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => (batterySaverOn() ? 0 : ctx.cap ? ctx.cap(tier, phone) : remoteCap(tier, phone, false)), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt, landAt: ctx.landAt, closeLabels: ctx.closeLabels });
   const interp = createInterp();
   // Friends' balls ride their own interpolators (the ball state in the mode slot), sampled at the same render time as the bodies,
   // so a shot leaves the friend's foot when their kick plays here.
@@ -273,6 +275,8 @@ export interface RoomPartyCtx {
   onEmoteSeen?: () => void;
   /** Rigs by heat tier (default remoteCap; a shared reef passes reefCap). */
   cap?: (tier: HeatTier, phone: boolean) => number;
+  /** Shared reefs: names keep the island's screen size up close (remoteAvatars closeLabels). */
+  closeLabels?: boolean;
   /** False: this layer does not take the connection's beat hook (a shared reef inside the island page: the island runtime keeps the
    *  hook and asks this layer for the pose through sendNow while it is active, townBridge.ts setRoomLayer). Default true. */
   ownBeat?: boolean;
@@ -297,7 +301,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
   let coreIds: MemberId[] | null = null;
 
   const core = createFriendCore({
-    scene: ctx.scene, phone: ctx.phone, fieldScale: ROOM_FIELD_SCALE, onEmoteSeen: ctx.onEmoteSeen, cap: ctx.cap,
+    scene: ctx.scene, phone: ctx.phone, fieldScale: ROOM_FIELD_SCALE, onEmoteSeen: ctx.onEmoteSeen, cap: ctx.cap, closeLabels: ctx.closeLabels,
     onFriendEmote(id) { if (last.has(id) && !gone.has(id)) { emoteUntil = now() + ROOM_EMOTE_AWAKE_S * 1000; wake(); } },
     admit(id, b, recvMs) {
       if (roomOf(b) !== room) {

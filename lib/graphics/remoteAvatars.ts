@@ -204,6 +204,8 @@ type Entry={
 export const LABEL_W=512,LABEL_H=128,LABEL_FONT_PX=60,LABEL_WORLD_W=3.4,LABEL_Y=2.62;
 /** The label keeps its world size up to LABEL_NEAR_M (m) from the camera (the phone's island view), then grows with the distance up to LABEL_FAR_GROW x. */
 export const LABEL_NEAR_M=34,LABEL_FAR_GROW=1.7;
+/** closeLabels (shared reefs): the smallest label scale up close (~1.7 m from the camera): never a speck, never bigger on screen than on the island. */
+export const LABEL_CLOSE_MIN=.05;
 const labelH=(_style:MemberStyle|null)=>LABEL_H;
 /** World height (m) of the name's letters (tests compare it with the townsfolk tag). */
 export const labelTextWorldHeight=()=>LABEL_FONT_PX/LABEL_W*LABEL_WORLD_W;
@@ -321,7 +323,9 @@ export function friendBallSpot(state:number,b:{x:number;y:number;z:number},pose:
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m).
  *  `groundAt`: the island's ground height (m) under x, z, where a flying friend's plume settles (none: it falls 3 m and fades). */
 export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number;groundAt?:(x:number,z:number)=>number;/** dry land at x, z (the island passes onLand): gates the swim pose (drawnAs) */landAt?:(x:number,z:number)=>boolean;
-/** A room page (the stranger room cap of ROOM_CAP); default: a layer with a fieldScale (only rooms pass one, createRoomParty). */room?:boolean}):RemoteAvatars{
+/** A room page (the stranger room cap of ROOM_CAP); default: a layer with a fieldScale (only rooms pass one, createRoomParty). */room?:boolean;
+ /** Shared reefs: the dive camera sits a few metres behind me, so a name keeps the island phone view's SCREEN size up close (it shrinks
+  *  with the distance below LABEL_NEAR_M instead of staying 3.4 m wide and filling the screen). Default off (the island is unchanged). */closeLabels?:boolean}):RemoteAvatars{
  const FS=opts.fieldScale??1;
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
@@ -373,7 +377,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const label=e.label!,bubble=e.bubble!,d2=e.d2,ld2=e.ld2;
   label.visible=false;bubble.visible=false;
   const underNpc=nearNpcTag(pose);
-  if(ld2<LABEL_RANGE*LABEL_RANGE&&!underNpc){const ly=LABEL_Y-(drawnSeated(pose,e.shield)?SEATED_LABEL_DROP:0);label.position.set(pose.x,pose.y+ly*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
+  if(ld2<LABEL_RANGE*LABEL_RANGE&&!underNpc){const ly=LABEL_Y-(drawnSeated(pose,e.shield)?SEATED_LABEL_DROP:0);label.position.set(pose.x,pose.y+ly*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(opts.closeLabels?LABEL_CLOSE_MIN:1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
   // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
   // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
   if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE&&!underNpc;e.status.visible=show;
