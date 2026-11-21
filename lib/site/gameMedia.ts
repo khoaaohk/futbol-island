@@ -58,10 +58,10 @@ const STILL_WORDS:Record<GameId,string[]>={
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
  airhockey:['Air Futbol: a rally against Sandy, the puck crossing the halfway line between the red and the teal striker','Air Futbol: SMASH! The teal striker drives up into the puck and sends it flying up the pitch','Air Futbol: the puck banks off the left side wall in the middle of a rally','Air Futbol against Pip, the level 2 opponent: SAVE! as the teal striker stops a fiery shot in front of its own goal'],
- lineup:['Line Up! early in a run: a few shapes of footballs on the pitch, one shape left in the tray and the empty bench beside it','Line Up!: a line fills, the footballs are kicked off the pitch and LINE UP! and +100 appear','Line Up!: a shape of three star balls held above a crowded pitch, with its shadow on the square where it will land'],
+ lineup:['Line Up! early in a run: a few shapes of footballs on the pitch, one shape left in the tray and the empty bench beside it','Line Up!: a line fills, the footballs are kicked off the pitch and LINE UP! and +100 appear','Line Up!: a shape of three star balls held above a crowded pitch, with its shadow on the square where it will land','Line Up! at level 5: the referee stands on one square of a crowded pitch, and the x2 call says to clear a line now'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile','Trophy Drop at level 4: a big silver trophy, a medal and a glove in the cabinet as CHAIN x2! appears'],
  rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: POW! as the ball knocks a training cone off its stack, a cable runs to the gate','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge','Roll It In on the beach: the ball rolls along a narrow wooden plank over the water toward a plate and the goal'],
- ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot'],
+ ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.','Your kit can switch mid-run.'],
@@ -71,10 +71,10 @@ const STILL_CAPS:Record<GameId,string[]>={
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
  airhockey:['Keep the rally going.','Swipe into the puck for a smash.','Bank shots score extra.','Each win brings a new opponent.'],
- lineup:['A tray of shapes and a bench.','A full line clears.','Drag a shape to its place.'],
+ lineup:['A tray of shapes and a bench.','A full line clears.','Drag a shape to its place.','The referee blocks a square: play around him.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.','Merge all the way up to a trophy.'],
  rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.','Go slow on the narrow planks.'],
- ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.'],
+ ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.','Stop them before they reach your goal.'],
 };
 export function gameStills(id:GameId,max=4):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));
