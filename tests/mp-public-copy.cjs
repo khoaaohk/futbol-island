@@ -19,7 +19,7 @@ const css=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
 const stub=()=>null;
 const OVR={'PrivacyPolicy.module.css':css,'admin.module.css':css,
  'landing/Landing':{default:stub},'IslandLoadingStatic':{default:stub},'root/RootSwitch':{default:stub},'lib/rootView':{ROOT_VIEW_BOOT:''},
- 'seo/JsonLd':{default:stub},'site/seo':{playLd:()=>({})},'islandBrushPreload':{preloadIslandBrush(){}}};
+ 'seo/JsonLd':{default:stub},'site/seo':{playLd:()=>({}),PLAY_OG:{url:'/og/play.jpg',alt:'stub'}}/* Nov 20 2026: /play reads its share picture (PLAY_OG, 166e12cd) */,'islandBrushPreload':{preloadIslandBrush(){}}};
 function withFlag(on,fn,{mp=on}={}){
  const keep={m:process.env.NEXT_PUBLIC_MULTIPLAYER,p:process.env.NEXT_PUBLIC_PUBLIC_WORLD};
  const set=(k,v)=>{if(v===undefined)delete process.env[k];else process.env[k]=v;};
