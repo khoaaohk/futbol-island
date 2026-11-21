@@ -25,7 +25,16 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
   assert(h.includes('data-root-landing')&&h.includes('data-root-game')&&h.includes('data-root-loader'),'both screens are prerendered');
   assert(h.indexOf('dataset.rootView')<h.indexOf('data-root-landing'),'the pre-paint flag runs before either screen');
   assert(!/<link[^>]+rel="preload"[^>]+\/splash\/(hero|keeper|cat|rival)/.test(h),'no loader-cast preloads for title-screen visitors');
-  if(h.includes('data-title-state'))assert(!h.includes('data-landing-play'),'no Play in the static HTML: it appears only after a code (or a saving break)');}
+  /* Nov 20 2026: since the Nov 14 retention release ('boot' state, TitleActions.tsx) the static HTML carries BOTH button sets, and this
+     guard still said "no Play at all" (it failed on every real build, live site included; the full suite skipped its built part).
+     The promise it protects is unchanged: a visitor with no save code never SEES Play. So: the page is built in 'boot', the only Play
+     sits inside the returning card, and the stylesheet hides that card until the pre-paint <html data-title-code> flag is set. */
+  if(h.includes('data-title-state')){assert(h.includes('data-title-state="boot"'),'the static title screen is in the boot state');
+   const plays=[...h.matchAll(/data-landing-play/g)].map(m=>m.index),ret=h.indexOf('data-boot-card="returning"'),fresh2=h.indexOf('data-boot-card="new"');
+   assert(ret>0&&fresh2>0&&plays.length===1&&plays[0]>ret&&ret>fresh2,'the only Play in the static HTML is inside the returning card (after the new-player card)');
+   const css=read('components/landing/Title.module.css');
+   assert(css.includes('.actions[data-title-state=boot] [data-boot-card=returning],:global(html[data-title-code]) .actions[data-title-state=boot] [data-boot-card=new]{display:none}'),'the returning card (Play) is hidden at boot unless a save code is known');
+   assert(css.includes(':global(html[data-title-code]) .actions[data-title-state=boot] [data-boot-card=returning]{display:grid}'),'Play shows only with the pre-paint save-code flag');}}
  assert.match(read('next.config.mjs'),/source: '\/play', has: \[\{ type: 'query', key: 'from', value: '\^\(arcade\|konbini\|museum\|shop\)\$' \}\], destination: '\/island-return'/,'the /play?from= rewrite to the static island-return page');}
 
 // 1b. Nov 3 2026 (owner): the feature tour is the home page `/`, the game is /play. /learn → `/` (308); the game's old `/?…`
