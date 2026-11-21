@@ -1,4 +1,6 @@
 import type {ReactNode} from 'react';
+import rt from './railTarget.module.css';
+import {railId} from '@/lib/site/railId';
 import {FactIcon,type FactIconKind} from './FactIcons';
 import h from './hub.module.css';
 /**
@@ -17,20 +19,21 @@ export function Hero({children,video}:{children:ReactNode;video:ReactNode}){
  if(!video)return <>{children}</>;
  return <div className={h.hero} data-hub-hero="">{children}<div className={h.heroArt}>{video}</div></div>;
 }
-function Card({c}:{c:HubCard}){
- return <li className={h.item}><a href={c.path}>
+function Card({c,ids}:{c:HubCard;ids?:string}){
+ return <li className={ids?`${h.item} ${rt.target}`:h.item} id={ids?railId(ids,c.path):undefined}><a href={c.path}>
   <span className={h.ico}>{c.badge?<b className={h.badge}>{c.badge}</b>:<FactIcon kind={c.icon} size={26}/>}</span>
   <span className={h.name}>{c.name}</span>
   {c.meta&&<span className={h.meta}>{c.meta}</span>}
   {c.line&&<span className={h.line}>{c.line}</span>}
  </a></li>;
 }
-export function CardGrid({cards,show=6,lang='en'}:{cards:readonly HubCard[];show?:number;lang?:'en'|'es'}){
+/** `ids` (layout batch 3, Nov 20 2026): give each card an id (`<ids>-<slug>`) that the hub's rail links to. */
+export function CardGrid({cards,show=6,lang='en',ids}:{cards:readonly HubCard[];show?:number;lang?:'en'|'es';ids?:string}){
  const first=cards.slice(0,show),rest=cards.slice(show);
  return <div className={h.cards}>
-  <ul className={h.grid}>{first.map(c=><Card key={c.path} c={c}/>)}</ul>
+  <ul className={h.grid}>{first.map(c=><Card key={c.path} c={c} ids={ids}/>)}</ul>
   {rest.length>0&&<details className={h.more}><summary className={h.moreSum}><span>{WORDS[lang].all(cards.length)}</span><span className={h.plus} aria-hidden="true"/></summary>
-   <ul className={h.grid}>{rest.map(c=><Card key={c.path} c={c}/>)}</ul></details>}
+   <ul className={h.grid}>{rest.map(c=><Card key={c.path} c={c} ids={ids}/>)}</ul></details>}
  </div>;
 }
 /** One chapter. `art` replaces the icon with a picture (a small pitch diagram); `tone` 'tint' puts the band on the tint. */

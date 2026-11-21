@@ -1,7 +1,9 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {planRailEs} from '@/lib/site/railNavMore';
+import {anchor,hubRail,planRailEs} from '@/lib/site/railNavMore';
+import rt from '@/components/site/railTarget.module.css';
+import {railId} from '@/lib/site/railId';
 import JsonLd from '@/components/seo/JsonLd';
 import GridDiagram from '@/lib/site/GridDiagram';
 import {AGES,SKILLS,drillsBySkill} from '@/lib/site/drills';
@@ -33,8 +35,8 @@ export function EsGridFigure({id,scene,small,image}:{id:string;scene:GridScene;s
  </figure>;
 }
 const Steps=({items}:{items:readonly string[]})=><ol>{items.map(t=><li key={t}>{t}</li>)}</ol>;
-function EsDrillList({items}:{items:readonly {drill:EsDrill;line:string}[]}){
- return <ul className={styles.list}>{items.map(({drill:d,line})=><li key={d.slug}><a href={d.esPath}><span className={styles.itemTitle}>{d.name}</span><span className={styles.itemMeta}>{line} {d.agesText.replace(/ \(.*$/,'')}.</span></a></li>)}</ul>;
+function EsDrillList({items,ids}:{items:readonly {drill:EsDrill;line:string}[];ids?:string}){
+ return <ul className={styles.list}>{items.map(({drill:d,line})=><li key={d.slug} id={ids?railId(ids,d.esPath):undefined} className={ids?rt.target:undefined}><a href={d.esPath}><span className={styles.itemTitle}>{d.name}</span><span className={styles.itemMeta}>{line} {d.agesText.replace(/ \(.*$/,'')}.</span></a></li>)}</ul>;
 }
 const H=()=>ES_DRILL_HUBS.drills,P=()=>ES_DRILL_HUBS.plans;
 const guideLink=(g:EsDrillGuide)=>({path:g.esPath,name:g.h1,line:g.blurb});
@@ -48,10 +50,10 @@ export function DrillsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:h.h1,path:h.path,description:h.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:[...ages,...skills].map(g=>({name:g.h1,path:g.esPath})).concat(drills.map(d=>({name:d.h1,path:d.esPath})))}))}/>
   <JsonLd data={faqLd(h.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('drills')} current={h.path}/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Ejercicios en esta página',[{title:'Por edad',items:ages.map(g=>anchor('age',g.esPath,g.h1))},...SKILLS.map(s=>({title:SKILLS_ES[s.id].name,items:bySkill(s.id).map(d=>anchor('drill',d.esPath,d.name))}))],true)} current="#top"/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
   <Section id="by-age" title="Ejercicios de fútbol por edad">
    <p>Cada página por edad es una guía corta: qué pueden hacer los jugadores, cómo agruparlos, los mejores ejercicios y qué evitar.</p>
-   <LinkList links={ages.map(guideLink)}/>
+   <LinkList ids="age" links={ages.map(guideLink)}/>
   </Section>
   <Section id="by-skill" title="Ejercicios de fútbol por habilidad">
    <p>Salta a una habilidad en esta página.</p>
@@ -59,7 +61,7 @@ export function DrillsHubEsPage(){
   </Section>
   {SKILLS.map(s=><Section key={s.id} id={s.id} title={SKILLS_ES[s.id].name}>
    <p>{SKILLS_ES[s.id].line}</p>
-   <EsDrillList items={bySkill(s.id).map(d=>({drill:d,line:drillLineEs(d)}))}/>
+   <EsDrillList ids="drill" items={bySkill(s.id).map(d=>({drill:d,line:drillLineEs(d)}))}/>
   </Section>)}
   <Section id="picture" title="Cada ejercicio tiene un diagrama como este">
    <EsGridFigure id="hub" scene={sharks.scene} image={picture}/>

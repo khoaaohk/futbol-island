@@ -15,6 +15,8 @@ import {playLessonHref} from './playLinks';
 import {FactIcon,type FactIconKind} from '@/components/site/FactIcons';
 import OnThisPage from '@/components/site/OnThisPage';
 import styles from '@/app/(site)/site.module.css';
+import rt from '@/components/site/railTarget.module.css';
+import {railId} from '@/lib/site/railId';
 /**
  * The shared sections of the guide pages (formations, positions and later clusters; lib/site/guides.ts): intro, diagram with
  * its text alternative, bullet lists, lesson and link lists, and the one gold Play button. Server-rendered, classes from
@@ -30,8 +32,9 @@ export type Onward={play:{href:string;label:string};library:{href:string;name:st
 export function OnwardRow({o}:{o:Onward}){
  return <p className={styles.onward} data-onward=""><a className={styles.onwardPlay} href={o.play.href}>{o.play.label}</a><a className={styles.onwardLib} href={o.library.href}>{o.library.name}</a></p>;
 }
-export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean;rail?:React.ReactNode;onward?:Onward}){
- return <>{rail}<header className={styles.intro}>
+/** `top`: the head is #top, the Overview entry of a hub's in-page rail (layout batch 3, Nov 20 2026). */
+export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward,top}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean;rail?:React.ReactNode;onward?:Onward;top?:boolean}){
+ return <>{rail}<header className={top?`${styles.intro} ${rt.target}`:styles.intro} id={top?'top':undefined}>
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{h1}</h1>
   <QuickAnswer lead={lead} facts={facts}/>
@@ -92,14 +95,14 @@ export function Section({id,title,children,panel,fold}:{id:string;title:string;c
  if(fold)return <section className={`${styles.section} ${styles.fold}`} aria-labelledby={id} data-fold=""><details className={styles.foldBox}>
   <summary className={styles.foldSum}><h2 className={styles.h2} id={id}>{title}</h2><span className={styles.plus} aria-hidden="true"/></summary>
   <div className={styles.foldBody}>{children}</div></details></section>;
- return <section className={panel?`${styles.section} ${styles.panel}`:styles.section} aria-labelledby={id}><h2 className={styles.h2} id={id}>{title}</h2>{children}</section>;
+ return <section className={panel?`${styles.section} ${styles.panel}`:styles.section} aria-labelledby={id}><h2 className={`${styles.h2} ${rt.target}`} id={id}>{title}</h2>{children}</section>;
 }
 export const Bullets=({items}:{items:readonly string[]})=><ul>{items.map(t=><li key={t}>{t}</li>)}</ul>;
 export function LessonList({lessons}:{lessons:readonly SiteLesson[]}){
  return <ul className={styles.list}>{lessons.map(l=><li key={l.id}><a href={lessonPath(l.id)}><span className={styles.itemTitle}>{l.title} ({l.formatLabel} lesson)</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>;
 }
-export function LinkList({links}:{links:readonly {path:string;name:string;line?:string}[]}){
- return <ul className={styles.list}>{links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.line&&<span className={styles.itemMeta}>{l.line}</span>}</a></li>)}</ul>;
+export function LinkList({links,ids}:{links:readonly {path:string;name:string;line?:string}[];ids?:string}){
+ return <ul className={styles.list}>{links.map(l=><li key={l.path} id={ids?railId(ids,l.path):undefined} className={ids?rt.target:undefined}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.line&&<span className={styles.itemMeta}>{l.line}</span>}</a></li>)}</ul>;
 }
 /** "Last checked" (lib/site/checked.ts): the content's real check date, and the trust page. */
 export function CheckedLine({date}:{date:string}){

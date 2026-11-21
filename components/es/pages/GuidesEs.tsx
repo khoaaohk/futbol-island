@@ -1,6 +1,7 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
+import {anchor,hubRail,sec} from '@/lib/site/railNavMore';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {place} from '@/lib/site/pitch';
@@ -60,7 +61,7 @@ export function RulesHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:rules.map(r=>({name:r.h1,path:r.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('rules')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Reglas en esta página',RULES_HUB.groups.map((g,i)=>({title:H.groups[i].title,items:g.rules.slice(0,6).map(x=>rules.find(r=>r.slug===x.slug)!).map(r=>anchor('rule',r.esPath,r.name))})),true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
   {/* batch 3, Nov 17 2026: as English (app/(site)/learn/soccer-rules/page.tsx): the diagram first, icon rows, chapter bands */}
   <Section id="picture" title="Cada regla tiene un diagrama como este">
    <div className={styles.pair}>{offside.scenes.map((s,i)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`o${i}`} scene={s} small/></div>)}</div>
@@ -69,7 +70,7 @@ export function RulesHubEsPage(){
   <Section id="basics" title="El juego en cinco líneas"><IconRows items={H.basics.map((t,i)=>({icon:BASIC_ICONS[i]??'ball',text:t}))}/></Section>
   {RULES_HUB.groups.map((g,i)=>{const list=g.rules.map(x=>rules.find(r=>r.slug===x.slug)!),sc=list[0].scenes[0];return <Band key={g.title} id={`g${i}`} title={H.groups[i].title} line={H.groups[i].line} tone={i%2?'paper':'tint'} count={`${list.length} ${list.length===1?'regla':'reglas'}`}
    art={<PitchDiagram id={`band${i}`} format={sc.format} spots={sc.spots} arrows={sc.runs} title={sc.title} desc={sceneDescEs(sc)} small scene={{ball:sc.ball,lineY:sc.lineY,lineWord:sc.lineWord,zone:sc.zone,passes:sc.passes}}/>}>
-   <CardGrid lang="es" cards={list.map(r=>({path:r.esPath,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
+   <CardGrid lang="es" ids="rule" cards={list.map(r=>({path:r.esPath,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
   </Band>;})}
   <QA id="faq" title="Preguntas sobre las reglas del fútbol" faq={H.faq}/>
   <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
@@ -145,14 +146,14 @@ export function TermsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={setLd}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('terms')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Términos en esta página',[{title:'De la A a la Z',items:letters.map(l=>({href:`#letra-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('pages','Términos con diagrama')]}],true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
   <Section id="az" title="Salta a una letra">
    <p>{letters.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letra-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>
   {letters.map(l=><Section key={l.letter} id={`letra-${l.letter.toLowerCase()}`} title={l.letter}>
    <ul>{l.terms.map(g=><li key={g.id} id={g.id}><b>{g.term}.</b> {g.def}{g.to&&<> <a href={g.to}>Ver la página</a>.</>}</li>)}</ul>
   </Section>)}
-  <Section id="pages" title="Términos con diagrama"><LinkList links={terms.map(t=>({path:t.esPath,name:t.name,line:t.short}))}/></Section>
+  <Section id="pages" title="Términos con diagrama"><LinkList ids="term" links={terms.map(t=>({path:t.esPath,name:t.name,line:t.short}))}/></Section>
   <QA id="faq" title="Preguntas sobre las palabras del fútbol" faq={H.faq}/>
   <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
@@ -203,13 +204,13 @@ export function PositionsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(p=>({name:p.name,path:p.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('positions')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Posiciones en esta página',[{title:'Cada posición',items:all.map(p=>anchor('position',p.esPath,p.name))}],true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="pitch" title="Las once posiciones en una cancha">
    <EsDiagram id="all" format="11v11" lines={full.lines} what="las once posiciones del fútbol en una formación 4-3-3" image={formationImage(full.slug)}/>
    <ul>{H.lines.map(l=><li key={l.name}><b>{l.name}.</b> {l.text}</li>)}</ul>
   </Section>
   <Band id="each" title="Cada posición explicada" tone="tint" icon="shirt" count={`${all.length} posiciones`}>
-   <CardGrid lang="es" show={all.length} cards={all.map(p=>({path:p.esPath,name:`${p.name} (${p.short})`,line:p.job,icon:'shirt' as const,badge:shirtBadge(p.numbers)}))}/>
+   <CardGrid lang="es" ids="position" show={all.length} cards={all.map(p=>({path:p.esPath,name:`${p.name} (${p.short})`,line:p.job,icon:'shirt' as const,badge:shirtBadge(p.numbers)}))}/>
   </Band>
   <Section id="numbers" title="Los números de las posiciones, del 1 al 11">
    <Bullets items={H.numbers}/>

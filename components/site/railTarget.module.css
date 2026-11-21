@@ -1,0 +1,5 @@
+/* A hub page's rail targets (layout batch 3, Nov 20 2026; owner: "the side nav always shows what is on the page you are looking at"):
+   a card or row the hub's rail links to (#rule-offside) lands under the header, and under the chip bar below 1280 px (the same
+   offsets as the Library's shelves, components/site/library.module.css). */
+.target{scroll-margin-top:84px}
+@media(max-width:1279px){.target{scroll-margin-top:136px}}

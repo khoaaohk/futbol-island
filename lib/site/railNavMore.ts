@@ -1,4 +1,5 @@
 import type {Rail,RailGroup,RailItem} from './railNav';
+import {railId} from './railId';
 import {LIBRARY_PATH} from './libraryPath';
 import {toEs} from '@/lib/i18n/esPaths';
 import {GAME_PAGES,GAMES_HUB} from './games';
@@ -49,3 +50,14 @@ export function planRailEs():Rail{
  const h=ES_DRILL_HUBS.plans;
  return rail(h.crumb,{href:h.path,name:'Todos los planes'},[{items:ES_PLANS().map(p=>({href:p.esPath,name:p.name}))}],true);
 }
+
+/** A hub's rail mirrors the hub page (owner, Nov 20 2026: "the side nav always shows what is on the page you are looking at"): Overview
+ *  (#top, the head) then the page's own cards and rows as in-page anchors, in the page's groups, with only the Library pinned on top
+ *  (the hub is the page itself). Pass current="#top" to RailNav; LibraryMenuSpy lights the entry on screen and glides on a tap. */
+export function hubRail(label:string,groups:RailGroup[],es=false):Rail{
+ return {label,up:[lib(es)],groups:[{items:[{href:'#top',name:es?'Resumen':'Overview'}]},...groups.filter(g=>g.items.length)]};
+}
+/** A rail entry for a hub card or row given `ids={prefix}` (components/site/HubParts.tsx CardGrid, LinkList, DrillList). */
+export const anchor=(prefix:string,path:string,name:string):RailItem=>({href:`#${railId(prefix,path)}`,name});
+/** A rail entry for a section heading already on the page. */
+export const sec=(id:string,name:string):RailItem=>({href:`#${id}`,name});

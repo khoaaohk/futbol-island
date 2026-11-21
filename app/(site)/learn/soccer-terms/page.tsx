@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {sectionRail} from '@/lib/site/railNav';
+import {hubRail,sec} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {GLOSSARY,GLOSSARY_LETTERS,TERMS_HUB as HUB,TERM_PAGES} from '@/lib/site/terms';
@@ -20,14 +20,14 @@ export default function TermsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={termSetLd}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('terms')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer terms on this page',[{title:'A to Z',items:GLOSSARY_LETTERS.map(l=>({href:`#letter-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('pages','Terms with a diagram')]}])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   <Section id="az" title="Jump to a letter">
    <p>{GLOSSARY_LETTERS.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letter-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>
   {GLOSSARY_LETTERS.map(l=><Section key={l.letter} id={`letter-${l.letter.toLowerCase()}`} title={l.letter}>
    <ul>{l.terms.map(g=><li key={g.id} id={g.id}><b>{g.term}.</b> {g.def}{g.to&&<> <a href={g.to}>{g.toName}</a>.</>}</li>)}</ul>
   </Section>)}
-  <Section id="pages" title="Terms with a diagram"><LinkList links={TERM_PAGES.map(t=>({path:t.path,name:t.name,line:t.short}))}/></Section>
+  <Section id="pages" title="Terms with a diagram"><LinkList ids="term" links={TERM_PAGES.map(t=>({path:t.path,name:t.name,line:t.short}))}/></Section>
   <QA id="faq" title="Questions about soccer words" faq={HUB.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'Every position and the numbers 1 to 11'},
    {path:'/learn/soccer-formations',name:'Soccer formations for kids',line:'Shapes for 7v7, 9v9, 11v11 and futsal'},{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'}]}]}/>

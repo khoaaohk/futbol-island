@@ -1,4 +1,6 @@
 import GridDiagram from './GridDiagram';
+import rt from '@/components/site/railTarget.module.css';
+import {railId} from '@/lib/site/railId';
 import {gridKey,type GridScene} from './grid';
 import type {Drill} from './drills';
 import styles from '@/app/(site)/site.module.css';
@@ -14,6 +16,6 @@ export function GridFigure({id,scene,small,image}:{id:string;scene:GridScene;sma
  </figure>;
 }
 export const Steps=({items}:{items:readonly string[]})=><ol>{items.map(t=><li key={t}>{t}</li>)}</ol>;
-export function DrillList({items}:{items:readonly {drill:Drill;line:string}[]}){
- return <ul className={styles.list}>{items.map(({drill:d,line})=><li key={d.slug}><a href={d.path}><span className={styles.itemTitle}>{d.name}</span><span className={styles.itemMeta}>{line} {d.agesText.replace(/ \(.*$/,'')}.</span></a></li>)}</ul>;
+export function DrillList({items,ids}:{items:readonly {drill:Drill;line:string}[];ids?:string}){
+ return <ul className={styles.list}>{items.map(({drill:d,line})=><li key={d.slug} id={ids?railId(ids,d.path):undefined} className={ids?rt.target:undefined}><a href={d.path}><span className={styles.itemTitle}>{d.name}</span><span className={styles.itemMeta}>{line} {d.agesText.replace(/ \(.*$/,'')}.</span></a></li>)}</ul>;
 }

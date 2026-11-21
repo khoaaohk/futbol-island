@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {sectionRail} from '@/lib/site/railNav';
+import {anchor,hubRail} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {DRILLS,DRILLS_HUB as HUB,DRILL_SAFETY_LINE,SKILLS,drill,drillLine,drillsBySkill} from '@/lib/site/drills';
@@ -23,10 +23,10 @@ export default function DrillsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:[...AGE_GUIDES,...SKILL_GUIDES].map(g=>({name:g.h1,path:g.path})).concat(DRILLS.map(d=>({name:d.h1,path:d.path})))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('drills')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer drills on this page',[{title:'By age',items:AGE_GUIDES.map(g=>anchor('age',g.path,g.h1))},...SKILLS.map(s=>({title:s.name,items:drillsBySkill(s.id).map(d=>anchor('drill',d.path,d.name))}))])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   <Section id="by-age" title="Soccer drills by age">
    <p>Each age page is a short guide: what players can do, how to group them, the best drills and what to avoid.</p>
-   <LinkList links={AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb}))}/>
+   <LinkList ids="age" links={AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb}))}/>
   </Section>
   <Section id="by-skill" title="Soccer drills by skill">
    <p>Jump to a skill on this page.</p>
@@ -34,7 +34,7 @@ export default function DrillsHub(){
   </Section>
   {SKILLS.map(s=><Section key={s.id} id={s.id} title={s.name}>
    <p>{s.line}</p>
-   <DrillList items={drillsBySkill(s.id).map(d=>({drill:d,line:drillLine(d)}))}/>
+   <DrillList ids="drill" items={drillsBySkill(s.id).map(d=>({drill:d,line:drillLine(d)}))}/>
   </Section>)}
   <Section id="picture" title="Every drill has a setup diagram like this">
    <GridFigure id="hub" scene={sharks.scene} image={PICTURE}/>

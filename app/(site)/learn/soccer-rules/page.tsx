@@ -1,6 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
-import {sectionRail} from '@/lib/site/railNav';
+import {anchor,hubRail} from '@/lib/site/railNavMore';
 import {QA} from '@/components/site/LessonHub';
 import {RULES,RULES_HUB as HUB,ruleBySlug} from '@/lib/site/rules';
 import {CHARTS} from '@/lib/site/sizes';
@@ -27,7 +27,7 @@ export default function RulesHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:RULES.map(r=>({name:r.h1,path:r.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('rules')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer rules on this page',HUB.groups.map(g=>({title:g.title,items:g.rules.slice(0,6).map(r=>anchor('rule',r.path,r.name))})))} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   {/* batch 3, Nov 17 2026 (audit rank 9): the diagram first, the five lines as icon rows, each rule group a chapter band with the
       first rule's own diagram, six rule cards and "Show all N"; lessons and related pages as one "Keep reading" grid */}
   <Section id="picture" title="Every rule page has a diagram like this">
@@ -37,7 +37,7 @@ export default function RulesHub(){
   <Section id="basics" title="The game in five lines"><IconRows items={HUB.basics.map((t,i)=>({icon:BASIC_ICONS[i]??'ball',text:t}))}/></Section>
   {HUB.groups.map((g,i)=>{const sc=g.rules[0].scenes[0];return <Band key={g.title} id={`g${i}`} title={g.title} line={g.line} tone={i%2?'paper':'tint'} count={`${g.rules.length} ${g.rules.length===1?'rule':'rules'}`}
    art={<PitchDiagram id={`band${i}`} format={sc.format} spots={sc.spots} arrows={sc.runs} title={sc.title} desc={sceneDesc(sc)} small scene={{ball:sc.ball,lineY:sc.lineY,lineWord:sc.lineWord,zone:sc.zone,passes:sc.passes}}/>}>
-   <CardGrid cards={g.rules.map(r=>({path:r.path,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
+   <CardGrid ids="rule" cards={g.rules.map(r=>({path:r.path,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
   </Band>;})}
   <QA id="faq" title="Questions about soccer rules" faq={HUB.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[...CHARTS.map(c=>({path:c.path,name:c.h1,line:c.blurb})),{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb},

@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {sectionRail} from '@/lib/site/railNav';
+import {anchor,hubRail} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS,FORMATIONS_HUB as HUB,formationsIn,formatGuide} from '@/lib/site/formations';
@@ -24,14 +24,14 @@ export default function FormationsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:FORMATIONS.map(f=>({name:`${f.name} formation`,path:f.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('formations')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer formations on this page',GUIDE_FORMATS.map(fmt=>({title:LABEL[fmt],items:formationsIn(fmt).map(f=>anchor('formation',f.path,f.name))})))} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
   <Section id="what" title="What is a formation?"><Bullets items={HUB.what}/></Section>
   {GUIDE_FORMATS.map(fmt=>{const list=formationsIn(fmt),first=list[0],guide=formatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
     <p>{HUB.groups[fmt]} {guide&&<a href={guide.path}>Compare all {list.length} in the {fmt} guide</a>}{guide&&'.'}</p>
     <div className={styles.pair}>
      <Diagram id={`d-${fmt}`} format={fmt} lines={first.lines} what={`the ${first.name} formation`} small/>
-     <LinkList links={list.map(f=>({path:f.path,name:`${f.name} formation`,line:f.best}))}/>
+     <LinkList ids="formation" links={list.map(f=>({path:f.path,name:`${f.name} formation`,line:f.best}))}/>
     </div>
    </Section>;})}
   <QA id="faq" title="Questions about formations" faq={HUB.faq}/>

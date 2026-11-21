@@ -1,6 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
+import {anchor,hubRail} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -44,14 +45,14 @@ export function FormationsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('formations')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Formaciones en esta página',GUIDE_FORMATS.map(fmt=>({title:LABEL[fmt],items:esFormationsIn(fmt).map(f=>anchor('formation',f.esPath,f.name))})),true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="what" title="¿Qué es una formación?"><Bullets items={H.what}/></Section>
   {GUIDE_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
     <p>{H.groups[fmt]} {guide&&<><a href={guide.esPath}>Compara las {list.length} en la guía de {fmt}</a>.</>}</p>
     <div className={styles.pair}>
      <FormationDiagram id={`d-${fmt}`} format={fmt} lines={first.lines} what={`la formación ${first.name}`} small/>
-     <LinkList links={list.map(f=>({path:f.esPath,name:`Formación ${f.name}`,line:f.best}))}/>
+     <LinkList ids="formation" links={list.map(f=>({path:f.esPath,name:`Formación ${f.name}`,line:f.best}))}/>
     </div>
    </Section>;})}
   <QA id="faq" title="Preguntas sobre las formaciones" faq={H.faq}/>
