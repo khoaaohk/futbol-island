@@ -43,7 +43,7 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  lineup:{name:'Line Up! gameplay: shapes of footballs fill the lines',alt:'Line Up! gameplay on a phone: shapes of footballs are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
  trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
  rollball:{name:'Roll It In gameplay: a football rolling through a puzzle',alt:'Roll It In gameplay on a phone: the ball takes a metal ramp, jumps a gap over the water, presses a plate to open the gate and rolls into the goal',caption:'Roll It In: jump the gap, press the plate, roll it in.'},
- ballblaster:{name:'Ball Blaster gameplay: kicking footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: a ball flies up the pitch and breaks a wind-up robot into pieces with a POW! burst',caption:'Ball Blaster: aim, kick and break the robots before they reach your goal.'},
+ ballblaster:{name:'Ball Blaster gameplay: your own bean kicks footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: the player\'s own bean kicks a multi-ball, then a fire-ball super shot breaks three robots for a trick shot, the wave is cleared and the floodlit boss wave begins',caption:'Ball Blaster: aim, fill the Super bar and break the robots before they reach your goal.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
@@ -61,7 +61,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  lineup:['Line Up! early in a run: a few shapes of footballs on the pitch, one shape left in the tray and the empty bench beside it','Line Up!: a line fills, the footballs are kicked off the pitch and LINE UP! and +100 appear','Line Up!: a shape of three star balls held above a crowded pitch, with its shadow on the square where it will land','Line Up! at level 5: the referee stands on one square of a crowded pitch, and the x2 call says to clear a line now'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile','Trophy Drop at level 4: a big silver trophy, a medal and a glove in the cabinet as CHAIN x2! appears'],
  rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: POW! as the ball knocks a training cone off its stack, a cable runs to the gate','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge','Roll It In on the beach: the ball rolls along a narrow wooden plank over the water toward a plate and the goal'],
- ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
+ ballblaster:['Ball Blaster: SUPER SHOT! The bean\'s fire ball breaks three robots for a +300 trick shot','Ball Blaster boss wave under the floodlights: the Mega Mannequin walks up behind cones, barrels and a glass board as a ball hits for SMASH! +80','Ball Blaster target practice after the boss: a ball hits a target for DING! +75 with five targets left','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.','Your kit can switch mid-run.'],
@@ -74,7 +74,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  lineup:['A tray of shapes and a bench.','A full line clears.','Drag a shape to its place.','The referee blocks a square: play around him.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.','Merge all the way up to a trophy.'],
  rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.','Go slow on the narrow planks.'],
- ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.','Stop them before they reach your goal.'],
+ ballblaster:['Fill the Super bar, hold until it is red, then kick.','Boss wave: keep hitting the Mega Mannequin.','Target practice: pick a target and strike through the ball.','Stop them before they reach your goal.'],
 };
 export function gameStills(id:GameId,max=4):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));
