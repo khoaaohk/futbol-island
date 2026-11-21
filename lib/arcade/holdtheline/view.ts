@@ -73,7 +73,7 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
  /* ---- beans ---- */
  /** A bean on the pitch. back = seen from behind (your team). Returns its head's top in css px. */
  function bean(c:Ctx,x:number,y:number,o:{body:string;skin:string;hair?:string;back?:boolean;ring?:string;num?:string;band?:boolean;lean?:number;trim?:string;big?:number}){
-  const p=project(x,y),s=p.s*1.3*(o.big??1),w=1.5*s,h=2.2*s,r=w/2,lean=(o.lean??0)*s*.5;
+  const p=project(x,y),s=p.s*1.3*(o.big??1),w=1.5*s,h=2.2*s,r=w/2,hr=Math.max(.5,r-1.3)/* never a negative radius on a tiny stage */,lean=(o.lean??0)*s*.5;
   c.fillStyle='#231a2e45';c.beginPath();c.ellipse(p.x+2,p.y+1,w*.62,w*.26,0,0,TAU);c.fill();
   if(o.ring){c.lineWidth=3;c.strokeStyle=INK;c.fillStyle=o.ring;c.beginPath();c.ellipse(p.x,p.y,w*.82,w*.36,0,0,TAU);c.fill();c.stroke();}
   c.save();c.translate(p.x,p.y);c.transform(1,0,lean/h,1,0,0);
@@ -81,9 +81,9 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
   c.beginPath();c.moveTo(-r,-h+r);c.arc(0,-h+r,r,Math.PI,0);c.lineTo(r,-r*.5);c.arc(0,-r*.5,r,0,Math.PI);c.closePath();c.fillStyle=o.body;c.fill();c.lineWidth=2.6;c.strokeStyle=INK;c.stroke();
   if(o.trim){c.fillStyle=o.trim;c.fillRect(-r+1.5,-h*.42,w-3,h*.1);}
   // head
-  if(o.back){c.beginPath();c.arc(0,-h+r,r-1.3,0,TAU);c.fillStyle=o.hair??INK;c.fill();c.beginPath();c.arc(0,-h+r,r-1.3,Math.PI*.2,Math.PI*.8);c.closePath();c.fillStyle=o.skin;c.fill();
+  if(o.back){c.beginPath();c.arc(0,-h+r,hr,0,TAU);c.fillStyle=o.hair??INK;c.fill();c.beginPath();c.arc(0,-h+r,hr,Math.PI*.2,Math.PI*.8);c.closePath();c.fillStyle=o.skin;c.fill();
    if(o.num){c.fillStyle=PAPER;c.beginPath();c.arc(0,-h*.34,r*.7,0,TAU);c.fill();c.lineWidth=1.6;c.stroke();c.fillStyle=INK;c.font=`900 ${Math.round(r*1.05)}px "Arial Black",Impact,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(o.num,0,-h*.33);}}
-  else{c.beginPath();c.arc(0,-h+r,r-1.3,0,TAU);c.fillStyle=o.skin;c.fill();c.beginPath();c.arc(0,-h+r,r-1.3,Math.PI*1.12,Math.PI*1.88);c.closePath();c.fillStyle=INK;c.fill();
+  else{c.beginPath();c.arc(0,-h+r,hr,0,TAU);c.fillStyle=o.skin;c.fill();c.beginPath();c.arc(0,-h+r,hr,Math.PI*1.12,Math.PI*1.88);c.closePath();c.fillStyle=INK;c.fill();
    c.fillStyle=INK;c.beginPath();c.arc(-r*.36,-h+r*1.08,Math.max(1.3,r*.15),0,TAU);c.arc(r*.36,-h+r*1.08,Math.max(1.3,r*.15),0,TAU);c.fill();
    if(o.band){c.fillStyle=SUN;c.fillRect(-r-1,-h*.56,r*.7,h*.13);c.lineWidth=1.5;c.strokeRect(-r-1,-h*.56,r*.7,h*.13);}}
   c.restore();return {x:p.x+lean,y:p.y-h,s,w,h,fx:p.x,fy:p.y};}

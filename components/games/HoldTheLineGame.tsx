@@ -194,7 +194,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    const p=local(e);try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}
    ptr.current={id:e.pointerId,sx:p.x,sy:p.y,wy:g.state.wantY,wx:g.state.wantX,drag:false,def:v.defAt(g,p.x,p.y),t:performance.now()};};
   const move=(e:PointerEvent)=>{const q=ptr.current,g=game.current;if(!q||!g||e.pointerId!==q.id||phaseRef.current!=='playing')return;e.preventDefault();const p=local(e),dx=p.x-q.sx,dy=p.y-q.sy;
-   if(!q.drag){if(Math.hypot(dx,dy)<DRAG)return;q.drag=true;q.wy=g.state.wantY;q.wx=g.state.wantX;q.sx=p.x;q.sy=p.y;return;}
+   if(!q.drag){if(Math.hypot(dx,dy)<DRAG)return;q.drag=true;}// the whole travel from the touch-down counts (re-anchoring here lost the first 10-25 px of a quick flick)
    // the whole line follows the thumb: up the screen = up the pitch
    const gain=v.gain(g.state.lineY);g.move(q.wy-(p.y-q.sy)/gain.y*1.25,q.wx+(p.x-q.sx)/gain.x*1.25);guideCheck();};
   const up=(e:PointerEvent)=>{const q=ptr.current;if(!q||e.pointerId!==q.id)return;try{el.releasePointerCapture(e.pointerId);}catch{/* gone */}ptr.current=null;
