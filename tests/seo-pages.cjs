@@ -164,7 +164,13 @@ for(const p of PATHS){
  const tt=(/<title>([^<]+)<\/title>/.exec(h)||[])[1]||'';assert(tt.replace(/&amp;/g,'&').replace(/&#x27;|&#39;/g,"'").length<=60,`${p}: title <= 60 (${tt})`);
  /* Search-worded pages (guides, comparisons, charts, tools, games, lessons, collection hubs) are titled whole (pageMeta {whole:true}, seo-content):
     their keyword title is the whole title, with no room for the suffix. Every other page is "X · Futbol Island". */
- if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/(learn|tools|games)(\/|$)/.test(p)&&!WHOLE_HUBS.has(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
+ if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/(learn|tools|games)(\/|$)/.test(p)&&!WHOLE_HUBS.has(p)){
+  /* Nov 20 2026: one rule, taken from lib/site/seo.ts fitTitle, not a list of paths: a page carries " · Futbol Island" unless its own
+     title is too long for it (title + suffix > 60), in which case the title stands whole. The exhibit pages' search titles
+     (lib/site/exhibits.ts, 44 to 57 characters) are the case that showed it; a short title without the suffix still fails. */
+  const plain=tt.replace(/&amp;/g,'&').replace(/&#x27;|&#39;/g,"'").replace(/&quot;/g,'"'),SUF=' · Futbol Island';
+  assert(plain.endsWith(SUF)||plain.length+SUF.length>60,`${p}: "X · Futbol Island", or a title too long to carry it (${plain})`);
+  const og=(/<meta property="og:title" content="([^"]*)"/.exec(h)||[])[1];assert.equal(og,tt,`${p}: og:title is the page title`);}
  assert.match(h,/<meta name="description" content="[^"]{20,}"/,`${p}: description`);
  assert(h.includes(`<link rel="canonical" href="${p==='/'?SITE:SITE+p}"/>`),`${p}: canonical`);
  if(GENERATED.includes(p)){const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
