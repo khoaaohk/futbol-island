@@ -44,10 +44,11 @@
 .menuIco i:last-child{top:8px}
 .menu[open] .menuIco i:first-child{transform:translateY(4px) rotate(45deg)}
 .menu[open] .menuIco i:last-child{transform:translateY(-4px) rotate(-45deg)}
-.menuPanel{position:absolute;top:100%;left:0;right:0;max-height:calc(100svh - 68px - env(safe-area-inset-top,0px));overflow-y:auto;overscroll-behavior:contain;padding:8px var(--gutter) 20px;background:var(--paper);box-shadow:0 1px 0 var(--rule),0 30px 60px -20px rgb(12 23 20 / .35)}
+/* Nov 20 2026 (owner: "on mobile make the menu fill the entire screen. also add more padding between each page"): the panel is the whole screen under the bar, like the home page's menu, with the same tall rows */
+.menuPanel{position:absolute;top:100%;left:0;right:0;height:calc(100svh - 68px - env(safe-area-inset-top,0px));box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;padding:20px var(--gutter) calc(32px + env(safe-area-inset-bottom,0px));background:var(--paper);box-shadow:0 1px 0 var(--rule),0 30px 60px -20px rgb(12 23 20 / .35)}
 .menuList{margin:0;padding:0;list-style:none}
 .menuList li+li{border-top:1px solid var(--rule)}
-.page .menuList a{display:flex;align-items:center;min-height:64px;padding:0 4px;color:var(--ink);font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
+.page .menuList a{display:flex;align-items:center;min-height:112px;padding:0 4px;color:var(--ink);font-size:36px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
 @media(max-width:640px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
 /* Spanish bar: three links + EN | ES; the links size to their words. */
 .page .navEs .navLinks a[data-nav-link]{width:92px;padding:0}/* layout batch 3: the chip's 92 px pitch on both bars */
@@ -85,7 +86,7 @@
 /* cross-document view transitions (the site layouts opt in with @view-transition, reduced motion excluded): the chip glides from
    the old page's place to the new one's; the bar, wordmark and Play are named so they hold still while the page under them swaps */
 @media(prefers-reduced-motion:no-preference){.navChip{view-transition-name:fi-nav-chip}.page .brand{view-transition-name:fi-nav-logo}.page .nav a.play{view-transition-name:fi-nav-play}.header{view-transition-name:fi-nav-bar}}
-.page:has([data-library-hero],[data-nav-section=library]) .menuList a[data-nav-cur=library],.page:has([data-games-page],[data-nav-section=games]) .menuList a[data-nav-cur=games]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.page:has([data-library-hero],[data-nav-section=library]) .menuList a[data-nav-cur=library],.page:has([data-games-page],[data-nav-section=games]) .menuList a[data-nav-cur=games]{display:inline-flex;min-height:64px;margin-block:24px;padding:0 28px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 @media print{.header{display:none}}
 
 /* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */
