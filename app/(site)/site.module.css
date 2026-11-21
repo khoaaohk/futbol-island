@@ -65,6 +65,12 @@
    rest; href$= also matches /es/library. No other page has the marker, so no other link is ever selected by this rule. */
 .page:has([data-library-hero]) .navLinks a[href$="/library"]{box-sizing:border-box;height:36px;min-height:36px;margin-block:4px;opacity:1;color:var(--ink);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 .page:has([data-library-hero]) .navEs .navLinks a[href$="/library"]{padding:0 14px}
+/* Nov 20 2026 (owner): on the Library, Learn, Safety and About go to their home chapters (/#learn, /#safe, /#about), like Explore
+   and Friends everywhere; on every other page they go to their reading pages (components/site/SiteNav.tsx renders both links). */
+.page .nav a[data-nav-home]{display:none}
+.page:has([data-library-hero]) .nav a[data-nav-page]{display:none}
+.page:has([data-library-hero]) .navLinks a[data-nav-home]{display:inline-flex}
+.page:has([data-library-hero]) .menuList a[data-nav-home]{display:flex}
 .page:has([data-library-hero]) .menuList a[href$="/library"]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 @media print{.header{display:none}}
 

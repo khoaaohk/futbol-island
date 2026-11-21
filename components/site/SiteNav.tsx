@@ -14,15 +14,20 @@ import styles from '@/app/(site)/site.module.css';
  * phone menu is a bare <details> that opens and closes natively.
  * Links are real destinations: the hubs where a reading page exists, else the home chapter (`/#id`, the ids in page.tsx NAV).
  */
-const NAV:readonly (readonly [string,string])[]=[[LESSONS_INDEX,'Learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety'],['/about','About'],[LIBRARY_PATH,'Library']]/* Nov 20 2026 (owner): Library, the hub of every footer section, after About */;
+/* The third item (Nov 20 2026, owner: "when on the library page and clicking on the other navigation, it should go back to the main
+ * page and scroll to that section"): the home chapter this link stands for (ids in app/(site)/page.tsx NAV). Such a link is
+ * rendered twice, to its reading page and to the home chapter, and only one is shown: the reading page everywhere, the home
+ * chapter on the Library (site.module.css, [data-library-hero]). Both are real hrefs and there is still no client code. */
+const NAV:readonly (readonly [string,string,string?])[]=[[LESSONS_INDEX,'Learn','/#learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety','/#safe'],['/about','About','/#about'],[LIBRARY_PATH,'Library']]/* Nov 20 2026 (owner): Library, the hub of every footer section, after About */;
 const NAME='Futbol Island';
+const links=()=>NAV.map(([href,label,home])=><li key={href}><a href={href} data-nav-page={home?'':undefined}>{label}</a>{home&&<a href={home} data-nav-home="">{label}</a>}</li>);
 export default function SiteNav(){
  return <nav className={styles.nav} aria-label="Site">
   <a className={styles.brand} href="/" aria-label={`${NAME} home`}><span aria-hidden="true">{[...NAME].map((ch,i)=>ch===' '?' ':<span key={i} style={{color:LOGO_COLOURS[i%LOGO_COLOURS.length]}}>{ch}</span>)}</span></a>
-  <ul className={styles.navLinks}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
+  <ul className={styles.navLinks}>{links()}</ul>
   <details className={styles.menu}>
    <summary className={styles.menuBtn} aria-label="Menu"><span className={styles.menuIco} aria-hidden="true"><i/><i/></span></summary>
-   <div className={styles.menuPanel}><ul className={styles.menuList}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul></div>
+   <div className={styles.menuPanel}><ul className={styles.menuList}>{links()}</ul></div>
   </details>
   <a className={`${styles.play} ${done.button}`} href={PLAY_PATH} aria-label="Play"><span className={done.label} aria-hidden="true">Play</span></a>
  </nav>;
