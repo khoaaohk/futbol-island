@@ -9,7 +9,7 @@
 const {chromium}=require('playwright');
 const arg=(k,d)=>{const a=process.argv.find(x=>x.startsWith(`--${k}=`));return a?a.slice(k.length+3):d;};
 const port=arg('port','8148'),base=`http://localhost:${port}`;
-const GAMES=['kitrush','snake','runner','tennis','pinball','puzzle','airhockey','lineup','trophydrop','rollball','ballblaster'];
+const GAMES=['kitrush','snake','runner','tennis','pinball','puzzle','airhockey','lineup','trophydrop','rollball','ballblaster','keepyuppy','holdtheline'];
 const urls=arg('urls',['room',...GAMES].join(',')).split(',');
 const PROFILES={slow:{latency:400,downloadThroughput:400*1024/8,uploadThroughput:400*1024/8},fast:{latency:165,downloadThroughput:9000*1024/8*0.9,uploadThroughput:1500*1024/8*0.9}};
 const profiles=arg('profiles','slow,fast').split(',');

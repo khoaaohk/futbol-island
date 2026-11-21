@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|keepyuppy|holdtheline] [--suspended] [--headed] [--null-output] [--mute]
+// keepyuppy (Nov 21 2026): windows count-in (the four clicks before bar 1), music (the first bars of the track, scheduled ahead on the
+// AudioContext clock: kick, clap, shaker, bass), touch (a boot on the ball while the song is stopped) and over (the end cue); the
+// start card, the stage cards and the pause must be SILENT. --mute keeps Chrome's --mute-audio (night runs): the analyser sits
+// before the destination, so the graph is still measured while nothing reaches the speakers.
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -34,7 +38,7 @@ const probe=()=>{const st=window.__audioProbe={contexts:[],connections:0,peak:0,
  window.__audioLabel=l=>{st.label=l;if(l&&!(l in st.windows))st.windows[l]=0;};window.__audioStates=()=>st.contexts.map(c=>c.ctx.state);};
 const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-sound-muted');localStorage.setItem('fi2-sound-volume','0.5');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{fixture:{game:'island',paid:5000,reason:'playtest entry',at:1}},packs:[]}));}catch{}};
 (async()=>{const args=['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist'];if(!suspended)args.push('--autoplay-policy=no-user-gesture-required');
- /* Fix round 2 (Nov 18 2026): --null-output sends Chrome's sound to its own timer-driven null sink. Use it when every game reads RMS 0 with a running context: the machine's sound device has stopped pulling, so the audio clock stands still (seen overnight on the owner's Mac). Nothing reaches the speakers. */if(process.argv.includes('--null-output'))args.push('--disable-audio-output');
+ /* Fix round 2 (Nov 18 2026): --null-output sends Chrome's sound to its own timer-driven null sink. Use it when every game reads RMS 0 with a running context: the machine's sound device has stopped pulling, so the audio clock stands still (seen overnight on the owner's Mac). Nothing reaches the speakers. */if(process.argv.includes('--null-output'))args.push('--disable-audio-output');if(process.argv.includes('--mute'))args.push('--mute-audio');
  const browser=await chromium.launch({channel:'chrome',headless:!process.argv.includes('--headed'),args,ignoreDefaultArgs:['--mute-audio']});let fail=false;
  try{/* Nov 11 2026: Breakaway Run plays upright (390x664, the iPhone with its browser bars); --landscape probes it sideways as before */const landscape=game==='live'||game==='runner'&&process.argv.includes('--landscape'),ctx=await browser.newContext({viewport:landscape?{width:844,height:390}:game==='runner'?{width:390,height:664}:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await ctx.addInitScript(probe);await ctx.addInitScript(seed);const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message.slice(0,200)));
@@ -121,6 +125,29 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await page.waitForFunction(()=>window.__ballblaster.game.state.stats.breaks>=1,null,{timeout:3000}).catch(()=>errors.push('no break'));await wait(600);must.push('smash');
    await label('');await wait(300);
    await B(()=>{window.__audioLabel('over');window.__ballblaster.audio.over();});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='keepyuppy'){quiet.push('menu');
+   // first run: the kicking foot, the timing check skipped, then the track card (all silent but the button click), then the song
+   await page.evaluate(()=>localStorage.setItem('fi2-keepyuppy-v1',JSON.stringify({v:1,guided:true})));/* Nov 21 2026: the guided first touches (silent, no music) are covered by check-keepyuppy-browser.cjs */
+   await page.locator('[data-keepyuppy-foot="R"]').tap({timeout:20000}).catch(()=>errors.push('no foot card'));await wait(500);await page.locator('[data-keepyuppy-card="calib"] [data-keepyuppy-skip]').tap({timeout:20000}).catch(()=>errors.push('no timing card'));
+   await page.waitForSelector('[data-keepyuppy-card="tip"]',{timeout:20000}).catch(()=>errors.push('no track card'));await wait(900);await label('track-card');await wait(900);quiet.push('track-card');
+   await label('');await page.locator('[data-keepyuppy-go]').tap();await wait(350);await label('count-in');await page.evaluate(()=>{window.__keepyuppy.game.state.lives=99;/* nobody plays here: the run must outlast the probe */});await wait(2500);must.push('count-in');
+   await label('');await page.waitForFunction(()=>window.__keepyuppy.time>6.2,null,{timeout:20000,polling:50}).catch(()=>errors.push('the song did not run'));await label('music');await wait(4000);must.push('music');
+   const K=fn=>page.evaluate(fn);
+   {const a=await K(()=>{const h=window.__keepyuppy;return {song:h.audio.songTime()!==null,scheduled:h.audio.scheduled,state:h.audio.state};});if(!a.song||a.state!=='running'||a.scheduled<40)errors.push('the music is not on the audio clock: '+JSON.stringify(a));}
+   await label('');await K(()=>window.__keepyuppy.audio.stopSong());await wait(700);await K(()=>{window.__audioLabel('touch');const a=window.__keepyuppy.audio;a.touch(3,true);});await wait(500);must.push('touch');
+   await label('');await wait(300);await K(()=>{window.__audioLabel('over');window.__keepyuppy.audio.over(true,3);});await wait(1200);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='holdtheline'){quiet.push('menu');
+   // holdtheline (Nov 21 2026): windows kickoff (the referee's whistle when the team card is read), pass (the first passes of the wave:
+   // the game's own cues), flag (the offside flag + whistle + crowd, the game's own cue) and over (the end cue); menu / paused must be SILENT.
+   await page.waitForFunction(()=>window.__holdtheline&&window.__holdtheline.phase==='playing',null,{timeout:30000});await label('kickoff');await page.locator('[data-holdtheline-ack]').tap().catch(()=>{});await wait(500);must.push('kickoff');
+   const S=fn=>page.evaluate(fn);
+   await label('');await page.waitForFunction(()=>window.__holdtheline.game.state.phase==='play',null,{timeout:9000,polling:20}).catch(()=>errors.push('no wave'));await label('pass');await wait(2600);must.push('pass');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('flag');const a=window.__holdtheline.audio;a.flag();a.cheer(true);});await wait(1200);must.push('flag');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('over');window.__holdtheline.audio.over(false);});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='rollball'){quiet.push('menu');
    await page.waitForFunction(()=>window.__rollball&&window.__rollball.phase==='playing',null,{timeout:30000});await label('');await wait(600);

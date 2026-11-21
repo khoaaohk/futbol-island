@@ -1,0 +1,130 @@
+/* Keepy-Uppy Beat shell (Nov 21 2026): an upright comic page over two 2D canvases. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
+ * ink border and a hard shadow on a Ben-Day backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ background:var(--cm-dots),#2f7f6a}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#2f7f6a;isolation:isolate;touch-action:none;overscroll-behavior:none}
+.canvas{position:absolute;left:0;top:0;display:block;pointer-events:none}
+.play{position:absolute;inset:0;z-index:1;touch-action:none;outline:none}
+.play:focus-visible{outline:4px solid var(--cm-ink);outline-offset:-4px}
+.probe{position:absolute;left:0;top:0;width:1px;height:calc(var(--arcade-bar-clear,56px) + env(safe-area-inset-top,0px));visibility:hidden;pointer-events:none}
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+
+/* HUD strip under the bar: the balls left, the track, and the weak-foot banner */
+.strip{position:absolute;z-index:3;left:50%;translate:-50% 0;top:calc(var(--arcade-bar-clear,56px) + 6px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;box-sizing:border-box;max-width:calc(100% - 16px);height:34px;padding:0 10px 0 0;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap}
+.lives{align-self:stretch;display:flex;align-items:center;gap:4px;padding:0 8px;background:var(--cm-ink)}
+.lives[data-hit]{animation:kuShake .3s 2 both}
+.lives i{width:15px;height:15px;box-sizing:border-box;border:2.5px solid var(--cm-paper);border-radius:50%;background:var(--cm-white,#fffaf0)}
+.lives i[data-off]{background:none;border-style:dashed;opacity:.55}
+.stripItem{display:flex;align-items:baseline;gap:6px;font:italic 900 16px/1 var(--cm-title)}
+.stripItem small{font:800 12px/1 var(--cm-ui);font-style:normal}
+.flash{position:absolute;z-index:2;inset:0;border:12px solid var(--cm-red);pointer-events:none;animation:kuFlash .55s ease-out both}
+
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(126px + env(safe-area-inset-bottom,0px));translate:-50% 0;width:max-content;max-width:calc(100% - 28px);margin:0;padding:6px 10px 5px;border:2.5px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 14px/1.25 var(--cm-ui);text-align:center;pointer-events:none;animation:kuPop .3s cubic-bezier(.2,1.6,.4,1) both}
+.hint[data-note]{background:var(--cm-sun)}
+/* the lesson's line sits under the HUD strip: the landing rings and the pads stay clear */
+.hint.hint{bottom:auto;top:calc(var(--arcade-bar-clear,56px) + 50px + env(safe-area-inset-top,0px))}
+
+/* words: a starburst and the points */
+.words{position:absolute;inset:0;z-index:4;pointer-events:none}
+.word{position:absolute;left:50%;top:56%;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:kuWord 1.1s cubic-bezier(.2,1.4,.4,1) both}
+.word[data-teach]{left:50%!important;top:27%!important}
+.pts{--cm-numeral-size:28px;display:block;color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
+@keyframes kuWord{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%{scale:1}86%{opacity:1;translate:-50% -70%}100%{opacity:0;translate:-50% -84%}}
+@keyframes kuPop{0%{scale:.4}100%{scale:1}}
+@keyframes kuShake{0%,100%{translate:0}25%{translate:-5px}75%{translate:5px}}
+@keyframes kuFlash{0%{opacity:.95}100%{opacity:0}}
+
+/* cards */
+.art{display:block;width:min(250px,74%);height:auto;margin:2px auto 8px}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.lesson{display:block;margin:2px 4px 12px 0;text-align:left;font:700 15px/1.4 var(--cm-ui)}
+.lesson b{display:block;margin-bottom:3px;font:italic 900 18px/1.1 var(--cm-title)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0;margin-bottom:10px}
+.actions>[data-wide]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.shelf{all:unset;box-sizing:border-box;display:grid;gap:5px;width:calc(100% - 6px);margin:0 6px 14px 0;padding:7px 8px 8px;border:3px solid var(--cm-ink);background:#e9dcc2;box-shadow:4px 4px 0 var(--cm-ink);cursor:pointer;font:800 14px/1 var(--cm-ui);text-align:left}
+.shelf:focus-visible{outline:3px solid var(--cm-teal);outline-offset:2px}
+.shelf b{float:right;font:400 18px/.8 var(--cm-numeral)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
+.score{--cm-numeral-size:64px;display:block}
+.score[data-new-best]{animation:kuPop .6s cubic-bezier(.2,1.6,.4,1) both}
+.stamp{position:absolute;right:-14px;top:-34px}
+.near{display:inline-block;margin:8px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.coach{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui)}
+.prizes{display:grid;gap:6px;margin:0 0 12px;text-align:left;font:600 13px/1.35 var(--cm-ui)}
+.prizes span{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:center}
+.prizes em{font-style:normal}.prizes b{font-weight:800}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardLearn{margin:0 0 8px;text-align:center}
+
+/* desktop: the page in the middle, caption strips in the margins */
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots),repeating-conic-gradient(from 4deg at 50% 62%,#2a7361 0 8deg,#2f7f6a 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+}
+@media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:50px}.art{width:min(190px,58%)}.hint{bottom:calc(112px + env(safe-area-inset-bottom,0px))}}
+@media (max-height:600px){.game [data-keepyuppy-card=start] .art{display:none}.fact{display:none}}
+@media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}.shelfList{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.score[data-new-best],.lives[data-hit],.hint,.banner,.stars i[data-on]{animation:none}.word{animation-duration:.8s}.flash{animation-duration:.2s}}
+
+/* Keepy-Uppy Beat's own pieces */
+.banner{position:absolute;z-index:3;left:50%;top:calc(var(--arcade-bar-clear,56px) + 48px + env(safe-area-inset-top,0px));translate:-50% 0;padding:4px 10px 3px;border:3px solid var(--cm-ink);background:var(--cm-teal);box-shadow:3px 3px 0 var(--cm-ink);font:italic 900 15px/1 var(--cm-title);white-space:nowrap;pointer-events:none;animation:kuPop .3s cubic-bezier(.2,1.6,.4,1) both}
+.banner[data-tone=sun]{background:var(--cm-sun)}
+.skip{position:absolute;z-index:4;right:10px;top:calc(var(--arcade-bar-clear,56px) + 104px + env(safe-area-inset-top,0px))}
+.tracks{display:grid;gap:5px;margin:0 6px 12px 0;padding:0;list-style:none}
+.tracks button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:24px 1fr auto;align-items:center;column-gap:8px;width:100%;min-height:44px;padding:4px 8px;border:2.5px solid var(--cm-ink);background:var(--cm-white,#fffaf0);font:800 14px/1.15 var(--cm-ui);text-align:left;cursor:pointer}
+.tracks button:focus-visible{outline:3px solid var(--cm-teal);outline-offset:2px}
+.tracks button[aria-pressed=true]{background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink)}
+.tracks button[disabled]{background:#e9dcc2;color:#6b6078;cursor:default}
+.tracks button>i{display:grid;place-items:center;width:22px;height:22px;box-sizing:border-box;border:2.5px solid var(--cm-ink);border-radius:50%;background:var(--cm-paper);font:900 12px/1 var(--cm-ui);font-style:normal}
+.tracks small{display:block;font:600 12px/1.2 var(--cm-ui)}
+.stars{display:inline-flex;gap:2px;vertical-align:middle}
+.stars i{display:block;width:var(--star,16px);height:var(--star,16px);background:#cdb99a;clip-path:polygon(50% 0,62% 34%,98% 36%,70% 58%,80% 94%,50% 73%,20% 94%,30% 58%,2% 36%,38% 34%)}
+.stars i[data-on]{background:var(--cm-ink)}
+.stars[data-big]{--star:46px;gap:6px;margin:4px 0 2px}
+.stars[data-big] i{background:#d8c8a8}
+.stars[data-big] i[data-on]{background:var(--cm-sun);filter:drop-shadow(2px 0 0 var(--cm-ink)) drop-shadow(-2px 0 0 var(--cm-ink)) drop-shadow(0 2px 0 var(--cm-ink)) drop-shadow(0 -2px 0 var(--cm-ink));animation:kuPop .5s cubic-bezier(.2,1.6,.4,1) both}
+.stars[data-big] i[data-on]:nth-child(2){animation-delay:.15s}.stars[data-big] i[data-on]:nth-child(3){animation-delay:.3s}
+.shelfRow{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding:5px 4px 4px;border-bottom:5px solid #8a5a3c;background:var(--cm-paper)}
+.cardSlot{display:grid;place-items:center;height:38px;box-sizing:border-box;border:2.5px solid var(--cm-ink);background:var(--slot,#e9dcc2);font:900 13px/1 var(--cm-ui);color:var(--cm-ink)}
+.cardSlot[data-state=empty]{border-style:dashed;background:none;color:#8a7d94}
+.cardSlot[data-state=part]{background:var(--cm-paper);box-shadow:inset 0 -9px 0 var(--slot)}
+.book{display:grid;gap:8px;margin:0;padding:0;list-style:none;text-align:left}
+.book li{display:grid;gap:3px;padding:8px 9px;border:2.5px solid var(--cm-ink);border-left:12px solid var(--slot,#cdb99a);background:#e9dcc2;color:var(--cm-ink);font:600 13px/1.35 var(--cm-ui)}
+.book li[data-full]{background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink)}
+.book b{font:800 15px/1.2 var(--cm-ui)}
+.book em{font-style:normal;font-weight:800}
+.pipsRow{display:flex;gap:4px;align-items:center;font:800 12px/1 var(--cm-ui)}
+.pipsRow i{width:12px;height:12px;box-sizing:border-box;border:2px solid var(--cm-ink);border-radius:50%}
+.pipsRow i[data-on]{background:var(--cm-ink)}
+.feet{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 6px 6px 0;margin:4px 0 10px}
+.feet button{min-height:92px;font-size:18px;flex-direction:column;gap:4px}
+.weakLine{margin:0 0 10px;padding:6px 8px 5px;border:2.5px solid var(--cm-ink);background:var(--cm-teal);font:800 14px/1.25 var(--cm-ui)}
+.weakLine b{font:400 22px/.9 var(--cm-numeral)}
+.info{margin:0 0 10px;font:700 13px/1.35 var(--cm-ui)}
+.howKeys{display:inline-block;margin:0 0 10px;padding:2px 8px;background:var(--cm-ink);color:var(--cm-paper);font:700 12px/1.4 var(--cm-ui)}
+@media (max-height:700px){.tracks button{min-height:44px;padding:2px 8px}.tracks small{display:none}.stars[data-big]{--star:36px}}
+.featLine{display:block;padding-top:2px;font:800 13px/1 var(--cm-ui)}/* verifier Nov 21 2026: the feats on the start card */
+.featHead{margin:14px 0 6px;font:800 16px/1.2 var(--cm-ui);text-align:left}.featHead b{float:right;font:400 18px/1 var(--cm-numeral)}
+.featList{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0;padding:0;list-style:none;text-align:left}
+.featList li{display:grid;grid-template-columns:20px 1fr;gap:6px;align-items:start;padding:5px 6px;border:2px solid var(--cm-ink);background:#e9dcc2;color:var(--cm-ink);font:600 12px/1.3 var(--cm-ui);opacity:.72}
+.featList li[data-won]{opacity:1;background:var(--cm-paper);box-shadow:2px 2px 0 var(--cm-ink)}
+.featList i{display:grid;place-items:center;width:18px;height:18px;border:2px solid var(--cm-ink);background:var(--cm-paper);font:800 12px/1 var(--cm-ui);font-style:normal}
+.featList li[data-won] i{background:var(--cm-teal,#19b5a5);color:#fff}
+.featList b{font-weight:800}
+@media (max-width:374px){.featList{grid-template-columns:1fr}}
