@@ -2,6 +2,7 @@ import type {ReactNode} from 'react';
 import type {LinkGroup,Related,SiteLink} from '@/lib/site/related';
 import KeepReading from './KeepReading';
 import styles from '@/app/(site)/site.module.css';
+import rt from './railTarget.module.css';
 /**
  * "More like this" on a card, exhibit or fish page (SEO, Nov 10 2026): the groups and the reading links computed by
  * lib/site/related.ts, then a quiet previous / next line. Plain links, server-rendered.
@@ -14,7 +15,7 @@ export default function RelatedLinks({related,heading,readHeading,renderGroup}:{
  return <>
   {renderGroup
    ?<><section className={styles.section} aria-labelledby="more">
-     <h2 className={styles.h2} id="more">{heading}</h2>
+     <h2 className={`${styles.h2} ${rt.target}`} id="more">{heading}</h2>
      {related.groups.map(g=><div key={g.title} className={styles.section}>{renderGroup(g)}</div>)}
     </section>
     <KeepReading id="read" title={readHeading} groups={[{id:'read-links',links:read(related.read)}]}/></>

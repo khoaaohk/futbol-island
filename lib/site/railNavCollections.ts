@@ -4,6 +4,7 @@ import {VIDEO_GROUPS,VIDEOS_PATH} from './videos';
 import {toEs} from '@/lib/i18n/esPaths';
 import {TOOLS_PATH} from './tools/registry';
 import {PRINTABLES_HUB_PATH} from './tools/printables';
+import {GALLERIES,SITE_EXHIBITS} from './exhibits';
 
 /**
  * Rails for the collections and coach tools (layout batch 3, Nov 20 2026; owner: "it should list what's on that page to smooth
@@ -49,3 +50,11 @@ export const printableRail=(o:{versions:boolean;compare:boolean},es=false):Rail=
   ...(o.compare?[['compare',L(es,'The formations compared','Las formaciones comparadas')] as const]:[]),['use',L(es,'How coaches use it','Cómo la usan')],more(es,L(es,'Go further','Ve más allá'))],es);
 export const scanFrontRail=(es=false):Rail=>page(onPage(es),toolsBack(es),[['what',L(es,'What it is','Qué es')],['how',L(es,'How to use it','Cómo se usa')],['speed',L(es,'Speed by age','Velocidad por edad')],
  ['settings',L(es,'Settings','Ajustes')],['drills',L(es,'Drills','Ejercicios')],['tips',L(es,'Tips','Consejos')],qa(es),more(es)],es);
+
+/* museum: /exhibits lists its 22 cases under their galleries (each case row is #ex-<id>); a case goes Back to the Museum */
+export const exhibitAnchor=(id:string)=>`ex-${id}`;
+export const exhibitsHubRail=():Rail=>hubRail('Museum cases on this page',GALLERIES.map(g=>({title:g.title,
+ items:SITE_EXHIBITS.filter(e=>e.gallery===g.id).map(e=>sec(exhibitAnchor(e.id),e.title))})));
+export const exhibitRail=(o:{story:boolean;sources:boolean}):Rail=>page('On this page',{href:'/exhibits',name:'Museum'},[['facts','The facts'],
+ ...(o.story?[['story','The story'] as const]:[]),['game','Take it to your game'],...(o.sources?[['sources','Sources'] as const]:[]),
+ ['more','More from the museum'],['read','Learn it on the pitch']]);

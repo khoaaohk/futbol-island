@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {exhibitRail} from '@/lib/site/railNavCollections';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
@@ -30,21 +33,23 @@ export default function ExhibitPage({params}:{params:{id:string}}){
   <JsonLd data={creativeWorkLd({name:e.h1,path:exhibitPath(e.id),description:e.facts.join(' '),image:ogPath(exhibitPath(e.id)),
    about:{'@type':'Thing',name:`${e.title} (${e.year})`,description:e.galleryTitle}})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={exhibitRail({story:e.story.length>0,sources:e.sources.length>0})} current="#top"/>
+  <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <p className={styles.eyebrow}>{e.galleryTitle} · {e.year}</p>
    <h1 className={styles.title}>{e.h1}</h1>
   </header>
   <Hero src={ogPath(exhibitPath(e.id))} alt={`${e.title} (${e.year}), a case in the Futbol Island history museum: ${e.galleryTitle}`}/>
   <ExhibitStamp year={e.year} gallery={e.galleryTitle}/>
-  <section className={styles.card} aria-labelledby="facts"><span className={styles.label}>Real football fact</span><h2 className={styles.h2} id="facts">The facts</h2>
+  <section className={styles.card} aria-labelledby="facts"><span className={styles.label}>Real football fact</span><h2 className={`${styles.h2} ${tgt.target}`} id="facts">The facts</h2>
    <ul>{e.facts.map(f=><li key={f}>{f}</li>)}</ul>
   </section>
-  {e.story.length>0&&<section className={styles.section} aria-labelledby="story"><h2 className={styles.h2} id="story">The story</h2>
+  {e.story.length>0&&<section className={styles.section} aria-labelledby="story"><h2 className={`${styles.h2} ${tgt.target}`} id="story">The story</h2>
    {timeline?<StoryTimeline lines={e.story}/>:<ul>{e.story.map((s,i)=><li key={i}>{s.head&&<b>{s.head}: </b>}{s.text}</li>)}</ul>}
   </section>}
-  <section className={styles.card} aria-labelledby="game"><h2 className={styles.h2} id="game">Take it to your game</h2><p>{e.forYourGame}</p></section>
-  {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={styles.h3} id="sources">Sources</h2>
+  <section className={styles.card} aria-labelledby="game"><h2 className={`${styles.h2} ${tgt.target}`} id="game">Take it to your game</h2><p>{e.forYourGame}</p></section>
+  {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={`${styles.h3} ${tgt.target}`} id="sources">Sources</h2>
    <ul className={styles.caption}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
   </section>}
  {/* Nov 20 2026 (SEO foundation): the pop-up books that name this case link back from it; (phase 2) first the rule, term,
