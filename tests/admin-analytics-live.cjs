@@ -143,7 +143,7 @@ await ok('page keys (Nov 13 2026): a fixed allowlist of route families, unknown 
  const PK=load('lib/analytics/pageKeys.ts'),K=load('lib/analytics/countIds.ts');
  const cases={'/':'home','/play':'play','/play?from=arcade&party=ABCD':'play','/island-return':'play','/arcade':'arcade','/marketing':'marketing','/marketing/overview':'marketing',
   '/learn/9v9-soccer-formations':'learn_9v9_soccer_formations','/learn/soccer-drills/rondo-4v1':'learn_soccer_drills','/learn/made-up':'learn','/LEARN/Soccer-Rules#x':'learn_soccer_rules',
-  '/privacy':'privacy','/safe-football-game-for-kids':'parents','/cards/12':'cards','/museum':'museum','/admin':'other','/secret/x?code=ABC':'other','':'other','x':'other'};
+  '/privacy':'privacy','/safe-football-game-for-kids':'parents','/cards/12':'cards','/library':'library'/* Nov 20 2026 */,'/museum':'museum','/admin':'other','/secret/x?code=ABC':'other','':'other','x':'other'};
  for(const [p,k] of Object.entries(cases))assert.equal(PK.pageKeyOf(p),k,p);assert.equal(PK.pageKeyOf(null),'other');
  assert.equal(PK.pageLabel('learn_9v9_soccer_formations'),'Learn: 9v9 formations');assert.equal(PK.pageLabel('marketing'),'Marketing page');assert.equal(PK.pageLabel('home'),'Home');
  assert.equal(PK.pageLabel('nope'),'Other page');assert.equal(PK.pageLabel(null),'Other page');assert.equal(PK.pageLabel('parents'),'Parents\u2019 guide');
