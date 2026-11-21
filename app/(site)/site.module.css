@@ -249,6 +249,31 @@
 .page:has(nav[data-rail])>.main>[data-toc]{display:none}
 .page:has(nav[data-rail])>.main:has(>[data-toc]) [data-keep-reading]{grid-column:1/-1}
 @media(max-width:1279px){.page:has(nav[data-rail])>.main{max-width:none;padding-inline:max(var(--gutter),calc(50vw - 590px))}}
+/* TWO ZONES beside the rail (owner, Nov 20 2026: "fix all the internal pages to fill the page more and not leave empty space on the
+   right side. also make sure it works responsively on all devices"). From 1280 px every guide-style section of a rail page (.section,
+   .panel included: rule, term, drill, position, formation, lesson, plan, game, video, card, fish, exhibit, book, tool and age-group
+   pages) is a two-column band: its H2 in a side column on the left, its content in a wide column on the right. One rule for every
+   template, CSS placement only (the HTML order is untouched), and no orphan half-width blocks. Prose keeps its measure (p, li:
+   68ch); blocks (diagrams, tables, fact grids, FAQ, check lists) fill the content column; a long plain list runs in two columns
+   on wide screens. Below 1280 px nothing changes: one column, prose at its measure, blocks full width. */
+@media(max-width:1279px){.page:has(nav[data-rail])>.main>.section>:is(figure,.pair,.panel,.faqList,dl,ul,ol,div){max-width:none}}
+@media(min-width:1280px){
+ .page:has(nav[data-rail])>.main{--zone-h:clamp(200px,24%,340px);--zone-gap:clamp(32px,3.5vw,64px)}
+ .page:has(nav[data-rail])>.main>.section:not(.fold){grid-template-columns:var(--zone-h) minmax(0,1fr);column-gap:var(--zone-gap);max-width:none}
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>*{grid-column:2;min-width:0}
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>.h2{grid-column:1;grid-row:1/span 2;align-self:start}
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>:is(.pair,.panel,.faqList,dl,ul,ol,div,table,details){max-width:none}
+ /* cards in a stack (easier / harder, mix-ups) sit side by side when the column is wide enough */
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>.stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>.stack>li{max-width:none}
+ /* a nested section or panel inside a band keeps one column */
+ .page:has(nav[data-rail])>.main>.section .section{grid-template-columns:minmax(0,1fr)}
+ .page:has(nav[data-rail])>.main>.section .section>*{grid-column:auto}
+}
+@media(min-width:1600px){
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>:is(ul,ol):not([class]):has(>li:nth-child(4)){columns:2;column-gap:var(--s4)}
+ .page:has(nav[data-rail])>.main>.section:not(.fold)>:is(ul,ol):not([class])>li{break-inside:avoid}
+}
 
 /* Guide pages (formations, positions; Nov 10 2026): pitch diagrams as inline SVG and comparison tables. Same tokens, no new
    colours beyond the pitch green inside the SVG; no scripts, no animation. */
