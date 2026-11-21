@@ -38,7 +38,7 @@ export const BOARD_TAB_ORDER:readonly BoardGame[]=BOARD_GAMES.filter(g=>!TIER_TA
  * stands in the arcade room today, in room order. A machine's mode boards (BOARD_TIER_TABS) are not listed (Nov 11: "keep it simple"); a results card that opens the Hall on one shows that single board with its name.
  * Boards of things that are not a machine in the room (Island Strikers, retired Nov 10; Clear the Box and Street Dash, retired Nov 18 2026; Summit Kick on the island) are not listed;
  * their rows stay in the data and a card that opens the Hall on one of them shows that single board. */
-export const HALL_MACHINES:readonly BoardGame[]=['kitrush','runner','snake','tennis','pinball','puzzle','airhockey','lineup','trophydrop','rollball','ballblaster'];
+export const HALL_MACHINES:readonly BoardGame[]=['kitrush','runner','snake','tennis','pinball','puzzle','airhockey','lineup','trophydrop','rollball','ballblaster','keepyuppy','holdtheline'];
 export const hallMachineOf=(g:BoardGame):BoardGame|null=>HALL_MACHINES.includes(g)?g:HALL_MACHINES.find(m=>BOARD_TIER_TABS[m]?.includes(g))??null;
 export const isBoardGame=(g:unknown):g is BoardGame=>typeof g==='string'&&(BOARD_GAMES as readonly string[]).includes(g);
 

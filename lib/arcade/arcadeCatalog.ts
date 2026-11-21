@@ -1,4 +1,6 @@
 import {numberWord} from '../numberWord';
+/** Nov 21 2026: the wall machines: upright cabinets that are not in the back row (the air hockey table is not one of them). */
+export const ARCADE_WALL_IDS=['keepyuppy','holdtheline'] as const;
 /**
  * Nov 17 2026 (owner: "place the games in the back and reorganize it so they all line side by side"): every upright cabinet stands
  * in ONE row against the back wall, side by side, all facing the door (yaw 0). ARCADE_ROW is the left-to-right order (west to east);
@@ -32,17 +34,21 @@ export const arcadeCabinets = [
  {id:'rollball',name:'Roll It In',short:'ROLL IT IN',lesson:'Look before you roll. Plan the next touch.',color:'#4a9fe0',...rowSpot('rollball')},
  // Nov 17 2026: Ball Blaster, the football gallery shooter (docs/arcade-aaa/ballblaster-direction.md), after Roll It In at the east end of the row (Nov 18 2026: it took over a retired cabinet's place).
  {id:'ballblaster',name:'Ball Blaster',short:'BALL BLASTER',lesson:'Pick your target. Strike through the ball.',color:'#f0452e',...rowSpot('ballblaster')},
+ // Nov 21 2026 (owner: "go ahead and push everything else"): the two new games stand against the EAST wall, between the prize counter and
+ // the vending machine (the back row is full). Same upright cabinet as the row, turned like the counter and the vending machine
+ // (yaw -60 degrees: they face the aisle and lean toward the room camera) and staggered so the bodies do not touch. Spots measured
+ // against the room's colliders (tests/arcade-room-crowd.cjs "east wall"): Keepy-Uppy Beat, the juggling rhythm game
+ // (docs/arcade-aaa/keepyuppy-direction.md), next to the counter; Hold the Line, the defending game
+ // (docs/arcade-aaa/holdtheline-direction.md), toward the vending machine.
+ {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a',x:11.75,z:2.85,yaw:-Math.PI/3},
+ {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e',x:12.85,z:4.85,yaw:-Math.PI/3},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet wait here for the
- *  owner's decision on their spot: the room, its
- *  draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
+ *  owner's decision on their spot: the room, its draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
- {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a'},// Nov 21 2026: the juggling rhythm game (docs/arcade-aaa/keepyuppy-direction.md "Room placement")
- /* Nov 21 2026: Hold the Line, the defending game (docs/arcade-aaa/holdtheline-direction.md "Room placement"): the same wait for a spot */
- {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e'},
-] as const;
+] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 21 2026: empty (both new games placed); the mechanism and tests/seo-games-gate.cjs stay for the next game */
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */
