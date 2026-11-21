@@ -192,7 +192,7 @@ function scenery(a:PopArena):T.BufferGeometry{const o:Parts=[],rnd=seeded(a.id.l
    for(let i=0;i<5;i++){const sx=7.4+i*.65,r=i%3;B(['#5a4a8a','#4a6a9a','#8a5a8a'][r],sx,.9+r*.6,-19.5-r*.7,.36,.46,.28,0,.025);B('#c98a5a',sx,1.32+r*.6,-19.5-r*.7,.24,.24,.24,0,.02);}
    piece([-8.6,0,-18.5,3,1.5,.2,'#fffaf0','goal']);for(let i=0;i<5;i++)Cy('#ffc83a',-4.5,.75,-11.6-i*1.6,.05,1.5,.02,.05,5);
    ballBag(-5.4,-14.2);ballBag(2.9,-4.4);Cy('#fff3d6',6.8,.9,-4.4,.03,1.8,.01,.03,5);P(o,box(.45,.3,.02),'#f0452e',7.03,1.65,-4.4,0,0,.01);
-   cones(-1.9,-1.4,4,-.25,-1.1);cones(1.9,-1.8,4,.25,-1.1);kitbag(1.45,.6,'#f0452e',.3);for(const s of [0,1])Cy(s?'#19b5a5':'#2f8fd8',2.05+s*.18,.15,.2,.06,.3,.015,.06,6);
+   cones(-1.9,-1.4,4,-.25,-1.1);cones(1.9,-1.8,4,.25,-1.1);kitbag(2.1,-1.3,'#f0452e',.3);for(const s of [0,1])Cy(s?'#19b5a5':'#2f8fd8',2.05+s*.18,.15,.2,.06,.3,.015,.06,6);
    for(const [x,z] of [[-1.5,2.6],[-2.4,.6],[2.6,-.3],[-.9,-.8],[1.2,-1.9],[-2.8,-4.6],[3.1,-5.2]] as const)tuft(x,z,.8);
    for(const s of [-1,1])P(o,cone(.28,.6,8),'#ff8a3c',s*2.4,.3,2.6,0,0,.03,true);break;
   case 'beach':// towels, surfboards, a buoy line, a bucket and spade, a cool box, sand mounds
@@ -205,7 +205,7 @@ function scenery(a:PopArena):T.BufferGeometry{const o:Parts=[],rnd=seeded(a.id.l
    B('#c98a4b',-6.4,.5,1.4,1.4,1,1.2,.3,.05);break;
   case 'stands':// ad boards along the pitch edge; foreground: a ball bag, cones, a kit bag
    for(const s of [-1,1])for(let i=0;i<4;i++){const x=s*(2.9+i*2.5);B(TONES[(i+(s>0?2:0))%5],x,.45,-9.35,2.4,.9,.12,0,.035);B('#fff3d6',x-.2,.45,-9.28,1.2,.32,.02,0,0);B(COMIC_INK,x-.5,.45,-9.26,.4,.16,.02,0,0);B('#ffc83a',x+.75,.45,-9.27,.35,.35,.02,0,0);}
-   ballBag(1.9,-2.6);cones(-1.9,-2.2,3,0,-1.1);kitbag(-2.2,-1.4,'#ffc83a',-.3);break;}}
+   ballBag(2.9,-4.2);cones(-1.9,-2.2,3,0,-1.1);kitbag(-2.6,-3.4,'#ffc83a',-.3);break;}}
  const roofPyr=(c:string,x:number,y:number,z:number,w:number,h:number)=>P(o,cyl(.01,w*.74,h,4).rotateY(Math.PI/4),c,x,y+h/2,z,0,0,.06,true);
  const piece=(q:PopBox)=>{const [x,y,z,w,h,d,c,look]=q,cy=y+h/2,front=z+d/2+.02;switch(look){
   case 'shop':B(c,x,cy,z,w,h,d,0,.08);B('#fff3d6',x,y+h-.2,z,w+.3,.4,d+.3,0,.05);// cornice
