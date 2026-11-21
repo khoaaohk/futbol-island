@@ -1,5 +1,5 @@
 -- Futbol Island admin analytics (Nov 21 2026): FootGolf Island's activity key 'arcade_footgolf' (lib/analytics/islandIds.ts ARCADE_GAMES), after Flick It's (20261212, which it keeps) and Hold the Line's (20261210).
--- NOT APPLIED. The owner pastes docs/arcade-aaa/footgolf-supabase.sql instead (the same function plus the board id).
+-- NOT APPLIED. The owner pastes docs/arcade-aaa/new-games-nov22-supabase.sql instead (the same function plus the board id).
 -- Additive and safe to run twice: analytics_ingest is replaced in place.
 
 create or replace function public.analytics_ingest(p jsonb) returns void

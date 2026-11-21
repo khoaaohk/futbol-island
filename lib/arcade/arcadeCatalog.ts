@@ -1,6 +1,6 @@
 import {numberWord} from '../numberWord';
 /** Nov 21 2026: the wall machines: upright cabinets that are not in the back row (the air hockey table is not one of them). */
-export const ARCADE_WALL_IDS=['keepyuppy','holdtheline','flickit','footgolf'] as const;/* Nov 22 2026: Flick It and FootGolf Island on the west wall */
+export const ARCADE_WALL_IDS=['keepyuppy','popup','flickit','footgolf'] as const;/* Nov 22 2026: Flick It and FootGolf Island on the west wall */
 /**
  * Nov 17 2026 (owner: "place the games in the back and reorganize it so they all line side by side"): every upright cabinet stands
  * in ONE row against the back wall, side by side, all facing the door (yaw 0). ARCADE_ROW is the left-to-right order (west to east);
@@ -41,7 +41,9 @@ export const arcadeCabinets = [
  // (docs/arcade-aaa/keepyuppy-direction.md), next to the counter; Hold the Line, the defending game
  // (docs/arcade-aaa/holdtheline-direction.md), toward the vending machine.
  {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a',x:11.75,z:2.85,yaw:-Math.PI/3},
- {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e',x:12.85,z:5.2,yaw:-Math.PI/3},
+ // Nov 22 2026: Pop-Up Shot, the volley-and-header target game (docs/arcade-aaa/popup-direction.md), takes Hold the Line's machine and
+ // spot (Hold the Line retired from the room; its board id stays in BOARD_GAMES so its scores stay valid).
+ {id:'popup',name:'Pop-Up Shot',short:'POP-UP SHOT',lesson:'Look up. Pick the target. Strike.',color:'#f0452e',x:12.85,z:5.2,yaw:-Math.PI/3},
  // Nov 22 2026 (owner approved the release): Flick It and FootGolf Island stand against the WEST wall, mirroring the east pair, between
  // the air hockey table and the Claw Club, where the south lounge sofa stood (removed for them). Turned +60 degrees so they face the aisle
  // and lean toward the room camera; spots measured against the room's colliders (tests/arcade-room-crowd.cjs "west wall").
@@ -53,7 +55,7 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
  *  owner's decision on their spot: the room, its draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
-] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 22 2026: empty again (Flick It and FootGolf Island placed on the west wall); the mechanism and tests/seo-games-gate.cjs stay for the next game */
+] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 22 2026: empty again (Flick It and FootGolf Island on the west wall, Pop-Up Shot in Hold the Line's spot); the mechanism and tests/seo-games-gate.cjs stay for the next game */
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */

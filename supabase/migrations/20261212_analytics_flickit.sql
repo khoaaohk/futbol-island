@@ -1,5 +1,5 @@
 -- Futbol Island admin analytics (Nov 21 2026): Flick It's activity key 'arcade_flickit' (lib/analytics/islandIds.ts ARCADE_GAMES), after Hold the Line's (20261210): a superset, every earlier key is kept.
--- NOT APPLIED. The owner pastes docs/arcade-aaa/flickit-supabase.sql instead (the same function plus the board id).
+-- NOT APPLIED. The owner pastes docs/arcade-aaa/new-games-nov22-supabase.sql instead (the same function plus the board id).
 -- Additive and safe to run twice: analytics_ingest is replaced in place.
 
 create or replace function public.analytics_ingest(p jsonb) returns void

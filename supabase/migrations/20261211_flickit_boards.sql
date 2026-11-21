@@ -1,5 +1,5 @@
 -- Futbol Island: Flick It board (Nov 21 2026; lib/arcade/leaderboard.ts BOARD_GAMES 'flickit', lib/arcade/flickit/core.ts).
--- NOT APPLIED. The owner pastes ONE file instead of this one: docs/arcade-aaa/flickit-supabase.sql holds the same allow-list plus the
+-- NOT APPLIED. The owner pastes ONE file instead of this one: docs/arcade-aaa/new-games-nov22-supabase.sql holds the same allow-list plus the
 -- analytics key. This copy exists so the migrations folder, replayed in order, ends with an allow-list that names every board.
 -- A superset of 20261209_holdtheline_boards.sql: the same list plus 'flickit'. Additive: every earlier board id is kept. Running it twice is harmless.
 -- The LAST result row must read "OK, Flick It board installed".

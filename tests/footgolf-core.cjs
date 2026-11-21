@@ -152,14 +152,14 @@ ok('device save: best round, fewest kicks, best per hole, daily and streak; junk
  assert.equal(SV.FOOTGOLF_KEY,'fi2-footgolf-v1');
 });
 
-ok('wiring: an unplaced game (by link only) with one all-time board, earns coins, never charges',()=>{
- const cat=read('lib/arcade/arcadeCatalog.ts');assert.match(cat,/arcadeUnplaced=\[\n \{id:'footgolf',name:'FootGolf Island'/);assert.doesNotMatch(cat.split('arcadeUnplaced')[0],/id:'footgolf'/,'no machine in the room');
+ok('wiring: a machine on the west wall (Nov 22 2026) with one all-time board, earns coins, never charges',()=>{
+ {const A=require('../lib/arcade/arcadeCatalog.ts'),c=A.arcadeCabinets.find(c=>c.id==='footgolf');assert.ok(c&&c.x===-13.8&&c.z===4.4&&Math.abs(c.yaw-Math.PI/3)<1e-9,'on the west wall');assert.equal(A.arcadeUnplaced.length,0);}
  assert.match(read('components/ArcadeRoom.tsx'),/footgolf:\(\)=>import\('\.\/games\/FootGolfGame'\)/);assert.match(read('components/ArcadeRoom.tsx'),/game==='footgolf'\?<FootGolf onExit=\{back\}\/>/);
- const lb=read('lib/arcade/leaderboard.ts');assert.match(lb,/'holdtheline','footgolf'\] as const;/);assert.match(lb,/ footgolf:\{name:'FootGolf Island',unit:'points',max:15_000/);assert.doesNotMatch(lb,/footgolfdaily|'footgolf_daily'/,'no daily board');
+ const lb=read('lib/arcade/leaderboard.ts');assert.match(lb,/'holdtheline','footgolf','flickit','popup'\] as const;/);assert.match(lb,/ footgolf:\{name:'FootGolf Island',unit:'points',max:15_000/);assert.doesNotMatch(lb,/footgolfdaily|'footgolf_daily'/,'no daily board');
  assert.match(read('lib/arcade/arcadeWalletCore.ts'),/if\(game==='footgolf'\)value=Math\.floor\(n\(s\.points\)\/600\)/);assert.equal(C.footgolfCoins(1200),2);
- assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_footgolf','Arcade: FootGolf Island'\]/);assert.match(read('lib/analytics/countIds.ts'),/'holdtheline','footgolf'\] as const/);
+ assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_footgolf','Arcade: FootGolf Island'\]/);assert.match(read('lib/analytics/countIds.ts'),/'popup','flickit','footgolf'\] as const/);
  assert.match(read('lib/arcade/lastScore.ts'),/footgolf_daily:\{game:'footgolf',label:'Daily Hole',today:true\}/);assert.match(read('lib/saves/snapshot.ts'),/'fi2-footgolf-v1'/);
- const sql=read('docs/arcade-aaa/footgolf-supabase.sql');assert.match(sql,/'holdtheline', 'footgolf'\)\)/);assert.match(sql,/'arcade_footgolf'/);for(const id of ['runner','kitrush','snakedaily','keepyuppy','holdtheline'])assert.ok(sql.includes(`'${id}'`),`keeps ${id}`);
+ const sql=read('docs/arcade-aaa/new-games-nov22-supabase.sql');assert.match(sql,/'holdtheline', 'footgolf', 'flickit', 'popup'\)\)/);assert.match(sql,/'arcade_footgolf'/);for(const id of ['runner','kitrush','snakedaily','keepyuppy','holdtheline'])assert.ok(sql.includes(`'${id}'`),`keeps ${id}`);
  const shell=read('components/games/FootGolfGame.tsx');assert.match(shell,/beginBoardSession\('footgolf'\)/);assert.match(shell,/creditRun\(r\.id,'footgolf'/);assert.doesNotMatch(shell,/spendCoins|chargeArcade/);
 });
 
