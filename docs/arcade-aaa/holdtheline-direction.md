@@ -93,7 +93,10 @@ board does not take the score). Migration copies: 20261209_holdtheline_boards.sq
 this branch met Keepy-Uppy Beat, which keeps those dates; the "newest file" pins in the tests were moved too).
 
 ## Not done / weaker than wanted
-- No room machine, no /games page, media or SEO yet.
+- No room machine yet (see docs/arcade-aaa/NEW-GAMES-NOV21.md). /games page (Nov 21 2026, integration): `/games/soccer-defending-game`,
+  built complete but noindex, out of the sitemap, the hub and every count until placed (tests/seo-games-gate.cjs covers every subset of
+  the three new games). Media: clip (Coast League OFFSIDE, 10 s) + four stills (OFFSIDE with the line drawn, a press at night, a switch
+  met by the slide, the season map), share picture. Placing it also links it from the pressure-and-cover-2v2 and recover-goal-side drills.
 - Human tuning is from bots, not children: drag gain, tap radius and wind-ups need a real phone playtest.
 - One answer per wave; keeper automatic; the line is always straight; beans are simple capsules.
 - Sound checked through the Web Audio graph only; this branch's scripts/check-arcade-audio.cjs runs unmuted, so the verify pass skipped it.
