@@ -238,7 +238,7 @@
  .main:has(>nav[data-rail])>[data-toc]{grid-row:3/span 60}
 }
 @media(min-width:1280px){
- .page:has(nav[data-rail]) nav[data-rail]{margin:0!important;padding-top:var(--shell-top)}/* fixed top-to-bottom: a grid gap margin must never shorten it; its first row (Back, or Overview) starts level with the breadcrumb, 108 px */
+ .page:has(nav[data-rail]) nav[data-rail]{margin:0!important}/* fixed top-to-bottom: a grid gap margin must never shorten it */
  .page:has(nav[data-rail])>.main{max-width:none;width:auto;margin:0 0 0 var(--rail);padding:var(--shell-top) max(48px,calc((100vw - var(--rail) - var(--shell-max)) / 2)) var(--s5)}
 }
 /* A rail page has no right-hand column (owner, Nov 20 2026: "fix all the internal pages to fill the page more and not leave empty
