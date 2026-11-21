@@ -22,7 +22,7 @@ export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
 /** The day these clips were first published (VideoObject.uploadDate, video sitemap publication_date). The four clips added on
  *  Nov 17 2026 carry their own first commit time (git log --diff-filter=A, checked by tests/seo-video.cjs). */
 export const GAME_CLIPS_UPLOADED='2026-11-16T12:00:00-08:00';
-const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00',safehands:'2026-11-21T04:53:11-08:00'};
+const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00',safehands:'2026-11-21T04:53:11-08:00',keepyuppy:'2026-11-21T12:00:00-08:00'};
 export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;mp4s?:string;poster:string;pw:number;ph:number;uploaded:string};
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
@@ -47,10 +47,12 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  ballblaster:{name:'Ball Blaster gameplay: your own bean kicks footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: the player\'s own bean kicks a multi-ball, then a fire-ball super shot breaks three robots for a trick shot, the wave is cleared and the floodlit boss wave begins',caption:'Ball Blaster: aim, fill the Super bar and break the robots before they reach your goal.'},
  // Nov 21 2026: Safe Hands (unlisted until it has a machine in the room: the clip is on its own page only, with no watch page).
  safehands:{name:'Safe Hands gameplay: reading the striker and diving to save',alt:'Safe Hands gameplay on a phone in Sunday league: the striker’s planted foot is ringed and labelled FOOT: LEFT, the keeper dives high to the left for SAVE! +220, then the next striker plants the foot to the right and the shot goes in for a goal',caption:'Safe Hands: watch the planted foot, then dive that way.'},
+ // Nov 21 2026: Keepy-Uppy Beat (unlisted until it has a machine in the room: the clip is on its own page only, with no watch page).
+ keepyuppy:{name:'Keepy-Uppy Beat gameplay: juggling a football to the beat',alt:'Keepy-Uppy Beat gameplay on a phone: balls fall down four coloured lanes into rings above the left foot, thigh, head and right foot pads, and the juggler keeps the ball up with SWEET! touches on the beat',caption:'Keepy-Uppy Beat: tap each pad as its ball lands, on the beat.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
- trophydrop:'/games/soccer-merge-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game',safehands:'/games/soccer-goalkeeper-game'};
+ trophydrop:'/games/soccer-merge-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game',safehands:'/games/soccer-goalkeeper-game',keepyuppy:'/games/soccer-juggling-game'};
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
@@ -66,6 +68,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  rollball:['Roll It In, Crab Walk: crabs sweep across a wooden plank over the water while the ball rolls between them toward a star','Roll It In: two keeper dummies slide across the path beyond a boost pad, with a plate wired to the gate','Roll It In, Keeper Drill at night: the ball crosses a boost pad for ZOOM! with keeper dummies sliding on each side','Roll It In on the beach: the ball rolls along a narrow wooden plank over the water toward a plate and the goal'],
  ballblaster:['Ball Blaster: SUPER SHOT! The bean\'s fire ball breaks three robots for a +300 trick shot','Ball Blaster boss wave under the floodlights: the Mega Mannequin walks up behind cones, barrels and a glass board as a ball hits for SMASH! +80','Ball Blaster target practice after the boss: a ball hits a target for DING! +75 with five targets left','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
  safehands:['Safe Hands, Sunday league: the striker’s planted foot is ringed and labelled FOOT: LEFT and CHEST UP: HIGH, and the keeper dives high to the left','Safe Hands, Cup final in the rain: a wall of three stands at the near post and the keeper waits in the open side, with the note Good wall. Now stand in the open side','Safe Hands, Cup final: the keeper catches a cross in the small box and KEEPER’S! +490 bursts over the goal, with the note The right call','Safe Hands, Cup final at night in the rain: the captain plants her foot and swings her leg for the last penalty while the keeper stands on the line'],
+ keepyuppy:['Keepy-Uppy Beat, Park Kickabout: the ball lands in the ring above the left-foot pad, the pad is pressed and the juggler’s left foot plays it up for SWEET!','Keepy-Uppy Beat, Cup Final Carnival: the juggler lands a Neck Stall for NECK STALL! +225 in the weak-foot part, with balls falling towards the left-foot and head pads','Keepy-Uppy Beat, Cup Final Carnival at night: AROUND THE WORLD! +240 and 62 in a row, under the stadium lights and bunting','Keepy-Uppy Beat’s Trick Book: cards for Thigh-Foot-Thigh, Seal Taps, the Neck Stall, Around the World and the Heel Flick, each with how to do it, a coaching line and five landings to fill it'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Twelve clean swipes make a Clean Run.','Read the whole wave: leave the other team’s boot.','The sky darkens as the run goes on.','Your kit can switch mid-run.'],
@@ -80,6 +83,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  rollball:['Time your run between the crabs.','Watch the sweepers, then go.','Arrows make you fast.','Go slow on the narrow planks.'],
  ballblaster:['Fill the Super bar, hold until it is red, then kick.','Boss wave: keep hitting the Mega Mannequin.','Target practice: pick a target and strike through the ball.','Stop them before they reach your goal.'],
  safehands:['The planted foot points where the shot goes.','Free kick: the wall guards one side, you guard the other.','A cross that lands free in your small box: catch it.','The Cup final ends on a penalty from the captain.'],
+ keepyuppy:['Tap the pad as the ball lands in its ring.','A Neck Stall: hold the head pad until the bar is full.','The Cup Final: every trick, both feet, 140 beats a minute.','The Trick Book: how each real trick is done.'],
 };
 export function gameStills(id:GameId,max=4):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));

@@ -37,7 +37,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'safehands';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'safehands'|'keepyuppy';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -404,6 +404,35 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Safe Hands?',a:'Drag to set your position, watch the striker’s planted foot, then swipe to dive that way.'},
    {q:'Can a goalkeeper really tell where a penalty is going?',a:'Often. The standing foot usually points where the ball goes. Good strikers try to hide it, which is why later rounds give you less time.'},
    {q:'What is the Daily Shootout?',a:'Five penalties from five takers, the same for everyone that day. Tomorrow brings five new ones.'}]},
+ // Nov 21 2026: Keepy-Uppy Beat, the juggling rhythm game (lib/arcade/keepyuppy/core.ts + charts.ts + save.ts, components/games/KeepyUppyGame.tsx,
+ // docs/arcade-aaa/keepyuppy-direction.md). Built and playable by link, NOT in the room yet (arcadeUnplaced): unlisted until placed, like Safe Hands.
+ {id:'keepyuppy',slug:'soccer-juggling-game',path:page('soccer-juggling-game'),name:'Keepy-Uppy Beat',play:play('keepyuppy'),
+  title:'Soccer Juggling Game for Kids: Keepy-Uppy Beat, Free Online',h1:'Soccer juggling game: Keepy-Uppy Beat',
+  description:'Keepy-Uppy Beat is a free soccer juggling game for kids. Keep the ball up to the beat with feet, thigh and head, learn tricks and train your weak foot.',
+  lead:'Keepy-Uppy Beat is a free football juggling game in your browser, a keepy uppy game set to music. Balls fall towards four pads: left foot, thigh, head and right foot. Tap the matching pad as the ball lands, on the beat, and keep it up to the end of the track.',
+  blurb:'Juggle the ball to the beat with feet, thigh and head',genre:['Arcade','Music','Sports','Educational'],skill:'Juggling: a soft touch, rhythm, the right body part and both feet',
+  og:img('keepy-uppy-beat-soccer-juggling-game-og.jpg'),ogAlt:'Keepy-Uppy Beat, a soccer juggling game: on one phone the juggler plays the ball up off the left foot for SWEET! in the park, on the other AROUND THE WORLD! +240 on the Cup Final track at night',
+  shots:gameStills('keepyuppy',1),
+  about:['Keepy-Uppy Beat is a rhythm game about juggling a football, drawn like a comic book. Your own island bean juggles at the top of the screen; below, balls fall down four lanes into four rings, one for each pad.',
+   'There are six tracks, from a kickabout in the park at 80 beats a minute to the Cup Final at 140, with music made for the game.'],
+  phone:['Hold the phone upright. The left thumb plays the left foot and thigh pads, the right thumb the head and right foot pads.','Tap a pad as its ball lands in the ring. For a trick, swipe on the foot pad (a circle for Around the World, up for a Heel Flick, sideways for a Crossover) or hold the head pad for a Neck Stall.'],
+  desktop:['D, F, J and K (or the arrow keys) are left foot, thigh, head and right foot.','Hold Space with a foot key for a swipe trick, hold a key for a stall, and press P to pause.'],
+  rules:['Tap when the ball lands: Sweet is within about a twentieth of a second, Good a little more. Early and Late keep the ball up but end your run of clean touches.','A ball that is missed is dropped. You have five balls on the first three tracks and three after that, and eight touches in a row that stay up win a ball back.',
+   'Finish a track for one star, and touch cleanly for two or three. The Track of the Day is one of the first three tracks with a twist, such as weak foot only, the same for everyone that day.'],
+  teaches:['Real juggling has a rhythm: touch, touch, touch. Each touch here sits on the beat of the music, and later tracks put touches between the drum hits, so you learn to count and keep time.',
+   'The ball flies in a real arc between two touches, so a higher, softer touch gives you longer before the next one. Every track has a weak-foot part that is scored on its own, and your best weak-foot score is kept.',
+   'There are six real tricks: Thigh-Foot-Thigh, Seal Taps, the Neck Stall, Around the World, the Heel Flick and the Crossover. Each has a 10-second lesson and a Trick Book card that says how it is done.'],
+  guides:[{path:D+'first-touch',name:'First touch drills',line:'Control the ball as it arrives'},{path:D+'thigh-and-chest-control',name:'Thigh and chest control drill',line:'Cushion a high ball with the thigh'},
+   {path:D+'at-home',name:'Drills to do at home',line:'Ball work you can do on your own'},{path:T+'weak-foot',name:'What is a weak foot?',line:'And how to make it stronger'},
+   {path:T+'first-touch',name:'First touch',line:'What a good first touch looks like'},{path:R+'heading-rules-for-kids',name:'Heading rules for kids',line:'The age limits for heading the ball'}],
+  tips:['Watch the ring, not the pad: tap as the ball sits in it.','If you are a little early or late every time, run the timing check again from the start card.','Before a trick, look at its picture on the ball: a circle means swipe round, an arrow means swipe that way.'],
+  harder:['Each track is faster than the last, from 80 to 140 beats a minute, with more touches between the drum hits.','New tricks join from the second track on, and the weak-foot part gets longer.','Medals: Bronze at 4,000 points, Silver at 10,000 and Gold at 20,000.'],
+  parents:[PARENTS_SAFE,'Skill: timing and both feet. The results card says what went wrong most, such as tapping early.','Session length: a track lasts about a minute. The game can be played with the sound off. No day streaks, no timers.'],
+  faq:[free('Keepy-Uppy Beat',true),{q:'Does Keepy-Uppy Beat work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'Can I play with the sound off?',a:'Yes. Every ball falls into a ring and lands on the beat, so you can play by watching. The music helps, but you never need it.'},
+   {q:'Does it teach real juggling?',a:'It teaches the parts you can learn on a screen: the rhythm, which part of the body to use, using both feet and the names of real tricks. Then take a real ball: drop it, one touch, catch it, and count your record.'},
+   {q:'What is a keepy-uppy?',a:'Keepy-uppy is the British word for juggling a football: keeping it in the air with your feet, thighs and head without letting it touch the ground. It is also called kick ups.'},
+   {q:'Is heading safe for kids?',a:'In the game the head pad is a gentle juggling header. In real football, many leagues limit heading for younger children, so check the rules for your child’s age.'}]},
 ];
 /** The ids of the games that have a machine in the arcade room. Only these pages are listed (see ALL_GAME_PAGES). */
 export const PLACED_GAME_IDS:ReadonlySet<string>=new Set<string>(arcadeCabinets.map(c=>c.id));
@@ -420,22 +449,24 @@ export const gameById=(id:GameId)=>ALL_GAME_PAGES.find(g=>g.id===id)!;
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
 /** Nov 21 2026: the hub names the goalkeeper game only once Safe Hands is listed (in the room). */
 const KEEPER_LISTED=isGameListed('safehands');
+/** Nov 21 2026: and the juggling game only once Keepy-Uppy Beat is listed. */
+const JUGGLE_LISTED=isGameListed('keepyuppy');
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${KEEPER_LISTED?'a goalkeeper game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${KEEPER_LISTED&&JUGGLE_LISTED?'goalkeeping, juggling, pinball and puzzles':KEEPER_LISTED?'a goalkeeper game, pinball, snake and puzzles':JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${KEEPER_LISTED?'a goalkeeper game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane, the weight of a pass or picking a target.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${KEEPER_LISTED?'a goalkeeper game, ':''}${JUGGLE_LISTED?'a juggling rhythm game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane, the weight of a pass or picking a target.`,
   'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
-  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(KEEPER_LISTED?[['For a future goalkeeper','Safe Hands.']]:[])] as [string,string][],
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(KEEPER_LISTED?[['For a future goalkeeper','Safe Hands.']]:[]),...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[])] as [string,string][],
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.`},
   {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app.'},
   {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${KEEPER_LISTED?', and, in goal, setting your position and reading the striker':''}.`},
+  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${KEEPER_LISTED?', and, in goal, setting your position and reading the striker':''}.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */
