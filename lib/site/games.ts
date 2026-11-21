@@ -397,7 +397,7 @@ export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',pat
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */
 export type GameListing={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;images:string[]};
 export const GAME_LISTINGS:readonly GameListing[]=[
- {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src),...GAME_PAGES.flatMap(g=>gameStills(g.id,3).map(s=>s.src)),...islandStills().map(s=>s.src),...(HERO_CLIP?[HERO_CLIP.poster]:[])]},
+ {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src),...GAME_PAGES.flatMap(g=>gameStills(g.id).map(s=>s.src)),...islandStills().map(s=>s.src),...(HERO_CLIP?[HERO_CLIP.poster]:[])]},
  ...GAME_PAGES.map(g=>({path:g.path,name:g.h1,title:g.title,description:g.description,blurb:g.blurb,images:[...allShots(g).map(s=>s.src),g.og]})),
 ];
 /* ---- JSON-LD ---- */
