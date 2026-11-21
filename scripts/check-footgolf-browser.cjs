@@ -64,6 +64,10 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   for(let i=0;i<9;i++){await page.evaluate(i=>window.__footgolf.loadHole(i),i);await wait(300);const s2=await st();await page.evaluate(()=>window.__footgolf.view.skipFlyover());await wait(500);await page.evaluate(()=>window.__footgolf.wake());await wait(900);const inf=await info();rows.push({hole:s2.hole,...inf});console.log(`   ${i+1} ${s2.hole}: ${inf.calls} draws, ${inf.triangles} triangles`);
    if(i===5||i===7)await shot(`hole${i+1}`);}
   check(rows.length===9&&rows.every(r=>r.calls>0),'every hole draws');
+  // a putt across the museum's steep green (it breaks downhill): the low cup camera
+  {await page.evaluate(()=>window.__footgolf.loadHole(5));await wait(300);await page.evaluate(()=>window.__footgolf.view.skipFlyover());await wait(900);
+   await page.evaluate(()=>{const f=window.__footgolf,c=f.game.state.hole.cup;f.placeBall(c[0]+5,c[1]-7);f.setKind('putt');});await wait(1300);await shot('green-aim');
+   await pull(mobile?150:170,0,450);await wait(1500);await shot('green-rolling');const s3=await until(x=>x.gp==='aim'||x.gp==='done',12000);console.log(`  green putt: ${s3.gp}, ${s3.dist.toFixed(2)} m left`);}
   check(errors.length===0,'no console errors',errors.slice(0,3).join(' | '));
  }finally{await browser.close();}
  if(fails.length){console.log(`\n${fails.length} FAILED: ${fails.join('; ')}`);process.exit(1);}console.log('\nall ok');

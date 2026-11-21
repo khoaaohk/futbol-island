@@ -263,11 +263,12 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
    if(cam.fly>=1){cam.mode='aim';aimPose(g,cam.tPos,cam.tLook);}k=cam.fly<.05?1:1-Math.exp(-dt*6);}
   else if(cam.mode==='aim'){aimPose(g,cam.tPos,cam.tLook);k=1-Math.exp(-dt*5);}
   else if(cam.mode==='chase'){const vh=Math.hypot(b.vx,b.vz);if(vh>.4){V.set(b.vx/vh,0,b.vz/vh);}else V.set(Math.sin(cam.yaw),0,-Math.cos(cam.yaw));
-   const gy=Math.max(heightAt(H,b.x,b.z),FG.water),air=Math.max(0,b.y-gy),back=b.air?8.5:7;cam.tPos.set(b.x-V.x*back,Math.max(b.y,gy)+3.2+air*.35,b.z-V.z*back);
+   const gy=Math.max(heightAt(H,b.x,b.z),FG.water),air=Math.max(0,b.y-gy),putt=s.lastShot?.kind==='putt',back=b.air?8.5:putt?3.8:7;cam.tPos.set(b.x-V.x*back,Math.max(b.y,gy)+(putt?1.5:3.2)+air*.35,b.z-V.z*back);
    const ty=Math.max(heightAt(H,cam.tPos.x,cam.tPos.z),FG.water)+1.2;if(cam.tPos.y<ty)cam.tPos.y=ty;cam.tLook.set(b.x+V.x*3,b.y+.3-air*.1,b.z+V.z*3);k=1-Math.exp(-dt*(b.air?2.6:3.2));
    // a rolling ball near the cup: the low view beside the cup
-   const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz);if(!b.air&&!b.rest&&d<6&&vh>.25&&(dx*b.vx+dz*b.vz)>0){cam.mode='cup';cam.cx=dx/d;cam.cz=dz/d;}}
-  else if(cam.mode==='cup'){const nx=cam.cx,nz=cam.cz;cam.tPos.set(H.cup[0]+nx*1.6-nz*1.9,H.cupY+.55,H.cup[1]+nz*1.6+nx*1.9);cam.tLook.set((b.x+H.cup[0]*2)/3,H.cupY+.1,(b.z+H.cup[1]*2)/3);k=1-Math.exp(-dt*3);}
+   const dx=H.cup[0]-b.x,dz=H.cup[1]-b.z,d=Math.hypot(dx,dz);if(!b.air&&!b.rest&&d<4.5&&s.kickFrom>7&&vh>.25&&(dx*b.vx+dz*b.vz)>0){cam.mode='cup';cam.cx=dx/d;cam.cz=dz/d;}}
+  else if(cam.mode==='cup'){// beyond the cup, a little to one side, low: the ball rolls toward the lens and into the hole
+   const nx=cam.cx,nz=cam.cz;cam.tPos.set(H.cup[0]+nx*3.2-nz*1.3,H.cupY+1.05,H.cup[1]+nz*3.2+nx*1.3);cam.tLook.set((b.x+H.cup[0])/2,H.cupY-.35,(b.z+H.cup[1])/2);k=1-Math.exp(-dt*2.4);}
   else{cam.orbit+=dt*.05;}
   cam.pos.lerp(cam.tPos,k);cam.look.lerp(cam.tLook,k);camera.position.copy(cam.pos);camera.lookAt(cam.look);void now;}
  function render(g:FootGolf,now:number){if(!H||g.state.hole!==H)setHole(g);if(!H)return;const s=g.state,b=s.ball,dt=Math.min(.1,cam.lastT?now-cam.lastT:1/30);cam.lastT=now;
@@ -304,7 +305,7 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   case 'splash':burst(e.x,FG.water+.05,e.z,22,['#ffffff','#bfe9f5','#27b0c8'],4.2,.12);break;
   case 'leaves':burst(e.x,e.y,e.z,14,['#3f9a52','#58b864','#2f8a4a'],2,.12);break;
   case 'wall':if(e.a>2)burst(e.x,e.y,e.z,5,['#d9c7a8','#fff3d6'],1.4,.06);break;
-  case 'cup':burst(H.cup[0],H.cupY+.2,H.cup[1],18,['#ffc83a','#f0452e','#19b5a5','#fff3d6'],3.4,.1);break;
+  case 'cup':burst(H.cup[0],H.cupY+.15,H.cup[1],14,['#ffc83a','#f0452e','#19b5a5','#fff3d6'],2.2,.05);break;
   case 'tee':break;}}
  return{
   setHole,render,resize,setPreview,onEvent,startFlyover,
@@ -312,6 +313,7 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
   skipFlyover(){if(cam.mode==='flyover')cam.fly=1;},
   get flying(){return cam.mode==='flyover';},
   get camMode(){return cam.mode;},
+  get camInfo(){return {mode:cam.mode,pos:camera.position.toArray().map(v=>+v.toFixed(2)),look:cam.look.toArray().map(v=>+v.toFixed(2)),ground:H?+heightAt(H,camera.position.x,camera.position.z).toFixed(2):0};},
   /** For the drag: the screen-space direction of the aim, so a drag reads the same whichever way the camera looks. */
   project(x:number,y:number,z:number){V.set(x,y,z).project(camera);return {x:(V.x+1)/2*W,y:(1-V.y)/2*Hh,on:V.z<1};},
   info:()=>({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,programs:renderer.info.programs?.length??0}),

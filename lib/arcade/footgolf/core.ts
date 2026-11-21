@@ -292,7 +292,7 @@ export function createFootGolf(o:{mode:FgMode;seed:number;hole?:number;day?:stri
    const wasAir=b.air,h=ballStep(H,b,FG.step,st.mem);if(b.y>st.flightMax)st.flightMax=b.y;
    if(h){switch(h.type){
     case 'water':penalty('splash');return;case 'oob':penalty('oob');return;
-    case 'air-cup':st.airIn=true;b.x=H.cup[0];b.z=H.cup[1];b.vx=b.vy=b.vz=0;b.air=false;b.rest=true;st.phase='holed';ev('cup',h.a,1,st.kicks===1?'ACE!':'IN THE AIR!');endHole(true);return;
+    case 'air-cup':st.airIn=true;b.x=H.cup[0];b.z=H.cup[1];b.vx=b.vy=b.vz=0;b.air=false;b.rest=true;st.phase='holed';ev('cup',h.a,1,'IN THE AIR!');endHole(true);return;
     case 'cup':case 'rim':b.vx=b.vy=b.vz=0;b.rest=true;b.x=H.cup[0];b.z=H.cup[1];st.phase='holed';if(h.type==='rim')ev('rim',h.a,0,'ROUND THE RIM...');ev('cup',h.a,0,'IN!');endHole(true);return;
     case 'lip':st.stats.lip++;ev('lip',h.a,0,'LIP OUT!');break;case 'hop':st.stats.lip++;ev('hop',h.a,0,'TOO QUICK!');break;
     case 'plug':st.stats.sand++;ev('plug',h.a,S.sand,'PLUGGED!');break;

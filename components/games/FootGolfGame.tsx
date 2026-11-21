@@ -17,7 +17,7 @@ import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
 import styles from './FootGolfGame.module.css';
-import {createFootGolf,predict,suggestKick,startYaw,scoreName,tipFor,HOLES,KICKS,KICK_ORDER,SURF,COURSE_PAR,FG,S,type FootGolf,type FgEvent,type FgMode,type FgResult,type FgTip,type KickKind,type Shot} from '@/lib/arcade/footgolf/core';
+import {createFootGolf,predict,heightAt,surfaceAt,suggestKick,startYaw,scoreName,tipFor,HOLES,KICKS,KICK_ORDER,SURF,COURSE_PAR,FG,S,type FootGolf,type FgEvent,type FgMode,type FgResult,type FgTip,type KickKind,type Shot} from '@/lib/arcade/footgolf/core';
 import {createFootgolfView,type FootgolfView} from '@/lib/arcade/footgolf/view';
 import {createFootgolfAudio,type FootgolfAudio} from '@/lib/arcade/footgolf/audio';
 import {readFootgolfSave,writeFootgolfSave,settleFootgolf,emptyFootgolfSave,liveStreak,type FootgolfSave,type FootgolfSettled} from '@/lib/arcade/footgolf/save';
@@ -117,7 +117,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
    case 'rim':a?.rim();break;
    case 'lip':a?.lip();arcadeFeedback(null,'collect');say(e.word,'red',true);break;
    case 'hop':a?.lip();say(e.word,'red',true);break;
-   case 'cup':a?.cup();arcadeFeedback(null,'goal');say(e.word,'sun');break;
+   case 'cup':a?.cup();arcadeFeedback(null,'goal');if(e.k===1)say(e.word,'sun');break;// a rolled-in ball: the hole's own word (Par, Birdie, Ace) follows
    case 'hole':case 'pickup':{const par=g.state.hole.def.par;a?.result(e.type==='pickup'?1:e.a-par);endAt.current=performance.now()+(reduced.current?700:1900);say(e.word.toUpperCase(),e.type==='pickup'?'paper':e.a<par?'red':'sun',true);break;}
    case 'stop':break;
    case 'tee':a?.tee(Math.hypot(g.state.hole.wind[0],g.state.hole.wind[1])/5);break;
@@ -188,7 +188,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);
   const noMenu=(e:Event)=>e.preventDefault();el.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__footgolf?:unknown}).__footgolf={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get aim(){return aim.current;},shoot,setKind:pickKind,wake:kick,loadHole:(i:number)=>{run.current={...run.current,mode:'hole',done:false,hole:i};begin(createFootGolf({mode:'hole',seed:9,hole:i}));}};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__footgolf?:unknown}).__footgolf={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get aim(){return aim.current;},shoot,setKind:pickKind,wake:kick,placeBall:(x:number,z:number)=>{const g=game.current;if(!g||g.state.phase!=='aim')return;const b=g.state.ball;b.x=x;b.z=z;b.y=heightAt(g.state.hole,x,z)+FG.R;g.state.lie=surfaceAt(g.state.hole,x,z);newAim();view.current?.setAim(aim.current.yaw,kindRef.current);kick();},loadHole:(i:number)=>{run.current={...run.current,mode:'hole',done:false,hole:i};begin(createFootGolf({mode:'hole',seed:9,hole:i}));}};
   return()=>{ro.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('touchmove',noScroll);el.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;v.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__footgolf?:unknown}).__footgolf;};
  // eslint-disable-next-line react-hooks/exhaustive-deps
