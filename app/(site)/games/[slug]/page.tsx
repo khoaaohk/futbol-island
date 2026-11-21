@@ -7,6 +7,8 @@ import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,videoGameLd} from '@/lib/site/games';
 import {breadcrumbLd,faqLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
 import site from '../../site.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {gamesRail} from '@/lib/site/railNavMore';
 
 /**
  * /games/<slug> (lib/site/games.ts): one arcade game as a reading page for search: what it is, how to play on a phone and a
@@ -31,6 +33,7 @@ export default function GamePageView({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={ld}/>{/* Nov 18 2026: no trailer VideoObject here; the clip's one home is its watch page (lib/site/videos.ts) */}
   <JsonLd data={faqLd(g.faq)}/>
+  <RailNav rail={gamesRail()} current={g.path}/>
   <GameIntro crumbs={crumbs} h1={g.h1} lead={g.lead} game={g}/>
   <Shots game={g}/>
   <Section id="what" title={`What is ${g.name}?`}>{g.about.map(x=><p key={x}>{x}</p>)}</Section>
