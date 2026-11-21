@@ -189,10 +189,12 @@
 .pager{display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
 @media(min-width:560px){.pager{grid-template-columns:1fr 1fr}.pager a[rel=next]{grid-column:2;text-align:right}.pager a[rel=prev]{grid-column:1;grid-row:1}}
 @media(max-width:559px){.pager a[rel=next]{order:-1}}
-.page .pager a{display:grid;gap:2px;align-content:center;min-height:var(--tap);padding:14px 18px;box-sizing:border-box;border-radius:var(--r-md);background:var(--link);color:var(--paper);text-decoration:none;transition:background-color .16s}
-@media(hover:hover){.page .pager a:hover{background:#185a48}}
+/* Nov 20 2026 (owner: "make this more subtle"): quiet cards on the page's own surface with a hairline, ink text, the arrow in pitch green; no solid green block */
+.page .pager a{display:grid;gap:2px;align-content:center;min-height:var(--tap);padding:14px 18px;box-sizing:border-box;border-radius:var(--r-md);background:var(--surface);box-shadow:inset 0 0 0 1px var(--rule);color:var(--ink);text-decoration:none;transition:background-color .16s,box-shadow .16s}
+@media(hover:hover){.page .pager a:hover{background:color-mix(in srgb,var(--gold) 22%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 60%,var(--rule))}}
 .page .pager a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
-.pagerWord{font-size:var(--t-label);line-height:1.3;font-weight:600;color:rgb(251 247 238 / .78)}
+.pagerWord{font-size:var(--t-label);line-height:1.3;font-weight:600;color:var(--ink-soft)}
+.pager a[rel=prev] .pagerWord::before,.pager a[rel=next] .pagerWord::after{color:var(--link)}
 .pagerName{font-size:var(--t-cap);line-height:1.35;font-weight:700;text-wrap:balance}
 .pager a[rel=prev] .pagerWord::before{content:'‹ '}
 .pager a[rel=next] .pagerWord::after{content:' ›'}
