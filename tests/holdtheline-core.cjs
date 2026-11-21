@@ -104,6 +104,10 @@ ok('two balls in behind: a pass to feet (no flag), then the real one: step again
  const g=first('double');toTell(g,'feet');g.move(g.state.lineY+2.5,0);const ev=run(g,(s,L)=>!!L.tell&&L.tell.kind==='thru');assert.equal(ev.find(e=>e.type==='kick').word,'feet');assert.equal(g.state.phase,'play');
  g.move(g.state.lineY+2.5,0);toRes(g);assert.equal(g.state.res.kind,'offside');assert.ok(g.state.feats.includes('double'));});
 
+ok('the pass to feet is judged too: step right past the runner during that wind-up and he receives it OFFSIDE (verify Nov 21)',()=>{
+ const g=first('double');toTell(g,'feet');const s=g.state;g.move(s.lineY+8,0);toRes(g);assert.equal(s.res.kind,'offside');assert.equal(s.snap.offside,true);assert.ok(!s.feats.includes('double'),'Twice bitten is for the SECOND ball');});
+ok('a nearly-right read gives the keeper a better chance than none; the right read never asks the lucky number (verify Nov 21)',()=>{
+ const src=read('lib/arcade/holdtheline/core.ts');assert.match(src,/late\?\.6:\.78/);assert.match(src,/near<=cover\+2\.5\?\.55:\.38/);assert.match(src,/sweepLine\+3\?\.55:\.8/);});
 ok('every wave is winnable: the bot that reads and answers lets nothing in, against every team, in both leagues',()=>{
  let waves=0;for(let league=0;league<2;league++)for(let m=0;m<TEAMS.length;m++)for(let i=0;i<6;i++){const p=B.play(300+i*41+m,'ideal',{league,match:m});assert.equal(p.log,'1'.repeat(HL.waves),`league ${league} ${TEAMS[m].name} seed ${i}: ${p.kinds.join(',')} -> ${p.log}`);waves+=HL.waves;assert.equal(p.stars,3);}
  assert.equal(waves,1440);

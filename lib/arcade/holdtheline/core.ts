@@ -55,7 +55,7 @@ export type Team={id:string;name:string;style:string;kit:string;trim:string;back
 /** Ten teams, each a different problem. `deck` is nine of a match's twelve waves (shuffled by the seed; three more are dealt from it again). */
 export const TEAMS:readonly Team[]=[
  {id:'coconut',name:'Coconut Rovers',style:'Straight runners',kit:'#f0452e',trim:'#fff3d6',back:3,passes:[2,3],startY:22,deck:['thru','thru','thru','thru','thru','thru','thru','decoy','decoy'],
-  lesson:'Step up together',tip:'Watch the passer. When the leg goes back, drag UP. The runner is left behind your line: offside!'},
+  lesson:'Step up together',tip:'Watch the passer. When the leg goes back, drag UP. The runner is left past your line: offside!'},
  {id:'sandy',name:'Sandy Bay Wanderers',style:'Out wide',kit:'#ff8a3c',trim:'#231a2e',back:3,passes:[2,3],startY:22,deck:['wide','wide','wide','wide','switch','switch','thru','thru','thru'],
   lesson:'Slide to the ball side',tip:'When the ball goes wide, drag ACROSS so your line is near it. A winger with nobody near is free to shoot.'},
  {id:'lighthouse',name:'Lighthouse Athletic',style:'Long ball',kit:'#fffaf0',trim:'#f0452e',back:4,passes:[1,2],startY:23,deck:['long','long','long','long','long','thru','thru','deep','deep'],
@@ -63,7 +63,7 @@ export const TEAMS:readonly Team[]=[
  {id:'tide',name:'Tiki-Taka Tide',style:'Short passes',kit:'#8f78b8',trim:'#fff3d6',back:4,passes:[5,7],startY:22,deck:['double','double','double','thru','thru','wide','wide','decoy','decoy'],
   lesson:'Stay compact. Be patient.',tip:'Lots of short passes to pull you apart. Keep the line together, slide with the ball, and only step when the leg goes back.'},
  {id:'mango',name:'Mango Counter',style:'Counter-attack',kit:'#ffc83a',trim:'#231a2e',back:4,passes:[1,2],startY:29,deck:['deep','deep','deep','deep','long','long','long','thru','thru'],
-  lesson:'Mind the space behind you',tip:'You start high up the pitch and they break fast. A runner from deep is still offside if you step. A long ball needs a quick drop.'},
+  lesson:'Mind the space behind you',tip:'You start high up the pitch and they break fast. A runner from deep can still be caught offside if you step up in time. A long ball needs a quick drop.'},
  {id:'palm',name:'Palm Wing FC',style:'Wing play',kit:'#4fb85c',trim:'#fff3d6',back:4,passes:[2,4],startY:22,deck:['switch','switch','switch','switch','switch','wide','wide','thru','thru'],
   lesson:'Slide across together',tip:'They pass on one side, then switch to the far wing. The moment the long pass is hit, drag ACROSS to the other side.'},
  {id:'coral',name:'Captain Coral’s XI',style:'The clever striker',kit:'#ff6f91',trim:'#231a2e',back:4,passes:[2,3],startY:22,deck:['bend','bend','bend','bend','heavy','heavy','thru','thru','decoy'],
@@ -89,7 +89,7 @@ export function tuning(league:number,match:number,daily=false):Tuning{
  if(daily)return {W:.8,fly:.6,hold:.6,sw:1.15,ctrl:.4,dwell:1.35,margin:.4,aid:1,limit:2};
  const m=Math.max(0,Math.min(9,match))/9;
  return league<=0?{W:1.05-.37*m,fly:.75-.15*m,hold:.8-.2*m,sw:1.35-.25*m,ctrl:.45,dwell:1.6-.3*m,margin:.4,aid:match<3?2:match<6?1:0,limit:match<3?3:match<6?2:1}
-  :{W:.72-.16*m,fly:.55-.1*m,hold:.55-.15*m,sw:1.05-.15*m,ctrl:.38,dwell:1.25-.25*m,margin:.3,aid:0,limit:1};
+  :{W:.82-.18*m,fly:.55-.1*m,hold:.55-.15*m,sw:1.05-.15*m,ctrl:.38,dwell:1.25-.25*m,margin:.3,aid:0,limit:1};
 }
 
 /* ---- the trap book: feats, exported for a future cross-arcade weekly card ---- */
@@ -197,7 +197,7 @@ export function createHoldTheLine(opts:{seed:number;league?:number;match?:number
  function settle(){const r=s.res;if(!r||r.done)return;r.done=true;const st=s.stats;
   if(r.goal){if(r.why==='held'&&s.lineY-r.line0>.5)r.why='late';s.goals++;s.streak=0;st.goals++;st.lastWhy=r.why;s.log+='0';emit('goal',GOAL_WHYS.indexOf(r.why),s.goals,r.why);return;}
   const k=r.stop,pts=Math.round(PTS[k]*lm*(1+.1*Math.min(5,s.streak)));s.score+=pts;s.stops++;s.streak++;st.bestRow=Math.max(st.bestRow,s.streak);s.log+='1';
-  if(k==='offside'){st.offsides++;feat('first');if(st.offsides>=3)feat('three');if(plan().kind==='double')feat('double');}
+  if(k==='offside'){st.offsides++;feat('first');if(st.offsides>=3)feat('three');if(plan().kind==='double'&&beat().k==='thru')feat('double');}
   else if(k==='tackle'){st.tackles++;feat('tackle');}else if(k==='block'){st.blocks++;feat('block');}else if(k==='swept'){st.swept++;feat('sweep');}
   else if(k==='slide'){st.slides++;if(plan().kind==='switch')feat('slide');}else st.saves++;
   if(s.streak>=5)feat('five');emit('stop',STOP_KINDS.indexOf(k),s.streak,k,pts);}
@@ -211,15 +211,17 @@ export function createHoldTheLine(opts:{seed:number;league?:number;match?:number
   if(T.kind==='shot'){const p=s.press,d=p?Math.hypot(s.defs[p.i].x-c.x,s.defs[p.i].y-c.y):99;emit('kick',0,0,'shot');
    if(p&&p.st==='go'&&d<2.5){startRes('block',{stop:'block',dur:1,ball:[[0,c.x,c.y],[.3,s.defs[p.i].x,s.defs[p.i].y-1]]});return;}
    const goal=!(plan().u<saveChance(c.y)),tx=goal?(plan().u*7%1<.5?-2.7:2.7):s.keeper.x;startRes('shot',{goal,stop:'save',why:'deep',at:.6,dur:1.4,ball:[[0,c.x,c.y],[.6,tx,goal?.2:2]]});return;}
-  if(T.kind==='feet'){emit('kick',0,0,'feet');from={x:c.x,y:c.y};s.stage='air';s.bt=0;return;}
-  const call=judgeOffside({attackerY:r.y,ballY:c.y,defendersY:defYs()});s.snap={t:s.t,line:call.line,ry:r.y,rx:r.x,offside:call.offside,reason:call.reason};emit('kick',call.offside?1:0,OFFSIDE_REASONS.indexOf(call.reason),T.kind);
+  const call=judgeOffside({attackerY:r.y,ballY:s.ball.y,defendersY:defYs()});
+  // a pass to the runner's feet is judged too: step up during that wind-up and he receives it offside
+  if(T.kind==='feet'&&!call.offside){emit('kick',0,0,'feet');from={x:c.x,y:c.y};s.stage='air';s.bt=0;return;}s.snap={t:s.t,line:call.line,ry:r.y,rx:r.x,offside:call.offside,reason:call.reason};emit('kick',call.offside?1:0,OFFSIDE_REASONS.indexOf(call.reason),T.kind);
   if(T.kind==='long'){from={x:c.x,y:c.y};s.stage='air';s.bt=0;return;}
   if(call.offside){s.flag=s.t;startRes('offside',{stop:'offside',dur:1.5,ball:[[0,c.x,c.y],[.5,mix(c.x,r.x,.7),mix(c.y,r.y,.7)]]});return;}
-  through(b.k==='bend'?'bend':call.reason==='ownhalf'?'ownhalf':'held',.78);}
+  // nearly right (the line stepped during the wind-up, but not far enough) gives the keeper a better chance than doing nothing
+  const late=s.lineY-T.line0>.5;through(b.k==='bend'?'bend':call.reason==='ownhalf'?'ownhalf':'held',late?.6:.78);}
  function wideCheck(){const b=beat(),w=s.atk[b.to],side=w.x<0?-1:1,last=s.bi>=plan().beats.length-1;let near=99;for(let i=0;i<n;i++)if(!(s.press&&s.press.i===i))near=Math.min(near,Math.abs(w.x-s.defs[i].x));
   if(near<=cover){if(last){startRes('slide',{stop:'slide',dur:1,ball:[[0,w.x,w.y],[.35,w.x-side*1.5,w.y-2],[.8,side*(HL.hw+2),w.y-1]]});return;}
    s.stats.covers++;const pts=Math.round(40*lm);s.score+=pts;emit('cover',side,0,'',pts);nextBeat();return;}
-  const goal=!(plan().u<.38),tx=goal?-side*2.6:s.keeper.x;startRes('free',{goal,stop:'save',why:'wide',at:1.5,dur:2.2,who:b.to,run:[[0,w.x,w.y],[1.1,side*5.5,11]],ball:[[0,w.x,w.y],[1.1,side*5.2,10.4],[1.5,tx,goal?.2:2]]});}
+  const goal=!(plan().u<(near<=cover+2.5?.55:.38)),tx=goal?-side*2.6:s.keeper.x;startRes('free',{goal,stop:'save',why:'wide',at:1.5,dur:2.2,who:b.to,run:[[0,w.x,w.y],[1.1,side*5.5,11]],ball:[[0,w.x,w.y],[1.1,side*5.2,10.4],[1.5,tx,goal?.2:2]]});}
  function pressTick(h:number){const p=s.press;if(!p)return;const d=s.defs[p.i];
   if(p.st==='go'&&s.phase==='play'){const T=s.atk[p.to],dx=T.x-d.x,dy=T.y-d.y,dist=Math.hypot(dx,dy)||1,mv=Math.min(dist,HL.pressV*h),b=beat();d.x+=dx/dist*mv;d.y+=dy/dist*mv;
    const has=s.holder===p.to&&(s.stage==='hold'||s.stage==='tell');
@@ -258,7 +260,7 @@ export function createHoldTheLine(opts:{seed:number;league?:number;match?:number
   else if(s.stage==='air'){const r=A[5];
    if(b.k==='feet'){const u=Math.min(1,s.bt/.4);s.ball.x=mix(from.x,r.x,u);s.ball.y=mix(from.y,r.y+.6,u);if(u>=1){s.holder=5;nextBeat();}}
    else{const dur=tn.sw*1.15,u=Math.min(1,s.bt/dur),lx=r.x*.6,ly=12;r.y=Math.max(ly+1,r.y-9.5*h);s.ball.x=mix(from.x,lx,u);s.ball.y=mix(from.y,ly,u);s.ball.h=Math.sin(u*Math.PI)*6;
-    if(u>=1){s.ball.h=0;if(s.lineY<=HL.sweepLine)startRes('swept',{stop:'swept',dur:1.1,ball:[[0,lx,ly],[.25,s.keeper.x,5],[.9,-plan().side*10,26]]});else through('long',.8);}}}
+    if(u>=1){s.ball.h=0;if(s.lineY<=HL.sweepLine)startRes('swept',{stop:'swept',dur:1.1,ball:[[0,lx,ly],[.25,s.keeper.x,5],[.9,-plan().side*10,26]]});else through('long',s.lineY<=HL.sweepLine+3?.55:.8);}}}
   if(s.phase==='play')pressTick(h);}
 
  const api={
