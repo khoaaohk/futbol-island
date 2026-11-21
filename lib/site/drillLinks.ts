@@ -42,7 +42,7 @@ export const G={
  /* Nov 17 2026: the puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),
  /* Nov 17 2026: the rolling-ball puzzle. */ rollBall:gameLink('rollball'), /* Nov 17 2026: the shooting game. */ ballBlaster:gameLink('ballblaster'),
  /* Nov 21 2026: the juggling game, spread into the thigh control and ball-mastery drills' links; empty until Keepy-Uppy Beat is placed. */ keepyUppy:(isGameListed('keepyuppy')?[gameLink('keepyuppy')]:[]) as readonly ReturnType<typeof gameLink>[],
- /* Nov 21 2026: the defending game, spread into the pressure-and-cover and recover-goal-side drills' links; empty until Hold the Line is placed. */ holdTheLine:(isGameListed('holdtheline')?[gameLink('holdtheline')]:[]) as readonly ReturnType<typeof gameLink>[],
+ /* Nov 22 2026: the target game, in the scanning drill's links; empty until Pop-Up Shot is placed. */ popUp:(isGameListed('popup')?[gameLink('popup')]:[]) as readonly ReturnType<typeof gameLink>[],
  /* Nov 21 2026: the free-kick game in the target-shooting drill, the footgolf game in the weight-of-pass drill; empty until placed. */ flickIt:(isGameListed('flickit')?[gameLink('flickit')]:[]) as readonly ReturnType<typeof gameLink>[],
  footGolf:(isGameListed('footgolf')?[gameLink('footgolf')]:[]) as readonly ReturnType<typeof gameLink>[],
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},

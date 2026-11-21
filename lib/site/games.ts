@@ -37,7 +37,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline'|'flickit'|'footgolf';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'popup'|'flickit'|'footgolf';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -405,38 +405,37 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'Does it teach real juggling?',a:'It teaches the parts you can learn on a screen: the rhythm, which part of the body to use, using both feet and the names of real tricks. Then take a real ball: drop it, one touch, catch it, and count your record.'},
    {q:'What is a keepy-uppy?',a:'Keepy-uppy is the British word for juggling a football: keeping it in the air with your feet, thighs and head without letting it touch the ground. It is also called kick ups.'},
 ]},
- // Nov 21 2026: Hold the Line, the defending / offside trap game (lib/arcade/holdtheline/core.ts + save.ts, components/games/HoldTheLineGame.tsx,
- // docs/arcade-aaa/holdtheline-direction.md). Placed Nov 21 2026 on the east wall beside Keepy-Uppy Beat, so the page is listed.
- {id:'holdtheline',slug:'soccer-defending-game',path:page('soccer-defending-game'),name:'Hold the Line',play:play('holdtheline'),
-  title:'Soccer Defending Game for Kids: Hold the Line, Free Online',h1:'Soccer defending game: Hold the Line',
-  description:'Hold the Line is a free soccer defending game for kids. Move your back line as one, step up to catch attackers offside, slide across and press.',
-  lead:'Hold the Line is a free football defence game in your browser and an offside game for kids. You move the whole back line with one thumb. Step up together just before the pass and the runner is caught offside; drop, slide across and press to stop the rest.',
-  blurb:'Move your back line as one and catch them offside',genre:['Arcade','Sports','Strategy','Educational'],skill:'Defending as a team: the offside line, stepping up together, dropping, sliding and pressing',
-  og:img('hold-the-line-soccer-defending-game-og.jpg'),ogAlt:'Hold the Line, a soccer defending game: on one phone the back line steps up and the runner is caught past the red offside line for OFFSIDE! +150, on the other a defender presses the passer at night and wins the ball: TACKLE! +150',
-  shots:gameStills('holdtheline',2),
-  about:['Hold the Line is a defending game drawn like a comic book. You look up the pitch from behind your own goal: your back line of island beans and the keeper, with the other team attacking you in waves.',
-   'Ten teams each attack in their own way: through balls, wingers, long balls, one-twos and switches of play. Beat all ten in the Coast League and the Island Premier opens, at night.'],
-  phone:['Hold the phone upright. Drag anywhere to move your whole back line: up the pitch to step up, down to drop, sideways to slide.','Tap a defender to send him to press the player on the ball.'],
-  desktop:['W and S move the line up and down the pitch, A and D slide it across.','Keys 1 to 4 send a defender to press, Space sends the nearest one, and P or Escape pauses.'],
-  rules:['Each attack has passes in midfield, then one key moment with a clue you can see, such as the passer’s leg going back.',
-   'Offside is judged when the ball is played, against the second-last defender, as in the real rule (Law 11). Level is onside, and a player in his own half cannot be offside.',
-   'The first teams may score a few goals and you still win; later teams, and every Island Premier match, only one. A win gives one to three stars, and a clean sheet scores the most. Match of the Day is one set of attacks, the same for everyone that day.'],
-  teaches:['The offside line is drawn at your second-last defender, with the assistant referee level with it. Step up together just before the pass and the runner is offside; leave one defender behind and he plays everyone onside.',
-   'Against a long ball from deep you drop, so it runs through to your keeper; sit too deep and they shoot. When the ball goes wide, the line slides across to the ball side and stays compact.',
-   'Pressing wins the ball from a heavy touch or a passer who waits, but the defender who presses leaves a gap behind him.'],
-  guides:[{path:R+'offside',name:'The offside rule',line:'Law 11 in simple words'},{path:T+'offside-trap',name:'Offside trap',line:'Stepping up together to leave a runner offside'},
-   {path:T+'high-line',name:'High line',line:'A back line that plays far up the pitch'},{path:T+'pressing',name:'Pressing',line:'Closing down the player on the ball'},
-   {path:T+'low-block',name:'Low block',line:'Defending deep, close to your own goal'},{path:D+'defending',name:'1v1 defending drills',line:'Stop the attacker, one against one'},
-   {path:P+'center-back',name:'The center back position',line:'The defenders in the middle of the line'},{path:P+'fullback',name:'The fullback position',line:'The defenders on each side'}],
-  tips:['Watch the passer, not the runner: when his leg goes back, step up.','Move early and all together. A small step at the right moment beats a big one too late.','Only press a heavy touch or a passer who waits: a press leaves a gap behind.'],
-  harder:['Each team is quicker: the passer winds up faster, and the pause at the kick gets shorter, then goes.','The Island Premier, at night, gives less time and a smaller margin, and you may let in only one goal.','Medals: Bronze at 1,400 points, Silver at 2,400 and Gold at 3,400.'],
-  parents:[PARENTS_SAFE,'Skill: defending as a team and the offside rule. After each goal the game says why it went in.','Session length: a match lasts about two minutes. The game can be played with the sound off. No day streaks, no timers.'],
-  faq:[free('Hold the Line',true),{q:'Does Hold the Line work on a phone or a school Chromebook?',a:DEVICE},
-   {q:'What is offside, in simple words?',a:'An attacker is offside if, at the moment a teammate passes to him, he is nearer the other team’s goal line than both the ball and the second-last defender (the goalkeeper usually counts as the last). Level is onside, and nobody is offside in his own half. The defending team then gets a free kick.'},
-   {q:'How do you play Hold the Line?',a:'Drag to move your whole back line: up the pitch to step up, down to drop, sideways to slide. Step up together just before a pass to catch the runner offside.'},
-   {q:'What age is Hold the Line for?',a:'Futbol Island is made for children aged 7 to 12. The first match is guided, one move at a time, and the offside line is drawn on the pitch; the teams after it attack faster, up to the Island Premier at night.'},
-   {q:'Does the game follow the real offside rule?',a:'Yes. Offside is judged when the ball is played, against the second-last defender, the goalkeeper included. Level is onside, a player in his own half is onside, and a player standing offside who does not get the ball is not penalised: the game labels him NOT IN THE PLAY.'},
-]},
+ // Nov 22 2026: Pop-Up Shot, the pop-up target game (lib/arcade/popup/arenas.ts + core.ts + view.ts + save.ts, components/games/PopUpGame.tsx,
+ // docs/arcade-aaa/popup-direction.md). It took Hold the Line's machine on the east wall, so the page is listed. Hold the Line's page,
+ // /games/soccer-defending-game, redirects here (next.config.mjs RETIRED_GAME_PAGES): a target game is not a defending game, so it has its
+ // own slug, from "soccer target game" (target practice; /games/soccer-shooting-game is Ball Blaster's).
+ {id:'popup',slug:'soccer-target-game',path:page('soccer-target-game'),name:'Pop-Up Shot',play:play('popup'),
+  title:'Soccer Target Game for Kids: Pop-Up Shot, Free Online',h1:'Soccer target game: Pop-Up Shot',
+  description:'Pop-Up Shot is a free soccer target game for kids. Flick ball after ball at targets that pop out of windows, boats and stands, then hide again.',
+  lead:'Pop-Up Shot is a free football target game in your browser: a shooting gallery with a football. Targets pop out of shop windows, bins, boats, huts and the stands, and hide again a moment later. Look up, pick one and flick the ball at it, ball after ball, for 50 seconds.',
+  blurb:'Flick ball after ball at targets before they hide',genre:['Arcade','Sports','Action','Educational'],skill:'Looking up, picking a target and striking quickly',
+  og:img('pop-up-shot-soccer-target-game-og.jpg'),ogAlt:'Pop-Up Shot, a soccer target game: on one phone a target in the Town Plaza is knocked down for SLAP! +680 on a x3 combo, on the other a target in the Stadium Stands goes DOWN! for +300',
+  shots:gameStills('popup',2),
+  about:['Pop-Up Shot is a fast target game drawn like a comic book. Your own island bean stands at the bottom of the screen with a rack of five balls that refills, and targets pop up all over a 3D scene, near, in the middle and far away.',
+   'There are five places: the Town Plaza, the Harbour, the Training Ground, the Beach and the Stadium Stands, each seen from its own camera. The Daily Arena picks one place and one set of targets a day, the same on every device.'],
+  phone:['Hold the phone upright and swipe anywhere. The direction of the swipe is the aim, its speed is the power, and a bent swipe curls the ball.','A quick swipe fires straight away, so you can flick in bursts. You can also tap a target to send a ball at it.'],
+  desktop:['Left and Right pick a target, and Space or Enter flicks the ball at it.','The mouse can swipe like a finger. P or Escape pauses.'],
+  rules:['A round lasts 50 seconds (60 in the Daily Arena). Each target is worth points, and far targets count for more than near ones.',
+   'Hits close together build a combo up to three times the points; eight hits in a row without a wasted ball puts you on fire. A gold mascot gives three balls a flick for a while, and a ball bag refills the rack at once.',
+   'The coach and the referee pop up too: hitting them loses your combo and streak. Never hitting them earns a Fair Play bonus at the end, with a bonus for accuracy. Your best score goes on the island high-score board.'],
+  teaches:['Good players look up before the ball arrives. Targets appear all over the scene, so you learn to scan the whole picture, not just the middle.',
+   'Pick the closest open target first and strike: a quick, sure decision beats a long look at one that is about to hide.',
+   'Accuracy under pressure: every wasted ball ends your streak, and the wrong target (the coach or the referee) costs you, as a careless pass or tackle would.'],
+  guides:[{path:T+'scanning',name:'Scanning',line:'Looking around before the ball arrives'},{path:D+'shoulder-check-colors',name:'Shoulder check colors drill',line:'Look up and call what you see'},
+   {path:D+'shooting',name:'Shooting drills',line:'Strike the ball well at a target'},{path:D+'world-cup-shooting-game',name:'World Cup shooting game',line:'A shooting game for a group'},
+   {path:T+'one-touch',name:'One-touch',line:'Playing the ball first time'}],
+  tips:['Look at the whole scene, not just the middle: the far windows and the top tiers score the most.','Take the target nearest your swipe line first, then the next.','Watch for the gold mascot: it gives three balls a flick.','Leave the coach and the referee alone.'],
+  harder:['The first targets stay up for over three seconds; by the end of the round they hide after a second and a half.','Only two targets show at the start, and up to five later.','No coach, referee or quick peeker pops up in the first ten seconds; after that they do.'],
+  parents:[PARENTS_SAFE,'Skill: scanning and quick decisions. The results card gives one tip from the round.','Session length: a round lasts under a minute. The game can be played with the sound off. No day streaks.'],
+  faq:[free('Pop-Up Shot',true),{q:'Does Pop-Up Shot work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'How do you play Pop-Up Shot?',a:'Swipe anywhere to flick a ball: the direction is the aim and the speed is the power. Knock down as many targets as you can before they hide, and leave the coach and the referee alone.'},
+   {q:'What age is Pop-Up Shot for?',a:'Futbol Island is made for children aged 7 to 12. The first targets stay up for over three seconds, long enough for a seven-year-old to see, choose and flick; the round speeds up as it goes.'},
+   {q:'How does a target game help with real football?',a:'Before a pass or a shot, good players look up and choose quickly. Pop-Up Shot trains that habit: scan, pick the best target and strike before it is gone.'}]},
  // Nov 21 2026: Flick It, the 3D flick / free-kick trick-shot game (lib/arcade/flickit/core.ts + view.ts + save.ts, components/games/FlickItGame.tsx,
  // docs/arcade-aaa/flickit-direction.md). Placed Nov 21 2026 on the west wall of the arcade room (arcadeCabinets), so the page is listed.
  // Slug: "free kick game" is what children and parents type for a game where you curl a still ball round a wall; the page says plainly
@@ -515,28 +514,28 @@ export const gameById=(id:GameId)=>ALL_GAME_PAGES.find(g=>g.id===id)!;
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
 /** Nov 21 2026: the hub names the juggling game only once Keepy-Uppy Beat is listed. */
 const JUGGLE_LISTED=isGameListed('keepyuppy');
-/** Nov 21 2026: and the defending game only once Hold the Line is listed. */
-const DEFEND_LISTED=isGameListed('holdtheline');
+/** Nov 22 2026: and the target game only once Pop-Up Shot is listed (it took Hold the Line's machine). */
+const TARGET_LISTED=isGameListed('popup');
 /** Nov 21 2026: the free-kick game and the footgolf game, once Flick It and FootGolf Island are listed (west wall). */
 const FLICK_LISTED=isGameListed('flickit'),GOLF_LISTED=isGameListed('footgolf');
 /** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns, four or more alone (the description stays 120-155 characters). */
-const NEW_KINDS=[JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
+const NEW_KINDS=[JUGGLE_LISTED&&'juggling',TARGET_LISTED&&'pop-up targets',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>3?`${NEW_KINDS.slice(0,-1).join(', ')} and ${NEW_KINDS[NEW_KINDS.length-1]}`:NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':FLICK_LISTED?'a free kick game, pinball, snake and puzzles':GOLF_LISTED?'a footgolf game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>3?`${NEW_KINDS.slice(0,-1).join(', ')} and ${NEW_KINDS[NEW_KINDS.length-1]}`:NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':TARGET_LISTED?'a target game, pinball, snake and puzzles':FLICK_LISTED?'a free kick game, pinball, snake and puzzles':GOLF_LISTED?'a footgolf game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}${FLICK_LISTED?'a free-kick game, ':''}${GOLF_LISTED?'footgolf, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${TARGET_LISTED?'a pop-up target game, ':''}${FLICK_LISTED?'a free-kick game, ':''}${GOLF_LISTED?'footgolf, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
   'Every game opens from its page and gets harder the longer you play; a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
-  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],/* Nov 21 2026: no pick line for the west wall games: the hub is at its word bound (tests/seo-games.cjs) */
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(TARGET_LISTED?[['For quick eyes','Pop-Up Shot.']]:[])] as [string,string][],/* Nov 21 2026: no pick line for the west wall games: the hub is at its word bound (tests/seo-games.cjs) */
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
   {q:'Can kids play these soccer games at school?',a:'Yes: they run in a web browser on a Chromebook, tablet or phone, if the school’s filter allows futbolisland.app.'},
   {q:'What ages are the games for?',a:'Children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}${FLICK_LISTED?', curling a free kick':''}${GOLF_LISTED?', the weight of a kick':''}.`},
+  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${TARGET_LISTED?', looking up before you strike':''}${FLICK_LISTED?', curling a free kick':''}${GOLF_LISTED?', the weight of a kick':''}.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

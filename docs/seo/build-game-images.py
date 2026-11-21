@@ -29,13 +29,13 @@ GAMES = [
  # Nov 17 2026: Ball Blaster, the shooting game, shot from real drag-and-release play on a 390x844 phone (DPR 2).
  ('ball-blaster-soccer-shooting-game', ['ballblaster-phone', 'ballblaster-aim'], ['ball-blaster-soccer-shooting-game', 'ball-blaster-aim-and-curl'], 'Ball Blaster', 'Free soccer shooting game'),
 ]
-# Nov 21 2026: Keepy-Uppy Beat and Hold the Line, placed on the arcade room's east wall the same day (thirteen machines): only the
+# Nov 21 2026: Keepy-Uppy Beat and Hold the Line (Pop-Up Shot since Nov 22), placed on the arcade room's east wall the same day (thirteen machines): only the
 # share picture is made here (their page pictures are gameplay stills in public/games/shots), at a lower JPEG quality so public/games
 # stays under its cap (tests/seo-games.cjs). They count on the hub picture (COUNT below).
 WALL = [
  ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
- ('hold-the-line-soccer-defending-game', ['holdtheline-offside', 'holdtheline-night'], [], 'Hold the Line', 'Free soccer defending game', 50),
- # Nov 21 2026: Flick It and FootGolf Island on the west wall (fifteen with Pop-Up Shot in place of Hold the Line).
+ # Nov 22 2026: Pop-Up Shot took Hold the Line's machine (Hold the Line's picture is gone); Flick It and FootGolf Island on the west wall: fifteen.
+ ('pop-up-shot-soccer-target-game', ['popup-plaza', 'popup-stands'], [], 'Pop-Up Shot', 'Free soccer target game', 50),
  ('flick-it-soccer-free-kick-game', ['flickit-pitch', 'flickit-stadium'], [], 'Flick It', 'Free soccer free kick game', 50),
  ('footgolf-island-soccer-golf-game', ['footgolf-tee', 'footgolf-birdie'], [], 'FootGolf Island', 'Free soccer golf game', 50),
 ]

@@ -14,10 +14,9 @@ import {publicWorldEnabled} from '../multiplayer/publicFlag';
 import {ARCADE_GAME_COUNT,arcadeCabinets} from '../arcade/arcadeCatalog';
 /** Nov 21 2026: Keepy-Uppy Beat, the juggling game, is named only once it has a machine in the room (lib/site/games.ts ALL_GAME_PAGES). */
 const KEEPY_LISTED=arcadeCabinets.some(c=>(c.id as string)==='keepyuppy');
-/** Nov 21 2026: and Hold the Line, the defending game. The machines after Roll It In are joined as a list ("A, B and C"). */
-const HOLD_LISTED=arcadeCabinets.some(c=>(c.id as string)==='holdtheline');
+/** The machines after Roll It In are joined as a list ("A, B and C"). Nov 22 2026: Pop-Up Shot took Hold the Line's machine. */
 const LISTED=(id:string)=>arcadeCabinets.some(c=>(c.id as string)===id);
-const LAST_MACHINES=['Ball Blaster (kick footballs at toy robots before they reach your goal)',...(KEEPY_LISTED?['Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)']:[]),...(HOLD_LISTED?['Hold the Line (move your back line as one and catch the runner offside)']:[]),
+const LAST_MACHINES=['Ball Blaster (kick footballs at toy robots before they reach your goal)',...(KEEPY_LISTED?['Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)']:[]),...(LISTED('popup')?['Pop-Up Shot (flick ball after ball at targets before they hide)']:[]),
  /* Nov 21 2026: the west wall games */...(LISTED('flickit')?['Flick It (swipe to curl, lift and dip the ball at cans, tyres, balloons and goals)']:[]),...(LISTED('footgolf')?['FootGolf Island (kick a football round nine holes into the cup)']:[])];/* Nov 17 2026: the arcade count follows the catalog */
 import {NumberWord} from '../numberWord';
 /** [PUBLIC-WORLD] Nov 11 2026: with the public-island build flag on, the few lines below that would become untrue switch (the `PUB?new:old`
