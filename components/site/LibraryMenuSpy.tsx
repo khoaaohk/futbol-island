@@ -1,38 +1,61 @@
 'use client';
 import {useEffect} from 'react';
 /**
- * A left rail's highlight (Nov 20 2026): marks the rail (or phone bar) link of the band in the middle of the screen with data-on; once the page's
- * footer is on screen (scrolled to the end) the last link is marked, since a short last band never reaches the middle. When the
- * rail's list is taller than the window, or the phone bar's chips are wider than it, the marked link is scrolled into view inside the list (never the window). Two
- * IntersectionObservers and one click handler on the menu, no scroll listener; renders nothing. Without script the rail is plain anchor links.
+ * A section menu's highlight (Nov 20 2026; the Library, /games and the guide pages' rails). Marks the link of the band in the
+ * middle of the screen with data-on; once the page's footer is on screen the last link is marked (a short last band never
+ * reaches the middle). Two IntersectionObservers, no window scroll listener, no animation loop; renders nothing. Without
+ * script the menu is plain anchor links with their own chip backgrounds.
+ *
+ * Phone/tablet chip bar (owner, Nov 20 2026 evening: "have that scroll and snap animation when moving through so the btns have
+ * more detail"): ONE pill (an aria-hidden <li data-pill>) slides from the old chip to the new one, like the home bar's pink chip:
+ * width is set at once and the move is a FLIP transform (translate + scaleX back to 1) on a spring. The bar then glides the lit
+ * chip to its centre with scrollTo on the bar only, debounced so a fast page scroll gives one glide; after the reader touches or
+ * swipes the bar the auto-centre waits 1.5 s. Edge fades show only where there is more to scroll (an IntersectionObserver on
+ * the first and last chip, rooted in the bar). A tap glides the page to its band and holds the pill on the tapped chip.
+ * Reduced motion: no spring, no glide.
  */
 export default function LibraryMenuSpy({menu}:{menu:string}){
  useEffect(()=>{
   const nav=document.getElementById(menu);if(!nav||!('IntersectionObserver' in window))return;
   const links=[...nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];if(!links.length)return;
-  const list=links[0].closest('ul');let mid='',end=false,hold=0;
-  const show=(a:HTMLAnchorElement)=>{
-   if(!list)return;const r=a.getBoundingClientRect(),b=list.getBoundingClientRect();
-   if(list.scrollHeight>list.clientHeight+1){if(r.top<b.top)list.scrollTop-=b.top-r.top+8;else if(r.bottom>b.bottom)list.scrollTop+=r.bottom-b.bottom+8;}
-   /* the phone/tablet bar: one row of chips; the lit chip is kept in view with room for the next one */
-   if(list.scrollWidth>list.clientWidth+1){if(r.left<b.left+16)list.scrollLeft-=b.left+16-r.left;else if(r.right>b.right-48)list.scrollLeft+=r.right-(b.right-48);}
+  const list=links[0].closest('ul');if(!list)return;
+  const still=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let mid='',end=false,hold=0,centre=0,pauseUntil=0,lit:HTMLAnchorElement|null=null;
+  const pill=document.createElement('li');pill.setAttribute('data-pill','');pill.setAttribute('aria-hidden','true');list.prepend(pill);list.setAttribute('data-pill-on','');
+  const place=(a:HTMLAnchorElement,from:HTMLAnchorElement|null)=>{
+   const x=a.offsetLeft,y=a.offsetTop,w=a.offsetWidth,h=a.offsetHeight;
+   pill.style.transition='none';pill.style.width=w+'px';pill.style.height=h+'px';
+   if(from&&!still()){const s=from.offsetWidth/w;pill.style.transform=`translate(${from.offsetLeft}px,${from.offsetTop}px) scaleX(${s})`;void pill.offsetWidth;pill.style.transition='';}
+   pill.style.transform=`translate(${x}px,${y}px)`;pill.style.opacity='1';
   };
-  const paint=()=>{if(hold)return;const id=end?links[links.length-1].hash.slice(1):mid;
-   links.forEach(a=>{if(a.hash==='#'+id){if(!a.hasAttribute('data-on')){a.setAttribute('data-on','');show(a);}}else a.removeAttribute('data-on');});};
+  const glide=(a:HTMLAnchorElement)=>{
+   if(list.scrollHeight>list.clientHeight+1){const r=a.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.top<b.top)list.scrollTop-=b.top-r.top+8;else if(r.bottom>b.bottom)list.scrollTop+=r.bottom-b.bottom+8;}
+   if(list.scrollWidth>list.clientWidth+1&&Date.now()>=pauseUntil)list.scrollTo({left:Math.max(0,a.offsetLeft-(list.clientWidth-a.offsetWidth)/2),behavior:still()?'auto':'smooth'});
+  };
+  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):mid;
+   const a=links.find(x=>x.hash==='#'+id)??null;if(a===lit)return;
+   links.forEach(x=>{if(x===a)x.setAttribute('data-on','');else x.removeAttribute('data-on');});
+   if(a){place(a,lit);clearTimeout(centre);centre=window.setTimeout(()=>glide(a),now?0:180);}else pill.style.opacity='0';
+   lit=a;};
   const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting)mid=e.target.id;paint();},{rootMargin:'-45% 0px -50% 0px'});
   links.forEach(a=>{const s=document.getElementById(a.hash.slice(1));if(s)io.observe(s);});
   const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{end=es[es.length-1].isIntersecting;paint();}):null;
   if(foot&&io2)io2.observe(foot);
-  /* a tap on a chip or a rail entry glides to its band and lights at once (owner, Nov 20 2026 evening: "tapping and clicking
-     smooth scrolls down"); the band lands under the header and the phone bar (scroll-margin-top). Reduced motion: a plain jump. */
+  /* edge fades: is the first / last chip fully inside the bar? */
+  const first=links[0],last=links[links.length-1];
+  const io3=new IntersectionObserver(es=>{for(const e of es){const full=e.intersectionRatio>.98;list.toggleAttribute(e.target===first?'data-more-left':'data-more-right',!full);}},{root:list,threshold:[.98,1]});
+  io3.observe(first);io3.observe(last);
+  const touch=()=>{pauseUntil=Date.now()+1500;};
+  list.addEventListener('pointerdown',touch,{passive:true});list.addEventListener('wheel',touch,{passive:true});
+  const ro='ResizeObserver' in window?new ResizeObserver(()=>{if(lit)place(lit,null);}):null;ro?.observe(list);
+  /* a tap glides the page to the band (scroll-margin-top keeps it under the header and bar) and holds the pill on the tapped chip */
   const tap=(e:MouseEvent)=>{const a=(e.target as Element).closest?.('a[href^="#"]') as HTMLAnchorElement|null;if(!a||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
    const t=document.getElementById(a.hash.slice(1));if(!t)return;e.preventDefault();
-   const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
-   t.scrollIntoView({behavior:still?'auto':'smooth',block:'start'});history.replaceState(null,'',a.hash);
-   /* the tapped entry stays lit while the page glides past the bands between (one short timer per tap) */
-   clearTimeout(hold);hold=0;mid=t.id;end=false;paint();hold=window.setTimeout(()=>{hold=0;},still?0:900);};
+   t.scrollIntoView({behavior:still()?'auto':'smooth',block:'start'});history.replaceState(null,'',a.hash);
+   clearTimeout(hold);hold=0;pauseUntil=0;mid=t.id;end=false;paint(true);hold=window.setTimeout(()=>{hold=0;},still()?0:900);};
   nav.addEventListener('click',tap);
-  return ()=>{io.disconnect();io2?.disconnect();nav.removeEventListener('click',tap);clearTimeout(hold);};
+  return ()=>{io.disconnect();io2?.disconnect();io3.disconnect();ro?.disconnect();nav.removeEventListener('click',tap);list.removeEventListener('pointerdown',touch);list.removeEventListener('wheel',touch);
+   clearTimeout(hold);clearTimeout(centre);pill.remove();list.removeAttribute('data-pill-on');};
  },[menu]);
  return null;
 }
