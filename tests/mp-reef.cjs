@@ -42,7 +42,7 @@ function harness(room, opts = {}) {
     update(dt, poses, cam, red, local) { state.upd.push({ poses: new Map([...poses].map(([k, v]) => [k, { ...v }])), local: local ? { ...local } : null }); } };
   const over = { remoteAvatars: { createRemoteAvatars: () => avatars, remoteCap: () => 5 }, heatTier: { batterySaverOn: () => state.saver },
     customization: { loadCustomization: () => ({}) }, look: { lookToWire: () => LOOK, wireToLook: (l) => l }, config: { multiplayerEnabled: () => true, relayWsUrl: () => null },
-    connection: { createPartyConnection: () => conn }, emoteReact: { emoteSeconds: () => 4 }, react: { useSyncExternalStore: () => null }, forceFieldBounce: { bounceOffField: () => false, fieldHit: {} } };
+    connection: { createPartyConnection: () => conn }, emoteReact: { emoteSeconds: () => 4 }, react: { useSyncExternalStore: () => null }, forceFieldBounce: { bounceOffField: () => false, fieldHit: {} }, ...(opts.over || {}) };
   const perf = { now: () => clock.t };
   const mod = load(opts.file ?? 'lib/multiplayer/roomParty.ts', over, { performance: perf });
   return { clock, state, conn, avatars, mod, over, perf };
@@ -190,6 +190,50 @@ t('island: a diver fades at their last island spot (no frozen busy figure), "1 e
   assert.equal(h.conn.sent.length, n0 + 1); assert.equal(h.conn.sent.at(-1).b[7] & 1, 1, 'surfacing warps the island pose');
 
   rt.dispose();
+});
+
+// ---- 4b. public-island counts (Cap.Reef / S.Reef, Nov 21 2026) -------------------------------------------------------------
+t('reef counts store: world + live only, change-only, missing entries 0, extra ignored, zero on a drop / detach', () => {
+  const rc = load('lib/multiplayer/reefCounts.ts');
+  const msg = new Set(), sts = new Set();
+  const c = { kind: 'world', status: 'live', onMessage(f) { msg.add(f); return () => msg.delete(f); }, onStatus(f) { sts.add(f); return () => sts.delete(f); } };
+  const emit = (m) => { for (const f of [...msg]) f(m); }, status = (s) => { c.status = s; for (const f of [...sts]) f(); };
+  let heard = 0; rc.reefCounts.subscribe(() => heard++);
+  const off = rc.attachReefCounts(c);
+  emit([S.Reef, [0, 2, 0, 0, 0, 0, 0]]); assert.equal(rc.reefCounts.get(42), 2); assert.equal(rc.reefCounts.get(41), 0); assert.equal(heard, 1);
+  emit([S.Reef, [0, 2, 0, 0, 0, 0, 0]]); assert.equal(heard, 1, 'the same counts: no redraw');
+  emit([S.Reef, [1]]); assert.equal(rc.reefCounts.get(41), 1); assert.equal(rc.reefCounts.get(42), 0, 'missing = 0');
+  emit([S.Reef, [0, 0, 0, 0, 0, 0, 3, 9, 9]]); assert.equal(rc.reefCounts.get(47), 3); assert.equal(rc.reefCounts.get(48), 0, 'not a reef');
+  assert.equal(rc.reefCounts.get(RoomCode.Arcade), 0); assert.equal(rc.reefCounts.get(40), 0);
+  status('reconnecting'); assert.equal(rc.reefCounts.get(47), 0, 'not live: zero');
+  status('live'); emit([S.Reef, [0, 0, 0, 0, 0, 0, 3]]); off(); assert.equal(rc.reefCounts.get(47), 0, 'detach zeroes'); assert.equal(msg.size, 0);
+  const party = { ...c, kind: 'party' }; const off2 = rc.attachReefCounts(party); emit([S.Reef, [5]]); assert.equal(rc.reefCounts.get(41), 0, 'a party ignores it'); off2();
+  assert.equal(rc.reefFlagCount(1, 2), 2, 'the larger, never the sum (the relay count already holds the roster)'); assert.equal(rc.reefFlagCount(1, 0), 1, 'an old relay: roster only'); assert.equal(rc.reefFlagCount(0, 0), 0);
+});
+
+t('island flag + prompt with strangers: S.Reef counts strangers the roster cannot see; max with the roster, never double; old relay falls back', () => {
+  const rc = load('lib/multiplayer/reefCounts.ts');
+  const h = harness(42, { file: 'lib/multiplayer/townBridge.ts', over: { reefCounts: rc } });
+  const doors = SPOTS.DIVE_SPOTS.map((s) => ({ room: P.reefRoom(s.area), x: s.surface.x, y: 3.9, z: s.surface.z }));
+  const L = { x: 505, y: 0, z: -290, facing: 0, speed: 0, mode: Mode.Swim, zone: Zone.Sea, warp: false, hidden: false, activity: -1 };
+  const rt = h.mod.createPartyRuntime({ scene: new T.Scene(), viewGate: { addUnitRoots() {} }, local: () => L, phone: true, reducedMotion: () => false, doors });
+  h.conn.live(); h.conn.emit(welcome([ME(), FR(1, dv(42, 0, -1, 0))]));
+  const hints = h.avatars.root.children.filter((c) => c.name === 'party-door-hint');
+  const at = (room) => hints[SPOTS.DIVE_SPOTS.findIndex((s) => P.reefRoom(s.area) === room)];
+  assert.equal(rt.roomCount(42), 1, 'roster only (an old relay: no S.Reef)');
+  const wc = { kind: 'world', status: 'live', onMessage: h.conn.onMessage, onStatus: (f) => h.conn.onStatus(() => f()) };
+  const off = rc.attachReefCounts(wc);
+  h.conn.emit([S.Reef, [0, 1, 0, 0, 0, 0, 0]]); assert.equal(rt.roomCount(42), 1, 'the relay counts friend 1 too: 1, not 2');
+  h.conn.emit([S.Reef, [0, 3, 0, 1, 0, 0, 0]]);
+  assert.equal(rt.roomCount(42), 3); assert.equal(at(42).userData.text, '3 exploring'); assert.equal(rt.roomCount(44), 1); assert.equal(at(44).userData.text, '1 exploring');
+  const reefP = load('lib/multiplayer/reefParty.ts', {}, {});
+  assert.equal(reefP.reefPromptText(rt.roomCount(44), true), 'Dive in: 1 player exploring');
+  h.conn.emit([S.Reef, [0, 0, 0, 0, 0, 0, 0]]); assert.equal(rt.roomCount(44), 0); assert.equal(at(44).visible, false, 'the stranger surfaced: no sign');
+  assert.equal(rt.roomCount(42), 1, 'the friend in my roster still counts');
+  off(); rt.dispose();
+  const tb = read('lib/multiplayer/townBridge.ts');
+  assert.ok(/reefCounts\.subscribe\(syncHints\)/.test(tb) && /offReef\(\)/.test(tb), 'redrawn on a count change only (no per-frame read), unsubscribed on dispose');
+  assert.ok(/attachReefCounts\(partyConnection\(\)\)/.test(read('components/Town.tsx')) && /offReef\(\)/.test(read('components/Town.tsx')), 'Town attaches the page connection and detaches it');
 });
 
 // ---- 5. wiring (source) ---------------------------------------------------------------------------------------------------

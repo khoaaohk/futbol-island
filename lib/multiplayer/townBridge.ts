@@ -14,6 +14,7 @@ import { beginSeatFrame, clearRemoteSeats, seatFriend } from '../town/stadiumSea
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
 import { displayName, partyStore } from './store';
 import { reefHintText } from './reefParty';
+import { reefCounts, reefFlagCount } from './reefCounts';
 import { isHiddenStranger, onHiddenStrangers } from './strangers';
 import * as T3 from 'three';
 
@@ -195,6 +196,9 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false })); sp.renderOrder = 4; sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
       let n = 0;
       if (live) for (const m of s.members) if (m.id !== s.you && atRoomDoor(m, d.room) && !hiddenNow(m.id)) n++;
+      // A dive flag on the public island: strangers in a reef are not in my roster (the relay hides them), so take the relay's count
+      // (Cap.Reef, S.Reef: others only, me left out) when larger; 0 from a party or an older relay leaves the roster count.
+      if (live && reefArea(d.room) > 0) n = reefFlagCount(n, reefCounts.get(d.room));
       if (n !== h.n) {
         h.n = n; const mat = h.sprite.material as T3.SpriteMaterial; mat.map?.dispose(); mat.map = n > 0 ? hintTexture(doorHintText(n, d.room)) : null; mat.needsUpdate = true;
         h.sprite.userData.text = doorHintText(n, d.room);
@@ -231,6 +235,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     if (avatars.tumble(victim, byteToDir(d), ctx.reducedMotion())) ctx.onKnock?.(victim, d, p.x, p.y, p.z);
   });
   const offFilters = onFriendFilters(syncHints), offStrangers = onHiddenStrangers(syncHints); // a Hide / Report recounts the door hints
+  const offReef = reefCounts.subscribe(syncHints); // the relay's reef counts (S.Reef, at most 1/s and only on a change) redraw the flag hints
 
   // Me while the island loop sleeps (Settings, map, a waiting quiz) or the page is leaving for a room: the frame loop is not running,
   // so the connection's own 5 s beat tick (no new timer) and pagehide send the Busy / Indoors pose. The connection's delta check sends
@@ -360,7 +365,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     dispose() {
       for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
-      offFilters(); offStrangers(); offHit(); clearRemoteSeats(); core.dispose(); lastIsland.clear(); tracks.clear();
+      offFilters(); offStrangers(); offReef(); offHit(); clearRemoteSeats(); core.dispose(); lastIsland.clear(); tracks.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
     },
   };
