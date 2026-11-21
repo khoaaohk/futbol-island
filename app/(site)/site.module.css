@@ -240,10 +240,15 @@
 @media(min-width:1280px){
  .page:has(nav[data-rail]) nav[data-rail]{margin:0!important}/* fixed top-to-bottom: a grid gap margin must never shorten it */
  .page:has(nav[data-rail])>.main{max-width:none;width:auto;margin:0 0 0 var(--rail);padding:var(--shell-top) max(48px,calc((100vw - var(--rail) - var(--shell-max)) / 2)) var(--s5)}
- .page:has(nav[data-rail])>.main:has(>[data-toc]){grid-template-columns:minmax(0,880px) var(--side);justify-content:space-between;column-gap:56px}
- .page:has(nav[data-rail])>.main:has(>[data-toc]) [data-keep-reading]{grid-column:1}
 }
-@media(min-width:1280px) and (max-width:1599px){.page:has(nav[data-rail])>.main:has(>[data-toc]){--side:240px;column-gap:40px}}
+/* A rail page has no right-hand column (owner, Nov 20 2026: "fix all the internal pages to fill the page more and not leave empty
+   space on the right side"): the rail lists the sections, so "On this page" ([data-toc]) is not shown and reserves nothing; the
+   content column is the whole width beside the rail (up to --shell-max) at every width, and below 1280 px the page is not held to
+   the 736 px reading column either. Prose keeps its own measure (p, li: --measure). */
+.page:has(nav[data-rail])>.main:has(>[data-toc]){grid-template-columns:minmax(0,1fr);column-gap:0}
+.page:has(nav[data-rail])>.main>[data-toc]{display:none}
+.page:has(nav[data-rail])>.main:has(>[data-toc]) [data-keep-reading]{grid-column:1/-1}
+@media(max-width:1279px){.page:has(nav[data-rail])>.main{max-width:none;padding-inline:max(var(--gutter),calc(50vw - 590px))}}
 
 /* Guide pages (formations, positions; Nov 10 2026): pitch diagrams as inline SVG and comparison tables. Same tokens, no new
    colours beyond the pitch green inside the SVG; no scripts, no animation. */
