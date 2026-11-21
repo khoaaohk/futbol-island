@@ -13,9 +13,12 @@ import g from './games.module.css';
  * own phone stills, the island from above (the Library's hero picture) and the guides' diagrams (lib/site/library.ts LIBRARY_PICS).
  * Server-rendered; the only script is the FAQ's existing FaqEnhance. Every picture is lazy with its real width and height.
  */
+/* Nov 20 2026 night (review: the menu still lit "Ball Blaster" with "Which game to start with" on screen): the menu's anchor id sits on the
+   whole band, not on its H2, so the spy's middle line finds it while any part of the band is there; scroll-margin (library.module.css
+   .shelfMain [id]) still lands the band under the header. */
 function Band({id,title,line,tone,children}:{id:string;title:string;line:string;tone:'tint'|'paper';children:ReactNode}){
- return <section className={`${lib.band} ${g.lband}`} data-tone={tone} aria-labelledby={id} data-own-grid="" data-games-lower={id}>
-  <div className={lib.head}><h2 className={lib.h2} id={id}>{title}</h2><p>{line}</p></div>
+ return <section id={id} className={`${lib.band} ${g.lband}`} data-tone={tone} aria-labelledby={`${id}-h`} data-own-grid="" data-games-lower={id}>
+  <div className={lib.head}><h2 className={lib.h2} id={`${id}-h`}>{title}</h2><p>{line}</p></div>
   {children}
  </section>;
 }

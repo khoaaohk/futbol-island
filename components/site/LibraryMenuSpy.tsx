@@ -52,8 +52,14 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
    links.forEach(x=>{if(x===a)x.setAttribute('data-on','');else x.removeAttribute('data-on');});
    if(a){place(a,lit);clearTimeout(centre);centre=window.setTimeout(()=>glide(a),now?0:180);}else pill.style.opacity='0';
    lit=a;};
-  const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting)mid=e.target.id;paint();},{rootMargin:'-45% 0px -50% 0px'});
-  links.forEach(a=>{const s=document.getElementById(a.hash.slice(1));if(s)io.observe(s);});
+  /* the entries whose band is on the middle line now; when two are (cards side by side on a wide screen) the first in the menu wins,
+     and between bands the last one stays lit */
+  const on=new Set<string>(),order=links.map(a=>a.hash.slice(1));
+  /* an anchor on a heading (lib/site/GuideParts.tsx Section puts the id on its H2) is watched through its whole <section>, so the entry
+     stays lit while any of that section is on the middle line, not only the heading's own strip (Nov 20 2026 night review) */
+  const idOf=new Map<Element,string>();
+  const io=new IntersectionObserver(es=>{for(const e of es){const id=idOf.get(e.target);if(!id)continue;if(e.isIntersecting)on.add(id);else on.delete(id);}const f=order.find(id=>on.has(id));if(f)mid=f;paint();},{rootMargin:'-45% 0px -50% 0px'});
+  links.forEach(a=>{const t=document.getElementById(a.hash.slice(1));if(!t)return;const w=/^H[1-6]$/.test(t.tagName)?t.closest('section')??t:t;if(idOf.has(w))return;idOf.set(w,t.id);io.observe(w);});
   const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{end=es[es.length-1].isIntersecting;paint();}):null;
   if(foot&&io2)io2.observe(foot);
   /* "Overview" (owner, Nov 20 2026 evening; Spanish "Resumen"): server-rendered with data-on, so there is no flash before this runs. The

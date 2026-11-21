@@ -114,6 +114,9 @@
 .gshelf{gap:var(--gap)}
 @media(max-width:1279px){.gshelf>nav{margin-bottom:calc(var(--shell-gap,24px) - var(--gap))}}
 .gmain section:not([data-own-grid]){grid-template-columns:minmax(0,1fr);min-width:0}
+/* Nov 20 2026 night (review): the band under the hero sits as close as the Library's first band (the hero's own bottom padding only),
+   so the hero gives back the column's gap */
+.gmain>[id=top]{margin-bottom:calc(-1 * var(--gap))}
 @media(min-width:1280px){
  .gmain{gap:var(--gap)}
  .gmain .bleed.bleed{--bw:100%;width:100%;margin-inline:0!important}

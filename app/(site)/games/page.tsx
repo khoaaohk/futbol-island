@@ -59,10 +59,10 @@ export default function GamesHub(){
       too tight and wall of text"): four full-width bands, each with a heading, a one-line lede and pictures (GamesLower.tsx). */}
   <PickBand id="pick" title="Which game to start with" line="Nine ways in. Pick the one that sounds like your player." picks={H.pick}/>
   <SafeBand id="safe" title="For parents and coaches" line="What grown-ups usually ask before a child plays." foot={GAME_FOOT}
-   points={[['Free, nothing to buy','Free, with no pop-up or tracking ads and nothing to buy. Coins on the island are earned by playing and learning, never bought with real money.'],
-    ['No account or chat','No account, no sign-up and no open chat. A high-score board takes a few arcade-style letters only.'],
-    ['Nothing to install','Nothing to install: the games run in the browser on phones, tablets, Chromebooks and computers.'],
-    ['Short sessions','Short sessions: a run lasts a few minutes and ends on its own.']]}
+   points={[['Free, nothing to buy','No pop-up or tracking ads. Coins on the island are earned by playing and learning, never bought with real money.'],
+    ['No account or chat','No sign-up either. A high-score board takes a few arcade-style letters only.'],
+    ['Nothing to install','The games run in the browser on phones, tablets, Chromebooks and computers.'],
+    ['Short sessions','A run lasts a few minutes and ends on its own.']]}/* Nov 20 2026 night: each sentence continues from its bold label instead of repeating it */
    guide={<>More detail is in the <a href="/safe-football-game-for-kids">parents’ guide</a>.</>}/>
   <FaqBand id="faq" title="Questions about the games" line="Short answers for parents, teachers and players." faq={H.faq}/>
   <GuidesBand id="guides" title="Learn the ideas behind the games" line="Each game rests on a real football idea. Here it is in full." links={[
