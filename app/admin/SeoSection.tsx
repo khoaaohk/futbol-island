@@ -10,6 +10,7 @@ import type {Report} from '@/lib/analytics/core';
 import {isQuickWin,QUICK_WIN,SNAPSHOT_PATH,type SeoLoad,type SeoSnapshot,type SeoWindow} from '@/lib/seo/snapshot';
 import {BarList,ChartCard,DayColumns,Delta,LineChart,fmtInt} from './charts';
 import SearchSection from './SearchSection';
+import SiteFunnelSection from './SiteFunnelSection';
 import styles from './admin.module.css';
 
 const day=(d:string)=>new Date(d.slice(0,10)+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
@@ -115,7 +116,7 @@ function Snapshot({s,summary,warnings}:{s:SeoSnapshot;summary:string[];warnings:
  </>;
 }
 
-export default function SeoSection({seo,report,rangeText,dayLabel}:{seo:SeoLoad|null;report:Pick<Report,'search'>;rangeText:string;dayLabel:(day:string)=>string}){
+export default function SeoSection({seo,report,rangeText,dayLabel}:{seo:SeoLoad|null;report:Pick<Report,'search'|'siteFunnel'>;rangeText:string;dayLabel:(day:string)=>string}){
  const s=seo&&seo.status==='ok'?seo.data:null;
  const google=report.search?.engines.find(e=>e.id==='google')?.sessions??0;
  return <>
@@ -146,5 +147,6 @@ export default function SeoSection({seo,report,rangeText,dayLabel}:{seo:SeoLoad|
    </div>
   </section>
   <SearchSection report={report} rangeText={rangeText} dayLabel={dayLabel}/>
+  <SiteFunnelSection report={report} rangeText={rangeText} dayLabel={dayLabel}/>
  </>;
 }
