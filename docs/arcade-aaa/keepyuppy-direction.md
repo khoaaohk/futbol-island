@@ -130,10 +130,10 @@ does not take the score.
 
 ## Not done / weaker than wanted
 - No machine in the room; reachable only by `/arcade?game=keepyuppy` until the owner picks a spot.
-- No /games page, media or SEO (next agent). Files: lib/site/games.ts (`GameId`, `GAME_PAGES`), gameMedia.ts + gameMedia.json, videos.ts,
-  drillLinks.ts, learnFeatures.ts, lastmod.generated.json, docs/seo/build-game-images.py, scripts/capture-game-media.cjs,
-  scripts/capture-game-shots-players.cjs, tests/seo-games.cjs, public/games/*. Counts ("eleven") read `ARCADE_GAME_COUNT` and stay
-  eleven while the game is unplaced.
+- /games page (Nov 21 2026, verifier): `/games/soccer-juggling-game`, built complete but noindex, out of the sitemap, the hub and every
+  count until the game is placed (lib/site/games.ts ALL_GAME_PAGES; tests/seo-games-gate.cjs places Safe Hands, Keepy-Uppy Beat and both).
+  Media: clip (Cup Final, 10 s) + four stills (park Sweet, Neck Stall, Around the World in the Cup Final, the Trick Book), share picture.
+  Placing the game also links it from the thigh-and-chest-control and toe-taps-and-foundations drills and gives its clip a watch page.
 - Tuning is from bots and a scripted player, not from children. The windows (55 / 110 / 170 ms), the balls per track and the swipe
   length (24 px) need a real playtest on a phone, and so does the default +20 ms offset on iOS Safari and with Bluetooth speakers.
 - The bean is the player's saved colours (body, skin, hair) drawn in 2D from the front, not the 3D rig with outfit and headwear.
