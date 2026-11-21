@@ -11,7 +11,7 @@ import g from './games.module.css';
  */
 const PLAYING=new Set<HTMLVideoElement>();
 const quiet=()=>typeof window!=='undefined'&&(matchMedia('(prefers-reduced-motion: reduce)').matches||(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData===true);
-export default function LoopClip({name,poster,mp4,webm,w,h,pw,ph,alt,auto=false,priority=false,className}:{name:string;poster:string;mp4:string;webm?:string;w:number;h:number;pw:number;ph:number;alt:string;auto?:boolean;priority?:boolean;className?:string}){
+export default function LoopClip({name,poster,mp4,webm,mp4s,w,h,pw,ph,alt,auto=false,priority=false,className}:{name:string;poster:string;mp4:string;webm?:string;mp4s?:string;w:number;h:number;pw:number;ph:number;alt:string;auto?:boolean;priority?:boolean;className?:string}){
  const box=useRef<HTMLDivElement>(null),vid=useRef<HTMLVideoElement>(null);
  const [want,setWant]=useState(false),[on,setOn]=useState(false),[playing,setPlaying]=useState(false);
  const seen=useRef(false),userPaused=useRef(false);
@@ -39,7 +39,8 @@ export default function LoopClip({name,poster,mp4,webm,w,h,pw,ph,alt,auto=false,
   {on&&<video ref={vid} muted playsInline loop preload="none" width={w} height={h} aria-hidden="true" tabIndex={-1}
    onPlay={e=>{PLAYING.add(e.currentTarget);setPlaying(true);}} onPause={e=>{PLAYING.delete(e.currentTarget);setPlaying(false);}}>
    {/* MP4 first: H.264 is hardware-decoded on phones (cooler) and these MP4s are the smaller files; WebM is the fallback */}
-   <source src={mp4} type="video/mp4"/>{webm&&<source src={webm} type="video/webm"/>}
+   {/* Nov 20 2026 (owner: build the smaller version): a narrow screen gets the phone-sized file only (the <video> is made on the client, so the choice is made here, once) */}
+   {mp4s&&matchMedia('(max-width: 760px)').matches?<source src={mp4s} type="video/mp4"/>:<><source src={mp4} type="video/mp4"/>{webm&&<source src={webm} type="video/webm"/>}</>}
   </video>}
   <button type="button" className={g.clipBtn} onClick={toggle} aria-label={`${playing?'Pause':'Play'} video: ${name}`} aria-pressed={playing}>
    <span aria-hidden="true" className={playing?g.iconPause:g.iconPlay}/>

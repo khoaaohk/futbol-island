@@ -33,7 +33,7 @@ const Shot=({s}:{s:GameShot})=><figure className={g.shot}>
 export function ClipFigure({c,auto,priority,className}:{c:GameClip;auto?:boolean;priority?:boolean;className?:string}){
  const watch=watchPathFor(c.key);
  return <figure className={`${g.clipFig}${className?' '+className:''}`}>
-  <LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto={auto} priority={priority}/>
+  <LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} mp4s={c.mp4s} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto={auto} priority={priority}/>
   <figcaption>{c.caption} <span className={g.secs}>{c.seconds} s, no sound.</span>{watch&&<> <a href={watch} data-watch-link="">Watch the full clip</a></>}</figcaption>
  </figure>;
 }
@@ -81,7 +81,7 @@ export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:stri
    <a className={site.cta} href={PLAY_PATH} data-play="island">{play}</a>
   </header>
   <div className={lib.heroArt}>
-   {c?<LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto priority className={`${lib.heroMain} ${g.heroClip}`}/>
+   {c?<LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} mp4s={c.mp4s} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto priority className={`${lib.heroMain} ${g.heroClip}`}/>
     // eslint-disable-next-line @next/next/no-img-element
     :<img className={lib.heroMain} src={still.src} alt={still.alt} width={still.w} height={still.h} decoding="async"/>}
    {/* a still, never a second playing video (AGENTS.md: one player at a time) */}

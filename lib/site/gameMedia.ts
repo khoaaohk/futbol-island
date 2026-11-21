@@ -15,7 +15,7 @@ import type {GameId,GameShot} from './games';
  * Nov 18 2026: Line Up! was captured again after its pieces became footballs (scripts/capture-lineup-media.cjs: the script, the
  * scripted player and the encode step in one file; the poster is still 1, an early moment of the same run).
  */
-type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;poster:{w:number;h:number;bytes:number}};
+type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;mp4s?:number;/* bytes of the phone-sized <key>-s.mp4 (640 px), where one exists */poster:{w:number;h:number;bytes:number}};
 type ShotFile={file:string;w:number;h:number;bytes:number};
 const MEDIA=M as unknown as {clips:Record<string,ClipFile>;shots:Record<string,ShotFile[]>};
 export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
@@ -23,10 +23,10 @@ export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
  *  Nov 17 2026 carry their own first commit time (git log --diff-filter=A, checked by tests/seo-video.cjs). */
 export const GAME_CLIPS_UPLOADED='2026-11-16T12:00:00-08:00';
 const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00'};
-export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;poster:string;pw:number;ph:number;uploaded:string};
+export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;mp4s?:string;poster:string;pw:number;ph:number;uploaded:string};
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
- return {...d,w:f.w,h:f.h,seconds:Math.max(1,Math.round(f.seconds)),mp4:`${CLIPS_DIR}/${d.key}.mp4`,webm:`${CLIPS_DIR}/${d.key}.webm`,poster:`${CLIPS_DIR}/${d.key}.webp`,pw:f.poster.w,ph:f.poster.h,uploaded:LATER_UPLOADS[d.key]??GAME_CLIPS_UPLOADED};};
+ return {...d,w:f.w,h:f.h,seconds:Math.max(1,Math.round(f.seconds)),mp4:`${CLIPS_DIR}/${d.key}.mp4`,webm:`${CLIPS_DIR}/${d.key}.webm`,...(f.mp4s?{mp4s:`${CLIPS_DIR}/${d.key}-s.mp4`}:{}),poster:`${CLIPS_DIR}/${d.key}.webp`,pw:f.poster.w,ph:f.poster.h,uploaded:LATER_UPLOADS[d.key]??GAME_CLIPS_UPLOADED};};
 /** The hub's hero loop: three of the phone games side by side in one file (one player, not three). */
 export const HERO_CLIP=clip({key:'hero',page:'/games',name:'Kit Rush, Squad Snake and Air Futbol, played on a phone',
  alt:'Three phone screens side by side: kit flying up to be swiped in Kit Rush, a line of players in Squad Snake and an air hockey pitch in Air Futbol',
