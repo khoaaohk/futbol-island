@@ -2,7 +2,7 @@ import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import LibraryPage from '@/components/site/LibraryPage';
-import {LIBRARY_EN as W,LIBRARY_HERO,LIBRARY_PATH,LIBRARY_PUBLISHED,librarySections} from '@/lib/site/library';
+import {LIBRARY_EN as W,LIBRARY_HERO,LIBRARY_OG,LIBRARY_PATH,LIBRARY_PUBLISHED,librarySections} from '@/lib/site/library';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
 /**
@@ -11,7 +11,7 @@ import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
  * link and the redirect from plain /learn lead here (next.config.mjs); /learn?q= is still the guide search.
  */
 export const dynamic='force-static';
-export const metadata=pageMeta(W.title,W.description,LIBRARY_PATH,{whole:true,type:'website'});
+export const metadata=pageMeta(W.title,W.description,LIBRARY_PATH,{whole:true,type:'website',image:{url:LIBRARY_OG.url,alt:LIBRARY_OG.alt}});
 const CRUMBS=[{name:'Home',path:'/'},{name:W.crumb,path:LIBRARY_PATH}];
 export default function Library(){
  const sections=librarySections();

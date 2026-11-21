@@ -4,7 +4,7 @@ import IslandLoadingStatic from '@/components/IslandLoadingStatic';
 import RootSwitch from '@/components/root/RootSwitch';
 import {ROOT_VIEW_BOOT} from '@/lib/rootView';
 import JsonLd from '@/components/seo/JsonLd';
-import {playLd} from '@/lib/site/seo';
+import {PLAY_OG,playLd} from '@/lib/site/seo';
 import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
 
 /**
@@ -30,8 +30,8 @@ const description=publicWorldEnabled()?DESCRIPTION_PUBLIC:DESCRIPTION_TODAY;
 export const metadata:Metadata={
  title,description,
  alternates:{canonical:'/play'},
- openGraph:{title,description,url:'/play',siteName:'Futbol Island',type:'website',images:[{url:'/opengraph-image.png',width:1200,height:630,alt:'Futbol Island'}]},
- twitter:{card:'summary_large_image',title,description,images:['/opengraph-image.png']},
+ openGraph:{title,description,url:'/play',siteName:'Futbol Island',type:'website',images:[{url:PLAY_OG.url,width:1200,height:630,alt:PLAY_OG.alt}]},
+ twitter:{card:'summary_large_image',title,description,images:[PLAY_OG.url]},
 };
 
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';

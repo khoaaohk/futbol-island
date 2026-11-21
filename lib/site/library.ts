@@ -69,6 +69,10 @@ export const GUIDE_PICS:Readonly<Record<string,LibraryPic>>={
  '/learn/soccer-rules/offside':still('/learn/sections/offside-card.webp',480,360),'/learn/soccer-drills':still('/learn/sections/drills-card.webp',480,360),
  '/learn/soccer-terms':still('/learn/sections/terms-card.webp',480,360)};
 /** The hero's two pictures: the island from above and a lesson on the pitch. */
+/** The Library's 1200x630 share picture (Nov 20 2026, SEO plan, owner: "go with your recommendations"): the hero pictures with the
+ *  wordmark and "Learn soccer", drawn by scripts/render-hub-og.cjs. Used by /library and /es/library. */
+export const LIBRARY_OG={url:'/og/learn-soccer-library-og.jpg',alt:'Futbol Island Library: learn soccer with lessons, rules and drills for kids 7 to 12',
+ altEs:'Biblioteca de Futbol Island: aprende fútbol con lecciones, reglas y ejercicios para niños de 7 a 12 años'} as const;
 export const LIBRARY_HERO={main:still('/learn/montage_m.webp',1280,720),inset:still('/learn/lesson_field_45_m.webp',720,900)};
 /** The first card of each group is its large one. */
 export const LIBRARY_FEATURED:Readonly<Record<LibraryGroupId,string>>={game:'/learn/lessons',train:'/learn/soccer-drills',play:'/games',collect:'/books'};

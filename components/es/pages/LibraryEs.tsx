@@ -1,6 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import LibraryPage from '@/components/site/LibraryPage';
-import {LIBRARY_HERO,LIBRARY_ITEMS,LIBRARY_PATH,LIBRARY_PUBLISHED,libraryCard,libraryExamples,libraryItemsFeaturedFirst,librarySection,type LibraryGroup,type LibraryLink,type LibrarySection,type LibraryWords} from '@/lib/site/library';
+import {LIBRARY_HERO,LIBRARY_OG,LIBRARY_ITEMS,LIBRARY_PATH,LIBRARY_PUBLISHED,libraryCard,libraryExamples,libraryItemsFeaturedFirst,librarySection,type LibraryGroup,type LibraryLink,type LibrarySection,type LibraryWords} from '@/lib/site/library';
 import {ES_FORMATIONS,ES_POSITIONS,ES_RULES,ES_TERMS} from '@/lib/i18n/es/registry';
 import {ES_DRILLS,ES_PLANS} from '@/lib/i18n/es/drillsRegistry';
 import {ES_LESSONS} from '@/lib/i18n/es/lessons';
@@ -89,4 +89,4 @@ export function LibraryEsPage(){
    hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} sections={sections} menuLabel="Secciones de la biblioteca" topLabel="Resumen" exLabel="algunas para empezar"/>
  </>;
 }
-export const libraryEsRoute=(enPath:string):EsRoute|null=>enPath===LIBRARY_PATH?{meta:()=>esMeta(W.title,W.description,enPath),render:()=><LibraryEsPage/>}:null;
+export const libraryEsRoute=(enPath:string):EsRoute|null=>enPath===LIBRARY_PATH?{meta:()=>esMeta(W.title,W.description,enPath,{url:LIBRARY_OG.url,alt:LIBRARY_OG.altEs}),render:()=><LibraryEsPage/>}:null;

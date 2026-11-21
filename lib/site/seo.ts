@@ -133,6 +133,9 @@ export const creativeWorkLd=(o:{name:string;path:string;description:string;about
  isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,about:o.about});
 /** /play (Nov 10 2026): the same game entity with its own @id, the page it is the main thing of, and real screenshots (the
  *  home page's captures, public/learn). No ratings and no reviews: none exist, so none are stated. */
+/** /play's 1200x630 share picture (Nov 20 2026, SEO plan): a match frame (the /games lead clip poster) with the wordmark and
+ *  "Free 3D soccer game in your browser", drawn by scripts/render-hub-og.cjs. */
+export const PLAY_OG={url:'/og/free-3d-soccer-game-og.jpg',alt:'Futbol Island, a free 3D soccer game in your browser: kids play a match on an island pitch'} as const;
 export const PLAY_SCREENSHOTS=['/learn/town_overview.webp','/learn/lesson_field.webp','/learn/quiz_question.webp'] as const;
 export const playLd=()=>({...siteLd(),mainEntityOfPage:abs(PLAY_PATH),
  screenshot:PLAY_SCREENSHOTS.map(s=>({'@type':'ImageObject',contentUrl:SITE_URL+s,encodingFormat:'image/webp'}))});
