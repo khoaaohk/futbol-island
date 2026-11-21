@@ -40,4 +40,10 @@ module.exports={
    const touch=(type,x,y)=>H.cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,id:1}]});
    while(!H.stop){const m=await H.page.evaluate(`(${botSrc})()`);if(!m){await H.wait(300);continue;}await touch('touchStart',m.sx,m.sy);await H.wait(90);
     for(let k=1;k<=14;k++){const e=k/14,u=e*e*(3-2*e);await touch('touchMove',m.sx+(m.tx-m.sx)*u,m.sy+(m.ty-m.sy)*u);await H.wait(20);}await H.wait(110);await touch('touchEnd');await H.wait(m.lines?700:350);}}},
+ puzzle:{start:process.env.PZ_START||'role:^play',ready:()=>window.__passPuzzle&&window.__passPuzzle.world,settle:2500,meta:()=>{const w=window.__passPuzzle&&window.__passPuzzle.world,s=w&&w.state;return s?{phase:s.phase,passes:s.passes,attempt:s.attempt,result:s.result&&s.result.kind}:null;},async play(H){let i=0;
+   const touch=(type,p)=>H.cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x:p.x,y:p.y,id:1}]});
+   while(!H.stop){const r=await H.page.evaluate(i=>{const g=window.__passPuzzle,w=g&&g.world,s=w&&w.state;if(!s||s.phase!=='aiming')return null;const b=s.ball.p,L=(w.scenario||{}).pitch||{length:40};
+     const opts=s.attackers.map((a,k)=>({k,x:(a.p||a).x,z:(a.p||a).z})).filter(o=>o.k!==s.carrier).sort((u,v)=>v.z-u.z);const goalZ=L.length/2;
+     const t=(b.z>goalZ-12)?{x:0,z:goalZ}:(opts[i%Math.min(2,opts.length)]||{x:0,z:goalZ});return {a:g.scene.toScreen(b.x,0,b.z),b:g.scene.toScreen(t.x,0,t.z)};},i);
+    if(!r){const ph=await H.page.evaluate(()=>{const w=window.__passPuzzle&&window.__passPuzzle.world;return w&&w.state.phase;});if(ph==='success'||ph==='fail'){await H.wait(2500);await H.page.getByRole('button',{name:/^(next|try again|retry|continue|play next)/i}).first().tap({timeout:1500}).catch(()=>{});}await H.wait(250);continue;}await touch('touchStart',r.a);for(let k=1;k<=22;k++){await touch('touchMove',{x:r.a.x+(r.b.x-r.a.x)*k/22,y:r.a.y+(r.b.y-r.a.y)*k/22});await H.wait(16);}await H.wait(120);await touch('touchEnd');i++;await H.wait(1500);}}},
 };

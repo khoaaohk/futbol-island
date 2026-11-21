@@ -14,13 +14,14 @@ const GAME=arg('game'),OUT=arg('out'),SECONDS=+arg('seconds',40),EVERY=+arg('eve
 fs.mkdirSync(OUT,{recursive:true});
 const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-sound-volume','0');}catch{}};
 (async()=>{const browser=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio']});
- try{const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});await ctx.addInitScript(seed);
+ try{const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});await ctx.addInitScript(seed);const LS=arg('ls','');if(LS)await ctx.addInitScript(o=>{try{for(const [k,v] of Object.entries(o))localStorage.setItem(k,v);}catch{}},JSON.parse(LS));
   const page=await ctx.newPage(),cdp=await ctx.newCDPSession(page),wait=ms=>page.waitForTimeout(ms);
   const tap=async(x,y)=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});await wait(40);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
   const swipe=async(x0,y0,x1,y1,ms=160,steps=8)=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y:y0,id:1}]});for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0+(x1-x0)*k/steps,y:y0+(y1-y0)*k/steps,id:1}]});await wait(ms/steps);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
   const G=require(path.join(__dirname,'capture-game-shots-players.cjs'))[GAME];if(!G)throw new Error('unknown game '+GAME);
   await page.goto(`${BASE}/arcade?game=${GAME}`,{waitUntil:'domcontentloaded',timeout:180000});
   if(G.ready)await page.waitForFunction(G.ready,null,{timeout:120000});
+  for(const name of (arg('pre','')||'').split('|').filter(Boolean)){const b=page.getByRole('button',{name:new RegExp(name,'i')}).first();await b.waitFor({timeout:120000});await wait(800);await b.tap();}
   const startBtn=G.start&&(G.start.startsWith('role:')?page.getByRole('button',{name:new RegExp(G.start.slice(5),'i')}).first():page.locator(G.start).first());
   if(startBtn){await startBtn.waitFor({timeout:120000});await wait(1500);await startBtn.tap();}else await wait(1500);await wait(G.settle??1200);
   if(SETUP)await page.evaluate(SETUP);
