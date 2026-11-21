@@ -35,8 +35,9 @@ export function EsIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward}:{cr
  return <>{rail}<header className={styles.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{noBreak(h1)}</h1>
-  {onward&&<OnwardRow o={onward}/>}
   <QuickAnswer lead={lead} facts={facts}/>
+  {/* after the direct answer, not between it and the H1 (Nov 20 2026 review: the answer must be the first paragraph after the H1, for search snippets) */}
+  {onward&&<OnwardRow o={onward}/>}
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{ES_UI.guideNames}</p>
   {cta&&<a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a>}
