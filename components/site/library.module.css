@@ -82,17 +82,27 @@
    when it is taller than the window. The page itself still scrolls normally (wheel, keys, anchors, find, restore); everything
    else sits in the right column. The rail ends where the footer starts. The marked link (data-on) is the band in the middle of
    the screen (LibraryMenuSpy.tsx); only colours change, so nothing shifts. */
-.shelf{display:grid;grid-template-columns:minmax(0,1fr)}/* minmax(0,…): a one-row chip list must never widen the page (Nov 20 2026 evening: the auto column grew to the chips' full length and pushed every block off the right edge of a phone) */
+.shelf{display:grid;grid-template-columns:minmax(0,1fr)}/* minmax(0,…): a one-row chip list must never widen the page (Nov 20 2026 evening: the
+   auto column grew to the chips' full length and pushed every block off the right edge of a phone) */
 .shelfMain{display:contents}
-.shelfMain>.hero{order:-1}
 .shelfMain [id]{scroll-margin-top:84px}
-.menu{margin-inline:calc(50% - 50vw);padding:0 max(var(--gutter),calc(50vw - 590px)) var(--s3)}
 nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .menu li{margin:0;max-width:none}
 .menu ul a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap);padding:0 16px;border-radius:var(--r-pill);background:var(--surface);color:var(--ink);font-size:16px;line-height:1.2;font-weight:700;text-decoration:none;transition:background-color .16s}
 @media(hover:hover){.menu ul a:hover{background:color-mix(in srgb,var(--gold) 45%,var(--surface))}}
 .menu ul a[data-on]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
 .menu a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px}
+/* Below 1280 px (owner, Nov 20 2026 evening: "game navigation should be on top above the breadcrumb and locked and scrollable
+   horizontally"): the menu is a bar locked under the sticky 68 px header, above the breadcrumb; one row of chips that scrolls
+   sideways inside the bar only, the last chip fading out at the right edge so more is obvious. About 52 px tall. */
+@media(max-width:1279px){
+ .menu{position:sticky;z-index:12;top:calc(68px + env(safe-area-inset-top,0px));margin:calc(-1 * var(--s3)) calc(50% - 50vw) 0;padding:6px 0;background:var(--paper);box-shadow:0 1px 0 var(--rule)}
+ nav.menu ul{display:flex;flex-wrap:nowrap;white-space:nowrap;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 max(var(--gutter),calc(50vw - 590px));scroll-padding-inline:var(--gutter);-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 44px),transparent)}
+ nav.menu ul::-webkit-scrollbar{display:none}
+ nav.menu li{flex:none}
+ .menu ul a{min-height:40px;padding:0 14px;font-size:15px;white-space:nowrap}
+ .shelfMain [id]{scroll-margin-top:136px}
+}
 @media(min-width:1280px){
  /* Nov 20 2026 evening (owner: "the left nav should not scroll up like that. also the footer is weird now with the left nav"): the
     rail is fixed, not sticky. It fills the left edge from the header's bottom (the header is sticky and always 68 px) to the bottom

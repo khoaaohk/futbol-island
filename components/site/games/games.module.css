@@ -123,14 +123,8 @@
    menu (never the page). From 1280 px the menu is the locked rail on the left; the page's wide blocks fill the column beside
    it, and the lower sections sit two across (text keeps its 68ch measure). */
 .gshelf{gap:var(--gap)}
-.gmain>header{order:-1}
 .gmain section:not(.island){grid-template-columns:minmax(0,1fr);min-width:0}
 .lower{display:grid;gap:var(--gap);min-width:0}
-@media(max-width:1279px){
- nav[id].menu ul{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:4px}
- nav[id].menu ul::-webkit-scrollbar{display:none}
- nav.menu li{flex:none}
-}
 @media(min-width:1280px){
  nav.menu ul{flex-direction:column;gap:4px}
  nav.menu ul a{min-height:44px;padding:8px 14px;font-size:16px}
