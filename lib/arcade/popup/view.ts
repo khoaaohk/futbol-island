@@ -19,6 +19,8 @@ import {ARENAS,type PopArena,type PopBox} from './arenas';
 import {K,KIND,PU,viewFor,type Popup,type PopEvent,type PopTarget} from './core';
 
 const TONES=['#f0452e','#19b5a5','#ffc83a','#2f8fd8','#ff65c8','#fff3d6'];
+/** The crowd in the stands is drawn in muted night tones so the bright targets among them still read at a glance. */
+const CROWD=['#5a4a8a','#6a5aa8','#4a6a9a','#8a5a8a','#3a5a7a','#7a6a5a'];
 type Parts=T.BufferGeometry[];
 const box=(w:number,h:number,d:number)=>new T.BoxGeometry(w,h,d),cyl=(r0:number,r1:number,h:number,n=10)=>new T.CylinderGeometry(r0,r1,h,n),sph=(r:number,n=10)=>new T.SphereGeometry(r,n,Math.max(5,n-3)),cone=(r:number,h:number,n=8)=>new T.ConeGeometry(r,h,n);
 function P(o:Parts,g:T.BufferGeometry,c:string,x:number,y:number,z:number,ry=0,rz=0,ink=.035,round=false){inkedPart(o,g,c,partAt(x,y,z,ry,rz),ink,round);}
@@ -170,9 +172,12 @@ function scenery(a:PopArena):T.BufferGeometry{const o:Parts=[],rnd=seeded(a.id.l
   case 'tower':for(const sx of [-1,1])for(const sz of [-1,1])B('#fff3d6',x+sx*w*.38,y+h*.3,z+sz*d*.38,.14,h*.6,.14,0,.03);B('#f0452e',x,y+h*.6+.6,z,w,1.2,d,0,.06);B('#bfe9f5',x,y+h*.6+.65,front,w*.7,.5,.04,0,.03);P(o,cyl(.01,w*.78,.7,4).rotateY(Math.PI/4),'#fff3d6',x,y+h+.15,z,0,0,.05,true);Cy('#8a5a2e',x,y+h+1,z,.04,1.6,.02);B('#f0452e',x+.35,y+h+1.5,z,.7,.45,.03,0,.02);break;
   case 'castle':B(c,x,cy,z,w,h,d,0,.05);for(const s of [-1,1])Cy(c,x+s*w*.38,y+h+.2,z,.2,.4,.03);P(o,cone(.12,.4,3),'#f0452e',x,y+h+.3,z,0,0,.02,true);break;
   case 'deckchair':B('#8a5a2e',x,y+.25,z,w,.5,d*.9,0,.03);P(o,box(w*.9,.06,d*1.2),c,x,y+.8,z,0,0,.03);B('#fff3d6',x,y+.8+.04,z,w*.3,.05,d*1.1,0,0);B('#8a5a2e',x,y+h*.75,z-d*.4,w,h*.5,.08,0,.03);break;
-  case 'tier':{B(c,x,cy,z,w,h,d,0,.07);const rows=2;for(let r=0;r<rows;r++){const ry=y+h*(r+1)/(rows+.5),rz=z+d/2-d*(r+.5)/rows*.6;B('#fff3d6',x,ry,rz+.2,w,.12,.4,0,.02);
-    for(let i=0;i<Math.round(w/.9);i++){if(rnd()<.35)continue;const sx=x-w/2+.45+i*.9;B(TONES[Math.floor(rnd()*6)],sx,ry+.32,rz,.42,.5,.36,0,.02);P(o,sph(.16,6),['#f2b98a','#c98a5a','#8a5a3a'][Math.floor(rnd()*3)],sx,ry+.7,rz,0,0,.02,true);}}
-   B('#231a2e',x,y+h-.06,z+d/2+.02,w,.12,.06,0,0);break;}
+  case 'tier':{B(c,x,cy,z,w,h,d,0,.07);B('#231a2e',x,y+h-.06,z+d/2+.02,w,.12,.06,0,0);// two rows of seats on the front, fans in most of them
+   for(let r=0;r<2;r++){const ry=y+h*(.12+r*.45),rz=front+.18;B('#fff3d6',x,ry,rz,w,.1,.4,0,.02);
+    for(let i=0;i<Math.round(w/.8);i++){const sx=x-w/2+.4+i*.8,fan=rnd()<.62,col=CROWD[Math.floor(rnd()*CROWD.length)];
+     if(fan){B(col,sx,ry+.38,rz,.46,.56,.3,0,.025);P(o,sph(.17,6),['#b98a8a','#8a6a7a','#6a4a5a'][Math.floor(rnd()*3)],sx,ry+.82,rz,0,0,.025,true);if(rnd()<.25)B(col,sx+.22,ry+.95,rz,.1,.5,.1,0,.015);}
+     else B(['#3a3a6a','#4a4a7a'][i%2],sx,ry+.3,rz-.05,.42,.5,.12,0,.02);}}
+   break;}
   case 'score':B(c,x,cy,z,w,h,d,0,.08);B('#ffc83a',x,cy+.4,z+d/2+.02,w*.8,1,.04,0,0);B('#fff3d6',x-1.4,cy-.7,z+d/2+.02,1.6,.9,.04,0,0);B('#fff3d6',x+1.4,cy-.7,z+d/2+.02,1.6,.9,.04,0,0);for(const s of [-1,1])B('#5b6072',x+s*w*.4,y-h*.4,z,.25,h*.8,.25,0,.03);break;
   case 'dugout':B(c,x,cy,z,w,h,d,0,.06);B('#bfe9f5',x,y+h*.6,z+d/2+.02,w*.8,h*.5,.04,0,.02);B('#fff3d6',x,y+h,z,w+.2,.1,d+.2,0,.02);break;
   case 'floodlight':Cy('#8d93a6',x,y+h/2,z,w*.2,h,.04);B('#fffbe0',x,y+h+.6,z+.3,3.6,1.6,.4,0,.06);for(let i=0;i<4;i++)B('#ffffff',x-1.3+i*.87,y+h+.6,z+.52,.6,1.2,.04,0,0);break;
@@ -184,8 +189,6 @@ function scenery(a:PopArena):T.BufferGeometry{const o:Parts=[],rnd=seeded(a.id.l
   case 'water':break;// painted on the ground sheet
   default:B(c,x,cy,z,w,h,d,0,.05);}};
  for(const q of a.boxes)piece(q);for(const q of a.deco)piece(q);
- // the kick spot: a little rack stand for the balls and a chalk mark
- const [bx,,bz]=a.ball;B('#8a5a2e',bx+.95,.12,bz+.25,1.4,.08,.34,0,.025);for(const s of [-1,1])B('#5b6072',bx+.95+s*.6,.06,bz+.25,.08,.12,.3,0,.015);
  // a few big near props cut the frame (depth cue)
  if(a.id==='plaza'){for(const s of [-1,1])P(o,sph(.5,7),'#ff65c8',s*3.4,.5,1.6,0,0,.04,true);}
  if(a.id==='beach'){B('#c98a4b',-6.4,.5,1.4,1.4,1,1.2,.3,.05);}
@@ -285,7 +288,7 @@ export function createPopupView(host:HTMLElement,o:{reduced:boolean;mobile:boole
     if(clock-trailAt[i]>.016){trailAt[i]=clock;const j=ti++%TRAIL;tp[j*5]=b.x;tp[j*5+1]=b.y;tp[j*5+2]=b.z;tp[j*5+3]=clock;tp[j*5+4]=s.triple>0||b.f%3===0?1:0;}}
    balls.count=n;balls.visible=n>0;if(n)balls.instanceMatrix.needsUpdate=true;
    // the rack at the spot: the next ball on the chalk mark, the others on the stand
-   {const [bx,by,bz]=arena.ball;let r=0;Q.identity();const left=Math.min(RACK,s.rack);for(let i=0;i<left;i++){if(i===0)V.set(bx,by+.08,bz);else V.set(bx+.45+i*.27,.35,bz+.25);SC.set(i===0?.19:.13,i===0?.19:.13,i===0?.19:.13);M.compose(V,Q,SC);rack.setMatrixAt(r++,M);}
+   {const [bx,by,bz]=arena.ball;let r=0;Q.identity();const left=Math.min(1,s.rack);if(left){V.set(bx,by+.08,bz);SC.set(.19,.19,.19);M.compose(V,Q,SC);rack.setMatrixAt(r++,M);}
     if(s.triple>0)for(const d of [-.42,.42]){if(r>=RACK)break;V.set(bx+d,by+.04,bz+.1);SC.set(.16,.16,.16);M.compose(V,Q,SC);rack.setMatrixAt(r++,M);}
     rack.count=r;rack.visible=r>0;if(r)rack.instanceMatrix.needsUpdate=true;if(left>0)nb=blobAt(nb,bx,0,bz,.28);}
   }else{balls.count=0;balls.visible=false;rack.count=0;rack.visible=false;}

@@ -86,7 +86,7 @@ export default function PopUpGame({onExit}:{onExit:()=>void}){
  /* ---- one rules event: sound, haptics, words, hit-stop, slow motion ---- */
  const onEvent=useCallback((e:PopEvent)=>{
   const a=audio.current,v=view.current,g=game.current;if(!g)return;v?.onEvent(e);const now=performance.now(),calm=reduced.current;
-  const at=()=>{const p=v?.project(e.x,e.y+.7,e.z),w=stage.current?.clientWidth??390;return p&&p.on?{x:Math.max(70,Math.min(w-70,p.x)),y:p.y}:undefined;};
+  const at=()=>{const p=v?.project(e.x,e.y+.7,e.z),w=stage.current?.clientWidth??390;return p&&p.on?{x:Math.max(125,Math.min(w-125,p.x)),y:p.y}:undefined;};
   switch(e.type){
    case 'pop':a?.pop(e.kind);break;
    case 'flick':a?.flick(e.a,e.b);arcadeFeedback(null,'collect');break;
