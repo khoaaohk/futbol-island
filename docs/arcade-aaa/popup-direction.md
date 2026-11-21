@@ -60,3 +60,17 @@ for the wrong target, a marimba that climbs with the combo. All WebAudio one-sho
 One scene, one renderer; static scenery merged into ONE geometry per arena; one InstancedMesh per target kind, one for balls, blob
 shadows, pieces and stars; no shadow maps, no post-processing; one directional light + hemisphere; pixel ratio 1.5 on phones;
 30 fps on phones; the loop sleeps on menu, pause, results and a hidden tab; pools only, no per-frame allocation.
+
+## Status (Nov 21 2026, branch `game-popup`, unplaced, not pushed)
+Built and playable at `/arcade?game=popup` on phone touch and desktop mouse. Files: lib/arcade/popup/{arenas,core,save,view,audio}.ts,
+components/games/PopUpGame.tsx (+ .module.css, PopUpScores.tsx, skins/popup.module.css), tests/popup-core.cjs,
+scripts/check-popup-browser.cjs (real swipes, perf numbers, screencast clip). Flick-to-shot mapping, ball flight, the camera approach
+and a few view helpers were copied from Flick It (branch game-flickit, not on main); nothing is imported from it.
+Input: a swipe fires as soon as it is long and fast enough (bursts); a tap on a target also sends a ball (the aim help picks it);
+keys: Left / Right pick a target, Space kicks. A "READY? GO!" second at the start while the camera flies in.
+Name ideas: **Pop-Up Shot** (working), **Knock 'Em Down**, **Target Rush**.
+Owner SQL: docs/arcade-aaa/popup-supabase.sql (additive: board 'popup', analytics 'arcade_popup'; keeps every board id and key,
+including Hold the Line's). Migration copies: supabase/migrations/20261211_popup_boards.sql, 20261212_analytics_popup.sql.
+Left for release: give it Hold the Line's cabinet (arcadeCatalog: move from `arcadeUnplaced` to the machine, HALL_MACHINES), the game
+page /games/soccer-defending-game (or a new slug + redirect) and its SEO copy, cabinet art and media (docs/seo/build-game-images.py),
+the owner pasting the SQL, a real-phone heat check.

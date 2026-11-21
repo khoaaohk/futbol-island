@@ -6896,3 +6896,23 @@ Owner: "can we make the arcade sign blink and animate so it flickers a little bi
 - **Tests:** `tests/arcade-neon-flicker.cjs` (seeded: ≤ 3 dips in any second, mean gap 2-6.5 s, steady and write-free when off, no
   catch-up after a long gap, wiring source checks).
 - Reduced work only, not measured on a real phone; no thermal claim.
+
+## Nov 21 2026: Pop-Up Shot, the pop-up target game (working id `popup`; branch `game-popup`, unplaced, local, not deployed)
+A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will later take Hold the Line's cabinet.
+- **One three.js scene** (lib/arcade/popup/view.ts): low-power context, `antialias` off on phones, pixel ratio capped at 1.5 on phones
+  (2 on desktop), ONE directional sun + a hemisphere, NO shadow map (blob shadows), no post-processing, comic shading from
+  lib/arcade/comic (one shared vertex-colour material for scenery and targets).
+- **Static scenery is ONE mesh per arena**: every box and deco piece of arenas.ts is baked into one vertex-colour geometry when the
+  arena loads (rebuilt only on an arena change); the ground is one painted canvas sheet (water painted in), the sky one painted strip.
+- **Instancing and pools**: one InstancedMesh per target model (dummy, cut-out, armour, balloon, runner, gold mascot, ball bag,
+  coach, referee), one each for the balls, the next ball, the trail, blob shadows, bits and stars. Rules pools (targets 12, balls 24,
+  events 64) and view pools (bits 140, trail 60, blobs 48, stars 8) are fixed; nothing is allocated per frame.
+- **The loop sleeps** on the start card, pause, the results card and a hidden tab (visibilitychange pauses); the menu draws one
+  frame. Phones draw 30 frames a second (frameCapSlot; rAF still ticks at 60 and every other tick is skipped), desktops 60.
+  Hit-stop and slow motion only scale the time handed to the fixed-step core.
+- **Measured in desktop Chrome** with scripts/check-popup-browser.cjs (phone emulation 390x844, DPR 3, a whole round of swipes;
+  renderer.info): plaza 6-12 draws, 8.5k-16k triangles; harbour 6-14 draws, 5.8k-15k; training 6-11 draws, 8k-11k; beach 6-12
+  draws, 3.4k-10.5k; stands 6-13 draws, 28k-36k (the crowd: two rows of fans on each of four tiers); 9 programs, 4 textures.
+  The loop made 0 rAF calls on the results card. **Not measured on a real phone**; no claim about iPhone heat.
+- Tradeoff: the stadium crowd is real geometry (~20k triangles in the one baked mesh) rather than a texture, so the tiers read as
+  seats from the low camera; still one draw.
