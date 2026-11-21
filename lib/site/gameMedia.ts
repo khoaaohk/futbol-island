@@ -99,6 +99,9 @@ const ISLAND_DEFS:ClipDef[]=[
  * clip above 720 px: it fills the lead block at desktop widths). Order: 7v7 Behind you, futsal Side, 9v9 Close, stadium 11v11
  * Broadcast, beach Broadcast (ends on a goal). Wide was too far away to read at this size. */
 export const GAMES_LEAD_CLIP='matchmix';
+/** The /games hero's phone picture beside the lead clip (Nov 20 2026, owner: "this screen shot should be the mobile version of the game
+ *  and not an arcade"): the main island game on a phone, a 7v7 match with the touch controls; captured at 390 x 844 on the preview. */
+export const GAMES_HERO_PHONE={src:'/games/shots/island-phone-7v7.webp',w:480,h:1039,alt:'Futbol Island on a phone: a 7v7 match on the island, the player in gold dribbling toward goal with the joystick and the Go! button on screen'};
 export const islandClips=()=>ISLAND_DEFS.map(clip).filter((c):c is GameClip=>!!c);
 /** Island stills (from the same takes), shown in the gallery between the clips. */
 export function islandStills():GameShot[]{

@@ -76,7 +76,7 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
 // Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 21 MB (Nov 20 2026: was 20 MB; four stills per game added ~0.5 MB).
 {const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
- const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster,c.mp4s]).filter(Boolean).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,4)),...gm.islandStills()].map(s=>path.basename(s.src)));
+ const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster,c.mp4s]).filter(Boolean).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,4)),...gm.islandStills(),gm.GAMES_HERO_PHONE].map(s=>path.basename(s.src)));
  // Nov 20 2026 (owner: the /games lead clip must be sharp, "make sure the quality is high and not blurry"): the lead clip's own files
  // (GAMES_LEAD_CLIP: 1280 px mp4 + webm + poster) are weighed apart, under 8 MB, so the 21 MB cap still catches growth everywhere else.
  const lead=new RegExp('^'+gm.GAMES_LEAD_CLIP+'(-s)?\\.');let total=0,leadTotal=0;for(const [d,used] of [['games/clips',usedC],['games/shots',usedS]])for(const f of fs.readdirSync(pub(d))){const n=fs.statSync(pub(d+'/'+f)).size;if(d==='games/clips'&&lead.test(f))leadTotal+=n;else total+=n;assert(used.has(f),`public/${d}/${f} is used by a page`);}

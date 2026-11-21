@@ -1,6 +1,6 @@
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {allShots,gameById,GAME_NAMES,GAMES_NAMES,type GameId,type GamePage,type GameShot} from '@/lib/site/games';
-import {GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
+import {GAMES_HERO_PHONE,GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
 import {watchPathFor} from '@/lib/site/videos';
 import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
@@ -68,11 +68,10 @@ export function GameFeature({game}:{game:GamePage}){
 /** The top of /games (layout batch 3, Nov 20 2026; owner: "i like the way the overview looks on library, can we match that for
  * games?"): the Library's hero composition (library.module.css .hero, the same classes, so the two never drift): breadcrumb, H1,
  * lede and the gold Play button on the left; on the right the lead clip large (GAMES_LEAD_CLIP, the page's ONLY autoplaying video,
- * poster preloaded by the page) with a still phone screenshot of an arcade game overlapping its lower-left corner. */
+ * poster preloaded by the page) with a still phone screenshot of the island game (a 7v7 match, touch controls) overlapping its lower-left corner. */
 export {GAMES_LEAD_CLIP as ISLAND_FEATURE_KEY} from '@/lib/site/gameMedia';
-const INSET_ID:GameId='kitrush';
 export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:string;lead:string;play:string}){
- const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP),still=islandStills()[0],inset=gameStills(INSET_ID,1)[0];
+ const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP),still=islandStills()[0],inset=GAMES_HERO_PHONE;/* the main game on a phone (owner: not an arcade still) */
  return <div className={`${lib.hero} ${g.ghero}`} id="top" data-games-page="" data-games-hero="">{/* data-games-page: the header's Games link is the selected one (site.module.css) */}
   <header className={lib.heroText}>
    <Breadcrumbs crumbs={crumbs}/>
@@ -86,7 +85,7 @@ export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:stri
     :<img className={lib.heroMain} src={still.src} alt={still.alt} width={still.w} height={still.h} decoding="async"/>}
    {/* a still, never a second playing video (AGENTS.md: one player at a time) */}
    {/* eslint-disable-next-line @next/next/no-img-element */}
-   {inset&&<img className={`${lib.heroInset} ${g.heroPhone}`} src={inset.src} alt={`${gameById(INSET_ID).name} on a phone, one of the eleven free arcade games on the island`} width={inset.w} height={inset.h} loading="lazy" decoding="async"/>}
+   <img className={`${lib.heroInset} ${g.heroPhone}`} src={inset.src} alt={inset.alt} width={inset.w} height={inset.h} loading="lazy" decoding="async"/>
   </div>
  </div>;
 }
