@@ -15,7 +15,10 @@ import {ARCADE_GAME_COUNT,arcadeCabinets} from '../arcade/arcadeCatalog';
 /** Nov 21 2026: Safe Hands is named only once it has a machine in the room (lib/site/games.ts ALL_GAME_PAGES). */
 const SAFE_HANDS_LISTED=arcadeCabinets.some(c=>(c.id as string)==='safehands');
 /** Nov 21 2026: and Keepy-Uppy Beat, the juggling game, the same way. */
-const KEEPY_LISTED=arcadeCabinets.some(c=>(c.id as string)==='keepyuppy');/* Nov 17 2026: the arcade count follows the catalog */
+const KEEPY_LISTED=arcadeCabinets.some(c=>(c.id as string)==='keepyuppy');
+/** Nov 21 2026: and Hold the Line, the defending game. The machines after Roll It In are joined as a list ("A, B and C"). */
+const HOLD_LISTED=arcadeCabinets.some(c=>(c.id as string)==='holdtheline');
+const LAST_MACHINES=['Ball Blaster (kick footballs at toy robots before they reach your goal)',...(SAFE_HANDS_LISTED?['Safe Hands (you are the goalkeeper: read the striker, then dive)']:[]),...(KEEPY_LISTED?['Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)']:[]),...(HOLD_LISTED?['Hold the Line (move your back line as one and catch the runner offside)']:[])];/* Nov 17 2026: the arcade count follows the catalog */
 import {NumberWord} from '../numberWord';
 /** [PUBLIC-WORLD] Nov 11 2026: with the public-island build flag on, the few lines below that would become untrue switch (the `PUB?new:old`
  *  ternaries); flag off = today's words byte for byte (tests/mp-public-copy.cjs). Old -> new: docs/multiplayer/PUBLIC-COPY-REVIEW.md. */
@@ -214,7 +217,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
  // ---- Play and practise -----------------------------------------------------------------------------------------------------
  {id:'arcade',title:'The Arcade',group:'play',imageKey:'arcade',
   hook:`${NumberWord(ARCADE_GAME_COUNT)} football games, one skill each.`,
-  description:`The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles, Air Futbol (the air hockey table, you against the computer), Line Up (fit shapes of footballs into full lines), Trophy Drop (drop and merge trophies up to the golden one), Roll It In (you are the ball: roll onto plates to open the way to goal)${SAFE_HANDS_LISTED||KEEPY_LISTED?`, Ball Blaster (kick footballs at toy robots before they reach your goal)${SAFE_HANDS_LISTED&&KEEPY_LISTED?',':' and'}${SAFE_HANDS_LISTED?' Safe Hands (you are the goalkeeper: read the striker, then dive)':''}${KEEPY_LISTED?`${SAFE_HANDS_LISTED?' and':''} Keepy-Uppy Beat (juggle the ball to the beat with feet, thigh and head)`:''}`:' and Ball Blaster (kick footballs at toy robots before they reach your goal)'}. Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.`,
+  description:`The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles, Air Futbol (the air hockey table, you against the computer), Line Up (fit shapes of footballs into full lines), Trophy Drop (drop and merge trophies up to the golden one), Roll It In (you are the ball: roll onto plates to open the way to goal)${LAST_MACHINES.slice(0,-1).map(m=>', '+m).join('')} and ${LAST_MACHINES[LAST_MACHINES.length-1]}. Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.`,
   footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space; fill the line; small touches add up; time your run; keep the ball close; look before you roll.',
   where:'Tap Enter Arcade at the arcade building on the island.',
   proof:`${ARCADE_GAME_COUNT} arcade games, each with its own skill line.`,counts:{arcadeGames:ARCADE_GAME_COUNT}},

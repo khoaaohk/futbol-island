@@ -44,6 +44,7 @@ export const G={
  /* Nov 21 2026: the goalkeeper game, spread into the goalkeeper drills' links; empty until Safe Hands has a machine in the room
     (lib/site/games.ts ALL_GAME_PAGES), so an unlisted page is never linked. */ safeHands:(isGameListed('safehands')?[gameLink('safehands')]:[]) as readonly ReturnType<typeof gameLink>[],
  /* Nov 21 2026: the juggling game, spread into the thigh control and ball-mastery drills' links; empty until Keepy-Uppy Beat is placed. */ keepyUppy:(isGameListed('keepyuppy')?[gameLink('keepyuppy')]:[]) as readonly ReturnType<typeof gameLink>[],
+ /* Nov 21 2026: the defending game, spread into the pressure-and-cover and recover-goal-side drills' links; empty until Hold the Line is placed. */ holdTheLine:(isGameListed('holdtheline')?[gameLink('holdtheline')]:[]) as readonly ReturnType<typeof gameLink>[],
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
  /* seo-nov18: the two pages stuck near position 19 get links from the age guides, plans and tool pages. */
  calc:{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time, with equal minutes for every player'},

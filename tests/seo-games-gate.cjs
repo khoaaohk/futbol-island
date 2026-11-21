@@ -1,8 +1,8 @@
-// Nov 21 2026: the unlisted game page gate (lib/site/games.ts ALL_GAME_PAGES). Safe Hands and Keepy-Uppy Beat have complete /games
+// Nov 21 2026: the unlisted game page gate (lib/site/games.ts ALL_GAME_PAGES). Safe Hands, Keepy-Uppy Beat and Hold the Line have complete /games
 // pages, but their games have no machine in the arcade room yet (lib/arcade/arcadeCatalog.ts arcadeUnplaced), so the site must not
-// list them or count them. This test loads the REAL site modules four times: as they are, and with the catalog edited IN MEMORY the
-// way the owner places a game (its entry moved from arcadeUnplaced into arcadeCabinets): Safe Hands alone, Keepy-Uppy Beat alone and
-// both. Placed, a game must be listed everywhere and every count must read twelve (or thirteen for both) with no other edit;
+// list them or count them. This test loads the REAL site modules eight times: as they are, and with the catalog edited IN MEMORY the
+// way the owner places a game (its entry moved from arcadeUnplaced into arcadeCabinets) for every subset of the three games.
+// Placed, a game must be listed everywhere and every count must read twelve, thirteen or fourteen with no other edit;
 // unplaced, nothing lists, links or counts it.
 //   node tests/seo-games-gate.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
@@ -11,7 +11,7 @@ const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
 const cssProxy=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
 const CATALOG=path.join(root,'lib/arcade/arcadeCatalog.ts');
 /** The owner's placement, as a source edit: the entry moves from arcadeUnplaced into arcadeCabinets (each direction doc's option A spot). */
-const SPOT={safehands:'x:11.6,z:-1,yaw:-Math.PI/2',keepyuppy:'x:11.6,z:2,yaw:-Math.PI/2'};
+const SPOT={safehands:'x:11.6,z:-1,yaw:-Math.PI/2',keepyuppy:'x:11.6,z:2,yaw:-Math.PI/2',holdtheline:'x:-11.6,z:-4.5,yaw:Math.PI/2'/* docs/arcade-aaa/NEW-GAMES-NOV21.md */};
 function place(src,id){
  const entry=new RegExp(`\\n \\{id:'${id}',[^\\n]*\\n`).exec(src);assert(entry,`arcadeUnplaced holds the ${id} entry`);
  const line=entry[0].trim().replace(/\s*\/\/.*$/,'').replace(/\},?$/,`,${SPOT[id]}},`);
@@ -40,21 +40,22 @@ function world(placed=[]){
  const arcade=L('lib/site/learnFeatures.ts');const feat=JSON.stringify(arcade).match(/"id":"arcade"[^}]*\}/)?.[0]??JSON.stringify(arcade);
  const watch=L('lib/site/videos.ts').allWatchVideos();
  const game=id=>{const g=games.gameById(id);return {g,meta:slugPage.generateMetadata({params:{slug:g.slug}}),drills:CHECK[id].drills.map(drillHtml)};};
- return {catalog,games,sitemap,llms,hubHtml,feat,watch,statics:slugPage.generateStaticParams().map(x=>x.slug),safehands:game('safehands'),keepyuppy:game('keepyuppy')};
+ return {catalog,games,sitemap,llms,hubHtml,feat,watch,statics:slugPage.generateStaticParams().map(x=>x.slug),safehands:game('safehands'),keepyuppy:game('keepyuppy'),holdtheline:game('holdtheline')};
 }
 /** Per game: the drill pages that link it once placed, the words the hub and the Library use for it. */
 const CHECK={safehands:{drills:['goalkeeper-angles'],hub:/goalkeeper game|Safe Hands/,name:'Safe Hands',kind:/goalkeeper/},
- keepyuppy:{drills:['thigh-and-chest-control','toe-taps-and-foundations'],hub:/juggling game|Keepy-Uppy Beat/,name:'Keepy-Uppy Beat',kind:/juggling/}};
+ keepyuppy:{drills:['thigh-and-chest-control','toe-taps-and-foundations'],hub:/juggling game|Keepy-Uppy Beat/,name:'Keepy-Uppy Beat',kind:/juggling/},
+ holdtheline:{drills:['pressure-and-cover-2v2','recover-goal-side'],hub:/defending game|Hold the Line/,name:'Hold the Line',kind:/defending/}};
 const words=h=>h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/g,' ').replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().split(' ').length;
 
-const WORD={11:'eleven',12:'twelve',13:'thirteen'},CAP=w=>w[0].toUpperCase()+w.slice(1);let hubWords='';
-for(const placed of [[],['safehands'],['keepyuppy'],['safehands','keepyuppy']]){
+const IDS=['safehands','keepyuppy','holdtheline'],WORD={11:'eleven',12:'twelve',13:'thirteen',14:'fourteen'},CAP=w=>w[0].toUpperCase()+w.slice(1);let hubWords='';
+for(const placed of [0,1,2,3,4,5,6,7].map(m=>IDS.filter((_,i)=>m&(1<<i)))){
  const w=world(placed),n=11+placed.length,word=WORD[n],tag=placed.length?`placed ${placed.join(' + ')}`:'unplaced';
  assert.equal(w.catalog.ARCADE_GAME_COUNT,n,tag);assert.equal(w.games.GAMES_WORD,word,tag);assert.equal(w.games.GAME_PAGES.length,n,tag);
  assert(new RegExp(`^${CAP(word)} `).test(w.games.GAMES_HUB.description),`${tag}: the hub description counts ${word}`);
  {const d=w.games.GAMES_HUB.description.length;assert(d>=120&&d<=155,`${tag}: hub description ${d} chars`);}
  assert(new RegExp(`${CAP(word)} football games`).test(w.feat),`${tag}: the Library counts ${word}`);
- for(const id of ['safehands','keepyuppy']){const {g,meta,drills}=w[id],c=CHECK[id],on=placed.includes(id),t=`${tag}, ${id}`;
+ for(const id of IDS){const {g,meta,drills}=w[id],c=CHECK[id],on=placed.includes(id),t=`${tag}, ${id}`;
   assert(w.games.ALL_GAME_PAGES.includes(g)&&w.statics.includes(g.slug),`${t}: the page is built`);
   if(on){
    assert(w.games.GAME_PAGES.includes(g),`${t}: listed`);assert(!meta.robots,`${t}: indexable`);
@@ -72,4 +73,4 @@ for(const placed of [[],['safehands'],['keepyuppy'],['safehands','keepyuppy']]){
  // the hub's words stay inside the bound tests/seo-games.cjs uses for the hub (it grows 40 words a listed game)
  const lim=1300+4*w.watch.filter(v=>v.group!=='lessons').length+15+100+60+40*Math.max(0,w.games.GAME_PAGES.length-7),nw=words(w.hubHtml);assert(nw<=lim,`${tag}: hub ${nw} words (limit ${lim})`);
  hubWords+=` ${word} ${nw}/${lim};`;}
-console.log(`seo-games-gate: ok (unplaced: both pages built, noindex, unlisted, eleven; placed by the catalog move, one or both: listed everywhere, twelve / thirteen; hub words:${hubWords})`);
+console.log(`seo-games-gate: ok (unplaced: all three pages built, noindex, unlisted, eleven; placed by the catalog move, every subset: listed everywhere, twelve / thirteen / fourteen; hub words:${hubWords})`);
