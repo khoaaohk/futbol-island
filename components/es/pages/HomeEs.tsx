@@ -62,6 +62,8 @@ const GUIDES:readonly [string,string,string][]=[
 
 export default function HomeEs(){
  return <>
+  {/* the header's Isla link is the selected one here (owner, Nov 20 2026), read by app/(site)/site.module.css */}
+  <span hidden data-nav-section="island"/>
   <JsonLd data={{'@context':'https://schema.org','@type':'WebSite','@id':URL_ES+'#website',name:SITE_NAME,url:URL_ES,inLanguage:'es',
    description:'Futbol Island es un juego gratis para aprender fútbol, para niños de 7 a 12 años, que se juega en el navegador web.',publisher:PUBLISHER,
    potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:URL_ES+'/learn?q={search_term_string}'},'query-input':'required name=search_term_string'}}}/>

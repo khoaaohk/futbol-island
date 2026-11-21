@@ -53,6 +53,8 @@
 /* Spanish bar: three links + EN | ES; the links size to their words. */
 .page .navEs .navLinks a[data-nav-link]{width:92px;padding:0}/* layout batch 3: the chip's 92 px pitch on both bars */
 .page .navEs .navLinks a[data-lang-switch]{width:auto;padding:0 12px}
+/* the language switch sits just right of the three links, outside the row's width, so the row (and its chip) is centred exactly like the English bar's (owner, Nov 20 2026) */
+@media(min-width:641px){.page .navEs .navLinks>li:has(>[data-lang-switch]){position:absolute;left:100%;top:0;bottom:0;display:flex;align-items:center;margin-left:14px;padding-left:14px;box-shadow:inset 1px 0 0 var(--rule)}.page .navEs .navLinks a[data-lang-switch]{font-size:13px;font-weight:600;opacity:.72}}
 /* QA Nov 14 2026: on a 320 px phone the menu, the 26 px wordmark and the Play pill needed 357 px, so Play ran off the edge. Below
    360 px the wordmark steps down to 20 px and the gaps to 4 px (313 px with the 16 px gutters). */
 @media(max-width:359px){.nav{gap:4px}.page .brand{font-size:20px}}
@@ -76,9 +78,12 @@
 .page .navLinks a{position:relative;z-index:1}
 .page .navLinks a[aria-current]{opacity:1}
 .navChip{position:absolute;left:0;top:4px;z-index:0;width:92px;height:36px;box-sizing:border-box;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590);pointer-events:none;opacity:0;transform:translateX(calc(var(--i,0) * 98px))}
+.page:has([data-nav-section=island]) .nav a[data-nav-page=island]{display:none}
+.page:has([data-nav-section=island]) .nav a[data-nav-cur=island]{display:inline-flex}
+.page:has([data-nav-section=island]) .navLinks{--i:0}
 .page:has([data-games-page],[data-nav-section=games]) .navLinks{--i:1}
 .page:has([data-library-hero],[data-nav-section=library]) .navLinks{--i:2}
-.page:has([data-library-hero],[data-nav-section=library],[data-games-page],[data-nav-section=games]) .navChip,.navLinks[data-going] .navChip{opacity:1}
+.page:has([data-library-hero],[data-nav-section=library],[data-games-page],[data-nav-section=games],[data-nav-section=island]) .navChip,.navLinks[data-going] .navChip{opacity:1}
 .navLinks[data-going] .navChip{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .navLinks:has(a[aria-current]:active) .navChip{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 @media(min-width:641px) and (max-width:759px){.navChip{width:82px;transform:translateX(calc(var(--i,0) * 86px))}}

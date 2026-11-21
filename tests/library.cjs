@@ -92,7 +92,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
  // the header (owner, Nov 20 2026 evening: "Learn, Game, and Library"): three links and Play, in both languages
  assert.match(nav,/\[\['\/','Island'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
- assert.match(navEs,/\[\['\/es','Isla'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
+ assert.match(navEs,/\[\['\/es','Isla','island'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Isla (selected on \/es, owner Nov 20 2026), Juegos, Biblioteca');
  for(const l of ['Explore','Friends','Safety','About'])assert(!nav.includes(`'${l}'`),`header has no ${l}`);
  {const lay=read('app/(site)/layout.tsx'),layEs=read('app/es/layout.tsx');assert(/<a href="\/about">About<\/a>/.test(lay)&&/<a href=\{SAFE_GUIDE\.path\}>Safety<\/a>/.test(lay),'About and Safety are in the footer');
   assert(/<a href=\{toEs\('\/about'\)\}>Acerca de<\/a>/.test(layEs)&&/safe-football-game-for-kids'\)\}>Seguridad<\/a>/.test(layEs),'and in the Spanish footer');}
@@ -118,7 +118,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  {const bar=render(React.createElement(L('components/site/SiteNav.tsx').default)),cur=[...bar.matchAll(/<a href="([^"]+)" data-nav-cur="[a-z]+" aria-current="page">/g)].map(m=>m[1]);
   assert.deepEqual(cur,['/games','/library','/games','/library'],'English bar: Games and Library (desktop list and phone menu)');assert.equal((bar.match(/aria-current/g)||[]).length,4);
   const barEs=render(React.createElement(L('components/es/SiteNavEs.tsx').default)),curEs=[...barEs.matchAll(/<a href="([^"]+)" data-nav-cur="[a-z]+" aria-current="page">/g)].map(m=>m[1]);
-  assert.deepEqual(curEs,['/games','/es/library','/games','/es/library'],'Spanish bar: Juegos and Biblioteca');assert.equal((barEs.match(/aria-current/g)||[]).length,4);}
+  assert.deepEqual(curEs,['/es','/games','/es/library','/es','/games','/es/library'],'Spanish bar: Isla (owner, Nov 20 2026: selected on /es), Juegos and Biblioteca');assert.equal((barEs.match(/aria-current/g)||[]).length,6);}
  const cfg=await import(require('node:path').join(root,'next.config.mjs')),red=await cfg.default('phase-production-build').redirects();
  const r=red.find(x=>x.source==='/learn'),re=red.find(x=>x.source==='/es/learn');
  assert.deepEqual([r.destination,r.permanent,r.missing],['/library',true,[{type:'query',key:'q'}]],'plain /learn -> /library; /learn?q= is the search');
