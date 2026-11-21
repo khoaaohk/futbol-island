@@ -250,12 +250,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 247383,
-   "webm": 307838,
+   "mp4": 326206,
+   "webm": 337649,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 36508
+    "bytes": 33464
    }
   },
   "ballblaster": {
@@ -581,19 +581,19 @@
     "file": "rollball-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 36508
+    "bytes": 40438
    },
    {
     "file": "rollball-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 41170
+    "bytes": 41594
    },
    {
     "file": "rollball-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 33502
+    "bytes": 41318
    },
    {
     "file": "rollball-4.webp",
