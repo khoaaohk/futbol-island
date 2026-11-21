@@ -150,5 +150,16 @@ ok('sound: every voice -> master -> ONE limiter -> destination; nothing before a
  assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true/);assert.match(a,/function unlock\(\)/);assert.match(read('components/games/SafeHandsGame.tsx'),/\(audio\.current\?\?=createSafehandsAudio\(\)\)\.unlock\(\)/);
  assert.match(read('scripts/check-arcade-audio.cjs'),/game==='safehands'/);});
 
+ok('the guided first penalty (verify pass, Nov 21): a plain low shot to a side, the rest of the run unchanged; the flag is saved',()=>{
+ for(const seed of [3,17,99,1234]){const a=C.createSafeHands({seed,intro:true}),b=C.createSafeHands({seed});a.ack();b.ack();const sa=a.state.shot,sb=b.state.shot;
+  assert.equal(sa.kind,'pen');assert.ok(sa.side!==0&&!sa.high&&sa.power<=SH.hold&&!sa.watch&&!sa.stutter&&!sa.defl,'tamed');assert.equal(sa.striker,sb.striker);
+  // a dive on the planted foot saves it
+  run(a,9,s=>(s.phase==='run'&&!!a.tells().plant));assert.equal(a.tells().plant.side,sa.side);a.act(sa.side<0?'L':'R');run(a,9,s=>s.phase==='res');assert.equal(a.state.res.saved,true,'the guided dive saves');
+  // the next attacks are the same game as without the guide
+  const next=g=>{run(g,30,s=>s.shotN>=1&&s.phase==='set');return JSON.stringify([g.state.shot.kind,g.state.shot.striker,g.state.shot.tx.toFixed(3)]);};run(b,9,s=>s.phase==='res');assert.equal(next(a),next(b));}
+ assert.equal(S.sanitizeSafehandsSave({intro:true}).intro,true);assert.equal(S.sanitizeSafehandsSave({intro:'yes'}).intro,false);assert.equal(S.emptySafehandsSave().intro,false);
+ for(const bad of ['x',[],null,7,{best:'x',gloves:'no',scout:{rosa:null,nia:{seen:'x'}},daily:5,rounds:99},{daily:{day:'<b>',saves:-4}}])assert.doesNotThrow(()=>S.sanitizeSafehandsSave(bad),'a bad save never throws');
+ assert.ok(read('components/games/SafeHandsGame.tsx').includes("guideRef.current==='swipe'&&!s.act"),'the world holds on the planted foot until the child swipes');});
+
 if(require.main===module)console.log(`safehands-core: ${n} checks ok`);
 module.exports={ok,read,C,S};

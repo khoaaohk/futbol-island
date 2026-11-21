@@ -102,6 +102,11 @@ Until then the game works: everything saves on the device and the island board j
 - The keeper uses the player's saved bean colours (body, skin, hair) drawn in 2D, not the 3D rig with its outfit and headwear.
 - Animation is pose-based (ready, dive, tip, block, hold): no in-between frames; strikers share one body with different tops.
 - Tells are honest by design; "hips" and "approach" are subtle and unlabelled, so most kids will read only the foot and the lean.
+  Verify pass (Nov 21 2026): the planted boot now gets a thick sun outline (Sunday league: while the foot is down, gently pulsing,
+  static with reduced motion; Academy: a 0.35 s flash as it lands; First team on: none), and the very first career run opens with a
+  guided penalty (shown once, `intro` in the save): "Watch the striker's planted foot up there", then the world holds on the planted
+  foot (the loop sleeps: 0 frames) with "The foot points LEFT. Swipe left to dive!" and a moving finger (CSS only) until the child
+  swipes the right way. The guided shot is a plain low one to a side (core `intro`, no extra random draws).
 - Human tuning is from bots, not from children: the swipe threshold (22 px) and the tell windows need a real playtest on a phone.
 - Deflections are mostly drama (they never change the side). The wet ball only changes what can be held.
 - Not measured on a real iPhone.

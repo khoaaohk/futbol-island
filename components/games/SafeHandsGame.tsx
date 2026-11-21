@@ -46,7 +46,7 @@ const SWIPE=22,CARRY_SPEED=700;
 const SAVE_WORD=['SAFE HANDS!','SAVE!','FINGERTIPS!','TIPPED OVER!','BLOCKED!','GOT IT!','KEEPER’S!','PUNCHED CLEAR!'];
 /** The first time a kind of shot comes: one line on what to do. */
 const KIND_HINT:Record<Kind,string>={
- pen:'Penalty: stay on your line. Watch her planted foot, then swipe to dive.',
+ pen:'Penalty: stay on your line. Watch the striker’s planted foot, then swipe to dive.',
  one:'One on one: drag up to come out and make the goal small. Stay big.',
  far:'Long shot: drag up two or three steps to narrow the angle.',
  free:'Free kick: the wall guards one side. Stand in the open side.',
@@ -78,6 +78,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
  const [hud,setHud]=useState<Hud>(blank),hudRef=useRef(hud),hudAt=useRef(0);
  const [save,setSave]=useState<SafehandsSave>(emptySafehandsSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[shelf,setShelf]=useState(false),[scout,setScout]=useState(false),[words,setWords]=useState<Word[]>([]);
+ const [guide,setGuide]=useState<{mode:'watch'|'swipe'|'wrong';side:number}|null>(null),guideRef=useRef<'off'|'watch'|'swipe'>('off');
  const [hint,setHint]=useState(''),[note,setNote]=useState(''),[tip,setTip]=useState(-1),[startTier,setStartTier]=useState(0),[goals,setGoals]=useState(0);
  const entry=useArcadeEntry('safehands');
  const stage=useRef<HTMLDivElement>(null),focusEl=useRef<HTMLDivElement>(null),bgEl=useRef<HTMLCanvasElement>(null),fgEl=useRef<HTMLCanvasElement>(null);
@@ -103,7 +104,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
    line:nearMissLine({score,best:settled.previousBest,newBest:settled.newBest,daily:r.daily,dailySaves:s.dailySaves,rounds,won:s.won,gloves:settled.save.gloves.length}),coach:coachLine(stats,r.daily)});
   if(score>0&&!r.daily)setBoard({score});
   if(settled.newMedal||settled.newGloves.length){audio.current?.medal(Math.max(1,settled.medal));arcadeFeedback(null,'goal');}
-  ptr.current=null;setWords([]);setHint('');setNote('');setTip(-1);view.current?.clear();change('over');
+  ptr.current=null;guideRef.current='off';setGuide(null);setWords([]);setHint('');setNote('');setTip(-1);view.current?.clear();change('over');
  },[change]);
 
  /* ---- one rules event: sound, haptics, words ---- */
@@ -135,7 +136,11 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   }
  },[say]);
 
- const doAct=useCallback((a:Act)=>{const g=game.current;if(!g||phaseRef.current!=='playing')return false;const ok=g.act(a);if(ok){urgent.current=true;setHint('');}return ok;},[]);
+ const doAct=useCallback((a:Act)=>{const g=game.current;if(!g||phaseRef.current!=='playing')return false;
+  // the guided first penalty: only a dive the way the foot points counts; the game waits for it
+  if(guideRef.current==='swipe'){const pl=g.tells().plant,dir=a[0]==='L'?-1:a[0]==='R'?1:0;if(!pl||dir!==pl.side){setGuide({mode:'wrong',side:pl?pl.side:1});return false;}a=dir<0?'L':'R';/* the shot is low: a swipe that drifted up still counts */}
+  const ok=g.act(a);if(ok){urgent.current=true;setHint('');
+   if(guideRef.current==='swipe'){guideRef.current='off';setGuide(null);writeSafehandsSave({...readSafehandsSave(),intro:true});kick();}}return ok;},[kick]);
 
  /* ---- the loop: fixed steps in the core; 30 draws a second on phones, 60 on desktop; an action draws on the very next vsync ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
@@ -144,7 +149,11 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   if(next<0){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}slot.current=next;
   const dt=last.current?Math.min(.1,(now-last.current)/1000):1/60;last.current=now;
   const k=keys.current,s=g.state;if((k.left||k.right||k.up||k.down)&&(s.phase==='set'||s.phase==='wall'||s.phase==='cross'))g.nudge(((k.right?1:0)-(k.left?1:0))*SH.moveX*1.2*dt,((k.up?1:0)-(k.down?1:0))*SH.moveD*1.2*dt);
+  // the guided first penalty: the world holds on the planted foot until the child swipes (the loop sleeps: one frame, no rAF)
+  if(guideRef.current==='swipe'&&!s.act){v.render(g,now/1000);return;}
   const c0=performance.now();if(now>=stopUntil.current){g.advance(dt);g.drain(onEvent);}
+  if(guideRef.current==='watch'&&s.shot?.kind==='pen'&&s.phase==='run'&&!s.act){const pl=g.tells().plant;if(pl){guideRef.current='swipe';setGuide({mode:'swipe',side:pl.side||1});setHint('');v.render(g,now/1000);return;}}
+  if(guideRef.current==='watch'&&s.shot&&s.shot.kind!=='pen'){guideRef.current='off';setGuide(null);}
   v.render(g,now/1000);draws.current++;{const c=cost.current,ms=performance.now()-c0;c.n++;c.ms+=ms;if(ms>c.max)c.max=ms;}// frame cost (rules + draw) for scripts/check-safehands-browser.cjs
   if(now-hudAt.current>100){const hh=hudRef.current,n:Hud={score:s.score,lives:s.lives,tier:s.tier,shotN:s.shotN,streak:s.streak,cp:s.phase,kind:s.shot?.kind??'',loose:!!g.looseBall(),decided:!!s.decision,log:s.dailyLog.join('')};
    let diff=false;for(const key of Object.keys(n) as (keyof Hud)[])if(n[key]!==hh[key]){diff=true;break;}if(diff){hudAt.current=now;hudRef.current=n;setHud(n);}}
@@ -158,7 +167,8 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   (audio.current??=createSafehandsAudio()).unlock();
   const id=await entry.enter();if(!id)return;
   const day=localPlayDay(Date.now()),seed=daily?safehandsDailySeed(day):1+Math.floor(Math.random()*2_000_000_000),sv=readSafehandsSave(),tier=daily?0:Math.min(startTier,sv.rounds,TIERS.length-1);
-  game.current=createSafeHands({seed,daily,startTier:tier});run.current={id,daily,day,done:false,scout:[],kinds:[],feats:[]};stopUntil.current=0;endAt.current=0;ptr.current=null;
+  const intro=!daily&&tier===0&&!sv.intro&&sv.plays===0;guideRef.current=intro?'watch':'off';setGuide(intro?{mode:'watch',side:0}:null);
+  game.current=createSafeHands({seed,daily,startTier:tier,intro});run.current={id,daily,day,done:false,scout:[],kinds:[],feats:[]};stopUntil.current=0;endAt.current=0;ptr.current=null;
   if(!daily)beginBoardSession('safehands');
   // the keeper wears the newest pair of gloves from the shelf
   {const lastGlove=[...SH_FEATS].reverse().find(f=>sv.gloves.includes(f.id));view.current?.setLook({glove:lastGlove?.color??'#ffc83a'});}
@@ -236,7 +246,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
  return <div className={`${styles.game} ${arcadeSkin.safehands} ${comicRoot}`} data-game="safehands" data-arcade-kind="safehands" data-phase={phase}>
   <aside className={styles.side} data-side="left" aria-hidden="true">
    <ComicPanel tilt={-1.5} tone="paper"><b>Set your position</b><br/>Before the kick, drag to stand between the ball and the middle of your goal. Drag up to step off your line.</ComicPanel>
-   <ComicPanel tilt={1} tone="sun"><b>Read, then dive</b><br/>The foot she plants next to the ball points where the shot goes. Swipe that way. Swipe up and across for a high dive.</ComicPanel>
+   <ComicPanel tilt={1} tone="sun"><b>Read, then dive</b><br/>The foot the striker plants next to the ball points where the shot goes. Swipe that way. Swipe up and across for a high dive.</ComicPanel>
    <ComicPanel tilt={-.8} tone="teal"><b>Keys</b><br/>A-D shuffle. W-S step out. After the whistle: left / right dive low, Q / E dive high, up tips over. P pauses.</ComicPanel>
   </aside>
   <aside className={styles.side} data-side="right" aria-hidden="true">
@@ -260,7 +270,12 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
    {playing&&hud.cp==='wall'&&<div className={styles.decide} data-safehands-decide="wall"><b>How many in the wall?</b><div>{[2,3,4].map(n=><ComicButton key={n} variant={n===3?'primary':'paper'} onClick={()=>wall(n)} data-safehands-wall={n}>{n}</ComicButton>)}</div><small>Ball in the middle: more. Ball out wide: fewer.</small></div>}
    {playing&&hud.cp==='cross'&&!hud.decided&&<div className={styles.decide} data-safehands-decide="cross"><b>Cross! Your call:</b><div><ComicButton variant="teal" onClick={()=>choose('claim')} data-safehands-choose="claim">Catch</ComicButton><ComicButton variant="primary" onClick={()=>choose('punch')} data-safehands-choose="punch">Punch</ComicButton><ComicButton onClick={()=>choose('stay')} data-safehands-choose="stay">Stay</ComicButton></div><small>Free in your small box: catch. A crowd: punch. Far out: stay.</small></div>}
    {playing&&hud.loose&&hud.cp==='set'&&<div className={styles.decide} data-safehands-decide="loose"><div><ComicButton variant="primary" wide onClick={()=>doAct('down')} data-safehands-smother>Dive on the ball!</ComicButton></div></div>}
-   {playing&&(note||hint)&&!(hud.cp==='wall'||(hud.cp==='cross'&&!hud.decided)||(hud.loose&&hud.cp==='set'))&&<p className={styles.hint} data-safehands-hint data-note={note?true:undefined} key={note||hint}>{note||hint}</p>}
+   {playing&&guide&&(hud.cp==='set'||hud.cp==='run'||hud.cp==='fly')&&<div className={styles.guide} data-safehands-guide={guide.mode} aria-live="polite">
+    {guide.mode==='watch'?<p><span aria-hidden="true">▲</span> Watch the striker’s <b>planted foot</b> up there. It points where the ball will go.</p>
+     :<><p>{guide.mode==='wrong'?'The other way! ':''}The foot points <b>{guide.side<0?'◀ LEFT':'RIGHT ▶'}</b>. Swipe {guide.side<0?'left':'right'} to dive!</p>
+      <i className={styles.guideHand} data-side={guide.side<0?'left':'right'} aria-hidden="true">☝</i></>}
+   </div>}
+   {playing&&!guide&&(note||hint)&&!(hud.cp==='wall'||(hud.cp==='cross'&&!hud.decided)||(hud.loose&&hud.cp==='set'))&&<p className={styles.hint} data-safehands-hint data-note={note?true:undefined} key={note||hint}>{note||hint}</p>}
    <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} data-teach={w.teach||undefined} style={w.x>=0?{left:w.x,top:w.y}:undefined} onAnimationEnd={()=>setWords(l=>l.filter(x=>x.id!==w.id))}>
     <ComicBurst word={w.text} size={w.teach?22:w.text.length>10?17:22} tilt={w.id%2?-4:3} color={w.tone==='red'?'#f0452e':w.tone==='teal'?'#19b5a5':w.tone==='paper'?'#fff3d6':'#ffc83a'} fill={w.tone==='red'?'#fff3d6':undefined}/>
     {w.pts>0&&<b className={`${comicNumeral} ${styles.pts}`}>+{w.pts}</b>}</span>)}</div>

@@ -12,14 +12,14 @@ export type ScoutCard={faced:number;saved:number;seen:[number,number,number,numb
 /** best: career best score. rounds: most rounds cleared in one run (0-4; 4 = the cup is won). cups: cup wins. gloves: feats earned.
  *  scout: one card per striker id. daily: today's shoot-out (counted = the board run is used). tip: next fact. */
 export type SafehandsSave={v:1;best:number;medal:number;plays:number;rounds:number;cups:number;tip:number;gloves:FeatId[];scout:Record<string,ScoutCard>;
- daily:{day:string;saves:number;best:number;counted:boolean;runs:number};dailyBest:number;seenKinds:string[]};
-export const emptySafehandsSave=():SafehandsSave=>({v:1,best:0,medal:0,plays:0,rounds:0,cups:0,tip:0,gloves:[],scout:{},daily:{day:'',saves:0,best:0,counted:false,runs:0},dailyBest:0,seenKinds:[]});
+ daily:{day:string;saves:number;best:number;counted:boolean;runs:number};dailyBest:number;seenKinds:string[];/** the guided first penalty was played */intro:boolean};
+export const emptySafehandsSave=():SafehandsSave=>({v:1,best:0,medal:0,plays:0,rounds:0,cups:0,tip:0,gloves:[],scout:{},daily:{day:'',saves:0,best:0,counted:false,runs:0},dailyBest:0,seenKinds:[],intro:false});
 const int=(v:unknown,max:number)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0;
 const DAY=/^\d{4}-\d{2}-\d{2}$/,day=(v:unknown)=>typeof v==='string'&&DAY.test(v)?v:'';
 const KINDS=['pen','one','far','free','cross','reb'];
 export function sanitizeSafehandsSave(raw:unknown):SafehandsSave{
  const out=emptySafehandsSave();if(!raw||typeof raw!=='object')return out;const r=raw as Partial<SafehandsSave>;
- out.best=int(r.best,SH.scoreMax);out.medal=int(r.medal,SH.medals.length);out.plays=int(r.plays,1e9);out.rounds=int(r.rounds,TIERS.length);out.cups=int(r.cups,1e6);out.tip=int(r.tip,1e9);out.dailyBest=int(r.dailyBest,SH.dailyShots);
+ out.best=int(r.best,SH.scoreMax);out.medal=int(r.medal,SH.medals.length);out.plays=int(r.plays,1e9);out.rounds=int(r.rounds,TIERS.length);out.cups=int(r.cups,1e6);out.tip=int(r.tip,1e9);out.dailyBest=int(r.dailyBest,SH.dailyShots);out.intro=r.intro===true;
  if(Array.isArray(r.gloves))out.gloves=SH_FEAT_IDS.filter(id=>(r.gloves as unknown[]).includes(id));
  if(Array.isArray(r.seenKinds))out.seenKinds=KINDS.filter(k=>(r.seenKinds as unknown[]).includes(k));
  if(r.scout&&typeof r.scout==='object')for(const st of STRIKERS){const c=(r.scout as Record<string,Partial<ScoutCard>>)[st.id];if(!c||typeof c!=='object')continue;const seen=Array.isArray(c.seen)?c.seen:[];
@@ -60,7 +60,7 @@ export type SafehandsTip={title:string;line:string};
 export const SAFEHANDS_TIPS:readonly SafehandsTip[]=[
  {title:'Set position',line:'A keeper stands on the line between the ball and the middle of the goal. From there both posts are the same distance away.'},
  {title:'Narrow the angle',line:'Step toward the ball and the goal looks smaller to the striker. Keepers come a few steps off the line for long shots.'},
- {title:'Read the planted foot',line:'The foot a striker plants next to the ball points where the shot will go. Watch it, not the eyes.'},
+ {title:'Read the planted foot',line:'The foot a striker plants next to the ball usually points where the shot will go. Watch it, not the eyes.'},
  {title:'Stay big',line:'In a one on one, stay on your feet as long as you can. Arms wide, chest up. Make the striker beat you.'},
  {title:'Catch or parry?',line:'Catch a soft shot and the danger is over. Push a hard shot wide, away from the middle of the goal.'},
  {title:'Be set',line:'Stop moving just before the kick. A keeper with both feet on the ground can dive either way.'},
@@ -79,9 +79,9 @@ export const WHY_LINE:Record<GoalWhy,string>={
  position:'You were too far from the ball’s path. Stand between the ball and the middle of the goal first.',
  wrongmove:'That move could not reach the ball. Dive to the side the planted foot points to.',
  chipped:'You came out too far and the ball was chipped over you. Two or three steps is enough for a long shot.',
- rounded:'Only dive at her feet when the ball runs away from her. If she keeps it close, stay big.',
+ rounded:'Only dive at the striker’s feet when the ball runs away. If the ball stays close, stay big.',
  stranded:'That cross was too far out to reach. Stay on your line when it lands outside your small box.',
- early:'She waited for you to move. Stay still until her foot is planted.',
+ early:'The striker waited for you to move. Stay still until the foot is planted.',
 };
 export function coachLine(stats:ShStats,daily:boolean):string{
  if(stats.goals===0)return daily?'Five out of five. A perfect shoot-out!':'A clean sheet. Not one goal let in!';

@@ -119,4 +119,14 @@
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:50px}.art{width:min(190px,58%)}.hint{bottom:calc(112px + env(safe-area-inset-bottom,0px))}}
 @media (max-height:600px){.game [data-safehands-card=start] .art{display:none}.fact{display:none}}
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}.shelfList{grid-template-columns:1fr}}
+/* Nov 21 2026: the guided first penalty (shown once): one line over the pitch and a finger that shows the swipe */
+.guide{position:absolute;z-index:4;left:14px;right:14px;bottom:calc(58px + env(safe-area-inset-bottom,0px));display:grid;justify-items:center;gap:8px;pointer-events:none}
+.guide p{margin:0;max-width:340px;padding:9px 12px 8px;border:3px solid var(--cm-ink);background:var(--cm-sun);box-shadow:4px 4px 0 var(--cm-ink);font:800 17px/1.3 var(--cm-ui);text-align:center}
+.guide[data-safehands-guide=watch] p{background:var(--cm-paper)}
+.guide[data-safehands-guide=wrong] p{background:var(--cm-red,#f0452e);color:var(--cm-paper)}
+.guideHand{font-style:normal;font-size:46px;line-height:1;text-shadow:3px 3px 0 var(--cm-ink);animation:shGuideR 1s ease-in-out infinite}
+.guideHand[data-side=left]{animation-name:shGuideL}
+@keyframes shGuideR{0%{translate:-40px 0;opacity:0}20%{opacity:1}80%{translate:40px 0;opacity:1}100%{translate:40px 0;opacity:0}}
+@keyframes shGuideL{0%{translate:40px 0;opacity:0}20%{opacity:1}80%{translate:-40px 0;opacity:1}100%{translate:-40px 0;opacity:0}}
+@media (prefers-reduced-motion:reduce){.guideHand{animation:none}}
 @media (prefers-reduced-motion:reduce){.streak{rotate:none;animation:none}.score[data-new-best],.lives[data-hit],.decide,.hint{animation:none}.word{animation-duration:.8s}.flash{animation-duration:.2s}}
