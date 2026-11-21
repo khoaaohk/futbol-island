@@ -66,3 +66,9 @@ export const booksHubRail=(featured:boolean,regions:readonly string[]):Rail=>hub
  ...regions.map(r=>[regionId(r),r] as const),['guides','Island field guides'],['how','How the books are made']]);
 export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All story books'},[['read-book','Read the pop-up book'],['story','The story'],['sources','Sources'],
  ['faq','Questions'],['keep','Keep reading']]);
+
+/* age groups and the other by-age charts (app/(site)/learn/ChartView.tsx, the Spanish ChartEsPage): Back to the Library, then the
+   page's tables and sections in page order */
+export const chartRail=(o:{tables:readonly {id:string;title:string}[];fields?:string;sections:readonly {id:string;title:string}[]},es=false):Rail=>
+ hub(L(es,'On this page','En esta página'),[...o.tables.map(t=>[t.id,t.title] as const),...(o.fields?[['fields',o.fields] as const]:[]),
+  ...o.sections.map(x=>[x.id,x.title] as const),qa(es),more(es)],es);

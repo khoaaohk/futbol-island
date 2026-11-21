@@ -1,3 +1,5 @@
+import RailNav from '@/components/site/shell/RailNav';
+import {chartRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import ClipPlay from '@/components/site/ClipPlay';
 import {QA} from '@/components/site/LessonHub';
@@ -112,7 +114,8 @@ function ChartEsPage({slug}:{slug:string}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:e.title,path,description:e.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:e.h1,teaches:e.lead,image:diagramUrl(c.picture)}))}/>
   <JsonLd data={faqLd(e.faq)}/>
-  <EsIntro crumbs={crumbs} h1={e.h1} lead={e.lead} more={e.more}/>
+  {/* layout batch 3 (Nov 20 2026): Back to the Biblioteca, Resumen, the page's sections */}
+  <EsIntro crumbs={crumbs} h1={e.h1} lead={e.lead} more={e.more} top rail={<RailNav rail={chartRail({tables:c.tables.map((t,i)=>({id:t.id,title:e.tables[i].title})),fields:c.fields?CHART_FIELDS_ES.title:undefined,sections:c.sections.map((x,i)=>({id:x.id,title:e.sections[i].title}))},true)} current="#top"/>}/>
   {c.tables.map((t,i)=>{const x=e.tables[i];return <Section key={t.id} id={t.id} title={x.title}>
    {x.intro&&<p>{x.intro}</p>}
    <DataTable label={x.title} head={x.head} rows={x.rows}/>
