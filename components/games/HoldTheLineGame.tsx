@@ -119,7 +119,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    case 'pass':a?.pass(e.word==='wide');if(e.b===1){a?.alert();arcadeFeedback(null,'collect');}break;
    case 'tell':a?.windup(s.tell?.W??.6);break;
    case 'kick':a?.pass(true);if(e.word==='shot'){a?.alert();say('SHOT!',0,'paper',true);}
-    else if(e.word!=='feet'){setHint('');setNote(REASON_NOTE[e.b]??'');if(e.a===0)a?.alert();
+    else if(e.word!=='feet'){setHint('');setNote(REASON_NOTE[e.b]??'');if(e.a===0){a?.alert();if(e.word==='thru')say('THROUGH ON GOAL!',0,'paper',true);}
      // the decision moment: the world holds for a beat with the offside line drawn (early matches; the helper fades out later)
      const aid=guideRef.current!=='off'?2:g.tn.aid;if(aid>=1)stopUntil.current=performance.now()+(aid>=2?950:650);}break;
    case 'stop':{const k=STOP_KINDS[e.a];if(k==='offside'){a?.flag();a?.cheer(true);arcadeFeedback(null,'perfect');}else if(k==='swept'){a?.sweep();a?.cheer(false);arcadeFeedback(null,'combo');}else if(k==='save'){a?.tackle();a?.cheer(false);}else{a?.tackle();a?.cheer(false);arcadeFeedback(null,'combo');}
@@ -238,7 +238,7 @@ export default function HoldTheLineGame({onExit}:{onExit:()=>void}){
    <ComicPanel tilt={-.8} tone="teal"><b>Keys</b><br/>W-S step up and drop. A-D slide. 1-4 send that defender to press. P pauses.</ComicPanel>
   </aside>
   <aside className={styles.side} data-side="right" aria-hidden="true">
-   <ComicPanel tilt={1.2} tone="paper" className={styles.sideMedals}><b>Medals</b>{HL.medals.map((m,i)=><span key={m}><i className={styles.medal} data-level={i+1}/>{MEDAL_NAMES[i]}<em>{m.toLocaleString('en-US')}</em></span>)}</ComicPanel>
+   <ComicPanel tilt={1.2} tone="paper" className={styles.sideMedals}><b>Medals</b>{HL.medals.map((m,i)=><span key={m}><i className={styles.medal} data-level={i+1} data-on/>{MEDAL_NAMES[i]}<em>{m.toLocaleString('en-US')}</em></span>)}</ComicPanel>
    <ComicPanel tilt={-1} tone="red"><b>Press with care</b><br/>Tap a defender to press only when the ball runs away from the passer. A press leaves a gap.</ComicPanel>
    <ComicPanel tilt={.8} tone="sun"><b>Too deep?</b><br/>Drop for a long ball. But sit near your own box and they shoot from distance.</ComicPanel>
   </aside>

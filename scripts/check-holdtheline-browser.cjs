@@ -49,9 +49,9 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
    for(;;){const s=await read();if(!s||s.ui!=='playing')return s;if(s.over)return s;if(Date.now()-t0>(o.ms||240000))return null;if(o.until&&o.until(s))return s;
     if(s.wave!==wave){wave=s.wave;seen='';}
     const L=s.L,idle=o.idle&&o.idle(s);
-    if(cap.through&&s.res==='through'){await shot(cap.through);cap.through='';}
+    if(cap.through&&s.res==='through'){await wait(900);await shot(cap.through);cap.through='';}
     if(cap.gap&&s.gap&&s.phase==='play'){await shot(cap.gap);cap.gap='';}
-    if(cap.sw&&L.wide&&s.kind==='switch'&&s.stage==='fly'){await shot(cap.sw);cap.sw='';}
+    if(cap.sw&&L.wide&&s.kind==='switch'&&s.stage==='fly'&&o.idle){await wait(420);await shot(cap.sw);cap.sw='';}
     if(cap.offside&&s.res==='offside'){await wait(260);await shot(cap.offside);cap.offside='';}
     if(L.play&&!idle){const tag=L.tell?'tell:'+L.tell.kind:L.wide?'wide:'+L.wide:L.heavy?'heavy':L.waiting?'waiting':L.deepPasser?'deep':'';
      if(tag&&tag!==seen){seen=tag;const R=s.rect;

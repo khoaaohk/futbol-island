@@ -24,6 +24,8 @@ export type LineLook={body:string;skin:string;hair:string};
 /** what the shell asks the view to show on top of the play */
 export type ViewAid={/** 2 the dashed offside line is always on, 1 only at the decision, 0 only when the flag goes up */aid:number;/** the world is held on the decision */frozen:boolean;reduced:boolean};
 const clamp=(v:number,a:number,b:number)=>v<a?a:v>b?b:v;
+/** two kit colours a child could mix up (the other team then wears its away colours) */
+const rgb=(h:string)=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)||0),near=(a:string,b:string)=>{const x=rgb(a),y=rgb(b);return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<125;};
 
 function dots(c:Ctx,x:number,y:number,w:number,h:number,color:string,step=8,r=1.5){c.fillStyle=color;c.beginPath();for(let j=0,yy=y+step/2;yy<y+h;yy+=step,j++)for(let xx=x+(j%2?step:step/2);xx<x+w;xx+=step){c.moveTo(xx+r,yy);c.arc(xx,yy,r,0,TAU);}c.fill();}
 /** A paper tag with an ink edge and a hard shadow (canvas twin of the kit's caption box). */
@@ -104,7 +106,7 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
    for(let i=0;i<n-1;i++){const a=chest(i),e=chest(i+1),gap=i===out||i+1===out;c.setLineDash(gap?[4,6]:[]);c.lineWidth=gap?3:7;c.strokeStyle=gap?RED:INK;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(e.x,e.y);c.stroke();if(!gap){c.lineWidth=3.5;c.strokeStyle=PAPER;c.stroke();}}c.setLineDash([]);
    if(out>=0&&s.press&&Math.abs(s.defs[out].y-y)>1.5){const p=project((out-(n-1)/2)*(n===4?5.5:6.5)+s.lineX,y);c.setLineDash([5,5]);c.lineWidth=2.5;c.strokeStyle=RED;c.beginPath();c.ellipse(p.x,p.y-2,p.s*1.2,p.s*.5,0,0,TAU);c.stroke();c.setLineDash([]);if(aid.aid>=1)tag(c,'GAP',p.x,p.y-30,{size:10,fill:RED,color:PAPER,align:'center'});}}
   // everyone, far to near
-  type Item={y:number;draw:()=>void};const items:Item[]=[],T=s.tell,team=g.team,key=g.plans[Math.min(s.wave,g.plans.length-1)].beats;const lastBeat=key[key.length-1];
+  type Item={y:number;draw:()=>void};const items:Item[]=[],T=s.tell,away=near(look.body,g.team.kit),team={kit:away?g.team.trim:g.team.kit,trim:away?g.team.kit:g.team.trim},key=g.plans[Math.min(s.wave,g.plans.length-1)].beats;const lastBeat=key[key.length-1];
   for(let i=0;i<7;i++){const a=s.atk[i];if(a.y>HL.top+1)continue;items.push({y:a.y,draw:()=>{
    const holder=s.phase==='play'&&s.holder===i&&(s.stage==='hold'||s.stage==='tell'),wind=holder&&T?clamp(s.bt/T.W,0,1):0,runner=i===5,moving=runner&&(s.phase==='res'&&s.res?.who===5||s.stage==='tell'||s.stage==='air');
    const p=project(a.x,a.y),sc=p.s*1.3;
@@ -114,6 +116,7 @@ export function createHoldthelineView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,
    const head=bean(c,a.x,a.y,{body:team.kit,trim:team.trim,skin:i%2?'#c98a5e':'#f2b98a',band:runner&&lastBeat.k==='bend',lean:moving?-.9:wind>0?.5:0});
    if(moving&&!aid.reduced){c.lineWidth=2.5;c.strokeStyle=INK;c.beginPath();for(let k=-1;k<=1;k++){c.moveTo(head.fx+k*head.w*.5,head.y-4);c.lineTo(head.fx+k*head.w*.5,head.y-4-head.s*1.3);}c.stroke();}
    if(holder&&aid.aid>=1){if(T&&T.kind!=='feet')tag(c,T.kind==='long'?'LONG BALL!':T.kind==='shot'?'SHOT!':'WIND-UP!',head.x,head.y-24,{size:10,fill:SUN,align:'center'});else if(L.heavy)tag(c,'HEAVY TOUCH!',head.x,head.y-24,{size:10,fill:SUN,align:'center'});else if(L.waiting)tag(c,'WAITING…',head.x,head.y-24,{size:10,align:'center'});}
+   else if(holder&&L.waiting)tag(c,'…',head.x,head.y-24,{size:13,align:'center'});// a passer who waits always shows it (the press is on)
    if(snap&&runner){tag(c,snap.offside?'OFFSIDE':snap.reason==='level'?'LEVEL = ONSIDE':snap.reason==='ownhalf'?'OWN HALF = ONSIDE':'ONSIDE',head.x,head.y-24,{size:11,fill:snap.offside?RED:TEAL,color:snap.offside?PAPER:INK,align:'center'});}
   }});}
   for(let i=0;i<n;i++){const d=s.defs[i],out=s.press&&s.press.i===i;items.push({y:d.y,draw:()=>{bean(c,d.x,d.y,{body:look.body,skin:look.skin,hair:look.hair,back:true,ring:out?SUN:PAPER,num:String(i+1),lean:out&&s.press!.st==='go'?.8:0});}});}

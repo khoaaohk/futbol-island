@@ -52,7 +52,7 @@ function table(name,o,N=60){let won=0,goals=0,stops=0,score=0,clean=0,secs=0,own
  for(let i=0;i<N;i++){const p=play(1000+i*17,name,o);won+=p.won?1:0;goals+=p.goals;stops+=p.stops;score+=p.score;clean+=p.goals===0&&p.won?1:0;secs+=p.secs;own+=p.stats.offsides+p.stats.tackles+p.stats.blocks+p.stats.slides+p.stats.swept;}
  return {won:won/N,goals:goals/N,stops:stops/N,score:score/N,clean:clean/N,secs:secs/N,own:own/N};}
 /** A season played in order by a bot: how many matches it wins before the first loss (three tries a match). */
-function season(name,league,seed){let m=0;for(;m<TEAMS.length;m++){let ok=false;for(let k=0;k<3&&!ok;k++)ok=play(seed+m*7+k*131,name,{league,match:m}).won;if(!ok)break;}return m;}
+function season(name,league,seed,tries=3){let m=0;for(;m<TEAMS.length;m++){let ok=false;for(let k=0;k<tries&&!ok;k++)ok=play(seed+m*7+k*131,name,{league,match:m}).won;if(!ok)break;}return m;}
 
 if(MAIN){
  const pct=v=>(v*100).toFixed(0)+'%';
@@ -69,7 +69,7 @@ if(MAIN){
   if(PRINT){console.log(`league ${league} (${C.LEAGUES[league].name}): bot | wins | goals a match | stops | clean sheets | mean score | match secs`);
    for(const [n,t] of [['ideal',I],['expert',E],['mid',M],['careful',Ca],['late',La],['drop',D],['random',R]])console.log(` ${n.padEnd(8)}| ${pct(t.won).padStart(4)} | ${t.goals.toFixed(2)} | ${t.stops.toFixed(1)} | ${pct(t.clean).padStart(4)} | ${Math.round(t.score)} | ${Math.round(t.secs)}`);
    for(const n of ['careful','mid','expert']){const per=TEAMS.map((_,m)=>pct(table(n,{league,match:m},30).won));console.log(` ${n} wins by match: ${per.join(' ')}`);}
-   for(const n of ['careful','mid','expert']){let sum=0;const N=30;for(let i=0;i<N;i++)sum+=season(n,league,5000+i*977);console.log(` ${n}: matches won in a row from the start (3 tries each): ${(sum/N).toFixed(1)} of ${TEAMS.length}`);}}
+   for(const n of ['careful','mid','expert']){let sum=0,one=0;const N=40;for(let i=0;i<N;i++){sum+=season(n,league,5000+i*977);one+=season(n,league,5000+i*977,1);}console.log(` ${n}: matches won in a row from the start: ${(one/N).toFixed(1)} of ${TEAMS.length} with one try each, ${(sum/N).toFixed(1)} with three tries each`);}}
  }
  // tuning targets: a careful first-timer wins the first match; a mid player gets through about half the Coast League
  {const c=table('careful',{league:0,match:0},80);assert.ok(c.won>=.75,`a careful first-timer wins the first match most of the time (${pct(c.won)})`);

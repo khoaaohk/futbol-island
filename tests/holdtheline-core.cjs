@@ -112,7 +112,7 @@ ok('every wave is winnable: the bot that reads and answers lets nothing in, agai
 
 ok('the match: goals against a limit, stars, a clean sheet is the prize; harder league = less time',()=>{
  const p=B.play(11,'ideal',{league:0,match:0});assert.ok(p.won&&p.goals===0&&p.stars===3);const q=B.play(11,'drop',{league:0,match:0});assert.equal(q.won,false);assert.equal(q.stars,0);assert.ok(q.goals===C.tuning(0,0).limit+1,'the match ends when the limit is passed');
- assert.deepEqual([C.tuning(0,0).limit,C.tuning(0,5).limit,C.tuning(1,0).limit],[3,2,1]);assert.deepEqual([C.tuning(0,0).aid,C.tuning(0,4).aid,C.tuning(0,8).aid,C.tuning(1,0).aid],[2,1,0,0],'the helper line fades out');
+ assert.deepEqual([C.tuning(0,0).limit,C.tuning(0,5).limit,C.tuning(0,6).limit,C.tuning(1,0).limit],[3,2,1,1]);assert.deepEqual([C.tuning(0,0).aid,C.tuning(0,4).aid,C.tuning(0,8).aid,C.tuning(1,0).aid],[2,1,0,0],'the helper line fades out');
  for(let m=0;m<10;m++){assert.ok(C.tuning(1,m).W<C.tuning(0,m).W,'promoted: a shorter wind-up');assert.ok(C.tuning(1,m).W>=.5,'never shorter than a child can react to');if(m)assert.ok(C.tuning(0,m).W<C.tuning(0,m-1).W);}
  assert.ok(p.score>HL.medals[1]&&p.score<HL.scoreMax);assert.equal(C.medalFor(HL.medals[0]),1);assert.equal(C.medalFor(HL.medals[2]),3);assert.equal(C.medalFor(HL.medals[0]-1),0);
  const g=C.createHoldTheLine({seed:3});assert.equal(g.state.phase,'tip');g.advance(2);assert.equal(g.state.t>0&&g.state.phase==='tip',true,'nothing happens until the team card is read');assert.equal(g.ack(),true);assert.equal(g.ack(),false);

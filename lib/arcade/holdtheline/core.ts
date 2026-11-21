@@ -88,7 +88,7 @@ export type Tuning={W:number;fly:number;hold:number;sw:number;ctrl:number;dwell:
 export function tuning(league:number,match:number,daily=false):Tuning{
  if(daily)return {W:.8,fly:.6,hold:.6,sw:1.15,ctrl:.4,dwell:1.35,margin:.4,aid:1,limit:2};
  const m=Math.max(0,Math.min(9,match))/9;
- return league<=0?{W:1.05-.37*m,fly:.75-.15*m,hold:.8-.2*m,sw:1.35-.25*m,ctrl:.45,dwell:1.6-.3*m,margin:.4,aid:match<3?2:match<6?1:0,limit:match<3?3:2}
+ return league<=0?{W:1.05-.37*m,fly:.75-.15*m,hold:.8-.2*m,sw:1.35-.25*m,ctrl:.45,dwell:1.6-.3*m,margin:.4,aid:match<3?2:match<6?1:0,limit:match<3?3:match<6?2:1}
   :{W:.72-.16*m,fly:.55-.1*m,hold:.55-.15*m,sw:1.05-.15*m,ctrl:.38,dwell:1.25-.25*m,margin:.3,aid:0,limit:1};
 }
 
