@@ -59,7 +59,7 @@ arcade room, `arcade_lobby`; plays are saved with the gashapon collection). Unti
   `/videos/hold-the-line-gameplay` -> `/videos/pop-up-shot-gameplay`. Hold the Line's page, media, drill links and hub copy are gone.
 - Counts read fifteen everywhere (hub, Library, llms.txt, share picture). Hub pick lines for Flick It and FootGolf were left out to stay
   under the hub word cap (1866/1899).
-- **Media caps raised, owner to confirm:** public/games share pictures 2.05 -> 2.16 MB (2,205 KB used); gameplay media 21 -> 23 MB
+- **Media caps raised (owner approved Nov 21 2026):** public/games share pictures 2.05 -> 2.16 MB (2,205 KB used); gameplay media 21 -> 23 MB
   (~22.9 MB used). Under 21 MB each new 3D clip would need ~125 KB and the ball blurs.
 
 ## Weak spots that need a real phone and a real child
