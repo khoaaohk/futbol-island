@@ -30,7 +30,7 @@
 .nav{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;height:100%;box-sizing:border-box;padding:0 max(var(--gutter),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)) 3px}
 .page .brand{justify-self:start;display:inline-flex;align-items:center;min-height:44px;font-family:IslandBrush,Arial,sans-serif;font-size:26px;line-height:1;color:var(--ink);text-decoration:none;white-space:nowrap}
 .navLinks{display:flex;gap:6px;margin:0;padding:0;list-style:none}
-.page .navLinks a{display:inline-flex;align-items:center;justify-content:center;width:92px;min-height:44px;color:var(--ink);font-size:13px;opacity:.78;text-decoration:none;white-space:nowrap}
+.page .navLinks a{display:inline-flex;align-items:center;justify-content:center;width:92px;min-height:44px;color:var(--ink);font-size:15px;font-weight:700;opacity:1;text-decoration:none;white-space:nowrap}
 @media(hover:hover){.page .navLinks a:hover{opacity:1;color:var(--link)}}
 .page .nav a.play{justify-self:end;align-self:center}/* weight and size come from DoneButton.module.css, exactly as the home bar's Play */
 .menu{display:none}
