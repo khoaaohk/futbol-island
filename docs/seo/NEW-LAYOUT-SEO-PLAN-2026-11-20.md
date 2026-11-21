@@ -126,3 +126,16 @@ Done, one commit each: actions 1 (titles/descriptions EN + `/es/library`), 2 (Li
 arcade games"), 3 (Keep reading Library + Games cards, EN/ES), 4 (sitemap .9), 5 (`/games` CollectionPage, game `sameAs`), 6 (llms.txt,
 `/es/library` og:type). Open, waiting for the owner: 7 to 11. Not done: the `/es` home title/description (already "juego de fútbol
 gratis para niños"; left as is), a phone/desktop look at the Keep reading grid with its two new cards.
+
+Later Nov 20 2026 (owner on 7 to 11: "decision for you, go with your recommendations"):
+- Home body links (action 8), commit 72cde241: "Learn the game" ends with "Read the rules, positions and drills in the Library"
+  (/library); "Even more to explore" has the line "Off the island too: play the eleven free soccer arcade games" (/games). Spanish
+  home: "Aprende el juego" links /es/library, "Explora la isla" links /games "(en inglés)". tests/seo-games.cjs allows exactly
+  this one body link to the games hub (no /games/<slug>).
+- `/play` (action 9, commit f1c47a06): the For grown-ups sheet ends with "Learn soccer in the Library" and "Free soccer games"; plain
+  server-rendered links, no script, kid flow untouched; the game still boots to the island.
+- Share pictures (action 10, commit 166e12cd): public/og/learn-soccer-library-og.jpg (/library, /es/library) and
+  public/og/free-3d-soccer-game-og.jpg (/play), 1200x630, ~90 KB each, from scripts/render-hub-og.cjs. `/games` and `/` keep theirs
+  (`/` is app/opengraph-image.png, 508 KB PNG: fine for crawlers but could be re-saved as JPEG later).
+- Keep reading grid checked at 390 and 1440 (offside rule page): both new cards show, rows even; no change needed.
+- Not changed: the home H1 (action 11, owner: keep it). Breadcrumbs through the Library (action 7) come after the side-nav audit.
