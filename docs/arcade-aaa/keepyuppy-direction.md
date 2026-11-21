@@ -80,8 +80,9 @@ Bots press pads at song times as the shell does. perfect = on the beat. expert /
 | 5 Rooftop Rhythm | full combo, 21,260 | 99 / 98 / 99 | 88 / 88 / 85 | 7% | 21%, 0 |
 | 6 Cup Final Carnival | full combo, 26,935 | 100 / 98 / 100 | 76 / 80 / 74 | 3% | 18%, 0 |
 The perfect bot's full combo on every track, both feet and every daily pair IS the fairness proof (asserted). Real browser, real touch
-events timed on the song clock (`scripts/check-keepyuppy-browser.cjs --mobile --tour`): Cage Night 100%, the Track of the Day (Rooftop
-Rhythm with the fast finish, before the pool was cut to tracks 1-4) 100% and 21,260 points; track 1 with sound off: every played touch Sweet.
+events timed on the song clock (`scripts/check-keepyuppy-browser.cjs --mobile --tour [--track=6]`): Cup Final Carnival 100% and three
+stars, Cage Night 100%, a Track of the Day (Rooftop Rhythm with the fast finish, before the pool was cut to tracks 1-4) 100% and 21,260
+points; track 1 with sound off (`--muted`, performance clock): every played touch Sweet; desktop keys with reduced motion: 97%.
 
 ## Come-back hooks (kid-safe: no day streaks, no timers, no notifications, nothing is lost by staying away)
 1. Track of the Day: one of tracks 1-4 with a twist (weak foot only, swap feet, no thighs, keep it low, fast finish), the same for
@@ -106,15 +107,15 @@ results and a hidden tab draw 0 frames and the AudioContext is suspended (checke
 TRADEOFF: the other 2D arcade games draw 30 a second on phones; this one draws up to 60 (30 with reduced motion), because cue balls moving
 at 30 a second read as stutter in a rhythm game and the eye loses the landing moment. Paid for by keeping a frame tiny (a clear, at most
 ~10 cue balls, one bean of a dozen paths, one ball, two words) and by short runs (about a minute, then a sleeping card). Measured in
-headless Chrome on the M-series Mac, phone profile 390x844 @2x, rules + music scheduling + draw: 0.20-0.24 ms a frame on average, 1.2 ms
-worst, over 4,511 frames (desktop 1440x900: 0.08 ms). Music adds about 10-25 short oscillator / noise voices a second through one
+headless Chrome on the M-series Mac, phone profile 390x844 @2x, rules + music scheduling + draw: 0.20-0.32 ms a frame on average, 1.7 ms
+worst, over 4,513 frames at 60 a second (about 1.5% of a 16.7 ms frame; desktop 1440x900: 0.08 ms). Music adds about 10-25 short oscillator / noise voices a second through one
 limiter. Desktop numbers, not an iPhone temperature claim; if a real phone runs warm, `frameMs` in the shell is the one line to cap at 30.
 
 ## Room placement (owner decision pending; the room is untouched)
 Like Safe Hands, the game is in the catalog as `arcadeUnplaced` (lib/arcade/arcadeCatalog.ts): playable by link, counted in analytics,
 with its board, but no machine, no change to the room or to any "eleven games" line. The Safe Hands doc proposes the east wall at
 x 11.6, z -1 (the mirror of the Air Futbol table). For this second new machine:
-- A (recommended): the same east wall, toward the door from Safe Hands (about x 11.6, z +2; check against arcadeRoomProps.ts and the door):
+- A (suggested): the same east wall, toward the door from Safe Hands (about x 11.6, z +2; check against arcadeRoomProps.ts and the door):
   not a cabinet but a busker's pitch: a round mat with the four coloured pads, a speaker and a ball on a stand. No machine moves; costs
   one small prop's meshes and its prompt. The two new games then make an "east wall" pair.
 - B: the west wall beside Air Futbol (x -10, z about +2), if the east wall is kept for Safe Hands alone.

@@ -77,18 +77,20 @@ const until=async at=>{const d=at-now();if(d>4)await wait(d-3);while(now()<at);}
    await click('[data-keepyuppy-shelf]');await page.waitForSelector('[data-keepyuppy-book]');await wait(300);await shot('trick-book');check(await page.locator('[data-keepyuppy-book] li').count()===6,'the Trick Book has a card for each of the 6 tricks');await page.keyboard.press('Escape');await wait(300);
    // Track of the Day: the card names the twist; the first seconds are played
    await click('[data-keepyuppy-daily]');await page.waitForSelector('[data-keepyuppy-card="tip"],[data-keepyuppy-card="lesson"]',{timeout:20000});await wait(300);
-   {let guard=0;while(await page.locator('[data-keepyuppy-card="lesson"]').count()&&guard++<4){await click('[data-keepyuppy-go]');await playStage();await page.waitForSelector('[data-keepyuppy-card]',{timeout:8000});await wait(200);}}
+   // each new trick gets its 10-second lesson first (today's track or the picked one, whichever meets the trick first)
+   let lessons=0;const takeLessons=async()=>{let guard=0;while(await page.locator('[data-keepyuppy-card="lesson"]').count()&&guard++<6){if(!lessons){check(await rafIn(1000)===0,'lesson card is idle: 0 frames in 1 s');await shot('lesson-card');}
+    const first=!lessons,t0=Date.now();await click('[data-keepyuppy-go]');const r=await playStage({each:async(s,i)=>{if(first&&i===2)await shot('lesson');}});lessons++;
+    check(Date.now()-t0<14000,`lesson ${lessons} is about ten seconds`,`${((Date.now()-t0)/1000).toFixed(1)} s, ${r.played} touches`);await page.waitForSelector('[data-keepyuppy-card]',{timeout:8000});await wait(250);}};
+   await takeLessons();
    check(await page.locator('[data-keepyuppy-twist]').count()===1,'the Track of the Day card names today\'s twist',await page.locator('[data-keepyuppy-twist]').getAttribute('data-keepyuppy-twist').catch(()=>''));await shot('daily-card');
    await click('[data-keepyuppy-go]');let k=0;await playStage({each:async(s,i)=>{if(i===9)await shot('daily-play');k=i;}});
    await page.waitForSelector('[data-keepyuppy-card="results"]',{timeout:20000});await wait(900);await shot('daily-results');
    {const sv=await state();check(sv.daily.counted&&sv.daily.stars>=1,'today\'s Track of the Day is saved on the device',JSON.stringify(sv.daily));check(/tomorrow/i.test(await page.locator('[data-keepyuppy-near]').innerText()),'the card says a new track comes tomorrow');}
    await click('[data-keepyuppy-menu]');await page.waitForSelector('[data-keepyuppy-card="start"]');await wait(300);
-   // a track with tricks: each new trick gets its 10-second lesson first
+   // a track with tricks
    await click(`[data-keepyuppy-track="${TRACK}"]`);await click('[data-keepyuppy-play]');await page.waitForSelector('[data-keepyuppy-card="lesson"],[data-keepyuppy-card="tip"]',{timeout:20000});await wait(300);
-   let lessons=0;while(await page.locator('[data-keepyuppy-card="lesson"]').count()&&lessons<6){if(!lessons){check(await rafIn(1000)===0,'lesson card is idle: 0 frames in 1 s');await shot('lesson-card');}
-    const t0=Date.now();await click('[data-keepyuppy-go]');const r=await playStage({each:async(s,i)=>{if(!lessons&&i===2)await shot('lesson');}});lessons++;
-    check(Date.now()-t0<14000,`lesson ${lessons} is about ten seconds`,`${((Date.now()-t0)/1000).toFixed(1)} s, ${r.played} touches`);await page.waitForSelector('[data-keepyuppy-card]',{timeout:8000});await wait(250);}
-   check(lessons>=1,'a track with new tricks starts with their lessons',`${lessons}`);
+   await takeLessons();
+   check(lessons>=2,'new tricks start with their lessons (today\'s track and the picked track together)',`${lessons}`);
    await page.waitForSelector('[data-keepyuppy-card="tip"]');await click('[data-keepyuppy-go]');
    let trickShot=false;await playStage({each:async(s,i)=>{if(!trickShot&&s.notes[1]&&s.notes[1].kind!=='tap'){trickShot=true;await shot('trick');}}});
    await page.waitForSelector('[data-keepyuppy-card="results"]',{timeout:20000});await wait(900);await shot('results-tricks');

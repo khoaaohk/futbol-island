@@ -284,7 +284,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
      {held&&<p className={styles.status} role="status">{held}</p>}
      <ComicPanel tone="sun" tilt={-1} className={styles.lesson}><b>{T.tip.title}</b>{T.tip.line}</ComicPanel>
      {r.twist&&<ComicPanel tone="teal" flat className={styles.fact} data-keepyuppy-twist={r.twist}><b>Today&rsquo;s twist: {twistInfo(r.twist).name}</b>{twistInfo(r.twist).line}</ComicPanel>}
-     <p className={styles.info}>{T.bpm} beats a minute · {T.balls} balls · weak-foot part in the middle</p>
+     <p className={styles.info}>{T.bpm} beats a minute · {T.balls} balls{r.twist?'':' · weak-foot part in the middle'}</p>
      <div className={styles.actions}><ComicButton variant="primary" wide onClick={go} data-keepyuppy-go autoFocus>Kick off</ComicButton></div>
     </ComicCard>)}
   {phase==='menu'&&askFoot&&<ComicCard label="Which foot do you kick with?" title="Which foot?" badge="First time" badgeTone="teal" data-keepyuppy-card="foot">
