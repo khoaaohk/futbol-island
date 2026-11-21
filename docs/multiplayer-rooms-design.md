@@ -514,6 +514,10 @@ entry Warp + one retry 5.5 s later, no new message, no protocol change. Relay v1
   rule) instead of the old frozen "Exploring the reef" figure; **count only, no marker** at the flag: the door hint mechanism with
   one hint per dive flag (`REEF_DOOR_HINTS`, over the buoy at the water + 3.9 m): "2 exploring", redrawn only when the count changes.
   The Explore prompt invites: "Dive in: 2 friends exploring" ("players" on the public island), from the same cached count.
+- **Public island limit (found in the local two-player check):** the flag count and the invite work for PARTY friends (the party
+  roster keeps everyone). On the public island the relay drops a stranger from my roster when they go into a room (worlds only
+  send same-room strangers), so island strangers do not see "2 exploring" for strangers; divers still see each other underwater.
+  Counting strangers would need a relay change (e.g. a per-room count message): not built, owner decision.
 - Old clients: a reef pose reads Indoors (fade at the door) and plain "Busy"/indoors in the list; they never draw divers.
 - Safety: no chat, no new text on the wire (numbers only); emotes as on land (bubble + arms on the swimming body); Hide / Mute /
   Report apply (same friend core); strangers only in the public world as in every room.
