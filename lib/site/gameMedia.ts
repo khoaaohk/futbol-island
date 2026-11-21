@@ -33,7 +33,7 @@ export const HERO_CLIP=clip({key:'hero',page:'/games',name:'Kit Rush, Squad Snak
  caption:`Real play from three of the ${numberWord(ARCADE_GAME_COUNT)} games, recorded on a phone screen.`});
 /** One clip per arcade game, keyed by the cabinet id. The words say what the clip shows. */
 const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
- kitrush:{name:'Kit Rush gameplay: swiping a team kit out of the air',alt:'Kit Rush gameplay on a phone: shirts, boots and balls fly up and a finger swipes through the team kit',caption:'Kit Rush: swipe your own kit, leave the other team’s.'},
+ kitrush:{name:'Kit Rush gameplay: swiping a team kit out of the air',alt:'Kit Rush gameplay on a phone: pink kit, bottles and a stopwatch fly up at sunset, a CLEAN RUN of twelve in a row, SLOW-MO, then the kit switches to red stripes while team-mates cheer on the touchline',caption:'Kit Rush: swipe your own kit, leave the other team’s.'},
  snake:{name:'Squad Snake gameplay: the captain collects team-mates',alt:'Squad Snake gameplay on a phone: the captain leads a growing line of numbered players across the pitch',caption:'Squad Snake: every team-mate joins the line in position order.'},
  runner:{name:'Breakaway Run gameplay: dribbling down the coast road',alt:'Breakaway Run gameplay: a player dribbles along three lanes, switching lanes and jumping past defenders',caption:'Breakaway Run: switch lanes, jump and slide past the tackles.'},
  tennis:{name:'Futbol Tennis gameplay: a rally over the net',alt:'Futbol Tennis gameplay on a phone: two players kick the ball back and forth over a net on a clay court',caption:'Futbol Tennis: kick, lob and drop the ball over the net.'},
@@ -51,7 +51,7 @@ const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
- kitrush:['Kit Rush mid-wave: kit in two team colours spins in the air above the goal','Kit Rush later in a run: more kit in the air and the score climbing','Kit Rush near the end of a run, with the lives at the top of the screen','Kit Rush: SWITCH! NEW KIT. The card shows the teal hoops you must swipe now, and the frame turns teal'],
+ kitrush:['Kit Rush at sunset: CLEAN RUN! Twelve pink kit swiped in a row while team-mates in pink cheer on the touchline','Kit Rush at dusk: a wave of red kit flies across the goal with one teal boot from another team among it','Kit Rush late in a run: red kit and a red card star fly up as the sky turns to evening','Kit Rush: SWITCH! NEW KIT. The card shows the teal hoops you must swipe now, and the frame turns teal'],
  snake:['Squad Snake: the captain turns with team-mates following in a line','Squad Snake: the line of players grows longer and the call THROUGH PASS! appears','Squad Snake at level 2: a new formation and new players to collect','Squad Snake: ten players follow the captain in a long L-shaped line across the bottom of the pitch'],
  runner:['Breakaway Run: the player dribbles toward a defender and a cone, with the Step-over skill button lit','Breakaway Run: a red defender lunges across the road ahead of the player','Breakaway Run: footballs in a line down the road with a defender far ahead','Breakaway Run on the sand road: the player runs at a goal with two red defenders in front of it'],
  tennis:['Futbol Tennis: the ball flies over the net toward the other player','Futbol Tennis: a player runs to reach the ball before it lands','Futbol Tennis: a rally on the clay court with the score at the top','Futbol Tennis at night on the Neon Final court: a rally against the Champion under the moon, with Trap, Header and Scissor buttons for trick shots'],
@@ -64,7 +64,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  ballblaster:['Ball Blaster: SUPER SHOT! The bean\'s fire ball breaks three robots for a +300 trick shot','Ball Blaster boss wave under the floodlights: the Mega Mannequin walks up behind cones, barrels and a glass board as a ball hits for SMASH! +80','Ball Blaster target practice after the boss: a ball hits a target for DING! +75 with five targets left','Ball Blaster late in wave 1: big wind-up robots march close to the goal while the aim ring waits between them'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
- kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.','Your kit can switch mid-run.'],
+ kitrush:['Twelve clean swipes make a Clean Run.','Read the whole wave: leave the other team’s boot.','The sky darkens as the run goes on.','Your kit can switch mid-run.'],
  snake:['Players join in position order.','The line grows as the squad fills up.','Each level brings a new formation.','Plan your turns as the line gets long.'],
  runner:['A defender ahead: change lane or play the skill.','Time the jump or slide past the tackle.','Collect footballs on the way.','Finish the run with a shot.'],
  tennis:['Over the net and into the court.','Get to the ball before it bounces twice.','The score sits at the top.','Later courts add trick shots.'],

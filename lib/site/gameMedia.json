@@ -70,12 +70,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 208006,
-   "webm": 301788,
+   "mp4": 276716,
+   "webm": 342237,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 29028
+    "bytes": 35564
    }
   },
   "snake": {
@@ -277,19 +277,19 @@
     "file": "kitrush-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 29028
+    "bytes": 38892
    },
    {
     "file": "kitrush-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 30126
+    "bytes": 32354
    },
    {
     "file": "kitrush-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 33670
+    "bytes": 31706
    },
    {
     "file": "kitrush-4.webp",

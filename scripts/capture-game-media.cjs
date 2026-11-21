@@ -17,6 +17,13 @@ const FF='/opt/homebrew/bin/ffmpeg',ff=a=>execFileSync(FF,['-hide_banner','-logl
 
 /** Players that know more than the still-capture ones (they read the game's dev hook and touch the screen like a child would). */
 const BETTER={
+ // Kit Rush: a short slash through one of your own kit (or a gold special) at a time, clear of whistles and other teams' kit
+ kitrush:{start:'[data-kitrush-play]',meta:()=>{const k=window.__kitrush,s=k&&k.game&&k.game.state;return s?{score:s.score,lives:s.lives,team:s.team,over:s.over}:null;},
+  async play(H){const {page,swipe,wait}=H;while(!H.stop){const m=await page.evaluate(()=>{const k=window.__kitrush,s=k&&k.game&&k.game.state,cv=[...document.querySelectorAll('canvas')].sort((a,b)=>b.getBoundingClientRect().width-a.getBoundingClientRect().width)[0];if(!s||!cv||k.phase!=='playing')return null;
+     const r=cv.getBoundingClientRect(),u=r.width/100,bad=s.items.filter(i=>i.active&&(i.kind===6||(i.kind<6&&i.team!==s.team)));
+     const ok=s.items.filter(i=>i.active&&i.y*u>60&&i.y*u<r.height-90&&((i.kind<6&&i.team===s.team)||(i.kind>=7&&!i.frenzy))&&bad.every(b=>Math.hypot(b.x-i.x,b.y-i.y)>14));
+     const i=ok.sort((a,b)=>b.y-a.y)[0];return i?{x:r.left+i.x*u,y:r.top+i.y*u}:null;});
+    if(!m){await wait(60);continue;}await swipe(m.x-34,m.y+22,m.x+34,m.y-22,90,5);await wait(140);}}},
  // Ball Blaster: kick at the machine nearest the goal (lead it a little), hold to full power; with the super bar ready hold until red
  ballblaster:{start:'[data-ballblaster-play]',meta:()=>{const k=window.__ballblaster,s=k&&k.game&&k.game.state;return s?{wave:s.wave,mode:s.mode,hearts:s.hearts,score:s.score,sup:+s.sup.toFixed(2),ready:s.supReady,over:s.over,n:s.ents.filter(e=>e.on&&!e.dead).length}:null;},
   async play(H){const {page,cdp,wait}=H;let i=0;
