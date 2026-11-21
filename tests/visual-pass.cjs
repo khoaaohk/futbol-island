@@ -100,7 +100,7 @@ for(const [kind,file,slug,enPath] of SAMPLES){
 // 7. hubs as chapter bands, EN and ES
 const bands=(h,where,min)=>{const b=[...h.matchAll(/<section class="band" data-tone="(tint|paper)" aria-labelledby="([^"]+)" data-band="">([\s\S]*?)<\/section>/g)];
  ok(b.length>=min,`${where}: ${min}+ chapter bands (${b.length})`);
- for(const [,,id,x] of b){ok(new RegExp(`<h2 class="h2" id="${id}">`).test(x),`${where}: band ${id} has its h2`);
+ for(const [,,id,x] of b){ok(new RegExp(`<h2 class="h2[^"]*" id="${id}">`).test(x),`${where}: band ${id} has its h2`);
   const shown=[...x.split('<details')[0].matchAll(/<li class="item"/g)].length,all=[...x.matchAll(/<li class="item"/g)].length;
   ok(shown<=Math.max(6,all===shown?all:6),`${where}: band ${id} shows at most 6 (${shown})`);
   ok((all>shown)===/<details class="more"><summary class="moreSum"><span>(Show all|Ver las) \d+<\/span>/.test(x),`${where}: band ${id}: "Show all N" only when there are more`);}
