@@ -2,7 +2,7 @@ import HtmlShell from '@/components/site/HtmlShell';
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import SiteNav from '@/components/site/SiteNav';
 import LangSwitch from '@/components/site/LangSwitch';
-import {FOOTER_HUBS} from '@/lib/site/footerHubs';
+import FooterHubs from '@/components/site/FooterHubs';
 import {SAFE_GUIDE} from '@/lib/site/hubs';
 import styles from './site.module.css';
 /**
@@ -12,7 +12,7 @@ import styles from './site.module.css';
  * from components/learn for motion, clips and filters; its words are still all prerendered. The game itself is at /play (Nov 3 2026; it was `/`): each page has one gold "Play" button (near the
  * top of index pages, at the end of detail pages). Shared type and spacing scale: site.module.css and docs/seo/DESIGN.md.
  */
-/* the footer's link row lives in lib/site/footerHubs.ts (Nov 20 2026): the Library at /library shows the same items as cards */
+/* the footer's links live in lib/site/footerHubs.ts (Nov 20 2026): the Library at /library shows the same items as cards */
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <HtmlShell lang="en"><div className={styles.page} data-reading-page="">
@@ -22,7 +22,11 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
       /marketing bring their own bar and hide this one (learn.module.css / marketing.module.css, `>header`). */}
   <header className={styles.header}><div className={styles.headerInner}><SiteNav/></div></header>
   <main className={styles.main}>{children}</main>
-  <footer className={styles.footer}><div className={styles.footerInner}>
+  <footer className={styles.footer}>
+  {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs on every reading page and the
+      home page, so each hub is one click from anywhere. Nov 20 2026: four labelled columns in the Library's groups (FooterHubs). */}
+  <FooterHubs/>
+  <div className={styles.footerInner}>
    <span>Futbol Island · a free football learning game for kids.</span>
    <a href="/">What’s inside</a>
    <a href="/privacy">Privacy</a>
@@ -30,9 +34,6 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
    <a href={SAFE_GUIDE.path}>Safety</a>
    <LangSwitch/>{/* EN | ES where the page has a Spanish version (Nov 15 2026) */}
   </div>
-  {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs, one quiet row on every
-      reading page and the home page, so each hub is one click from anywhere. Plain links, same footer style. */}
-  <nav className={styles.footerInner} aria-label="Guides">{FOOTER_HUBS.map(([href,label])=><a key={href} href={href}>{label}</a>)}</nav>
   </footer>
  </div></HtmlShell>;
 }

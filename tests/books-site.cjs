@@ -96,7 +96,7 @@ ok(!paths.some(p=>/^\/books\/./.test(p)&&!B.BUILT_BOOKS.includes(p.slice(7))),'s
 const llms=L('lib/site/llms.ts').llmsText();
 ok(/\]\(https:\/\/futbolisland\.app\/books\):/.test(llms)&&B.BUILT_BOOKS.every(id=>llms.includes(`(https://futbolisland.app/books/${id}): `+B.bookBySlug(id).page.summary)),'llms.txt: hub and a line per built book with its answer');
 const PK=L('lib/analytics/pageKeys.ts');ok(PK.pageKeyOf('/books/cafu')==='books'&&PK.pageKeyOf('/books')==='books','pageKeys: books');
-ok(/\['\/books','Story books'\]/.test(read('lib/site/footerHubs.ts'))&&/FOOTER_HUBS\.map/.test(read('app/(site)/layout.tsx')),'footer links the books (the list is lib/site/footerHubs.ts since Nov 20 2026)');
+ok(/\['\/books','Story books'\]/.test(read('lib/site/footerHubs.ts'))&&/<FooterHubs\/>/.test(read('app/(site)/layout.tsx')),'footer links the books (the list is lib/site/footerHubs.ts since Nov 20 2026)');
 console.log(`books-site: ${n} source/HTML checks OK`);
 // ---- 6. built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');

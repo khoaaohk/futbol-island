@@ -13,7 +13,11 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert.deepEqual(cards.map(c=>c.href).sort(),foot.FOOTER_HUBS.map(x=>x[0]).sort(),'one card per footer link');
  assert.deepEqual(groups.map(g=>g.id),['game','train','play','collect']);
  for(const [p,label] of foot.FOOTER_HUBS)assert.equal(W.items[p].name,label,`${p}: the card has the footer's name`);
- assert.match(read('app/(site)/layout.tsx'),/import \{FOOTER_HUBS\} from '@\/lib\/site\/footerHubs'/,'the footer reads the shared list');
+ assert.match(read('components/site/FooterHubs.tsx'),/import \{FOOTER_ES,FOOTER_GROUPS\} from '@\/lib\/site\/footerHubs'/,'the footer reads the shared list');assert(/<FooterHubs\/>/.test(read('app/(site)/layout.tsx'))&&/<FooterHubs es\/>/.test(read('app/es/layout.tsx')),'both footers render it');
+ /* Nov 20 2026 (owner: "do we need these in the footer?"; kept for search, tidied): four columns in the Library's groups and order */
+ assert.deepEqual(foot.FOOTER_GROUPS.map(g=>g.id),lib.LIBRARY_GROUP_ORDER,'footer columns = Library groups, same order');
+ for(const g of foot.FOOTER_GROUPS)assert.deepEqual(g.links.map(x=>x[0]),lib.libraryItemsIn(g.id).map(i=>i.path),`footer column ${g.id}: the Library's items in its order`);
+ for(const [p] of foot.FOOTER_HUBS)assert(foot.FOOTER_ES[p],`${p}: a Spanish footer name`);
  const PATHS=new Set(paths.sitePaths().map(p=>p.path));for(const c of cards)assert(PATHS.has(c.href),`${c.href} is a sitemap page`);
  // 2
  const n={'/learn/lessons':L('lib/site/lessons.ts').LESSONS.length,'/learn/soccer-terms':L('lib/site/terms.ts').TERM_PAGES.length,'/learn/soccer-rules':L('lib/site/rules.ts').RULES.length,

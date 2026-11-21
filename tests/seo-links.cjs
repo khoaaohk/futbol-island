@@ -130,7 +130,7 @@ assert(/alternates:\{canonical:path\}/.test(code('lib/site/seo.ts')),'pageMeta s
  assert.equal((code('app/(site)/learn/soccer-drills/[slug]/page.tsx').match(/<ReadNext path=\{/g)||[]).length,2,'drill and drill-guide pages render ReadNext');}
 
 // ---- 7. click depth (model) ------------------------------------------------------------------------------------------------
-{assert(/FOOTER_HUBS\.map/.test(code('app/(site)/layout.tsx')),'the footer renders lib/site/footerHubs.ts (Nov 20 2026)');const footer=[...code('lib/site/footerHubs.ts').matchAll(/\['(\/[^']*)','[^']+'\]/g)].map(m=>m[1]);
+{assert(/<FooterHubs\/>/.test(code('app/(site)/layout.tsx')),'the footer renders lib/site/footerHubs.ts (Nov 20 2026)');const footer=[...code('lib/site/footerHubs.ts').matchAll(/\['(\/[^']*)','[^']+'\]/g)].map(m=>m[1]);
  for(const p of ['/cards','/fish','/exhibits','/learn/lessons','/learn/soccer-positions','/learn/soccer-formations','/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills'])
   assert(footer.includes(p),`${p} is in the footer on every page (depth 1)`);
  const D=new Map([['/',0]]);const set=(p,d)=>{p=p.split('#')[0];if(PATHS.has(p)&&(!D.has(p)||D.get(p)>d))D.set(p,d);};

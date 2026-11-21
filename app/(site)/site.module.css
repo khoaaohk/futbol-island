@@ -165,8 +165,22 @@
 /* Quiet footer (the same one the home page ends on): one line and plain links, as the home page's end links. */
 .footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s3);align-items:center;justify-content:center;text-align:center}
+.footHubs+.footerInner{max-width:var(--col);justify-content:flex-start;text-align:left}
+/* the footer's left edge is the content's left edge: the centred reading column (--col) on every page without a rail, and beside
+   the fixed rail the rail shell's content edge (the same padding as .main there, below) */
+@media(min-width:1280px){.page:has(nav[data-rail])>.footer{padding-inline:max(48px,calc((100vw - var(--rail) - var(--shell-max,1520px)) / 2))}
+ .page:has(nav[data-rail])>.footer>*{max-width:1040px;margin-left:0}}
 .page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
 .page .footer a:hover{color:var(--ink)}
+/* Nov 20 2026 (owner: "do we need these in the footer?"; kept for search, tidied): the guide links in four labelled columns in
+   the Library's groups (components/site/FooterHubs.tsx), left-aligned in the footer's centred column, the small row under them.
+   Four columns from 900 px, two from 600 px, and on phones one group per row with its links running on in a row. */
+.footHubs{max-width:var(--col);margin:0 auto var(--s2);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2) var(--s3);text-align:left}
+.footHead{margin:0 0 2px;color:var(--ink);font-size:var(--t-cap);font-weight:700;line-height:1.3}
+.footGroup ul{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+@media(min-width:600px){.footHubs{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}.footGroup ul{display:block}}
+@media(min-width:900px){.footHubs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:600px) and (pointer:fine){.page .footGroup a{min-height:32px}}
 /* a page with a left rail (components/site/library.module.css .menu, data-rail; Nov 20 2026 evening): from 1280 px the rail is fixed on
    the left edge, so the footer sits in the column beside it, centred there, and never passes under it. */
 @media(min-width:1280px){.page{--rail:248px}.page:has([data-rail])>.footer{margin-left:var(--rail)}}
