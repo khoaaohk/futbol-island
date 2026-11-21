@@ -20,10 +20,12 @@ export const dynamic='force-static';
 
 // Indexable (owner, Nov 3 2026) with its own title and description; the home page `/` is the main entry.
 // Nov 8 2026 (SEO): "learning game" in the title; the formats, safe emotes and no ads in the description (<= 155).
-const title='Play Futbol Island: Free Football Learning Game';
-const DESCRIPTION_TODAY='Start your island or continue with your save code. Learn 7v7, 9v9, 11v11 and futsal in short lessons, play with friends using safe emotes. No pop-up ads.';
+// Nov 20 2026 (new layout SEO, owner: "Also play"): the words of people ready to play now ("free 3D soccer game", "in your browser", "no
+// download") lead; "Free Football Learning Game" was also the /marketing title. docs/seo/NEW-LAYOUT-SEO-PLAN-2026-11-20.md
+const title='Play Futbol Island: Free 3D Soccer Game in Your Browser';
+const DESCRIPTION_TODAY='Play a free 3D soccer game for kids in your browser, no download. Start your island or use your save code, then learn 7v7, 9v9, 11v11 and futsal.';
 // [PUBLIC-WORLD] Nov 11 2026: once other players can be seen (lib/multiplayer/publicFlag.ts; off = today's description, <= 155 characters).
-const DESCRIPTION_PUBLIC='Start your island or continue with your save code. Learn 7v7, 9v9, 11v11 and futsal in short lessons. Wave and cheer with other players. No pop-up ads.';
+const DESCRIPTION_PUBLIC='Play a free 3D soccer game for kids in your browser, no download. Start an island or use a save code, learn 7v7, 9v9, 11v11 and futsal, and wave to others.';
 const description=publicWorldEnabled()?DESCRIPTION_PUBLIC:DESCRIPTION_TODAY;
 export const metadata:Metadata={
  title,description,

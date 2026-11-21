@@ -25,8 +25,9 @@ const ES_COUNTS:Readonly<Record<string,number>>={'/learn/lessons':LESSONS.length
  '/learn/soccer-formations':ES_FORMATION_SLUGS.length,'/learn/soccer-terms':ES_TERM_SLUGS.length,'/learn/soccer-drills':DRILLS.length,'/learn/soccer-practice-plans':ES_PLAN_SLUGS.length,
  '/tools':TOOL_PAGES.filter(t=>t.kind!=='hub'&&t.kind!=='printables'&&hasEs(t.path)).length};
 const W:Omit<LibraryWords,'groups'>&{groups:Record<'game'|'train'|'more',{title:string;line:string}>}={
- title:'Biblioteca de Futbol Island: lecciones, reglas y más',
- description:'Todo lo que enseña Futbol Island en una página: lecciones de fútbol gratis, reglas, posiciones, ejercicios y planes para niños de 7 a 12 años.',
+ /* Nov 20 2026 (new layout SEO): like the English page, the title leads with the search ("aprende fútbol para niños"). */
+ title:'Aprende fútbol para niños: lecciones, reglas y ejercicios',
+ description:'Aprende fútbol gratis, para niños de 7 a 12 años: lecciones con pruebas, las reglas, las posiciones, formaciones, ejercicios y planes de práctica.',
  h1:'La biblioteca de Futbol Island',crumb:'Biblioteca',
  lead:'Futbol Island enseña a niños de 7 a 12 años cómo funciona el fútbol: las reglas, las posiciones, cómo se ordena un equipo y cómo pasar, defender y marcar. Los padres y entrenadores tienen ejercicios, planes de práctica y herramientas para imprimir. Todo aquí es gratis.',
  play:'Juega gratis',heroAlt:'Futbol Island desde arriba: una plaza, una cancha pequeña con reja y jugadores caminando',insetAlt:'La pantalla Island paths del juego: un camino de lecciones con pestañas para 7v7, 9v9, 11v11 y Futsal',

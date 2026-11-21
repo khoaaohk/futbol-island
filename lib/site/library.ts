@@ -77,8 +77,10 @@ export const LIBRARY_FEATURED:Readonly<Record<LibraryGroupId,string>>={game:'/le
 export type LibraryWords={title:string;description:string;h1:string;lead:string;crumb:string;play:string;playLine:string;playTitle:string;heroAlt:string;insetAlt:string;
  groups:Record<LibraryGroupId,{title:string;line:string}>;items:Record<string,{name:string;line:string;alt:string;count?:(n:number)=>string;/** 1-2 more sentences on what is inside (checked against the pages, Nov 20 2026) */more:string;/** the section's one button */cta:(n?:number)=>string}>};
 export const LIBRARY_EN:LibraryWords={
- title:'Futbol Island Library: Lessons, Drills, Rules, Games',
- description:'Everything Futbol Island teaches, on one page: free football lessons, rules, positions, drills, practice plans, games and story books for kids 7 to 12.',
+ /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... library"): the title leads with the search ("learn soccer for kids"), not the
+    brand; the description names what is inside in search words. docs/seo/NEW-LAYOUT-SEO-PLAN-2026-11-20.md */
+ title:'Learn Soccer for Kids: Free Lessons, Rules and Drills',
+ description:'Learn soccer for free, for kids 7 to 12: football lessons with quizzes, the rules, positions, formations, drills, practice plans, games and story books.',
  h1:'The Futbol Island library',crumb:'Library',
  lead:'Futbol Island teaches kids aged 7 to 12 how football (soccer) works: the rules, the positions, how a team keeps its shape and how to pass, defend and score. Parents and coaches get drills, practice plans and tools to print. Everything here is free to read and use.',
  play:'Play the game',heroAlt:'Futbol Island from above: a town square, a small caged pitch and players walking around',insetAlt:'The Island paths screen in the game: a path of lessons with tabs for 7v7, 9v9, 11v11 and Futsal',playTitle:'Play it on the island',playLine:'Every lesson here also plays out on a pitch in the game, with moving players and a short quiz. It is free and runs in the web browser.',

@@ -58,7 +58,7 @@ for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} ha
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
 /* the card and fish collection hubs (seo-links) are search-titled whole too */
-const WHOLE_HUBS=new Set(['/library'/* Nov 20 2026: "Futbol Island Library: …" already starts with the name */,...L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path),'/about','/fish','/cards'/* Nov 20 2026 (SEO foundation 9): their fuller titles are whole titles */]);
+const WHOLE_HUBS=new Set(['/library'/* Nov 20 2026: a search title ("Learn Soccer for Kids: …", new layout SEO, owner: "boost traffic to these three main pages, Island, games, and library"), used whole */,...L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path),'/about','/fish','/cards'/* Nov 20 2026 (SEO foundation 9): their fuller titles are whole titles */]);
 // Nov 6 2026 (signature species, waves 1-2, parametric: no hard-coded count): every Fishbook species, the new waves included, has a
 // sitemap page and a fish tale, and a fun fish fact is labelled as such on its public page.
 {const SIG=L('lib/town/fishing/shoreSignatures.ts'),page=fs.readFileSync(path.join(__dirname,'../app/(site)/fish/[id]/page.tsx'),'utf8');
