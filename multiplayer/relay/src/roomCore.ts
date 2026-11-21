@@ -7,7 +7,7 @@ import {
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
   pickWorldName, ISLAND_GOAL, MAP_DOTS,
-  seatedWire, SEATED_IDLE_MS,
+  seatedWire, SEATED_IDLE_MS, WORLD_LEAVE_MAX_BODY,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
@@ -405,16 +405,30 @@ export class RoomCore {
     }
   }
 
-  disconnect(peer: Peer): void {
+  /** A socket closed. `code` = the close code the CLIENT sent, when the host knows it: only CloseCode.Leaving (a page going away for
+   *  good, after C.Leave) frees the slot at once, exactly like C.Leave; any other code or none (a drop, a sleeping phone, a hidden tab's
+   *  close) keeps the resume grace. It only ever touches this socket's own member. */
+  disconnect(peer: Peer, code?: number): void {
     this.pending.delete(peer);
     this.pendingMeta.delete(peer);
     this.retiredPeers.delete(peer);
     const m = this.byPeer.get(peer);
     if (!m) return;
+    if (code === CloseCode.Leaving) { this.remove(m, LeaveReason.Left, null); return; }
     this.byPeer.delete(peer);
     m.peer = null;
     m.goneAt = this.clock.now(); // slot kept for RESUME_GRACE_MS; others hear Left/Timeout only when it lapses
     this.matchDrop(m); this.matchUnwatch(m); // relay v1.8: a dropped player's match slot goes back to the AI at once (the party slot keeps its grace)
+  }
+
+  /** World only (POST /world/:shard/leave, a closed tab's beacon): free the slot holding exactly `token`, but only while that slot has
+   *  no socket (a connected player is never removed this way). Returns nothing the caller may pass on; nothing is logged. */
+  leaveByToken(token: string): void {
+    if (!this.world || this.ended || typeof token !== 'string' || token.length < 16 || token.length > WORLD_LEAVE_MAX_BODY) return;
+    let found: Member | null = null;
+    this.members.forEach((x) => { if (ctEq(x.token, token)) found = x; });
+    const m = found as Member | null;
+    if (m && m.peer === null) this.remove(m, LeaveReason.Left, null);
   }
 
   /** Relay v1.2: called between two 5 Hz ticks (the Durable Object steps at 10 Hz): only the nearest LIVE_NEAR friends within

@@ -26,6 +26,12 @@ export function relayLobbyUrl(inShard: number | null): string | null {
   if (!base) return null;
   return validShard(inShard) ? `${base}/world?in=${inShard}` : `${base}/world`;
 }
+/** `http(s)://.../world/:shard/leave` (a closed tab's beacon, Nov 20 2026), or null when disabled or the shard is not a plain number. */
+export function relayWorldLeaveUrl(shard: number): string | null {
+  const base = relayHttpUrl();
+  if (!base || !validShard(shard)) return null;
+  return `${base}/world/${shard}/leave`;
+}
 /** `ws(s)://.../world/:shard/ws`, or null when disabled or the shard is not a plain number. */
 export function relayWorldWsUrl(shard: number): string | null {
   const base = relayHttpUrl();

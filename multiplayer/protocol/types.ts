@@ -125,7 +125,15 @@ export const CloseCode = {
   WorldOff: 4007,
   /** The slot was freed after WORLD_IDLE_MS idle / away: go to "Just me" quietly; reconnect (GET /world) on the next real input. */
   Idle: 4008,
+  /** Nov 20 2026, CLIENT -> relay: "this page is going away for good" (a closed tab), sent as the close code right after C.Leave on the
+   *  same socket. The relay frees that socket's own slot at once, as C.Leave does; every other close code (a drop, 1001 going away, a
+   *  hidden-tab close) keeps the resume grace. An older relay ignores client close codes (C.Leave alone already frees the slot). */
+  Leaving: 4009,
 } as const;
+/** Nov 20 2026: POST /world/:shard/leave, body = my own world resume token (text/plain, sendBeacon): a closed tab whose socket was
+ *  already shut (15 s hidden, a drop) frees its slot at once. Only a slot that is NOT connected right now and holds exactly that token
+ *  is freed; the answer is always 204 (it tells nothing). An older relay answers 404 and the grace runs out as before. */
+export const WORLD_LEAVE_MAX_BODY = 64;
 /** Relay v1.8 (Cap.Match, Nov 4 2026; docs/join-live-game-design.md "Multiplayer slice 2"): friends play the SAME live match.
  *  ONE new client frame C.Match and ONE new server frame S.Match, each [code, MatchKind, ...]. An old client never answers Cap.Match in
  *  C.Caps, so it never gets S.Match (and could not parse it: parseServer -> null); an old relay never offers it, so a new client never

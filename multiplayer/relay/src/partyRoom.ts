@@ -15,7 +15,7 @@
 // (they re-Hello as new faces). Phase 0 caveat: not exercised on real Cloudflare.
 import { RoomCore, CLOSE } from './roomCore';
 import type { MemberAttachment, Peer, RoomSnapshot } from './roomCore';
-import { generateCode, PARTY_MAX_MS, WORLD_MAX_SHARDS } from '../../protocol';
+import { generateCode, PARTY_MAX_MS, WORLD_MAX_SHARDS, WORLD_LEAVE_MAX_BODY } from '../../protocol';
 import { WORLD_HEARTBEAT_MS } from './worldLobbyCore';
 
 /** Workers Rate Limiting binding (wrangler.toml [[ratelimits]]). Optional: without it the worker uses its in-isolate buckets. */
@@ -102,16 +102,18 @@ export class PartyRoom {
     this.afterEvent();
   }
 
-  async webSocketClose(ws: WebSocket): Promise<void> {
+  /** `code` = the client's close code: only CloseCode.Leaving (sent after C.Leave by a closing tab) frees the slot at once; every other
+   *  close (a drop, 1001, 1006, an error) keeps the resume grace (RoomCore.disconnect). */
+  async webSocketClose(ws: WebSocket, code?: number): Promise<void> {
     const peer = this.peers.get(ws);
     this.peers.delete(ws);
     this.attSig.delete(ws);
     try { ws.close(1000, 'bye'); } catch { /* already closed: reciprocal close so the socket is not left half-open (review #23) */ }
-    if (peer && this.core) this.core.disconnect(peer);
+    if (peer && this.core) this.core.disconnect(peer, typeof code === 'number' ? code : undefined);
     this.afterEvent();
   }
 
-  async webSocketError(ws: WebSocket): Promise<void> { await this.webSocketClose(ws); }
+  async webSocketError(ws: WebSocket): Promise<void> { await this.webSocketClose(ws); } // an error is a drop: the grace applies
 
   async alarm(): Promise<void> {
     this.alarmAt = 0;
@@ -279,6 +281,14 @@ export class PartyRoom {
       return new Response('ok');
     }
     const shard = Number(worldQ);
+    if (url.pathname === '/leave') { // Nov 20 2026: a closed tab's beacon (index.ts checked origin + rate); never builds a world
+      if (request.method === 'POST') {
+        const token = (await request.text()).slice(0, WORLD_LEAVE_MAX_BODY + 1).trim();
+        const core = await this.load(); // an unknown shard has no stored world: null
+        if (core && core.world) { core.leaveByToken(token); this.afterEvent(); }
+      }
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname !== '/ws' || !Number.isInteger(shard) || shard < 1 || shard > WORLD_MAX_SHARDS) return new Response('not found', { status: 404 });
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('expected websocket', { status: 426 });
     let core = await this.load();

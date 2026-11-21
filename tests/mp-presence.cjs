@@ -28,13 +28,13 @@ const flush=async()=>{for(let i=0;i<6;i++)await new Promise(r=>setImmediate(r));
 /** The page: one connection (with a fake socket / fetch / clock), bound to the store like roomParty.partyConnection(). */
 function page(W,opts={}){
   const clock=opts.clock||makeClock(),sockets=[],calls=[];let lobby=opts.lobby||(()=>({status:200,body:{open:true,shard:1,n:3}}));
-  class WS{constructor(url){this.url=url;this.readyState=0;this.sent=[];sockets.push(this);}send(s){this.sent.push(s);}close(){this.readyState=3;}
+  class WS{constructor(url){this.url=url;this.readyState=0;this.sent=[];sockets.push(this);}send(s){this.sent.push(s);}close(code){this.readyState=3;this.closeCode=code;}
     open(){this.readyState=1;this.onopen&&this.onopen();}recv(m){this.onmessage&&this.onmessage({data:JSON.stringify(m)});}
     drop(code){this.readyState=3;this.onclose&&this.onclose(code===undefined?undefined:{code});}}
   let hidden=false;const vsubs=[];
   const fetch=url=>{calls.push(url);const r=lobby(url);if(r==='neterr')return Promise.reject(new Error('offline'));return Promise.resolve({ok:r.status===200,status:r.status,json:()=>Promise.resolve(r.body)});};
   const c=W.conn.createPartyConnection({WebSocketImpl:WS,now:clock.now,random:()=>0.5,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout,
-    visibility:{hidden:()=>hidden,on:fn=>{vsubs.push(fn);return()=>{};}},storage:opts.storage||memStore(),tabStorage:opts.tab||W.session,locks:null,fetch,online:()=>true,pageExit:opts.pageExit});
+    visibility:{hidden:()=>hidden,on:fn=>{vsubs.push(fn);return()=>{};}},storage:opts.storage||memStore(),tabStorage:opts.tab||W.session,locks:null,fetch,online:()=>true,pageExit:opts.pageExit,beacon:opts.beacon,worldLeaveUrl:opts.beacon?(sh=>`http://relay.test/world/${sh}/leave`):undefined});
   W.idx.bindConnection(c,clock.now);W.pw.attachWorldConnection(c);
   return{c,clock,sockets,calls,last:()=>sockets[sockets.length-1],setLobby(f){lobby=f;},setHidden(h){hidden=h;vsubs.forEach(f=>f());},
     msgs:s=>s.sent.map(x=>JSON.parse(x)),all(){return sockets.flatMap(s=>s.sent.map(x=>JSON.parse(x)));}};}
@@ -303,6 +303,33 @@ t('closed tab: the world socket sends Leave and forgets the tab slot; a code par
   const W2=world(),ex2=[],q=page(W2,{pageExit:{on:fn=>{ex2.push(fn);return()=>{};}}});
   q.c.join('K7MQ4R',{look:LOOK,nick:'Emma'});const pw=q.last();pw.open();pw.recv([20,1,1,'ptok-abcdefghij0123',0,0,0,[[1,[2,0],LOOK,1,null,'Emma']]]);
   const n0=q.msgs(pw).length;ex2[0]();assert.equal(q.msgs(pw).length,n0,'a party keeps its slot (its session rejoins from the device)');assert.equal(pw.readyState,1);
+});
+// ---- Nov 20 2026: the Leave frame is followed by close code 4009; a socket already shut sends one beacon with MY token; drops keep the grace ----
+t('closed tab: Leave + close 4009 on an open socket; the token beacon only when the socket is already shut; hidden / drop / bfcache send nothing',async()=>{
+  const mk=()=>{const exits=[],beacons=[];const W=world(),p=page(W,{pageExit:{on:fn=>{exits.push(fn);return()=>{};}},beacon:(u,b)=>beacons.push([u,b])});return{W,p,exits,beacons};};
+  // a. open socket: one Leave frame, then close code CloseCode.Leaving; no beacon
+  let {W,p,exits,beacons}=mk();let ws=await live(p,W);
+  const n0=p.msgs(ws).length;exits[0]();
+  assert.deepEqual(p.msgs(ws).slice(n0),[[8]]);assert.equal(ws.closeCode,4009,'close code CloseCode.Leaving after the Leave');assert.equal(beacons.length,0);
+  // b. hidden 15 s (the socket is shut, the slot kept for the grace), then the tab is closed: one beacon with my own token, nothing else
+  ({W,p,exits,beacons}=mk());ws=await live(p,W);
+  p.setHidden(true);p.clock.advance(14000);
+  assert.ok(!p.msgs(ws).some(m=>m[0]===8),'hidden (app switch, sleeping phone): never Leave');assert.equal(ws.readyState,1,'under 15 s the socket stays');
+  p.clock.advance(2000);assert.equal(ws.readyState,3,'15 s hidden: the socket is shut');
+  assert.equal(ws.closeCode,undefined,'a hidden-tab close is a plain close (the relay keeps the grace)');assert.equal(beacons.length,0,'hidden alone sends no beacon');
+  exits[0]();
+  assert.deepEqual(beacons,[['http://relay.test/world/1/leave','wtok-abcdefghij0123']],'one beacon, my own world token, my own shard');
+  assert.equal(p.c.hasWorldSession(),false);exits[0]();assert.equal(beacons.length,1,'a second exit is a no-op');
+  // c. a dropped socket (network): no Leave, no beacon; the reconnect resumes with the same token (same player)
+  ({W,p,exits,beacons}=mk());ws=await live(p,W);
+  ws.drop(1006);assert.ok(!p.msgs(ws).some(m=>m[0]===8));assert.equal(beacons.length,0,'a drop never frees the slot');
+  p.clock.advance(1100);await flush();const ws2=p.last();assert.notEqual(ws2,ws,'it reconnects');ws2.open();
+  const hello=p.msgs(ws2)[0];assert.equal(hello[0],0);assert.equal(hello[3],'wtok-abcdefghij0123','the Hello resumes the same slot (same player)');
+  // d. no exit event (the back-forward cache, a frozen tab, a room page): the connection never leaves on its own
+  ({W,p,exits,beacons}=mk());ws=await live(p,W);p.setHidden(true);p.clock.advance(60000);p.setHidden(false);
+  assert.ok(!p.all().some(m=>m[0]===8),'no Leave without a real exit');assert.equal(beacons.length,0);
+  // e. an explicit switch to Just me: Leave + 4009 too
+  ({W,p,exits,beacons}=mk());ws=await live(p,W);p.c.leave();assert.equal(p.msgs(ws).slice(-1)[0][0],8);assert.equal(ws.closeCode,4009);assert.equal(beacons.length,0);
 });
 t('defaultPageExit: only a real close / another site; never a room page, a reload, a client route or the bfcache; nothing without the Navigation API',()=>{
   const W=world();let now=0;

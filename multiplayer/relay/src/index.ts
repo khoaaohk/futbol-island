@@ -4,7 +4,7 @@
 // declares them (shared across isolates); without a binding (or if it errors) the in-isolate token buckets below apply, as in
 // Phase 0 (they reset on a cold start and are per isolate). Party creation stays on the in-isolate bucket (5 per hour does not fit the
 // binding's 10 s / 60 s periods). IPs are only ever used as an HMAC with a daily salt, never stored or logged.
-import { normalizeCode, TokenBucket, WORLD_MAX_SHARDS, CloseCode } from '../../protocol';
+import { normalizeCode, TokenBucket, WORLD_MAX_SHARDS, CloseCode, WORLD_LEAVE_MAX_BODY } from '../../protocol';
 import { PartyRoom, newPartyCode } from './partyRoom';
 import type { Env, RateLimiter } from './partyRoom';
 import { originAllowed } from './origins';
@@ -145,6 +145,20 @@ export default {
       const q = url.searchParams.get('in');
       const res = await lob.fetch('https://do/assign' + (q && /^\d{1,3}$/.test(q) ? '?in=' + q : ''));
       return json(200, res.ok ? await res.json() : { open: false }, origin, env);
+    }
+    // Nov 20 2026: POST /world/:shard/leave (a closed tab's sendBeacon; body = that tab's own resume token, text/plain, so no preflight).
+    // Same origin allow-list (above) and the world lookup rate as GET /world. Frees only a NOT connected slot holding exactly that token
+    // (RoomCore.leaveByToken). Always 204, no body, nothing logged: it tells the caller nothing.
+    const lm = request.method === 'POST' ? /^\/world\/(\d{1,3})\/leave$/.exec(url.pathname) : null;
+    if (lm) {
+      const shard = Number(lm[1]);
+      const done = new Response(null, { status: 204, headers: origin ? { 'access-control-allow-origin': origin, vary: 'Origin', 'cache-control': 'no-store' } : { 'cache-control': 'no-store' } });
+      if (shard < 1 || shard > WORLD_MAX_SHARDS || Number(request.headers.get('content-length') || 0) > WORLD_LEAVE_MAX_BODY) return done;
+      if (!(await allow(env.WORLD_RL, 'l:' + ik, lim.world, now))) { noteStat(env, ctx, 'rl:world_rate', now); return done; }
+      const token = (await request.text()).slice(0, WORLD_LEAVE_MAX_BODY + 1);
+      if (!/^[A-Za-z0-9_-]{16,64}$/.test(token.trim())) return done;
+      await env.PARTY.get(env.PARTY.idFromName('pub-' + shard)).fetch(new Request('https://do/leave?world=' + shard, { method: 'POST', body: token.trim() }));
+      return done;
     }
     const wm = request.method === 'GET' ? /^\/world\/(\d{1,3})\/ws$/.exec(url.pathname) : null;
     if (wm) {

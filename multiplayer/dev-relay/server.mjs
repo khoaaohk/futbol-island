@@ -138,6 +138,17 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       const q = url.searchParams.get('in');
       return json(res, 200, lobby.assign(q && /^\d{1,3}$/.test(q) ? Number(q) : undefined));
     }
+    const lm = req.method === 'POST' ? /^\/world\/(\d{1,3})\/leave$/.exec(url.pathname) : null;
+    if (lm) { // Nov 20 2026: a closed tab's beacon (the worker's POST /world/:shard/leave): body = its own token; always 204
+      let body = '';
+      req.on('data', (d) => { if (body.length <= P.WORLD_LEAVE_MAX_BODY) body += d; });
+      req.on('end', () => {
+        const shard = Number(lm[1]), tok = body.slice(0, P.WORLD_LEAVE_MAX_BODY + 1).trim(), w = worlds.get(shard);
+        if (allowWorld(ipKey(req, url), 'l') && /^[A-Za-z0-9_-]{16,64}$/.test(tok) && w) { w.leaveByToken(tok); syncWorld(shard, w); }
+        res.writeHead(204); res.end();
+      });
+      return;
+    }
     if (dev && req.method === 'POST' && url.pathname === '/dev/lobby-restart') { // the WorldLobby DO evicted: a fresh core reloads the stored counts
       const rows = lobby.snapshot(), was = lobby.stored;
       lobby = new WorldLobbyCore(() => clock.now(), () => (typeof controlToken === 'string' && controlToken.length >= 16) || worldOpen);
@@ -186,7 +197,7 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       stats.joins++;
       room.connect(peer, false, { ipKey: key, held: ad.held });
       conn.onMessage((t) => { metrics.framesIn++; room.message(peer, t); syncWorld(shard, room); });
-      conn.onClose(() => { room.disconnect(peer); });
+      conn.onClose((code) => { room.disconnect(peer, code); });
       return;
     }
     const r = routeCode(url);
@@ -199,7 +210,7 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
     stats.joins++;
     room.connect(peer, room.codeStatus(r.code) === 'retired');
     conn.onMessage((t) => room.message(peer, t));
-    conn.onClose(() => room.disconnect(peer));
+    conn.onClose((code) => room.disconnect(peer, code));
   });
 
   let step = 0;
