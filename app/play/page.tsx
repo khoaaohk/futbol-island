@@ -25,7 +25,7 @@ export const dynamic='force-static';
 const title='Play Futbol Island: Free 3D Soccer Game in Your Browser';
 const DESCRIPTION_TODAY='Play a free 3D soccer game for kids in your browser, no download. Start your island or use your save code, then learn 7v7, 9v9, 11v11 and futsal.';
 // [PUBLIC-WORLD] Nov 11 2026: once other players can be seen (lib/multiplayer/publicFlag.ts; off = today's description, <= 155 characters).
-const DESCRIPTION_PUBLIC='Play a free 3D soccer game for kids in your browser, no download. Start an island or use a save code, learn 7v7, 9v9, 11v11 and futsal, and wave to others.';
+const DESCRIPTION_PUBLIC='Play a free 3D soccer game for kids in your browser, no download. Start an island or use a save code, learn 7v7, 9v9 and 11v11, and meet other players.';
 const description=publicWorldEnabled()?DESCRIPTION_PUBLIC:DESCRIPTION_TODAY;
 export const metadata:Metadata={
  title,description,
