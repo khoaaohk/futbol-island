@@ -19,7 +19,7 @@
  .wide{--wide:min(1120px,calc(100vw - 2 * var(--gutter) - 32px));width:var(--wide);margin-inline:calc((100% - var(--wide)) / 2)}
 }
 /* beside the rail (layout batch 3, Nov 20 2026) the column is already wide: the frame starts on the head's left edge instead of centring */
-@media(min-width:1280px){main:has(>nav[data-rail]) .wide{--wide:100%;margin-inline:0}}/* beside the rail the frame is the whole content area (owner, Nov 20 2026: fill the width) */
+@media(min-width:960px){main:has(>nav[data-rail]) .wide{--wide:100%;margin-inline:0}}/* release check, Nov 20 2026: from 960 px, not 1280: below the rail the column is already wide, so the frame keeps its edges *//* beside the rail the frame is the whole content area (owner, Nov 20 2026: fill the width) */
 
 /* Coach chapters: heading, frame, steps on a phone; steps beside the frame on desktop, sides alternating */
 .chapters{display:grid;gap:var(--s4)}

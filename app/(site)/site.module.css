@@ -302,6 +302,9 @@
 }
 /* the footer's link columns spread across the content area on a rail page */
 @media(min-width:1280px){.page:has(nav[data-rail])>.footer>*{max-width:var(--shell-max,1520px)}.page:has(nav[data-rail])>.footer .footHubs{max-width:none}}
+/* below 1280 a rail page's content is the wide centred column (.main, max(gutter, 50vw - 590px) each side): the footer columns take
+   the same edges (release check, Nov 20 2026: they sat in the 736 px reading column, off the content edges at 900-1279 px) */
+@media(max-width:1279px){.page:has(nav[data-rail])>.footer{padding-inline:max(var(--gutter),calc(50vw - 590px))}.page:has(nav[data-rail])>.footer>*{max-width:none}}
 /* a rail entry's focus ring sits inside the entry (the list clips anything outside it) and shows only for the keyboard */
 .page nav[data-rail] a:focus-visible{outline-offset:-3px}
 .page nav[data-rail] a:focus:not(:focus-visible){outline:none}
