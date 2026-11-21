@@ -6895,5 +6895,20 @@ The football flick game (`lib/arcade/flickit/`, `docs/arcade-aaa/flickit-directi
 - **Physics:** fixed 1/120 s steps, at most 60 a frame; about 40 things a stage, each a box / sphere / capsule / ring test against
   the one ball, plus flying bodies against standing ones. Slow motion and hit-stop only scale the time handed to the core.
 - **Tradeoffs:** the ink outlines are hulls inside the baked mesh (they double its triangles; no extra draw); the backdrop is a
-  painted half cylinder, soft on purpose; no kicker character is drawn.
+  painted half cylinder, soft on purpose; the kicker came with the polish pass below.
 - Desktop counts only: not measured on a real phone; no thermal claim.
+- **Polish pass (Nov 21 2026, same branch, not deployed): a kicker, dressed places, flutter.** Added: the player's own bean on the
+  shared arcade rig (`createIslandArcadePlayer`, as Ball Blaster and FootGolf use it; 2-4 draws depending on the saved outfit), posed
+  once a frame (the swipe only hands the view a number, `setCharge`; the kick is still read on release, so flick response is
+  unchanged). Each place's dressing (shed, washing line, gnome, shop fronts, clock tower, fountain, stand, floodlights, huts, lifeguard
+  tower, chain-link cage, water tanks, skyline, crowd, ad boards, roof floodlight bank, kit bag, bottle, grass tufts) is BAKED into the
+  same one scenery mesh under `SCENERY_TRIS` = 22k (baked 8.4k-19.9k); target models got labels, planks, hoops and tread (instanced as
+  before). Pennants, bunting, fairy lights and 3 gulls: ONE instanced draw of a one-triangle cloth (up to 64 matrices a frame,
+  preallocated; none in the stadium, whose flags are baked). Cloud shadows and beach towels are painted into the ground sheet once
+  (no runtime cost); fog starts nearer (26-40 m) for haze. The chase camera holds when the ball is knocked back toward the spot. The
+  stadium skips the underlay plane (the stands close it in). Nothing is allocated per frame; dispose frees the rig and its textures.
+  **Measured** (headless Chrome, 390x844 DPR 2 touch, ready view on the spot, `renderer.info`, before -> after; scripts/shots-flickit-polish.cjs
+  and scripts/check-flickit-browser.cjs): garden 12 -> 17 draws, 10.1k -> 31.6k triangles; plaza 12 -> 16-17, 11.2k -> 28.8k; pitch
+  14 -> 18-19, 11.8k -> 27.4k; beach 13 -> 17-18, 9.8k -> 20.1k; roof 12 -> 16-17, 10.9k -> 21.6k; stadium 16 -> 18-19, 11.6k -> 25.8k
+  (the range is the bean's outfit). Textures 4-5 -> 7-8 (the rig's), programs 8-10 -> 12-15. Same counts at 1440x900. Within the
+  budget of 20 draws and 35k triangles. Not measured on a real phone; no thermal claim.
