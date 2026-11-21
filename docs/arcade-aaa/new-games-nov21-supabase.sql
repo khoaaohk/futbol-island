@@ -1,29 +1,23 @@
--- Futbol Island: the three new arcade games built Nov 21 2026: Safe Hands ('safehands', goalkeeper), Keepy-Uppy Beat
--- ('keepyuppy', rhythm juggling) and Hold the Line ('holdtheline', defending / offside trap). This ONE file installs all three
--- games' board ids and activity keys (docs/arcade-aaa/NEW-GAMES-NOV21.md).
--- FOR THE OWNER. Paste this whole file into the Supabase SQL editor and press Run. It is meant to run AFTER
--- docs/arcade-aaa/swap-games-supabase.sql (Roll It In and Ball Blaster); paste it once, running it again is harmless.
--- Requires 20261013_arcade_leaderboards.sql (the arcade_scores table). The analytics part is skipped when the analytics tables
--- are not installed.
+-- Futbol Island: the two new arcade games released Nov 21 2026: Keepy-Uppy Beat ('keepyuppy', rhythm juggling)
+-- and Hold the Line ('holdtheline', defending / offside trap).
+-- FOR THE OWNER. Paste this whole file into the Supabase SQL editor and press Run. Paste it once; running it again is harmless.
 -- What it does (additive; nothing is dropped and no row is touched):
---   1. the arcade_scores game allow-list: every board id the site uses, now with 'safehands', 'keepyuppy' and 'holdtheline'
---      (one all-time top-20 board each). Every earlier board id is kept, the retired 'clearbox' and 'streetdash' too.
---   2. analytics_ingest with 'arcade_safehands', 'arcade_keepyuppy' and 'arcade_holdtheline' (play time in the admin activity
---      chart). Every earlier key is kept.
+--   1. the arcade_scores game allow-list: every board id the site uses, now with 'keepyuppy' and 'holdtheline'
+--      (one all-time top-20 board each). Every earlier board id is kept.
+--   2. analytics_ingest with 'arcade_keepyuppy' and 'arcade_holdtheline' (play time in the admin activity chart).
+--      Every earlier key is kept. Skipped when the analytics tables are not installed.
 -- The games work before this is pasted: scores save on the device, only the island board refuses the score.
--- It is the same as safehands-supabase.sql + keepyuppy-supabase.sql + holdtheline-supabase.sql together (paste only this one),
--- and as supabase/migrations/20261205..20261210 replayed in order.
 -- The LAST result must be one row:
---   status = OK, Safe Hands, Keepy-Uppy Beat and Hold the Line installed
+--   status = OK, Keepy-Uppy Beat and Hold the Line installed
 
 -- 1. The game allow-list: every board id in lib/arcade/leaderboard.ts BOARD_GAMES.
 alter table public.arcade_scores drop constraint if exists arcade_scores_game_check;
 alter table public.arcade_scores add constraint arcade_scores_game_check
   check (game in ('runner', 'pinball', 'tennis', 'live', 'puzzle', 'kick', 'cupfinal', 'legend', 'livepro', 'livelgnd',
     'tenpro', 'tenlgnd', 'pinderby', 'pinfinal', 'puzpro', 'puzlgnd', 'runwarm', 'runnight', 'runstorm', 'rundaily',
-    'kitrush', 'kitdaily', 'snake', 'snakedaily', 'airhockey', 'lineup', 'trophydrop', 'clearbox', 'streetdash', 'rollball', 'ballblaster', 'safehands', 'keepyuppy', 'holdtheline'));
+    'kitrush', 'kitdaily', 'snake', 'snakedaily', 'airhockey', 'lineup', 'trophydrop', 'clearbox', 'streetdash', 'rollball', 'ballblaster', 'keepyuppy', 'holdtheline'));
 
--- 2. analytics_ingest with 'arcade_safehands', 'arcade_keepyuppy' and 'arcade_holdtheline' (and every earlier key) (skipped when the analytics tables are not installed).
+-- 2. analytics_ingest with 'arcade_keepyuppy' and 'arcade_holdtheline' (and every earlier key) (skipped when the analytics tables are not installed).
 do $guard$
 begin
   if to_regclass('public.analytics_sessions') is null then
@@ -66,7 +60,7 @@ begin
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, least(value::numeric, v_e)::integer), '{}'::jsonb)
               from jsonb_each_text(case when jsonb_typeof(p->'activity_ms') = 'object' then p->'activity_ms' else '{}'::jsonb end)
-             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_safehands','arcade_keepyuppy','arcade_holdtheline','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
+             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_keepyuppy','arcade_holdtheline','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, v), '{}'::jsonb) from (
               select key, least(value::integer, v_e / 1000) v
@@ -90,14 +84,12 @@ $fn$;
 end $guard$;
 
 -- Self-check: the last result of this file. Lists anything missing.
-select case when missing = '' then 'OK, Safe Hands, Keepy-Uppy Beat and Hold the Line installed' else 'NOT INSTALLED: ' || missing end as status from (
+select case when missing = '' then 'OK, Keepy-Uppy Beat and Hold the Line installed' else 'NOT INSTALLED: ' || missing end as status from (
   select concat_ws(', ',
     case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
       and pg_get_constraintdef(oid) like '%''rollball''%') then 'board rollball' end,
     case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
       and pg_get_constraintdef(oid) like '%''ballblaster''%') then 'board ballblaster' end,
-    case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
-      and pg_get_constraintdef(oid) like '%''safehands''%') then 'board safehands' end,
     case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
       and pg_get_constraintdef(oid) like '%''keepyuppy''%') then 'board keepyuppy' end,
     case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
@@ -108,8 +100,6 @@ select case when missing = '' then 'OK, Safe Hands, Keepy-Uppy Beat and Hold the
       and prosrc like '%arcade_rollball%') then 'analytics key arcade_rollball' end,
     case when to_regclass('public.analytics_sessions') is not null and not exists (select 1 from pg_proc where proname = 'analytics_ingest'
       and prosrc like '%arcade_ballblaster%') then 'analytics key arcade_ballblaster' end,
-    case when to_regclass('public.analytics_sessions') is not null and not exists (select 1 from pg_proc where proname = 'analytics_ingest'
-      and prosrc like '%arcade_safehands%') then 'analytics key arcade_safehands' end,
     case when to_regclass('public.analytics_sessions') is not null and not exists (select 1 from pg_proc where proname = 'analytics_ingest'
       and prosrc like '%arcade_keepyuppy%') then 'analytics key arcade_keepyuppy' end,
     case when to_regclass('public.analytics_sessions') is not null and not exists (select 1 from pg_proc where proname = 'analytics_ingest'

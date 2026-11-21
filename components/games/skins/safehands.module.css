@@ -1,8 +1,0 @@
-/* Safe Hands HUD skin (Nov 21 2026, docs/arcade-aaa/safehands-direction.md). The class lands on the game root next to
- * data-game="safehands" together with the comic kit's classes (components/games/comic). This file only sets what is Safe Hands'
- * own: the page colour behind the stage and the overlays' accents. The back-to-arcade button stays as it is. */
-.skin{--arcade-skin:safehands;background:#3f9a4a}
-.skin [data-arcade-pill] span{color:var(--cm-ink)!important}
-.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ed9}
-.skin.skin.skin.skin [data-arcade-pause-score]{border-left:10px solid var(--cm-teal)}
-.skin.skin.skin.skin [data-arcade-board]{max-height:min(92dvh,760px)}

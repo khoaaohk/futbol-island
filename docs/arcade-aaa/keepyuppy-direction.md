@@ -2,7 +2,7 @@
 
 A rhythm game about juggling a football. An original game for the arcade (id `keepyuppy`), built in the house comic print style with the
 player's own island bean. No other rhythm game's name, art, tracks, charts or look is used: the music, charts and drawings are made here.
-Status: built on branch `game-keepyuppy` (on top of `game-safehands`), NOT pushed, NOT in the room yet (see "Room placement").
+Status: released Nov 21 2026 on branch `games-nov21` with a machine in the arcade room (see "Room placement").
 Open it with `/arcade?game=keepyuppy`.
 
 ## What it teaches (AGENTS.md: every feature teaches football)
@@ -111,27 +111,17 @@ headless Chrome on the M-series Mac, phone profile 390x844 @2x, rules + music sc
 worst, over 4,513 frames at 60 a second (about 1.5% of a 16.7 ms frame; desktop 1440x900: 0.08 ms). Music adds about 10-25 short oscillator / noise voices a second through one
 limiter. Desktop numbers, not an iPhone temperature claim; if a real phone runs warm, `frameMs` in the shell is the one line to cap at 30.
 
-## Room placement (owner decision pending; the room is untouched)
-Like Safe Hands, the game is in the catalog as `arcadeUnplaced` (lib/arcade/arcadeCatalog.ts): playable by link, counted in analytics,
-with its board, but no machine, no change to the room or to any "eleven games" line. The Safe Hands doc proposes the east wall at
-x 11.6, z -1 (the mirror of the Air Futbol table). For this second new machine:
-- A (suggested): the same east wall, toward the door from Safe Hands (about x 11.6, z +2; check against arcadeRoomProps.ts and the door):
-  not a cabinet but a busker's pitch: a round mat with the four coloured pads, a speaker and a ball on a stand. No machine moves; costs
-  one small prop's meshes and its prompt. The two new games then make an "east wall" pair.
-- B: the west wall beside Air Futbol (x -10, z about +2), if the east wall is kept for Safe Hands alone.
-- C: both new games join the back row (12 uprights re-spaced to about 2.0 m; every machine moves).
-To place it: move the entry from `arcadeUnplaced` into `arcadeCabinets` (+ `ARCADE_ROW` for C), add it to `HALL_MACHINES`, the coins
-panel `earning` line, `arcadeCabinetAttract` TITLES and the room tests; every "N games" line then counts it by itself.
+## Room placement
+Placed Nov 21 2026 (owner: "go ahead and push everything else"): see docs/arcade-aaa/NEW-GAMES-NOV21.md for the spot and the room budget.
 
 ## Owner: one paste
-`docs/arcade-aaa/keepyuppy-supabase.sql` (board id `keepyuppy` + analytics key `arcade_keepyuppy`; idempotent; a superset of the Safe
-Hands file; ends "OK, Keepy-Uppy Beat installed"). Until then the game works: everything saves on the device and the island board just
-does not take the score.
+`docs/arcade-aaa/new-games-nov21-supabase.sql` (board ids `keepyuppy` + `holdtheline`, analytics keys `arcade_keepyuppy` +
+`arcade_holdtheline`; idempotent; ends "OK, Keepy-Uppy Beat and Hold the Line installed"). Until then the game works: everything saves
+on the device and the island board just does not take the score.
 
 ## Not done / weaker than wanted
-- No machine in the room; reachable only by `/arcade?game=keepyuppy` until the owner picks a spot.
-- /games page (Nov 21 2026, verifier): `/games/soccer-juggling-game`, built complete but noindex, out of the sitemap, the hub and every
-  count until the game is placed (lib/site/games.ts ALL_GAME_PAGES; tests/seo-games-gate.cjs places Safe Hands, Keepy-Uppy Beat and both).
+- /games page (Nov 21 2026, verifier): `/games/soccer-juggling-game`, listed and indexable since the game was placed
+  (lib/site/games.ts ALL_GAME_PAGES; tests/seo-games-gate.cjs).
   Media: clip (Cup Final, 10 s) + four stills (park Sweet, Neck Stall, Around the World in the Cup Final, the Trick Book), share picture.
   Placing the game also links it from the thigh-and-chest-control and toe-taps-and-foundations drills and gives its clip a watch page.
 - Tuning is from bots and a scripted player, not from children. The windows (55 / 110 / 170 ms), the balls per track and the swipe
@@ -144,7 +134,7 @@ does not take the score.
 - The Trick Book dialog and the trick lessons were checked by script and screenshot only.
 - Not measured on a real iPhone.
 
-## Verifier pass (Nov 21 2026, independent agent; branch `game-keepyuppy` after merging `game-safehands`)
+## Verifier pass (Nov 21 2026, independent agent; branch `game-keepyuppy`)
 Timing, measured in real Chrome (`--mute-audio`, CDP touch events, 390x844 @2x) with a probe that records every oscillator's start time
 and every frame's song time (script kept outside the repo; numbers here):
 - Music scheduling: every music voice starts exactly on its sixteenth of the AudioContext clock: error 0.000 ms over 130 (80 BPM) and

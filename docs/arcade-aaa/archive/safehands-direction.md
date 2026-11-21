@@ -1,3 +1,5 @@
+Rejected by the owner on Nov 21 2026 ('i dont like safe hands game'); code removed from the release; the last version is on branch game-safehands.
+
 # Safe Hands: direction (Nov 21 2026)
 
 You are the goalkeeper. An original game for the arcade (id `safehands`), built in the house comic print style with the island's beans.

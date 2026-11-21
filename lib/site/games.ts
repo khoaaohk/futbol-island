@@ -37,7 +37,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'safehands'|'keepyuppy'|'holdtheline';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster'|'keepyuppy'|'holdtheline';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -53,7 +53,7 @@ const PARENTS_SAFE='Free, with no ads, no account and no open chat. The high-sco
 
 /** Nov 21 2026: every game page, built or not yet listed. A page is LISTED (the hub, the sitemap, llms.txt, the image and video
  *  sitemaps, the Library, the drill links, every count) only once its game has a machine in the arcade room, i.e. its id is in
- *  arcadeCabinets (lib/arcade/arcadeCatalog.ts). A game in arcadeUnplaced (Safe Hands, Nov 21 2026) keeps a complete page at its URL,
+ *  arcadeCabinets (lib/arcade/arcadeCatalog.ts). A game in arcadeUnplaced (none since Nov 21 2026) keeps a complete page at its URL,
  *  noindex and reached by no link, so placing the game in the room lists it everywhere with no edit here (tests/seo-games-gate.cjs). */
 export const ALL_GAME_PAGES:readonly GamePage[]=[
  {id:'kitrush',slug:'soccer-swipe-game',path:page('soccer-swipe-game'),name:'Kit Rush',play:play('kitrush'),
@@ -375,37 +375,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Ball Blaster?',a:'Press and drag to aim, then let go to kick a ball. Hold longer for a harder shot and flick sideways to curl it. Break the machines before they reach your goal. Three that get through end the run.'},
    {q:'What age is Ball Blaster for?',a:'Futbol Island is made for children aged 7 to 12. The first wave is slow and has only robots. The waves get faster and busier forever, so it is a test for older children and adults too.'},
    {q:'What is the Daily Blast?',a:'A daily challenge on the start card. Everyone gets the same waves that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
- // Nov 21 2026: Safe Hands, the goalkeeper game (lib/arcade/safehands/core.ts + save.ts, components/games/SafeHandsGame.tsx,
- // docs/arcade-aaa/safehands-direction.md). Built and playable by link, NOT in the room yet (arcadeUnplaced): unlisted until placed.
- // Its pictures are all gameplay stills (public/games/shots), so the page adds only its share picture to public/games.
- {id:'safehands',slug:'soccer-goalkeeper-game',path:page('soccer-goalkeeper-game'),name:'Safe Hands',play:play('safehands'),
-  title:'Soccer Goalkeeper Game for Kids: Safe Hands, Free Online',h1:'Soccer goalkeeper game: Safe Hands',
-  description:'Safe Hands is a free soccer goalkeeper game for kids. Read the striker, dive to save penalties and free kicks, and try a daily penalty shootout.',
-  lead:'Safe Hands is a free goalkeeper game in your browser. You are the keeper. Set your position before the kick, watch the striker’s body for the clue, then swipe to dive, catch or tip the ball over the bar.',
-  blurb:'You are the goalkeeper: read the striker and dive',genre:['Arcade','Sports','Educational'],skill:'Setting your position in goal and reading the striker before the shot',
-  og:img('safe-hands-soccer-goalkeeper-game-og.jpg'),ogAlt:'Safe Hands, a soccer goalkeeper game: on one phone the keeper dives high to the left at a Sunday league penalty with the planted foot labelled, on the other a Cup final penalty at night in the rain',
-  shots:gameStills('safehands',1),
-  about:['Safe Hands is a goalkeeper game drawn like a comic book. The big panel shows your goal from behind, with you in it; a smaller panel shows the striker up close, so you can watch the run-up.',
-   'A career has four rounds of six shots: Sunday league, the Academy, the First team and the Cup final at night in the rain. You face penalties, one on ones, long shots, free kicks, crosses and rebounds. Three goals against end the run.'],
-  phone:['Hold the phone upright. Before the kick, drag to move the keeper along the line, or up to step off it.','After the whistle, one swipe is your save: left or right dives low, up and across dives high, straight up tips it over the bar. No swipe: the keeper stays and catches. Big buttons pick the wall and answer a cross.'],
-  desktop:['A and D move the keeper, W and S step out and back. After the whistle the arrows dive low, Q and E dive high and up tips the ball over.','Keys 2 to 4 pick the wall, 1 to 3 answer a cross, P pauses.'],
-  rules:['You get one move a shot. The wrong way, the wrong height or too late is a goal.','A soft shot can be caught. A hard shot caught in the middle is spilled for a rebound: push hard shots wide.',
-   'At a penalty you stay on the goal line until the kick, as in the real rules. On a long shot, step out too far and the ball is chipped over you.','A round with no goals against gives one back. The Daily Shootout is five penalties from the same five takers for everyone that day.'],
-  teaches:['Every move is a real goalkeeping idea. First the set position: stand on the line between the ball and the middle of your goal, so both corners are the same distance away. Stepping off your line narrows the angle, and in a one on one you stay big, on your feet.',
-   'Keepers read the striker’s body. The foot planted next to the ball points where the shot goes, and the lean tells the height: leaning back sends it high. On the first round these clues are written on the screen; later you get less time.',
-   'Then the choices: catch a soft shot, push a hard one wide, punch a cross in a crowd. On a free kick the wall guards one side and you guard the other.'],
-  guides:[{path:P+'goalkeeper',name:'The goalkeeper position',line:'The job, the skills and where to stand'},{path:R+'penalty-kick',name:'The penalty kick rule',line:'Why the keeper stays on the line'},
-   {path:D+'goalkeeper-angles',name:'Goalkeeper angles drill',line:'Practise the set position and the angle'},{path:D+'goalkeeper-footwork-and-set',name:'Goalkeeper footwork drill',line:'Be set before the shot'},
-   {path:D+'goalkeeper-catching-w-and-basket',name:'Goalkeeper catching drill',line:'The W and the basket catch'},{path:T+'free-kick-wall',name:'The free kick wall',line:'Who stands in the wall and why'}],
-  tips:['Get to your spot first: a keeper in the right place needs a shorter dive.','Watch the planted foot, not the eyes. Some strikers look the other way on purpose.','Move as soon as the foot is planted. An early dive reaches the corner.','Read the scouting cards: each striker’s habits are written down once you have seen them twice.'],
-  harder:['Each round adds shots: long shots in the Academy, free kicks and crosses for the First team. The Cup final is wet, so the ball is harder to hold.','The time between the planted foot and the kick falls from 0.8 seconds to 0.4, and some strikers try tricks.','Medals: Bronze at 2,500 points, Silver at 6,000 and Gold at 11,000.'],
-  parents:[PARENTS_SAFE,'Skill: watching closely and deciding fast. Each goal against gets one short coaching line.','Session length: a run lasts one to four minutes, the Daily Shootout about one. No day streaks, no timers.'],
-  faq:[free('Safe Hands',true),{q:'Does Safe Hands work on a phone or a school Chromebook?',a:DEVICE},
-   {q:'How do you play Safe Hands?',a:'Drag to set your position, watch the striker’s planted foot, then swipe to dive that way.'},
-   {q:'Can a goalkeeper really tell where a penalty is going?',a:'Often. The standing foot usually points where the ball goes. Good strikers try to hide it, which is why later rounds give you less time.'},
-   {q:'What is the Daily Shootout?',a:'Five penalties from five takers, the same for everyone that day. Tomorrow brings five new ones.'}]},
  // Nov 21 2026: Keepy-Uppy Beat, the juggling rhythm game (lib/arcade/keepyuppy/core.ts + charts.ts + save.ts, components/games/KeepyUppyGame.tsx,
- // docs/arcade-aaa/keepyuppy-direction.md). Built and playable by link, NOT in the room yet (arcadeUnplaced): unlisted until placed, like Safe Hands.
+ // docs/arcade-aaa/keepyuppy-direction.md). Built and playable by link, NOT in the room yet (arcadeUnplaced): unlisted until placed.
  {id:'keepyuppy',slug:'soccer-juggling-game',path:page('soccer-juggling-game'),name:'Keepy-Uppy Beat',play:play('keepyuppy'),
   title:'Soccer Juggling Game for Kids: Keepy-Uppy Beat, Free Online',h1:'Soccer juggling game: Keepy-Uppy Beat',
   description:'Keepy-Uppy Beat is a free soccer juggling game for kids. Keep the ball up to the beat with feet, thigh and head, learn tricks and train your weak foot.',
@@ -477,30 +448,28 @@ export const gameBySlug=(slug:string)=>ALL_GAME_PAGES.find(g=>g.slug===slug);
 export const gameById=(id:GameId)=>ALL_GAME_PAGES.find(g=>g.id===id)!;
 /** A ready link to a game page for a guide's own "related" list (lib/site/rules.ts, lib/site/drillLinks.ts, the two hubs). */
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
-/** Nov 21 2026: the hub names the goalkeeper game only once Safe Hands is listed (in the room). */
-const KEEPER_LISTED=isGameListed('safehands');
-/** Nov 21 2026: and the juggling game only once Keepy-Uppy Beat is listed. */
+/** Nov 21 2026: the hub names the juggling game only once Keepy-Uppy Beat is listed. */
 const JUGGLE_LISTED=isGameListed('keepyuppy');
 /** Nov 21 2026: and the defending game only once Hold the Line is listed. */
 const DEFEND_LISTED=isGameListed('holdtheline');
 /** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns (the description stays 120-155 characters). */
-const NEW_KINDS=[KEEPER_LISTED&&'goalkeeping',JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending'].filter(Boolean) as string[];
+const NEW_KINDS=[JUGGLE_LISTED&&'juggling',DEFEND_LISTED&&'defending'].filter(Boolean) as string[];
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:KEEPER_LISTED?'a goalkeeper game, pinball, snake and puzzles':JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':DEFEND_LISTED?'a defending game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${KEEPER_LISTED?'a goalkeeper game, ':''}${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${DEFEND_LISTED?'a defending game, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
   'Every game opens from its page and gets harder the longer you play; a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
-  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(KEEPER_LISTED?[['For a future goalkeeper','Safe Hands.']]:[]),...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(DEFEND_LISTED?[['For a defender','Hold the Line.']]:[])] as [string,string][],
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
   {q:'Can kids play these soccer games at school?',a:'Yes: they run in a web browser on a Chromebook, tablet or phone, if the school’s filter allows futbolisland.app.'},
   {q:'What ages are the games for?',a:'Children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}${KEEPER_LISTED?', and, in goal, setting your position and reading the striker':''}.`},
+  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${DEFEND_LISTED?', the offside line':''}.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

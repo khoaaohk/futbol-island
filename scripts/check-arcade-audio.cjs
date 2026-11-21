@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|safehands|keepyuppy|holdtheline] [--suspended] [--headed] [--null-output] [--mute]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|keepyuppy|holdtheline] [--suspended] [--headed] [--null-output] [--mute]
 // keepyuppy (Nov 21 2026): windows count-in (the four clicks before bar 1), music (the first bars of the track, scheduled ahead on the
 // AudioContext clock: kick, clap, shaker, bass), touch (a boot on the ball while the song is stopped) and over (the end cue); the
 // start card, the stage cards and the pause must be SILENT. --mute keeps Chrome's --mute-audio (night runs): the analyser sits
@@ -137,18 +137,6 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    {const a=await K(()=>{const h=window.__keepyuppy;return {song:h.audio.songTime()!==null,scheduled:h.audio.scheduled,state:h.audio.state};});if(!a.song||a.state!=='running'||a.scheduled<40)errors.push('the music is not on the audio clock: '+JSON.stringify(a));}
    await label('');await K(()=>window.__keepyuppy.audio.stopSong());await wait(700);await K(()=>{window.__audioLabel('touch');const a=window.__keepyuppy.audio;a.touch(3,true);});await wait(500);must.push('touch');
    await label('');await wait(300);await K(()=>{window.__audioLabel('over');window.__keepyuppy.audio.over(true,3);});await wait(1200);must.push('over');
-   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
-  }else if(game==='safehands'){quiet.push('menu');
-   // safehands (Nov 21 2026): windows whistle (the referee before the first kick: the game's own run-up), kick (the strike that follows),
-   // glove (a parry + the crowd, the game's own cues) and over (the end cue); menu / paused must be SILENT.
-   await page.waitForFunction(()=>window.__safehands&&window.__safehands.phase==='playing',null,{timeout:30000});await page.locator('[data-safehands-ack]').tap().catch(()=>{});await label('');
-   const S=fn=>page.evaluate(fn);
-   await page.waitForFunction(()=>window.__safehands.game.state.phase==='run',null,{timeout:9000,polling:20}).catch(()=>errors.push('no run-up'));await label('whistle');await wait(500);must.push('whistle');
-   await label('');await page.waitForFunction(()=>window.__safehands.game.state.phase==='fly',null,{timeout:6000,polling:10}).catch(()=>errors.push('no kick'));await label('kick');await wait(400);must.push('kick');
-   await label('');await wait(300);
-   await S(()=>{window.__audioLabel('glove');const a=window.__safehands.audio;a.glove(1);a.cheer(false);});await wait(900);must.push('glove');
-   await label('');await wait(300);
-   await S(()=>{window.__audioLabel('over');window.__safehands.audio.over(false);});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='holdtheline'){quiet.push('menu');
    // holdtheline (Nov 21 2026): windows kickoff (the referee's whistle when the team card is read), pass (the first passes of the wave:

@@ -34,12 +34,11 @@ export const arcadeCabinets = [
  {id:'ballblaster',name:'Ball Blaster',short:'BALL BLASTER',lesson:'Pick your target. Strike through the ball.',color:'#f0452e',...rowSpot('ballblaster')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
-/** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet. Safe Hands, the goalkeeper
- *  game (docs/arcade-aaa/safehands-direction.md "Room placement"), waits here for the owner's decision on its spot: the room, its
+/** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet wait here for the
+ *  owner's decision on their spot: the room, its
  *  draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
- {id:'safehands',name:'Safe Hands',short:'SAFE HANDS',lesson:'Set your position. Read the striker.',color:'#19b5a5'},
  {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a'},// Nov 21 2026: the juggling rhythm game (docs/arcade-aaa/keepyuppy-direction.md "Room placement")
  /* Nov 21 2026: Hold the Line, the defending game (docs/arcade-aaa/holdtheline-direction.md "Room placement"): the same wait for a spot */
  {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e'},

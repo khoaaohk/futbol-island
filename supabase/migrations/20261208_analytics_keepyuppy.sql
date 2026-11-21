@@ -1,6 +1,9 @@
--- Futbol Island admin analytics (Nov 21 2026): Keepy-Uppy Beat's activity key 'arcade_keepyuppy' (lib/analytics/islandIds.ts ARCADE_GAMES), after Safe Hands' (20261206): a superset, every earlier key is kept.
--- NOT APPLIED. The owner pastes docs/arcade-aaa/keepyuppy-supabase.sql instead (the same function plus the Keepy-Uppy Beat board id).
+-- Futbol Island admin analytics (Nov 21 2026): Keepy-Uppy Beat's activity key 'arcade_keepyuppy' (lib/analytics/islandIds.ts ARCADE_GAMES), after Ball Blaster's (20261204): a superset, every earlier key is kept.
+-- NOT APPLIED. The owner pastes docs/arcade-aaa/new-games-nov21-supabase.sql instead (Keepy-Uppy Beat and Hold the Line: the same function plus both board ids).
 -- Additive and safe to run twice: analytics_ingest is replaced in place.
+-- activity key; every key, place and cell allowed before is still allowed. Old rows are untouched.
+-- The LAST result must be one row:
+--   status = OK, Ball Blaster activity installed
 
 create or replace function public.analytics_ingest(p jsonb) returns void
 language plpgsql security invoker set search_path = public as $$
@@ -37,7 +40,7 @@ begin
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, least(value::numeric, v_e)::integer), '{}'::jsonb)
               from jsonb_each_text(case when jsonb_typeof(p->'activity_ms') = 'object' then p->'activity_ms' else '{}'::jsonb end)
-             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_safehands','arcade_keepyuppy','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
+             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','arcade_ballblaster','arcade_keepyuppy','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, v), '{}'::jsonb) from (
               select key, least(value::integer, v_e / 1000) v
@@ -60,6 +63,6 @@ revoke all on function public.analytics_ingest(jsonb) from public, anon, authent
 grant execute on function public.analytics_ingest(jsonb) to service_role;
 
 -- Self-check: the last result of this file.
-select case when exists (select 1 from pg_proc where proname = 'analytics_ingest' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_trophydrop%' and prosrc like '%arcade_clearbox%' and prosrc like '%arcade_streetdash%' and prosrc like '%arcade_rollball%' and prosrc like '%arcade_ballblaster%' and prosrc like '%arcade_safehands%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%'
-    and prosrc like '%arcade_airhockey%' and prosrc like '%exhibit_throw-in%')
-  then 'OK, Safe Hands activity installed' else 'NOT INSTALLED: analytics_ingest (arcade_ballblaster)' end as status;
+select case when exists (select 1 from pg_proc where proname = 'analytics_ingest' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_trophydrop%' and prosrc like '%arcade_clearbox%' and prosrc like '%arcade_streetdash%' and prosrc like '%arcade_rollball%' and prosrc like '%arcade_ballblaster%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%'
+    and prosrc like '%arcade_airhockey%' and prosrc like '%exhibit_throw-in%' and prosrc like '%arcade_keepyuppy%')
+  then 'OK, Keepy-Uppy Beat activity installed' else 'NOT INSTALLED: analytics_ingest (arcade_keepyuppy)' end as status;

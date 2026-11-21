@@ -1,7 +1,7 @@
 # Hold the Line: direction (Nov 21 2026; verified and trimmed the same day)
 
 You are the defence. An original arcade game (id `holdtheline`) in the house comic print style with the island's beans. Built on
-branch `game-holdtheline` (on top of `game-safehands`), NOT pushed, NOT in the room yet. Open it with `/arcade?game=holdtheline`.
+branch `game-holdtheline`; released Nov 21 2026 on `games-nov21` with a machine in the arcade room. Open it with `/arcade?game=holdtheline`.
 
 ## What it teaches (AGENTS.md)
 The offside line is your second-last defender (drawn across the pitch; the assistant referee runs level with it); offside is judged
@@ -87,15 +87,15 @@ the start card, team card, guided hold, pause, results and a hidden tab. Verify 
 phone 0.12 ms a frame average, 1.5 ms worst over 3,583 frames.
 
 ## Room placement, owner paste, migrations
-In the catalog as `arcadeUnplaced` (no machine, no "eleven games" line changed). Proposal: the west wall, mirror of Safe Hands' spot.
-Owner paste: `docs/arcade-aaa/new-games-nov21-supabase.sql` (all three new games; replaces holdtheline-supabase.sql) (idempotent; until it is pasted everything saves on the device and the island
+Placed Nov 21 2026 in `arcadeCabinets`: the spot and the room budget are in docs/arcade-aaa/NEW-GAMES-NOV21.md.
+Owner paste: `docs/arcade-aaa/new-games-nov21-supabase.sql` (Keepy-Uppy Beat and Hold the Line) (idempotent; until it is pasted everything saves on the device and the island
 board does not take the score). Migration copies: 20261209_holdtheline_boards.sql, 20261210_analytics_holdtheline.sql (renumbered Nov 21 2026 from 20261207/20261208 when
 this branch met Keepy-Uppy Beat, which keeps those dates; the "newest file" pins in the tests were moved too).
 
 ## Not done / weaker than wanted
 - No room machine yet (see docs/arcade-aaa/NEW-GAMES-NOV21.md). /games page (Nov 21 2026, integration): `/games/soccer-defending-game`,
   built complete but noindex, out of the sitemap, the hub and every count until placed (tests/seo-games-gate.cjs covers every subset of
-  the three new games). Media: clip (Coast League OFFSIDE, 10 s) + four stills (OFFSIDE with the line drawn, a press at night, a switch
+  the two new games). Media: clip (Coast League OFFSIDE, 10 s) + four stills (OFFSIDE with the line drawn, a press at night, a switch
   met by the slide, the season map), share picture. Placing it also links it from the pressure-and-cover-2v2 and recover-goal-side drills.
 - Human tuning is from bots, not children: drag gain, tap radius and wind-ups need a real phone playtest.
 - One answer per wave; keeper automatic; the line is always straight; beans are simple capsules.

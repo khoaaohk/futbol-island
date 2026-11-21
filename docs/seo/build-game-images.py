@@ -33,7 +33,6 @@ GAMES = [
 # picture is made (their page pictures are gameplay stills in public/games/shots), at a lower JPEG quality so public/games stays
 # under its cap (tests/seo-games.cjs), and they are NOT counted on the hub picture. Move an entry up into GAMES when it is placed.
 UNPLACED = [
- ('safe-hands-soccer-goalkeeper-game', ['safehands-phone', 'safehands-cup'], [], 'Safe Hands', 'Free soccer goalkeeper game', 56),
  ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
  ('hold-the-line-soccer-defending-game', ['holdtheline-offside', 'holdtheline-night'], [], 'Hold the Line', 'Free soccer defending game', 50),
 ]
@@ -77,7 +76,7 @@ for file, shots, outs, name, line in GAMES:
 for file, shots, outs, name, line, q in UNPLACED:
     if ONLY and not any(file.startswith(o) for o in ONLY): continue
     og(file, shots, name, line, q)
-# the hub: three games side by side (skipped when only unplaced games were asked for: `safe-hands`)
+# the hub: three games side by side (skipped when only unplaced games were asked for: `keepy-uppy`)
 if ONLY and not any(f.startswith(o) for o in ONLY for f, *_ in GAMES) and 'hub' not in ONLY: sys.exit(0)
 c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); d.rounded_rectangle([560, 40, 1170, 700], 36, fill=TINT)
 for i, s in enumerate(['kitrush-phone', 'snake-fullsquad', 'puzzle-phone']):

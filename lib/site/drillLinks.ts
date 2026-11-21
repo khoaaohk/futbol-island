@@ -41,8 +41,6 @@ export const G={
  kitRush:gameLink('kitrush'),pinball:gameLink('pinball'),tennis:gameLink('tennis'),runner:gameLink('runner'),puzzles:gameLink('puzzle'),
  /* Nov 17 2026: the puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),
  /* Nov 17 2026: the rolling-ball puzzle. */ rollBall:gameLink('rollball'), /* Nov 17 2026: the shooting game. */ ballBlaster:gameLink('ballblaster'),
- /* Nov 21 2026: the goalkeeper game, spread into the goalkeeper drills' links; empty until Safe Hands has a machine in the room
-    (lib/site/games.ts ALL_GAME_PAGES), so an unlisted page is never linked. */ safeHands:(isGameListed('safehands')?[gameLink('safehands')]:[]) as readonly ReturnType<typeof gameLink>[],
  /* Nov 21 2026: the juggling game, spread into the thigh control and ball-mastery drills' links; empty until Keepy-Uppy Beat is placed. */ keepyUppy:(isGameListed('keepyuppy')?[gameLink('keepyuppy')]:[]) as readonly ReturnType<typeof gameLink>[],
  /* Nov 21 2026: the defending game, spread into the pressure-and-cover and recover-goal-side drills' links; empty until Hold the Line is placed. */ holdTheLine:(isGameListed('holdtheline')?[gameLink('holdtheline')]:[]) as readonly ReturnType<typeof gameLink>[],
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
