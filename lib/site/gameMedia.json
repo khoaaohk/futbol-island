@@ -141,13 +141,13 @@
   "puzzle": {
    "w": 332,
    "h": 720,
-   "seconds": 9.6,
-   "mp4": 189699,
-   "webm": 263954,
+   "seconds": 10,
+   "mp4": 178613,
+   "webm": 252099,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 42580
+    "bytes": 34916
    }
   },
   "walk": {
@@ -433,13 +433,13 @@
     "file": "puzzle-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 42580
+    "bytes": 27510
    },
    {
     "file": "puzzle-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 40286
+    "bytes": 34264
    },
    {
     "file": "puzzle-3.webp",

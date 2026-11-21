@@ -86,7 +86,7 @@ function encode(){
  webp(poster,path.join(clips,`${GAME}.webp`));stills.forEach((s,i)=>webp(s,path.join(shots,`${GAME}-${i+1}.webp`)));
  const size=f=>fs.statSync(f).size,jf=path.join(ROOT,'lib/site/gameMedia.json'),raw=fs.readFileSync(jf,'utf8'),M=JSON.parse(raw);
  M.clips[GAME]={...M.clips[GAME],w:332,h:720,seconds:CLIP_S,mp4:size(path.join(clips,`${GAME}.mp4`)),webm:size(path.join(clips,`${GAME}.webm`)),poster:{w:480,h:1039,bytes:size(path.join(clips,`${GAME}.webp`))}};
- const old=M.shots[GAME]||[];if(stills.length)M.shots[GAME]=[1,2,3].map(n=>({file:`${GAME}-${n}.webp`,w:480,h:1039,bytes:size(path.join(shots,`${GAME}-${n}.webp`))})).concat(old.slice(3));
+ const old=M.shots[GAME]||[];if(stills.length)M.shots[GAME]=stills.map((_,i)=>i+1).map(n=>({file:`${GAME}-${n}.webp`,w:480,h:1039,bytes:size(path.join(shots,`${GAME}-${n}.webp`))})).concat(old.slice(stills.length));
  fs.writeFileSync(jf,JSON.stringify(M,null,(/^\{\n( +)"/.exec(raw)||[,' '])[1].length)+(raw.endsWith('\n')?'\n':''));
  console.log(`${GAME}: mp4 ${M.clips[GAME].mp4} B, webm ${M.clips[GAME].webm} B, poster ${M.clips[GAME].poster.bytes} B, stills ${M.shots[GAME].map(s=>s.bytes).join(' / ')} B`);
 }
