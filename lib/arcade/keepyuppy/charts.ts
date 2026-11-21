@@ -5,7 +5,7 @@
  * scale degrees 0-9 over two octaves of the track's five-note scale. A pattern may be one, two or four bars long and loops.
  */
 export type Music={root:number;scale:readonly number[];lead:'tri'|'square'|'bell'|'pluck'|'steel'|'whistle';kick:string;clap:string;shaker:string;bass:string;motif:string};
-export type Track={id:string;name:string;venue:string;bpm:number;/** drops allowed before the ball is gone for good (kinder on the first tracks) */balls:number;/** the weak-foot section, in bars (first, last), 1-based */weak:readonly [number,number];
+export type Track={id:string;name:string;venue:string;bpm:number;/** drops allowed before the ball is gone for good (kinder on the first tracks; verifier Nov 21 2026: 5 on tracks 1-3, was 5/4/4, so a careful beginner finishes track 2 about 80% and track 3 about 65% of the time) */balls:number;/** the weak-foot section, in bars (first, last), 1-based */weak:readonly [number,number];
  tip:{title:string;line:string};chart:string;music:Music};
 const MAJ=[0,2,4,7,9],MIN=[0,3,5,7,10];
 
@@ -15,12 +15,12 @@ export const TRACKS:readonly Track[]=[
   chart:'S...S... S...S... S...W... S...W... T...S... T...S... S.S.T... W...T... H...S... H...T... S.T.H... S.W.H... '
    +'W...W... W.W.T... W...H... W.W.H... S.W.T.H. S.W.T.H. S.S.W.W. T.H.S...',
   music:{root:48,scale:MAJ,lead:'whistle',kick:'x.......x.......',clap:'....x.......x...',shaker:'x.x.x.x.x.x.x.x.',bass:'0.......0.....2.0.......3.....2.',motif:'4...5...7.5.4.......2...4...5...4...2...........'+'................'}},
- {id:'school',name:'Schoolyard Shuffle',venue:'The schoolyard, at break',bpm:92,balls:4,weak:[11,14],
+ {id:'school',name:'Schoolyard Shuffle',venue:'The schoolyard, at break',bpm:92,balls:5,weak:[11,14],
   tip:{title:'Both feet',line:'Great jugglers use both feet. Watch for the weak-foot part: it counts on its own, and it gets better every time.'},
-  chart:'S...W... S.W.T... S.W.S.W. T.T.H... S.W.T.H. S.S.W.W. [TST]..H.. S.W.S... [TST]..W.. H.H.S.W. '
-   +'W...W... W.T.W.H. W.W.T... [TWT]..W.. S.W.S.W. T.H.T.H. S.SW..T. [TST]..H.. S.W.T.H. SW..SW.. [TST].H... S.W.S...',
+  chart:'S...W... S.W.T... S.T.S.W. T.T.H... S.W.T.H. S.S.W.W. [TST]..H.. S.W.S... [TST]..W.. H.H.S.S. '
+   +'W...W... W.T.W.H. W.W.T... [TWT]..W.. S.T.S.W. T.H.T.H. S.SW..T. [TST]..H.. S.W.T.H. SW..SW.. [TST].H... S.W.S...',
   music:{root:50,scale:MAJ,lead:'tri',kick:'x...x...x...x...',clap:'....x.......x..x',shaker:'x.x.x.x.x.x.x.x.',bass:'0...0..2....3...0...0..2....4.3.',motif:'5.5.7...5.4.2...4.4.5...4.2.0...'}},
- {id:'beach',name:'Beach Bounce',venue:'The beach, at low tide',bpm:104,balls:4,weak:[13,16],
+ {id:'beach',name:'Beach Bounce',venue:'The beach, at low tide',bpm:104,balls:5,weak:[13,16],
   tip:{title:'Eyes on the ball',line:'Watch the ball all the way onto your foot, your thigh or your forehead. Your head follows the ball.'},
   chart:'S...W... S.W.T... H.H.S.W. T.H.S... N=====.. S.W.S.W. [H.H.H.].. SW..T.H. N===..S. W.S.TH.. [H.H.H.]W. S.W.T... '
    +'W...W.W. W.T.W.H. WT..W.H. W.W.N==. S.W.S.W. TH..TH.. [H.H.H.].. SW.TH.S. N=====.. S.W.T.H. SW..SW.. [H.H.H.]..',

@@ -50,7 +50,7 @@ ok('scoring: 100 / 60 / 20 a touch, the combo adds 10% every ten clean touches (
  assert.equal(C.keepyCoins(0),0);assert.equal(C.keepyCoins(4100),2);assert.equal(C.keepyCoins(99999),12);});
 
 ok('balls: a drop loses the combo and one ball, eight touches that stay up win one back, no balls left ends the run early',()=>{
- assert.deepEqual(TRACKS.map(t=>t.balls),[5,4,4,3,3,3]);
+ assert.deepEqual(TRACKS.map(t=>t.balls),[5,5,5,3,3,3]);
  const g=game(3),N=g.chart.notes;g.advance(N[0].t+.2);assert.equal(g.state.lives,2);for(let i=1;i<=8;i++)hit(g,i,i%2?.14:0);assert.equal(g.state.lives,3,'Early and Late touches still count toward winning a ball back');assert.equal(g.state.regained,1);
  for(let i=9;i<=16;i++)hit(g,i);assert.equal(g.state.lives,3,'never more than the track gives');
  const h=game(3);h.advance(h.chart.notes[2].t+.2);const ev=events(h);assert.equal(h.state.over,true);assert.equal(h.state.out,true);assert.equal(ev.at(-1).type,'over');assert.equal(ev.at(-1).a,0);assert.equal(h.stars(),0);assert.equal(h.weakScore(),-1);assert.equal(h.press(0,9),'');
