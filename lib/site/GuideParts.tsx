@@ -128,7 +128,7 @@ export function PlayEnd({href=PLAY_PATH,label='Play it on the island',bar='Learn
 /** "Coach's notes" (lib/site/coachNotes.ts): the item's own coaching point, how it shows up in a match, age-group notes and,
  *  where the page had none, common mistakes. `ages` alone is used on drill pages (they already have points and a game line). */
 export function CoachNotesSection({name,notes}:{name:string;notes:{coach?:string;match?:string;ages:readonly (readonly [string,string])[];mistakes?:readonly string[]}}){
- return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={`${styles.h2} ${styles.notesH}`} id="coach-notes"><FactIcon kind="whistle" size={28}/><span>{`Coach’s notes: ${name}`}</span></h2>
+ return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={`${styles.h2} ${styles.notesH} ${rt.target}`} id="coach-notes"><FactIcon kind="whistle" size={28}/><span>{`Coach’s notes: ${name}`}</span></h2>
   {notes.coach&&<p><b>Coaching point:</b> {notes.coach}</p>}
   {notes.match&&<p><b>In a match:</b> {notes.match}</p>}
   {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>Common mistakes</h3><Bullets items={notes.mistakes}/></>}

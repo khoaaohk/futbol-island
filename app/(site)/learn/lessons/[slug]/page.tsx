@@ -18,6 +18,7 @@ import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '../../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
 import {lessonRail} from '@/lib/site/railNavMore';
+import rt from '@/components/site/railTarget.module.css';
 
 /** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz shows its questions, options and explanations, never which option is correct. */
 export const dynamic='force-static';
@@ -36,8 +37,8 @@ export default function LessonPage({params}:{params:{slug:string}}){
   <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(faq)}/>
-  <RailNav rail={lessonRail(l.format)} current={lessonPath(l.id)}/>
-  <header className={styles.intro}>
+  <RailNav rail={lessonRail({quiz:l.questions.length>0,hubs:hubs.length>0,guides:guides.length>0})} current="#top"/>
+  <header className={`${styles.intro} ${rt.target}`} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{l.title}</h1>
    {/* Nov 17 2026 (visual pass): the concept and the old eyebrow's format / chapter / level now live in the learn card's facts. */}
@@ -46,21 +47,21 @@ export default function LessonPage({params}:{params:{slug:string}}){
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Play this lesson</a>
   </header>
-  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={styles.h2} id="coach">What the coach says</h2>
+  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={`${styles.h2} ${rt.target}`} id="coach">What the coach says</h2>
    <CoachChapters lang="en" id={l.id} format={l.format} formatLabel={l.formatLabel} steps={l.steps}/>
   </section>
-  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Quiz questions</h2>
+  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={`${styles.h2} ${rt.target}`} id="quiz">Quiz questions</h2>
    <p className={styles.caption}>Try to answer before you open the coach’s explanation. On the island you answer each one on the pitch.</p>
    <QuizCards lang="en" questions={l.questions}/>
   </section>}
   {/* Nov 14 2026 (seo-boost): sibling lessons (lib/site/related.ts lessonSiblings), so every lesson links to its neighbours. */}
-  <section className={styles.section} aria-labelledby="siblings"><h2 className={styles.h2} id="siblings">Keep going: {sib.groupName}</h2>
+  <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">Keep going: {sib.groupName}</h2>
    <ul className={styles.list}>{[...sib.same.map(x=>({x,tag:''})),{x:sib.prev,tag:'Previous lesson · '},{x:sib.next,tag:'Next lesson · '}].map(({x,tag})=><li key={x.id}><a href={lessonPath(x.id)}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}</ul>
   </section>
-  {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={styles.h2} id="related">More lessons like this</h2>
+  {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">More lessons like this</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span></a></li>)}</ul>
   </section>}
-  {guides.length>0&&<section className={styles.section} aria-labelledby="guides"><h2 className={styles.h2} id="guides">Related guides</h2>
+  {guides.length>0&&<section className={styles.section} aria-labelledby="guides"><h2 className={`${styles.h2} ${rt.target}`} id="guides">Related guides</h2>
    <ul className={styles.list}>{guides.map(g=><li key={g.path}><a href={g.path}><span className={styles.itemTitle}>{g.name[0].toUpperCase()+g.name.slice(1)}</span></a></li>)}</ul>
   </section>}
   <QA id="faq" title="Questions grown-ups ask" faq={faq}/>

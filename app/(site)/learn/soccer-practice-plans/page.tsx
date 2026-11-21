@@ -11,7 +11,7 @@ import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import styles from '../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
-import {planRail} from '@/lib/site/railNavMore';
+import {plansHubRail} from '@/lib/site/railNavMore';
 
 /** /learn/soccer-practice-plans: the practice plans hub (lib/site/plans.ts): the plans by age, the play-practice-play structure, lengths by age. */
 export const dynamic='force-static';
@@ -23,7 +23,7 @@ export default function PlansHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:PLANS.map(p=>({name:p.h1,path:p.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={planRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={plansHubRail()} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   {AGES.map(a=><Section key={a} id={a.toLowerCase()} title={`${a} soccer practice plans (${AGE_YEARS[a]})`}>
    <LinkList links={plansForAge(a).map(p=>({path:p.path,name:p.h1,line:`${p.minutes} minutes. ${p.goal}.`}))}/>
   </Section>)}

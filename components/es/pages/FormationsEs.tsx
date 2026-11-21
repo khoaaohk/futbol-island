@@ -1,7 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {anchor,hubRail} from '@/lib/site/railNavMore';
+import {onwardFor} from '@/lib/site/railNav';
+import {anchor,guideRail,hubRail} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -73,7 +73,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:f.title,path:f.esPath,description:f.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`Formación ${f.name} de fútbol`,teaches:f.answer,image:formationImage(f.slug)}))}/>
   <JsonLd data={faqLd(f.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('formations')} current={f.esPath}/>} onward={onwardFor(f.lessons[0],true)} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
+  <EsIntro top rail={<RailNav rail={guideRail('formations',[],true)} current="#top"/>} onward={onwardFor(f.lessons[0],true)} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`Diagrama del ${f.shapeEs}`}>
    <FormationDiagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
    <p><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>: pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>

@@ -1,7 +1,7 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
-import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {anchor,hubRail,sec} from '@/lib/site/railNavMore';
+import {onwardFor} from '@/lib/site/railNav';
+import {anchor,guideRail,hubRail,sec} from '@/lib/site/railNavMore';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {place} from '@/lib/site/pitch';
@@ -95,7 +95,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:r.title,path:r.esPath,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (regla de fútbol)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.esPath,name:`Prueba: ${r.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('rules')} current={r.esPath}/>} onward={onwardFor(r.cta,true)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES_ES}/>:undefined} facts={facts}/>
+  <EsIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(futsal?['futsal-vs-soccer']:[])],true,play)} current="#top"/>} onward={onwardFor(r.cta,true)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES_ES}/>:undefined} facts={facts}/>
   <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -146,7 +146,7 @@ export function TermsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={setLd}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro top rail={<RailNav rail={hubRail('Términos en esta página',[{title:'De la A a la Z',items:letters.map(l=>({href:`#letra-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('pages','Términos con diagrama')]}],true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Términos en esta página',[{items:letters.map(l=>({href:`#letra-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('pages','Términos con diagrama')]}],true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
   <Section id="az" title="Salta a una letra">
    <p>{letters.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letra-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>
@@ -176,7 +176,7 @@ export function TermEsPage({t}:{t:EsTerm}){
   <JsonLd data={esLd({...articleLd({headline:t.title,path:t.esPath,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (término de fútbol)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.esPath,name:`Prueba: ${t.name}`,questions:quiz})})}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.esPath),inLanguage:'es',inDefinedTermSet:abs(H.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('terms')} current={t.esPath}/>} onward={onwardFor(t.cta,true)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
+  <EsIntro top rail={<RailNav rail={guideRail('terms',[],true)} current="#top"/>} onward={onwardFor(t.cta,true)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagrama`}><EsSceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Errores comunes"><Bullets items={t.mistakes}/></Section>
@@ -239,7 +239,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:p.title,path:p.esPath,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (posición de fútbol)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.esPath,name:`Prueba: ${p.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('positions')} current={p.esPath}/>} onward={onwardFor(p.lessons[0],true)} crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
+  <EsIntro top rail={<RailNav rail={guideRail('positions',[],true)} current="#top"/>} onward={onwardFor(p.lessons[0],true)} crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
   <Section id="where" title={`Dónde se coloca: ${lower}`}>
    <EsDiagram id="where-d" format={f.format} lines={f.lines} what={`la posición de ${lower} en una formación ${f.shape}`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>

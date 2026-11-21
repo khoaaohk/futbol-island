@@ -1,7 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {anchor,hubRail,planRailEs} from '@/lib/site/railNavMore';
+import {onwardFor} from '@/lib/site/railNav';
+import {anchor,guideRail,hubRail,planRail,plansHubRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
 import {railId} from '@/lib/site/railId';
 import JsonLd from '@/components/seo/JsonLd';
@@ -93,7 +93,7 @@ export function DrillEsPage({d}:{d:EsDrill}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:d.title,path:d.esPath,description:d.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${d.name} (ejercicio de fútbol)`,teaches:d.answer,image:diagramUrl(d.picture)}))}/>
   <JsonLd data={faqLd(d.faq)}/>
-  <EsIntro rail={<RailNav rail={sectionRailEs('drills')} current={d.esPath}/>} onward={onwardFor(d.cta,true)} crumbs={crumbs} h1={d.h1} lead={d.answer}/>
+  <EsIntro top rail={<RailNav rail={guideRail('drills',d.home?['home']:[],true)} current="#top"/>} onward={onwardFor(d.cta,true)} crumbs={crumbs} h1={d.h1} lead={d.answer}/>
   <EsPrintSheet path={d.esPath} what="hoja del ejercicio"/>
   <Section id="diagram" title={`${d.name}: diagrama del montaje`}><EsGridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="De un vistazo">
@@ -153,7 +153,7 @@ export function PlansHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:h.h1,path:h.path,description:h.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:esPlanOrder().slice(1).map(p=>({name:p.name,path:p.path}))}))}/>
   <JsonLd data={faqLd(h.faq)}/>
-  <EsIntro rail={<RailNav rail={planRailEs()} current={h.path}/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
+  <EsIntro top rail={<RailNav rail={plansHubRail(true)} current="#top"/>} crumbs={crumbs} h1={h.h1} lead={h.lead} more={h.more} cta/>
   {AGES.map(a=><Section key={a} id={a.toLowerCase()} title={`Planes de entrenamiento de fútbol ${a} (${AGE_YEARS_ES[a]})`}>
    <LinkList links={esPlansForAge(a).map(p=>({path:p.esPath,name:p.h1,line:`${p.minutes} minutos. ${p.goal}.`}))}/>
   </Section>)}
@@ -183,9 +183,9 @@ export function PlanEsPage({p}:{p:EsPlan}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:p.title,path:p.esPath,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.h1} (entrenamiento de fútbol infantil)`,teaches:p.goal,image:diagramUrl(p.picture)}))}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <RailNav rail={planRailEs()} current={p.esPath}/>
+  <RailNav rail={planRail(true)} current="#top"/>
   <div className={styles.printPage}>
-   <EsIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
+   <EsIntro top crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="De un vistazo">
     <Glance label={`${p.h1}: de un vistazo`} items={[{icon:'kid',label:'Edad',value:`${p.age} (${AGE_YEARS_ES[p.age]})`},{icon:'clock',label:'Duración',value:`${p.minutes} minutos (guía para ${p.age}: ${PRACTICE_RANGE_ES[p.age]})`},{icon:'people',label:'Jugadores',value:p.players},{icon:'flag',label:'Objetivo del día',value:p.goal},{icon:'court',label:'Partido final',value:FIELD_ES[p.age]}]}/>
    </Section>

@@ -68,7 +68,7 @@ export function EsGuideEnd({cta=true,checked,lessonId}:{cta?:boolean;checked?:st
   {cta&&(lessonId?<EsPlayEnd href={playLessonHref(lessonId)} label={ES_UI.playLesson}/>:<EsPlayEnd/>)}</>;
 }
 export function EsCoachNotes({name,notes}:{name:string;notes:CoachNotesEs}){
- return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={`${styles.h2} ${styles.notesH}`} id="coach-notes"><FactIcon kind="whistle" size={28}/><span>{ES_UI.coachNotes}: {name}</span></h2>
+ return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={`${styles.h2} ${styles.notesH} ${rt.target}`} id="coach-notes"><FactIcon kind="whistle" size={28}/><span>{ES_UI.coachNotes}: {name}</span></h2>
   {notes.coach&&<p><b>{ES_UI.coachPoint}:</b> {notes.coach}</p>}
   {notes.match&&<p><b>{ES_UI.inMatch}:</b> {notes.match}</p>}
   {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>{ES_UI.mistakes}</h3><ul>{notes.mistakes.map(t=><li key={t}>{t}</li>)}</ul></>}

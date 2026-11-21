@@ -1,6 +1,7 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {onwardFor,sectionRail} from '@/lib/site/railNav';
+import {onwardFor} from '@/lib/site/railNav';
+import {guideRail} from '@/lib/site/railNavMore';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -59,7 +60,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('rules')} current={r.path}/>} onward={onwardFor(r.cta)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
+  <GuideIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(r.bodies?['by-country']:[]),...(futsal?['futsal-vs-soccer']:[])],false,play)} current="#top"/>} onward={onwardFor(r.cta)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}

@@ -25,7 +25,8 @@ import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '@/app/(site)/site.module.css';
 import fx from '@/components/site/siteForms.module.css';
 import RailNav from '@/components/site/shell/RailNav';
-import {lessonRailEs} from '@/lib/site/railNavMore';
+import {lessonRail,lessonsIndexRail} from '@/lib/site/railNavMore';
+import rt from '@/components/site/railTarget.module.css';
 /**
  * The Spanish lessons (Spanish round D, Nov 16 2026): /es/learn/lessons (index), /es/learn/lessons/<id> (96 reading pages) and
  * the Spanish guide search /es/learn?q= (not a sitemap page; noindex, like /learn). Same sections and classes as
@@ -62,8 +63,8 @@ export function LessonEsPage({l}:{l:EsLesson}){
    keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(LESSON_FAQ)}/>
-  <RailNav rail={lessonRailEs(l.format)} current={l.esPath}/>
-  <header className={styles.intro}>
+  <RailNav rail={lessonRail({quiz:l.questions.length>0,hubs:hubs.length>0,guides:guides.length>0},true)} current="#top"/>
+  <header className={`${styles.intro} ${rt.target}`} id="top">
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{l.title}</h1>
    <LearnCard lang="es" id={l.id} concept={l.concept} formatLabel={fmtWord(l.formatLabel)} difficulty={l.difficulty} difficultyLabel={l.difficultyEs} questions={l.questions.length} chapter={l.chapterEs} answer/>
@@ -72,20 +73,20 @@ export function LessonEsPage({l}:{l:EsLesson}){
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Juega esta lección</a>
   </header>
   <EsPrintSheet path={l.esPath} what="hoja de la lección" has="la idea, los pasos y las preguntas"/>
-  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={styles.h2} id="coach">Lo que dice el entrenador</h2>
+  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={`${styles.h2} ${rt.target}`} id="coach">Lo que dice el entrenador</h2>
    <CoachChapters lang="es" id={l.id} format={l.format} formatLabel={fmtWord(l.formatLabel)} steps={l.steps}/>
   </section>
-  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Preguntas de la prueba</h2>
+  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={`${styles.h2} ${rt.target}`} id="quiz">Preguntas de la prueba</h2>
    <p className={styles.caption}>Intenta responder antes de abrir la explicación del entrenador. En la isla respondes cada una en la cancha.</p>
    <QuizCards lang="es" questions={l.questions}/>
   </section>}
-  <section className={styles.section} aria-labelledby="siblings"><h2 className={styles.h2} id="siblings">{group}</h2>
+  <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">{group}</h2>
    <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}</ul>
   </section>
-  {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={styles.h2} id="related">Más lecciones como esta</h2>
+  {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">Más lecciones como esta</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.name}</span></a></li>)}</ul>
   </section>}
-  {guides.length>0&&<section className={styles.section} aria-labelledby="guides"><h2 className={styles.h2} id="guides">Guías relacionadas</h2>
+  {guides.length>0&&<section className={styles.section} aria-labelledby="guides"><h2 className={`${styles.h2} ${rt.target}`} id="guides">Guías relacionadas</h2>
    <ul className={styles.list}>{guides.map(g=><li key={g.path}><a href={g.path}><span className={styles.itemTitle}>{g.name}</span></a></li>)}</ul>
   </section>}
   <QA id="faq" title="Preguntas de los adultos" faq={LESSON_FAQ}/>
@@ -113,8 +114,8 @@ export function LessonsIndexEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`Lecciones de fútbol de ${SITE_NAME}`,numberOfItems:all.length,
    itemListElement:all.map((l,i)=>({'@type':'ListItem',position:i+1,name:`${l.title} (${l.formatLabel})`,url:abs(l.esPath)}))}}/>
-  <RailNav rail={lessonRailEs()} current={INDEX_ES}/>
-  <header className={styles.intro}>
+  <RailNav rail={lessonsIndexRail(null,true)} current="#top"/>
+  <header className={`${styles.intro} ${rt.target}`} id="top">
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>Lecciones de fútbol para niños</h1>
    <p className={styles.lead} data-answer="">{LEAD}</p>
@@ -122,11 +123,11 @@ export function LessonsIndexEsPage(){
    <a className={styles.cta} href={PLAY_PATH}>Juega las lecciones en la isla</a>
    <EsSearchForm/>
   </header>
-  {topics.length>0&&<section className={styles.section} aria-labelledby="topics"><h2 className={styles.h2} id="topics">Lecciones por tema</h2>
+  {topics.length>0&&<section className={styles.section} aria-labelledby="topics"><h2 className={`${styles.h2} ${rt.target}`} id="topics">Lecciones por tema</h2>
    <ul className={styles.list}>{topics.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.name}</span><span className={styles.itemMeta}>{h.blurb}</span></a></li>)}</ul>
   </section>}
   {FORMAT_ORDER.map(f=>{const list=all.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
-   <h2 className={styles.h2} id={`fmt-${f}`}>Lecciones de {fmtWord(FORMAT_LABEL[f])} <span className={styles.count}>({list.length})</span></h2>
+   <h2 className={`${styles.h2} ${rt.target}`} id={`fmt-${f}`}>Lecciones de {fmtWord(FORMAT_LABEL[f])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={l.esPath}><span className={styles.itemTitle}>{l.title}</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>
   </section>;})}
   <div className={styles.endNote}><p className={styles.caption}>{ES_UI.guideFoot}</p><EsCheckedLine date={CHECKED}/></div>

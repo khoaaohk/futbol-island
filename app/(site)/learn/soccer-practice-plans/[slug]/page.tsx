@@ -39,9 +39,9 @@ export default function PlanPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.h1} (youth soccer coaching)`,teaches:p.goal,image:diagramUrl(p.picture)})}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <RailNav rail={planRail()} current={p.path}/>{/* outside .printPage: the shell keys on a direct child of main; print hides it */}
+  <RailNav rail={planRail()} current="#top"/>{/* outside .printPage: the shell keys on a direct child of main; print hides it */}
   <div className={styles.printPage}>
-   <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
+   <GuideIntro top crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="At a glance">
     <Glance label={`${p.h1}: at a glance`} items={[{icon:'kid',label:'Age group',value:`${p.age} (${AGE_YEARS[p.age]})`},{icon:'clock',label:'Length',value:`${p.minutes} minutes (guidance for ${p.age}: ${PRACTICE_RANGE[p.age]})`},{icon:'people',label:'Players',value:p.players},{icon:'flag',label:'Goal for the day',value:p.goal},{icon:'court',label:'Final game',value:p.field}]}/>
    </Section>

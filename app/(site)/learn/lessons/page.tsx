@@ -8,7 +8,9 @@ import {DEFINITION,HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
 import {SAFE_TRUST_LINE} from '@/lib/site/safety';
 import styles from '../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
-import {lessonRail} from '@/lib/site/railNavMore';
+import {lessonsIndexRail} from '@/lib/site/railNavMore';
+import rt from '@/components/site/railTarget.module.css';
+import {guideVideo} from '@/lib/site/guideVideos';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
@@ -22,8 +24,8 @@ export default function LearnIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} football lessons`,numberOfItems:LESSONS.length,
    itemListElement:LESSONS.map((l,i)=>({'@type':'ListItem',position:i+1,name:`${l.title} (${l.formatLabel})`,url:abs(lessonPath(l.id))}))}}/>
-  <RailNav rail={lessonRail()} current="/learn/lessons"/>
-  <header className={styles.intro}>
+  <RailNav rail={lessonsIndexRail(guideVideo('/learn/lessons')?`clip-${guideVideo('/learn/lessons')!.key}`:null)} current="#top"/>
+  <header className={`${styles.intro} ${rt.target}`} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football lessons for kids</h1>
    <p className={styles.lead}>{DEFINITION} {DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
@@ -32,11 +34,11 @@ export default function LearnIndex(){
    <LearnSearchForm/>
   </header>
   <GuideVideo path="/learn/lessons"/>
-  <section className={styles.section} aria-labelledby="topics"><h2 className={styles.h2} id="topics">Lessons by topic</h2>
+  <section className={styles.section} aria-labelledby="topics"><h2 className={`${styles.h2} ${rt.target}`} id="topics">Lessons by topic</h2>
    <ul className={styles.list}>{HUBS.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span><span className={styles.itemMeta}>{h.blurb}</span></a></li>)}</ul>
   </section>
   {FORMAT_ORDER.map(f=>{const list=LESSONS.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
-   <h2 className={styles.h2} id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons <span className={styles.count}>({list.length})</span></h2>
+   <h2 className={`${styles.h2} ${rt.target}`} id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={lessonPath(l.id)}><span className={styles.itemTitle}>{l.title}</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>
   </section>;})}
  </>;

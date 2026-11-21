@@ -1,5 +1,6 @@
 'use client';
 import {useState} from 'react';
+import rt from './railTarget.module.css';
 import type {QuizQuestion} from '@/lib/site/guideQuiz';
 import styles from '@/app/(site)/site.module.css';
 import {ES_QUIZ} from '../../lib/i18n/es/ui';
@@ -15,7 +16,7 @@ export default function GuideQuiz({id,name,questions,lang}:{id:string;name:strin
  const done=picked.every(x=>x!==null),score=picked.filter((x,i)=>x===questions[i].correct).length,total=questions.length;
  const cheer=es?ES_QUIZ.cheer(score,total):score===total?`${score}/${total}! You know your ${name}.`:score>=total-1?`${score}/${total}. So close. Read the one you missed and try again.`:`${score}/${total}. Have another read and try again.`;
  return <section className={styles.section} aria-labelledby={id} data-guide-quiz="">
-  <h2 className={styles.h2} id={id}>{es?ES_QUIZ.title:'Quick quiz'}: {name}</h2>
+  <h2 className={`${styles.h2} ${rt.target}`} id={id}>{es?ES_QUIZ.title:'Quick quiz'}: {name}</h2>
   <ol className={styles.quiz}>{questions.map((q,i)=>{const p=picked[i],answered=p!==null,right=p===q.correct;
    return <li key={q.q} className={styles.quizItem}>
     <h3 className={styles.h3} id={`${id}-q${i}`}>{q.q}</h3>

@@ -1,6 +1,7 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {onwardFor,sectionRail} from '@/lib/site/railNav';
+import {onwardFor} from '@/lib/site/railNav';
+import {guideRail} from '@/lib/site/railNavMore';
 import ReadNext from '@/components/site/ReadNext';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {positionQuiz} from '@/lib/site/guideQuiz';
@@ -48,7 +49,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (soccer position)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.path,name:`${p.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <GuideIntro rail={<RailNav rail={sectionRail('positions')} current={p.path}/>} onward={onwardFor(p.lessons[0])} crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
+  <GuideIntro top rail={<RailNav rail={guideRail('positions')} current="#top"/>} onward={onwardFor(p.lessons[0])} crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
   <Section id="where" title={`Where the ${lower} stands`}>
    <Diagram id="where-d" format={f.format} lines={f.lines} what={`the ${lower} position in a ${f.shape} formation`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
