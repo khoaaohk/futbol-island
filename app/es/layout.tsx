@@ -16,6 +16,9 @@ export default function EsLayout({children}:{children:React.ReactNode}){
  return <HtmlShell lang="es"><div className={styles.page} data-reading-page="">
   {/* cross-document view transitions, as app/(site)/layout.tsx */}
   <style>{'html,body{background:#fbf7ee;color-scheme:light}@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}::view-transition-group(fi-nav-chip){animation-duration:.3s;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}}'}</style>
+  {/* release check, Nov 20 2026: the game routes never opt in (above), so Chrome aborted this page's transition into them and
+      logged "Transition was aborted because of invalid state" on /play and /arcade; the page skips it itself before it leaves */}
+  <script dangerouslySetInnerHTML={{__html:"addEventListener('pageswap',function(e){var v=e.viewTransition,a=e.activation,u=a&&a.entry&&a.entry.url;if(v&&u){var p=new URL(u).pathname;if(/^\\/(play|arcade|coach|admin)(\\/|$)/.test(p))v.skipTransition()}})"}}/>
   <header className={styles.header}><div className={styles.headerInner}><SiteNavEs/></div></header>
   <main className={styles.main}>{children}</main>
   <footer className={styles.footer}>
