@@ -85,9 +85,14 @@ const L=rel=>load(path.join(root,rel));
   WebApplication:['name','description','applicationCategory','operatingSystem','offers'],LearningResource:['name','description','educationalLevel','learningResourceType'],
   BreadcrumbList:['itemListElement'],FAQPage:['mainEntity'],Organization:['name','url','logo'],WebSite:['name','url']};
  const inbound=new Map(urls.map(u=>[u,0])),texts={},problems=[];
+ let esOnDemand=0;
  const CHILD=/^\/(learn\/(soccer-(drills|formations|rules|positions|terms|practice-plans)|lessons)\/[^/]+|tools\/[^/]+(\/[^/]+)?|games\/[^/]+)$/;
  for(const p of urls){
-  const h=html(p);if(!h){if(p!=='/play'&&p!=='/privacy')problems.push(`${p}: not prerendered`);continue;}
+  const h=html(p);if(!h){
+   // Spanish pages under app/es/[[...path]] render on their first request (generateStaticParams returns [] to keep the
+   // Vercel build inside 8 GB), so a build has no file for most of them: not a problem; tests/es-pages.cjs covers them.
+   if(p==='/es'||p.startsWith('/es/')){esOnDemand++;continue;}
+   if(p!=='/play'&&p!=='/privacy')problems.push(`${p}: not prerendered`);continue;}
   const canon=[...h.matchAll(/<link rel="canonical" href="([^"]+)"/g)].map(m=>m[1]);
   if(canon.length!==1||canon[0]!==SITE+(p==='/'?'':p))problems.push(`${p}: canonical ${canon.join(',')||'none'}`);
   const lds=[...h.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(m=>{try{return JSON.parse(m[1]);}catch{problems.push(`${p}: JSON-LD does not parse`);return {};}});
@@ -119,5 +124,5 @@ const L=rel=>load(path.join(root,rel));
   sents.forEach(ss=>new Set(ss).forEach(s=>df.set(s,(df.get(s)||0)+1)));
   ps.forEach((p,i)=>{const u=sents[i].filter(s=>df.get(s)===1).reduce((a,s)=>a+s.split(' ').length,0);if(u<MIN[f])problems.push(`${p}: ${u} unique words (${f} minimum ${MIN[f]})`);});}
  assert.deepEqual(problems.slice(0,30),[],`${problems.length} built-site problems`);
- console.log(`seo-boost: source checks OK; ${urls.length} built pages: canonicals, JSON-LD, FAQ, breadcrumbs, related links, no orphans, unique text OK`);
+ console.log(`seo-boost: source checks OK; ${urls.length} built pages (${esOnDemand} Spanish pages render on first visit: skipped): canonicals, JSON-LD, FAQ, breadcrumbs, related links, no orphans, unique text OK`);
 })().catch(e=>{console.error(e.message);process.exit(1);});
