@@ -157,7 +157,7 @@ ok('arcade wiring: last cabinet in the back row, one all-time board, coins, soun
  assert.equal(arcadeCoinTarget('trophydrop',{points:449}),2);assert.equal(arcadeCoinTarget('trophydrop',{points:1e7}),ARCADE_COIN_CAPS.trophydrop);assert.equal(ARCADE_COIN_CAPS.trophydrop,ARCADE_COIN_CAPS.snake);assert.equal(K.trophyCoins(449),2);
  const room=read('components/ArcadeRoom.tsx');assert(/game==='trophydrop'\?<TrophyDrop onExit=\{back\}\/>/.test(room)&&/trophydrop:\(\)=>import\('\.\/games\/TrophyDropGame'\)/.test(room));
  assert(/trophydrop:trophydrop\.skin/.test(read('components/games/skins/index.ts')));assert(/trophydrop:'TROPHY DROP'/.test(read('lib/arcade/arcadeCabinetAttract.ts'))&&/id==='trophydrop'\)drawTrophy\(time\)/.test(read('lib/arcade/arcadeCabinetAttract.ts')));
- assert(/'airhockey','lineup','trophydrop',('rollball',)?('ballblaster',)?('safehands',)?'runner'/.test(read('components/arcade/HighScoreEntry.tsx')),'results first');
+ assert(/'airhockey','lineup','trophydrop',('rollball',)?('ballblaster',)?('safehands',)?('holdtheline',)?'runner'/.test(read('components/arcade/HighScoreEntry.tsx')),'results first');
  const shell=read('components/games/TrophyDropGame.tsx');assert(/data-game="trophydrop"/.test(shell)&&/beginBoardSession\('trophydrop'\)/.test(shell)&&/saveArcadeRecord\('trophydrop',score\)/.test(shell));
  assert(/data-trophy-again autoFocus>Play again</.test(shell)&&/data-trophy-play autoFocus>Play</.test(shell)&&/data-trophy-daily>Daily Drop/.test(shell),'instant restart; the daily challenge on the game’s own start card');
  assert(!/takeTodayLaunch|noteArcadeToday/.test(shell),'no Today slide-out wiring');

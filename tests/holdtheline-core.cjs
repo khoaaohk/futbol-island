@@ -149,5 +149,38 @@ ok('the device save: stars per match, promotion, the clean-sheet run, the daily;
  assert.match(S.nearMissLine({daily:false,won:false,stars:0,goals:3,limit:2,league:0,match:3,promoted:false,opened:-1,cleanRun:0,book:0}),/Keep it to 2 or fewer/);assert.match(S.nearMissLine({daily:true,won:true,stars:2,goals:1,limit:2,league:0,match:0,promoted:false,opened:-1,cleanRun:0,book:0}),/come back tomorrow for a new pattern/);
  assert.match(S.coachLine({...stats,goals:1,lastWhy:'late'},true),/judged when the ball is kicked/);assert.match(S.coachLine(stats,true),/clean sheet/i);});
 
+ok('wiring: playable by /arcade?game=holdtheline, its own board, coins, analytics key, device save; no machine in the room yet',()=>{
+ const cat=read('lib/arcade/arcadeCatalog.ts'),room=read('components/ArcadeRoom.tsx'),K=require('../lib/arcade/arcadeCatalog.ts');
+ assert.ok(K.arcadeUnplaced.some(c=>c.id==='holdtheline'&&c.name==='Hold the Line'));assert.ok(!K.arcadeCabinets.some(c=>c.id==='holdtheline'),'the room and every "N games" count are unchanged until the owner places it');assert.ok(!K.ARCADE_ROW.includes('holdtheline'));assert.equal(K.arcadeCabinets.length,11);
+ assert.equal(K.arcadeAnalyticsId('holdtheline'),'holdtheline');assert.match(cat,/\{id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE'/);
+ assert.match(room,/const HoldTheLine=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/HoldTheLineGame'\)\)/);assert.match(room,/holdtheline:\(\)=>import\('\.\/games\/HoldTheLineGame'\)/);assert.match(room,/arcadeUnplaced\.some\(c=>c\.id===id\)/);assert.match(room,/game==='holdtheline'\?<HoldTheLine onExit=\{back\}\/>/);
+ const L=require('../lib/arcade/leaderboard.ts');assert.ok(L.BOARD_GAMES.includes('holdtheline'));assert.equal(L.BOARD_RULES.holdtheline.max,HL.scoreMax);assert.ok(!L.HALL_MACHINES.includes('holdtheline'));
+ {const r=L.BOARD_RULES.holdtheline;let best=0;for(const league of [0,1])for(const m of [0,4,9])for(const seed of [11,12,13]){const o=B.play(seed,'ideal',{league,match:m});best=Math.max(best,o.score/o.secs);assert.ok(o.score<=r.base+r.perSecond*o.secs,'a perfect match fits the board\'s ceiling');assert.ok(o.secs>r.minSeconds);}assert.ok(best<r.perSecond,`the board's rate limit is above the best bot (${best.toFixed(0)} a second)`);}
+ const W=require('../lib/arcade/arcadeWalletCore.ts');assert.equal(W.arcadeCoinTarget('holdtheline',{points:2600}),6);assert.equal(W.arcadeCoinTarget('holdtheline',{points:8000}),12,'capped like the other machines');assert.equal(C.holdthelineCoins(2600),6);
+ assert.match(read('lib/analytics/islandIds.ts'),/'safehands','holdtheline'\] as const/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_holdtheline','Arcade: Hold the Line'\]/);assert.match(read('lib/analytics/countIds.ts'),/'safehands','holdtheline'\] as const/);
+ assert.match(read('lib/saves/snapshot.ts'),/'fi2-holdtheline-v1'/);assert.match(read('lib/arcade/lastScore.ts'),/holdtheline_daily:\{game:'holdtheline',label:'Match of the Day',today:true\}/);
+ assert.match(read('components/arcade/HighScoreEntry.tsx'),/'safehands','holdtheline','runner'/);assert.match(read('components/games/skins/index.ts'),/holdtheline:holdtheline\.skin/);assert.match(read('scripts/check-arcade-load.cjs'),/'safehands','holdtheline'/);
+ const sql=read('docs/arcade-aaa/holdtheline-supabase.sql');assert.match(sql,/'ballblaster', 'safehands', 'holdtheline'\)\);/);assert.match(sql,/'arcade_safehands','arcade_holdtheline',/);assert.match(sql,/OK, Hold the Line installed/);assert.match(sql,/drop constraint if exists arcade_scores_game_check/);assert.doesNotMatch(sql,/drop table|delete from|truncate/i);
+ for(const g of L.BOARD_GAMES)assert.ok(sql.includes(`'${g}'`),`the owner SQL keeps board ${g}`);for(const g of require('../lib/analytics/islandIds.ts').ARCADE_GAMES)assert.ok(sql.includes(`'arcade_${g}'`),`the owner SQL keeps analytics key arcade_${g}`);
+ assert.match(read('supabase/migrations/20261207_holdtheline_boards.sql'),/'safehands', 'holdtheline'\)\);/);assert.match(read('supabase/migrations/20261208_analytics_holdtheline.sql'),/'arcade_holdtheline'/);});
+
+ok('the shell: one thumb, kid-safe come-back hooks, buttons in the UI sans, the loop sleeps off the pitch',()=>{
+ const t=read('components/games/HoldTheLineGame.tsx'),css=read('components/games/HoldTheLineGame.module.css'),v=read('lib/arcade/holdtheline/view.ts');
+ assert.match(t,/data-game="holdtheline" data-arcade-kind="holdtheline"/);assert.match(t,/useArcadeEntry\('holdtheline'\)/);assert.match(t,/<ArcadeTopBar game="holdtheline"[^>]*backTitle="Back to arcade"/);assert.match(t,/<ComicMedalTrack score=\{result\.score\}/);assert.match(t,/<ArcadePauseCard game="holdtheline"/);
+ assert.match(t,/holdthelineDailySeed\(day\)/);assert.match(t,/data-holdtheline-shelf/);assert.match(t,/data-holdtheline-map/);assert.match(t,/data-holdtheline-near/);assert.match(t,/data-holdtheline-run/);assert.match(t,/else if\(s\.phase==='tip'\)return;\/\/ the team card is up: the loop sleeps/);
+ assert.match(t,/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/);assert.match(t,/document\.addEventListener\('visibilitychange',hidden\)/);assert.match(t,/frameMs\.current=1000\/\(mobile\?30:60\)/);
+ assert.match(t,/if\(aid>=1\)stopUntil\.current=performance\.now\(\)\+\(aid>=2\?950:650\);/,'the decision moment: one brief hold with the offside line drawn, early matches only');
+ assert.ok(t.includes("if(guideRef.current==='step'){v.render(g,now/1000,aidOf());return;}"),'the guided first step: the world holds on the wind-up until the child drags up');
+ assert.match(t,/beanLookFor\(c\.loadCustomization\(p\.completed,p\.total\)\)/,'the back line is the player’s own island bean');
+ assert.match(t,/\/\^\(Digit\|Numpad\)\[1-4\]\$\/\.test\(e\.code\)/,'1-4 press that defender');assert.match(t,/KeyW:'up'/);assert.match(t,/KeyA:'left'/);
+ assert.doesNotMatch(t,/setInterval|Notification|streak\.day|liveStreak/);assert.doesNotMatch(css,/IslandBrush/);assert.doesNotMatch(css,/blur\(|backdrop-filter|linear-gradient\(/);assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
+ assert.match(v,/getContext\('2d',\{alpha:false\}\)/);assert.match(v,/dpr=Math\.min\(2,Math\.max\(1,ratio\)\)/);assert.doesNotMatch(v,/requestAnimationFrame|setTimeout|setInterval|createLinearGradient|createRadialGradient|shadowBlur|filter\s*=/);
+ assert.match(v,/INK='#231a2e',PAPER='#fff3d6',SUN='#ffc83a',ORANGE='#ff8a3c',RED='#f0452e',TEAL='#19b5a5',VIOLET='#8f78b8'/,'the comic kit’s hex values');assert.match(v,/'OFFSIDE LINE'/,'the offside line is drawn across the pitch and named');});
+
+ok('sound: every voice -> master -> ONE limiter -> destination; nothing before a gesture; no loops',()=>{
+ const a=read('lib/arcade/holdtheline/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);
+ assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true/);assert.match(a,/function unlock\(\)/);assert.match(read('components/games/HoldTheLineGame.tsx'),/\(audio\.current\?\?=createHoldthelineAudio\(\)\)\.unlock\(\)/);
+ assert.match(read('scripts/check-arcade-audio.cjs'),/game==='holdtheline'/);});
+
 if(require.main===module)console.log(`holdtheline-core: ${n} checks ok`);
 module.exports={ok,read,C,S,B,run,first};

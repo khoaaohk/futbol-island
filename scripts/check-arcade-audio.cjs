@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|safehands] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|rollball|ballblaster|safehands|holdtheline] [--suspended] [--headed]
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -133,6 +133,17 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await S(()=>{window.__audioLabel('glove');const a=window.__safehands.audio;a.glove(1);a.cheer(false);});await wait(900);must.push('glove');
    await label('');await wait(300);
    await S(()=>{window.__audioLabel('over');window.__safehands.audio.over(false);});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='holdtheline'){quiet.push('menu');
+   // holdtheline (Nov 21 2026): windows kickoff (the referee's whistle when the team card is read), pass (the first passes of the wave:
+   // the game's own cues), flag (the offside flag + whistle + crowd, the game's own cue) and over (the end cue); menu / paused must be SILENT.
+   await page.waitForFunction(()=>window.__holdtheline&&window.__holdtheline.phase==='playing',null,{timeout:30000});await label('kickoff');await page.locator('[data-holdtheline-ack]').tap().catch(()=>{});await wait(500);must.push('kickoff');
+   const S=fn=>page.evaluate(fn);
+   await label('');await page.waitForFunction(()=>window.__holdtheline.game.state.phase==='play',null,{timeout:9000,polling:20}).catch(()=>errors.push('no wave'));await label('pass');await wait(2600);must.push('pass');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('flag');const a=window.__holdtheline.audio;a.flag();a.cheer(true);});await wait(1200);must.push('flag');
+   await label('');await wait(300);
+   await S(()=>{window.__audioLabel('over');window.__holdtheline.audio.over(false);});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='rollball'){quiet.push('menu');
    await page.waitForFunction(()=>window.__rollball&&window.__rollball.phase==='playing',null,{timeout:30000});await label('');await wait(600);
