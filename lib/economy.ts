@@ -165,7 +165,7 @@ export const SUMMIT_KICK_COINS={perHoop:1,perfect:3} as const;
  *  the wallet's save clamps, so NEVER lower them (raise only). The Training meter is what limits a day of arcade earning. */
 export const ARCADE_PLAY_COST=0;
 /** Nov 18 2026: clearbox and streetdash are retired cabinets; their caps stay as the save clamp for coins already earned. */
-export const ARCADE_COIN_CAPS={runner:12,pinball:15,tennis:18,live:20,puzzle:8,kitrush:12,snake:12,airhockey:12,lineup:12,trophydrop:12,clearbox:12,streetdash:12,rollball:12,ballblaster:12,keepyuppy:12,holdtheline:12,island:20,learn:LEARN_RUN_CAP} as const;
+export const ARCADE_COIN_CAPS={runner:12,pinball:15,tennis:18,live:20,puzzle:8,kitrush:12,snake:12,airhockey:12,lineup:12,trophydrop:12,clearbox:12,streetdash:12,rollball:12,ballblaster:12,keepyuppy:12,holdtheline:12,popup:12,island:20,learn:LEARN_RUN_CAP} as const;
 export const PUZZLE_FIRST_SOLVE_COINS=5;
 
 /** Card trade-ins at Rosa's stand (lib/town/market/cardSelling.ts), metered. */

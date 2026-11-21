@@ -48,7 +48,8 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
  *  owner's decision on their spot: the room, its draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
-] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 21 2026: empty (both new games placed); the mechanism and tests/seo-games-gate.cjs stay for the next game */
+ {id:'popup',name:'Pop-Up Shot',short:'POP-UP SHOT',lesson:'Look up. Pick the target. Strike.',color:'#f0452e'},// Nov 21 2026: the pop-up target game, a working name and id (docs/arcade-aaa/popup-direction.md); it will take Hold the Line's machine later
+] as const;/* Nov 21 2026: empty (both new games placed); the mechanism and tests/seo-games-gate.cjs stay for the next game */
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */
