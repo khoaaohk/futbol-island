@@ -303,13 +303,25 @@
     "file": "airhockey-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 38810
+    "bytes": 36094
    },
    {
     "file": "airhockey-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 41516
+    "bytes": 39786
+   },
+   {
+    "file": "airhockey-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 36606
+   },
+   {
+    "file": "airhockey-4.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 37534
    }
   ],
   "pinball": [

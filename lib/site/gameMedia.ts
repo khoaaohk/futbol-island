@@ -57,7 +57,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  tennis:['Futbol Tennis: the ball flies over the net toward the other player','Futbol Tennis: a player runs to reach the ball before it lands','Futbol Tennis: a rally on the clay court with the score at the top'],
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
- airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
+ airhockey:['Air Futbol: a rally against Sandy, the puck crossing the halfway line between the red and the teal striker','Air Futbol: SMASH! The teal striker drives up into the puck and sends it flying up the pitch','Air Futbol: the puck banks off the left side wall in the middle of a rally','Air Futbol against Pip, the level 2 opponent: SAVE! as the teal striker stops a fiery shot in front of its own goal'],
  lineup:['Line Up! early in a run: a few shapes of footballs on the pitch, one shape left in the tray and the empty bench beside it','Line Up!: a line fills, the footballs are kicked off the pitch and LINE UP! and +100 appear','Line Up!: a shape of three star balls held above a crowded pitch, with its shadow on the square where it will land'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
  rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: POW! as the ball knocks a training cone off its stack, a cable runs to the gate','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
@@ -70,13 +70,13 @@ const STILL_CAPS:Record<GameId,string[]>={
  tennis:['Over the net and into the court.','Get to the ball before it bounces twice.','The score sits at the top.'],
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
- airhockey:['Score in the top goal.','Bank shots score extra.','Use the side walls.'],
+ airhockey:['Keep the rally going.','Swipe into the puck for a smash.','Bank shots score extra.','Each win brings a new opponent.'],
  lineup:['A tray of shapes and a bench.','A full line clears.','Drag a shape to its place.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.'],
  rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.'],
  ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.'],
 };
-export function gameStills(id:GameId,max=3):GameShot[]{
+export function gameStills(id:GameId,max=4):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));
 }
 /** Inside the island: the 3D island game around the arcade. Order is the gallery's order. */
