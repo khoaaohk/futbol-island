@@ -6970,3 +6970,57 @@ The football flick game (`lib/arcade/flickit/`, `docs/arcade-aaa/flickit-directi
   14 -> 18-19, 11.8k -> 27.4k; beach 13 -> 17-18, 9.8k -> 20.1k; roof 12 -> 16-17, 10.9k -> 21.6k; stadium 16 -> 18-19, 11.6k -> 25.8k
   (the range is the bean's outfit). Textures 4-5 -> 7-8 (the rig's), programs 8-10 -> 12-15. Same counts at 1440x900. Within the
   budget of 20 draws and 35k triangles. Not measured on a real phone; no thermal claim.
+
+## Claw Club: the playable claw machine (Nov 21 2026, local branch `claw-machine`, not deployed)
+
+The arcade room's decorative claw machine is now playable (lib/claw: `clawPhysics.ts`, `clawMachine3d.ts`, `clawRoom.ts`, `clawStore.ts`;
+components/ClawMachineHud.tsx; tests/claw-machine.cjs). Cost rules it keeps:
+
+- **Room view = a cheap LOD.** `buildClawLod()` is one vertex-coloured merged mesh + one glass plane + the marquee sign + the idle
+  carriage: 4 draws, 3,936 triangles. The old decoration was ~3 draws (sign + a 2-colour carriage; its body merged into the room's shared
+  colour batches) and ~4.8k triangles, so the room is +1 draw and slightly fewer triangles. No new per-frame work: the carriage keeps its
+  old sine slide in `props.update`.
+- **The detailed machine is built on the first zoom only** (`buildClawDetail`), kept for the page and disposed with the room. One
+  RoomEnvironment PMREM (built once, 0.04 blur) feeds the chrome, clearcoat paint, glass and toy reflections: no realtime reflection pass,
+  **no extra light** (the inner LED strip and bulbs are emissive; the bulb chase is one InstancedMesh's colours, rewritten 3×/s idle,
+  14×/s for 3.5 s after a win). Contact shadows are one InstancedMesh of soft discs.
+- **Pile toys are low-poly (fix pass, Nov 21 2026; owner: "lower-detail toy models for the pile").** Each pile toy is the real gashapon
+  model built with the capped low-poly kit (`buildToy(id,{lo:true})` → `createToyKit(toy,{lo:true})`: spheres 10 around, cylinders and
+  cones 8, tori 4×12, lathes 10, 1 bevel segment, 3 curve segments), every part merged into ONE vertex-coloured mesh on one shared
+  material (`pileToy` in clawMachine3d.ts): 1 draw per toy, 12-pile 317k → 78k triangles. The won toy is swapped for the full HD model
+  (`setToy(slot,id,true)`, merged per finish) once it lands in the tray, and the result card's "Look closer" builds its own HD viewer.
+- **Control deck (fix pass):** the joystick, DROP button and credit display sit on a sloped console (`CLAW_DECK`) that juts out of the
+  base front below the glass floor, and the zoom camera looks a little further down (`cy+dist*.22`), so on a phone the controls read under
+  the pile, never over it. Same draws (merged into the existing statics).
+- **Physics only runs while something moves.** Fixed 120 Hz steps, 2 particles per toy (24), typed arrays, no allocation per step;
+  `sim.sleeping` (all toys asleep, claw parked, flap still) → no steps and no mesh updates. The pile is settled offline when the machine
+  is first built (~4 s of sim in a few ms).
+- **The room holds still while zoomed**: `tick()` hands the frame to `claw.update()` (no walking, crowd, props or prompts), renders with the
+  zoom camera at the room's active cadence (30 fps phone / 60 desktop), and stops the loop after 8 s with nothing moving (the next input
+  wakes it). The near plane ends 0.5 m in front of the glass while zoomed, so the player, the ball and anyone behind stay out of the shot.
+- **Sounds**: one AudioContext opened on the first tap, suspended when you zoom out, closed with the room.
+
+Measured (headless Chrome on a Mac, phone 390×844 @2x and desktop 1280×800; renderer.info of the last frame; **not measured on a real
+phone**, no thermal claim):
+
+| View | Draw calls | Triangles |
+| --- | --- | --- |
+| Room, standing at the claw (phone) | 59 | 180k |
+| Room, standing at the claw (desktop) | 77 | 208k |
+| Zoomed on the machine, phone | 124 | 469k (machine + toys: 94 draws, 317k) |
+| Zoomed on the machine, desktop | 127 | 481k |
+
+After the fix pass (low-poly pile, same method, same day; **not measured on a real phone**, no thermal claim):
+
+| View | Draw calls | Triangles |
+| --- | --- | --- |
+| Room, standing at the claw (phone / desktop) | 58–59 / 76 | 180k / 208k (unchanged: the LOD is still 4 draws, 3,960 triangles) |
+| Zoomed, phone, idle | 85 | 233k (machine + toys: 53 draws, 80k) |
+| Zoomed, phone, won toy in the tray (HD) | 87 | 251k (55 draws, 98k) |
+| Zoomed, desktop | 86 | 244k |
+
+The machine + toys are now 53 draws / 80k triangles (was 94 / 317k). The remaining ~32 draws / ~150k triangles of a zoomed frame are the
+room's own merged batches seen at the cabinet's sides (the same meshes the room view draws); the target of ≤ 60 draws / ≤ 150k for the
+whole zoomed frame is therefore not met. Tried: hiding room meshes whose bounding sphere sits wholly behind the cabinet's opaque front
+rectangle; it hid nothing (the room's big meshes are room-wide batches), so it was removed. Next levers if a phone runs warm: a shorter
+far plane while zoomed (would clip the room's floor/walls with a visible edge), or merging the claw's 9 finger/knuckle/tip meshes.

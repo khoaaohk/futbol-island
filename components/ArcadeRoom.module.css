@@ -57,3 +57,5 @@
 
 /* Nov 10 2026: Today joins Scores and Coins; three header buttons fit beside Exit on a 390 px phone. */
 @media(max-width:430px){.headerActions{gap:6px}.header .headerActions button{min-width:0}.header .headerActions .buttonFace{padding:8px 13px}}
+/* Nov 21 2026: while the Claw Club is zoomed, its own HUD replaces the room's header, stick, actions and prompts. */
+.root[data-claw="true"] .header,.root[data-claw="true"] .partySlot,.root[data-claw="true"] :global(.touch-controls),.root[data-claw="true"] :global(.travel-actions),.root[data-claw="true"] .machinePrompt,.root[data-claw="true"] .gashaPrompt{display:none}
