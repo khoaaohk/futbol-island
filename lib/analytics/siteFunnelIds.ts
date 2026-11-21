@@ -100,18 +100,17 @@ export type SiteViewEnv={
  /** This tab's session began from a search engine or AI assistant (tracker.ts sessionFromSearch). */
  fromSearch:()=>boolean;
 };
-/** The last view counted, so React strict mode's double effect (dev) does not count a view twice. */
-let last={path:'',at:-1e9};
 /**
  * One page view (VisitTracker's pathname effect, tracker running): counts sf:v_<section> and listens for a tap on any link to
  * /play: sf:p_<section> once per view, and the per-tab mark the /play side reads. Returns the cleanup (the next page view, or
- * unmount); null for a page outside every section, which costs nothing. `perfNow` is a monotonic clock for the double-effect guard.
+ * unmount); null for a page outside every section, which costs nothing. Every call counts its view: under React strict mode (dev)
+ * the effect runs twice, but VisitTracker's tracker restart between the two runs drops the first run's queued counts, so one
+ * view still sends exactly one sf:v_ (no time-based guard, which would drop it).
  */
-export function watchSiteView(pathname:string,env:SiteViewEnv,perfNow:number):(()=>void)|null{
+export function watchSiteView(pathname:string,env:SiteViewEnv):(()=>void)|null{
  const section=siteSectionOf(pathname);
- if(!section){last={path:'',at:-1e9};return null;}
- if(!(last.path===pathname&&perfNow-last.at<1000))env.count(sfId('v',section));
- last={path:pathname,at:perfNow};
+ if(!section)return null;
+ env.count(sfId('v',section));
  let tapped=false;
  const onClick=(e:{target:unknown})=>{
   let href:string|null=null;

@@ -33,8 +33,8 @@ const session=()=>{const m={};return {m,getItem:k=>m[k]??null,setItem:(k,v)=>{m[
 /** A document stand-in: click listeners, and a click on a link with this href (or on something that is not a link). */
 function doc(){let ls=[];return {ls:()=>ls.length,addEventListener:(t,f)=>{assert.equal(t,'click');ls.push(f);},removeEventListener:(t,f)=>{ls=ls.filter(x=>x!==f);},
  click(href){const target=href===undefined?{closest:()=>null}:{closest:sel=>{assert.equal(sel,'a[href]');return {getAttribute:()=>href};}};for(const f of [...ls])f({target});}};}
-function view(pathname,{ss=session(),d=doc(),now=1_000_000,fromSearch=false,perf=0}={}){
- const got=[];const stop=SF.watchSiteView(pathname,{document:d,origin:ORIGIN,session:ss,now:()=>now,count:id=>got.push(id),fromSearch:()=>fromSearch},perf);
+function view(pathname,{ss=session(),d=doc(),now=1_000_000,fromSearch=false}={}){
+ const got=[];const stop=SF.watchSiteView(pathname,{document:d,origin:ORIGIN,session:ss,now:()=>now,count:id=>got.push(id),fromSearch:()=>fromSearch});
  return {got,stop,ss,d};}
 
 (async()=>{
@@ -77,7 +77,7 @@ await ok('links to /play are recognised; other links are not',()=>{
 });
 
 await ok('a view counts once (also under a double effect); a Play tap once per view; the mark is per tab and names only the section',()=>{
- const a=view('/learn/soccer-rules/offside-rule-for-kids',{perf:5000});
+ const a=view('/learn/soccer-rules/offside-rule-for-kids');
  deq(a.got,['sf:v_learn_rules']);assert.equal(a.d.ls(),1,'one click listener');
  a.d.click('/learn/soccer-terms');a.d.click(undefined);a.d.click('https://example.com/play');deq(a.got,['sf:v_learn_rules'],'other links count nothing');
  assert.equal(a.ss.getItem(SF.SF_PLAY_KEY),null);
@@ -86,19 +86,17 @@ await ok('a view counts once (also under a double effect); a Play tap once per v
  assert.equal(a.ss.getItem(SF.SF_PLAY_KEY),'learn_rules.1000000');deq(Object.keys(a.ss.m),[SF.SF_PLAY_KEY],'one mark, nothing else stored');
  assert(!/offside|soccer-rules|\//.test(a.ss.getItem(SF.SF_PLAY_KEY)),'the mark never holds the page');
  a.stop();assert.equal(a.d.ls(),0,'the listener is removed');
- // React strict mode: effect, cleanup, effect again within a second → one view
+ // every effect run counts its view (strict mode's first run is dropped by the tracker's restart: see the beacon test below)
  const d=doc(),g=[];const env={document:d,origin:ORIGIN,session:session(),now:()=>1,count:id=>g.push(id),fromSearch:()=>false};
- const s1=SF.watchSiteView('/cards/45',env,9000);s1();const s2=SF.watchSiteView('/cards/45',env,9001);
- deq(g,['sf:v_cards']);assert.equal(d.ls(),1);d.click('/play');deq(g,['sf:v_cards','sf:p_cards']);s2();
+ const s1=SF.watchSiteView('/cards/45',env);s1();assert.equal(d.ls(),0);const s2=SF.watchSiteView('/cards/45',env);
+ deq(g,['sf:v_cards','sf:v_cards']);assert.equal(d.ls(),1);d.click('/play');deq(g,['sf:v_cards','sf:v_cards','sf:p_cards']);s2();
  // the next page view counts again, with its own tap
- const s3=SF.watchSiteView('/cards/46',env,9002);d.click('/play');s3();deq(g,['sf:v_cards','sf:p_cards','sf:v_cards','sf:p_cards']);
- // coming back to the same page later is a new view
- SF.watchSiteView('/cards/46',env,20000)();assert.equal(g.filter(x=>x==='sf:v_cards').length,3);
+ g.length=0;const s3=SF.watchSiteView('/cards/46',env);d.click('/play');s3();deq(g,['sf:v_cards','sf:p_cards']);
  // pages outside every section: no count, no listener, no storage
  for(const p of ['/','/play','/privacy','/marketing','/admin','/arcade']){const v=view(p);assert.equal(v.stop,null,p);deq(v.got,[]);assert.equal(v.d.ls(),0);deq(v.ss.m,{});}
  // a search session marks the tap; a throwing storage or reader never breaks the click
- const s=view('/coach',{fromSearch:true,perf:40000});s.d.click('/play');assert.equal(s.ss.getItem(SF.SF_PLAY_KEY),'coach_app.1000000.s');deq(s.got,['sf:v_coach_app','sf:p_coach_app']);
- const g2=[];SF.watchSiteView('/scan',{document:d,origin:ORIGIN,session:{setItem(){throw Error('full');}},now:()=>1,count:id=>g2.push(id),fromSearch:()=>{throw Error('x');}},60000);
+ const s=view('/coach',{fromSearch:true});s.d.click('/play');assert.equal(s.ss.getItem(SF.SF_PLAY_KEY),'coach_app.1000000.s');deq(s.got,['sf:v_coach_app','sf:p_coach_app']);
+ const g2=[];SF.watchSiteView('/scan',{document:d,origin:ORIGIN,session:{setItem(){throw Error('full');}},now:()=>1,count:id=>g2.push(id),fromSearch:()=>{throw Error('x');}});
  d.click('/play');deq(g2,['sf:v_scan_app','sf:p_scan_app']);
 });
 
@@ -157,7 +155,7 @@ await ok('tracker → beacon → ingest → report: per section views, taps, rea
   const x=trackerEnv(p,ref),tr=T.startTracker(x.e);tr.pageview(p);
   assert.equal(T.sessionFromSearch(),!!ref,'the session start knows a search arrival');
   const ss=session(),d=doc();
-  const stop=SF.watchSiteView(p,{document:d,origin:ORIGIN,session:ss,now:()=>now.getTime(),count:T.count,fromSearch:T.sessionFromSearch},100_000*(++i));
+  const stop=SF.watchSiteView(p,{document:d,origin:ORIGIN,session:ss,now:()=>now.getTime(),count:T.count,fromSearch:T.sessionFromSearch});++i;
   if(tap)d.click('/play');stop();
   if(reach){tr.pageview('/play');SF.countSitePlayArrival(ss,now.getTime()+2000,T.count);}
   if(play)SF.countSitePlayStart(ss,now.getTime()+9000,T.count);
@@ -169,6 +167,11 @@ await ok('tracker → beacon → ingest → report: per section views, taps, rea
   for(const b of x.sent)for(const k of Object.keys(b.k||{}))assert(K.isCountId(k),k);
   for(const b of x.sent)assert.equal((await ingest(store,b,now,hdr({'x-forwarded-for':'203.0.113.'+(20+i)}))).reason,'ok');
  }
+ // React strict mode (dev): tracker start, view, both cleanups, tracker start, view again → exactly one sf:v_ on the beacons
+ {const x=trackerEnv('/fish/clownfish'),d=doc(),env={document:d,origin:ORIGIN,session:session(),now:()=>now.getTime(),count:T.count,fromSearch:T.sessionFromSearch};
+  let tr=T.startTracker(x.e);tr.pageview('/fish/clownfish');const a=SF.watchSiteView('/fish/clownfish',env);tr.stop();a();
+  tr=T.startTracker(x.e);tr.pageview('/fish/clownfish');const b=SF.watchSiteView('/fish/clownfish',env);b();x.advance(5000);x.hide();tr.stop();
+  const v=x.sent.reduce((n,s)=>n+((s.k||{})['sf:v_fish']||0),0);assert.equal(v,1,'one view under the double effect');}
  // a forged or unknown section from a browser is dropped; DNT stores nothing
  const x=trackerEnv('/cards/1'),tr=T.startTracker(x.e);tr.pageview('/cards/1');const s=x.sent[0].s;
  assert.equal((await ingest(store,{v:1,t:'beat',s,p:'/cards/1',e:1000,k:{'sf:v_home':9,'sf:v_cards_45':9,'sf:z_cards':9}},now,hdr({'x-forwarded-for':'203.0.113.90'}))).reason,'ok');
@@ -200,7 +203,9 @@ await ok('the report: home row from mk:, not in the total; empty without counts'
 await ok('wiring: VisitTracker counts only while the tracker runs; the home page funnel code is unchanged; no new storage beyond the three per-tab marks',()=>{
  const vt=read('components/VisitTracker.tsx');
  assert(/if\(!pathname\|\|!tracker\.current\)return;\s*return watchSiteView\(pathname,/.test(vt),'a view is counted only with the tracker on');
- assert(/pathname==='\/play'&&tracker\.current\)countSitePlayArrival\(/.test(vt)&&/pathname==='\/play'&&view==='game'&&tracker\.current\)countSitePlayStart\(/.test(vt));
+ assert(/if\(pathname!=='\/play'\|\|!tracker\.current\)return;\s*const t=window\.setTimeout\(\(\)=>\{if\(tracker\.current\)countSitePlayArrival\(/.test(vt),'reached: one tick later, cancelled by the cleanup');
+ assert(/if\(pathname!=='\/play'\|\|view!=='game'\|\|!tracker\.current\)return;\s*const t=window\.setTimeout\(\(\)=>\{if\(tracker\.current\)countSitePlayStart\(/.test(vt),'played: one tick later');
+ assert.equal((vt.match(/clearTimeout\(t\)/g)||[]).length,2);
  assert(/countPlayArrival\(\(\(\)=>\{try\{return window\.sessionStorage;\}catch\{return null;\}\}\)\(\),Date\.now\(\),count\)/.test(vt),'mk:reached is counted as before');
  const src=read('lib/analytics/siteFunnelIds.ts');
  assert(!/localStorage|document\.cookie|fetch\(|sendBeacon|setInterval|setTimeout|requestAnimationFrame|location\.href|referrer/.test(src),'no cookie, localStorage, request, timer or URL read');

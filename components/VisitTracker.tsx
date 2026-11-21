@@ -38,20 +38,25 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
   // Marketing page (Nov 3 2026): a Play tap on `/` that really reached the game counts mk:reached (lib/analytics/marketingIds.ts).
   // Nov 14 2026 (retention): this visit was opened from the Home Screen icon (start_url /play, app/manifest.ts).
   if(pathname==='/play'&&tracker.current&&isStandalone())count('st:home_open');
-  if(pathname==='/play'&&tracker.current)countPlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);
-  // Site pages to Play (Nov 20 2026, lib/analytics/siteFunnelIds.ts): the same arrival after a Play tap on a section's page.
-  if(pathname==='/play'&&tracker.current)countSitePlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname]);
+  if(pathname==='/play'&&tracker.current)countPlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname]);
+ // Site pages to Play (Nov 20 2026, lib/analytics/siteFunnelIds.ts): the same arrival after a Play tap on a section's page. One
+ // tick later (one timer per /play arrival, cancelled by the cleanup): React strict mode (dev) runs the effects twice and the
+ // tracker's restart between the runs drops counts, so counting at once would use up the per-tab mark for a dropped count.
+ useEffect(()=>{if(pathname!=='/play'||!tracker.current)return;
+  const t=window.setTimeout(()=>{if(tracker.current)countSitePlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},0);return()=>window.clearTimeout(t);},[pathname]);
  // Site pages to Play: a view of a public section's page (or the Coach app / Scan Trainer) and its first tap on a link to /play.
  // One passive click listener while such a page is open; nothing on any other page.
  useEffect(()=>{if(!pathname||!tracker.current)return;
-  return watchSiteView(pathname,{document,origin:window.location.origin,session:(()=>{try{return window.sessionStorage;}catch{return null;}})(),now:()=>Date.now(),count,fromSearch:sessionFromSearch},performance.now())??undefined;},[pathname]);
+  return watchSiteView(pathname,{document,origin:window.location.origin,session:(()=>{try{return window.sessionStorage;}catch{return null;}})(),now:()=>Date.now(),count,fromSearch:sessionFromSearch})??undefined;},[pathname]);
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.
  useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);
  // Marketing page (Nov 4 2026): that tab then really played (the view switched to the game) → mk:played, once per tab.
  useEffect(()=>{if(pathname==='/play'&&view==='game'&&tracker.current)countPlayStart((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname,view]);
  // Site pages to Play (Nov 20 2026): the same moment for a tab that came from a section's Play tap → sf:d_<section>, once per tab.
- useEffect(()=>{if(pathname==='/play'&&view==='game'&&tracker.current)countSitePlayStart((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname,view]);
+ // One tick later, for the same reason as the arrival above (and so a restore straight into the game still counts after it).
+ useEffect(()=>{if(pathname!=='/play'||view!=='game'||!tracker.current)return;
+  const t=window.setTimeout(()=>{if(tracker.current)countSitePlayStart((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},0);return()=>window.clearTimeout(t);},[pathname,view]);
  // Investor page (Nov 5 2026): a view of /marketing and its foreground time (lib/analytics/marketingVisit.ts); the page stays
  // script-free. Where and when are added by the server from the beat, never sent from here.
  useEffect(()=>{if(pathname!==MM_PATH||!tracker.current)return;return watchMarketingVisit({document,now:()=>performance.now(),count,onPageHide});},[pathname]);
