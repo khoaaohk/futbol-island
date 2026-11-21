@@ -27,10 +27,11 @@ export type GameClip={key:string;name:string;caption:string;alt:string;page:stri
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
  return {...d,w:f.w,h:f.h,seconds:Math.max(1,Math.round(f.seconds)),mp4:`${CLIPS_DIR}/${d.key}.mp4`,webm:`${CLIPS_DIR}/${d.key}.webm`,...(f.mp4s?{mp4s:`${CLIPS_DIR}/${d.key}-s.mp4`}:{}),poster:`${CLIPS_DIR}/${d.key}.webp`,pw:f.poster.w,ph:f.poster.h,uploaded:LATER_UPLOADS[d.key]??GAME_CLIPS_UPLOADED};};
-/** The hub's hero loop: three of the phone games side by side in one file (one player, not three). */
+/** The hub's hero loop: three of the phone games side by side in one file (one player, not three). Re-recorded Nov 20 2026 from the
+ *  games after their Nov 18 passes (scripts/build-hero-clip.sh, from the capture-game-media.cjs recordings). It does not autoplay. */
 export const HERO_CLIP=clip({key:'hero',page:'/games',name:'Kit Rush, Squad Snake and Air Futbol, played on a phone',
- alt:'Three phone screens side by side: kit flying up to be swiped in Kit Rush, a line of players in Squad Snake and an air hockey pitch in Air Futbol',
- caption:`Real play from three of the ${numberWord(ARCADE_GAME_COUNT)} games, recorded on a phone screen.`});
+ alt:'Three phone screens side by side: kit swiped in a Slow-mo burst at sunset in Kit Rush, a Quick x2 Midfield Four chain in Squad Snake and a Save! against the bean opponent in Air Futbol',
+ caption:`Real play from three of the ${numberWord(ARCADE_GAME_COUNT)} games as they are today, recorded on a phone screen.`});
 /** One clip per arcade game, keyed by the cabinet id. The words say what the clip shows. */
 const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  kitrush:{name:'Kit Rush gameplay: swiping a team kit out of the air',alt:'Kit Rush gameplay on a phone: pink kit, bottles and a stopwatch fly up at sunset, a CLEAN RUN of twelve in a row, SLOW-MO, then the kit switches to red stripes while team-mates cheer on the touchline',caption:'Kit Rush: swipe your own kit, leave the other team’s.'},
