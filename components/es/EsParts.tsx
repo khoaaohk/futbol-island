@@ -1,4 +1,5 @@
 import PitchDiagram from '@/lib/site/PitchDiagram';
+import {OnwardRow,type Onward} from '@/lib/site/GuideParts';
 import {sceneMotion} from '@/lib/site/sceneMotion';
 import type {Scene} from '@/lib/site/scenes';
 import MotionToggle from '@/components/site/MotionToggle';
@@ -29,10 +30,11 @@ export function EsBreadcrumbs({crumbs}:{crumbs:readonly Crumb[]}){
 export const esCrumbs=(...tail:Crumb[]):Crumb[]=>[{name:ES_UI.home,path:toEs('/')},...tail];
 /** Keep a formation shape such as 4-3-3 on one line (a phone otherwise breaks the h1 after a hyphen: “4-3-” / “3”). */
 const noBreak=(s:string)=>s.split(/(\d+(?:-\d+)+)/).map((x,i)=>i%2?<span key={i} style={{whiteSpace:'nowrap'}}>{x}</span>:x);
-export function EsIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
- return <><header className={styles.intro}>
+export function EsIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean;rail?:React.ReactNode;onward?:Onward}){
+ return <>{rail}<header className={styles.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{noBreak(h1)}</h1>
+  {onward&&<OnwardRow o={onward}/>}
   <QuickAnswer lead={lead} facts={facts}/>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{ES_UI.guideNames}</p>

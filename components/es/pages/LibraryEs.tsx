@@ -60,7 +60,7 @@ export function LibraryEsPage(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={esLd(collectionLd({name:W.h1,path:PATH,description:W.description,published:LIBRARY_PUBLISHED,modified:SITE_UPDATED.library,items:groups.flatMap(g=>g.cards.map(c=>({name:c.name,path:c.href})))}))}/>
   <LibraryPage crumbs={<EsBreadcrumbs crumbs={CRUMBS}/>} h1={W.h1} lead={W.lead} play={W.play} playTitle={W.playTitle} playLine={W.playLine}
-   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} groups={groups} menuLabel="Grupos de la biblioteca"/>
+   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} groups={groups} menuLabel="Grupos de la biblioteca" topLabel="Resumen"/>
  </>;
 }
 export const libraryEsRoute=(enPath:string):EsRoute|null=>enPath===LIBRARY_PATH?{meta:()=>esMeta(W.title,W.description,enPath),render:()=><LibraryEsPage/>}:null;

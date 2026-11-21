@@ -1,4 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {onwardFor,sectionRail} from '@/lib/site/railNav';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -43,7 +45,7 @@ function DrillPage({d}:{d:Drill}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:d.title,path:d.path,description:d.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${d.name} (soccer drill)`,teaches:d.answer,image:diagramUrl(d.picture)})}/>
   <JsonLd data={faqLd(d.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={d.h1} lead={d.answer}/>
+  <GuideIntro rail={<RailNav rail={sectionRail('drills')} current={d.path}/>} onward={onwardFor(d.cta)} crumbs={crumbs} h1={d.h1} lead={d.answer}/>
   <PrintSheet path={d.path} what="drill sheet"/>
   <Section id="diagram" title={`${d.name}: setup diagram`}><GridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="At a glance">

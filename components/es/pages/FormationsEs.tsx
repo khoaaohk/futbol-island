@@ -1,4 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {libraryRail,onwardFor,sectionRailEs} from '@/lib/site/railNav';
+import {libraryGroupsEs} from '@/components/es/pages/LibraryEs';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -42,7 +45,7 @@ export function FormationsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="what" title="¿Qué es una formación?"><Bullets items={H.what}/></Section>
   {GUIDE_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
@@ -70,7 +73,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:f.title,path:f.esPath,description:f.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`Formación ${f.name} de fútbol`,teaches:f.answer,image:formationImage(f.slug)}))}/>
   <JsonLd data={faqLd(f.faq)}/>
-  <EsIntro crumbs={crumbs} h1={f.h1} lead={f.answer}/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('formations')} current={f.esPath}/>} onward={onwardFor(f.lessons[0],true)} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`Diagrama del ${f.shapeEs}`}>
    <FormationDiagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
    <p><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>: pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>

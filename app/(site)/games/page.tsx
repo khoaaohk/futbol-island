@@ -33,7 +33,7 @@ export default function GamesHub(){
       that). Plain anchor links. */}
   <div className={`${lib.shelf} ${gamesCss.gshelf}`}>
    <nav className={`${lib.menu} ${gamesCss.menu}`} id="games-menu" data-rail="" aria-label="Games on this page">
-    <ul>{MENU.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
+    <ul><li><a href="#top" data-on="">Overview</a></li>{MENU.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
    </nav>
    <LibraryMenuSpy menu="games-menu"/>
    <div className={`${lib.shelfMain} ${gamesCss.gmain}`}>

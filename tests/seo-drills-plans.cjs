@@ -93,7 +93,8 @@ for(const g of PAGES){
  const h=html.get(g.path),where=g.path,k=kind(g.path);
  const h1=h.match(/<h1[^>]*>([\s\S]*?)<\/h1>/g)||[];assert.equal(h1.length,1,`${where}: one h1`);
  assert(/soccer/i.test(text(h1[0])),`${where}: the h1 says soccer`);
- const body=text(h);
+ /* Nov 20 2026 (layout batch 2): the section rail (nav[data-rail], components/site/shell/RailNav.tsx) is navigation, not the page's opening words */
+ const body=text(h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/,''));
  assert(/soccer/i.test(body.slice(0,500)),`${where}: "soccer" in the first sentences`);
  assert(/football/i.test(body.slice(0,1400)),`${where}: "football" once near the top`);
  const n=body.split(' ').length;words+=n;assert(n>=MIN[k],`${where}: real substance (${n} words, at least ${MIN[k]})`);
@@ -139,7 +140,7 @@ for(const p of plans.PLANS)assert(html.get(PH).includes(`href="${p.path}"`),`pla
 
 // ---- 3. content shape and safety ------------------------------------------------------------------------------------------------
 const two=s=>(s.match(/[^.!?]+[.!?]+(?=\s|$)/g)||[]).length;
-for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h);
+for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/,'').replace(/<p[^>]*data-onward[\s\S]*?<\/p>/,''));/* the section rail and the onward row are navigation, not the drill's words (Nov 20 2026) */
  assert(d.ages.length>=1&&d.ages.every(a=>drills.AGES.includes(a)),`${where}: ages`);
  assert(/^\d+ x \d+ yd \(\d+ x \d+ m\)/.test(d.space),`${where}: space in yards and metres (${d.space})`);
  assert(d.equipment.length>=10&&d.players.length>=1&&/minute/.test(d.time),`${where}: equipment, players and time`);

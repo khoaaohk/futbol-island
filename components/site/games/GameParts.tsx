@@ -14,7 +14,7 @@ import g from './games.module.css';
 /** The gold button: the one way from a game page into that game (the deep link /arcade?game=<id>). Label: UI sans 800 (.cta). */
 export const PlayLink=({game}:{game:GamePage})=><a className={site.cta} href={game.play} data-play={game.id}>Play {game.name}</a>;
 export function GameIntro({crumbs,h1,lead,game}:{crumbs:readonly Crumb[];h1:string;lead:string;game?:GamePage}){
- return <header className={site.intro} data-games-page="">{/* marks /games and /games/<slug> so the header's Games link is the selected one (site.module.css) */}
+ return <header className={site.intro} id="top" data-games-page="">{/* marks /games and /games/<slug> so the header's Games link is the selected one (site.module.css) */}
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={site.title}>{h1}</h1>
   <p className={site.lead}>{lead}</p>

@@ -1,4 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {libraryRail} from '@/lib/site/railNav';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {GLOSSARY,GLOSSARY_LETTERS,TERMS_HUB as HUB,TERM_PAGES} from '@/lib/site/terms';
@@ -18,7 +20,7 @@ export default function TermsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={termSetLd}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro rail={<RailNav rail={libraryRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   <Section id="az" title="Jump to a letter">
    <p>{GLOSSARY_LETTERS.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letter-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>

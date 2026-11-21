@@ -22,10 +22,19 @@ import styles from '@/app/(site)/site.module.css';
  */
 /** `toc` (batch 3, Nov 17 2026): a detail page (no `cta`) also gets the desktop "On this page" column (components/site/OnThisPage.tsx);
  *  its presence switches .main to the two-column guide layout (site.module.css). Index pages keep one wide column. */
-export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
- return <><header className={styles.intro}>
+/** `rail` (layout batch 2, Nov 20 2026): the section's rail / chip bar (components/site/shell/RailNav.tsx), rendered before the head so
+ *  the chip bar sits above the breadcrumb on phones. `onward`: a Play action tied to the topic plus the Library, right under the
+ *  H1 at every width (owner: "easy to navigate"), so nobody scrolls to the footer to move on. It is a mint button, not the gold
+ *  `.cta`: the page keeps its one gold Play button at the end (tests/seo-formations-positions.cjs). */
+export type Onward={play:{href:string;label:string};library:{href:string;name:string}};
+export function OnwardRow({o}:{o:Onward}){
+ return <p className={styles.onward} data-onward=""><a className={styles.onwardPlay} href={o.play.href}>{o.play.label}</a><a className={styles.onwardLib} href={o.library.href}>{o.library.name}</a></p>;
+}
+export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean;rail?:React.ReactNode;onward?:Onward}){
+ return <>{rail}<header className={styles.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{h1}</h1>
+  {onward&&<OnwardRow o={onward}/>}
   <QuickAnswer lead={lead} facts={facts}/>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{GUIDE_NAMES}</p>

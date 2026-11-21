@@ -1,4 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {onwardFor,sectionRail} from '@/lib/site/railNav';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -51,7 +53,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <JsonLd data={{...articleLd({headline:t.title,path:t.path,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (soccer term)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.path,name:`${t.name} quiz`,questions:quiz})}}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
+  <GuideIntro rail={<RailNav rail={sectionRail('terms')} current={t.path}/>} onward={onwardFor(t.cta)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   {/* Nov 20 2026 (SEO foundation): the kinds of the move, the other side of it, a second meaning, then one drill and one lesson */}

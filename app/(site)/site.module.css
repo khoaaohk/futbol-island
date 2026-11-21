@@ -76,12 +76,14 @@
 /* Opening block: crumbs, eyebrow, title, lead and (index pages) the CTA. */
 /* The page head is the home chapter head: centred, breadcrumb above a huge tight 600 headline in the system sans (no brush face,
    no text shadow), the lead in soft ink at weight 500. From 1100px it spreads past the reading column so a long title has room. */
-.intro{display:grid;gap:var(--s2);justify-items:center;text-align:center;padding:clamp(8px,4vh,48px) 0 var(--s2)}
+/* Nov 20 2026 evening (owner: "make sure all the breadcrumbs are in the same place so users always know where to find it"): the
+   head is left-aligned on every page, so the breadcrumb is always the first thing at the content's left edge. */
+.intro{display:grid;gap:var(--s2);justify-items:start;text-align:left;padding:clamp(8px,4vh,48px) 0 var(--s2)}
 @media(min-width:1100px){.intro{margin-inline:-140px}}
 .main .intro p{max-width:60ch}
 .crumbs{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:0 var(--s1)}
-.intro .crumbs ol{justify-content:center}
+.intro .crumbs ol{justify-content:flex-start}
 /* one text line per row; each link carries an invisible 44px tall tap area (the home bar's logo does the same) */
 .crumbs li{display:inline-flex;align-items:center;padding:6px 0}
 .page .crumbs a{position:relative;color:var(--ink-soft);text-decoration:none}
@@ -168,6 +170,36 @@
 /* a page with a left rail (components/site/library.module.css .menu, data-rail; Nov 20 2026 evening): from 1280 px the rail is fixed on
    the left edge, so the footer sits in the column beside it, centred there, and never passes under it. */
 @media(min-width:1280px){.page{--rail:248px}.page:has([data-rail])>.footer{margin-left:var(--rail)}}
+/* THE RAIL PAGE SHELL (layout batch 2, Nov 20 2026; owner: "the games and library contents on the right layout are different. they
+   need to have consistency. breadcrumbs are in different positions"). Every page with a rail (nav[data-rail]: the Library, /games,
+   and the guide pages through components/site/shell/RailNav.tsx) shares one geometry, set here and nowhere else:
+    - from 1280 px the content column starts beside the fixed rail and is at most --shell-max wide, centred in what is left, so its
+      left edge is the same on every rail page; the top padding under the header is --shell-top;
+    - below 1280 px the chip bar sits under the header and the content starts --shell-gap under it;
+    - the head (breadcrumb, H1, lede) is the first thing in the column, left-aligned, the breadcrumb on top (.intro above, and the
+      Library hero's text column in library.module.css), with no padding of its own above it.
+   Pictures, clips and diagrams differ only inside the head's media slot and the body. */
+/* the onward row under a guide page's H1 (lib/site/GuideParts.tsx OnwardRow): a mint Play button tied to the topic and the Library */
+.onward{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s3)}
+.page .onwardPlay{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap);padding:0 18px 2px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d);font-weight:800;font-size:16px;line-height:1.2;text-decoration:none;transition:translate .12s,box-shadow .12s}
+.page .onwardPlay:active{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
+@media(hover:hover){.page .onwardPlay:hover{background:color-mix(in srgb,var(--gold) 40%,var(--btn-mint,#beded1))}}
+.page .onwardLib{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
+@media(prefers-reduced-motion:reduce){.page .onwardPlay{transition:none}}
+.page:has(nav[data-rail]){--shell-max:1520px;--shell-top:40px;--shell-gap:24px}
+.page:has(nav[data-rail]) .intro{padding-top:0;margin-inline:0}
+@media(max-width:1279px){
+ .main:has(>nav[data-rail]){padding-top:var(--s3)}
+ .main:has(>nav[data-rail])>nav[data-rail]{grid-column:1/-1;margin-bottom:calc(var(--shell-gap) - var(--gap))}
+ .main:has(>nav[data-rail])>[data-toc]{grid-row:3/span 60}
+}
+@media(min-width:1280px){
+ .page:has(nav[data-rail]) nav[data-rail]{margin:0!important}/* fixed top-to-bottom: a grid gap margin must never shorten it */
+ .page:has(nav[data-rail])>.main{max-width:none;width:auto;margin:0 0 0 var(--rail);padding:var(--shell-top) max(48px,calc((100vw - var(--rail) - var(--shell-max)) / 2)) var(--s5)}
+ .page:has(nav[data-rail])>.main:has(>[data-toc]){grid-template-columns:minmax(0,880px) var(--side);justify-content:space-between;column-gap:56px}
+ .page:has(nav[data-rail])>.main:has(>[data-toc]) [data-keep-reading]{grid-column:1}
+}
+@media(min-width:1280px) and (max-width:1599px){.page:has(nav[data-rail])>.main:has(>[data-toc]){--side:240px;column-gap:40px}}
 
 /* Guide pages (formations, positions; Nov 10 2026): pitch diagrams as inline SVG and comparison tables. Same tokens, no new
    colours beyond the pitch green inside the SVG; no scripts, no animation. */

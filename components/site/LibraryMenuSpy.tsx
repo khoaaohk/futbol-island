@@ -17,10 +17,25 @@ import {useEffect} from 'react';
 export default function LibraryMenuSpy({menu}:{menu:string}){
  useEffect(()=>{
   const nav=document.getElementById(menu);if(!nav||!('IntersectionObserver' in window))return;
-  const links=[...nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];if(!links.length)return;
-  const list=links[0].closest('ul');if(!list)return;
   const still=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let mid='',end=false,hold=0,centre=0,pauseUntil=0,lit:HTMLAnchorElement|null=null;
+  const links=[...nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];
+  if(!links.length){
+   /* a rail of page links (the guide pages, components/site/shell/RailNav.tsx): the pill sits on the current page's chip and the
+      bar (or rail) starts with it in view; nothing moves after that */
+   const a=nav.querySelector<HTMLAnchorElement>('a[aria-current="page"]'),ul=nav.querySelector('ul');if(!ul)return;
+   const pl=document.createElement('li');pl.setAttribute('data-pill','');pl.setAttribute('aria-hidden','true');ul.prepend(pl);ul.setAttribute('data-pill-on','');
+   const put=()=>{if(!a)return;pl.style.width=a.offsetWidth+'px';pl.style.height=a.offsetHeight+'px';pl.style.transform=`translate(${a.offsetLeft}px,${a.offsetTop}px)`;pl.style.opacity='1';};
+   pl.style.transition='none';put();
+   if(a){if(ul.scrollWidth>ul.clientWidth+1)ul.scrollLeft=Math.max(0,a.offsetLeft-(ul.clientWidth-a.offsetWidth)/2);
+    if(ul.scrollHeight>ul.clientHeight+1)ul.scrollTop=Math.max(0,a.offsetTop-(ul.clientHeight-a.offsetHeight)/2);}
+   const ends=[...ul.querySelectorAll('a')],f=ends[0],z=ends[ends.length-1];
+   const eo=new IntersectionObserver(es=>{for(const e of es)ul.toggleAttribute(e.target===f?'data-more-left':'data-more-right',e.intersectionRatio<.98);},{root:ul,threshold:[.98,1]});
+   if(f&&z){eo.observe(f);eo.observe(z);}
+   const rz='ResizeObserver' in window?new ResizeObserver(put):null;rz?.observe(ul);
+   return ()=>{eo.disconnect();rz?.disconnect();pl.remove();ul.removeAttribute('data-pill-on');};
+  }
+  const list=links[0].closest('ul');if(!list)return;
+  let mid='',end=false,top=false,hold=0,centre=0,pauseUntil=0,lit:HTMLAnchorElement|null=null;
   const pill=document.createElement('li');pill.setAttribute('data-pill','');pill.setAttribute('aria-hidden','true');list.prepend(pill);list.setAttribute('data-pill-on','');
   const place=(a:HTMLAnchorElement,from:HTMLAnchorElement|null)=>{
    const x=a.offsetLeft,y=a.offsetTop,w=a.offsetWidth,h=a.offsetHeight;
@@ -32,7 +47,7 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
    if(list.scrollHeight>list.clientHeight+1){const r=a.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.top<b.top)list.scrollTop-=b.top-r.top+8;else if(r.bottom>b.bottom)list.scrollTop+=r.bottom-b.bottom+8;}
    if(list.scrollWidth>list.clientWidth+1&&Date.now()>=pauseUntil)list.scrollTo({left:Math.max(0,a.offsetLeft-(list.clientWidth-a.offsetWidth)/2),behavior:still()?'auto':'smooth'});
   };
-  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):mid;
+  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):top&&links[0].hash==='#top'?'top':mid;
    const a=links.find(x=>x.hash==='#'+id)??null;if(a===lit)return;
    links.forEach(x=>{if(x===a)x.setAttribute('data-on','');else x.removeAttribute('data-on');});
    if(a){place(a,lit);clearTimeout(centre);centre=window.setTimeout(()=>glide(a),now?0:180);}else pill.style.opacity='0';
@@ -41,6 +56,10 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
   links.forEach(a=>{const s=document.getElementById(a.hash.slice(1));if(s)io.observe(s);});
   const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{end=es[es.length-1].isIntersecting;paint();}):null;
   if(foot&&io2)io2.observe(foot);
+  /* "Overview" (owner, Nov 20 2026 evening; Spanish "Resumen"): lit at load and whenever the page's head block (#top) is on screen, so exactly one entry is
+     always lit; it is server-rendered with data-on, so there is no flash before this runs */
+  const head=document.getElementById('top'),io4=head?new IntersectionObserver(es=>{top=es[es.length-1].isIntersecting;paint();},{rootMargin:'-68px 0px 0px 0px'}):null;
+  if(head&&io4)io4.observe(head);
   /* edge fades: is the first / last chip fully inside the bar? */
   const first=links[0],last=links[links.length-1];
   const io3=new IntersectionObserver(es=>{for(const e of es){const full=e.intersectionRatio>.98;list.toggleAttribute(e.target===first?'data-more-left':'data-more-right',!full);}},{root:list,threshold:[.98,1]});
@@ -52,9 +71,9 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
   const tap=(e:MouseEvent)=>{const a=(e.target as Element).closest?.('a[href^="#"]') as HTMLAnchorElement|null;if(!a||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
    const t=document.getElementById(a.hash.slice(1));if(!t)return;e.preventDefault();
    t.scrollIntoView({behavior:still()?'auto':'smooth',block:'start'});history.replaceState(null,'',a.hash);
-   clearTimeout(hold);hold=0;pauseUntil=0;mid=t.id;end=false;paint(true);hold=window.setTimeout(()=>{hold=0;},still()?0:900);};
+   clearTimeout(hold);hold=0;pauseUntil=0;mid=t.id;end=false;top=t.id==='top';paint(true);hold=window.setTimeout(()=>{hold=0;},still()?0:900);};
   nav.addEventListener('click',tap);
-  return ()=>{io.disconnect();io2?.disconnect();io3.disconnect();ro?.disconnect();nav.removeEventListener('click',tap);list.removeEventListener('pointerdown',touch);list.removeEventListener('wheel',touch);
+  return ()=>{io.disconnect();io2?.disconnect();io3.disconnect();io4?.disconnect();ro?.disconnect();nav.removeEventListener('click',tap);list.removeEventListener('pointerdown',touch);list.removeEventListener('wheel',touch);
    clearTimeout(hold);clearTimeout(centre);pill.remove();list.removeAttribute('data-pill-on');};
  },[menu]);
  return null;

@@ -1,4 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import RailNav from '@/components/site/shell/RailNav';
+import {onwardFor,sectionRail} from '@/lib/site/railNav';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -38,7 +40,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:f.title,path:f.path,description:f.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${f.name} soccer formation`,teaches:f.answer,image:formationImage(f.slug)})}/>
   <JsonLd data={faqLd(f.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={f.h1} lead={f.answer}/>
+  <GuideIntro rail={<RailNav rail={sectionRail('formations')} current={f.path}/>} onward={onwardFor(f.lessons[0])} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`${f.name} diagram`}>
    <Diagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
    <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link.</p>
