@@ -28,7 +28,8 @@ export type OwnedToy={n:number;first:number};
 export type SpinReceipt={m:GashaponMachineId;toy:string;at:number;dup:boolean;refund:number};
 /** Claw Club plays (Nov 21 2026, lib/claw/clawStore.ts): receipts per play id (toy won or null) and the misses-in-a-row count (the pity rule). */
 export type ClawReceipt={toy:string|null;at:number;dup:boolean;refund:number};
-export type ClawSave={plays:Record<string,ClawReceipt>;streak:number};
+/** `day`/`paid`: the play ids paid for on that play day (the daily cap; a refunded try is taken off, so it does not count). */
+export type ClawSave={plays:Record<string,ClawReceipt>;streak:number;day?:string;paid?:string[]};
 export type GashaponState={version:1;owned:Record<string,OwnedToy>;spins:Record<string,SpinReceipt>;day:string;today:number;last:number;claw?:ClawSave};
 export const emptyGashapon=():GashaponState=>({version:1,owned:{},spins:{},day:'',today:0,last:0});
 
@@ -59,7 +60,8 @@ export function sanitizeGashapon(v:unknown):GashaponState{
   const claw=s.claw as Partial<ClawSave>|undefined;
   if(claw&&typeof claw==='object'){const plays=Object.entries(claw.plays??{}).filter(([id,r])=>isId(id)&&r&&typeof r==='object'&&(r.toy===null||!!gashaponToy(String(r.toy))))
    .sort((a,b)=>whole(b[1].at,9e15)-whole(a[1].at,9e15)).slice(0,RECEIPTS_KEPT);
-   out.claw={plays:Object.fromEntries(plays.map(([id,r])=>[id,{toy:r.toy===null?null:String(r.toy),at:whole(r.at,9e15),dup:r.dup===true,refund:whole(r.refund,GASHAPON_REFUND)}])),streak:whole(claw.streak,99)};}
+   out.claw={plays:Object.fromEntries(plays.map(([id,r])=>[id,{toy:r.toy===null?null:String(r.toy),at:whole(r.at,9e15),dup:r.dup===true,refund:whole(r.refund,GASHAPON_REFUND)}])),streak:whole(claw.streak,99)};
+   if(typeof claw.day==='string'&&claw.day.length<=16&&Array.isArray(claw.paid)){out.claw.day=claw.day;out.claw.paid=claw.paid.filter(isId).slice(0,64);}}
  }catch{return emptyGashapon();}
  return out;
 }

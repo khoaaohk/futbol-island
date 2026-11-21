@@ -4,11 +4,13 @@
  * Zoomed: your coins, Done, then "Play · 10 coins" (the only arcade machine that costs coins; lib/claw/clawStore.ts). A paid try
  * shows the timer, a joystick (drag; arrow keys / WASD on a keyboard) and DROP (Space / Enter). The result card names the toy and
  * its one-line football fact; a repeat says how many you have and the coins back. Done before the drop gives the coins back.
+ * 12 tries a day (clawStore.triesLeft, like the gashapon's 12 capsules): the room prompt and the zoomed HUD say how many are left;
+ * at 0 the Play button reads "Back tomorrow" and nothing is charged.
  */
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore,type PointerEvent as RPointerEvent} from 'react';
 import type {ClawRoom,ClawSnapshot} from '@/lib/claw/clawRoom';
 import {clawStore,clawPending,newPlayId,settleOpenTry} from '@/lib/claw/clawBrowser';
-import {CLAW_PRICE,type ClawFinish} from '@/lib/claw/clawStore';
+import {CLAW_PRICE,CLAW_DAILY_MESSAGE,type ClawFinish} from '@/lib/claw/clawStore';
 import {clawPrize} from '@/lib/claw/clawPrizes';
 import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {openToyViewer} from '@/lib/gashapon/gashaponBrowser';
@@ -63,22 +65,24 @@ export default function ClawMachineHud({claw,blocked,onZoom}:{claw:ClawControls|
  useEffect(()=>{if(snap.phase!=='aim')release();},[snap.phase]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!claw)return null;
  const aiming=snap.phase==='aim'&&zoomed,running=play.current!==null&&!aiming&&snap.phase!=='done'&&snap.phase!=='home';
- const short=wallet.balance<CLAW_PRICE,firm=clawStore.firmNext();
+ const short=wallet.balance<CLAW_PRICE,firm=clawStore.firmNext(),left=clawStore.triesLeft(),out=left<=0;
+ const triesText=out?'No tries left today':`${left} ${left===1?'try':'tries'} left today`;
  const prize=card?.toy?clawPrize(card.toy.id):undefined;
  return <>
-  {snap.near&&!zoomed&&!blocked&&<button ref={prompt} type="button" className={`store-enter-prompt ${styles.prompt}`} data-claw-play onClick={()=>{if(!claw.open())setNote('The claw machine is resting. Try again soon.');}}>Play claw · {CLAW_PRICE} coins</button>}
+  {snap.near&&!zoomed&&!blocked&&<button ref={prompt} type="button" className={`store-enter-prompt ${styles.prompt}`} data-claw-play data-claw-left={left} onClick={()=>{if(!claw.open())setNote('The claw machine is resting. Try again soon.');}}>{out?'Claw Club · back tomorrow':`Play claw · ${CLAW_PRICE} coins`}<span className={styles.promptTries}>{triesText}</span></button>}
   {zoomed&&<div className={styles.layer} data-claw-hud={snap.mode} data-phase={snap.phase}>
    <header className={styles.top}>
-    <p className={styles.coins} data-claw-balance={wallet.balance}><span className={styles.coin} aria-hidden="true"/>{wallet.balance}<span className={styles.coinWord}> coins</span></p>
+    <div className={styles.purse}><p className={styles.coins} data-claw-balance={wallet.balance}><span className={styles.coin} aria-hidden="true"/>{wallet.balance}<span className={styles.coinWord}> coins</span></p>
+     <p className={styles.tries} data-claw-tries={left}>{triesText}</p></div>
     {aiming&&<p className={styles.timer} data-claw-timer={snap.time} data-low={snap.time<=5} aria-live="off">{snap.time}</p>}
     <button type="button" className={styles.done} onClick={()=>void leave()} data-claw-done>{aiming?'Done (coins back)':'Done'}</button>
    </header>
    {snap.ready&&!aiming&&!running&&!card&&<section className={styles.panel} data-claw-start>
     <h2 className={styles.title}>Claw Club</h2>
     <p className={styles.line}>Steer the claw over a toy, press DROP, and steer it home to the chute.</p>
-    {firm&&<p className={styles.firm} data-claw-firm>Lucky try: extra-firm grip this time!</p>}
+    {out?<p className={styles.firm} data-claw-out>{CLAW_DAILY_MESSAGE}</p>:firm&&<p className={styles.firm} data-claw-firm>Lucky try: extra-firm grip this time!</p>}
     {retry?<button type="button" className={styles.primary} onClick={()=>void finish(retry.id,retry.toy)} data-claw-retry>Save my prize</button>
-     :<button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short} data-claw-pay>{busy?'Coin in…':short?`Earn ${CLAW_PRICE} coins in the games`:`Play · ${CLAW_PRICE} coins`}</button>}
+     :<button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short||out} data-claw-pay>{busy?'Coin in…':out?'Back tomorrow':short?`Earn ${CLAW_PRICE} coins in the games`:`Play · ${CLAW_PRICE} coins`}</button>}
    </section>}
    {card&&<section className={styles.panel} data-claw-result={card.toy?.id??'miss'} aria-live="polite">
     {card.toy?<>
@@ -86,11 +90,11 @@ export default function ClawMachineHud({claw,blocked,onZoom}:{claw:ClawControls|
      <p className={styles.meta}><span>{RARITY_LABEL[card.toy.rarity]}</span>{card.duplicate?<span data-claw-repeat>Repeat ({card.count} now){card.refund>0?` · +${card.refund} coins back`:''}</span>:<span className={styles.fresh} data-claw-new>New for your Toy Shelf</span>}</p>
      <p className={styles.fact} data-claw-fact>{prize?.fact}</p>
      <div className={styles.row}><button type="button" className={styles.secondary} onClick={()=>openToyViewer(card.toy!.id,'result')} data-claw-look>Look closer</button>
-      <button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short} data-claw-again>{short?'Need coins':`Again · ${CLAW_PRICE}`}</button></div>
+      <button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short||out} data-claw-again>{out?'Back tomorrow':short?'Need coins':`Again · ${CLAW_PRICE}`}</button></div>
     </>:<>
      <h2 className={styles.title}>So close!</h2>
      <p className={styles.line}>Grab a toy in the middle, with the prongs around it, for a firm hold.{clawStore.firmNext()?' Your next try gets an extra-firm grip.':''}</p>
-     <button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short} data-claw-again>{short?`Earn ${CLAW_PRICE} coins in the games`:`Try again · ${CLAW_PRICE} coins`}</button>
+     <button type="button" className={styles.primary} onClick={()=>void start()} disabled={busy||short||out} data-claw-again>{out?'Back tomorrow':short?`Earn ${CLAW_PRICE} coins in the games`:`Try again · ${CLAW_PRICE} coins`}</button>
     </>}
    </section>}
    {note&&<p className={styles.note} role="status" data-claw-note>{note}</p>}

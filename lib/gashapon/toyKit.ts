@@ -135,8 +135,8 @@ function roundTriShape(r:number,round:number){
 function roundRectShape(w:number,h:number,r:number){const sh=new T.Shape(),x=-w/2,y=-h/2;r=Math.min(r,w/2,h/2);
  sh.moveTo(x+r,y);sh.lineTo(x+w-r,y);sh.quadraticCurveTo(x+w,y,x+w,y+r);sh.lineTo(x+w,y+h-r);sh.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
  sh.lineTo(x+r,y+h);sh.quadraticCurveTo(x,y+h,x,y+h-r);sh.lineTo(x,y+r);sh.quadraticCurveTo(x,y,x+r,y);return sh;}
-function extruded(sh:T.Shape,depth:number,bevel:number,hd=false){
- const g=new T.ExtrudeGeometry(sh,{depth:Math.max(.001,depth-2*bevel),bevelEnabled:bevel>0,bevelSize:bevel,bevelThickness:bevel,bevelSegments:hd?6:2,curveSegments:hd?16:6});
+function extruded(sh:T.Shape,depth:number,bevel:number,hd=false,lo=false){
+ const g=new T.ExtrudeGeometry(sh,{depth:Math.max(.001,depth-2*bevel),bevelEnabled:bevel>0,bevelSize:bevel,bevelThickness:bevel,bevelSegments:hd?6:lo?1:2,curveSegments:hd?16:lo?3:6});
  g.translate(0,0,-(depth-2*bevel)/2);return g;
 }
 
@@ -149,8 +149,12 @@ function fbm(x:number,y:number,z:number){return (vnoise(x,y,z)*.6+vnoise(x*2.1,y
 /** Lighten (amount > 0) or darken (< 0) a hex colour, for shading a part without a new material. */
 export function shade(hex:string,amount:number){const c=new T.Color(hex);const hsl={h:0,s:0,l:0};c.getHSL(hsl);c.setHSL(hsl.h,hsl.s,Math.min(1,Math.max(0,hsl.l+amount)));return '#'+c.getHexString();}
 
-export function createToyKit(toy:GashaponToy,opts:{hd?:boolean}={}){
- const hd=!!opts.hd,parts=new Map<string,PartDef>([['body',{name:'body',at:[0,0,0],parent:null}]]),pieces:Piece[]=[],proxies:{part:string;r:number;at:V3}[]=[];
+/**
+ * `lo` (Nov 21 2026, the Claw Club pile, lib/claw/clawMachine3d.ts): the low-poly kit with every segment count capped further
+ * (spheres 10 around, cylinders 8, ...), for many small toys seen through glass. Never with `hd`.
+ */
+export function createToyKit(toy:GashaponToy,opts:{hd?:boolean;lo?:boolean}={}){
+ const lo=!!opts.lo&&!opts.hd,L=(n:number,max:number)=>lo?Math.min(n,max):n,hd=!!opts.hd,parts=new Map<string,PartDef>([['body',{name:'body',at:[0,0,0],parent:null}]]),pieces:Piece[]=[],proxies:{part:string;r:number;at:V3}[]=[];
  const add=(g:T.BufferGeometry,o:PieceOpts)=>{const part=o.part??'body';if(!parts.has(part))parts.set(part,{name:part,at:[0,0,0],parent:null});
   pieces.push({part,geometry:place(g,o),color:o.color??toy.colors[0],shine:!!o.shine,mat:o.mat??(o.shine?'gold':'vinyl')});};
  /** Segment counts: round 3A low-poly, HD about 2.5× (smooth silhouettes under the studio lights). */
@@ -161,33 +165,33 @@ export function createToyKit(toy:GashaponToy,opts:{hd?:boolean}={}){
   shade,
   /** Declare a part: its pivot in model space and its parent part (default: hangs off the pose root). */
   part(name:string,o:{at?:V3;parent?:string}={}){parts.set(name,{name,at:o.at??[0,0,0],parent:o.parent??null});},
-  sphere(r:number,o:PieceOpts&{seg?:number}={}){const w=o.seg??(hd?Math.min(48,Math.max(12,Math.round(12+r*110))):18);add(new T.SphereGeometry(r,w,Math.max(4,Math.round(w*2/3))),o);},
-  capsule(r:number,len:number,o:PieceOpts={}){add(new T.CapsuleGeometry(r,len,hd?Math.min(8,Math.max(3,Math.round(3+r*40))):5,hd?Math.min(32,Math.max(10,Math.round(10+r*120))):14),o);},
+  sphere(r:number,o:PieceOpts&{seg?:number}={}){const w=L(o.seg??(hd?Math.min(48,Math.max(12,Math.round(12+r*110))):18),10);add(new T.SphereGeometry(r,w,Math.max(4,Math.round(w*2/3))),o);},
+  capsule(r:number,len:number,o:PieceOpts={}){add(new T.CapsuleGeometry(r,len,L(hd?Math.min(8,Math.max(3,Math.round(3+r*40))):5,3),L(hd?Math.min(32,Math.max(10,Math.round(10+r*120))):14,8)),o);},
   box(w:number,h:number,d:number,o:PieceOpts={}){add(new T.BoxGeometry(w,h,d),o);},
   /** A box with rounded edges (rounded-rectangle front, bevelled). */
-  rbox(w:number,h:number,d:number,round:number,o:PieceOpts={}){const b=Math.min(round,d/2.2);add(extruded(roundRectShape(w-2*b,h-2*b,round),d,b,hd),o);},
-  cyl(rTop:number,rBottom:number,h:number,o:PieceOpts&{seg?:number}={}){add(new T.CylinderGeometry(rTop,rBottom,h,o.seg??S(16)),o);},
-  cone(r:number,h:number,o:PieceOpts&{seg?:number}={}){add(new T.ConeGeometry(r,h,o.seg??S(14)),o);},
-  torus(R:number,tube:number,o:PieceOpts&{arc?:number;seg?:number}={}){const arc=o.arc??Math.PI*2;add(new T.TorusGeometry(R,tube,hd?Math.min(16,Math.max(8,Math.round(6+tube*260))):8,o.seg??(hd?Math.max(12,Math.round((20+R*110)*arc/(Math.PI*2))):20),arc),o);},
+  rbox(w:number,h:number,d:number,round:number,o:PieceOpts={}){const b=Math.min(round,d/2.2);add(extruded(roundRectShape(w-2*b,h-2*b,round),d,b,hd,lo),o);},
+  cyl(rTop:number,rBottom:number,h:number,o:PieceOpts&{seg?:number}={}){add(new T.CylinderGeometry(rTop,rBottom,h,L(o.seg??S(16),8)),o);},
+  cone(r:number,h:number,o:PieceOpts&{seg?:number}={}){add(new T.ConeGeometry(r,h,L(o.seg??S(14),8)),o);},
+  torus(R:number,tube:number,o:PieceOpts&{arc?:number;seg?:number}={}){const arc=o.arc??Math.PI*2;add(new T.TorusGeometry(R,tube,L(hd?Math.min(16,Math.max(8,Math.round(6+tube*260))):8,4),L(o.seg??(hd?Math.max(12,Math.round((20+R*110)*arc/(Math.PI*2))):20),12),arc),o);},
   /** A turned profile: [radius, height] points from the bottom up. */
-  lathe(points:readonly (readonly [number,number])[],o:PieceOpts&{seg?:number}={}){add(new T.LatheGeometry(points.map(([r,y])=>new T.Vector2(Math.max(0,r),y)),o.seg??S(18)),o);},
+  lathe(points:readonly (readonly [number,number])[],o:PieceOpts&{seg?:number}={}){add(new T.LatheGeometry(points.map(([r,y])=>new T.Vector2(Math.max(0,r),y)),L(o.seg??S(18),10)),o);},
   /** HD: a smooth turned profile, Catmull-Rom through the points (`steps` per span), for buns, bellies and domes. */
   smoothLathe(points:readonly (readonly [number,number])[],o:PieceOpts&{seg?:number;steps?:number}={}){
-   const c=new T.SplineCurve(points.map(([r,y])=>new T.Vector2(Math.max(0,r),y))),n=(points.length-1)*(o.steps??(hd?8:3));
-   add(new T.LatheGeometry(c.getPoints(n).map(p=>new T.Vector2(Math.max(0,p.x),p.y)),o.seg??S(18)),o);},
+   const c=new T.SplineCurve(points.map(([r,y])=>new T.Vector2(Math.max(0,r),y))),n=(points.length-1)*L(o.steps??(hd?8:3),2);
+   add(new T.LatheGeometry(c.getPoints(n).map(p=>new T.Vector2(Math.max(0,p.x),p.y)),L(o.seg??S(18),10)),o);},
   /** A flat outline ([x, y] points, front +z) pushed `depth` deep with a soft bevel. */
-  extrude(points:readonly (readonly [number,number])[],depth:number,o:PieceOpts&{bevel?:number}={}){add(extruded(shapeOf(points),depth,o.bevel??Math.min(.03,depth/4),hd),o);},
+  extrude(points:readonly (readonly [number,number])[],depth:number,o:PieceOpts&{bevel?:number}={}){add(extruded(shapeOf(points),depth,o.bevel??Math.min(.03,depth/4),hd,lo),o);},
   /** A soft triangle (apex up) of circumradius r, `depth` deep (an onigiri, a hat). */
-  roundTri(r:number,depth:number,o:PieceOpts&{round?:number;bevel?:number}={}){add(extruded(roundTriShape(r,o.round??.32),depth,o.bevel??Math.min(.06,depth/3),hd),o);},
+  roundTri(r:number,depth:number,o:PieceOpts&{round?:number;bevel?:number}={}){add(extruded(roundTriShape(r,o.round??.32),depth,o.bevel??Math.min(.06,depth/3),hd,lo),o);},
   /** HD: a round tube through model-space points (Catmull-Rom): seams, grooves, pleats, laces. */
   tube(points:readonly V3[],r:number,o:PieceOpts={}){const c=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));
-   add(new T.TubeGeometry(c,Math.max(8,points.length*(hd?3:2)),r,hd?6:4,false),o);},
+   add(new T.TubeGeometry(c,L(Math.max(8,points.length*(hd?3:2)),8),r,hd?6:lo?3:4,false),o);},
   /**
    * HD: a lumpy blob (a fried crust, a cookie top, a rock): a sphere of radius r (scaled by `scale`) pushed out along its normals
    * by smooth 3D noise (`amp` deep, `freq` lumps per unit); hollows shade toward `dark`, peaks toward `light` (per-vertex colour).
    */
   blob(r:number,o:PieceOpts&{amp?:number;freq?:number;seed?:number;dark?:string;light?:string;seg?:number}={}){
-   const seg=o.seg??(hd?72:20),g=new T.SphereGeometry(r,seg,Math.round(seg*.7)),pos=g.getAttribute('position'),n=pos.count,amp=o.amp??r*.12,f=o.freq??6,seed=o.seed??1;
+   const seg=L(o.seg??(hd?72:20),14),g=new T.SphereGeometry(r,seg,Math.round(seg*.7)),pos=g.getAttribute('position'),n=pos.count,amp=o.amp??r*.12,f=o.freq??6,seed=o.seed??1;
    const base=new T.Color(o.color??toy.colors[0]),dk=new T.Color(o.dark??shade(o.color??toy.colors[0],-.18)),lt=new T.Color(o.light??shade(o.color??toy.colors[0],.08)),col=new Float32Array(n*3),c=new T.Color(),p=new T.Vector3();
    for(let i=0;i<n;i++){p.fromBufferAttribute(pos,i);const d=p.clone().normalize(),h=fbm(d.x*f+seed,d.y*f-seed*.7,d.z*f+seed*1.3);// −1 … 1
     p.addScaledVector(d,amp*h);pos.setXYZ(i,p.x,p.y,p.z);c.copy(base);if(h<0)c.lerp(dk,Math.min(1,-h*1.4));else c.lerp(lt,Math.min(1,h*1.2));c.toArray(col,i*3);}

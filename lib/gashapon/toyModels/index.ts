@@ -30,9 +30,10 @@ export const HD_MACHINES:ReadonlySet<GashaponMachineId>=new Set<GashaponMachineI
 /** The builder for a toy, and whether it is the generic fallback. */
 export function toyBuilder(toy:GashaponToy):{build:ToyBuilder;generic:boolean}{const own=MODELS[toy.machine]?.[toy.id];return own?{build:own,generic:false}:{build:genericToy,generic:true};}
 export const builtToyIds=():string[]=>Object.values(MODELS).flatMap(set=>Object.keys(set??{}));
-/** Build a toy's rig (meshes, parts, behaviour). The caller owns it: `rig.dispose()`. Null for an unknown id. */
-export function buildToy(id:string):ToyRig|null{
- const toy=gashaponToy(id);if(!toy)return null;const {build,generic}=toyBuilder(toy),k=createToyKit(toy,{hd:!generic&&HD_MACHINES.has(toy.machine)});
- let behaviour;try{behaviour=build(k);}catch(err){console.warn('toy builder failed, using the generic figure',id,err);const g=createToyKit(toy);return g.finish(genericToy(g));}
+/** Build a toy's rig (meshes, parts, behaviour). The caller owns it: `rig.dispose()`. Null for an unknown id. `lo`: the capped
+ *  low-poly kit (the Claw Club pile; lib/gashapon/toyKit.ts createToyKit). */
+export function buildToy(id:string,opts:{lo?:boolean}={}):ToyRig|null{
+ const toy=gashaponToy(id);if(!toy)return null;const {build,generic}=toyBuilder(toy),k=createToyKit(toy,opts.lo?{lo:true}:{hd:!generic&&HD_MACHINES.has(toy.machine)});
+ let behaviour;try{behaviour=build(k);}catch(err){console.warn('toy builder failed, using the generic figure',id,err);const g=createToyKit(toy,{lo:opts.lo});return g.finish(genericToy(g));}
  return k.finish(behaviour);
 }

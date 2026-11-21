@@ -8,8 +8,9 @@
  *  - `buildClawDetail()`: the zoomed machine, built on the first zoom and kept: painted metal with clearcoat, chrome posts and
  *    gantry, glass with an environment reflection + streaks (no realtime reflection pass), the inner LED strip and marquee bulbs
  *    (emissive, no extra light), the gantry rails / crossbar / carriage, cable, hub and three curled prongs, the clear chute
- *    baffle, the prize flap + tray, a joystick and a drop button that move, the coin slot and a credit display. The toys are the
- *    real gashapon toy models (lib/gashapon/toyModels), merged per finish, so a won toy looks the same on the Toy Shelf.
+ *    baffle, the prize flap + tray, a joystick and a drop button that move, the coin slot, and a credit display on the sloped control deck. The pile toys are
+ *    the real gashapon toy models built with the capped low-poly kit (buildToy `lo`), one merged vertex-coloured mesh each on
+ *    one shared material; the won toy is swapped for its full-detail model (merged per finish) once it lands in the tray.
  *    Soft contact shadows (one instanced draw) ground the toys and the claw.
  * Physics lives in lib/claw/clawPhysics.ts; `update()` here only copies its state onto the meshes (no allocation per frame).
  */
@@ -26,6 +27,16 @@ export const CLAW_FLOOR_Y=1.14;
 export const CLAW_SIZE={halfW:1,front:.92,back:-.82,glassZ:.64,glassX:.92,top:3.45,canopy:2.84} as const;
 const PAINT='#c8365f',PAINT_DARK='#8e2443',CREAM='#f4e8d4',FELT='#3d2f6e',INTERIOR='#16121e',BACKDROP='#56a35c';
 const PHI=[-Math.PI/2,Math.PI/6,Math.PI*5/6];
+/**
+ * The sloped control deck (Nov 21 2026 fix pass): a console that juts out of the base front BELOW the glass floor, tilted toward
+ * the player, so from the zoom camera the joystick and DROP button sit under the pile instead of over it. Machine frame.
+ * `deckAt(x, along, up)`: a point `up` above the deck's top face, `along` metres from its middle (− = toward the glass).
+ */
+export const CLAW_DECK={x0:-.28,x1:.94,z:1.06,y:-.19,depth:.32,thick:.05,tilt:.34,stickX:.02,buttonX:.68,screenX:.35} as const;
+function deckAt(x:number,along:number,up:number,out=new T.Vector3()){const D=CLAW_DECK,c=Math.cos(D.tilt),s=Math.sin(D.tilt),h=D.thick/2+up;return out.set(x,CLAW_FLOOR_Y+D.y+h*c-along*s,D.z+h*s+along*c);}
+function deckBody(push:(g:Geo,part:'deck'|'support')=>void){const D=CLAW_DECK,w=D.x1-D.x0,cx=(D.x0+D.x1)/2;
+ push(placed(new T.BoxGeometry(w,D.thick,D.depth),cx,CLAW_FLOOR_Y+D.y,D.z,D.tilt,0,0),'deck');
+ push(placed(new T.BoxGeometry(w-.04,.1,.24),cx,CLAW_FLOOR_Y+D.y-.08,CLAW_SIZE.front+.12),'support');}
 
 // ---- shared bits --------------------------------------------------------------------------------------------------------------
 function signTexture(w:number,h:number,draw:(c:CanvasRenderingContext2D,w:number,h:number)=>void){const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const c=canvas.getContext('2d')!;draw(c,w,h);const t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t;}
@@ -49,7 +60,7 @@ export function buildClawLod(){
  const ball=(x:number,y:number,z:number,r:number,c:string)=>parts.push(colored(placed(new T.SphereGeometry(r,10,7),x,y,z),c));
  const S=CLAW_SIZE,F=CLAW_FLOOR_Y;
  box(0,F/2,.05,2,F,1.74,PAINT);box(0,.035,.05,2.02,.07,1.76,'#1a1420');box(0,F-.06,.93,2.02,.06,.04,CREAM);
- box(-.61,.65,.935,.5,.44,.02,INTERIOR);box(.32,F+.04,.79,1.3,.08,.26,CREAM);ball(.1,F+.2,.79,.05,'#e0303c');ball(.62,F+.1,.79,.07,'#e0303c');
+ box(-.61,.65,.935,.5,.44,.02,INTERIOR);box(0,F+.015,.78,1.98,.03,.28,CREAM);deckBody((g,part)=>parts.push(colored(g,part==='deck'?CREAM:PAINT_DARK)));{const p=deckAt(CLAW_DECK.stickX,-.02,.15);ball(p.x,p.y,p.z,.045,'#e0303c');const q=deckAt(CLAW_DECK.buttonX,-.02,0);ball(q.x,q.y,q.z,.07,'#e0303c');}
  box(.55,.66,.93,.26,.32,.02,'#c9ced6');
  for(const x of [-S.glassX,S.glassX])for(const z of [-S.glassZ,S.glassZ])cyl(x,(F+S.canopy)/2,z,.04,S.canopy-F,'#d7dbe2');
  box(0,(F+S.canopy)/2,-.66,1.84,S.canopy-F,.03,BACKDROP);box(0,F-.01,0,1.84,.02,1.3,FELT);
@@ -77,7 +88,20 @@ export function buildClawLod(){
 }
 
 // ---- the detailed machine -----------------------------------------------------------------------------------------------------
-type ToyView={id:string;root:T.Group;scale:number;r:number;yaw:number;materials:T.Material[];geometries:Geo[]};
+type ToyView={id:string;root:T.Group;scale:number;r:number;yaw:number;materials:T.Material[];geometries:Geo[];hi:boolean};
+/**
+ * A pile toy (Nov 21 2026 fix pass, owner: "lower-detail toy models for the pile"): the capped low-poly kit (buildToy `lo`), every
+ * part merged into ONE vertex-coloured mesh on the pile's shared material, so each toy is one draw. The won toy is swapped for the
+ * full-detail model (flattenToy) once it is in the tray; the Toy Shelf / "Look closer" viewer always builds its own full model.
+ */
+function pileToy(id:string,mat:T.Material):ToyView|null{
+ const rig=buildToy(id,{lo:true}),prize=clawPrize(id);if(!rig||!prize)return null;
+ rig.root.updateMatrixWorld(true);const inv=new T.Matrix4().copy(rig.root.matrixWorld).invert(),list:Geo[]=[];
+ for(const m of rig.meshes){let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='color')g.deleteAttribute(k);
+  if(!g.getAttribute('color'))g=colored(g,'#ffffff');g.applyMatrix4(tmpM.multiplyMatrices(inv,m.matrixWorld));list.push(g);}
+ rig.dispose();const merged=mergeAll(list),root=new T.Group();root.name=`claw-toy-${id}`;const mesh=new T.Mesh(merged,mat);mesh.name='claw-pile-toy';root.add(mesh);
+ return {id,root,scale:clawToyScale(prize),r:0,yaw:0,materials:[],geometries:[merged],hi:false};
+}
 /** One toy rig re-merged per material (draws = finishes used), standing on y = 0. */
 function flattenToy(id:string,env:T.Texture|null):ToyView|null{
  const rig=buildToy(id),prize=clawPrize(id);if(!rig||!prize)return null;
@@ -89,7 +113,7 @@ function flattenToy(id:string,env:T.Texture|null):ToyView|null{
   else for(const g of list){geometries.push(g);root.add(new T.Mesh(g,mat));}}
  for(const m of rig.meshes)m.geometry.dispose();for(const p of rig.proxies){p.geometry.dispose();(p.material as T.Material).dispose();}
  for(const mat of rig.materials){const std=mat as T.MeshStandardMaterial;if(env&&'envMap' in std){std.envMap=env;std.envMapIntensity=.75;std.needsUpdate=true;}}
- return {id,root,scale:clawToyScale(prize),r:0,yaw:0,materials:rig.materials,geometries};
+ return {id,root,scale:clawToyScale(prize),r:0,yaw:0,materials:rig.materials,geometries,hi:true};
 }
 
 export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],sim:ClawSim){
@@ -129,8 +153,11 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  st(interior,placed(new T.PlaneGeometry(S.front-CHUTE.z1,oy1-oy0),ox0+.001,(oy0+oy1)/2,(S.front+CHUTE.z1)/2,0,Math.PI/2));st(interior,placed(new T.PlaneGeometry(S.front-CHUTE.z1,oy1-oy0),ox1-.001,(oy0+oy1)/2,(S.front+CHUTE.z1)/2,0,-Math.PI/2));
  st(interior,placed(new T.PlaneGeometry(ox1-ox0,S.front-CHUTE.z1),(ox0+ox1)/2,oy1-.001,(S.front+CHUTE.z1)/2,Math.PI/2,0,0));
  // control deck on the base top, in front of the glass
- st(cream,placed(rbox(1.98,.07,S.front-S.glassZ),0,F+.035,(S.front+S.glassZ)/2));st(paintDark,placed(rbox(1.3,.06,.24),.3,F+.1,.79,-.12,0,0));
- st(darkMetal,placed(new T.CylinderGeometry(.07,.08,.02,24),.08,F+.14,.79));st(chrome,placed(new T.CylinderGeometry(.095,.095,.018,28),.62,F+.135,.79));
+ st(cream,placed(rbox(1.98,.03,S.front-S.glassZ),0,F+.015,(S.front+S.glassZ)/2));
+ // the sloped control deck below the glass floor (CLAW_DECK): cream top, dark support, a chrome edge, the stick plate and button ring
+ deckBody((g,part)=>st(part==='deck'?cream:paintDark,g));
+ {const D=CLAW_DECK,e=deckAt((D.x0+D.x1)/2,D.depth/2,-D.thick/2);st(chrome,placed(rbox(D.x1-D.x0+.01,.02,.02),e.x,e.y,e.z));
+  const pl=deckAt(D.stickX,-.02,.008),rg=deckAt(D.buttonX,-.02,.008);st(darkMetal,placed(new T.CylinderGeometry(.07,.08,.016,24),pl.x,pl.y,pl.z,D.tilt,0,0));st(chrome,placed(new T.CylinderGeometry(.095,.095,.016,28),rg.x,rg.y,rg.z,D.tilt,0,0));}
  // coin door + credit display on the base front
  st(brushed,placed(rbox(.3,.38,.025),.58,.64,S.front+.012));st(rubber,placed(rbox(.018,.1,.01),.58,.68,S.front+.026));st(chrome,placed(rbox(.06,.14,.012),.58,.68,S.front+.026));
  st(rubber,placed(rbox(.09,.05,.01),.58,.53,S.front+.026));
@@ -174,7 +201,7 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  for(let i=0;i<bulbCount;i++){o.position.set(bulbSpots[2*i],bulbSpots[2*i+1],.885);o.updateMatrix();bulbs.setMatrixAt(i,o.matrix);bulbs.setColorAt(i,new T.Color('#ffd27a'));}group.add(bulbs);
  // credit display (canvas, redrawn only when its text changes)
  const dispCanvas=document.createElement('canvas');dispCanvas.width=256;dispCanvas.height=72;const dc=dispCanvas.getContext('2d')!;const dispTex=new T.CanvasTexture(dispCanvas);dispTex.colorSpace=T.SRGBColorSpace;textures.push(dispTex);
- const dispMat=mat(new T.MeshBasicMaterial({map:dispTex,toneMapped:false}));add(placed(pane(.36,.1),.58,.9,S.front+.002),dispMat,'claw-display');
+ const dispMat=mat(new T.MeshBasicMaterial({map:dispTex,toneMapped:false}));{const p=deckAt(CLAW_DECK.screenX,-.02,.003);add(placed(pane(.3,.085),p.x,p.y,p.z,-Math.PI/2+CLAW_DECK.tilt,0,0),dispMat,'claw-display');}
  let dispText='';
  function display(text:string){if(text===dispText)return;dispText=text;dc.fillStyle='#120a0a';dc.fillRect(0,0,256,72);dc.font='700 40px "Courier New",monospace';dc.textAlign='center';dc.textBaseline='middle';dc.fillStyle='#ff4b3e';dc.shadowColor='#ff2a1a';dc.shadowBlur=10;dc.fillText(text,128,38);dc.shadowBlur=0;dispTex.needsUpdate=true;}
  display('INSERT 10');
@@ -189,12 +216,13 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  const flapMat=mat(new T.MeshStandardMaterial({color:'#2a2333',roughness:.3,metalness:.1,transparent:true,opacity:.86,envMap:env,envMapIntensity:.8}));
  const flap=new T.Mesh(flapGeo,flapMat);flap.position.set((ox0+ox1)/2,F+CHUTE.flapTop,CHUTE.z1);group.add(flap);
  // joystick (pivot at the base) and the drop button
- const stick=new T.Group();stick.position.set(.08,F+.15,.79);group.add(stick);
- const shaftGeo=new T.CylinderGeometry(.012,.014,.16,12);shaftGeo.translate(0,.08,0);geometries.push(shaftGeo);stick.add(new T.Mesh(shaftGeo,chrome));
- const knobGeo=new T.SphereGeometry(.045,24,18);knobGeo.translate(0,.18,0);geometries.push(knobGeo);stick.add(new T.Mesh(knobGeo,red));
- const bootGeo=new T.SphereGeometry(.04,16,8,0,Math.PI*2,0,Math.PI/2);bootGeo.scale(1,.45,1);geometries.push(bootGeo);const boot=new T.Mesh(bootGeo,rubber);boot.position.copy(stick.position);group.add(boot);
+ const deckTilt=new T.Group();deckTilt.rotation.x=CLAW_DECK.tilt;deckAt(CLAW_DECK.stickX,-.02,.016,deckTilt.position);group.add(deckTilt);
+ const stick=new T.Group();deckTilt.add(stick);
+ const shaftGeo=new T.CylinderGeometry(.012,.014,.13,12);shaftGeo.translate(0,.065,0);geometries.push(shaftGeo);stick.add(new T.Mesh(shaftGeo,chrome));
+ const knobGeo=new T.SphereGeometry(.045,24,18);knobGeo.translate(0,.15,0);geometries.push(knobGeo);stick.add(new T.Mesh(knobGeo,red));
+ const bootGeo=new T.SphereGeometry(.04,16,8,0,Math.PI*2,0,Math.PI/2);bootGeo.scale(1,.45,1);geometries.push(bootGeo);const boot=new T.Mesh(bootGeo,rubber);deckTilt.add(boot);
  const buttonGeo=new T.SphereGeometry(.075,28,14,0,Math.PI*2,0,Math.PI/2);buttonGeo.scale(1,.5,1);geometries.push(buttonGeo);
- const button=new T.Mesh(buttonGeo,red);button.position.set(.62,F+.144,.79);group.add(button);
+ const buttonTilt=new T.Group();buttonTilt.rotation.x=CLAW_DECK.tilt;deckAt(CLAW_DECK.buttonX,-.02,.016,buttonTilt.position);group.add(buttonTilt);const button=new T.Mesh(buttonGeo,red);buttonTilt.add(button);
  // gantry: crossbar (moves in z), carriage (moves in x), cable, hub, three prongs
  const crossGeo=new T.BoxGeometry(1.72,.045,.06);geometries.push(crossGeo);const cross=new T.Mesh(crossGeo,brushed);cross.position.y=2.745;group.add(cross);
  const carriage=new T.Group();group.add(carriage);
@@ -216,9 +244,15 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
  const shadowGeo=new T.PlaneGeometry(1,1);shadowGeo.rotateX(-Math.PI/2);geometries.push(shadowGeo);const shadowMat=mat(new T.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,toneMapped:false}));
  const shadows=new T.InstancedMesh(shadowGeo,shadowMat,pile.length+1);shadows.renderOrder=1;shadows.frustumCulled=false;group.add(shadows);
  // the toys
- const toys:(ToyView|null)[]=pile.map((id,i)=>{const v=flattenToy(id,env);if(v){v.yaw=((i*2.399)%1.6)-.8;group.add(v.root);}return v;});
- function setToy(slot:number,id:string){const old=toys[slot];if(old){old.root.removeFromParent();old.geometries.forEach(g=>g.dispose());old.materials.forEach(m=>{(m as T.MeshStandardMaterial).normalMap?.dispose();m.dispose();});}
-  const v=flattenToy(id,env);if(v){v.yaw=((slot*2.399)%1.6)-.8;group.add(v.root);}toys[slot]=v;}
+ // the toys: low-poly pile toys on one shared material (one draw each); `hi` swaps a slot to the full-detail model (the won toy)
+ const pileMat=mat(new T.MeshStandardMaterial({vertexColors:true,roughness:.42,metalness:0,envMap:env,envMapIntensity:.7}));
+ const toys:(ToyView|null)[]=pile.map((id,i)=>{const v=pileToy(id,pileMat);if(v){v.yaw=((i*2.399)%1.6)-.8;group.add(v.root);}return v;});
+ function setToy(slot:number,id:string,hi=false){const old=toys[slot];
+  if(old?.id===id&&old.hi===hi)return;
+  const v=hi?flattenToy(id,env):pileToy(id,pileMat);if(!v)return;// keep the old model rather than leave a gap
+  if(old){v.root.position.copy(old.root.position);v.root.quaternion.copy(old.root.quaternion);v.root.scale.copy(old.root.scale);v.root.visible=old.root.visible;
+   old.root.removeFromParent();old.geometries.forEach(g=>g.dispose());old.materials.forEach(m=>{(m as T.MeshStandardMaterial).normalMap?.dispose();m.dispose();});}
+  v.yaw=((slot*2.399)%1.6)-.8;group.add(v.root);toys[slot]=v;}
 
  // ---- per-frame copy of the sim state (no allocation) ----
  const up=new T.Vector3(0,1,0),axis=new T.Vector3(),q=new T.Quaternion(),qy=new T.Quaternion(),cableDir=new T.Vector3();
@@ -246,7 +280,7 @@ export function buildClawDetail(renderer:T.WebGLRenderer,pile:readonly string[],
   flap.rotation.x=s.flap;
   // controls follow the hand
   stick.rotation.x+=((input.z*.38)-stick.rotation.x)*Math.min(1,dt*18);stick.rotation.z+=((-input.x*.38)-stick.rotation.z)*Math.min(1,dt*18);
-  const press=Math.max(0,input.pressed);button.position.y=F+.144-.012*press;button.scale.y=1-.25*press;
+  const press=Math.max(0,input.pressed);button.position.y=-.012*press;button.scale.y=1-.25*press;
   // bulbs: a slow idle chase; a fast pink/white chase after a win (`celebrate`)
   chaseT=Math.max(0,chaseT-dt);idleT+=dt;const fast=chaseT>0,step=Math.floor(idleT*(fast?14:3));
   if(step!==chase){chase=step;for(let i=0;i<bulbCount;i++){const on=fast?(i+step)%3===0:(i+step)%4===0;bulbColor.copy(fast?(on?hot:pink):(on?warm:dim));bulbs.setColorAt(i,bulbColor);}bulbs.instanceColor!.needsUpdate=true;}

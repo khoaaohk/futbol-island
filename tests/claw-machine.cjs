@@ -77,8 +77,8 @@ await ok('prize pool: real toys with facts, the Bean always in the pile, no dupl
  for(let k=0;k<20;k++){const slot=k%pile.length,next=Z.nextRefill(pile,refill,pile[slot]);pile[slot]=next;assert.equal(new Set(pile).size,pile.length,'unique after refill');}
 });
 // ---- coins + prizes -----------------------------------------------------------------------------------------------------------
-function ports(){const st={raw:null,spent:new Map(),credited:new Map(),balance:100,failWrite:false,now:1000};
- return {st,p:{read:()=>st.raw,write:s=>{if(st.failWrite)throw new Error('full');st.raw=JSON.parse(JSON.stringify(s));},now:()=>++st.now,day:()=>'2026-11-21',
+function ports(){const st={raw:null,spent:new Map(),credited:new Map(),balance:100,failWrite:false,now:1000,day:'2026-11-21'};
+ return {st,p:{read:()=>st.raw,write:s=>{if(st.failWrite)throw new Error('full');st.raw=JSON.parse(JSON.stringify(s));},now:()=>++st.now,day:()=>st.day,
   spend:async(id,cost)=>{if(st.spent.has(id))return {ok:true};if(st.balance<cost)return {ok:false,reason:'Not enough coins'};st.balance-=cost;st.spent.set(id,cost);return {ok:true};},
   refund:async(id,coins)=>{if(st.credited.has(id))return 0;st.credited.set(id,coins);st.balance+=coins;return coins;}}};}
 await ok('coins: one charge per play id; refunds only for unfinished tries and never twice; short balance refused',async()=>{
@@ -87,6 +87,23 @@ await ok('coins: one charge per play id; refunds only for unfinished tries and n
  assert.equal(await c.refund('p1'),10);assert.equal(await c.refund('p1'),0,'refund once');assert.equal(st.balance,100);
  assert((await c.pay('p2')).ok);await c.finish('p2',null);assert.equal(await c.refund('p2'),0,'a finished try is never refunded');
  st.balance=5;const short=await c.pay('p3');assert.equal(short.ok,false);assert.equal(st.balance,5,'never negative');
+});
+await ok('daily cap: 12 paid tries a play day; refunded tries do not count; at 0 no charge; the next day refills',async()=>{
+ const {st,p}=ports(),c=CS.createClawStore(p);st.balance=1000;assert.equal(CS.CLAW_TRIES_PER_DAY,12);assert.equal(c.triesLeft(),12);
+ assert((await c.pay('r1')).ok);assert.equal(c.triesLeft(),11);assert.equal(await c.refund('r1'),10);assert.equal(c.triesLeft(),12,'a refunded try is given back');
+ for(let i=0;i<12;i++){assert((await c.pay('t'+i)).ok);await c.finish('t'+i,null);}
+ assert.equal(c.triesLeft(),0);assert((await c.pay('t3')).ok,'the same id again is not a new try');const before=st.balance,no=await c.pay('t12');
+ assert.equal(no.ok,false);assert.equal(no.daily,true);assert.match(no.reason,/12 claw tries today/);assert.equal(st.balance,before,'no charge at 0');assert(!st.spent.has('claw:t12'));
+ assert.equal(St.sanitizeGashapon(st.raw).claw.paid.length,12,'the paid list survives the save sanitiser');
+ st.day='2026-11-22';assert.equal(c.triesLeft(),12,'a new day refills');assert((await c.pay('t12')).ok);assert.equal(c.triesLeft(),11);
+ assert.equal(c.streak(),12,'finish keeps the pity count with the daily list');
+});
+await ok('pile LOD: the low-poly pile toys are one merged mesh each and far cheaper than the full models',()=>{
+ const Tm=load('lib/gashapon/toyModels/index.ts'),{pile}=Z.clawPile(42);let lo=0,hi=0;
+ const tri=r=>r.meshes.reduce((n,m)=>n+(m.geometry.index?m.geometry.index.count:m.geometry.getAttribute('position').count)/3,0);
+ for(const id of pile){const a=Tm.buildToy(id,{lo:true}),b=Tm.buildToy(id);assert(a&&b,id);assert.equal(a.hd,false);lo+=tri(a);hi+=tri(b);a.dispose();b.dispose();}
+ console.log(`     (pile of ${pile.length}: full ${Math.round(hi)} → low ${Math.round(lo)} triangles)`);assert(lo<hi/3,`low ${lo} vs full ${hi}`);assert(lo<90000,`pile ${lo}`);
+ const src=fs.readFileSync(path.join(base,'lib/claw/clawMachine3d.ts'),'utf8');assert(/function pileToy/.test(src)&&/setToy\(slot,pile\[slot\],true\)/.test(fs.readFileSync(path.join(base,'lib/claw/clawRoom.ts'),'utf8')),'pile toys low, the won toy full detail');
 });
 await ok('award: the won toy lands in the gashapon save; a repeat counts up and pays 5 back; same id → same answer',async()=>{
  const {st,p}=ports(),c=CS.createClawStore(p);

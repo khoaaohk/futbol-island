@@ -1,5 +1,8 @@
 /* Claw Club HUD (Nov 21 2026). Flat fills, the room's body font, buttons in the UI sans at 800 (AGENTS.md button font rule). */
-.prompt{position:absolute;z-index:5;transform:translate(-50%,-100%);visibility:hidden;font:800 16px/1.1 var(--btn-font,Arial,sans-serif)}
+.prompt{position:absolute;z-index:5;transform:translate(-50%,-100%);visibility:hidden;flex-direction:column;gap:3px;font:800 16px/1.1 var(--btn-font,Arial,sans-serif)}
+.promptTries{font-size:13px;font-weight:700;opacity:.85}
+.purse{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.tries{margin:0;padding:5px 10px;border-radius:999px;background:#1b1230cc;color:#fff4e0;font:800 13px/1 var(--font-body,Arial,sans-serif);font-variant-numeric:tabular-nums}
 .layer{--ink:#1b1230;--paper:#fff6e4;--raspberry:#c8365f;--raspberry-dark:#8e2443;position:absolute;inset:0;z-index:6;pointer-events:none;font-family:var(--font-body,Arial,Helvetica,sans-serif);color:var(--ink)}
 .layer>*{pointer-events:auto}
 .layer[data-claw-hud="in"] .panel,.layer[data-claw-hud="out"] .panel,.layer[data-claw-hud="out"] .controls{opacity:0;pointer-events:none}

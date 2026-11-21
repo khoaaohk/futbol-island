@@ -42,7 +42,7 @@ export function createClawRoom(opts:{scene:T.Scene;renderer:T.WebGLRenderer;plac
   const portrait=aspect<1,fov=portrait?44:36,t=Math.tan(T.MathUtils.degToRad(fov/2));
   const hw=portrait?.98:1.15,hh=portrait?1.95:1.5,dist=Math.max(hh/t,hw/(t*aspect)),cy=portrait?1.62:2.05;
   end.fov=fov;nearEnd=Math.max(.05,dist-.5);/* the near plane ends just in front of the glass: you, your ball and anyone behind you stay out of the shot */end.look.set(0,cy,0);placement.localToWorld(end.look);
-  end.pos.set(0,cy+dist*.16,CLAW_SIZE.front+dist);placement.localToWorld(end.pos);
+  end.pos.set(0,cy+dist*.22,CLAW_SIZE.front+dist);/* looking a little down, so the sloped control deck (CLAW_DECK) reads below the glass, not over the pile */placement.localToWorld(end.pos);
  }
  function startPose(ortho:T.OrthographicCamera){
   ortho.getWorldDirection(dir);const halfH=(ortho.top-ortho.bottom)/2/ortho.zoom,o=ortho.position;
@@ -90,7 +90,7 @@ export function createClawRoom(opts:{scene:T.Scene;renderer:T.WebGLRenderer;plac
   const sec=Math.ceil(s.aimLeft);
   if(s.phase==='aim'){detail.display(`TIME ${String(sec).padStart(2,'0')}`);}else if(s.phase==='done'&&s.result>=0)detail.display('WINNER!');else if(s.phase==='home'||s.phase==='done')detail.display('INSERT 10');else detail.display('GOOD LUCK');
   if(s.phase!==lastPhase){
-   if(s.phase==='done'&&lastPhase!=='aim'){const slot=s.result;set({result:{slot,toy:slot>=0?pile[slot]:null}});pendingSlot=slot;if(slot<0)sound.miss();}
+   if(s.phase==='done'&&lastPhase!=='aim'){const slot=s.result;set({result:{slot,toy:slot>=0?pile[slot]:null}});pendingSlot=slot;if(slot>=0)detail.setToy(slot,pile[slot],true);/* the won toy in the tray: full detail */if(slot<0)sound.miss();}
    lastPhase=s.phase;
   }
   if(sec!==lastSecond||snap.phase!==s.phase){lastSecond=sec;set({phase:s.phase,time:sec});}
