@@ -76,7 +76,7 @@ function sheets(frames,from,step){const pick=[];for(let s=from;s<=(frames.at(-1)
 function nearest(frames,s){let best=null;for(const f of frames)if(f.t<=s+.02)best=f;return best||frames[0];}
 
 function encode(){
- const frames=JSON.parse(fs.readFileSync(path.join(OUT,'frames.json'),'utf8')),start=+arg('clip'),stills=arg('stills').split(',').map(Number),poster=+arg('poster',stills[0]);
+ const frames=JSON.parse(fs.readFileSync(path.join(OUT,'frames.json'),'utf8')),start=+arg('clip'),stills=(arg('stills','')||'').split(',').filter(Boolean).map(Number),poster=+arg('poster',stills[0]);// no --stills: clip and poster only
  const clips=path.join(ROOT,'public/games/clips'),shots=path.join(ROOT,'public/games/shots');
  const list=path.join(OUT,'clip.txt');fs.writeFileSync(list,'ffconcat version 1.0\n'+frames.map((f,i)=>`file '${f.file}'\nduration ${Math.max(.005,((frames[i+1]?.t??f.t+.05)-f.t)).toFixed(4)}`).join('\n')+`\nfile '${frames.at(-1).file}'\n`);
  const cut=['-f','concat','-safe','0','-i',list,'-ss',start.toFixed(2),'-t',String(CLIP_S),'-vf','fps=30,scale=332:720:flags=lanczos','-an'];
@@ -86,7 +86,7 @@ function encode(){
  webp(poster,path.join(clips,`${GAME}.webp`));stills.forEach((s,i)=>webp(s,path.join(shots,`${GAME}-${i+1}.webp`)));
  const size=f=>fs.statSync(f).size,jf=path.join(ROOT,'lib/site/gameMedia.json'),raw=fs.readFileSync(jf,'utf8'),M=JSON.parse(raw);
  M.clips[GAME]={...M.clips[GAME],w:332,h:720,seconds:CLIP_S,mp4:size(path.join(clips,`${GAME}.mp4`)),webm:size(path.join(clips,`${GAME}.webm`)),poster:{w:480,h:1039,bytes:size(path.join(clips,`${GAME}.webp`))}};
- const old=M.shots[GAME]||[];M.shots[GAME]=[1,2,3].map(n=>({file:`${GAME}-${n}.webp`,w:480,h:1039,bytes:size(path.join(shots,`${GAME}-${n}.webp`))})).concat(old.slice(3));
+ const old=M.shots[GAME]||[];if(stills.length)M.shots[GAME]=[1,2,3].map(n=>({file:`${GAME}-${n}.webp`,w:480,h:1039,bytes:size(path.join(shots,`${GAME}-${n}.webp`))})).concat(old.slice(3));
  fs.writeFileSync(jf,JSON.stringify(M,null,(/^\{\n( +)"/.exec(raw)||[,' '])[1].length)+(raw.endsWith('\n')?'\n':''));
  console.log(`${GAME}: mp4 ${M.clips[GAME].mp4} B, webm ${M.clips[GAME].webm} B, poster ${M.clips[GAME].poster.bytes} B, stills ${M.shots[GAME].map(s=>s.bytes).join(' / ')} B`);
 }
