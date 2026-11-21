@@ -17,10 +17,12 @@ import styles from '@/app/(site)/site.module.css';
 /* The third item (Nov 20 2026, owner: "when on the library page and clicking on the other navigation, it should go back to the main
  * page and scroll to that section"): the home chapter this link stands for (ids in app/(site)/page.tsx NAV). Such a link is
  * rendered twice, to its reading page and to the home chapter, and only one is shown: the reading page everywhere, the home
- * chapter on the Library (site.module.css, [data-library-hero]). Both are real hrefs and there is still no client code. */
-const NAV:readonly (readonly [string,string,string?])[]=[[LESSONS_INDEX,'Learn','/#learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety','/#safe'],['/about','About','/#about'],[LIBRARY_PATH,'Library']]/* Nov 20 2026 (owner): Library, the hub of every footer section, after About */;
+ * chapter on the Library (site.module.css, [data-library-hero]). Both are real hrefs and there is still no client code.
+ * The Library's own link uses the same pair for aria-current="page": the copy shown on the Library carries it, the copy shown
+ * everywhere else does not (a hidden link is not in the accessibility tree, so a screen reader meets exactly one). */
+const NAV:readonly (readonly [string,string,string?])[]=[[LESSONS_INDEX,'Learn','/#learn'],['/#explore','Explore'],['/#together','Friends'],[SAFE_GUIDE.path,'Safety','/#safe'],['/about','About','/#about'],[LIBRARY_PATH,'Library',LIBRARY_PATH]]/* Nov 20 2026 (owner): Library, the hub of every footer section, after About */;
 const NAME='Futbol Island';
-const links=()=>NAV.map(([href,label,home])=><li key={href}><a href={href} data-nav-page={home?'':undefined}>{label}</a>{home&&<a href={home} data-nav-home="">{label}</a>}</li>);
+const links=()=>NAV.map(([href,label,home])=><li key={href}><a href={href} data-nav-page={home?'':undefined}>{label}</a>{home&&<a href={home} data-nav-home="" aria-current={home===href?'page':undefined}>{label}</a>}</li>);
 export default function SiteNav(){
  return <nav className={styles.nav} aria-label="Site">
   <a className={styles.brand} href="/" aria-label={`${NAME} home`}><span aria-hidden="true">{[...NAME].map((ch,i)=>ch===' '?' ':<span key={i} style={{color:LOGO_COLOURS[i%LOGO_COLOURS.length]}}>{ch}</span>)}</span></a>

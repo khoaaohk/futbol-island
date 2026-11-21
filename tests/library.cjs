@@ -43,18 +43,23 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert.equal(E.libraryGroupsEs().flatMap(g=>g.cards).length,cards.length);assert(!/—/.test(eh));
  // 4
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
- assert.match(nav,/\[LESSONS_INDEX,'Learn','\/#learn'\],\['\/#explore','Explore'\],\['\/#together','Friends'\],\[SAFE_GUIDE\.path,'Safety','\/#safe'\],\['\/about','About','\/#about'\],\[LIBRARY_PATH,'Library'\]\]/,'header: Learn, Explore, Friends, Safety, About, Library');
+ assert.match(nav,/\[LESSONS_INDEX,'Learn','\/#learn'\],\['\/#explore','Explore'\],\['\/#together','Friends'\],\[SAFE_GUIDE\.path,'Safety','\/#safe'\],\['\/about','About','\/#about'\],\[LIBRARY_PATH,'Library',LIBRARY_PATH\]\]/,'header: Learn, Explore, Friends, Safety, About, Library');
  assert.match(navEs,/\[toEs\('\/about'\),'Acerca de'\],\[toEs\(ES_LIBRARY\),'Biblioteca'\]\]/,'Spanish header: Biblioteca after Acerca de');
  assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\[LIBRARY_PATH,'Library'\]\];/);assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
  // the selected state: a server-rendered bar cannot know its page, so the Library marks itself and CSS selects the link (desktop list and phone menu, /library and /es/library); Learn has no selected rule
- {const css=read('app/(site)/site.module.css');assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[href\$="\/library"\]\{[^}]*background:var\(--btn-pink/,'desktop: Library is the selected link on the Library');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[href\$="\/library"\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
-  assert.equal((css.match(/:has\(\[data-library-hero\]\)[^{]*\{[^}]*btn-pink/g)||[]).length,2,'only the Library link is selected by the marker');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
+ {const css=read('app/(site)/site.module.css');assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[aria-current=page\]\{[^}]*background:var\(--btn-pink/,'desktop: Library is the selected link on the Library');
+  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[aria-current=page\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
+  assert.equal((css.match(/:has\(\[data-library-hero\]\)[^{]*\{[^}]*btn-pink/g)||[]).length,2,'only the Library link is selected by the marker');assert(!/href\$="\/library"\]\{/.test(css),'never by href: the Spanish bar\'s English switch also ends in /library');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
   for(const f of ['app/(site)/learn/lessons/page.tsx','components/site/LessonHub.tsx','lib/site/GuideParts.tsx'])assert(!/data-library-hero/.test(read(f)),`${f}: no marker, so Library is not selected there`);}
  // on the Library the header goes to the home chapters (owner, Nov 20 2026); everywhere else to the reading pages. Both hrefs are real, CSS shows one.
  {const css=read('app/(site)/site.module.css'),homePage=read('app/(site)/page.tsx');
   for(const id of ['learn','explore','together','safe','about'])assert(new RegExp(`\\['${id}','`).test(homePage),`the home page has the #${id} chapter`);
-  assert.match(nav,/<a href=\{href\} data-nav-page=\{home\?'':undefined\}>\{label\}<\/a>\{home&&<a href=\{home\} data-nav-home="">\{label\}<\/a>\}/);
+  assert.match(nav,/<a href=\{href\} data-nav-page=\{home\?'':undefined\}>\{label\}<\/a>\{home&&<a href=\{home\} data-nav-home="" aria-current=\{home===href\?'page':undefined\}>\{label\}<\/a>\}/);
+  /* aria-current (Nov 20 2026): the Library link's shown-on-the-Library copy carries it, in both languages, and no other link does */
+  {const bar=render(React.createElement(L('components/site/SiteNav.tsx').default)),cur=[...bar.matchAll(/<a href="([^"]+)" data-nav-home="" aria-current="page">/g)].map(m=>m[1]);
+   assert.deepEqual(cur,['/library','/library'],'English bar: only Library (desktop list and phone menu) can be the current page');assert.equal((bar.match(/aria-current/g)||[]).length,2);
+   const barEs=render(React.createElement(L('components/es/SiteNavEs.tsx').default)),curEs=[...barEs.matchAll(/<a href="([^"]+)" data-nav-home="" aria-current="page">/g)].map(m=>m[1]);
+   assert.deepEqual(curEs,['/es/library','/es/library'],'Spanish bar: only Biblioteca');assert.equal((barEs.match(/aria-current/g)||[]).length,2);}
   assert.match(css,/\.page \.nav a\[data-nav-home\]\{display:none\}/,'the home-chapter links are hidden on every other page');
   assert.match(css,/\.page:has\(\[data-library-hero\]\) \.nav a\[data-nav-page\]\{display:none\}/,'and shown in place of the page links on the Library only');}
  const cfg=await import(require('node:path').join(root,'next.config.mjs')),red=await cfg.default('phase-production-build').redirects();
