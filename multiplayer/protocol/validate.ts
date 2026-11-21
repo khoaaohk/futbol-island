@@ -1,6 +1,7 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
 import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, KIT_CLUB_LEN, KIT_CLUB_MAX_BYTES, KIT_CLUB_COLOR_LEN, KIT_CLUB_COLOR_MAX_BYTES, CLUB_PALETTE_LEN, CLUB_NO_BACKING_IDX, Cap, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, CAPS_PARTY_HI, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
+import { REEF_COUNTS_MAX } from './rooms';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
 
@@ -282,6 +283,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 2 && inRange(a[1], 0, ISLAND_GOAL.max) ? (a as ServerMsg) : null;
     case S.Map: // map dots (Cap.Map)
       return a.length === 2 && mapCellsOk(a[1]) ? (a as ServerMsg) : null;
+    case S.Reef: // reef counts (Cap.Reef): 1..REEF_COUNTS_MAX counts (a later relay may add reefs; a client reads the ones it knows)
+      return a.length === 2 && Array.isArray(a[1]) && a[1].length >= 1 && a[1].length <= REEF_COUNTS_MAX && a[1].every((n: unknown) => inRange(n, 0, WORLD_HARD)) ? (a as ServerMsg) : null;
     case S.NameLock:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ServerMsg) : null;
     case S.EmoteAsk:

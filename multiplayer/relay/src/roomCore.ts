@@ -6,7 +6,7 @@ import {
   HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, kitForCaps, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
-  pickWorldName, ISLAND_GOAL, MAP_DOTS,
+  pickWorldName, ISLAND_GOAL, MAP_DOTS, RoomCode, REEF_AREAS,
   seatedWire, SEATED_IDLE_MS, WORLD_LEAVE_MAX_BODY,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -113,7 +113,11 @@ interface Member {
   goalSent: number; goalBucket: TokenBucket;
   /** Map dots (Cap.Map): the last S.Map cell list sent on this socket, encoded ('[]' = none / nothing yet: the client starts empty). */
   mapSent: string;
+  /** Reef counts (Cap.Reef): the last S.Reef counts sent on this socket, encoded (REEF_ZERO = none yet: the client starts at zero). */
+  reefSent: string;
 }
+/** Reef counts: the encoded all-zero list (what a fresh socket has; S.Reef goes out only once a count differs from it). */
+const REEF_ZERO = JSON.stringify(new Array(REEF_AREAS).fill(0));
 /** Relay v1.8: one shared live match. owner = the member running the MatchSim (-1 nobody); slots: member -> [team, slot] in join order
  *  (Map insertion order: the owner migrates to the earliest remaining joiner). Memory only: a match never survives an eviction. */
 interface MatchField { owner: number; slots: Map<number, [number, number]>; ownerAt: number }
@@ -464,6 +468,7 @@ export class RoomCore {
       this.visibility();
       if (second) this.members.forEach((r) => this.worldHints(r));
       if (second && now - this.mapAt >= MAP_DOTS.everyMs) { this.mapAt = now; this.mapPass(null); } // map dots: every 5 s, change only
+      if (second) this.reefPass(null); // reef counts: 1 Hz at most, change only (a diver bouncing in and out is coalesced to 1 frame/s)
     }
     this.fanOut(false);
   }
@@ -784,10 +789,7 @@ export class RoomCore {
       const k = (Math.floor(p[0] / D) + 512) * 1024 + (Math.floor(p[2] / D) + 512);
       cellOf.set(d.id, k); counts.set(k, (counts.get(k) || 0) + 1);
     });
-    const apart = new Map<number, Set<number>>(); // recipient id -> ids never counted for them
-    const hold = (a: number, b: number) => { if (a === b) return; let l = apart.get(a); if (!l) apart.set(a, (l = new Set())); l.add(b); };
-    this.members.forEach((m) => m.hides.forEach((id) => { hold(m.id, id); hold(id, m.id); }));
-    this.follow.forEach((f, k) => { if (f.blocked) { const a = Math.floor(k / 64), b = k % 64; hold(a, b); hold(b, a); } });
+    const apart = this.apartSets();
     this.members.forEach((r) => {
       if (!r.peer || !(r.caps & Cap.Map) || (only && r !== only)) return;
       let cells: MapCell[] = [];
@@ -802,6 +804,46 @@ export class RoomCore {
       const text = JSON.stringify(cells);
       if (text === r.mapSent) return;
       r.mapSent = text; this.send(r.peer, [S.Map, cells]);
+    });
+  }
+
+  /** Recipient id -> ids never counted for them (a report either way, a blocked following pair either way): map dots and reef counts. */
+  private apartSets(): Map<number, Set<number>> {
+    const apart = new Map<number, Set<number>>();
+    const hold = (a: number, b: number) => { if (a === b) return; let l = apart.get(a); if (!l) apart.set(a, (l = new Set())); l.add(b); };
+    this.members.forEach((m) => m.hides.forEach((id) => { hold(m.id, id); hold(id, m.id); }));
+    this.follow.forEach((f, k) => { if (f.blocked) { const a = Math.floor(k / 64), b = k % 64; hold(a, b); hold(b, a); } });
+    return apart;
+  }
+
+  /** Reef counts (Cap.Reef, Nov 21 2026): S.Reef to each Cap.Reef member (or only `only`) when its counts changed. Who counts: a
+   *  connected, not quarantined member whose last pose is in reef room 41..47 and not Hidden (a hidden tab or a relay-set away is out;
+   *  a dropped socket is out at once, its slot grace does not count). Each recipient's counts leave out themself and everyone held
+   *  apart from them (as map dots). A quarantined recipient keeps all zeros. Counts only: no id, name or spot ever leaves here, and a
+   *  stranger inside a reef stays hidden on the island exactly as before. Runs on the 1 Hz hint pass, so at most 1 frame/s/socket. */
+  private reefPass(only: Member | null): void {
+    let want = false;
+    this.members.forEach((r) => { if (r.peer && (r.caps & Cap.Reef) && (!only || r === only)) want = true; });
+    if (!want) return;
+    const base = RoomCode.Reef + 1;
+    const total = new Array<number>(REEF_AREAS).fill(0), slot = new Map<number, number>(); // member id -> reef index
+    this.members.forEach((d) => {
+      const i = d.room - base, p = d.pose;
+      if (i < 0 || i >= REEF_AREAS || !p || !d.peer || d.quarantined || (p[7] & PoseFlag.Hidden) !== 0) return;
+      slot.set(d.id, i); total[i]++;
+    });
+    const apart = slot.size ? this.apartSets() : null;
+    this.members.forEach((r) => {
+      if (!r.peer || !(r.caps & Cap.Reef) || (only && r !== only)) return;
+      let text = REEF_ZERO;
+      if (!r.quarantined && slot.size) {
+        const c = total.slice();
+        const off = (id: number) => { const i = slot.get(id); if (i !== undefined) c[i]--; };
+        off(r.id); apart?.get(r.id)?.forEach(off);
+        text = JSON.stringify(c.map((n) => Math.min(WORLD_HARD, Math.max(0, n))));
+      }
+      if (text === r.reefSent) return;
+      r.reefSent = text; this.send(r.peer, [S.Reef, JSON.parse(text) as number[]]);
     });
   }
 
@@ -978,7 +1020,7 @@ export class RoomCore {
       known: new Set(), met: new Set(), hides: new Set(), quarantined: false, ipKey: null, rkey: 't' + token, activeAt: now, ax: NaN, az: NaN,
       quietSent: -1, worldSent: -1, reportBucket: new TokenBucket(REPORT.rate[0], REPORT.rate[1]),
       goalSent: -1, goalBucket: new TokenBucket(ISLAND_GOAL.rate[0], ISLAND_GOAL.rate[1]),
-      mapSent: '[]',
+      mapSent: '[]', reefSent: REEF_ZERO,
     };
   }
 
@@ -1038,6 +1080,7 @@ export class RoomCore {
     if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit && this.vis(m, x)) this.send(peer, [S.Kit, x.id, kitFor(m, x.kit)]); });
     if (this.world) { m.quietSent = -1; m.worldSent = -1; m.goalSent = -1; this.worldHints(m); } // relay v2.0: the first S.Quiet / S.World at once
     if (this.world) { m.mapSent = '[]'; if (m.caps & Cap.Map) this.mapPass(m); } // map dots: a new socket starts empty; its first cells at once
+    if (this.world) { m.reefSent = REEF_ZERO; if (m.caps & Cap.Reef) this.reefPass(m); } // reef counts: a new socket starts at zero; non-zero counts at once
     if (m.caps & Cap.Match) this.fields.forEach((_f, id) => this.send(peer, this.rosterMsg(id)));
     else this.matchDrop(m); // a socket that stopped understanding matches (an old tab resumed the slot) leaves its match
   }

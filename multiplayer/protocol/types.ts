@@ -51,7 +51,7 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048, Map: 4096, KitClub: 8192, KitClubColor: 16384 } as const;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048, Map: 4096, KitClub: 8192, KitClubColor: 16384, Reef: 32768 } as const;
 /** What a PARTY socket is offered (S.Caps): exactly 255, as before relay v2.0, so every old client keeps parsing S.Caps. */
 export const CAPS_ALL = 255;
 /** Relay v2.0 (public worlds, Nov 11 2026; docs/multiplayer/WORLD-HANDOFF.md). Only a WORLD socket (/world/:shard/ws) is offered
@@ -69,7 +69,10 @@ export const CAPS_ALL = 255;
 /** Drip FC colours (Nov 16 2026, docs/dripfc-colors.md): Cap.KitClubColor (a Kit may carry KIT_CLUB_COLOR_LEN slots: the club pieces'
  *  palette colour codes) joins CAPS_WORLD the same way: sent only when S.Caps offered it, forwarded whole only to Cap.KitClubColor
  *  members, its first KIT_CLUB_LEN slots to Cap.KitClub members and its first KIT_LEN slots to everyone else (kitForCaps). */
-export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map | Cap.KitClub | Cap.KitClubColor;
+/** Reef counts (Nov 21 2026, docs/multiplayer-rooms-design.md Phase 5): Cap.Reef (S.Reef, how many players are in each shared reef
+ *  room 41..47, counts only) joins CAPS_WORLD. A client ANDs with S.Caps, so an old relay never offers it and the client keeps its
+ *  friends-only count; an old client never answers Cap.Reef, so it is never sent S.Reef (and would drop the unknown type anyway). */
+export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map | Cap.KitClub | Cap.KitClubColor | Cap.Reef;
 export const CAPS_MAX = 0xffff;
 /** Party Drip FC kits (Nov 16 2026, docs/dripfc-colors.md): Cap.KitClub + Cap.KitClubColor for PARTY sockets too. S.Caps to a party stays
  *  exactly CAPS_ALL (255): a client built before relay v2.0 (Nov 11 2026) parses S.Caps 0..255 only and would drop a larger S.Caps,
@@ -298,6 +301,8 @@ export const S = {
   Map: 44,
   /** Party Drip FC kits (Nov 16 2026), party only: S.CapsHi [45, bits] = the party caps above 255 (CAPS_PARTY_HI), sent right before S.Caps. */
   CapsHi: 45,
+  /** Reef counts (Nov 21 2026), world only (Cap.Reef): S.Reef [46, [n41, ..., n47]] = players in each reef room (REEF_COUNTS). */
+  Reef: 46,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -350,4 +355,7 @@ export type SGoal = [typeof S.Goal, n: number];
 /** Map dots (Cap.Map): [cellX, cellZ, count] per cell (MAP_DOTS); [] = nobody else on the open island. Counts only, no ids. */
 export type MapCell = [cx: number, cz: number, n: number];
 export type SMap = [typeof S.Map, cells: MapCell[]];
-export type ServerMsg = SCapsHi | SMap | SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
+/** Reef counts (Cap.Reef): REEF_AREAS counts, index i = reef room 41 + i (RoomCode.Reef + area), each 0..WORLD_HARD: the OTHER
+ *  connected, visible players of my world in that reef (never me, never anyone held apart from me). Counts only: no id, name or spot. */
+export type SReef = [typeof S.Reef, counts: number[]];
+export type ServerMsg = SReef | SCapsHi | SMap | SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;

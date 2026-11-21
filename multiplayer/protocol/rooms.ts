@@ -29,6 +29,9 @@ export function isRoomCode(c: number): boolean {
 
 /** Dive spots have areas 1..REEF_AREAS (lib/town/water/diveSpots.ts DIVE_SPOTS[].area). */
 export const REEF_AREAS = 7;
+/** S.Reef (Cap.Reef) carries one count per reef, index i = reef room RoomCode.Reef + 1 + i; a validator accepts up to this many so a
+ *  later relay may add reefs without breaking a client (codes stay below 48 + the next room block). */
+export const REEF_COUNTS_MAX = 16;
 /** The room code of a dive spot's reef (41..47), or -1 for an area outside 1..REEF_AREAS. Divers in the same reef share it. */
 export function reefRoom(area: number): number {
   return Number.isInteger(area) && area >= 1 && area <= REEF_AREAS ? RoomCode.Reef + area : -1;
