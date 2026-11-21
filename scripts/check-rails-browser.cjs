@@ -173,7 +173,7 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
  const idx=[...new Set([1,Math.floor(L.length/2),L.length-1])].filter(i=>i>0&&i<L.length);
  await hand(0);await p.waitForTimeout(200);
  for(const i of idx){const href=L[i].href;
-  const vis=await p.evaluate(h=>{const a=[...document.querySelectorAll('nav[data-rail] ul a')].find(x=>x.getAttribute('href')===h);a.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});const r=a.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};},href);
+  const vis=await p.evaluate(h=>{const a=[...document.querySelectorAll('nav[data-rail] ul a')].find(x=>x.getAttribute('href')===h);a.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'});const r=a.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};},href);
   await p.mouse.click(vis.x,vis.y);await p.waitForTimeout(300);await settle(p);await p.waitForTimeout(250);
   const r=await p.evaluate(h=>{const nav=document.querySelector('nav[data-rail]');const t=document.getElementById(h.slice(1));const nb=innerWidth<1280?nav.getBoundingClientRect().bottom:0;
    const H=[...document.querySelectorAll('header')].find(x=>['fixed','sticky'].includes(getComputedStyle(x).position));const line=Math.max(nb,H?H.getBoundingClientRect().bottom:0);
