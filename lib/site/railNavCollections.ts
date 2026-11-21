@@ -58,3 +58,11 @@ export const exhibitsHubRail=():Rail=>hubRail('Museum cases on this page',GALLER
 export const exhibitRail=(o:{story:boolean;sources:boolean}):Rail=>page('On this page',{href:'/exhibits',name:'Museum'},[['facts','The facts'],
  ...(o.story?[['story','The story'] as const]:[]),['game','Take it to your game'],...(o.sources?[['sources','Sources'] as const]:[]),
  ['more','More from the museum'],['read','Learn it on the pitch']]);
+
+/* story books: /books lists the featured book, its shelves by region, the field guides and how the books are made; a book goes Back
+   to All story books and lists its own sections */
+export const regionId=(region:string)=>'r-'+region.toLowerCase().replace(/[^a-z]+/g,'-');
+export const booksHubRail=(featured:boolean,regions:readonly string[]):Rail=>hub('Story books on this page',[...(featured?[['first-book','Start here'] as const]:[]),
+ ...regions.map(r=>[regionId(r),r] as const),['guides','Island field guides'],['how','How the books are made']]);
+export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All story books'},[['read-book','Read the pop-up book'],['story','The story'],['sources','Sources'],
+ ['faq','Questions'],['keep','Keep reading']]);

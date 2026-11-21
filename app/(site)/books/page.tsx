@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {booksHubRail,regionId} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {QuickAnswer,PlayEnd,type Fact} from '@/lib/site/GuideParts';
@@ -30,12 +33,14 @@ export default function BooksHub(){
   <JsonLd data={collectionLd({name:'Football pop-up books for kids',path:BOOKS_PATH,description:LEAD,published:SITE_PUBLISHED,modified:SITE_UPDATED.books,
    items:BUILT_BOOKS.map(id=>bookBySlug(id)!).map(x=>({name:x.fullTitle,path:x.path!}))})}/>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={booksHubRail(!!featured,shelf().map(g=>g.region))} current="#top"/>
+  <header className={`${styles.intro} ${b.head}`} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football pop-up books for kids</h1>
    <QuickAnswer lead={LEAD} facts={FACTS}/>
   </header>
-  {featured&&<section className={b.feature} aria-labelledby="first">
+  {featured&&<section className={`${b.feature} ${tgt.target}`} aria-labelledby="first" id="first-book">
    <a className={b.coverLink} href={featured.path!} tabIndex={-1} aria-hidden="true"><BookCover book={featured} tone="gold" size="lg" as="span"/></a>
    <div className={b.featureText}>
     <h2 className={b.featureTitle} id="first">Start with {featured.fullTitle}</h2>
@@ -43,20 +48,20 @@ export default function BooksHub(){
     <a className={b.openBtn} href={featured.path!}>Read {featured.title}’s story</a>
    </div>
   </section>}
-  {shelf().map(g=>{const s=start;start+=g.books.length;const id='r-'+g.region.toLowerCase().replace(/[^a-z]+/g,'-');
+  {shelf().map(g=>{const s=start;start+=g.books.length;const id=regionId(g.region);
    return <section key={g.region} className={styles.section} aria-labelledby={id}>
-    <h2 className={styles.h2} id={id}>Players from {g.region}</h2>
+    <h2 className={`${styles.h2} ${tgt.target}`} id={id}>Players from {g.region}</h2>
     <BookShelf books={g.books} start={s}/>
    </section>;})}
   <section className={styles.section} aria-labelledby="guides">
-   <h2 className={styles.h2} id="guides">Island field guides</h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id="guides">Island field guides</h2>
    <ul className={b.shelf}><li className={b.shelfItem}>
     <a className={b.shelfLink} href="/fish"><GuideCover name="Fishbook" sub="Sea animals and football" foot={`${SITE_FISH.length} sea animals`} tone="sky"/>
      <span className={b.shelfName}>Fishbook: {SITE_FISH.length} sea animals, each linked to a real football club or story</span><span className={b.shelfMeta}>Open the Fishbook</span></a>
    </li></ul>
   </section>
   <section className={styles.card} aria-labelledby="how">
-   <h2 className={styles.h2} id="how">How the books are made</h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id="how">How the books are made</h2>
    <p>Each story is written for children aged 7 to 12 from published sources, which are listed at the end of every book. Facts about a player are only what those sources say; we never invent quotes. The “What it teaches” lesson and the paper action on each page are our own coaching ideas.</p>
    <p>On the island, the books stand in vending machines around the town; open one to see it pop up in 3D. On this site, each story page has the full text, the sources and a pop-up reader with the same voice.</p>
   </section>
