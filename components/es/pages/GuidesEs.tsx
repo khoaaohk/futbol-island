@@ -1,7 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail,onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {libraryGroupsEs} from '@/components/es/pages/LibraryEs';
+import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {place} from '@/lib/site/pitch';
@@ -61,7 +60,7 @@ export function RulesHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:rules.map(r=>({name:r.h1,path:r.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('rules')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
   {/* batch 3, Nov 17 2026: as English (app/(site)/learn/soccer-rules/page.tsx): the diagram first, icon rows, chapter bands */}
   <Section id="picture" title="Cada regla tiene un diagrama como este">
    <div className={styles.pair}>{offside.scenes.map((s,i)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`o${i}`} scene={s} small/></div>)}</div>
@@ -146,7 +145,7 @@ export function TermsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={setLd}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('terms')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
   <Section id="az" title="Salta a una letra">
    <p>{letters.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letra-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>
@@ -204,7 +203,7 @@ export function PositionsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(p=>({name:p.name,path:p.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('positions')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="pitch" title="Las once posiciones en una cancha">
    <EsDiagram id="all" format="11v11" lines={full.lines} what="las once posiciones del fútbol en una formación 4-3-3" image={formationImage(full.slug)}/>
    <ul>{H.lines.map(l=><li key={l.name}><b>{l.name}.</b> {l.text}</li>)}</ul>

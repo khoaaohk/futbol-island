@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail} from '@/lib/site/railNav';
+import {sectionRail} from '@/lib/site/railNav';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {DRILLS,DRILLS_HUB as HUB,DRILL_SAFETY_LINE,SKILLS,drill,drillLine,drillsBySkill} from '@/lib/site/drills';
@@ -23,7 +23,7 @@ export default function DrillsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:[...AGE_GUIDES,...SKILL_GUIDES].map(g=>({name:g.h1,path:g.path})).concat(DRILLS.map(d=>({name:d.h1,path:d.path})))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={libraryRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro rail={<RailNav rail={sectionRail('drills')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   <Section id="by-age" title="Soccer drills by age">
    <p>Each age page is a short guide: what players can do, how to group them, the best drills and what to avoid.</p>
    <LinkList links={AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb}))}/>

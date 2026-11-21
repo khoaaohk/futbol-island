@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail} from '@/lib/site/railNav';
+import {sectionRail} from '@/lib/site/railNav';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS,FORMATIONS_HUB as HUB,formationsIn,formatGuide} from '@/lib/site/formations';
@@ -24,7 +24,7 @@ export default function FormationsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:FORMATIONS.map(f=>({name:`${f.name} formation`,path:f.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={libraryRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
+  <GuideIntro rail={<RailNav rail={sectionRail('formations')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
   <Section id="what" title="What is a formation?"><Bullets items={HUB.what}/></Section>
   {GUIDE_FORMATS.map(fmt=>{const list=formationsIn(fmt),first=list[0],guide=formatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>

@@ -1,6 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail} from '@/lib/site/railNav';
+import {sectionRail} from '@/lib/site/railNav';
 import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS_HUB,formationBySlug,formatGuide} from '@/lib/site/formations';
 import {NUMBERS,POSITIONS,POSITIONS_HUB as HUB,positionPath} from '@/lib/site/positions';
@@ -26,7 +26,7 @@ export default function PositionsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:POSITIONS.map(p=>({name:p.name,path:p.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={libraryRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
+  <GuideIntro rail={<RailNav rail={sectionRail('positions')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
   <Section id="pitch" title="All eleven positions on one field">
    <Diagram id="all" format="11v11" lines={full.lines} what="the eleven soccer positions in a 4-3-3 formation" image={formationImage(full.slug)}/>
    <ul>{HUB.lines.map(l=><li key={l.name}><b>{l.name}.</b> {l.text}</li>)}</ul>

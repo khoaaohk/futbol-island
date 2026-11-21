@@ -1,7 +1,6 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail,onwardFor,sectionRailEs} from '@/lib/site/railNav';
-import {libraryGroupsEs} from '@/components/es/pages/LibraryEs';
+import {onwardFor,sectionRailEs} from '@/lib/site/railNav';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -45,7 +44,7 @@ export function FormationsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro rail={<RailNav rail={libraryRail(libraryGroupsEs(),true)} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro rail={<RailNav rail={sectionRailEs('formations')} current={H.path}/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="what" title="¿Qué es una formación?"><Bullets items={H.what}/></Section>
   {GUIDE_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>

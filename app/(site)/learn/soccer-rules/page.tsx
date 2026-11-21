@@ -1,6 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import RailNav from '@/components/site/shell/RailNav';
-import {libraryRail} from '@/lib/site/railNav';
+import {sectionRail} from '@/lib/site/railNav';
 import {QA} from '@/components/site/LessonHub';
 import {RULES,RULES_HUB as HUB,ruleBySlug} from '@/lib/site/rules';
 import {CHARTS} from '@/lib/site/sizes';
@@ -27,7 +27,7 @@ export default function RulesHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:RULES.map(r=>({name:r.h1,path:r.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro rail={<RailNav rail={libraryRail()} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro rail={<RailNav rail={sectionRail('rules')} current={HUB.path}/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   {/* batch 3, Nov 17 2026 (audit rank 9): the diagram first, the five lines as icon rows, each rule group a chapter band with the
       first rule's own diagram, six rule cards and "Show all N"; lessons and related pages as one "Keep reading" grid */}
   <Section id="picture" title="Every rule page has a diagram like this">
