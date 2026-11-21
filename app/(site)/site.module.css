@@ -267,6 +267,7 @@
 .page:has(nav[data-rail])>.main>:is(.section,.panel,.pager,.endNote,[data-keep-reading]),
 .page:has(nav[data-rail])>.main>.section>:is(.pair,.panel,.faqList,.quick,dl,ul,ol,div,table,details),
 .page:has(nav[data-rail])>.main>.intro>.quick{max-width:none}
+.page:has(nav[data-rail])>.main>section{max-width:none}/* every section block, whatever its module class (books hub, card and museum pages: audit Nov 20 2026), takes the content width; prose inside keeps its measure */
 .page:has(nav[data-rail])>.main .faqList{max-width:none}/* any FAQ, however deep (plans, tools: audit Nov 20 2026), runs full width */
 .page:has(nav[data-rail])>.main .faqList p{max-width:85ch}
 .page:has(nav[data-rail])>.main>.section>.stack{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
