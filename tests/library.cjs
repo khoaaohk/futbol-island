@@ -30,7 +30,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const html=render(React.createElement(L('app/(site)/library/page.tsx').default));
  assert.equal((html.match(/<h1/g)||[]).length,1);assert.match(html,/<h1[^>]*>The Futbol Island library<\/h1>/);
  for(const c of cards)assert(html.includes(`href="${c.href}"`),`${c.href} is linked`);
- assert.equal((html.match(/href="\/play"/g)||[]).length,3,'the Play button, at the top, at the foot of the group menu and at the close');
+ assert.equal((html.match(/href="\/play"/g)||[]).length,2,'the Play button, at the top and at the close (none in the group menu: owner, Nov 20 2026)');
  {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library groups"/.test(menu[0]),'the group menu is a labelled nav');
   for(const g of groups)assert(menu[1].includes(`href="#group-${g.id}"`)&&html.includes(`id="group-${g.id}"`),`menu jumps to ${g.id}`);}
  assert(!/\/marketing/.test(html)&&!/—/.test(html),'no /marketing link, no em dash');

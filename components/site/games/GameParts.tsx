@@ -1,6 +1,6 @@
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {allShots,GAME_NAMES,GAMES_NAMES,type GamePage,type GameShot} from '@/lib/site/games';
-import {gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
+import {GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
 import {watchPathFor} from '@/lib/site/videos';
 import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
@@ -51,7 +51,7 @@ export function Shots({game}:{game:GamePage}){
 export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
  const c=gameClip(game.id),kind=game.h1.split(':')[0],stills=gameStills(game.id,4);
  const wide=(c?c.pw:game.shots[0].w)>(c?c.ph:game.shots[0].h);
- return <li className={`${g.feature}${flip?' '+g.flip:''}${wide?' '+g.featureWide:''}`}>
+ return <li id={`game-${game.id}`} className={`${g.feature}${flip?' '+g.flip:''}${wide?' '+g.featureWide:''}`}>
   <div className={g.featureMedia}>{c?<ClipFigure c={c}/>:<Shot s={game.shots[0]}/>}</div>
   <div className={g.featureWords}>
    <h3 className={g.featureName}><a href={game.path}>{game.name}</a></h3>
@@ -66,9 +66,9 @@ export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
 }
 /** The top of /games (Nov 20 2026, owner: "a page for games that features futbol island as the primary game and the arcade games
  * below that"): the island game itself, with its beach match clip, two plain lines and the page's biggest Play button (/play). */
-export const ISLAND_FEATURE_KEY='match';
+export {GAMES_LEAD_CLIP as ISLAND_FEATURE_KEY} from '@/lib/site/gameMedia';
 export function IslandFeature({title,lines,play}:{title:string;lines:readonly string[];play:string}){
- const c=islandClips().find(x=>x.key===ISLAND_FEATURE_KEY);
+ const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP);
  return <section className={`${g.island} ${g.bleed}`} aria-labelledby="island-game" data-island-feature="">
   <div className={g.islandMedia}>{c?<ClipFigure c={c} auto priority/>:<Shot s={islandStills()[0]}/>}</div>
   <div className={g.islandWords}>

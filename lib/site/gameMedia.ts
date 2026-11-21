@@ -91,6 +91,9 @@ const ISLAND_DEFS:ClipDef[]=[
  {key:'room',page:'/games',name:'The arcade room on Futbol Island',alt:'The arcade room on the island with its game machines in a row',caption:'The arcade room, where these games live.'},
  {key:'plaza',page:'/games',name:'Meeting friends in the plaza on Futbol Island',alt:'Players meet in the town plaza, waving and passing a ball to each other',caption:'Meet friends in the plaza.'},
 ];
+/** The clip that leads /games (Nov 20 2026, owner: Futbol Island is the primary game). One key: swap it for a new montage's
+ * key (an island clip defined above) and the hub's lead block, its preload and the gallery's skip all follow. */
+export const GAMES_LEAD_CLIP='match';
 export const islandClips=()=>ISLAND_DEFS.map(clip).filter((c):c is GameClip=>!!c);
 /** Island stills (from the same takes), shown in the gallery between the clips. */
 export function islandStills():GameShot[]{

@@ -115,6 +115,7 @@ function check(p,meta,el,game){
  // links
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1].replace(/&amp;/g,'&'));
  for(const l of links){if(/^\/arcade\?game=/.test(l)){assert(PAGES.some(g=>g.play===l),`${where}: deep link ${l}`);continue;}
+  if(l.startsWith('#')){assert(h.includes(` id="${l.slice(1)}"`),`${where}: ${l} jumps to something on the page`);continue;}/* Nov 20 2026: the hub's left menu */
   assert(l.startsWith('/'),`${where}: ${l} is an internal link`);assert(PATHS.has(l.split('#')[0])||l==='/safe-football-game-for-kids',`${where}: link target ${l} exists`);}
  /* Nov 20 2026 (SEO foundation, owner approved): the gold buttons still open the game; a game page also has ONE plain text link
     "Play the whole island" to /play in its content (the hub has none). */

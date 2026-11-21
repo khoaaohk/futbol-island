@@ -50,7 +50,7 @@
 /* Hub: one block per game (Nov 20 2026, owner: "each game should have 4 smaller ones and one large video"; "so much white space"
    at 2,000 px). One upright clip, the words with the Play link at the top, and the stills in one row (3 or 4: they share the row,
    so there is never an empty slot). Phone: clip | words side by side, stills across the foot. From 900 px: clip | words, the stills
-   at the foot of the words column, flipped every other. From 1600 px: two games per row on a wider band (an odd last game runs
+   at the foot of the words column, flipped every other. From 1800 px: two games per row beside the left menu (an odd last game runs
    full width as clip | words | stills). The Play link is in the first screen of every card at every width. */
 .features{list-style:none;padding:0!important;display:grid;gap:var(--s3)!important}
 .feature{display:grid;grid-template-columns:minmax(0,44%) minmax(0,1fr);grid-template-areas:'m w' 't t';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
@@ -75,8 +75,7 @@
  .featureWords .gameLinks{flex-direction:row;align-items:center}
  .thumbs{gap:var(--s2)!important;grid-auto-columns:minmax(0,200px);justify-content:start}/* four fill the column; three keep the four-up size */
 }
-@media(min-width:1600px){
- .features.bleed,.island.bleed{--bw:min(1760px,100vw - 2 * max(var(--gutter),40px))}
+@media(min-width:1800px){
  .features{grid-template-columns:repeat(2,minmax(0,1fr))}
  .feature,.flip{grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
  .feature:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:'m w t';grid-template-rows:auto}
@@ -119,3 +118,23 @@
 .mediaWide .mediaClip{max-width:none}
 .strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
 .stripWide{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* The hub's left menu (Nov 20 2026, owner: "the games page needs a left nav too"): the Library's menu (library.module.css .menu,
+   .shelf, .shelfMain; LibraryMenuSpy) with 16 entries. Below 1280 px the chips run in one row that swipes sideways inside the
+   menu (never the page). From 1280 px the menu is the locked rail on the left; the page's wide blocks fill the column beside
+   it, and the lower sections sit two across (text keeps its 68ch measure). */
+.gshelf{gap:var(--gap)}
+.gmain>header{order:-1}
+.gmain section:not(.island){grid-template-columns:minmax(0,1fr);min-width:0}
+.lower{display:grid;gap:var(--gap);min-width:0}
+@media(max-width:1279px){
+ nav[id].menu ul{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:4px}
+ nav[id].menu ul::-webkit-scrollbar{display:none}
+ nav.menu li{flex:none}
+}
+@media(min-width:1280px){
+ nav.menu ul{flex-direction:column;gap:4px}
+ nav.menu ul a{min-height:44px;padding:8px 14px;font-size:16px}
+ .gmain{gap:var(--gap)}
+ .gmain .bleed.bleed{--bw:100%;width:100%;margin-inline:0!important}
+ .lower{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s5);align-items:start}
+}

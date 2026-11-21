@@ -8,12 +8,16 @@ import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
+import lib from '@/components/site/library.module.css';
+import LibraryMenuSpy from '@/components/site/LibraryMenuSpy';
 
 /** /games (lib/site/games.ts): every arcade game as a reading page for search, with real gameplay loops and stills
  * (lib/site/gameMedia.ts, Nov 16 2026). Static; the only client code is the clips' LoopClip. No game canvas. */
 export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
+const MENU:readonly (readonly [string,string])[]=[['#island-game','Futbol Island'],...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
+ ['#island','Inside the island'],['#pick','Which game to start with'],['#safe','For parents and coaches'],['#faq','Questions']];
 export default function GamesHub(){
  // The island clip's poster is the page's LCP (Nov 20 2026: Futbol Island leads the page): preload it at high priority.
  const top=islandClips().find(c=>c.key===ISLAND_FEATURE_KEY);
@@ -24,7 +28,16 @@ export default function GamesHub(){
   <JsonLd data={gameListLd()}/>
   <JsonLd data={faqLd(H.faq)}/>
   {/* Nov 18 2026: no VideoObject on this page; every clip's one home is its watch page, /videos/<slug> (lib/site/videos.ts) */}
-  <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
+  {/* Nov 20 2026 (owner: "the games page needs a left nav too"): the Library's group menu (library.module.css .menu, LibraryMenuSpy):
+      chips under the intro, from 1280 px a rail locked on the left under the header (the intro comes first by CSS order below
+      that). Plain anchor links. */}
+  <div className={`${lib.shelf} ${gamesCss.gshelf}`}>
+   <nav className={`${lib.menu} ${gamesCss.menu}`} id="games-menu" aria-label="Games on this page">
+    <ul>{MENU.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}</ul>
+   </nav>
+   <LibraryMenuSpy menu="games-menu"/>
+   <div className={`${lib.shelfMain} ${gamesCss.gmain}`}>
+    <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   <IslandFeature title="Futbol Island, the main game" play="Play Futbol Island"
    lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
   <Section id="games" title={`The ${GAMES_WORD} arcade games`}>
@@ -42,6 +55,7 @@ export default function GamesHub(){
   <Section id="play" title="Pick a game and play">
    <ul className={gamesCss.playRow}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
   </Section>
+  <div className={gamesCss.lower}>
   <Section id="pick" title="Which game to start with">
    <ul>{H.pick.map(([k,v])=><li key={k}><b>{k}:</b> {v}</li>)}</ul>
   </Section>
@@ -58,6 +72,9 @@ export default function GamesHub(){
   <Section id="guides" title="Learn the ideas behind the games"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'The shapes Squad Snake builds, with a diagram of each'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
    {path:'/learn/soccer-rules/offside',name:'The offside rule for kids',line:'The line Pass Puzzles draws on the pitch'},{path:'/learn/soccer-drills',name:'Soccer drills for kids',line:'First touch, passing, dribbling and shooting drills'},
    {path:'/learn/soccer-terms',name:'Soccer terms',line:'Give-and-go, through ball, first touch and more'},{path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz'}]}/></Section>
+  </div>
+   </div>
+  </div>
   <p className={site.caption}>{GAME_FOOT}</p>
  </>;
 }

@@ -30,6 +30,16 @@ function Card({c,big}:{c:LibraryCard;big:boolean}){
 export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,groups,menuLabel='Library groups'}:{crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
  menuLabel?:string;hero:{main:LibraryPic;inset:LibraryPic;mainAlt:string;insetAlt:string};groups:readonly LibraryGroup[]}){
  return <div className={l.page}>
+  <div className={l.shelf}>
+   {/* the group menu (Nov 20 2026, owner: "add the left nav to the library"; then "the left nav should be locked on the left
+       side. the content on the right is the only thing that scrolls"): from 1280 px a rail locked under the header from the top
+       of the page, beside the hero too; below that a row of chips under the hero (the hero comes first by CSS order). Plain
+       anchor links; LibraryMenuSpy only marks the band on screen. */}
+   <nav className={l.menu} id="library-menu" aria-label={menuLabel}>
+    <ul>{groups.map(g=><li key={g.id}><a href={`#group-${g.id}`}>{g.title}</a></li>)}</ul>
+   </nav>
+   <LibraryMenuSpy menu="library-menu"/>
+   <div className={l.shelfMain}>
   <div className={l.hero} data-library-hero="">
    <header className={l.heroText}>
     {crumbs}
@@ -42,15 +52,6 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
     <img className={l.heroInset} src={hero.inset.src} alt={hero.insetAlt} width={hero.inset.w} height={hero.inset.h} decoding="async"/>
    </div>
   </div>
-  <div className={l.shelf}>
-   {/* the group menu (Nov 20 2026, owner: "add the left nav to the library"): a sticky left column from 1280 px, a row of
-       chips under the hero below that. Plain anchor links; LibraryMenuSpy only marks the band on screen. */}
-   <nav className={l.menu} id="library-menu" aria-label={menuLabel}>
-    <ul>{groups.map(g=><li key={g.id}><a href={`#group-${g.id}`}>{g.title}</a></li>)}</ul>
-    <a className={`${site.cta} ${l.menuPlay}`} href={PLAY_PATH}>{play}</a>
-   </nav>
-   <LibraryMenuSpy menu="library-menu"/>
-   <div className={l.shelfMain}>
   {groups.map((g,i)=>{const pair=g.cards.length===2;return <section key={g.id} id={`group-${g.id}`} className={l.band} data-tone={i%2===0?'tint':'paper'} aria-labelledby={`lib-${g.id}`} data-library-group={g.id}>
    <div className={l.head}><h2 className={l.h2} id={`lib-${g.id}`}>{g.title}</h2><p>{g.line}</p></div>
    <ul className={l.grid} data-rows={g.cards.length-1} data-flip={!pair&&i%2===1?'':undefined} data-pair={pair?'':undefined}>
