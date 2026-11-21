@@ -32,6 +32,7 @@ import {buildFishingFunnel} from './fishingFunnel';
 import {buildWelcome} from './welcomeReport';
 import {buildMarketingVisits} from './marketingVisitReport';
 import {buildSearch} from './searchReport';
+import {buildSiteFunnel} from './siteFunnelReport';
 import {SEARCH_SINCE} from './searchIds';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
@@ -151,6 +152,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  {let earlier:DailyRollup[]=[];const a=addDays(range.from,-120)<SEARCH_SINCE?SEARCH_SINCE:addDays(range.from,-120),b=addDays(range.from,-1);
   if(a<=b)try{earlier=(await loadRollups(store,dayList(a,b),now,mode)).rollups;}catch{}
   report.search=buildSearch(rollups,earlier);}
+ // Nov 20 2026: site pages to Play, per section (siteFunnelReport.ts), same merged counters.
+ report.siteFunnel=buildSiteFunnel(merged);
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

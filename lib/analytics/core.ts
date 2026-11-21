@@ -31,6 +31,7 @@ import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import type {FishingFunnel} from './fishingFunnel';
 import type {SourcesSummary} from './live';
 import type {SearchReport} from './searchReport';
+import type {SiteFunnelReport} from './siteFunnelReport';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
 import type {HoldoutReport} from './holdoutReport';
@@ -603,6 +604,8 @@ export type Report={
  marketingVisits?:MarketingVisitReport|null;
  /** Nov 10 2026: the Marketing tab's "Search arrivals" (lib/analytics/searchReport.ts): by engine and landing page, exact. */
  search?:SearchReport|null;
+ /** Nov 20 2026: "Site pages to Play" (lib/analytics/siteFunnelReport.ts): per site section views, Play taps, reached, played; exact. */
+ siteFunnel?:SiteFunnelReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

@@ -100,6 +100,33 @@ migration: the new ids use the existing counter columns.
 
 The "By referring site" card uses the referrer-host totals that already exist for every tracked day, so it also covers days
 before Nov 10 2026 (without landing pages).
+## 6b. Site pages to Play in `/admin` (Marketing and SEO tabs, Nov 20 2026)
+
+One table, a row per part of the site: the seven groups of `/learn` (rules, terms, drills and practice plans, lessons,
+positions, formations, other), tools, games, videos, cards, fish, exhibits, books, library, about, the parents' guide, and the
+Coach app (`/coach`) and Scan Trainer (`/scan`). Per row and in total, for the range in the header: views, Play taps, tap rate,
+reached `/play`, how many of those began from search, played, and played per 1,000 views. The home page keeps its own funnel
+(`mk:`) and is shown as a comparison row outside the total. Code: `lib/analytics/siteFunnelIds.ts`,
+`lib/analytics/siteFunnelReport.ts`, `app/admin/SiteFunnelSection.tsx`, counted from `components/VisitTracker.tsx`.
+
+| Count | Meaning |
+| --- | --- |
+| `sf:v_<section>` | a page of the section was shown (one per page view) |
+| `sf:p_<section>` | a link to `/play` was tapped on such a page (once per page view) |
+| `sf:r_<section>` | that tab arrived at `/play` within 10 minutes of the tap |
+| `sf:rs_<section>` | the same arrival, when the visit began from a search engine or AI assistant (a part of `sf:r_`; a lowest figure, a reload forgets where the visit began) |
+| `sf:d_<section>` | that tab then really played (entered the game), once per tab |
+
+19 sections × 5 = 95 fixed ids. Spanish pages (`/es/…`) count with their English section.
+
+**What was added to collection (for the privacy policy):** five more anonymous totals per day for each part of the site (for
+example "Learn: rules, 120 views, 9 Play taps, 7 reached the game, 4 played"). The section is a fixed name worked out in the
+browser from the first part of the page's path; the page itself, the URL, search words and anything about the visitor are
+never sent. No new identifier or cookie. On the device, three per-tab `sessionStorage` marks (`fi-sf-play`, `fi-sf-reached`,
+`fi-sf-played`) carry "this tab tapped Play on a page of section X at time T" from the page to `/play`; they hold a section
+name and a time, are never sent and end with the tab, exactly like the home page's `fi-mk-play`. Nothing is counted under
+Do-Not-Track or Global Privacy Control, for bots, on previews, in club embeds or from a staff device, as before. No database
+migration: the new ids use the existing counter columns.
 
 ## At deploy time
 

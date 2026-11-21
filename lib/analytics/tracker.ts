@@ -121,6 +121,10 @@ const pageHideHooks=new Set<()=>void>();
  *  Read by lib/analytics/partyRetentionEvents.ts for `mp:guest_new` (Phase C, off by default). Never leaves the device on its own. */
 let startRt:0|1|null=null;
 export const sessionStartRt=():0|1|null=>startRt;
+/** Nov 20 2026 (siteFunnelIds.ts sf:rs_): the session this page load STARTED came from a search engine or AI assistant. A module
+ *  variable only (no storage), so it is false again after a reload; read at a Play tap on a site page. Never sent on its own. */
+let startSearch=false;
+export const sessionFromSearch=():boolean=>startSearch;
 export function onPageHide(fn:()=>void):()=>void{pageHideHooks.add(fn);return()=>{pageHideHooks.delete(fn);};}
 /** Learning counters waiting for the next beat (id → n). Only filled while a tracker runs. */
 const countAcc=new Map<string,number>();
@@ -301,7 +305,7 @@ export function startTracker(env:TrackerEnv){
    if(Object.keys(u).length)body.u=u;
    // Nov 10 2026 (searchIds.ts): an arrival from a search engine or AI assistant counts once per (landing page, engine name),
    // on the next beat. The engine comes from the referrer host above, else from a link's utm_source; no query text is read.
-   {const eng=engineOf(r)||engineOf(u.source);if(eng)count(searchId(p,eng));}
+   {const eng=engineOf(r)||engineOf(u.source);if(eng)count(searchId(p,eng));startSearch=!!eng;}
    startRt=null;try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;startRt=body.rt as 0|1;}}catch{}
    try{const k=env.player?.();if(k)Object.assign(body,'ph' in k?{ph:k.ph}:{pi:k.pi});}catch{}
    if((n.maxTouchPoints||0)>1)body.tp=1;

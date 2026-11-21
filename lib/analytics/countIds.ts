@@ -52,6 +52,10 @@
  *                                  or AI assistant, per landing page and engine NAME. Never search words, a URL or an id.
  *   ws:<event>                     the smart Welcome back suggestion (WELCOME_COUNT_IDS below, Nov 14 2026): shown / tapped /
  *                                  acted per kind, notes per holdout arm and returns within 7 days per arm
+ *   sf:<step>_<section>            site pages to Play (SITE_FUNNEL_COUNT_IDS, lib/analytics/siteFunnelIds.ts; Nov 20 2026): per public
+ *                                  section, the Coach app and Scan Trainer: page views, Play taps (once per view), tabs that then
+ *                                  reached /play (and how many of those began from search) and tabs that really played. Never a page
+ *                                  or anything about the visitor.
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
@@ -61,6 +65,7 @@ import {WELCOME_KINDS} from '../welcome/kinds';
 import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
 import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
+import {SITE_FUNNEL_COUNT_IDS} from './siteFunnelIds';
 import {isSearchId} from './searchIds';
 import {GASHAPON_TOYS} from '../gashapon/toys';
 
@@ -411,6 +416,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...GASHAPON_COUNT_IDS,// gs: gashapon machines, the toy viewer and the Toy Shelf (gashaponEvents.ts, Nov 8 2026)
  ...COACH_COUNT_EVENTS.map(([e])=>'ca:'+e),// ca: the coach app (components/coach/CoachApp.tsx, Nov 16 2026)
  ...SCAN_COUNT_EVENTS.map(([e])=>'sn:'+e),// sn: Scan Trainer (components/scan/ScanApp.tsx, Nov 16 2026)
+ ...SITE_FUNNEL_COUNT_IDS,// sf: site pages to Play, per section (siteFunnelIds.ts, Nov 20 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
