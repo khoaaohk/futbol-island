@@ -61,7 +61,7 @@
 .featureWords .featureName a{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:4px;text-underline-offset:.16em}
 @media(min-width:900px){
  .featureMedia .clipFig{width:100%}
- .feature{grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:var(--s4);padding:var(--s3);align-items:center}
+ .feature{grid-template-columns:minmax(0,260px) minmax(0,1fr);grid-template-areas:'m w';gap:var(--s4);padding:var(--s3);align-items:center}
  .flip{grid-template-columns:minmax(0,1fr) minmax(0,260px);grid-template-areas:'w m'}
  .featureWide{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:'m w'}
  .featureWords{gap:var(--s2)}
