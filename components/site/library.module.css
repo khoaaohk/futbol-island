@@ -74,5 +74,34 @@
 .close .h2{margin:0;font-size:clamp(30px,2vw + 20px,46px);line-height:1.06;font-weight:600;letter-spacing:-.028em}
 .close p{margin:var(--s1) 0 0;max-width:52ch;color:var(--ink)}
 @media(min-width:900px){.close{grid-template-columns:minmax(0,1fr) auto;gap:var(--s5);padding-block:88px}}
-@media(prefers-reduced-motion:reduce){.grid a,.pic img{transition:none}.grid a:hover img{scale:none}}
-@media print{.hero,.band,.close{margin-inline:0;padding:0;background:none}.heroArt,.pic{display:none}}
+/* The group menu (owner, Nov 20 2026: "add the left nav to the library"). Below 1280 px: a row of chips under the hero, on the
+   bands' own edges. From 1280 px: a sticky column left of the bands, with a Play button at its foot; the bands become panels
+   on one pair of outer margins (at most 1840 px wide), so a large monitor is filled. The marked link (data-on) is the band in
+   the middle of the screen (LibraryMenuSpy.tsx); only colours change, so nothing shifts. */
+.band{scroll-margin-top:84px}
+.menu{margin-inline:calc(50% - 50vw);padding:0 max(var(--gutter),calc(50vw - 590px)) var(--s3)}
+.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.menu li{margin:0;max-width:none}
+.menu ul a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap);padding:0 16px;border-radius:var(--r-pill);background:var(--surface);color:var(--ink);font-size:16px;line-height:1.2;font-weight:700;text-decoration:none;transition:background-color .16s}
+@media(hover:hover){.menu ul a:hover{background:color-mix(in srgb,var(--gold) 45%,var(--surface))}}
+.menu ul a[data-on]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
+.menu a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+.menu .menuPlay{display:none}
+@media(min-width:1280px){
+ .hero{padding-inline:max(var(--gutter),calc(50vw - 920px));padding-bottom:var(--s4);grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr)}.heroMain{aspect-ratio:16/10;max-height:62vh}.heroArt{padding-bottom:6%}
+ .shelf{margin-inline:calc(50% - 50vw);padding:0 max(var(--gutter),calc(50vw - 920px)) var(--s4);display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--s4);align-items:start}
+ .menu{position:sticky;top:92px;margin:0;padding:var(--s2) 0;display:grid;gap:var(--s3);justify-items:start;max-height:calc(100vh - 110px);overflow-y:auto}
+ .menu ul{flex-direction:column;flex-wrap:nowrap;gap:4px;width:100%}
+ .menu ul a{display:flex;width:100%;min-height:48px;padding:10px 16px;border-radius:var(--r-md);background:transparent;font-size:18px}
+ .menu .menuPlay{display:inline-flex;margin-left:8px}
+ .shelfMain{display:grid;min-width:0}
+ .shelfMain .band{margin-inline:0;padding:56px 44px;border-radius:var(--r-lg)}
+ .shelfMain .close{margin:var(--s3) 0 0;border-radius:var(--r-lg);padding:64px 44px}
+}
+@media(min-width:1600px){
+ .card a{grid-template-columns:208px minmax(0,1fr);gap:24px}
+ .card .name{font-size:22px}.card .line{font-size:17px}
+ .feature .name{font-size:38px}
+}
+@media(prefers-reduced-motion:reduce){.grid a,.pic img,.menu ul a{transition:none}.grid a:hover img{scale:none}}
+@media print{.hero,.band,.close,.shelf{margin-inline:0;padding:0;background:none}.heroArt,.pic,.menu{display:none}.shelf{display:block}}

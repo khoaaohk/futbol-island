@@ -4,11 +4,12 @@ import type {LibraryCard,LibraryGroup,LibraryPic} from '@/lib/site/library';
 import {PLAY_PATH} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import l from './library.module.css';
+import LibraryMenuSpy from './LibraryMenuSpy';
 /**
  * The Library page (/library and /es/library; owner, Nov 20 2026: "a page that houses all the items at the bottom of the
- * footer", then "make the new hub page visually appealing"). Server-rendered, no script. A hero with two pictures from the
+ * footer", then "make the new hub page visually appealing"). Server-rendered; the only script is LibraryMenuSpy (the group menu's highlight). A hero with two pictures from the
  * game, then one band per group: the group's first card is large, the others sit beside it, and every other band swaps
- * sides. Each card is one link with the section's own lead picture (lib/site/library.ts LIBRARY_PICS), its name, a count from
+ * sides. A group menu (chips under the hero; a sticky left column from 1280 px) jumps to each band. Each card is one link with the section's own lead picture (lib/site/library.ts LIBRARY_PICS), its name, a count from
  * the data and one plain line. Only the hero pictures load eagerly; the rest are lazy with their real width and height.
  */
 function Pic({c}:{c:LibraryCard}){
@@ -26,8 +27,8 @@ function Card({c,big}:{c:LibraryCard;big:boolean}){
   </span>
  </a></li>;
 }
-export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,groups}:{crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
- hero:{main:LibraryPic;inset:LibraryPic;mainAlt:string;insetAlt:string};groups:readonly LibraryGroup[]}){
+export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,groups,menuLabel='Library groups'}:{crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
+ menuLabel?:string;hero:{main:LibraryPic;inset:LibraryPic;mainAlt:string;insetAlt:string};groups:readonly LibraryGroup[]}){
  return <div className={l.page}>
   <div className={l.hero} data-library-hero="">
    <header className={l.heroText}>
@@ -41,7 +42,16 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
     <img className={l.heroInset} src={hero.inset.src} alt={hero.insetAlt} width={hero.inset.w} height={hero.inset.h} decoding="async"/>
    </div>
   </div>
-  {groups.map((g,i)=>{const pair=g.cards.length===2;return <section key={g.id} className={l.band} data-tone={i%2===0?'tint':'paper'} aria-labelledby={`lib-${g.id}`} data-library-group={g.id}>
+  <div className={l.shelf}>
+   {/* the group menu (Nov 20 2026, owner: "add the left nav to the library"): a sticky left column from 1280 px, a row of
+       chips under the hero below that. Plain anchor links; LibraryMenuSpy only marks the band on screen. */}
+   <nav className={l.menu} id="library-menu" aria-label={menuLabel}>
+    <ul>{groups.map(g=><li key={g.id}><a href={`#group-${g.id}`}>{g.title}</a></li>)}</ul>
+    <a className={`${site.cta} ${l.menuPlay}`} href={PLAY_PATH}>{play}</a>
+   </nav>
+   <LibraryMenuSpy menu="library-menu"/>
+   <div className={l.shelfMain}>
+  {groups.map((g,i)=>{const pair=g.cards.length===2;return <section key={g.id} id={`group-${g.id}`} className={l.band} data-tone={i%2===0?'tint':'paper'} aria-labelledby={`lib-${g.id}`} data-library-group={g.id}>
    <div className={l.head}><h2 className={l.h2} id={`lib-${g.id}`}>{g.title}</h2><p>{g.line}</p></div>
    <ul className={l.grid} data-rows={g.cards.length-1} data-flip={!pair&&i%2===1?'':undefined} data-pair={pair?'':undefined}>
     {g.cards.map((c,k)=><Card key={c.href} c={c} big={k===0||pair}/>)}
@@ -51,5 +61,7 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
    <div><h2 className={l.h2} id="lib-play">{playTitle}</h2><p>{playLine}</p></div>
    <a className={site.cta} href={PLAY_PATH}>{play}</a>
   </section>
+   </div>
+  </div>
  </div>;
 }
