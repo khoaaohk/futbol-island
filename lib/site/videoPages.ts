@@ -50,8 +50,8 @@ const list=(l:string[])=>`${l.slice(0,-1).join(', ')} and ${l[l.length-1]}`;
 const ISLAND_ABOUT:Record<string,()=>string[]>={
  walk:()=>[DEFINITION,safe('No accounts')],fly:()=>[safe('Free, with no pop-up or tracking ads')],plaza:()=>[safe('No open chat'),safe('Grown-ups stay in charge')],
  stadium:()=>[SPONSOR_BOARDS_LINE],fishing:()=>[`The Fishbook has a page for each of the ${SITE_FISH.length} sea animals you can catch on the island.`],
- matchmix:()=>[hubLine('7v7-9v9-11v11')],
- match:()=>[hubLine('7v7-9v9-11v11'),hubLine('passing-and-support')],kitstudio:()=>exhibitById('shirts')!.facts.slice(1,3),
+ matchmix:()=>[hubLine('7v7-9v9-11v11'),hubLine('futsal-for-kids')],
+ match:()=>[hubLine('passing-and-support')],kitstudio:()=>exhibitById('shirts')!.facts.slice(1,3),
  museum:()=>{const g=GALLERIES.filter(x=>SITE_EXHIBITS.some(e=>e.gallery===x.id));return [`The museum has ${SITE_EXHIBITS.length} cases in ${g.length} galleries: ${list(g.map(x=>x.title))}.`];},
  room:()=>[`The arcade room has ${GAME_PAGES.length} machines: ${list(GAME_PAGES.map(x=>x.name))}.`],
 };
