@@ -34,6 +34,7 @@ GAMES = [
 # under its cap (tests/seo-games.cjs), and they are NOT counted on the hub picture. Move an entry up into GAMES when it is placed.
 UNPLACED = [
  ('safe-hands-soccer-goalkeeper-game', ['safehands-phone', 'safehands-cup'], [], 'Safe Hands', 'Free soccer goalkeeper game', 56),
+ ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
 ]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']

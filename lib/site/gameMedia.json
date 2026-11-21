@@ -281,6 +281,18 @@
     "h": 1039,
     "bytes": 40152
    }
+  },
+  "keepyuppy": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 312954,
+   "webm": 443928,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 41646
+   }
   }
  },
  "shots": {
@@ -664,6 +676,32 @@
     "w": 480,
     "h": 1039,
     "bytes": 33156
+   }
+  ],
+  "keepyuppy": [
+   {
+    "file": "keepyuppy-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38994
+   },
+   {
+    "file": "keepyuppy-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 42284
+   },
+   {
+    "file": "keepyuppy-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 41830
+   },
+   {
+    "file": "keepyuppy-4.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 56982
    }
   ]
  }

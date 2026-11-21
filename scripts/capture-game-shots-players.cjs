@@ -25,8 +25,23 @@ const safehands={start:'[data-safehands-play]',meta:shState,async play(H){const 
    const p=s.plant||{side:0,high:false,power:.5},hard=p.power>(sh.wet?.5:.72),a=p.side===0?(hard?(p.high?[0,-80]:[-80,0]):null):[p.side*80,p.high?-60:6];
    if(a)await drag([[cx,by],[cx+a[0]*.5,by+a[1]*.5],[cx+a[0],by+a[1]]]);continue;}
   await wait(30);}}};
+/** Keepy-Uppy Beat (Nov 21 2026): a juggler who plays every ball on the beat with real touches, timed on the game's own song clock
+ *  (as scripts/check-keepyuppy-browser.cjs does): taps, swipes for the swipe tricks, holds for the Neck Stall. It taps through the
+ *  track card and Play again. Seed the save with --ls (every track open, every lesson seen, timing set) and pick a track with --pre. */
+const kuState=()=>{const h=window.__keepyuppy,g=h&&h.game,s=g&&g.state;return s?{ui:h.phase,mode:g.mode,track:g.track.id,t:+h.time.toFixed(2),score:s.score,combo:s.combo,lives:s.lives,next:(g.next()||{}).trick||''}:{ui:h&&h.phase};};
+const keepyuppy={start:'[data-keepyuppy-play]',meta:kuState,async play(H){const {page,cdp,wait}=H;let last=-1,id=0;
+ const touch=(type,x,y,i)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,id:i}]});
+ const until=async at=>{const d=at-Date.now();if(d>4)await wait(d-3);while(Date.now()<at);};
+ while(!H.stop){const t0=Date.now(),s=await page.evaluate(()=>{const h=window.__keepyuppy,g=h&&h.game;if(!h||!g||h.phase!=='playing'||!h.loop)return null;const L=h.view.layout,r=h.stage,n=g.chart.notes.filter(x=>x.st===0)[0];
+   return {time:h.time,n:n&&{i:n.i,t:n.t,tEnd:n.tEnd,lane:n.lane,kind:n.kind,dir:n.dir},x:r.left,y:r.top+L.padTop+L.padH*.45,w:L.laneW};}),t1=Date.now();
+  if(!s){const b=page.locator('[data-keepyuppy-go],[data-keepyuppy-again]').first();if(await b.isVisible().catch(()=>false)){await wait(900);await b.tap().catch(()=>{});}await wait(150);continue;}
+  const n=s.n;if(!n||n.i<=last){await wait(40);continue;}
+  const at=(t0+t1)/2+(n.t-s.time)*1000-8;if(at-Date.now()>380){await wait(Math.min(at-Date.now()-250,400));continue;}
+  last=n.i;const x=s.x+(n.lane+.5)*s.w,y=s.y,k=++id;await until(at);await touch('touchStart',x,y,k);
+  if(n.kind==='swipe'){const dx=n.dir==='side'?(n.lane===0?34:-34):n.dir==='up'?0:26,dy=n.dir==='side'?0:n.dir==='up'?-40:-26;await wait(24);await touch('touchMove',x+dx/2,y+dy/2,k);await wait(24);await touch('touchMove',x+dx,y+dy,k);await wait(24);}
+  else if(n.kind==='hold')await until(at+(n.tEnd-n.t)*1000+50);else await wait(34);await touch('touchEnd');}}};
 module.exports={
- safehands,
+ safehands,keepyuppy,
  airhockey:{start:'[data-air-play]',meta:airState,async play(H){const {page,cdp,wait}=H;
   await page.waitForFunction(()=>window.__airhockey&&window.__airhockey.phase==='playing',null,{timeout:10000});
   const L=await page.evaluate(()=>{const k=window.__airhockey;const r=document.querySelector('[data-air-stage]').getBoundingClientRect();return {...k.layout,left:r.left,top:r.top};});
