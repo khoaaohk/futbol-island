@@ -14,15 +14,15 @@
  *    on the same local play day.
  */
 export const ARCADE_LAST_KEY='fi2-arcade-last-v1';
-export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey','lineup','trophydrop','rollball','ballblaster','keepyuppy','holdtheline','footgolf','flickit',
- 'runner_daily','runner_cup','runner_legend','pinball_derby','pinball_final','kitrush_daily','snake_daily','lineup_daily','rollball_daily','ballblaster_daily','keepyuppy_daily','holdtheline_daily','footgolf_daily','flickit_daily'] as const;
+export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey','lineup','trophydrop','rollball','ballblaster','keepyuppy','footgolf','flickit','popup',
+ 'runner_daily','runner_cup','runner_legend','pinball_derby','pinball_final','kitrush_daily','snake_daily','lineup_daily','rollball_daily','ballblaster_daily','keepyuppy_daily','footgolf_daily','flickit_daily','popup_daily'] as const;
 /** The daily-run and elite-tier entries: the cabinet, the mode the Welcome back tap opens (`mode` = a tier, `today` = the daily
  *  run) and the words for "Your last <label> was …". */
 export const LAST_SCORE_MODES:Partial<Record<string,{game:string;label:string;mode?:string;today?:true}>>={
  runner_daily:{game:'runner',label:'Daily Run',today:true},runner_cup:{game:'runner',label:'Cup Final run',mode:'cup'},
  runner_legend:{game:'runner',label:'Legend run',mode:'legend'},pinball_derby:{game:'pinball',label:'Derby Night game',mode:'derby'},
  pinball_final:{game:'pinball',label:'World Final game',mode:'final'},kitrush_daily:{game:'kitrush',label:'Daily Rush',today:true},
- snake_daily:{game:'snake',label:'Daily Squad',today:true},lineup_daily:{game:'lineup',label:'Daily Line-Up',today:true},rollball_daily:{game:'rollball',label:'Daily Roll',today:true},ballblaster_daily:{game:'ballblaster',label:'Daily Blast',today:true},keepyuppy_daily:{game:'keepyuppy',label:'Track of the Day',today:true},holdtheline_daily:{game:'holdtheline',label:'Match of the Day',today:true},footgolf_daily:{game:'footgolf',label:'Daily Hole',today:true},flickit_daily:{game:'flickit',label:'Daily Flick',today:true},
+ snake_daily:{game:'snake',label:'Daily Squad',today:true},lineup_daily:{game:'lineup',label:'Daily Line-Up',today:true},rollball_daily:{game:'rollball',label:'Daily Roll',today:true},ballblaster_daily:{game:'ballblaster',label:'Daily Blast',today:true},keepyuppy_daily:{game:'keepyuppy',label:'Track of the Day',today:true},footgolf_daily:{game:'footgolf',label:'Daily Hole',today:true},flickit_daily:{game:'flickit',label:'Daily Flick',today:true},popup_daily:{game:'popup',label:'Daily Arena',today:true},
 };
 const playDay=(ms:number)=>{const d=new Date(ms);return d.getFullYear()*1e4+d.getMonth()*100+d.getDate();};
 export type LastScoreGame=typeof LAST_SCORE_GAMES[number];

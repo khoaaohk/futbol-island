@@ -1,5 +1,5 @@
 -- Futbol Island: FootGolf Island board (Nov 21 2026; lib/arcade/leaderboard.ts BOARD_GAMES 'footgolf', lib/arcade/footgolf/core.ts).
--- NOT APPLIED. The owner pastes ONE file instead of this one: docs/arcade-aaa/footgolf-supabase.sql holds the same allow-list plus the analytics key.
+-- NOT APPLIED. The owner pastes ONE file instead of this one: docs/arcade-aaa/new-games-nov22-supabase.sql holds the same allow-list plus the analytics key.
 -- This copy exists so the migrations folder, replayed in order, ends with an allow-list that names every board.
 -- A superset of 20261209_holdtheline_boards.sql: the same list plus 'footgolf'. Running it twice is harmless. (Numbered after Flick It's 20261211/20261212 on
 -- branch game-flickit; Nov 22 2026 release: it also keeps 'flickit', so it is a superset of 20261211_flickit_boards.sql.)

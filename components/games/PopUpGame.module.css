@@ -1,0 +1,80 @@
+/* Pop-Up Shot shell (Nov 21 2026, docs/arcade-aaa/popup-direction.md): comic HUD over the full-bleed 3D arena. The stage fills the
+ * screen on phones and desktops (each arena has a wide and a tall camera). Tokens: ../games/comic. No brush font on buttons. */
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;background:var(--cm-dots),#f08a5c}
+.game button{font-family:var(--cm-ui)}
+.stage{position:absolute;inset:0;overflow:hidden;background:#8fd4ee;isolation:isolate;touch-action:none;overscroll-behavior:none}
+.play{position:absolute;inset:0;z-index:1;touch-action:none;outline:none}
+.play:focus-visible{outline:4px solid var(--cm-ink);outline-offset:-4px}
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+
+/* the finger's path: a chalk streak */
+.swipe{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;overflow:visible}
+.swipe path{fill:none;stroke:var(--cm-paper);stroke-width:10;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .22s;filter:drop-shadow(2px 2px 0 var(--cm-ink))}
+.swipe path[data-live]{opacity:.92;transition:none}
+.reticle{position:absolute;left:0;top:0;z-index:2;width:54px;height:54px;margin:-27px 0 0 -27px;border:4px dashed var(--cm-sun);border-radius:50%;box-shadow:0 0 0 3px var(--cm-ink);pointer-events:none;opacity:0;animation:puSpin 2.4s linear infinite}
+.reticle[data-on]{opacity:1}
+@keyframes puSpin{to{rotate:1turn}}
+
+/* HUD: the arena and the clock on a tab under the bar; combo and streak badges; the rack of balls at the bottom */
+.strip{position:absolute;z-index:3;left:50%;translate:-50% 0;top:calc(var(--arcade-bar-clear,56px) + 6px + env(safe-area-inset-top,0px));display:flex;align-items:stretch;box-sizing:border-box;max-width:calc(100% - 16px);height:36px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap}
+.place{display:flex;align-items:center;padding:0 9px;background:var(--cm-ink);color:var(--cm-paper);font:italic 900 14px/1 var(--cm-title);letter-spacing:.02em}
+.clock{--cm-numeral-size:26px;display:flex;align-items:center;min-width:42px;justify-content:center;padding:0 8px}
+.clock[data-low]{color:var(--cm-red);animation:puPulse 1s ease-in-out infinite}
+@keyframes puPulse{50%{scale:1.15}}
+.combo{position:absolute;z-index:3;right:12px;top:calc(var(--arcade-bar-clear,56px) + 50px + env(safe-area-inset-top,0px));display:grid;justify-items:center;padding:5px 10px 4px;border:3px solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);rotate:3deg;pointer-events:none;animation:puBump .3s cubic-bezier(.2,1.6,.4,1) both}
+.combo b{font:italic 900 22px/1 var(--cm-title)}
+.combo small{font:800 10px/1.1 var(--cm-ui)}
+.streak{position:absolute;z-index:3;left:12px;top:calc(var(--arcade-bar-clear,56px) + 50px + env(safe-area-inset-top,0px));padding:5px 9px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 12px/1 var(--cm-ui);rotate:-2deg;pointer-events:none}
+.streak b{font:italic 900 17px/1 var(--cm-title)}
+.streak[data-fire]{background:var(--cm-sun);animation:puPulse .8s ease-in-out infinite}
+.power{position:absolute;z-index:3;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:6px 10px;border:3px solid var(--cm-ink);background:var(--cm-teal);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1 var(--cm-ui);pointer-events:none}
+.power b{font:italic 900 18px/1 var(--cm-title)}
+.rack{position:absolute;z-index:3;left:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:5px;padding:5px 9px 5px 7px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);pointer-events:none}
+.rack i{width:16px;height:16px;border:2.5px solid var(--cm-ink);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--cm-ink) 0 2.5px,#fffaf0 3px)}
+.rack i[data-off]{background:#d9cdb4;opacity:.45}
+.rack small{margin-left:4px;font:800 12px/1 var(--cm-ui)}
+.rack[data-quick]{background:var(--cm-teal)}.rack[data-quick] small{color:var(--cm-paper)}
+.count{position:absolute;z-index:4;left:50%;top:40%;translate:-50% -50%;padding:8px 22px 6px;border:4px solid var(--cm-ink);background:var(--cm-sun);box-shadow:6px 6px 0 var(--cm-ink);font:italic 900 40px/1 var(--cm-title);rotate:-3deg;pointer-events:none;animation:puBump .35s cubic-bezier(.2,1.6,.4,1) both}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(62px + env(safe-area-inset-bottom,0px));translate:-50% 0;box-sizing:border-box;width:max-content;max-width:calc(100% - 28px);margin:0;padding:6px 11px 5px;border:2px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.25 var(--cm-ui);text-align:center;pointer-events:none;animation:puBump .4s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes puBump{0%{scale:.4}100%{scale:1}}
+
+/* words: a starburst and the points where the target went down; the lesson words bigger, up high */
+.words{position:absolute;inset:0;z-index:4;pointer-events:none}
+.word{position:absolute;left:50%;top:32%;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:puWord .9s cubic-bezier(.2,1.4,.4,1) both}
+.word[data-teach]{left:50%!important;top:25%!important;animation-duration:1.4s}
+.pts{--cm-numeral-size:26px;display:block;color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
+@keyframes puWord{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%{scale:1}84%{opacity:1;translate:-50% -74%}100%{opacity:0;translate:-50% -92%}}
+
+/* cards */
+.art{display:block;width:min(250px,74%);height:auto;margin:2px auto 8px}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.picker{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 6px 12px 0}
+.arenaBtn{display:grid;gap:2px;min-height:44px;padding:6px 9px;border:3px solid var(--cm-ink);background:var(--cm-white);box-shadow:3px 3px 0 var(--cm-ink);color:var(--cm-ink);font:800 13px/1.1 var(--cm-ui);text-align:left;cursor:pointer}
+.arenaBtn small{font:700 11px/1.15 var(--cm-ui);opacity:.8}
+.arenaBtn[aria-pressed=true]{background:var(--cm-sun)}
+.arenaBtn:active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink)}
+.picker>.arenaBtn:last-child:nth-child(odd){grid-column:1/-1}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 6px 6px 0;margin-bottom:12px}
+.actions>[data-wide]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 4px}
+.score{--cm-numeral-size:64px;display:block}
+.score[data-new-best]{animation:puBump .6s cubic-bezier(.2,1.6,.4,1) both}
+.stamp{position:absolute;right:-16px;top:-20px}
+.near{display:inline-block;margin:4px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.bonus{display:flex;justify-content:center;gap:10px;margin:0 0 10px;font:800 13px/1 var(--cm-ui)}
+.bonus span{padding:4px 8px;border:2px solid var(--cm-ink);background:var(--cm-sun)}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardLearn{margin:0 0 6px;text-align:center}
+@media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:50px}.art{width:min(170px,52%)}}
+@media (max-height:600px){.art{display:none}.fact{display:none}}
+@media (max-width:374px){.place{font-size:12px;padding:0 6px}.rack small{display:none}}
+@media (prefers-reduced-motion:reduce){.score[data-new-best],.hint,.combo,.count{animation:none}.clock[data-low],.streak[data-fire]{animation:none}.reticle{animation:none}.word{animation-duration:.7s}}

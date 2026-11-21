@@ -2,6 +2,8 @@
 export type ArcadePoseOptions={vx?:number;vz?:number;charge?:number;slide?:number;stun?:number;celebrate?:number;anticipate?:number;stride?:number;dribbling?:boolean;
  /** Contact coordinates in unscaled rig-local metres; latched for the follow-through. */
  strikeX?:number;strikeZ?:number;shotPower?:number;actionKind?:'pass'|'shot'|'loft';
+ /** Which boot strikes (1 right, -1 left); unset lets the rig pick (Pop-Up Shot, Nov 21 2026). */
+ kickSide?:-1|1;
  receive?:number;receiveProgress?:number;
  keeper?:number;jockey?:number;dive?:import('../graphics/player').PlayerMotion['dive'];jumpProgress?:number;jumpHeight?:number;
  reaction?:import('../graphics/player').PlayerMotion['reaction'];reactionProgress?:number;
