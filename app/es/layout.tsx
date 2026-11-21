@@ -19,6 +19,8 @@ export default function EsLayout({children}:{children:React.ReactNode}){
   <footer className={styles.footer}><div className={styles.footerInner}>
    <span>Futbol Island · un juego gratis para aprender fútbol, para niños.</span>
    <a href={toEs('/')}>Qué hay en la isla</a>
+   <a href={toEs('/about')}>Acerca de</a>{/* Nov 20 2026: About and Safety left the header (SiteNavEs.tsx) */}
+   <a href={toEs('/safe-football-game-for-kids')}>Seguridad</a>
    <a href="/privacy">Privacidad (en inglés)</a>
    <LangSwitch/>
   </div>

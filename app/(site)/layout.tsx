@@ -3,6 +3,7 @@ import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import SiteNav from '@/components/site/SiteNav';
 import LangSwitch from '@/components/site/LangSwitch';
 import {FOOTER_HUBS} from '@/lib/site/footerHubs';
+import {SAFE_GUIDE} from '@/lib/site/hubs';
 import styles from './site.module.css';
 /**
  * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): `/` (home), /about,
@@ -25,6 +26,8 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
    <span>Futbol Island · a free football learning game for kids.</span>
    <a href="/">What’s inside</a>
    <a href="/privacy">Privacy</a>
+   <a href="/about">About</a>{/* Nov 20 2026: About and Safety left the header (SiteNav.tsx); they live here now */}
+   <a href={SAFE_GUIDE.path}>Safety</a>
    <LangSwitch/>{/* EN | ES where the page has a Spanish version (Nov 15 2026) */}
   </div>
   {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs, one quiet row on every

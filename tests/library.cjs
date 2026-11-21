@@ -45,25 +45,27 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  assert.equal(E.libraryGroupsEs().flatMap(g=>g.cards).length,cards.length);assert(!/—/.test(eh));
  // 4
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
- assert.match(nav,/\[LESSONS_INDEX,'Learn','\/#learn'\],\['\/#explore','Explore'\],\['\/#together','Friends'\],\[SAFE_GUIDE\.path,'Safety','\/#safe'\],\['\/about','About','\/#about'\],\[LIBRARY_PATH,'Library',LIBRARY_PATH\]\]/,'header: Learn, Explore, Friends, Safety, About, Library');
- assert.match(navEs,/\[toEs\('\/about'\),'Acerca de'\],\[toEs\(ES_LIBRARY\),'Biblioteca'\]\]/,'Spanish header: Biblioteca after Acerca de');
+ // the header (owner, Nov 20 2026 evening: "Learn, Game, and Library"): three links and Play, in both languages
+ assert.match(nav,/\[\[LESSONS_INDEX,'Learn'\],\['\/games','Games','games'\],\[LIBRARY_PATH,'Library','library'\]\]/,'header: Learn, Games, Library');
+ assert.match(navEs,/\[\[toEs\('\/learn\/lessons'\),'Aprender'\],\['\/games','Juegos','games'\],\[toEs\(ES_LIBRARY\),'Biblioteca','library'\]\]/,'Spanish header: Aprender, Juegos, Biblioteca');
+ for(const l of ['Explore','Friends','Safety','About'])assert(!nav.includes(`'${l}'`),`header has no ${l}`);
+ {const lay=read('app/(site)/layout.tsx'),layEs=read('app/es/layout.tsx');assert(/<a href="\/about">About<\/a>/.test(lay)&&/<a href=\{SAFE_GUIDE\.path\}>Safety<\/a>/.test(lay),'About and Safety are in the footer');
+  assert(/<a href=\{toEs\('\/about'\)\}>Acerca de<\/a>/.test(layEs)&&/safe-football-game-for-kids'\)\}>Seguridad<\/a>/.test(layEs),'and in the Spanish footer');}
  assert.match(home,/const NAV_PAGES:\[string,string\]\[\]=\[\[LIBRARY_PATH,'Library'\]\];/);assert.match(home,/<MobileMenu links=\{NAV\} pages=\{NAV_PAGES\}\/>/,'the home bar and its phone menu have Library too');
- // the selected state: a server-rendered bar cannot know its page, so the Library marks itself and CSS selects the link (desktop list and phone menu, /library and /es/library); Learn has no selected rule
- {const css=read('app/(site)/site.module.css');assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[aria-current=page\]\{[^}]*background:var\(--btn-pink/,'desktop: Library is the selected link on the Library');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[aria-current=page\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
-  assert.equal((css.match(/:has\(\[data-library-hero\]\)[^{]*\{[^}]*btn-pink/g)||[]).length,2,'only the Library link is selected by the marker');assert(!/href\$="\/library"\]\{/.test(css),'never by href: the Spanish bar\'s English switch also ends in /library');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
-  for(const f of ['app/(site)/learn/lessons/page.tsx','components/site/LessonHub.tsx','lib/site/GuideParts.tsx'])assert(!/data-library-hero/.test(read(f)),`${f}: no marker, so Library is not selected there`);}
- // on the Library the header goes to the home chapters (owner, Nov 20 2026); everywhere else to the reading pages. Both hrefs are real, CSS shows one.
- {const css=read('app/(site)/site.module.css'),homePage=read('app/(site)/page.tsx');
-  for(const id of ['learn','explore','together','safe','about'])assert(new RegExp(`\\['${id}','`).test(homePage),`the home page has the #${id} chapter`);
-  assert.match(nav,/<a href=\{href\} data-nav-page=\{home\?'':undefined\}>\{label\}<\/a>\{home&&<a href=\{home\} data-nav-home="" aria-current=\{home===href\?'page':undefined\}>\{label\}<\/a>\}/);
-  /* aria-current (Nov 20 2026): the Library link's shown-on-the-Library copy carries it, in both languages, and no other link does */
-  {const bar=render(React.createElement(L('components/site/SiteNav.tsx').default)),cur=[...bar.matchAll(/<a href="([^"]+)" data-nav-home="" aria-current="page">/g)].map(m=>m[1]);
-   assert.deepEqual(cur,['/library','/library'],'English bar: only Library (desktop list and phone menu) can be the current page');assert.equal((bar.match(/aria-current/g)||[]).length,2);
-   const barEs=render(React.createElement(L('components/es/SiteNavEs.tsx').default)),curEs=[...barEs.matchAll(/<a href="([^"]+)" data-nav-home="" aria-current="page">/g)].map(m=>m[1]);
-   assert.deepEqual(curEs,['/es/library','/es/library'],'Spanish bar: only Biblioteca');assert.equal((barEs.match(/aria-current/g)||[]).length,2);}
-  assert.match(css,/\.page \.nav a\[data-nav-home\]\{display:none\}/,'the home-chapter links are hidden on every other page');
-  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.nav a\[data-nav-page\]\{display:none\}/,'and shown in place of the page links on the Library only');}
+ // the selected state: a server-rendered bar cannot know its page, so the Library ([data-library-hero]) and the games pages ([data-games-page]) mark themselves and CSS shows the selected copy (desktop list and phone menu)
+ {const css=read('app/(site)/site.module.css');
+  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.navLinks a\[data-nav-cur=library\],\.page:has\(\[data-games-page\]\) \.navLinks a\[data-nav-cur=games\]\{[^}]*background:var\(--btn-pink/,'desktop: Library on the Library, Games on the games pages');
+  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.menuList a\[data-nav-cur=library\],\.page:has\(\[data-games-page\]\) \.menuList a\[data-nav-cur=games\]\{[^}]*background:var\(--btn-pink/,'phone menu too');
+  assert.equal((css.match(/:has\(\[data-(library-hero|games-page)\]\)[^{]*\{[^}]*btn-pink/g)||[]).length,2,'only the marked links are selected');assert(!/href\$="\/library"\]\{/.test(css),'never by href: the Spanish bar\'s English switch also ends in /library');assert(/data-library-hero=""/.test(html)&&/data-library-hero=""/.test(eh),'both Library pages carry the marker');
+  assert.match(read('components/site/games/GameParts.tsx'),/<header className=\{site\.intro\} data-games-page="">/,'the games pages carry their marker');
+  for(const f of ['app/(site)/learn/lessons/page.tsx','components/site/LessonHub.tsx','lib/site/GuideParts.tsx'])assert(!/data-library-hero|data-games-page/.test(read(f)),`${f}: no marker, so nothing is selected there`);
+  assert.match(css,/\.page \.nav a\[data-nav-cur\]\{display:none\}/,'the selected copies are hidden on every other page');
+  assert.match(css,/\.page:has\(\[data-library-hero\]\) \.nav a\[data-nav-page=library\],\.page:has\(\[data-games-page\]\) \.nav a\[data-nav-page=games\]\{display:none\}/,'and the plain copy is hidden on its own pages');}
+ /* aria-current: only the selected copies carry it, one Games and one Library per list, in both languages */
+ {const bar=render(React.createElement(L('components/site/SiteNav.tsx').default)),cur=[...bar.matchAll(/<a href="([^"]+)" data-nav-cur="[a-z]+" aria-current="page">/g)].map(m=>m[1]);
+  assert.deepEqual(cur,['/games','/library','/games','/library'],'English bar: Games and Library (desktop list and phone menu)');assert.equal((bar.match(/aria-current/g)||[]).length,4);
+  const barEs=render(React.createElement(L('components/es/SiteNavEs.tsx').default)),curEs=[...barEs.matchAll(/<a href="([^"]+)" data-nav-cur="[a-z]+" aria-current="page">/g)].map(m=>m[1]);
+  assert.deepEqual(curEs,['/games','/es/library','/games','/es/library'],'Spanish bar: Juegos and Biblioteca');assert.equal((barEs.match(/aria-current/g)||[]).length,4);}
  const cfg=await import(require('node:path').join(root,'next.config.mjs')),red=await cfg.default('phase-production-build').redirects();
  const r=red.find(x=>x.source==='/learn'),re=red.find(x=>x.source==='/es/learn');
  assert.deepEqual([r.destination,r.permanent,r.missing],['/library',true,[{type:'query',key:'q'}]],'plain /learn -> /library; /learn?q= is the search');

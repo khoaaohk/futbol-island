@@ -49,30 +49,20 @@
 .menuList li+li{border-top:1px solid var(--rule)}
 .page .menuList a{display:flex;align-items:center;min-height:64px;padding:0 4px;color:var(--ink);font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
 @media(max-width:640px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
-/* Spanish bar (components/es/SiteNavEs.tsx, Nov 16 2026): 8 links + EN | ES. Up to 1099 px it uses the phone menu; wider, the
-   links size to their words instead of the fixed 92 px. */
-@media(max-width:1099px){.navEs .navLinks{display:none}.navEs .menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .navEs .brand{grid-column:2;grid-row:1;justify-self:center}.page .navEs a.play{grid-column:3;grid-row:1}}
-@media(min-width:1100px){.navEs .navLinks{gap:2px}.page .navEs .navLinks a{width:auto;padding:0 8px}}
+/* Spanish bar: three links + EN | ES; the links size to their words. */
+.page .navEs .navLinks a{width:auto;padding:0 12px}
 /* QA Nov 14 2026: on a 320 px phone the menu, the 26 px wordmark and the Play pill needed 357 px, so Play ran off the edge. Below
    360 px the wordmark steps down to 20 px and the gaps to 4 px (313 px with the 16 px gutters). */
 @media(max-width:359px){.nav{gap:4px}.page .brand{font-size:20px}}
 @media(min-width:641px) and (max-width:759px){.navLinks{gap:4px}.page .navLinks a{width:82px}}
-/* Nov 20 2026 (Library added, six links): the brand, six 92px links and Play need about 880px, so 641-899px gets the phone bar too */
-@media(min-width:641px) and (max-width:899px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
-/* Nov 20 2026 (owner: "the library btn needs to be selected"): on the Library the header's Library link is the selected one, with
-   the home bar's pink chip (components/learn/learn.module.css .subLinks::before). The bar is server-rendered in the shared
-   layout with no client code, so the page marks itself ([data-library-hero], components/site/LibraryPage.tsx) and CSS does the
-   rest. The selected link is the one carrying aria-current="page" (SiteNav.tsx, SiteNavEs.tsx: shown on the Library only). It was
-   a[href$="/library"] at first, which also painted the Spanish bar's "English" switch pink on /es/library (its href is /library). */
-.page:has([data-library-hero]) .navLinks a[aria-current=page]{box-sizing:border-box;height:36px;min-height:36px;margin-block:4px;opacity:1;color:var(--ink);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
-.page:has([data-library-hero]) .navEs .navLinks a[aria-current=page]{padding:0 14px}
-/* Nov 20 2026 (owner): on the Library, Learn, Safety and About go to their home chapters (/#learn, /#safe, /#about), like Explore
-   and Friends everywhere; on every other page they go to their reading pages (components/site/SiteNav.tsx renders both links). */
-.page .nav a[data-nav-home]{display:none}
-.page:has([data-library-hero]) .nav a[data-nav-page]{display:none}
-.page:has([data-library-hero]) .navLinks a[data-nav-home]{display:inline-flex}
-.page:has([data-library-hero]) .menuList a[data-nav-home]{display:flex}
-.page:has([data-library-hero]) .menuList a[aria-current=page]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+/* Nov 20 2026 (owner: "the library btn needs to be selected"; evening: three links, Learn, Games, Library). The bar is
+   server-rendered in the shared layout with no client code, so a page marks itself ([data-library-hero] in LibraryPage.tsx,
+   [data-games-page] in GameIntro on /games and /games/<slug>) and CSS shows the copy of its link that carries
+   aria-current="page" (data-nav-cur; SiteNav.tsx renders both copies), with the home bar's pink chip. */
+.page .nav a[data-nav-cur]{display:none}
+.page:has([data-library-hero]) .nav a[data-nav-page=library],.page:has([data-games-page]) .nav a[data-nav-page=games]{display:none}
+.page:has([data-library-hero]) .navLinks a[data-nav-cur=library],.page:has([data-games-page]) .navLinks a[data-nav-cur=games]{display:inline-flex;box-sizing:border-box;height:36px;min-height:36px;margin-block:4px;padding:0 14px;opacity:1;color:var(--ink);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.page:has([data-library-hero]) .menuList a[data-nav-cur=library],.page:has([data-games-page]) .menuList a[data-nav-cur=games]{display:inline-flex;min-height:52px;margin-block:6px;padding:0 24px 3px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 @media print{.header{display:none}}
 
 /* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */
