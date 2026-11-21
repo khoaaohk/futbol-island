@@ -51,7 +51,7 @@ export function EsSceneDiagram({id,scene,small,image,animate}:{id:string;scene:S
  const art=<PitchDiagram id={id} format={scene.format} spots={scene.spots} arrows={scene.runs} title={scene.title} desc={desc} small={small} scene={{ball:scene.ball,lineY:scene.lineY,lineWord:scene.lineWord,zone:scene.zone,passes:scene.passes}}/>;
  return <figure className={styles.figure}>
   {motion
-   ?<div className={`${styles.art} ${styles.anim}`} id={root} data-anim=""><style>{motion.css}</style>{art}<MotionToggle name={animate!} lang="es"/></div>
+   ?<div className={`${styles.art} ${styles.anim}`} id={root} data-anim=""><style dangerouslySetInnerHTML={{__html:motion.css}}/>{art}<MotionToggle name={animate!} lang="es"/></div>
    :<div className={styles.art}>{art}</div>}
   <figcaption className={styles.caption}>{scene.caption}{image&&<> <a href={image}>{ES_UI.openPicture}</a>.</>}</figcaption>
  </figure>;

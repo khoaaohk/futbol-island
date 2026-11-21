@@ -19,7 +19,9 @@ type Key={t:number;x:number;y:number};
 type Track={sel:string;keys:Key[]};
 const near=(a:readonly [number,number],b:readonly [number,number],d:number)=>Math.hypot(a[0]-b[0],a[1]-b[1])<=d;
 export type SceneMotion={duration:number;tracks:Track[];css:string};
-/** The CSS for one animated scene inside the element with id `root` (null when the scene has nothing to move). */
+/** The CSS for one animated scene inside the element with id `root` (null when the scene has nothing to move). Rendered with
+ *  <style dangerouslySetInnerHTML> (Nov 20 2026): as a text child, React's server render escapes its quotes ([data-i=&quot;1&quot;]),
+ *  so the selector never matched in the server HTML and hydration failed with "Text content did not match". */
 export function sceneMotion(scene:Scene,root:string):SceneMotion|null{
  if(!scene.runs.length&&!scene.passes.length)return null;
  const p=PITCH[scene.format],W=p.px,H=Math.round(p.l*(W/p.w));
