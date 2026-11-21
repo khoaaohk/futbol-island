@@ -1,9 +1,8 @@
 'use client';
 import {useEffect} from 'react';
 /**
- * A section menu's highlight (Nov 20 2026; the Library, /games and the guide pages' rails). Marks the link of the band in the
- * middle of the screen with data-on; once the page's footer is on screen the last link is marked (a short last band never
- * reaches the middle). Two IntersectionObservers, no window scroll listener, no animation loop; renders nothing. Without
+ * A section menu's highlight (Nov 20 2026; the Library, /games and the guide pages' rails). Marks one link with data-on at all times: the last section whose top has passed the line under the header
+ * (a tapped link until the reader scrolls by hand; the last link at the page end). IntersectionObservers, no window scroll listener, no animation loop; renders nothing. Without
  * script the menu is plain anchor links with their own chip backgrounds.
  *
  * Phone/tablet chip bar (owner, Nov 20 2026 evening: "have that scroll and snap animation when moving through so the btns have
@@ -35,7 +34,7 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
    return ()=>{eo.disconnect();rz?.disconnect();pl.remove();ul.removeAttribute('data-pill-on');};
   }
   const list=links[0].closest('ul');if(!list)return;
-  let mid='',end=false,top=false,hold=0,centre=0,pauseUntil=0,lit:HTMLAnchorElement|null=null;
+  let end=false,held:string|null=null,centre=0,pauseUntil=0,lit:HTMLAnchorElement|null=null;
   const pill=document.createElement('li');pill.setAttribute('data-pill','');pill.setAttribute('aria-hidden','true');list.prepend(pill);list.setAttribute('data-pill-on','');
   const place=(a:HTMLAnchorElement,from:HTMLAnchorElement|null)=>{
    const x=a.offsetLeft,y=a.offsetTop,w=a.offsetWidth,h=a.offsetHeight;
@@ -47,32 +46,28 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
    if(list.scrollHeight>list.clientHeight+1){const r=a.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.top<b.top)list.scrollTop-=b.top-r.top+8;else if(r.bottom>b.bottom)list.scrollTop+=r.bottom-b.bottom+8;}
    if(list.scrollWidth>list.clientWidth+1&&Date.now()>=pauseUntil)list.scrollTo({left:Math.max(0,a.offsetLeft-(list.clientWidth-a.offsetWidth)/2),behavior:still()?'auto':'smooth'});
   };
-  const paint=(now=false)=>{if(hold&&!now)return;const id=end?links[links.length-1].hash.slice(1):mid||(top&&links[0].hash==='#top'?'top':'');
+  /* Which entry is lit (Nov 20 2026 night, coordinator review: a tap often ended on a neighbour, short sections and small H2 targets
+     never lit, and a page could show none). Exactly one entry, always: a tapped entry until the reader scrolls by hand (wheel, touch
+     or a key); else the last entry once the footer is on screen; else the LAST entry whose
+     target's top is at or above the line under the header (+ chip bar below 1280 px) plus 24 px; else the first entry (Overview).
+     "Above the line" is one IntersectionObserver whose root reaches from far above the screen down to that line, so a target is in it
+     exactly when its top has passed the line, however small it is and however far a jump scrolls. No window scroll listener. */
+  const paint=(now=false)=>{const above=order.filter(id=>on.has(id));const id=held??(end?order[order.length-1]:above[above.length-1]??order[0]);
    const a=links.find(x=>x.hash==='#'+id)??null;if(a===lit)return;
    links.forEach(x=>{if(x===a)x.setAttribute('data-on','');else x.removeAttribute('data-on');});
    if(a){place(a,lit);clearTimeout(centre);centre=window.setTimeout(()=>glide(a),now?0:180);}else pill.style.opacity='0';
    lit=a;};
-  /* the entries whose band is on the middle line now; when two are (cards side by side on a wide screen) the first in the menu wins,
-     and between bands the last one stays lit */
-  const on=new Set<string>(),order=links.map(a=>a.hash.slice(1));
-  /* an anchor on a heading (lib/site/GuideParts.tsx Section puts the id on its H2) is watched through its whole <section>, so the entry
-     stays lit while any of that section is on the middle line, not only the heading's own strip (Nov 20 2026 night review) */
-  const idOf=new Map<Element,string>();
-  const io=new IntersectionObserver(es=>{for(const e of es){const id=idOf.get(e.target);if(!id)continue;if(e.isIntersecting)on.add(id);else on.delete(id);}const f=order.find(id=>on.has(id));if(f)mid=f;paint();},{rootMargin:'-45% 0px -50% 0px'});
-  links.forEach(a=>{const t=document.getElementById(a.hash.slice(1));if(!t)return;const w=/^H[1-6]$/.test(t.tagName)?t.closest('section')??t:t;if(idOf.has(w))return;idOf.set(w,t.id);io.observe(w);});
-  const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{end=es[es.length-1].isIntersecting;paint();}):null;
+  const order=links.map(a=>a.hash.slice(1)),on=new Set<string>(),idOf=new Map<Element,string>();
+  for(const id of order){const t=document.getElementById(id);if(t)idOf.set(t,id);}
+  const lineOf=()=>{const t=document.getElementById(order[order.length-1]);return Math.max(68,t?parseFloat(getComputedStyle(t).scrollMarginTop)||0:0)+24;};
+  let io:IntersectionObserver|null=null;
+  const watch=()=>{io?.disconnect();on.clear();const line=lineOf();
+   io=new IntersectionObserver(es=>{for(const e of es){const id=idOf.get(e.target);if(!id)continue;if(e.isIntersecting)on.add(id);else on.delete(id);}paint();},
+    {rootMargin:`100000px 0px -${Math.max(0,window.innerHeight-line)}px 0px`});
+   idOf.forEach((_,t)=>io!.observe(t));};
+  watch();let rt=0;const resize=()=>{clearTimeout(rt);rt=window.setTimeout(watch,200);};window.addEventListener('resize',resize,{passive:true});
+  const foot=document.querySelector('footer'),io2=foot?new IntersectionObserver(es=>{const e=es[es.length-1];end=e.isIntersecting&&e.boundingClientRect.bottom<=window.innerHeight+2;paint();},{threshold:[0,.2,.4,.6,.8,1]}):null;// the page end: the footer's own bottom is on screen
   if(foot&&io2)io2.observe(foot);
-  /* "Overview" (owner, Nov 20 2026 evening; Spanish "Resumen"): server-rendered with data-on, so there is no flash before this runs. The
-     head block (#top) is watched like a section (the middle line above), so Overview is lit while the head covers the middle of the
-     screen and a section takes over as soon as its heading reaches the top half (Nov 20 2026 night: before, any strip of the hero left
-     on screen kept Overview lit over the first section). This observer only covers the first moments, before anything has crossed
-     the middle line. */
-  /* Nov 20 2026 night: the head counts only while it reaches below the line a tapped section lands on (its scroll-margin-top: under
-     the header, and the chip bar below 1280 px), so after a tap on the first section the hero's last strip under the bar does not
-     light Overview again */
-  const head=document.getElementById('top'),land=head?Math.max(68,parseFloat(getComputedStyle(head).scrollMarginTop)||0)+4:68;
-  const io4=head?new IntersectionObserver(es=>{top=es[es.length-1].isIntersecting;paint();},{rootMargin:`-${land}px 0px 0px 0px`}):null;
-  if(head&&io4)io4.observe(head);
   /* edge fades: is the first / last chip fully inside the bar? */
   const first=links[0],last=links[links.length-1];
   const io3=new IntersectionObserver(es=>{for(const e of es){const full=e.intersectionRatio>.98;list.toggleAttribute(e.target===first?'data-more-left':'data-more-right',!full);}},{root:list,threshold:[.98,1]});
@@ -81,13 +76,17 @@ export default function LibraryMenuSpy({menu}:{menu:string}){
   list.addEventListener('pointerdown',touch,{passive:true});list.addEventListener('wheel',touch,{passive:true});
   const ro='ResizeObserver' in window?new ResizeObserver(()=>{if(lit)place(lit,null);}):null;ro?.observe(list);
   /* a tap glides the page to the band (scroll-margin-top keeps it under the header and bar) and holds the pill on the tapped chip */
+  const release=()=>{if(held===null)return;held=null;off();paint();};
+  const off=()=>{window.removeEventListener('wheel',release);window.removeEventListener('touchstart',release);window.removeEventListener('keydown',release);};
   const tap=(e:MouseEvent)=>{const a=(e.target as Element).closest?.('a[href^="#"]') as HTMLAnchorElement|null;if(!a||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
    const t=document.getElementById(a.hash.slice(1));if(!t)return;e.preventDefault();
    t.scrollIntoView({behavior:still()?'auto':'smooth',block:'start'});history.replaceState(null,'',a.hash);
-   clearTimeout(hold);hold=0;pauseUntil=0;mid=t.id;end=false;top=t.id==='top';paint(true);hold=window.setTimeout(()=>{hold=0;},still()?0:900);};
+   pauseUntil=0;off();held=t.id;paint(true);
+   /* added after this tap's own touchstart/keydown, so only the reader's next hand scroll lets the light follow the page again */
+   window.addEventListener('wheel',release,{passive:true,once:true});window.addEventListener('touchstart',release,{passive:true,once:true});window.addEventListener('keydown',release,{passive:true,once:true});};
   nav.addEventListener('click',tap);
-  return ()=>{io.disconnect();io2?.disconnect();io3.disconnect();io4?.disconnect();ro?.disconnect();nav.removeEventListener('click',tap);list.removeEventListener('pointerdown',touch);list.removeEventListener('wheel',touch);
-   clearTimeout(hold);clearTimeout(centre);pill.remove();list.removeAttribute('data-pill-on');};
+  return ()=>{io?.disconnect();io2?.disconnect();io3.disconnect();off();window.removeEventListener('resize',resize);clearTimeout(rt);ro?.disconnect();nav.removeEventListener('click',tap);list.removeEventListener('pointerdown',touch);list.removeEventListener('wheel',touch);
+   clearTimeout(centre);pill.remove();list.removeAttribute('data-pill-on');};
  },[menu]);
  return null;
 }
