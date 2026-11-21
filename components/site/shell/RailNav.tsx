@@ -2,6 +2,7 @@ import type {Rail} from '@/lib/site/railNav';
 import l from '../library.module.css';
 import r from './rail.module.css';
 import LibraryMenuSpy from '../LibraryMenuSpy';
+import RailBack from './RailBack';
 /**
  * The guide pages' rail (layout batch 2, Nov 20 2026; owner: "the left nav should be locked on the left side. the content on the
  * right is the only thing that scrolls", "remove the play btn on the left nav"). The same element and styles as the Library's and
@@ -21,7 +22,7 @@ export default function RailNav({rail,current,id='section-rail'}:{rail:Rail;curr
        previous screen. on mobile the back btn is locked on the left and everything scrolls under it"): one link to the level
        above (a page goes to its section; a section goes to the Library). The Library and the games hub pass no `up`, so they
        have none. In the rail it is the first row; in the phone bar a round button fixed at the left, the chips pass under it. */}
-   {rail.up.length>0&&rail.up[0].href!==current&&<p className={r.back} data-rail-back=""><a href={rail.up[0].href} title={rail.up[0].name} aria-label={`${/^\/es(\/|$)/.test(rail.up[0].href)?'Volver a':'Back to'} ${rail.up[0].name}`}><span className={r.arrow} aria-hidden="true">{'\u2190'}</span><span className={r.backTxt} aria-hidden="true">{/^\/es(\/|$)/.test(rail.up[0].href)?'Volver':'Back'}</span></a></p>}
+   {rail.up.length>0&&rail.up[0].href!==current&&<p className={r.back} data-rail-back=""><RailBack href={rail.up[0].href} name={rail.up[0].name} es={/^\/es(\/|$)/.test(rail.up[0].href)}/></p>}
    <ul>
     {rail.groups.map((g,i)=>[
      g.title?<li key={`g${i}`} className={r.group}><span>{g.title}</span></li>:null,
