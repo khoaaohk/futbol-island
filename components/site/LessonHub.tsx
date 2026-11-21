@@ -14,6 +14,9 @@ import FaqEnhance from '@/components/learn/FaqEnhance';
 import KeepReading from './KeepReading';
 import {Band,CardGrid,groupIcon,Hero,lessonIcon,type HubCard} from './HubParts';
 import styles from '@/app/(site)/site.module.css';
+import RailNav from './shell/RailNav';
+import {hubRail,sec} from '@/lib/site/railNavMore';
+import type {RailItem} from '@/lib/site/railNav';
 /**
  * One topic hub (lib/site/hubs.ts): answer-first lead, the lesson groups as linked lists, short Q&A (mirrored exactly in the
  * FAQPage JSON-LD), related hubs and one gold Play link. Server-rendered, no client code, the reading pages' one stylesheet.
@@ -48,15 +51,20 @@ export function MoreToLearn({except}:{except?:string}){
 export const lessonCard=(l:SiteLesson,quiz?:boolean):HubCard=>({path:quiz?`${lessonPath(l.id)}#quiz`:lessonPath(l.id),name:l.title,icon:lessonIcon(l.category),
  meta:quiz?`${l.formatLabel} · ${l.questions.length} questions`:`${l.formatLabel} lesson`,line:quiz?l.questions[0]?.q:l.concept});
 
-export default function LessonHub({hub,children}:{hub:Hub;children?:React.ReactNode}){
+/** `extra`: rail entries for the page's own sections passed as children (they come before the lesson groups). */
+export default function LessonHub({hub,children,extra=[]}:{hub:Hub;children?:React.ReactNode;extra?:readonly RailItem[]}){
  const crumbs=hubCrumbs(hub),items=hub.groups.flatMap(g=>g.lessons);
+ /* the side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to the Library, Overview, then what is on
+    this hub in page order: its own sections, each lesson group, the questions and More to learn */
+ const rail=hubRail(`${hub.crumb} on this page`,[{items:[...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Questions'),sec('more','More to learn')]}]);
  return <>
+  <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:hub.h1,path:hub.path,description:hub.description,published:SITE_UPDATED.hubs,modified:SITE_UPDATED.hubs,
    items:items.map(l=>({name:`${l.title} (${l.formatLabel})`,path:lessonPath(l.id)}))})}/>
   <JsonLd data={faqLd(hub.faq)}/>
   <Hero video={guideVideo(hub.path)?<GuideVideo path={hub.path}/>:null}>{/* batch 3: the game clip beside the intro on wide screens (components/site/HubParts.tsx) */}
-  <header className={styles.intro}>
+  <header className={`${styles.intro} ${rt.target}`} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{hub.h1}</h1>
    <p className={styles.lead}>{hub.lead}</p>

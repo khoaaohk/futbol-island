@@ -9,6 +9,8 @@ import {breadcrumbLd,collectionLd,faqLd,pageMeta} from './seo';
 import {SITE_UPDATED} from './updated';
 import {cheatSheetPath} from './tools/printables';
 import styles from '@/app/(site)/site.module.css';
+import RailNav from '@/components/site/shell/RailNav';
+import {pageRail,sec} from './railNavMore';
 /**
  * One format guide (/learn/7v7-soccer-formations, /learn/9v9-soccer-formations, /learn/11v11-soccer-formations): that format's
  * formations compared in one table, the "which one should my team use" answer, a small diagram of each, FAQ and lessons.
@@ -22,7 +24,10 @@ export default function FormatGuideView({format}:{format:FormatGuide['format']})
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:g.h1,path:g.path,description:g.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:list.map(f=>({name:`${f.name} formation`,path:f.path}))})}/>
   <JsonLd data={faqLd(g.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
+  {/* the side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to the formations hub (the breadcrumb's
+      parent), Overview, then this guide's sections */}
+  <GuideIntro top rail={<RailNav rail={pageRail(`${format} formations on this page`,{href:FORMATIONS_HUB.path,name:'All soccer formations'},[sec('compare','Compared'),
+   sec('pick','Which one'),sec('shapes','Diagrams'),sec('basics','In short'),sec('faq','Questions'),sec('keep-reading','Keep reading')])} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
   <Section id="compare" title={`${format} formations compared`}>
    <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`${format} formations compared`}><table className={styles.table}>
     <thead><tr><th scope="col">Formation</th><th scope="col">With the goalkeeper</th><th scope="col">Best for</th><th scope="col">Watch out for</th></tr></thead>

@@ -93,7 +93,7 @@ export function DataTable({head,rows,label}:{head:readonly string[];rows:readonl
  *  the body is closed until tapped; all of it is in the HTML (search, find-in-page and no-JS readers get it). */
 export function Section({id,title,children,panel,fold}:{id:string;title:string;children:React.ReactNode;panel?:boolean;fold?:boolean}){
  if(fold)return <section className={`${styles.section} ${styles.fold}`} aria-labelledby={id} data-fold=""><details className={styles.foldBox}>
-  <summary className={styles.foldSum}><h2 className={styles.h2} id={id}>{title}</h2><span className={styles.plus} aria-hidden="true"/></summary>
+  <summary className={styles.foldSum}><h2 className={`${styles.h2} ${rt.target}`} id={id}>{title}</h2><span className={styles.plus} aria-hidden="true"/></summary>
   <div className={styles.foldBody}>{children}</div></details></section>;
  return <section className={panel?`${styles.section} ${styles.panel}`:styles.section} aria-labelledby={id}><h2 className={`${styles.h2} ${rt.target}`} id={id}>{title}</h2>{children}</section>;
 }

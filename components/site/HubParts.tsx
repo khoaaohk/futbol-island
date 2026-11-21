@@ -42,7 +42,7 @@ export function Band({id,title,line,count,icon,art,tone,children}:{id:string;tit
   <div className={h.inner}>
    <div className={h.head}>
     {!art&&icon&&<span className={h.bigIco}><FactIcon kind={icon} size={40}/></span>}
-    <h2 className={h.h2} id={id}>{title}</h2>
+    <h2 className={`${h.h2} ${rt.target}`} id={id}>{title}</h2>
     {line&&<p className={h.lead}>{line}</p>}
     {count&&<p className={h.count}>{count}</p>}
     {art&&<div className={h.art}>{art}</div>}
