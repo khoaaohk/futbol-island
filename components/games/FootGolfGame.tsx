@@ -82,7 +82,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
  const newAim=useCallback(()=>{const g=game.current;if(!g)return;const y=startYaw(g.state);aim.current={yaw:y,base:y};const k=suggestKick(g.state);pickKind(k);setCurl(0);curlRef.current=0;kPower.current=-1;setPower(-1);dirty.current=true;},[pickKind]);
  const shotNow=useCallback((p:number):Shot=>({kind:kindRef.current,power:p,yaw:aim.current.yaw,curl:curlRef.current}),[]);
  /** the dotted preview: the real physics, full on holes 1-3, 60% on 4-6, 35% on 7-9 (and the Daily Hole) */
- const preview=useCallback((p:number)=>{const g=game.current,v=view.current;if(!g||!v)return;if(p<0||g.state.phase!=='aim'){v.setPreview(ghostBuf.current,0,false);return;}
+ const preview=useCallback((p:number)=>{const g=game.current,v=view.current;if(!g||!v)return;v.setCharge(p<0||g.state.phase!=='aim'?0:p);if(p<0||g.state.phase!=='aim'){v.setPreview(ghostBuf.current,0,false);return;}
   const frac=g.state.mode==='daily'?.35:g.state.hole.def.preview,n=predict(g.state,shotNow(p),ghostBuf.current,frac);v.setPreview(ghostBuf.current,n,frac>=1);},[shotNow]);
 
  /* ---- the round's end: save, coins, board (once per round) ---- */
