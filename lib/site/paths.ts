@@ -1,5 +1,5 @@
 import {LESSONS,lessonPath} from './lessons';
-import {SITE_FISH,fishPath} from './fish';
+import {INDEXED_FISH,SITE_FISH,fishIndexed,fishPath} from './fish';
 import {SITE_CARDS,cardPath} from './cards';
 import {SITE_EXHIBITS,exhibitPath} from './exhibits';
 import {HUB_PATHS,SAFE_GUIDE} from './hubs';
@@ -32,6 +32,11 @@ export const GUIDE_PATHS=[...HUB_PATHS,SAFE_GUIDE.path] as const;
  *  kept out of the index (robots noindex, follow) and out of sitemap.xml and sitemap-images.xml: about 450 short pages with no
  *  search intent were most of Google's "Discovered - not indexed". /cards and the card group pages stay indexed. */
 export const NOINDEX_CARD_PATHS:readonly string[]=SITE_CARDS.map(c=>cardPath(c.number));
+/** Nov 21 2026 (thin-page cleanup, owner approved): the common and uncommon fish pages, same treatment as the card pages
+ *  (lib/site/fish.ts fishIndexed): reached by links, noindex, follow, out of both sitemaps. */
+export const NOINDEX_FISH_PATHS:readonly string[]=SITE_FISH.filter(f=>!fishIndexed(f)).map(f=>fishPath(f.id));
+/** Every real page kept out of the sitemap on purpose (noindex, follow), for the link checks. */
+export const NOINDEX_PATHS:readonly string[]=[...NOINDEX_CARD_PATHS,...NOINDEX_FISH_PATHS];
 /** Every path with its sitemap priority and its real content date (no build-time "now"). */
 export function sitePaths():{path:string;priority:number;lastmod:string}[]{
  return sectionPaths().map(x=>({...x,lastmod:pageModified(x.path,x.lastmod)}));
@@ -45,7 +50,7 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
   ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.9:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
-  ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),
+  ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...INDEXED_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),/* Nov 21 2026: rare and legendary only (NOINDEX_FISH_PATHS) */
   /* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and out of both sitemaps (NOINDEX_CARD_PATHS below) */...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
   ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */
   ...COMPARISONS.map(c=>({path:c.path,priority:.7,lastmod:COMPARISONS_UPDATED})),/* "A vs B" guides (lib/site/comparisons.ts) */
