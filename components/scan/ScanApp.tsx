@@ -6,6 +6,7 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
 import c from './scan.module.css';
+import {BackButton} from '@/components/BackButton';
 /**
  * Scan Trainer (/scan and the club embed /embed/soccer-scanning-trainer; Nov 16 2026; docs/scan-trainer/HANDOFF.md).
  * Three screens: settings, the full-screen cue (3-2-1, then a new cue every interval; tap anywhere to pause) and the summary.
@@ -138,7 +139,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  }
  if(view==='summary'&&result){
   const r=result.r;
-  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
+  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>setView('settings')}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
     <dl className={c.stats}>
@@ -193,10 +194,13 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
  </div>;
 }
-function Top({w,lang,embed,onLang}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void}){
+/** Back (owner, Nov 20 2026): the app mark in this corner looked like a back button and did nothing. It is now the game's own Back
+ *  button (components/BackButton.tsx). From the summary it returns to the settings; from the settings it leaves for the trainer's
+ *  guide page. The embed has no Back: the page that frames it is the way out. */
+function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
+ const leave=()=>{window.location.assign(lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer');};
  return <header className={c.top}>
-  {/* eslint-disable-next-line @next/next/no-img-element */}
-  {!embed&&<img src="/scan/icon.svg" alt="" width={32} height={32} className={c.mark}/>}
+  {!embed&&<BackButton data-scan-back label={lang==='es'?'Volver':'Back'} onBack={onBack??leave}/>}
   <span className={c.topTitle}><b>{w.app}</b><span>Futbol Island</span></span>
   <button type="button" className={c.langBtn} lang={lang==='es'?'en':'es'} onClick={onLang}>{w.lang}</button>
  </header>;

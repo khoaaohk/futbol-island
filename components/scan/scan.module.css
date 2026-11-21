@@ -10,7 +10,6 @@
 :where(.app) button{cursor:pointer}
 .app :focus-visible{outline:3px solid var(--pitch);outline-offset:2px}
 .top{position:sticky;top:0;z-index:5;background:var(--paper);display:flex;align-items:center;gap:12px;padding:max(10px,env(safe-area-inset-top)) 16px 10px}
-.mark{width:32px;height:32px;border-radius:var(--r-sm);flex:0 0 auto;display:block}
 .topTitle{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
 .topTitle b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topTitle span{font-size:13px;color:var(--soft)}

@@ -8,6 +8,7 @@ import {addStoppage,applyChange,buildPlan,confirmChange,planWithLate,changeBetwe
 import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,loadStore,minutesCsv,newId,saveStore,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
 import c from './coach.module.css';
+import {BackButton} from '@/components/BackButton';
 /**
  * The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): Team · Lineup · Game · Summary, and the live game screen.
  * One client component on purpose (a coach opens it once and lives in it). The engine is pure (lib/coach/engine.ts) and the
@@ -158,8 +159,8 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  const team=store.team;
  return <div className={c.app} data-reading-page="" data-coach-app="">
   <header className={c.top}>
-   {/* eslint-disable-next-line @next/next/no-img-element */}
-   <img className={c.mark} src="/coach/icon.svg" alt="" width={32} height={32}/>
+   {/* Back (owner, Nov 20 2026): the game's own Back button in place of the app mark; it leaves for the coach tools page. */}
+   <BackButton data-coach-back label={lang==='es'?'Volver':'Back'} onBack={()=>{window.location.assign(lang==='es'?'/es/tools':'/tools');}}/>
    <div className={c.topTitle}><b>{team.name||w.appName}</b><span>{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</span></div>
    <button type="button" className={c.langBtn} lang={w.langCode} onClick={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))}>{w.lang}</button>
   </header>
