@@ -113,7 +113,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   const at=()=>{const r=s.res,w=stage.current?.clientWidth??390;if(!r||!v)return undefined;const p=v.project(r.x,r.y+.5,s.kd);return {x:Math.max(100,Math.min(w-100,p.x)),y:p.y-46};};
   switch(e.type){
    case 'tier':a?.round();setTip(e.a);break;
-   case 'attack':{const k=e.word as Kind;if(k!=='head'&&k!=='reb')run.current.kinds.push(k);setNote('');if(!seen.current.has(k)){seen.current.add(k);setHint(KIND_HINT[k]);}else if(k==='reb'||k==='head')setHint(KIND_HINT[k]);break;}
+   case 'attack':{const k=e.word as Kind;if(k!=='head'&&k!=='reb')run.current.kinds.push(k);setNote('');if(!seen.current.has(k)){seen.current.add(k);setHint(KIND_HINT[k]);}else setHint(k==='reb'||k==='head'?KIND_HINT[k]:'');/* a hint never outlives its shot */break;}
    case 'whistle':a?.whistle(e.word==='head'||e.word==='reb');break;
    case 'touch':a?.alert();arcadeFeedback(null,'collect');say('HEAVY TOUCH!',0,'red',true);break;
    case 'strike':a?.kick(e.a/100);break;
