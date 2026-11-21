@@ -15,6 +15,7 @@ The two games added after the foundation pass are 2D canvas games with their own
 |---|---|---|---|
 | Kit Rush (`kitrush`) | `components/games/skins/kitrush.module.css`, `KitRushGame.module.css` | `components/games/KitRushGame.tsx`, `KitRushScores.tsx`, `lib/arcade/kitrush/*` (view, audio) | `lib/arcade/kitrush/*` (core); `tests/kitrush-core.cjs`, `scripts/check-kitrush-browser.cjs` |
 | Squad Snake (`snake`) | `components/games/skins/snake.module.css`, `SquadSnakeGame.module.css` | `components/games/SquadSnakeGame.tsx`, `SquadSnakeScores.tsx`, `lib/arcade/snake/*` (view, audio) | `lib/arcade/snake/*` (core); `tests/snake-core.cjs`, `scripts/check-snake-browser.cjs` |
+| Safe Hands (`safehands`, Nov 21 2026: no machine in the room yet, `arcadeUnplaced`; `/arcade?game=safehands`) | `components/games/skins/safehands.module.css`, `SafeHandsGame.module.css` | `components/games/SafeHandsGame.tsx`, `SafeHandsScores.tsx`, `lib/arcade/safehands/*` (view, audio, save) | `lib/arcade/safehands/core.ts`; `tests/safehands-core.cjs`, `tests/safehands-bots.cjs`, `scripts/check-safehands-browser.cjs`; `docs/arcade-aaa/safehands-direction.md` |
 
 Shared by all six (never restyle per game): the Arcade back button (its face is pinned on `.bar.bar` in
 `components/arcade/ArcadeTopBar.module.css`; `tests/arcade-chrome-shared.cjs` asserts it), the results-first high-score strip and

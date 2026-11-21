@@ -101,7 +101,7 @@ ok('scoring, lives and the ladder: saves build a streak, three goals end the run
  const r=B.play(11,'random');assert.equal(r.lives,0);assert.equal(r.stats.goals,3);assert.ok(!r.won);
  g=C.createSafeHands({seed:5});assert.equal(g.state.phase,'tip');g.advance(1);assert.equal(g.state.t,0,'the round card waits');assert.equal(g.ack(),true);assert.equal(g.ack(),false);
  assert.ok(TIERS.every(t=>t.kinds.length===SH.shotsPerTier));assert.deepEqual(TIERS.map(t=>new Set(t.kinds).size),[2,3,5,5],'each round adds kinds of shot');assert.ok(!TIERS[2].wet&&TIERS[3].wet);
- assert.equal(C.medalFor(SH.medals[0]-1),0);assert.equal(C.medalFor(SH.medals[2]),3);assert.equal(C.safehandsCoins(1499),2);
+ assert.equal(C.medalFor(SH.medals[0]-1),0);assert.equal(C.medalFor(SH.medals[2]),3);assert.equal(C.safehandsCoins(1999),1);
  assert.equal(new Set(SH_FEATS.map(f=>f.id)).size,12);assert.deepEqual(C.SH_FEAT_IDS,SH_FEATS.map(f=>f.id));});
 
 ok('device save: best, medal, rounds, gloves, scouting cards, the daily claim; bad data is cleaned',()=>{
@@ -126,8 +126,8 @@ ok('wiring: playable by /arcade?game=safehands, its own board, coins, analytics 
  assert.equal(K.arcadeAnalyticsId('safehands'),'safehands');assert.match(cat,/export type ArcadePlayableId=ArcadeCabinetId\|typeof arcadeUnplaced\[number\]\['id'\];/);
  assert.match(room,/const SafeHands=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/SafeHandsGame'\)\)/);assert.match(room,/safehands:\(\)=>import\('\.\/games\/SafeHandsGame'\)/);assert.match(room,/arcadeUnplaced\.some\(c=>c\.id===id\)/);assert.match(room,/game==='safehands'\?<SafeHands onExit=\{back\}\/>/);
  const L=require('../lib/arcade/leaderboard.ts');assert.ok(L.BOARD_GAMES.includes('safehands'));assert.equal(L.BOARD_RULES.safehands.max,SH.scoreMax);assert.ok(!L.HALL_MACHINES.includes('safehands'));
- {const best=Math.max(...[11,12,13,14,15,16].map(i=>{const o=B.play(i,'oracle');return o.score/o.secs;}));const r=L.BOARD_RULES.safehands;assert.ok(best<r.perSecond,`the board's rate limit is above the best bot (${best.toFixed(0)} a second)`);assert.ok(r.base+r.perSecond*60>3000);}
- const W=require('../lib/arcade/arcadeWalletCore.ts');assert.equal(W.arcadeCoinTarget('safehands',{points:2600}),5);assert.equal(W.arcadeCoinTarget('safehands',{points:60000}),12,'capped like the other machines');assert.equal(C.safehandsCoins(2600),5);
+ {const best=Math.max(...[11,12,13,14,15,16].map(i=>{const o=B.play(i,'oracle');return o.score/o.secs;}));const r=L.BOARD_RULES.safehands;assert.ok(best<r.perSecond,`the board's rate limit is above the best bot (${best.toFixed(0)} a second)`);{const cup=C.createSafeHands({seed:3,startTier:3});assert.equal(cup.state.tier,3);assert.ok(r.base+r.perSecond*45>9000,'a run started at the Cup final (the fastest scoring) fits the rate');}}
+ const W=require('../lib/arcade/arcadeWalletCore.ts');assert.equal(W.arcadeCoinTarget('safehands',{points:2600}),2);assert.equal(W.arcadeCoinTarget('safehands',{points:60000}),12,'capped like the other machines');assert.equal(C.safehandsCoins(2600),2);
  assert.match(read('lib/analytics/islandIds.ts'),/'ballblaster','safehands'\] as const/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_safehands','Arcade: Safe Hands'\]/);assert.match(read('lib/analytics/countIds.ts'),/'ballblaster','safehands'\] as const/);
  assert.match(read('lib/saves/snapshot.ts'),/'fi2-safehands-v1'/);assert.match(read('lib/arcade/lastScore.ts'),/safehands_daily:\{game:'safehands',label:'Daily Shootout',today:true\}/);
  assert.match(read('components/arcade/HighScoreEntry.tsx'),/'ballblaster','safehands','runner'/);assert.match(read('components/games/skins/index.ts'),/safehands:safehands\.skin/);assert.match(read('scripts/check-arcade-load.cjs'),/'ballblaster','safehands'/);

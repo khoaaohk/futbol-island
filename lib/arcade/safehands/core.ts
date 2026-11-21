@@ -332,4 +332,4 @@ export function createSafeHands(opts:{seed:number;daily?:boolean;startTier?:numb
 }
 export const SAVE_KINDS:readonly SaveKind[]=['held','parry','fingertip','tip','block','smother','claim','punch'];
 export const GOAL_WHYS:readonly GoalWhy[]=['froze','wrongway','height','late','position','wrongmove','chipped','rounded','stranded','early'];
-export const safehandsCoins=(score:number)=>Math.floor(Math.max(0,score)/500);
+export const safehandsCoins=(score:number)=>Math.floor(Math.max(0,score)/1000);

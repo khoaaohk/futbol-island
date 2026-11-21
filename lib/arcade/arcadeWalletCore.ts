@@ -68,7 +68,7 @@ export function arcadeCoinTarget(game:Exclude<ArcadeCoinGame,'puzzle'|'island'>,
  if(game==='lineup')value=Math.floor(n(s.points)/400);// Line Up! (Nov 17 2026): `points` is the run's score, 1 coin per 400
  if(game==='trophydrop')value=Math.floor(n(s.points)/150);// Trophy Drop (Nov 17 2026): `points` is the run's score, 1 coin per 150
  if(game==='rollball')value=Math.floor(n(s.points)/300);// Roll It In (Nov 17 2026): `points` is the run's score, 1 coin per 300
- if(game==='safehands')value=Math.floor(n(s.points)/500);// Safe Hands (Nov 21 2026): `points` is the run's score, 1 coin per 500 (lib/arcade/safehands/core.ts safehandsCoins)
+ if(game==='safehands')value=Math.floor(n(s.points)/1000);// Safe Hands (Nov 21 2026): `points` is the run's score, 1 coin per 1,000 (lib/arcade/safehands/core.ts safehandsCoins)
  if(game==='ballblaster')value=Math.floor(n(s.points)/2000);// Ball Blaster (Nov 17 2026): `points` is the run's score, 1 coin per 2,000 (lib/arcade/ballblaster/core.ts ballblasterCoins)
  if(game==='kitrush')value=Math.floor(n(s.points)/150);// Kit Rush (Nov 10 2026): `points` is the run's score, 1 coin per 150
  return Math.min(ARCADE_COIN_CAPS[game],value);

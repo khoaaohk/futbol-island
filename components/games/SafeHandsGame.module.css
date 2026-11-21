@@ -76,7 +76,7 @@
 .scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
 .score{--cm-numeral-size:64px;display:block}
 .score[data-new-best]{animation:shPop .6s cubic-bezier(.2,1.6,.4,1) both}
-.stamp{position:absolute;right:-14px;top:6px}
+.stamp{position:absolute;right:-14px;top:-34px}
 .dailyLine{margin:0 0 8px;font:800 14px/1.2 var(--cm-ui)}
 .medal{display:inline-grid;place-items:center;width:22px;height:22px;box-sizing:border-box;border:3px solid var(--cm-ink);border-radius:50%;background:#e9dcc2}
 .medal i{width:6px;height:6px;border-radius:50%;background:#cdb99a}

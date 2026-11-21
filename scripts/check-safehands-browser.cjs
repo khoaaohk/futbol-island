@@ -76,13 +76,15 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   await click('[data-safehands-ack]');await wait(300);
   {const a=await read();check(a.ui==='playing'&&a.loop,'the loop runs in play');const d0=await page.evaluate(()=>window.__safehands.draws);await wait(2000);const f=(await page.evaluate(()=>window.__safehands.draws))-d0;check(f>20&&(mobile?f<=64:f<=125),`draw rate is capped: ${f} draws in 2 s (${mobile?'phone: 30':'desktop: 60'} a second at most)`);}
   const r1=await attack('read',{tell:'tell',save:'save'});check(!!r1&&r1.saved,'attack 1 saved by reading the planted foot',JSON.stringify(r1));
-  const mid=await read();
   const r2=await attack('read',{set:'set'});check(!!r2&&(r2.saved||r2.kind==='spill'),'attack 2 saved',JSON.stringify(r2));
   {const s=await read();check(s.score>0&&s.saves>=1,'the score rises with saves',`${s.score} pts`);}
   /* pause */
   await page.keyboard.press('KeyP');await wait(300);check((await read()).ui==='paused','P pauses');check(await rafIn(1500)===0,'paused: 0 frames in 1.5 s');await page.keyboard.press('KeyP');await wait(200);check((await read()).ui==='playing','P resumes');
-  /* a drag moves the keeper (penalty: along the line only) */
-  void mid;
+  /* a real drag moves the keeper: sideways along the line, and up to step off it (not at a penalty) */
+  {let s0=null;for(let i=0;i<300;i++){s0=await read();if(!s0||s0.over)break;if(s0.phase==='set'&&s0.pt>.1&&s0.sh.kind!=='reb')break;await wait(25);}
+   if(s0&&s0.phase==='set'){const R=s0.rect,cx=R.x+R.w/2,by=R.y+R.h-150;await gesture([[cx,by],[cx+25,by-20],[cx+50,by-40]],25);const s1=await read(),want=50/s0.gain.x*1.15;
+    check(Math.abs(s1.wantX-s0.wantX-want)<.25,'a 50 px drag moves the keeper sideways by its metres',`${(s1.wantX-s0.wantX).toFixed(2)} m, expected ${want.toFixed(2)}`);
+    check(s0.sh.kind==='pen'?s1.wantD===0:s1.wantD>1,s0.sh.kind==='pen'?'at a penalty the keeper stays on the line':'dragging up steps off the line',`${s1.wantD.toFixed(2)} m`);}}
   let guard=0;while(guard++<12){const r=await attack('idle');if(r===null)break;if(r==='tip'){await click('[data-safehands-ack]');await wait(200);}}
   await page.waitForSelector('[data-safehands-card="results"]',{timeout:20000});await wait(900);
   {const st=await page.evaluate(()=>{const g=window.__safehands.game.state;return {score:g.score,goals:g.stats.goals,lives:g.lives,saves:g.stats.saves};});
@@ -97,6 +99,14 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
    if(!mobile){await page.keyboard.press('Enter');await wait(400);await page.keyboard.down('KeyD');await wait(350);await page.keyboard.up('KeyD');const a=await read();check(a.kx>.3,'D shuffles the keeper to the right',a.kx.toFixed(2));
     for(let i=0;i<400;i++){const s=await read();if(s.phase==='run'&&s.plant){await page.keyboard.press(s.plant.side<0?(s.plant.high?'KeyQ':'ArrowLeft'):s.plant.high?'KeyE':'ArrowRight');break;}await wait(25);}
     await wait(200);check((await read()).act||(await read()).phase==='res','an arrow key dives after the whistle');await shot('desktop');}}
+  /* ---- Daily Shootout: five penalties, the result is saves out of five with what to beat tomorrow ---- */
+  {await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-safehands-card="start"]',{timeout:60000});await wait(500);
+   await click('[data-safehands-daily]');await page.waitForSelector('[data-safehands-card="tip"]',{timeout:20000});await wait(300);check(await page.locator('[data-safehands-card="tip"] ol li').count()===5,'the Daily Shootout card names the day\'s five takers');await shot('daily');
+   await click('[data-safehands-ack]');let n=0;for(;;){const r=await attack('read');if(r===null||r==='tip')break;n++;if(n>7)break;}
+   await page.waitForSelector('[data-safehands-card="results"]',{timeout:20000});await wait(700);
+   const d=await page.evaluate(()=>{const g=window.__safehands.game.state;return {saves:g.dailySaves,log:g.dailyLog.length,lives:g.lives};}),line=await page.locator('[data-safehands-near]').innerText(),big=await page.locator('[data-safehands-card="results"] strong').first().innerText();
+   check(n===5&&d.log===5&&d.lives===3,'the shoot-out is five penalties, no lives',JSON.stringify(d));check(big===`${d.saves}/5`,'the result is saves out of five',big);check(/tomorrow/i.test(line),'the card says what to beat tomorrow',line);
+   const sv=await page.evaluate(()=>JSON.parse(localStorage.getItem('fi2-safehands-v1')));check(sv.daily.counted&&sv.daily.saves===d.saves,'today\'s shoot-out is saved on the device');await shot('daily-results');}
   /* ---- the tour (screenshots only): First team has the wall and the cross; then the shelf and a scouting card ---- */
   if(shots&&tour){
    await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('fi2-safehands-v1'));s.rounds=2;s.gloves=['first-save','clean-sheet','fingertip','safe-hands','wall'];s.scout.rosa={faced:6,saved:4,seen:[5,3,6,0]};s.scout.nia={faced:3,saved:1,seen:[2,0,3,0]};s.scout.tomas={faced:2,saved:1,seen:[1,1,2,1]};localStorage.setItem('fi2-safehands-v1',JSON.stringify(s));});
@@ -107,6 +117,19 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
    const cap={wall:'wall-choice',cross:'cross'};let g2=0,kinds=[];
    while(g2++<8){const s=await read();if(!s||s.over)break;const k=s.sh&&s.sh.kind;kinds.push(k);const c=k==='free'?{wall:cap.wall,set:'freekick',save:''}:k==='cross'?{cross:cap.cross}:k==='one'?{set:'one-on-one'}:k==='far'?{set:'long-shot'}:{};const r=await attack('read',c);if(r===null)break;if(r==='tip')break;}
    console.log('tour kinds: '+kinds.join(', '));
+  }
+  /* ---- --full: the whole ladder played by the tell-reading keeper with real gestures (about 3 minutes) ---- */
+  if(has('full')){
+   await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('[data-safehands-card="start"]',{timeout:60000});await wait(500);
+   await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('fi2-safehands-v1'));s.rounds=0;localStorage.setItem('fi2-safehands-v1',JSON.stringify(s));});
+   const t0=Date.now();await click('[data-safehands-play]');await page.waitForSelector('[data-safehands-card="tip"]');let n=0,saved=0,last=-1;
+   for(;;){const s=await read();if(!s||s.over||s.ui!=='playing')break;if(s.phase==='tip'){if(s.tier===3&&last!==3)await shot('round-cup');last=s.tier;await click('[data-safehands-ack]');await wait(150);continue;}
+    const r=await attack('read',s.tier===3&&s.shotN===1?{tell:'cup-tell'}:{});if(r===null)break;if(r!=='tip'){n++;if(r.saved)saved++;}}
+   await page.waitForSelector('[data-safehands-card="results"]',{timeout:20000});await wait(900);await shot('results-cup');
+   const st=await page.evaluate(()=>{const h=window.__safehands,g=h.game.state;return {won:g.won,score:g.score,goals:g.stats.goals,saves:g.stats.saves,tier:g.tier,feats:g.feats,cost:h.cost};});
+   console.log(`full run: ${Math.round((Date.now()-t0)/1000)} s, ${JSON.stringify({won:st.won,score:st.score,saves:st.saves,goals:st.goals,tier:st.tier,gloves:st.feats.length})}`);
+   console.log(`frame cost (rules + draw): mean ${(st.cost.ms/Math.max(1,st.cost.n)).toFixed(2)} ms, worst ${st.cost.max.toFixed(1)} ms over ${st.cost.n} frames`);
+   check(st.tier>=2,'the tell-reading keeper gets to First team or beyond with real gestures',`tier ${st.tier}, ${st.goals} goals`);
   }
   check(errors.length===0,'no console errors',errors.slice(0,3).join(' | '));
  }finally{await browser.close();}

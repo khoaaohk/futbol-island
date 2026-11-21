@@ -82,7 +82,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
  const entry=useArcadeEntry('safehands');
  const stage=useRef<HTMLDivElement>(null),focusEl=useRef<HTMLDivElement>(null),bgEl=useRef<HTMLCanvasElement>(null),fgEl=useRef<HTMLCanvasElement>(null);
  const game=useRef<SafeHands|null>(null),view=useRef<SafehandsView|null>(null),audio=useRef<SafehandsAudio|null>(null);
- const raf=useRef(0),draws=useRef(0),last=useRef(0),slot=useRef(0),urgent=useRef(false),stopUntil=useRef(0),frameMs=useRef(1000/30),endAt=useRef(0),wordId=useRef(0);
+ const raf=useRef(0),draws=useRef(0),cost=useRef({n:0,ms:0,max:0}),last=useRef(0),slot=useRef(0),urgent=useRef(false),stopUntil=useRef(0),frameMs=useRef(1000/30),endAt=useRef(0),wordId=useRef(0);
  const run=useRef<{id:string;daily:boolean;day:string;done:boolean;scout:ScoutNote[];kinds:string[];feats:FeatId[]}>({id:'',daily:false,day:'',done:true,scout:[],kinds:[],feats:[]});
  const ptr=useRef<{id:number;sx:number;sy:number;wx:number;wd:number;mode:''|'move'|'swipe';carry:boolean;t:number;done:boolean}|null>(null);
  const keys=useRef({left:false,right:false,up:false,down:false}),seen=useRef<Set<string>>(new Set()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
@@ -144,8 +144,8 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   if(next<0){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}slot.current=next;
   const dt=last.current?Math.min(.1,(now-last.current)/1000):1/60;last.current=now;
   const k=keys.current,s=g.state;if((k.left||k.right||k.up||k.down)&&(s.phase==='set'||s.phase==='wall'||s.phase==='cross'))g.nudge(((k.right?1:0)-(k.left?1:0))*SH.moveX*1.2*dt,((k.up?1:0)-(k.down?1:0))*SH.moveD*1.2*dt);
-  if(now>=stopUntil.current){g.advance(dt);g.drain(onEvent);}
-  v.render(g,now/1000);draws.current++;
+  const c0=performance.now();if(now>=stopUntil.current){g.advance(dt);g.drain(onEvent);}
+  v.render(g,now/1000);draws.current++;{const c=cost.current,ms=performance.now()-c0;c.n++;c.ms+=ms;if(ms>c.max)c.max=ms;}// frame cost (rules + draw) for scripts/check-safehands-browser.cjs
   if(now-hudAt.current>100){const hh=hudRef.current,n:Hud={score:s.score,lives:s.lives,tier:s.tier,shotN:s.shotN,streak:s.streak,cp:s.phase,kind:s.shot?.kind??'',loose:!!g.looseBall(),decided:!!s.decision,log:s.dailyLog.join('')};
    let diff=false;for(const key of Object.keys(n) as (keyof Hud)[])if(n[key]!==hh[key]){diff=true;break;}if(diff){hudAt.current=now;hudRef.current=n;setHud(n);}}
   if(s.over){if(endAt.current&&now>=endAt.current){finish();return;}}
@@ -191,7 +191,8 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;
    const g=game.current;if(!g)return;e.preventDefault();audio.current?.unlock();if(g.state.over){endAt.current=1;return;}
    const p=local(e);try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}
-   ptr.current={id:e.pointerId,sx:p.x,sy:p.y,wx:g.state.wantX,wd:g.state.wantD,mode:'',carry:false,t:performance.now(),done:false};};
+   const cp=g.state.phase;/* the gesture starts as what the moment calls for: a drag before the whistle, a swipe after it */
+   ptr.current={id:e.pointerId,sx:p.x,sy:p.y,wx:g.state.wantX,wd:g.state.wantD,mode:cp==='run'||cp==='fly'?'swipe':cp==='set'||cp==='wall'||cp==='cross'?'move':'',carry:false,t:performance.now(),done:false};};
   const move=(e:PointerEvent)=>{const q=ptr.current,g=game.current;if(!q||!g||e.pointerId!==q.id||phaseRef.current!=='playing')return;e.preventDefault();const p=local(e),cp=g.state.phase,now=performance.now();
    if(cp==='set'||cp==='wall'||cp==='cross'){if(q.mode!=='move'){q.mode='move';q.sx=p.x;q.sy=p.y;q.wx=g.state.wantX;q.wd=g.state.wantD;}const gain=v.gain;g.move(q.wx+(p.x-q.sx)/gain.x*1.15,q.wd-(p.y-q.sy)/gain.d);}
    else if(cp==='run'||cp==='fly'){if(q.mode!=='swipe'){q.carry=q.mode==='move';q.mode='swipe';q.sx=p.x;q.sy=p.y;q.t=now;}if(q.done)return;const dx=p.x-q.sx,dy=p.y-q.sy,d=Math.hypot(dx,dy);
@@ -202,7 +203,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);
   const noMenu=(e:Event)=>e.preventDefault();el.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__safehands?:unknown}).__safehands={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get draws(){return draws.current;},get view(){return view.current;},get audio(){return audio.current;},get stage(){return el.getBoundingClientRect();}};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__safehands?:unknown}).__safehands={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get draws(){return draws.current;},get cost(){return cost.current;},get view(){return view.current;},get audio(){return audio.current;},get stage(){return el.getBoundingClientRect();}};
   return()=>{ro.disconnect();el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('touchmove',noScroll);el.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;v.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__safehands?:unknown}).__safehands;};
  },[doAct]);
@@ -297,7 +298,7 @@ export default function SafeHandsGame({onExit}:{onExit:()=>void}){
     <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-safehands-scores>Scores</ComicButton>
    </div>
   </ComicCard>}
-  {phase==='over'&&result&&<ComicCard label="Full time" badge={result.daily?'Daily Shootout':result.won?'Cup winners':'Full time'} badgeTone={result.daily?'teal':'red'} best={result.daily?`Today ${result.settled.dailyBest}/${SH.dailyShots}`:`Best ${result.settled.save.best}`} data-safehands-card="results" data-safehands-score={result.score} data-safehands-saves={result.saves}>
+  {phase==='over'&&result&&<ComicCard label="Full time" badge={result.daily?'Daily Shootout':result.won?'Cup winners':'Full time'} badgeTone={result.daily?'teal':'red'} best={result.settled.newBest?undefined:result.daily?`Today ${result.settled.dailyBest}/${SH.dailyShots}`:`Best ${result.settled.save.best}`} data-safehands-card="results" data-safehands-score={result.score} data-safehands-saves={result.saves}>
    <div className={styles.scoreRow}>
     <strong className={`${comicNumeral} ${styles.score}`} data-new-best={result.settled.newBest||undefined}>{result.daily?`${result.dailySaves}/${SH.dailyShots}`:result.score}</strong>
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
