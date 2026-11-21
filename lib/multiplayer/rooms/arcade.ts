@@ -57,7 +57,7 @@ export const ARCADE_ROOM:RoomDescriptor={
   {id:'air-hockey',kind:'table',x:-10,z:-1,r:2.4,label:'Watching air hockey'},
   {id:'claw',kind:'machine',x:-12,z:8,r:1.6,label:'At the claw machine'},
   {id:'vending',kind:'machine',x:12.6,z:9.6,r:1.4,label:'At the drinks machine'},
-  {id:'lounge-north',kind:'lounge',x:-13,z:-6,r:2,label:'Sitting in the lounge'},
+  {id:'lounge-south',kind:'lounge',x:-13,z:2.5,r:2,label:'Sitting in the lounge'},
   {id:'door',kind:'door',x:0,z:12,r:2.1,label:'At the door'},
  ],
  stationRadius:2.5,

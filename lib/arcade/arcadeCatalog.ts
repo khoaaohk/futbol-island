@@ -45,10 +45,11 @@ export const arcadeCabinets = [
  // spot (Hold the Line retired from the room; its board id stays in BOARD_GAMES so its scores stay valid).
  {id:'popup',name:'Pop-Up Shot',short:'POP-UP SHOT',lesson:'Look up. Pick the target. Strike.',color:'#f0452e',x:12.85,z:5.2,yaw:-Math.PI/3},
  // Nov 22 2026 (owner approved the release): Flick It and FootGolf Island stand against the WEST wall, mirroring the east pair, between
- // the air hockey table and the Claw Club, where the south lounge sofa stood (removed for them). Turned +60 degrees so they face the aisle
- // and lean toward the room camera; spots measured against the room's colliders (tests/arcade-room-crowd.cjs "west wall").
- {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8',x:-12.7,z:2.4,yaw:Math.PI/3},// docs/arcade-aaa/flickit-direction.md
- {id:'footgolf',name:'FootGolf Island',short:'FOOTGOLF',lesson:'Laces to go far. Inside of the foot to roll it in.',color:'#3f9a50',x:-13.8,z:4.4,yaw:Math.PI/3},// docs/arcade-aaa/footgolf-direction.md
+ // the back row and the air hockey table, where the north lounge sofa stood (removed for them; the south lounge stays). Not by the Claw
+ // Club: seen from the room camera it hid the lower cabinet there. Turned +60 degrees so they face the aisle and lean toward the camera;
+ // spots measured against the room's colliders (tests/arcade-room-crowd.cjs "west wall").
+ {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8',x:-12.75,z:-5.45,yaw:Math.PI/3},// docs/arcade-aaa/flickit-direction.md
+ {id:'footgolf',name:'FootGolf Island',short:'FOOTGOLF',lesson:'Laces to go far. Inside of the foot to roll it in.',color:'#3f9a50',x:-13.85,z:-3.45,yaw:Math.PI/3},// docs/arcade-aaa/footgolf-direction.md
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet wait here for the

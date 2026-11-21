@@ -90,11 +90,12 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
    for(const [k,o] of Object.entries(props))assert(gap(spot,o)>=.2,`${c.id}: walk-up spot clear of the ${k}`);bodies.forEach((b,j)=>assert(gap(spot,b)>=(j===i?.05:.3),c.id+': walk-up spot clear of the cabinet bodies'));});
   assert(gap(bodies[0],bodies[1])>=.3,'the two wall cabinets do not touch');
   console.log('ARCADE_EAST_WALL_PASS',JSON.stringify(wall.map((c,i)=>({id:c.id,x:c.x,z:c.z,clear:+Math.min(...Object.values(props).map(o=>gap(bodies[i],o))).toFixed(2)}))));}
- // Nov 22 2026: the west wall pair, Flick It and FootGolf Island, turned +60 degrees between the air hockey table and the Claw Club where
- // the south lounge stood. Same body and walk-up rules as the east pair, against the table, the claw machine and the north lounge.
+ // Nov 22 2026: the west wall pair, Flick It and FootGolf Island, turned +60 degrees between the back row and the air hockey table where
+ // the north lounge stood. Same body and walk-up rules as the east pair, against the table, the back row, the corner plinth and pillar,
+ // the claw machine and the south lounge.
  {const rect=(cx,cz,hx,lo,hi,yaw)=>{const ax=[Math.cos(yaw),-Math.sin(yaw)],az=[Math.sin(yaw),Math.cos(yaw)];return [[-hx,lo],[hx,lo],[hx,hi],[-hx,hi]].map(([u,v])=>[cx+u*ax[0]+v*az[0],cz+u*ax[1]+v*az[1]]);};
   const gap=(P,Q)=>{let best=-Infinity;for(const S of [P,Q])for(let i=0;i<S.length;i++){const p=S[i],q=S[(i+1)%S.length],n=[q[1]-p[1],p[0]-q[0]],l=Math.hypot(...n),pr=X=>X.map(x=>(x[0]*n[0]+x[1]*n[1])/l),A=pr(P),B=pr(Q);best=Math.max(best,Math.min(...B)-Math.max(...A),Math.min(...A)-Math.max(...B));}return best;};
-  const props={hockey:rect(-10,-1,1.55,-2.4,2.4,0),claw:rect(-12,8,1.615,-1.596,1.596,0),lounge:rect(-13,-6,1.05,-1.85,1.85,0)};/* the colliders in arcadeRoomProps.ts; the north lounge sofa (arcadeRoomScene.ts) */
+  const rowWest=row.reduce((m,c)=>c.x<m.x?c:m),props={hockey:rect(-10,-1,1.55,-2.4,2.4,0),claw:rect(-12,8,1.615,-1.596,1.596,0),lounge:rect(-13,2.5,1.05,-1.85,1.85,0),row:rect(rowWest.x,rowWest.z,.95,-.63,3.1,0),plinth:rect(-14,-10.5,.375,-.375,.375,0),pillar:rect(-15.3,-9,.375,-.375,.375,0)};/* the colliders in arcadeRoomProps.ts; the south lounge sofa, corner plinth and wall pillar (arcadeRoomScene.ts); the back row's west end with its walk-up spot */
   const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id)&&c.x<0);assert.equal(wall.map(c=>c.id).join(),'flickit,footgolf');
   const bodies=wall.map(c=>rect(c.x,c.z,.95,-.63,1.32,c.yaw));
   wall.forEach((c,i)=>{assert(c.x< -10&&Math.abs(c.yaw-Math.PI/3)<1e-9,c.id+': on the west wall, turned toward the aisle');assert(Math.min(...bodies[i].map(p=>p[0]))> -15,c.id+': inside the wall');

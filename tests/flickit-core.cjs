@@ -171,7 +171,7 @@ ok('save: best Tour, stars per stage, the day\'s Daily Flick, junk refused',()=>
 });
 ok('wiring: a machine on the west wall (Nov 22 2026), its own all-time board, coins, analytics key, device save, SQL as files',()=>{
  const cat=read('lib/arcade/arcadeCatalog.ts'),room=read('components/ArcadeRoom.tsx'),A=require('../lib/arcade/arcadeCatalog.ts');
- assert.equal(A.arcadeUnplaced.length,0);{const c=A.arcadeCabinets.find(c=>c.id==='flickit');assert.ok(c&&c.x===-12.7&&c.z===2.4&&Math.abs(c.yaw-Math.PI/3)<1e-9,'on the west wall');}assert.ok(!A.ARCADE_ROW.includes('flickit'));assert.equal(A.ARCADE_GAME_COUNT,15);
+ assert.equal(A.arcadeUnplaced.length,0);{const c=A.arcadeCabinets.find(c=>c.id==='flickit');assert.ok(c&&c.x===-12.75&&c.z===-5.45&&Math.abs(c.yaw-Math.PI/3)<1e-9,'on the west wall');}assert.ok(!A.ARCADE_ROW.includes('flickit'));assert.equal(A.ARCADE_GAME_COUNT,15);
  assert.match(cat,/\{id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power\. Inside of the foot to bend it\.'/);
  assert.match(room,/const FlickIt=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/FlickItGame'\)\)/);assert.match(room,/flickit:\(\)=>import\('\.\/games\/FlickItGame'\)/);assert.match(room,/game==='flickit'\?<FlickIt onExit=\{back\}\/>/);
  const L=require('../lib/arcade/leaderboard.ts');assert.ok(L.BOARD_GAMES.includes('flickit'));assert.ok(L.HALL_MACHINES.includes('flickit'),'in the Hall');assert.ok(!L.BOARD_GAMES.some(g=>/flick.*daily|flickdaily/.test(g)),'no daily board (the owner removed daily boards)');

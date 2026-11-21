@@ -153,7 +153,7 @@ ok('device save: best round, fewest kicks, best per hole, daily and streak; junk
 });
 
 ok('wiring: a machine on the west wall (Nov 22 2026) with one all-time board, earns coins, never charges',()=>{
- {const A=require('../lib/arcade/arcadeCatalog.ts'),c=A.arcadeCabinets.find(c=>c.id==='footgolf');assert.ok(c&&c.x===-13.8&&c.z===4.4&&Math.abs(c.yaw-Math.PI/3)<1e-9,'on the west wall');assert.equal(A.arcadeUnplaced.length,0);}
+ {const A=require('../lib/arcade/arcadeCatalog.ts'),c=A.arcadeCabinets.find(c=>c.id==='footgolf');assert.ok(c&&c.x===-13.85&&c.z===-3.45&&Math.abs(c.yaw-Math.PI/3)<1e-9,'on the west wall');assert.equal(A.arcadeUnplaced.length,0);}
  assert.match(read('components/ArcadeRoom.tsx'),/footgolf:\(\)=>import\('\.\/games\/FootGolfGame'\)/);assert.match(read('components/ArcadeRoom.tsx'),/game==='footgolf'\?<FootGolf onExit=\{back\}\/>/);
  const lb=read('lib/arcade/leaderboard.ts');assert.match(lb,/'holdtheline','footgolf','flickit','popup'\] as const;/);assert.match(lb,/ footgolf:\{name:'FootGolf Island',unit:'points',max:15_000/);assert.doesNotMatch(lb,/footgolfdaily|'footgolf_daily'/,'no daily board');
  assert.match(read('lib/arcade/arcadeWalletCore.ts'),/if\(game==='footgolf'\)value=Math\.floor\(n\(s\.points\)\/600\)/);assert.equal(C.footgolfCoins(1200),2);
