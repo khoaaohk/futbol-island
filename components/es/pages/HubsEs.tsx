@@ -1,5 +1,8 @@
 import RailNav from '@/components/site/shell/RailNav';
 import {chartRail} from '@/lib/site/railNavCollections';
+import {hubRail,sec} from '@/lib/site/railNavMore';
+import type {RailItem} from '@/lib/site/railNav';
+import rtEs from '@/components/site/railTarget.module.css';
 import JsonLd from '@/components/seo/JsonLd';
 import ClipPlay from '@/components/site/ClipPlay';
 import {QA} from '@/components/site/LessonHub';
@@ -64,15 +67,18 @@ function MoreToLearnEs({except}:{except?:string}){
 }
 
 // ---- lesson hubs ------------------------------------------------------------------------------------------------------------------
-function LessonHubEs({hub,children}:{hub:EsHub;children?:React.ReactNode}){
+function LessonHubEs({hub,children,extra=[]}:{hub:EsHub;children?:React.ReactNode;extra?:readonly RailItem[]}){
  const crumbs=hubCrumbsEs(hub),items=hub.groups.flatMap(g=>g.lessons);
+ /* the side nav, as English (components/site/LessonHub.tsx): Back to the Biblioteca, Resumen, the page's own section, each group, Preguntas, Más para aprender */
+ const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,g.title)),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
  return <>
+  <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:hub.h1,path:hub.path,description:hub.description,published:SITE_UPDATED.hubs,modified:SITE_UPDATED.hubs,
    items:items.map(l=>({name:`${l.title} (${l.formatLabel})`,path:l.esPath}))}))}/>
   <JsonLd data={faqLd(hub.faq)}/>
   <Hero video={guideVideo(hub.enPath)&&hub.video?<GuideVideoEs enPath={hub.enPath} words={hub.video}/>:null}>{/* batch 3, as English (components/site/LessonHub.tsx) */}
-  <header className={styles.intro}>
+  <header className={`${styles.intro} ${rtEs.target}`} id="top">
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{hub.h1}</h1>
    <p className={styles.lead} data-answer="">{hub.lead}</p>
@@ -163,7 +169,7 @@ export function hubsEsRoute(enPath:string):EsRoute|null{
  if(ES_LESSON_HUB_PATHS.includes(enPath)){
   const slug=enPath.replace(/^\/learn\//,''),h=esHub(slug)!;
   const extra=slug==='futsal-for-kids'?<FutsalExtra/>:slug==='7v7-9v9-11v11'?<TeamSizesEs/>:null;
-  return {meta:()=>esMeta(h.title,h.description,enPath),render:()=><LessonHubEs hub={h}>{extra}</LessonHubEs>};
+  return {meta:()=>esMeta(h.title,h.description,enPath),render:()=><LessonHubEs hub={h} extra={slug==='futsal-for-kids'?[sec('futsal-more','Reglas y formaciones')]:slug==='7v7-9v9-11v11'?[sec('compare','Comparados')]:[]}>{extra}</LessonHubEs>};
  }
  const chart=CHART_BY_PATH.get(enPath);
  if(chart){const c=chartBySlug(chart)!,e=CHARTS_ES[chart];

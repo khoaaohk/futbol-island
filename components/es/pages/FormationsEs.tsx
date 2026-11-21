@@ -1,7 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
-import {anchor,guideRail,hubRail} from '@/lib/site/railNavMore';
+import {anchor,guideRail,hubRail,pageRail,sec} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -111,7 +111,8 @@ export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:g.h1,path:g.esPath,description:g.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:list.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(g.faq)}/>
-  <EsIntro crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
+  <EsIntro top rail={<RailNav rail={pageRail(`${format}: en esta página`,{href:H.path,name:'Todas las formaciones'},[sec('compare','Comparadas'),sec('pick','Cuál elegir'),
+   sec('shapes','Diagramas'),sec('basics','En breve'),sec('faq','Preguntas'),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
   <Section id="compare" title={`Formaciones de ${format} comparadas`}>
    <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`Formaciones de ${format} comparadas`}><table className={styles.table}>
     <thead><tr><th scope="col">Formación</th><th scope="col">Con el portero</th><th scope="col">Ideal para</th><th scope="col">Cuidado con</th></tr></thead>
@@ -156,7 +157,8 @@ export function CompareEsPage({c}:{c:EsComparison}){
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:c.title,path:c.esPath,description:c.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:c.h1,teaches:c.answer,image:img[0]}))}/>
-  <EsIntro crumbs={crumbs} h1={c.h1} lead={c.answer}/>
+  <EsIntro top rail={<RailNav rail={pageRail('Esta comparación',{href:hub.path,name:pos?'Todas las posiciones':'Todas las formaciones'},[sec('side-by-side','Lado a lado'),
+   sec('fit','Cuál le queda'),sec('switching','Cómo cambiar'),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={c.h1} lead={c.answer}/>
   <Section id="side-by-side" title="Lado a lado">
    <DataTable label={c.h1.replace(/:.*$/,'')} head={['Tema',nameOf(A),nameOf(B)]} rows={compareRows(c)}/>
   </Section>
