@@ -84,9 +84,12 @@
 }
 .thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
 /* The arcade's intro: its words beside the three-phone clip from 900 px. */
-.arcadeIntro{display:grid;gap:var(--s3);align-items:center}
+.arcadeIntro{display:grid;gap:var(--s3);align-items:center;margin-bottom:32px!important}/* + the section's 16 px = the cards' 48 px rhythm before the first card */
 .arcadeIntro>div{display:grid;gap:var(--s2)}
-@media(min-width:900px){.arcadeIntro{grid-template-columns:minmax(0,640px) minmax(0,520px);justify-content:center;gap:var(--s4)}}
+/* Nov 20 2026 night (owner: "a lot of white space"): the paragraphs on the H2's left edge, top-aligned with the clip, which is
+   decoration here and kept about as tall as the text */
+@media(min-width:900px){.arcadeIntro{grid-template-columns:minmax(0,1fr) minmax(0,440px);justify-content:start;align-items:start;gap:var(--s4)}
+ .arcadeIntro .clip{max-height:300px}}
 .featureWords .gameLinks .playNow,.playRow .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
 @media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow .playNow:hover{scale:1.04}}
 .featureWords .gameLinks .playNow:active,.playRow .playNow:active{scale:.96}
@@ -135,7 +138,10 @@
 .bandText p{margin:0;max-width:62ch!important;font-size:var(--t-body);line-height:1.5;color:var(--ink)}
 .bandText p.bandNote{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
 .bandNote a{color:var(--ink);text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
-@media(min-width:900px){.islandBand{grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:var(--s4);padding:var(--s4);align-items:start}}
+/* Nov 20 2026 night (owner: "fix this spacing. a lot of white space"): one column, the heading on top and the two paragraphs side by
+   side under it on wide screens, the caption and the names line as quiet full-width lines; the Library's band padding */
+@media(min-width:900px){.islandBand{padding:40px 44px;gap:var(--s2)}.bandText{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s1) var(--s4)}
+ .bandText p{max-width:none!important}.bandText p.bandNote{grid-column:1/-1}}
 /* The lower sections (batch 3, Nov 20 2026; owner: "these should be their own space and not two columns ... it's too tight and wall
    of text"; GamesLower.tsx): full-width bands with the Library's band spacing (library.module.css .band/.head), pictures in each. */
 .lband.lband ul{list-style:none;margin:0;padding:0}
