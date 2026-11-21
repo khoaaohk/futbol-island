@@ -167,9 +167,11 @@ export default function Home(){
     <h2 className={s.h2} id="about-h">About</h2>
     <p className={s.sub}>{G.partnerLead}<a className={s.bold} href={WSV_LINKS[0].href} rel="noopener noreferrer" target="_blank">{G.partnerName}</a>{G.partnerRest}</p>
     <ul className={s.aboutBoxes}>
-     <li><a href={`mailto:${CONTACT_EMAIL}`} target="_blank" rel="noopener noreferrer"><b>Email</b><span>{CONTACT_EMAIL}</span></a></li>
+     <li><a href={`mailto:${CONTACT_EMAIL}`} target="_blank" rel="noopener noreferrer"><b>Email</b><span>{CONTACT_EMAIL.split('@')[0]}@<wbr/>{CONTACT_EMAIL.split('@')[1]}</span></a></li>
      <li><a href={WSV_LINKS[1].href} target="_blank" rel="noopener noreferrer"><b>Instagram</b><span>{WSV_LINKS[1].label.replace(' on Instagram','')}</span></a></li>
      <li><a href="/marketing"><b>Marketing</b><span>Overview and downloads</span></a></li>
+     {/* the fourth box (owner, Nov 20 2026): the full About page */}
+     <li><a href="/about"><b>About us</b><span>Who makes Futbol Island</span></a></li>
     </ul>
    </div>
   </section>
