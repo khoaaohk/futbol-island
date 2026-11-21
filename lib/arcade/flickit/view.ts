@@ -39,9 +39,9 @@ const PLACES:Record<string,Place>={
  * look-at point, dy = metres down, dx = metres sideways), so the kicker and the ball sit low and the targets and the landmark fill
  * the picture; fog starts near enough to haze the back band. Gulls circle over the day places (centre x y z, radius). */
 const VIEW:Record<string,{pull:number;dy:number;dx:number;fk:number;fog:[number,number];gull?:[number,number,number,number]}>={
- garden:{pull:-.1,dy:.2,dx:0,fk:.82,fog:[26,140],gull:[3,11,-34,7]},plaza:{pull:-.08,dy:0,dx:-.2,fk:.86,fog:[30,150],gull:[-4,15,-36,6]},
+ garden:{pull:-.1,dy:.2,dx:0,fk:.82,fog:[26,140],gull:[3,11,-34,7]},plaza:{pull:-.08,dy:-.45,dx:-.2,fk:.86,fog:[30,150],gull:[-4,15,-36,6]},
  pitch:{pull:-.06,dy:.5,dx:-.3,fk:.86,fog:[28,150],gull:[2,13,-38,8]},beach:{pull:-.02,dy:1.1,dx:1.2,fk:.86,fog:[30,150],gull:[0,10,-36,9]},
- roof:{pull:-.04,dy:.6,dx:.2,fk:.9,fog:[34,160]},stadium:{pull:-.1,dy:.05,dx:.5,fk:.84,fog:[40,170]},
+ roof:{pull:-.04,dy:.6,dx:.2,fk:.9,fog:[34,160]},stadium:{pull:-.1,dy:-.55,dx:.5,fk:.84,fog:[40,170]},
 };
 
 /** The backdrop: the house comic coast (banded sky, sun, clouds, headlands, sea) with each place's own skyline inked over it. */
@@ -369,7 +369,7 @@ export function createFlickitView(host:HTMLElement,o:{reduced:boolean;mobile:boo
  function resize(w:number,h:number,dpr:number){W=w;H=h;renderer.setPixelRatio(Math.min(o.mobile?1.5:2,dpr));renderer.setSize(w,h,false);comicDotCell(ink,renderer);measure();}
 
  function setStage(g:FlickIt,intro=true){const s=g.state;def=s.stage;const p=PLACES[def.place]??PLACES.garden;
-  backTex?.dispose();groundT?.dispose();backTex=backdropTex(def.place);groundT=groundTex(def.place,s.ents);backMat.map=backTex;backMat.needsUpdate=true;groundMat.map=groundT;groundMat.needsUpdate=true;underMat.color.set(p.ground);
+  backTex?.dispose();groundT?.dispose();backTex=backdropTex(def.place);groundT=groundTex(def.place,s.ents);backMat.map=backTex;backMat.needsUpdate=true;groundMat.map=groundT;groundMat.needsUpdate=true;underMat.color.set(p.ground);under.visible=def.place!=='stadium';/* the stands close the stadium in: one draw saved */
   place.geometry.dispose();place.geometry=scenery(def.place,s.ents);sceneryTris=SCENE_OUT.tris;flut=SCENE_OUT.flut;
   {const vw=VIEW[def.place];if(vw){fog.near=vw.fog[0];fog.far=vw.fog[1];}gullN=vw?.gull&&!o.reduced?GULLS:0;flutN=Math.min(FLUT-gullN*2,flut.length/8);let fi=0;for(let i=0;i<flutN;i++)flutter.setColorAt(fi++,CC.set(FLUT_C[flut[i*8+6]]));for(let i=0;i<gullN*2;i++)flutter.setColorAt(fi++,CC.set(def.place==='beach'?'#fffaf0':'#3a2f58'));flutter.count=fi;flutter.visible=fi>0;if(flutter.instanceColor)flutter.instanceColor.needsUpdate=true;}
   kick.set=false;kick.charge=0;kick.cheer=0;kick.at=-9;
