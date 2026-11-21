@@ -48,15 +48,17 @@ export const LIBRARY_ITEMS:readonly LibraryItem[]=FOOTER_HUBS.map(([path,label])
 export const libraryItemsIn=(g:LibraryGroupId)=>LIBRARY_ITEMS.filter(i=>i.group===g);
 
 /** Each card's picture: the lead picture of the linked section (its hub's own diagram, screenshot or game still). Real sizes, so nothing shifts. */
-export type LibraryPic={src:string;w:number;h:number;/** a 1200 x 630 diagram picture: the pitch is on its left, so crops keep the left */diagram?:boolean};
-const F=(src:string):LibraryPic=>({src,w:1200,h:630,diagram:true}),D=(file:string):LibraryPic=>F(diagramUrl(file)),still=(src:string,w:number,h:number):LibraryPic=>({src:learnUrl(src),w,h});
+export type LibraryPic={src:string;w:number;h:number;/** a 1200 x 630 diagram picture (pitch panel left, title right): the x where the pitch panel and its margin end, measured
+ *  on the pictures Nov 20 2026 (430: the upright pitch of rules, terms, charts and formations; 629: the square drill grid). A small card shows
+ *  exactly that panel, whole, and never a slice of the title beside it. */diagram?:number;/** object-position of a cropped photo thumb */pos?:string};
+const F=(src:string,panel=430):LibraryPic=>({src,w:1200,h:630,diagram:panel}),D=(file:string,panel=430):LibraryPic=>F(diagramUrl(file),panel),still=(src:string,w:number,h:number):LibraryPic=>({src:learnUrl(src),w,h});
 const islandVideo=allWatchVideos().find(v=>v.group==='island')??allWatchVideos()[0],firstBook=SITE_BOOKS.find(b=>BUILT_BOOKS.includes(b.id));
 export const LIBRARY_PICS:Readonly<Record<string,LibraryPic|undefined>>={
  '/learn/lessons':still('/learn/slide_stories.webp',1600,900),'/learn/soccer-rules':D('offside-rule.png'),'/learn/soccer-positions':F(formationImage('11v11-4-3-3')),
  '/learn/soccer-formations':F(formationImage('7v7-2-3-1')),'/learn/soccer-terms':D('give-and-go-term.png'),'/learn/soccer-age-groups':D('soccer-age-groups-chart.png'),
- '/learn/soccer-drills':D('sharks-and-minnows-drill.png'),'/learn/soccer-practice-plans':D('three-v-three-game-drill.png'),'/tools':F(formationImage('9v9-3-2-3')),
+ '/learn/soccer-drills':D('sharks-and-minnows-drill.png',629),'/learn/soccer-practice-plans':D('three-v-three-game-drill.png',629),'/tools':F(formationImage('9v9-3-2-3')),
  '/games':still('/learn/slide_arcade.webp',1600,900),'/videos':islandVideo?{src:islandVideo.posterSrc,w:islandVideo.pw??islandVideo.w,h:islandVideo.ph??islandVideo.h}:undefined,
- '/cards':still('/learn/wide_cards.webp',1920,1080),'/fish':{src:'/games/shots/fishing-1.webp',w:960,h:540},'/exhibits':still('/learn/wide_museum.webp',1920,1080),
+ '/cards':{...still('/learn/player_cards.webp',780,1688),pos:'50% 38%'}/* the card binder (the wide clip's still showed the town square, no cards) */,'/fish':{src:'/games/shots/fishing-1.webp',w:960,h:540},'/exhibits':still('/learn/wide_museum.webp',1920,1080),
  '/books':firstBook?{src:bookImage(firstBook),w:960,h:600}:undefined};
 /** The hero's two pictures: the island from above and a lesson on the pitch. */
 export const LIBRARY_HERO={main:still('/learn/montage_m.webp',1280,720),inset:still('/learn/lesson_field_45_m.webp',720,900)};
@@ -89,7 +91,7 @@ export const LIBRARY_EN:LibraryWords={
   '/tools':{alt:'Diagram of a 9v9 lineup in a 3-2-3',name:'Coach tools',line:'Lineup builders, playing time planners and field diagrams to print. For coaches.',count:n=>`${n} tools and printables`},
   '/games':{alt:'A match on a neon pitch in the Futbol Island arcade, Gold against Blue, seen from above',name:'Games',line:'Free arcade games about passing, shape and quick thinking. For kids.',count:n=>`${n} games`},
   '/videos':{alt:'The town square on Futbol Island from above, with a welcome message on the screen',name:'Videos',line:'Short clips of the games, the island and the lessons. For kids and parents who want a look first.',count:n=>`${n} videos`},
-  '/cards':{alt:'A still from the card collection clip in the game',name:'Player cards',line:'Football players to collect, each with a position and a play to learn. For kids.',count:n=>`${n} player cards`},
+  '/cards':{alt:'A binder page of nine player cards in the game',name:'Player cards',line:'Football players to collect, each with a position and a play to learn. For kids.',count:n=>`${n} player cards`},
   '/fish':{alt:'Fishing from the pier on Futbol Island',name:'Fishbook',line:'Every fish you can catch from the island, and where it lives. For kids who like to explore.',count:n=>`${n} fish`},
   '/exhibits':{alt:'Inside the football museum on Futbol Island',name:'Museum',line:'Moments from football history, told simply. For kids and families.',count:n=>`${n} exhibits`},
   '/books':{alt:'An open pop-up story book',name:'Story books',line:'Pop-up story books about football players. For kids who like to read.',count:n=>`${n} story books`}}};

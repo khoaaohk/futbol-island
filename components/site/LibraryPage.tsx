@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import type {CSSProperties,ReactNode} from 'react';
 import {FactIcon} from './FactIcons';
 import type {LibraryCard,LibraryGroup,LibraryPic} from '@/lib/site/library';
 import {PLAY_PATH} from '@/lib/site/seo';
@@ -11,13 +11,14 @@ import l from './library.module.css';
  * sides. Each card is one link with the section's own lead picture (lib/site/library.ts LIBRARY_PICS), its name, a count from
  * the data and one plain line. Only the hero pictures load eagerly; the rest are lazy with their real width and height.
  */
-function Pic({c,sizes}:{c:LibraryCard;sizes:string}){
+function Pic({c}:{c:LibraryCard}){
  if(!c.pic)return <span className={l.pic} data-icon=""><FactIcon kind={c.icon} size={56}/></span>;
- return <span className={l.pic} data-diagram={c.pic.diagram?'':undefined}><img src={c.pic.src} alt={c.alt} width={c.pic.w} height={c.pic.h} sizes={sizes} loading="lazy" decoding="async"/></span>;
+ const d=c.pic.diagram,vars=d?{'--pa':`${d}/${c.pic.h}`,'--pc':`${(d/2/c.pic.w*100).toFixed(2)}%`,'--px':`${((1-d/c.pic.w)*100).toFixed(2)}%`} as CSSProperties:undefined;
+ return <span className={l.pic} data-diagram={d?'':undefined} style={vars}><img src={c.pic.src} alt={c.alt} width={c.pic.w} height={c.pic.h} style={c.pic.pos?{objectPosition:c.pic.pos}:undefined} loading="lazy" decoding="async"/></span>;
 }
 function Card({c,big}:{c:LibraryCard;big:boolean}){
  return <li className={big?l.feature:l.card}><a href={c.href}>
-  <Pic c={c} sizes={big?'(min-width:900px) 620px, 100vw':'168px'}/>
+  <Pic c={c}/>
   <span className={l.body}>
    <h3 className={l.name}>{c.name}</h3>
    {c.count&&<span className={l.count}>{c.count}</span>}
