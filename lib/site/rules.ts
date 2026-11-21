@@ -251,8 +251,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next7_shotreaction','expf_keeperposition','def_7_goalside'],cta:'next7_shotreaction',exhibitIds:['penalty-1891'],links:[L.gk,L.st,L.cb]},
  // ---- yellow and red cards -----------------------------------------------------------------------------------------------
  {slug:'yellow-and-red-cards',name:'Yellow and red cards',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'Yellow and Red Cards in Soccer: What a Yellow Card Means',h1:'What does a yellow card mean in soccer?',
-  desc:'What does a yellow card mean in soccer? A warning. The 7 yellow and 7 red card offenses, what happens after a red card, and a referee game.',
+  title:'Yellow and Red Cards in Soccer: What a Yellow Card Means',h1:'Yellow and red cards in soccer: what does a yellow card mean?',
+  desc:'What does a yellow card mean in soccer? A warning, and two make a red. All 14 yellow and red card offenses, sin bins in kids’ soccer and a referee quiz.',
   answer:'A yellow card in soccer is a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card sends the player off for the rest of the game, and the team plays one player short, with no one to replace them.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
@@ -448,6 +448,7 @@ export const RULES:readonly Rule[]=([
   faq:[{q:'At what age can kids head the ball in soccer?',a:'In US youth soccer, from age 11 in games. Players aged 10 and under do not head the ball at all. Players aged 11 and 12 have limits in practice.'},
    {q:'What happens if a 9-year-old heads the ball in a game?',a:'If it was deliberate, the referee stops play and the other team gets an indirect free kick from that spot.'},
    {q:'Why is heading limited for kids?',a:'U.S. Soccer brought in the limits in 2015 with Recognize to Recover, its player health and safety program, made with the help of medical experts.'},
+   {q:'Is heading banned in youth soccer?',a:'Not at every age. In US youth soccer, players aged 10 and under do not head the ball, and players aged 11 and 12 may head it in games with limits in practice. In England, the FA is phasing deliberate heading out of grassroots matches from U7 to U11.'},
    {q:'How can young players control a high ball without heading?',a:'With the chest, the thigh or the foot, or by letting it bounce. Our lessons teach looking early and choosing a first touch into space.'}],
   lessonIds:['learn7_receive','learn9_receive','next7_shotreaction'],cta:'learn7_receive',links:[L.ages,L.f7,L.ball]},
  // ---- futsal rules -------------------------------------------------------------------------------------------------------
