@@ -78,6 +78,7 @@ export const KEEPY_TIPS:readonly KeepyTip[]=[
 export function coachLine(c:Record<Grade,number>,out:boolean):string{
  const scruffy=c.early+c.late+c.slip+c.wrong;
  if(c.drop===0&&scruffy===0)return 'Every touch clean. That is real control!';
+ if(c.drop+scruffy<=2&&!out)return 'Almost every touch clean. Soft touches, eyes on the ball. Go for all Sweet next time.';
  if(c.wrong>=Math.max(2,c.early,c.late))return 'Look at the ring before you tap: its colour and picture tell you which pad to use.';
  if(c.early>c.late&&c.early>=c.drop)return 'You were a little early. Wait until the ball sits in the ring, then tap.';
  if(c.late>c.early&&c.late>=c.drop)return 'You were a little late. Listen for the drum and tap with it.';
@@ -89,7 +90,7 @@ export function coachLine(c:Record<Grade,number>,out:boolean):string{
 export function nearMissLine(o:{daily:boolean;out:boolean;stars:number;acc:number;track:number;opened:number;starsTotal:number;weak:number;weakBefore:number;newBest:boolean;score:number;best:number;medalBefore:number}):string{
  if(o.daily)return o.stars>=3?'Three stars on the Track of the Day. A new one comes tomorrow!':`${o.stars} ${o.stars===1?'star':'stars'} today. Play again for more, or come back tomorrow for a new twist.`;
  if(o.opened>=0)return `New track open: ${TRACKS[o.opened].name}!`;
- if(o.out)return `You got ${o.acc}% of the way to perfect. Finish the track for your first star.`;
+ if(o.out)return o.acc<15?'Tap the pad when the ball lands in its ring. Finish the track for your first star.':'So close. Keep the ball up to the end of the track for your first star.';
  if(o.stars<3){const need=Math.ceil(KU.stars[o.stars]*100)-o.acc;return `${Math.max(1,need)} more ${need===1?'point':'points'} of accuracy for ${o.stars+1} ${o.stars===0?'star':'stars'}.`;}
  if(o.weak>=0&&o.weak<90)return `Three stars! Now your weak foot: ${o.weak} out of 100. Can you reach 90?`;
  const next=KU.medals.findIndex(m=>o.score<m);if(next>=0&&next>=o.medalBefore&&KU.medals[next]-o.score<=KU.medals[next]*.3)return `${KU.medals[next]-o.score} points from ${MEDAL_NAMES[next]}.`;

@@ -40,6 +40,7 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
  {id:'safehands',name:'Safe Hands',short:'SAFE HANDS',lesson:'Set your position. Read the striker.',color:'#19b5a5'},
+ {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a'},// Nov 21 2026: the juggling rhythm game (docs/arcade-aaa/keepyuppy-direction.md "Room placement")
 ] as const;
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,

@@ -1,0 +1,8 @@
+/* Keepy-Uppy Beat HUD skin (Nov 21 2026, docs/arcade-aaa/keepyuppy-direction.md). The class lands on the game root next to
+ * data-game="keepyuppy" together with the comic kit's classes (components/games/comic). This file only sets what is the game's
+ * own: the page colour behind the stage and the overlays' accents. The back-to-arcade button stays as it is. */
+.skin{--arcade-skin:keepyuppy;background:#2f7f6a}
+.skin [data-arcade-pill] span{color:var(--cm-ink)!important}
+.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ed9}
+.skin.skin.skin.skin [data-arcade-pause-score]{border-left:10px solid var(--cm-sun)}
+.skin.skin.skin.skin [data-arcade-board]{max-height:min(92dvh,760px)}

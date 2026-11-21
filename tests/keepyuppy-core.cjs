@@ -47,7 +47,7 @@ ok('scoring: 100 / 60 / 20 a touch, the combo adds 10% every ten clean touches (
  const ev=events(g);assert.ok(ev.some(e=>e.type==='combo'&&e.a===10));
  const p=B.play(0,'perfect');assert.equal(p.events.at(-1).type,'over');assert.equal(p.events.at(-1).points,900);assert.ok(p.score<=KU.scoreMax);assert.ok(B.play(5,'perfect').score<=KU.scoreMax*.75,'room under the board cap');
  assert.equal(C.medalFor(3999),0);assert.equal(C.medalFor(4000),1);assert.equal(C.medalFor(20000),3);assert.ok(B.play(0,'perfect').score>=KU.medals[0],'bronze can be won on track 1');assert.ok(B.play(5,'perfect').score>=KU.medals[2]);
- assert.equal(C.keepyCoins(0),0);assert.equal(C.keepyCoins(3100),2);assert.equal(C.keepyCoins(99999),12);});
+ assert.equal(C.keepyCoins(0),0);assert.equal(C.keepyCoins(4100),2);assert.equal(C.keepyCoins(99999),12);});
 
 ok('balls: a drop loses the combo and one ball, eight touches that stay up win one back, no balls left ends the run early',()=>{
  assert.deepEqual(TRACKS.map(t=>t.balls),[5,4,3,3,3,3]);
@@ -75,9 +75,9 @@ ok('lessons and the tap-timing check: nothing to lose, no score; eight taps give
  const c=C.createKeepy({strong:'L',calib:true});assert.equal(c.chart.notes.length,KU.calibTaps);for(const x of c.chart.notes){c.advance(x.t);c.press((x.i%4),x.t+.062+(x.i%2?.004:-.004));}c.advance(c.chart.end);assert.equal(c.state.offsets.length,8,'any pad counts');assert.equal(C.calibOffset(c.state.offsets),62);
  assert.equal(C.calibOffset([.1,.1]),null);assert.equal(C.calibOffset([.9,.9,.5,.5,.5,.5,.5,.5]),200,'clamped');assert.equal(C.calibOffset([0,0,-.03,-.02,-.04,-.03,.2,-.03]),-30,'the median ignores one wild tap');});
 
-ok('Track of the Day: the same track and twist for everyone that day, a fair chart, never the last track',()=>{
+ok('Track of the Day: the same track and twist for everyone that day, a fair chart, one of the first four tracks',()=>{
  assert.equal(C.keepyDailySeed('2026-11-21'),C.keepyDailySeed('2026-11-21'));assert.notEqual(C.keepyDailySeed('2026-11-21'),C.keepyDailySeed('2026-11-22'));
- assert.deepEqual(C.dailyPick(C.keepyDailySeed('2026-11-21')),C.dailyPick(C.keepyDailySeed('2026-11-21')));assert.ok(C.DAILY_POOL.length>=12);assert.ok(C.DAILY_POOL.every(p=>p.track<TRACKS.length-1));
+ assert.deepEqual(C.dailyPick(C.keepyDailySeed('2026-11-21')),C.dailyPick(C.keepyDailySeed('2026-11-21')));assert.ok(C.DAILY_POOL.length>=12);assert.ok(C.DAILY_POOL.every(p=>p.track<4),'the day\'s track is one of the first four');
  const seen=new Set(),tracks=new Set();for(let d=1;d<=28;d++){const p=C.dailyPick(C.keepyDailySeed(`2026-12-${String(d).padStart(2,'0')}`));seen.add(p.track+p.twist);tracks.add(p.track);assert.ok(C.DAILY_POOL.some(q=>q.track===p.track&&q.twist===p.twist));}assert.ok(seen.size>=6&&tracks.size>=4,'the days differ');
  for(const p of C.DAILY_POOL)for(const f of ['L','R'])assert.deepEqual(C.chartProblems(C.buildChart(TRACKS[p.track].chart,TRACKS[p.track].bpm,f,p.twist)),[]);
  const w=C.buildChart(TRACKS[0].chart,80,'R','weak');assert.ok(w.notes.every(x=>x.part!=='S'));assert.ok(C.buildChart(TRACKS[1].chart,92,'R','nothigh').notes.every(x=>x.part!=='T'&&x.trick!=='tft'));assert.ok(C.buildChart(TRACKS[0].chart,80,'R','low').notes.every(x=>x.part!=='H'));

@@ -42,10 +42,10 @@ export type TrickInfo={id:TrickId;name:string;how:string;keys:string;fact:string
 export const TRICKS:readonly TrickInfo[]=[
  {id:'tft',name:'Thigh-Foot-Thigh',how:'Three quick touches: thigh, foot, thigh. Tap the pads in that order.',keys:'tap, tap, tap',fact:'Changing from thigh to foot and back teaches you to judge the height of each touch.',color:'#ffc83a'},
  {id:'seal',name:'Seal Taps',how:'Three headers in a row. Tap the head pad three times, on the beat.',keys:'tap, tap, tap',fact:'Use your forehead, eyes open, and push up with your legs, not your neck.',color:'#8f78b8'},
- {id:'stall',name:'Neck Stall',how:'Catch the ball on the back of your neck. Hold the head pad down until the bar is full.',keys:'hold',fact:'Bend forward, look up and make a cradle between your shoulders. The ball sits still.',color:'#19b5a5'},
- {id:'atw',name:'Around the World',how:'Your foot circles the ball in the air. Swipe a circle on the foot pad.',keys:'swipe (Space + key)',fact:'Flick the ball up softly, circle it with your foot, and meet it again on the way down.',color:'#ff8a3c'},
- {id:'heel',name:'Heel Flick',how:'Flick the ball up from behind with your heel. Swipe UP on the foot pad.',keys:'swipe up (Space + key)',fact:'The ball goes over your head from behind. Turn your head to find it again.',color:'#f0452e'},
- {id:'cross',name:'Crossover',how:'One leg crosses over the ball as it rises. Swipe SIDEWAYS on the foot pad.',keys:'swipe sideways (Space + key)',fact:'Small, soft touches leave you time to cross a leg over the ball.',color:'#5aa9e6'},
+ {id:'stall',name:'Neck Stall',how:'Catch the ball on the back of your neck. Hold the head pad down until the bar is full.',keys:'hold (key: hold J)',fact:'Bend forward, look up and make a cradle between your shoulders. The ball sits still.',color:'#19b5a5'},
+ {id:'atw',name:'Around the World',how:'Your foot circles the ball in the air. Swipe a circle on the foot pad.',keys:'swipe a circle (keys: Space + foot key)',fact:'Flick the ball up softly, circle it with your foot, and meet it again on the way down.',color:'#ff8a3c'},
+ {id:'heel',name:'Heel Flick',how:'Flick the ball up from behind with your heel. Swipe UP on the foot pad.',keys:'swipe up (keys: Space + foot key)',fact:'The ball goes over your head from behind. Turn your head to find it again.',color:'#f0452e'},
+ {id:'cross',name:'Crossover',how:'One leg crosses over the ball as it rises. Swipe SIDEWAYS on the foot pad.',keys:'swipe sideways (keys: Space + foot key)',fact:'Small, soft touches leave you time to cross a leg over the ball.',color:'#5aa9e6'},
 ];
 export const TRICK_IDS:readonly TrickId[]=TRICKS.map(t=>t.id);
 export const trickInfo=(id:TrickId)=>TRICKS.find(t=>t.id===id)!;
@@ -152,9 +152,9 @@ export const CALIB_SOURCE='S.S.S.S. S.S.S.S.';
 
 /* ---- the day's track ---- */
 export function keepyDailySeed(day:string){let h=0x811c9dc5;const s='keepyuppy:'+day;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 1+h%2_000_000_000;}
-/** Every (track, twist) pair that is still a fair chart for both feet and really changes the track. The last track is left out. */
+/** Every (track, twist) pair that is still a fair chart for both feet and really changes the track. Only the first four tracks: the day's track must be kind to a new player. */
 export const DAILY_POOL:readonly {track:number;twist:TwistId}[]=(()=>{const out:{track:number;twist:TwistId}[]=[];
- TRACKS.slice(0,-1).forEach((tr,track)=>{const base=JSON.stringify(parseChart(tr.chart).notes);for(const tw of TWISTS){
+ TRACKS.slice(0,4).forEach((tr,track)=>{const base=JSON.stringify(parseChart(tr.chart).notes);for(const tw of TWISTS){
   const changed=tw.id==='speedup'||JSON.stringify(applyTwist(parseChart(tr.chart).notes,tw.id))!==base;
   if(changed&&(['L','R'] as const).every(f=>chartProblems(buildChart(tr.chart,tr.bpm,f,tw.id)).length===0))out.push({track,twist:tw.id});}});return out;})();
 /** The track first (so every track gets its days), then one of its twists. */
@@ -193,7 +193,7 @@ export function createKeepy(o:KuOpts){
    if(n.st===0){if(t>n.t+win)judge(n,'drop');else break;}
    else if(n.kind==='hold'){if(t>=n.tEnd)judge(n,n.grade as Grade);}
    else if(t>n.pressT+KU.swipeWait)judge(n,'slip');
-   if(s.over)return;if(n.st===2&&i===s.base)s.base++;}
+   if(s.over)return;if((n.st as number)===2&&i===s.base)s.base++;}
   if(t>=chart.end&&!s.over){s.over=true;const bonus=free?0:KU.clearBonus*stars();s.score+=bonus;emit('over',-1,'',bonus,1,-1);}
  }
  /** A pad goes down at song time t. Returns the grade, 'held' for a press that waits (stall, swipe) or '' for a tap with no ball near. */
@@ -237,4 +237,4 @@ export function calibOffset(offsets:readonly number[]):number|null{
  const v=offsets.slice(offsets.length>=6?2:0).sort((a,b)=>a-b);if(v.length<4)return null;
  const m=v.length%2?v[(v.length-1)/2]:(v[v.length/2-1]+v[v.length/2])/2;return Math.max(-200,Math.min(200,Math.round(m*1000)));
 }
-export const keepyCoins=(score:number)=>Math.max(0,Math.min(12,Math.floor(score/1500)));
+export const keepyCoins=(score:number)=>Math.max(0,Math.min(12,Math.floor(score/2000)));
