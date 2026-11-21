@@ -6896,3 +6896,40 @@ Owner: "can we make the arcade sign blink and animate so it flickers a little bi
 - **Tests:** `tests/arcade-neon-flicker.cjs` (seeded: ≤ 3 dips in any second, mean gap 2-6.5 s, steady and write-free when off, no
   catch-up after a long gap, wiring source checks).
 - Reduced work only, not measured on a real phone; no thermal claim.
+
+## Claw Club: the playable claw machine (Nov 21 2026, local branch `claw-machine`, not deployed)
+
+The arcade room's decorative claw machine is now playable (lib/claw: `clawPhysics.ts`, `clawMachine3d.ts`, `clawRoom.ts`, `clawStore.ts`;
+components/ClawMachineHud.tsx; tests/claw-machine.cjs). Cost rules it keeps:
+
+- **Room view = a cheap LOD.** `buildClawLod()` is one vertex-coloured merged mesh + one glass plane + the marquee sign + the idle
+  carriage: 4 draws, 3,936 triangles. The old decoration was ~3 draws (sign + a 2-colour carriage; its body merged into the room's shared
+  colour batches) and ~4.8k triangles, so the room is +1 draw and slightly fewer triangles. No new per-frame work: the carriage keeps its
+  old sine slide in `props.update`.
+- **The detailed machine is built on the first zoom only** (`buildClawDetail`), kept for the page and disposed with the room. One
+  RoomEnvironment PMREM (built once, 0.04 blur) feeds the chrome, clearcoat paint, glass and toy reflections: no realtime reflection pass,
+  **no extra light** (the inner LED strip and bulbs are emissive; the bulb chase is one InstancedMesh's colours, rewritten 3×/s idle,
+  14×/s for 3.5 s after a win). Contact shadows are one InstancedMesh of soft discs.
+- **Toys are the real gashapon HD models**, re-merged per finish (draws per toy = finishes used, 3–9) so a won toy matches the Toy Shelf.
+  They are the bulk of the zoomed triangles (~25k each).
+- **Physics only runs while something moves.** Fixed 120 Hz steps, 2 particles per toy (24), typed arrays, no allocation per step;
+  `sim.sleeping` (all toys asleep, claw parked, flap still) → no steps and no mesh updates. The pile is settled offline when the machine
+  is first built (~4 s of sim in a few ms).
+- **The room holds still while zoomed**: `tick()` hands the frame to `claw.update()` (no walking, crowd, props or prompts), renders with the
+  zoom camera at the room's active cadence (30 fps phone / 60 desktop), and stops the loop after 8 s with nothing moving (the next input
+  wakes it). The near plane ends 0.5 m in front of the glass while zoomed, so the player, the ball and anyone behind stay out of the shot.
+- **Sounds**: one AudioContext opened on the first tap, suspended when you zoom out, closed with the room.
+
+Measured (headless Chrome on a Mac, phone 390×844 @2x and desktop 1280×800; renderer.info of the last frame; **not measured on a real
+phone**, no thermal claim):
+
+| View | Draw calls | Triangles |
+| --- | --- | --- |
+| Room, standing at the claw (phone) | 59 | 180k |
+| Room, standing at the claw (desktop) | 77 | 208k |
+| Zoomed on the machine, phone | 124 | 469k (machine + toys: 94 draws, 317k) |
+| Zoomed on the machine, desktop | 127 | 481k |
+
+Tradeoff to watch on a real phone: the zoomed view's ~470k triangles come mostly from the 12 HD toy models. If an iPhone runs warm while
+playing, the first lever is building the pile toys with the low-poly toy kit (`createToyKit(toy,{hd:false})`, ~2.6× fewer segments) and
+keeping the HD model for the Toy Shelf only.

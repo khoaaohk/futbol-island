@@ -322,6 +322,8 @@ export function createClawSim(seed:number,toyBodies:readonly ToyBody[]){
   /** The won toy leaves the tray; a new toy (`body` index slot reuse) drops in from above the pile. */
   replace(slot:number,body:ToyBody){if(slot<0||slot>=n)return;bodies[slot]=body;placeToy(slot,-.1+rand()*.6,1.25,-.3+rand()*.5,(rand()-.5)*.8,rand()*Math.PI*2);},
   remove(slot:number){active[slot]=0;},
+  /** Tests: put a toy at a point (upright, at rest). */
+  place(slot:number,x:number,y:number,z:number){if(slot>=0&&slot<n)placeToy(slot,x,y,z,0,0);},
   /** Fast-forward (leaving mid-try after the drop): runs steps with no input until the try is done. */
   finish(maxSeconds=20){let k=0;while(s.phase!=='done'&&s.phase!=='home'&&k<maxSeconds/CLAW_DT){step(0,0,s.phase==='aim');k++;}return s.result;},
   rest:(i:number)=>rest[i],
