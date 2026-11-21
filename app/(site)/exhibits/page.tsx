@@ -6,6 +6,7 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {exhibitPath,GALLERIES,SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import styles from '../site.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 /** The History Museum's cases as reading pages. /museum stays the game's walk-in hall. */
 export const dynamic='force-static';
@@ -14,7 +15,7 @@ const DESC=`The Futbol Island History Museum: ${SITE_EXHIBITS.length} exhibits o
 const META=`The Futbol Island History Museum: ${SITE_EXHIBITS.length} exhibits on the Laws, World Cup history, balls, kits, legends, tactics and science.`;
 /* Nov 20 2026 (SEO phase 2): was "History Museum exhibits" / h1 "History Museum", which did not name the sport */
 export const metadata=pageMeta('Football History for Kids: Museum Exhibits',META,'/exhibits');
-const CRUMBS=[{name:'Home',path:'/'},{name:'Museum',path:'/exhibits'}];
+const CRUMBS=libraryCrumbs({name:'Museum',path:'/exhibits'});/* Nov 20 2026: through the Library */
 
 export default function ExhibitsIndex(){
  return <>

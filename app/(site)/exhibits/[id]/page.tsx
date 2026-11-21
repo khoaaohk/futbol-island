@@ -11,6 +11,7 @@ import {booksForExhibit,exhibitCrossLinks} from '@/lib/site/crossLinks';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta,fullDescription} from '@/lib/site/seo';
 import {ExhibitStamp,ExhibitTileGroup,Hero,isDated,StoryTimeline} from '@/components/site/cards/CardParts';
 import styles from '../../site.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 /** One museum case as plain text: era, facts, the experience's story text and the sources (titles only, no outside links).
  *  Nov 17 2026 (visual pass, AUDIT.md #8): the share picture as the hero <img>, a year / gallery stamp, the story as a vertical
@@ -26,7 +27,7 @@ export function generateMetadata({params}:{params:{id:string}}){
 }
 export default function ExhibitPage({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)notFound();
- const crumbs=[{name:'Home',path:'/'},{name:'Museum',path:'/exhibits'},{name:e.title,path:exhibitPath(e.id)}];
+ const crumbs=libraryCrumbs({name:'Museum',path:'/exhibits'},{name:e.title,path:exhibitPath(e.id)});/* Nov 20 2026: through the Library */
  const dated=e.story.filter(l=>isDated(l.head)).length,timeline=dated>=2&&dated*2>=e.story.length;
  const rel=exhibitRelated(e);
  return <>

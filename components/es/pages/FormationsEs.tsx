@@ -13,7 +13,7 @@ import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,esLessonLinks,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,esLessonLinks,LinkList,QA,Section,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLesson} from '@/lib/i18n/es/lessons';
 import {esLd} from './GuidesEs';
 import styles from '@/app/(site)/site.module.css';
@@ -40,7 +40,7 @@ const LABEL:Record<Fmt,string>={'7v7':'Formaciones de fútbol 7v7','9v9':'Formac
 
 // ---- hub ----
 export function FormationsHubEsPage(){
- const H=ES_HUBS.formations,crumbs=esCrumbs({name:H.crumb,path:H.path}),all=ES_FORMATIONS();
+ const H=ES_HUBS.formations,crumbs=esLibCrumbs({name:H.crumb,path:H.path}),all=ES_FORMATIONS();
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
@@ -64,7 +64,7 @@ export function FormationsHubEsPage(){
 // ---- one formation ----
 export function FormationEsPage({f}:{f:EsFormation}){
  const H=ES_HUBS.formations,futsal=f.format==='futsal',what=`la formación ${f.name}`;
- const crumbs=esCrumbs({name:H.crumb,path:H.path},{name:f.name,path:f.esPath});
+ const crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:f.name,path:f.esPath});
  const guide=futsal?null:esFormatGuide(f.format as '7v7'|'9v9'|'11v11');
  const compare=ES_COMPARISONS().filter(c=>c.links.slice(0,2).some(l=>l.path===f.path));
  const related=[...(guide?[{path:guide.esPath,name:guide.h1,line:guide.blurb}]:[]),
@@ -105,7 +105,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
 
 // ---- format guides ----
 export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
- const H=ES_HUBS.formations,g=esFormatGuide(format),list=esFormationsIn(format),crumbs=esCrumbs({name:H.crumb,path:H.path},{name:g.crumb,path:g.esPath});
+ const H=ES_HUBS.formations,g=esFormatGuide(format),list=esFormationsIn(format),crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:g.crumb,path:g.esPath});
  const others=(['7v7','9v9','11v11'] as const).filter(x=>x!==format).map(esFormatGuide);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -145,7 +145,7 @@ function compareRows(c:EsComparison):string[][]{
  const A=cells(a),B=cells(b);return ROWS_FORM.map((r,i)=>[r,A[i],B[i]]);
 }
 export function CompareEsPage({c}:{c:EsComparison}){
- const pos=c.kind==='position',hub=pos?ES_HUBS.positions:ES_HUBS.formations,crumbs=esCrumbs({name:hub.crumb,path:hub.path},{name:c.h1.replace(/:.*$/,''),path:c.esPath});
+ const pos=c.kind==='position',hub=pos?ES_HUBS.positions:ES_HUBS.formations,crumbs=esLibCrumbs({name:hub.crumb,path:hub.path},{name:c.h1.replace(/:.*$/,''),path:c.esPath});
  const A=pos?posEs(c.a)!:ES_FORMATIONS().find(f=>f.slug===c.a)!,B=pos?posEs(c.b)!:ES_FORMATIONS().find(f=>f.slug===c.b)!;
  const nameOf=(x:typeof A)=>'job' in x?x.name:x.shape;
  const links=pos?[A,B].map(p=>({path:(p as {esPath:string}).esPath,name:(p as {h1:string}).h1,line:(p as {job:string}).job}))

@@ -19,6 +19,7 @@ import styles from '../../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
 import {lessonRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 /** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz shows its questions, options and explanations, never which option is correct. */
 export const dynamic='force-static';
@@ -30,7 +31,7 @@ export function generateMetadata({params}:{params:{slug:string}}){
 }
 export default function LessonPage({params}:{params:{slug:string}}){
  const l=lessonById(params.slug);if(!l)notFound();
- const crumbs=[{name:'Home',path:'/'},{name:'Lessons',path:'/learn/lessons'},{name:l.title,path:lessonPath(l.id)}];/* no /learn crumb: it redirects to / */
+ const crumbs=libraryCrumbs({name:'Lessons',path:'/learn/lessons'},{name:l.title,path:lessonPath(l.id)});/* Nov 20 2026: through the Library *//* no /learn crumb: it redirects to / */
  const guides=guidesForLesson(l.id);/* formations and positions pages that teach from this lesson (lib/site/guides.ts) */
  const sib=lessonSiblings(l),hubs=hubsFor(l.id),faq=[{q:'How do I play this lesson?',a:'Open Futbol Island at futbolisland.app/play and start an island or continue with a save code. In the game, a coach voice shows each idea on a pitch with moving players, step by step, and a quick quiz checks it.'},...HUB_COMMON_FAQ];
  return <>

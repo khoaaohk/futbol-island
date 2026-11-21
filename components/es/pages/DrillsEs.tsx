@@ -18,7 +18,7 @@ import {AGE_YEARS_ES,DRILL_SAFETY_LINE_ES,PLAN_SAFETY_LINE_ES,PPP_LINE_ES,PRACTI
 import {ES_DRILL_HUBS,ES_DRILLS,ES_DRILL_GUIDES,esDrill,esDrillGuide,esDrillLinks,esDrillOrder,esPlan,esPlanOrder,esPlansForAge,drillLineEs,gridDescEs,gridKeyEs,type EsDrill,type EsDrillGuide,type EsPlan} from '@/lib/i18n/es/drillsRegistry';
 import {ES_HUBS} from '@/lib/i18n/es/registry';
 import {ES_UI} from '@/lib/i18n/es/ui';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,LinkList,QA,Section,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import {Checklist,Glance} from '@/components/site/PageParts';
 import styles from '@/app/(site)/site.module.css';
@@ -44,7 +44,7 @@ const allDrills=()=>({path:H().path,name:'Todos los ejercicios de fútbol para n
 
 // ---- hub -------------------------------------------------------------------------------------------------------------------
 export function DrillsHubEsPage(){
- const h=H(),crumbs=esCrumbs({name:h.crumb,path:h.path}),guides=ES_DRILL_GUIDES(),drills=ES_DRILLS(),sharks=esDrill('sharks-and-minnows')!,picture=diagramUrl('sharks-and-minnows-drill.png');
+ const h=H(),crumbs=esLibCrumbs({name:h.crumb,path:h.path}),guides=ES_DRILL_GUIDES(),drills=ES_DRILLS(),sharks=esDrill('sharks-and-minnows')!,picture=diagramUrl('sharks-and-minnows-drill.png');
  const ages=guides.filter(g=>g.kind==='age'),skills=guides.filter(g=>g.kind==='skill'),bySkill=(id:string)=>drills.filter(d=>d.skill===id);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -83,7 +83,7 @@ export function DrillsHubEsPage(){
 
 // ---- one drill -----------------------------------------------------------------------------------------------------------------
 export function DrillEsPage({d}:{d:EsDrill}){
- const h=H(),crumbs=esCrumbs({name:h.crumb,path:h.path},{name:d.name,path:d.esPath});
+ const h=H(),crumbs=esLibCrumbs({name:h.crumb,path:h.path},{name:d.name,path:d.esPath});
  const skillGuide=SKILL_GUIDES.find(g=>g.picks.some(p=>p.drill.slug===d.slug));
  const related=[...d.related.map(s=>esDrill(s)!).map(x=>({path:x.esPath,name:`${x.name} (ejercicio)`,line:drillLineEs(x)})),...esDrillLinks(d.links),
   ...guidesForDrill(d).map(g=>guideLink(esDrillGuide(g.slug)!)),...(skillGuide?[guideLink(esDrillGuide(skillGuide.slug)!)]:[]),
@@ -118,7 +118,7 @@ export function DrillEsPage({d}:{d:EsDrill}){
 
 // ---- age and skill guides ------------------------------------------------------------------------------------------------------
 export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
- const h=H(),crumbs=esCrumbs({name:h.crumb,path:h.path},{name:g.name,path:g.esPath}),featured=esDrill(g.featured)!;
+ const h=H(),crumbs=esLibCrumbs({name:h.crumb,path:h.path},{name:g.name,path:g.esPath}),featured=esDrill(g.featured)!;
  const others=ES_DRILL_GUIDES().filter(x=>x.slug!==g.slug&&x.kind===g.kind).map(guideLink);
  const plans=g.age?esPlansForAge(g.age).map(p=>({path:p.esPath,name:p.h1,line:`${p.minutes} minutos, con tabla de tiempos`})):[];
  const sections=(list:EsDrillGuide['before'])=>list.map(s=><Section key={s.id} id={s.id} title={s.title}><Bullets items={s.items}/></Section>);
@@ -148,7 +148,7 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
 
 // ---- plans -----------------------------------------------------------------------------------------------------------------
 export function PlansHubEsPage(){
- const h=P(),crumbs=esCrumbs({name:h.crumb,path:h.path}),game=esDrill('three-v-three-game')!,picture=diagramUrl('three-v-three-game-drill.png');
+ const h=P(),crumbs=esLibCrumbs({name:h.crumb,path:h.path}),game=esDrill('three-v-three-game')!,picture=diagramUrl('three-v-three-game-drill.png');
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:h.h1,path:h.path,description:h.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:esPlanOrder().slice(1).map(p=>({name:p.name,path:p.path}))}))}/>
@@ -176,7 +176,7 @@ export function PlansHubEsPage(){
  </>;
 }
 export function PlanEsPage({p}:{p:EsPlan}){
- const h=P(),crumbs=esCrumbs({name:h.crumb,path:h.path},{name:p.name,path:p.esPath}),guide=esDrillGuide(p.age.toLowerCase())!,shown=p.drills.find(d=>d.picture===p.picture)!;
+ const h=P(),crumbs=esLibCrumbs({name:h.crumb,path:h.path},{name:p.name,path:p.esPath}),guide=esDrillGuide(p.age.toLowerCase())!,shown=p.drills.find(d=>d.picture===p.picture)!;
  const related=[...esPlansForAge(p.age).filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.h1,line:`${x.minutes} minutos: ${x.goal[0].toLowerCase()+x.goal.slice(1)}`})),guideLink(guide),...esDrillLinks(p.links),
   {path:h.path,name:'Todos los planes de entrenamiento de fútbol',line:h.blurb},allDrills()];
  return <>

@@ -15,6 +15,7 @@ import {BookCover,BookLinkTiles,StoryChapters} from '@/components/site/books/Boo
 import OpenBook from '@/components/site/books/OpenBook';
 import styles from '../../site.module.css';
 import b from '@/components/site/books/books.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * One pop-up book as a reading page (Nov 17 2026): the answer-first summary and key facts, the book block (its cover and the
  * "Open the pop-up book" button, which loads the web reader only on tap), the whole story as text chapter by chapter (year,
@@ -32,7 +33,7 @@ export function generateMetadata({params}:{params:{slug:string}}){
 }
 export default function BookPage({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book||!book.page)notFound();
- const path=bookPath(book.slug),crumbs=[{name:'Home',path:'/'},{name:'Pop-up books',path:BOOKS_PATH},{name:book.title,path}];
+ const path=bookPath(book.slug),crumbs=libraryCrumbs({name:'Pop-up books',path:BOOKS_PATH},{name:book.title,path});/* Nov 20 2026: through the Library */
  const modified=sitePaths().find(p=>p.path===path)?.lastmod??SITE_UPDATED.books;
  const facts:Fact[]=book.page.facts.map(f=>({icon:f.icon,label:f.label,value:f.value,href:f.href}));
  return <>

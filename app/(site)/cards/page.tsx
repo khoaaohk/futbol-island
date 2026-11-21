@@ -11,12 +11,13 @@ import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import {REFEREE_CARDS_LINK} from '@/lib/site/crossLinks';
 import styles from '../site.module.css';
 import {CardThumbGrid,cardLink} from '@/components/site/cards/GameCard';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 export const dynamic='force-static';
 const PLAYERS=SITE_CARDS.filter(c=>!c.coach).length,COACHES=SITE_CARDS.length-PLAYERS;
 const DESC=`The Futbol Island card binder: ${PLAYERS} player cards and ${COACHES} coach cards, from today’s stars to all-time greats, in football and futsal.`;
 export const metadata=pageMeta('Football Player Cards for Kids: Today’s Stars and Greats',DESC,'/cards',{whole:true})/* Nov 20 2026: was "Player cards" */;
-const CRUMBS=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'}];
+const CRUMBS=libraryCrumbs({name:'Cards',path:'/cards'});/* Nov 20 2026: through the Library */
 
 export default function CardsIndex(){
  return <>

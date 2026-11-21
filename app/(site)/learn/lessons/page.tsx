@@ -11,13 +11,14 @@ import RailNav from '@/components/site/shell/RailNav';
 import {lessonsIndexRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
 import {guideVideo} from '@/lib/site/guideVideos';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
 // the search-result description is kept under 155 characters; the page lead stays the full sentence
 const META=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, passing, defending and restarts in 7v7 to 11v11 and futsal, with quizzes.`;
 export const metadata=pageMeta('Football Lessons and Quizzes for Kids',META,'/learn/lessons');
-const CRUMBS=[{name:'Home',path:'/'},{name:'Lessons',path:'/learn/lessons'}];/* no /learn crumb: it redirects to / */
+const CRUMBS=libraryCrumbs({name:'Lessons',path:'/learn/lessons'});/* Nov 20 2026: through the Library *//* no /learn crumb: it redirects to / */
 
 export default function LearnIndex(){
  return <>

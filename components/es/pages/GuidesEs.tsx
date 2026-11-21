@@ -21,7 +21,7 @@ import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {esRuleCrossLinks,esTermCrossLinks} from '@/lib/i18n/es/crossLinks';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
-import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
+import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLibCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
@@ -56,7 +56,7 @@ const links=(xs:readonly {path:string}[])=>xs.map(x=>esLink(x.path)).filter((x):
 
 // ---- rules ------------------------------------------------------------------------------------------------------------------
 export function RulesHubEsPage(){
- const H=ES_HUBS.rules,crumbs=esCrumbs({name:H.crumb,path:H.path}),rules=ES_RULES(),offside=rules.find(r=>r.slug==='offside')!;
+ const H=ES_HUBS.rules,crumbs=esLibCrumbs({name:H.crumb,path:H.path}),rules=ES_RULES(),offside=rules.find(r=>r.slug==='offside')!;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:rules.map(r=>({name:r.h1,path:r.esPath}))}))}/>
@@ -78,7 +78,7 @@ export function RulesHubEsPage(){
  </>;
 }
 export function RuleEsPage({r}:{r:EsRule}){
- const H=ES_HUBS.rules,crumbs=esCrumbs({name:H.crumb,path:H.path},{name:r.name,path:r.esPath}),all=ES_RULES(),quiz=ruleQuizEs(r);
+ const H=ES_HUBS.rules,crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:r.name,path:r.esPath}),all=ES_RULES(),quiz=ruleQuizEs(r);
  const i=all.findIndex(x=>x.slug===r.slug),next=[all[(i+1)%all.length],all[(i+2)%all.length]];
  /* Nov 20 2026 (SEO leftovers): the rule's coach tool, its terms and a sister rule come first, as in English (lib/i18n/es/crossLinks.ts) */
  const cross=esRuleCrossLinks(r.slug),fresh=(l:{path:string})=>!cross.some(x=>x.path===l.path);
@@ -134,7 +134,7 @@ export function RuleEsPage({r}:{r:EsRule}){
 
 // ---- terms ------------------------------------------------------------------------------------------------------------------
 export function TermsHubEsPage(){
- const H=ES_HUBS.terms,crumbs=esCrumbs({name:H.crumb,path:H.path}),terms=ES_TERMS();
+ const H=ES_HUBS.terms,crumbs=esLibCrumbs({name:H.crumb,path:H.path}),terms=ES_TERMS();
  const entries=GLOSSARY.map(g=>{const e=H.glossary[g.id];if(!e)throw new Error(`Spanish glossary entry ${g.id} is missing`);
   const to=g.to?(hasEs(g.to)?toEs(g.to):null):null;return {id:g.id,term:e.term,def:e.def,to};})
   .sort((a,b)=>a.term.localeCompare(b.term,'es'));
@@ -160,7 +160,7 @@ export function TermsHubEsPage(){
  </>;
 }
 export function TermEsPage({t}:{t:EsTerm}){
- const H=ES_HUBS.terms,all=ES_TERMS(),crumbs=esCrumbs({name:H.crumb,path:H.path},{name:t.name,path:t.esPath}),quiz=termQuizEs(t,all);
+ const H=ES_HUBS.terms,all=ES_TERMS(),crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:t.name,path:t.esPath}),quiz=termQuizEs(t,all);
  /* Nov 20 2026 (SEO leftovers): the term's rule and coach tool come first, as in English (lib/i18n/es/crossLinks.ts) */
  const cross=esTermCrossLinks(t.slug);
  const related=[...cross,...links(t.links??[]).filter(l=>!cross.some(x=>x.path===l.path)),...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
@@ -199,7 +199,7 @@ function EsDiagram({id,format,lines,what,mark,markName,image}:{id:string;format:
  </figure>;
 }
 export function PositionsHubEsPage(){
- const H=ES_HUBS.positions,crumbs=esCrumbs({name:H.crumb,path:H.path}),all=ES_POSITIONS(),full=formationBySlug('11v11-4-3-3')!;
+ const H=ES_HUBS.positions,crumbs=esLibCrumbs({name:H.crumb,path:H.path}),all=ES_POSITIONS(),full=formationBySlug('11v11-4-3-3')!;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(p=>({name:p.name,path:p.esPath}))}))}/>
@@ -231,7 +231,7 @@ export function PositionsHubEsPage(){
 }
 export function PositionEsPage({p}:{p:EsPosition}){
  const H=ES_HUBS.positions,all=ES_POSITIONS(),f=formationBySlug(p.diagram)!,lower=p.name.toLowerCase();
- const crumbs=esCrumbs({name:H.crumb,path:H.path},{name:p.name,path:p.esPath}),quiz=positionQuizEs(p,all,SUITS_OPEN);
+ const crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:p.name,path:p.esPath}),quiz=positionQuizEs(p,all,SUITS_OPEN);
  const used=ES_FORMATIONS().filter(x=>x.lines.some(l=>l.spots.some(s=>s.pos===p.slug))),compare=ES_COMPARISONS().filter(c=>c.links.slice(0,2).some(l=>l.path===p.path));
  const facts:Fact[]=[{icon:'shirt',label:'Número de camiseta',value:p.numbers,href:'#number'},{icon:'tag',label:'Nombre corto',value:p.short},
   {icon:'lineup',label:'Dónde',value:`Diagrama ${f.shape}`,href:'#where'},{icon:'quiz',label:'Prueba rápida',value:`${quiz.length} preguntas`,href:'#quiz'}];

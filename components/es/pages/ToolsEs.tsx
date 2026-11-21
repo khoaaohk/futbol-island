@@ -32,7 +32,7 @@ import {ES_FORMATIONS,ES_HUBS,ES_POSITIONS,esFormatGuide,esFormation,esFormation
 import {LICENCE_ES,LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_ES,PRINTABLES_HUB_ES,PRIVACY_LINE_ES,TOOL_NAMES_ES,TOOLS_HUB_ES,fieldNameEs} from '@/lib/i18n/es/tools';
 import type {PrintableEs,ToolPageEs} from '@/lib/i18n/es/types';
 import {ToolCards} from '@/components/site/tools/ToolCards';
-import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,QuickAnswer,Section,esCrumbs,type Fact} from '@/components/es/EsParts';
+import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,QuickAnswer,Section,esCrumbs,esLibCrumbs,type Fact} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import site from '@/app/(site)/site.module.css';
 import t from '@/components/site/tools/tools.module.css';
@@ -49,7 +49,7 @@ const lineupEs=(p:LineupPage):ToolPageEs=>need(LINEUP_PAGES_ES,p.slug);
 const plannerEs=(p:PlannerPage):ToolPageEs=>need(PLANNER_PAGES_ES,p.slug);
 const printEs=(p:Printable):PrintableEs=>need(PRINTABLES_ES,p.slug);
 const PRINT_HUB=PRINTABLES_HUB_ES(PRINT_FILES.length),HUB=TOOLS_HUB_ES;
-const toolCrumbsEs=(...tail:Crumb[])=>esCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)},...tail);
+const toolCrumbsEs=(...tail:Crumb[])=>esLibCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)},...tail);
 const image=(enPath:string)=>TOOL_PAGES.find(x=>x.path===enPath)!.image!;
 type Link={path:string;name:string;line:string};
 /** Pages outside the families above, by English path: their Spanish name and line. */
@@ -155,7 +155,7 @@ function SheetThumbEs({file,alt}:{file:PrintFile;alt:string}){
 
 // ---- /es/tools ----
 function ToolsHubEs(){
- const crumbs=esCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)});
+ const crumbs=esLibCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)});
  const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>

@@ -20,6 +20,7 @@ import {FISH_SPOTS,SHADOW_LABEL,type FishSpecies} from '@/lib/town/fishing/fishC
 import pp from '@/components/site/PageParts.module.css';
 import {playFishHref,shoreSpot} from '@/lib/site/playLinks';
 import styles from '../../site.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 /** One Fishbook species. Art: the game's own drawing (components/FishArt.tsx), since Nov 10 2026 as a real picture built at build
  *  time (art.png/route.tsx: one indexable <img> with alt text and fixed width/height, no script), plus the page's share picture
@@ -53,7 +54,7 @@ function fishFacts(f:FishSpecies):Fact[]{
 const tipIcon=(t:string):FactIconKind=>/deep-sea/.test(t)?'boat':/watch the water/.test(t)?'eye':/\blure\b/.test(t)?'bobber':/at night|at sunset|after dark/i.test(t)?'moon':/market stand/.test(t)?'coin':'pin';
 export default function FishPage({params}:{params:{id:string}}){
  const f=fishById(params.id);if(!f)notFound();
- const crumbs=[{name:'Home',path:'/'},{name:'Fish',path:'/fish'},{name:f.name,path:fishPath(f.id)}];
+ const crumbs=libraryCrumbs({name:'Fish',path:'/fish'},{name:f.name,path:fishPath(f.id)});/* Nov 20 2026: through the Library */
  const spot=shoreSpot(f.spots),places=fishPlaces(f),when=fishWhen(f),note=fishNote(f),tips=fishCatchTips(f);
  const wiki=note?.src.find(u=>/^https:\/\/en\.wikipedia\.org\/wiki\//.test(u));
  return <>

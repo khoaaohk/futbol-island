@@ -17,7 +17,7 @@ import {esHubLink as hubLink} from '@/lib/i18n/es/hubs';
 const esHubLink=(enPath:string)=>hasEs(enPath)?hubLink(enPath):null;
 import {esMeta} from '@/lib/i18n/es/seo';
 import {ES_UI} from '@/lib/i18n/es/ui';
-import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,EsPrintSheet,EsReadNext,QA,esCrumbs} from '@/components/es/EsParts';
+import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,EsPrintSheet,EsReadNext,QA,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import type {EsRoute} from '../routes';
 import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
@@ -53,7 +53,7 @@ const ParentsLine=()=><p className={styles.caption}>{SAFE_TRUST_LINE_ES} {hasEs(
 // ---- one lesson ---------------------------------------------------------------------------------------------------------------
 const LESSON_FAQ=[{q:'¿Cómo juego esta lección?',a:'Abre Futbol Island en futbolisland.app/play y empieza una isla o sigue con un código de guardado. En el juego, la voz de un entrenador muestra cada idea en una cancha con jugadores que se mueven, paso a paso, y una prueba rápida la repasa. El juego está en inglés por ahora.'},...HUB_COMMON_FAQ_ES];
 export function LessonEsPage({l}:{l:EsLesson}){
- const crumbs=esCrumbs(crumbIndex,{name:l.title,path:l.esPath});
+ const crumbs=esLibCrumbs(crumbIndex,{name:l.title,path:l.esPath});
  const sib=lessonSiblings(l),same=sib.same.map(x=>({x:esLesson(x.id)!,tag:''})),prev=esLesson(sib.prev.id)!,next=esLesson(sib.next.id)!;
  const fw=fmtWord(l.formatLabel),group=l.categoryEs?`Más lecciones de ${l.categoryEs.toLowerCase()} en ${fw}`:l.chapterEs?`Más lecciones de ${fw}: ${l.chapterEs.toLowerCase()}`:`Más lecciones de ${fw}`;
  const hubs=hubsFor(l.id).map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
@@ -108,7 +108,7 @@ function EsSearchForm(){
  </form>;
 }
 export function LessonsIndexEsPage(){
- const crumbs=esCrumbs(crumbIndex),all=ES_LESSONS();
+ const crumbs=esLibCrumbs(crumbIndex),all=ES_LESSONS();
  const topics=HUBS.map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>

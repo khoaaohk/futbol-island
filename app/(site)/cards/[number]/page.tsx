@@ -19,6 +19,7 @@ import {CardTileGroup,CareerTimeline,Chips,StatStrip,type Stat} from '@/componen
 import {GameCard} from '@/components/site/cards/GameCard';
 import gc from '@/components/site/cards/GameCard.module.css';
 import styles from '../../site.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 /** One player (or coach) card as plain text: position, country, blurb, strengths and career. No photo (see lib/site/cards.ts).
  *  Nov 10 2026 (SEO): + the iconic play and the idea it teaches (when the player has a film), the lesson for the card's position
@@ -39,7 +40,7 @@ export function generateMetadata({params}:{params:{number:string}}){
 }
 export default function CardPage({params}:{params:{number:string}}){
  const c=card(params);if(!c)notFound();
- const crumbs=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'},{name:c.displayName,path:cardPath(c.number)}];
+ const crumbs=libraryCrumbs({name:'Cards',path:'/cards'},{name:c.displayName,path:cardPath(c.number)});/* Nov 20 2026: through the Library */
  const book=bookForCard(c);
  const lesson=roleLesson(c),related=cardRelated(c),note=cardNote(c),drill=note&&cardNoteDrill(note);
  const stats:Stat[]=[{icon:'position',label:'Position',value:c.roleLabel},...(c.country?[{icon:'country' as const,label:'Country',value:c.country}]:[]),

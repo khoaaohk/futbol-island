@@ -25,7 +25,7 @@ import {CHART_FIELDS_ES,CHARTS_ES,LINKS_ES} from '@/lib/i18n/es/charts';
 import {SAFE_FACTS_ES,SAFE_FAQ_ES,SAFE_GUIDE_ES,SAFE_TRUST_LINE_ES,ES_SAFE_GUIDE} from '@/lib/i18n/es/safety';
 import {Promises,ShortFaq,TrustTiles} from '@/components/site/PageParts';
 import {safePromises,SAFE_TRUST_ES} from '@/components/site/SafeLook';
-import {Bullets,DataTable,EsBreadcrumbs,EsGuideEnd,EsIntro,EsSceneDiagram,LinkList,Section,esCrumbs,esLessonLinks} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsBreadcrumbs,EsGuideEnd,EsIntro,EsSceneDiagram,LinkList,Section,esCrumbs,esLibCrumbs,esLessonLinks} from '@/components/es/EsParts';
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,groupIcon,Hero,lessonIcon} from '@/components/site/HubParts';
 import {esLd} from './GuidesEs';
@@ -38,7 +38,7 @@ import styles from '@/app/(site)/site.module.css';
  * (English-only targets such as player cards and the games list are left off).
  */
 const LESSONS_ES_PATH=toEs('/learn/lessons');
-const hubCrumbsEs=(h:{crumb:string;path:string})=>esCrumbs({name:ES_UI.lessons,path:LESSONS_ES_PATH},{name:h.crumb,path:h.path});
+const hubCrumbsEs=(h:{crumb:string;path:string})=>esLibCrumbs({name:h.crumb,path:h.path});/* Nov 20 2026, owner approved "breadcrumbs through the Library" */
 const linkEs=(enPath:string,hash='')=>{if(!hasEs(enPath))return null;const w=LINKS_ES[enPath];return w?{path:toEs(enPath)+hash,name:w.name,line:w.line}:null;};
 const present=<T,>(xs:(T|null)[])=>xs.filter((x):x is T=>!!x);
 

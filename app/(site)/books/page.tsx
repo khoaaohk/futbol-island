@@ -11,6 +11,7 @@ import {BookCover,BookShelf,GuideCover} from '@/components/site/books/BookParts'
 import {SITE_FISH} from '@/lib/site/fish';
 import styles from '../site.module.css';
 import b from '@/components/site/books/books.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * The pop-up books shelf (Nov 17 2026): every player book on the island, grouped by where the player is from. Every book has
  * its own page (lib/site/books.ts BOOK_PAGES, all 36 since Nov 17 2026), so every cover links to it. Server-only, no script.
@@ -20,7 +21,7 @@ const N=SITE_BOOKS.length;
 const LEAD=`Futbol Island has ${N} free pop-up books for kids, each a short true story about a real football player in six chapters. Every chapter ends with what it teaches, like keeping going after a no or being ready from the bench, and every fact is checked against its sources.`;
 export const metadata=pageMeta('Football pop-up books for kids',
  `${N} free pop-up story books for kids about real football players, from Cafu and Marta to Salah and Kerr: six short chapters each, read aloud, with sources.`,BOOKS_PATH);
-const CRUMBS=[{name:'Home',path:'/'},{name:'Pop-up books',path:BOOKS_PATH}];
+const CRUMBS=libraryCrumbs({name:'Pop-up books',path:BOOKS_PATH});/* Nov 20 2026: through the Library */
 const FACTS:Fact[]=[
  {icon:'deck',label:'Books',value:`${N} true stories`},
  {icon:'steps',label:'Each book',value:'6 chapters, one lesson each'},

@@ -9,13 +9,14 @@ import {SITE_PUBLISHED} from '@/lib/site/updated';
 import {booksForCollection,collectionTopicLinks} from '@/lib/site/crossLinks';
 import styles from '@/app/(site)/site.module.css';
 import {CardThumbGrid} from '@/components/site/cards/GameCard';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 const CARD_PAGE=/^\/cards\/\d+$/;
 /**
  * A collection hub (lib/site/collections.ts, Nov 15 2026): breadcrumb, h1, short intro, one list per group, the guide pages that
  * explain the topic, and the sibling hubs. Server-rendered plain links, the same list classes as /cards and /fish.
  */
 const PARENT={cards:{name:'Cards',path:'/cards',cta:'Collect cards on the island'},fish:{name:'Fish',path:'/fish',cta:'Go fishing on the island'}} as const;
-export const collectionCrumbs=(c:Collection)=>[{name:'Home',path:'/'},{name:PARENT[c.parent].name,path:PARENT[c.parent].path},{name:c.crumb,path:c.path}];
+export const collectionCrumbs=(c:Collection)=>libraryCrumbs({name:PARENT[c.parent].name,path:PARENT[c.parent].path},{name:c.crumb,path:c.path});/* Nov 20 2026: through the Library */
 export function hubMeta(parent:'cards'|'fish',slug:string){const c=collectionBySlug(parent,slug)!;return pageMeta(c.title,c.description,c.path,{whole:true,type:'website'});}
 /** The list of hubs on /cards and /fish ("Browse by …"). */
 export function CollectionLinks({list,title}:{list:readonly Collection[];title:string}){

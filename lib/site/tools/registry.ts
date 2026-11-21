@@ -7,6 +7,7 @@ import {PLAYERS_PER_TEAM,type GuideFormat} from '../pitch';
 import {DEFAULT_FORMATION} from './lineup';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,type Printable} from './printables';
 import {SCAN_EN,SCAN_IMAGE,SCAN_PATH} from './scanTrainer';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * The free coach tools (Nov 10 2026): /tools, the lineup builder and its format landings, the playing-time planner and its
  * landings, and the printables (lib/site/tools/printables.ts). TOOL_PAGES is the registry, parallel to lib/site/guides.ts: it
@@ -152,7 +153,7 @@ export const TOOL_PAGES:readonly ToolPage[]=[
 ];
 /** The pages the lesson hubs' "More to learn" list and llms.txt name (the tools hub and the three main tools). */
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);
-export const toolCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:TOOLS_HUB.crumb,path:TOOLS_HUB.path},...tail];
+export const toolCrumbs=(...tail:{name:string;path:string}[])=>libraryCrumbs({name:TOOLS_HUB.crumb,path:TOOLS_HUB.path},...tail);/* Nov 20 2026: through the Library */
 export const lineupPage=(slug:string)=>LINEUP_PAGES.find(p=>p.slug===slug);
 /** The worked example at the top of the calculator page (Nov 20 2026): its numbers are computed by the tool's own planRotation()
  *  on the page, never typed by hand. */

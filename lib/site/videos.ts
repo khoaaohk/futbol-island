@@ -4,6 +4,7 @@ import type {GameId} from './games';
 import {fullUrl,guideVideo,type GuideVideo} from './guideVideos';
 import {learnUrl} from './learnMedia';
 import {abs,type Crumb} from './seo';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * Watch pages (Nov 18 2026, Search Console Video indexing: 0 indexed, "Video isn't on a watch page"). Google indexes a video only
  * on a page whose MAIN content is that video, so every clip on the site has its own page, /videos/<slug>, with the player at the
@@ -84,7 +85,7 @@ const guidePathOf=(key:string)=>GUIDE_PATHS[key];
 export const watchVideoBySlug=(slug:string)=>allWatchVideos().find(v=>v.slug===slug);
 /** The watch page of a clip by its media key (game id, island key, 'hero' or a guide clip's key), for "Watch the full clip". */
 export const watchPathFor=(key:string)=>allWatchVideos().find(v=>v.key===key)?.path??null;
-export const videoCrumbs=(v?:WatchVideo):Crumb[]=>[{name:'Home',path:'/'},{name:'Videos',path:VIDEOS_PATH},...(v?[{name:v.title,path:v.path}]:[])];
+export const videoCrumbs=(v?:WatchVideo):Crumb[]=>libraryCrumbs({name:'Videos',path:VIDEOS_PATH},...(v?[{name:v.title,path:v.path}]:[]));/* Nov 20 2026: through the Library */
 export const isPortrait=(v:{w:number;h:number})=>v.h>v.w;
 const DATE_FMT=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Los_Angeles'});
 export const videoDateLabel=(v:WatchVideo)=>DATE_FMT.format(new Date(v.uploadDate));

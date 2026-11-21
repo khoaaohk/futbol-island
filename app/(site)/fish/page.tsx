@@ -8,11 +8,12 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {fishPath,rarityWord,SITE_FISH} from '@/lib/site/fish';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import styles from '../site.module.css';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 
 export const dynamic='force-static';
 const DESC=`The Futbol Island Fishbook: ${SITE_FISH.length} sea animals, each linked to a real football club, team or story from the sea. With a fun fact and how to catch each one.`;
 export const metadata=pageMeta(`Fishbook: ${SITE_FISH.length} Sea Animals and Their Football Clubs`,DESC,'/fish',{whole:true})/* Nov 20 2026: was "Fishbook" */;
-const CRUMBS=[{name:'Home',path:'/'},{name:'Fish',path:'/fish'}];
+const CRUMBS=libraryCrumbs({name:'Fish',path:'/fish'});/* Nov 20 2026: through the Library */
 const ORDER=['common','uncommon','rare','legendary'] as const;
 
 export default function FishIndex(){

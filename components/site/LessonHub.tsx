@@ -17,11 +17,12 @@ import styles from '@/app/(site)/site.module.css';
 import RailNav from './shell/RailNav';
 import {hubRail,sec} from '@/lib/site/railNavMore';
 import type {RailItem} from '@/lib/site/railNav';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * One topic hub (lib/site/hubs.ts): answer-first lead, the lesson groups as linked lists, short Q&A (mirrored exactly in the
  * FAQPage JSON-LD), related hubs and one gold Play link. Server-rendered, no client code, the reading pages' one stylesheet.
  */
-export const hubCrumbs=(h:{crumb:string;path:string})=>[{name:'Home',path:'/'},{name:'Lessons',path:LESSONS_INDEX},{name:h.crumb,path:h.path}];
+export const hubCrumbs=(h:{crumb:string;path:string})=>libraryCrumbs({name:h.crumb,path:h.path});/* Nov 20 2026, owner approved "breadcrumbs through the Library": a topic hub's parent is the Library, as its Back pill */
 
 /** The questions (visual pass, Nov 17 2026): one list of plain rows like the home page's FAQ, each a native <details> whose
  *  <summary> holds the question as an h3; the answer text is in the HTML whether open or closed, so the FAQPage JSON-LD (faq only)

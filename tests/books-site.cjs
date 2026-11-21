@@ -72,7 +72,7 @@ for(const id of B.BUILT_BOOKS){const bk=B.bookBySlug(id),h=pageHtml(id);
  ok(book.numberOfPages===bk.chapters.length&&book.bookFormat==='https://schema.org/EBook'&&/^\d{4}-\d{2}-\d{2}$/.test(book.dateModified)&&book.datePublished,`${id}: Book JSON-LD: pages, format, dates`);
  ok(Object.keys(book).every(k=>allowed.has(k)),`${id}: Book JSON-LD: only Book / CreativeWork properties`);
  ok(faq&&faq.mainEntity.length===bk.page.faq.length&&faq.mainEntity.every((q,i)=>q.name===bk.page.faq[i].q&&q.acceptedAnswer.text===bk.page.faq[i].a&&h.includes(q.name)&&h.includes(q.acceptedAnswer.text)),`${id}: FAQPage JSON-LD = the questions shown`);
- ok(crumbs&&crumbs.itemListElement.length===3,`${id}: BreadcrumbList: home, books, this book`);
+ ok(crumbs&&crumbs.itemListElement.length===4&&crumbs.itemListElement[1].name==='Library',`${id}: BreadcrumbList: home, library, books, this book`);/* owner, Nov 20 2026, approved "breadcrumbs through the Library" (was home, books, this book) */
  ok(/<a href="#story"[^>]*data-open-book=""/.test(h)&&/id="story"/.test(h),`${id}: open button is a real link to the story`);
  ok(B.bookLinks(bk).every(l=>h.includes(`href="${l.path}"`))&&/href="\/books"/.test(h),`${id}: keep reading: card, position guide, museum, hub`);
  ok(!/three\.js|three\.module|WebGL|PlayerPopUpBook/.test(h),`${id}: no three.js in the page HTML`);}

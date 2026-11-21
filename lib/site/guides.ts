@@ -8,6 +8,7 @@ import {TERM_PAGES,TERMS_HUB} from './terms';
 import {DRILLS,DRILLS_HUB} from './drills';
 import {DRILL_GUIDES} from './drillGuides';
 import {PLANS,PLANS_HUB} from './plans';
+import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * The guide clusters (SEO, Nov 10 2026): evergreen reading pages that answer what parents and coaches search for
  * ("7v7 soccer formations", "what does a center mid do"), each leading into the free lessons. One registry for all of them,
@@ -81,7 +82,7 @@ export const guideByPath=(path:string)=>ALL_GUIDE_PAGES.find(g=>g.path===path);
 /* Nov 10 2026: the last of the four places goes to a drill that trains the lesson, when there is one (COACH_PAGES). */
 export const guidesForLesson=(id:string)=>{const d=COACH_PAGES.filter(g=>g.path.startsWith(DRILLS_HUB.path+"/")&&g.lessonIds.includes(id)).slice(0,1);
  return [...[...GUIDE_PAGES,...REFERENCE_PAGES.filter(g=>!g.hub)].filter(g=>g.lessonIds.includes(id)).slice(0,4-d.length),...d];};
-export const guideCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:'Lessons',path:LESSONS_INDEX},...tail];
+export const guideCrumbs=(...tail:{name:string;path:string}[])=>libraryCrumbs(...tail);/* Nov 20 2026, owner approved "breadcrumbs through the Library": was Home › Lessons › … */
 /** The one shared line that ends every guide page. */
 export const GUIDE_FOOT='Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. Every idea on this page is taught on a pitch with moving players, then checked with a quick quiz.';
 /** "Soccer" first for US searchers, "football" once near the top (owner, Nov 10 2026). */
