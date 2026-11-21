@@ -82,7 +82,7 @@
    when it is taller than the window. The page itself still scrolls normally (wheel, keys, anchors, find, restore); everything
    else sits in the right column. The rail ends where the footer starts. The marked link (data-on) is the band in the middle of
    the screen (LibraryMenuSpy.tsx); only colours change, so nothing shifts. */
-.shelf{display:grid}
+.shelf{display:grid;grid-template-columns:minmax(0,1fr)}/* minmax(0,…): a one-row chip list must never widen the page (Nov 20 2026 evening: the auto column grew to the chips' full length and pushed every block off the right edge of a phone) */
 .shelfMain{display:contents}
 .shelfMain>.hero{order:-1}
 .shelfMain [id]{scroll-margin-top:84px}
