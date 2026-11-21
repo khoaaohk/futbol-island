@@ -32,7 +32,8 @@ const main=f=>(fs.readFileSync(path.join(app,f),'utf8').match(/<main[\s\S]*<\/ma
 const card=main('cards/20.html');
 // Nov 20 2026: the banner <img> left the card page (owner: "the players card still doesn't have the actual card from the game")
 assert(/role="img" aria-label="Futbol Island card No\. 020: [^"]+"/.test(card)&&card.indexOf('data-game-card')<card.indexOf('id="facts"'),'card 20: the game card in the head, before the stat strip');
-assert(!/og\.png/.test(card)&&/Position<span[^>]*>:<\/span><\/b>/.test(card),'no banner image on the page; the label keeps its colon');
+// Nov 20 2026 (release check): only an <img> counts as the banner; the page's JSON-LD (inside <main>) keeps og.png as its image
+assert(!/<img[^>]*og\.png/.test(card)&&/Position<span[^>]*>:<\/span><\/b>/.test(card),'no banner image on the page; the label keeps its colon');
 const ex=main('exhibits/laws-1863.html');
 assert(/<img[^>]*src="\/exhibits\/laws-1863\/og\.png"[^>]*width="1200"[^>]*height="630"/.test(ex),'exhibit: hero img with size');
 assert(/<dd>1863<\/dd>/.test(ex)&&/<ol class="[^"]*timeline/.test(ex),'exhibit: year stamp and story timeline');
