@@ -1,0 +1,33 @@
+/* The game's card on the website (components/site/cards/GameCard.tsx, Nov 20 2026). MiniCard is sized by --w (1em = a tenth of
+   its width); its trim and drop shadow reach about .45em past the box and .7em below, so the holders pad for them. */
+
+/* Card page head: the H1 + summary on one side, the card on the other from 760 px; on phones the card sits under the summary,
+   centred, about 70 % of the screen width. Used with site.module.css .intro (a grid); the text keeps its column and order. */
+.hero{--w:min(70vw,300px);justify-self:center;padding:calc(var(--w) * .05) calc(var(--w) * .05) calc(var(--w) * .1);margin-top:var(--s1,8px)}
+.face{margin:0}
+@media(min-width:760px){
+ .head{grid-template-columns:minmax(0,44rem) auto;justify-content:start;grid-template-rows:auto auto auto 1fr;column-gap:clamp(28px,4vw,72px);align-items:start}
+ .head>*{grid-column:1}
+ .head>.hero{--w:clamp(220px,21vw,320px);grid-column:2;grid-row:1/span 4;align-self:start;justify-self:start;margin-top:0}
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .face{transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+ .hero:hover .face{transform:perspective(1100px) rotateX(4deg) rotateY(-8deg) translateY(-4px)}
+}
+
+/* Lists: small real cards. A row's portrait masks (inline mask-image, ~30 KB each) stay off until LazyCardList marks the row
+   data-near (within about a screen of the viewport); the backdrop, trim and name plate draw at once, so nothing shifts. */
+.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,136px),1fr));gap:var(--s3,24px) var(--s2,16px)}
+.grid>li{min-width:0;max-width:none;margin:0}
+.grid[data-lazy]>li{content-visibility:auto;contain-intrinsic-size:auto 300px}
+.grid[data-lazy]>li:not([data-near]) .thumbCard *{-webkit-mask-image:none!important;mask-image:none!important}
+.grid .thumb{container-type:inline-size;display:grid;justify-items:center;align-content:start;gap:4px;padding:6px 0 4px;color:var(--ink);text-decoration:none;text-align:center;border-radius:var(--r-md,14px)}
+.thumbCard{--w:min(calc(100cqw - 16px),172px);margin:0 0 calc(var(--w) * .1)}
+.thumbName{font-weight:700;line-height:1.25;color:var(--link,var(--ink));overflow-wrap:anywhere}
+.thumbMeta{font-size:var(--t-cap,13px);line-height:1.35;color:var(--ink-soft)}
+.thumb:hover .thumbName,.thumb:focus-visible .thumbName{text-decoration:underline;text-underline-offset:3px}
+.thumb:focus-visible{outline:3px solid var(--link,currentColor);outline-offset:2px}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .thumbCard{transition:transform .2s ease-out}
+ .thumb:hover .thumbCard{transform:translateY(-3px) rotate(-1deg)}
+}

@@ -10,6 +10,7 @@ import {ROLE_LABELS,ROLE_ORDER} from '@/lib/town/cardCollection';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import {REFEREE_CARDS_LINK} from '@/lib/site/crossLinks';
 import styles from '../site.module.css';
+import {CardThumbGrid,cardLink} from '@/components/site/cards/GameCard';
 
 export const dynamic='force-static';
 const PLAYERS=SITE_CARDS.filter(c=>!c.coach).length,COACHES=SITE_CARDS.length-PLAYERS;
@@ -31,9 +32,11 @@ export default function CardsIndex(){
    <a className={styles.cta} href="/play">Collect cards on the island</a>
   </header>
   <CollectionLinks list={CARD_COLLECTIONS} title="Browse the cards by collection"/>
-  {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
+  {ROLE_ORDER.filter(role=>SITE_CARDS.some(c=>c.role===role)).map((role,idx)=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
    <h2 className={`${styles.h2} ${tgt.target}`} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
-   <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><span className={styles.itemTitle}>#{c.number} {c.displayName}</span><span className={styles.itemMeta}>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>
+   {/* Nov 20 2026 (owner: "the players card still doesn't have the actual card from the game"): the game's own cards at thumbnail
+       size (GameCard.tsx; was text rows). Off-screen rows skip rendering, so their portraits load only as they scroll near. */}
+   <CardThumbGrid links={list.map(cardLink)} eager={idx===0?8:0}/>
   </section>;})}
   {/* Nov 20 2026 (SEO foundation): the guides the cards are about, and the referee's cards for readers who wanted the rule */}
   <section className={styles.section} aria-labelledby="learn-more"><h2 className={`${styles.h2} ${tgt.target}`} id="learn-more">Keep reading</h2>

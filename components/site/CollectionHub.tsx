@@ -8,6 +8,8 @@ import {breadcrumbLd,collectionLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
 import {SITE_PUBLISHED} from '@/lib/site/updated';
 import {booksForCollection,collectionTopicLinks} from '@/lib/site/crossLinks';
 import styles from '@/app/(site)/site.module.css';
+import {CardThumbGrid} from '@/components/site/cards/GameCard';
+const CARD_PAGE=/^\/cards\/\d+$/;
 /**
  * A collection hub (lib/site/collections.ts, Nov 15 2026): breadcrumb, h1, short intro, one list per group, the guide pages that
  * explain the topic, and the sibling hubs. Server-rendered plain links, the same list classes as /cards and /fish.
@@ -41,7 +43,10 @@ export default function CollectionHub({parent,slug,siblings}:{parent:'cards'|'fi
   {c.groups.map((g,i)=>{const id=g.id??`g-${i}`;return <section key={id} className={styles.section} aria-labelledby={id}>
    <h2 className={`${styles.h2} ${tgt.target}`} id={id}>{g.title} <span className={styles.count}>({g.links.length})</span></h2>
    {g.line&&<p>{g.line}</p>}
-   <ul className={styles.list}>{g.links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.meta&&<span className={styles.itemMeta}>{l.meta}</span>}</a></li>)}</ul>
+   {/* Nov 20 2026 (owner: "the players card still doesn't have the actual card from the game"): a card group lists the game's
+       own cards at thumbnail size (GameCard.tsx; off-screen rows skip rendering, so their portraits load as they scroll near) */}
+   {parent==='cards'&&g.links.every(l=>CARD_PAGE.test(l.path))?<CardThumbGrid links={g.links} eager={i===0?8:0}/>
+   :<ul className={styles.list}>{g.links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.meta&&<span className={styles.itemMeta}>{l.meta}</span>}</a></li>)}</ul>}
   </section>;})}
   <section className={styles.section} aria-labelledby="learn-more"><h2 className={`${styles.h2} ${tgt.target}`} id="learn-more">Keep reading</h2>
    <ul className={styles.list}>{[...c.learn,...cross,...siblings.filter(s=>s.path!==c.path&&!c.learn.some(l=>l.path===s.path)&&!cross.some(l=>l.path===s.path)).map(s=>({path:s.path,name:s.h1,line:s.blurb})),

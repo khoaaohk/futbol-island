@@ -11,7 +11,14 @@ const cp=read('app/(site)/cards/[number]/page.tsx'),ep=read('app/(site)/exhibits
 assert(!/^\s*['"]use client['"]/.test(parts)&&!/useState|useEffect|onClick/.test(parts),'CardParts is server-only');
 assert(/<img src=\{src\} alt=\{alt\} width=\{OG\.width\} height=\{OG\.height\}/.test(parts),'hero img has its width and height');
 assert(/const OG=\{width:1200,height:630\}/.test(parts),'hero size is the share picture size');
-assert(/<Hero src=\{ogPath\(cardPath\(c\.number\)\)\}/.test(cp)&&/<StatStrip stats=\{stats\}\/>/.test(cp)&&/<Chips items=\{c\.strengths\}\/>/.test(cp)&&/<CareerTimeline lines=\{c\.career\}\/>/.test(cp),'card page: hero, stat strip, chips, clubs timeline');
+// Nov 20 2026 (owner: "the players card still doesn't have the actual card from the game"): the card page head shows the game's own
+// card (GameCard = the binder's MiniCard) instead of the share-picture banner; og:image is unchanged; related cards are small real cards.
+const gc=read('components/site/cards/GameCard.tsx');
+assert(/import MiniCard from '@\/components\/MiniCard'/.test(gc)&&/role="img" aria-label=\{cardLabel\(c\)\}/.test(gc),'GameCard wraps the game MiniCard as one labelled picture');
+assert(!/^\s*['"]use client['"]/.test(gc)&&!/useState|useEffect/.test(gc),'GameCard is server-rendered');
+assert(!/<Hero\b/.test(cp)&&/<GameCard c=\{c\}\/>\s*<\/header>/.test(cp)&&/image:\{url:ogPath\(cardPath\(c\.number\)\)/.test(cp),'card page: the game card in the head, the banner only as og:image');
+assert(/<CardThumbGrid links=\{g\.links\}\/>/.test(parts),'more cards like this: small real cards');
+assert(/<StatStrip stats=\{stats\}\/>/.test(cp)&&/<Chips items=\{c\.strengths\}\/>/.test(cp)&&/<CareerTimeline lines=\{c\.career\}\/>/.test(cp),'card page: stat strip, chips, clubs timeline');
 assert(/renderGroup=\{g=><CardTileGroup g=\{g\}\/>\}/.test(cp)&&/renderGroup=\{g=><ExhibitTileGroup g=\{g\}\/>\}/.test(ep),'related groups as tiles');
 assert(/<Hero src=\{ogPath\(exhibitPath\(e\.id\)\)\}/.test(ep)&&/<ExhibitStamp year=\{e\.year\}/.test(ep)&&/<StoryTimeline lines=\{e\.story\}\/>/.test(ep),'exhibit page: hero, stamp, story timeline');
 assert(/shapeRendering="crispEdges"/.test(parts)&&/#7a4e12/.test(parts)&&/strokeWidth="1\.4"/.test(parts),'icons drawn like the fuel bolt');
@@ -23,11 +30,9 @@ const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist
 if(!fs.existsSync(path.join(app,'cards/20.html'))){console.log(`  SKIP built-site checks: no build in ${path.relative(root,dist)}`);process.exit(0);}
 const main=f=>(fs.readFileSync(path.join(app,f),'utf8').match(/<main[\s\S]*<\/main>/)||[''])[0];
 const card=main('cards/20.html');
-const hero=card.match(/<img[^>]*src="\/cards\/20\/og\.png"[^>]*>/);
-assert(hero&&/width="1200"/.test(hero[0])&&/height="630"/.test(hero[0])&&/alt="[^"]+card #20[^"]*"/.test(hero[0]),'card 20: hero img with size and alt');
-assert(!/loading="lazy"/.test(hero[0]),'the hero is not lazy (it is the first picture on screen)');
-assert(card.indexOf('og.png')<card.indexOf('id="facts"')&&/Position<span[^>]*>:<\/span><\/b>/.test(card),'hero before the stat strip; the label keeps its colon');
-assert.equal((card.match(/<img\b/g)||[]).length,1,'one picture on a card page');
+// Nov 20 2026: the banner <img> left the card page (owner: "the players card still doesn't have the actual card from the game")
+assert(/role="img" aria-label="Futbol Island card No\. 020: [^"]+"/.test(card)&&card.indexOf('data-game-card')<card.indexOf('id="facts"'),'card 20: the game card in the head, before the stat strip');
+assert(!/og\.png/.test(card)&&/Position<span[^>]*>:<\/span><\/b>/.test(card),'no banner image on the page; the label keeps its colon');
 const ex=main('exhibits/laws-1863.html');
 assert(/<img[^>]*src="\/exhibits\/laws-1863\/og\.png"[^>]*width="1200"[^>]*height="630"/.test(ex),'exhibit: hero img with size');
 assert(/<dd>1863<\/dd>/.test(ex)&&/<ol class="[^"]*timeline/.test(ex),'exhibit: year stamp and story timeline');

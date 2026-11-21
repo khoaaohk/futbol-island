@@ -1,16 +1,14 @@
 import type {ReactNode} from 'react';
-import {cardByNumber} from '@/lib/site/cards';
 import {exhibitById} from '@/lib/site/exhibits';
 import type {LinkGroup} from '@/lib/site/related';
-import {countryArt} from '@/lib/town/countryArt';
 import s from './cards.module.css';
+import {CardThumbGrid} from './GameCard';
 /**
  * Picture parts of the card and exhibit reading pages (visual pass, Nov 17 2026, AUDIT.md #2 and #8). Server-only, no script:
  * - Hero: the page's own share picture (og.png, built at build time) as one <img> with its real size, so nothing shifts.
  * - Stats: the facts as tiles with 16 px icons drawn like the game's fuel bolt (components/FuelCount.tsx FuelIcon).
  * - Timeline: a vertical list of dated steps (a card's clubs, an exhibit's dated story), only from the page's own words.
- * - Tiles: related cards / exhibits as small card faces (number, name, flag stripe; year for exhibits): no extra image
- *   requests, so a card page still loads one picture.
+ * - Tiles: related exhibits as small tiles led by their year; related cards are the game's own cards (GameCard.tsx, Nov 20 2026).
  */
 /** The share picture's size (lib/site/ogImage.tsx OG_SIZE; not imported, so the page module stays free of the og renderer). */
 const OG={width:1200,height:630};
@@ -71,21 +69,10 @@ export function ExhibitStamp({year,gallery}:{year:string;gallery:string}){
  </dl>;
 }
 
-/** The three flag colours as a flat stripe (fill attributes, no inline style). */
-function FlagStripe({country}:{country?:string}){
- const [a,b,c]=countryArt(country).flag;
- return <svg className={s.flag} viewBox="0 0 3 1" preserveAspectRatio="none" aria-hidden="true"><rect width="1" height="1" fill={a}/><rect x="1" width="1" height="1" fill={b}/><rect x="2" width="1" height="1" fill={c}/></svg>;
-}
-const pad=(n:number)=>String(n).padStart(3,'0');
-/** RelatedLinks renderGroup for card pages: each linked card as a small card face. */
+/** RelatedLinks renderGroup for card pages ("More cards like this"): the game's own cards at thumbnail size (GameCard.tsx
+ *  CardThumbGrid; Nov 20 2026, owner: "the players card still doesn't have the actual card from the game"; was text tiles). */
 export function CardTileGroup({g}:{g:LinkGroup}){
- return <div className={s.group}><h3 className={s.groupTitle}>{g.title}</h3><ul className={s.tiles}>{g.links.map(l=>{
-  const c=cardByNumber(Number(l.path.split('/').pop()));
-  return <li key={l.path}><a href={l.path} className={s.tile} data-era={c?.era==='allTime'?'legend':'star'}>
-   <span className={s.tileNo} aria-hidden="true">{c?pad(c.number):''}</span>
-   <span className={s.tileName}>{l.name}</span>{l.meta&&<span className={s.tileMeta}>{l.meta}</span>}
-   <FlagStripe country={c?.country}/>
-  </a></li>;})}</ul></div>;
+ return <div className={s.group}><h3 className={s.groupTitle}>{g.title}</h3><CardThumbGrid links={g.links}/></div>;
 }
 /** RelatedLinks renderGroup for exhibit pages: each case as a tile led by its year. */
 export function ExhibitTileGroup({g}:{g:LinkGroup}){

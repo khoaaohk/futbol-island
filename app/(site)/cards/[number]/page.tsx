@@ -15,7 +15,9 @@ import {checkedOn} from '@/lib/site/checked';
 import {bookForCard,cardTopicLinks} from '@/lib/site/crossLinks';
 import {CheckedLine,PlayEnd} from '@/lib/site/GuideParts';
 import {PLAY_PACKS_HREF} from '@/lib/site/playLinks';
-import {CardTileGroup,CareerTimeline,Chips,Hero,StatStrip,type Stat} from '@/components/site/cards/CardParts';
+import {CardTileGroup,CareerTimeline,Chips,StatStrip,type Stat} from '@/components/site/cards/CardParts';
+import {GameCard} from '@/components/site/cards/GameCard';
+import gc from '@/components/site/cards/GameCard.module.css';
 import styles from '../../site.module.css';
 
 /** One player (or coach) card as plain text: position, country, blurb, strengths and career. No photo (see lib/site/cards.ts).
@@ -49,13 +51,16 @@ export default function CardPage({params}:{params:{number:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={cardRail({coach:!!c.coach,why:!!note,career:c.career.length>0,play:!!c.play,learn:!!(note&&drill),know:!!(note&&note.facts.length>0)})} current="#top"/>
-  <header className={styles.intro} id="top">
+  {/* Nov 20 2026 (owner: "the players card still doesn't have the actual card from the game"): the head shows the game's own
+      card (components/site/cards/GameCard.tsx, the binder's MiniCard) beside the H1 on wide screens, under the summary on phones.
+      It replaces the share-picture banner (Hero); that picture stays the page's og:image only. */}
+  <header className={`${styles.intro} ${gc.head}`} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <p className={styles.eyebrow}>Card #{c.number} · {c.roleLabel} · {eraWord(c)}</p>
    <h1 className={styles.title}>{c.displayName}</h1>
    {c.blurb&&<p className={styles.lead}>{c.blurb}</p>}
+   <GameCard c={c}/>
   </header>
-  <Hero src={ogPath(cardPath(c.number))} alt={`${c.displayName}, Futbol Island card #${c.number}: ${c.roleLabel}${c.country?`, ${c.country}`:''}`}/>
   <section className={styles.card} aria-labelledby="facts">
    <span className={styles.label}>Real football fact</span>
    <h2 className={`${styles.h2} ${tgt.target}`} id="facts">On the card</h2>
