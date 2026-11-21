@@ -27,7 +27,7 @@ export function gameRail(name:string):Rail{
 /** A lesson page: Back to all lessons, Overview, then the lesson's own sections (quiz, topic hubs and guides only where it has them). */
 export function lessonRail(has:{quiz:boolean;hubs:boolean;guides:boolean},es=false):Rail{
  const t=(en:string,sp:string)=>es?sp:en;
- return pageRail(t('This lesson','Esta lección'),{href:es?toEs('/learn/lessons'):'/learn/lessons',name:t('All lessons','Todas las lecciones')},[sec('coach',t('What the coach says','Lo que dice el entrenador')),
+ return pageRail(t('This lesson','Esta lección'),{href:es?toEs('/learn/lessons'):'/learn/lessons',name:t('All lessons','Todas las lecciones')},[sec('learn',t('What you learn','Lo que aprendes')),sec('coach',t('What the coach says','Lo que dice el entrenador')),
   ...(has.quiz?[sec('quiz',t('Quiz','Prueba'))]:[]),sec('siblings',t('Keep going','Sigue')),...(has.hubs?[sec('related',t('More like this','Más como esta'))]:[]),
   ...(has.guides?[sec('guides',t('Related guides','Guías relacionadas'))]:[]),sec('faq',t('Questions','Preguntas'))],es);
 }
@@ -96,4 +96,19 @@ export function guideRail(family:RailFamily,has:readonly string[]=[],es=false,pl
   return play&&x[0]==='diagram'?[sec(play.deck.id,es?'Paso a paso':'Card by card'),s,sec(play.game.id,es?'Pruébalo':'Try it')]:[s];});
  return pageRail(es?`${base.label}: en esta página`:`${base.label}: on this page`,base.up[0],[...list,sec('faq',es?'Preguntas':'Questions'),sec('coach-notes',es?'Notas del entrenador':'Coach notes'),
   ...(QUIZ[family]?[sec('quiz',es?'Prueba':'Quiz')]:[]),sec('keep-reading',es?'Sigue leyendo':'Keep reading')],es);
+}
+
+/** A drill guide by age or skill (/learn/soccer-drills/u8, /passing, /at-home; owner, Nov 20 2026: "all internal pages need to
+ *  have side navs"): Back to all drills, Overview, then the guide's sections in page order with short labels (the headings on the
+ *  page stay as they are). */
+const DRILL_GUIDE_SHORT:Record<string,string>={can:'What they can do',groups:'Group sizes',avoid:'What to avoid',basics:'The basics',mistakes:'Mistakes',need:'What you need',
+ order:'By age',plan:'Home practice',rules:'Rules to know',safety:'Safety',technique:'Technique',tips:'Tips for parents'};
+const DRILL_GUIDE_SHORT_ES:Record<string,string>={can:'Qué pueden hacer',groups:'Grupos',avoid:'Qué evitar',basics:'Lo básico',mistakes:'Errores',need:'Qué necesitas',
+ order:'Por edad',plan:'Práctica en casa',rules:'Reglas',safety:'Seguridad',technique:'Técnica',tips:'Consejos'};
+export function drillGuideRail(g:{facts?:unknown;before:readonly {id:string;title:string}[];after:readonly {id:string;title:string}[];featured:string},hasPlans:boolean,es=false):Rail{
+ const t=(en:string,sp:string)=>es?sp:en,short=es?DRILL_GUIDE_SHORT_ES:DRILL_GUIDE_SHORT;
+ const s=(x:{id:string;title:string})=>sec(x.id,short[x.id]??x.title);
+ return pageRail(t('This guide','Esta guía'),es?{href:ES_DRILL_HUBS.drills.path,name:'Todos los ejercicios'}:{href:'/learn/soccer-drills',name:'All soccer drills'},
+  [...(g.facts?[sec('facts',t('At a glance','De un vistazo'))]:[]),...g.before.map(s),sec('drills',t('The drills','Los ejercicios')),sec('diagram',t('Example','Ejemplo')),...g.after.map(s),
+   ...(hasPlans?[sec('plans',t('Practice plans','Planes'))]:[]),sec('faq',t('Questions','Preguntas')),sec('keep-reading',t('Keep reading','Sigue leyendo'))],es);
 }

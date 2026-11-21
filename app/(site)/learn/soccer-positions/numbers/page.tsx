@@ -9,6 +9,8 @@ import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,DataTable,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {positionPath} from '@/lib/site/positions';
+import RailNav from '@/components/site/shell/RailNav';
+import {pageRail,sec} from '@/lib/site/railNavMore';
 
 /** /learn/soccer-positions/numbers (lib/site/positionNumbers.ts, Nov 16 2026): positions by number 1-11 and the team-sheet letters. */
 export const dynamic='force-static';
@@ -19,7 +21,10 @@ export default function NumbersPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:P.title,path:P.path,description:P.desc,published:NUMBERS_UPDATED,modified:NUMBERS_UPDATED,about:'Soccer positions by number',teaches:P.answer,image:formationImage(f.slug)})}/>
   <JsonLd data={faqLd(P.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={P.h1} lead={P.answer} more={P.more}/>
+  {/* side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to all positions, Overview, the sections (short labels) */}
+  <GuideIntro top rail={<RailNav rail={pageRail('Position numbers',{href:POSITIONS_HUB.path,name:'All soccer positions'},[sec('diagram','Diagram'),sec('table','Each number'),
+   sec('eleven','The 11 positions'),sec('center-back','Center back'),sec('letters','Abbreviations'),sec('why','Why numbers'),sec('small','Smaller games'),sec('faq','Questions'),
+   sec('lessons','Lessons'),sec('related','Keep reading')])} current="#top"/>} crumbs={crumbs} h1={P.h1} lead={P.answer} more={P.more}/>
   <Section id="diagram" title="The numbers 1 to 11 on a soccer field">
    <Diagram id="n0" format="11v11" lines={f.lines} what="the soccer position numbers 1 to 11 in a 4-3-3 formation" image={formationImage(f.slug)}/>
   </Section>

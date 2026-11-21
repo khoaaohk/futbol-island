@@ -7,6 +7,7 @@ import type {ReactNode} from 'react';
 import LessonFrame from './LessonFrame';
 import site from '../../../app/(site)/site.module.css';
 import s from './lesson.module.css';
+import rt from '../railTarget.module.css';
 /**
  * The lesson reading page's picture parts (visual pass, Nov 17 2026; audit rank 1), shared by app/(site)/learn/lessons/[slug]
  * and the Spanish components/es/pages/LessonsEs.tsx so both languages get the same page:
@@ -70,7 +71,7 @@ export function LearnCard({lang,id,concept,formatLabel,difficulty,difficultyLabe
  if(m)facts.push([<ClockIcon key="t"/>,w.time,w.mins(m)]);
  if(chapter)facts.push([<FlagIcon key="p"/>,w.path,chapter]);
  return <section className={s.learn} aria-labelledby="learn">
-  <h2 className={s.learnTitle} id="learn">{w.learn}</h2>
+  <h2 className={`${s.learnTitle} ${rt.target}`} id="learn">{w.learn}</h2>
   <p className={`${site.lead} ${s.learnLead}`} {...(answer?{'data-answer':''}:{})}>{concept}</p>
   <dl className={s.facts} aria-label={w.facts}>{facts.map(([icon,k,v])=><div key={k} className={k===w.path?s.factWide:s.fact}><dt>{icon}{k}</dt><dd>{v}</dd></div>)}</dl>
  </section>;

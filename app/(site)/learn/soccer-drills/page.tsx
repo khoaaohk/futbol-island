@@ -1,6 +1,6 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
-import {anchor,hubRail} from '@/lib/site/railNavMore';
+import {hubRail,sec} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {DRILLS,DRILLS_HUB as HUB,DRILL_SAFETY_LINE,SKILLS,drill,drillLine,drillsBySkill} from '@/lib/site/drills';
@@ -23,7 +23,7 @@ export default function DrillsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:[...AGE_GUIDES,...SKILL_GUIDES].map(g=>({name:g.h1,path:g.path})).concat(DRILLS.map(d=>({name:d.h1,path:d.path})))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro top rail={<RailNav rail={hubRail('Soccer drills on this page',[{title:'By age',items:AGE_GUIDES.map(g=>anchor('age',g.path,g.h1))},...SKILLS.map(s=>({title:s.name,items:drillsBySkill(s.id).map(d=>anchor('drill',d.path,d.name))}))])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer drills on this page',[{items:[sec('by-age','By age'),sec('by-skill','By skill'),...SKILLS.map(s=>sec(s.id,s.name)),sec('picture','The diagram'),sec('how','How to use them'),sec('guides','Guides and plans'),sec('faq','Questions'),sec('keep-reading','Keep reading')]}])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
   <Section id="by-age" title="Soccer drills by age">
    <p>Each age page is a short guide: what players can do, how to group them, the best drills and what to avoid.</p>
    <LinkList ids="age" links={AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb}))}/>

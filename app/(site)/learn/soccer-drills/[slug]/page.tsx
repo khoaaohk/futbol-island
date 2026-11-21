@@ -1,7 +1,7 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
-import {guideRail} from '@/lib/site/railNavMore';
+import {drillGuideRail,guideRail} from '@/lib/site/railNavMore';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -81,7 +81,7 @@ function GuidePage({g}:{g:DrillGuide}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:g.title,path:g.path,description:g.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${g.name} (soccer coaching guide)`,teaches:g.lead,image:diagramUrl(g.picture)})}/>
   <JsonLd data={faqLd(g.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={g.h1} lead={g.lead} more={g.more}/>
+  <GuideIntro top rail={<RailNav rail={drillGuideRail(g,plans.length>0)} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} more={g.more}/>
   {g.facts&&<Section id="facts" title={g.facts.label}>
    <DataTable label={g.facts.label} head={['Detail',g.age??'Value']} rows={g.facts.rows}/>
    <p className={styles.caption}>{g.facts.note}</p>

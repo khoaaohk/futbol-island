@@ -1,7 +1,7 @@
 import KeepReading from '@/components/site/KeepReading';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
-import {anchor,guideRail,hubRail,planRail,plansHubRail} from '@/lib/site/railNavMore';
+import {anchor,drillGuideRail,guideRail,hubRail,planRail,plansHubRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
 import {railId} from '@/lib/site/railId';
 import JsonLd from '@/components/seo/JsonLd';
@@ -126,7 +126,7 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(articleLd({headline:g.title,path:g.esPath,description:g.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${g.name} (guía para entrenadores de fútbol)`,teaches:g.lead,image:diagramUrl(g.picture)}))}/>
   <JsonLd data={faqLd(g.faq)}/>
-  <EsIntro crumbs={crumbs} h1={g.h1} lead={g.lead} more={g.more}/>
+  <EsIntro top rail={<RailNav rail={drillGuideRail(g,plans.length>0,true)} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} more={g.more}/>
   {g.facts&&<Section id="facts" title={g.facts.label}>
    <DataTable label={g.facts.label} head={['Dato',g.age??'Valor']} rows={g.facts.rows}/>
    <p className={styles.caption}>{g.facts.note}</p>
