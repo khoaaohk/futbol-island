@@ -69,6 +69,7 @@ export default function FootGolfGame({onExit}:{onExit:()=>void}){
  const reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
  useEffect(()=>{setSave(readFootgolfSave());setToday(localPlayDay(Date.now()));},[]);
+ useEffect(()=>{if(!hint)return;const t=setTimeout(()=>setHint(''),5500);return()=>clearTimeout(t);},[hint]);
  useEffect(()=>{if(!foot)return;const t=setTimeout(()=>setFoot(null),1800);return()=>clearTimeout(t);},[foot]);
  const kick=useCallback(()=>{stillAt.current=0;if(!raf.current&&phaseRef.current==='playing'){last.current=0;slot.current=0;raf.current=requestAnimationFrame(t=>frameRef.current(t));}},[]);
  const say=useCallback((text:string,tone:Word['tone'],teach=false)=>{if(!text)return;const w:Word={id:++wordId.current,text,tone,teach};setWords(l=>[...l.filter(x=>!(teach&&x.teach)).slice(-2),w]);},[]);

@@ -82,7 +82,7 @@ export const HOLES:readonly HoleDef[]=[
   walls:[[-14.3,-38,-14.3,-60,.7,3],[-9.7,-38,-9.7,-60,.7,3]],posts:[],trees:[[18,-6,1,0],[-22,-14,1.1,0],[22,-70,1,0],[-24,-100,1,0],[24,-106,1.1,0]],wind:[110,1,3.5],preview:.6},
  {id:'museum',name:'Museum Gardens',par:3,place:'museum',lesson:'Read the green: the arrows point downhill.',tee:[0,0],cups:[[0,-57],[-3,-55],[3,-59]],bounds:[-40,-86,40,16],
   slope:[0,0],hills:[],fair:[cap(6,0,-5,0,-46)],green:{x:0,z:-57,rx:8.5,rz:7.5,tx:-.02,tz:.075},sand:[[-6,-47,2.6,2],[6.5,-50,2.6,2.2]],ponds:[],rivers:[],
-  stone:[cap(1.6,-14,6,-14,-70),cap(1.6,14,6,14,-70)],walls:[[-10,-14,-10,-40,1.3,2],[10,-18,10,-42,1.3,2],[-12,-66,12,-66,1.3,2]],posts:[[0,-30,1,1.6,3]],
+  stone:[cap(1.6,-14,6,-14,-70),cap(1.6,14,6,14,-70)],walls:[[-10,-14,-10,-40,1.3,2],[10,-18,10,-42,1.3,2],[-12,-66,12,-66,1.3,2]],posts:[[5.5,-27,1,1.6,3]],
   trees:[[-18,-20,1,2],[18,-30,1,2],[-18,-50,1.1,2],[18,-56,1,2]],wind:[0,0,1.5],preview:.6},
  {id:'coral',name:'Coral Cay',par:3,place:'coral',lesson:'Wind moves a high ball. Backspin holds it on the green.',tee:[0,0],cups:[[2,-48],[0,-51],[4,-46]],bounds:[-40,-74,44,16],
   land:{caps:[cap(8,0,8,0,-8),cap(4,14,-10,14,-38)],ells:[[2,-49,11,10]]},slope:[0,0],hills:[[2,-49,8,.3]],fair:[cap(5,0,4,0,-5)],

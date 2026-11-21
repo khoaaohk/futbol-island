@@ -129,12 +129,14 @@ function scenery(H:Hole):T.BufferGeometry{const o:Parts=[],d=H.def,y=(x:number,z
   if(k===0){P(o,new T.DodecahedronGeometry(p[2]*1.05,0),'#a89a94',p[0],gy+p[3]*.4,p[1],rnd()*3,0,.08,true);P(o,new T.DodecahedronGeometry(p[2]*.6,0),'#c2b6ae',p[0]+p[2]*.5,gy+p[3]*.75,p[1]-p[2]*.2,rnd()*3,0,.06,true);}
   else if(k===1){const g=cyl(p[2],p[2],p[3],10);g.rotateZ(Math.PI/2);P(o,g,'#e8c45a',p[0],gy+p[2]*.9,p[1],rnd()*3,0,.06,true);}
   else if(k===2){P(o,cyl(p[2],p[2]+.2,.7,16),'#d9c7a8',p[0],gy+.35,p[1],0,0,.06,true);P(o,cyl(p[2]-.25,p[2]-.25,.06,16),FG_COLORS.water,p[0],gy+.68,p[1],0,0,0);P(o,cyl(.35,.5,1.4,10),'#cdb894',p[0],gy+1.2,p[1],0,0,.05,true);P(o,cyl(1.1,.8,.3,12),'#d9c7a8',p[0],gy+1.9,p[1],0,0,.05,true);P(o,ico(.4,0),'#bfe9f5',p[0],gy+2.3,p[1],0,0,.04,true);}
+  else if(p[2]>.5){// a plinth with a bronze footballer on it (the museum's statue)
+   P(o,box(p[2]*1.6,p[3],p[2]*1.6),'#e9d6b2',p[0],gy+p[3]/2,p[1],.4,0,.05);P(o,cyl(.22,.3,1.3,8),'#b9824a',p[0],gy+p[3]+.65,p[1],0,0,.04,true);P(o,ico(.24,1),'#c99252',p[0],gy+p[3]+1.5,p[1],0,0,.03,true);P(o,box(.16,.9,.16),'#a8723e',p[0]+.2,gy+p[3]+.35,p[1]+.25,0,.5,.03);P(o,ico(.2,1),'#fff3d6',p[0]+.55,gy+p[3]+.2,p[1]+.4,0,0,.03,true);}
   else{P(o,cyl(p[2],p[2],p[3],8),'#fff3d6',p[0],gy+p[3]/2,p[1],0,0,.04,true);P(o,box(.9,.5,.06),FG_COLORS.red,p[0]+.45,gy+p[3]-.3,p[1],0,0,.03);}}
  // the bridge deck
  if(d.bridge){const c=d.bridge.c,dx=c.p[2]-c.p[0],dz=c.p[3]-c.p[1],L=Math.hypot(dx,dz),ry=Math.atan2(-dz,dx);for(let t=0;t<L;t+=.6){const x=c.p[0]+dx*t/L,z=c.p[1]+dz*t/L;P(o,box(.5,.12,c.w*2),t%1.2<.6?'#c98a4b':'#b97a40',x,H.deckY+.02,z,ry,0,.02);}
   for(const s of [-1,1])for(let t=0;t<=L;t+=L/3){const x=c.p[0]+dx*t/L-dz/L*s*c.w,z=c.p[1]+dz*t/L+dx/L*s*c.w;P(o,cyl(.18,.18,2.4,6),'#8a5a3a',x,H.deckY-.9,z,0,0,.03,true);}}
  // tee markers
- P(o,ico(.22,0),FG_COLORS.red,d.tee[0]-2,y(d.tee[0]-2,d.tee[1])+.2,d.tee[1],0,0,.03,true);P(o,ico(.22,0),FG_COLORS.red,d.tee[0]+2,y(d.tee[0]+2,d.tee[1])+.2,d.tee[1],0,0,.03,true);
+ P(o,ico(.13,0),FG_COLORS.red,d.tee[0]-2.2,y(d.tee[0]-2.2,d.tee[1])+.12,d.tee[1],0,0,.025,true);P(o,ico(.13,0),FG_COLORS.red,d.tee[0]+2.2,y(d.tee[0]+2.2,d.tee[1])+.12,d.tee[1],0,0,.025,true);
  // the landmark of each place
  const at=(x:number,z:number)=>Math.max(FG.water,y(x,z));
  const house=(x:number,z:number,w:number,h:number,dp:number,c:string,roof:string,ry=0)=>{const gy=at(x,z);P(o,box(w,h,dp),c,x,gy+h/2-.2,z,ry,0,.07);const r=new T.CylinderGeometry(.01,w*.62,1.6,4,1);r.rotateY(Math.PI/4);r.scale(1,1,dp/w);P(o,r,roof,x,gy+h+.6,z,ry,0,.06);
@@ -228,8 +230,8 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
  const cam={mode:'still' as CamMode,pos:new T.Vector3(0,20,30),look:new T.Vector3(),tPos:new T.Vector3(),tLook:new T.Vector3(),fly:0,flyDur:4.6,yaw:0,kind:'long' as KickKind,lastT:0,orbit:0,cx:0,cz:-1};
  let H:Hole|null=null,W=1,Hh=1,lastBX=0,lastBZ=0,flagWave=0;
  function measure(){camera.aspect=W/Hh;camera.fov=W/Hh<.75?60:50;
-  // upright phones: the kick picker covers the bottom fifth, so the picture is framed higher (a taller virtual screen, its lower part shown)
-  const lift=W/Hh<.8?Math.round(Hh*.24):0;if(lift)camera.setViewOffset(W,Hh+lift,0,lift,W,Hh);else camera.clearViewOffset();camera.updateProjectionMatrix();}
+  // upright phones: the kick picker covers the bottom fifth, so the picture is shifted up (a sheared frustum: no zoom, no extra cost)
+  const lift=Math.round(Hh*(W/Hh<.8?.17:.13));camera.setViewOffset(W,Hh,0,lift,W,Hh);camera.updateProjectionMatrix();}
  function resize(w:number,h:number,dpr:number){W=w;Hh=h;renderer.setPixelRatio(Math.min(o.mobile?1.5:2,dpr));renderer.setSize(w,h,false);comicDotCell(ink,renderer);measure();}
  function setHole(g:FootGolf){const s=g.state;H=s.hole;const p=PLACES[H.def.place]??PLACES.jetty;
   backTex?.dispose();backTex=backdropTex(H.def.place);backTex.wrapS=T.RepeatWrapping;backTex.repeat.set(2,1);backMat.map=backTex;backMat.needsUpdate=true;
@@ -249,9 +251,9 @@ export function createFootgolfView(host:HTMLElement,o:{reduced:boolean;mobile:bo
  function startFlyover(bx:number,bz:number){if(!H)return;cam.mode='flyover';cam.fly=0;cam.flyDur=o.reduced?.01:Math.min(6,3.2+H.metres/60);void bx;void bz;}
  const routePt=(u:number,out:T.Vector3)=>{const r=H!.route;let total=0;for(let i=2;i<r.length;i+=2)total+=Math.hypot(r[i]-r[i-2],r[i+1]-r[i-1]);let want=u*total;
   for(let i=2;i<r.length;i+=2){const L=Math.hypot(r[i]-r[i-2],r[i+1]-r[i-1]);if(want<=L||i===r.length-2){const t=Math.min(1,want/(L||1));out.set(r[i-2]+(r[i]-r[i-2])*t,0,r[i-1]+(r[i+1]-r[i-1])*t);return out;}want-=L;}return out.set(r[0],0,r[1]);};
- function aimPose(g:FootGolf,outPos:T.Vector3,outLook:T.Vector3){const b=g.state.ball,putt=cam.kind==='putt',dist=putt?3.6:cam.kind==='pass'?5.4:6.6,ht=putt?1.25:cam.kind==='pass'?2:2.7,fx=Math.sin(cam.yaw),fz=-Math.cos(cam.yaw);
+ function aimPose(g:FootGolf,outPos:T.Vector3,outLook:T.Vector3){const b=g.state.ball,putt=cam.kind==='putt',dist=putt?3.6:cam.kind==='pass'?6:8,ht=putt?1.35:cam.kind==='pass'?2.8:4.4,fx=Math.sin(cam.yaw),fz=-Math.cos(cam.yaw);
   outPos.set(b.x-fx*dist,0,b.z-fz*dist);const gy=heightAt(H!,outPos.x,outPos.z);outPos.y=Math.max(gy+ht*.6,b.y+ht,FG.water+1);
-  const ahead=putt?Math.min(9,Math.max(3,g.cupDist()*.9)):cam.kind==='pass'?16:28;outLook.set(b.x+fx*ahead,0,b.z+fz*ahead);outLook.y=Math.max(heightAt(H!,outLook.x,outLook.z),FG.water)+(putt?.1:1.6);}
+  const ahead=putt?Math.min(9,Math.max(3,g.cupDist()*.9)):cam.kind==='pass'?18:32;outLook.set(b.x+fx*ahead,0,b.z+fz*ahead);outLook.y=Math.max(heightAt(H!,outLook.x,outLook.z),FG.water)+(putt?.1:.2);}
  const ease=(t:number)=>t<.5?2*t*t:1-(-2*t+2)**2/2;
  function updateCamera(g:FootGolf,dt:number,now:number){if(!H)return;const s=g.state,b=s.ball;let k=1-Math.exp(-dt*4);
   if(cam.mode==='flyover'){cam.fly+=dt/cam.flyDur;const u=ease(Math.min(1,cam.fly));
