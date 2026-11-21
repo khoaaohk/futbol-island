@@ -276,6 +276,20 @@
  .page:has(nav[data-rail])>.main>.section:has(>figure):has(>p):not(:has(>:is(ul,ol,dl,div,table)))>.h2{grid-column:1/-1}
  .page:has(nav[data-rail])>.main>.section:has(>figure):has(>p):not(:has(>:is(ul,ol,dl,div,table)))>figure{grid-column:2;grid-row:2/span 4;max-width:none}
 }
+/* Drill setup diagrams use the width (owner, Nov 20 2026, "should drill setup diagrams grow on wide screens? yes": go with the
+   recommendation). The diagram is drawn (inline SVG, sharp at any size): it fills its well up to 560 px wide below 1280 px; from
+   1280 px it sits beside its "At a glance" (7/12 + 5/12 of the content area, the HTML order unchanged: the main grid places the two
+   sections side by side), never taller than the window. */
+.page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]>.figure .art svg{width:100%;max-width:560px;max-height:calc(100svh - 180px)}
+@media(min-width:1280px){
+ .page:has(nav[data-rail])>.main:has(>.section[aria-labelledby="diagram"]+.section[aria-labelledby="facts"]){grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--s4)}
+ .page:has(nav[data-rail])>.main:has(>.section[aria-labelledby="diagram"]+.section[aria-labelledby="facts"])>*{grid-column:1/-1}
+ .page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]:has(+.section[aria-labelledby="facts"]){grid-column:1}
+ .page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]+.section[aria-labelledby="facts"]{grid-column:2}
+ .page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]+.section[aria-labelledby="facts"] [data-glance]{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]>.figure{max-width:none}
+ .page:has(nav[data-rail])>.main>.section[aria-labelledby="diagram"]>.figure .art svg{max-width:none;max-height:min(680px,calc(100svh - 260px))}
+}
 @media(min-width:1600px){
  .page:has(nav[data-rail])>.main>.section>:is(ul,ol):not([class]):has(>li:nth-child(4)){columns:2;column-gap:var(--s4)}
  .page:has(nav[data-rail])>.main>.section>:is(ul,ol):not([class])>li{break-inside:avoid}
