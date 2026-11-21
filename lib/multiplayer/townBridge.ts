@@ -77,7 +77,9 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
    *  instead of the island's (the island loop is frozen under the water). null = back on the island: the next island pose is a Warp. */
   setRoomLayer(layer: { sendNow(): void } | null): void;
   /** Others counted at room `room`'s door hint right now (the dive prompt's "Dive in: 2 friends exploring"); 0 without a hint there. */
-  roomCount(room: number): number }
+  roomCount(room: number): number;
+  /** Hide the hint at room `room`'s door while something else says the same (the dive prompt's invite at a reef flag); -1 = none. */
+  muteRoomHint(room: number): void }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -238,6 +240,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     if (entryWarpDue(ew, nowMs)) body[7] |= 1;
     return body;
   }
+  let mutedHint = -1; // a door hint hidden while the dive prompt's invite says the same
   let roomLayer: { sendNow(): void } | null = null; // shared reefs: the dive room's layer owns the pose meanwhile
   function sendLocal(nowMs: number) {
     if (conn.status !== 'live') return;
@@ -267,6 +270,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (back) { armEntryWarp(ew); jumpX = jumpZ = NaN; } // reef -> island is a jump: Warp (+ the retry), as after a room page
     },
     roomCount(room) { for (const h of hints) if (h.d.room === room) return h.n; return 0; },
+    muteRoomHint(room) { mutedHint = room; },
     debugEmotes: () => avatars.debugEmotes(),
     duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
     endDuet: (id) => avatars.endDuet(id),
@@ -348,7 +352,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
         meRingOn = showRing;
         if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; ring.pitch = l.pitch ?? 0; ring.yaw = l.facing; }
         avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null, core.balls);
-        if (hints.length) for (const h of hints) if (h.n > 0) { const dx = h.d.x - camera.position.x, dz = h.d.z - camera.position.z; h.sprite.visible = dx * dx + dz * dz < HINT_RANGE * HINT_RANGE; }
+        if (hints.length) for (const h of hints) if (h.n > 0) { const dx = h.d.x - camera.position.x, dz = h.d.z - camera.position.z; h.sprite.visible = h.d.room !== mutedHint && dx * dx + dz * dz < HINT_RANGE * HINT_RANGE; }
       }
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.
       lastUpdateAt = nowMs;

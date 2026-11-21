@@ -73,7 +73,8 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
         out.lastBusy = false;
         const x = -1.5 + 2.2 * Math.sin(k * 0.9), z = 2.4 + 0.8 * Math.cos(k * 0.6);
         const warp = roomWarps === 0 || (roomWarps === 1 && r >= 5500) || out.wasBusy ? 1 : 0; if (warp) roomWarps++; out.wasBusy = false;
-        const b = roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, x, 0, z, walking ? k * 0.9 : 0.6, walking ? Mode.Walk : Mode.Idle, warp);
+        const dive = room >= 41 && room <= 47; // shared reefs: a diver swims a loop ~4 m in front of the dive room's start (0, 13)
+        const b = dive ? roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, x * 1.5, 0, z + 6, walking ? k * 0.9 : 0.6, Mode.Dive, warp) : roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, x, 0, z, walking ? k * 0.9 : 0.6, walking ? Mode.Walk : Mode.Idle, warp);
         if (!walking && !warp && out.lastStill) return; // standing: send once, like the client's delta suppression
         out.lastStill = !walking;
         send([C.Pose, seq, ...b]);

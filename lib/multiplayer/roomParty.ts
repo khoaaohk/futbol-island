@@ -5,7 +5,7 @@
 // No analytics imports (tests/mp-isolation.cjs): counts leave through callbacks only. No timers or loops of its own: the room's
 // frame loop calls update(), the connection's 5 s beat carries the pose while that loop sleeps.
 import type * as THREE from 'three';
-import { BallState, Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Kit, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { BallState, Mode, S, Zone, presenceOf, reefArea, roomLocalY, roomOf, shielded, type Kit, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { emoteSeconds } from '../town/emoteReact';
 import { createRemoteAvatars, remoteCap, type RemoteAvatars, type RemoteBall } from '../graphics/remoteAvatars';
 import { batterySaverOn, type HeatTier } from '../graphics/heatTier';
@@ -398,7 +398,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
       }
       const l = ctx.local();
       avatars.root.visible = !hideFriends;
-      const showRing = conn.status === 'live' && core.meHex !== '' && !l.hidden && !l.busy && !hideFriends;
+      const showRing = conn.status === 'live' && core.meHex !== '' && !l.hidden && !l.busy && !hideFriends && reefArea(room) < 0; // no ring under my own diver
       meRingOn = showRing;
       if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = core.meHex; ring.mode = Mode.Walk; ring.pitch = 0; ring.yaw = l.facing; }
       if (!hideFriends) avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);

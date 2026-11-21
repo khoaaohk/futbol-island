@@ -139,6 +139,7 @@ t('reef layer: divers in the SAME reef only (not another reef, the island or a r
   h.clock.t += 600; reef.update(.05, h.clock.t, cam0());
   let f = h.state.upd.at(-1);
   deq([...f.poses.keys()], [1], 'only the diver in THIS reef');
+  assert.equal(f.local, null, 'no colour ring under my own diver'); assert.equal(reef.room, 42);
   let p = f.poses.get(1); assert.equal(p.mode, Mode.Dive); assert.equal(p.zone, Zone.Sea, 'zone Sea: the remote layer draws the wet body'); assert.ok(Math.abs(p.y + 1) < .051, 'room-local depth');
   const first = h.conn.sent.find((x) => P.roomOf(x.b) === 42); assert.ok(first, 'sends this reef'); assert.equal(first.b[5], Mode.Dive); assert.equal(first.b[7] & 1, 1, 'entry warp');
   // friend 1 swims 0.6 m per 100 ms: the stroke speed rises toward 6 m/s
@@ -178,6 +179,9 @@ t('island: a diver fades at their last island spot (no frozen busy figure), "1 e
   assert.equal(p.zone, Zone.Indoors, 'fades out (no busy figure frozen at the flag)'); assert.ok(Math.abs(p.x - 510) < .01 && Math.abs(p.z + 292) < .01, 'at their last island spot');
   assert.equal(at(42).userData.text, '1 exploring'); assert.equal(rt.roomCount(42), 1);
   assert.equal(h.mod.doorHintText(2, 45), '2 exploring');
+  assert.equal(at(42).visible, true, 'in range: shown');
+  rt.muteRoomHint(42); h.clock.t += 50; rt.update(.05, h.clock.t, cam); assert.equal(at(42).visible, false, 'the invite on the dive prompt replaces that flag hint');
+  rt.muteRoomHint(-1); h.clock.t += 50; rt.update(.05, h.clock.t, cam); assert.equal(at(42).visible, true);
   // I dive: the island's beat forwards to the reef layer; back up: the next island pose is a Warp
   let fwd = 0; rt.setRoomLayer({ sendNow() { fwd++; } });
   h.clock.t += 6000; h.conn.before(); assert.equal(fwd, 1, 'the beat asks the reef layer while under');
@@ -194,6 +198,7 @@ t('wiring: the layer is made on the way under and ended on the way up; the dive 
   assert.match(town, /REEF_DOOR_HINTS=DIVE_SPOTS\.map\(s=>\(\{room:reefRoom\(s\.area\)/);
   assert.match(town, /createReefParty\(\{scene:room0\.scene,area:spot\.area/);
   assert.match(town, /surfaced:\(spot,reason\)=>\{[^\n]*endReefParty\(\)/);
+  assert.match(town, /party\.muteRoomHint\(dive\.promptShown&&ns\?reefRoom\(ns\.area\):-1\)/);
   assert.match(town, /beforeRender:\(_s,cam,dt\)=>\{if\(reefParty\)reefParty\.update\(dt,performance\.now\(\),cam\);\}/);
   assert.ok(dr.indexOf('ports.beforeRender?.(room.scene,room.camera,dt);') > 0 && dr.indexOf('ports.beforeRender?.(room.scene,room.camera,dt);') < dr.indexOf('ports.renderer.render(room.scene,room.camera);'), 'before the room render');
   // the island stays frozen: the dive branch still returns before party.update
