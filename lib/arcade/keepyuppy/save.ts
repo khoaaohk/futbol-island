@@ -10,15 +10,15 @@ import {TRACKS} from './charts';
 export const KEEPYUPPY_KEY='fi2-keepyuppy-v1';
 /** stars 0-3, best score, best accuracy 0-100, best weak-foot score 0-100 (-1 = never finished) */
 export type TrackSave={stars:number;best:number;acc:number;weak:number;plays:number};
-export type KeepySave={v:1;strong:Foot|'';/** tap-timing offset in ms from "tap when the ball lands" (0 until done) */offset:number;calibrated:boolean;best:number;medal:number;plays:number;tip:number;
+export type KeepySave={v:1;strong:Foot|'';/** tap-timing offset in ms from "tap when the ball lands" (0 until done) */offset:number;calibrated:boolean;/** the guided first touches were done (verifier, Nov 21 2026) */guided:boolean;best:number;medal:number;plays:number;tip:number;
  tracks:Record<string,TrackSave>;/** clean landings per trick */tricks:Partial<Record<TrickId,number>>;/** lessons taken */seen:TrickId[];feats:FeatId[];
  daily:{day:string;stars:number;score:number;acc:number;runs:number;counted:boolean}};
-export const emptyKeepySave=():KeepySave=>({v:1,strong:'',offset:0,calibrated:false,best:0,medal:0,plays:0,tip:0,tracks:{},tricks:{},seen:[],feats:[],daily:{day:'',stars:0,score:0,acc:0,runs:0,counted:false}});
+export const emptyKeepySave=():KeepySave=>({v:1,strong:'',offset:0,calibrated:false,guided:false,best:0,medal:0,plays:0,tip:0,tracks:{},tricks:{},seen:[],feats:[],daily:{day:'',stars:0,score:0,acc:0,runs:0,counted:false}});
 const int=(v:unknown,max:number,min=0)=>typeof v==='number'&&Number.isFinite(v)?Math.max(min,Math.min(max,Math.floor(v))):0;
 const DAY=/^\d{4}-\d{2}-\d{2}$/,day=(v:unknown)=>typeof v==='string'&&DAY.test(v)?v:'';
 export function sanitizeKeepySave(raw:unknown):KeepySave{
  const out=emptyKeepySave();if(!raw||typeof raw!=='object')return out;const r=raw as Partial<KeepySave>;
- out.strong=r.strong==='L'||r.strong==='R'?r.strong:'';out.offset=typeof r.offset==='number'&&Number.isFinite(r.offset)?Math.max(-200,Math.min(200,Math.round(r.offset))):0;out.calibrated=r.calibrated===true;
+ out.strong=r.strong==='L'||r.strong==='R'?r.strong:'';out.offset=typeof r.offset==='number'&&Number.isFinite(r.offset)?Math.max(-200,Math.min(200,Math.round(r.offset))):0;out.calibrated=r.calibrated===true;out.guided=r.guided===true;
  out.best=int(r.best,KU.scoreMax);out.medal=int(r.medal,KU.medals.length);out.plays=int(r.plays,1e9);out.tip=int(r.tip,1e9);
  if(r.tracks&&typeof r.tracks==='object')for(const t of TRACKS){const c=(r.tracks as Record<string,Partial<TrackSave>>)[t.id];if(!c||typeof c!=='object')continue;
   out.tracks[t.id]={stars:int(c.stars,3),best:int(c.best,KU.scoreMax),acc:int(c.acc,100),weak:typeof c.weak==='number'&&c.weak>=0?int(c.weak,100):-1,plays:int(c.plays,1e6)};}
@@ -64,9 +64,9 @@ export type KeepyTip={title:string;line:string};
 export const KEEPY_TIPS:readonly KeepyTip[]=[
  {title:'Soft first touch',line:'Let your foot give a little as the ball lands, like catching an egg. A soft touch keeps the ball close.'},
  {title:'Eyes on the ball',line:'Watch the ball all the way onto your foot. Jugglers look at the ball, not at their feet.'},
- {title:'Both feet',line:'Ten touches with your weaker foot every day and it stops being weak. The best players use both.'},
+ {title:'Both feet',line:'Give your weaker foot extra touches every time you practise. It gets stronger, and the best players use both.'},
  {title:'Height is time',line:'A higher touch gives you longer before the next one. Use it before a trick. Keep it low when you want to go fast.'},
- {title:'Laces, not toes',line:'Juggle with the flat top of your foot, toes pointing forward. A toe poke sends the ball away.'},
+ {title:'Laces, not toes',line:'Lock your ankle so the top of your foot is flat, like a tray, and meet the ball on your laces. A toe poke sends the ball away.'},
  {title:'Thigh',line:'Lift your thigh until it is flat, like a table. Meet the ball in the middle of your thigh, not on the knee.'},
  {title:'Header',line:'Use your forehead and keep your eyes open. Push up with your legs.'},
  {title:'Find the rhythm',line:'Juggling has a beat: touch, touch, touch. Count it out loud and your feet will follow.'},
@@ -83,7 +83,7 @@ export function coachLine(c:Record<Grade,number>,out:boolean):string{
  if(c.early>c.late&&c.early>=c.drop)return 'You were a little early. Wait until the ball sits in the ring, then tap.';
  if(c.late>c.early&&c.late>=c.drop)return 'You were a little late. Listen for the drum and tap with it.';
  if(c.slip>=2)return 'For a trick, keep your thumb down: swipe, or hold until the bar is full.';
- if(out)return 'Three drops and the ball is gone. Slow down, watch one ring at a time.';
+ if(out)return 'No balls left. Slow down and watch one ring at a time.';
  return c.drop>0?'Watch the ball all the way into the ring. Eight clean touches win a ball back.':'Soft touches, good rhythm. Now go for more Sweet ones.';
 }
 /** The results card's "what to beat next" line: the nearest thing the child almost had. */

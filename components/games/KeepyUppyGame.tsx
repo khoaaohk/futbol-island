@@ -25,7 +25,7 @@ import {BoardDialog} from '../arcade/BoardsPanel';
 import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './KeepyUppyGame.module.css';
-import {createKeepy,keepyDailySeed,dailyPick,calibOffset,medalFor,timeOfBeat,beatAtTime,trickInfo,twistInfo,clean,KU,TRICKS,MEDAL_NAMES,KU_FEATS,type Keepy,type KuEvent,type TrickId,type TwistId,type Foot,type Grade,type Dir,type FeatId} from '@/lib/arcade/keepyuppy/core';
+import {createKeepy,keepyDailySeed,dailyPick,calibOffset,medalFor,timeOfBeat,beatAtTime,trickInfo,twistInfo,clean,KU,TRICKS,MEDAL_NAMES,KU_FEATS,LANE_NAME,type Keepy,type KuEvent,type TrickId,type TwistId,type Foot,type Grade,type Dir,type FeatId} from '@/lib/arcade/keepyuppy/core';
 import {TRACKS} from '@/lib/arcade/keepyuppy/charts';
 import {createKeepyView,type KeepyView} from '@/lib/arcade/keepyuppy/view';
 import {createKeepyAudio,type KeepyAudio} from '@/lib/arcade/keepyuppy/audio';
@@ -44,7 +44,7 @@ const KeepyUppyScores=dynamic(()=>retryImport(()=>import('./KeepyUppyScores')),{
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** A run is a short list of stages: the one-time tap-timing check, a 10-second lesson for each trick not learned yet, then the track. */
-type Stage={kind:'calib'}|{kind:'lesson';trick:TrickId}|{kind:'track'};
+type Stage={kind:'guide'}|{kind:'calib'}|{kind:'lesson';trick:TrickId}|{kind:'track'};
 type Hud={score:number;lives:number;weak:boolean;fast:boolean};
 type Result={score:number;daily:boolean;track:number;twist:TwistId|'';stars:number;acc:number;weak:number;out:boolean;sweet:number;bestCombo:number;tricks:number;settled:KeepySettled;line:string;coach:string;coins:number};
 type Word={id:number;text:string;pts:number;tone:'sun'|'red'|'teal'|'paper'};
@@ -75,14 +75,14 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  const [save,setSave]=useState<KeepySave>(emptyKeepySave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[book,setBook]=useState(false),[words,setWords]=useState<Word[]>([]);
  /** the stage card that is up (-1 = none: a ball is in the air), the track picked on the start card, the foot question, a note under the HUD */
- const [tip,setTip]=useState(-1),[pick,setPick]=useState(-1),[askFoot,setAskFoot]=useState<null|{daily:boolean;solo:boolean}>(null),[note,setNote]=useState(''),[drops,setDrops]=useState(0),[held,setHeld]=useState('');
+ const [tip,setTip]=useState(-1),[pick,setPick]=useState(-1),[askFoot,setAskFoot]=useState<null|{daily:boolean;solo:boolean}>(null),[note,setNote]=useState(''),[drops,setDrops]=useState(0),[held,setHeld]=useState(''),[guide,setGuide]=useState('');
  const entry=useArcadeEntry('keepyuppy');
  const stage=useRef<HTMLDivElement>(null),focusEl=useRef<HTMLDivElement>(null),bgEl=useRef<HTMLCanvasElement>(null),fgEl=useRef<HTMLCanvasElement>(null);
  const game=useRef<Keepy|null>(null),view=useRef<KeepyView|null>(null),audio=useRef<KeepyAudio|null>(null);
  const clock=useRef(createSongClock(()=>performance.now()/1000,()=>audio.current?.songTime()??null));
  const raf=useRef(0),draws=useRef(0),cost=useRef({n:0,ms:0,max:0}),slot=useRef(0),frameMs=useRef(1000/60),endAt=useRef(0),wordId=useRef(0),pressed=useRef(0),lat=useRef(0),off=useRef(DEFAULT_OFFSET);
  const run=useRef<{id:string;daily:boolean;day:string;track:number;twist:TwistId|'';strong:Foot;stages:Stage[];at:number;done:boolean;solo:boolean;lessons:TrickId[];tricks:Partial<Record<TrickId,number>>}>({id:'',daily:false,day:'',track:0,twist:'',strong:'R',stages:[],at:0,done:true,solo:false,lessons:[],tricks:{}});
- const pauseRef=useRef<()=>void>(()=>{});const ptrs=useRef(new Map<number,{lane:number;sx:number;sy:number;swiped:boolean}>()),keysDown=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
+ const pauseRef=useRef<()=>void>(()=>{}),guideWait=useRef(false);const ptrs=useRef(new Map<number,{lane:number;sx:number;sy:number;swiped:boolean}>()),keysDown=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
 
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
  useEffect(()=>{const s=readKeepySave();setSave(s);setToday(localPlayDay(Date.now()));},[]);
@@ -125,13 +125,13 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  /** A stage starts: the game, the scene, the clock at the count-in, the music. */
  const begin=useCallback((i:number)=>{
   const r=run.current,st=r.stages[i],a=audio.current,v=view.current;if(!st)return;a?.unlock();
-  const g=game.current=createKeepy({strong:r.strong,track:r.track,twist:r.twist,lesson:st.kind==='lesson'?st.trick:undefined,calib:st.kind==='calib'}),c=g.chart;
+  const g=game.current=createKeepy({strong:r.strong,track:r.track,twist:r.twist,lesson:st.kind==='lesson'?st.trick:undefined,calib:st.kind==='calib',guide:st.kind==='guide'}),c=g.chart;guideWait.current=false;setGuide('');
   r.at=i;endAt.current=0;ptrs.current.clear();pressed.current=0;keysDown.current.clear();v?.setScene(r.track,r.strong);
   // the tap-timing check measures the raw offset; everything else uses the saved one
   const sv=readKeepySave();off.current=st.kind==='calib'?0:sv.calibrated?sv.offset/1000:DEFAULT_OFFSET;
-  a?.hush(false);a?.startSong({music:g.track.music,bars:c.bars,mode:st.kind==='calib'?'click':st.kind==='lesson'?'drums':'full',timeOf:b=>timeOfBeat(c,b),beatAt:t=>beatAtTime(c,t)},c.start);
+  a?.hush(false);if(st.kind==='guide')a?.stopSong();/* the guide waits for each tap: no music, the performance clock */else a?.startSong({music:g.track.music,bars:c.bars,mode:st.kind==='calib'?'click':st.kind==='lesson'?'drums':'full',timeOf:b=>timeOfBeat(c,b),beatAt:t=>beatAtTime(c,t)},c.start);
   clock.current.start(c.start);lat.current=a?.latency??0;
-  const h={...blank,lives:g.state.lives};hudRef.current=h;setHud(h);setTip(-1);setWords([]);setDrops(0);setNote(st.kind==='calib'?'Tap any pad each time the ball lands in the ring.':st.kind==='lesson'?trickInfo(st.trick).how:'');
+  const h={...blank,lives:g.state.lives};hudRef.current=h;setHud(h);setTip(-1);setWords([]);setDrops(0);setNote(st.kind==='guide'?'':st.kind==='calib'?'Tap any pad each time the ball lands in the ring.':st.kind==='lesson'?trickInfo(st.trick).how:'');
   kick();focusEl.current?.focus({preventScroll:true});
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[kick]);
@@ -139,9 +139,10 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  const nextStage=useCallback(()=>{
   const g=game.current,r=run.current,st=r.stages[r.at];if(!g||!st)return;audio.current?.rest();
   if(st.kind==='calib'){const ms=calibOffset(g.state.offsets),sv=readKeepySave();if(ms!==null){const n={...sv,offset:ms,calibrated:true};writeKeepySave(n);setSave(n);setHeld(`Timing set: ${ms>0?'+':''}${ms} ms.`);}else setHeld('Not enough taps. The usual timing is used. You can try again from the start card.');}
+  if(st.kind==='guide'){const sv=readKeepySave(),n={...sv,guided:true};writeKeepySave(n);setSave(n);setHeld('Great touches! Now the music plays and the balls keep coming.');}
   if(st.kind==='lesson'){if(!r.lessons.includes(st.trick))r.lessons.push(st.trick);const landed=g.state.tricks[st.trick]??0;r.tricks[st.trick]=(r.tricks[st.trick]??0)+landed;setHeld(landed>0?`You landed it ${landed===1?'once':`${landed} times`}. It is in your Trick Book.`:'It will come. Watch the ring and try it in the track.');
    const sv=readKeepySave();if(!sv.seen.includes(st.trick)){const n={...sv,seen:[...sv.seen,st.trick]};writeKeepySave(n);setSave(n);}}
-  ptrs.current.clear();pressed.current=0;setWords([]);setNote('');view.current?.clear();
+  ptrs.current.clear();pressed.current=0;setWords([]);setNote('');setGuide('');guideWait.current=false;view.current?.clear();
   if(r.at+1<r.stages.length){r.at++;setTip(r.at);}else{r.done=true;game.current=null;view.current?.render(null,0);change('menu');}
  },[change]);
 
@@ -153,6 +154,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
   if(next<0){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}slot.current=next;
   const c0=performance.now(),song=clock.current.now(),t=song-lat.current;audio.current?.pump(song);
   if(!g.state.over){g.advance(t-off.current);g.drain(onEvent);}
+  {const w=g.mode==='guide'?g.waiting():undefined;if(w){clock.current.pause();guideWait.current=true;setGuide(`Tap ${LANE_NAME[w.lane].toUpperCase()} now!`);v.render(g,w.t+off.current,pressed.current|(1<<w.lane));draws.current++;return;}}// verifier (Nov 21 2026): the ball waits in its ring; a tap on its pad wakes the loop (afterTap)
   v.render(g,t,pressed.current);draws.current++;{const c=cost.current,ms=performance.now()-c0;c.n++;c.ms+=ms;if(ms>c.max)c.max=ms;}// frame cost (rules + music scheduling + draw) for scripts/check-keepyuppy-browser.cjs
   if(now-hudAt.current>100){const s=g.state,tr=g.track,bt=beatAtTime(g.chart,t),hh=hudRef.current,n:Hud={score:s.score,lives:s.lives,weak:g.mode==='track'&&!run.current.twist&&bt>=(tr.weak[0]-1)*4-2&&bt<tr.weak[1]*4,fast:g.mode==='track'&&bt>=g.chart.speedAt};
    if(n.score!==hh.score||n.lives!==hh.lives||n.weak!==hh.weak||n.fast!==hh.fast){hudAt.current=now;hudRef.current=n;setHud(n);}}
@@ -166,7 +168,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
   const sv=readKeepySave();if(!sv.strong){setAskFoot({daily,solo});return;}
   const day=localPlayDay(Date.now()),d=dailyPick(keepyDailySeed(day)),open=TRACKS.map((_,i)=>trackOpen(sv,i)),last=open.lastIndexOf(true);
   const track=solo?0:daily?d.track:want>=0&&open[want]?want:pick>=0&&open[pick]?pick:last,twist:TwistId|''=daily&&!solo?d.twist:'';
-  const stages:Stage[]=[];if(solo||!sv.calibrated&&sv.plays===0)stages.push({kind:'calib'});
+  const stages:Stage[]=[];if(!solo&&!sv.guided&&sv.plays===0)stages.push({kind:'guide'});if(solo||!sv.calibrated&&sv.plays===0)stages.push({kind:'calib'});
   if(!solo){const probe=createKeepy({strong:sv.strong,track,twist});for(const id of probe.chart.tricks)if(!sv.seen.includes(id))stages.push({kind:'lesson',trick:id});stages.push({kind:'track'});}
   let id='solo';if(!solo){const got=await entry.enter();if(!got)return;id=got;}
   run.current={id,daily:daily&&!solo,day,track,twist,strong:sv.strong,stages,at:0,done:false,solo,lessons:[],tricks:{}};game.current=null;
@@ -184,11 +186,14 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{pauseRef.current=pause;},[pause]);
  /** Back from a pause: the song steps back two beats so the player hears the beat before the next ball. */
  const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;const a=audio.current,g=game.current;a?.unlock();a?.hush(false);change('playing');
-  if(g&&tip<0){const c=g.chart,at=Math.max(c.start,clock.current.now()-2*60/c.bpm);a?.startSong({music:g.track.music,bars:c.bars,mode:g.mode==='calib'?'click':g.mode==='lesson'?'drums':'full',timeOf:b=>timeOfBeat(c,b),beatAt:t=>beatAtTime(c,t)},at);clock.current.start(at);kick();}
+  if(g&&tip<0&&g.mode==='guide'){guideWait.current=false;clock.current.resume();kick();}
+  else if(g&&tip<0){const c=g.chart,at=Math.max(c.start,clock.current.now()-2*60/c.bpm);a?.startSong({music:g.track.music,bars:c.bars,mode:g.mode==='calib'?'click':g.mode==='lesson'?'drums':'full',timeOf:b=>timeOfBeat(c,b),beatAt:t=>beatAtTime(c,t)},at);clock.current.start(at);kick();}
   focusEl.current?.focus({preventScroll:true});},[change,kick,tip]);
  const leave=useCallback(()=>{if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;audio.current?.stopSong();onExit();},[onExit]);
  const chooseFoot=useCallback((f:Foot)=>{const sv={...readKeepySave(),strong:f};writeKeepySave(sv);setSave(sv);const q=askFoot;setAskFoot(null);view.current?.setScene(0,f);view.current?.render(null,0);if(q)void start(q.daily,q.solo);},[askFoot,start]);
 
+ /** The guide: the waiting ball was played, so the clock and the loop go on. */
+ const afterTap=useCallback(()=>{const g=game.current;if(!guideWait.current||!g||g.waiting())return;guideWait.current=false;setGuide('');clock.current.resume();kick();},[kick]);
  /* ---- the canvases, size, the thumbs ---- */
  useEffect(()=>{
   const el=stage.current,bg=bgEl.current,fg=fgEl.current;if(!el||!bg||!fg)return;
@@ -200,10 +205,10 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
   const redraw=()=>{const g=game.current;if(phaseRef.current==='over')return;v.render(g,g?clock.current.now()-lat.current:0,pressed.current);};
   const fit=()=>{const r=el.getBoundingClientRect(),probe=el.querySelector<HTMLElement>('[data-ku-probe]'),topClear=(probe?.offsetHeight||56)+46;v.resize(Math.max(1,el.clientWidth||r.width),Math.max(1,el.clientHeight||r.height),window.devicePixelRatio||1,topClear);redraw();};
   fit();const ro=new ResizeObserver(fit);ro.observe(el);
-  const live=()=>phaseRef.current==='playing'&&!!game.current&&raf.current!==0;
+  const live=()=>phaseRef.current==='playing'&&!!game.current&&(raf.current!==0||guideWait.current);
   const down=(e:PointerEvent)=>{if(!live()||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;
    const g=game.current!;e.preventDefault();audio.current?.unlock();const r=el.getBoundingClientRect(),lane=v.laneAt(e.clientX-r.left-el.clientLeft);try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}
-   ptrs.current.set(e.pointerId,{lane,sx:e.clientX,sy:e.clientY,swiped:false});pressed.current|=1<<lane;g.press(lane,judgeTime(e.timeStamp));g.drain(onEvent);};
+   ptrs.current.set(e.pointerId,{lane,sx:e.clientX,sy:e.clientY,swiped:false});pressed.current|=1<<lane;g.press(lane,judgeTime(e.timeStamp));g.drain(onEvent);afterTap();};
   const move=(e:PointerEvent)=>{const q=ptrs.current.get(e.pointerId),g=game.current;if(!q||!g||q.swiped||!live())return;const dx=e.clientX-q.sx,dy=e.clientY-q.sy;
    if(Math.hypot(dx,dy)>=SWIPE){q.swiped=true;if(g.swipe(q.lane,swipeDir(dx,dy),judgeTime(e.timeStamp)))g.drain(onEvent);}};
   const up=(e:PointerEvent)=>{const q=ptrs.current.get(e.pointerId);if(!q)return;ptrs.current.delete(e.pointerId);try{el.releasePointerCapture(e.pointerId);}catch{/* gone */}
@@ -216,7 +221,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
    /** song time as the rules see it now, and the same for an event stamp */get time(){return clock.current.now()-lat.current-off.current;},get offset(){return off.current;},get latency(){return lat.current;},get run(){return run.current;},get stage(){return el.getBoundingClientRect();}};
   return()=>{ro.disconnect();el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('touchmove',noScroll);el.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;v.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__keepyuppy?:unknown}).__keepyuppy;};
- },[judgeTime,onEvent]);
+ },[judgeTime,onEvent,afterTap]);
 
  /* ---- keys; looked away: pause ---- */
  useEffect(()=>{
@@ -225,14 +230,14 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
   const map:Record<string,number>={KeyD:0,KeyF:1,KeyJ:2,KeyK:3,ArrowLeft:0,ArrowDown:1,ArrowUp:2,ArrowRight:3};
   const key=(e:KeyboardEvent)=>{
    if(e.code==='Escape'||e.code==='KeyP'){if(isUi(e)&&e.code!=='Escape')return;e.preventDefault();if(phaseRef.current==='playing')pause();else if(phaseRef.current==='paused')resume();return;}
-   if(isUi(e))return;const g=game.current;if(phaseRef.current!=='playing'||!g||!raf.current)return;audio.current?.unlock();const t=judgeTime(e.timeStamp);
+   if(isUi(e))return;const g=game.current;if(phaseRef.current!=='playing'||!g||!(raf.current||guideWait.current))return;audio.current?.unlock();const t=judgeTime(e.timeStamp);
    if(e.code==='Space'){e.preventDefault();if(e.repeat)return;keysDown.current.add('Space');for(const c of keysDown.current){const l=map[c];if(l!==undefined&&g.swipe(l,'any',t))g.drain(onEvent);}return;}
-   const lane=map[e.code];if(lane===undefined)return;e.preventDefault();if(e.repeat)return;keysDown.current.add(e.code);pressed.current|=1<<lane;g.press(lane,t);if(keysDown.current.has('Space'))g.swipe(lane,'any',t);g.drain(onEvent);};
+   const lane=map[e.code];if(lane===undefined)return;e.preventDefault();if(e.repeat)return;keysDown.current.add(e.code);pressed.current|=1<<lane;g.press(lane,t);if(keysDown.current.has('Space'))g.swipe(lane,'any',t);g.drain(onEvent);afterTap();};
   const keyUp=(e:KeyboardEvent)=>{keysDown.current.delete(e.code);const lane=map[e.code];if(lane===undefined)return;let mask=0;for(const c of keysDown.current){const l=map[c];if(l!==undefined)mask|=1<<l;}for(const p of ptrs.current.values())mask|=1<<p.lane;pressed.current=mask;
-   const g=game.current;if(g&&phaseRef.current==='playing'&&raf.current&&!(mask&(1<<lane))&&g.release(lane,judgeTime(e.timeStamp)))g.drain(onEvent);};
+   const g=game.current;if(g&&phaseRef.current==='playing'&&(raf.current||guideWait.current)&&!(mask&(1<<lane))&&g.release(lane,judgeTime(e.timeStamp)))g.drain(onEvent);};
   window.addEventListener('blur',away);document.addEventListener('visibilitychange',hidden);window.addEventListener('keydown',key);window.addEventListener('keyup',keyUp);
   return()=>{window.removeEventListener('blur',away);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('keydown',key);window.removeEventListener('keyup',keyUp);};
- },[pause,resume,judgeTime,onEvent]);
+ },[pause,resume,judgeTime,onEvent,afterTap]);
 
  const busy=entry.pending,live=phase==='playing'||phase==='paused',r=run.current,st=live?r.stages[tip>=0?tip:r.at]:undefined,inTrack=live&&st?.kind==='track',T=TRACKS[live?r.track:0];
  const tap=()=>{(audio.current??=createKeepyAudio()).unlock();audio.current.tap();};
@@ -255,21 +260,27 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
    <canvas ref={fgEl} className={styles.canvas} aria-hidden="true"/>
    <i className={styles.probe} data-ku-probe aria-hidden="true"/>
    <div ref={focusEl} className={styles.play} tabIndex={0} role="application" aria-label="Keepy-Uppy Beat. Four pads: left foot, thigh, head, right foot. Tap a pad when its ball lands in the ring. Keys: D, F, J and K. Hold Space with a foot key to swipe."/>
-   {live&&st&&<div className={styles.strip} data-keepyuppy-hud data-keepyuppy-stage-kind={st.kind} data-keepyuppy-playing={playing||undefined} aria-live="polite" aria-label={inTrack?`${hud.lives} balls left. ${T.name}.`:st.kind==='calib'?'Timing check':'Trick lesson'}>
+   {live&&st&&<div className={styles.strip} data-keepyuppy-hud data-keepyuppy-stage-kind={st.kind} data-keepyuppy-playing={playing||undefined} aria-live="polite" aria-label={inTrack?`${hud.lives} balls left. ${T.name}.`:st.kind==='guide'?'First touches':st.kind==='calib'?'Timing check':'Trick lesson'}>
     {inTrack&&<span className={styles.lives} key={`l${drops}`} data-hit={drops>0||undefined} data-keepyuppy-lives={hud.lives}>{Array.from({length:T.balls},(_,i)=><i key={i} data-off={i>=hud.lives||undefined}/>)}</span>}
-    <span className={styles.stripItem} style={inTrack?undefined:{paddingLeft:10}}><small>{st.kind==='calib'?'Timing check':st.kind==='lesson'?'Lesson':r.daily?'Track of the Day':`Track ${r.track+1}`}</small>{st.kind==='calib'?'8 taps':st.kind==='lesson'?trickInfo(st.trick).name:T.name}</span>
+    <span className={styles.stripItem} style={inTrack?undefined:{paddingLeft:10}}><small>{st.kind==='guide'?'First touches':st.kind==='calib'?'Timing check':st.kind==='lesson'?'Lesson':r.daily?'Track of the Day':`Track ${r.track+1}`}</small>{st.kind==='calib'||st.kind==='guide'?'8 taps':st.kind==='lesson'?trickInfo(st.trick).name:T.name}</span>
    </div>}
    {playing&&inTrack&&(hud.weak||hud.fast||r.twist)&&<span className={styles.banner} data-tone={hud.weak?undefined:'sun'} key={hud.weak?'w':hud.fast?'f':'t'} data-keepyuppy-banner>{hud.weak?'WEAK FOOT!':hud.fast?'FASTER!':twistInfo(r.twist as TwistId).name.toUpperCase()}</span>}
    {playing&&st?.kind==='calib'&&<ComicButton size="small" className={styles.skip} onClick={skip} data-keepyuppy-skip>Skip</ComicButton>}
    {playing&&drops>0&&<i className={styles.flash} key={`f${drops}`} aria-hidden="true"/>}
-   {playing&&note&&<p className={styles.hint} data-keepyuppy-hint key={note}>{note}</p>}
+   {playing&&note&&!guide&&<p className={styles.hint} data-keepyuppy-hint key={note}>{note}</p>}
+   {playing&&guide&&<p className={styles.hint} data-keepyuppy-hint data-keepyuppy-guide key={guide}>{guide}</p>}
    <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} data-teach onAnimationEnd={()=>setWords(l=>l.filter(x=>x.id!==w.id))}>
     <ComicBurst word={w.text} size={w.text.length>14?16:20} tilt={w.id%2?-4:3} color={w.tone==='red'?'#f0452e':w.tone==='teal'?'#19b5a5':w.tone==='paper'?'#fff3d6':'#ffc83a'} fill={w.tone==='red'?'#fff3d6':undefined}/>
     {w.pts>0&&<b className={`${comicNumeral} ${styles.pts}`}>+{w.pts}</b>}</span>)}</div>
   </div>
   <ArcadeTopBar game="keepyuppy" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={inTrack?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>
-  {phase==='paused'&&<ArcadePauseCard game="keepyuppy" score={inTrack?`${hud.score} pts · ${T.name} · ${hud.lives} ${hud.lives===1?'ball':'balls'} left`:st?.kind==='lesson'?'Trick lesson':'Timing check'} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start(r.daily,r.solo,r.track);}} restartDisabled={busy} keys={[['D F J K','left foot, thigh, head, right foot'],['Space + key','swipe'],['Hold','neck stall'],['P','pause']]}/>}
-  {phase==='playing'&&tip>=0&&st&&(st.kind==='calib'
+  {phase==='paused'&&<ArcadePauseCard game="keepyuppy" score={inTrack?`${hud.score} pts · ${T.name} · ${hud.lives} ${hud.lives===1?'ball':'balls'} left`:st?.kind==='lesson'?'Trick lesson':st?.kind==='guide'?'First touches':'Timing check'} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start(r.daily,r.solo,r.track);}} restartDisabled={busy} keys={[['D F J K','left foot, thigh, head, right foot'],['Space + key','swipe'],['Hold','neck stall'],['P','pause']]}/>}
+  {phase==='playing'&&tip>=0&&st&&(st.kind==='guide'
+   ?<ComicCard label="First touches" title="First touches" badge="One time" badgeTone="teal" data-keepyuppy-card="guide">
+     <p className={styles.learn}>The ball waits in its ring. <b>Tap the pad under it.</b></p>
+     <div className={styles.actions}><ComicButton variant="primary" wide onClick={go} data-keepyuppy-go autoFocus>Start</ComicButton></div>
+    </ComicCard>
+   :st.kind==='calib'
    ?<ComicCard label="Timing check" title="Tap when the ball lands" badge="One time" badgeTone="teal" data-keepyuppy-card="calib">
      <p className={styles.learn}>Every phone and speaker is a little different. <b>Tap any pad each time the ball lands in the ring</b>, eight times, and the game sets itself to your taps.</p>
      <div className={styles.actions}><ComicButton variant="primary" wide onClick={go} data-keepyuppy-go autoFocus>Start</ComicButton><ComicButton size="small" wide onClick={skip} data-keepyuppy-skip>Skip for now</ComicButton></div>
@@ -306,9 +317,10 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
     <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start(false);}} data-keepyuppy-play autoFocus>Play<small>{TRACKS[sel].name}</small></ComicButton>
     <ComicButton variant="teal" wide disabled={busy} onClick={()=>{void start(true);}} data-keepyuppy-daily>Track of the Day<small>{D?`${TRACKS[D.track].name} · ${twistInfo(D.twist).name}${dailyToday?.counted?` · today ${dailyToday.stars}/3 stars`:''}`:'The same for everyone today'}</small></ComicButton>
    </div>
-   <button type="button" className={styles.shelf} onClick={()=>{tap();setBook(true);}} data-keepyuppy-shelf aria-label={`Trick Book: ${cardsFull(save)} of ${TRICKS.length} cards full. Open`}>
+   <button type="button" className={styles.shelf} onClick={()=>{tap();setBook(true);}} data-keepyuppy-shelf aria-label={`Trick Book: ${cardsFull(save)} of ${TRICKS.length} cards full, ${save.feats.length} of ${KU_FEATS.length} feats. Open`}>
     <span>Trick Book <b>{cardsFull(save)}/{TRICKS.length}</b></span>
     <span className={styles.shelfRow}>{TRICKS.map(t=>{const s=slotOf(t.id);return <span key={t.id} className={styles.cardSlot} data-state={s} style={{['--slot' as string]:t.color}} aria-hidden="true">{s==='empty'?'?':s==='full'?'★':`${save.tricks[t.id]??0}/${KU.trickNeed}`}</span>;})}</span>
+    <span className={styles.featLine} data-keepyuppy-feats={save.feats.length}>Feats <b>{save.feats.length}/{KU_FEATS.length}</b></span>
    </button>
    <div className={styles.actions} data-row="three">
     <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-keepyuppy-scores>Scores</ComicButton>
@@ -352,6 +364,8 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
    <ul className={styles.book} data-keepyuppy-book>{TRICKS.map(t=>{const n=save.tricks[t.id]??0,known=n>0||save.seen.includes(t.id),first=TRACKS.find(tr=>createKeepy({strong:'R',track:TRACKS.indexOf(tr)}).chart.tricks.includes(t.id));return <li key={t.id} data-full={cardFull(save,t.id)||undefined} style={{['--slot' as string]:known?t.color:undefined}}>
     <b>{known?t.name:'Empty slot'}</b>{known?<><span>{t.how}</span><em>{t.fact}</em></>:<span>A trick waits here. You learn it on {first?.name??'a later track'}.</span>}
     <span className={styles.pipsRow} aria-label={`${Math.min(n,KU.trickNeed)} of ${KU.trickNeed} clean landings`}>{Array.from({length:KU.trickNeed},(_,i)=><i key={i} data-on={i<n||undefined}/>)}{n>KU.trickNeed?` ${n} landed`:''}</span></li>;})}</ul>
+   <h3 className={styles.featHead}>Feats <b>{save.feats.length}/{KU_FEATS.length}</b></h3>
+   <ul className={styles.featList} data-keepyuppy-featlist>{KU_FEATS.map(f=>{const won=save.feats.includes(f.id);return <li key={f.id} data-won={won||undefined}><i aria-hidden="true">{won?'✓':''}</i><span><b>{f.name}</b> {f.how}</span></li>;})}</ul>
   </BoardDialog>}
  </div>;
 }

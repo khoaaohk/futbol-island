@@ -41,7 +41,7 @@ export type TrickInfo={id:TrickId;name:string;how:string;keys:string;fact:string
 /** The Trick Book. Every name is a real juggling move. `how` is the 10-second lesson's line. */
 export const TRICKS:readonly TrickInfo[]=[
  {id:'tft',name:'Thigh-Foot-Thigh',how:'Three quick touches: thigh, foot, thigh. Tap the pads in that order.',keys:'tap, tap, tap',fact:'Changing from thigh to foot and back teaches you to judge the height of each touch.',color:'#ffc83a'},
- {id:'seal',name:'Seal Taps',how:'Three headers in a row. Tap the head pad three times, on the beat.',keys:'tap, tap, tap',fact:'Use your forehead, eyes open, and push up with your legs, not your neck.',color:'#8f78b8'},
+ {id:'seal',name:'Seal Taps',how:'Three headers in a row. Tap the head pad three times, on the beat.',keys:'tap, tap, tap',fact:'Named after a seal with a ball on its nose. Use your forehead, eyes open, and push up with your legs, not your neck.',color:'#8f78b8'},
  {id:'stall',name:'Neck Stall',how:'Catch the ball on the back of your neck. Hold the head pad down until the bar is full.',keys:'hold (key: hold J)',fact:'Bend forward, look up and make a cradle between your shoulders. The ball sits still.',color:'#19b5a5'},
  {id:'atw',name:'Around the World',how:'Your foot circles the ball in the air. Swipe a circle on the foot pad.',keys:'swipe a circle (keys: Space + foot key)',fact:'Flick the ball up softly, circle it with your foot, and meet it again on the way down.',color:'#ff8a3c'},
  {id:'heel',name:'Heel Flick',how:'Flick the ball up from behind with your heel. Swipe UP on the foot pad.',keys:'swipe up (keys: Space + foot key)',fact:'The ball goes over your head from behind. Turn your head to find it again.',color:'#f0452e'},
@@ -149,12 +149,14 @@ export function lessonSource(trick:TrickId,fast:boolean):string{
 }
 export const lessonBpm=(trackBpm:number)=>Math.min(100,trackBpm);
 export const CALIB_SOURCE='S.S.S.S. S.S.S.S.';
+/** Verifier (Nov 21 2026): the guided first eight touches, shown once before the first track: every pad twice, slowly. */
+export const GUIDE_SOURCE='S.S. W.W. T.T. H.H.',GUIDE_BPM=80;
 
 /* ---- the day's track ---- */
 export function keepyDailySeed(day:string){let h=0x811c9dc5;const s='keepyuppy:'+day;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 1+h%2_000_000_000;}
-/** Every (track, twist) pair that is still a fair chart for both feet and really changes the track. Only the first four tracks: the day's track must be kind to a new player. */
+/** Every (track, twist) pair that is still a fair chart for both feet and really changes the track. Only the first three tracks (verifier, Nov 21 2026: was four; Cage Night with a twist finished by a careful first-timer about 1 run in 7): the day's track must be kind to a new player. */
 export const DAILY_POOL:readonly {track:number;twist:TwistId}[]=(()=>{const out:{track:number;twist:TwistId}[]=[];
- TRACKS.slice(0,4).forEach((tr,track)=>{const base=JSON.stringify(parseChart(tr.chart).notes);for(const tw of TWISTS){
+ TRACKS.slice(0,3).forEach((tr,track)=>{const base=JSON.stringify(parseChart(tr.chart).notes);for(const tw of TWISTS){
   const changed=tw.id==='speedup'||JSON.stringify(applyTwist(parseChart(tr.chart).notes,tw.id))!==base;
   if(changed&&(['L','R'] as const).every(f=>chartProblems(buildChart(tr.chart,tr.bpm,f,tw.id)).length===0))out.push({track,twist:tw.id});}});return out;})();
 /** The track first (so every track gets its days), then one of its twists. */
@@ -162,16 +164,17 @@ export function dailyPick(seed:number){const tracks=[...new Set(DAILY_POOL.map(p
 
 /* ---- a run ---- */
 export type KuEvent={type:'press'|'hit'|'drop'|'trick'|'life'|'combo'|'stray'|'over';/** note index */i:number;grade:Grade|'';points:number;/** life: lives now. combo: the count. over: 1 finished, 0 out. trick: index in TRICKS */a:number;lane:number};
-export type KuMode='track'|'lesson'|'calib';
-export type KuOpts={strong:Foot;track?:number;twist?:TwistId|'';lesson?:TrickId;calib?:boolean};
+export type KuMode='track'|'lesson'|'calib'|'guide';
+export type KuOpts={strong:Foot;track?:number;twist?:TwistId|'';lesson?:TrickId;calib?:boolean;/** the guided first touches: the ball waits in its ring until the right pad is tapped */guide?:boolean};
 export type Keepy=ReturnType<typeof createKeepy>;
 export function createKeepy(o:KuOpts){
- const mode:KuMode=o.calib?'calib':o.lesson?'lesson':'track',track:Track=TRACKS[Math.max(0,Math.min(TRACKS.length-1,o.track??0))];
- const chart=mode==='calib'?buildChart(CALIB_SOURCE,KU.calibBpm,o.strong):mode==='lesson'?buildChart(lessonSource(o.lesson!,track.bpm>120),lessonBpm(track.bpm),o.strong):buildChart(track.chart,track.bpm,o.strong,o.twist??'');
+ const mode:KuMode=o.guide?'guide':o.calib?'calib':o.lesson?'lesson':'track',track:Track=TRACKS[Math.max(0,Math.min(TRACKS.length-1,o.track??0))];
+ const chart=mode==='guide'?buildChart(GUIDE_SOURCE,GUIDE_BPM,o.strong):mode==='calib'?buildChart(CALIB_SOURCE,KU.calibBpm,o.strong):mode==='lesson'?buildChart(lessonSource(o.lesson!,track.bpm>120),lessonBpm(track.bpm),o.strong):buildChart(track.chart,track.bpm,o.strong,o.twist??'');
  const N=chart.notes,free=mode!=='track',balls=mode==='track'?track.balls:KU.lives,win=mode==='calib'?KU.calibWindow:KU.ok;
  const s={mode,t:chart.start,score:0,combo:0,bestCombo:0,lives:balls,cleanRun:0,sweetRun:0,bestSweet:0,base:0,over:false,out:false,sum:0,judged:0,weakSum:0,weakN:0,regained:0,stray:0,
   counts:{sweet:0,good:0,early:0,late:0,wrong:0,slip:0,drop:0} as Record<Grade,number>,tricks:{} as Partial<Record<TrickId,number>>,/** calibration: tap time minus beat time, seconds */offsets:[] as number[]};
  const q:KuEvent[]=[],emit=(type:KuEvent['type'],i:number,grade:Grade|'',points:number,a:number,lane:number)=>{q.push({type,i,grade,points,a,lane});};
+ const first=()=>{for(let i=s.base;i<N.length;i++)if(N[i].st===0)return N[i];return undefined;};
  const mult=()=>1+Math.min(KU.comboMax,Math.floor(s.combo/KU.comboStep))*.1;
  function judge(n:Note,grade:Grade){
   if(n.st===2)return;n.st=2;n.grade=grade;s.counts[grade]++;s.judged++;s.sum+=KU.weight[grade];if(n.part==='W'){s.weakN++;s.weakSum+=KU.weight[grade];}
@@ -188,7 +191,7 @@ export function createKeepy(o:KuOpts){
  const gradeOf=(d:number):Grade=>{const a=Math.abs(d);return a<=KU.sweet?'sweet':a<=KU.good?'good':d<0?'early':'late';};
  /** Song time moves on: late balls are dropped, a full stall is landed, a swipe that never came slips. */
  function advance(t:number){
-  if(s.over)return;s.t=t;
+  if(s.over)return;if(mode==='guide'){const w=first();if(w&&t>w.t)t=w.t;}s.t=t;
   for(let i=s.base;i<N.length;i++){const n=N[i];if(n.st===2){if(i===s.base)s.base++;continue;}
    if(n.st===0){if(t>n.t+win)judge(n,'drop');else break;}
    else if(n.kind==='hold'){if(t>=n.tEnd)judge(n,n.grade as Grade);}
@@ -199,11 +202,12 @@ export function createKeepy(o:KuOpts){
  /** A pad goes down at song time t. Returns the grade, 'held' for a press that waits (stall, swipe) or '' for a tap with no ball near. */
  function press(lane:number,t:number):Grade|'held'|''{
   if(s.over)return '';
+  if(mode==='guide'){const w=first();if(w&&w.lane===lane&&s.t>=w.t-1e-9){judge(w,'sweet');return 'sweet';}}
   let n0:Note|undefined,n1:Note|undefined;for(let i=s.base;i<N.length&&!n1;i++)if(N[i].st===0){if(!n0)n0=N[i];else n1=N[i];}
   const fits=(n:Note|undefined)=>!!n&&Math.abs(t-n.t)<=win&&(mode==='calib'||n.lane===lane);
   // the nearer of the next two balls that this pad can play; the second one only when it really is the nearer (else: the wrong pad)
   const near1=!!n0&&!!n1&&Math.abs(t-n1.t)<Math.abs(t-n0.t),n=fits(n0)&&fits(n1)?(near1?n1:n0):fits(n0)?n0:fits(n1)&&near1?n1:undefined;
-  if(!n){if(n0&&Math.abs(t-n0.t)<=win&&n0.lane!==lane){judge(n0,'wrong');return 'wrong';}s.stray++;emit('stray',-1,'',0,0,lane);return '';}
+  if(!n){if(mode!=='guide'&&n0&&Math.abs(t-n0.t)<=win&&n0.lane!==lane){judge(n0,'wrong');return 'wrong';}s.stray++;emit('stray',-1,'',0,0,lane);return '';}
   if(n===n1&&n0&&n0.st===0)judge(n0,'drop');if(s.over)return '';
   const grade=gradeOf(t-n.t);if(mode==='calib')s.offsets.push(t-n.t);
   if(n.kind==='tap'){judge(n,grade);return grade;}
@@ -230,7 +234,8 @@ export function createKeepy(o:KuOpts){
   return f;
  }
  return {state:s,chart,track,mode,balls,press,swipe,release,advance,accuracy,stars,weakScore,feats,mult,drain(cb:(e:KuEvent)=>void){while(q.length)cb(q.shift()!);},
-  /** the next ball to land (the first note still waiting) */next(){for(let i=s.base;i<N.length;i++)if(N[i].st===0)return N[i];return undefined;}};
+  /** the next ball to land (the first note still waiting) */next:first,
+  /** the guide: the ball sitting in its ring, waiting for its pad (undefined when none is waiting) */waiting(){const w=first();return mode==='guide'&&w&&s.t>=w.t-1e-9?w:undefined;}};
 }
 /** The median tap offset from a calibration run, in ms (the first two taps are warm-up). Null when there were too few taps. */
 export function calibOffset(offsets:readonly number[]):number|null{

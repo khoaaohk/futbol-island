@@ -99,7 +99,15 @@ const until=async at=>{const d=at-now();if(d>4)await wait(d-3);while(now()<at);}
   }else{
    // first run: the kicking foot, then the one-time tap-timing check
    await click('[data-keepyuppy-play]');await page.waitForSelector('[data-keepyuppy-card="foot"]',{timeout:20000});await wait(300);await shot('foot');
-   await click('[data-keepyuppy-foot="R"]');await page.waitForSelector('[data-keepyuppy-card="calib"]',{timeout:20000});await wait(300);check(await rafIn(1500)===0,'stage card is idle: 0 frames in 1.5 s');await shot('calib-card');
+   await click('[data-keepyuppy-foot="R"]');
+   // verifier (Nov 21 2026): the guided first touches, once: each ball waits in its ring (the loop sleeps) until its pad is tapped
+   await page.waitForSelector('[data-keepyuppy-card="guide"]',{timeout:20000});await wait(300);await shot('guide-card');await click('[data-keepyuppy-go]');
+   {let tapped=0,slept=true,wrongKept=true;for(let k=0;k<8;k++){await page.waitForSelector('[data-keepyuppy-guide]',{timeout:8000});await wait(150);
+     if(k===0){slept=await rafIn(600)===0;await shot('guide');}const s=await read(),w=await page.evaluate(()=>{const n=window.__keepyuppy.game.waiting();return n?{lane:n.lane,kind:'tap'}:null;});if(!w)break;
+     if(k===1){await playNote({lane:(w.lane+1)%4,kind:'tap'},now(),s.pad);await wait(150);wrongKept=await page.evaluate(()=>!!window.__keepyuppy.game.waiting());}
+     await playNote(w,now(),s.pad);tapped++;await wait(250);}
+    check(tapped===8&&slept&&wrongKept,'the guided first touches: 8 balls wait for their pad (0 frames while waiting; the other pad is only a knock)',`${tapped} taps`);}
+   await page.waitForSelector('[data-keepyuppy-card="calib"]',{timeout:20000});await wait(300);check(await rafIn(1500)===0,'stage card is idle: 0 frames in 1.5 s');await shot('calib-card');
    {const a=(await read()).audio;check(muted?a.state==='none':a.state!=='none','sound '+(muted?'off: no AudioContext at all':'on: the AudioContext exists after the first tap'),a.state);}
    await click('[data-keepyuppy-go]');const cal=await playStage({late:30,each:async(s,i)=>{if(i===3)await shot('calib');}});check(cal.played===8,'the timing check is 8 taps',`${cal.played}`);
    await page.waitForSelector('[data-keepyuppy-card="tip"]',{timeout:8000});await wait(300);

@@ -75,10 +75,10 @@ ok('lessons and the tap-timing check: nothing to lose, no score; eight taps give
  const c=C.createKeepy({strong:'L',calib:true});assert.equal(c.chart.notes.length,KU.calibTaps);for(const x of c.chart.notes){c.advance(x.t);c.press((x.i%4),x.t+.062+(x.i%2?.004:-.004));}c.advance(c.chart.end);assert.equal(c.state.offsets.length,8,'any pad counts');assert.equal(C.calibOffset(c.state.offsets),62);
  assert.equal(C.calibOffset([.1,.1]),null);assert.equal(C.calibOffset([.9,.9,.5,.5,.5,.5,.5,.5]),200,'clamped');assert.equal(C.calibOffset([0,0,-.03,-.02,-.04,-.03,.2,-.03]),-30,'the median ignores one wild tap');});
 
-ok('Track of the Day: the same track and twist for everyone that day, a fair chart, one of the first four tracks',()=>{
+ok('Track of the Day: the same track and twist for everyone that day, a fair chart, one of the first three tracks',()=>{
  assert.equal(C.keepyDailySeed('2026-11-21'),C.keepyDailySeed('2026-11-21'));assert.notEqual(C.keepyDailySeed('2026-11-21'),C.keepyDailySeed('2026-11-22'));
- assert.deepEqual(C.dailyPick(C.keepyDailySeed('2026-11-21')),C.dailyPick(C.keepyDailySeed('2026-11-21')));assert.ok(C.DAILY_POOL.length>=12);assert.ok(C.DAILY_POOL.every(p=>p.track<4),'the day\'s track is one of the first four');
- const seen=new Set(),tracks=new Set();for(let d=1;d<=28;d++){const p=C.dailyPick(C.keepyDailySeed(`2026-12-${String(d).padStart(2,'0')}`));seen.add(p.track+p.twist);tracks.add(p.track);assert.ok(C.DAILY_POOL.some(q=>q.track===p.track&&q.twist===p.twist));}assert.ok(seen.size>=6&&tracks.size>=4,'the days differ');
+ assert.deepEqual(C.dailyPick(C.keepyDailySeed('2026-11-21')),C.dailyPick(C.keepyDailySeed('2026-11-21')));assert.ok(C.DAILY_POOL.length>=12);assert.ok(C.DAILY_POOL.every(p=>p.track<3),'the day\'s track is one of the first four');
+ const seen=new Set(),tracks=new Set();for(let d=1;d<=28;d++){const p=C.dailyPick(C.keepyDailySeed(`2026-12-${String(d).padStart(2,'0')}`));seen.add(p.track+p.twist);tracks.add(p.track);assert.ok(C.DAILY_POOL.some(q=>q.track===p.track&&q.twist===p.twist));}assert.ok(seen.size>=6&&tracks.size>=3,'the days differ');
  for(const p of C.DAILY_POOL)for(const f of ['L','R'])assert.deepEqual(C.chartProblems(C.buildChart(TRACKS[p.track].chart,TRACKS[p.track].bpm,f,p.twist)),[]);
  const w=C.buildChart(TRACKS[0].chart,80,'R','weak');assert.ok(w.notes.every(x=>x.part!=='S'));assert.ok(C.buildChart(TRACKS[1].chart,92,'R','nothigh').notes.every(x=>x.part!=='T'&&x.trick!=='tft'));assert.ok(C.buildChart(TRACKS[0].chart,80,'R','low').notes.every(x=>x.part!=='H'));
  const s=C.buildChart(TRACKS[1].chart,92,'R','speedup'),b=C.buildChart(TRACKS[1].chart,92,'R');assert.equal(s.bpm2,103);assert.ok(s.end<b.end);near(C.timeOfBeat(s,s.speedAt+4)-C.timeOfBeat(s,s.speedAt),240/103);near(C.beatAtTime(s,C.timeOfBeat(s,70.5)),70.5);near(C.beatAtTime(b,C.timeOfBeat(b,-3)),-3);
@@ -120,7 +120,7 @@ ok('the device save: missing, corrupt and hostile data all load; stars open trac
  assert.match(S.nearMissLine({daily:false,out:false,stars:1,acc:62,track:0,opened:-1,starsTotal:1,weak:50,weakBefore:-1,newBest:true,score:3000,best:0,medalBefore:0}),/8 more points of accuracy for 2 stars/);
  assert.match(S.nearMissLine({daily:false,out:false,stars:2,acc:80,track:0,opened:1,starsTotal:2,weak:50,weakBefore:-1,newBest:true,score:3000,best:0,medalBefore:0}),/New track open: Schoolyard Shuffle/);
  assert.match(S.nearMissLine({daily:true,out:false,stars:2,acc:80,track:0,opened:-1,starsTotal:2,weak:50,weakBefore:-1,newBest:true,score:3000,best:0,medalBefore:0}),/tomorrow/);
- const z={sweet:0,good:0,early:0,late:0,wrong:0,slip:0,drop:0};assert.match(S.coachLine({...z,sweet:9},false),/clean/);assert.match(S.coachLine({...z,early:5,late:1},false),/early/);assert.match(S.coachLine({...z,late:5},false),/late/);assert.match(S.coachLine({...z,wrong:4},false),/which pad/);assert.match(S.coachLine({...z,drop:3},true),/Three drops/);});
+ const z={sweet:0,good:0,early:0,late:0,wrong:0,slip:0,drop:0};assert.match(S.coachLine({...z,sweet:9},false),/clean/);assert.match(S.coachLine({...z,early:5,late:1},false),/early/);assert.match(S.coachLine({...z,late:5},false),/late/);assert.match(S.coachLine({...z,wrong:4},false),/which pad/);assert.match(S.coachLine({...z,drop:3},true),/No balls left/);});
 
 ok('wiring: playable by /arcade?game=keepyuppy, its own board, coins, analytics key, device save; no machine in the room yet',()=>{
  const cat=read('lib/arcade/arcadeCatalog.ts'),room=read('components/ArcadeRoom.tsx'),K=require('../lib/arcade/arcadeCatalog.ts');
@@ -156,6 +156,17 @@ ok('sound: every voice -> master -> ONE limiter -> destination; scheduled on the
  assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true|new Audio|fetch\(|\.mp3|\.ogg|\.wav|decodeAudioData/);assert.match(a,/function unlock\(\)/);assert.match(a,/const t=song\.t0\+song\.timeOf\(e\.beat\);/,'each music event gets its exact AudioContext time');assert.match(a,/LOOK=\.25/);
  assert.match(a,/if\(typeof window==='undefined'\|\|!wanted\(\)\)return;/,'sound off: no AudioContext at all');assert.match(a,/void ctx\.suspend\(\)/);
  assert.match(read('components/games/KeepyUppyGame.tsx'),/\(audio\.current\?\?=createKeepyAudio\(\)\)\.unlock\(\)/);assert.match(read('scripts/check-arcade-audio.cjs'),/game==='keepyuppy'/);});
+
+ok('verifier (Nov 21 2026): the guided first touches wait for each tap, once; a suspended sound pauses the run',()=>{
+ for(const f of ['L','R']){const c=C.buildChart(C.GUIDE_SOURCE,C.GUIDE_BPM,f);assert.equal(c.notes.length,8);assert.deepEqual(C.chartProblems(c),[]);assert.deepEqual([...new Set(c.notes.map(x=>x.lane))].sort(),[0,1,2,3],'every pad');}
+ const g=C.createKeepy({strong:'R',guide:true}),N=g.chart.notes;assert.equal(g.mode,'guide');
+ g.advance(N[0].t+3);assert.equal(N[0].st,0,'the ball is never dropped: it waits');assert.equal(g.state.t,N[0].t);assert.equal(g.waiting(),N[0]);
+ assert.equal(g.press((N[0].lane+1)%4,N[0].t+3),'','the other pad is only a knock');assert.equal(N[0].st,0);
+ assert.equal(g.press(N[0].lane,N[0].t+3),'sweet');assert.equal(g.waiting(),undefined);assert.equal(g.state.score,0,'nothing to win or lose');
+ for(let k=1;k<8;k++){g.advance(N[k].t+1);g.press(N[k].lane,N[k].t+1);}g.advance(g.chart.end+1);assert.ok(g.state.over&&!g.state.out);assert.equal(g.state.counts.sweet,8);
+ assert.equal(S.sanitizeKeepySave({guided:true}).guided,true);assert.equal(S.sanitizeKeepySave({guided:'yes'}).guided,false);assert.equal(S.emptyKeepySave().guided,false);
+ const sh=read('components/games/KeepyUppyGame.tsx');assert.match(sh,/if\(!solo&&!sv\.guided&&sv\.plays===0\)stages\.push\(\{kind:'guide'\}\)/,'shown once, on a first-ever run');assert.match(sh,/if\(audio\.current\?\.lost\)\{pauseRef\.current\(\);return;\}/);
+ assert.match(read('lib/arcade/keepyuppy/audio.ts'),/get lost\(\)\{return !!song&&!!song\.live&&!!ctx&&ctx\.state!=='running'&&!quiet&&wanted\(\);\}/);});
 
 if(require.main===module)console.log(`keepyuppy-core: ${n} checks ok`);
 module.exports={ok,read,C,S};
