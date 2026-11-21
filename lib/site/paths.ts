@@ -16,7 +16,8 @@ import {pageModified} from './lastmod';
 import {LIBRARY_PATH} from './libraryPath';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
- * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
+ * formerly /learn, which now redirects to `/`) and the main entry; the game is /play. Nov 20 2026 (owner: "We need to boost traffic to these
+ * three main pages, Island, games, and library", "Also play"): /play, /games and /library are .9, next after `/`.
  * The lesson index is /learn/lessons. /start was removed on Oct 9 2026 (it 404s, see
  * tests/landing.cjs), so it is not listed; the game's own rooms (/museum, /arcade …) are canvas scenes and stay out too.
  */
@@ -37,13 +38,13 @@ export function sitePaths():{path:string;priority:number;lastmod:string}[]{
 }
 function sectionPaths():{path:string;priority:number;lastmod:string}[]{
  const U=SITE_UPDATED;
- return [{path:'/',priority:1,lastmod:U.home},{path:'/about',priority:.9,lastmod:U.about},{path:'/play',priority:.3,lastmod:U.play},{path:'/privacy',priority:.5,lastmod:U.privacy},{path:'/marketing',priority:.4,lastmod:U.marketing},
+ return [{path:'/',priority:1,lastmod:U.home},{path:'/about',priority:.9,lastmod:U.about},{path:'/play',priority:.9,lastmod:U.play}/* Nov 20 2026 (owner: "Also play"): one of the four main pages with /, /games and /library (was .3) */,{path:'/privacy',priority:.5,lastmod:U.privacy},{path:'/marketing',priority:.4,lastmod:U.marketing},
   {path:FACTS_PATH,priority:.5,lastmod:FAMILY_CHECKED.rules},/* the trust page (lib/site/checked.ts, Nov 15 2026) */
-  {path:LIBRARY_PATH,priority:.8,lastmod:U.library},/* the Library (lib/site/library.ts, Nov 20 2026) */{path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
+  {path:LIBRARY_PATH,priority:.9,lastmod:U.library},/* the Library (lib/site/library.ts, Nov 20 2026) */{path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
   ...GUIDE_PATHS.map(path=>({path,priority:.8,lastmod:U.hubs})),
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
-  ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
+  ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.9:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
   ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),
   /* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and out of both sitemaps (NOINDEX_CARD_PATHS below) */...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
   ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */

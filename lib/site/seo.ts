@@ -84,6 +84,8 @@ export const ORG_ID=SITE_URL+'/#organization',WEBSITE_ID=SITE_URL+'/#website';
 export const PUBLISHER={'@type':'Organization','@id':ORG_ID,name:SITE_NAME,url:SITE_URL+'/',logo:{'@type':'ImageObject',url:SITE_URL+'/icon.png'}};
 /** The game itself (it runs at /play since Nov 3 2026), as a web app and a video game: on `/`, /play and /about. */
 export const PLAY_PATH='/play';
+/** The game's own page on itch.io (owner's listing; also in ORG_SAME_AS). */
+export const GAME_LISTING_ITCH='https://futbolisland.itch.io/futbol-island';
 export const GAME_ID=abs(PLAY_PATH)+'#game';
 /** Nov 14 2026 (seo-boost): operatingSystem "Web browser", applicationCategory GameApplication (Google's value for games),
  *  isFamilyFriendly, and the same @id on `/` and /play so both describe one game. */
@@ -95,7 +97,9 @@ export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplicati
  inLanguage:'en',isAccessibleForFree:true,offers:{'@type':'Offer',price:0,priceCurrency:'USD'},
  audience:KIDS_AUDIENCE,educationalUse:['Self-directed learning','Practice','Quiz'],
  learningResourceType:'Educational game',teaches:['Football positions','Team shape','Tactics','Laws of the Game','Football history','Futsal'],
- publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png'});
+ publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png',
+ /* Nov 20 2026 (new layout SEO, owner: "Also play"): the same game's own listing elsewhere (it is in ORG_SAME_AS below too) */
+ sameAs:[GAME_LISTING_ITCH]});
 /** The home page `/` (the feature tour, Nov 3 2026): the site and its publisher. */
 export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','@id':WEBSITE_ID,name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
  description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER,
@@ -105,7 +109,7 @@ export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
 /** TODO(owner): put Futbol Island's OWN public profile URLs here (its own Instagram, YouTube, TikTok, LinkedIn page) when they
  *  exist. Left empty on purpose (Nov 20 2026): a sameAs that names another entity is a false statement, so none is invented. */
-export const ORG_SAME_AS:readonly string[]=['https://itch.io/profile/futbolisland','https://futbolisland.itch.io/futbol-island'];
+export const ORG_SAME_AS:readonly string[]=['https://itch.io/profile/futbolisland',GAME_LISTING_ITCH];
 export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',...(ORG_SAME_AS.length>0?{sameAs:[...ORG_SAME_AS]}:{}),
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
 /** Who the learning pages are for (seo-extras, Nov 15 2026): kids 7 to 12 and the grown-ups who coach them. */
