@@ -43,9 +43,11 @@ const PLAY_URL=PLAY_PATH;
 
 const hl=(id:LearnHighlightId)=>LEARN_HIGHLIGHTS.find(h=>h.id===id)!;
 const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
-const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together','Friends'],['safe','Safety'],['about','About']];
-/* Nov 20 2026 (owner): one page link after the chapter anchors, the Library (/library). Not a chapter: it never gets the current chip. */
-const NAV_PAGES:[string,string][]=[[LIBRARY_PATH,'Library']];
+/* Nov 20 2026 evening (owner: "yes change the home page bar too"): the site's three links, Learn, Games, Library. Learn still
+   scrolls to the Learn chapter; Explore, Friends, Safety and About left the bar (their chapters stay on the page, and About and
+   Safety are in the footer). Games and Library are page links, not chapters: they never get the current chip. */
+const NAV:[string,string][]=[['learn','Learn']];
+const NAV_PAGES:[string,string][]=[['/games','Games'],[LIBRARY_PATH,'Library']];
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
 const isWide=(k:string)=>{const im=learnAsset(k).image;return !!im&&im.width>im.height*.8;};
