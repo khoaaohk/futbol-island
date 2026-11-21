@@ -34,6 +34,14 @@ export const arcadeCabinets = [
  {id:'ballblaster',name:'Ball Blaster',short:'BALL BLASTER',lesson:'Pick your target. Strike through the ball.',color:'#f0452e',...rowSpot('ballblaster')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
+/** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet. Safe Hands, the goalkeeper
+ *  game (docs/arcade-aaa/safehands-direction.md "Room placement"), waits here for the owner's decision on its spot: the room, its
+ *  draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
+ *  into arcadeCabinets (and its id into ARCADE_ROW). */
+export const arcadeUnplaced=[
+ {id:'safehands',name:'Safe Hands',short:'SAFE HANDS',lesson:'Set your position. Read the striker.',color:'#19b5a5'},
+] as const;
+export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */
 export const ARCADE_GAME_COUNT=arcadeCabinets.length;
@@ -46,7 +54,7 @@ export const ARCADE_TABLE_ID:ArcadeCabinetId='airhockey';
 export const ARCADE_TABLE_HALF={x:1.55,z:2.4} as const;
 /** How far in front of a machine its play spot is (the table is wider than a cabinet, so its spot is further out). */
 export const arcadeStand=(id:ArcadeCabinetId):number=>id===ARCADE_TABLE_ID?2.35:1.8;
-export const arcadeAnalyticsId=(id:ArcadeCabinetId):string=>id==='kitrush'?'live':id;// 'snake' reports as itself (lib/analytics ARCADE_GAMES; allow-listed by supabase/migrations/20261114_analytics_snake.sql)
+export const arcadeAnalyticsId=(id:ArcadePlayableId):string=>id==='kitrush'?'live':id;// 'snake' reports as itself (lib/analytics ARCADE_GAMES; allow-listed by supabase/migrations/20261114_analytics_snake.sql)
 /** Hub layout, shared by arcadeRoomScene.ts and the multiplayer room descriptor (lib/multiplayer/rooms/arcade.ts) so a friend's
  *  "Playing <game>" spot is always in front of the real cabinet. Until Nov 17 2026 this angled the two side cabinets (ARCADE_HUB_YAW);
  *  in the back row every cabinet faces the door, so the hub uses the catalog's own spots. */
