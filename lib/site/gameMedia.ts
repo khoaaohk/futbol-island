@@ -85,7 +85,7 @@ const ISLAND_DEFS:ClipDef[]=[
  {key:'fly',page:'/games',name:'Flying over Futbol Island with the jetpack',alt:'A player flies over the island with a jetpack, looking down on the town and the beach',caption:'Fly over it with the jetpack.'},
  {key:'stadium',page:'/games',name:'The stadium on the west coast of Futbol Island',alt:'The big stadium on the west coast of the island, with its stands and sponsor boards',caption:'Visit the stadium on the west coast.'},
  {key:'fishing',page:'/games',name:'Fishing on Futbol Island: a bite and a trophy card',alt:'Fishing from the pier: the float dips, the screen flashes for a bite and the catch is shown on a trophy card',caption:'Wait for the bite, reel in, win a trophy card.'},
- {key:'matchmix',page:'/games',name:'Live football matches on Futbol Island: five formats, four camera angles',alt:'Five quick cuts of live matches: a 7v7 game from behind the player, rooftop futsal from the side, a close view of a 9v9 shot on goal, the 11v11 stadium from the broadcast camera and a goal in beach soccer',caption:'Real matches in five formats, from four camera angles: 7v7, futsal, 9v9, 11v11 and beach soccer.'},
+ {key:'matchmix',page:'/games',name:'Live football matches on Futbol Island: five formats, three camera angles',alt:'Five quick cuts of live matches: a 7v7 game from behind the player, rooftop futsal from the side, a close view of a 9v9 shot on goal, the 11v11 stadium up close as a defender wins the ball, and beach soccer up close ending on a shot at goal',caption:'Real matches in five formats, from three camera angles: 7v7, futsal, 9v9, 11v11 and beach soccer.'},
  {key:'match',page:'/games',name:'A live beach football match on Futbol Island',alt:'A beach football match on the sand: players run, pass and shoot at goal',caption:'Join a live match on the beach.'},
  {key:'kitstudio',page:'/games',name:'Designing a football shirt in the Kit Shop studio',alt:'The Kit Shop studio: a purple and gold shirt with a name and the number 7 on the back',caption:'Design your own kit in the Kit Shop.'},
  {key:'museum',page:'/games',name:'The football museum on Futbol Island',alt:'The football museum seen from above, with exhibits of shirts, balls and trophies',caption:'Explore the football museum.'},
@@ -97,7 +97,8 @@ const ISLAND_DEFS:ClipDef[]=[
 /** Nov 20 2026 (owner: "lead with clip of playing on the different formats and different angles. make sure the quality is high and not
  * blurry"): matchmix, real joined play recorded from the game's WebGL canvas at 1920x1080 / 30 fps and cut to 1280x720 (the only
  * clip above 720 px: it fills the lead block at desktop widths). Order: 7v7 Behind you, futsal Side, 9v9 Close, stadium 11v11
- * Broadcast, beach Broadcast (ends on a goal). Wide was too far away to read at this size. */
+ * Close, beach Close (cropped around the play, ends on a shot). Wide and Broadcast were too far away to read at this size (the stadium
+ * and beach cuts were Broadcast until a re-cut later on Nov 20 2026). */
 export const GAMES_LEAD_CLIP='matchmix';
 /** The /games hero's phone picture beside the lead clip (Nov 20 2026, owner: "this screen shot should be the mobile version of the game
  *  and not an arcade"): the main island game on a phone, a 7v7 match with the touch controls; captured at 390 x 844 on the preview. */
