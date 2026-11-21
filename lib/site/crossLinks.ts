@@ -25,10 +25,10 @@ type ToolKey=keyof typeof TOOL;
 const R='/learn/soccer-rules/';
 /** Rule page -> the coach tool that goes with it, 2 or 3 glossary terms the rule uses, and a sister rule where one explains the other. */
 const RULE_LINKS:Record<string,{tool:ToolKey;terms:string[];rules?:string[]}>={
- 'kick-off':{tool:'lineup',terms:['set-piece','pressing','own-goal','extra-time']},
- 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal','support']},
+ 'kick-off':{tool:'calc',terms:['set-piece','pressing','own-goal','extra-time']},
+ 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal','support'],rules:['yellow-and-red-cards']},
  'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up','goal-area']},
- 'corner-kick':{tool:'fields',terms:['set-piece','cross','marking','far-post','near-post']},
+ 'corner-kick':{tool:'fields',terms:['set-piece','cross','cutback','marking','far-post','near-post'],rules:['heading-rules-for-kids']},
  'drop-ball':{tool:'fields',terms:['set-piece','first-touch']},
  'yellow-and-red-cards':{tool:'lineup',terms:['yellow-card','red-card','tackle']},
  'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying'],rules:['yellow-and-red-cards']},
@@ -53,7 +53,7 @@ const TERM_RULES:Record<string,string[]>={
  /* batch 1 of new term pages, Nov 20 2026 */
  'dribble':['fouls-and-free-kicks'],'shielding':['fouls-and-free-kicks'],'volley':['corner-kick','heading-rules-for-kids'],'half-volley':['fouls-and-free-kicks'],
  'square-pass':['offside','back-pass-rule'],'man-on':['yellow-and-red-cards'],'overload':['offside'],'underlap':['offside'],'far-post':['corner-kick'],
- 'offside-trap':['offside','build-out-line'],'jockeying':['fouls-and-free-kicks'],'cover':['offside'],'clearance':['heading-rules-for-kids','corner-kick'],
+ 'offside-trap':['offside','build-out-line'],'jockeying':['fouls-and-free-kicks','yellow-and-red-cards'],'cover':['offside'],'clearance':['heading-rules-for-kids','corner-kick'],
  'build-up':['build-out-line','goal-kick'],'false-nine':['offside'],'sweeper-keeper':['handball','back-pass-rule'],'box-to-box':['substitutions-and-game-length'],
  'assist':['corner-kick'],'brace':['penalty-kick','kick-off'],'own-goal':['throw-in','back-pass-rule'],
  /* batch 2 of new term pages, Nov 20 2026 */
