@@ -141,7 +141,7 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
   const h1=document.querySelector('main h1');
   return {toc,crumb:cr?{x:Math.round(cr.getBoundingClientRect().left),y:Math.round(cr.getBoundingClientRect().top+scrollY)}:null,h1:h1?{x:Math.round(h1.getBoundingClientRect().left),y:Math.round(h1.getBoundingClientRect().top+scrollY)}:null,
    edges:[...new Set(edges)].slice(0,4),cl:Math.round(cl),cr:Math.round(crt),maxR:Math.round(maxR),sw:document.documentElement.scrollWidth,iw:innerWidth,
-   h2:[...m.querySelectorAll('h2')].filter(h=>!nav.contains(h)&&h.getBoundingClientRect().height>0&&!h.closest('footer,[data-toc],details:not([open])')).map(h=>({id:h.id||(h.closest('[id]')&&h.closest('[id]')!==m?h.closest('[id]').id:''),t:h.textContent.trim().slice(0,40)}))};
+   h2:[...m.querySelectorAll('h2')].filter(h=>!nav.contains(h)&&h.getBoundingClientRect().height>0&&!h.closest('footer,[data-toc],details:not([open])')).map(h=>{const ids=[];for(let e=h;e&&e!==m;e=e.parentElement)if(e.id)ids.push(e.id);return {id:h.id,ids,t:h.textContent.trim().slice(0,40)};})};
  });
  if(lay.toc)errs.push('"On this page" visible');
  if(lay.edges.length)errs.push(`blocks off the content edges: ${lay.edges.join(', ')}`);
@@ -151,7 +151,7 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
   if(!isPhone&&Math.abs(lay.crumb.y-108)>3)errs.push(`crumb y${lay.crumb.y} (want 108)`);
   if(lay.h1&&lay.h1.y<lay.crumb.y)errs.push('H1 above the breadcrumb');}
  if(W>=1280){const empty=(lay.cr-lay.maxR)/Math.max(1,lay.cr-lay.cl);if(empty>.12)errs.push(`right side ${Math.round(empty*100)}% empty (content ${lay.cl}-${lay.maxR} of ${lay.cr})`);}
- if(!pg.hub&&full){const ids=new Set(L.map(x=>x.href.slice(1)));const miss=lay.h2.filter(h=>!h.id||!ids.has(h.id));if(miss.length)errs.push(`H2 not in rail: ${miss.map(h=>(h.id||'no-id')+':"'+h.t+'"').join('; ')}`);}
+ if(!pg.hub&&full){const ids=new Set(L.map(x=>x.href.slice(1)));const miss=lay.h2.filter(h=>!h.ids.some(x=>ids.has(x)));if(miss.length)errs.push(`H2 not in rail: ${miss.map(h=>(h.id||'no-id')+':"'+h.t+'"').join('; ')}`);}
  lap('layout');
  if(!full||!L.length)return {errs,note,n:L.length};
  /* step scroll: exactly one lit entry, and the expected one */
@@ -173,7 +173,7 @@ async function checkPage(p,pg,W,Hh,full){const T0=Date.now();const lap=s=>proces
  const idx=[...new Set([1,Math.floor(L.length/2),L.length-1])].filter(i=>i>0&&i<L.length);
  await hand(0);await p.waitForTimeout(200);
  for(const i of idx){const href=L[i].href;
-  const vis=await p.evaluate(h=>{const a=[...document.querySelectorAll('nav[data-rail] ul a')].find(x=>x.getAttribute('href')===h);a.scrollIntoView({block:'nearest',inline:'nearest'});const r=a.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};},href);
+  const vis=await p.evaluate(h=>{const a=[...document.querySelectorAll('nav[data-rail] ul a')].find(x=>x.getAttribute('href')===h);a.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});const r=a.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};},href);
   await p.mouse.click(vis.x,vis.y);await p.waitForTimeout(300);await settle(p);await p.waitForTimeout(250);
   const r=await p.evaluate(h=>{const nav=document.querySelector('nav[data-rail]');const t=document.getElementById(h.slice(1));const nb=innerWidth<1280?nav.getBoundingClientRect().bottom:0;
    const H=[...document.querySelectorAll('header')].find(x=>['fixed','sticky'].includes(getComputedStyle(x).position));const line=Math.max(nb,H?H.getBoundingClientRect().bottom:0);
