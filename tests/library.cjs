@@ -60,7 +60,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const imgs=[...html.matchAll(/<img [^>]*>/g)].map(m=>m[0]);/* Nov 20 2026 night (owner: "change these to light colors to match with the marketing side. also if these could animate that would
     be nice"): the eight drawn diagram pictures are inline SVG (lib/site/sectionImage.tsx SectionSvg, played by SectionPicPlayer),
     the rest are <img> */
- const svgs=[...html.matchAll(/<svg [^>]*data-pic-anim="[\d.]+"[^>]*>/g)].map(m=>m[0]);assert.equal(svgs.length,8,'eight drawn pictures inline');
+ const svgs=[...html.matchAll(/<svg [^>]*data-pic-anim="[\d.]+"[^>]*>/g)].map(m=>m[0]);assert.equal(svgs.length,6,'six drawn pictures inline (Positions and Formations show lesson frames, below)');
  for(const v of svgs)assert(/role="img"/.test(v)&&/aria-label="[^"]{8,}"/.test(v)&&/viewBox="0 0 1440 900"/.test(v),`drawn picture: role, label, 16:10 ${v.slice(0,80)}`);
  assert(/<svg [^>]*data-pic-anim[\s\S]*?<\/svg>/.test(html)&&!/data-play/.test(html),'the server HTML is the final state (no play attribute)');
  assert(imgs.length+svgs.length>=cards.length,'a picture on every card');
@@ -70,9 +70,16 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
     baked-in title; the eight diagram sections show their own drawn section picture (lib/site/sectionImage.tsx, a real webp file
     under public/learn/sections/ made by scripts/build-section-pictures.cjs), never a page's 1200 x 630 share card */
  {const fs=require('node:fs'),path=require('node:path'),{webpSize}=L('lib/site/learnMedia.ts'),{SECTION_PICTURES}=L('lib/site/sectionImage.tsx');
-  const drawn={'/learn/soccer-rules':'rules','/learn/soccer-terms':'terms','/learn/soccer-drills':'drills','/learn/soccer-positions':'positions','/learn/soccer-formations':'formations',
+  const drawn={'/learn/soccer-rules':'rules','/learn/soccer-terms':'terms','/learn/soccer-drills':'drills',
    '/learn/soccer-practice-plans':'plans','/learn/soccer-age-groups':'ages','/tools':'tools'};
-  assert.deepEqual(Object.values(drawn).sort(),Object.keys(SECTION_PICTURES).sort(),'one drawn picture per diagram section');
+  assert.deepEqual([...Object.values(drawn),'formations','positions'].sort(),Object.keys(SECTION_PICTURES).sort(),'one drawn picture per diagram section (positions and formations stay drawn for the /games cards)');
+  /* Nov 20 2026 (owner: "for these, can we add from actual lessons in the game? using different angles"): Positions and Formations show
+     real lesson frames (a large angle plus inset angles), a light lazy <img> under 140 KB, alt naming the lessons and angles, EN and ES */
+  const lessonShots={'/learn/soccer-positions':'positions-game','/learn/soccer-formations':'formations-game'};
+  for(const [p,f] of Object.entries(lessonShots)){const pic=lib.LIBRARY_PICS[p];assert.equal(pic.src.split('?')[0],`/learn/sections/${f}.webp`,`${p}: its lesson picture`);
+   assert(fs.statSync(path.join(root,'public/learn/sections',`${f}.webp`)).size<=140*1024,`${f}.webp is at most 140 KB`);
+   assert(new RegExp(`<img [^>]*src="[^"]*${f}\\.webp[^"]*"[^>]*loading="lazy"`).test(html)||new RegExp(`<img [^>]*loading="lazy"[^>]*src="[^"]*${f}\\.webp`).test(html),`${f}: a lazy <img> on /library`);
+   assert(/ alt="[^"]*lesson[^"]*"/i.test((html.match(new RegExp(`<img [^>]*${f}[^>]*>`))??[''])[0]),`${f}: the alt names the lesson`);}
   for(const [p,pic] of Object.entries(lib.LIBRARY_PICS)){assert(pic,`${p}: a picture`);assert(!pic.src.includes('/learn/diagrams/'),`${p}: not a share card`);
    assert(Math.abs(pic.w/pic.h-1.6)<.01||pic.pos||pic.h>pic.w||Math.abs(pic.w/pic.h-16/9)<.01,`${p}: 16:10, or a photo the frame crops`);
    const file=pic.src.split('?')[0];if(drawn[p])assert.equal(file,`/learn/sections/${drawn[p]}.webp`,`${p}: its drawn section picture`);
@@ -88,6 +95,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
   assert(/<a href="#top"[^>]*data-on=""[^>]*>Resumen<\/a>/.test(eh));}
  for(const c of E.libraryGroupsEs().flatMap(g=>g.cards)){assert(eh.includes(`href="${c.href}"`));if(!c.href.startsWith('/es/'))assert(/\(en inglés\)$/.test(c.name),`${c.href}: an English page says so`);else assert(ep.hasEs(ep.toEn(c.href)),`${c.href}: a Spanish page`);}
  assert.equal(E.libraryGroupsEs().flatMap(g=>g.cards).length,cards.length);assert(!/—/.test(eh));
+ for(const f of ['positions-game','formations-game'])assert(/ alt="[^"]*lecci[oó]n[^"]*"/i.test((eh.match(new RegExp(`<img [^>]*${f}[^>]*>`))??[''])[0]),`es ${f}: the alt names the lesson`);
  // 4
  const nav=read('components/site/SiteNav.tsx'),navEs=read('components/es/SiteNavEs.tsx'),home=read('app/(site)/page.tsx');
  // the header (owner, Nov 20 2026 evening: "Learn, Game, and Library"): three links and Play, in both languages
