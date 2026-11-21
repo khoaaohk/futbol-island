@@ -125,7 +125,7 @@ export const BEACH_WET={from:1.4,to:3.1,noise:1.5,dark:[.2,.17,.11],a2:.14,f0:.0
 /** The trail verge (m from the ribbon's edge): the paving breaks into the lawn over `blend`, with a worn edging line at `line`. */
 export const TRAIL_EDGE={blend:.42,noise:.5,line:.62,lineWidth:.16,lineDark:.07} as const;
 /** The lawn's colour under the trails (shoreline.ts INTERIOR_GRASS_COLOR), for the verge blend. */
-const LAWN_COLOR='#6e9678';
+const LAWN_COLOR='#608870';
 
 /**
  * Ground lighting without three's PBR path (Nov 17 2026, docs/graphics/island-graphics-plan-nov17.md T2). Ground is roughness .85-1,

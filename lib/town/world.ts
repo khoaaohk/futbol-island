@@ -3,6 +3,7 @@ import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
+import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
@@ -298,13 +299,13 @@ export function* buildTownSteps(scene: T.Scene) {
   function planter(x:number,z:number){prop('planter',()=>planterParts(x,z));}
   function planterParts(x:number,z:number){
     assets.push({kind:'planter',x,z,w:1.6,d:1.6,visualW:1.9,visualD:1.9});
-    box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#739568',x,1,z);
+    box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
     obstacles.push({x,z,w:1.6,d:1.6});
   }
   function tree(x:number,z:number){prop('tree',()=>treeParts(x,z));}
   function treeParts(x:number,z:number){
     assets.push({kind:'tree',x,z,w:.45,d:.45,visualW:3.6,visualD:3.6,canopyHeight:4.4});
-    cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#739568',x,3.3,z);
+    cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#5b8c5c',x,3.3,z);
     obstacles.push(trunkCollider(x,z,.18));
   }
   function table(x:number,z:number){prop('table',()=>tableParts(x,z));}
@@ -811,7 +812,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const arenaRails:(Obstacle&{floor:number;top:number})[]=[],ar=KNOCKOUT_ROOF;
   // Rooftop turf in eight 5.5 m mown bands (pitchStripes.ts). Two palette shades of the old turf colour: both batch into the
   // same vertex-colour chunk draw as before, so the stripes add no draw call, material or shader.
-  {const light=shadeHex('#648c72',STRIPE_LIGHT),dark=shadeHex('#648c72',STRIPE_DARK);for(let i=0;i<8;i++)box(24,.035,5.5,i%2?light:dark,ar.x,ar.height+.02,ar.z-22+(i+.5)*5.5);}
+  {const light=shadeHex('#6e9b67',STRIPE_LIGHT),dark=shadeHex('#6e9b67',STRIPE_DARK);for(let i=0;i<8;i++)box(24,.035,5.5,i%2?light:dark,ar.x,ar.height+.02,ar.z-22+(i+.5)*5.5);}
   for(const side of [-1,1]){box(.09,.04,44,'#f8edc9',ar.x+side*12,ar.height+.05,ar.z);box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z+side*22);}
   box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z);
   for(const side of [-1,1]){
@@ -1235,7 +1236,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const coachesSign=sign('COACHES',13.7,2.1,161,9.7,-36.63,'#294f43','#f4cc7c');coachesSign.name='coaches-sign';
   sign('NOW OPEN',5,.6,161,3.5,-36.75,'#477c6a');// Lane 2 (Sep 30 2026): the Coaches Centre is live (Coaches Board + IDP); was OPENING SOON (lib/town/openingSoon.ts)
   path(145,-34,40,4);path(174,-24,6,26);
-  box(28,.035,19.3,'#6e9678',156,-.055,-19.65);
+  box(28,.035,19.3,'#78a970',156,-.055,-19.65);
   for(const x of [142.4,169.6])box(.1,.008,18.5,'#f5eed5',x,-.022,-19.65);
   for(const z of [-28.9,-10.4])box(27.2,.008,.1,'#f5eed5',156,-.022,z);
   box(26,2.3,.35,'#d6b58a',156,1.15,-29.5);
@@ -1688,6 +1689,16 @@ export function* buildTownSteps(scene: T.Scene) {
   const stadiumPaintFor=(source:T.Material)=>{const shared=paintMaterials.get(source);if(!shared)return undefined;let twin=stadiumPaints.get(shared);
     if(!twin){twin=patchStadiumNight(shared.clone(),STADIUM_NIGHT_GAIN.paint,STADIUM_NIGHT_GAIN.turf);stadiumPaints.set(shared,twin);materials.push(twin);}return twin;};
   const position=new T.Vector3();
+  // Richer baked light (Nov 20 2026, load time only, vertex colours of the same chunks: no draw, material, shader or per-frame cost).
+  // The sun never moves (islandLighting.ts ISLAND_SUN_POSITION), so walls turned to it take a small warm tint and walls turned away a
+  // cool one; each building gets a few percent of its own value and warmth so neighbours differ. Multipliers are in linear colour.
+  const BAKE_SUN_X=ISLAND_SUN_POSITION[0]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]),BAKE_SUN_Z=ISLAND_SUN_POSITION[2]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
+  const BAKE={warm:.12,cool:.06,jitterValue:.07,jitterWarmth:.04,canopyLow:.9,canopyHigh:1.24,paneSky:new T.Color('#9cc8e6'),paneSkyMix:.55,paneFoot:.5} as const;
+  const bakeCells=new Map<string,number[]>();
+  buildings.forEach((b,i)=>{for(let cx=Math.floor((b.x-b.w/2-.7)/16);cx<=Math.floor((b.x+b.w/2+.7)/16);cx++)for(let cz=Math.floor((b.z-b.d/2-.7)/16);cz<=Math.floor((b.z+b.d/2+.7)/16);cz++){const k=cx+':'+cz,list=bakeCells.get(k);if(list)list.push(i);else bakeCells.set(k,[i]);}});
+  const buildingAt=(x:number,z:number)=>{const list=bakeCells.get(Math.floor(x/16)+':'+Math.floor(z/16));if(list)for(const i of list){const b=buildings[i];if(Math.abs(x-b.x)<=b.w/2+.7&&Math.abs(z-b.z)<=b.d/2+.7)return i;}return -1;};
+  const bakeArray=(a:T.BufferAttribute|T.InterleavedBufferAttribute)=>{if(a instanceof T.BufferAttribute&&!a.normalized&&a.itemSize===3)return a.array;const out=new Float32Array(a.count*3);for(let i=0;i<a.count;i++){out[i*3]=a.getX(i);out[i*3+1]=a.getY(i);out[i*3+2]=a.getZ(i);}return out;};
+  const bakeHash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return (v-Math.floor(v))*2-1;};
   // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
   const batchObject=(object:T.Object3D)=>{
     if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.userData.ownDraw||object.parent===ferry||Array.isArray(object.material))return;
@@ -1704,10 +1715,27 @@ export function* buildTownSteps(scene: T.Scene) {
       const colors=new Float32Array(geom.getAttribute('position').count*3);
       // Baked light (Nov 10 2026, load time only): walls darken toward their foot over the lowest 4 m (to 0.68 linear, ~0.84 on
       // screen), undersides 0.62, tops 1.03, measured from the piece's own base (roofs and Summit Isle are not at y=0). Flat trim (< 0.15 m) stays flat.
-      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,nrm=gb.max.y-gy>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
-      for(let i=0,v=0;i<colors.length;i+=3,v++){let f=1;
-        if(nrm){const ny=nrm.getY(v);if(ny<-.5)f=.62;else if(ny>.7)f=1.03;else if(Math.abs(ny)<.5){const t=Math.min(1,Math.max(0,(pos.getY(v)-gy)/4));f=.68+.32*t*t*(3-2*t);}}
-        colors[i]=color.r*f;colors[i+1]=color.g*f;colors[i+2]=color.b*f;}
+      // Nov 20 2026: sun-side warm / far-side cool tint on walls, a per-building jitter, tree and bush canopies on one smooth
+      // foot-to-crown gradient (cooler below, yellower above) in place of the three steps, and window panes sky-blue at the top
+      // fading to dark at the sill.
+      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,gh=gb.max.y-gy,nrm=gh>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
+      // Nov 21 2026 (verifier): doors and tall glass (1.7 m and up, e.g. the Arcade's double door) keep their solid colour; the sky
+      // gradient read as pale blue-grey metal on them. Windows and shopfronts (up to 1.65 m) keep the gradient.
+      const pane=paint===windowPaint&&gh<1.7,canopy=!pane&&object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
+      const home=pane||canopy||stadiumPiece?-1:buildingAt(position.x,position.z),jv=home<0?1:1+BAKE.jitterValue*bakeHash(home),jw=home<0?1:1+BAKE.jitterWarmth*bakeHash(home+.5);
+      const P=bakeArray(pos),N=nrm&&bakeArray(nrm),cr=color.r,cg=color.g,cb=color.b,len=colors.length;
+      if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
+        for(let i=0;i<len;i+=3){const t=(P[i+1]-gy)*ih,k=BAKE.paneSkyMix*t*t,d=BAKE.paneFoot+(1-BAKE.paneFoot)*t;colors[i]=(cr+(sky.r-cr)*k)*d;colors[i+1]=(cg+(sky.g-cg)*k)*d;colors[i+2]=(cb+(sky.b-cb)*k)*d;}}
+      else if(!N){const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;for(let i=0;i<len;i+=3){colors[i]=r;colors[i+1]=g;colors[i+2]=b;}}
+      else if(canopy){const ih=.5/gh,span=BAKE.canopyHigh-BAKE.canopyLow;
+        for(let i=0;i<len;i+=3){const u=(P[i+1]-gy)*ih+.25*(N[i+1]+1),e=u*u*(3-2*u),f=BAKE.canopyLow+span*e,s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z,w=s>0?BAKE.warm*s:0;
+          colors[i]=cr*f*(.93+.14*e)*(1+w);colors[i+1]=cg*f;colors[i+2]=cb*f*(1.08-.18*e)*(s>0?1-w:1-BAKE.cool*s);}}
+      else{const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw,warm=stadiumPiece?0:BAKE.warm,cool=stadiumPiece?0:BAKE.cool;
+        for(let i=0;i<len;i+=3){const ny=N[i+1];let f=1;
+          if(ny<-.5)f=.62;else if(ny>.7)f=1.03;else if(ny<.5){let t=(P[i+1]-gy)*.25;if(t>1)t=1;f=.68+.32*t*t*(3-2*t);}
+          const s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z;
+          if(s>0){colors[i]=r*f*(1+warm*s);colors[i+2]=b*f*(1-warm*s);}else{colors[i]=r*f;colors[i+2]=b*f*(1-cool*s);}
+          colors[i+1]=g*f;}}
       geom.setAttribute('color',new T.BufferAttribute(colors,3));
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
@@ -1766,7 +1794,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Separate spatial chunks retain local culling instead of one island-sized bound.
   const poolCanvas=document.createElement('canvas');poolCanvas.width=poolCanvas.height=32;
   const poolCtx=poolCanvas.getContext('2d')!,gradient=poolCtx.createRadialGradient(16,16,0,16,16,16);
-  gradient.addColorStop(0,'rgba(255,213,140,.56)');gradient.addColorStop(.3,'rgba(255,197,110,.34)');gradient.addColorStop(.7,'rgba(255,183,92,.09)');gradient.addColorStop(1,'rgba(255,196,112,0)');poolCtx.fillStyle=gradient;poolCtx.fillRect(0,0,32,32);
+  gradient.addColorStop(0,'rgba(255,213,140,.72)');gradient.addColorStop(.3,'rgba(255,197,110,.46)');gradient.addColorStop(.7,'rgba(255,183,92,.13)');gradient.addColorStop(1,'rgba(255,196,112,0)');poolCtx.fillStyle=gradient;poolCtx.fillRect(0,0,32,32);
   const poolTexture=new T.CanvasTexture(poolCanvas);poolTexture.colorSpace=T.SRGBColorSpace;textures.push(poolTexture);
   const poolMaterial=new T.MeshBasicMaterial({map:poolTexture,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});materials.push(poolMaterial);
   const poolGeometry=new T.PlaneGeometry(1,1);poolGeometry.rotateX(-Math.PI/2);
@@ -1861,6 +1889,6 @@ export function* buildTownSteps(scene: T.Scene) {
   const westRegion=new T.Box3(new T.Vector3(-420,-2,-330),new T.Vector3(-100,36,300));let westShown=true;
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;for(const m of isleChunks)m.visible=sceneryShown&&isleShown;for(const m of westChunks)m.visible=sceneryShown&&westShown;for(const m of stadiumRoofs.roofs)m.visible=sceneryShown&&westShown;stadiumLights.lamps.visible=sceneryShown&&westShown;};
   const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion),west=sharks.frustum.intersectsBox(westRegion);if(show!==cayShown||isle!==isleShown||west!==westShown){cayShown=show;isleShown=isle;westShown=west;applyCayVisibility();}};
-  return {signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+  return {signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?1.25:dusk?.22:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?2.3:dusk?.5:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
     updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();stadiumLights.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}plazaFlags.mesh.removeFromParent();plazaFlags.mesh.geometry.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }
