@@ -22,7 +22,7 @@ export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
 /** The day these clips were first published (VideoObject.uploadDate, video sitemap publication_date). The four clips added on
  *  Nov 17 2026 carry their own first commit time (git log --diff-filter=A, checked by tests/seo-video.cjs). */
 export const GAME_CLIPS_UPLOADED='2026-11-16T12:00:00-08:00';
-const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00'};
+const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00',matchmix:'2026-11-20T18:58:48-08:00'};
 export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;poster:string;pw:number;ph:number;uploaded:string};
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
@@ -85,6 +85,7 @@ const ISLAND_DEFS:ClipDef[]=[
  {key:'fly',page:'/games',name:'Flying over Futbol Island with the jetpack',alt:'A player flies over the island with a jetpack, looking down on the town and the beach',caption:'Fly over it with the jetpack.'},
  {key:'stadium',page:'/games',name:'The stadium on the west coast of Futbol Island',alt:'The big stadium on the west coast of the island, with its stands and sponsor boards',caption:'Visit the stadium on the west coast.'},
  {key:'fishing',page:'/games',name:'Fishing on Futbol Island: a bite and a trophy card',alt:'Fishing from the pier: the float dips, the screen flashes for a bite and the catch is shown on a trophy card',caption:'Wait for the bite, reel in, win a trophy card.'},
+ {key:'matchmix',page:'/games',name:'Live football matches on Futbol Island: five formats, four camera angles',alt:'Five quick cuts of live matches: a 7v7 game from behind the player, rooftop futsal from the side, a close view of a 9v9 shot on goal, the 11v11 stadium from the broadcast camera and a goal in beach soccer',caption:'Real matches in five formats, from four camera angles: 7v7, futsal, 9v9, 11v11 and beach soccer.'},
  {key:'match',page:'/games',name:'A live beach football match on Futbol Island',alt:'A beach football match on the sand: players run, pass and shoot at goal',caption:'Join a live match on the beach.'},
  {key:'kitstudio',page:'/games',name:'Designing a football shirt in the Kit Shop studio',alt:'The Kit Shop studio: a purple and gold shirt with a name and the number 7 on the back',caption:'Design your own kit in the Kit Shop.'},
  {key:'museum',page:'/games',name:'The football museum on Futbol Island',alt:'The football museum seen from above, with exhibits of shirts, balls and trophies',caption:'Explore the football museum.'},
@@ -93,7 +94,11 @@ const ISLAND_DEFS:ClipDef[]=[
 ];
 /** The clip that leads /games (Nov 20 2026, owner: Futbol Island is the primary game). One key: swap it for a new montage's
  * key (an island clip defined above) and the hub's lead block, its preload and the gallery's skip all follow. */
-export const GAMES_LEAD_CLIP='match';
+/** Nov 20 2026 (owner: "lead with clip of playing on the different formats and different angles. make sure the quality is high and not
+ * blurry"): matchmix, real joined play recorded from the game's WebGL canvas at 1920x1080 / 30 fps and cut to 1280x720 (the only
+ * clip above 720 px: it fills the lead block at desktop widths). Order: 7v7 Behind you, futsal Side, 9v9 Close, stadium 11v11
+ * Broadcast, beach Broadcast (ends on a goal). Wide was too far away to read at this size. */
+export const GAMES_LEAD_CLIP='matchmix';
 export const islandClips=()=>ISLAND_DEFS.map(clip).filter((c):c is GameClip=>!!c);
 /** Island stills (from the same takes), shown in the gallery between the clips. */
 export function islandStills():GameShot[]{
