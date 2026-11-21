@@ -1,10 +1,10 @@
 import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
-import {ClipFigure,GameFeature,GameIntro,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
+import {ClipFigure,GameFeature,GameIntro,ISLAND_FEATURE_KEY,IslandFeature,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
-import {HERO_CLIP} from '@/lib/site/gameMedia';
+import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
@@ -15,8 +15,9 @@ export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
 export default function GamesHub(){
- // The hero poster is the page's LCP: preload it at high priority (react-dom's preload, in the App Router's React).
- if(HERO_CLIP&&typeof ReactDOM.preload==='function')ReactDOM.preload(HERO_CLIP.poster,{as:'image',fetchPriority:'high'});
+ // The island clip's poster is the page's LCP (Nov 20 2026: Futbol Island leads the page): preload it at high priority.
+ const top=islandClips().find(c=>c.key===ISLAND_FEATURE_KEY);
+ if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high'});
  const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -24,17 +25,18 @@ export default function GamesHub(){
   <JsonLd data={faqLd(H.faq)}/>
   {/* Nov 18 2026: no VideoObject on this page; every clip's one home is its watch page, /videos/<slug> (lib/site/videos.ts) */}
   <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
-  {HERO_CLIP&&<div className={`${gamesCss.bleed} ${gamesCss.hero}`}>
-   <ClipFigure c={HERO_CLIP} auto priority/>
-   <a className={site.cta} href={GAME_PAGES[0].play} data-play={GAME_PAGES[0].id}>Play {GAME_PAGES[0].name} now</a>
-  </div>}
-  <Section id="games" title={`The ${GAMES_WORD} games`}>
-   {H.intro.map(x=><p key={x}>{x}</p>)}
+  <IslandFeature title="Futbol Island, the main game" play="Play Futbol Island"
+   lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
+  <Section id="games" title={`The ${GAMES_WORD} arcade games`}>
+   <div className={`${gamesCss.arcadeIntro} ${gamesCss.bleed}`}>
+    <div>{H.intro.map(x=><p key={x}>{x}</p>)}</div>
+    {HERO_CLIP&&<ClipFigure c={HERO_CLIP}/>}
+   </div>
    <ul className={`${gamesCss.features} ${gamesCss.bleed}`}>{GAME_PAGES.map((g,i)=><GameFeature key={g.id} game={g} flip={i%2===1}/>)}</ul>
   </Section>
   <Section id="island" title="Inside the island">
    <p>The arcade is one room of Futbol Island, a whole 3D island to explore. Walk or fly around it, fish from the pier, play a match on the beach, design a kit and visit the football museum.</p>
-   <div className={gamesCss.bleed}><IslandGallery/></div>
+   <div className={gamesCss.bleed}><IslandGallery skip={ISLAND_FEATURE_KEY}/></div>
    <p>Watch all {nVideos} clips, one on each page, on the <a href={VIDEOS_PATH}>Futbol Island videos</a> page.</p>
   </Section>
   <Section id="play" title="Pick a game and play">

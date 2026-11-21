@@ -47,32 +47,58 @@
 .hero .clipFig{width:min(100%,760px)}
 .hero .clip{border-radius:var(--r-lg)}
 .hero figcaption{color:#f3efe2;text-align:center}
-/* Hub: one block per game. Phone: clip and name side by side, then the words. From 860 px: media | words, flipped every other. */
+/* Hub: one block per game (Nov 20 2026, owner: "each game should have 4 smaller ones and one large video"; "so much white space"
+   at 2,000 px). One upright clip, the words with the Play link at the top, and the stills in one row (3 or 4: they share the row,
+   so there is never an empty slot). Phone: clip | words side by side, stills across the foot. From 900 px: clip | words, the stills
+   at the foot of the words column, flipped every other. From 1600 px: two games per row on a wider band (an odd last game runs
+   full width as clip | words | stills). The Play link is in the first screen of every card at every width. */
 .features{list-style:none;padding:0!important;display:grid;gap:var(--s3)!important}
-.feature{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
+.feature{display:grid;grid-template-columns:minmax(0,44%) minmax(0,1fr);grid-template-areas:'m w' 't t';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
 .featureMedia{grid-area:m;min-width:0;display:grid}
-/* Phones and small tablets: the clip runs full width, but an upright phone clip is capped so it fits on screen (about 70% of the
-   viewport height at the clip's 332:720 aspect), centred. */
-.featureMedia .clipFig{justify-self:center;width:min(100%,calc(70svh * 332 / 720),420px)}
-.featureWide .featureMedia .clipFig{width:100%}
+.featureMedia .clipFig{width:100%}
+.featureMedia .clipFig figcaption{font-size:13px}
 .featureWords{grid-area:w;display:grid;gap:10px;min-width:0;align-content:start}
 .featureWords p{max-width:none!important}
-.featureName{margin:0;font-size:var(--t-h2);line-height:1.05;font-weight:700;letter-spacing:-.03em}
+.featureName{margin:0;font-size:clamp(24px,5vw + 4px,var(--t-h2));line-height:1.05;font-weight:700;letter-spacing:-.03em;overflow-wrap:anywhere}
 .featureWords .featureName a{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:4px;text-underline-offset:.16em}
+.featureWords .gameLinks{flex-direction:column;align-items:flex-start}
+.featureWords .gameLinks .playNow{padding-block:8px;line-height:1.2}
+.featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w' 't'}
+.thumbs{grid-area:t;list-style:none;padding:0!important;margin:0;display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:var(--s1)!important;align-self:end;min-width:0}
+.thumbs li{max-width:none!important;min-width:0}
 @media(min-width:900px){
- .featureMedia .clipFig{width:100%}
- .feature{grid-template-columns:minmax(0,260px) minmax(0,1fr);grid-template-areas:'m w';gap:var(--s4);padding:var(--s3);align-items:center}
- .flip{grid-template-columns:minmax(0,1fr) minmax(0,260px);grid-template-areas:'w m'}
- .featureWide{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:'m w'}
- .featureWords{gap:var(--s2)}
+ .feature{grid-template-columns:clamp(240px,22vw,320px) minmax(0,1fr);grid-template-areas:'m w' 'm t';grid-template-rows:auto 1fr;gap:var(--s3) var(--s4);padding:var(--s3)}
+ .flip{grid-template-columns:minmax(0,1fr) clamp(240px,22vw,320px);grid-template-areas:'w m' 't m'}
+ .featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w' 't';grid-template-rows:auto}
+ .featureMedia .clipFig figcaption{font-size:var(--t-cap)}
+ .featureWords{gap:12px}
+ .featureWords .gameLinks{flex-direction:row;align-items:center}
+ .thumbs{gap:var(--s2)!important;grid-auto-columns:minmax(0,200px);justify-content:start}/* four fill the column; three keep the four-up size */
 }
-/* The three stills: a sideways strip that snaps on phones, three in a row from 900 px. */
-.thumbs{list-style:none;padding:0 0 4px!important;margin:0;display:flex!important;gap:var(--s1)!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
-.thumbs::-webkit-scrollbar{display:none}
-.thumbs li{flex:0 0 38%;max-width:none!important;scroll-snap-align:start}
-.featureWide .thumbs li{flex-basis:72%}
-@media(min-width:900px){.thumbs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:360px}.featureWide .thumbs{max-width:none}}
+@media(min-width:1600px){
+ .features.bleed,.island.bleed{--bw:min(1760px,100vw - 2 * max(var(--gutter),40px))}
+ .features{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .feature,.flip{grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr);grid-template-areas:'m w' 'm t'}
+ .feature:last-child:nth-child(odd){grid-column:1/-1;grid-template-columns:clamp(220px,13vw,270px) minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:'m w t';grid-template-rows:auto}
+ .feature:last-child:nth-child(odd) .thumbs{align-self:center;grid-auto-columns:minmax(0,1fr)}
+ .feature:last-child:nth-child(odd) .featureWords{align-self:center}
+}
 .thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
+/* The top of the hub (Nov 20 2026, owner: "features futbol island as the primary game and the arcade games below that"): the
+   island game on the pitch-green field the old three-phone hero had, its clip large, the page's biggest Play button. */
+.island{display:grid;gap:var(--s3);align-items:center;box-sizing:border-box;padding:var(--s2) var(--s2) var(--s3);background:var(--link);border-radius:clamp(24px,2.4vw,32px)}
+.islandMedia{min-width:0;display:grid}
+.island .clip{border-radius:var(--r-lg)}
+.island figcaption,.island figcaption a{color:#f3efe2}
+.islandWords{display:grid;gap:var(--s2);justify-items:start;min-width:0;padding-inline:4px}
+.islandName{margin:0;font-size:clamp(32px,2.4vw + 18px,58px);line-height:1.04;font-weight:700;letter-spacing:-.03em;color:#fffaf0;text-wrap:balance}
+.islandWords p{margin:0;max-width:40ch!important;font-size:var(--t-lead);line-height:1.4;color:#f3efe2;text-wrap:pretty}
+.page .island .islandPlay{min-height:64px;padding:0 36px;font-size:22px;margin-top:var(--s1)}
+@media(min-width:900px){.island{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:var(--s4);padding:var(--s4)}}
+/* The arcade's intro: its words beside the three-phone clip from 900 px. */
+.arcadeIntro{display:grid;gap:var(--s3);align-items:center}
+.arcadeIntro>div{display:grid;gap:var(--s2)}
+@media(min-width:900px){.arcadeIntro{grid-template-columns:minmax(0,640px) minmax(0,520px);justify-content:center;gap:var(--s4)}}
 .featureWords .gameLinks .playNow,.playRow .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
 @media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow .playNow:hover{scale:1.04}}
 .featureWords .gameLinks .playNow:active,.playRow .playNow:active{scale:.96}

@@ -75,7 +75,7 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
 // Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 20 MB.
 {const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
- const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster]).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,3)),...gm.islandStills()].map(s=>path.basename(s.src)));
+ const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster]).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,4)),...gm.islandStills()].map(s=>path.basename(s.src)));
  let total=0;for(const [d,used] of [['games/clips',usedC],['games/shots',usedS]])for(const f of fs.readdirSync(pub(d))){total+=fs.statSync(pub(d+'/'+f)).size;assert(used.has(f),`public/${d}/${f} is used by a page`);}
  assert(clips.length===PAGES.length+1+gm.islandClips().length&&clips.length>=14,`a clip for every game, the hero and the island (${clips.length})`);
  assert(total<20*1024*1024,`gameplay media weighs ${Math.round(total/1024)} KB`);}
@@ -93,7 +93,7 @@ function check(p,meta,el,game){
  const h=renderToStaticMarkup(el);html.set(p.path,h);
  assert.equal((h.match(/<h1[ >]/g)||[]).length,1,`${where}: one h1`);assert(h.includes(`>${p.name}</h1>`),`${where}: the h1 is the registry's`);
  const t=text(h);assert(/football/i.test(t.slice(0,700)),`${where}: "football" near the top`);
- const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300+(game?4+30/* Nov 20 2026: the "Play the whole island" section, about 30 words */:4*L('lib/site/videos.ts').allWatchVideos().filter(v=>v.group!=='lessons').length+15)/* Nov 18 2026: each clip's "Watch the full clip" link to its watch page (4 words; every games clip is on the hub) and the hub's line to /videos */+(game?15:40)*Math.max(0,PAGES.length-7)/* Nov 17 2026: every game past seven adds one entry (about 15 words) to each page's list of the other games and one block (clip, name, what it teaches, three stills: about 40 words) to the hub, so the ceilings grow with the catalog;  Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
+ const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300+(game?4+30/* Nov 20 2026: the "Play the whole island" section, about 30 words */:4*L('lib/site/videos.ts').allWatchVideos().filter(v=>v.group!=='lessons').length+15)/* Nov 18 2026: each clip's "Watch the full clip" link to its watch page (4 words; every games clip is on the hub) and the hub's line to /videos */+(game?0:60)/* Nov 20 2026: the hub opens with Futbol Island itself (title, two lines, Play button: about 55 words) */+(game?15:40)*Math.max(0,PAGES.length-7)/* Nov 17 2026: every game past seven adds one entry (about 15 words) to each page's list of the other games and one block (clip, name, what it teaches, three stills: about 40 words) to the hub, so the ceilings grow with the catalog;  Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
  assert(!/Strikers/.test(h),`${where}: Island Strikers is not an arcade game any more`);
  assert(!/aggregateRating|ratingValue|reviewCount|millions? of players/i.test(h),`${where}: no ratings, no invented numbers`);
  // Nov 16 2026 (owner: videos of the game on these pages): the clips are LoopClip islands that create their <video> on the client
@@ -110,7 +110,7 @@ function check(p,meta,el,game){
  const imgs=[...h.matchAll(/<img\b([^>]*)>/g)].map(m=>Object.fromEntries([...m[1].matchAll(/([a-z-]+)="([^"]*)"/g)].map(a=>[a[1],a[2].replace(/&#x27;/g,"'").replace(/&amp;/g,'&')])));
  assert(imgs.length>=(game?2:6),`${where}: pictures`);
  for(const i of imgs){assert(i.src.startsWith('/games/')&&fs.existsSync(pub(i.src)),`${where}: ${i.src} exists`);const s=size(pub(i.src));
-  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:'/games/clips/hero.webp')),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
+  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:'/games/clips/match.webp'/* Nov 20 2026: the island's beach match leads the hub */)),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
  assert.equal(new Set(imgs.map(i=>i.alt)).size,imgs.length,`${where}: every alt text is its own`);
  // links
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1].replace(/&amp;/g,'&'));
@@ -118,8 +118,9 @@ function check(p,meta,el,game){
   assert(l.startsWith('/'),`${where}: ${l} is an internal link`);assert(PATHS.has(l.split('#')[0])||l==='/safe-football-game-for-kids',`${where}: link target ${l} exists`);}
  /* Nov 20 2026 (SEO foundation, owner approved): the gold buttons still open the game; a game page also has ONE plain text link
     "Play the whole island" to /play in its content (the hub has none). */
- assert(!/class="[^"]*cta[^"]*"[^>]*href="\/play"|href="\/play"[^>]*class="[^"]*cta/.test(h),`${where}: the buttons open the games, not the island`);
- {const n=links.filter(l=>l==='/play').length,isGame=PAGES.some(g=>g.path===where);assert.equal(n,isGame?1:0,`${where}: ${isGame?'one':'no'} text link to the island`);if(isGame)assert(/<a href="\/play" data-island-link="">Play the whole island<\/a>/.test(h),`${where}: the island link says what it is`);}
+ {const toIsland=(h.match(/<a [^>]*href="\/play"[^>]*>/g)||[]).filter(a=>/class="[^"]*cta/.test(a));/* Nov 20 2026 (owner): the hub leads with Futbol Island, so its one island button goes to /play; a game page's buttons open its game */
+  if(game)assert(!toIsland.length,`${where}: the buttons open the games, not the island`);else assert(toIsland.length===1&&/data-play="island"/.test(toIsland[0]),`${where}: one button opens the island (the lead), the rest open games`);}
+ {const n=links.filter(l=>l==='/play').length,isGame=PAGES.some(g=>g.path===where);assert.equal(n,1,`${where}: one link to the island (a game page's text link; the hub's lead button, Nov 20 2026)`);if(isGame)assert(/<a href="\/play" data-island-link="">Play the whole island<\/a>/.test(h),`${where}: the island link says what it is`);}
  return {h,t,ld,links,by};
 }
 {const r=check(ALL[0],hubMod.metadata,React.createElement(hubMod.default),null);

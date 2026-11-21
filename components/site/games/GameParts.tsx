@@ -3,7 +3,7 @@ import {allShots,GAME_NAMES,GAMES_NAMES,type GamePage,type GameShot} from '@/lib
 import {gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
 import {watchPathFor} from '@/lib/site/videos';
-import type {Crumb} from '@/lib/site/seo';
+import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import g from './games.module.css';
 /**
@@ -45,9 +45,11 @@ export function Shots({game}:{game:GamePage}){
   <div className={`${g.strip}${wide?' '+g.stripWide:''}`}>{shots.map(s=><Shot key={s.src} s={s}/>)}</div>
  </div></div>;
 }
-/** The hub's block for one game: its clip (hover or tap to play), what kind of game it is, what it teaches, three stills, links. */
+/** The hub's block for one game (Nov 20 2026, owner: "each game should have 4 smaller ones and one large video"): its clip (hover
+ * or tap to play), its name, kind, what it teaches and the Play link together at the top, then up to four stills in one row that
+ * fills its column (3 or 4, never an empty slot). Layout per width in games.module.css (.feature). */
 export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
- const c=gameClip(game.id),kind=game.h1.split(':')[0],stills=gameStills(game.id,3);
+ const c=gameClip(game.id),kind=game.h1.split(':')[0],stills=gameStills(game.id,4);
  const wide=(c?c.pw:game.shots[0].w)>(c?c.ph:game.shots[0].h);
  return <li className={`${g.feature}${flip?' '+g.flip:''}${wide?' '+g.featureWide:''}`}>
   <div className={g.featureMedia}>{c?<ClipFigure c={c}/>:<Shot s={game.shots[0]}/>}</div>
@@ -55,16 +57,30 @@ export function GameFeature({game,flip}:{game:GamePage;flip?:boolean}){
    <h3 className={g.featureName}><a href={game.path}>{game.name}</a></h3>
    <span className={g.gameKind}>{kind}</span>
    <p>{game.blurb}. It teaches {game.skill[0].toLowerCase()+game.skill.slice(1)}.</p>
-   {stills.length>0&&<ul className={g.thumbs} aria-label={`More pictures of ${game.name}`}>{stills.map(s=><li key={s.src}>
-    {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img src={s.src} alt={s.alt} width={s.w} height={s.h} loading="lazy" decoding="async"/></li>)}</ul>}
    <span className={g.gameLinks}><a className={g.playNow} href={game.play}>Play {game.name}</a><a href={game.path}>How to play</a></span>
   </div>
+  {stills.length>0&&<ul className={g.thumbs} aria-label={`More pictures of ${game.name}`}>{stills.map(s=><li key={s.src}>
+   {/* eslint-disable-next-line @next/next/no-img-element */}
+   <img src={s.src} alt={s.alt} width={s.w} height={s.h} loading="lazy" decoding="async"/></li>)}</ul>}
  </li>;
 }
+/** The top of /games (Nov 20 2026, owner: "a page for games that features futbol island as the primary game and the arcade games
+ * below that"): the island game itself, with its beach match clip, two plain lines and the page's biggest Play button (/play). */
+export const ISLAND_FEATURE_KEY='match';
+export function IslandFeature({title,lines,play}:{title:string;lines:readonly string[];play:string}){
+ const c=islandClips().find(x=>x.key===ISLAND_FEATURE_KEY);
+ return <section className={`${g.island} ${g.bleed}`} aria-labelledby="island-game" data-island-feature="">
+  <div className={g.islandMedia}>{c?<ClipFigure c={c} auto priority/>:<Shot s={islandStills()[0]}/>}</div>
+  <div className={g.islandWords}>
+   <h2 className={g.islandName} id="island-game">{title}</h2>
+   {lines.map(x=><p key={x}>{x}</p>)}
+   <a className={`${site.cta} ${g.islandPlay}`} href={PLAY_PATH} data-play="island">{play}</a>
+  </div>
+ </section>;
+}
 /** "Inside the island": the island game's clips and stills in one row that swipes sideways (scroll snap, no script). */
-export function IslandGallery(){
- const clips=islandClips(),stills=islandStills();
+export function IslandGallery({skip}:{skip?:string}={}){
+ const clips=islandClips().filter(c=>c.key!==skip),stills=islandStills();
  const items:({c:GameClip}|{s:GameShot})[]=[];clips.forEach((c,i)=>{items.push({c});if(stills[i])items.push({s:stills[i]});});
  stills.slice(clips.length).forEach(s=>items.push({s}));
  return <ul className={g.gallery} aria-label="Pictures and clips from the island">
