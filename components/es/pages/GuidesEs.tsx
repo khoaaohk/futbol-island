@@ -1,4 +1,5 @@
 import JsonLd from '@/components/seo/JsonLd';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {anchor,guideRail,hubRail,sec} from '@/lib/site/railNavMore';
@@ -126,7 +127,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   </QA>
   <EsCoachNotes name={r.name} notes={r.notes}/>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/>
-  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(r.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(r.path)},{id:'related',links:related}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(r.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(r.path)},{id:'related',links:related}],r.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.rules} lessonId={r.cta?.id}/>
   <EsReadNext order={esOrder('rules')} path={r.esPath}/>
  </>;
@@ -184,7 +185,7 @@ export function TermEsPage({t}:{t:EsTerm}){
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/>
-  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(t.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(t.path)},{id:'related',links:related}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(t.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(t.path)},{id:'related',links:related}],t.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.terms} lessonId={t.cta?.id}/>
   <EsReadNext order={esOrder('terms')} path={t.esPath}/>
  </>;
@@ -257,11 +258,11 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <EsCoachNotes name={p.name} notes={p.notes}/>
   <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>
   {/* batch 3, Nov 17 2026: as English, one "Sigue leyendo" grid (every link kept) */}
-  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
+  <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
    {id:'formations',label:'Formación',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]:[]},
    {id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(p.path)},
    {id:'compare',label:'Comparar',icon:'swap',links:compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
-   {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}]}/>
+   {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}],p.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>
   <EsReadNext order={esOrder('positions')} path={p.esPath}/>
  </>;

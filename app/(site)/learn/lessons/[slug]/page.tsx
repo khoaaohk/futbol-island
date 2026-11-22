@@ -8,6 +8,7 @@ import {QA} from '@/components/site/LessonHub';
 import {hubsFor,SAFE_GUIDE} from '@/lib/site/hubs';
 import {guidesForLesson} from '@/lib/site/guides';
 import {lessonSiblings} from '@/lib/site/related';
+import {meshLinks} from '@/lib/site/mesh';
 import {HUB_COMMON_FAQ,SAFE_TRUST_LINE} from '@/lib/site/safety';
 import {LESSON_DATA_UPDATED,SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {formatPhrase,LESSONS,lessonById,lessonDescription,lessonPath,lessonTitle} from '@/lib/site/lessons';
@@ -33,7 +34,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
  const l=lessonById(params.slug);if(!l)notFound();
  const crumbs=libraryCrumbs({name:'Lessons',path:'/learn/lessons'},{name:l.title,path:lessonPath(l.id)});/* Nov 20 2026: through the Library *//* no /learn crumb: it redirects to / */
  const guides=guidesForLesson(l.id);/* formations and positions pages that teach from this lesson (lib/site/guides.ts) */
- const sib=lessonSiblings(l),hubs=hubsFor(l.id),faq=[{q:'How do I play this lesson?',a:'Open Futbol Island at futbolisland.app/play and start an island or continue with a save code. In the game, a coach voice shows each idea on a pitch with moving players, step by step, and a quick quiz checks it.'},...HUB_COMMON_FAQ];
+ const sib=lessonSiblings(l),hubs=hubsFor(l.id),mesh=meshLinks(lessonPath(l.id),{skip:[...[...sib.same,sib.prev,sib.next].map(x=>lessonPath(x.id)),...hubs.map(h=>h.path),...guides.map(g=>g.path)]}),faq=[{q:'How do I play this lesson?',a:'Open Futbol Island at futbolisland.app/play and start an island or continue with a save code. In the game, a coach voice shows each idea on a pitch with moving players, step by step, and a quick quiz checks it.'},...HUB_COMMON_FAQ];
  return <>
   <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -57,7 +58,9 @@ export default function LessonPage({params}:{params:{slug:string}}){
   </section>}
   {/* Nov 14 2026 (seo-boost): sibling lessons (lib/site/related.ts lessonSiblings), so every lesson links to its neighbours. */}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">Keep going: {sib.groupName}</h2>
-   <ul className={styles.list}>{[...sib.same.map(x=>({x,tag:''})),{x:sib.prev,tag:'Previous lesson · '},{x:sib.next,tag:'Next lesson · '}].map(({x,tag})=><li key={x.id}><a href={lessonPath(x.id)}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}</ul>
+   <ul className={styles.list}>{[...sib.same.map(x=>({x,tag:''})),{x:sib.prev,tag:'Previous lesson · '},{x:sib.next,tag:'Next lesson · '}].map(({x,tag})=><li key={x.id}><a href={lessonPath(x.id)}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}
+    {/* Nov 21 2026 (linking mesh, lib/site/mesh.ts): the closest other lessons and 2-3 guide pages on the same idea */}
+    {mesh.map(m=><li key={m.path}><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
   </section>
   {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">More lessons like this</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span></a></li>)}</ul>

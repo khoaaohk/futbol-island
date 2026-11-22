@@ -1,4 +1,5 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -66,7 +67,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
     <DrillList items={p.drills.map(d=>({drill:d,line:drillLine(d)}))}/>
    </Section>
    <QA id="faq" title={`Questions about this ${p.age} practice`} faq={p.faq}/>
-   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},{id:'related',links:related}]}/>
+   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},{id:'related',links:related}],p.path)}/>
    <p className={styles.caption}>{GUIDE_FOOT}</p>
    <CheckedLine date={FAMILY_CHECKED.plans}/>
    <PlayEnd/>

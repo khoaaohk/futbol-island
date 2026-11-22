@@ -1,4 +1,5 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {drillGuideRail,guideRail} from '@/lib/site/railNavMore';
@@ -67,7 +68,7 @@ function DrillPage({d}:{d:Drill}){
   {d.home&&<Section id="home" title="Do it at home"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Questions about ${d.name}`} faq={d.faq}/>
   {/* batch 3, Nov 17 2026: lessons and related drills and guides as one "Keep reading" row */}
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(d.lessons)},{id:'related',links:related}]}/>
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(d.lessons)},{id:'related',links:related}],d.path)}/>
   <GuideEnd path={d.path} checked={FAMILY_CHECKED.drills} lesson={d.cta}/>
   <ReadNext path={d.path}/>
  </>;
@@ -95,7 +96,7 @@ function GuidePage({g}:{g:DrillGuide}){
   {sections(g.after)}
   {plans.length>0&&<Section id="plans" title={`${g.age} practice plans`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Questions about ${g.kind==='age'?g.name:g.name.toLowerCase()}`} faq={g.faq}/>
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(g.lessons)},{id:'related',links:[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}]}/>
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(g.lessons)},{id:'related',links:[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}],g.path)}/>
   <GuideEnd path={g.path} checked={FAMILY_CHECKED.drills} lesson={g.lessons[0]}/>
   <ReadNext path={g.path}/>
  </>;

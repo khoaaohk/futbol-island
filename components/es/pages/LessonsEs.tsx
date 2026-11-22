@@ -5,6 +5,7 @@ import {playLessonHref} from '@/lib/site/playLinks';
 import {hubsFor,HUBS} from '@/lib/site/hubs';
 import {guidesForLesson} from '@/lib/site/guides';
 import {lessonSiblings} from '@/lib/site/related';
+import {meshLinks} from '@/lib/site/mesh';
 import {LESSON_DATA_UPDATED,SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {abs,breadcrumbLd,faqLd,PLAY_PATH,SITE_NAME} from '@/lib/site/seo';
 import {lessonLd} from '@/lib/site/learningLd';
@@ -58,6 +59,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
  const fw=fmtWord(l.formatLabel),group=l.categoryEs?`Más lecciones de ${l.categoryEs.toLowerCase()} en ${fw}`:l.chapterEs?`Más lecciones de ${fw}: ${l.chapterEs.toLowerCase()}`:`Más lecciones de ${fw}`;
  const hubs=hubsFor(l.id).map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  const guides=guidesForLesson(l.id).map(g=>guideLinkEs(g.path)).filter((x):x is NonNullable<typeof x>=>!!x);
+ const mesh=meshLinks(lessonPath(l.id),{lang:'es',skip:[...[...sib.same,sib.prev,sib.next].map(x=>lessonPath(x.id)),...hubs.map(h=>h.path),...guides.map(g=>g.path)]});
  return <>
   <JsonLd data={esLd(lessonLd({name:l.title,path:l.esPath,description:l.concept,teaches:l.concept,level:l.difficulty,about:formatPhraseEs(l.formatLabel),
    keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
@@ -81,7 +83,9 @@ export function LessonEsPage({l}:{l:EsLesson}){
    <QuizCards lang="es" questions={l.questions}/>
   </section>}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">{group}</h2>
-   <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}</ul>
+   <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}
+    {/* Nov 21 2026 (linking mesh, lib/site/mesh.ts): as English, in Spanish */}
+    {mesh.map(m=><li key={m.path}><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
   </section>
   {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">Más lecciones como esta</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.name}</span></a></li>)}</ul>

@@ -1,4 +1,5 @@
 import KeepReading from './KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import JsonLd from '@/components/seo/JsonLd';
 import {COMPARISONS_UPDATED,comparisonBySlug} from '@/lib/site/comparisons';
 import {guideCrumbs} from '@/lib/site/guides';
@@ -23,7 +24,7 @@ export default function ComparePage({slug}:{slug:string}){
   </Section>
   <Section id="fit" title="Which one fits?"><Bullets items={c.fit}/></Section>
   <Section id="switching" title="Switching between them"><Bullets items={c.switching}/></Section>
-  <KeepReading title="Read each one, and more" groups={[{id:'related',links:c.links}]}/>
+  <KeepReading title="Read each one, and more" groups={withMesh([{id:'related',links:c.links}],c.path)}/>
   <GuideEnd/>
  </>;
 }

@@ -1,4 +1,5 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {guideRail} from '@/lib/site/railNavMore';
@@ -69,7 +70,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related terms as one "Keep reading" row */}
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(t.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(t.path)},{id:'related',links:related}]}/>
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(t.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(t.path)},{id:'related',links:related}],t.path)}/>
   <GuideEnd path={t.path} checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
   <ReadNext path={t.path}/>
  </>;
