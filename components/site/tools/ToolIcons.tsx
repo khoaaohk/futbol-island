@@ -58,5 +58,8 @@ export function toolIconFor(path:string):{kind:ToolIconKind;badge?:GameBadge}{
  if(/positions-and-numbers$/.test(p))return {kind:'shirt',badge:'11v11'};
  if(/cheat-sheet$/.test(p))return {kind:'cheat',badge:f};
  if(/\/blank-/.test(p))return {kind:'blank',badge:f};
+ if(/soccer-match-timer$/.test(p))return {kind:'clock'};/* Nov 22 2026: the game-day and practice tools */
+ if(/tournament-schedule-maker$/.test(p))return {kind:'rotation'};
+ if(/soccer-beep-test$/.test(p))return {kind:'whistle'};
  return {kind:'diagram'};
 }

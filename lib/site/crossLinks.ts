@@ -92,6 +92,16 @@ const toolLink=(k:ToolKey):XLink=>{const t=tool(k);return {path:t.path,name:t.na
 const topic=(key:string):XLink=>key.startsWith('t:')?termLink(key.slice(2)):key.startsWith('r:')?ruleLink(key.slice(2)):toolLink(key.slice(5) as ToolKey);
 const uniq=<T extends {path:string}>(l:T[],self?:string)=>l.filter((x,i,a)=>x.path!==self&&a.findIndex(y=>y.path===x.path)===i);
 
+/* Nov 22 2026: the game-day and practice tools (lib/site/tools/newTools.ts), linked from the rule and glossary pages about game time
+   and effort. Keyed by the page's path; the target must be a tool page (checked below). */
+const TM='/learn/soccer-terms/';
+const EXTRA_TOOLS:Record<string,string[]>={
+ [R+'substitutions-and-game-length']:['/tools/soccer-match-timer'],[R+'kick-off']:['/tools/soccer-match-timer'],
+ [TM+'stoppage-time']:['/tools/soccer-match-timer'],[TM+'extra-time']:['/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker'],
+ [TM+'penalty-shoot-out']:['/tools/soccer-tournament-schedule-maker'],[TM+'box-to-box']:['/tools/soccer-beep-test'],[TM+'pressing']:['/tools/soccer-beep-test'],
+};
+const extraLink=(path:string):XLink=>{const t=TOOL_PAGES.find(x=>x.path===path);if(!t)throw new Error(`crossLinks: tool ${path} does not exist`);return {path:t.path,name:t.name,line:t.blurb};};
+Object.values(EXTRA_TOOLS).flat().forEach(extraLink);
 /* Checked at load: every rule and term has a row, and every slug in a row is a real page. */
 for(const r of RULES){const row=RULE_LINKS[r.slug];if(!row)throw new Error(`crossLinks: rule ${r.slug} has no row`);tool(row.tool);row.terms.forEach(term);(row.rules??[]).forEach(rule);}
 for(const t of TERM_PAGES){const row=TERM_RULES[t.slug];if(!row||row.length===0)throw new Error(`crossLinks: term ${t.slug} has no rule`);row.forEach(rule);}
@@ -100,12 +110,12 @@ Object.values(TERM_TOOL).forEach(tool);Object.values(ROLE_TOPICS).flat().forEach
 /** A rule page's links out of its cluster: its coach tool, its terms, a sister rule. */
 export function ruleCrossLinks(slug:string):XLink[]{
  const row=RULE_LINKS[slug];if(!row)return [];
- return uniq([toolLink(row.tool),...row.terms.map(termLink),...(row.rules??[]).map(ruleLink)],R+slug);
+ return uniq([toolLink(row.tool),...(EXTRA_TOOLS[R+slug]??[]).map(extraLink),...row.terms.map(termLink),...(row.rules??[]).map(ruleLink)],R+slug);
 }
 /** A term page's links out of its cluster: its rule (or two) and, for words about shape or game time, a coach tool. */
 export function termCrossLinks(slug:string):XLink[]{
  const rules=TERM_RULES[slug]??[],t=TERM_TOOL[slug];
- return uniq([...rules.map(ruleLink),...(t?[toolLink(t)]:[])]);
+ return uniq([...rules.map(ruleLink),...(t?[toolLink(t)]:[]),...(EXTRA_TOOLS[TM+slug]??[]).map(extraLink)]);
 }
 /** Two topic pages for a card, by its role and number. */
 export function cardTopicLinks(c:Pick<SiteCard,'role'|'number'>):XLink[]{

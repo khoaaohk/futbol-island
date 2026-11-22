@@ -40,10 +40,11 @@ const text=h=>h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[
 // ---- 1. registry, sitemap, metadata ---------------------------------------------------------------------------------------
 const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder',
  '/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',
- ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */];
+ ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */,
+ '/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker','/tools/soccer-beep-test'/* Nov 22 2026: game-day and practice tools (tests/new-tools-pages.cjs) */];
 assert.deepEqual(PAGES.map(p=>p.path),WANT,'the tool pages');
-assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams','/tools/soccer-scanning-trainer'],'hub-level pages');
-const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,'/tools/soccer-scanning-trainer.png',...(fs.existsSync(path.join(root,'public/tools/soccer-playing-time-calculator.png'))?['/tools/soccer-playing-time-calculator.png']:[])/* Nov 20 2026: the calculator's real screenshot */]/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
+assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams','/tools/soccer-scanning-trainer','/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker','/tools/soccer-beep-test'],'hub-level pages');
+const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,'/tools/soccer-scanning-trainer.png','/tools/soccer-match-timer.png','/tools/soccer-tournament-schedule-maker.png','/tools/soccer-beep-test.png',...(fs.existsSync(path.join(root,'public/tools/soccer-playing-time-calculator.png'))?['/tools/soccer-playing-time-calculator.png']:[])/* Nov 20 2026: the calculator's real screenshot */]/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
 {const all=[...guides.ALL_GUIDE_PAGES,...PAGES];
  assert.equal(new Set(all.map(p=>p.title)).size,all.length,'titles are unique across guides and tools');assert.equal(new Set(all.map(p=>p.description)).size,all.length,'descriptions are unique');}
 for(const p of PAGES){
@@ -52,11 +53,11 @@ for(const p of PAGES){
  assert(/soccer|futsal/i.test(p.title)&&/soccer|futsal/i.test(p.name),`${p.path}: says soccer (or futsal) in the title and h1`);
  assert(p.blurb&&p.image&&SERVED.has(p.image),`${p.path}: a blurb and a picture that exists (${p.image})`);
 }
-const file=p=>p.path===reg.TOOLS_PATH?`${T}/page.tsx`:p.kind==='printables'?`${T}/soccer-field-diagrams/page.tsx`:p.kind==='printable'?`${T}/soccer-field-diagrams/[sheet]/page.tsx`:p.kind==='scan'?`${T}/soccer-scanning-trainer/page.tsx`:`${T}/[slug]/page.tsx`;
+const file=p=>p.path===reg.TOOLS_PATH?`${T}/page.tsx`:p.kind==='printables'?`${T}/soccer-field-diagrams/page.tsx`:p.kind==='printable'?`${T}/soccer-field-diagrams/[sheet]/page.tsx`:p.kind==='scan'?`${T}/soccer-scanning-trainer/page.tsx`:['timer','schedule','beep'].includes(p.kind)?`${T}/${p.path.split('/').pop()}/page.tsx`:`${T}/[slug]/page.tsx`;
 const params=p=>p.kind==='printable'?{sheet:p.path.split('/').pop()}:{slug:p.path.split('/').pop()};
 for(const f of new Set(PAGES.map(file))){const s=read(f);assert(/export const dynamic='force-static';/.test(s),`${f} is force-static`);if(/\[/.test(f))assert(/dynamicParams=false/.test(s)&&/generateStaticParams/.test(s),`${f}: unknown slugs 404`);}
 assert.deepEqual(L(`${T}/[slug]/page.tsx`).generateStaticParams().map(x=>x.slug),WANT.slice(1,9).map(p=>p.split('/').pop()),'tool slugs');
-assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(10,-1).map(p=>p.split('/').pop()),'printable slugs');
+assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(10,-4).map(p=>p.split('/').pop()),'printable slugs');
 
 // ---- 2. rendered pages ----------------------------------------------------------------------------------------------------
 const html=new Map(),paraPages=new Map();let words=0;
@@ -93,7 +94,7 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
  assert.equal(new Set(h.match(/ id="[^"]+"/g)||[]).size,(h.match(/ id="[^"]+"/g)||[]).length,`${where}: unique ids`);
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one gold button`);assert(!/IslandBrush/.test(h));
  /* Nov 20 2026: the calculator's Sources list links its official pages (registry PLANNER_SOURCES); every other link is internal */
- const SRC=new Set(reg.PLANNER_SOURCES.map(x=>x.url));if(p.path===reg.PLANNER_PATH)for(const u of SRC)assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
+ const NEWT=L('lib/site/tools/newTools.ts').NEW_TOOLS_EN,mine=NEWT.find(t=>`/tools/${t.slug}`===p.path),SRC=new Set((mine?mine.sources:reg.PLANNER_SOURCES).map(x=>x.url));if(p.path===reg.PLANNER_PATH||mine)for(const u of SRC)assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]).filter(l=>!SRC.has(l)&&!l.startsWith('#'));assert(links.length>=8,`${where}: links`);
  /* Nov 20 2026 night (owner: "it should list what's on that page to smooth scroll down"): the side nav's in-page links (#top, #faq...) are not
     page links; each must land on an id on this page */

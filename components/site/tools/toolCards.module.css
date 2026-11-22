@@ -6,6 +6,7 @@ ul.cards.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-col
 ul.cards[data-tint="time"]{--card:#f5ecd4;--card-hover:#efe2c0;--tile:#f4d68a}
 ul.cards[data-tint="practice"]{--card:#e1edf0;--card-hover:#d3e5ea;--tile:#bcdde9}
 ul.cards[data-tint="print"]{--card:#f1eadc;--card-hover:#e9dfcb;--tile:#e6d8bb}
+ul.cards[data-tint="gameday"]{--card:#e9e6f2;--card-hover:#dedaec;--tile:#cdc6e4}/* Nov 22 2026: timer, tournaments, fitness */
 ul.cards.cards>li{max-width:none;display:flex;min-width:0}
 
 ul.cards .card{flex:1;display:grid;grid-template-columns:56px minmax(0,1fr);align-items:center;gap:14px;min-height:var(--tap,44px);

@@ -51,6 +51,7 @@ const HEAD={path:'/learn/soccer-rules/heading-rules-for-kids',name:'Heading rule
 const F7={path:'/learn/7v7-soccer-formations',name:'7v7 soccer formations',line:'Shapes for U9 and U10 teams'};
 const F9={path:'/learn/9v9-soccer-formations',name:'9v9 soccer formations',line:'Shapes for U11 and U12 teams'};
 const F11={path:'/learn/11v11-soccer-formations',name:'11v11 soccer formations',line:'Shapes for the full game'};
+const TIMER={path:'/tools/soccer-match-timer',name:'Soccer match timer and scoreboard',line:'A game clock with the halves or quarters of each age group'};/* Nov 22 2026 */
 const FUTSAL={path:'/learn/soccer-rules/futsal-rules',name:'Futsal rules that differ from soccer',line:'A smaller ball, a smaller court'};
 
 /** The 2026-27 birth-date range of age group U<n> on the August 1 to July 31 cycle (US Club Soccer: U-6 = Aug 1 2020 to Jul 31 2021). */
@@ -116,7 +117,7 @@ export const CHARTS:readonly ChartPage[]=[
    {q:'How big is a full-size soccer field?',a:'The Laws of the Game allow 100 to 130 yards long and 50 to 100 yards wide. For international games the range is 110 to 120 yards by 70 to 80 yards.'},
    {q:'How big is a U8 soccer field?',a:'In the U.S. Soccer standards, U6 to U8 teams play 4v4 on a field 25 to 35 yards long and 15 to 25 yards wide, with goals no bigger than 4 feet by 6 feet.'},
    {q:'How big is a soccer goal?',a:'A full-size goal is 8 yards wide and 8 feet high. Youth goals are smaller: at most 4 x 6 feet for 4v4, 6.5 x 18.5 feet for 7v7 and 7 x 21 feet for 9v9.'}],
-  lessons:pick(['learn7_shape','prn_7_spread','learn9_shape','learn11_shape']),links:[BALL,AGES,BUILD,F7,F9,F11],
+  lessons:pick(['learn7_shape','prn_7_spread','learn9_shape','learn11_shape']),links:[BALL,AGES,BUILD,F7,F9,F11,TIMER],
   picture:'soccer-field-size-by-age-chart.png',pictureTitle:'Soccer field size by age',pictureSub:'4v4, 7v7, 9v9 and 11v11 fields in yards'},
 
  {slug:'soccer-age-groups',path:AGES.path,crumb:'Age groups',blurb:'U6 to U19 explained: birth dates for each group and which game it plays',
@@ -142,7 +143,7 @@ export const CHARTS:readonly ChartPage[]=[
    {q:'When do kids start playing 11v11?',a:'At U13 in the U.S. Soccer standards. Before that, children play 4v4, then 7v7 at U9 and U10, then 9v9 at U11 and U12.'},
    {q:'Did soccer age groups change for 2026?',a:`Yes. US Youth Soccer, US Club Soccer and AYSO moved from calendar-year groups to an August 1 to July 31 cycle, starting with the ${SIZES_SEASON} season.`},
    {q:'Can my child play in an older age group?',a:'Usually yes, if the club and the league agree. This is called playing up. Rules such as no heading at age 10 and under still follow the child’s own age in US Youth Soccer.'}],
-  lessons:pick(['learn7_roles','learn9_shape','learn11_shape','learnf_roles31']),links:[BALL,FIELD,TIME,HEAD,F7,F9,F11,RULES],
+  lessons:pick(['learn7_roles','learn9_shape','learn11_shape','learnf_roles31']),links:[BALL,FIELD,TIME,HEAD,F7,F9,F11,RULES,TIMER],
   picture:'soccer-age-groups-chart.png',pictureTitle:'Soccer age groups',pictureSub:`U6 to U19 for the ${SIZES_SEASON} season`},
 ];
 export const chartBySlug=(slug:string)=>CHARTS.find(c=>c.slug===slug);

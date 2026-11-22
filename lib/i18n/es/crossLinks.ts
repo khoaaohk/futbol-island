@@ -4,6 +4,7 @@ import {PRINTABLES_HUB_PATH,PRINT_FILES} from '@/lib/site/tools/printables';
 import {hasEs,toEs} from '../esPaths';
 import {ES_RULES,ES_TERMS} from './registry';
 import {LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_HUB_ES} from './tools';
+import {NEW_TOOLS_ES} from './newTools';
 /**
  * The cross-cluster links of lib/site/crossLinks.ts on the Spanish pages (SEO leftovers, Nov 20 2026). The English tables stay
  * the one source: each English link is swapped for its Spanish page, with the words of that Spanish page's own record (its h1,
@@ -16,6 +17,7 @@ function esCross(x:XLink):XLink|null{
  const t=ES_TERMS().find(y=>y.path===x.path);if(t)return {path:t.esPath,name:`${t.name} (término de fútbol)`,line:t.short};
  const l=LINEUP_PAGES.find(y=>y.path===x.path),le=l&&LINEUP_PAGES_ES[l.slug];if(le)return {path:toEs(x.path),name:le.h1,line:le.blurb};
  const p=PLANNER_PAGES.find(y=>y.path===x.path),pe=p&&PLANNER_PAGES_ES[p.slug];if(pe)return {path:toEs(x.path),name:pe.h1,line:pe.blurb};
+ const nt=NEW_TOOLS_ES[x.path.replace('/tools/','')];if(nt&&x.path.startsWith('/tools/'))return {path:toEs(x.path),name:nt.h1,line:nt.blurb};/* Nov 22 2026 */
  if(x.path===PRINTABLES_HUB_PATH){const h=PRINTABLES_HUB_ES(PRINT_FILES.length);return {path:toEs(x.path),name:h.h1,line:h.blurb};}
  return null;
 }

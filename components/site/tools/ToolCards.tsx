@@ -7,7 +7,7 @@
 import {ToolIcon,toolIconFor} from './ToolIcons';
 import styles from './toolCards.module.css';
 
-export type CardTint='lineups'|'time'|'practice'|'print';
+export type CardTint='lineups'|'time'|'practice'|'print'|'gameday';
 export function ToolCards({links,tint}:{links:readonly {path:string;name:string;line?:string}[];tint:CardTint}){
  return <ul className={styles.cards} data-tint={tint} data-tool-cards="">{links.map(l=>{const {kind,badge}=toolIconFor(l.path);
   return <li key={l.path}><a className={styles.card} href={l.path} data-tool-card={kind}>

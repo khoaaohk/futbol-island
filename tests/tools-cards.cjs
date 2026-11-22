@@ -28,8 +28,8 @@ const es=renderToStaticMarkup(L('components/es/pages/ToolsEs.tsx').toolsEsRoute(
 
 function check(h,lang,prefix){
  const lists=[...h.matchAll(/<ul[^>]*data-tool-cards=""[^>]*>([\s\S]*?)<\/ul>/g)];
- assert.equal(lists.length,4,`${lang}: four card groups`);
- assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['lineups','time','practice','print'],`${lang}: each group has its own tint`);
+ assert.equal(lists.length,5,`${lang}: five card groups (Nov 22 2026: + timer, tournaments, fitness)`);
+ assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['lineups','time','practice','gameday','print'],`${lang}: each group has its own tint`);
  const cards=[...h.matchAll(/<a [^>]*data-tool-card="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
  const hrefs=cards.map(m=>/href="([^"]+)"/.exec(m[0])[1]);
  const want=[...reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path),prefix?'/coach?lang=es':'/coach'];/* + the coach app (Nov 17) */

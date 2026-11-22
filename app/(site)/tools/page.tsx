@@ -9,6 +9,7 @@ import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {PRINTABLES} from '@/lib/site/tools/printables';
 import {LINEUP_PAGES,PLANNER_PAGES,PRINTABLES_HUB,PRIVACY_LINE,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,toolCrumbs} from '@/lib/site/tools/registry';
 import {SCAN_EN,SCAN_PATH} from '@/lib/site/tools/scanTrainer';
+import {NEW_TOOLS_EN,newToolPath} from '@/lib/site/tools/newTools';
 
 /** /tools (lib/site/tools/registry.ts): every free coach tool and printable, in four groups of cards (components/site/tools/ToolCards.tsx). Static, no client code. */
 export const dynamic='force-static';
@@ -35,6 +36,10 @@ export default function ToolsHub(){
   <Section id="practice" title="Apps for practice and match day">
    <p>Two phone apps for the field: a scanning trainer that flashes colors, numbers, arrows and passes so players look over the shoulder, and a coach app with the lineup and a live substitution clock.</p>
    <ToolCards links={[{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb},{path:'/coach',name:'Coach app for match day',line:'Lineup and a live substitution clock on your phone; works offline, no account'}]} tint="practice"/>
+  </Section>
+  <Section id="game-day" title="Match timer, tournaments and fitness">
+   <p>A big game clock and scoreboard with halves set by age group, a round robin schedule maker for festivals and tournaments, and a beep test with a gentler version for children. Each works offline in your browser, and what you type stays on your device.</p>
+   <ToolCards links={NEW_TOOLS_EN.map(t=>({path:newToolPath(t.slug),name:cap(t.h1),line:t.blurb}))} tint="gameday"/>
   </Section>
   <Section id="printables" title="Printable field diagrams and cheat sheets">
    <p>Blank fields to draw on, every formation of a game on one page, and the positions with their numbers. Free to print and share for teams, clubs and schools.</p>
