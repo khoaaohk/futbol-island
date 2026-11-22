@@ -39,7 +39,7 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
  const [awake,setAwake]=useState(true);
  const [now,setNow]=useState(0);
  const [flash,setFlash]=useState(0);
- const board=useRef<HTMLElement|null>(null),audio=useRef<AudioContext|null>(null),last=useRef(0),release=useRef<()=>void>(()=>{}),loaded=useRef(false),whistled=useRef(-1);
+ const board=useRef<HTMLElement|null>(null),audio=useRef<AudioContext|null>(null),last=useRef(-1),release=useRef<()=>void>(()=>{}),loaded=useRef(false),whistled=useRef(-1);
  /* read the saved game once, after the first paint (the server renders the default) */
  useEffect(()=>{const v=store.get<Saved>(KEY);const c=v?readClock(v.clock):null;
   if(v&&c){setClock(c);setNames([String(v.names?.[0]??w.home).slice(0,24),String(v.names?.[1]??w.away).slice(0,24)]);setSound(!!v.sound);setAwake(v.awake!==false);setEdited(!!v.edited);if(presets.some(p=>p.id===v.preset)||v.preset==='custom')setPreset(v.preset);}
@@ -67,7 +67,7 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
  const played=clock.phase==='running'?elapsed(clock,now):clock.banked;
  useEffect(()=>{
   if(clock.phase!=='running'){last.current=played;return;}
-  const from=last.current;last.current=played;if(played<from)return;
+  const from=last.current;last.current=played;if(from<0||now===0||played<from)return;/* the first reading (a page load mid-game) beeps nothing */
   const subs=crossed(subMarks(clock.setup).map(m=>m*MIN),from,played),end=periodLength(clock);
   if(subs.length){setFlash(f=>f+1);if(sound&&audio.current)doubleBeep(audio.current);}
   if(from<end&&played>=end&&whistled.current!==clock.period){whistled.current=clock.period;setFlash(f=>f+1);if(sound&&audio.current)whistle(audio.current);}

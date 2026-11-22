@@ -78,4 +78,16 @@ assert.deepEqual(R.parseTeams('Lions\n Tigers ,<b>Bears</b>\n\n'),['Lions','Tige
  a=B.at(S,bs,64);assert.deepEqual([a.level,a.shuttle],[2,1]);assert.equal(B.at(S,bs,1e6).done,true);
  assert.deepEqual(B.score(bs,0),{label:'0',level:0,shuttle:0,metres:0});const sc=B.score(bs,10);assert.equal(sc.label,'2.3');assert.equal(sc.metres,200);
  assert.equal(B.totalSec(S),bs[bs.length-1].t);assert.equal(B.levelsFor('kids'),K);}
+// ---- 4. page words: the Spanish twins match the English in shape ------------------------------------------------------------
+{const mods=new Map(),req=id=>{if(id.startsWith('@/')){const f=path.join(root,id.slice(2)+'.ts');if(!mods.has(f)){const m={};mods.set(f,m);new Function('exports','require',ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m,req);}return mods.get(f);}return require(id);};
+ const EN=req('@/lib/site/tools/newTools'),ES=req('@/lib/i18n/es/newTools');
+ assert.deepEqual(EN.NEW_TOOLS_EN.map(t=>t.slug),['soccer-match-timer','soccer-tournament-schedule-maker','soccer-beep-test']);
+ for(const e of EN.NEW_TOOLS_EN){const x=ES.NEW_TOOLS_ES[e.slug],w=e.slug;assert(x,`${w}: Spanish words`);
+  assert.deepEqual(x.sections.map(z=>[z.id,!!z.table,(z.paras??[]).length,(z.items??[]).length]),e.sections.map(z=>[z.id,!!z.table,(z.paras??[]).length,(z.items??[]).length]),`${w}: same sections`);
+  assert.equal(x.how.length,e.how.length,`${w}: same steps`);assert.equal(x.faq.length,e.faq.length,`${w}: same FAQ count`);assert(e.faq.length>=3&&e.faq.length<=5);
+  assert.deepEqual(x.sources.map(z=>z.url),e.sources.map(z=>z.url),`${w}: same sources`);assert.deepEqual(x.related.map(z=>z.path),e.related.map(z=>z.path),`${w}: same related pages`);
+  assert.equal(x.features.length,e.features.length,`${w}: same features`);
+  for(const k of ['title','h1','description','lead','blurb','crumb','imageAlt'])assert.notEqual(x[k],e[k],`${w}: ${k} is translated`);
+  assert(e.title.length>=30&&e.title.length<=60&&x.title.length<=66,`${w}: title lengths`);assert(e.description.length>=120&&e.description.length<=155&&x.description.length<=160,`${w}: description lengths`);
+  for(const s of e.sources)assert(/^https:\/\//.test(s.url)&&s.says.length>40,`${w}: a real source`);}}
 console.log('new-tools: ok');

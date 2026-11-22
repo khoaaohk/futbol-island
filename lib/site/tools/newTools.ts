@@ -2,7 +2,7 @@ import type {Faq} from '../safety';
 /**
  * Three game-day and practice tools (Nov 22 2026): a match timer and scoreboard, a round-robin tournament schedule maker and a
  * beep test for kids. The logic is pure (lib/site/tools/{matchTimer,roundRobin,beepTest}.ts, tests/new-tools.cjs); the page
- * words live here, the Spanish words in lib/i18n/es/newTools.ts with the same shape (tests/new-tools-pages.cjs checks they match).
+ * words live here, the Spanish words in lib/i18n/es/newTools.ts with the same shape (tests/new-tools.cjs checks they match).
  * Query targets: "soccer timer", "soccer scoreboard online", "youth soccer game clock"; "round robin schedule generator soccer",
  * "tournament schedule maker"; "beep test audio", "bleep test levels", "soccer fitness test for kids".
  * Facts and where they come from (every source is linked on its page):

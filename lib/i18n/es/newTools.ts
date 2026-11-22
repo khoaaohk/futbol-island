@@ -2,7 +2,7 @@ import type {NewToolWords,Source} from '@/lib/site/tools/newTools';
 import {BEEP_EN,SCHEDULE_EN,TIMER_EN} from '@/lib/site/tools/newTools';
 /**
  * Spanish words for the three game-day and practice tools (Nov 22 2026; lib/site/tools/newTools.ts has the English and the
- * sources). Same shape, section ids, FAQ count and source URLs as the English (tests/new-tools-pages.cjs checks it). `related`
+ * sources). Same shape, section ids, FAQ count and source URLs as the English (tests/new-tools.cjs checks it). `related`
  * paths are English paths; the Spanish page links their Spanish twins (every one has one).
  */
 const src=(en:Source,name:string,says:string):Source=>({name,url:en.url,says});

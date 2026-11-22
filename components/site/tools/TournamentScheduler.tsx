@@ -82,8 +82,8 @@ export default function TournamentScheduler({lang}:{lang?:'es'}){
   {teams.length>=2&&<section className={s.panel} aria-labelledby="rr-table">
    <h3 id="rr-table">{w.table}</h3>
    <div className={s.tableWrap}><table className={s.table} data-standings="">
-    <thead><tr>{w.head.map((h,i)=><th key={h} scope="col"><abbr title={w.headLong[i]} className={s.abbr}>{h}</abbr></th>)}</tr></thead>
-    <tbody>{table.map((r,i)=><tr key={r.team}><td>{i+1}</td><td>{r.name}</td><td>{r.p}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td><td>{r.gf}</td><td>{r.ga}</td><td>{r.gd>0?`+${r.gd}`:r.gd}</td><td>{r.pts}</td></tr>)}</tbody>
+    <thead><tr>{w.head.map((h,i)=><th key={h} scope="col" className={i===6||i===7?s.wideCol:undefined}><abbr title={w.headLong[i]} className={s.abbr}>{h}</abbr></th>)}</tr></thead>
+    <tbody>{table.map((r,i)=><tr key={r.team}><td>{i+1}</td><td>{r.name}</td><td>{r.p}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td><td className={s.wideCol}>{r.gf}</td><td className={s.wideCol}>{r.ga}</td><td>{r.gd>0?`+${r.gd}`:r.gd}</td><td>{r.pts}</td></tr>)}</tbody>
    </table></div>
    <div className={`${s.actions} ${s.noPrint}`}><button type="button" className={s.btn} onClick={()=>window.print()}>{w.print}</button><button type="button" className={`${s.btn} ${s.btnQuiet}`} onClick={copy}>{w.copy}</button>
     <button type="button" className={`${s.btn} ${s.btnQuiet}`} onClick={()=>{setScores({});setStatus(w.cleared);}}>{w.clear}</button></div>
