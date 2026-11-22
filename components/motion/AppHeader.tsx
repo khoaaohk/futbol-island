@@ -21,7 +21,12 @@ export function AppHeader({left,title,sub,lang,onLang,exitLabel,exitAria,exitDat
   </div>
  </header>;
 }
-/** The left slot's control, which never leaves the coach apps: a house and "Home" (the coach app's Home), or a back arrow inside an app. */
+/** The mini apps' left control (owner, Nov 22 2026): the game's gold Back, the same everywhere; back to the coach app's Home when it
+ *  opened this app, else to the page the coach came from. */
+export function HeaderGoldBack({lang,onBack,data}:{lang:'en'|'es';onBack:()=>void;data?:Record<string,string>}){
+ return <BackButton {...data} className={h.exit} label={lang==='es'?'Volver':'Back'} onBack={onBack}/>;
+}
+/** A light back control (inside an app: the scan summary back to its start screen). */
 export function HeaderBack({label,text,icon='home',onClick,data}:{label:string;text?:string;icon?:'home'|'back';onClick:()=>void;data?:Record<string,string>}){
  return <button type="button" className={`${h.back} ${text?h.backText:''}`} aria-label={label} onClick={onClick} {...data}>
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icon==='back'?'M14.5 6 8.5 12l6 6':'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5'}/></svg>{text&&<span>{text}</span>}</button>;

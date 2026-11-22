@@ -6,8 +6,8 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
 import c from './scan.module.css';
-import {AppHeader,HeaderBack} from '@/components/motion/AppHeader';
-import {coachHref,noteAppEntry,openedFromCoach,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
+import {AppHeader,HeaderBack,HeaderGoldBack} from '@/components/motion/AppHeader';
+import {miniBackHref,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
 import '@/components/motion/motion.css';
 /**
  * Scan Trainer (/scan and the club embed /embed/soccer-scanning-trainer; Nov 16 2026; docs/scan-trainer/HANDOFF.md).
@@ -229,10 +229,11 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  *  back arrow to the start screen, else "Coach" back to the coach app's Home when it opened the trainer (?from=coach); on the right the
  *  language and then Exit (back to the page the coach came from). The embed has no header buttons: the page that frames it is the way out. */
 function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
- const [fromCoach,setFromCoach]=useState(false);
- useEffect(()=>{setFromCoach(openedFromCoach());},[]);
- const left=embed?null:fromCoach?<HeaderBack label={lang==='es'?'Inicio de la app del entrenador':'Coach app Home'} text={lang==='es'?'Inicio':'Home'} onClick={()=>{window.location.assign(coachHref(lang));}} data={{'data-scan-coach':''}}/>
-  :onBack?<HeaderBack label={lang==='es'?'Volver':'Back'} text={lang==='es'?'Volver':'Back'} icon="back" onClick={onBack} data={{'data-scan-back':''}}/>:null;
+ const guide=lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer';
+ /* left: from the summary a light Back to the start screen; on the start screen the gold Back (the coach app's Home when it opened
+    the trainer, else the page the coach came from); no Exit in a mini app (owner, Nov 22 2026: Exit only on the coach app's Home) */
+ const left=embed?null:onBack?<HeaderBack label={lang==='es'?'Volver':'Back'} text={lang==='es'?'Volver':'Back'} icon="back" onClick={onBack} data={{'data-scan-back':''}}/>
+  :<HeaderGoldBack key="settings" lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,guide));}} data={{'data-scan-coach':''}}/>;
  void onLang;/* the language moved to the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
- return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-scan-exit':''}} exit={!embed} exitHome={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}/>;
+ return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria="" exit={false}/>;
 }

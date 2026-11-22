@@ -212,7 +212,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab}>
   {/* the shared header (components/motion/AppHeader): the title centred, the language and then Exit on the right */}
   {/* the language button only on Home (owner, Nov 22 2026); the choice is saved (fi-coach-v1) and the tools follow it */}
-  <AppHeader lang={lang} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
+  <AppHeader lang={lang} exit={tab==='home'} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
    /* the left slot stays empty (owner, Nov 22 2026): every coach screen shows the tab bar, whose Home tab is the one way home */
    title={TITLE(w,tab)} sub={tab==='home'&&team.name?team.name:<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">

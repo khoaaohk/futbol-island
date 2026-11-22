@@ -106,3 +106,5 @@ export const openedFromCoach=()=>{try{return new URLSearchParams(location.search
 /** Exit: the site page the coach came from, else the app's own guide page (`home`), else the tools hub. */
 export const exitHref=(lang:'en'|'es',home?:string)=>{try{const e=window.sessionStorage.getItem(ENTRY_KEY);if(e)return e;}catch{/* none */}return home??(lang==='es'?'/es/tools':'/tools');};
 export const coachHref=(lang:'en'|'es')=>lang==='es'?'/coach?lang=es':'/coach';
+/** A mini app's Back (/scan, /board): the coach app's Home when it opened this app, else the site page the coach came from, else the app's guide page. */
+export const miniBackHref=(lang:'en'|'es',guide:string)=>openedFromCoach()?coachHref(lang):exitHref(lang,guide);
