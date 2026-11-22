@@ -11,6 +11,7 @@ const page:BookPageSpec={
    {icon:'steps',label:'Olympic bronze',value:'2012, 2016'},
    {icon:'shirt',label:'Olympic gold',value:'2021, Tokyo'},
    {icon:'deck',label:'The book',value:'6 chapters, read aloud'},
+   {icon:'cards',label:'Same 2012 match',value:'Alex Morgan’s book',href:'/books/morgan'},
   ],
   faq:[
    {q:'When did Christine Sinclair start playing football?',a:'Christine was born in 1983 in Burnaby, in Canada, into a football family: her father and two of her uncles had all played. She started at four, on a team for children up to seven, so she was one of the youngest on the field and had to be quick and clever.'},

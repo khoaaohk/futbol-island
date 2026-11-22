@@ -11,6 +11,7 @@ const page:BookPageSpec={
    {icon:'cards',label:'Olympic gold',value:'2012'},
    {icon:'shirt',label:'World Cups won',value:'2015, 2019'},
    {icon:'deck',label:'The book',value:'6 chapters, read aloud'},
+   {icon:'cards',label:'Same 2012 match',value:'Christine Sinclair’s book',href:'/books/sinclair'},
   ],
   faq:[
    {q:'When did Alex Morgan start playing club soccer?',a:'Alex was born in 1989 in San Dimas, California. She played for fun in a local league but did not join a club team until she was fourteen, much later than many players. She learned fast, and three years later she was playing for her country’s under-20 team.'},
