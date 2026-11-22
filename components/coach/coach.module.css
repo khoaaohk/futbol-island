@@ -262,3 +262,106 @@
 .tiles li:last-child:nth-child(odd) .tile{min-height:0;flex-direction:row;align-items:center}
 @media (min-width:700px){.tiles li:last-child:nth-child(odd){grid-column:auto}.tiles li:last-child:nth-child(odd) .tile{min-height:128px;flex-direction:column;align-items:flex-start}}
 .lateRow{padding-left:60px}
+/* ---- Nov 22 2026: header (title left; Home inside a tool; language, then Exit at the far right) ---- */
+.homeBtn{width:44px;height:44px;flex:0 0 auto;border-radius:999px;border:0;background:var(--tint);color:var(--ink);display:grid;place-items:center;transition:background-color .15s,transform .12s}
+.homeBtn svg{width:22px;height:22px}
+.homeBtn:active,.langBtn:active,.stepBtn:active,.segBtn:active,.fmtBtn:active{transform:scale(.96)}
+.langBtn{min-height:44px;transition:background-color .15s,transform .12s}
+.exitBtn{flex:0 0 auto}
+/* View Transitions (components/motion/motion.css): the bar and the tab bar hold still, the title and the tool mark move */
+.top{view-transition-name:coach-top}
+.topTitle b{display:block;view-transition-name:coach-title}
+.toolMark{view-transition-name:coach-mark}
+.app[data-tool=home] .toolMark{view-transition-name:none}
+.tabs{view-transition-name:coach-tabs}
+/* ---- the tab bar: one indicator glides to the current tab (transform only) and takes the tool's tint ---- */
+.tabInd{position:absolute;left:8px;top:6px;width:calc((100% - 32px) / 5);height:56px;border-radius:16px;background:var(--accTint);pointer-events:none;
+ transition:transform 300ms cubic-bezier(.22,1,.36,1),background-color 200ms ease,opacity 150ms ease}
+.tabInd[data-off]{opacity:0}
+.tab{position:relative;z-index:1;transition:color .18s ease,transform .12s}
+.tab[aria-current=page]{background:transparent}
+/* ---- one control language: 52 px for inputs, chips, steppers, segments and buttons in a row; pills for choices ---- */
+.app{--ctl:52px}
+.chip{min-height:var(--ctl);transition:background-color .18s ease,color .18s ease,transform .12s}
+.input{min-height:var(--ctl);border-radius:14px;border:1px solid rgb(20 34 29 / .16);transition:border-color .15s}
+select.input{appearance:none;-webkit-appearance:none;padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2314221d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center}
+.input:focus{border-color:var(--pitch)}
+.btn:disabled,.chip:disabled{opacity:.45;cursor:default;transform:none}
+.here,.iconBtn{min-height:var(--ctl);transition:background-color .18s ease,color .18s ease,transform .12s}
+.here:active,.iconBtn:active,.benchChip:active,.whoBtn:active{transform:scale(.96)}
+.lbl{display:block;margin:0 0 8px;font-size:15px;font-weight:700;color:var(--ink);line-height:1.25}
+.sec{display:block;margin-top:24px}
+.secTight{margin-top:12px}
+.stepRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stepRow .lbl{margin:0;flex:1;min-width:0}
+.stepper{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:4px;width:172px;height:var(--ctl);padding:4px;border-radius:999px;background:var(--tint)}
+.stepBtn{width:44px;height:44px;flex:0 0 auto;border-radius:999px;border:0;background:var(--paper);font-size:24px;font-weight:800;line-height:1;transition:background-color .15s,transform .12s,opacity .15s}
+.stepBtn:disabled{opacity:.35;cursor:default}
+.stepVal{flex:1;text-align:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.segTrack{display:grid;gap:4px;height:var(--ctl);padding:4px;border-radius:999px;background:var(--tint)}
+.segBtn{min-width:0;border:0;border-radius:999px;background:transparent;font-size:15px;font-weight:800;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background-color .18s ease,color .18s ease,transform .12s}
+.segBtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.fmtGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fmtBtn{min-height:60px;border:0;border-radius:16px;background:var(--tint);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;transition:background-color .18s ease,color .18s ease,transform .12s}
+.fmtBtn b{font-size:17px;font-weight:800;line-height:1.1}
+.fmtBtn small{font-size:12px;font-weight:600;opacity:.75;line-height:1.1}
+.fmtBtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+@media (min-width:700px){.fmtGrid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.sheetBody>.sec:first-child{margin-top:8px}
+/* the empty squad card */
+.squadEmpty{padding:20px 16px}
+.emptyTitle{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.emptyHelp{margin:4px 0 16px;font-size:15px;color:var(--soft)}
+.squadEmpty .quickRow{display:grid;gap:12px}
+.squadEmpty .stepper{background:var(--paper)}
+.squadEmpty .stepBtn{background:var(--tint)}
+.lateRow{gap:12px}
+.lateRow select{max-width:none}
+/* ---- sheets: slide up with the backdrop fading in; on close slide down and fade out, then unmount (useSheet, 240 ms) ---- */
+.sheet{animation:sheetFade 240ms ease-out both}
+.sheet[data-closing]{animation:sheetFadeOut 240ms ease-in both}
+.sheetIn{animation:sheetUp 300ms cubic-bezier(.22,1,.36,1) both;will-change:transform}
+.sheet[data-closing] .sheetIn{animation:sheetDown 240ms cubic-bezier(.55,.06,.68,.19) both}
+@keyframes sheetFade{from{background-color:rgb(20 34 29 / 0)}}
+@keyframes sheetFadeOut{to{background-color:rgb(20 34 29 / 0)}}
+@keyframes sheetUp{from{transform:translateY(100%)}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+.sheetHead{position:relative;padding-top:22px;cursor:grab}
+.grab{position:absolute;left:50%;top:8px;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:rgb(20 34 29 / .2)}
+.grabZone{position:relative;height:14px;margin:-12px -16px 0;cursor:grab}
+.grabZone .grab{top:2px}
+@media (min-width:900px){
+ .setSheet{animation-name:sheetPop}.sheet[data-closing] .setSheet{animation-name:sheetPopOut}
+ @keyframes sheetPop{from{transform:translateY(32px);opacity:0}}
+ @keyframes sheetPopOut{to{transform:translateY(32px);opacity:0}}
+}
+/* ---- press and hover (hover only for a real mouse: phones never get stuck hovers) ---- */
+.tile,.continue{transition:transform .16s cubic-bezier(.22,1,.36,1),box-shadow .16s ease,background-color .16s ease}
+.tile:active,.continue:active{transform:scale(.97);box-shadow:0 2px 10px rgb(20 34 29 / .14)}
+.tileIcon{transition:transform .16s cubic-bezier(.22,1,.36,1),background-color .16s ease,color .16s ease}
+.app a,.app button,.app select,.app label:has(input[type=checkbox]){cursor:pointer}
+.app button:disabled{cursor:default}
+@media (hover:hover) and (pointer:fine){
+ .tile:hover,.continue:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgb(20 34 29 / .12)}
+ .tile:hover .tileIcon,.continue:hover .tileIcon{transform:scale(1.06);background:var(--acc);color:var(--accTint)}
+ .btn:not(:disabled):hover{box-shadow:0 4px 14px rgb(20 34 29 / .16);filter:brightness(1.06)}
+ .btnGhost:not(:disabled):hover,.langBtn:hover,.homeBtn:hover,.iconBtn:hover{background:var(--well)}
+ .chip:not([aria-pressed=true]):hover,.fmtBtn:not([aria-pressed=true]):hover,.benchChip:hover{background:var(--well)}
+ .segBtn:not([aria-pressed=true]):hover{background:rgb(20 34 29 / .06)}
+ .stepBtn:not(:disabled):hover{background:#fff;box-shadow:0 2px 8px rgb(20 34 29 / .12)}
+ .tab:not([aria-current=page]):hover{color:var(--ink);background:rgb(20 34 29 / .05)}
+ .setCard:hover,.subCard:hover,.whoBtn:hover{background:var(--well)}
+ .row:hover{background:rgb(20 34 29 / .025)}
+ .here:hover{filter:brightness(1.06)}
+ .doneBtn:hover{box-shadow:0 4px 14px rgb(20 34 29 / .2)}
+ .toast button:hover{filter:brightness(1.05)}
+}
+.app a:focus-visible,.app button:focus-visible{outline:3px solid var(--pitch);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+ .tabInd,.tab,.tile,.continue,.tileIcon,.homeBtn,.langBtn,.stepBtn,.segBtn,.fmtBtn,.chip,.here,.iconBtn{transition:background-color .15s ease,color .15s ease}
+ .tile:hover,.continue:hover,.tile:active,.continue:active,.tile:hover .tileIcon,.continue:hover .tileIcon,.homeBtn:active,.stepBtn:active,.segBtn:active,.fmtBtn:active,.here:active,.iconBtn:active{transform:none}
+ .sheetIn,.sheet[data-closing] .sheetIn{animation:sheetFadeOnly 200ms ease-out both}
+ .sheet[data-closing] .sheetIn{animation-name:sheetFadeOnlyOut}
+ @keyframes sheetFadeOnly{from{opacity:0}}
+ @keyframes sheetFadeOnlyOut{to{opacity:0}}
+}

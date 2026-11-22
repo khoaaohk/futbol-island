@@ -144,3 +144,62 @@
  .sheetIn{border-radius:var(--r-lg);max-height:84dvh}
 }
 @media (prefers-reduced-motion:reduce){.chip,.btn,.mode,.summaryCard,.knob,.knob::after{transition:none}.sheetIn{animation:none}}
+/* ---- Nov 22 2026 motion (components/motion) and one control language ---- */
+.h2{font-size:15px;font-weight:700;margin:0 0 8px}
+.h2Val{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.group{margin-top:24px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}
+.chip{min-height:52px;padding:0 10px}
+.swatch{transition:background-color .18s ease,color .18s ease,opacity .18s ease,transform .12s}
+.dirBtn{transition:background-color .18s ease,color .18s ease,opacity .18s ease,transform .12s}
+.stepBtn{width:52px;height:52px;transition:background-color .15s,transform .12s,opacity .15s}
+.scale{margin:2px 64px 0}
+/* sheets: slide up with the backdrop fading in; on close slide down and fade out, then unmount (useSheet, 240 ms) */
+.sheet{animation:sheetFade 240ms ease-out both}
+.sheet[data-closing]{animation:sheetFadeOut 240ms ease-in both}
+.sheetIn{animation:sheetUp 300ms cubic-bezier(.22,1,.36,1) both;will-change:transform}
+.sheet[data-closing] .sheetIn{animation:sheetDown 240ms cubic-bezier(.55,.06,.68,.19) both}
+@keyframes sheetFade{from{background-color:rgb(20 34 29 / 0)}}
+@keyframes sheetFadeOut{to{background-color:rgb(20 34 29 / 0)}}
+@keyframes sheetUp{from{transform:translateY(100%)}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+.sheetHead{position:relative;padding-top:22px;cursor:grab}
+.grab{position:absolute;left:50%;top:8px;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:rgb(20 34 29 / .2)}
+@media (min-width:900px){
+ .sheetIn{animation-name:sheetPop}.sheet[data-closing] .sheetIn{animation-name:sheetPopOut}
+ @keyframes sheetPop{from{transform:translateY(32px);opacity:0}}
+ @keyframes sheetPopOut{to{transform:translateY(32px);opacity:0}}
+}
+/* the run: 3-2-1 lands with a gentle scale-fade; each new cue is readable at once (120 ms, starts at 70% opacity) */
+.countNum{display:inline-block;animation:countIn 320ms cubic-bezier(.22,1,.36,1) both}
+@keyframes countIn{from{opacity:0;transform:scale(1.25)}}
+.cueIn{position:absolute;inset:0;animation:cueIn 120ms ease-out both}
+@keyframes cueIn{from{opacity:.7;transform:scale(.97)}}
+/* summary: a personal best gets one short star burst (CSS only, 700 ms, once) */
+.statWide{position:relative;overflow:hidden}
+.burst{position:absolute;right:28px;top:50%;width:0;height:0;pointer-events:none}
+.burst i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;background:var(--gold);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);
+ transform:rotate(var(--a)) translateY(0) scale(.2);opacity:0;animation:burst 700ms cubic-bezier(.22,1,.36,1) 280ms both}
+@keyframes burst{30%{opacity:1}to{opacity:0;transform:rotate(var(--a)) translateY(-56px) scale(1)}}
+/* press and hover (hover only for a real mouse) */
+.app a,.app button{cursor:pointer}
+.app button:disabled{cursor:default}
+@media (hover:hover) and (pointer:fine){
+ .btn:not(:disabled):hover{box-shadow:0 4px 14px rgb(20 34 29 / .16);filter:brightness(1.06)}
+ .btnGhost:hover{background:var(--well)}
+ .mode:not([aria-pressed=true]):hover,.chip:not([aria-pressed=true]):hover,.swatch:not([aria-pressed=true]):hover,.dirBtn:not([aria-pressed=true]):hover,.toggle:hover,.stepBtn:not(:disabled):hover{background:var(--well)}
+ .summaryCard:hover{background:var(--well);transform:translateY(-1px);box-shadow:0 6px 18px rgb(20 34 29 / .1)}
+ .doneBtn:hover{box-shadow:0 4px 14px rgb(20 34 29 / .2)}
+ .note a{text-decoration-thickness:2px;text-underline-offset:3px}
+ .note a:hover{text-decoration-color:var(--pitch)}
+}
+@media (prefers-reduced-motion:reduce){
+ .countNum,.cueIn{animation:none}
+ .burst{display:none}
+ .sheetIn,.sheet[data-closing] .sheetIn{animation:sheetFadeOnly 200ms ease-out both}
+ .sheet[data-closing] .sheetIn{animation-name:sheetFadeOnlyOut}
+ @keyframes sheetFadeOnly{from{opacity:0}}
+ @keyframes sheetFadeOnlyOut{to{opacity:0}}
+ .summaryCard:hover{transform:none}
+ .swatch,.dirBtn,.stepBtn{transition:background-color .15s ease,color .15s ease}
+}

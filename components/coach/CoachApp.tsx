@@ -8,9 +8,11 @@ import {addStoppage,applyChange,buildPlan,confirmChange,planWithLate,changeBetwe
 import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,loadStore,minutesCsv,newId,saveStore,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
 import c from './coach.module.css';
-import {BackButton} from '@/components/BackButton';
+import {AppHeader,HeaderBack} from '@/components/motion/AppHeader';
 import TeamShare from '@/components/share/TeamShare';
 import type {ShareLesson} from '@/lib/share/teamShare';
+import {exitHref,noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
+import '@/components/motion/motion.css';
 /**
  * The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): Team · Lineup · Game · Summary, and the live game screen.
  * One client component on purpose (a coach opens it once and lives in it). The engine is pure (lib/coach/engine.ts) and the
@@ -24,6 +26,7 @@ type Formation={slug:string;label:string;spots:SpotPos[]};
 type Tab='home'|'team'|'lineup'|'minutes'|'subs'|'summary';
 /** the bottom bar: Home and the four tools; the summary opens from Home and after a game */
 const TABS:readonly Tab[]=['home','team','lineup','minutes','subs'];
+const SCREENS:readonly Tab[]=[...TABS,'summary'];
 /** the last tool used, for Home's "Continue" card: its own key, so the team record (fi-coach-v1) is untouched */
 const LAST_KEY='fi-coach-last-tool';
 /** Nov 22 2026 (owner: "it's confusing to know which one I'm on"): each screen is its own tool with its own title, icon and accent;
@@ -92,7 +95,7 @@ function TimelineRows({w,rows,blocks,roles,settings,nowAt,seconds}:TimelineProps
      {blocks.map((b,k)=>b.period===per&&b.on.includes(p.id)?<i key={k} className={`${c.tlBar} ${roles?ROLE_CLASS[roles[k]?.[p.id]??'mid']:b.gk===p.id?c.gk:c.fieldC}`} style={{left:`${b.start/len*100}%`,width:`${Math.max(0.5,(Math.min(b.end,len)-b.start)/len*100)}%`}}/>:null)}
      {nowAt&&nowAt.period===per?<i className={c.tlNow} style={{left:`${Math.min(100,nowAt.sec/len*100)}%`}}/>:null}
     </div>)}</div>,
-    <div key={p.id+'m'} className={c.tlMin}>{mins(seconds[p.id]??0)}</div>])}
+    <div key={p.id+'m'} className={c.tlMin}><Tick value={mins(seconds[p.id]??0)}/></div>])}
   </div>
  </div>;
 }
@@ -101,9 +104,9 @@ function Legend({w,keeper}:{w:Words;keeper:boolean}){
 }
 function Fair({w,seconds,ids,skip,fixedName,step}:{w:Words;seconds:Readonly<Record<string,number>>;ids:readonly string[];skip:ReadonlySet<string>;fixedName?:string;step:number}){
  /* uneven = a spread of more than one change interval (the planner keeps everyone there all game within one; tests/coach-app.cjs) */
- const f=fairness(seconds,ids,skip),bad=f.spread>step*60+1;
- return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(mins(f.min),mins(f.max))}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
-  <span className={c.fairTag} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span></div>;
+ const f=fairness(seconds,ids,skip),bad=f.spread>step*60+1,lo=useCountUp(mins(f.min)),hi=useCountUp(mins(f.max));
+ return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(lo,hi)}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
+  <span className={`${c.fairTag} fi-pop`} key={String(bad)} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span></div>;
 }
 function NumberInput({value,taken,onCommit,w}:{value:number;taken:ReadonlySet<number>;onCommit:(n:number)=>void;w:Words}){
  const [draft,setDraft]=useState(String(value));
@@ -112,6 +115,21 @@ function NumberInput({value,taken,onCommit,w}:{value:number;taken:ReadonlySet<nu
  return <div><input className={`${c.input} ${c.num}`} inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label={w.number} aria-invalid={!valid} value={draft}
   onChange={e=>{const v=e.target.value.replace(/\D/g,'').slice(0,2);setDraft(v);const k=Number(v);if(/^\d{1,2}$/.test(v)&&(k===value||!taken.has(k)))onCommit(k);}}/>
   {!valid&&<p className={c.err} role="alert">{draft===''?w.numberNeeded:w.numberTaken}</p>}</div>;
+}
+/** A count picked with − and + (Nov 22 2026, owner: no bare native selects): one pill, the same height and fill as the chips. */
+function Stepper({w,label,value,options,fmt,onChange,id}:{w:Words;label:string;value:number;options:readonly number[];fmt:(n:number)=>string;onChange:(n:number)=>void;id:string}){
+ let i=options.indexOf(value);if(i<0)i=Math.max(0,options.findIndex(o=>o>value)-1);
+ return <div className={c.stepRow}><span className={c.lbl} id={id}>{label}</span>
+  <div className={c.stepper} role="group" aria-labelledby={id}>
+   <button type="button" className={c.stepBtn} aria-label={`${label}, ${w.less}`} disabled={i<=0} onClick={()=>onChange(options[i-1])}>−</button>
+   <output className={c.stepVal} aria-live="polite"><Tick value={value}/>{fmt(value).replace(String(value),'')}</output>
+   <button type="button" className={c.stepBtn} aria-label={`${label}, ${w.more}`} disabled={i>=options.length-1} onClick={()=>onChange(options[i+1])}>+</button>
+  </div></div>;
+}
+/** Equal segments in one track (a 2-4 option choice): the same 52 px pill as the steppers. */
+function Seg<T extends string|number|boolean>({label,value,options,names,onPick}:{label:string;value:T;options:readonly T[];names:(v:T)=>ReactNode;onPick:(v:T)=>void}){
+ return <div className={c.sec}><p className={c.lbl}>{label}</p><div className={c.segTrack} role="group" aria-label={label} style={{gridTemplateColumns:`repeat(${options.length},minmax(0,1fr))`}}>
+  {options.map(o=><button key={String(o)} type="button" className={c.segBtn} aria-pressed={o===value} onClick={()=>onPick(o)}>{names(o)}</button>)}</div></div>;
 }
 /* ------------------------------------------------------------------ the app ---------------------------------------------- */
 export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lessons?:readonly ShareLesson[]}){
@@ -124,6 +142,19 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  const [undo,setUndo]=useState<Game[]>([]);
  const [toast,setToast]=useState<{msg:string;undo:boolean}|null>(null);
  const [now,setNow]=useState(()=>Date.now());
+ /* screen motion (components/motion): the direction of the last move (the CSS fallback's entrance) and the tool whose Home tile
+    receives the header mark on the way back (a shared element in the View Transition) */
+ const [enter,setEnter]=useState<Dir|null>(null),[fly,setFly]=useState<Tab|null>(null);
+ /* the motion model (owner, Nov 22 2026: "polished and smooth", like native apps): the bottom tabs swap in place with a 120 ms
+    opacity crossfade and keep each screen's scroll; only Home -> a tool pushes (slides in) and Home/Back pops (slides back).
+    Screens stay mounted once visited (hidden when inactive), so a tab switch never rebuilds a screen. */
+ const [seen,setSeen]=useState<ReadonlySet<Tab>>(()=>new Set());
+ useEffect(()=>{if(ready)setSeen(v=>v.has(tab)?v:new Set([...v,tab]));},[tab,ready]);
+ const scrollAt=useRef<Partial<Record<Tab,number>>>({});
+ const go=(t:Tab,via:'tab'|'push'='push')=>{if(t===tab)return;const dir:Dir=via==='tab'?'tab':t==='home'?'back':tab==='home'?'forward':'tab';
+  scrollAt.current[tab]=window.scrollY;
+  document.querySelectorAll<HTMLElement>('[data-tile-icon]').forEach(e=>{e.style.viewTransitionName=dir==='forward'&&e.dataset.tileIcon===t?'coach-mark':'';});
+  screenChange(dir,()=>{setEnter(dir);setFly(dir==='back'?tab:null);setSeen(v=>v.has(t)?v:new Set([...v,t]));setTab(t);},()=>{window.scrollTo(0,dir==='tab'?scrollAt.current[t]??0:0);});};
  const lang:Lang=store.lang??'en',w=WORDS[lang];
  const audio=useRef<AudioContext|null>(null);
  /* load once: the saved team, the language, a shared link; register the app's own service worker */
@@ -139,7 +170,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   try{const l=window.localStorage.getItem(LAST_KEY);if(l&&l!=='home'&&(TABS.includes(l as Tab)||l==='summary'))setLastTool(l as Tab);}catch{/* storage blocked */}
   /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
   document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/coach/manifest.webmanifest';else l.remove();});
-  setReady(true);count('ca:open');
+  setReady(true);count('ca:open');noteAppEntry('coach');
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/coach-sw.js',{scope:'/coach'}).catch(()=>{});
  },[]);
  useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);document.documentElement.lang=lang;},[store,ready,lang]);
@@ -174,26 +205,26 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
  const team=store.team;
  return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab}>
-  <header className={c.top}>
-   {/* Back (owner, Nov 20 2026): the game's own Back button in place of the app mark; it leaves for the coach tools page. */}
-   {/* Nov 22 2026: from a tool, Back returns to Home; from Home it leaves for the coach tools page (a fresh button per screen: it locks once pressed) */}
-   <BackButton key={tab==='home'?'home':'tool'} data-coach-back label={lang==='es'?'Volver':'Back'} onBack={tab==='home'?()=>{window.location.assign(lang==='es'?'/es/tools':'/tools');}:()=>setTab('home')}/>
-   <span className={c.toolMark} data-tool={tab} aria-hidden="true"><Icon d={ICONS[tab]}/></span>
-   <div className={c.topTitle}><b>{TITLE(w,tab)}</b><span>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</span></div>
-   <button type="button" className={c.langBtn} lang={w.langCode} aria-label={w.lang} onClick={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))}>{w.langCode.toUpperCase()}</button>
-  </header>
+  {/* the shared header (components/motion/AppHeader): Home inside a tool, the title centred, the language and then Exit on the right */}
+  <AppHeader lang={lang} onLang={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))} exitAria={lang==='es'?'Salir de la app del entrenador':'Exit the coach app'} exitData={{'data-coach-back':'','data-coach-exit':''}}
+   left={tab!=='home'?<><HeaderBack label={lang==='es'?'Inicio':'Home'} onClick={()=>go('home')} data={{'data-coach-home':''}}/><span className={c.toolMark} data-tool={tab} aria-hidden="true"><Icon d={ICONS[tab]}/></span></>:null}
+   title={TITLE(w,tab)} sub={<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
-   {!ready?null:tab==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={setTab} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
-     onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else setTab('team');}}
+   {ready&&SCREENS.filter(t=>seen.has(t)||t===tab).map(t=><div key={t} className="fi-screen" hidden={t!==tab} data-enter={t===tab&&enter?enter:undefined}>
+    {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} fly={fly} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
+     onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else go('team');}}
      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
-    :tab==='team'?<TeamTab w={w} store={store} update={update} d={d} share={shareBlock}/>
-    :tab==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
-    :tab==='minutes'||tab==='subs'?<GameTab view={tab} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>setTab('team')}/>
+    :t==='team'?<TeamTab w={w} store={store} update={update} d={d} share={shareBlock}/>
+    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
+    :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>go('team')}/>
     :<SummaryTab w={w} store={store} now={now} share={shareBlock} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
-      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));setTab('minutes');}}}/>}
+      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes');}}}/>}
+   </div>)}
   </main>
   <nav className={c.tabs} aria-label={w.appName}>
-   {TABS.map(t=><button key={t} type="button" className={c.tab} data-tool={t} aria-current={tab===t?'page':undefined} onClick={()=>setTab(t)}>
+   {/* one indicator that glides to the current tab (transform only); hidden on the summary, which has no tab */}
+   <span className={c.tabInd} aria-hidden="true" data-off={TABS.includes(tab)?undefined:''} style={{transform:`translateX(calc(${Math.max(0,TABS.indexOf(tab))} * (100% + 4px)))`}}/>
+   {TABS.map(t=><button key={t} type="button" className={c.tab} data-tool={t} aria-current={tab===t?'page':undefined} onClick={()=>go(t,'tab')}>
     <span className={c.tabDot}/><Icon d={ICONS[t]}/>{t==='home'?w.tabHome:t==='team'?w.tabTeam:t==='lineup'?w.tabLineup:t==='minutes'?w.tabMinutes:t==='subs'?w.tabSubs:w.tabSummary}</button>)}
   </nav>
   {live&&game&&<LiveGame w={w} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
@@ -207,7 +238,9 @@ type D=ReturnType<typeof derive>;
 const EXAMPLE=['Ava','Ben','Carlos','Dani','Eli','Fatima','Gus','Hana','Isla','Jonah','Kai','Leo'];
 /* ------------------------------------------------------------------ Home -------------------------------------------------- */
 /** Home (Nov 22 2026, owner: "a simple dashboard"): the team at a glance, Continue, and one tile per tool with its icon and accent. */
-function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;running:boolean;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
+function HomeTab({w,store,d,last,lang,go,fly,running,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;fly:Tab|null;running:boolean;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
+ /* motion: the tiles rise in once per browser session; the team card pops in when "Try an example team" fills it */
+ const intro=useOncePerSession('fi-coach-intro'),[filled,setFilled]=useState(false);
  const s=store.settings,team=store.team,has=team.players.length>0,fmt=presetOf(s.format).id==='futsal'?'Futsal':s.format;
  const tiles:{key:string;tool:string;name:string;line:string;icon:string;on?:()=>void;href?:string}[]=[
   {key:'lineup',tool:'lineup',name:w.titleLineup,line:w.lineLineup,icon:ICONS.lineup,on:()=>go('lineup')},
@@ -216,27 +249,28 @@ function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:
   {key:'match',tool:'match',name:w.matchDay,line:w.lineMatch,icon:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4M9 2h6M19 6l1.5-1.5',on:onMatch},
   {key:'summary',tool:'summary',name:w.titleSummary,line:w.lineSummary,icon:ICONS.summary,on:()=>go('summary')},
   {key:'board',tool:'board',name:w.boardName,line:w.lineBoard,icon:'M4 4h16v16H4zM8 9l3 3-3 3M13 15h4',href:'/board?from=coach'},
-  {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es':'/scan'},
+  {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es&from=coach':'/scan?from=coach'},
   {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans'}];
  return <>
   <h1 className={c.srOnly}>{w.titleHome}</h1>
-  {has?<section className={c.homeTeam} aria-label={w.homeTeam}>
+  {has?<section className={`${c.homeTeam} ${filled?'fi-pop':intro?'fi-in':''}`} aria-label={w.homeTeam}>
    <div><p className={c.homeTeamName}>{team.name||w.homeTeam}</p><p className={c.homeTeamMeta}>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.playersN(team.players.length)}</p>
     <p className={c.homeTeamMeta}>{w.ready(d.here.length,d.F)}</p></div>
    <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} onClick={()=>go('team')}>{w.editTeam}</button>
-  </section>:<section className={c.homeEmpty} aria-label={w.homeTeam}>
+  </section>:<section className={`${c.homeEmpty} ${intro?'fi-in':''}`} aria-label={w.homeTeam}>
    <p className={c.homeTeamName}>{w.homeTeam}</p><p className={c.homeTeamMeta}>{w.homeEmpty}</p>
    <div className={c.homeEmptyBtns}><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>go('team')}>{w.setupTeam}</button>
-    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onExample}>{w.tryExample}</button></div>
+    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>{setFilled(true);onExample();}}>{w.tryExample}</button></div>
   </section>}
-  {has&&(running||last)&&<button type="button" className={c.continue} data-tool={running?'subs':last??'home'} onClick={running?onResume:()=>go(last!)}>
+  {has&&(running||last)&&<button type="button" className={`${c.continue} ${intro?'fi-in':''}`} style={{'--i':1} as React.CSSProperties} data-tool={running?'subs':last??'home'} onClick={running?onResume:()=>go(last!)}>
    <span className={c.tileIcon} aria-hidden="true"><Icon d={ICONS[running?'subs':last!]}/></span>
    <span className={c.tileText}><small>{w.continueOn}</small><b>{running?w.resumeGame:TITLE(w,last!)}</b></span>
    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
   <h2 className={c.h2}>{w.tools}</h2>
-  <ul className={c.tiles}>{tiles.map(t=><li key={t.key}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href}>
-    <span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span><span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
-   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}><span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span><span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>)}</ul>
+  <ul className={c.tiles}>{tiles.map((t,i)=>{const icon=<span className={c.tileIcon} aria-hidden="true" data-tile-icon={t.tool} style={fly===t.tool?{viewTransitionName:'coach-mark'} as React.CSSProperties:undefined}><Icon d={t.icon}/></span>;
+   return <li key={t.key} className={intro?'fi-in':undefined} style={intro?{'--i':i+2} as React.CSSProperties:undefined}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href}>
+    {icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
+   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}>{icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>;})}</ul>
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </>;
 }
@@ -251,44 +285,40 @@ function TeamTab({w,store,update,d,share}:{w:Words;store:Store;update:Up;d:D;sha
   for(let k=0;k<n;k++){while(nums.has(num)||added.some(a=>a.num===num))num++;if(num>99)break;const id=newId(new Set([...ids,...added.map(a=>a.id)]),Date.now()%100000+k);added.push({id,num,name:'',gk:false});}
   setPlayers(ps=>[...ps,...added],added.map(a=>a.id));};
  const s=store.settings;
- const [quick,setQuick]=useState(12),[sheet,setSheet]=useState(false);
+ const [quick,setQuick]=useState(12),sheet=useSheet<true>(),panel=useRef<HTMLDivElement>(null),swipe=useSwipeDown(panel,sheet.close);
  const pre=presetOf(s.format),fmt=pre.id==='futsal'?'Futsal':s.format;
  /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the squad is the screen; the game settings sit behind one summary card
     and open in a sheet. Same settings, same store (fi-coach-v1). */
  return <>
   <h1 className={c.h1}>{w.titleTeam}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)}</p>
-  <button type="button" className={c.setCard} onClick={()=>setSheet(true)} aria-haspopup="dialog" data-coach-settings="">
+  <button type="button" className={c.setCard} onClick={()=>sheet.open(true)} aria-haspopup="dialog" data-coach-settings="">
    <span className={c.setMain}><b>{store.team.name||w.teamName}</b><span>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}{pre.keeper?` · ${s.keeper==='fixed'?w.keeperFixed:w.keeperRotate}`:''}</span></span>
    <span className={c.setGo}>{w.gameSettings}<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
   </button>
-  {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
-   <div className={`${c.sheetIn} ${c.setSheet}`} role="dialog" aria-modal="true" aria-labelledby="coach-settings">
-    <div className={c.sheetHead}><p className={c.sheetTitle} id="coach-settings">{w.gameSettings}</p><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.sheetDone}</button></div>
+  {sheet.value&&<div className={c.sheet} data-closing={sheet.closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)sheet.close();}} onKeyDown={e=>{if(e.key==='Escape')sheet.close();}}>
+   <div className={`${c.sheetIn} ${c.setSheet}`} ref={panel} role="dialog" aria-modal="true" aria-labelledby="coach-settings">
+    <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><p className={c.sheetTitle} id="coach-settings">{w.gameSettings}</p><button type="button" className={c.doneBtn} onClick={sheet.close} autoFocus>{w.sheetDone}</button></div>
     <div className={c.sheetBody}>
-     <label className={c.field}>{w.teamName}<input className={c.input} value={store.team.name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,name:v.slice(0,24)}}));}}/></label>
-     <h2 className={c.h2}>{w.format}</h2>
-     <div className={c.seg} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.chip} aria-pressed={s.format===p.id}
-      onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}>{p.id==='futsal'?'Futsal':p.id}{p.ages&&<small>{p.ages}</small>}</button>)}</div>
-     <div className={`${c.grid3} ${c.gap}`}>
-      <label className={c.field}>{w.periods}<select className={c.input} value={s.periods} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periods:v}}));}}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>
-      <label className={c.field}>{w.minutes}<select className={c.input} value={s.periodMin} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periodMin:v,subEvery:Math.min(x.settings.subEvery,v)}}));}}>{[8,10,12,15,20,25,30,35,40,45].map(n=><option key={n}>{n}</option>)}</select></label>
-      <label className={c.field}>{w.subEvery}<select className={c.input} value={s.subEvery} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,subEvery:v}}));}}>{[2,3,4,5,6,8,10,12,15].filter(n=>n<=s.periodMin).map(n=><option key={n} value={n}>{n} {w.min}</option>)}</select></label>
-     </div>
-     {pre.keeper&&<><h2 className={c.h2}>{w.keeper}</h2><div className={c.seg} role="group" aria-label={w.keeper}>
-      {(['rotate','fixed'] as const).map(k=><button key={k} type="button" className={c.chip} aria-pressed={s.keeper===k} onClick={()=>update(x=>({...x,settings:{...x.settings,keeper:k}}))}>{k==='rotate'?w.keeperRotate:w.keeperFixed}</button>)}</div></>}
-     <h2 className={c.h2}>{w.subStyle}</h2>
-     <div className={c.seg} role="group" aria-label={w.subStyle}>{([false,true] as const).map(r=><button key={String(r)} type="button" className={c.chip} aria-pressed={s.rolling===r} onClick={()=>update(x=>({...x,settings:{...x.settings,rolling:r}}))}>{r?w.rolling:w.stoppages}</button>)}</div>
+     <label className={c.sec}><span className={c.lbl}>{w.teamName}</span><input className={c.input} value={store.team.name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,name:v.slice(0,24)}}));}}/></label>
+     <div className={c.sec}><p className={c.lbl}>{w.format}</p>
+      <div className={c.fmtGrid} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.fmtBtn} aria-pressed={s.format===p.id}
+       onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}><b>{p.id==='futsal'?'Futsal':p.id}</b>{p.ages&&<small>{p.ages}</small>}</button>)}</div></div>
+     <Seg label={w.periods} value={s.periods} options={[1,2,3,4]} names={n=>n} onPick={v=>update(x=>({...x,settings:{...x.settings,periods:v}}))}/>
+     <div className={c.sec}><Stepper w={w} id="cs-min" label={w.minutes} value={s.periodMin} options={[8,10,12,15,20,25,30,35,40,45]} fmt={n=>`${n} ${w.min}`} onChange={v=>update(x=>({...x,settings:{...x.settings,periodMin:v,subEvery:Math.min(x.settings.subEvery,v)}}))}/></div>
+     <div className={c.secTight}><Stepper w={w} id="cs-sub" label={w.subEvery} value={s.subEvery} options={[2,3,4,5,6,8,10,12,15].filter(n=>n<=s.periodMin)} fmt={n=>`${n} ${w.min}`} onChange={v=>update(x=>({...x,settings:{...x.settings,subEvery:v}}))}/></div>
+     {pre.keeper&&<Seg label={w.keeper} value={s.keeper} options={['rotate','fixed'] as const} names={k=>k==='rotate'?w.keeperRotate:w.keeperFixed} onPick={k=>update(x=>({...x,settings:{...x.settings,keeper:k}}))}/>}
+     <Seg label={w.subStyle} value={s.rolling} options={[false,true] as const} names={r=>r?w.rolling:w.stoppages} onPick={r=>update(x=>({...x,settings:{...x.settings,rolling:r}}))}/>
     </div>
    </div>
   </div>}
   <h2 className={c.h2}>{w.squad}</h2>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   {d.here.length>0&&d.here.length<s.onField&&<p className={c.err}>{w.notEnough(s.onField)}</p>}
-  {!players.length&&<div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p>
-   <div className={c.quickRow}><label className={c.quickLabel}>{w.quickAdd}<select className={`${c.input} ${c.quickSel}`} value={quick} onChange={e=>setQuick(Number(e.target.value))}>{Array.from({length:23},(_,i)=>i+4).map(n=><option key={n}>{n}</option>)}</select></label>
-    <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>add(quick)}>{w.startHere}</button></div></div>}
-  <ul className={c.squad}>{[...players].sort((a,b)=>a.num-b.num).map(p=><li key={p.id} className={c.row}>
+  {!players.length&&<div className={`${c.empty} ${c.squadEmpty} fi-pop`}><p className={c.emptyTitle}>{w.startHere}</p><p className={c.emptyHelp}>{w.squadHelp}</p>
+   <div className={c.quickRow}><Stepper w={w} id="cs-quick" label={w.playersLbl} value={quick} options={Array.from({length:23},(_,i)=>i+4)} fmt={n=>String(n)} onChange={setQuick}/>
+    <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={()=>add(quick)}>{w.addN(quick)}</button></div></div>}
+  <ul className={c.squad}>{[...players].sort((a,b)=>a.num-b.num).map((p,i)=><li key={p.id} className={`${c.row} fi-in`} style={{'--i':Math.min(i,8)} as React.CSSProperties}>
    <NumberInput w={w} value={p.num} taken={nums} onCommit={n=>setPlayers(ps=>ps.map(x=>x.id===p.id?{...x,num:n}:x))}/>
    <input className={c.input} aria-label={`${w.nameOpt}, #${p.num}`} placeholder={w.nameOpt} value={p.name} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,players:x.team.players.map(q=>q.id===p.id?{...q,name:v.slice(0,24)}:q)}}));}}/>
    <div className={c.rowTools}>
@@ -347,10 +377,10 @@ function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D
     {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0;
      return <button key={i} type="button" className={`${c.spot} ${gk?c.spotGk:''} ${p?'':c.spotEmpty}`} style={{left:`${4+sp.x*0.92}%`,top:`${4+(100-sp.y)*0.92}%`}} data-over={over===refKey(r)}
       aria-label={`${sp.label}: ${p?label(p):'—'}`} {...handlers(r,p?String(p.num):sp.label)}>
-      <span className={c.disc}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?.name||sp.label}</span></button>;})}
+      <span className={`${c.disc} ${p?'fi-pop':''}`} key={p?.id??'none'}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?.name||sp.label}</span></button>;})}
    </div>
    <div><h2 className={`${c.h2} ${c.benchH}`}>{w.bench}</h2>
-    <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};return <button key={p.id} type="button" className={c.benchChip} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
+    <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};return <button key={p.id} type="button" className={`${c.benchChip} fi-pop`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
   </div>
   <div className={`${c.btnRow} ${c.noPrint}`}>
    <button type="button" className={c.btn} onClick={()=>{update(s=>({...s,spots:[]}));setSel(null);}}>{w.autoFill}</button>
@@ -384,8 +414,8 @@ function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam}:{view:'minutes
   <p className={c.note}>{w.ready(d.here.length,d.F)} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}</p>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   <ol className={c.subList}>
-   <li className={c.subCard} data-start=""><time>{w.atKick}</time><div className={c.subRows}><div className={c.subRow}><span className={c.inTxt}>{w.in}</span><span className={c.nums}>{(d.plan.blocks[0]?.on??[]).map(id=>{const p=byId.get(id);return p?<b key={id} data-gk={d.plan.blocks[0]?.gk===id?'':undefined}>{p.num}<small>{p.name}</small></b>:null;})}</span></div></div></li>
-   {changes.map((x,i)=><li key={i} className={c.subCard}><time>{x.at}</time><div className={c.subRows}>
+   <li className={`${c.subCard} fi-in`} data-start=""><time>{w.atKick}</time><div className={c.subRows}><div className={c.subRow}><span className={c.inTxt}>{w.in}</span><span className={c.nums}>{(d.plan.blocks[0]?.on??[]).map(id=>{const p=byId.get(id);return p?<b key={id} data-gk={d.plan.blocks[0]?.gk===id?'':undefined}>{p.num}<small>{p.name}</small></b>:null;})}</span></div></div></li>
+   {changes.map((x,i)=><li key={i} className={`${c.subCard} fi-in`} style={{'--i':Math.min(i+1,8)} as React.CSSProperties}><time>{x.at}</time><div className={c.subRows}>
     {x.out.length>0&&<div className={c.subRow}><span className={c.outTxt}>{w.out}</span><span className={c.nums}>{x.out.map(id=>{const p=byId.get(id);return p?<b key={id}>{p.num}<small>{p.name}</small></b>:null;})}</span></div>}
     {x.in.length>0&&<div className={c.subRow}><span className={c.inTxt}>{w.in}</span><span className={c.nums}>{x.in.map(id=>{const p=byId.get(id);return p?<b key={id} data-on="">{p.num}<small>{p.name}</small></b>:null;})}</span></div>}
     {x.gk&&<p className={c.subGk}>{nm(x.gk)} {w.goesInGoal}</p>}</div></li>)}
@@ -405,7 +435,7 @@ function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,kee
  const pName=w.periodName(Math.min(game.clock.period,s.periods-1),s.periods),up=st==='live'&&sec>=len;
  const due=nc&&nc.due!=null&&inPlay?nc.due-sec:null,now_=due!=null&&due<=0;
  const [wake,setWake]=useState<'on'|'off'|'none'>('off');
- const [sheet,setSheet]=useState<Player|null>(null);
+ const sheetS=useSheet<Player>(),sheet=sheetS.value,setSheet=(p:Player|null)=>{if(p)sheetS.open(p);else sheetS.close();},livePanel=useRef<HTMLDivElement>(null),liveSwipe=useSwipeDown(livePanel,sheetS.close);
  const alerted=useRef('');
  /* keep the screen on while the live screen is open (and again after the phone comes back) */
  useEffect(()=>{const nav=navigator as WakeLockNav;let lock:{release():Promise<void>}|null=null,gone=false;
@@ -470,7 +500,8 @@ function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,kee
     </div>
    </>}
   </section>
-  {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(null);}}><div className={c.sheetIn} role="dialog" aria-modal="true" aria-label={label(sheet)}>
+  {sheet&&<div className={c.sheet} data-closing={sheetS.closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)setSheet(null);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(null);}}><div className={c.sheetIn} ref={livePanel} role="dialog" aria-modal="true" aria-label={label(sheet)}>
+   <div className={c.grabZone} {...liveSwipe}><span className={c.grab} aria-hidden="true"/></div>
    <p className={c.sheetTitle}>{label(sheet)} · {mins(played[sheet.id]??0)} {w.min}</p>
    {(game.status[sheet.id]??'ok')==='ok'?<>
     <button type="button" className={c.btn} onClick={()=>mark(sheet,'hurt')}>{w.hurt}</button>
@@ -495,7 +526,7 @@ function SummaryTab({w,store,now,share,onShare,onNew}:{w:Words;store:Store;now:n
   <Fair w={w} seconds={sec} ids={ids} skip={skip} fixedName={fixed?label(store.team.players.find(p=>p.id===fixed)):undefined} step={g.settings.subEvery}/>
   <table className={c.sumTable}><thead><tr><th>#</th><th>{w.nameOpt.split(' (')[0]}</th><th style={{width:'34%'}}><span className="sr-only"/></th><th className={c.r}>{w.inGoal}</th><th className={c.r}>{w.min}</th></tr></thead>
    <tbody>{rows.map(p=><tr key={p.id}><td><b>{p.num}</b></td><td>{p.name}{g.status[p.id]!=='ok'?` · ${g.status[p.id]==='hurt'?w.hurt:g.status[p.id]==='left'?w.left:w.late}`:''}</td>
-    <td><span className={c.sumBar} style={{width:`${(sec[p.id]??0)/max*100}%`}}/></td><td className={c.r}>{kept[p.id]?mins(kept[p.id]):''}</td><td className={c.r}><b>{mins(sec[p.id]??0)}</b></td></tr>)}</tbody></table>
+    <td><span className={c.sumBar} style={{width:`${(sec[p.id]??0)/max*100}%`}}/></td><td className={c.r}>{kept[p.id]?mins(kept[p.id]):''}</td><td className={c.r}><b><Tick value={mins(sec[p.id]??0)}/></b></td></tr>)}</tbody></table>
   <h2 className={c.h2}>{w.plan}</h2>
   <TimelineRows w={w} rows={rows} blocks={g.blocks} settings={g.settings} seconds={sec}/>
   <div className={c.noPrint}>

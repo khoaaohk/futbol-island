@@ -6,7 +6,9 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
 import c from './scan.module.css';
-import {BackButton} from '@/components/BackButton';
+import {AppHeader,HeaderBack} from '@/components/motion/AppHeader';
+import {coachHref,noteAppEntry,openedFromCoach,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
+import '@/components/motion/motion.css';
 /**
  * Scan Trainer (/scan and the club embed /embed/soccer-scanning-trainer; Nov 16 2026; docs/scan-trainer/HANDOFF.md).
  * Three screens: settings, the full-screen cue (3-2-1, then a new cue every interval; tap anywhere to pause) and the summary.
@@ -55,6 +57,11 @@ function Seg<T extends string|number>({label,value,options,names,onPick,id}:{lab
 function Toggle({label,line,on,onFlip}:{label:string;line?:string;on:boolean;onFlip:()=>void}){
  return <button type="button" role="switch" aria-checked={on} className={c.toggle} onClick={onFlip}><span className={c.toggleText}><b>{label}</b>{line&&<span>{line}</span>}</span><span className={c.knob} aria-hidden="true"/></button>;
 }
+/** Summary numbers count up from 0 once (about 600 ms); reduced motion shows them at once. */
+function Count({n}:{n:number}){return <>{useCountUp(n,600,0)}</>;}
+function CountOf({w,hit,total}:{w:Words;hit:number;total:number}){return <>{w.ofN(useCountUp(hit,600,0),total)}</>;}
+/** A personal best: a short star burst, CSS only, once (700 ms), then nothing. */
+function Burst(){return <span className={c.burst} aria-hidden="true">{Array.from({length:10},(_,i)=><i key={i} style={{'--a':`${i*36}deg`} as React.CSSProperties}/>)}</span>;}
 export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initialLang?:Lang}){
  const [store,setStore]=useState<Store>(()=>({...emptyStore(),...(initialLang?{lang:initialLang}:{})}));
  const [ready,setReady]=useState(false);
@@ -65,7 +72,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  const [score,setScore]=useState<Score>({hit:0,miss:0});
  const [result,setResult]=useState<{r:Result;best:boolean;prevBest?:Result;cues:number;sec:number}|null>(null);
  const [wake,setWake]=useState<'on'|'none'|'off'>('off');
- const [sheet,setSheet]=useState(false);
+ const sheetS=useSheet<true>(),sheet=!!sheetS.value,setSheet=(v:boolean)=>{if(v)sheetS.open(true);else sheetS.close();},panel=useRef<HTMLDivElement>(null),swipe=useSwipeDown(panel,sheetS.close);
  const audio=useRef<AudioContext|null>(null),rand=useRef<()=>number>(Math.random),lastSound=useRef(-9),finished=useRef(false);
  const s=store.settings,lang:Lang=store.lang??'en',w=WORDS[lang];
  const update=useCallback((f:(x:Store)=>Store)=>setStore(f),[]);
@@ -76,6 +83,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   if(q==='es'||q==='en')st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';
   setStore(st);setReady(true);
   if(embed)return;
+  noteAppEntry('scan');
   document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/scan/manifest.webmanifest';else l.remove();});
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/scan-sw.js',{scope:'/scan'}).catch(()=>{});
  },[embed,initialLang]);
@@ -100,7 +108,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   const res:Result={hit:score.hit,total,cues:shown,sec:Math.round(ms/1000),interval:s.interval,at:today()};
   const prev=store.results[s.mode]?.best,isBest=s.score&&better(res,prev);
   if(s.score&&total>0)update(x=>({...x,results:{...x.results,[s.mode]:{last:res,best:isBest?res:prev}}}));
-  setResult({r:res,best:isBest&&!!prev,prevBest:prev,cues:shown,sec:Math.round(ms/1000)});setView('summary');setRun(null);
+  screenChange('fade',()=>{setResult({r:res,best:isBest&&!!prev,prevBest:prev,cues:shown,sec:Math.round(ms/1000)});setView('summary');setRun(null);});
   if(!embed)count('sn:finish');
   try{if(document.fullscreenElement)void document.exitFullscreen();}catch{/* none */}
  },[s,score,store.results,update,embed]);
@@ -121,8 +129,8 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   const paused=run.pausedAt!=null,cue=cues[ph.phase==='run'?ph.cue:-1];
   return <div className={`${c.app} ${c.stage}`} data-scan-view="run" data-paused={paused?'':undefined}>
    <button type="button" className={c.tapZone} onClick={togglePause} aria-label={paused?w.resume:w.tapPause}>
-    {ph.phase==='count'?<div className={c.cue} style={{background:'#14221d',color:'#fbf7ee'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={c.num} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
-     :cue?<CueView cue={cue} s={s} w={w}/>:null}
+    {ph.phase==='count'?<div className={c.cue} style={{background:'#14221d',color:'#fbf7ee'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={`${c.num} ${c.countNum}`} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
+     :cue?<div className={c.cueIn} key={ph.phase==='run'?ph.cue:-1}><CueView cue={cue} s={s} w={w}/></div>:null}
    </button>
    {ph.phase==='run'&&s.session>0&&<div className={c.progress} aria-hidden="true"><i style={{transform:`scaleX(${Math.min(1,ph.ms/(s.session*1000))})`}}/></div>}
    <div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>
@@ -141,19 +149,19 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  }
  if(view==='summary'&&result){
   const r=result.r;
-  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>setView('settings')}/>
+  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>screenChange('back',()=>setView('settings'))}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
     <p className={c.sumCtx}>{w.modes[s.mode]} · {w.every} {w.sec(r.interval)}</p>
     <dl className={c.stats}>
-     <div><dt>{w.cuesShown}</dt><dd>{result.cues}</dd></div>
-     <div><dt>{w.time}</dt><dd>{fmtTime(result.sec)}</dd></div>
-     {s.score&&r.total>0&&<div className={c.statWide}><dt>{w.scoreHead}</dt><dd>{w.ofN(r.hit,r.total)}</dd></div>}
+     <div className="fi-in" style={{'--i':1} as React.CSSProperties}><dt>{w.cuesShown}</dt><dd><Count n={result.cues}/></dd></div>
+     <div className="fi-in" style={{'--i':2} as React.CSSProperties}><dt>{w.time}</dt><dd>{fmtTime(result.sec)}</dd></div>
+     {s.score&&r.total>0&&<div className={`${c.statWide} fi-in`}><dt>{w.scoreHead}</dt><dd><CountOf w={w} hit={r.hit} total={r.total}/></dd>{result.best&&<Burst/>}</div>}
     </dl>
-    {s.score&&r.total>0?<p className={c.resultLine}>{result.best?w.newBest:result.prevBest?w.toBeat(w.ofN(result.prevBest.hit,result.prevBest.total)):w.toBeat(w.ofN(r.hit,r.total))}</p>:<p className={c.note}>{w.noScore}</p>}
+    {s.score&&r.total>0?<p className={`${c.resultLine} fi-in`} style={{'--i':3} as React.CSSProperties}>{result.best?w.newBest:result.prevBest?w.toBeat(w.ofN(result.prevBest.hit,result.prevBest.total)):w.toBeat(w.ofN(r.hit,r.total))}</p>:<p className={c.note}>{w.noScore}</p>}
     <div className={c.btnCol}>
      <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={start} autoFocus>{w.goAgain}</button>
-     <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide}`} onClick={()=>setView('settings')}>{w.change}</button>
+     <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide}`} onClick={()=>screenChange('back',()=>setView('settings'))}>{w.change}</button>
     </div>
    </main></div>;
  }
@@ -179,12 +187,12 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
    </div>
   </main>
-  {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
-   <div className={c.sheetIn} role="dialog" aria-modal="true" aria-labelledby="scan-settings">
-    <div className={c.sheetHead}><h2 className={c.sheetTitle} id="scan-settings">{w.settings}</h2><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.doneBtn}</button></div>
+  {sheet&&<div className={c.sheet} data-closing={sheetS.closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
+   <div className={c.sheetIn} ref={panel} role="dialog" aria-modal="true" aria-labelledby="scan-settings">
+    <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><h2 className={c.sheetTitle} id="scan-settings">{w.settings}</h2><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.doneBtn}</button></div>
     <div className={c.sheetBody}>
    <Seg id="sg-age" label={w.age} value={s.age??('' as never)} options={AGES} names={a=>w.ages[a]} onPick={a=>update(x=>({...x,settings:applyPreset(x.settings,a)}))}/>
-   <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={c.h2} id="sg-every">{w.every}: <span className={c.val}>{w.sec(s.interval)}</span></h2>
+   <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={`${c.h2} ${c.h2Val}`} id="sg-every"><span>{w.every}</span><span className={c.val}>{w.sec(s.interval)}</span></h2>
     <div className={c.stepper}>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.min(MAX_INTERVAL,s.interval+.5)})} disabled={s.interval>=MAX_INTERVAL} aria-label={w.slower}>−</button>
      <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} step={0.5} value={MAX_INTERVAL+MIN_INTERVAL-s.interval} onChange={e=>set({interval:MAX_INTERVAL+MIN_INTERVAL-Number(e.target.value)})} aria-label={w.every} aria-valuetext={w.sec(s.interval)} className={c.range}/>
@@ -202,7 +210,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <div className={c.compass}>{(['upLeft','up','upRight','left','','right','downLeft','down','downRight'] as (Dir|'')[]).map((d,i)=>d===''?<span key={i} className={c.compassMid} aria-hidden="true"/>:
      <button key={d} type="button" className={c.dirBtn} aria-pressed={s.dirs.includes(d)} aria-label={w.dirNames[d]}
       onClick={()=>{const on=s.dirs.includes(d),next=on?s.dirs.filter(x=>x!==d):[...s.dirs,d];if(next.length>=2)set({dirs:DIRS.filter(x=>next.includes(x))});}}><Arrow dir={d} size="28px"/></button>)}</div></div>}
-   {s.mode==='pass'&&<div className={c.group} role="group" aria-labelledby="sg-tm"><h2 className={c.h2} id="sg-tm">{w.teammates}: <span className={c.val}>{s.teammates}</span></h2><p className={c.note}>{w.teammatesNote} {s.teammates}.</p>
+   {s.mode==='pass'&&<div className={c.group} role="group" aria-labelledby="sg-tm"><h2 className={`${c.h2} ${c.h2Val}`} id="sg-tm"><span>{w.teammates}</span><span className={c.val}>{s.teammates}</span></h2><p className={c.note}>{w.teammatesNote} {s.teammates}.</p>
     <div className={c.seg}>{Array.from({length:MAX_TEAMMATES-MIN_TEAMMATES+1},(_,i)=>i+MIN_TEAMMATES).map(n=><button key={n} type="button" className={c.chip} aria-pressed={s.teammates===n} onClick={()=>set({teammates:n})}>{n}</button>)}</div></div>}
    <div className={c.group} role="group" aria-labelledby="sg-screen"><h2 className={c.h2} id="sg-screen">{w.screen}</h2>
     <Toggle label={w.bg} line={w.bgLine} on={s.bg} onFlip={()=>set({bg:!s.bg})}/>
@@ -216,16 +224,13 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   </div>}
  </div>;
 }
-/** Back (owner, Nov 20 2026): the app mark in this corner looked like a back button and did nothing. It is now the game's own Back
- *  button (components/BackButton.tsx). From the summary it returns to the settings; from the settings it leaves for the trainer's
- *  guide page. The embed has no Back: the page that frames it is the way out. */
+/** The shared coach-apps header (components/motion/AppHeader; owner Nov 22 2026): the title centred; on the left, from the summary a
+ *  back arrow to the start screen, else "Coach" back to the coach app's Home when it opened the trainer (?from=coach); on the right the
+ *  language and then Exit (back to the page the coach came from). The embed has no header buttons: the page that frames it is the way out. */
 function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
- const leave=()=>{window.location.assign(lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer');};
- return <header className={c.top}>
-  {/* key: the button locks itself once pressed (it expects its screen to go away), and React kept the same one from the summary to
-      the settings, so Back was dead on the settings after a session (found Nov 20 2026). A fresh button per screen. */}
-  {!embed&&<BackButton key={onBack?'summary':'settings'} data-scan-back label={lang==='es'?'Volver':'Back'} onBack={onBack??leave}/>}
-  <span className={c.topTitle}><b>{w.app}</b><span>Futbol Island</span></span>
-  <button type="button" className={c.langBtn} lang={lang==='es'?'en':'es'} onClick={onLang}>{w.lang}</button>
- </header>;
+ const [fromCoach,setFromCoach]=useState(false);
+ useEffect(()=>{setFromCoach(openedFromCoach());},[]);
+ const left=embed?null:onBack?<HeaderBack label={lang==='es'?'Volver':'Back'} text={lang==='es'?'Volver':'Back'} onClick={onBack} data={{'data-scan-back':''}}/>
+  :fromCoach?<HeaderBack label={lang==='es'?'Volver a la app del entrenador':'Back to the coach app'} text={lang==='es'?'Entrenador':'Coach'} onClick={()=>{window.location.assign(coachHref(lang));}} data={{'data-scan-coach':''}}/>:null;
+ return <AppHeader lang={lang} onLang={onLang} left={left} title={w.app} sub="Futbol Island" exitAria={lang==='es'?'Salir del entrenador de escaneo':'Exit the scan trainer'} exitData={{'data-scan-exit':''}} exit={!embed}/>;
 }
