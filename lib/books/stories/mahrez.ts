@@ -30,7 +30,7 @@ export const MAHREZ_BOOK:BookData={
    lesson:'Believe in your team, even when nobody expects you to win.',
    prompt:'Raise the trophy',response:'Champions!',source:0},
   {id:'algeria',year:'2019',title:'Captain of Algeria',
-   text:'In 2019, Riyad was the captain of Algeria at the Africa Cup of Nations. In the semi-final against Nigeria, he scored the winning goal in the ninety-sixth minute.\n\nKick the ball. Algeria won the whole tournament. In 2023, he also won the Champions League with Manchester City. The skinny boy from the streets had become a champion. He had helped bring the cup home to his father’s country.',
+   text:'In 2019, Riyad was the captain of Algeria at the Africa Cup of Nations. In the semi-final against Nigeria, he scored the winning goal with a free kick, in the very last minute of the match.\n\nKick the ball. Algeria won the whole tournament. In 2023, he also won the Champions League with Manchester City. The skinny boy from the streets had become a champion. He had helped bring the cup home to his father’s country.',
    lesson:'Keep believing in yourself, right to the last minute.',
    prompt:'Kick the ball',response:'Champions of Africa!',source:0},
  ]

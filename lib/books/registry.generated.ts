@@ -27,6 +27,7 @@ import {KANE_BOOK as b_kane} from './stories/kane';
 import {KANTE_BOOK as b_kante} from './stories/kante';
 import {KERR_BOOK as b_kerr} from './stories/kerr';
 import {LUKAKU_BOOK as b_lukaku} from './stories/lukaku';
+import {MAHREZ_BOOK as b_mahrez} from './stories/mahrez';
 import {MALDINI_BOOK as b_maldini} from './stories/maldini';
 import {MANE_BOOK as b_mane} from './stories/mane';
 import {MARTA_BOOK as b_marta} from './stories/marta';
@@ -73,6 +74,7 @@ import v_b_kane from '../../public/voice/books/kane/narration.json';
 import v_b_kante from '../../public/voice/books/kante/narration.json';
 import v_b_kerr from '../../public/voice/books/kerr/narration.json';
 import v_b_lukaku from '../../public/voice/books/lukaku/narration.json';
+import v_b_mahrez from '../../public/voice/books/mahrez/narration.json';
 import v_b_maldini from '../../public/voice/books/maldini/narration.json';
 import v_b_mane from '../../public/voice/books/mane/narration.json';
 import v_b_marta from '../../public/voice/books/marta/narration.json';
@@ -121,6 +123,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "kante":b_kante,
  "kerr":b_kerr,
  "lukaku":b_lukaku,
+ "mahrez":b_mahrez,
  "maldini":b_maldini,
  "mane":b_mane,
  "marta":b_marta,
@@ -170,6 +173,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "kante":v_b_kante,
  "kerr":v_b_kerr,
  "lukaku":v_b_lukaku,
+ "mahrez":v_b_mahrez,
  "maldini":v_b_maldini,
  "mane":v_b_mane,
  "marta":v_b_marta,
@@ -219,6 +223,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "kante":()=>import('./spreads/kante'),
  "kerr":()=>import('./spreads/kerr'),
  "lukaku":()=>import('./spreads/lukaku'),
+ "mahrez":()=>import('./spreads/mahrez'),
  "maldini":()=>import('./spreads/maldini'),
  "mane":()=>import('./spreads/mane'),
  "marta":()=>import('./spreads/marta'),

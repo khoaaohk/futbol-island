@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "streets": {
+      "src": "/voice/books/mahrez/streets.m4a?v=coach-bella-1",
+      "duration": 35.7,
+      "scriptSha256": "b973dd614fb76d2507e5f09deafff07586b5b3637c1285c655e5fb43fd585d09",
+      "cues": [
+        {
+          "text": "Street football",
+          "start": 0.0,
+          "duration": 1.775
+        },
+        {
+          "text": "Riyad Mahrez was born in 1991 in Clichy, near Paris, in France, and he grew up in Sarcelles, another town nearby.",
+          "start": 1.775,
+          "duration": 9.625
+        },
+        {
+          "text": "His father, Ahmed, came from Algeria.",
+          "start": 11.4,
+          "duration": 3.275
+        },
+        {
+          "text": "Riyad learned to play in the streets, with quick feet and clever tricks.",
+          "start": 14.675,
+          "duration": 4.725
+        },
+        {
+          "text": "Roll the ball down the street.",
+          "start": 19.4,
+          "duration": 2.375
+        },
+        {
+          "text": "In 2004, he joined the youth team of his local club, AAS Sarcelles.",
+          "start": 21.775,
+          "duration": 6.05
+        },
+        {
+          "text": "He kept his love for tricks and skills from the streets.",
+          "start": 27.825,
+          "duration": 3.625
+        },
+        {
+          "text": "You can learn a lot anywhere there is a ball and some friends.",
+          "start": 31.45,
+          "duration": 4.225
+        }
+      ]
+    },
+    "father": {
+      "src": "/voice/books/mahrez/father.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "c927bfb8b028fb07bdd0c557640a52284b0b06e37bc308c7705b882878905f23",
+      "cues": [
+        {
+          "text": "Losing his dad",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "When Riyad was fifteen, his father died suddenly of a heart attack.",
+          "start": 1.975,
+          "duration": 4.8
+        },
+        {
+          "text": "It was a very sad time for Riyad, his mother and his brothers and sisters.",
+          "start": 6.775,
+          "duration": 5.45
+        },
+        {
+          "text": "Losing a parent when you are young is one of the hardest things that can happen.",
+          "start": 12.225,
+          "duration": 5.225
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 17.45,
+          "duration": 2.225
+        },
+        {
+          "text": "Later, Riyad chose to play for Algeria, his father\u2019s country, partly in his honour.",
+          "start": 19.675,
+          "duration": 6.175
+        },
+        {
+          "text": "A stadium in Sarcelles was named after Riyad, and he dedicated it to his father.",
+          "start": 25.85,
+          "duration": 6.05
+        },
+        {
+          "text": "Missing someone is hard. You can carry their love with you.",
+          "start": 31.9,
+          "duration": 3.925
+        }
+      ]
+    },
+    "skinny": {
+      "src": "/voice/books/mahrez/skinny.m4a?v=coach-bella-1",
+      "duration": 32.9,
+      "scriptSha256": "1f904a5dac01736fa9ea56eec64f82c96730d22dad598621945ba0f293b6f451",
+      "cues": [
+        {
+          "text": "Too skinny?",
+          "start": 0.0,
+          "duration": 1.7
+        },
+        {
+          "text": "Riyad was very slim, and scouts from big clubs often overlooked him because of it.",
+          "start": 1.7,
+          "duration": 6.025
+        },
+        {
+          "text": "So he started at smaller clubs: Quimper in 2009, and then Le Havre in 2010.",
+          "start": 7.725,
+          "duration": 6.8
+        },
+        {
+          "text": "Some people thought he was not strong enough.",
+          "start": 14.525,
+          "duration": 2.925
+        },
+        {
+          "text": "Turn the signpost.",
+          "start": 17.45,
+          "duration": 1.95
+        },
+        {
+          "text": "Riyad kept practising his dribbling and his left foot, and he kept getting better.",
+          "start": 19.4,
+          "duration": 5.625
+        },
+        {
+          "text": "Small clubs gave him the chance to play every week and grow.",
+          "start": 25.025,
+          "duration": 4.15
+        },
+        {
+          "text": "People may judge how you look. Show them how you play.",
+          "start": 29.175,
+          "duration": 3.725
+        }
+      ]
+    },
+    "leicester": {
+      "src": "/voice/books/mahrez/leicester.m4a?v=coach-bella-1",
+      "duration": 35.1,
+      "scriptSha256": "e4d295af25e6db765ad8aebc4197ee549432fcef589d43eddce092d64664eab5",
+      "cues": [
+        {
+          "text": "A small price",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In January 2014, Leicester City signed Riyad from Le Havre for about \u00a3450,000.",
+          "start": 1.825,
+          "duration": 8.125
+        },
+        {
+          "text": "For a footballer, that was a small fee.",
+          "start": 9.95,
+          "duration": 3.075
+        },
+        {
+          "text": "Leicester were not in the Premier League yet.",
+          "start": 13.025,
+          "duration": 3.15
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 16.175,
+          "duration": 2.075
+        },
+        {
+          "text": "Riyad moved to England, to a new country and a new language.",
+          "start": 18.25,
+          "duration": 4.625
+        },
+        {
+          "text": "He worked hard, and he soon became one of the team\u2019s most exciting players.",
+          "start": 22.875,
+          "duration": 5.3
+        },
+        {
+          "text": "In his first season, Leicester won promotion.",
+          "start": 28.175,
+          "duration": 3.625
+        },
+        {
+          "text": "A small price does not mean a small talent.",
+          "start": 31.8,
+          "duration": 3.3
+        }
+      ]
+    },
+    "champions": {
+      "src": "/voice/books/mahrez/champions.m4a?v=coach-bella-1",
+      "duration": 37.1,
+      "scriptSha256": "d8da8d613baa5a5262bc74ee3468e54e23e1ec2bca7cfb3a283e2e3356d5e566",
+      "cues": [
+        {
+          "text": "Champions of England",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In the 2015\u201316 season, Leicester City surprised everyone and won the Premier League.",
+          "start": 2.1,
+          "duration": 7.15
+        },
+        {
+          "text": "At the start of that season, very few people thought Leicester had any chance.",
+          "start": 9.25,
+          "duration": 5.1
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 14.35,
+          "duration": 1.95
+        },
+        {
+          "text": "Riyad was named the PFA Players\u2019 Player of the Year, voted for by the other players.",
+          "start": 16.3,
+          "duration": 6.65
+        },
+        {
+          "text": "He was the first African player to win it.",
+          "start": 22.95,
+          "duration": 3.275
+        },
+        {
+          "text": "His teammate Jamie Vardy scored lots of goals, and Riyad scored and set up many goals too.",
+          "start": 26.225,
+          "duration": 6.6
+        },
+        {
+          "text": "Believe in your team, even when nobody expects you to win.",
+          "start": 32.825,
+          "duration": 4.25
+        }
+      ]
+    },
+    "algeria": {
+      "src": "/voice/books/mahrez/algeria.m4a?v=coach-bella-1",
+      "duration": 36.9,
+      "scriptSha256": "9e2b6520acb12dc78fc8604f861fb0df39b67208cb163b70b45fe4a9fb4a40a1",
+      "cues": [
+        {
+          "text": "Captain of Algeria",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "In 2019, Riyad was the captain of Algeria at the Africa Cup of Nations.",
+          "start": 2.0,
+          "duration": 6.15
+        },
+        {
+          "text": "In the semi-final against Nigeria, he scored the winning goal with a free kick, in the very last minute of the match.",
+          "start": 8.15,
+          "duration": 7.675
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 15.825,
+          "duration": 1.75
+        },
+        {
+          "text": "Algeria won the whole tournament.",
+          "start": 17.575,
+          "duration": 2.65
+        },
+        {
+          "text": "In 2023, he also won the Champions League with Manchester City.",
+          "start": 20.225,
+          "duration": 5.45
+        },
+        {
+          "text": "The skinny boy from the streets had become a champion.",
+          "start": 25.675,
+          "duration": 3.775
+        },
+        {
+          "text": "He had helped bring the cup home to his father\u2019s country.",
+          "start": 29.45,
+          "duration": 3.7
+        },
+        {
+          "text": "Keep believing in yourself, right to the last minute.",
+          "start": 33.15,
+          "duration": 3.75
+        }
+      ]
+    }
+  }
+}
