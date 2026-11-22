@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "brother": {
+      "src": "/voice/books/sawa/brother.m4a?v=coach-bella-1",
+      "duration": 37.8,
+      "scriptSha256": "1eaf59b769d7e31eed96f313edc046645085bf8004964466d78241d4a927958d",
+      "cues": [
+        {
+          "text": "Joining the boys",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Homare Sawa was born in 1978 in Fuch\u016b, a city in Tokyo, Japan.",
+          "start": 1.85,
+          "duration": 6.425
+        },
+        {
+          "text": "When she was six, she went to watch her older brother train.",
+          "start": 8.275,
+          "duration": 4.25
+        },
+        {
+          "text": "His coach saw her and invited her to join the boys\u2019 team.",
+          "start": 12.525,
+          "duration": 4.275
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 16.8,
+          "duration": 1.75
+        },
+        {
+          "text": "Homare said yes.",
+          "start": 18.55,
+          "duration": 2.05
+        },
+        {
+          "text": "Playing with the boys, she learned to be quick, brave and clever with the ball.",
+          "start": 20.6,
+          "duration": 5.125
+        },
+        {
+          "text": "She kept playing football with boys and with older players as she grew up, and it made her a tough and clever player.",
+          "start": 25.725,
+          "duration": 7.6
+        },
+        {
+          "text": "Playing with people bigger than you can make you braver and smarter.",
+          "start": 33.325,
+          "duration": 4.425
+        }
+      ]
+    },
+    "young": {
+      "src": "/voice/books/sawa/young.m4a?v=coach-bella-1",
+      "duration": 40.8,
+      "scriptSha256": "6a196cc92e3903a229aab5741d9329c333ec6b3d6766cf05500f126fc910ad21",
+      "cues": [
+        {
+          "text": "Young and ready",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "When Homare was only twelve, she played her first match in Japan\u2019s top women\u2019s league, for a club called Yomiuri Beleza.",
+          "start": 1.825,
+          "duration": 8.4
+        },
+        {
+          "text": "In December 1993, at fifteen, she played for Japan for the first time, and she scored four goals against the Philippines.",
+          "start": 10.225,
+          "duration": 9.175
+        },
+        {
+          "text": "She was much younger than most of the players around her.",
+          "start": 19.4,
+          "duration": 3.775
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 23.175,
+          "duration": 1.75
+        },
+        {
+          "text": "Homare kept learning from older players, one step at a time.",
+          "start": 24.925,
+          "duration": 4.65
+        },
+        {
+          "text": "She listened, watched and practised, and she became a key player for her club and her country.",
+          "start": 29.575,
+          "duration": 6.325
+        },
+        {
+          "text": "Being young is not a reason to wait. Learn from the people around you.",
+          "start": 35.9,
+          "duration": 4.9
+        }
+      ]
+    },
+    "america": {
+      "src": "/voice/books/sawa/america.m4a?v=coach-bella-1",
+      "duration": 40.4,
+      "scriptSha256": "01d5a70042e790b71b518f9e3373115c7be7c143786053a0ee826e61abf47547",
+      "cues": [
+        {
+          "text": "Starting again far away",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "In 1999, her club in Japan ended her contract.",
+          "start": 2.35,
+          "duration": 4.675
+        },
+        {
+          "text": "Homare decided to go and play in the United States, a long way from home, where people spoke a different language.",
+          "start": 7.025,
+          "duration": 7.85
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 14.875,
+          "duration": 2.075
+        },
+        {
+          "text": "From 2001 to 2003, she played for the Atlanta Beat in a new professional league in America.",
+          "start": 16.95,
+          "duration": 7.675
+        },
+        {
+          "text": "Starting again in a new country is not easy, but she kept improving.",
+          "start": 24.625,
+          "duration": 4.95
+        },
+        {
+          "text": "She had new teammates and a new way of playing to get used to, and she became an even better player.",
+          "start": 29.575,
+          "duration": 6.675
+        },
+        {
+          "text": "When a door closes, you can be brave and try somewhere new.",
+          "start": 36.25,
+          "duration": 4.15
+        }
+      ]
+    },
+    "wave": {
+      "src": "/voice/books/sawa/wave.m4a?v=coach-bella-1",
+      "duration": 36.0,
+      "scriptSha256": "d6d24e7c135d7ab700f02ba4f389fa90e6e6d255700761b95a304fd6099b2510",
+      "cues": [
+        {
+          "text": "A country in sadness",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "In March 2011, a huge earthquake and tsunami hit Japan.",
+          "start": 2.125,
+          "duration": 4.95
+        },
+        {
+          "text": "Many people lost their homes, and many families were very sad.",
+          "start": 7.075,
+          "duration": 4.625
+        },
+        {
+          "text": "A few months later, the World Cup began in Germany, and Homare was Japan\u2019s captain.",
+          "start": 11.7,
+          "duration": 6.5
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 18.2,
+          "duration": 1.85
+        },
+        {
+          "text": "The team dedicated the tournament to the people hit by the disaster.",
+          "start": 20.05,
+          "duration": 4.95
+        },
+        {
+          "text": "Homare hoped that, if they never gave up on the pitch, the team could give people at home some courage.",
+          "start": 25.0,
+          "duration": 6.625
+        },
+        {
+          "text": "In hard times, doing your best can lift other people too.",
+          "start": 31.625,
+          "duration": 4.35
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/sawa/final.m4a?v=coach-bella-1",
+      "duration": 36.9,
+      "scriptSha256": "b2d328e805a2abcf17bf8c1f2ac1c94353915662a7f6100c59bbe7386e3f21dc",
+      "cues": [
+        {
+          "text": "Never giving up",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In the final, Japan played the United States.",
+          "start": 1.825,
+          "duration": 3.6
+        },
+        {
+          "text": "In extra time, the United States scored to lead 2\u20131.",
+          "start": 5.425,
+          "duration": 4.425
+        },
+        {
+          "text": "Then, in the 117th minute, with only a few minutes left, Homare scored.",
+          "start": 9.85,
+          "duration": 6.025
+        },
+        {
+          "text": "It was 2\u20132!",
+          "start": 15.875,
+          "duration": 1.775
+        },
+        {
+          "text": "Take the next penalty.",
+          "start": 17.65,
+          "duration": 2.2
+        },
+        {
+          "text": "Japan won the penalty shootout 3\u20131.",
+          "start": 19.85,
+          "duration": 3.5
+        },
+        {
+          "text": "They were the first Asian team ever to win the Women\u2019s World Cup, and back at home, their win brought joy to a sad country.",
+          "start": 23.35,
+          "duration": 8.2
+        },
+        {
+          "text": "Keep going until the very end. The game is not over until it is over.",
+          "start": 31.55,
+          "duration": 5.275
+        }
+      ]
+    },
+    "awards": {
+      "src": "/voice/books/sawa/awards.m4a?v=coach-bella-1",
+      "duration": 43.8,
+      "scriptSha256": "347340c8504a67cc6ce0c7a4b04d23b43c83677d57d89a55e92c9d38b69f7de2",
+      "cues": [
+        {
+          "text": "Six World Cups",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Homare won the Golden Ball for the best player of the 2011 World Cup, and the Golden Boot for the most goals: five.",
+          "start": 2.025,
+          "duration": 8.375
+        },
+        {
+          "text": "Then FIFA named her the Women\u2019s World Player of the Year.",
+          "start": 10.4,
+          "duration": 4.05
+        },
+        {
+          "text": "She was the first Asian player, man or woman, to win such a big award.",
+          "start": 14.45,
+          "duration": 5.55
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 20.0,
+          "duration": 2.225
+        },
+        {
+          "text": "Homare played in six World Cups, from 1995 to 2015, and she stopped playing at the end of 2015.",
+          "start": 22.225,
+          "duration": 8.725
+        },
+        {
+          "text": "In her very last tournament, she won one more cup with her club.",
+          "start": 30.95,
+          "duration": 4.475
+        },
+        {
+          "text": "She had played for Japan for twenty-two years.",
+          "start": 35.425,
+          "duration": 3.225
+        },
+        {
+          "text": "Keep going for a long time, and you can do things nobody has done before.",
+          "start": 38.65,
+          "duration": 5.1
+        }
+      ]
+    }
+  }
+}
