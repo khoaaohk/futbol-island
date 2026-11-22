@@ -100,9 +100,9 @@ for(const m of VENDING_MACHINES)m.specials.push(...homeDisplays.filter(i=>i.mach
 export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId[]>>={
  ...Object.fromEntries(VENDING_MACHINES.filter(m=>!m.drinks&&booksForMachine(m.id).length>=4).map(m=>[m.id,booksForMachine(m.id)])),
  northbeach:['cafu','bronze','davies','maldini'],          // full-backs and defenders: overlap, cover, defend together
- causeway:['nadim','modric','salah','eusebio'],            // long roads to a new home
- cayplaza:['kante','vardy','debruyne','kane'],             // told no, kept working
- sharks:['oshoala','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
+ causeway:['nadim','sinclair','modric','salah','eusebio'],            // long roads to a new home
+ cayplaza:['kante','howard','vardy','debruyne','kane'],             // told no, kept working
+ sharks:['oshoala','morgan','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
  caykonbini:['messi','marta','ronaldinho','putellas'],     // a Konbini mix of island favourites
  summit:['davies','kante','vardy','weah'],                 // long, hard roads: a mix for the trail's own Konbini
  stadium:['messi','marta','ronaldinho','putellas'],        // the Coral Cay Konbini's island favourites (same glass, GLASS_TWIN)

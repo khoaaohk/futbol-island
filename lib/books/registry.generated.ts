@@ -18,6 +18,7 @@ import {FALCAO_BOOK as b_falcao} from './stories/falcao';
 import {GARRINCHA_BOOK as b_garrincha} from './stories/garrincha';
 import {GRIEZMANN_BOOK as b_griezmann} from './stories/griezmann';
 import {HEGERBERG_BOOK as b_hegerberg} from './stories/hegerberg';
+import {HOWARD_BOOK as b_howard} from './stories/howard';
 import {IBRAHIMOVIC_BOOK as b_ibrahimovic} from './stories/ibrahimovic';
 import {INIESTA_BOOK as b_iniesta} from './stories/iniesta';
 import {ISLAND_BOOK as b_island} from './stories/island';
@@ -29,19 +30,23 @@ import {MALDINI_BOOK as b_maldini} from './stories/maldini';
 import {MANE_BOOK as b_mane} from './stories/mane';
 import {MARTA_BOOK as b_marta} from './stories/marta';
 import {MODRIC_BOOK as b_modric} from './stories/modric';
+import {MORGAN_BOOK as b_morgan} from './stories/morgan';
 import {NADIM_BOOK as b_nadim} from './stories/nadim';
 import {OSHOALA_BOOK as b_oshoala} from './stories/oshoala';
 import {PELE_BOOK as b_pele} from './stories/pele';
 import {PUTELLAS_BOOK as b_putellas} from './stories/putellas';
 import {RASHFORD_BOOK as b_rashford} from './stories/rashford';
+import {RENARD_BOOK as b_renard} from './stories/renard';
 import {RONALDINHO_BOOK as b_ronaldinho} from './stories/ronaldinho';
 import {RONALDO_BOOK as b_ronaldo} from './stories/ronaldo';
 import {SAKA_BOOK as b_saka} from './stories/saka';
 import {SALAH_BOOK as b_salah} from './stories/salah';
+import {SINCLAIR_BOOK as b_sinclair} from './stories/sinclair';
 import {SON_BOOK as b_son} from './stories/son';
 import {VARDY_BOOK as b_vardy} from './stories/vardy';
 import {VINICIUS_BOOK as b_vinicius} from './stories/vinicius';
 import {WEAH_BOOK as b_weah} from './stories/weah';
+import {WRIGHT_BOOK as b_wright} from './stories/wright';
 import {ZIDANE_BOOK as b_zidane} from './stories/zidane';
 import v_b_messi from '../../public/voice/books/messi/narration.json';
 import v_b_bronze from '../../public/voice/books/bronze/narration.json';
@@ -60,6 +65,7 @@ import v_b_falcao from '../../public/voice/books/falcao/narration.json';
 import v_b_garrincha from '../../public/voice/books/garrincha/narration.json';
 import v_b_griezmann from '../../public/voice/books/griezmann/narration.json';
 import v_b_hegerberg from '../../public/voice/books/hegerberg/narration.json';
+import v_b_howard from '../../public/voice/books/howard/narration.json';
 import v_b_ibrahimovic from '../../public/voice/books/ibrahimovic/narration.json';
 import v_b_iniesta from '../../public/voice/books/iniesta/narration.json';
 import v_b_island from '../../public/voice/books/island/narration.json';
@@ -71,19 +77,23 @@ import v_b_maldini from '../../public/voice/books/maldini/narration.json';
 import v_b_mane from '../../public/voice/books/mane/narration.json';
 import v_b_marta from '../../public/voice/books/marta/narration.json';
 import v_b_modric from '../../public/voice/books/modric/narration.json';
+import v_b_morgan from '../../public/voice/books/morgan/narration.json';
 import v_b_nadim from '../../public/voice/books/nadim/narration.json';
 import v_b_oshoala from '../../public/voice/books/oshoala/narration.json';
 import v_b_pele from '../../public/voice/books/pele/narration.json';
 import v_b_putellas from '../../public/voice/books/putellas/narration.json';
 import v_b_rashford from '../../public/voice/books/rashford/narration.json';
+import v_b_renard from '../../public/voice/books/renard/narration.json';
 import v_b_ronaldinho from '../../public/voice/books/ronaldinho/narration.json';
 import v_b_ronaldo from '../../public/voice/books/ronaldo/narration.json';
 import v_b_saka from '../../public/voice/books/saka/narration.json';
 import v_b_salah from '../../public/voice/books/salah/narration.json';
+import v_b_sinclair from '../../public/voice/books/sinclair/narration.json';
 import v_b_son from '../../public/voice/books/son/narration.json';
 import v_b_vardy from '../../public/voice/books/vardy/narration.json';
 import v_b_vinicius from '../../public/voice/books/vinicius/narration.json';
 import v_b_weah from '../../public/voice/books/weah/narration.json';
+import v_b_wright from '../../public/voice/books/wright/narration.json';
 import v_b_zidane from '../../public/voice/books/zidane/narration.json';
 /** Book text (Messi keeps its legacy action→steps mapping). */
 export const REGISTRY_BOOKS:Record<string,BookData>={
@@ -104,6 +114,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "garrincha":b_garrincha,
  "griezmann":b_griezmann,
  "hegerberg":b_hegerberg,
+ "howard":b_howard,
  "ibrahimovic":b_ibrahimovic,
  "iniesta":b_iniesta,
  "island":b_island,
@@ -115,19 +126,23 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "mane":b_mane,
  "marta":b_marta,
  "modric":b_modric,
+ "morgan":b_morgan,
  "nadim":b_nadim,
  "oshoala":b_oshoala,
  "pele":b_pele,
  "putellas":b_putellas,
  "rashford":b_rashford,
+ "renard":b_renard,
  "ronaldinho":b_ronaldinho,
  "ronaldo":b_ronaldo,
  "saka":b_saka,
  "salah":b_salah,
+ "sinclair":b_sinclair,
  "son":b_son,
  "vardy":b_vardy,
  "vinicius":b_vinicius,
  "weah":b_weah,
+ "wright":b_wright,
  "zidane":b_zidane,
 };
 /** Narration manifests (Coach Bella sentence cues). */
@@ -149,6 +164,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "garrincha":v_b_garrincha,
  "griezmann":v_b_griezmann,
  "hegerberg":v_b_hegerberg,
+ "howard":v_b_howard,
  "ibrahimovic":v_b_ibrahimovic,
  "iniesta":v_b_iniesta,
  "island":v_b_island,
@@ -160,19 +176,23 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "mane":v_b_mane,
  "marta":v_b_marta,
  "modric":v_b_modric,
+ "morgan":v_b_morgan,
  "nadim":v_b_nadim,
  "oshoala":v_b_oshoala,
  "pele":v_b_pele,
  "putellas":v_b_putellas,
  "rashford":v_b_rashford,
+ "renard":v_b_renard,
  "ronaldinho":v_b_ronaldinho,
  "ronaldo":v_b_ronaldo,
  "saka":v_b_saka,
  "salah":v_b_salah,
+ "sinclair":v_b_sinclair,
  "son":v_b_son,
  "vardy":v_b_vardy,
  "vinicius":v_b_vinicius,
  "weah":v_b_weah,
+ "wright":v_b_wright,
  "zidane":v_b_zidane,
 };
 /** Paper spreads, each in its own lazily loaded chunk. */
@@ -194,6 +214,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "garrincha":()=>import('./spreads/garrincha'),
  "griezmann":()=>import('./spreads/griezmann'),
  "hegerberg":()=>import('./spreads/hegerberg'),
+ "howard":()=>import('./spreads/howard'),
  "ibrahimovic":()=>import('./spreads/ibrahimovic'),
  "iniesta":()=>import('./spreads/iniesta'),
  "island":()=>import('./spreads/island'),
@@ -205,18 +226,22 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "mane":()=>import('./spreads/mane'),
  "marta":()=>import('./spreads/marta'),
  "modric":()=>import('./spreads/modric'),
+ "morgan":()=>import('./spreads/morgan'),
  "nadim":()=>import('./spreads/nadim'),
  "oshoala":()=>import('./spreads/oshoala'),
  "pele":()=>import('./spreads/pele'),
  "putellas":()=>import('./spreads/putellas'),
  "rashford":()=>import('./spreads/rashford'),
+ "renard":()=>import('./spreads/renard'),
  "ronaldinho":()=>import('./spreads/ronaldinho'),
  "ronaldo":()=>import('./spreads/ronaldo'),
  "saka":()=>import('./spreads/saka'),
  "salah":()=>import('./spreads/salah'),
+ "sinclair":()=>import('./spreads/sinclair'),
  "son":()=>import('./spreads/son'),
  "vardy":()=>import('./spreads/vardy'),
  "vinicius":()=>import('./spreads/vinicius'),
  "weah":()=>import('./spreads/weah'),
+ "wright":()=>import('./spreads/wright'),
  "zidane":()=>import('./spreads/zidane'),
 };

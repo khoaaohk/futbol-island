@@ -199,8 +199,8 @@ const mind:SpreadDef={id:'mind',rest:17.8,
  build:B=>{
   const bd=backdrop(B,K+'m-bd',k=>{wash(k,4.5,3,'#6f7ea8',INK.navy,y=>.35);const w=rect(2.6,.5,1.3,1.0);k.fill(w,INK.night);k.key(w,.014);k.circle(3.0,.8,.12,INK.white);k.key('M3.25 .5 L3.25 1.5 M2.6 1 L3.9 1',.02,INK.white);k.fill(rect(0,2.4,4.5,.6),'#a08660');},
    k=>{daySky(k,4.5,3);crowd(k,4.5,1.2,2.45,[...FRA,INK.yellow,INK.green],3);lightRig(k,.8,.3);lightRig(k,3.9,.3);k.fill(rect(0,2.45,4.5,.55),INK.grass);});
-  const light=bd.add(glow(K+'m-glow',.6),'L',1.3,1.0,{out:.02});
   const lamp=B.stand(S.lamp(K+'m-lamp',.55,1.4),-1.2,-.9,{layer:2});
+  const light=lamp.add(glow(K+'m-glow',.42),0,1.0,{z:.02,anchor:'bottom'});
   const W=B.person(K+'m-w',-2.8,.4,1.36,{shirt:'casual',...WR,face:'shy',layer:3});
   const breath=W.body.add(S.bubble(K+'m-breath',.46,.4,'breath'),.45,1.45,{z:-.02});
   const feel=B.stand(S.flipCard(K+'m-feel',1.7,.3,'THOUGHTS AND FEELINGS',INK.sky,INK.navy),-3.6,1.95,{layer:3,s:0,tab:false});
