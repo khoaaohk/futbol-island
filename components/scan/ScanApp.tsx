@@ -84,7 +84,9 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   setStore(st);setReady(true);
   if(embed)return;
   noteAppEntry('scan');
-  document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/scan/manifest.webmanifest';else l.remove();});
+  /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
+     throw "Cannot read properties of null (reading 'removeChild')" (Nov 22 2026) */
+  document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/scan/manifest.webmanifest';});
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/scan-sw.js',{scope:'/scan'}).catch(()=>{});
  },[embed,initialLang]);
  useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);if(!embed)document.documentElement.lang=lang;},[store,ready,lang,embed]);

@@ -173,7 +173,9 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   else setTab(asked??'home');
   try{const l=window.localStorage.getItem(LAST_KEY);if(l&&l!=='home'&&(TABS.includes(l as Tab)||l==='summary'))setLastTool(l as Tab);}catch{/* storage blocked */}
   /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
-  document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/coach/manifest.webmanifest';else l.remove();});
+  /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
+     throw "Cannot read properties of null (reading 'removeChild')" (Nov 22 2026) */
+  document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/coach/manifest.webmanifest';});
   setReady(true);count('ca:open');noteAppEntry('coach');
   if(!asked&&!(s.game&&s.game.clock.status!=='done'&&s.game.clock.status!=='pre'))try{const y=Number(window.sessionStorage.getItem(HOME_Y));window.sessionStorage.removeItem(HOME_Y);if(y>0)requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,y)));}catch{/* optional */}
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/coach-sw.js',{scope:'/coach'}).catch(()=>{});

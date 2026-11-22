@@ -22,7 +22,8 @@ export const hasViewTransitions=()=>typeof document!=='undefined'&&typeof (docum
  */
 export function screenChange(dir:Dir,change:()=>void,after?:()=>void){
  const d=document as VTDoc,run=()=>{flushSync(change);after?.();};
- if(!hasViewTransitions()||reducedMotion()||document.visibilityState!=='visible'){run();return;}
+ /* one transition at a time: a second change while one runs just happens at once */
+ if(!hasViewTransitions()||reducedMotion()||document.visibilityState!=='visible'||document.documentElement.dataset.vt){run();return;}
  const root=document.documentElement;root.dataset.vt=dir;
  try{const t=d.startViewTransition!(run);
   t.finished.finally(()=>{if(root.dataset.vt===dir)delete root.dataset.vt;});
