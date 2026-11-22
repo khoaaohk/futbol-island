@@ -33,7 +33,8 @@ const webpSize=f=>{const b=fs.readFileSync(f);return b.toString('ascii',0,4)==='
 let spreadBytes=0;for(const b of B.SITE_BOOKS)for(const c of b.chapters){const f=path.join(root,'public/books/spreads',b.id,c.id+'.webp');
  ok(fs.existsSync(f),`${b.id}/${c.id}: spread picture exists`);const [w,hh]=webpSize(f)??[];spreadBytes+=fs.statSync(f).size;
  ok(w===960&&hh===600&&fs.statSync(f).size<90000,`${b.id}/${c.id}: spread picture is a 960×600 webp under 90 KB`);}
-ok(spreadBytes<12e6,`spread pictures total ${(spreadBytes/1e6).toFixed(1)} MB`);
+// Budget per book (Nov 21 2026: twenty more books; 12 MB was sized for the 36): about 330 KB for six 960x600 stills.
+ok(spreadBytes<B.SITE_BOOKS.length*.33e6,`spread pictures total ${(spreadBytes/1e6).toFixed(1)} MB for ${B.SITE_BOOKS.length} books`);
 for(const b of B.SITE_BOOKS)for(const [i,c] of b.chapters.entries()){const raw=LIB.BOOKS[b.id].pages[i];
  const joined=c.paragraphs.join(' '),cut=raw.prompt.replace(/\.$/,'')+'.';
  ok(raw.text.split(/\n\n+/).join(' ').replace(cut,'').replace(/\s+/g,' ').trim()===joined.replace(/\s+/g,' ').trim(),`${b.id}/${c.id}: page text is the book's text minus the action sentence`);}
