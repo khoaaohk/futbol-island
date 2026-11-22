@@ -35,10 +35,11 @@ ok(/checked Nov 16 2026/.test(read('lib/site/cardRules.ts')),'cardRules.ts state
 // ---- 2. server HTML ----
 const P=L('app/(site)/learn/soccer-rules/[slug]/page.tsx'),rules=L('lib/site/rules.ts'),R=rules.ruleBySlug('yellow-and-red-cards');
 const words=s=>s.trim().split(/\s+/).length;
-ok(R.title.length<=60&&/yellow and red cards in soccer/i.test(R.title)&&/yellow card means/i.test(R.title),`title query-led and <= 60: ${R.title}`);
-ok(R.desc.length<=155&&/what does a yellow card mean in soccer/i.test(R.desc),`description query-led and <= 155 (${R.desc.length})`);
+// Nov 22 2026 (CTR round): Google ranks the term pages for "what does a yellow card mean", so this page is the rules deep-dive.
+ok(R.title.length<=60&&/yellow and red card rules in soccer/i.test(R.title)&&/offenses/i.test(R.title),`title query-led and <= 60: ${R.title}`);
+ok(R.desc.length<=155&&/yellow and red card rules in soccer/i.test(R.desc),`description query-led and <= 155 (${R.desc.length})`);
 ok(words(R.answer)>=40&&words(R.answer)<=60,`answer 40-60 words (${words(R.answer)})`);
-for(const q of ['What does a yellow card mean in soccer?','How do you get a red card in soccer?','What happens after a red card in soccer?'])ok(R.faq.some(f=>f.q===q),`FAQ asks: ${q}`);
+for(const q of ['What are the yellow card rules in soccer?','How do you get a red card in soccer?','What happens after a red card in soccer?'])ok(R.faq.some(f=>f.q===q),`FAQ asks: ${q}`);
 const routes=L('components/es/routes.tsx');
 const pages=[['en',decode(render(React.createElement(P.default,{params:{slug:'yellow-and-red-cards'}}))),en,R],
  ['es',decode(render(routes.esRoute('/learn/soccer-rules/yellow-and-red-cards').render())),es,L('lib/i18n/es/registry.ts').esRule('yellow-and-red-cards')]];
