@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "village": {
+      "src": "/voice/books/caicedo/village.m4a?v=coach-bella-1",
+      "duration": 44.8,
+      "scriptSha256": "7a16941d50d5ae6c0fcfbc9da403b7fbcdbdd74f76884673593eeaf345b4948a",
+      "cues": [
+        {
+          "text": "A club that had only boys",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "Linda Caicedo was born in 2005 in Candelaria, a small town in Colombia.",
+          "start": 2.35,
+          "duration": 6.675
+        },
+        {
+          "text": "Her mother remembers her kicking dolls and kitchen spoons around the house as if they were footballs.",
+          "start": 9.025,
+          "duration": 6.5
+        },
+        {
+          "text": "When Linda was five, she joined Real Juanchito, a village club that until then had only let boys play.",
+          "start": 15.525,
+          "duration": 7.425
+        },
+        {
+          "text": "Open the gate.",
+          "start": 22.95,
+          "duration": 1.725
+        },
+        {
+          "text": "Her coaches welcomed her and helped her learn.",
+          "start": 24.675,
+          "duration": 3.35
+        },
+        {
+          "text": "At ten she joined her first girls\u2019 team, and at eleven she moved to a club in the big city of Cali, where her teams won three national under-13 tournaments.",
+          "start": 28.025,
+          "duration": 10.9
+        },
+        {
+          "text": "If there is no place for you yet, a brave first step can open the gate for others too.",
+          "start": 38.925,
+          "duration": 5.875
+        }
+      ]
+    },
+    "debut": {
+      "src": "/voice/books/caicedo/debut.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "f87dce87d462ecf2c532179f59eac6dd698daaea38fb8d8618700e14f427ff41",
+      "cues": [
+        {
+          "text": "A goal in her first match",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "In July 2019, when she was only fourteen, Linda played her first professional match, for Am\u00e9rica de Cali.",
+          "start": 2.25,
+          "duration": 8.3
+        },
+        {
+          "text": "She scored the only goal of the game.",
+          "start": 10.55,
+          "duration": 2.775
+        },
+        {
+          "text": "By the end of that year she was the league\u2019s top scorer, and her goal won the club its first league title.",
+          "start": 13.325,
+          "duration": 6.925
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 20.25,
+          "duration": 2.0
+        },
+        {
+          "text": "It was a brilliant start.",
+          "start": 22.25,
+          "duration": 2.2
+        },
+        {
+          "text": "But a few months later, Linda would face the hardest challenge of her life, and it would not be on a football pitch.",
+          "start": 24.45,
+          "duration": 7.025
+        },
+        {
+          "text": "Good days are worth celebrating. They give you strength for the hard days too.",
+          "start": 31.475,
+          "duration": 5.15
+        }
+      ]
+    },
+    "illness": {
+      "src": "/voice/books/caicedo/illness.m4a?v=coach-bella-1",
+      "duration": 45.3,
+      "scriptSha256": "8080a53a1779d2dece541de3c5f8ba133f9ae2958b694f055a12120dd5e42996",
+      "cues": [
+        {
+          "text": "The hardest challenge",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Early in 2020, soon after her fifteenth birthday, Linda began to have pains in her tummy.",
+          "start": 2.1,
+          "duration": 7.0
+        },
+        {
+          "text": "Doctors found that she had cancer, a serious illness.",
+          "start": 9.1,
+          "duration": 4.075
+        },
+        {
+          "text": "She had an operation, and then six months of strong medicine.",
+          "start": 13.175,
+          "duration": 4.5
+        },
+        {
+          "text": "For a while, she had to stay in bed.",
+          "start": 17.675,
+          "duration": 2.825
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 20.5,
+          "duration": 2.1
+        },
+        {
+          "text": "Linda said later that it was hard on her feelings too, so she asked for help from the psychologists at her club, people who are trained to help with worries and sadness.",
+          "start": 22.6,
+          "duration": 10.15
+        },
+        {
+          "text": "In September 2020, the doctors told her the cancer was gone.",
+          "start": 32.75,
+          "duration": 5.0
+        },
+        {
+          "text": "When you are ill or sad, asking for help is brave. Doctors, family and helpers are part of your team.",
+          "start": 37.75,
+          "duration": 7.475
+        }
+      ]
+    },
+    "return": {
+      "src": "/voice/books/caicedo/return.m4a?v=coach-bella-1",
+      "duration": 39.2,
+      "scriptSha256": "25ce5db7da0251495d4f099463229e0a2337e65b347ce6ba2e3a835311f58aaa",
+      "cues": [
+        {
+          "text": "One small step at a time",
+          "start": 0.0,
+          "duration": 2.4
+        },
+        {
+          "text": "Linda went back to training only days after her last treatment.",
+          "start": 2.4,
+          "duration": 4.575
+        },
+        {
+          "text": "The medicine had made her hair fall out, and she chose to play wearing a wig.",
+          "start": 6.975,
+          "duration": 5.125
+        },
+        {
+          "text": "In October 2020, she played her first match for her new club, Deportivo Cali.",
+          "start": 12.1,
+          "duration": 6.2
+        },
+        {
+          "text": "Fill the comeback bar.",
+          "start": 18.3,
+          "duration": 2.2
+        },
+        {
+          "text": "She grew stronger, step by step.",
+          "start": 20.5,
+          "duration": 2.95
+        },
+        {
+          "text": "In 2022, the Copa Am\u00e9rica Femenina, the big tournament for South American national teams, was played in Colombia, and Linda was named its best player.",
+          "start": 23.45,
+          "duration": 11.55
+        },
+        {
+          "text": "Coming back takes small steps. Every one of them counts.",
+          "start": 35.0,
+          "duration": 4.15
+        }
+      ]
+    },
+    "finals": {
+      "src": "/voice/books/caicedo/finals.m4a?v=coach-bella-1",
+      "duration": 44.0,
+      "scriptSha256": "8db529484492750975e70293196cb0afe918ebf341fd611b6f7320c2a0ddd2b8",
+      "cues": [
+        {
+          "text": "So close, twice",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "In 2022, Linda played in two big finals.",
+          "start": 2.05,
+          "duration": 4.225
+        },
+        {
+          "text": "Colombia lost the Copa Am\u00e9rica final 1\u20130 to Brazil.",
+          "start": 6.275,
+          "duration": 4.575
+        },
+        {
+          "text": "Then, at the Under-17 World Cup in India, she was Colombia\u2019s captain and wore the number 10, but Colombia lost the final 1\u20130 to Spain.",
+          "start": 10.85,
+          "duration": 10.325
+        },
+        {
+          "text": "Turn the medal.",
+          "start": 21.175,
+          "duration": 1.725
+        },
+        {
+          "text": "Losing a final hurts.",
+          "start": 22.9,
+          "duration": 2.325
+        },
+        {
+          "text": "But Linda won the Silver Ball, the prize for the second-best player of that World Cup.",
+          "start": 25.225,
+          "duration": 5.95
+        },
+        {
+          "text": "In February 2023, two days after her eighteenth birthday, she joined Real Madrid in Spain.",
+          "start": 31.175,
+          "duration": 7.45
+        },
+        {
+          "text": "Losing a final means you got very close. Learn from it, and keep going.",
+          "start": 38.625,
+          "duration": 5.3
+        }
+      ]
+    },
+    "worldcup": {
+      "src": "/voice/books/caicedo/worldcup.m4a?v=coach-bella-1",
+      "duration": 39.8,
+      "scriptSha256": "23309f940d26d46ab9ddb73fd9e9f3a32e6b224f274b4460e724b3791526fa34",
+      "cues": [
+        {
+          "text": "A goal against Germany",
+          "start": 0.0,
+          "duration": 2.225
+        },
+        {
+          "text": "At the 2023 World Cup in Australia and New Zealand, Linda scored in Colombia\u2019s first match, a 2\u20130 win over South Korea.",
+          "start": 2.225,
+          "duration": 9.475
+        },
+        {
+          "text": "Then she played Germany, one of the strongest teams in the world, and scored again.",
+          "start": 11.7,
+          "duration": 5.525
+        },
+        {
+          "text": "Colombia won 2\u20131, and her goal was voted the best goal of the whole tournament.",
+          "start": 17.225,
+          "duration": 5.875
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 23.1,
+          "duration": 1.75
+        },
+        {
+          "text": "The girl who had come through a serious illness at fifteen was now a World Cup star, playing for her country with her teammates all around her.",
+          "start": 24.85,
+          "duration": 9.125
+        },
+        {
+          "text": "Hard times can make you stronger and kinder. Your story can give other people hope.",
+          "start": 33.975,
+          "duration": 5.75
+        }
+      ]
+    }
+  }
+}

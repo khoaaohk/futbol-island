@@ -41,6 +41,8 @@ export const PLAYER_BOOKS = {
  nadim: { itemId: 'display:causeway:book', title: 'Nadim: A long road to a new home', player: 'Nadia Nadim', machine: 'causeway' },
  kante: { itemId: 'display:cayplaza:book', title: 'Kanté: Told no, and still working', player: 'N’Golo Kanté', machine: 'cayplaza' },
  oshoala: { itemId: 'display:sharks:book', title: 'Oshoala: Playing when few believed', player: 'Asisat Oshoala', machine: 'sharks' },
+ // Nov 21 2026: twenty more hardship stories (docs/player-books/NEW-20-NOV21.md), each shelved at the machine its item id names.
+ caicedo: { itemId: 'display:oldtown:book:caicedo', title: 'Caicedo: Brave enough to come back', player: 'Linda Caicedo', machine: 'oldtown' },
 } as const;
 export type PlayerBookId = keyof typeof PLAYER_BOOKS;
 /** Books every player owns from the start (their Backpack lists them; nothing is bought). */

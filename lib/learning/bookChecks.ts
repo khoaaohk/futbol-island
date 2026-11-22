@@ -48,4 +48,6 @@ export const BOOK_CHECKS:Record<PlayerBookId,BookCheck>={
  nadim:C('follow-in','7v7','A teammate takes a penalty. What should the attackers do?',['Celebrate before it goes in','Run in once it is kicked','Walk away'],1,'Wait outside the box until it is kicked. If the keeper saves, the first player there can score the rebound.'),
  kante:C('win-it','futsal','You win the ball. What do you do next?',['Pass quickly to a free teammate','Dribble alone into three defenders','Kick it out'],0,'Win it, then give it quickly. The whole team attacks together.'),
  oshoala:C('team-roles','9v9','A defender moves up the pitch. Who helps?',['Nobody','A teammate covers their space','The referee'],1,'Great teams share the jobs: when one player moves, another covers.'),
+ // Nov 21 2026 books.
+ caicedo:C('width-space','7v7','Your teammate has the ball in the middle. Where can you go to help?',['Out wide, into open space','Right next to them','Behind the goal'],0,'Open space gives your teammate an easy pass, and gives you room to run with the ball.'),
 };

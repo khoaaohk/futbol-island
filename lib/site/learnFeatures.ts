@@ -315,7 +315,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   description:'Each pop-up book tells a true story of a footballer overcoming hardship, with a narrator reading every page. A book check afterwards links the story back to a lesson.',
   footballTie:'Resilience and practice habits, plus a "take it to your game" idea at the end of each book.',
   where:'Buy books with coins at the vending machines; they stay in the backpack to reread.',
-  proof:'37 narrated pop-up books.',counts:{books:37}},
+  proof:'38 narrated pop-up books.',counts:{books:38}},
  {id:'vending',title:'Vending machines',group:'collect',imageKey:'vending_machine',
   hook:'Spend the coins you earn on cards, balls and rides.',
   description:'Vending machines around the islands sell card packs, balls, rides and island animals for coins. Every machine also has a Specials row sold only there, which gives a reason to explore.',

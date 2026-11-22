@@ -18,10 +18,11 @@ const decode=h=>h.replace(/&#x27;|&#39;/g,"'").replace(/&quot;/g,'"').replace(/&
 const B=L('lib/site/books.ts'),EX=L('lib/site/exhibits.ts'),CAT=L('lib/books/catalog.ts'),LIB=L('lib/books/library.ts');
 // ---- 1. data ----
 const ids=Object.keys(CAT.PLAYER_BOOKS).filter(i=>i!=='island');
-ok(B.SITE_BOOKS.length===ids.length&&ids.length===36,`all 36 player books on the shelf (${B.SITE_BOOKS.length})`);
+const NOV21=ids.slice(ids.indexOf('oshoala')+1),TOTAL=36+NOV21.length;// the Nov 21 2026 books follow Oshoala in the catalog
+ok(B.SITE_BOOKS.length===ids.length&&ids.length===TOTAL,`all ${TOTAL} player books on the shelf (${B.SITE_BOOKS.length})`);
 ok(B.SITE_BOOKS.every(b=>b.region&&b.country&&/^[a-z]+$/.test(b.slug)),'every book has a country, region and slug');
-ok(B.shelf().reduce((a,g)=>a+g.books.length,0)===36,'the shelf groups hold every book once');
-ok(B.BUILT_BOOKS.length===36&&B.SITE_BOOKS.every(b=>b.path===`/books/${b.id}`),'every book has its own page');
+ok(B.shelf().reduce((a,g)=>a+g.books.length,0)===TOTAL,'the shelf groups hold every book once');
+ok(B.BUILT_BOOKS.length===TOTAL&&B.SITE_BOOKS.every(b=>b.path===`/books/${b.id}`),'every book has its own page');
 for(const id of B.BUILT_BOOKS){const b=B.bookBySlug(id),p=b.page;
  ok(p.summary.split(/\s+/).length>=30&&p.summary.length<=420,`${id}: summary 30+ words`);
  ok(p.faq.length>=3&&p.faq.length<=5,`${id}: 3-5 FAQ items`);
@@ -46,7 +47,7 @@ ok(!/On the island now|coming soon/i.test(hub),'hub: no stand-in for a missing p
 ok(/<a[^>]*href="\/fish"[^>]*>[\s\S]*?Fishbook/.test(hub)&&/Island field guides/.test(hub),'hub: the Fishbook field guide links to /fish');
 ok(/href="\/books"/.test(decode(render(React.createElement(L('app/(site)/fish/page.tsx').default)))),'fish hub links back to the books');
 const hubLd=ldOf(hub),coll=hubLd.find(x=>x['@type']==='CollectionPage');ok(coll&&hubLd.some(x=>x['@type']==='BreadcrumbList'),'hub JSON-LD: CollectionPage + BreadcrumbList');
-ok(coll.mainEntity.numberOfItems===36&&B.SITE_BOOKS.every(x=>coll.mainEntity.itemListElement.some(it=>it.url===`https://futbolisland.app/books/${x.id}`)),'hub JSON-LD: the CollectionPage lists every book page');
+ok(coll.mainEntity.numberOfItems===TOTAL&&B.SITE_BOOKS.every(x=>coll.mainEntity.itemListElement.some(it=>it.url===`https://futbolisland.app/books/${x.id}`)),'hub JSON-LD: the CollectionPage lists every book page');
 // ---- 3. every built page (Cafu, the sample, also checks card #26) ----
 const P=L('app/(site)/books/[slug]/page.tsx');
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');

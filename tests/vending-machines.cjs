@@ -56,23 +56,27 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const M=ALL.filter(m=>!m.drinks);
  const rows=['special','books','packs','ball','scooter','bike','moped','jetpack','costume'];
  const regular=new Set(C.VENDING_ITEMS.map(i=>i.id)),seen=new Map();
+ // Nov 21 2026 books (catalog entries after Oshoala): each adds one to its home machine's shelf (option A: six per original
+ // machine, five per Sep 29 book machine; the face pages six slots at a time).
+ const NOV21=Object.keys(PLAYER_BOOKS).slice(Object.keys(PLAYER_BOOKS).indexOf('oshoala')+1),newAt=id=>NOV21.filter(b=>PLAYER_BOOKS[b].machine===id).length;
+ assert(NOV21.length<=20,'at most the twenty Nov 21 books');
  for(const m of M){
   const stock=C.machineStock(m.id);same(stock.map(r=>r.row),rows,m.id+' rows');
   assert.equal(stock.find(r=>r.row==='costume').items.length,24,'23 club costumes and the fox');
   for(const r of stock.slice(2))same(r.items.map(i=>i.id),C.VENDING_ITEMS.filter(i=>i.row===r.row).map(i=>i.id),'regular stock is identical in every machine');
   // Sep 30 2026 ("each machine should have 4 books"): every shop machine sells exactly four pop-up books, its home books first.
-  const books=stock[1].items;assert.equal(books.length,4,m.id+' sells exactly four books');assert(books.every(b=>b.kind==='display'&&b.price===100&&b.storyId&&PLAYER_BOOKS[b.storyId].itemId===b.id),m.id+' books are real books at 100');
+  const books=stock[1].items;assert.equal(books.length,4+newAt(m.id),m.id+' sells four books plus its Nov 21 home books');assert(books.length<=6,m.id+' at most six books');assert(books.every(b=>b.kind==='display'&&b.price===100&&b.storyId&&PLAYER_BOOKS[b.storyId].itemId===b.id),m.id+' books are real books at 100');
   const home=Object.keys(PLAYER_BOOKS).filter(b=>PLAYER_BOOKS[b].machine===m.id).map(b=>PLAYER_BOOKS[b].itemId);same(books.slice(0,home.length).map(b=>b.id),home,m.id+' features its home books first');
   assert(stock[0].items.every(i=>i.kind!=='display'),'books sit in the Books row, not Specials');
   if(REGULAR_ONLY.includes(m.id)){assert.equal(m.specials.length,0,m.id+' sells the regular rows only');assert.equal(stock[0].items.length,0,'no specials row items');}
-  else if(BOOK_MACHINES.includes(m.id)){assert.equal(m.specials.length,1,m.id+' sells its one book as its special');const book=books[0];assert.equal(book.kind,'display');assert.equal(book.price,100,'same book price as every machine');assert(book.storyId&&PLAYER_BOOKS[book.storyId].machine===m.id&&PLAYER_BOOKS[book.storyId].itemId===book.id,m.id+' sells its matching book');}
-  else{assert.equal(m.specials.length,6,m.id+' has six exclusive specials');assert.equal(stock[0].items.length,2,'its exclusive ball and pack');assert.equal(books.filter(b=>b.machine===m.id).length,4,'four home books');}
+  else if(BOOK_MACHINES.includes(m.id)){assert.equal(m.specials.length,1+newAt(m.id),m.id+' sells its home books as its specials');const book=books[0];assert.equal(book.kind,'display');assert.equal(book.price,100,'same book price as every machine');assert(book.storyId&&PLAYER_BOOKS[book.storyId].machine===m.id&&PLAYER_BOOKS[book.storyId].itemId===book.id,m.id+' sells its matching book');}
+  else{assert.equal(m.specials.length,6+newAt(m.id),m.id+' has its ball, pack and home books as exclusive specials');assert.equal(stock[0].items.length,2,'its exclusive ball and pack');assert.equal(books.filter(b=>b.machine===m.id).length,4+newAt(m.id),'four home books plus the Nov 21 ones');}
   for(const id of m.specials){assert(!regular.has(id),id+' is not in the regular rows');assert(!seen.has(id),id+' is sold at one machine only');seen.set(id,m.id);const item=C.vendingItem(id);assert.equal(item.machine,m.id);assert(item.blurb.length>40,id+' teaches something');}
   assert(m.lesson.length>20);
  }
  {const sold=new Set(M.flatMap(m=>C.machineStock(m.id)[1].items.map(i=>i.id))),all=Object.keys(PLAYER_BOOKS).filter(b=>PLAYER_BOOKS[b].machine).map(b=>PLAYER_BOOKS[b].itemId);
-  same([...sold].sort(),[...all].sort(),'all 36 sellable books are on sale somewhere (the starter book is free), and nothing else');assert.equal(all.length,36);
-  assert.equal(C.VENDING_SPECIALS.filter(i=>i.kind==='display').length,36,'one item per book: the own-everything total is unchanged');
+  same([...sold].sort(),[...all].sort(),'every sellable book is on sale somewhere (the starter book is free), and nothing else');assert.equal(all.length,36+NOV21.length);
+  assert.equal(C.VENDING_SPECIALS.filter(i=>i.kind==='display').length,36+NOV21.length,'one item per book: the own-everything total is unchanged');
   assert(M.flatMap(m=>C.machineStock(m.id)[1].items.map(i=>i.id)).length>sold.size,'some books are sold at more than one machine');}
  for(const item of [...C.VENDING_ITEMS,...C.VENDING_SPECIALS]){assert(Number.isInteger(item.price)&&item.price>0,item.id+' price');assert(item.blurb.length>10,item.id+' blurb');}
  // Balls, rides and costumes keep their store learning copy; specials are all eight new balls plus eight themed packs.

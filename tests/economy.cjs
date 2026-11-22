@@ -89,7 +89,7 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 //    for at most REVIEW_PAID_PER_DAY right answers a day (the only daily-repeatable learning coins), and each book's "Take it to
 //    your game" check pays LEARN_COINS.book once. Worst case = every day's warm-up fully paid from day 1 plus every book check.
 {const {REVIEW_PAID_PER_DAY}=require('../lib/learning/review.ts');const casualPerDay=72;
- const dailyMax=LEARN_COINS.review*REVIEW_PAID_PER_DAY,bookPool=36*LEARN_COINS.book;
+ const dailyMax=LEARN_COINS.review*REVIEW_PAID_PER_DAY,bookPool=Object.values(require('../lib/books/catalog.ts').PLAYER_BOOKS).filter(b=>b.machine).length*LEARN_COINS.book;// every sellable book (36 + the Nov 21 books)
  assert(dailyMax<=casualPerDay*.1,`warm-up coins (${dailyMax}/day) stay under a tenth of a casual day`);
  assert(dailyMax<LEARN_COINS.quiz,'a whole day of warm-ups pays less than one new lesson quiz: new learning still pays best');
  assert(LEARN_COINS.book<BOOK_PRICE*.1,'a book check returns under a tenth of the book');assert(bookPool<=S.sinkTotal(S.AFTER_FULL)*.05,'all book checks are under 5% of the sink');

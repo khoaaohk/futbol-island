@@ -28,7 +28,7 @@ import {PLAYER_BOOKS,BOOK_PRICE,booksForMachine,type PlayerBookId} from '../book
 import {READY_BOOKS} from '../books/registry.ids.generated';
 /** Shelf blurb for a pop-up book: every player book is a true story of a hardship and how they kept going. */
 /** Name on the cover / shelf label. */
-const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé',kante:'Kanté'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
+const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé',kante:'Kanté',vinicius:'Vinícius',son:'Son'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
 const bookBlurb=(id:PlayerBookId)=>id==='island'?'Futbol Island: an introduction to everything you can do on the island.':`${PLAYER_BOOKS[id].title}. A riso pop-up book: the true story of a hardship ${PLAYER_BOOKS[id].player} faced, and what helped.`;
 
 export const VENDING_YAW=Math.atan2(16,33);
@@ -92,9 +92,13 @@ for(const m of VENDING_MACHINES)m.specials.push(...homeDisplays.filter(i=>i.mach
  * a mix. All 36 sellable books appear at least once (the Futbol Island starter book is free for everyone). A book is ONE item
  * (its PLAYER_BOOKS itemId) wherever it is sold, so ownership, price and "Read" are per book: buying it at one machine owns it at
  * every machine, and existing saves keep their books unchanged (no migration needed: the ids did not change).
+ * Nov 21 2026 (twenty new books, owner away; coordinator decision, docs/player-books/NEW-20-NOV21.md option A): the shelf grows
+ * instead of a new machine. Each original machine sells its four books plus two new home books (six), each Sep 29 book machine
+ * adds one (five). The face already pages six slots at a time (VENDING_FACE_LAYOUT), so books five and six sit on the next page
+ * under the same Books row; the glass, atlas and draw calls are unchanged (books are display items, painted on the face).
  */
 export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId[]>>={
- ...Object.fromEntries(VENDING_MACHINES.filter(m=>!m.drinks&&booksForMachine(m.id).length===4).map(m=>[m.id,booksForMachine(m.id)])),
+ ...Object.fromEntries(VENDING_MACHINES.filter(m=>!m.drinks&&booksForMachine(m.id).length>=4).map(m=>[m.id,booksForMachine(m.id)])),
  northbeach:['cafu','bronze','davies','maldini'],          // full-backs and defenders: overlap, cover, defend together
  causeway:['nadim','modric','salah','eusebio'],            // long roads to a new home
  cayplaza:['kante','vardy','debruyne','kane'],             // told no, kept working

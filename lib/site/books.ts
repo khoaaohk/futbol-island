@@ -30,12 +30,16 @@ export const BUILT_BOOKS=BOOK_IDS.filter(id=>!!BOOK_PAGES[id]);
 
 /** Regions for the shelf, from the country of the player's card (lib/town/playerAppearance.json). A player without a card on the
  *  site yet takes the national team named in the island's own player data (FALLBACK_COUNTRY), never a guess. */
-export const REGIONS=['South America','Europe','Africa','North America and Oceania'] as const;
+export const REGIONS=['South America','Europe','Africa','Asia','North America and Oceania'] as const;
 export type Region=typeof REGIONS[number];
 const REGION_OF:Record<string,Region>={Brazil:'South America',Argentina:'South America',Italy:'Europe',France:'Europe',Netherlands:'Europe',Croatia:'Europe',
  Portugal:'Europe',Spain:'Europe',England:'Europe',Belgium:'Europe',Sweden:'Europe',Norway:'Europe',Denmark:'Europe',Egypt:'Africa',Liberia:'Africa',
- 'Ivory Coast':'Africa',Senegal:'Africa',Nigeria:'Africa',Canada:'North America and Oceania',Australia:'North America and Oceania'};
-const FALLBACK_COUNTRY:Partial<Record<PlayerBookId,string>>={vardy:'England',eriksen:'Denmark',rashford:'England',nadim:'Denmark',kante:'France'};
+ 'Ivory Coast':'Africa',Senegal:'Africa',Nigeria:'Africa',Canada:'North America and Oceania',Australia:'North America and Oceania',
+ // Nov 21 2026 books: Asia is its own shelf (Son, then Sawa).
+ Colombia:'South America',USA:'North America and Oceania','United States':'North America and Oceania',Japan:'Asia','South Korea':'Asia',
+ 'Czech Republic':'Europe',Wales:'Europe',Algeria:'Africa',Cameroon:'Africa','Bosnia and Herzegovina':'Europe'};
+const FALLBACK_COUNTRY:Partial<Record<PlayerBookId,string>>={vardy:'England',eriksen:'Denmark',rashford:'England',nadim:'Denmark',kante:'France',
+ caicedo:'Colombia'};
 
 export type BookChapter={id:string;year:string;title:string;
  /** The page text as paragraphs, without the paper-action sentence (see the file comment). */
