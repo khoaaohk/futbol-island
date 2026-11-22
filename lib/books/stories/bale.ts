@@ -26,7 +26,7 @@ export const BALE_BOOK:BookData={
    lesson:'A bad run is just a run. It does not say who you are.',
    prompt:'Lift the rain cloud',response:'Keep going.',source:2},
   {id:'burnley',year:'September 2009',title:'The run is over',
-   text:'In September 2009, Gareth came on as a substitute in the eighty-fifth minute against Burnley. Tottenham won 5–0. At last, the run was over! His teammates were happy for him.\n\nFlip the scoreboard. Then his manager moved him from left-back to the wing, and Gareth became one of the most exciting players in the world. In 2011 and 2013, the other players voted him their Player of the Year.',
+   text:'In September 2009, Gareth came on as a substitute near the end of a game against Burnley. Tottenham won 5–0. At last, the run was over! His teammates were happy for him.\n\nFlip the scoreboard. Then his manager moved him from left-back to the wing, and Gareth became one of the most exciting players in the world. In 2011 and 2013, the other players voted him their Player of the Year.',
    lesson:'Sometimes a small change, like a new position, can help you shine.',
    prompt:'Flip the scoreboard',response:'The run is over!',source:1},
   {id:'wales',year:'2013 to 2023',title:'A hero for Wales',

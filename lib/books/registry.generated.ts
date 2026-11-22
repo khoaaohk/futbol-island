@@ -3,6 +3,7 @@ import type {BookData} from './types';
 import type {SpreadDef} from './popupEngine';
 import {MESSI_BOOK} from './messi';
 import {BAGGIO_BOOK as b_baggio} from './stories/baggio';
+import {BALE_BOOK as b_bale} from './stories/bale';
 import {BRONZE_BOOK as b_bronze} from './stories/bronze';
 import {BUFFON_BOOK as b_buffon} from './stories/buffon';
 import {CAFU_BOOK as b_cafu} from './stories/cafu';
@@ -54,6 +55,7 @@ import {WEAH_BOOK as b_weah} from './stories/weah';
 import {ZIDANE_BOOK as b_zidane} from './stories/zidane';
 import v_b_messi from '../../public/voice/books/messi/narration.json';
 import v_b_baggio from '../../public/voice/books/baggio/narration.json';
+import v_b_bale from '../../public/voice/books/bale/narration.json';
 import v_b_bronze from '../../public/voice/books/bronze/narration.json';
 import v_b_buffon from '../../public/voice/books/buffon/narration.json';
 import v_b_cafu from '../../public/voice/books/cafu/narration.json';
@@ -107,6 +109,7 @@ import v_b_zidane from '../../public/voice/books/zidane/narration.json';
 export const REGISTRY_BOOKS:Record<string,BookData>={
  messi:{...MESSI_BOOK,player:'Lionel Messi',pages:MESSI_BOOK.pages.map(p=>({...p,steps:p.action==='touch'?3:1}))},
  "baggio":b_baggio,
+ "bale":b_bale,
  "bronze":b_bronze,
  "buffon":b_buffon,
  "cafu":b_cafu,
@@ -161,6 +164,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
 export const REGISTRY_NARRATION:Record<string,unknown>={
  "messi":v_b_messi,
  "baggio":v_b_baggio,
+ "bale":v_b_bale,
  "bronze":v_b_bronze,
  "buffon":v_b_buffon,
  "cafu":v_b_cafu,
@@ -215,6 +219,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
 export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,SpreadDef>}>>={
  "messi":()=>import('./bookDiorama'),
  "baggio":()=>import('./spreads/baggio'),
+ "bale":()=>import('./spreads/bale'),
  "bronze":()=>import('./spreads/bronze'),
  "buffon":()=>import('./spreads/buffon'),
  "cafu":()=>import('./spreads/cafu'),

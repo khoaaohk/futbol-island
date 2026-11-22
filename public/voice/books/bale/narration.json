@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "cardiff": {
+      "src": "/voice/books/bale/cardiff.m4a?v=coach-bella-1",
+      "duration": 35.7,
+      "scriptSha256": "b97699393ddb2dcbfc487cd90ef8de33a62d94085ad96c482219f9f44307fa6b",
+      "cues": [
+        {
+          "text": "Spotted at six-a-side",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Gareth Bale was born in 1989 in Cardiff, in Wales.",
+          "start": 2.275,
+          "duration": 4.75
+        },
+        {
+          "text": "When he was nine, scouts from Southampton saw him playing six-a-side football for his first club, Cardiff Civil Service.",
+          "start": 7.025,
+          "duration": 8.2
+        },
+        {
+          "text": "He was quick and loved to run with the ball.",
+          "start": 15.225,
+          "duration": 3.225
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 18.45,
+          "duration": 1.75
+        },
+        {
+          "text": "Southampton invited him to train with them.",
+          "start": 20.2,
+          "duration": 3.55
+        },
+        {
+          "text": "It was the start of a long journey.",
+          "start": 23.75,
+          "duration": 2.875
+        },
+        {
+          "text": "He was still a schoolboy, and he trained with Southampton while he grew up.",
+          "start": 26.625,
+          "duration": 4.75
+        },
+        {
+          "text": "Enjoy playing. Fun games are where great players begin.",
+          "start": 31.375,
+          "duration": 4.25
+        }
+      ]
+    },
+    "rules": {
+      "src": "/voice/books/bale/rules.m4a?v=coach-bella-1",
+      "duration": 31.4,
+      "scriptSha256": "98cecc04f49f247c04bf194bb5f0d6550c1add1050adb4ba7ec999c0bcd94d66",
+      "cues": [
+        {
+          "text": "Special rules",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "Gareth was so good at school football that his PE teacher, Gwyn Morris, gave him special rules.",
+          "start": 1.9,
+          "duration": 6.775
+        },
+        {
+          "text": "He was only allowed one touch of the ball, and he was not allowed to use his left foot, his best foot.",
+          "start": 8.675,
+          "duration": 6.625
+        },
+        {
+          "text": "That made the games fairer for the other children.",
+          "start": 15.3,
+          "duration": 3.35
+        },
+        {
+          "text": "Tap the ball three times.",
+          "start": 18.65,
+          "duration": 2.275
+        },
+        {
+          "text": "The rules made the game fair for everyone, and they made Gareth practise his other skills.",
+          "start": 20.925,
+          "duration": 5.9
+        },
+        {
+          "text": "Making things harder for yourself is a great way to get better.",
+          "start": 26.825,
+          "duration": 4.575
+        }
+      ]
+    },
+    "young": {
+      "src": "/voice/books/bale/young.m4a?v=coach-bella-1",
+      "duration": 36.8,
+      "scriptSha256": "e3033e1944e741f6ed82cd86a3c108f1390264770a678b8206c1602b58e04565",
+      "cues": [
+        {
+          "text": "The youngest for Wales",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "In April 2006, when he was sixteen, Gareth played his first match for Southampton.",
+          "start": 2.175,
+          "duration": 6.775
+        },
+        {
+          "text": "A few weeks later, he became the youngest player ever to play for Wales, at sixteen years and 315 days.",
+          "start": 8.95,
+          "duration": 8.125
+        },
+        {
+          "text": "He played at left-back, running up and down the wing.",
+          "start": 17.075,
+          "duration": 3.55
+        },
+        {
+          "text": "Flip the shirt.",
+          "start": 20.625,
+          "duration": 1.775
+        },
+        {
+          "text": "In 2007, he moved to Tottenham Hotspur in London.",
+          "start": 22.4,
+          "duration": 4.875
+        },
+        {
+          "text": "London was a big new city, and Tottenham was a big new club.",
+          "start": 27.275,
+          "duration": 4.625
+        },
+        {
+          "text": "Young players can do big things when they are ready and given a chance.",
+          "start": 31.9,
+          "duration": 4.825
+        }
+      ]
+    },
+    "jinx": {
+      "src": "/voice/books/bale/jinx.m4a?v=coach-bella-1",
+      "duration": 33.4,
+      "scriptSha256": "0a954df90d713e788f88a7090d06930ddde3c7dd81df0c5bc2873768c318aecd",
+      "cues": [
+        {
+          "text": "The unlucky run",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "At Tottenham, something strange happened.",
+          "start": 1.85,
+          "duration": 3.2
+        },
+        {
+          "text": "Gareth played in 24 Premier League games, and his team did not win any of them.",
+          "start": 5.05,
+          "duration": 5.975
+        },
+        {
+          "text": "For two years, the run went on, and some people even called him unlucky.",
+          "start": 11.025,
+          "duration": 5.375
+        },
+        {
+          "text": "It was not his fault, but people still talked about it.",
+          "start": 16.4,
+          "duration": 3.875
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 20.275,
+          "duration": 2.1
+        },
+        {
+          "text": "It is hard when people say you are unlucky.",
+          "start": 22.375,
+          "duration": 3.5
+        },
+        {
+          "text": "Gareth kept training and kept playing his best.",
+          "start": 25.875,
+          "duration": 3.4
+        },
+        {
+          "text": "A bad run is just a run. It does not say who you are.",
+          "start": 29.275,
+          "duration": 4.1
+        }
+      ]
+    },
+    "burnley": {
+      "src": "/voice/books/bale/burnley.m4a?v=coach-bella-1",
+      "duration": 37.2,
+      "scriptSha256": "8f8e954fd09076a5af0a9fa8e8fe6e3ed29a149899dade3c67e9039becbfca2c",
+      "cues": [
+        {
+          "text": "The run is over",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In September 2009, Gareth came on as a substitute near the end of a game against Burnley.",
+          "start": 1.85,
+          "duration": 7.15
+        },
+        {
+          "text": "Tottenham won 5\u20130.",
+          "start": 9.0,
+          "duration": 2.375
+        },
+        {
+          "text": "At last, the run was over!",
+          "start": 11.375,
+          "duration": 2.5
+        },
+        {
+          "text": "His teammates were happy for him.",
+          "start": 13.875,
+          "duration": 2.65
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 16.525,
+          "duration": 2.0
+        },
+        {
+          "text": "Then his manager moved him from left-back to the wing, and Gareth became one of the most exciting players in the world.",
+          "start": 18.525,
+          "duration": 7.65
+        },
+        {
+          "text": "In 2011 and 2013, the other players voted him their Player of the Year.",
+          "start": 26.175,
+          "duration": 6.325
+        },
+        {
+          "text": "Sometimes a small change, like a new position, can help you shine.",
+          "start": 32.5,
+          "duration": 4.7
+        }
+      ]
+    },
+    "wales": {
+      "src": "/voice/books/bale/wales.m4a?v=coach-bella-1",
+      "duration": 36.1,
+      "scriptSha256": "f6a2fb062f40576ce06f1c34eeefab9c983bf0c044e6360f678d99667b78f9a2",
+      "cues": [
+        {
+          "text": "A hero for Wales",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2013, Real Madrid signed Gareth for a world-record fee, and he won the Champions League five times.",
+          "start": 1.975,
+          "duration": 7.875
+        },
+        {
+          "text": "In 2016, he led Wales to the semi-finals of the European Championship.",
+          "start": 9.85,
+          "duration": 5.775
+        },
+        {
+          "text": "He scored many important goals in big finals.",
+          "start": 15.625,
+          "duration": 3.6
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 19.225,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2022, he helped Wales reach the World Cup for the first time since 1958.",
+          "start": 21.075,
+          "duration": 6.65
+        },
+        {
+          "text": "Gareth stopped playing in January 2023.",
+          "start": 27.725,
+          "duration": 3.9
+        },
+        {
+          "text": "Unlucky moments pass. Keep working, and your luck can turn.",
+          "start": 31.625,
+          "duration": 4.4
+        }
+      ]
+    }
+  }
+}
