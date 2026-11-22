@@ -47,6 +47,7 @@ export const PLAYER_BOOKS = {
  son: { itemId: 'display:rooftop:book:son', title: 'Son: Practise the basics, then fly', player: 'Son Heung-min', machine: 'rooftop' },
  earps: { itemId: 'display:pier:book:earps', title: 'Earps: Left out, then the world’s best', player: 'Mary Earps', machine: 'pier' },
  griezmann: { itemId: 'display:rooftop:book:griezmann', title: 'Griezmann: Too small for France?', player: 'Antoine Griezmann', machine: 'rooftop' },
+ vandijk: { itemId: 'display:clubgrounds:book:vandijk', title: 'Van Dijk: Late, but not too late', player: 'Virgil van Dijk', machine: 'clubgrounds' },
 } as const;
 export type PlayerBookId = keyof typeof PLAYER_BOOKS;
 /** Books every player owns from the start (their Backpack lists them; nothing is bought). */

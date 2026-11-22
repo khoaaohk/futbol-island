@@ -54,4 +54,5 @@ export const BOOK_CHECKS:Record<PlayerBookId,BookCheck>={
  son:C('scan-receive','7v7','You have practised your first touch for years. The ball comes to you. Where should that touch send it?',['Straight back to the passer, every time','Into open space, away from the defender','As high as you can'],1,'A good first touch moves the ball into space, so your next touch can be a dribble, a pass or a shot.'),
  earps:C('keeper-set','futsal','The attacker is about to shoot. What does the goalkeeper do?',['Turn around','Get set: feet apart, hands ready','Run off the pitch'],1,'A set keeper is balanced and ready to dive either way.'),
  griezmann:C('win-it','futsal','You lose the ball to a defender. What do you do next?',['Stop and complain','Walk back slowly','Press straight away to win it back'],2,'Good players react at once. Losing the ball, like hearing no, is a moment to keep going.'),
+ vandijk:C('press-cover','9v9','Your teammate runs to win the ball. What does the defender beside them do?',['Cover the space behind them','Run off the pitch','Stand still and watch'],0,'When one defender presses, the next one covers. Defending together keeps your goal safe.'),
 };

@@ -39,6 +39,7 @@ import {RONALDO_BOOK as b_ronaldo} from './stories/ronaldo';
 import {SAKA_BOOK as b_saka} from './stories/saka';
 import {SALAH_BOOK as b_salah} from './stories/salah';
 import {SON_BOOK as b_son} from './stories/son';
+import {VANDIJK_BOOK as b_vandijk} from './stories/vandijk';
 import {VARDY_BOOK as b_vardy} from './stories/vardy';
 import {VINICIUS_BOOK as b_vinicius} from './stories/vinicius';
 import {WEAH_BOOK as b_weah} from './stories/weah';
@@ -81,6 +82,7 @@ import v_b_ronaldo from '../../public/voice/books/ronaldo/narration.json';
 import v_b_saka from '../../public/voice/books/saka/narration.json';
 import v_b_salah from '../../public/voice/books/salah/narration.json';
 import v_b_son from '../../public/voice/books/son/narration.json';
+import v_b_vandijk from '../../public/voice/books/vandijk/narration.json';
 import v_b_vardy from '../../public/voice/books/vardy/narration.json';
 import v_b_vinicius from '../../public/voice/books/vinicius/narration.json';
 import v_b_weah from '../../public/voice/books/weah/narration.json';
@@ -125,6 +127,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "saka":b_saka,
  "salah":b_salah,
  "son":b_son,
+ "vandijk":b_vandijk,
  "vardy":b_vardy,
  "vinicius":b_vinicius,
  "weah":b_weah,
@@ -170,6 +173,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "saka":v_b_saka,
  "salah":v_b_salah,
  "son":v_b_son,
+ "vandijk":v_b_vandijk,
  "vardy":v_b_vardy,
  "vinicius":v_b_vinicius,
  "weah":v_b_weah,
@@ -215,6 +219,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "saka":()=>import('./spreads/saka'),
  "salah":()=>import('./spreads/salah'),
  "son":()=>import('./spreads/son'),
+ "vandijk":()=>import('./spreads/vandijk'),
  "vardy":()=>import('./spreads/vardy'),
  "vinicius":()=>import('./spreads/vinicius'),
  "weah":()=>import('./spreads/weah'),

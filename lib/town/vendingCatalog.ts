@@ -28,7 +28,7 @@ import {PLAYER_BOOKS,BOOK_PRICE,booksForMachine,type PlayerBookId} from '../book
 import {READY_BOOKS} from '../books/registry.ids.generated';
 /** Shelf blurb for a pop-up book: every player book is a true story of a hardship and how they kept going. */
 /** Name on the cover / shelf label. */
-const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé',kante:'Kanté',vinicius:'Vinícius',son:'Son'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
+const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé',kante:'Kanté',vinicius:'Vinícius',son:'Son',vandijk:'Van Dijk'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
 const bookBlurb=(id:PlayerBookId)=>id==='island'?'Futbol Island: an introduction to everything you can do on the island.':`${PLAYER_BOOKS[id].title}. A riso pop-up book: the true story of a hardship ${PLAYER_BOOKS[id].player} faced, and what helped.`;
 
 export const VENDING_YAW=Math.atan2(16,33);

@@ -1,0 +1,319 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "dishes": {
+      "src": "/voice/books/vandijk/dishes.m4a?v=coach-bella-1",
+      "duration": 35.7,
+      "scriptSha256": "1797d7446a31c4432bc2a0d775ea0b5c59696568328e80a56f39c4a5fbf0483b",
+      "cues": [
+        {
+          "text": "Washing dishes",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "Virgil van Dijk was born in 1991 in Breda, in the Netherlands.",
+          "start": 1.95,
+          "duration": 5.65
+        },
+        {
+          "text": "At eight, he joined the youth academy of a club called Willem II.",
+          "start": 7.6,
+          "duration": 4.85
+        },
+        {
+          "text": "As a teenager, he also had a part-time job washing dishes in a restaurant.",
+          "start": 12.45,
+          "duration": 5.55
+        },
+        {
+          "text": "He worked on the days when he did not have training or a match.",
+          "start": 18.0,
+          "duration": 4.15
+        },
+        {
+          "text": "Stack the plates.",
+          "start": 22.15,
+          "duration": 1.875
+        },
+        {
+          "text": "Virgil worked hard at the restaurant and at training.",
+          "start": 24.025,
+          "duration": 3.675
+        },
+        {
+          "text": "Doing a job well, even a small one, teaches you to keep going.",
+          "start": 27.7,
+          "duration": 4.675
+        },
+        {
+          "text": "Hard work in any job teaches you something.",
+          "start": 32.375,
+          "duration": 3.3
+        }
+      ]
+    },
+    "growth": {
+      "src": "/voice/books/vandijk/growth.m4a?v=coach-bella-1",
+      "duration": 38.5,
+      "scriptSha256": "a66ab3a4a6fa47d85fd44eeaeec873b58f315561bc73e4d884c92deb51f2ae11",
+      "cues": [
+        {
+          "text": "Too many limits?",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "At Willem II, Virgil was not seen as good enough.",
+          "start": 1.85,
+          "duration": 3.925
+        },
+        {
+          "text": "One coach said he had too many limitations, and the club did not offer him a contract.",
+          "start": 5.775,
+          "duration": 5.9
+        },
+        {
+          "text": "Being told you are not good enough is hard, especially when you are young.",
+          "start": 11.675,
+          "duration": 4.9
+        },
+        {
+          "text": "Flip the sign.",
+          "start": 16.575,
+          "duration": 1.85
+        },
+        {
+          "text": "But Virgil was still growing.",
+          "start": 18.425,
+          "duration": 2.35
+        },
+        {
+          "text": "At seventeen, he grew about 18 centimetres, and he moved from right-back to centre-back, the position in the middle of the defence.",
+          "start": 20.775,
+          "duration": 9.025
+        },
+        {
+          "text": "His new height and strength helped him win the ball in the air.",
+          "start": 29.8,
+          "duration": 4.175
+        },
+        {
+          "text": "Bodies grow at different times. Don\u2019t let one opinion stop you.",
+          "start": 33.975,
+          "duration": 4.475
+        }
+      ]
+    },
+    "groningen": {
+      "src": "/voice/books/vandijk/groningen.m4a?v=coach-bella-1",
+      "duration": 33.9,
+      "scriptSha256": "0f2214abf243cf4d74bac8ff0a60ec77e2a8a351802cb639e899e2fc766bcbae",
+      "cues": [
+        {
+          "text": "A new chance",
+          "start": 0.0,
+          "duration": 1.775
+        },
+        {
+          "text": "In 2010, when he was nineteen, Virgil left Willem II and joined FC Groningen, another Dutch club.",
+          "start": 1.775,
+          "duration": 8.1
+        },
+        {
+          "text": "A scout there had seen something special in him.",
+          "start": 9.875,
+          "duration": 3.25
+        },
+        {
+          "text": "Moving to a new club, in a city far from home, was a fresh start.",
+          "start": 13.125,
+          "duration": 4.75
+        },
+        {
+          "text": "Open the door.",
+          "start": 17.875,
+          "duration": 1.8
+        },
+        {
+          "text": "On 1 May 2011, Virgil played his first professional match for Groningen.",
+          "start": 19.675,
+          "duration": 5.8
+        },
+        {
+          "text": "He was finally a professional footballer.",
+          "start": 25.475,
+          "duration": 3.275
+        },
+        {
+          "text": "If one door closes, look for another. Someone may see what others missed.",
+          "start": 28.75,
+          "duration": 5.15
+        }
+      ]
+    },
+    "hospital": {
+      "src": "/voice/books/vandijk/hospital.m4a?v=coach-bella-1",
+      "duration": 42.4,
+      "scriptSha256": "4a49ec197e09a04af32eb17460cd3b5a7578d7c3c04eae22cc785188e0f7b621",
+      "cues": [
+        {
+          "text": "Very ill in hospital",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "Soon after his twentieth birthday, Virgil became very ill.",
+          "start": 2.35,
+          "duration": 4.55
+        },
+        {
+          "text": "A problem with his appendix turned into a serious infection, and he needed an emergency operation.",
+          "start": 6.9,
+          "duration": 7.075
+        },
+        {
+          "text": "He spent thirteen days in hospital and lost a lot of weight.",
+          "start": 13.975,
+          "duration": 4.4
+        },
+        {
+          "text": "It was a frightening time for him and his family.",
+          "start": 18.375,
+          "duration": 3.55
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 21.925,
+          "duration": 2.1
+        },
+        {
+          "text": "Getting better took months of rest and patience.",
+          "start": 24.025,
+          "duration": 3.325
+        },
+        {
+          "text": "By the summer of 2012, Virgil was back with his team.",
+          "start": 27.35,
+          "duration": 4.375
+        },
+        {
+          "text": "His body had needed time, and he had given it that time.",
+          "start": 31.725,
+          "duration": 4.225
+        },
+        {
+          "text": "Getting better from an illness takes time. Rest, patience and people who care help you heal.",
+          "start": 35.95,
+          "duration": 6.425
+        }
+      ]
+    },
+    "climb": {
+      "src": "/voice/books/vandijk/climb.m4a?v=coach-bella-1",
+      "duration": 35.2,
+      "scriptSha256": "ca6c74540e4052ade92fca759b89b067f1f7015d8fcd995b07d81727307a3b61",
+      "cues": [
+        {
+          "text": "Step by step",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In 2013, Virgil joined Celtic in Scotland, where he won the league twice.",
+          "start": 1.825,
+          "duration": 6.0
+        },
+        {
+          "text": "In 2015, he moved to Southampton in England.",
+          "start": 7.825,
+          "duration": 4.325
+        },
+        {
+          "text": "Each move was one more step up.",
+          "start": 12.15,
+          "duration": 2.6
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 14.75,
+          "duration": 1.75
+        },
+        {
+          "text": "In January 2018, Liverpool signed him.",
+          "start": 16.5,
+          "duration": 3.925
+        },
+        {
+          "text": "At that time it was the biggest fee ever paid for a defender.",
+          "start": 20.425,
+          "duration": 4.675
+        },
+        {
+          "text": "The teenager who had washed dishes was now one of the most wanted defenders in the world.",
+          "start": 25.1,
+          "duration": 5.925
+        },
+        {
+          "text": "A slow climb is still a climb. Keep taking the next step.",
+          "start": 31.025,
+          "duration": 4.1
+        }
+      ]
+    },
+    "captain": {
+      "src": "/voice/books/vandijk/captain.m4a?v=coach-bella-1",
+      "duration": 38.8,
+      "scriptSha256": "1ca0116cc37546e31ec9e6ce95552cac942c2c6c403b6ad2960db15e183ae26a",
+      "cues": [
+        {
+          "text": "Champion and captain",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "In 2019, Virgil won the Champions League with Liverpool, and he was named UEFA\u2019s Men\u2019s Player of the Year.",
+          "start": 2.075,
+          "duration": 8.025
+        },
+        {
+          "text": "He came second for the Ballon d\u2019Or.",
+          "start": 10.1,
+          "duration": 2.775
+        },
+        {
+          "text": "In 2020, he hurt his knee badly, and he worked for months to come back.",
+          "start": 12.875,
+          "duration": 5.6
+        },
+        {
+          "text": "He showed that you can come back after a big injury too.",
+          "start": 18.475,
+          "duration": 4.05
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 22.525,
+          "duration": 1.95
+        },
+        {
+          "text": "In 2023, Virgil became Liverpool\u2019s captain.",
+          "start": 24.475,
+          "duration": 4.375
+        },
+        {
+          "text": "The teenager who was not offered a contract had become one of the best defenders in the world.",
+          "start": 28.85,
+          "duration": 6.05
+        },
+        {
+          "text": "A late start is not a slow finish. Keep growing.",
+          "start": 34.9,
+          "duration": 3.85
+        }
+      ]
+    }
+  }
+}
