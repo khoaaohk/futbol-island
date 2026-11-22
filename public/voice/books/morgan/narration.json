@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "late": {
+      "src": "/voice/books/morgan/late.m4a?v=coach-bella-1",
+      "duration": 38.2,
+      "scriptSha256": "b40955ab9cfaf04cbd65d90d498ecea99fb154e7d7b30eb7e642b2eec0ed0b44",
+      "cues": [
+        {
+          "text": "Starting late",
+          "start": 0.0,
+          "duration": 1.75
+        },
+        {
+          "text": "Alex Morgan was born in 1989 in San Dimas, California, in the United States.",
+          "start": 1.75,
+          "duration": 7.075
+        },
+        {
+          "text": "She played soccer for fun in a local league, but she did not join a club team until she was fourteen.",
+          "start": 8.825,
+          "duration": 6.45
+        },
+        {
+          "text": "Many players start much younger.",
+          "start": 15.275,
+          "duration": 2.55
+        },
+        {
+          "text": "Some of the girls she played against had been in club teams for years.",
+          "start": 17.825,
+          "duration": 4.7
+        },
+        {
+          "text": "Open the gate.",
+          "start": 22.525,
+          "duration": 1.725
+        },
+        {
+          "text": "Starting late meant Alex had a lot to learn.",
+          "start": 24.25,
+          "duration": 3.325
+        },
+        {
+          "text": "She learned fast, and three years later she was playing for her country’s under-20 team.",
+          "start": 27.575,
+          "duration": 5.75
+        },
+        {
+          "text": "It is never too late to start. Begin where you are, and keep learning.",
+          "start": 33.325,
+          "duration": 4.825
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/morgan/knee.m4a?v=coach-bella-1",
+      "duration": 41.3,
+      "scriptSha256": "00d9a08cdaa3669512a1a017ed63e88d3ffcb65158ff9ad5940db539dc3aee20",
+      "cues": [
+        {
+          "text": "A big knee injury",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "When she was seventeen, Alex tore a ligament in her knee, called the ACL, during a practice game.",
+          "start": 2.025,
+          "duration": 6.825
+        },
+        {
+          "text": "She missed her last season of high school soccer.",
+          "start": 8.85,
+          "duration": 3.3
+        },
+        {
+          "text": "An ACL injury is one of the biggest injuries a footballer can have.",
+          "start": 12.15,
+          "duration": 5.35
+        },
+        {
+          "text": "It takes months of hard work to get back.",
+          "start": 17.5,
+          "duration": 2.975
+        },
+        {
+          "text": "Fill the comeback bar.",
+          "start": 20.475,
+          "duration": 2.2
+        },
+        {
+          "text": "Alex worked hard to get her knee strong again.",
+          "start": 22.675,
+          "duration": 3.2
+        },
+        {
+          "text": "She has said she was back on the field in five months.",
+          "start": 25.875,
+          "duration": 3.625
+        },
+        {
+          "text": "She did her exercises, rested when she needed to and listened to the people helping her.",
+          "start": 29.5,
+          "duration": 6.075
+        },
+        {
+          "text": "Injuries take patience. Work with your helpers, and your body can get strong again.",
+          "start": 35.575,
+          "duration": 5.65
+        }
+      ]
+    },
+    "u20": {
+      "src": "/voice/books/morgan/u20.m4a?v=coach-bella-1",
+      "duration": 30.6,
+      "scriptSha256": "b804d2b80ecbda95bd2ef9f55cda431cea883c15839f09ef952d2ed16bd2c14f",
+      "cues": [
+        {
+          "text": "The winning goal",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2008, Alex played for the United States at the Under-20 World Cup in Chile.",
+          "start": 1.85,
+          "duration": 6.4
+        },
+        {
+          "text": "She scored four goals at the tournament.",
+          "start": 8.25,
+          "duration": 2.85
+        },
+        {
+          "text": "Only two years had passed since her big knee injury.",
+          "start": 11.1,
+          "duration": 3.875
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 14.975,
+          "duration": 1.75
+        },
+        {
+          "text": "Her fourth goal won the final, and the United States became under-20 world champions.",
+          "start": 16.725,
+          "duration": 6.125
+        },
+        {
+          "text": "All the hard work during her recovery had paid off.",
+          "start": 22.85,
+          "duration": 3.75
+        },
+        {
+          "text": "Your hard work in the quiet months shows on the big day.",
+          "start": 26.6,
+          "duration": 4.0
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/morgan/final.m4a?v=coach-bella-1",
+      "duration": 39.9,
+      "scriptSha256": "a00911ca3dc9d09035a3f065b0116f7b05ac13ece6bd4a39afee2de061cc545c",
+      "cues": [
+        {
+          "text": "The youngest, and a lost final",
+          "start": 0.0,
+          "duration": 2.7
+        },
+        {
+          "text": "At the 2011 World Cup in Germany, Alex was the youngest player on the US team.",
+          "start": 2.7,
+          "duration": 6.375
+        },
+        {
+          "text": "She scored her first World Cup goal in the semi-final against France.",
+          "start": 9.075,
+          "duration": 4.7
+        },
+        {
+          "text": "She was young, and she was playing on the biggest stage in the world.",
+          "start": 13.775,
+          "duration": 4.3
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 18.075,
+          "duration": 2.1
+        },
+        {
+          "text": "In the final, the United States drew 2–2 with Japan, and then lost on penalties.",
+          "start": 20.175,
+          "duration": 6.3
+        },
+        {
+          "text": "Losing a final is very hard, especially when you are young.",
+          "start": 26.475,
+          "duration": 4.475
+        },
+        {
+          "text": "Alex and her teammates used that sadness to work even harder.",
+          "start": 30.95,
+          "duration": 4.725
+        },
+        {
+          "text": "Losing a final hurts. Rest, learn and come back.",
+          "start": 35.675,
+          "duration": 4.15
+        }
+      ]
+    },
+    "london": {
+      "src": "/voice/books/morgan/london.m4a?v=coach-bella-1",
+      "duration": 38.9,
+      "scriptSha256": "6c7f98fae0e2a3485bb6ad5b719a934fc7df1692f68781b04adeb811228be4b2",
+      "cues": [
+        {
+          "text": "In the 123rd minute",
+          "start": 0.0,
+          "duration": 2.65
+        },
+        {
+          "text": "At the 2012 Olympics, the United States played Canada in an exciting semi-final.",
+          "start": 2.65,
+          "duration": 6.125
+        },
+        {
+          "text": "With the score 3–3, deep into extra time, Alex scored in the 123rd minute.",
+          "start": 8.775,
+          "duration": 6.65
+        },
+        {
+          "text": "Canada’s captain, Christine Sinclair, had scored three goals, and the game was nearly over.",
+          "start": 15.425,
+          "duration": 6.5
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 21.925,
+          "duration": 2.0
+        },
+        {
+          "text": "The United States won 4–3, then beat Japan 2–1 in the final.",
+          "start": 23.925,
+          "duration": 5.15
+        },
+        {
+          "text": "Alex was an Olympic champion.",
+          "start": 29.075,
+          "duration": 2.575
+        },
+        {
+          "text": "The disappointment of the year before had turned into joy.",
+          "start": 31.65,
+          "duration": 3.925
+        },
+        {
+          "text": "Stay ready until the very last minute.",
+          "start": 35.575,
+          "duration": 3.25
+        }
+      ]
+    },
+    "books": {
+      "src": "/voice/books/morgan/books.m4a?v=coach-bella-1",
+      "duration": 37.4,
+      "scriptSha256": "0f581eb8771d799f9029f82dc1d10104c84096f99b2f830aab865d1bbd2ace18",
+      "cues": [
+        {
+          "text": "Two World Cups and a bookshelf",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "Alex had more injuries, to her ankle, knee and hamstring, and each time she came back.",
+          "start": 2.525,
+          "duration": 6.35
+        },
+        {
+          "text": "She won the World Cup twice, in 2015 and 2019.",
+          "start": 8.875,
+          "duration": 4.725
+        },
+        {
+          "text": "She played for clubs in the United States and in France.",
+          "start": 13.6,
+          "duration": 4.075
+        },
+        {
+          "text": "Open the book.",
+          "start": 17.675,
+          "duration": 1.775
+        },
+        {
+          "text": "Alex also wrote children’s books, a series called The Kicks, about a girl who plays soccer.",
+          "start": 19.45,
+          "duration": 6.4
+        },
+        {
+          "text": "In September 2024, she stopped playing, as she was expecting her second child.",
+          "start": 25.85,
+          "duration": 6.525
+        },
+        {
+          "text": "Setbacks come and go. Keep going, and help the next generation too.",
+          "start": 32.375,
+          "duration": 5.0
+        }
+      ]
+    }
+  }
+}

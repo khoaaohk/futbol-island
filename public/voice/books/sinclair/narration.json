@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "family": {
+      "src": "/voice/books/sinclair/family.m4a?v=coach-bella-1",
+      "duration": 34.9,
+      "scriptSha256": "3ef069945d484fe4da4330061dfe4b62eb4be41b33e8142effc0cded719c938d",
+      "cues": [
+        {
+          "text": "A football family",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Christine Sinclair was born in 1983 in Burnaby, in Canada.",
+          "start": 2.0,
+          "duration": 5.55
+        },
+        {
+          "text": "Football ran in her family: her father and two of her uncles had all played the game.",
+          "start": 7.55,
+          "duration": 5.725
+        },
+        {
+          "text": "Christine started playing when she was four, on a team for children up to seven.",
+          "start": 13.275,
+          "duration": 5.575
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 18.85,
+          "duration": 1.75
+        },
+        {
+          "text": "Playing with older children was not easy, but it helped her learn fast.",
+          "start": 20.6,
+          "duration": 4.975
+        },
+        {
+          "text": "As one of the youngest on the field, she had to be quick and clever.",
+          "start": 25.575,
+          "duration": 4.525
+        },
+        {
+          "text": "Playing with older kids can be hard. It can also help you grow.",
+          "start": 30.1,
+          "duration": 4.725
+        }
+      ]
+    },
+    "debut": {
+      "src": "/voice/books/sinclair/debut.m4a?v=coach-bella-1",
+      "duration": 33.5,
+      "scriptSha256": "040d8357bdebd5625e566055443c4ccc27d9fdd29774540e92b0489cf4d66c56",
+      "cues": [
+        {
+          "text": "Three goals at sixteen",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In 2000, when she was sixteen, Christine played her first tournament for Canada, the Algarve Cup in Portugal.",
+          "start": 2.2,
+          "duration": 8.25
+        },
+        {
+          "text": "She scored three goals.",
+          "start": 10.45,
+          "duration": 2.2
+        },
+        {
+          "text": "She was one of the youngest players in the team, playing against grown women from all over the world.",
+          "start": 12.65,
+          "duration": 6.225
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 18.875,
+          "duration": 2.0
+        },
+        {
+          "text": "It was the start of a very long journey with her national team, one that would bring great joy, and some very hard days too.",
+          "start": 20.875,
+          "duration": 8.45
+        },
+        {
+          "text": "When you get a chance, give it your best, however young you are.",
+          "start": 29.325,
+          "duration": 4.1
+        }
+      ]
+    },
+    "london": {
+      "src": "/voice/books/sinclair/london.m4a?v=coach-bella-1",
+      "duration": 42.1,
+      "scriptSha256": "86a8aa5e70c53faca1c6e02f402dcaf039905becaaa4eb64b95fde560228679f",
+      "cues": [
+        {
+          "text": "Three goals, and still a loss",
+          "start": 0.0,
+          "duration": 2.7
+        },
+        {
+          "text": "At the 2012 Olympics, Canada played the United States in the semi-final.",
+          "start": 2.7,
+          "duration": 5.475
+        },
+        {
+          "text": "Christine scored three goals, a hat-trick.",
+          "start": 8.175,
+          "duration": 3.375
+        },
+        {
+          "text": "But the United States scored a winning goal at the very end of extra time, and Canada lost 4\u20133.",
+          "start": 11.55,
+          "duration": 6.825
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 18.375,
+          "duration": 2.1
+        },
+        {
+          "text": "It was one of the saddest days of Christine\u2019s football life.",
+          "start": 20.475,
+          "duration": 4.05
+        },
+        {
+          "text": "A few days later, Canada played again and won the bronze medal.",
+          "start": 24.525,
+          "duration": 4.65
+        },
+        {
+          "text": "Winning bronze could not take all the sadness away, but it showed the team could pick themselves up again.",
+          "start": 29.175,
+          "duration": 6.6
+        },
+        {
+          "text": "You can play your very best and still lose. It is okay to feel sad, then get up again.",
+          "start": 35.775,
+          "duration": 6.25
+        }
+      ]
+    },
+    "rio": {
+      "src": "/voice/books/sinclair/rio.m4a?v=coach-bella-1",
+      "duration": 36.3,
+      "scriptSha256": "99929dbc2063fd3092464f2026a1f0dbb41cc9b8b1a621519b883fd7122024b0",
+      "cues": [
+        {
+          "text": "Climbing back",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "Four years later, at the 2016 Olympics in Brazil, Canada reached the bronze medal match again.",
+          "start": 1.675,
+          "duration": 7.3
+        },
+        {
+          "text": "Their opponents were Brazil, the home team, in front of a huge crowd.",
+          "start": 8.975,
+          "duration": 5.15
+        },
+        {
+          "text": "The crowd wanted Brazil to win, and the noise was very loud.",
+          "start": 14.125,
+          "duration": 4.525
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 18.65,
+          "duration": 1.75
+        },
+        {
+          "text": "Christine scored the winning goal, and Canada won bronze again.",
+          "start": 20.4,
+          "duration": 4.6
+        },
+        {
+          "text": "Each time they lost, the team came back and tried again.",
+          "start": 25.0,
+          "duration": 4.1
+        },
+        {
+          "text": "The team had learned how to bounce back.",
+          "start": 29.1,
+          "duration": 2.725
+        },
+        {
+          "text": "Getting back up after a loss is a skill. You can practise it.",
+          "start": 31.825,
+          "duration": 4.45
+        }
+      ]
+    },
+    "record": {
+      "src": "/voice/books/sinclair/record.m4a?v=coach-bella-1",
+      "duration": 37.0,
+      "scriptSha256": "cacaee9001b14e71fc4467aae9c053ed2f815087cc7547ef2e8355d443be9ec2",
+      "cues": [
+        {
+          "text": "More goals than anyone",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In January 2020, Christine scored her 185th goal for Canada.",
+          "start": 2.2,
+          "duration": 6.125
+        },
+        {
+          "text": "No player in the world, man or woman, had ever scored so many international goals.",
+          "start": 8.325,
+          "duration": 6.325
+        },
+        {
+          "text": "She finished with 190.",
+          "start": 14.65,
+          "duration": 2.775
+        },
+        {
+          "text": "Christine had been scoring for her country for twenty years.",
+          "start": 17.425,
+          "duration": 4.025
+        },
+        {
+          "text": "Fill the goal bar.",
+          "start": 21.45,
+          "duration": 1.95
+        },
+        {
+          "text": "Christine also raised money for research into multiple sclerosis, an illness her mother lived with, so that other families could be helped.",
+          "start": 23.4,
+          "duration": 9.325
+        },
+        {
+          "text": "Hard work adds up. Every practice is one more step.",
+          "start": 32.725,
+          "duration": 4.275
+        }
+      ]
+    },
+    "tokyo": {
+      "src": "/voice/books/sinclair/tokyo.m4a?v=coach-bella-1",
+      "duration": 39.8,
+      "scriptSha256": "5cab6e4d73fa2ae47a6775bc60b35a53a693306e1e7bd7487f0db4971c3caf9f",
+      "cues": [
+        {
+          "text": "Gold at last",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "The Tokyo Olympics were held in 2021.",
+          "start": 1.875,
+          "duration": 3.65
+        },
+        {
+          "text": "In the semi-final, Canada played the United States again, nine years after that sad day in London.",
+          "start": 5.525,
+          "duration": 7.1
+        },
+        {
+          "text": "This time Canada won 1\u20130.",
+          "start": 12.625,
+          "duration": 2.975
+        },
+        {
+          "text": "Some of the players had been part of that sad day in 2012.",
+          "start": 15.6,
+          "duration": 4.4
+        },
+        {
+          "text": "Lift the gold medal.",
+          "start": 20.0,
+          "duration": 2.15
+        },
+        {
+          "text": "In the final, Canada and Sweden drew 1\u20131, and Canada won on penalties.",
+          "start": 22.15,
+          "duration": 5.675
+        },
+        {
+          "text": "It was Canada\u2019s first Olympic gold in women\u2019s football, and Christine had finally won it with her team.",
+          "start": 27.825,
+          "duration": 7.35
+        },
+        {
+          "text": "Keep going after heartbreak. Your best moment might still be ahead.",
+          "start": 35.175,
+          "duration": 4.6
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "home": {
+      "src": "/voice/books/wright/home.m4a?v=coach-bella-1",
+      "duration": 35.4,
+      "scriptSha256": "59b41c5f47c09b3b6a0da7ee47cf3b7495e59b5ea06487771f9d83f8de2454ef",
+      "cues": [
+        {
+          "text": "A hard start",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "Ian Wright was born in 1963 in Woolwich, in London, to parents from Jamaica, and he grew up in Brockley.",
+          "start": 1.825,
+          "duration": 8.375
+        },
+        {
+          "text": "His father was not around, and his mother, Nesta, brought him up.",
+          "start": 10.2,
+          "duration": 4.575
+        },
+        {
+          "text": "Home was not always a happy or safe place.",
+          "start": 14.775,
+          "duration": 3.275
+        },
+        {
+          "text": "Open the door.",
+          "start": 18.05,
+          "duration": 1.8
+        },
+        {
+          "text": "When home feels hard, school and the people there can be a place of help.",
+          "start": 19.85,
+          "duration": 4.95
+        },
+        {
+          "text": "Ian loved football, and it gave him a place to be happy.",
+          "start": 24.8,
+          "duration": 4.325
+        },
+        {
+          "text": "If home feels hard, it is never your fault. Tell a teacher or another grown-up you trust.",
+          "start": 29.125,
+          "duration": 6.25
+        }
+      ]
+    },
+    "pigden": {
+      "src": "/voice/books/wright/pigden.m4a?v=coach-bella-1",
+      "duration": 36.1,
+      "scriptSha256": "310ded7dbd340c7593e6902495ede2f9c0d57ad4b291d110fa863365043f33e8",
+      "cues": [
+        {
+          "text": "Mr Pigden",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "At primary school, Ian had a teacher called Sydney Pigden.",
+          "start": 1.85,
+          "duration": 4.425
+        },
+        {
+          "text": "Long before, Mr Pigden had been a pilot in the Second World War.",
+          "start": 6.275,
+          "duration": 5.05
+        },
+        {
+          "text": "Mr Pigden was one of his teachers, and he noticed Ian.",
+          "start": 11.325,
+          "duration": 4.3
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 15.625,
+          "duration": 1.775
+        },
+        {
+          "text": "Mr Pigden helped Ian learn to read and write, and he believed in him.",
+          "start": 17.4,
+          "duration": 5.075
+        },
+        {
+          "text": "Ian later called him the first positive male figure in his life.",
+          "start": 22.475,
+          "duration": 4.55
+        },
+        {
+          "text": "Sometimes one grown-up who believes in you can change everything.",
+          "start": 27.025,
+          "duration": 4.575
+        },
+        {
+          "text": "One kind teacher can change a life. Let the helpers help you.",
+          "start": 31.6,
+          "duration": 4.425
+        }
+      ]
+    },
+    "trials": {
+      "src": "/voice/books/wright/trials.m4a?v=coach-bella-1",
+      "duration": 33.5,
+      "scriptSha256": "bc5418b26e6bd773f3778ccb948b0df76921211179d34a764fc1d5a81608e06e",
+      "cues": [
+        {
+          "text": "Two trials, two noes",
+          "start": 0.0,
+          "duration": 2.375
+        },
+        {
+          "text": "As a teenager, Ian had trials at two professional clubs, Southend United and Brighton.",
+          "start": 2.375,
+          "duration": 6.4
+        },
+        {
+          "text": "Neither club offered him a contract.",
+          "start": 8.775,
+          "duration": 2.95
+        },
+        {
+          "text": "Being turned down can make you feel that your dream is over.",
+          "start": 11.725,
+          "duration": 4.275
+        },
+        {
+          "text": "Knock on the doors.",
+          "start": 16.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Ian kept playing anyway, in Sunday league football.",
+          "start": 18.0,
+          "duration": 3.975
+        },
+        {
+          "text": "He became the top scorer in his league.",
+          "start": 21.975,
+          "duration": 2.8
+        },
+        {
+          "text": "He was playing for fun, but he was getting better every week.",
+          "start": 24.775,
+          "duration": 4.3
+        },
+        {
+          "text": "Keep playing for the love of it, even when the big doors stay shut.",
+          "start": 29.075,
+          "duration": 4.375
+        }
+      ]
+    },
+    "palace": {
+      "src": "/voice/books/wright/palace.m4a?v=coach-bella-1",
+      "duration": 33.0,
+      "scriptSha256": "14e2767b132e4a69880853883bc8841b58b92970c3c80be1f6bea0cfa42a2a8a",
+      "cues": [
+        {
+          "text": "A late start",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Ian played for a small club, Greenwich Borough.",
+          "start": 1.8,
+          "duration": 3.55
+        },
+        {
+          "text": "Then, in August 1985, when he was twenty-one, he signed for Crystal Palace.",
+          "start": 5.35,
+          "duration": 6.325
+        },
+        {
+          "text": "Most new professional players are much younger.",
+          "start": 11.675,
+          "duration": 3.575
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 15.25,
+          "duration": 1.75
+        },
+        {
+          "text": "Ian worked hard and scored lots of goals.",
+          "start": 17.0,
+          "duration": 3.175
+        },
+        {
+          "text": "In 1989, he scored 24 league goals and helped Palace win promotion to the top division.",
+          "start": 20.175,
+          "duration": 7.15
+        },
+        {
+          "text": "It is never too late to start. Your path can be different from everyone else\u2019s.",
+          "start": 27.325,
+          "duration": 5.6
+        }
+      ]
+    },
+    "arsenal": {
+      "src": "/voice/books/wright/arsenal.m4a?v=coach-bella-1",
+      "duration": 37.3,
+      "scriptSha256": "e1ad670e7d83502795899301ca6bf4efb7cf8da1e99ff6dbbec16dadff7d1cdd",
+      "cues": [
+        {
+          "text": "Goals for Arsenal",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "In 1991, Ian joined Arsenal, and he played for England too.",
+          "start": 1.8,
+          "duration": 5.525
+        },
+        {
+          "text": "He scored 185 goals for Arsenal, more than anyone before him.",
+          "start": 7.325,
+          "duration": 5.7
+        },
+        {
+          "text": "Years later, in 2005, Thierry Henry beat his record.",
+          "start": 13.025,
+          "duration": 4.925
+        },
+        {
+          "text": "Arsenal paid a club-record fee for him.",
+          "start": 17.95,
+          "duration": 3.125
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 21.075,
+          "duration": 2.0
+        },
+        {
+          "text": "With Arsenal, Ian won the FA Cup, the League Cup and the league title.",
+          "start": 23.075,
+          "duration": 4.675
+        },
+        {
+          "text": "The young man who started late had become one of the best strikers in England.",
+          "start": 27.75,
+          "duration": 5.2
+        },
+        {
+          "text": "Hard work and joy together can take you a very long way.",
+          "start": 32.95,
+          "duration": 4.35
+        }
+      ]
+    },
+    "thanks": {
+      "src": "/voice/books/wright/thanks.m4a?v=coach-bella-1",
+      "duration": 37.8,
+      "scriptSha256": "548851d794987383ff393247fbaa9b4d8aeafda1f7df1e5dde79600c450c2ea5",
+      "cues": [
+        {
+          "text": "Thank you, Mr Pigden",
+          "start": 0.0,
+          "duration": 2.475
+        },
+        {
+          "text": "Ian had been told that Mr Pigden had died.",
+          "start": 2.475,
+          "duration": 3.6
+        },
+        {
+          "text": "But in 2005, on a BBC television programme, his old teacher walked in to meet him.",
+          "start": 6.075,
+          "duration": 7.025
+        },
+        {
+          "text": "Ian was so happy that he cried.",
+          "start": 13.1,
+          "duration": 2.6
+        },
+        {
+          "text": "They hugged, and the moment was watched by people all over the country.",
+          "start": 15.7,
+          "duration": 4.75
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 20.45,
+          "duration": 2.225
+        },
+        {
+          "text": "Ian later dedicated his life story, a book he wrote in 2016, to Mr Pigden.",
+          "start": 22.675,
+          "duration": 6.55
+        },
+        {
+          "text": "He never forgot the teacher who had believed in him when he was a boy.",
+          "start": 29.225,
+          "duration": 4.675
+        },
+        {
+          "text": "Remember the people who helped you, and tell them thank you.",
+          "start": 33.9,
+          "duration": 3.825
+        }
+      ]
+    }
+  }
+}

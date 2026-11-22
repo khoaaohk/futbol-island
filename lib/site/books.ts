@@ -39,7 +39,9 @@ const REGION_OF:Record<string,Region>={Brazil:'South America',Argentina:'South A
  Colombia:'South America',USA:'North America and Oceania','United States':'North America and Oceania',Japan:'Asia','South Korea':'Asia',
  'Czech Republic':'Europe',Wales:'Europe',Algeria:'Africa',Cameroon:'Africa','Bosnia and Herzegovina':'Europe'};
 const FALLBACK_COUNTRY:Partial<Record<PlayerBookId,string>>={vardy:'England',eriksen:'Denmark',rashford:'England',nadim:'Denmark',kante:'France',
- caicedo:'Colombia',mahrez:'Algeria',baggio:'Italy',formiga:'Brazil',milla:'Cameroon',dzeko:'Bosnia and Herzegovina',bale:'Wales'};
+ caicedo:'Colombia',mahrez:'Algeria',
+ sinclair:'Canada',morgan:'USA',renard:'France',howard:'USA',wright:'England',
+ baggio:'Italy',formiga:'Brazil',milla:'Cameroon',dzeko:'Bosnia and Herzegovina',bale:'Wales'};
 
 export type BookChapter={id:string;year:string;title:string;
  /** The page text as paragraphs, without the paper-action sentence (see the file comment). */

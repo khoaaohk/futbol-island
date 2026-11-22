@@ -46,6 +46,11 @@ import hamm from './hamm';
 import sawa from './sawa';
 import cech from './cech';
 import mahrez from './mahrez';
+import sinclair from './sinclair';
+import morgan from './morgan';
+import renard from './renard';
+import howard from './howard';
+import wright from './wright';
 import baggio from './baggio';
 import formiga from './formiga';
 import milla from './milla';
@@ -57,4 +62,6 @@ export const BOOK_PAGES:Partial<Record<PlayerBookId,BookPageSpec>>={messi,falcao
  maldini,zidane,cruyff,modric,cristiano,iniesta,vardy,kane,putellas,bronze,
  buffon,eriksen,debruyne,ibrahimovic,lukaku,rashford,eusebio,saka,hegerberg,nadim,kante,
  salah,weah,drogba,mane,oshoala,kerr,davies,
- caicedo,vinicius,son,earps,griezmann,vandijk,hamm,sawa,cech,mahrez,baggio,formiga,milla,dzeko,bale};
+ caicedo,vinicius,son,earps,griezmann,vandijk,hamm,sawa,cech,mahrez,
+ sinclair,morgan,renard,howard,wright,
+ baggio,formiga,milla,dzeko,bale};

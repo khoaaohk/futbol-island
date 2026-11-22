@@ -10,7 +10,7 @@ export const SINCLAIR_BOOK:BookData={
  ],
  pages:[
   {id:'family',year:'Burnaby · Aged 4',title:'A football family',
-   text:'Christine Sinclair was born in 1983 in Burnaby, in Canada. Football ran in her family: her father had played, and two of her uncles had been Canadian champions. Christine started playing when she was four, on a team for children up to seven.\n\nKick the ball. Playing with older children was not easy, but it helped her learn fast. As one of the youngest on the field, she had to be quick and clever.',
+   text:'Christine Sinclair was born in 1983 in Burnaby, in Canada. Football ran in her family: her father and two of her uncles had all played the game. Christine started playing when she was four, on a team for children up to seven.\n\nKick the ball. Playing with older children was not easy, but it helped her learn fast. As one of the youngest on the field, she had to be quick and clever.',
    lesson:'Playing with older kids can be hard. It can also help you grow.',
    prompt:'Kick the ball',response:'Learning from the big kids.',source:0},
   {id:'debut',year:'2000 · Aged 16',title:'Three goals at sixteen',
