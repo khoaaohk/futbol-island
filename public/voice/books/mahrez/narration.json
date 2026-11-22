@@ -5,8 +5,8 @@
   "pages": {
     "streets": {
       "src": "/voice/books/mahrez/streets.m4a?v=coach-bella-1",
-      "duration": 35.7,
-      "scriptSha256": "b973dd614fb76d2507e5f09deafff07586b5b3637c1285c655e5fb43fd585d09",
+      "duration": 34.2,
+      "scriptSha256": "a143e71747762cb4fe941d6b3beda3406ab24afeb4a6cdb1781eed6a6500a5e9",
       "cues": [
         {
           "text": "Street football",
@@ -14,38 +14,38 @@
           "duration": 1.775
         },
         {
-          "text": "Riyad Mahrez was born in 1991 in Clichy, near Paris, in France, and he grew up in Sarcelles, another town nearby.",
+          "text": "Riyad Mahrez was born in 1991 in Sarcelles, a town near Paris, in France, and he grew up there.",
           "start": 1.775,
-          "duration": 9.625
+          "duration": 8.125
         },
         {
           "text": "His father, Ahmed, came from Algeria.",
-          "start": 11.4,
+          "start": 9.9,
           "duration": 3.275
         },
         {
           "text": "Riyad learned to play in the streets, with quick feet and clever tricks.",
-          "start": 14.675,
+          "start": 13.175,
           "duration": 4.725
         },
         {
           "text": "Roll the ball down the street.",
-          "start": 19.4,
+          "start": 17.9,
           "duration": 2.375
         },
         {
           "text": "In 2004, he joined the youth team of his local club, AAS Sarcelles.",
-          "start": 21.775,
+          "start": 20.275,
           "duration": 6.05
         },
         {
           "text": "He kept his love for tricks and skills from the streets.",
-          "start": 27.825,
+          "start": 26.325,
           "duration": 3.625
         },
         {
           "text": "You can learn a lot anywhere there is a ball and some friends.",
-          "start": 31.45,
+          "start": 29.95,
           "duration": 4.225
         }
       ]

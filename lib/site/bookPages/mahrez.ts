@@ -14,7 +14,7 @@ const page:BookPageSpec={
    {icon:'deck',label:'The book',value:'6 chapters, read aloud'},
   ],
   faq:[
-   {q:'Where did Riyad Mahrez learn football?',a:'Riyad Mahrez was born in 1991 in Clichy, near Paris, and grew up in Sarcelles. He learned to play in the streets, with quick feet and clever tricks, and in 2004 he joined the youth team of his local club, AAS Sarcelles.'},
+   {q:'Where did Riyad Mahrez learn football?',a:'Riyad Mahrez was born in 1991 in Sarcelles, near Paris, and grew up there. He learned to play in the streets, with quick feet and clever tricks, and in 2004 he joined the youth team of his local club, AAS Sarcelles.'},
    {q:'Why did Riyad Mahrez play for Algeria?',a:'His father, Ahmed, came from Algeria. When Riyad was fifteen, his father died suddenly. Later, Riyad chose to play for Algeria, his father’s country, partly in his honour. A stadium in Sarcelles was named after Riyad, and he dedicated it to his father.'},
    {q:'Was Riyad Mahrez called too skinny?',a:'Yes. He was very slim, and scouts from big clubs often overlooked him because of it. He started at smaller clubs, Quimper in 2009 and Le Havre in 2010, and kept practising his dribbling and his left foot.'},
    {q:'How much did Leicester pay for Riyad Mahrez?',a:'In January 2014, Leicester City signed him from Le Havre for about £450,000, a small fee for a footballer. Leicester won promotion in his first season, and in 2015–16 they surprised everyone and won the Premier League. Riyad was named the PFA Players’ Player of the Year, the first African player to win it.'},

@@ -30,7 +30,7 @@ export const BAGGIO_BOOK:BookData={
    lesson:'Everyone misses sometimes, even the best. A miss is a moment, not who you are.',
    prompt:'Lift the rain cloud',response:'Still a hero.',source:1},
   {id:'giving',year:'1998 to 2010',title:'Playing on, and giving back',
-   text:'Roberto kept playing. He went to the 1998 World Cup, and from 2000 to 2004 he was the captain of Brescia, a smaller club, which retired his number 10 shirt to honour him. He scored 205 goals in Italy’s top league. He did not let one moment stop him.\n\nRaise the banner. In 2002, he became a Goodwill Ambassador for the United Nations, helping in the fight against hunger. In 2010, he won the Man of Peace award for his work for human rights.',
+   text:'Roberto kept playing. He went to the 1998 World Cup, and from 2000 to 2004 he played for Brescia, a smaller club, which retired his number 10 shirt to honour him. He scored 205 goals in Italy’s top league. He did not let one moment stop him.\n\nRaise the banner. In 2002, he became a Goodwill Ambassador for the United Nations, helping in the fight against hunger. In 2010, he won the Man of Peace award for his work for human rights.',
    lesson:'After a painful moment, keep playing and keep giving. People remember how you came back.',
    prompt:'Raise the banner',response:'Kind, as well as brilliant.',source:0},
  ]

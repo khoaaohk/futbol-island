@@ -10,7 +10,7 @@ export const MAHREZ_BOOK:BookData={
  ],
  pages:[
   {id:'streets',year:'Sarcelles · Childhood',title:'Street football',
-   text:'Riyad Mahrez was born in 1991 in Clichy, near Paris, in France, and he grew up in Sarcelles, another town nearby. His father, Ahmed, came from Algeria. Riyad learned to play in the streets, with quick feet and clever tricks.\n\nRoll the ball down the street. In 2004, he joined the youth team of his local club, AAS Sarcelles. He kept his love for tricks and skills from the streets.',
+   text:'Riyad Mahrez was born in 1991 in Sarcelles, a town near Paris, in France, and he grew up there. His father, Ahmed, came from Algeria. Riyad learned to play in the streets, with quick feet and clever tricks.\n\nRoll the ball down the street. In 2004, he joined the youth team of his local club, AAS Sarcelles. He kept his love for tricks and skills from the streets.',
    lesson:'You can learn a lot anywhere there is a ball and some friends.',
    prompt:'Roll the ball down the street',response:'Quick feet!',steps:3,source:1},
   {id:'father',year:'2006 · Aged 15',title:'Losing his dad',

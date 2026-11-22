@@ -255,8 +255,8 @@
     },
     "giving": {
       "src": "/voice/books/baggio/giving.m4a?v=coach-bella-1",
-      "duration": 44.3,
-      "scriptSha256": "a8da7cd03ef584e29e23f3e305e84eb91a14f45f0f3e99dbc666206d730fec58",
+      "duration": 43.6,
+      "scriptSha256": "bd02d5807b85e54c9cdeb773228375ceb8fdc5224fa999fe37065ae369d49014",
       "cues": [
         {
           "text": "Playing on, and giving back",
@@ -269,38 +269,38 @@
           "duration": 2.25
         },
         {
-          "text": "He went to the 1998 World Cup, and from 2000 to 2004 he was the captain of Brescia, a smaller club, which retired his number 10 shirt to honour him.",
+          "text": "He went to the 1998 World Cup, and from 2000 to 2004 he played for Brescia, a smaller club, which retired his number 10 shirt to honour him.",
           "start": 4.625,
-          "duration": 12.05
+          "duration": 11.35
         },
         {
           "text": "He scored 205 goals in Italy\u2019s top league.",
-          "start": 16.675,
+          "start": 15.975,
           "duration": 3.9
         },
         {
           "text": "He did not let one moment stop him.",
-          "start": 20.575,
+          "start": 19.875,
           "duration": 2.7
         },
         {
           "text": "Raise the banner.",
-          "start": 23.275,
+          "start": 22.575,
           "duration": 1.85
         },
         {
           "text": "In 2002, he became a Goodwill Ambassador for the United Nations, helping in the fight against hunger.",
-          "start": 25.125,
+          "start": 24.425,
           "duration": 7.85
         },
         {
           "text": "In 2010, he won the Man of Peace award for his work for human rights.",
-          "start": 32.975,
+          "start": 32.275,
           "duration": 5.2
         },
         {
           "text": "After a painful moment, keep playing and keep giving. People remember how you came back.",
-          "start": 38.175,
+          "start": 37.475,
           "duration": 6.075
         }
       ]
