@@ -17,6 +17,7 @@ import {EARPS_BOOK as b_earps} from './stories/earps';
 import {ERIKSEN_BOOK as b_eriksen} from './stories/eriksen';
 import {EUSEBIO_BOOK as b_eusebio} from './stories/eusebio';
 import {FALCAO_BOOK as b_falcao} from './stories/falcao';
+import {FORMIGA_BOOK as b_formiga} from './stories/formiga';
 import {GARRINCHA_BOOK as b_garrincha} from './stories/garrincha';
 import {GRIEZMANN_BOOK as b_griezmann} from './stories/griezmann';
 import {HAMM_BOOK as b_hamm} from './stories/hamm';
@@ -65,6 +66,7 @@ import v_b_earps from '../../public/voice/books/earps/narration.json';
 import v_b_eriksen from '../../public/voice/books/eriksen/narration.json';
 import v_b_eusebio from '../../public/voice/books/eusebio/narration.json';
 import v_b_falcao from '../../public/voice/books/falcao/narration.json';
+import v_b_formiga from '../../public/voice/books/formiga/narration.json';
 import v_b_garrincha from '../../public/voice/books/garrincha/narration.json';
 import v_b_griezmann from '../../public/voice/books/griezmann/narration.json';
 import v_b_hamm from '../../public/voice/books/hamm/narration.json';
@@ -115,6 +117,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "eriksen":b_eriksen,
  "eusebio":b_eusebio,
  "falcao":b_falcao,
+ "formiga":b_formiga,
  "garrincha":b_garrincha,
  "griezmann":b_griezmann,
  "hamm":b_hamm,
@@ -166,6 +169,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "eriksen":v_b_eriksen,
  "eusebio":v_b_eusebio,
  "falcao":v_b_falcao,
+ "formiga":v_b_formiga,
  "garrincha":v_b_garrincha,
  "griezmann":v_b_griezmann,
  "hamm":v_b_hamm,
@@ -217,6 +221,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "eriksen":()=>import('./spreads/eriksen'),
  "eusebio":()=>import('./spreads/eusebio'),
  "falcao":()=>import('./spreads/falcao'),
+ "formiga":()=>import('./spreads/formiga'),
  "garrincha":()=>import('./spreads/garrincha'),
  "griezmann":()=>import('./spreads/griezmann'),
  "hamm":()=>import('./spreads/hamm'),

@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "ban": {
+      "src": "/voice/books/formiga/ban.m4a?v=coach-bella-1",
+      "duration": 38.1,
+      "scriptSha256": "7c832e9bf6145bf0181cac2e0f541cb29f14d5c756b419ea6dfa583cdb13e1c1",
+      "cues": [
+        {
+          "text": "Born when girls could not play",
+          "start": 0.0,
+          "duration": 2.575
+        },
+        {
+          "text": "Formiga was born Miraildes Maciel Mota in 1978, in Salvador, Brazil.",
+          "start": 2.575,
+          "duration": 6.5
+        },
+        {
+          "text": "When she was born, a law in Brazil said that women were not allowed to play football.",
+          "start": 9.075,
+          "duration": 5.8
+        },
+        {
+          "text": "Girls who loved football had to play in secret, or not at all.",
+          "start": 14.875,
+          "duration": 4.625
+        },
+        {
+          "text": "Flip the sign.",
+          "start": 19.5,
+          "duration": 1.85
+        },
+        {
+          "text": "The law was removed in 1979, but for many years after that, girls who played football were still not taken seriously.",
+          "start": 21.35,
+          "duration": 8.875
+        },
+        {
+          "text": "Formiga would help to change that.",
+          "start": 30.225,
+          "duration": 2.675
+        },
+        {
+          "text": "An unfair rule can be changed. Keep playing, and help others play too.",
+          "start": 32.9,
+          "duration": 5.125
+        }
+      ]
+    },
+    "mother": {
+      "src": "/voice/books/formiga/mother.m4a?v=coach-bella-1",
+      "duration": 35.2,
+      "scriptSha256": "e9fcfdf03d8ca1dcd008058fb94da58b99904914c313e6427974d50c8444cc7d",
+      "cues": [
+        {
+          "text": "Her mother said yes",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "When she was nine, Formiga\u2019s family moved to Cama\u00e7ari, near Salvador.",
+          "start": 1.95,
+          "duration": 5.525
+        },
+        {
+          "text": "She began playing football at twelve.",
+          "start": 7.475,
+          "duration": 2.725
+        },
+        {
+          "text": "Not everyone in her family wanted her to play.",
+          "start": 10.2,
+          "duration": 3.425
+        },
+        {
+          "text": "Open the gate.",
+          "start": 13.625,
+          "duration": 1.725
+        },
+        {
+          "text": "Her mother, Dona Celeste, took her to play futsal for a club called Euroexport.",
+          "start": 15.35,
+          "duration": 5.625
+        },
+        {
+          "text": "With one person on her side, Formiga could start.",
+          "start": 20.975,
+          "duration": 3.825
+        },
+        {
+          "text": "Formiga learned quick passing and close control in futsal, skills she used all through her life.",
+          "start": 24.8,
+          "duration": 6.325
+        },
+        {
+          "text": "One person who believes in you can change everything.",
+          "start": 31.125,
+          "duration": 4.025
+        }
+      ]
+    },
+    "ant": {
+      "src": "/voice/books/formiga/ant.m4a?v=coach-bella-1",
+      "duration": 32.9,
+      "scriptSha256": "139914dfad56900a248c77133d7e9c08c0bf8968b1b7b85f0514ead35ecce2b3",
+      "cues": [
+        {
+          "text": "Small and strong",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "Formiga means ant in Portuguese.",
+          "start": 1.95,
+          "duration": 2.85
+        },
+        {
+          "text": "Someone watching one of her games said she looked like an ant, playing against bigger, older men.",
+          "start": 4.8,
+          "duration": 6.45
+        },
+        {
+          "text": "She was small, and she ran all over the pitch.",
+          "start": 11.25,
+          "duration": 3.45
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 14.7,
+          "duration": 1.775
+        },
+        {
+          "text": "Formiga has said she never liked the nickname, but it stayed with her for her whole career.",
+          "start": 16.475,
+          "duration": 5.875
+        },
+        {
+          "text": "An ant is tiny, but it can carry heavy loads and never stops working.",
+          "start": 22.35,
+          "duration": 5.225
+        },
+        {
+          "text": "Being small is not a weakness. Work hard and help your team, like an ant.",
+          "start": 27.575,
+          "duration": 5.25
+        }
+      ]
+    },
+    "silver": {
+      "src": "/voice/books/formiga/silver.m4a?v=coach-bella-1",
+      "duration": 46.6,
+      "scriptSha256": "5746d90e773b5305951e57f1a911a5a772f1388358240813ff8c1f3a0634bbac",
+      "cues": [
+        {
+          "text": "So close, again and again",
+          "start": 0.0,
+          "duration": 2.625
+        },
+        {
+          "text": "Formiga first played for Brazil in 1995, when she was seventeen.",
+          "start": 2.625,
+          "duration": 5.7
+        },
+        {
+          "text": "Brazil came close to the biggest prizes many times.",
+          "start": 8.325,
+          "duration": 3.85
+        },
+        {
+          "text": "They lost the Olympic finals of 2004 and 2008 to the United States, and they finished second at the 2007 World Cup.",
+          "start": 12.175,
+          "duration": 9.8
+        },
+        {
+          "text": "Getting so close and not winning can feel even harder than losing early.",
+          "start": 21.975,
+          "duration": 5.35
+        },
+        {
+          "text": "Turn over the two medals.",
+          "start": 27.325,
+          "duration": 2.225
+        },
+        {
+          "text": "Losing big finals is painful.",
+          "start": 29.55,
+          "duration": 2.775
+        },
+        {
+          "text": "Each time, Formiga came back and played again.",
+          "start": 32.325,
+          "duration": 3.65
+        },
+        {
+          "text": "She kept training, kept passing and kept helping the younger players around her.",
+          "start": 35.975,
+          "duration": 5.4
+        },
+        {
+          "text": "Losing finals is hard. Coming back each time is what makes you strong.",
+          "start": 41.375,
+          "duration": 5.2
+        }
+      ]
+    },
+    "records": {
+      "src": "/voice/books/formiga/records.m4a?v=coach-bella-1",
+      "duration": 41.9,
+      "scriptSha256": "04511570546fc288406458c258dda0299665014bcdabf0260fcbc9c594387b38",
+      "cues": [
+        {
+          "text": "Seven World Cups",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Formiga played at seven World Cups, more than any other player.",
+          "start": 2.1,
+          "duration": 4.525
+        },
+        {
+          "text": "In 2015, at thirty-seven, she became the oldest player to score at a Women\u2019s World Cup.",
+          "start": 6.625,
+          "duration": 6.775
+        },
+        {
+          "text": "In 2019, at forty-one, she became the oldest player ever at the tournament.",
+          "start": 13.4,
+          "duration": 6.05
+        },
+        {
+          "text": "Most footballers stop playing long before forty.",
+          "start": 19.45,
+          "duration": 3.65
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 23.1,
+          "duration": 1.75
+        },
+        {
+          "text": "She also played at seven Olympic Games, from 1996 to 2020.",
+          "start": 24.85,
+          "duration": 5.625
+        },
+        {
+          "text": "No other footballer, man or woman, has played at seven World Cups and seven Olympics.",
+          "start": 30.475,
+          "duration": 6.35
+        },
+        {
+          "text": "If you love the game and look after your body, you can play for a long time.",
+          "start": 36.825,
+          "duration": 5.05
+        }
+      ]
+    },
+    "farewell": {
+      "src": "/voice/books/formiga/farewell.m4a?v=coach-bella-1",
+      "duration": 40.7,
+      "scriptSha256": "85b0c7ec7506ed1574b86298b576d9b91655cba4c0623606289fe439df79a7dd",
+      "cues": [
+        {
+          "text": "A long, long journey",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In November 2021, Formiga played her last match for Brazil, at forty-three.",
+          "start": 2.2,
+          "duration": 6.35
+        },
+        {
+          "text": "She had played for her country for twenty-six years, and 234 times, more than any other Brazilian footballer, man or woman.",
+          "start": 8.55,
+          "duration": 9.075
+        },
+        {
+          "text": "She also played in France for Paris Saint-Germain, and at forty-one she became the oldest player to score in the Women\u2019s Champions League.",
+          "start": 17.625,
+          "duration": 8.675
+        },
+        {
+          "text": "Wave the flag.",
+          "start": 26.3,
+          "duration": 1.85
+        },
+        {
+          "text": "The girl born when women were not allowed to play had become one of the greatest players in Brazil\u2019s history.",
+          "start": 28.15,
+          "duration": 7.225
+        },
+        {
+          "text": "Keep going, and you can open the way for the girls and boys who come after you.",
+          "start": 35.375,
+          "duration": 5.275
+        }
+      ]
+    }
+  }
+}

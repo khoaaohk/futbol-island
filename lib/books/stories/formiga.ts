@@ -17,7 +17,7 @@ export const FORMIGA_BOOK:BookData={
    lesson:'One person who believes in you can change everything.',
    prompt:'Open the gate',response:'Her mother believed.',source:0},
   {id:'ant',year:'The nickname',title:'Small and strong',
-   text:'Formiga means ant in Portuguese. Someone watching one of her games said she looked like an ant, playing against bigger, older men. Her teammates said she played like ants work, together and for the whole team.\n\nLift the flap. Formiga has said she never liked the nickname, but it stayed with her for her whole career. An ant is tiny, but it can carry heavy loads and never stops working.',
+   text:'Formiga means ant in Portuguese. Someone watching one of her games said she looked like an ant, playing against bigger, older men. She was small, and she ran all over the pitch.\n\nLift the flap. Formiga has said she never liked the nickname, but it stayed with her for her whole career. An ant is tiny, but it can carry heavy loads and never stops working.',
    lesson:'Being small is not a weakness. Work hard and help your team, like an ant.',
    prompt:'Lift the flap',response:'Small, strong, together.',source:0},
   {id:'silver',year:'1995 to 2008',title:'So close, again and again',
