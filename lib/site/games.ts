@@ -520,7 +520,7 @@ const TARGET_LISTED=isGameListed('popup');
 const FLICK_LISTED=isGameListed('flickit'),GOLF_LISTED=isGameListed('footgolf');
 /** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns, four or more alone (the description stays 120-155 characters). */
 const NEW_KINDS=[JUGGLE_LISTED&&'juggling',TARGET_LISTED&&'pop-up targets',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
-export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Free soccer games for kids',
+export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Play free soccer games for kids online',/* Nov 22 2026 (play now): the H1 says what searchers ask for ("soccer games for kids to play online") */
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
@@ -550,6 +550,9 @@ export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type'
  image:abs(g.og),screenshot:allShots(g).map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
  genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
+ // Nov 22 2026 (play now): the page's Play now button as a schema.org PlayAction (valid on any Thing via potentialAction; Google shows no
+ // rich result for it, it only states where the game itself is played): the deep link that opens the game, on desktop and phone browsers.
+ potentialAction:{'@type':'PlayAction',name:`Play ${g.name}`,target:{'@type':'EntryPoint',urlTemplate:abs(g.play),actionPlatform:['https://schema.org/DesktopWebPlatform','https://schema.org/MobileWebPlatform']}},
  datePublished:GAMES_UPDATED,dateModified:pageModified(g.path,GAMES_UPDATED),publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** The hub's list of games. */
 export const GAMES_LIST_ID=abs(GAMES_PATH)+'#games';

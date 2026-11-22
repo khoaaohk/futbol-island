@@ -74,6 +74,6 @@ for(const out of [...Array(1<<IDS.length).keys()].map(m=>IDS.filter((_,i)=>m&(1<
    assert(drills.every(h=>!h.includes(`href="${g.path}"`))&&c.rules.every(s=>!w.rule(s).includes(`href="${g.path}"`)),`${t}: no drill or rule page links it`);
    assert(!w.feat.includes(c.name),`${t}: the Library does not name it`);assert(!w.watch.some(v=>v.key===id),`${t}: no watch page for its clip`);}}
  // the hub's words stay inside the bound tests/seo-games.cjs uses for the hub (it grows 40 words a listed game)
- const lim=1300+4*w.watch.filter(v=>v.group!=='lessons').length+15+100+60+40*Math.max(0,w.games.GAME_PAGES.length-7),nw=words(w.hubHtml);assert(nw<=lim,`${tag}: hub ${nw} words (limit ${lim})`);
+ const lim=1300+4*w.watch.filter(v=>v.group!=='lessons').length+15+100+60+40*Math.max(0,w.games.GAME_PAGES.length-7)+12*w.games.GAME_PAGES.length/* Nov 22 2026: the quick-play grid */,nw=words(w.hubHtml);assert(nw<=lim,`${tag}: hub ${nw} words (limit ${lim})`);
  hubWords+=` ${word} ${nw}/${lim};`;}
 console.log(`seo-games-gate: ok (as released: fifteen, ${IDS.join(' + ')} listed everywhere; taken out in memory, every subset: built, noindex, unlisted, fourteen / thirteen / twelve; hub words:${hubWords})`);

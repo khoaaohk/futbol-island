@@ -116,7 +116,7 @@ function Snapshot({s,summary,warnings}:{s:SeoSnapshot;summary:string[];warnings:
  </>;
 }
 
-export default function SeoSection({seo,report,rangeText,dayLabel}:{seo:SeoLoad|null;report:Pick<Report,'search'|'siteFunnel'>;rangeText:string;dayLabel:(day:string)=>string}){
+export default function SeoSection({seo,report,rangeText,dayLabel}:{seo:SeoLoad|null;report:Pick<Report,'search'|'siteFunnel'|'gamePlays'>;rangeText:string;dayLabel:(day:string)=>string}){
  const s=seo&&seo.status==='ok'?seo.data:null;
  const google=report.search?.engines.find(e=>e.id==='google')?.sessions??0;
  return <>

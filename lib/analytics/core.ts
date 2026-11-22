@@ -32,6 +32,7 @@ import type {FishingFunnel} from './fishingFunnel';
 import type {SourcesSummary} from './live';
 import type {SearchReport} from './searchReport';
 import type {SiteFunnelReport} from './siteFunnelReport';
+import type {GamePlayReport} from './gamePlayReport';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
 import type {HoldoutReport} from './holdoutReport';
@@ -606,6 +607,8 @@ export type Report={
  search?:SearchReport|null;
  /** Nov 20 2026: "Site pages to Play" (lib/analytics/siteFunnelReport.ts): per site section views, Play taps, reached, played; exact. */
  siteFunnel?:SiteFunnelReport|null;
+ /** Nov 22 2026: "Game pages to Play" (lib/analytics/gamePlayReport.ts): per arcade game, page views, Play taps, hub taps, launches; exact. */
+ gamePlays?:GamePlayReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

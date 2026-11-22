@@ -7,6 +7,7 @@
  */
 import type {Report} from '@/lib/analytics/core';
 import type {SfRow} from '@/lib/analytics/siteFunnelReport';
+import type {GamePlayReport,GpRow} from '@/lib/analytics/gamePlayReport';
 import {fmtInt} from './charts';
 import styles from './admin.module.css';
 
@@ -24,14 +25,39 @@ function Line({r,strong}:{r:SfRow;strong?:boolean}){
  </tr>;
 }
 
-export default function SiteFunnelSection({report,rangeText,dayLabel}:{report:Pick<Report,'siteFunnel'>;rangeText:string;dayLabel:(day:string)=>string}){
+const GP_COLUMNS=['Game','Page views','Play taps on its page','Tap rate','Play taps on /games','All launches'];
+function GpLine({r,strong}:{r:GpRow;strong?:boolean}){
+ return <tr data-gp-row={r.id} style={strong?{fontWeight:700}:undefined}>
+  <th scope="row" style={{fontWeight:strong?700:400,fontSize:14,color:'inherit'}}>{r.label}</th>
+  <td data-k="views">{fmtInt(r.views)}</td><td data-k="taps">{fmtInt(r.taps)}</td><td>{pct(r.tapRate)}</td>
+  <td data-k="hub">{fmtInt(r.hubTaps)}</td><td data-k="launches">{fmtInt(r.launches)}</td>
+ </tr>;
+}
+/** "Game pages to Play" (Nov 22 2026, lib/analytics/gamePlayReport.ts): per arcade game, visits to its page → Play taps → launches. */
+export function GamePlaysCard({g,dayLabel}:{g:GamePlayReport|null|undefined;dayLabel:(day:string)=>string}){
+ return <div className={`${styles.card} ${styles.wide}`} data-game-plays>
+  <h3 style={{margin:'0 0 8px'}}>Game pages to Play</h3>
+  {!g||!g.hasData?<p className={styles.empty}>No view of a game page counted in this range yet. These totals start with the Nov 22 2026 release.</p>:<>
+  <div className={styles.tableScroll} style={{maxHeight:'none'}}><table className={styles.table}>
+   <thead><tr>{GP_COLUMNS.map(c=><th key={c} scope="col">{c}</th>)}</tr></thead>
+   <tbody>{g.rows.map(r=><GpLine key={r.id} r={r}/>)}</tbody>
+   <tfoot><GpLine r={g.total} strong/></tfoot>
+  </table></div></>}
+  <p className={styles.note}>For each arcade game: how many times its page (/games/…) was opened, how many of those views tapped Play now or its
+   pictures (one per view at most), how many taps its Play button got on the /games page, and how many times the game was started in the arcade
+   from any door (the room, a game page, a link). Counted since {dayLabel(g?.since??'2026-11-22')}; daily totals are in the Export (counters named gp:).</p>
+ </div>;
+}
+
+export default function SiteFunnelSection({report,rangeText,dayLabel}:{report:Pick<Report,'siteFunnel'>&Partial<Pick<Report,'gamePlays'>>;rangeText:string;dayLabel:(day:string)=>string}){
  const f=report.siteFunnel;
  const head=<div className={styles.sectionHead}><h2 id="sec-sitefunnel">Site pages to Play</h2>
   <p>For {rangeText}: how many times the pages of each part of the site were opened, how many of those views tapped a link to the game, how many
    tabs then arrived at /play, and how many really played (pressed Play on the title screen and entered the game). Every number is exact
    and is a total for the whole section: no page, visitor or search words. Counted since {dayLabel(f?.since??'2026-11-20')}.</p></div>;
  if(!f||!f.hasData)return <section className={styles.island} aria-labelledby="sec-sitefunnel" data-site-funnel>{head}
-  <p className={styles.empty}>No view of a site page counted in this range yet. These totals start with the Nov 20 2026 release; a count comes in when the visitor leaves the tab, or every few minutes.</p></section>;
+  <p className={styles.empty}>No view of a site page counted in this range yet. These totals start with the Nov 20 2026 release; a count comes in when the visitor leaves the tab, or every few minutes.</p>
+  <GamePlaysCard g={report.gamePlays} dayLabel={dayLabel}/></section>;
  return <section className={styles.island} aria-labelledby="sec-sitefunnel" data-site-funnel>
   {head}
   <div className={`${styles.card} ${styles.wide}`}>
@@ -46,5 +72,6 @@ export default function SiteFunnelSection({report,rangeText,dayLabel}:{report:Pi
     section. The home page row is its own funnel from the Marketing page section above and is not in the total. Each day’s raw totals are in the header’s
     Export (daily CSV, counters named sf:).</p>
   </div>
+  <GamePlaysCard g={report.gamePlays} dayLabel={dayLabel}/>
  </section>;
 }

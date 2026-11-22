@@ -9,6 +9,7 @@ import {isStaffDevice} from '@/lib/analytics/staff';
 import {countPlayArrival,countPlayStart} from '@/lib/analytics/marketingIds';
 import {MM_PATH,watchMarketingVisit} from '@/lib/analytics/marketingVisit';
 import {countSitePlayArrival,countSitePlayStart,watchSiteView} from '@/lib/analytics/siteFunnelIds';
+import {watchGamePlays} from '@/lib/analytics/gamePlayIds';
 import {useRootView} from '@/components/root/useRootView';
 import {isStandalone} from '@/lib/pwa/homeScreen';
 import {inEmbed} from '@/lib/embed/isEmbed';
@@ -48,6 +49,9 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  // One passive click listener while such a page is open; nothing on any other page.
  useEffect(()=>{if(!pathname||!tracker.current)return;
   return watchSiteView(pathname,{document,origin:window.location.origin,session:(()=>{try{return window.sessionStorage;}catch{return null;}})(),now:()=>Date.now(),count,fromSearch:sessionFromSearch})??undefined;},[pathname]);
+ // Game pages to Play (Nov 22 2026, lib/analytics/gamePlayIds.ts): a game page's view and its first tap on a link that opens the game;
+ // on /games, the first tap on each game's Play link. One passive click listener on /games pages only.
+ useEffect(()=>{if(!pathname||!tracker.current)return;return watchGamePlays(pathname,{document,origin:window.location.origin,count})??undefined;},[pathname]);
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.
  useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);

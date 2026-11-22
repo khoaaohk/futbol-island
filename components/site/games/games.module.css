@@ -182,3 +182,50 @@
 @media(min-width:1440px){.guides{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.guides>li>a{transition:none}}
 @media(max-width:639px){.pick{grid-template-columns:94px minmax(0,1fr);gap:14px}.pickPics img{width:44px}}
+/* Play now (Nov 22 2026, lib/site/gamePlay.ts; owner's SEO plan item 6). A game page's first screen under its H1: the play stage,
+   the game's first screenshots on the pitch green with the big gold Play now button, how to play and where it runs. No script, no
+   video, no canvas: one tap on the button (or the pictures) opens the game. Phone: two stills side by side, cropped to 3:4 from the
+   top, the button full width under them. From 900 px: three stills on the left, the words on the right. Tone, no lines or shadows. */
+.stage{display:grid;gap:var(--s2);width:100%;box-sizing:border-box;padding:var(--s2);background:var(--link);border-radius:clamp(24px,2.4vw,32px);color:#f6f2e6}
+.stageArt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0;border-radius:var(--r-md)}
+.stageArt img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:top;border-radius:var(--r-md);background:#185a47;transition:translate .2s cubic-bezier(.2,1.28,.32,1)}
+.stageArt img:nth-child(n+3){display:none}
+.stageWide .stageArt{grid-template-columns:minmax(0,1fr)}
+.stageWide .stageArt img{aspect-ratio:auto}
+@media(hover:hover){.stageArt:hover img{translate:0 -4px}.stageArt:hover img:nth-child(2){transition-delay:.04s}.stageArt:hover img:nth-child(3){transition-delay:.08s}}
+.stageWords{display:grid;gap:12px;align-content:center;justify-items:start;min-width:0}
+.stage .stageCta{width:100%;text-align:center;padding-inline:14px;font-size:clamp(17px,4.6vw,20px);letter-spacing:-.01em;white-space:nowrap}
+.stage p{margin:0;max-width:44ch}
+.stage .stageHow{font-size:var(--t-body);line-height:1.45;font-weight:600;color:#f6f2e6}
+.stage .stageWorks{font-size:var(--t-cap);line-height:1.45;color:#dfe8de}
+@media(min-width:640px){.stageArt{grid-template-columns:repeat(3,minmax(0,1fr))}.stageArt img:nth-child(n+3){display:block}.stageArt[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:900px){
+ .stage{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:var(--s4);padding:var(--s3) var(--s4) var(--s3) var(--s3);align-items:center}
+ .stageArt img{aspect-ratio:480/760}
+ .stage .stageCta{width:auto;min-height:64px;padding-inline:36px}
+ .stage .stageHow{font-size:var(--t-lead);line-height:1.35}
+}
+@media(prefers-reduced-motion:reduce){.stageArt img{transition:none}}
+/* The hub's quick-play grid: phone, one compact row per game (picture | name, skill, Play); from 640 px small upright cards,
+   three, four or five across. The same gold Play pill as the detailed cards below. */
+.quick{list-style:none;padding:0!important;margin:0;display:grid!important;grid-template-columns:minmax(0,1fr);gap:12px!important}
+.quickCard{display:grid;grid-template-columns:88px minmax(0,1fr);grid-template-areas:'a n' 'a s' 'a p';grid-template-rows:auto auto 1fr;gap:4px 14px;align-items:start;max-width:none!important;padding:12px;background:var(--surface);border-radius:var(--r-lg)}
+.quickArt{grid-area:a;display:block;border-radius:var(--r-md);overflow:hidden}
+.quickArt img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:50% 30%;background:var(--well);transition:scale .2s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.quickArt:hover img{scale:1.04}}
+.quickName{grid-area:n;margin:0;font-size:var(--t-h3);line-height:1.2;font-weight:700;letter-spacing:-.02em}
+.quickName a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.18em}
+.quickCard p.quickSkill{grid-area:s;margin:0;font-size:var(--t-cap);line-height:1.4;color:var(--ink)}
+.quickPlay{grid-area:p;align-self:end;justify-self:start;display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.quickPlay:hover{scale:1.04}}
+.quickPlay:active{scale:.96}
+.quickPlay:focus-visible,.quickName a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+@media(min-width:640px){
+ .quick{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)!important}
+ .quickCard{grid-template-columns:minmax(0,1fr);grid-template-areas:'a' 'n' 's' 'p';grid-template-rows:auto auto 1fr auto;gap:8px;padding:14px}
+ .quickArt img{aspect-ratio:4/3;object-position:50% 55%}
+ .quickPlay{margin-top:6px}
+}
+@media(min-width:1100px){.quick{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:1800px){.quick{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.quickArt img,.quickPlay{transition:none}}

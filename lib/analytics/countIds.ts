@@ -56,6 +56,9 @@
  *                                  section, the Coach app and Scan Trainer: page views, Play taps (once per view), tabs that then
  *                                  reached /play (and how many of those began from search) and tabs that really played. Never a page
  *                                  or anything about the visitor.
+ *   gp:<step>_<game>               game pages to Play (GAME_PLAY_COUNT_IDS, lib/analytics/gamePlayIds.ts; Nov 22 2026): per arcade
+ *                                  game, its page's views, Play taps on its page (once per view) and Play taps on its /games card.
+ *                                  Never a URL or anything about the visitor.
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
@@ -66,6 +69,7 @@ import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
 import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
 import {SITE_FUNNEL_COUNT_IDS} from './siteFunnelIds';
+import {GAME_PLAY_COUNT_IDS} from './gamePlayIds';
 import {isSearchId} from './searchIds';
 import {GASHAPON_TOYS} from '../gashapon/toys';
 
@@ -417,6 +421,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...COACH_COUNT_EVENTS.map(([e])=>'ca:'+e),// ca: the coach app (components/coach/CoachApp.tsx, Nov 16 2026)
  ...SCAN_COUNT_EVENTS.map(([e])=>'sn:'+e),// sn: Scan Trainer (components/scan/ScanApp.tsx, Nov 16 2026)
  ...SITE_FUNNEL_COUNT_IDS,// sf: site pages to Play, per section (siteFunnelIds.ts, Nov 20 2026)
+ ...GAME_PLAY_COUNT_IDS,// gp: game pages to Play, per game (gamePlayIds.ts, Nov 22 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
