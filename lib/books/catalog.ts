@@ -43,6 +43,10 @@ export const PLAYER_BOOKS = {
  oshoala: { itemId: 'display:sharks:book', title: 'Oshoala: Playing when few believed', player: 'Asisat Oshoala', machine: 'sharks' },
  // Nov 21 2026: twenty more hardship stories (docs/player-books/NEW-20-NOV21.md), each shelved at the machine its item id names.
  caicedo: { itemId: 'display:oldtown:book:caicedo', title: 'Caicedo: Brave enough to come back', player: 'Linda Caicedo', machine: 'oldtown' },
+ vinicius: { itemId: 'display:eleven:book:vinicius', title: 'Vinícius: Standing up to racism', player: 'Vinícius Júnior', machine: 'eleven' },
+ son: { itemId: 'display:rooftop:book:son', title: 'Son: Practise the basics, then fly', player: 'Son Heung-min', machine: 'rooftop' },
+ earps: { itemId: 'display:pier:book:earps', title: 'Earps: Left out, then the world’s best', player: 'Mary Earps', machine: 'pier' },
+ griezmann: { itemId: 'display:rooftop:book:griezmann', title: 'Griezmann: Too small for France?', player: 'Antoine Griezmann', machine: 'rooftop' },
 } as const;
 export type PlayerBookId = keyof typeof PLAYER_BOOKS;
 /** Books every player owns from the start (their Backpack lists them; nothing is bought). */

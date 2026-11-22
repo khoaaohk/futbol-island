@@ -11,10 +11,12 @@ import {CRUYFF_BOOK as b_cruyff} from './stories/cruyff';
 import {DAVIES_BOOK as b_davies} from './stories/davies';
 import {DEBRUYNE_BOOK as b_debruyne} from './stories/debruyne';
 import {DROGBA_BOOK as b_drogba} from './stories/drogba';
+import {EARPS_BOOK as b_earps} from './stories/earps';
 import {ERIKSEN_BOOK as b_eriksen} from './stories/eriksen';
 import {EUSEBIO_BOOK as b_eusebio} from './stories/eusebio';
 import {FALCAO_BOOK as b_falcao} from './stories/falcao';
 import {GARRINCHA_BOOK as b_garrincha} from './stories/garrincha';
+import {GRIEZMANN_BOOK as b_griezmann} from './stories/griezmann';
 import {HEGERBERG_BOOK as b_hegerberg} from './stories/hegerberg';
 import {IBRAHIMOVIC_BOOK as b_ibrahimovic} from './stories/ibrahimovic';
 import {INIESTA_BOOK as b_iniesta} from './stories/iniesta';
@@ -36,7 +38,9 @@ import {RONALDINHO_BOOK as b_ronaldinho} from './stories/ronaldinho';
 import {RONALDO_BOOK as b_ronaldo} from './stories/ronaldo';
 import {SAKA_BOOK as b_saka} from './stories/saka';
 import {SALAH_BOOK as b_salah} from './stories/salah';
+import {SON_BOOK as b_son} from './stories/son';
 import {VARDY_BOOK as b_vardy} from './stories/vardy';
+import {VINICIUS_BOOK as b_vinicius} from './stories/vinicius';
 import {WEAH_BOOK as b_weah} from './stories/weah';
 import {ZIDANE_BOOK as b_zidane} from './stories/zidane';
 import v_b_messi from '../../public/voice/books/messi/narration.json';
@@ -49,10 +53,12 @@ import v_b_cruyff from '../../public/voice/books/cruyff/narration.json';
 import v_b_davies from '../../public/voice/books/davies/narration.json';
 import v_b_debruyne from '../../public/voice/books/debruyne/narration.json';
 import v_b_drogba from '../../public/voice/books/drogba/narration.json';
+import v_b_earps from '../../public/voice/books/earps/narration.json';
 import v_b_eriksen from '../../public/voice/books/eriksen/narration.json';
 import v_b_eusebio from '../../public/voice/books/eusebio/narration.json';
 import v_b_falcao from '../../public/voice/books/falcao/narration.json';
 import v_b_garrincha from '../../public/voice/books/garrincha/narration.json';
+import v_b_griezmann from '../../public/voice/books/griezmann/narration.json';
 import v_b_hegerberg from '../../public/voice/books/hegerberg/narration.json';
 import v_b_ibrahimovic from '../../public/voice/books/ibrahimovic/narration.json';
 import v_b_iniesta from '../../public/voice/books/iniesta/narration.json';
@@ -74,7 +80,9 @@ import v_b_ronaldinho from '../../public/voice/books/ronaldinho/narration.json';
 import v_b_ronaldo from '../../public/voice/books/ronaldo/narration.json';
 import v_b_saka from '../../public/voice/books/saka/narration.json';
 import v_b_salah from '../../public/voice/books/salah/narration.json';
+import v_b_son from '../../public/voice/books/son/narration.json';
 import v_b_vardy from '../../public/voice/books/vardy/narration.json';
+import v_b_vinicius from '../../public/voice/books/vinicius/narration.json';
 import v_b_weah from '../../public/voice/books/weah/narration.json';
 import v_b_zidane from '../../public/voice/books/zidane/narration.json';
 /** Book text (Messi keeps its legacy action→steps mapping). */
@@ -89,10 +97,12 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "davies":b_davies,
  "debruyne":b_debruyne,
  "drogba":b_drogba,
+ "earps":b_earps,
  "eriksen":b_eriksen,
  "eusebio":b_eusebio,
  "falcao":b_falcao,
  "garrincha":b_garrincha,
+ "griezmann":b_griezmann,
  "hegerberg":b_hegerberg,
  "ibrahimovic":b_ibrahimovic,
  "iniesta":b_iniesta,
@@ -114,7 +124,9 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "ronaldo":b_ronaldo,
  "saka":b_saka,
  "salah":b_salah,
+ "son":b_son,
  "vardy":b_vardy,
+ "vinicius":b_vinicius,
  "weah":b_weah,
  "zidane":b_zidane,
 };
@@ -130,10 +142,12 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "davies":v_b_davies,
  "debruyne":v_b_debruyne,
  "drogba":v_b_drogba,
+ "earps":v_b_earps,
  "eriksen":v_b_eriksen,
  "eusebio":v_b_eusebio,
  "falcao":v_b_falcao,
  "garrincha":v_b_garrincha,
+ "griezmann":v_b_griezmann,
  "hegerberg":v_b_hegerberg,
  "ibrahimovic":v_b_ibrahimovic,
  "iniesta":v_b_iniesta,
@@ -155,7 +169,9 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "ronaldo":v_b_ronaldo,
  "saka":v_b_saka,
  "salah":v_b_salah,
+ "son":v_b_son,
  "vardy":v_b_vardy,
+ "vinicius":v_b_vinicius,
  "weah":v_b_weah,
  "zidane":v_b_zidane,
 };
@@ -171,10 +187,12 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "davies":()=>import('./spreads/davies'),
  "debruyne":()=>import('./spreads/debruyne'),
  "drogba":()=>import('./spreads/drogba'),
+ "earps":()=>import('./spreads/earps'),
  "eriksen":()=>import('./spreads/eriksen'),
  "eusebio":()=>import('./spreads/eusebio'),
  "falcao":()=>import('./spreads/falcao'),
  "garrincha":()=>import('./spreads/garrincha'),
+ "griezmann":()=>import('./spreads/griezmann'),
  "hegerberg":()=>import('./spreads/hegerberg'),
  "ibrahimovic":()=>import('./spreads/ibrahimovic'),
  "iniesta":()=>import('./spreads/iniesta'),
@@ -196,7 +214,9 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "ronaldo":()=>import('./spreads/ronaldo'),
  "saka":()=>import('./spreads/saka'),
  "salah":()=>import('./spreads/salah'),
+ "son":()=>import('./spreads/son'),
  "vardy":()=>import('./spreads/vardy'),
+ "vinicius":()=>import('./spreads/vinicius'),
  "weah":()=>import('./spreads/weah'),
  "zidane":()=>import('./spreads/zidane'),
 };

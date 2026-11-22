@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "macon": {
+      "src": "/voice/books/griezmann/macon.m4a?v=coach-bella-1",
+      "duration": 33.3,
+      "scriptSha256": "9f1db85a8ce69225713d55aba36130b326009df4732a28eeabaccecd78d48154",
+      "cues": [
+        {
+          "text": "A small boy with a big touch",
+          "start": 0.0,
+          "duration": 2.5
+        },
+        {
+          "text": "Antoine Griezmann was born in 1991 in M\u00e2con, a town in France.",
+          "start": 2.5,
+          "duration": 5.8
+        },
+        {
+          "text": "He played for his hometown club, UF M\u00e2connais.",
+          "start": 8.3,
+          "duration": 3.85
+        },
+        {
+          "text": "He was small and slim, but he was very good with the ball.",
+          "start": 12.15,
+          "duration": 4.1
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 16.25,
+          "duration": 1.75
+        },
+        {
+          "text": "Antoine dreamed of joining a big French club\u2019s academy, where young players train to become professionals.",
+          "start": 18.0,
+          "duration": 7.0
+        },
+        {
+          "text": "Every week he played, and every week he hoped someone would notice him.",
+          "start": 25.0,
+          "duration": 4.575
+        },
+        {
+          "text": "Your size today is not the size of your dreams.",
+          "start": 29.575,
+          "duration": 3.65
+        }
+      ]
+    },
+    "rejected": {
+      "src": "/voice/books/griezmann/rejected.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "c6ecf0468e139c6c2f833e3a543f995ffbab8c5fc384a689a4c6db994d8612b5",
+      "cues": [
+        {
+          "text": "Told no, again and again",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "Antoine had trials at several professional clubs in France, including Lyon, Auxerre, Saint-\u00c9tienne and Sochaux.",
+          "start": 2.525,
+          "duration": 8.3
+        },
+        {
+          "text": "Again and again, they said no.",
+          "start": 10.825,
+          "duration": 2.75
+        },
+        {
+          "text": "The clubs were not sure about him because he was so small.",
+          "start": 13.575,
+          "duration": 4.025
+        },
+        {
+          "text": "Being small does not make you a worse player, but some coaches worried he would not be strong enough.",
+          "start": 17.6,
+          "duration": 6.35
+        },
+        {
+          "text": "Knock on the doors.",
+          "start": 23.95,
+          "duration": 2.0
+        },
+        {
+          "text": "Hearing no so many times would make anyone sad.",
+          "start": 25.95,
+          "duration": 3.675
+        },
+        {
+          "text": "But Antoine kept going to trials and kept playing.",
+          "start": 29.625,
+          "duration": 3.7
+        },
+        {
+          "text": "Keep going after a no. One club\u2019s opinion does not decide who you can become.",
+          "start": 33.325,
+          "duration": 5.775
+        }
+      ]
+    },
+    "scout": {
+      "src": "/voice/books/griezmann/scout.m4a?v=coach-bella-1",
+      "duration": 42.8,
+      "scriptSha256": "b1b0235cd9e14fdaad9515fb4ddf3e7a9e3e7fed9468d76988e02aed92ec04db",
+      "cues": [
+        {
+          "text": "Someone was watching",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "In 2005, during a trial with Montpellier, Antoine played in a friendly match.",
+          "start": 2.0,
+          "duration": 6.4
+        },
+        {
+          "text": "Watching was \u00c9ric Olhats, a scout for Real Sociedad, a club in Spain.",
+          "start": 8.4,
+          "duration": 5.8
+        },
+        {
+          "text": "Olhats liked what he saw: a boy with great technique who seemed to understand the game.",
+          "start": 14.2,
+          "duration": 5.725
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 19.925,
+          "duration": 1.775
+        },
+        {
+          "text": "Olhats invited him for a week\u2019s trial in San Sebasti\u00e1n.",
+          "start": 21.7,
+          "duration": 4.475
+        },
+        {
+          "text": "It was extended to a second week, and then Real Sociedad offered him a place in their youth team.",
+          "start": 26.175,
+          "duration": 6.375
+        },
+        {
+          "text": "Antoine\u2019s dream was coming true, but in a different country from the one he had expected.",
+          "start": 32.55,
+          "duration": 5.9
+        },
+        {
+          "text": "Keep showing what you can do. The right person might be watching.",
+          "start": 38.45,
+          "duration": 4.325
+        }
+      ]
+    },
+    "border": {
+      "src": "/voice/books/griezmann/border.m4a?v=coach-bella-1",
+      "duration": 35.5,
+      "scriptSha256": "ed4d8a0a3d48d2fd9e095980e81841f9e8efbbed342af6cc44090eda880a949f",
+      "cues": [
+        {
+          "text": "Across the border",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "Antoine was still a young teenager, a long way from his family.",
+          "start": 1.975,
+          "duration": 4.575
+        },
+        {
+          "text": "He lived with \u00c9ric Olhats in Bayonne, a French town near the Spanish border, and went to school there.",
+          "start": 6.55,
+          "duration": 6.975
+        },
+        {
+          "text": "Being far from home at that age is hard for anyone.",
+          "start": 13.525,
+          "duration": 3.925
+        },
+        {
+          "text": "Unfold the bridge.",
+          "start": 17.45,
+          "duration": 2.05
+        },
+        {
+          "text": "In the evenings, he crossed into Spain to train with Real Sociedad.",
+          "start": 19.5,
+          "duration": 5.025
+        },
+        {
+          "text": "It was a long journey, but he kept going.",
+          "start": 24.525,
+          "duration": 3.3
+        },
+        {
+          "text": "He grew stronger and more skilful every year.",
+          "start": 27.825,
+          "duration": 3.675
+        },
+        {
+          "text": "A hard journey can be worth it when you love what you do.",
+          "start": 31.5,
+          "duration": 3.95
+        }
+      ]
+    },
+    "euro": {
+      "src": "/voice/books/griezmann/euro.m4a?v=coach-bella-1",
+      "duration": 39.4,
+      "scriptSha256": "bdf5ec79e5faa23bce2196da9a4f6fa3d766cf66b08154d86eda7c68440fefc5",
+      "cues": [
+        {
+          "text": "A final at home",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2009, Antoine played his first match for Real Sociedad, and in 2014 he moved to Atl\u00e9tico Madrid.",
+          "start": 1.975,
+          "duration": 8.85
+        },
+        {
+          "text": "At Euro 2016, held in France, he was the top scorer, with six goals, and he was named the best player of the tournament.",
+          "start": 10.825,
+          "duration": 8.775
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 19.6,
+          "duration": 2.1
+        },
+        {
+          "text": "But in the final, France lost 1\u20130 to Portugal.",
+          "start": 21.7,
+          "duration": 4.025
+        },
+        {
+          "text": "Losing a final in your own country is very hard.",
+          "start": 25.725,
+          "duration": 3.925
+        },
+        {
+          "text": "Antoine and his teammates had to pick themselves up and start again.",
+          "start": 29.65,
+          "duration": 4.775
+        },
+        {
+          "text": "Losing hurts. Let yourself feel it, then get ready for the next chance.",
+          "start": 34.425,
+          "duration": 4.975
+        }
+      ]
+    },
+    "worldcup": {
+      "src": "/voice/books/griezmann/worldcup.m4a?v=coach-bella-1",
+      "duration": 35.3,
+      "scriptSha256": "8b05f59ca437082977e67dcec791bcba8eef7ad27ad8f4424c297c2b59113929",
+      "cues": [
+        {
+          "text": "Champion of the world",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Two years later, at the 2018 World Cup, France reached the final again.",
+          "start": 2.025,
+          "duration": 5.625
+        },
+        {
+          "text": "They beat Croatia 4\u20132.",
+          "start": 7.65,
+          "duration": 2.5
+        },
+        {
+          "text": "Antoine scored a penalty, and he was named player of the match.",
+          "start": 10.15,
+          "duration": 4.5
+        },
+        {
+          "text": "It was France\u2019s second World Cup win.",
+          "start": 14.65,
+          "duration": 3.425
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 18.075,
+          "duration": 1.95
+        },
+        {
+          "text": "The boy that French clubs had called too small was now a world champion with France.",
+          "start": 20.025,
+          "duration": 5.6
+        },
+        {
+          "text": "He stopped playing for France in 2024.",
+          "start": 25.625,
+          "duration": 3.575
+        },
+        {
+          "text": "Size is not everything. Skill, hard work and belief can carry you a long way.",
+          "start": 29.2,
+          "duration": 6.1
+        }
+      ]
+    }
+  }
+}

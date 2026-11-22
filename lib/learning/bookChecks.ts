@@ -50,4 +50,8 @@ export const BOOK_CHECKS:Record<PlayerBookId,BookCheck>={
  oshoala:C('team-roles','9v9','A defender moves up the pitch. Who helps?',['Nobody','A teammate covers their space','The referee'],1,'Great teams share the jobs: when one player moves, another covers.'),
  // Nov 21 2026 books.
  caicedo:C('width-space','7v7','Your teammate has the ball in the middle. Where can you go to help?',['Out wide, into open space','Right next to them','Behind the goal'],0,'Open space gives your teammate an easy pass, and gives you room to run with the ball.'),
+ vinicius:C('scan-receive','futsal','Futsal is fast and the court is small. What helps you most before the ball reaches you?',['A quick look to see who is near','Looking down at your boots','Closing your eyes'],0,'A quick look tells you where the space is, so you can think fast and move the ball on, just as futsal teaches.'),
+ son:C('scan-receive','7v7','You have practised your first touch for years. The ball comes to you. Where should that touch send it?',['Straight back to the passer, every time','Into open space, away from the defender','As high as you can'],1,'A good first touch moves the ball into space, so your next touch can be a dribble, a pass or a shot.'),
+ earps:C('keeper-set','futsal','The attacker is about to shoot. What does the goalkeeper do?',['Turn around','Get set: feet apart, hands ready','Run off the pitch'],1,'A set keeper is balanced and ready to dive either way.'),
+ griezmann:C('win-it','futsal','You lose the ball to a defender. What do you do next?',['Stop and complain','Walk back slowly','Press straight away to win it back'],2,'Good players react at once. Losing the ball, like hearing no, is a moment to keep going.'),
 };
