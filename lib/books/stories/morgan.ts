@@ -21,7 +21,7 @@ export const MORGAN_BOOK:BookData={
    text:'In 2008, Alex played for the United States at the Under-20 World Cup in Chile. She scored four goals at the tournament. Only two years had passed since her big knee injury.\n\nKick the ball. Her fourth goal won the final, and the United States became under-20 world champions. All the hard work during her recovery had paid off.',
    lesson:'Your hard work in the quiet months shows on the big day.',
    prompt:'Kick the ball',response:'Under-20 champions!',source:0},
-  {id:'2011',year:'2011 · World Cup',title:'The youngest, and a lost final',
+  {id:'final',year:'2011 · World Cup',title:'The youngest, and a lost final',
    text:'At the 2011 World Cup in Germany, Alex was the youngest player on the US team. She scored her first World Cup goal in the semi-final against France. She was young, and she was playing on the biggest stage in the world.\n\nLift the rain cloud. In the final, the United States drew 2–2 with Japan, and then lost on penalties. Losing a final is very hard, especially when you are young. Alex and her teammates used that sadness to work even harder.',
    lesson:'Losing a final hurts. Rest, learn and come back.',
    prompt:'Lift the rain cloud',response:'Ready to try again.',source:0},
