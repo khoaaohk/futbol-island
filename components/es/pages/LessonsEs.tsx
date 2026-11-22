@@ -85,7 +85,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">{group}</h2>
    <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}
     {/* Nov 21 2026 (linking mesh, lib/site/mesh.ts): as English, in Spanish */}
-    {mesh.map(m=><li key={m.path}><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
+    {mesh.map(m=><li key={m.path} data-mesh=""><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
   </section>
   {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">Más lecciones como esta</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.name}</span></a></li>)}</ul>

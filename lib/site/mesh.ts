@@ -28,7 +28,7 @@ import * as le from '../i18n/es/lessons';
  * as more items of the "Keep going" list: no new layout.
  */
 export type MeshFamily='rule'|'term'|'drill'|'drill-guide'|'plan'|'position'|'formation'|'comparison'|'lesson';
-export type MeshLink={path:string;name:string;line?:string};
+export type MeshLink={path:string;name:string;line?:string;mesh?:boolean};
 type Node={path:string;family:MeshFamily;name:string;line?:string;bag:Map<string,number>};
 export const MESH_SAME=8,MESH_CROSS=3;
 
@@ -130,8 +130,8 @@ export function meshLinks(path:string,{skip=[],lang='en'}:{skip?:Iterable<string
  for(const x of all){if(cross.length>=MESH_CROSS||x.score<=0)break;if(!fams.has(x.node.family)){fams.add(x.node.family);cross.push(x);}}
  const out=[...same,...cross].map(({node}):MeshLink=>{
   /* the short title only: no summary line, so the grid adds links, not repeated text (word budgets, unique-text checks) */
-  if(lang==='en')return {path:node.path,name:node.name};
-  const w=esWords().get(node.path);return {path:w?.path??toEs(node.path),name:w?.name??node.name};
+  if(lang==='en')return {path:node.path,name:node.name,mesh:true};
+  const w=esWords().get(node.path);return {path:w?.path??toEs(node.path),name:w?.name??node.name,mesh:true};
  });
  return out;
 }

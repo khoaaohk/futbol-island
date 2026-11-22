@@ -60,7 +60,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">Keep going: {sib.groupName}</h2>
    <ul className={styles.list}>{[...sib.same.map(x=>({x,tag:''})),{x:sib.prev,tag:'Previous lesson · '},{x:sib.next,tag:'Next lesson · '}].map(({x,tag})=><li key={x.id}><a href={lessonPath(x.id)}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}
     {/* Nov 21 2026 (linking mesh, lib/site/mesh.ts): the closest other lessons and 2-3 guide pages on the same idea */}
-    {mesh.map(m=><li key={m.path}><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
+    {mesh.map(m=><li key={m.path} data-mesh=""><a href={m.path}><span className={styles.itemTitle}>{m.name}</span>{m.line&&<span className={styles.itemMeta}>{m.line}</span>}</a></li>)}</ul>
   </section>
   {hubs.length>0&&<section className={styles.section} aria-labelledby="related"><h2 className={`${styles.h2} ${rt.target}`} id="related">More lessons like this</h2>
    <ul className={styles.list}>{hubs.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span></a></li>)}</ul>

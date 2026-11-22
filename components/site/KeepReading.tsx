@@ -13,7 +13,7 @@ import {GAMES_HUB} from '../../lib/site/games';
  * The first card of each group carries the old section id (#lessons, #drills, #related), so old jump links still land.
  * Server-rendered, no script.
  */
-export type ReadLink={path:string;name:string;line?:string;tag?:string};
+export type ReadLink={path:string;name:string;line?:string;tag?:string;/** a linking-mesh card (lib/site/mesh.ts): marked data-mesh for the link counts */mesh?:boolean};
 /** `icon` / `label` left out: each card takes them from its own path (kindOf), for "related" groups that mix pages. */
 export type ReadGroup={id:string;label?:string;icon?:FactIconKind;links:readonly ReadLink[]};
 type Kind={icon:FactIconKind;en:string;es:string};
@@ -56,7 +56,7 @@ export function shareOut(sizes:readonly number[],show:number):number[]{
 }
 function Card({g,l,id,lang}:{g:ReadGroup;l:ReadLink;id?:string;lang:'en'|'es'}){
  const auto=g.icon&&g.label?null:kindOf(l.path);
- return <li className={k.item} id={id}><a href={l.path}>
+ return <li className={k.item} id={id} data-mesh={l.mesh?'':undefined}><a href={l.path}>
   <span className={k.ico}><FactIcon kind={g.icon??auto!.icon} size={22}/></span>
   <span className={k.name}>{l.name}</span>
   {/* the group word is drawn by CSS (attr): a visual hint like the icon, not page text (word counts, snippets) */}
