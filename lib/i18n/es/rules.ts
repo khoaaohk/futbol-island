@@ -417,6 +417,7 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
   faq:[{q:'¿A qué edad pueden cabecear los niños en el fútbol?',a:'En el fútbol juvenil de Estados Unidos, desde los 11 años en los partidos. Los jugadores de 10 años o menos no cabecean el balón para nada. Los jugadores de 11 y 12 años tienen límites en los entrenamientos.'},
    {q:'¿Qué pasa si un niño de 9 años cabecea el balón en un partido?',a:'Si fue a propósito, el árbitro detiene el juego y el otro equipo recibe un tiro libre indirecto desde ese lugar. No se muestra tarjeta.'},
    {q:'¿Por qué se limita el cabeceo para los niños?',a:'U.S. Soccer introdujo los límites como parte de su iniciativa sobre conmociones cerebrales, por consejo de su comité médico.'},
+   {q:'¿Está prohibido cabecear en el fútbol infantil?',a:'No en todas las edades. En el fútbol juvenil de Estados Unidos, los jugadores de 10 años o menos no cabecean el balón, y los de 11 y 12 pueden cabecear en los partidos, con límites en los entrenamientos. En Inglaterra, la FA está quitando el cabezazo intencional de los partidos de base de sub-7 a sub-11.'},
    {q:'¿Cómo pueden los jugadores jóvenes controlar un balón alto sin cabecear?',a:'Con el pecho, el muslo o el pie, o dejándolo botar. Nuestras lecciones enseñan a mirar temprano y a elegir un primer toque hacia el espacio.'}],
   notes:{
    coach:'Enseña a los jugadores a controlar un balón alto con el pecho o el muslo, o a dejarlo botar primero, para que nunca necesiten usar la cabeza.',

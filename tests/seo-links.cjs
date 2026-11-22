@@ -34,7 +34,7 @@ const {load}=(()=>{const ts=require('typescript'),vm=require('node:vm'),cache=ne
 const L=rel=>load(path.join(root,rel));
 const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
 const code=rel=>read(rel).replace(/\/\*[\s\S]*?\*\//g,'');
-const paths=L('lib/site/paths.ts'),SP=paths.sitePaths(),PATHS=new Set([...SP.map(x=>x.path),...paths.NOINDEX_CARD_PATHS]);/* Nov 20 2026: single card pages are real pages, noindex and out of the sitemap */
+const paths=L('lib/site/paths.ts'),SP=paths.sitePaths(),PATHS=new Set([...SP.map(x=>x.path),...paths.NOINDEX_PATHS]);/* Nov 20 2026: single card pages, Nov 21 2026: common and uncommon fish pages are real pages, noindex and out of the sitemap */
 const col=L('lib/site/collections.ts'),cmp=L('lib/site/comparisons.ts'),rel=L('lib/site/related.ts'),cards=L('lib/site/cards.ts'),fish=L('lib/site/fish.ts');
 const groups=L('lib/site/cardGroups.ts'),positions=L('lib/site/positions.ts'),rn=L('lib/site/readNext.ts'),guides=L('lib/site/guides.ts');
 const isPage=p=>PATHS.has(p.split('#')[0]);

@@ -33,6 +33,9 @@ import type {DeckIcon,DeckSlide,DeckWords} from './ruleDeck';
  *    2023, Sporting v Benfica, women's cup, to both teams' medical staff who helped an ill fan):
  *    https://www.euronews.com/2023/01/25/referee-shows-a-white-card-for-the-first-time-in-football-history-but-why . It is not
  *    in the Laws of the Game. NOT a green card: no source ties a green card to Portugal, so the page says nothing about one.
+ *  - Nov 21 2026 (SEO lift): the "penalty cards" and "blue card" side questions use only the sources above: Law 12 section 4
+ *    names two cards (yellow and red); the temporary dismissals guidelines say a yellow card, then both arms to the area. No
+ *    blue-card trial or league is named (not verified).
  * NOT VERIFIED and therefore said only as "check your league": how many games a red card costs (competitions decide; the Laws
  * do not), whether young recreational leagues show cards, yellow-card accumulation bans.
  */
@@ -147,7 +150,9 @@ export const CARD_RULES:CardRulesContent={
   {q:'How long does a yellow card last?',a:'Only for the game it is shown in. During that game, a second yellow card means a red card. In leagues that use sin bins, the player also sits out for a short time, such as 10 minutes in a 90-minute game.'},
   {q:'Do yellow cards carry over to the next game?',a:'Not in the Laws of the Game: each game starts with no cards. Some competitions keep count over a season or a tournament, and a player who collects a set number of yellow cards misses a game. Each competition sets that number.'},
   {q:'Can a goalkeeper get a red card?',a:'Yes. The goalkeeper follows the same card rules as every other player. The one difference is that a goalkeeper may handle the ball inside their own penalty area, so that is not a handball. If the goalkeeper is sent off, a teammate or a substitute goes in goal, and the team still plays one player short.'},
-  {q:'What is Portugal’s white card?',a:'The Portuguese Football Federation uses a white card to praise fair play, such as helping someone who is hurt. It was first shown in a top-level game in January 2023, to the medical staff of both teams after they helped a fan who fell ill. It is a fair-play idea, not part of the Laws of the Game, and it does not punish anyone.'}]},
+  {q:'What is Portugal’s white card?',a:'The Portuguese Football Federation uses a white card to praise fair play, such as helping someone who is hurt. It was first shown in a top-level game in January 2023, to the medical staff of both teams after they helped a fan who fell ill. It is a fair-play idea, not part of the Laws of the Game, and it does not punish anyone.'},
+  {q:'What are penalty cards in soccer?',a:'“Penalty cards” is another name some people use for the yellow and red cards. They are not the same thing as a penalty kick: a card punishes the player, and a penalty kick is the restart after a foul inside the penalty area. One foul in the area can bring both.'},
+  {q:'Is there a blue card in soccer?',a:'Not in the Laws of the Game: Law 12 has two cards, yellow and red. Where a league uses sin bins, the referee shows a yellow card and then points to the sin bin with both arms. A few federations add cards of their own, like Portugal’s white card for fair play.'}]},
  sources:{line:'Sources: IFAB Laws of the Game, Law 12 (fouls and misconduct) and Law 3 (the players), and the IFAB guidelines for temporary dismissals.',
   links:[{name:'Law 12: fouls and misconduct (The IFAB)',url:`${IFAB}fouls-and-misconduct/`},{name:'Law 3: the players (The IFAB)',url:`${IFAB}the-players/`},
    {name:'Guidelines for temporary dismissals (The IFAB)',url:`${IFAB}guidelines-for-temporary-dismissals/`},
