@@ -175,9 +175,10 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     </button>
     {res?.best&&<p className={c.best} data-scan-best="">{w.modes[s.mode]}: {w.lastBest(res.last?w.ofN(res.last.hit,res.last.total):'–',w.ofN(res.best.hit,res.best.total))}</p>}
     <p className={c.place}>{w.place}</p>
+    {/* fixed to the bottom on a phone; in the column beside the cue on a wide screen */}
+  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
    </div>
   </main>
-  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
   {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
    <div className={c.sheetIn} role="dialog" aria-modal="true" aria-labelledby="scan-settings">
     <div className={c.sheetHead}><h2 className={c.sheetTitle} id="scan-settings">{w.settings}</h2><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.doneBtn}</button></div>

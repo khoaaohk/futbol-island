@@ -138,7 +138,8 @@
  .main{max-width:1080px;padding-top:16px}
  .home{grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:24px;align-items:start}
  .preview .cue{height:min(68dvh,560px);max-height:none}
- .dock{left:auto;right:max(16px,calc(50vw - 540px));width:min(420px,calc(50vw - 40px));background:transparent;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+ .dock{position:static;padding:4px 0 0;background:transparent}
+ .main{padding-bottom:32px}
  .sheet{align-items:center}
  .sheetIn{border-radius:var(--r-lg);max-height:84dvh}
 }
