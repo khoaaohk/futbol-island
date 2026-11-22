@@ -1,4 +1,5 @@
 import RailNav from '@/components/site/shell/RailNav';
+import {BOARD_EN,BOARD_PATH} from '@/lib/site/tools/board';
 import {toolsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -33,8 +34,8 @@ export default function ToolsHub(){
    <ToolCards links={PLANNER_PAGES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))} tint="time"/>
   </Section>
   <Section id="practice" title="Apps for practice and match day">
-   <p>Two phone apps for the field: a scanning trainer that flashes colors, numbers, arrows and passes so players look over the shoulder, and a coach app with the lineup and a live substitution clock.</p>
-   <ToolCards links={[{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb},{path:'/coach',name:'Coach app for match day',line:'Lineup and a live substitution clock on your phone; works offline, no account'}]} tint="practice"/>
+   <p>A tactics board to draw a play and run it step by step, a scanning trainer that flashes colors, numbers, arrows and passes so players look over the shoulder, and a coach app with the lineup and a live substitution clock.</p>
+   <ToolCards links={[{path:BOARD_PATH,name:cap(BOARD_EN.h1),line:BOARD_EN.blurb},{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb},{path:'/coach',name:'Coach app for match day',line:'Lineup and a live substitution clock on your phone; works offline, no account'}]} tint="practice"/>
   </Section>
   <Section id="printables" title="Printable field diagrams and cheat sheets">
    <p>Blank fields to draw on, every formation of a game on one page, and the positions with their numbers. Free to print and share for teams, clubs and schools.</p>

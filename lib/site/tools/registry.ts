@@ -7,6 +7,7 @@ import {PLAYERS_PER_TEAM,type GuideFormat} from '../pitch';
 import {DEFAULT_FORMATION} from './lineup';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,type Printable} from './printables';
 import {SCAN_EN,SCAN_IMAGE,SCAN_PATH} from './scanTrainer';
+import {BOARD_EN,BOARD_PATH} from './board';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 /**
  * The free coach tools (Nov 10 2026): /tools, the lineup builder and its format landings, the playing-time planner and its
@@ -67,7 +68,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
   faq:[{q:'Which 11v11 formations can I build?',a:'The 4-3-3, 4-4-2, 4-2-3-1 and 3-5-2. Each one links to a guide page with roles, strengths and weak spots.'},
    {q:'Do the numbers on the dots have to match shirt numbers?',a:'No. The numbers 1 to 11 are a coaching custom for naming positions. Players can wear any shirt number.'},
    {q:'Can adult and school teams use it?',a:'Yes. It is free for any team, club or school. The picture and the printed sheet carry a small futbolisland.app credit.'}]},
- {kind:'lineup',slug:'futsal-lineup-builder',path:'/tools/futsal-lineup-builder',format:'futsal',crumb:'Futsal lineup builder',title:'Futsal Lineup Builder: Free Printable Lineup Sheet',h1:'Futsal lineup builder',
+ {kind:'lineup',slug:'futsal-lineup-builder',path:'/tools/futsal-lineup-builder',format:'futsal',crumb:'Futsal lineup builder',title:'Futsal Formation Maker: Free Futsal Lineup Builder'/* Nov 22 2026 (GSC: "formation maker futsal" @77); was "Futsal Lineup Builder: Free Printable Lineup Sheet" */,h1:'Futsal lineup builder',
   description:'Build a futsal lineup in a 2-2, a 1-2-1 diamond or a 3-1 on a real futsal court. Type names, swap players and subs, then print or share it. Free.',
   lead:'Set your goalkeeper and four court players on a futsal court in a 2-2, a 1-2-1 diamond or a 3-1, and list the rest of the squad as rolling substitutes.',
   blurb:'Five starters and rolling subs on a futsal court',
@@ -134,7 +135,7 @@ export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',tit
   {q:'Should I download the PNG or the SVG?',a:'Take the PNG to print at home or to drop into a document or a slide. Take the SVG if you want to edit the diagram in a drawing program or print it very large: it stays sharp at any size.'},
   {q:'Will the sheets print on A4 paper?',a:'Yes. They are drawn for US Letter; choose “fit to page” in the print window and they fill an A4 page with a slightly wider margin.'},
   {q:'Why is a 7v7 field drawn differently from a full-size field?',a:'Because it is a different field, not a smaller copy. In the US a 7v7 field has build-out lines and its own penalty area size. Each template here keeps the markings of its own game.'}] as Faq[]};
-export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'};
+export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'|'board'};
 const lineupImage=(p:LineupPage)=>formationImg(DEFAULT_FORMATION[p.format??'7v7']);
 /** Nov 20 2026 (SEO foundation): the calculator's own picture is a real screenshot of the tool (public/tools/, captured from the
  *  built page with headless Chrome at 1200 x 630), not a formation diagram. */
@@ -150,6 +151,8 @@ export const TOOL_PAGES:readonly ToolPage[]=[
  ...PRINTABLES.map(p=>({path:p.path,name:p.h1,title:p.title,description:p.description,blurb:p.blurb,kind:'printable' as const,image:printableImage(p)})),
  /* Scan Trainer's front door (Nov 16 2026; lib/site/tools/scanTrainer.ts): hub-level, so llms.txt, search and "More to learn" list it */
  {path:SCAN_PATH,name:SCAN_EN.h1,title:SCAN_EN.title,description:SCAN_EN.description,blurb:SCAN_EN.blurb,hub:true,kind:'scan',image:SCAN_IMAGE},
+ /* the tactics board's front door (Nov 22 2026; lib/site/tools/board.ts): the game's Coaches Board, full screen at /board */
+ {path:BOARD_PATH,name:BOARD_EN.h1,title:BOARD_EN.title,description:BOARD_EN.description,blurb:BOARD_EN.blurb,hub:true,kind:'board',image:formationImg('11v11-4-3-3')},
 ];
 /** The pages the lesson hubs' "More to learn" list and llms.txt name (the tools hub and the three main tools). */
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);

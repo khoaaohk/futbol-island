@@ -20,7 +20,7 @@ import {hubBySlug} from './hubs';
  */
 export type XLink={path:string;name:string;line:string};
 const TOOL={calc:'/tools/soccer-playing-time-calculator',lineup:'/tools/soccer-lineup-builder',l7:'/tools/7v7-lineup-builder',l9:'/tools/9v9-lineup-builder',
- futsal:'/tools/futsal-lineup-builder',rot7:'/tools/7v7-substitution-rotation',fields:'/tools/soccer-field-diagrams'} as const;
+ futsal:'/tools/futsal-lineup-builder',rot7:'/tools/7v7-substitution-rotation',fields:'/tools/soccer-field-diagrams',board:'/tools/soccer-tactics-board'} as const;
 type ToolKey=keyof typeof TOOL;
 const R='/learn/soccer-rules/';
 /** Rule page -> the coach tool that goes with it, 2 or 3 glossary terms the rule uses, and a sister rule where one explains the other. */
@@ -63,8 +63,8 @@ const TERM_RULES:Record<string,string[]>={
  'stoppage-time':['substitutions-and-game-length'],'extra-time':['substitutions-and-game-length','kick-off'],'penalty-shoot-out':['penalty-kick'],
 };
 /** Term page -> a coach tool, only where the word is about team shape or game time. */
-const TERM_TOOL:Record<string,ToolKey>={'pressing':'calc','switching-play':'lineup','overlap':'lineup','counterattack':'lineup','marking':'lineup','set-piece':'fields','free-kick-wall':'fields',
- 'overload':'lineup','false-nine':'lineup','build-up':'l7','box-to-box':'calc',
+const TERM_TOOL:Record<string,ToolKey>={/* Nov 22 2026: moves (overlap, switch, counter, overload) point at the tactics board */'pressing':'calc','switching-play':'board','overlap':'board','counterattack':'board','marking':'lineup','set-piece':'fields','free-kick-wall':'fields',
+ 'overload':'board','false-nine':'lineup','build-up':'l7','box-to-box':'calc',
  'width':'lineup','low-block':'lineup','high-line':'lineup','stoppage-time':'calc','extra-time':'calc','penalty-area':'fields','goal-area':'fields'};
 /** Card role -> the terms and rules that role's football is about. A card page shows two of them, picked by card number, so
  *  the links spread over the list instead of every card pointing at the same page. `t:` a term, `r:` a rule, `tool:` a tool. */

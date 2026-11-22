@@ -40,10 +40,10 @@ const text=h=>h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[
 // ---- 1. registry, sitemap, metadata ---------------------------------------------------------------------------------------
 const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder',
  '/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',
- ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */];
+ ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */,'/tools/soccer-tactics-board'/* the tactics board's front door (Nov 22 2026) */];
 assert.deepEqual(PAGES.map(p=>p.path),WANT,'the tool pages');
-assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams','/tools/soccer-scanning-trainer'],'hub-level pages');
-const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,'/tools/soccer-scanning-trainer.png',...(fs.existsSync(path.join(root,'public/tools/soccer-playing-time-calculator.png'))?['/tools/soccer-playing-time-calculator.png']:[])/* Nov 20 2026: the calculator's real screenshot */]/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
+assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams','/tools/soccer-scanning-trainer','/tools/soccer-tactics-board'],'hub-level pages');
+const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,`/board`,'/tools/soccer-scanning-trainer.png',...(fs.existsSync(path.join(root,'public/tools/soccer-playing-time-calculator.png'))?['/tools/soccer-playing-time-calculator.png']:[])/* Nov 20 2026: the calculator's real screenshot */]/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
 {const all=[...guides.ALL_GUIDE_PAGES,...PAGES];
  assert.equal(new Set(all.map(p=>p.title)).size,all.length,'titles are unique across guides and tools');assert.equal(new Set(all.map(p=>p.description)).size,all.length,'descriptions are unique');}
 for(const p of PAGES){
@@ -52,11 +52,11 @@ for(const p of PAGES){
  assert(/soccer|futsal/i.test(p.title)&&/soccer|futsal/i.test(p.name),`${p.path}: says soccer (or futsal) in the title and h1`);
  assert(p.blurb&&p.image&&SERVED.has(p.image),`${p.path}: a blurb and a picture that exists (${p.image})`);
 }
-const file=p=>p.path===reg.TOOLS_PATH?`${T}/page.tsx`:p.kind==='printables'?`${T}/soccer-field-diagrams/page.tsx`:p.kind==='printable'?`${T}/soccer-field-diagrams/[sheet]/page.tsx`:p.kind==='scan'?`${T}/soccer-scanning-trainer/page.tsx`:`${T}/[slug]/page.tsx`;
+const file=p=>p.path===reg.TOOLS_PATH?`${T}/page.tsx`:p.kind==='printables'?`${T}/soccer-field-diagrams/page.tsx`:p.kind==='printable'?`${T}/soccer-field-diagrams/[sheet]/page.tsx`:p.kind==='scan'?`${T}/soccer-scanning-trainer/page.tsx`:p.kind==='board'?`${T}/soccer-tactics-board/page.tsx`:`${T}/[slug]/page.tsx`;
 const params=p=>p.kind==='printable'?{sheet:p.path.split('/').pop()}:{slug:p.path.split('/').pop()};
 for(const f of new Set(PAGES.map(file))){const s=read(f);assert(/export const dynamic='force-static';/.test(s),`${f} is force-static`);if(/\[/.test(f))assert(/dynamicParams=false/.test(s)&&/generateStaticParams/.test(s),`${f}: unknown slugs 404`);}
 assert.deepEqual(L(`${T}/[slug]/page.tsx`).generateStaticParams().map(x=>x.slug),WANT.slice(1,9).map(p=>p.split('/').pop()),'tool slugs');
-assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(10,-1).map(p=>p.split('/').pop()),'printable slugs');
+assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(10,-2)/* the last two: scan and board front doors */.map(p=>p.split('/').pop()),'printable slugs');
 
 // ---- 2. rendered pages ----------------------------------------------------------------------------------------------------
 const html=new Map(),paraPages=new Map();let words=0;

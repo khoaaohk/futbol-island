@@ -240,6 +240,7 @@
 .app [data-tool=subs]{--acc:#1f5fd1;--accTint:#dfe8fb}
 .app [data-tool=match]{--acc:#9a3b1c;--accTint:#f6e1d6}
 .app [data-tool=summary]{--acc:#4f5b53;--accTint:#e6e3d6}
+.app [data-tool=board]{--acc:#2d6f39;--accTint:#dcebd2}
 .app [data-tool=scan]{--acc:#14221d;--accTint:#e9c16b}
 .app [data-tool=drills]{--acc:#174f40;--accTint:#e4e8d4}
 .app [data-tool=team]{--acc:#14221d;--accTint:#e6e3d6}

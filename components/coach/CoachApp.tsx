@@ -215,6 +215,7 @@ function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:
   {key:'subs',tool:'subs',name:w.titleSubs,line:w.lineSubs,icon:ICONS.subs,on:()=>go('subs')},
   {key:'match',tool:'match',name:w.matchDay,line:w.lineMatch,icon:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4M9 2h6M19 6l1.5-1.5',on:onMatch},
   {key:'summary',tool:'summary',name:w.titleSummary,line:w.lineSummary,icon:ICONS.summary,on:()=>go('summary')},
+  {key:'board',tool:'board',name:w.boardName,line:w.lineBoard,icon:'M4 4h16v16H4zM8 9l3 3-3 3M13 15h4',href:'/board?from=coach'},
   {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es':'/scan'},
   {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans'}];
  return <>

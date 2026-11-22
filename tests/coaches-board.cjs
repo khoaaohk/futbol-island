@@ -175,7 +175,7 @@ await agroup('share link round trip',async()=>{
  const back=await SH.decodePlay(await SH.encodePlay(withInk));assert.equal(back.steps[0].ink[0].kind,'zone');assert.equal(back.steps[0].ink[0].pts.length,3);
  for(const bad of ['','z','x123','z!!!!','zAAAA','j'+Buffer.from('[2]').toString('base64url'),'j'+Buffer.from('{"v":1}').toString('base64url')])assert.equal(await SH.decodePlay(bad),null,bad);
  assert.equal(SH.readShareHash('#play=zAbc_-9'),'zAbc_-9');assert.equal(SH.readShareHash('#save=abc'),null);
- assert.equal(SH.shareUrl('zX','https://example.org/?a=1#x'),'https://example.org/#play=zX');
+ assert.equal(SH.shareUrl('zX','https://example.org/?a=1#x'),'https://example.org/#play=zX');assert.equal(SH.shareUrl('zX','https://example.org/board'),'https://example.org/board#play=zX');
 });
 
 group('built-in example plays',()=>{

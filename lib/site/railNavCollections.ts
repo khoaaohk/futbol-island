@@ -51,6 +51,10 @@ export const printableRail=(o:{versions:boolean;compare:boolean},es=false):Rail=
 export const scanFrontRail=(es=false):Rail=>page(onPage(es),toolsBack(es),[['what',L(es,'What it is','Qué es')],['how',L(es,'How to use it','Cómo se usa')],['speed',L(es,'Speed by age','Velocidad por edad')],
  ['settings',L(es,'Settings','Ajustes')],['drills',L(es,'Drills','Ejercicios')],['tips',L(es,'Tips','Consejos')],qa(es),more(es)],es);
 
+/* the tactics board's front door (Nov 22 2026, app/(site)/tools/soccer-tactics-board) */
+export const boardFrontRail=(es=false):Rail=>page(onPage(es),toolsBack(es),[['what',L(es,'What it does','Qué hace')],['how',L(es,'How to draw a play','Cómo dibujar')],
+ ['features',L(es,'On the board','En la pizarra')],['uses',L(es,'Ways to use it','Cómo usarla')],qa(es),more(es)],es);
+
 /* museum: /exhibits lists its 22 cases under their galleries (each case row is #ex-<id>); a case goes Back to the Museum */
 export const exhibitAnchor=(id:string)=>`ex-${id}`;
 export const exhibitsHubRail=():Rail=>hubRail('Museum cases on this page',GALLERIES.map(g=>({title:g.title,

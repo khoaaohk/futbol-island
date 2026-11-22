@@ -23,6 +23,8 @@ import {SHAPES} from '@/lib/site/tools/shapes';
 import ScanTrainerPage from '@/components/site/tools/ScanTrainerPage';
 import {EsGridFigure} from './DrillsEs';
 import {SCAN_IMAGE,SCAN_PATH,SCAN_RELATED_EN} from '@/lib/site/tools/scanTrainer';
+import {BOARD_APP_PATH,BOARD_ES,BOARD_PATH,BOARD_RELATED} from '@/lib/site/tools/board';
+import BoardPage from '@/components/site/tools/BoardPage';
 import {SCAN_ES} from '@/lib/i18n/es/scanTrainer';
 import {CREDIT,dotItems,fieldItems,INK,LETTER,LICENCE,wrapText,type Item,type Sheet} from '@/lib/site/tools/sheet';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
@@ -361,6 +363,19 @@ function ScanEs(){
   end={<EsToolEnd/>} figure={(id,sc)=><EsGridFigure id={id} scene={sc} small/>}/>;
 }
 
+const BOARD_RELATED_ES:readonly [string,string][]=[['Formaciones de fútbol','Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'],['Posiciones de fútbol','Qué hace cada posición y los números del 1 al 11'],
+ ['Ejercicios de fútbol para niños','Ejercicios con diagrama para practicar la jugada que dibujaste'],['Creador de alineaciones de fútbol','Nombres en un diagrama de cancha para el partido'],
+ ['Diagramas de cancha de fútbol en blanco','Imprime una cancha para dibujar jugadas en papel'],['Entrenador de escaneo','Los jugadores aprenden a mirar por encima del hombro']];
+/** The tactics board's front door in Spanish (Nov 22 2026; the same body as the English page) */
+function BoardEs(){
+ const crumbs=toolCrumbsEs({name:BOARD_ES.crumb,path:toEs(BOARD_PATH)});
+ const related=BOARD_RELATED.map((l,i)=>({path:hasEs(l.path)?toEs(l.path):l.path,name:BOARD_RELATED_ES[i][0],line:BOARD_RELATED_ES[i][1]}));
+ return <BoardPage p={BOARD_ES} path={toEs(BOARD_PATH)} image={image(BOARD_PATH)} crumbs={crumbs} lang="es" related={related}
+  intro={<header className={site.intro} id="top"><EsBreadcrumbs crumbs={crumbs}/><h1 className={site.title}>{BOARD_ES.h1}</h1><p className={site.lead} data-answer="">{BOARD_ES.lead}</p>
+   <AppLink href={`${BOARD_APP_PATH}?lang=es`} label={BOARD_ES.openLabel} line={BOARD_ES.openLine}/><p className={site.caption}>{TOOL_NAMES_ES}</p></header>}
+  end={<EsToolEnd/>}/>;
+}
+
 // ---- the route table ----
 const H1_IMAGE_ALT='Un diagrama de formación de fútbol 9v9';
 export function toolsEsRoute(enPath:string):EsRoute|null{
@@ -368,6 +383,7 @@ export function toolsEsRoute(enPath:string):EsRoute|null{
  const l=LINEUP_PAGES.find(x=>x.path===enPath);if(l){const e=lineupEs(l);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:`Un diagrama de formación del ${e.h1.toLowerCase()}`}),render:()=><LineupEs p={l}/>};}
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol'}),render:()=><PlannerEs p={r}/>};}
  if(enPath===SCAN_PATH)return {meta:()=>esMeta(SCAN_ES.title,SCAN_ES.description,enPath,{url:SCAN_IMAGE,alt:'El entrenador de escaneo en dos teléfonos: una señal de color azul y un pase al compañero 3 a la derecha'}),render:()=><ScanEs/>};
+ if(enPath===BOARD_PATH)return {meta:()=>esMeta(BOARD_ES.title,BOARD_ES.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol 11v11, la forma que se arma en la pizarra táctica'}),render:()=><BoardEs/>};
  if(enPath===PRINTABLES_HUB.path)return {meta:()=>esMeta(PRINT_HUB.title,PRINT_HUB.description,enPath,{url:image(enPath),alt:'Un diagrama de cancha de fútbol 11v11 en blanco'}),render:()=><PrintablesHubEs/>};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);
   return {meta:()=>{const sh=fileEs(s,s.files[0]).sheet,url=printableImage(s),m=esMeta(e.title,e.description,enPath,{url,alt:sh.title});return {...m,openGraph:{...m.openGraph,images:[{url,width:sh.w*1.5,height:sh.h*1.5,alt:sh.title}]}};},render:()=><PrintableEsPage p={s}/>};}

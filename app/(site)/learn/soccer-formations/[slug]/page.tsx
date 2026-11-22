@@ -45,7 +45,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <GuideIntro top rail={<RailNav rail={guideRail('formations')} current="#top"/>} onward={onwardFor(f.lessons[0])} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`${f.name} diagram`}>
    <Diagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
-   <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link.</p>
+   <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link. To show how the shape moves, draw a play on the <a href="/tools/soccer-tactics-board">free tactics board</a>.</p>
    {futsal
     ?<p>{f.shape} counts the four outfield players from the back to the front. The goalkeeper is counted separately, so a futsal team has {PLAYERS_PER_TEAM.futsal} players on the court.</p>
     :<p>Coaches write this shape in two ways. <b>{f.shape}</b> counts the {PLAYERS_PER_TEAM[f.format]-1} outfield players, from the defense forward. U.S. Soccer counts the goalkeeper first and writes <b>{withKeeper(f)}</b>. Both mean the same formation. The numbers on the dots are a common coaching custom, not a rule: players can wear any shirt number.</p>}

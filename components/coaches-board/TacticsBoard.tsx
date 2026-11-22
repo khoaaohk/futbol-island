@@ -400,7 +400,7 @@ export default function TacticsBoard({onBack}:{onBack?:()=>void;onProgress?:()=>
 
  // ── share ──
  const [link,setLink]=useState('');
- useEffect(()=>{if(sheet!=='share')return;let live=true;setLink('');encodePlay(play).then(code=>{if(live)setLink(shareUrl(code,location.origin+location.pathname));});return ()=>{live=false;};},[sheet,play]);
+ useEffect(()=>{if(sheet!=='share')return;let live=true;setLink('');encodePlay(play).then(code=>{if(live)setLink(shareUrl(code,location.origin+'/board'))/* Nov 22 2026: every share link opens the web board */;});return ()=>{live=false;};},[sheet,play]);
  const copyLink=async()=>{try{await navigator.clipboard.writeText(link);flash('Link copied');}catch{flash('Select the link and copy it');}};
  const nativeShare=async()=>{try{await navigator.share({title:play.name,text:`${play.name} — a play on the Futbol Island Coaches Board`,url:link});}catch{/* dismissed */}};
  const savePicture=async()=>{if(!scene)return;try{const {boardPng}=await import('./exportPng');const blob=await boardPng(scene,{title:play.name,caption:play.note??''});
