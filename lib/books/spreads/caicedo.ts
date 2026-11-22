@@ -116,7 +116,7 @@ const debut:SpreadDef={id:'debut',rest:20.1,
 /* ───────────── 3 · The hardest challenge (illness) ───────────── */
 const illness:SpreadDef={id:'illness',rest:20.3,
  left:k=>{floor(k,-5,0);const rug=ell(-2.5,Z(.6),1.7,.7);k.fill(rug,INK.sky,.7);k.dots(rug,INK.blue,.05,.3);caption(k,-2.5,'EARLY 2020 · AGED 15','A SERIOUS ILLNESS · TIME TO REST',INK.navy);},
- right:k=>{floor(k,0,5,'#e4cfa8','#b39a6e');const rug=ell(2.5,Z(.7),1.8,.7);k.fill(rug,INK.yellow,.5);k.dots(rug,INK.orange,.05,.3);caption(k,2.5,'SEPTEMBER 2020','HER TEAM OF HELPERS · WELL AGAIN',INK.green);},
+ right:k=>{floor(k,0,5,'#e4cfa8','#b39a6e');const rug=ell(2.5,Z(.7),1.8,.7);k.fill(rug,INK.yellow,.5);k.dots(rug,INK.orange,.05,.3);caption(k,2.5,'LATER IN 2020','HER TEAM OF HELPERS · GETTING BETTER',INK.green);},
  build:B=>{
   const wall=(k:Kit,c:string)=>{wash(k,4.5,3,c,INK.white,y=>.2+y*.05);for(let x=.3;x<4.5;x+=.6)k.key(`M${x} 0 L${x} 2.4`,.01,'#c9b48e');k.fill(rect(0,2.4,4.5,.6),'#d9b98c');};
   const bd=backdrop(B,K+'i-bd',k=>wall(k,'#efe0c4'),k=>wall(k,'#f6e8cc'));
@@ -138,7 +138,7 @@ const illness:SpreadDef={id:'illness',rest:20.3,
   const hearts=helpers.map((h,i)=>h.body.add(heartBubble(`i-heart${i}`),.4,h.h*.95,{z:-.02}));
   const help=B.stand(P.lineCard('i-help',1.5,.62,['ASKING FOR','HELP IS BRAVE'],INK.yellow),4.1,-1.3,{layer:1,s:0});
   const well=B.person(K+'i-well',2.6,1.0,1.2,{shirt:'casual',...LINDA,face:'grin',layer:3,holdR:'ball'});
-  const sept=B.stand(S.flipCard(K+'i-sept',1.4,.32,'SEPTEMBER 2020',INK.pink),1.2,1.9,{layer:3,s:0,tab:false});
+  const sept=B.stand(S.flipCard(K+'i-sept',1.4,.32,'GETTING BETTER',INK.pink),1.2,1.9,{layer:3,s:0,tab:false});
   const team=B.stand(P.lineCard('i-team',1.9,.36,['DOCTORS · FAMILY · HELPERS'],INK.white),3.6,1.9,{layer:3,s:0,tab:false});
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,20.3):b.t;
    linda.body.s=beat(t,2.2,3);linda.armR.rot=.12+.6*beat(t,5,6);doc.body.s=beat(t,9.2,10);doc.armL.rot=-.12-1.1*pulse(t,10,12.6);
