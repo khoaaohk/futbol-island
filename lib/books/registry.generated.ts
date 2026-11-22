@@ -2,6 +2,7 @@
 import type {BookData} from './types';
 import type {SpreadDef} from './popupEngine';
 import {MESSI_BOOK} from './messi';
+import {BAGGIO_BOOK as b_baggio} from './stories/baggio';
 import {BRONZE_BOOK as b_bronze} from './stories/bronze';
 import {BUFFON_BOOK as b_buffon} from './stories/buffon';
 import {CAFU_BOOK as b_cafu} from './stories/cafu';
@@ -49,6 +50,7 @@ import {VINICIUS_BOOK as b_vinicius} from './stories/vinicius';
 import {WEAH_BOOK as b_weah} from './stories/weah';
 import {ZIDANE_BOOK as b_zidane} from './stories/zidane';
 import v_b_messi from '../../public/voice/books/messi/narration.json';
+import v_b_baggio from '../../public/voice/books/baggio/narration.json';
 import v_b_bronze from '../../public/voice/books/bronze/narration.json';
 import v_b_buffon from '../../public/voice/books/buffon/narration.json';
 import v_b_cafu from '../../public/voice/books/cafu/narration.json';
@@ -98,6 +100,7 @@ import v_b_zidane from '../../public/voice/books/zidane/narration.json';
 /** Book text (Messi keeps its legacy action→steps mapping). */
 export const REGISTRY_BOOKS:Record<string,BookData>={
  messi:{...MESSI_BOOK,player:'Lionel Messi',pages:MESSI_BOOK.pages.map(p=>({...p,steps:p.action==='touch'?3:1}))},
+ "baggio":b_baggio,
  "bronze":b_bronze,
  "buffon":b_buffon,
  "cafu":b_cafu,
@@ -148,6 +151,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
 /** Narration manifests (Coach Bella sentence cues). */
 export const REGISTRY_NARRATION:Record<string,unknown>={
  "messi":v_b_messi,
+ "baggio":v_b_baggio,
  "bronze":v_b_bronze,
  "buffon":v_b_buffon,
  "cafu":v_b_cafu,
@@ -198,6 +202,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
 /** Paper spreads, each in its own lazily loaded chunk. */
 export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,SpreadDef>}>>={
  "messi":()=>import('./bookDiorama'),
+ "baggio":()=>import('./spreads/baggio'),
  "bronze":()=>import('./spreads/bronze'),
  "buffon":()=>import('./spreads/buffon'),
  "cafu":()=>import('./spreads/cafu'),

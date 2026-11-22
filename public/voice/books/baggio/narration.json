@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "knee": {
+      "src": "/voice/books/baggio/knee.m4a?v=coach-bella-1",
+      "duration": 37.9,
+      "scriptSha256": "1db9a28d2b011b0eb572478f2b8ae23acb70b41c0c11f397358bb4a175b74de5",
+      "cues": [
+        {
+          "text": "Hurt before the big move",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "Roberto Baggio was born in 1967 in Caldogno, a small town in Italy.",
+          "start": 2.25,
+          "duration": 6.5
+        },
+        {
+          "text": "On 5 May 1985, when he was eighteen, he badly hurt his knee in a match.",
+          "start": 8.75,
+          "duration": 6.225
+        },
+        {
+          "text": "It happened just two days before his move to a big club, Fiorentina, was finished.",
+          "start": 14.975,
+          "duration": 6.0
+        },
+        {
+          "text": "Open the door.",
+          "start": 20.975,
+          "duration": 1.8
+        },
+        {
+          "text": "Some doctors feared he might never play again.",
+          "start": 22.775,
+          "duration": 3.675
+        },
+        {
+          "text": "But Fiorentina kept their promise and signed him anyway.",
+          "start": 26.45,
+          "duration": 4.125
+        },
+        {
+          "text": "They waited for him to get better.",
+          "start": 30.575,
+          "duration": 2.675
+        },
+        {
+          "text": "When people keep their promises in hard times, it gives you hope.",
+          "start": 33.25,
+          "duration": 4.625
+        }
+      ]
+    },
+    "recovery": {
+      "src": "/voice/books/baggio/recovery.m4a?v=coach-bella-1",
+      "duration": 37.4,
+      "scriptSha256": "3239e06db39a64829a5a335ef461bef9fe23dc657d977ea438cb8bbe7560a066",
+      "cues": [
+        {
+          "text": "A long recovery",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Roberto needed a second operation on his knee, with 220 stitches.",
+          "start": 2.0,
+          "duration": 5.575
+        },
+        {
+          "text": "He lost a lot of weight, and he missed most of the next season.",
+          "start": 7.575,
+          "duration": 4.325
+        },
+        {
+          "text": "For a young player, waiting so long to play can be very hard.",
+          "start": 11.9,
+          "duration": 4.4
+        },
+        {
+          "text": "Turn the calendar pages.",
+          "start": 16.3,
+          "duration": 2.225
+        },
+        {
+          "text": "Getting better took a long, long time.",
+          "start": 18.525,
+          "duration": 3.0
+        },
+        {
+          "text": "Roberto kept working, and slowly his knee grew strong enough for him to play again.",
+          "start": 21.525,
+          "duration": 5.775
+        },
+        {
+          "text": "Knee problems came back later in his career, and each time he worked his way back.",
+          "start": 27.3,
+          "duration": 5.6
+        },
+        {
+          "text": "Long recoveries need patience. Keep believing in your body.",
+          "start": 32.9,
+          "duration": 4.45
+        }
+      ]
+    },
+    "best": {
+      "src": "/voice/books/baggio/best.m4a?v=coach-bella-1",
+      "duration": 35.0,
+      "scriptSha256": "6c21d24d29b08854585b084ca47fb6a28f3713fb2a6f0f411f2d96d43dcf5cc9",
+      "cues": [
+        {
+          "text": "The best in the world",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "At the 1990 World Cup, played in Italy, Roberto scored a brilliant goal against Czechoslovakia.",
+          "start": 1.925,
+          "duration": 7.625
+        },
+        {
+          "text": "He was becoming one of the most skilful players anywhere.",
+          "start": 9.55,
+          "duration": 3.825
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 13.375,
+          "duration": 2.225
+        },
+        {
+          "text": "In 1993, he won the Ballon d\u2019Or, and FIFA named him the World Player of the Year.",
+          "start": 15.6,
+          "duration": 6.75
+        },
+        {
+          "text": "The young man with the injured knee was the best player in the world.",
+          "start": 22.35,
+          "duration": 4.575
+        },
+        {
+          "text": "Fans loved his skill, his calm and his famous ponytail.",
+          "start": 26.925,
+          "duration": 4.4
+        },
+        {
+          "text": "Setbacks early on do not stop you becoming great.",
+          "start": 31.325,
+          "duration": 3.6
+        }
+      ]
+    },
+    "worldcup": {
+      "src": "/voice/books/baggio/worldcup.m4a?v=coach-bella-1",
+      "duration": 33.4,
+      "scriptSha256": "8489a86bce7d5851dad6d5a6588d1b73c3a3583488e52d257e237fb2a8acf631",
+      "cues": [
+        {
+          "text": "Carrying the team",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "At the 1994 World Cup, in the United States, Roberto scored five goals in the knockout rounds.",
+          "start": 1.925,
+          "duration": 7.7
+        },
+        {
+          "text": "He kept playing even with a sore hamstring, a muscle at the back of the leg, and Italy reached the final.",
+          "start": 9.625,
+          "duration": 6.825
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 16.45,
+          "duration": 1.75
+        },
+        {
+          "text": "Goal after goal, Roberto helped his team move forward, all the way to the final against Brazil.",
+          "start": 18.2,
+          "duration": 6.75
+        },
+        {
+          "text": "Many people said Italy would not have reached the final without him.",
+          "start": 24.95,
+          "duration": 4.55
+        },
+        {
+          "text": "Helping your team can mean giving everything you have.",
+          "start": 29.5,
+          "duration": 3.85
+        }
+      ]
+    },
+    "penalty": {
+      "src": "/voice/books/baggio/penalty.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "028fb5b8326a1181bfa765b4d67c92f133d6acc1be53149df457354f2cbd7bb7",
+      "cues": [
+        {
+          "text": "The penalty",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "The final against Brazil ended without a goal, so it went to a penalty shootout.",
+          "start": 1.8,
+          "duration": 5.625
+        },
+        {
+          "text": "Roberto took Italy\u2019s last penalty, and the ball went over the crossbar.",
+          "start": 7.425,
+          "duration": 5.225
+        },
+        {
+          "text": "Brazil were the world champions.",
+          "start": 12.65,
+          "duration": 2.6
+        },
+        {
+          "text": "Football can be very cruel in a shootout.",
+          "start": 15.25,
+          "duration": 2.95
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 18.2,
+          "duration": 2.1
+        },
+        {
+          "text": "Roberto was very sad.",
+          "start": 20.3,
+          "duration": 2.35
+        },
+        {
+          "text": "Millions of people had watched.",
+          "start": 22.65,
+          "duration": 2.475
+        },
+        {
+          "text": "But one missed penalty did not change all the good he had done for his team.",
+          "start": 25.125,
+          "duration": 5.0
+        },
+        {
+          "text": "Everyone misses sometimes, even the best. A miss is a moment, not who you are.",
+          "start": 30.125,
+          "duration": 5.775
+        }
+      ]
+    },
+    "giving": {
+      "src": "/voice/books/baggio/giving.m4a?v=coach-bella-1",
+      "duration": 44.3,
+      "scriptSha256": "a8da7cd03ef584e29e23f3e305e84eb91a14f45f0f3e99dbc666206d730fec58",
+      "cues": [
+        {
+          "text": "Playing on, and giving back",
+          "start": 0.0,
+          "duration": 2.375
+        },
+        {
+          "text": "Roberto kept playing.",
+          "start": 2.375,
+          "duration": 2.25
+        },
+        {
+          "text": "He went to the 1998 World Cup, and from 2000 to 2004 he was the captain of Brescia, a smaller club, which retired his number 10 shirt to honour him.",
+          "start": 4.625,
+          "duration": 12.05
+        },
+        {
+          "text": "He scored 205 goals in Italy\u2019s top league.",
+          "start": 16.675,
+          "duration": 3.9
+        },
+        {
+          "text": "He did not let one moment stop him.",
+          "start": 20.575,
+          "duration": 2.7
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 23.275,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2002, he became a Goodwill Ambassador for the United Nations, helping in the fight against hunger.",
+          "start": 25.125,
+          "duration": 7.85
+        },
+        {
+          "text": "In 2010, he won the Man of Peace award for his work for human rights.",
+          "start": 32.975,
+          "duration": 5.2
+        },
+        {
+          "text": "After a painful moment, keep playing and keep giving. People remember how you came back.",
+          "start": 38.175,
+          "duration": 6.075
+        }
+      ]
+    }
+  }
+}

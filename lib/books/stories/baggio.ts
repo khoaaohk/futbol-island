@@ -10,7 +10,7 @@ export const BAGGIO_BOOK:BookData={
  ],
  pages:[
   {id:'knee',year:'1985 · Aged 18',title:'Hurt before the big move',
-   text:'Roberto Baggio was born in 1967 in Caldogno, a small town in Italy. On 5 May 1985, when he was eighteen, he badly hurt his knee in a match. It happened just two days before his move to a big club, Fiorentina, was finished.\n\nOpen the door. Some doctors feared he might never play again. But Fiorentina kept their promise, signed him anyway and helped pay for his operation.',
+   text:'Roberto Baggio was born in 1967 in Caldogno, a small town in Italy. On 5 May 1985, when he was eighteen, he badly hurt his knee in a match. It happened just two days before his move to a big club, Fiorentina, was finished.\n\nOpen the door. Some doctors feared he might never play again. But Fiorentina kept their promise and signed him anyway. They waited for him to get better.',
    lesson:'When people keep their promises in hard times, it gives you hope.',
    prompt:'Open the door',response:'Fiorentina kept the door open.',source:0},
   {id:'recovery',year:'1985 to 1987',title:'A long recovery',
@@ -21,7 +21,7 @@ export const BAGGIO_BOOK:BookData={
    text:'At the 1990 World Cup, played in Italy, Roberto scored a brilliant goal against Czechoslovakia. He was becoming one of the most skilful players anywhere.\n\nLift the photo frame. In 1993, he won the Ballon d’Or, and FIFA named him the World Player of the Year. The young man with the injured knee was the best player in the world. Fans loved his skill, his calm and his famous ponytail.',
    lesson:'Setbacks early on do not stop you becoming great.',
    prompt:'Lift the photo frame',response:'The world’s best!',source:0},
-  {id:'1994',year:'1994 · USA',title:'Carrying the team',
+  {id:'worldcup',year:'1994 · USA',title:'Carrying the team',
    text:'At the 1994 World Cup, in the United States, Roberto scored five goals in the knockout rounds. He kept playing even with a sore hamstring, a muscle at the back of the leg, and Italy reached the final.\n\nKick the ball. Goal after goal, Roberto helped his team move forward, all the way to the final against Brazil. Many people said Italy would not have reached the final without him.',
    lesson:'Helping your team can mean giving everything you have.',
    prompt:'Kick the ball',response:'Into the final!',source:0},

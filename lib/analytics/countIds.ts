@@ -212,7 +212,7 @@ export const ENGAGE_BOOT_MODELS=['speed','retro','classic','feather','fins','tra
 export const ENGAGE_CARD_SOURCES=['ball','npc','quiz','explore','journey','story','path','pack','starter'] as const;
 export const ENGAGE_CARD_TIERS=['icon','elite','regular'] as const;
 /** lib/books/catalog.ts PLAYER_BOOKS keys, in order. */
-export const ENGAGE_BOOKS=['island','messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala','caicedo','vinicius','son','earps','griezmann','vandijk','hamm','sawa','cech','mahrez'] as const;
+export const ENGAGE_BOOKS=['island','messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala','caicedo','vinicius','son','earps','griezmann','vandijk','hamm','sawa','cech','mahrez','baggio'] as const;
 /** A reading visit's foreground time (the pop-up book open, tab visible): under 1 min, 1–3, 3–10, 10+ minutes. */
 export const ENGAGE_READ_BUCKETS=[['read_1m','Under 1 minute'],['read_3m','1–3 minutes'],['read_10m','3–10 minutes'],['read_long','10+ minutes']] as const;
 /**
