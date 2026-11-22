@@ -1,6 +1,6 @@
 import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
-import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
+import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,QuickPlay,gamesCss} from '@/components/site/games/GameParts';
 import {Section} from '@/lib/site/GuideParts';
 import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd,gamesHubLd} from '@/lib/site/games';
@@ -16,7 +16,8 @@ export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
 // Batch 3 (Nov 20 2026): Overview (the hero, #top) is the first entry; the island game now lives in the hero, so it has no entry of its own.
-const MENU:readonly (readonly [string,string])[]=[...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
+// Nov 22 2026 (play now): the quick-play grid comes straight after the hero, before the long sections.
+const MENU:readonly (readonly [string,string])[]=[['#quick','Play a game now'],...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
  ['#island','Inside the island'],['#pick','Which game to start with'],['#safe','For parents and coaches'],['#faq','Questions'],['#guides','Learn the ideas']];
 export default function GamesHub(){
  // The lead clip's poster (GAMES_LEAD_CLIP, in the hero) is the page's LCP: preload it at high priority.
@@ -39,6 +40,10 @@ export default function GamesHub(){
    <LibraryMenuSpy menu="games-menu"/>
    <div className={`${lib.shelfMain} ${gamesCss.gmain}`}>
     <GamesHero crumbs={crumbs} h1={H.h1} lead={H.lead} play="Play Futbol Island"/>
+    {/* Nov 22 2026 (play now, owner's SEO plan item 6): every game one tap away before the long sections (lib/site/gamePlay.ts) */}
+    <Section id="quick" title={`Play a game now: ${GAMES_WORD} to choose from`}>
+     <div className={gamesCss.bleed}><QuickPlay games={GAME_PAGES}/></div>
+    </Section>
     <IslandBand title="Futbol Island, the main game" note={GAMES_NAMES}
      lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
   <Section id="games" title={`The ${GAMES_WORD} soccer arcade games`}>{/* Nov 20 2026 (new layout SEO): "soccer arcade games" is a search */}
@@ -52,9 +57,6 @@ export default function GamesHub(){
    <p>The arcade is one room of Futbol Island, a whole 3D island to explore. Walk or fly around it, fish from the pier, play a match on the beach, design a kit and visit the football museum.</p>
    <div className={gamesCss.bleed}><IslandGallery skip={ISLAND_FEATURE_KEY}/></div>
    <p>Watch all {nVideos} clips, one on each page, on the <a href={VIDEOS_PATH}>Futbol Island videos</a> page.</p>
-  </Section>
-  <Section id="play" title="Pick a game and play">
-   <ul className={gamesCss.playRow}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
   </Section>
   {/* Batch 3 (Nov 20 2026; owner: "these should be their own space and not two columns. if we need to add imagery to both. it's
       too tight and wall of text"): four full-width bands, each with a heading, a one-line lede and pictures (GamesLower.tsx). */}

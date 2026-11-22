@@ -4,6 +4,7 @@ import {GAMES_HERO_PHONE,GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandS
 import LoopClip from './LoopClip';
 import {watchPathFor} from '@/lib/site/videos';
 import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
+import {PLAY_NOW,PLAY_WORKS,cardShot,howToPlay,stageShots} from '@/lib/site/gamePlay';
 import site from '@/app/(site)/site.module.css';
 import g from './games.module.css';
 import lib from '@/components/site/library.module.css';
@@ -18,10 +19,42 @@ export function GameIntro({crumbs,h1,lead,game}:{crumbs:readonly Crumb[];h1:stri
  return <header className={site.intro} id="top" data-games-page="">{/* marks /games and /games/<slug> so the header's Games link is the selected one (site.module.css) */}
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={site.title}>{h1}</h1>
+  {game&&<PlayStage game={game}/>}
   <p className={site.lead}>{lead}</p>
   <p className={site.caption}>{game?GAME_NAMES:GAMES_NAMES}</p>
-  {game&&<div className={g.playRow}><PlayLink game={game}/></div>}
  </header>;
+}
+/** A game page's first screen under its H1 (Nov 22 2026, lib/site/gamePlay.ts): the game's first screenshots on a pitch-green
+ *  stage, the big "Play now" button (the deep link /arcade?game=<id>: one tap opens the game, nothing is embedded here), a
+ *  one-line how-to-play and where it runs. The pictures are a second link to the same game, out of the tab order. Server-rendered,
+ *  no script: the first poster is the page's LCP and is preloaded by the page (app/(site)/games/[slug]/page.tsx). */
+export function PlayStage({game}:{game:GamePage}){
+ const shots=stageShots(game),wide=shots[0].w>shots[0].h;
+ return <div className={`${g.stage}${wide?' '+g.stageWide:''}`} data-play-stage={game.id}>
+  <a className={g.stageArt} href={game.play} data-play={game.id} tabIndex={-1} aria-hidden="true" data-n={shots.length}>
+   {/* eslint-disable-next-line @next/next/no-img-element */}
+   {shots.map((s,i)=><img key={s.src} src={s.src} alt="" width={s.w} height={s.h} loading="eager" decoding={i?'async':'sync'} {...(i?{}:{fetchpriority:'high'})}/>)}
+  </a>
+  <div className={g.stageWords}>
+   <a className={`${site.cta} ${g.stageCta}`} href={game.play} data-play={game.id} data-play-now="">{PLAY_NOW}</a>
+   <p className={g.stageHow}>{howToPlay(game)}</p>
+   <p className={g.stageWorks}>{PLAY_WORKS}</p>
+  </div>
+ </div>;
+}
+/** The /games hub's quick-play grid (Nov 22 2026): one small card per game, its first still, its name (a link to its page), the
+ *  skill it teaches in a line and a Play button that opens the game directly. The first row's pictures load at once; the rest are lazy. */
+export function QuickPlay({games}:{games:readonly GamePage[]}){
+ return <ul className={g.quick} aria-label="Play a game now">{games.map((x,i)=>{const s=cardShot(x);
+  return <li key={x.id} className={g.quickCard}>
+   <a className={g.quickArt} href={x.play} data-play={x.id} tabIndex={-1} aria-hidden="true">
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={s.src} alt="" width={s.w} height={s.h} loading={i<2?'eager':'lazy'} decoding="async"/>
+   </a>
+   <h3 className={g.quickName}><a href={x.path}>{x.name}</a></h3>
+   <p className={g.quickSkill}>{x.skill}</p>
+   <a className={g.quickPlay} href={x.play} data-play={x.id} aria-label={`Play ${x.name} now`}>Play now</a>
+  </li>;})}</ul>;
 }
 const Shot=({s}:{s:GameShot})=><figure className={g.shot}>
  {/* a plain <img> on purpose: a small static WebP with its own width and height (no optimiser round trip) */}

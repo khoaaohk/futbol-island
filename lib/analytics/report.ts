@@ -33,6 +33,7 @@ import {buildWelcome} from './welcomeReport';
 import {buildMarketingVisits} from './marketingVisitReport';
 import {buildSearch} from './searchReport';
 import {buildSiteFunnel} from './siteFunnelReport';
+import {buildGamePlays} from './gamePlayReport';
 import {SEARCH_SINCE} from './searchIds';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
@@ -154,6 +155,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
   report.search=buildSearch(rollups,earlier);}
  // Nov 20 2026: site pages to Play, per section (siteFunnelReport.ts), same merged counters.
  report.siteFunnel=buildSiteFunnel(merged);
+ // Nov 22 2026: game pages to Play, per arcade game (gamePlayReport.ts), same merged counters.
+ report.gamePlays=buildGamePlays(merged);
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

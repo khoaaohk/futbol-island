@@ -1,3 +1,5 @@
+import * as ReactDOM from 'react-dom';
+import {stageShots} from '@/lib/site/gamePlay';
 import KeepReading from '@/components/site/KeepReading';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -15,7 +17,8 @@ import {gameRail} from '@/lib/site/railNavMore';
  * computer, the football idea it teaches (with links to the guides), tips, how it gets harder, a note for parents and a FAQ.
  * Static and server-rendered: no game canvas. Under the intro, the game's gameplay loop (tap or hover to play; LoopClip is the
  * only client code, AGENTS.md phone heat) and up to four stills (lib/site/gameMedia.ts, Nov 16 2026). The game itself opens
- * from the gold button, at /arcade?game=<id>.
+ * from the gold button, at /arcade?game=<id>. Nov 22 2026 (play now): the first screen under the H1 is the play stage
+ * (GameParts PlayStage, lib/site/gamePlay.ts): screenshots, the big Play now button, how to play and where it runs.
  */
 export const dynamic='force-static';
 export const dynamicParams=false;
@@ -31,6 +34,8 @@ const List=({items}:{items:readonly string[]})=><ul>{items.map(x=><li key={x}>{x
 export default function GamePageView({params}:{params:{slug:string}}){
  const g=gameBySlug(params.slug);if(!g)notFound();
  const crumbs=gameCrumbs({name:g.name,path:g.path}),ld=videoGameLd(g);
+ // Nov 22 2026 (play now): the play stage's first poster is the page's LCP; preload it at high priority (lib/site/gamePlay.ts).
+ if(typeof ReactDOM.preload==='function')ReactDOM.preload(stageShots(g)[0].src,{as:'image',fetchPriority:'high'});
  const others=[...GAME_PAGES.filter(x=>x!==g).map(x=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb})),{path:GAMES_HUB.path,name:`All ${GAMES_WORD} free soccer games`,line:GAMES_HUB.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
