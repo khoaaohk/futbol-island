@@ -30,10 +30,11 @@ for(const id of B.BUILT_BOOKS){const b=B.bookBySlug(id),p=b.page;
  ok(/^\d{4}-\d{2}-\d{2}$/.test(p.published),`${id}: published date`);
  ok((p.exhibits??[]).every(e=>EX.exhibitById(e)),`${id}: exhibits exist`);}
 const webpSize=f=>{const b=fs.readFileSync(f);return b.toString('ascii',0,4)==='RIFF'&&b.toString('ascii',8,12)==='WEBP'&&b.toString('ascii',12,16)==='VP8 '?[b.readUInt16LE(26)&0x3fff,b.readUInt16LE(28)&0x3fff]:null;};
-let spreadBytes=0;for(const b of B.SITE_BOOKS)for(const c of b.chapters){const f=path.join(root,'public/books/spreads',b.id,c.id+'.webp');
- ok(fs.existsSync(f),`${b.id}/${c.id}: spread picture exists`);const [w,hh]=webpSize(f)??[];spreadBytes+=fs.statSync(f).size;
+let spreadBytes=0,spreadCount=0;for(const b of B.SITE_BOOKS)for(const c of b.chapters){const f=path.join(root,'public/books/spreads',b.id,c.id+'.webp');
+ ok(fs.existsSync(f),`${b.id}/${c.id}: spread picture exists`);const [w,hh]=webpSize(f)??[];spreadBytes+=fs.statSync(f).size;spreadCount++;
  ok(w===960&&hh===600&&fs.statSync(f).size<90000,`${b.id}/${c.id}: spread picture is a 960×600 webp under 90 KB`);}
-ok(spreadBytes<12e6,`spread pictures total ${(spreadBytes/1e6).toFixed(1)} MB`);
+// The 36-book shelf had a 12 MB cap (about 55 KB a picture); the Nov 21 books grow the shelf, so the cap keeps that average.
+ok(spreadBytes<55e3*spreadCount,`spread pictures total ${(spreadBytes/1e6).toFixed(1)} MB for ${spreadCount} pictures`);
 for(const b of B.SITE_BOOKS)for(const [i,c] of b.chapters.entries()){const raw=LIB.BOOKS[b.id].pages[i];
  const joined=c.paragraphs.join(' '),cut=raw.prompt.replace(/\.$/,'')+'.';
  ok(raw.text.split(/\n\n+/).join(' ').replace(cut,'').replace(/\s+/g,' ').trim()===joined.replace(/\s+/g,' ').trim(),`${b.id}/${c.id}: page text is the book's text minus the action sentence`);}

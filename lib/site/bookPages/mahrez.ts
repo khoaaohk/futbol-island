@@ -4,7 +4,7 @@ import type {BookPageSpec} from './types';
  * it was a free kick (confirmed by several match reports). */
 const page:BookPageSpec={
   published:'2026-11-21',
-  summary:'Mahrez: Too skinny? Watch this is a free six-chapter pop-up story for kids about Riyad Mahrez, who learned football in the streets of Sarcelles, lost his father at fifteen and was overlooked by big clubs for being too slim. Leicester City signed him for a small fee, he won the Premier League and the PFA award, and he captained Algeria, his father’s country, to the Africa Cup of Nations. The story teaches that a small price does not mean a small talent.',
+  summary:'Mahrez: Too skinny? Watch this is a free six-chapter pop-up story for kids about Riyad Mahrez, who learned football in the streets of Sarcelles, lost his father at fifteen and was overlooked for being too slim. Leicester signed him for a small fee, he won the Premier League and he captained Algeria, his father’s country, to the Africa Cup of Nations. The story teaches that a small price does not mean a small talent.',
   facts:[
    {icon:'tag',label:'Country',value:'Algeria'},
    {icon:'steps',label:'Grew up',value:'Sarcelles, near Paris'},

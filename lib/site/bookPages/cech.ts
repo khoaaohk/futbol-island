@@ -4,7 +4,7 @@ import type {BookPageSpec} from './types';
  * only that his head was badly hurt, the safety lesson and his return in a headguard. */
 const page:BookPageSpec={
   published:'2026-11-21',
-  summary:'Čech: The keeper in the headguard is a free six-chapter pop-up story for kids about Petr Čech, who became a goalkeeper after breaking his leg at ten, set a Premier League record of 1,025 minutes without letting in a goal and came back from a serious head injury wearing a padded headguard. He won the 2012 Champions League with three penalty saves. The story teaches that head injuries are serious and protective gear is smart.',
+  summary:'Čech: The keeper in the headguard is a free six-chapter pop-up story for kids about Petr Čech, who became a goalkeeper after breaking his leg at ten, set a record of 1,025 minutes without letting in a goal and came back from a serious head injury wearing a padded headguard. He won the 2012 Champions League with three penalty saves. The story teaches that head injuries are serious and protective gear is smart.',
   facts:[
    {icon:'tag',label:'Country',value:'Czech Republic'},
    {icon:'steps',label:'Became a keeper',value:'At ten, after a broken leg'},

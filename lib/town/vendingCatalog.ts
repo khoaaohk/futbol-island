@@ -99,7 +99,7 @@ for(const m of VENDING_MACHINES)m.specials.push(...homeDisplays.filter(i=>i.mach
  */
 export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId[]>>={
  ...Object.fromEntries(VENDING_MACHINES.filter(m=>!m.drinks&&booksForMachine(m.id).length>=4).map(m=>[m.id,booksForMachine(m.id)])),
- northbeach:['cafu','bronze','davies','maldini','hamm'],          // full-backs and defenders: overlap, cover, defend together
+ northbeach:['cafu','hamm','bronze','davies','maldini'],          // full-backs and defenders: overlap, cover, defend together
  causeway:['nadim','modric','salah','eusebio'],            // long roads to a new home
  cayplaza:['kante','vardy','debruyne','kane'],             // told no, kept working
  sharks:['oshoala','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
