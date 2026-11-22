@@ -48,10 +48,11 @@ import cech from './cech';
 import mahrez from './mahrez';
 import baggio from './baggio';
 import formiga from './formiga';
+import milla from './milla';
 /** Every book's web page (the 36 player books of Nov 17 2026, plus the Nov 21 2026 books). A new book needs one import + one entry here (catalog order is kept
  *  by lib/site/books.ts); tests/books-site.cjs fails until it has one. */
 export const BOOK_PAGES:Partial<Record<PlayerBookId,BookPageSpec>>={messi,falcao,marta,ronaldinho,pele,ronaldo,garrincha,cafu,
  maldini,zidane,cruyff,modric,cristiano,iniesta,vardy,kane,putellas,bronze,
  buffon,eriksen,debruyne,ibrahimovic,lukaku,rashford,eusebio,saka,hegerberg,nadim,kante,
  salah,weah,drogba,mane,oshoala,kerr,davies,
- caicedo,vinicius,son,earps,griezmann,vandijk,hamm,sawa,cech,mahrez,baggio,formiga};
+ caicedo,vinicius,son,earps,griezmann,vandijk,hamm,sawa,cech,mahrez,baggio,formiga,milla};

@@ -33,6 +33,7 @@ import {MAHREZ_BOOK as b_mahrez} from './stories/mahrez';
 import {MALDINI_BOOK as b_maldini} from './stories/maldini';
 import {MANE_BOOK as b_mane} from './stories/mane';
 import {MARTA_BOOK as b_marta} from './stories/marta';
+import {MILLA_BOOK as b_milla} from './stories/milla';
 import {MODRIC_BOOK as b_modric} from './stories/modric';
 import {NADIM_BOOK as b_nadim} from './stories/nadim';
 import {OSHOALA_BOOK as b_oshoala} from './stories/oshoala';
@@ -82,6 +83,7 @@ import v_b_mahrez from '../../public/voice/books/mahrez/narration.json';
 import v_b_maldini from '../../public/voice/books/maldini/narration.json';
 import v_b_mane from '../../public/voice/books/mane/narration.json';
 import v_b_marta from '../../public/voice/books/marta/narration.json';
+import v_b_milla from '../../public/voice/books/milla/narration.json';
 import v_b_modric from '../../public/voice/books/modric/narration.json';
 import v_b_nadim from '../../public/voice/books/nadim/narration.json';
 import v_b_oshoala from '../../public/voice/books/oshoala/narration.json';
@@ -133,6 +135,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "maldini":b_maldini,
  "mane":b_mane,
  "marta":b_marta,
+ "milla":b_milla,
  "modric":b_modric,
  "nadim":b_nadim,
  "oshoala":b_oshoala,
@@ -185,6 +188,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "maldini":v_b_maldini,
  "mane":v_b_mane,
  "marta":v_b_marta,
+ "milla":v_b_milla,
  "modric":v_b_modric,
  "nadim":v_b_nadim,
  "oshoala":v_b_oshoala,
@@ -237,6 +241,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "maldini":()=>import('./spreads/maldini'),
  "mane":()=>import('./spreads/mane'),
  "marta":()=>import('./spreads/marta'),
+ "milla":()=>import('./spreads/milla'),
  "modric":()=>import('./spreads/modric'),
  "nadim":()=>import('./spreads/nadim'),
  "oshoala":()=>import('./spreads/oshoala'),

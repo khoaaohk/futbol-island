@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "railway": {
+      "src": "/voice/books/milla/railway.m4a?v=coach-bella-1",
+      "duration": 36.4,
+      "scriptSha256": "21da67b75f6a34eb32c35589c5413731fd67c72ff11f29a2eb24dc2f55d1dec9",
+      "cues": [
+        {
+          "text": "Always on the move",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "Roger Milla was born in 1952 in Yaound\u00e9, in Cameroon.",
+          "start": 2.075,
+          "duration": 5.225
+        },
+        {
+          "text": "His father worked on the railways, so the family moved around.",
+          "start": 7.3,
+          "duration": 4.55
+        },
+        {
+          "text": "When Roger was eleven, they moved to Douala, a big city by the sea.",
+          "start": 11.85,
+          "duration": 5.2
+        },
+        {
+          "text": "Moving house again and again can be hard for a child.",
+          "start": 17.05,
+          "duration": 4.05
+        },
+        {
+          "text": "Pull the tab.",
+          "start": 21.1,
+          "duration": 1.75
+        },
+        {
+          "text": "Moving often means new friends and new places to play.",
+          "start": 22.85,
+          "duration": 4.375
+        },
+        {
+          "text": "Roger always found a game.",
+          "start": 27.225,
+          "duration": 2.45
+        },
+        {
+          "text": "He played wherever he could.",
+          "start": 29.675,
+          "duration": 2.325
+        },
+        {
+          "text": "When life keeps changing, the ball can help you make new friends.",
+          "start": 32.0,
+          "duration": 4.375
+        }
+      ]
+    },
+    "home": {
+      "src": "/voice/books/milla/home.m4a?v=coach-bella-1",
+      "duration": 29.4,
+      "scriptSha256": "9d40b0442bb1cd8e2865dc1bb16be3d12c99960d88a1650d051de4bcd85b646d",
+      "cues": [
+        {
+          "text": "Learning at home",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Roger played for clubs in Cameroon, such as L\u00e9opard Douala and Tonnerre Yaound\u00e9, and he won league titles there.",
+          "start": 1.875,
+          "duration": 7.975
+        },
+        {
+          "text": "He was quick, strong and full of tricks, and he scored lots of goals.",
+          "start": 9.85,
+          "duration": 4.75
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 14.6,
+          "duration": 2.0
+        },
+        {
+          "text": "In 1976, he was named African Footballer of the Year.",
+          "start": 16.6,
+          "duration": 4.95
+        },
+        {
+          "text": "It is one of the biggest prizes a footballer in Africa can win.",
+          "start": 21.55,
+          "duration": 4.65
+        },
+        {
+          "text": "Doing well at home is a great first step.",
+          "start": 26.2,
+          "duration": 3.15
+        }
+      ]
+    },
+    "france": {
+      "src": "/voice/books/milla/france.m4a?v=coach-bella-1",
+      "duration": 38.4,
+      "scriptSha256": "9a9ef95e5ccdc8b9637dd17ee7508f59dfec6a7230a4220ff1bba1bb52c415ed",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In 1977, Roger moved to France, far from his family and his country.",
+          "start": 1.825,
+          "duration": 6.35
+        },
+        {
+          "text": "He played for many French clubs, including Monaco, Saint-\u00c9tienne and Montpellier.",
+          "start": 8.175,
+          "duration": 5.85
+        },
+        {
+          "text": "Moving to another country meant a new language, a new climate and new teammates.",
+          "start": 14.025,
+          "duration": 5.75
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 19.775,
+          "duration": 2.075
+        },
+        {
+          "text": "In 1989, he moved again, to R\u00e9union, an island in the Indian Ocean.",
+          "start": 21.85,
+          "duration": 6.425
+        },
+        {
+          "text": "Most people thought his best days were behind him.",
+          "start": 28.275,
+          "duration": 3.55
+        },
+        {
+          "text": "But Roger still loved to play.",
+          "start": 31.825,
+          "duration": 2.6
+        },
+        {
+          "text": "Starting again somewhere new takes courage at any age.",
+          "start": 34.425,
+          "duration": 3.925
+        }
+      ]
+    },
+    "call": {
+      "src": "/voice/books/milla/call.m4a?v=coach-bella-1",
+      "duration": 34.4,
+      "scriptSha256": "1d546fef3cecd14eaeb0fac20a2626e739ac2e2c33dbc031b1a745d767fe1901",
+      "cues": [
+        {
+          "text": "A surprise call",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "In 1988, Roger had stopped playing for Cameroon.",
+          "start": 1.9,
+          "duration": 4.45
+        },
+        {
+          "text": "But before the 1990 World Cup, the President of Cameroon asked him to come back.",
+          "start": 6.35,
+          "duration": 6.075
+        },
+        {
+          "text": "He was enjoying football on a quiet island, far from the big stages.",
+          "start": 12.425,
+          "duration": 5.05
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 17.475,
+          "duration": 1.775
+        },
+        {
+          "text": "Roger said yes.",
+          "start": 19.25,
+          "duration": 2.0
+        },
+        {
+          "text": "He was thirty-eight, an age when most strikers have stopped playing.",
+          "start": 21.25,
+          "duration": 4.45
+        },
+        {
+          "text": "He said later that he was not sure his legs were up to it.",
+          "start": 25.7,
+          "duration": 4.2
+        },
+        {
+          "text": "Feeling unsure is normal. You can be brave and try anyway.",
+          "start": 29.9,
+          "duration": 4.475
+        }
+      ]
+    },
+    "dance": {
+      "src": "/voice/books/milla/dance.m4a?v=coach-bella-1",
+      "duration": 32.1,
+      "scriptSha256": "ddfc34fd6476e8ad7b696e64e0ceb45844ee1b6128968a7e4c800fa3ee2454d3",
+      "cues": [
+        {
+          "text": "Dancing at the corner flag",
+          "start": 0.0,
+          "duration": 2.4
+        },
+        {
+          "text": "At the 1990 World Cup in Italy, Roger came on as a substitute and scored four goals: two against Romania and two against Colombia.",
+          "start": 2.4,
+          "duration": 10.325
+        },
+        {
+          "text": "After his goals, he ran to the corner flag and danced.",
+          "start": 12.725,
+          "duration": 4.3
+        },
+        {
+          "text": "Swing the corner flag.",
+          "start": 17.025,
+          "duration": 2.125
+        },
+        {
+          "text": "Cameroon became the first African team ever to reach a World Cup quarter-final.",
+          "start": 19.15,
+          "duration": 5.825
+        },
+        {
+          "text": "People all around the world copied his dance.",
+          "start": 24.975,
+          "duration": 3.275
+        },
+        {
+          "text": "Joy is part of football. Celebrate with your team!",
+          "start": 28.25,
+          "duration": 3.825
+        }
+      ]
+    },
+    "oldest": {
+      "src": "/voice/books/milla/oldest.m4a?v=coach-bella-1",
+      "duration": 36.8,
+      "scriptSha256": "16bbb2a51fae3295c41057e8d088e0c7dc3c6e4189a9483ac4957a5d8d6c3603",
+      "cues": [
+        {
+          "text": "The oldest goalscorer",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "Four years later, at the 1994 World Cup in the United States, Roger scored against Russia.",
+          "start": 2.2,
+          "duration": 7.35
+        },
+        {
+          "text": "He was forty-two, the oldest player ever to score at a World Cup.",
+          "start": 9.55,
+          "duration": 4.7
+        },
+        {
+          "text": "Many people were amazed that he was still playing at that age.",
+          "start": 14.25,
+          "duration": 4.275
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 18.525,
+          "duration": 1.95
+        },
+        {
+          "text": "In 1990, he had been named African Footballer of the Year for a second time, and in 2007 he was named the best African player of the past fifty years.",
+          "start": 20.475,
+          "duration": 11.175
+        },
+        {
+          "text": "People may say you are too old or too young. Love the game, and keep going.",
+          "start": 31.65,
+          "duration": 5.075
+        }
+      ]
+    }
+  }
+}

@@ -54,6 +54,7 @@ export const PLAYER_BOOKS = {
  mahrez: { itemId: 'display:beach:book:mahrez', title: 'Mahrez: Too skinny? Watch this', player: 'Riyad Mahrez', machine: 'beach' },
  baggio: { itemId: 'display:plaza:book:baggio', title: 'Baggio: After the missed penalty', player: 'Roberto Baggio', machine: 'plaza' },
  formiga: { itemId: 'display:beach:book:formiga', title: 'Formiga: The ant who never stopped', player: 'Formiga', machine: 'beach' },
+ milla: { itemId: 'display:plaza:book:milla', title: 'Milla: Never too old', player: 'Roger Milla', machine: 'plaza' },
 } as const;
 export type PlayerBookId = keyof typeof PLAYER_BOOKS;
 /** Books every player owns from the start (their Backpack lists them; nothing is bought). */
