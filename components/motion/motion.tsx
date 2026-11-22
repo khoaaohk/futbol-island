@@ -92,12 +92,17 @@ const FROM_KEY='fi-from-coach',ENTRY_KEY='fi-apps-entry',APPS=/^\/(es\/)?(coach|
 /** Call once on load in each app: remembers where on the site the coach came from and whether the coach app opened this one. */
 export function noteAppEntry(app:'coach'|'scan'|'board'){
  try{const ss=window.sessionStorage;
-  if(document.referrer){const r=new URL(document.referrer);if(r.origin===location.origin&&!APPS.test(r.pathname))ss.setItem(ENTRY_KEY,r.pathname+r.search);}
-  if(app==='coach')ss.setItem(FROM_KEY,'1');
-  else if(new URLSearchParams(location.search).get('from')==='coach')ss.setItem(FROM_KEY,'1');
-  else if(!document.referrer||!APPS.test(new URL(document.referrer).pathname))ss.removeItem(FROM_KEY);
+  const r=document.referrer?new URL(document.referrer):null,site=!!r&&r.origin===location.origin,inApps=site&&APPS.test(r!.pathname);
+  /* where on the site the coach came from: a site page sets it; a visit from outside the site (search, a typed address) clears it */
+  if(site&&!inApps){let last:string|null=null;try{last=ss.getItem('fi-site-last');}catch{/* none */}
+   /* the site sends only its origin as the referrer, so the exact page comes from the site's own note (FromCoachBar) */
+   ss.setItem(ENTRY_KEY,last&&!APPS.test(last)?last:r!.pathname+r!.search);}
+  else if(!inApps)ss.removeItem(ENTRY_KEY);
+  if(app==='coach'||new URLSearchParams(location.search).get('from')==='coach')ss.setItem(FROM_KEY,'1');
+  else if(!inApps)ss.removeItem(FROM_KEY);
  }catch{/* storage blocked: Exit falls back to the tools hub */}
 }
 export const openedFromCoach=()=>{try{return new URLSearchParams(location.search).get('from')==='coach'||window.sessionStorage.getItem(FROM_KEY)==='1';}catch{return false;}};
-export const exitHref=(lang:'en'|'es')=>{try{const e=window.sessionStorage.getItem(ENTRY_KEY);if(e)return e;}catch{/* none */}return lang==='es'?'/es/tools':'/tools';};
+/** Exit: the site page the coach came from, else the app's own guide page (`home`), else the tools hub. */
+export const exitHref=(lang:'en'|'es',home?:string)=>{try{const e=window.sessionStorage.getItem(ENTRY_KEY);if(e)return e;}catch{/* none */}return home??(lang==='es'?'/es/tools':'/tools');};
 export const coachHref=(lang:'en'|'es')=>lang==='es'?'/coach?lang=es':'/coach';

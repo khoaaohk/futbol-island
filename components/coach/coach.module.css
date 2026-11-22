@@ -271,8 +271,6 @@
 /* View Transitions (components/motion/motion.css): the bar and the tab bar hold still, the title and the tool mark move */
 .top{view-transition-name:coach-top}
 .topTitle b{display:block;view-transition-name:coach-title}
-.toolMark{view-transition-name:coach-mark}
-.app[data-tool=home] .toolMark{view-transition-name:none}
 .tabs{view-transition-name:coach-tabs}
 /* ---- the tab bar: one indicator glides to the current tab (transform only) and takes the tool's tint ---- */
 .tabInd{position:absolute;left:8px;top:6px;width:calc((100% - 32px) / 5);height:56px;border-radius:16px;background:var(--accTint);pointer-events:none;
@@ -365,3 +363,16 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
  @keyframes sheetFadeOnly{from{opacity:0}}
  @keyframes sheetFadeOnlyOut{to{opacity:0}}
 }
+/* ---- the site's light palette throughout (owner, Nov 22 2026: "use lighter colors"): no big dark blocks; choices pick in the
+   brand green with white text (6.6:1), the main action stays gold, secondary actions are light ---- */
+.homeTeam,.homeEmpty{background:#e3efe6;color:var(--ink);box-shadow:inset 0 0 0 1px rgb(29 107 85 / .14)}
+.homeTeamMeta{opacity:1;color:var(--soft)}
+.homeTeam .btnGhost,.homeEmpty .btnGhost{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1px rgb(20 34 29 / .14)}
+.btn{background:var(--pitch);color:#fff}
+.btnGhost{background:var(--tint);color:var(--ink)}
+.btnGold{background:var(--gold);color:var(--ink)}
+.chip[aria-pressed=true],.segBtn[aria-pressed=true],.fmtBtn[aria-pressed=true]{background:var(--pitch);color:#fff}
+.doneBtn{background:var(--pitch);color:#fff}
+.cardBtns .btn.done{background:var(--gold);color:var(--ink)}
+@media (hover:hover) and (pointer:fine){.homeTeam .btnGhost:hover,.homeEmpty .btnGhost:hover{background:#fff}}
+.btn.cardGhost{background:rgb(255 255 255 / .14);color:#fff}

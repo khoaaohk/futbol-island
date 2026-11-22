@@ -1,5 +1,6 @@
 import RailNav from '@/components/site/shell/RailNav';
 import {lineupRail,plannerRail,printableRail,printablesHubRail,toolsHubRail} from '@/lib/site/railNavCollections';
+import {CoachAppBand} from '@/components/site/tools/CoachAppBand';
 import KeepReading from '@/components/site/KeepReading';
 import type {EsRoute} from '../routes';
 import JsonLd from '@/components/seo/JsonLd';
@@ -165,6 +166,7 @@ function ToolsHubEs(){
   <JsonLd data={faqLd(HUB.faq)}/>
   <RailNav rail={toolsHubRail(true)} current="#top"/>
   <EsToolIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead}/>
+  <CoachAppBand lang="es"/>
   <Section id="lineups" title="Creadores de alineaciones">
    <p>Pon los nombres en un diagrama de cancha, cambia jugadores con un toque y luego imprime la hoja, guarda una imagen o comparte un enlace. {PRIVACY_LINE_ES}</p>
    <ToolCards links={LINEUP_PAGES.map(p=>toolLink(p.path)!)} tint="lineups"/>

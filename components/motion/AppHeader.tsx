@@ -10,19 +10,19 @@ import h from './AppHeader.module.css';
  * screen's title and a small line under it (they crossfade between screens, components/motion/motion.css); right = the language
  * (a two-letter code) and then the gold Exit, the game's navigation button, which leaves for the page the coach came from.
  */
-export function AppHeader({left,title,sub,lang,onLang,exitLabel,exitAria,exitData,exit=true,className=''}:{left?:ReactNode;title:ReactNode;sub?:ReactNode;lang:'en'|'es';onLang?:()=>void;exitLabel?:string;exitAria:string;exitData?:Record<string,string>;exit?:boolean;className?:string}){
+export function AppHeader({left,title,sub,lang,onLang,exitLabel,exitAria,exitData,exit=true,exitHome,className=''}:{left?:ReactNode;title:ReactNode;sub?:ReactNode;lang:'en'|'es';onLang?:()=>void;exitLabel?:string;exitAria:string;exitData?:Record<string,string>;exit?:boolean;exitHome?:string;className?:string}){
  const other=lang==='es'?'en':'es';
  return <header className={`${h.bar} ${className}`}>
   <div className={h.left}>{left}</div>
   <div className={h.title}><b>{title}</b>{sub!=null&&<span>{sub}</span>}</div>
   <div className={h.right}>
    {onLang&&<button type="button" className={h.lang} lang={other} aria-label={other==='es'?'Español':'English'} onClick={onLang}>{other.toUpperCase()}</button>}
-   {exit&&<BackButton {...exitData} className={h.exit} label={exitLabel??(lang==='es'?'Salir':'Exit')} aria-label={exitAria} onBack={()=>{window.location.assign(exitHref(lang));}}/>}
+   {exit&&<BackButton {...exitData} className={h.exit} label={exitLabel??(lang==='es'?'Salir':'Exit')} aria-label={exitAria} onBack={()=>{window.location.assign(exitHref(lang,exitHome));}}/>}
   </div>
  </header>;
 }
-/** The left slot's control: an icon (Home) or an icon and a short label ("Coach"). */
-export function HeaderBack({label,text,onClick,data}:{label:string;text?:string;onClick:()=>void;data?:Record<string,string>}){
+/** The left slot's control, which never leaves the coach apps: a house and "Home" (the coach app's Home), or a back arrow inside an app. */
+export function HeaderBack({label,text,icon='home',onClick,data}:{label:string;text?:string;icon?:'home'|'back';onClick:()=>void;data?:Record<string,string>}){
  return <button type="button" className={`${h.back} ${text?h.backText:''}`} aria-label={label} onClick={onClick} {...data}>
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={text?'M14.5 6 8.5 12l6 6':'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5'}/></svg>{text&&<span>{text}</span>}</button>;
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icon==='back'?'M14.5 6 8.5 12l6 6':'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5'}/></svg>{text&&<span>{text}</span>}</button>;
 }

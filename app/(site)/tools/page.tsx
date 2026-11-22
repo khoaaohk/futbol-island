@@ -4,6 +4,7 @@ import {toolsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {ToolCards} from '@/components/site/tools/ToolCards';
+import {CoachAppBand} from '@/components/site/tools/CoachAppBand';
 import {ToolIntro} from '@/components/site/tools/ToolParts';
 import {GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -25,6 +26,8 @@ export default function ToolsHub(){
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={toolsHubRail()} current="#top"/>
   <ToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
+  {/* Nov 22 2026 (owner): the Coach app called out at the top, before the groups of tools */}
+  <CoachAppBand/>
   <Section id="lineups" title="Lineup builders">
    <p>Put names on a field diagram, swap players with a tap, then print the sheet, save a picture or share a link. {PRIVACY_LINE}</p>
    <ToolCards links={LINEUP_PAGES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))} tint="lineups"/>

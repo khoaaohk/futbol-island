@@ -3,7 +3,7 @@
  * worker. inScope() is a second guard (tests/coach-app.cjs runs it): a page outside /coach is never answered from the cache.
  * Strategy: the app page is network first (a deploy shows at once) with the cached copy as the offline fallback; Next's hashed
  * static files are cache first (they never change under the same name). Nothing else is touched, nothing is sent. */
-const CACHE='fi-coach-v1';
+const CACHE='fi-coach-v2';
 const PAGES=['/coach','/coach/manifest.webmanifest','/coach/icon.svg','/coach/icon-192.png'];
 function inScope(path){
  return path==='/coach'||path.startsWith('/coach/');
@@ -13,6 +13,9 @@ self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promis
 self.addEventListener('fetch',e=>{
  const r=e.request;if(r.method!=='GET')return;
  const u=new URL(r.url);if(u.origin!==self.location.origin)return;
+ /* Nov 22 2026: never answer from the cache on a dev machine: the dev server's chunk names do not change, so cache first kept old
+    code running after every edit (v2 also drops the v1 cache on activate) */
+ if(self.location.hostname==='localhost'||self.location.hostname==='127.0.0.1')return;
  if(r.mode==='navigate'){
   if(!inScope(u.pathname))return;
   e.respondWith(fetch(r).then(res=>{if(res.ok){const copy=res.clone();caches.open(CACHE).then(c=>c.put('/coach',copy));}return res;}).catch(()=>caches.match('/coach').then(m=>m||Response.error())));

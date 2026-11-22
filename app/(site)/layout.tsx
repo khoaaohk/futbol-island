@@ -1,5 +1,6 @@
 import HtmlShell from '@/components/site/HtmlShell';
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
+import FromCoachBar from '@/components/motion/FromCoachBar';
 import SiteNav from '@/components/site/SiteNav';
 import LangSwitch from '@/components/site/LangSwitch';
 import FooterHubs from '@/components/site/FooterHubs';
@@ -29,6 +30,8 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
       /marketing bring their own bar and hide this one (learn.module.css / marketing.module.css, `>header`). */}
   <header className={styles.header}><div className={styles.headerInner}><SiteNav/></div></header>
   <main className={styles.main}>{children}</main>
+  {/* a site page opened from the coach app's Home (?from=coach) shows a way back to it (Nov 22 2026) */}
+  <FromCoachBar/>
   <footer className={styles.footer}>
   {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs on every reading page and the
       home page, so each hub is one click from anywhere. Nov 20 2026: four labelled columns in the Library's groups (FooterHubs). */}

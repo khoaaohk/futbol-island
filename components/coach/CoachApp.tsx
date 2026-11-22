@@ -8,7 +8,7 @@ import {addStoppage,applyChange,buildPlan,confirmChange,planWithLate,changeBetwe
 import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,loadStore,minutesCsv,newId,saveStore,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
 import c from './coach.module.css';
-import {AppHeader,HeaderBack} from '@/components/motion/AppHeader';
+import {AppHeader} from '@/components/motion/AppHeader';
 import TeamShare from '@/components/share/TeamShare';
 import type {ShareLesson} from '@/lib/share/teamShare';
 import {exitHref,noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
@@ -29,6 +29,8 @@ const TABS:readonly Tab[]=['home','team','lineup','minutes','subs'];
 const SCREENS:readonly Tab[]=[...TABS,'summary'];
 /** the last tool used, for Home's "Continue" card: its own key, so the team record (fi-coach-v1) is untouched */
 const LAST_KEY='fi-coach-last-tool';
+/** Home's scroll when a tile leaves for another page (/board, /scan, practice plans), restored on the way back */
+const HOME_Y='fi-coach-home-y';
 /** Nov 22 2026 (owner: "it's confusing to know which one I'm on"): each screen is its own tool with its own title, icon and accent;
  *  the tool pages open the matching one (/coach#tool=lineup, #tool=minutes, #tool=subs). */
 const toolFromHash=(h:string):Tab|null=>{const m=/[#&]tool=(home|team|lineup|minutes|subs|summary)\b/.exec(h);return m?m[1] as Tab:null;};
@@ -136,15 +138,18 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  const [store,setStore]=useState<Store>(()=>emptyStore());
  const [ready,setReady]=useState(false);
  const [tab,setTab]=useState<Tab>('home');
+ const tabRef=useRef<Tab>('home');tabRef.current=tab;
  const [lastTool,setLastTool]=useState<Tab|null>(null);
- const [live,setLive]=useState(false);
+ const [live,setLiveRaw]=useState(false),liveFrom=useRef<Tab>('subs');
+ /* the live screen returns to where it was opened from: Home (the Match day tile) or the plan */
+ const setLive=(v:boolean)=>{if(v)liveFrom.current=tabRef.current==='home'?'home':'subs';setLiveRaw(v);};
  const [shared,setShared]=useState<Shared|null>(null);
  const [undo,setUndo]=useState<Game[]>([]);
  const [toast,setToast]=useState<{msg:string;undo:boolean}|null>(null);
  const [now,setNow]=useState(()=>Date.now());
  /* screen motion (components/motion): the direction of the last move (the CSS fallback's entrance) and the tool whose Home tile
     receives the header mark on the way back (a shared element in the View Transition) */
- const [enter,setEnter]=useState<Dir|null>(null),[fly,setFly]=useState<Tab|null>(null);
+ const [enter,setEnter]=useState<Dir|null>(null);
  /* the motion model (owner, Nov 22 2026: "polished and smooth", like native apps): the bottom tabs swap in place with a 120 ms
     opacity crossfade and keep each screen's scroll; only Home -> a tool pushes (slides in) and Home/Back pops (slides back).
     Screens stay mounted once visited (hidden when inactive), so a tab switch never rebuilds a screen. */
@@ -153,8 +158,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  const scrollAt=useRef<Partial<Record<Tab,number>>>({});
  const go=(t:Tab,via:'tab'|'push'='push')=>{if(t===tab)return;const dir:Dir=via==='tab'?'tab':t==='home'?'back':tab==='home'?'forward':'tab';
   scrollAt.current[tab]=window.scrollY;
-  document.querySelectorAll<HTMLElement>('[data-tile-icon]').forEach(e=>{e.style.viewTransitionName=dir==='forward'&&e.dataset.tileIcon===t?'coach-mark':'';});
-  screenChange(dir,()=>{setEnter(dir);setFly(dir==='back'?tab:null);setSeen(v=>v.has(t)?v:new Set([...v,t]));setTab(t);},()=>{window.scrollTo(0,dir==='tab'?scrollAt.current[t]??0:0);});};
+  screenChange(dir,()=>{setEnter(dir);setSeen(v=>v.has(t)?v:new Set([...v,t]));setTab(t);},()=>{window.scrollTo(0,dir==='forward'?0:scrollAt.current[t]??0);});};
  const lang:Lang=store.lang??'en',w=WORDS[lang];
  const audio=useRef<AudioContext|null>(null);
  /* load once: the saved team, the language, a shared link; register the app's own service worker */
@@ -171,6 +175,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
   document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/coach/manifest.webmanifest';else l.remove();});
   setReady(true);count('ca:open');noteAppEntry('coach');
+  if(!asked&&!(s.game&&s.game.clock.status!=='done'&&s.game.clock.status!=='pre'))try{const y=Number(window.sessionStorage.getItem(HOME_Y));window.sessionStorage.removeItem(HOME_Y);if(y>0)requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,y)));}catch{/* optional */}
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/coach-sw.js',{scope:'/coach'}).catch(()=>{});
  },[]);
  useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);document.documentElement.lang=lang;},[store,ready,lang]);
@@ -205,13 +210,14 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
  const team=store.team;
  return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab}>
-  {/* the shared header (components/motion/AppHeader): Home inside a tool, the title centred, the language and then Exit on the right */}
-  <AppHeader lang={lang} onLang={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))} exitAria={lang==='es'?'Salir de la app del entrenador':'Exit the coach app'} exitData={{'data-coach-back':'','data-coach-exit':''}}
-   left={tab!=='home'?<><HeaderBack label={lang==='es'?'Inicio':'Home'} onClick={()=>go('home')} data={{'data-coach-home':''}}/><span className={c.toolMark} data-tool={tab} aria-hidden="true"><Icon d={ICONS[tab]}/></span></>:null}
-   title={TITLE(w,tab)} sub={<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
+  {/* the shared header (components/motion/AppHeader): the title centred, the language and then Exit on the right */}
+  {/* the language button only on Home (owner, Nov 22 2026); the choice is saved (fi-coach-v1) and the tools follow it */}
+  <AppHeader lang={lang} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
+   /* the left slot stays empty (owner, Nov 22 2026): every coach screen shows the tab bar, whose Home tab is the one way home */
+   title={TITLE(w,tab)} sub={tab==='home'&&team.name?team.name:<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
    {ready&&SCREENS.filter(t=>seen.has(t)||t===tab).map(t=><div key={t} className="fi-screen" hidden={t!==tab} data-enter={t===tab&&enter?enter:undefined}>
-    {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} fly={fly} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
+    {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
      onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else go('team');}}
      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
     :t==='team'?<TeamTab w={w} store={store} update={update} d={d} share={shareBlock}/>
@@ -229,7 +235,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   </nav>
   {live&&game&&<LiveGame w={w} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
    sound={store.sound} toggleSound={()=>update(s=>({...s,sound:!s.sound}))}
-   onExit={()=>{const st=game.clock.status;if(st==='done'||window.confirm(w.exitConfirm)){setLive(false);setTab(st==='done'?'summary':'subs');}}}
+   onExit={()=>{const st=game.clock.status;if(st==='done'||window.confirm(w.exitConfirm)){setLive(false);setTab(st==='done'?'summary':liveFrom.current);}}}
    onSummary={()=>{setLive(false);setTab('summary');}} onSub={()=>count('ca:sub')}/>}
   {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}</div>}
  </div>;
@@ -238,7 +244,7 @@ type D=ReturnType<typeof derive>;
 const EXAMPLE=['Ava','Ben','Carlos','Dani','Eli','Fatima','Gus','Hana','Isla','Jonah','Kai','Leo'];
 /* ------------------------------------------------------------------ Home -------------------------------------------------- */
 /** Home (Nov 22 2026, owner: "a simple dashboard"): the team at a glance, Continue, and one tile per tool with its icon and accent. */
-function HomeTab({w,store,d,last,lang,go,fly,running,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;fly:Tab|null;running:boolean;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
+function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;running:boolean;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
  /* motion: the tiles rise in once per browser session; the team card pops in when "Try an example team" fills it */
  const intro=useOncePerSession('fi-coach-intro'),[filled,setFilled]=useState(false);
  const s=store.settings,team=store.team,has=team.players.length>0,fmt=presetOf(s.format).id==='futsal'?'Futsal':s.format;
@@ -250,7 +256,7 @@ function HomeTab({w,store,d,last,lang,go,fly,running,onResume,onMatch,onExample}
   {key:'summary',tool:'summary',name:w.titleSummary,line:w.lineSummary,icon:ICONS.summary,on:()=>go('summary')},
   {key:'board',tool:'board',name:w.boardName,line:w.lineBoard,icon:'M4 4h16v16H4zM8 9l3 3-3 3M13 15h4',href:'/board?from=coach'},
   {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es&from=coach':'/scan?from=coach'},
-  {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans'}];
+  {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans?from=coach'}];
  return <>
   <h1 className={c.srOnly}>{w.titleHome}</h1>
   {has?<section className={`${c.homeTeam} ${filled?'fi-pop':intro?'fi-in':''}`} aria-label={w.homeTeam}>
@@ -267,8 +273,8 @@ function HomeTab({w,store,d,last,lang,go,fly,running,onResume,onMatch,onExample}
    <span className={c.tileText}><small>{w.continueOn}</small><b>{running?w.resumeGame:TITLE(w,last!)}</b></span>
    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
   <h2 className={c.h2}>{w.tools}</h2>
-  <ul className={c.tiles}>{tiles.map((t,i)=>{const icon=<span className={c.tileIcon} aria-hidden="true" data-tile-icon={t.tool} style={fly===t.tool?{viewTransitionName:'coach-mark'} as React.CSSProperties:undefined}><Icon d={t.icon}/></span>;
-   return <li key={t.key} className={intro?'fi-in':undefined} style={intro?{'--i':i+2} as React.CSSProperties:undefined}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href}>
+  <ul className={c.tiles}>{tiles.map((t,i)=>{const icon=<span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span>;
+   return <li key={t.key} className={intro?'fi-in':undefined} style={intro?{'--i':i+2} as React.CSSProperties:undefined}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href} onClick={()=>{try{window.sessionStorage.setItem(HOME_Y,String(window.scrollY));}catch{/* optional */}}}>
     {icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
    :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}>{icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>;})}</ul>
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>

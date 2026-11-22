@@ -144,6 +144,6 @@ function checkPage(h,p,where,lang){
    was dead on the settings after a session's summary. From the summary it returns to the settings; from the settings it leaves. */
 {const app=read('components/scan/ScanApp.tsx');ok(/<AppHeader /.test(app)&&/data-scan-back/.test(app)&&/data-scan-exit/.test(app),'the shared header: Back from the summary, Exit on the right');
  ok(/data-scan-view="summary"><Top .*onBack=\{\(\)=>screenChange\('back',\(\)=>setView\('settings'\)\)\}/.test(app),'summary Back returns to the settings');
- ok(/window\.location\.assign\(exitHref\(lang\)\)/.test(read('components/motion/AppHeader.tsx')),'Exit leaves for the page the coach came from (else the tools hub)');}
+ ok(/window\.location\.assign\(exitHref\(lang,exitHome\)\)/.test(read('components/motion/AppHeader.tsx')),'Exit leaves for the page the coach came from (else the tools hub)');}
 console.log(`PASS scan-trainer: ${checks} checks`);
 })().catch(e=>{console.error(e);process.exit(1);});

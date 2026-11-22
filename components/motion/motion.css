@@ -18,12 +18,10 @@ html[data-vt=fade]::view-transition-new(root){animation:260ms var(--fi-out) both
 /* the header bar and the tab bar stay put (their live content animates itself: the indicator glides) */
 ::view-transition-old(app-top),::view-transition-old(coach-tabs){display:none}
 ::view-transition-new(app-top),::view-transition-new(coach-tabs){animation:none}
-/* the header title crossfades with a small rise; the tool mark (the tile's icon on the way in) flies and recolours */
+/* the header title crossfades with a small rise */
 ::view-transition-group(app-title){animation-duration:260ms;animation-timing-function:var(--fi-out)}
 ::view-transition-old(app-title){animation:120ms ease-out both fi-fade-out;height:100%;object-fit:none;object-position:center}
 ::view-transition-new(app-title){animation:260ms var(--fi-out) both fi-fade-up-sm;height:100%;object-fit:none;object-position:center}
-::view-transition-group(coach-mark){animation-duration:320ms;animation-timing-function:var(--fi-out)}
-::view-transition-old(coach-mark),::view-transition-new(coach-mark){animation-duration:320ms}
 /* the scan summary's big score */
 @keyframes fi-out-left{to{opacity:0;transform:translateX(-24px)}}
 @keyframes fi-out-right{to{opacity:0;transform:translateX(24px)}}

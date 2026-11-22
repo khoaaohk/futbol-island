@@ -34,7 +34,7 @@ const at=(es:boolean,path:string)=>es?toEs(path):path;
 const toolsBack=(es:boolean):RailItem=>({href:at(es,TOOLS_PATH),name:L(es,'All coach tools','Todas las herramientas')});
 const qa=(es:boolean):Sec=>['faq',L(es,'Questions','Preguntas')],more=(es:boolean,name?:string):Sec=>['keep-reading',name??L(es,'Keep reading','Sigue leyendo')];
 const onPage=(es:boolean)=>L(es,'On this page','En esta página');
-export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[['lineups',L(es,'Lineup builders','Alineaciones')],
+export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[['coach-app',L(es,'Coach app','App del entrenador')],['lineups',L(es,'Lineup builders','Alineaciones')],
  ['playing-time',L(es,'Playing time','Minutos de juego')],['practice',L(es,'Practice and match day','Entrenamiento y partido')],['printables',L(es,'Printables','Para imprimir')],
  qa(es),['guides',L(es,'Guides','Guías')]],es);
 export const lineupRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],

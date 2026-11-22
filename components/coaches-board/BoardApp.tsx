@@ -15,8 +15,8 @@ export default function BoardApp(){
  const [fromCoach,setFromCoach]=useState(false);
  useEffect(()=>{noteAppEntry('board');setFromCoach(openedFromCoach());},[]);
  return <div style={{position:'fixed',inset:0,zIndex:40,display:'flex',flexDirection:'column',background:'#fbf7ee'}} data-board-app="">
-  <AppHeader lang="en" title="Tactics board" sub="Futbol Island" exitAria="Exit the tactics board" exitData={{'data-board-exit':''}}
-   left={fromCoach?<HeaderBack label="Back to the coach app" text="Coach" onClick={()=>{window.location.assign(coachHref('en'));}} data={{'data-board-coach':''}}/>:null}/>
+  <AppHeader lang="en" title="Tactics board" sub="Futbol Island" exitAria="Exit the coach app and go back to Futbol Island" exitData={{'data-board-exit':''}} exitHome="/tools/soccer-tactics-board"
+   left={fromCoach?<HeaderBack label="Coach app Home" text="Home" onClick={()=>{window.location.assign(coachHref('en'));}} data={{'data-board-coach':''}}/>:null}/>
   <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard/></div></div>
  </div>;
 }

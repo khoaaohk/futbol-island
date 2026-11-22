@@ -203,3 +203,10 @@
  .summaryCard:hover{transform:none}
  .swatch,.dirBtn,.stepBtn{transition:background-color .15s ease,color .15s ease}
 }
+/* ---- the site's light palette (owner, Nov 22 2026): choices pick in the brand green, the main action stays gold ---- */
+.mode[aria-pressed=true],.chip[aria-pressed=true],.swatch[aria-pressed=true]{background:var(--pitch);color:#fff}
+.btn{background:var(--pitch);color:#fff}
+.btnGold{background:var(--gold);color:var(--ink)}
+.btnGhost{background:var(--tint);color:var(--ink)}
+.btnLight{background:rgb(255 255 255 / .14);color:#fff}
+.doneBtn{background:var(--pitch);color:#fff}

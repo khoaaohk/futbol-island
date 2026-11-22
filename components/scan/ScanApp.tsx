@@ -217,6 +217,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <Toggle label={w.names} line={w.namesLine} on={s.names} onFlip={()=>set({names:!s.names})}/>
     <Toggle label={w.score} line={w.scoreLine} on={s.score} onFlip={()=>set({score:!s.score})}/>
    </div>
+   <Seg id="sg-lang" label={lang==='es'?'Idioma':'Language'} value={lang} options={['en','es'] as const} names={x=>x==='es'?'Español':'English'} onPick={x=>update(st=>({...st,lang:x}))}/>
    <Seg id="sg-sound" label={w.sound} value={s.sound} options={SOUNDS} names={x=>w.sounds[x]} onPick={x=>{set({sound:x});try{const AC=window.AudioContext;if(x!=='off'&&AC){audio.current??=new AC();void audio.current.resume();play(audio.current,x);}}catch{/* none */}}}/>
    <p className={c.note}>{w.offline}{!embed&&<> <a href={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
     </div>
@@ -230,7 +231,8 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
 function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
  const [fromCoach,setFromCoach]=useState(false);
  useEffect(()=>{setFromCoach(openedFromCoach());},[]);
- const left=embed?null:onBack?<HeaderBack label={lang==='es'?'Volver':'Back'} text={lang==='es'?'Volver':'Back'} onClick={onBack} data={{'data-scan-back':''}}/>
-  :fromCoach?<HeaderBack label={lang==='es'?'Volver a la app del entrenador':'Back to the coach app'} text={lang==='es'?'Entrenador':'Coach'} onClick={()=>{window.location.assign(coachHref(lang));}} data={{'data-scan-coach':''}}/>:null;
- return <AppHeader lang={lang} onLang={onLang} left={left} title={w.app} sub="Futbol Island" exitAria={lang==='es'?'Salir del entrenador de escaneo':'Exit the scan trainer'} exitData={{'data-scan-exit':''}} exit={!embed}/>;
+ const left=embed?null:fromCoach?<HeaderBack label={lang==='es'?'Inicio de la app del entrenador':'Coach app Home'} text={lang==='es'?'Inicio':'Home'} onClick={()=>{window.location.assign(coachHref(lang));}} data={{'data-scan-coach':''}}/>
+  :onBack?<HeaderBack label={lang==='es'?'Volver':'Back'} text={lang==='es'?'Volver':'Back'} icon="back" onClick={onBack} data={{'data-scan-back':''}}/>:null;
+ void onLang;/* the language moved to the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
+ return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-scan-exit':''}} exit={!embed} exitHome={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}/>;
 }
