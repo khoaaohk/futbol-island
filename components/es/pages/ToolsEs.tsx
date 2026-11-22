@@ -158,7 +158,7 @@ function SheetThumbEs({file,alt}:{file:PrintFile;alt:string}){
 // ---- /es/tools ----
 function ToolsHubEs(){
  const crumbs=esLibCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)});
- const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}];
+ const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:toEs(BOARD_PATH),name:BOARD_ES.h1,line:BOARD_ES.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:HUB.h1,path:toEs(TOOLS_HUB.path),description:HUB.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:items.map(x=>({name:x.name,path:x.path}))}))}/>
@@ -175,7 +175,7 @@ function ToolsHubEs(){
   </Section>
   <Section id="practice" title="Apps para el entrenamiento y el partido">
    <p>Dos apps para la cancha: un entrenador de escaneo que muestra colores, números, flechas y pases para que los jugadores miren por encima del hombro, y una app del entrenador con la alineación y un reloj de cambios en vivo.</p>
-   <ToolCards links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:'/coach?lang=es',name:'App del entrenador para el partido',line:'La alineación y un reloj de cambios en vivo en tu teléfono; funciona sin conexión, sin cuenta'}]} tint="practice"/>
+   <ToolCards links={[{path:toEs(BOARD_PATH),name:BOARD_ES.h1,line:BOARD_ES.blurb},{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:'/coach?lang=es',name:'App del entrenador para el partido',line:'La alineación y un reloj de cambios en vivo en tu teléfono; funciona sin conexión, sin cuenta'}]} tint="practice"/>
   </Section>
   <Section id="printables" title="Diagramas de cancha y hojas de referencia para imprimir">
    <p>Canchas en blanco para dibujar, todas las formaciones de una modalidad en una página, y las posiciones con sus números. Gratis para imprimir y compartir con equipos, clubes y escuelas.</p>
