@@ -99,8 +99,8 @@
     },
     "illness": {
       "src": "/voice/books/caicedo/illness.m4a?v=coach-bella-1",
-      "duration": 45.3,
-      "scriptSha256": "8080a53a1779d2dece541de3c5f8ba133f9ae2958b694f055a12120dd5e42996",
+      "duration": 44.8,
+      "scriptSha256": "67a5f770ed346f302564a5fddc93df61de03c74f6c8f493cad9045e43a286d0d",
       "cues": [
         {
           "text": "The hardest challenge",
@@ -118,33 +118,33 @@
           "duration": 4.075
         },
         {
-          "text": "She had an operation, and then six months of strong medicine.",
+          "text": "She had an operation, and then months of strong medicine.",
           "start": 13.175,
-          "duration": 4.5
+          "duration": 4.275
         },
         {
           "text": "For a while, she had to stay in bed.",
-          "start": 17.675,
+          "start": 17.45,
           "duration": 2.825
         },
         {
           "text": "Lift the rain cloud.",
-          "start": 20.5,
+          "start": 20.275,
           "duration": 2.1
         },
         {
           "text": "Linda said later that it was hard on her feelings too, so she asked for help from the psychologists at her club, people who are trained to help with worries and sadness.",
-          "start": 22.6,
+          "start": 22.375,
           "duration": 10.15
         },
         {
-          "text": "In September 2020, the doctors told her the cancer was gone.",
-          "start": 32.75,
-          "duration": 5.0
+          "text": "Slowly, with the treatment and all that help, she began to get better.",
+          "start": 32.525,
+          "duration": 4.725
         },
         {
           "text": "When you are ill or sad, asking for help is brave. Doctors, family and helpers are part of your team.",
-          "start": 37.75,
+          "start": 37.25,
           "duration": 7.475
         }
       ]
@@ -152,7 +152,7 @@
     "return": {
       "src": "/voice/books/caicedo/return.m4a?v=coach-bella-1",
       "duration": 39.2,
-      "scriptSha256": "25ce5db7da0251495d4f099463229e0a2337e65b347ce6ba2e3a835311f58aaa",
+      "scriptSha256": "8f5aa0fd5ecfaeff3e6dc1cb72cf4ba2a676d8778e0e3fcf0f7d4889841c2b27",
       "cues": [
         {
           "text": "One small step at a time",
@@ -165,33 +165,33 @@
           "duration": 4.575
         },
         {
-          "text": "The medicine had made her hair fall out, and she chose to play wearing a wig.",
+          "text": "She was still getting her strength back, but she was happy to be with the ball again.",
           "start": 6.975,
-          "duration": 5.125
+          "duration": 5.175
         },
         {
           "text": "In October 2020, she played her first match for her new club, Deportivo Cali.",
-          "start": 12.1,
+          "start": 12.15,
           "duration": 6.2
         },
         {
           "text": "Fill the comeback bar.",
-          "start": 18.3,
+          "start": 18.35,
           "duration": 2.2
         },
         {
           "text": "She grew stronger, step by step.",
-          "start": 20.5,
+          "start": 20.55,
           "duration": 2.95
         },
         {
           "text": "In 2022, the Copa Am\u00e9rica Femenina, the big tournament for South American national teams, was played in Colombia, and Linda was named its best player.",
-          "start": 23.45,
+          "start": 23.5,
           "duration": 11.55
         },
         {
           "text": "Coming back takes small steps. Every one of them counts.",
-          "start": 35.0,
+          "start": 35.05,
           "duration": 4.15
         }
       ]
