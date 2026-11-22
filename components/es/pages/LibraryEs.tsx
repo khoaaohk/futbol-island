@@ -77,7 +77,7 @@ const EN_ONLY_ES:Readonly<Record<string,string>>={'Three soccer arcade games pla
  'Pass puzzle: a pass around the defender':'Pass Puzzles: un pase que rodea al defensa','Strikers':'Delanteros','Goalkeepers':'Porteros','Women’s football legends':'Leyendas del fútbol femenino',
  'World Cup winners':'Campeones del mundo','Sharks':'Tiburones','Crabs and shellfish':'Cangrejos y mariscos','Octopuses, squid and rays':'Pulpos, calamares y rayas','Fishing spots':'Lugares de pesca',
  'The first Laws':'Las primeras reglas','The first World Cup':'El primer Mundial','Boots through time':'Las botas a lo largo del tiempo','The Ballon d’Or':'El Balón de Oro'};
-const examplesEs=(path:string):LibraryLink[]=>libraryExamples(path).map(e=>{if(!hasEs(path))return {...e,name:EN_ONLY_ES[e.name]??e.name};const n=esName(e.href);return n&&hasEs(e.href.split('#')[0])?{href:toEs(e.href.split('#')[0])+(e.href.includes('#')?'#'+e.href.split('#')[1]:''),name:n}:null;}).filter((e):e is LibraryLink=>!!e);
+const examplesEs=(path:string):LibraryLink[]=>libraryExamples(path).map(e=>{if(!hasEs(path))return {...e,name:EN_ONLY_ES[e.name]??e.name};const n=/^\/(games|books)\//.test(e.href)?e.name/* round E: a game or player name */:esName(e.href);return n&&hasEs(e.href.split('#')[0])?{href:toEs(e.href.split('#')[0])+(e.href.includes('#')?'#'+e.href.split('#')[1]:''),name:n}:null;}).filter((e):e is LibraryLink=>!!e);
 export function librarySectionsEs():LibrarySection[]{
  return LIBRARY_ITEMS.map(i=>{const es=hasEs(i.path);return librarySection(i,W.items[i.path],es?toEs(i.path):i.path,es?ES_COUNTS[i.path]:i.count,examplesEs(i.path));});
 }
