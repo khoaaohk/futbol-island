@@ -1,0 +1,289 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "siege": {
+      "src": "/voice/books/dzeko/siege.m4a?v=coach-bella-1",
+      "duration": 41.0,
+      "scriptSha256": "95369d2c422ab5edf514c4514288c44444ec4b58eba4995ab36ea6e05fca9444",
+      "cues": [
+        {
+          "text": "A city surrounded",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "Edin D\u017eeko was born in 1986 in Sarajevo, the capital city of Bosnia and Herzegovina.",
+          "start": 1.95,
+          "duration": 7.9
+        },
+        {
+          "text": "When he was six, a war began, and the city was surrounded for nearly four years.",
+          "start": 9.85,
+          "duration": 5.725
+        },
+        {
+          "text": "This is called a siege.",
+          "start": 15.575,
+          "duration": 2.125
+        },
+        {
+          "text": "Life was dangerous and difficult for everyone in the city.",
+          "start": 17.7,
+          "duration": 4.325
+        },
+        {
+          "text": "Open the door.",
+          "start": 22.025,
+          "duration": 1.8
+        },
+        {
+          "text": "Edin\u2019s family home was destroyed, so fifteen members of his family lived together in his grandparents\u2019 small flat.",
+          "start": 23.825,
+          "duration": 8.2
+        },
+        {
+          "text": "They shared what they had and looked after each other.",
+          "start": 32.025,
+          "duration": 3.725
+        },
+        {
+          "text": "In hard times, families who share and stick together keep each other going.",
+          "start": 35.75,
+          "duration": 5.2
+        }
+      ]
+    },
+    "mother": {
+      "src": "/voice/books/dzeko/mother.m4a?v=coach-bella-1",
+      "duration": 31.1,
+      "scriptSha256": "56873670d3d068c53b0c2bae147d2d51ebc74e2c20c6d4f95c64edd72f1a173d",
+      "cues": [
+        {
+          "text": "His mother said no",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Even during the war, Edin kept playing football outside, in his neighbourhood, Otoka.",
+          "start": 2.025,
+          "duration": 6.175
+        },
+        {
+          "text": "But one day, his mother said he could not go out to play.",
+          "start": 8.2,
+          "duration": 4.075
+        },
+        {
+          "text": "Football helped the children feel a little bit normal.",
+          "start": 12.275,
+          "duration": 3.45
+        },
+        {
+          "text": "Close the window.",
+          "start": 15.725,
+          "duration": 1.85
+        },
+        {
+          "text": "That same day, the football pitch was hit during the fighting.",
+          "start": 17.575,
+          "duration": 4.25
+        },
+        {
+          "text": "Edin was safe at home, because his mother had said no.",
+          "start": 21.825,
+          "duration": 4.1
+        },
+        {
+          "text": "Sometimes grown-ups say no to keep you safe. Listening to them is wise.",
+          "start": 25.925,
+          "duration": 5.175
+        }
+      ]
+    },
+    "tall": {
+      "src": "/voice/books/dzeko/tall.m4a?v=coach-bella-1",
+      "duration": 37.3,
+      "scriptSha256": "7f0f505c774965dda9ebe34ce45933098a94eb7e889deb9bc69ab7383282f2c0",
+      "cues": [
+        {
+          "text": "Too tall, they said",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "After the war, Edin played for a Sarajevo club called \u017deljezni\u010dar.",
+          "start": 2.05,
+          "duration": 5.1
+        },
+        {
+          "text": "Some people there thought he was too tall, and not skilful enough for midfield.",
+          "start": 7.15,
+          "duration": 5.05
+        },
+        {
+          "text": "Being very tall can make it harder to control the ball when you are young.",
+          "start": 12.2,
+          "duration": 4.725
+        },
+        {
+          "text": "Flip the sign.",
+          "start": 16.925,
+          "duration": 1.85
+        },
+        {
+          "text": "The club sold him to Teplice, in the Czech Republic, for only 25,000 euros.",
+          "start": 18.775,
+          "duration": 6.35
+        },
+        {
+          "text": "It was a very small fee, but it was a new start.",
+          "start": 25.125,
+          "duration": 3.675
+        },
+        {
+          "text": "In the Czech Republic, Edin played up front and started to score goals.",
+          "start": 28.8,
+          "duration": 4.9
+        },
+        {
+          "text": "If people doubt you, keep working on your skills.",
+          "start": 33.7,
+          "duration": 3.575
+        }
+      ]
+    },
+    "germany": {
+      "src": "/voice/books/dzeko/germany.m4a?v=coach-bella-1",
+      "duration": 31.0,
+      "scriptSha256": "c12d3931e19567ef0e95ce6b8500f3d227ac0e156ab300ba87565f5db693b9de",
+      "cues": [
+        {
+          "text": "Champions of Germany",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "Edin moved on to Wolfsburg, in Germany, and he became a striker who scored lots of goals.",
+          "start": 2.175,
+          "duration": 6.45
+        },
+        {
+          "text": "He learned to use his height, his strength and his clever feet.",
+          "start": 8.625,
+          "duration": 4.25
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 12.875,
+          "duration": 1.95
+        },
+        {
+          "text": "In 2009, Wolfsburg won the Bundesliga, the German league, for the first time ever.",
+          "start": 14.825,
+          "duration": 6.65
+        },
+        {
+          "text": "Edin was one of the stars of the team, and the boy from Sarajevo was a champion.",
+          "start": 21.475,
+          "duration": 5.65
+        },
+        {
+          "text": "Find the place where you can shine, and keep growing there.",
+          "start": 27.125,
+          "duration": 3.875
+        }
+      ]
+    },
+    "england": {
+      "src": "/voice/books/dzeko/england.m4a?v=coach-bella-1",
+      "duration": 29.6,
+      "scriptSha256": "405a576db9d0643c8b6f13adf584fd89ccb003fcf96c8aab60d601d02a44a5d0",
+      "cues": [
+        {
+          "text": "Titles in England",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "Edin joined Manchester City in England.",
+          "start": 1.925,
+          "duration": 3.35
+        },
+        {
+          "text": "With City, he won the Premier League twice, in 2012 and in 2014, and the FA Cup in 2011.",
+          "start": 5.275,
+          "duration": 8.025
+        },
+        {
+          "text": "He often came off the bench and scored important goals.",
+          "start": 13.3,
+          "duration": 4.1
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 17.4,
+          "duration": 2.0
+        },
+        {
+          "text": "The boy who had grown up during a siege was now a champion in one of the biggest leagues in the world.",
+          "start": 19.4,
+          "duration": 6.475
+        },
+        {
+          "text": "Where you start does not decide where you can go.",
+          "start": 25.875,
+          "duration": 3.65
+        }
+      ]
+    },
+    "bosnia": {
+      "src": "/voice/books/dzeko/bosnia.m4a?v=coach-bella-1",
+      "duration": 41.9,
+      "scriptSha256": "f4569d3dee1d0a3443cfe9d5db3d1aa1c7b8c69bad8a1dafd3465cadb78095a4",
+      "cues": [
+        {
+          "text": "A first World Cup for Bosnia",
+          "start": 0.0,
+          "duration": 2.675
+        },
+        {
+          "text": "Edin scored ten goals to help Bosnia and Herzegovina qualify for the 2014 World Cup, their first big tournament.",
+          "start": 2.675,
+          "duration": 8.575
+        },
+        {
+          "text": "In Brazil, he scored against Iran in the team\u2019s first-ever World Cup win.",
+          "start": 11.25,
+          "duration": 5.575
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 16.825,
+          "duration": 1.85
+        },
+        {
+          "text": "Edin became Bosnia\u2019s captain, and he has played and scored more for his country than anyone else.",
+          "start": 18.675,
+          "duration": 6.45
+        },
+        {
+          "text": "In 2026, he wrote a letter to the children of Bosnia about growing up in the siege.",
+          "start": 25.125,
+          "duration": 6.35
+        },
+        {
+          "text": "He wrote about what life had been like, so that children today could understand.",
+          "start": 31.475,
+          "duration": 5.05
+        },
+        {
+          "text": "Hope can grow even after the hardest times. Share your story to help others.",
+          "start": 36.525,
+          "duration": 5.35
+        }
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ import {CRUYFF_BOOK as b_cruyff} from './stories/cruyff';
 import {DAVIES_BOOK as b_davies} from './stories/davies';
 import {DEBRUYNE_BOOK as b_debruyne} from './stories/debruyne';
 import {DROGBA_BOOK as b_drogba} from './stories/drogba';
+import {DZEKO_BOOK as b_dzeko} from './stories/dzeko';
 import {EARPS_BOOK as b_earps} from './stories/earps';
 import {ERIKSEN_BOOK as b_eriksen} from './stories/eriksen';
 import {EUSEBIO_BOOK as b_eusebio} from './stories/eusebio';
@@ -63,6 +64,7 @@ import v_b_cruyff from '../../public/voice/books/cruyff/narration.json';
 import v_b_davies from '../../public/voice/books/davies/narration.json';
 import v_b_debruyne from '../../public/voice/books/debruyne/narration.json';
 import v_b_drogba from '../../public/voice/books/drogba/narration.json';
+import v_b_dzeko from '../../public/voice/books/dzeko/narration.json';
 import v_b_earps from '../../public/voice/books/earps/narration.json';
 import v_b_eriksen from '../../public/voice/books/eriksen/narration.json';
 import v_b_eusebio from '../../public/voice/books/eusebio/narration.json';
@@ -115,6 +117,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "davies":b_davies,
  "debruyne":b_debruyne,
  "drogba":b_drogba,
+ "dzeko":b_dzeko,
  "earps":b_earps,
  "eriksen":b_eriksen,
  "eusebio":b_eusebio,
@@ -168,6 +171,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "davies":v_b_davies,
  "debruyne":v_b_debruyne,
  "drogba":v_b_drogba,
+ "dzeko":v_b_dzeko,
  "earps":v_b_earps,
  "eriksen":v_b_eriksen,
  "eusebio":v_b_eusebio,
@@ -221,6 +225,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "davies":()=>import('./spreads/davies'),
  "debruyne":()=>import('./spreads/debruyne'),
  "drogba":()=>import('./spreads/drogba'),
+ "dzeko":()=>import('./spreads/dzeko'),
  "earps":()=>import('./spreads/earps'),
  "eriksen":()=>import('./spreads/eriksen'),
  "eusebio":()=>import('./spreads/eusebio'),
