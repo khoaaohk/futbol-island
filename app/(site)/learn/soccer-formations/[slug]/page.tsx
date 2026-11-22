@@ -1,4 +1,5 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {guideRail} from '@/lib/site/railNavMore';
@@ -67,7 +68,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <QA id="faq" title={`Questions about the ${f.shape}`} faq={f.faq}/>
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
   {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}]}/>
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}],f.path)}/>
   <GuideEnd path={f.path} checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
   <ReadNext path={f.path}/>
  </>;

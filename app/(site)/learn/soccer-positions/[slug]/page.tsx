@@ -1,4 +1,5 @@
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {guideRail} from '@/lib/site/railNavMore';
@@ -68,13 +69,13 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <GuideQuiz id="quiz" name={`the ${lower}`} questions={quiz}/>
   {/* batch 3, Nov 17 2026: lessons, formations, player cards, drills (lib/site/drillLinks.ts), comparisons and the other positions
       as one "Keep reading" row (every link kept; the rest under "Show N more") */}
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},
    {id:'formations',label:'Formation',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.path,name:`${x.name} formation`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb}]:[]},
    {id:'cards',label:'Player card',icon:'shirt',links:cards.length>0?[...cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')})),...(hub?[{path:hub.path,name:`See all ${hub.blurb.replace(/,.*$/,'')}`,line:hub.h1}]:[])]:[]},
    {id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(p.path)},
    {id:'books',label:'Pop-up book',icon:'book',links:booksForRole(p.cardRole)},/* Nov 20 2026: the books about players of this position */
    {id:'compare',label:'Compare',icon:'swap',links:compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
-   {id:'related',links:[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}]}/>
+   {id:'related',links:[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}],p.path)}/>
   <GuideEnd path={p.path} checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
   <ReadNext path={p.path}/>
  </>;

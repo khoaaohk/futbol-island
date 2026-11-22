@@ -96,7 +96,7 @@ for(const enPath of ep.ES_PAGES){
  for(const re of gl.ES_BANNED)assert(!re.test(text),`${esPath}: banned word ${re}`);
 }
 // sitemap
-{const sm=L('app/sitemap.ts').default();const byUrl=new Map(sm.map(x=>[x.url,x]));
+{const sm=L('lib/site/sitemaps.ts').sitemapEntries();const byUrl=new Map(sm.map(x=>[x.url,x]));
  for(const p of ep.ES_PAGES){const e=byUrl.get(seo.abs(ep.toEs(p))),n=byUrl.get(seo.abs(p));assert(e&&n,`${p}: both languages in the sitemap`);
   assert.deepEqual(e.alternates,n.alternates,`${p}: same hreflang set on both sitemap entries`);assert.equal(e.alternates.languages.es,seo.abs(ep.toEs(p)));}}
 // Spanish search (round D): /es/learn?q= (noindex, follow), its index has only /es pages with Spanish names, "fuera" finds offside

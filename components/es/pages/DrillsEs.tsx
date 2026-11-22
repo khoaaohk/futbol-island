@@ -1,4 +1,5 @@
 import KeepReading from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {anchor,drillGuideRail,guideRail,hubRail,planRail,plansHubRail} from '@/lib/site/railNavMore';
@@ -110,7 +111,7 @@ export function DrillEsPage({d}:{d:EsDrill}){
   <EsCoachNotes name={d.name} notes={{coach:'',match:'',ages:d.ageNotes}}/>
   {d.home&&<Section id="home" title="Hazlo en casa"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Preguntas sobre: ${d.name}`} faq={d.faq}/>
-  <KeepReading lang="es" groups={[{id:'related',links:related}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'related',links:related}],d.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.drills} lessonId={d.cta.id}/>
   <EsReadNext order={esDrillOrder()} path={d.esPath}/>
  </>;
@@ -140,7 +141,7 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
   {sections(g.after)}
   {plans.length>0&&<Section id="plans" title={`Planes de entrenamiento ${g.age}`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Preguntas sobre: ${g.name.toLowerCase()}`} faq={g.faq}/>
-  <KeepReading lang="es" groups={[{id:'related',links:[...others,...esDrillLinks(g.links),allDrills(),{path:P().path,name:P().h1,line:P().blurb}]}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'related',links:[...others,...esDrillLinks(g.links),allDrills(),{path:P().path,name:P().h1,line:P().blurb}]}],g.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.drills} lessonId={g.lessons[0]?.id}/>
   <EsReadNext order={esDrillOrder()} path={g.esPath}/>
  </>;
@@ -210,7 +211,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
     <EsDrillList items={p.drills.map(d=>({drill:d,line:drillLineEs(d)}))}/>
    </Section>
    <QA id="faq" title={`Preguntas sobre este entrenamiento ${p.age}`} faq={p.faq}/>
-  <KeepReading lang="es" groups={[{id:'related',links:related}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'related',links:related}],p.path,'es')}/>
    <EsGuideEnd checked={FAMILY_CHECKED.plans} lessonId={p.lessons[0]?.id}/>
   </div>
   <EsReadNext order={esPlanOrder()} path={p.esPath}/>

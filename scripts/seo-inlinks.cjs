@@ -16,8 +16,10 @@ const norm = h => { h = h.replace(/&amp;/g, '&').split('#')[0].split('?')[0]; if
 const isPage = h => h.startsWith('/') && !h.startsWith('//') && !/\.[a-z0-9]{2,5}$/i.test(h) && !/^\/(api|admin|_next)(\/|$)/.test(h);
 const hrefs = html => [...html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map(m => norm(m[1])).filter(isPage);
 (async () => {
-  const sm = await (await fetch(base + '/sitemap.xml')).text();
-  const queue = [...new Set([...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => norm(m[1])))], seen = new Set(queue), sitemap = new Set(queue);
+  // Nov 21 2026: /sitemap.xml is a sitemap index of family sitemaps (lib/site/sitemaps.ts); read each one from this base.
+  const locs = b => [...b.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]), idx = await (await fetch(base + '/sitemap.xml')).text();
+  const sm = /<sitemapindex\b/.test(idx) ? (await Promise.all(locs(idx).map(async u => (await fetch(base + u.replace(SITE, ''))).text()))).join('\n') : idx;
+  const queue = [...new Set(locs(sm).map(m => norm(m)))], seen = new Set(queue), sitemap = new Set(queue);
   const all = new Map(), en = new Map(), main = new Map(), add = (m, to, from) => { if (!m.has(to)) m.set(to, new Set()); m.get(to).add(from); };
   let done = 0;
   const work = async () => { for (;;) { const p = queue.shift(); if (p === undefined) return;

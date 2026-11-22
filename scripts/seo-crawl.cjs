@@ -30,8 +30,9 @@ const FAMILY = [
 ];
 const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
 (async () => {
-  const sm = await get('/sitemap.xml');
-  const urls = [...sm.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+  // Nov 21 2026: /sitemap.xml is a sitemap index (lib/site/sitemaps.ts): read every family sitemap it names, from this base.
+  const sm = await get('/sitemap.xml'), locs = b => [...b.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+  const urls = /<sitemapindex\b/.test(sm.body) ? (await Promise.all(locs(sm.body).map(async u => { const r = await get(u.replace(SITE, '')); if (r.status !== 200) throw new Error(`${u}: ${r.status}`); return locs(r.body); }))).flat() : locs(sm.body);
   const paths = urls.map(u => u.replace(SITE, '') || '/');
   const problems = { status: [], canonical: [], jsonld: [], broken: [], orphan: [], depth: [] };
   const inbound = new Map(paths.map(p => [p, new Set()]));

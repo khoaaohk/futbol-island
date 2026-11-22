@@ -35,7 +35,7 @@ const L=rel=>load(path.join(root,rel));
 
 // ---- 1. sources ---------------------------------------------------------------------------------------------------------------
 const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(`${d}/${e.name}`):[`${d}/${e.name}`]);
-const SITE_FILES=[...walk('app/(site)'),...walk('lib/site'),'components/seo/JsonLd.tsx','components/site/Breadcrumbs.tsx','components/site/LessonHub.tsx','app/robots.ts','app/sitemap.ts','app/manifest.ts','app/llms.txt/route.ts','app/llms-full.txt/route.ts'].filter(f=>/\.tsx?$/.test(f));
+const SITE_FILES=[...walk('app/(site)'),...walk('lib/site'),'components/seo/JsonLd.tsx','components/site/Breadcrumbs.tsx','components/site/LessonHub.tsx','app/robots.ts','app/sitemap.xml/route.ts','app/sitemaps/[family]/route.ts','app/feed.xml/route.ts','app/manifest.ts','app/llms.txt/route.ts','app/llms-full.txt/route.ts'].filter(f=>/\.tsx?$/.test(f));
 for(const f of SITE_FILES){const s=read(f);
  assert(!/^\s*['"]use client['"]/.test(s),`${f} is a server module`);
  assert(!/process\.env|supabase|stripe|from 'three'|@babylonjs/i.test(s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1')),`${f} reads no env, server keys or 3D code`);}
@@ -120,7 +120,7 @@ assert(!fs.existsSync(path.join(root,'public/llms.txt')),'no static public/llms.
  assert(m.icons.some(i=>i.sizes==='512x512'),'manifest: a 512 icon');for(const i of m.icons)assert(fs.existsSync(path.join(root,'app',i.src.slice(1))),`manifest icon ${i.src} exists`);
  // sitemap dates: every path has a real content date (lib/site/updated.ts), no build-time now, no changefreq
  for(const x of paths.sitePaths())assert(/^\d{4}-\d{2}-\d{2}$/.test(x.lastmod),`${x.path}: lastmod`);
- assert(!/changeFrequency|new Date\(/.test(read('app/sitemap.ts')+read('lib/site/paths.ts')+read('lib/site/updated.ts')),'no changefreq, no build-time date');
+ assert(!/changeFrequency|new Date\(/.test(read('lib/site/sitemaps.ts')+read('lib/site/paths.ts')+read('lib/site/updated.ts')),'no changefreq, no build-time date');
  // no page inherits the root canonical "/"
  assert(!/canonical/.test(read('app/layout.tsx').replace(/\/\/.*$/gm,'')),'the root layout sets no canonical');
  for(const r of ['arcade','shop','museum','konbini'])assert.match(read(`app/${r}/page.tsx`),new RegExp(`noindexMeta\\([^;]*'/${r}'\\)`),`/${r}: own canonical, noindex`);
@@ -153,7 +153,7 @@ const fileFor=p=>p==='/'?path.join(app,'index.html'):path.join(app,p.slice(1)+'.
 const html=p=>fs.readFileSync(fileFor(p),'utf8');
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<style[\s\S]*?<\/style>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/\s+/g,' ');
 // Sitemap: every expected path, nothing else, and each one is built.
-const sitemap=fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8');
+const sitemap=require('./lib/builtSitemap.cjs')(app);/* Nov 21 2026: /sitemap.xml is an index of family sitemaps */
 const locs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1]);
 /* Spanish pages (/es, docs/i18n/HANDOFF.md) render on demand, so they are not in the build output: the sitemap lists exactly ES_PAGES for them. */
 const esP=L('lib/i18n/esPaths.ts'),isEs=p=>p==='/es'||p.startsWith('/es/');

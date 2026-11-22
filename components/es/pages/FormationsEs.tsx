@@ -1,4 +1,5 @@
 import KeepReading from '@/components/site/KeepReading';
+import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
 import {anchor,guideRail,hubRail,pageRail,sec} from '@/lib/site/railNavMore';
@@ -97,7 +98,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <Section id="suits" title="A quién le sirve"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Preguntas sobre el ${f.shapeEs}`} faq={f.faq}/>
   <EsCoachNotes name={f.name} notes={f.notes}/>
-  <KeepReading lang="es" groups={[{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}]}/>
+  <KeepReading lang="es" groups={withMesh([{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}],f.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>
  </>;
@@ -164,7 +165,7 @@ export function CompareEsPage({c}:{c:EsComparison}){
   </Section>
   <Section id="fit" title="¿Cuál le queda a tu equipo?"><Bullets items={c.fit}/></Section>
   <Section id="switching" title="Cómo pasar de una a otra"><Bullets items={c.switching}/></Section>
-  <KeepReading lang="es" title="Lee cada una, y más" groups={[{id:'related',links:[...links,...extra]}]}/>
+  <KeepReading lang="es" title="Lee cada una, y más" groups={withMesh([{id:'related',links:[...links,...extra]}],c.path,'es')}/>
   <EsGuideEnd checked={pos?FAMILY_CHECKED.positions:FAMILY_CHECKED.formations}/>
  </>;
 }

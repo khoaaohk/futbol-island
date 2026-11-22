@@ -212,7 +212,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  assert(/GAME_LISTINGS\.map/.test(read('app/llms-full.txt/route.ts')),'llms-full.txt lists the game pages');}
 
 // ---- 5. sitemaps, robots, redirects, /arcade ----------------------------------------------------------------------------------
-{const sm=L('app/sitemap.ts').default().map(x=>x.url);for(const p of ALL)assert(sm.includes(seo.abs(p.path)),`sitemap.xml has ${p.path}`);
+{const sm=L('lib/site/sitemaps.ts').sitemapEntries().map(x=>x.url);for(const p of ALL)assert(sm.includes(seo.abs(p.path)),`sitemap.xml has ${p.path}`);
  const im=L('lib/site/tools/imageSitemap.ts'),xml=im.imageSitemapXml(),entries=im.imageEntries();
  for(const p of ALL){const e=entries.find(x=>x.path===p.path);assert(e&&e.images.length===p.images.length,`image sitemap has ${p.path}`);assert(xml.includes(`<loc>${seo.abs(p.path)}</loc>`));
   for(const i of e.images){assert(fs.existsSync(pub(i)),`image sitemap: ${i} exists`);assert(xml.includes(`<image:loc>${seo.abs(i)}</image:loc>`),`image sitemap lists ${i}`);}}

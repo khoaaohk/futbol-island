@@ -43,11 +43,15 @@ export function fullDescription(base:string,tails:readonly string[]):string{
  const fits=tails.map(t=>`${b} ${t}`).filter(x=>x.length<=155);
  return fits.find(x=>x.length>=120)??fits.sort((x,y)=>y.length-x.length)[0]??b;
 }
+/** The Atom feed of new and updated pages (lib/site/feed.ts, app/feed.xml/route.ts, Nov 21 2026), named in every page's <head>
+ *  as rel=alternate type=application/atom+xml through `alternates.types`. */
+export const FEED_PATH='/feed.xml',FEED_TITLE=`${SITE_NAME}: new and updated pages`;
+export const FEED_TYPES={'application/atom+xml':[{url:FEED_PATH,title:FEED_TITLE}]};
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
 export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website';image?:{url:string;alt:string}}={}):Metadata{
  const full=fitTitle(title,o.whole);description=fitDescription(description);
  // Nov 15 2026 (Spanish round 1): a page with a Spanish version names both (hreflang en / es / x-default; lib/i18n/esPaths.ts).
- const alternates=hasEs(path)?{canonical:path,languages:languageAlternates(path)}:{canonical:path};
+ const alternates=hasEs(path)?{canonical:path,languages:languageAlternates(path),types:FEED_TYPES}:{canonical:path,types:FEED_TYPES};
  if(o.image)return {title:full,description,alternates,/* a page with its own picture (guide diagrams, lib/site/guides.ts) */
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:o.image.url,width:1200,height:630,alt:o.image.alt}]},
   twitter:{card:'summary_large_image',title:full,description,images:[o.image.url]}};
