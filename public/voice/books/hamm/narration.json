@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "shoes": {
+      "src": "/voice/books/hamm/shoes.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "61ce86b949a39b0061fabf278c005f175deb688740c26d3bbc1e95726ca04a61",
+      "cues": [
+        {
+          "text": "Special shoes",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "Mia Hamm was born in 1972 in Selma, Alabama, in the United States.",
+          "start": 1.9,
+          "duration": 6.275
+        },
+        {
+          "text": "She was born with a club foot, a foot that turns inwards, and when she was very small she wore special shoes to help it grow straight.",
+          "start": 8.175,
+          "duration": 8.725
+        },
+        {
+          "text": "Open the shoebox.",
+          "start": 16.9,
+          "duration": 1.975
+        },
+        {
+          "text": "Her father was in the US Air Force, so the family moved from base to base, all around the world.",
+          "start": 18.875,
+          "duration": 7.0
+        },
+        {
+          "text": "Mia played soccer for the first time in Florence, in Italy.",
+          "start": 25.875,
+          "duration": 4.325
+        },
+        {
+          "text": "Moving so often meant saying goodbye to friends, again and again.",
+          "start": 30.2,
+          "duration": 4.8
+        },
+        {
+          "text": "A ball helped her make new ones.",
+          "start": 35.0,
+          "duration": 2.5
+        },
+        {
+          "text": "Where you start does not decide where you can go.",
+          "start": 37.5,
+          "duration": 3.65
+        }
+      ]
+    },
+    "youngest": {
+      "src": "/voice/books/hamm/youngest.m4a?v=coach-bella-1",
+      "duration": 41.5,
+      "scriptSha256": "ea1bf072599a8119a88baebf5b212fd16f89c3d02ecebc438ddebe5b185b4fc0",
+      "cues": [
+        {
+          "text": "The youngest on the team",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In 1987, when she was only fifteen, Mia first played for the United States national team.",
+          "start": 2.2,
+          "duration": 7.175
+        },
+        {
+          "text": "Being the youngest can feel scary, because everyone else is bigger and more experienced.",
+          "start": 9.375,
+          "duration": 5.95
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 15.325,
+          "duration": 1.75
+        },
+        {
+          "text": "At the University of North Carolina, her team won four national championships in five years.",
+          "start": 17.075,
+          "duration": 6.7
+        },
+        {
+          "text": "In 1991, at nineteen, Mia was the youngest player in the US team that won the very first Women\u2019s World Cup.",
+          "start": 23.775,
+          "duration": 8.95
+        },
+        {
+          "text": "She kept working on her speed, her dribbling and her shooting.",
+          "start": 32.725,
+          "duration": 4.225
+        },
+        {
+          "text": "Being the youngest is hard. Listen, learn and keep working.",
+          "start": 36.95,
+          "duration": 4.525
+        }
+      ]
+    },
+    "garrett": {
+      "src": "/voice/books/hamm/garrett.m4a?v=coach-bella-1",
+      "duration": 47.3,
+      "scriptSha256": "89e619e3cb5cbbecb0859ec8edf04868df41574a2ba5ec73d464fc118218f755",
+      "cues": [
+        {
+          "text": "A hard illness",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Mia was the fourth of six children.",
+          "start": 1.85,
+          "duration": 2.825
+        },
+        {
+          "text": "Her older brother Garrett had joined the family through adoption.",
+          "start": 4.675,
+          "duration": 4.175
+        },
+        {
+          "text": "As a young man, Garrett became ill with aplastic anaemia, a rare illness that stops the body making enough new blood.",
+          "start": 8.85,
+          "duration": 8.425
+        },
+        {
+          "text": "Doctors needed to find a donor, someone whose healthy cells could help him.",
+          "start": 17.275,
+          "duration": 5.175
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 22.45,
+          "duration": 1.775
+        },
+        {
+          "text": "It was hard to find a match, but in the end one was found, and Garrett had a transplant.",
+          "start": 24.225,
+          "duration": 5.925
+        },
+        {
+          "text": "Sadly, in 1997, Garrett died after the treatment.",
+          "start": 30.15,
+          "duration": 4.825
+        },
+        {
+          "text": "He was twenty-eight.",
+          "start": 34.975,
+          "duration": 1.95
+        },
+        {
+          "text": "Mia and her family missed him very much.",
+          "start": 36.925,
+          "duration": 3.325
+        },
+        {
+          "text": "When someone you love is very ill, it is okay to feel sad and to lean on your family and friends.",
+          "start": 40.25,
+          "duration": 7.05
+        }
+      ]
+    },
+    "foundation": {
+      "src": "/voice/books/hamm/foundation.m4a?v=coach-bella-1",
+      "duration": 37.1,
+      "scriptSha256": "52fed9d481f1db0d311c0bad0be34b1a1b65e9d9b19da81bca9af32078004ae0",
+      "cues": [
+        {
+          "text": "Turning sadness into help",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "In 1999, Mia started the Mia Hamm Foundation.",
+          "start": 2.35,
+          "duration": 4.5
+        },
+        {
+          "text": "It held the first Garrett Game, a match to raise money in her brother\u2019s honour.",
+          "start": 6.85,
+          "duration": 5.275
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 12.125,
+          "duration": 1.85
+        },
+        {
+          "text": "The foundation helps people who need a bone marrow or cord blood transplant, and it asks more people to join the list of donors.",
+          "start": 13.975,
+          "duration": 8.275
+        },
+        {
+          "text": "It also makes more chances for girls and women to play sport.",
+          "start": 22.25,
+          "duration": 4.5
+        },
+        {
+          "text": "Mia\u2019s sad loss became a way to help many other families.",
+          "start": 26.75,
+          "duration": 4.375
+        },
+        {
+          "text": "When something sad happens, helping other people can be a way to remember someone you love.",
+          "start": 31.125,
+          "duration": 5.975
+        }
+      ]
+    },
+    "record": {
+      "src": "/voice/books/hamm/record.m4a?v=coach-bella-1",
+      "duration": 37.4,
+      "scriptSha256": "10f1204fb3ae9096540623b175b7bfa54f93f5947cdc66fa37ccd6226cb50f2d",
+      "cues": [
+        {
+          "text": "Goal number 108",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "In May 1999, Mia scored her 108th goal for the United States.",
+          "start": 2.275,
+          "duration": 5.825
+        },
+        {
+          "text": "No player in the world, man or woman, had ever scored more goals in international football.",
+          "start": 8.1,
+          "duration": 6.775
+        },
+        {
+          "text": "That summer, the United States won the Women\u2019s World Cup again, at home.",
+          "start": 14.875,
+          "duration": 5.35
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 20.225,
+          "duration": 2.0
+        },
+        {
+          "text": "Mia kept scoring.",
+          "start": 22.225,
+          "duration": 2.075
+        },
+        {
+          "text": "By 2004 she had 158 goals for her country, a record that lasted until 2013.",
+          "start": 24.3,
+          "duration": 8.05
+        },
+        {
+          "text": "Big records are made one goal, one practice and one day at a time.",
+          "start": 32.35,
+          "duration": 4.975
+        }
+      ]
+    },
+    "gold": {
+      "src": "/voice/books/hamm/gold.m4a?v=coach-bella-1",
+      "duration": 36.6,
+      "scriptSha256": "948c15752e1e1ea06a63d53e3326d8c088bb1acc1ed4b80b9436b2318c9092e4",
+      "cues": [
+        {
+          "text": "Win or lose, together",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "Not every tournament ended with a win.",
+          "start": 2.3,
+          "duration": 3.125
+        },
+        {
+          "text": "Mia\u2019s team finished third at the World Cups of 1995 and 2003, and won silver at the Olympics in 2000.",
+          "start": 5.425,
+          "duration": 9.225
+        },
+        {
+          "text": "Each time, they came back and tried again.",
+          "start": 14.65,
+          "duration": 3.275
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 17.925,
+          "duration": 1.95
+        },
+        {
+          "text": "Mia won Olympic gold medals in 1996 and 2004.",
+          "start": 19.875,
+          "duration": 5.9
+        },
+        {
+          "text": "Through her foundation, the work she started for Garrett still helps families today.",
+          "start": 25.775,
+          "duration": 5.475
+        },
+        {
+          "text": "Big dreams are reached together, and kindness lasts longer than any trophy.",
+          "start": 31.25,
+          "duration": 5.275
+        }
+      ]
+    }
+  }
+}

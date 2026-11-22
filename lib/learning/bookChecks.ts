@@ -55,4 +55,5 @@ export const BOOK_CHECKS:Record<PlayerBookId,BookCheck>={
  earps:C('keeper-set','futsal','The attacker is about to shoot. What does the goalkeeper do?',['Turn around','Get set: feet apart, hands ready','Run off the pitch'],1,'A set keeper is balanced and ready to dive either way.'),
  griezmann:C('win-it','futsal','You lose the ball to a defender. What do you do next?',['Stop and complain','Walk back slowly','Press straight away to win it back'],2,'Good players react at once. Losing the ball, like hearing no, is a moment to keep going.'),
  vandijk:C('press-cover','9v9','Your teammate runs to win the ball. What does the defender beside them do?',['Cover the space behind them','Run off the pitch','Stand still and watch'],0,'When one defender presses, the next one covers. Defending together keeps your goal safe.'),
+ hamm:C('overlap','7v7','Your winger has the ball near the side line. How can you help?',['Run around the outside to give a pass','Stand right behind them','Wait by your own goal'],0,'That run is an overlap. A teammate who runs to help gives the winger a choice, just like friends who help you through hard times.'),
 };

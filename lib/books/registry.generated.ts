@@ -17,6 +17,7 @@ import {EUSEBIO_BOOK as b_eusebio} from './stories/eusebio';
 import {FALCAO_BOOK as b_falcao} from './stories/falcao';
 import {GARRINCHA_BOOK as b_garrincha} from './stories/garrincha';
 import {GRIEZMANN_BOOK as b_griezmann} from './stories/griezmann';
+import {HAMM_BOOK as b_hamm} from './stories/hamm';
 import {HEGERBERG_BOOK as b_hegerberg} from './stories/hegerberg';
 import {IBRAHIMOVIC_BOOK as b_ibrahimovic} from './stories/ibrahimovic';
 import {INIESTA_BOOK as b_iniesta} from './stories/iniesta';
@@ -60,6 +61,7 @@ import v_b_eusebio from '../../public/voice/books/eusebio/narration.json';
 import v_b_falcao from '../../public/voice/books/falcao/narration.json';
 import v_b_garrincha from '../../public/voice/books/garrincha/narration.json';
 import v_b_griezmann from '../../public/voice/books/griezmann/narration.json';
+import v_b_hamm from '../../public/voice/books/hamm/narration.json';
 import v_b_hegerberg from '../../public/voice/books/hegerberg/narration.json';
 import v_b_ibrahimovic from '../../public/voice/books/ibrahimovic/narration.json';
 import v_b_iniesta from '../../public/voice/books/iniesta/narration.json';
@@ -105,6 +107,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "falcao":b_falcao,
  "garrincha":b_garrincha,
  "griezmann":b_griezmann,
+ "hamm":b_hamm,
  "hegerberg":b_hegerberg,
  "ibrahimovic":b_ibrahimovic,
  "iniesta":b_iniesta,
@@ -151,6 +154,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "falcao":v_b_falcao,
  "garrincha":v_b_garrincha,
  "griezmann":v_b_griezmann,
+ "hamm":v_b_hamm,
  "hegerberg":v_b_hegerberg,
  "ibrahimovic":v_b_ibrahimovic,
  "iniesta":v_b_iniesta,
@@ -197,6 +201,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "falcao":()=>import('./spreads/falcao'),
  "garrincha":()=>import('./spreads/garrincha'),
  "griezmann":()=>import('./spreads/griezmann'),
+ "hamm":()=>import('./spreads/hamm'),
  "hegerberg":()=>import('./spreads/hegerberg'),
  "ibrahimovic":()=>import('./spreads/ibrahimovic'),
  "iniesta":()=>import('./spreads/iniesta'),
