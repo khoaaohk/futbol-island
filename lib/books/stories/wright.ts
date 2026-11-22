@@ -15,7 +15,7 @@ export const WRIGHT_BOOK:BookData={
    lesson:'If home feels hard, it is never your fault. Tell a teacher or another grown-up you trust.',
    prompt:'Open the door',response:'A safe place.',source:0},
   {id:'pigden',year:'Primary school',title:'Mr Pigden',
-   text:'At primary school, Ian had a teacher called Sydney Pigden. Long before, Mr Pigden had been a pilot in the Second World War. Mr Pigden was a PE teacher, and he noticed Ian.\n\nLift the flap. Mr Pigden helped Ian learn to read and write, and he believed in him. Ian later called him the first positive male figure in his life. Sometimes one grown-up who believes in you can change everything.',
+   text:'At primary school, Ian had a teacher called Sydney Pigden. Long before, Mr Pigden had been a pilot in the Second World War. Mr Pigden was one of his teachers, and he noticed Ian.\n\nLift the flap. Mr Pigden helped Ian learn to read and write, and he believed in him. Ian later called him the first positive male figure in his life. Sometimes one grown-up who believes in you can change everything.',
    lesson:'One kind teacher can change a life. Let the helpers help you.',
    prompt:'Lift the flap',response:'Someone believed in him.',source:1},
   {id:'trials',year:'Teenage years',title:'Two trials, two noes',
