@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "island": {
+      "src": "/voice/books/renard/island.m4a?v=coach-bella-1",
+      "duration": 38.9,
+      "scriptSha256": "a2c4a2da4717f6c9576bd1c1770086a7ce14e3b548f6bdb79eabb819b2c3a183",
+      "cues": [
+        {
+          "text": "An island girl",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Wendie Renard was born in 1990 in Sch\u0153lcher, on Martinique, a French island in the Caribbean Sea.",
+          "start": 2.0,
+          "duration": 7.775
+        },
+        {
+          "text": "She started playing football when she was seven, for a local club called L\u2019Essor Pr\u00e9chotin.",
+          "start": 9.775,
+          "duration": 5.975
+        },
+        {
+          "text": "Martinique is a warm, green island with mountains and beaches.",
+          "start": 15.75,
+          "duration": 4.7
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 20.45,
+          "duration": 1.75
+        },
+        {
+          "text": "Martinique is a long way from mainland France, where the biggest clubs and the national training centre are.",
+          "start": 22.2,
+          "duration": 7.225
+        },
+        {
+          "text": "For a girl from Martinique, reaching the big clubs meant a very long journey across the ocean.",
+          "start": 29.425,
+          "duration": 6.325
+        },
+        {
+          "text": "Big dreams can start on a small island.",
+          "start": 35.75,
+          "duration": 3.1
+        }
+      ]
+    },
+    "father": {
+      "src": "/voice/books/renard/father.m4a?v=coach-bella-1",
+      "duration": 33.4,
+      "scriptSha256": "59d0a68ff25b81c0566ee7bcee005ba1d35f8c7d1ef6ed0f338171299d625f62",
+      "cues": [
+        {
+          "text": "Losing her father",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "When Wendie was eight, her father died of an illness.",
+          "start": 1.9,
+          "duration": 3.65
+        },
+        {
+          "text": "It was a very sad time for her family.",
+          "start": 5.55,
+          "duration": 3.075
+        },
+        {
+          "text": "Losing a parent when you are young is one of the hardest things that can happen.",
+          "start": 8.625,
+          "duration": 5.225
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 13.85,
+          "duration": 2.225
+        },
+        {
+          "text": "The people around her, especially the women in her family, encouraged her to keep playing football.",
+          "start": 16.075,
+          "duration": 6.625
+        },
+        {
+          "text": "Football became something that helped her keep going, with her family cheering her on.",
+          "start": 22.7,
+          "duration": 5.525
+        },
+        {
+          "text": "When someone you love is gone, the people around you can help you carry on.",
+          "start": 28.225,
+          "duration": 5.175
+        }
+      ]
+    },
+    "notchosen": {
+      "src": "/voice/books/renard/notchosen.m4a?v=coach-bella-1",
+      "duration": 36.2,
+      "scriptSha256": "b3fa7f1c261c7bce81ea2d044e6281c5cc156855d24ec4fcb6f1baf81808d611",
+      "cues": [
+        {
+          "text": "Not chosen",
+          "start": 0.0,
+          "duration": 1.725
+        },
+        {
+          "text": "As a young teenager, Wendie flew to mainland France for a trial at Clairefontaine, the national football training centre.",
+          "start": 1.725,
+          "duration": 8.275
+        },
+        {
+          "text": "She was not chosen for the programme.",
+          "start": 10.0,
+          "duration": 2.7
+        },
+        {
+          "text": "She had travelled thousands of kilometres across the ocean for that chance.",
+          "start": 12.7,
+          "duration": 4.95
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 17.65,
+          "duration": 2.1
+        },
+        {
+          "text": "Being told no, so far from home, could have been the end of her dream.",
+          "start": 19.75,
+          "duration": 4.95
+        },
+        {
+          "text": "But Wendie did not give up.",
+          "start": 24.7,
+          "duration": 2.375
+        },
+        {
+          "text": "She went home, kept training and waited for her next chance.",
+          "start": 27.075,
+          "duration": 4.1
+        },
+        {
+          "text": "Not being chosen hurts. It is a moment, not the end of your story.",
+          "start": 31.175,
+          "duration": 5.025
+        }
+      ]
+    },
+    "lyon": {
+      "src": "/voice/books/renard/lyon.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "dbc61330830dd17b2443173f082e4d4a3359665e7d572a0b3378b1fb31a356ba",
+      "cues": [
+        {
+          "text": "A long way from home",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Wendie had another trial, this time at the club Lyon, and it went much better.",
+          "start": 2.1,
+          "duration": 5.5
+        },
+        {
+          "text": "At sixteen, she left Martinique and went to live in Lyon, thousands of kilometres from her island.",
+          "start": 7.6,
+          "duration": 7.125
+        },
+        {
+          "text": "She was a long way from her mother and her family.",
+          "start": 14.725,
+          "duration": 3.7
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 18.425,
+          "duration": 2.075
+        },
+        {
+          "text": "Living far from your family when you are young can be lonely.",
+          "start": 20.5,
+          "duration": 4.425
+        },
+        {
+          "text": "Wendie worked hard, and she grew into a very tall defender, 1.87 metres.",
+          "start": 24.925,
+          "duration": 6.5
+        },
+        {
+          "text": "Leaving home is brave. You can take your family\u2019s love with you.",
+          "start": 31.425,
+          "duration": 4.425
+        }
+      ]
+    },
+    "europe": {
+      "src": "/voice/books/renard/europe.m4a?v=coach-bella-1",
+      "duration": 37.0,
+      "scriptSha256": "1742f691b8a0aa8a131d9d5a191aafa9431b524d13f9d99dc1f43a24e576aee7",
+      "cues": [
+        {
+          "text": "Eight times champions of Europe",
+          "start": 0.0,
+          "duration": 2.6
+        },
+        {
+          "text": "With Lyon, Wendie won the Champions League, the biggest club competition in Europe, eight times.",
+          "start": 2.6,
+          "duration": 6.8
+        },
+        {
+          "text": "In 2013, she became captain of France.",
+          "start": 9.4,
+          "duration": 3.825
+        },
+        {
+          "text": "She was tall, strong in the air and calm with the ball, and she was a leader in the team.",
+          "start": 13.225,
+          "duration": 5.775
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 19.0,
+          "duration": 1.95
+        },
+        {
+          "text": "The girl who was not chosen at Clairefontaine had become one of the best defenders in the world.",
+          "start": 20.95,
+          "duration": 6.2
+        },
+        {
+          "text": "She showed that a no at the start does not have to be the end.",
+          "start": 27.15,
+          "duration": 4.1
+        },
+        {
+          "text": "Keep working after a no. Your hard work can take you further than anyone expected.",
+          "start": 31.25,
+          "duration": 5.75
+        }
+      ]
+    },
+    "mind": {
+      "src": "/voice/books/renard/mind.m4a?v=coach-bella-1",
+      "duration": 40.5,
+      "scriptSha256": "2b0e83bc0db76cac7b2562d35395e131e2fd318829ccea759f1279fc4070f8bf",
+      "cues": [
+        {
+          "text": "Looking after her mind",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "In February 2023, Wendie said she would not play at that year\u2019s World Cup, so she could protect her mental health: the health of her thoughts and feelings.",
+          "start": 2.15,
+          "duration": 10.475
+        },
+        {
+          "text": "It was a hard and brave decision, because the World Cup is the biggest tournament of all.",
+          "start": 12.625,
+          "duration": 6.0
+        },
+        {
+          "text": "Switch the lamp on.",
+          "start": 18.625,
+          "duration": 2.0
+        },
+        {
+          "text": "A few weeks later, France had a new coach, who invited her back.",
+          "start": 20.625,
+          "duration": 4.675
+        },
+        {
+          "text": "Wendie said yes, and at the World Cup she scored the winning goal against Brazil.",
+          "start": 25.3,
+          "duration": 5.675
+        },
+        {
+          "text": "Taking care of herself first had helped her come back stronger.",
+          "start": 30.975,
+          "duration": 4.375
+        },
+        {
+          "text": "Looking after your mind is as important as looking after your body.",
+          "start": 35.35,
+          "duration": 5.1
+        }
+      ]
+    }
+  }
+}
