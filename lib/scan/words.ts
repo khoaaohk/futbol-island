@@ -10,7 +10,7 @@ export type Words={langCode:'en'|'es';lang:string;app:string;tagline:string;age:
  sound:string;sounds:Record<Sound,string>;score:string;scoreLine:string;on:string;off:string;start:string;place:string;
  lastBest:(last:string,best:string)=>string;ofN:(hit:number,total:number)=>string;getReady:string;tapPause:string;left:(t:string)=>string;endless:string;
  paused:string;resume:string;end:string;right:string;wrong:string;passTo:(n:number)=>string;done:string;cuesShown:string;time:string;scoreHead:string;newBest:string;toBeat:(s:string)=>string;
- goAgain:string;change:string;noScore:string;wake:string;offline:string;guide:string;preview:string;pausedHint:string};
+ goAgain:string;change:string;noScore:string;wake:string;offline:string;guide:string;preview:string;pausedHint:string;settings:string;doneBtn:string};
 const EN:Words={langCode:'en',lang:'Español',app:'Scan Trainer',tagline:'Look over the shoulder. Call it. Play.',age:'Age group',
  ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Adult'},show:'Show',
  modes:{colours:'Colors',numbers:'Numbers',arrows:'Arrows',mix:'Mix',pass:'Pass it'},
@@ -29,7 +29,7 @@ const EN:Words={langCode:'en',lang:'Español',app:'Scan Trainer',tagline:'Look o
  paused:'Paused',resume:'Resume',end:'End session',right:'Right',wrong:'Missed',passTo:n=>`Pass to ${n}`,done:'Session done',cuesShown:'Cues shown',time:'Time',scoreHead:'Calls right',
  newBest:'New best on this phone',toBeat:s=>`To beat next time: ${s}`,goAgain:'Go again',change:'Change settings',noScore:'Turn on “Coach keeps score” to get a result to beat.',
  wake:'Keep the screen on in your phone’s settings: this browser cannot.',offline:'Works offline once opened. Nothing leaves this phone.',guide:'How to use it, and drills',
- preview:'Preview',pausedHint:'Tap anywhere on the cue to pause.'};
+ preview:'Preview',pausedHint:'Tap anywhere on the cue to pause.',settings:'Settings',doneBtn:'Done'};
 const ES:Words={langCode:'es',lang:'English',app:'Entrenador de escaneo',tagline:'Mira por encima del hombro. Dilo. Juega.',age:'Edad',
  ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Adultos'},show:'Mostrar',
  modes:{colours:'Colores',numbers:'Números',arrows:'Flechas',mix:'Mezcla',pass:'Pásala'},
@@ -48,5 +48,5 @@ const ES:Words={langCode:'es',lang:'English',app:'Entrenador de escaneo',tagline
  paused:'En pausa',resume:'Seguir',end:'Terminar la sesión',right:'Bien',wrong:'Falló',passTo:n=>`Pásale al ${n}`,done:'Sesión terminada',cuesShown:'Señales mostradas',time:'Tiempo',scoreHead:'Respuestas bien',
  newBest:'Nueva mejor marca en este teléfono',toBeat:s=>`Para superar la próxima vez: ${s}`,goAgain:'Otra vez',change:'Cambiar ajustes',noScore:'Activa “El entrenador lleva la cuenta” para tener una marca que superar.',
  wake:'Deja la pantalla encendida en los ajustes del teléfono: este navegador no puede.',offline:'Funciona sin conexión una vez abierto. Nada sale de este teléfono.',guide:'Cómo usarlo y ejercicios',
- preview:'Vista previa',pausedHint:'Toca la señal en cualquier parte para pausar.'};
+ preview:'Vista previa',pausedHint:'Toca la señal en cualquier parte para pausar.',settings:'Ajustes',doneBtn:'Listo'};
 export const WORDS:Readonly<Record<'en'|'es',Words>>={en:EN,es:ES};

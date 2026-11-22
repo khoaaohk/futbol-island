@@ -65,6 +65,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  const [score,setScore]=useState<Score>({hit:0,miss:0});
  const [result,setResult]=useState<{r:Result;best:boolean;prevBest?:Result;cues:number;sec:number}|null>(null);
  const [wake,setWake]=useState<'on'|'none'|'off'>('off');
+ const [sheet,setSheet]=useState(false);
  const audio=useRef<AudioContext|null>(null),rand=useRef<()=>number>(Math.random),lastSound=useRef(-9),finished=useRef(false);
  const s=store.settings,lang:Lang=store.lang??'en',w=WORDS[lang];
  const update=useCallback((f:(x:Store)=>Store)=>setStore(f),[]);
@@ -123,6 +124,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     {ph.phase==='count'?<div className={c.cue} style={{background:'#14221d',color:'#fbf7ee'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={c.num} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
      :cue?<CueView cue={cue} s={s} w={w}/>:null}
    </button>
+   {ph.phase==='run'&&s.session>0&&<div className={c.progress} aria-hidden="true"><i style={{transform:`scaleX(${Math.min(1,ph.ms/(s.session*1000))})`}}/></div>}
    <div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>
    {s.score&&ph.phase==='run'&&!paused&&<div className={c.scoreStrip}>
     <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><span aria-hidden="true">✓</span> {score.hit}</button>
@@ -142,6 +144,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>setView('settings')}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
+    <p className={c.sumCtx}>{w.modes[s.mode]} · {w.every} {w.sec(r.interval)}</p>
     <dl className={c.stats}>
      <div><dt>{w.cuesShown}</dt><dd>{result.cues}</dd></div>
      <div><dt>{w.time}</dt><dd>{fmtTime(result.sec)}</dd></div>
@@ -154,13 +157,32 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     </div>
    </main></div>;
  }
+ const glyph=(m:typeof MODES[number])=>m==='colours'?<span className={c.modeDot} aria-hidden="true"/>:m==='numbers'?<span className={c.modeNum} aria-hidden="true">7</span>
+  :m==='arrows'?<Arrow dir="up" size="22px"/>:m==='mix'?<span className={c.modeMix} aria-hidden="true"><i/><b>3</b></span>:<span className={c.modeNum} aria-hidden="true">3<Arrow dir="right" size="14px"/></span>;
+ /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the start screen shows the cue, the five modes and one summary of the
+    settings; everything else lives in the Settings sheet. Same settings, same store (fi-scan-v1), same Start. */
  return <div className={c.app} data-scan-view="settings"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
-  <main className={c.main}>
-   <h1 className={c.h1}>{w.app}</h1>
-   <p className={c.lead}>{w.tagline}</p>
+  <main className={`${c.main} ${c.home}`}>
+   <h1 className={c.srOnly}>{w.app}</h1>
    <figure className={c.preview} aria-label={w.preview}><CueView cue={sample} s={s} w={w} small/><figcaption>{w.modeLines[s.mode]}</figcaption></figure>
+   <div className={c.homeSide}>
+    <div className={c.modes} role="group" aria-label={w.show}>{MODES.map(m=><button key={m} type="button" className={c.mode} aria-pressed={s.mode===m} onClick={()=>set({mode:m})}>{glyph(m)}<span>{w.modes[m]}</span></button>)}</div>
+    <button type="button" className={c.summaryCard} onClick={()=>setSheet(true)} data-scan-settings="" aria-haspopup="dialog">
+     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:'–'}</b></span>
+     <span><small>{w.every}</small><b>{w.sec(s.interval)}</b></span>
+     <span><small>{w.session}</small><b>{w.sessions[s.session]}</b></span>
+     <span className={c.summaryGo}><span className={c.srOnly}>{w.settings}</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+    </button>
+    {res?.best&&<p className={c.best} data-scan-best="">{w.modes[s.mode]}: {w.lastBest(res.last?w.ofN(res.last.hit,res.last.total):'–',w.ofN(res.best.hit,res.best.total))}</p>}
+    <p className={c.place}>{w.place}</p>
+   </div>
+  </main>
+  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
+  {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
+   <div className={c.sheetIn} role="dialog" aria-modal="true" aria-labelledby="scan-settings">
+    <div className={c.sheetHead}><h2 className={c.sheetTitle} id="scan-settings">{w.settings}</h2><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.doneBtn}</button></div>
+    <div className={c.sheetBody}>
    <Seg id="sg-age" label={w.age} value={s.age??('' as never)} options={AGES} names={a=>w.ages[a]} onPick={a=>update(x=>({...x,settings:applyPreset(x.settings,a)}))}/>
-   <Seg id="sg-mode" label={w.show} value={s.mode} options={MODES} names={m=>w.modes[m]} onPick={m=>set({mode:m})}/>
    <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={c.h2} id="sg-every">{w.every}: <span className={c.val}>{w.sec(s.interval)}</span></h2>
     <div className={c.stepper}>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.min(MAX_INTERVAL,s.interval+.5)})} disabled={s.interval>=MAX_INTERVAL} aria-label={w.slower}>−</button>
@@ -187,11 +209,10 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <Toggle label={w.score} line={w.scoreLine} on={s.score} onFlip={()=>set({score:!s.score})}/>
    </div>
    <Seg id="sg-sound" label={w.sound} value={s.sound} options={SOUNDS} names={x=>w.sounds[x]} onPick={x=>{set({sound:x});try{const AC=window.AudioContext;if(x!=='off'&&AC){audio.current??=new AC();void audio.current.resume();play(audio.current,x);}}catch{/* none */}}}/>
-   {res?.best&&<p className={c.note} data-scan-best="">{w.modes[s.mode]}: {w.lastBest(res.last?w.ofN(res.last.hit,res.last.total):'–',w.ofN(res.best.hit,res.best.total))}</p>}
-   <p className={c.note}>{w.place}</p>
    <p className={c.note}>{w.offline}{!embed&&<> <a href={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
-  </main>
-  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
+    </div>
+   </div>
+  </div>}
  </div>;
 }
 /** Back (owner, Nov 20 2026): the app mark in this corner looked like a back button and did nothing. It is now the game's own Back
