@@ -14,6 +14,11 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
 const PACE={regular:[80,120],emptyShare:.2};// 85 → 80 on 11 Nov 2026: arcade plays became free (owner), so a regular spends ~1 day less on plays; earnings unchanged
 const inPace=d=>d>=PACE.regular[0]&&d<=PACE.regular[1];
 const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
+// Nov 21 2026: +20 player books (owner asked for them); price (100) and income unchanged. Collecting every book is optional,
+// so the pace checks below (sections 5, 7–9) measure the game WITHOUT the twenty Nov 21 player books (core()), and section 5b
+// checks the full shelf with its own, looser, dated limits. More player books then never move the core guard rails.
+const {PLAYER_BOOKS:PB}=require('../lib/books/catalog.ts');const NOV21_BOOKS=Object.keys(PB).slice(Object.keys(PB).indexOf('oshoala')+1);
+const core=cfg=>({...cfg,name:cfg.name+'-core',excludeBooks:[...(cfg.excludeBooks||[]),...NOV21_BOOKS]});
 
 // 1. Learning beats repetition per minute: a lesson quiz pays best, a hidden ball (now 10) is next, and both are uncapped.
 {const m=S.ASSUME.min,quizPerMin=(LEARN_COINS.quiz+LEARN_COINS.quizPerfect*S.ASSUME.perfectFirstTry)/m.lesson,ballPerMin=LEARN_COINS.ball/3.5;
@@ -66,13 +71,23 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 
 // 5. Pace (5-seed means, 200 days): the expansion does not slow completion, a book is ≤ 2 sessions of saving, no dry spells.
 {const run=(cfg,who)=>S.averaged(cfg,who,200,5);
- for(const who of ['casual15','regular','keen']){const b=run(S.BEFORE,who),a=run(S.AFTER_FULL,who);
+ for(const who of ['casual15','regular','keen']){const b=run(S.BEFORE,who),a=run(core(S.AFTER_FULL),who);
   assert(a.allBought<=b.allBought+3,`${who}: own everything by day ${a.allBought} (before ${b.allBought})`);
   assert(a.saveDaysPerBook<=2,`${who}: a book is ${a.saveDaysPerBook} days of income`);
   assert(a.learnPct>=40,`${who}: learning is ${a.learnPct}% of coins in days 8–30`);
   assert(fewEmpty(a),`${who}: ${a.emptyBeforeDone} saving-up sessions before owning everything (day ${a.allBought})`);}
- const reg=run(S.AFTER_FULL,'regular');assert(inPace(reg.allBought),`regular player owns everything in the ${PACE.regular.join('–')} day target (day ${reg.allBought})`);
- const keen=S.summarize(S.AFTER_FULL,'keen',200);assert.equal(keen.floodedBeforeAllBought,0,'never flooded before everything is bought');}
+ const reg=run(core(S.AFTER_FULL),'regular');assert(inPace(reg.allBought),`regular player owns everything in the ${PACE.regular.join('–')} day target (day ${reg.allBought})`);
+ const keen=S.summarize(core(S.AFTER_FULL),'keen',200);assert.equal(keen.floodedBeforeAllBought,0,'never flooded before everything is bought');}
+
+// 5b. The full shelf (Nov 21 2026: 57 books incl. the twenty Nov 21 player books, 100 coins each). Looser limits: a regular
+//     owns literally everything within 130 days (122 at 57 books), a casual saves up in at most a quarter of sessions before
+//     that (23% at 57 books), books stay ≤ 2 sessions of saving, and a keen player is never flooded.
+{assert.equal(NOV21_BOOKS.length,20,'twenty Nov 21 player books');
+ for(const who of ['casual15','regular','keen']){const a=S.averaged(S.AFTER_FULL,who,200,5);
+  assert(a.saveDaysPerBook<=2,`full shelf, ${who}: a book is ${a.saveDaysPerBook} days of income`);
+  assert(a.emptyBeforeDone<=Math.max(10,.25*a.allBought),`full shelf, ${who}: ${a.emptyBeforeDone} saving-up sessions before owning everything (day ${a.allBought})`);}
+ const reg=S.averaged(S.AFTER_FULL,'regular',200,5);assert(reg.allBought<=130,`full shelf: regular owns everything by day ${reg.allBought} (≤ 130)`);
+ assert.equal(S.summarize(S.AFTER_FULL,'keen',200).floodedBeforeAllBought,0,'full shelf: never flooded before everything is bought');}
 
 // 6. Drink machines (29 Sep 2026, lib/town/drinkMachines.ts): a small everyday sink, not a wall. Prices 3–6; the whole "Drink
 //    machines" collection costs less than one casual day's income and the 3-a-day limit spreads it over at least 4 play days,
@@ -94,8 +109,8 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
  assert(dailyMax<LEARN_COINS.quiz,'a whole day of warm-ups pays less than one new lesson quiz: new learning still pays best');
  assert(LEARN_COINS.book<BOOK_PRICE*.1,'a book check returns under a tenth of the book');assert(bookPool<=S.sinkTotal(S.AFTER_FULL)*.05,'all book checks are under 5% of the sink');
  assert(!isTrainingRun('learn:review:2026-09-30:1','learn')&&!isTrainingRun('learn:book:cafu','learn'),'learning coins, never metered');
- const worst={...S.AFTER_FULL,name:'lane3-worst',dailyPlay:S.AFTER_FULL.dailyPlay+dailyMax,starter:S.AFTER_FULL.starter+bookPool};
- const reg=S.averaged(worst,'regular',200,5),cas=S.averaged(worst,'casual15',200,5),casBase=S.averaged(S.AFTER_FULL,'casual15',200,5);
+ const worst={...core(S.AFTER_FULL),name:'lane3-worst',dailyPlay:S.AFTER_FULL.dailyPlay+dailyMax,starter:S.AFTER_FULL.starter+bookPool};
+ const reg=S.averaged(worst,'regular',200,5),cas=S.averaged(worst,'casual15',200,5),casBase=S.averaged(core(S.AFTER_FULL),'casual15',200,5);
  assert(inPace(reg.allBought),`worst case: regular still owns everything inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);
  // 14 Oct 2026: casual completion is slower (base ~162 days), so the same 6 learning coins a day move it more in days; the bound is
  // relative now (≤ 16% sooner, was ≤ 14 days of ~121). Learning paying a bit more is the point of the rebalance.
@@ -111,9 +126,9 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
  assert(worst<=jobs.JOB_BASE_PAY['farm-harvest'],`a full-pay share is worth ${worst} ≤ the job pay: the pay stays the main reward`);
  assert.deepEqual(['full','half','tip'].map(t=>H.jobShare('farm-harvest',t,0).reduce((n,x)=>n+x.count,0)),[3,2,1],'the share follows the pay tier');
  assert(isTrainingRun('market:2026-09-30:1','island'),'selling the share is metered like any sale');
- for(const who of ['casual15','regular','keen']){const a=S.averaged(S.AFTER_FULL,who,200,5),b=S.averaged(S.NO_SHARE,who,200,5);
+ for(const who of ['casual15','regular','keen']){const a=S.averaged(core(S.AFTER_FULL),who,200,5),b=S.averaged(core(S.NO_SHARE),who,200,5);
   assert(b.allBought-a.allBought<=2,`${who}: the share speeds completion by ${b.allBought-a.allBought} days (≤ 2)`);assert(a.learnPct>=40,`${who}: learning still ${a.learnPct}%`);}
- const reg=S.averaged(S.AFTER_FULL,'regular',200,5);assert(inPace(reg.allBought),`regular still inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);}
+ const reg=S.averaged(core(S.AFTER_FULL),'regular',200,5);assert(inPace(reg.allBought),`regular still inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);}
 
 // 9. Fuel (30 Sep 2026, docs/economy/FUEL_2026-09-30.md): fuel spending is a small everyday sink, never a wall. Even when every
 //    missing bit of fuel is bought (the coin worst case) it stays a small share of income, completion slips by at most a week,
@@ -122,13 +137,13 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 {const F=require('../lib/town/fuel.ts');
  assert(F.FUEL_RATE.jetpack>F.FUEL_RATE.moped&&F.FUEL_RATE.moped>F.FUEL_RATE.bike&&F.FUEL_RATE.bike>F.FUEL_RATE.scooter&&F.FUEL_RATE.scooter>F.FUEL_RATE.walk,'easier travel costs more: fly > rides > walk');
  assert(S.FUEL_SHOP.some(i=>i.price<=4&&i.fuel>=20),'a 3–4 coin rice snack refuels at least 20');assert.equal(S.FUEL_SHOP.find(i=>i.id==='onigiri-ume')?.fuel,F.FUEL_BY_GROUP.carb,'the sim reads the refuel values from lib/town/fuel.ts');
- for(const who of ['casual15','regular','keen']){const base=S.averaged(S.AFTER_FULL,who,200,5),buy=S.averaged(S.FUEL_BUY,who,200,5),free=S.averaged(S.FUEL_FREE,who,200,5);
+ for(const who of ['casual15','regular','keen']){const base=S.averaged(core(S.AFTER_FULL),who,200,5),buy=S.averaged(core(S.FUEL_BUY),who,200,5),free=S.averaged(core(S.FUEL_FREE),who,200,5);
   assert(buy.fuelSharePct<=12,`${who}: fuel costs ${buy.fuelSharePct}% of income even when every refill is bought (≤ 12%)`);
   assert(buy.allBought-base.allBought<=7,`${who}: buying all fuel delays owning everything by ${buy.allBought-base.allBought} days (≤ 7)`);
   assert(buy.learnPct>=40,`${who}: learning still ${buy.learnPct}% of coins`);assert(buy.emptyBeforeDone<=base.emptyBeforeDone+3,`${who}: no new dry spells`);
   assert.equal(free.fuelShortDays,0,`${who}: the zero-coin path (breakfast + garden fruit) never leaves a day short`);
   assert(free.freeMinPerDay<=3,`${who}: the free refuel costs ${free.freeMinPerDay} min a day of picking (≤ 3)`);}
- const reg=S.averaged(S.FUEL_BUY,'regular',200,5);assert(inPace(reg.allBought),`fuel: regular still inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);
+ const reg=S.averaged(core(S.FUEL_BUY),'regular',200,5);assert(inPace(reg.allBought),`fuel: regular still inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);
  // Zero-coin stress (fountains removed Sep 30 2026): a 90-minute heavy flyer still refuels for free with breakfast + a few garden picks.
  const heavy=S.fuelStress({minutes:90,fly:.5});assert.equal(heavy.fountainSips,0);assert(heavy.freeMinutes<=5,`heavy flyer: ${heavy.freeMinutes} min of free refuelling (≤ 5)`);}
 
@@ -137,9 +152,9 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 //     daily ceiling by more than a few tip coins; the regular player stays inside 60–90 days.
 {assert.equal(jobs.JOB_BASE_PAY['garden-shift'],6,'Garden shift pays 6 (10 until the 14 Oct 2026 rebalance)');assert(S.SEP30_GARDEN&&S.NO_GARDEN_SHIFT,'the sim models the garden shift');
  const a=S.jobCeiling(S.NO_GARDEN_SHIFT),b=S.jobCeiling(S.AFTER_FULL);assert(b.meteredJobCeiling-a.meteredJobCeiling<=5,`the garden shift adds ${b.meteredJobCeiling-a.meteredJobCeiling} metered coins a day (≤ 5)`);
- for(const who of ['casual15','regular','keen']){const x=S.averaged(S.NO_GARDEN_SHIFT,who,200,5),y=S.averaged(S.AFTER_FULL,who,200,5);
+ for(const who of ['casual15','regular','keen']){const x=S.averaged(core(S.NO_GARDEN_SHIFT),who,200,5),y=S.averaged(core(S.AFTER_FULL),who,200,5);
   assert(Math.abs(y.allBought-x.allBought)<=2,`${who}: the garden shift moves owning everything by ${y.allBought-x.allBought} days (≤ 2)`);assert(y.learnPct>=40,`${who}: learning still ${y.learnPct}%`);}
- const reg=S.averaged(S.AFTER_FULL,'regular',200,5);assert(inPace(reg.allBought),`garden shift: regular inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);}
+ const reg=S.averaged(core(S.AFTER_FULL),'regular',200,5);assert(inPace(reg.allBought),`garden shift: regular inside ${PACE.regular.join('–')} days (day ${reg.allBought})`);}
 // 11. The 14 Oct 2026 rebalance (docs/economy.md; user: "improve the economy to make it harder to buy things since it's easier to
 //     find, shake, and fish now"). Session model: scripts/economy-sessions.cjs (real constants, real market quote and meter).
 {const X=require('../scripts/economy-sessions.cjs'),E=require('../lib/economy.ts'),fs=require('node:fs'),path=require('node:path');
