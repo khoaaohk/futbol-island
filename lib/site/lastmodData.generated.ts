@@ -498,5 +498,10 @@ const data:Record<string,string>={"/":"2026-11-20",
 "/books/vinicius":"2026-11-21",
 "/books/son":"2026-11-21",
 "/books/earps":"2026-11-21",
-"/books/griezmann":"2026-11-21"};
+"/books/griezmann":"2026-11-21",
+"/books/vandijk":"2026-11-21",
+"/books/hamm":"2026-11-21",
+"/books/sawa":"2026-11-21",
+"/books/cech":"2026-11-21",
+"/books/mahrez":"2026-11-21"};
 export default data;
