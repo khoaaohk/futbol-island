@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "tics": {
+      "src": "/voice/books/howard/tics.m4a?v=coach-bella-1",
+      "duration": 37.6,
+      "scriptSha256": "6e9314d0f04fbfdfe68210df5f4c76fa6433b96cbc8acf0a452f64913346a1e9",
+      "cues": [
+        {
+          "text": "Tics he could not stop",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Tim Howard was born in 1979 in North Brunswick, New Jersey, in the United States.",
+          "start": 2.05,
+          "duration": 7.0
+        },
+        {
+          "text": "After his parents separated, when he was three, he lived with his mother.",
+          "start": 9.05,
+          "duration": 5.025
+        },
+        {
+          "text": "As a boy, Tim found out that he had Tourette syndrome.",
+          "start": 14.075,
+          "duration": 4.05
+        },
+        {
+          "text": "Lift the flap.",
+          "start": 18.125,
+          "duration": 1.775
+        },
+        {
+          "text": "Tourette syndrome makes people have tics: sudden movements or sounds that are very hard to stop.",
+          "start": 19.9,
+          "duration": 6.475
+        },
+        {
+          "text": "Tim also has OCD, which can fill your head with worries that make you repeat things.",
+          "start": 26.375,
+          "duration": 6.05
+        },
+        {
+          "text": "Some people\u2019s brains and bodies work differently. Different is not wrong.",
+          "start": 32.425,
+          "duration": 5.175
+        }
+      ]
+    },
+    "hiding": {
+      "src": "/voice/books/howard/hiding.m4a?v=coach-bella-1",
+      "duration": 34.9,
+      "scriptSha256": "95261da083a4a4c2bd86a75b1a73bbb17c29c1da66002c6176205bcaade7eebd",
+      "cues": [
+        {
+          "text": "Trying to hide it",
+          "start": 0.0,
+          "duration": 1.775
+        },
+        {
+          "text": "Like many children with Tourette syndrome, Tim tried to hide his tics.",
+          "start": 1.775,
+          "duration": 4.8
+        },
+        {
+          "text": "Hiding them all day long made him very tired.",
+          "start": 6.575,
+          "duration": 3.55
+        },
+        {
+          "text": "Many people did not understand what Tourette syndrome was.",
+          "start": 10.125,
+          "duration": 4.425
+        },
+        {
+          "text": "Open the goal.",
+          "start": 14.55,
+          "duration": 1.775
+        },
+        {
+          "text": "Tim found that he loved being a goalkeeper.",
+          "start": 16.325,
+          "duration": 3.3
+        },
+        {
+          "text": "He has written that the way his brain works helps him focus very hard and react quickly in goal.",
+          "start": 19.625,
+          "duration": 6.725
+        },
+        {
+          "text": "In goal, he could put all his energy into watching the ball.",
+          "start": 26.35,
+          "duration": 4.2
+        },
+        {
+          "text": "You don\u2019t have to hide who you are. Telling people you trust can help.",
+          "start": 30.55,
+          "duration": 4.3
+        }
+      ]
+    },
+    "helping": {
+      "src": "/voice/books/howard/helping.m4a?v=coach-bella-1",
+      "duration": 37.5,
+      "scriptSha256": "1c3a4f03fe24ebee6820d148a340e941b1998c387c833d1516463338078ab9ca",
+      "cues": [
+        {
+          "text": "A young professional",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "In 1998, at nineteen, Tim played his first match in Major League Soccer, for the MetroStars.",
+          "start": 2.0,
+          "duration": 7.65
+        },
+        {
+          "text": "He also began to help children who have Tourette syndrome.",
+          "start": 9.65,
+          "duration": 4.05
+        },
+        {
+          "text": "He was still very young himself.",
+          "start": 13.7,
+          "duration": 2.6
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 16.3,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2001, he won the league\u2019s Humanitarian of the Year award for that work, and he joined the board of a Tourette syndrome group in New Jersey.",
+          "start": 18.15,
+          "duration": 9.825
+        },
+        {
+          "text": "He wanted children with Tourette syndrome to know that they could follow their dreams too.",
+          "start": 27.975,
+          "duration": 5.725
+        },
+        {
+          "text": "You can help others while you are still growing yourself.",
+          "start": 33.7,
+          "duration": 3.75
+        }
+      ]
+    },
+    "england": {
+      "src": "/voice/books/howard/england.m4a?v=coach-bella-1",
+      "duration": 36.0,
+      "scriptSha256": "647e1f2060df5553dc6e146f921cae326ff6896ec7ab1056b118a6b36f0ac5ec",
+      "cues": [
+        {
+          "text": "A big move",
+          "start": 0.0,
+          "duration": 1.775
+        },
+        {
+          "text": "In 2003, Tim joined Manchester United in England, one of the biggest clubs in the world, and he won the FA Cup in 2004.",
+          "start": 1.775,
+          "duration": 9.775
+        },
+        {
+          "text": "Moving to another country, with new teammates and lots of attention, was a big step.",
+          "start": 11.55,
+          "duration": 6.15
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 17.7,
+          "duration": 2.075
+        },
+        {
+          "text": "In 2006, he moved to Everton, and he played there for ten seasons.",
+          "start": 19.775,
+          "duration": 5.725
+        },
+        {
+          "text": "People around the world saw that a goalkeeper with Tourette syndrome could play at the very top.",
+          "start": 25.5,
+          "duration": 6.15
+        },
+        {
+          "text": "Be proud of who you are. You can show people what is possible.",
+          "start": 31.65,
+          "duration": 4.3
+        }
+      ]
+    },
+    "belgium": {
+      "src": "/voice/books/howard/belgium.m4a?v=coach-bella-1",
+      "duration": 34.2,
+      "scriptSha256": "c76ead056ec350addc8f4dbae81e310b292d0d020618eed57d364953d7c12162",
+      "cues": [
+        {
+          "text": "Fifteen saves",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "At the 2014 World Cup in Brazil, the United States played Belgium.",
+          "start": 1.95,
+          "duration": 5.5
+        },
+        {
+          "text": "Belgium attacked again and again, and Tim kept stopping them.",
+          "start": 7.45,
+          "duration": 4.35
+        },
+        {
+          "text": "It was a knockout match: the losing team would go home.",
+          "start": 11.8,
+          "duration": 4.05
+        },
+        {
+          "text": "Dive for the save.",
+          "start": 15.85,
+          "duration": 2.0
+        },
+        {
+          "text": "Tim made fifteen saves, a World Cup record for one match.",
+          "start": 17.85,
+          "duration": 4.65
+        },
+        {
+          "text": "The United States lost 2\u20131 after extra time, but people everywhere talked about his brave goalkeeping.",
+          "start": 22.5,
+          "duration": 7.1
+        },
+        {
+          "text": "You can be proud of your effort even when the result goes against you.",
+          "start": 29.6,
+          "duration": 4.6
+        }
+      ]
+    },
+    "legacy": {
+      "src": "/voice/books/howard/legacy.m4a?v=coach-bella-1",
+      "duration": 40.4,
+      "scriptSha256": "bf94c7fe5f6c2f05af9fb3bf53cba8f8376a6f359bab3406bcebb5278732487d",
+      "cues": [
+        {
+          "text": "Helping other kids",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Tim played 121 times for the United States, more than any other US men\u2019s goalkeeper.",
+          "start": 2.0,
+          "duration": 7.225
+        },
+        {
+          "text": "In 2014, he wrote a book about his life with Tourette syndrome and OCD, called The Keeper.",
+          "start": 9.225,
+          "duration": 6.9
+        },
+        {
+          "text": "In the book, he talked openly about the things he had once tried to hide.",
+          "start": 16.125,
+          "duration": 4.825
+        },
+        {
+          "text": "Turn over the helper cards.",
+          "start": 20.95,
+          "duration": 2.35
+        },
+        {
+          "text": "A leadership programme for teenagers with Tourette syndrome, at Rutgers University, carries his name.",
+          "start": 23.3,
+          "duration": 7.125
+        },
+        {
+          "text": "Tim stopped playing in 2019.",
+          "start": 30.425,
+          "duration": 2.875
+        },
+        {
+          "text": "He showed that being different can also be a strength.",
+          "start": 33.3,
+          "duration": 3.7
+        },
+        {
+          "text": "Your story can help someone else feel less alone.",
+          "start": 37.0,
+          "duration": 3.325
+        }
+      ]
+    }
+  }
+}
