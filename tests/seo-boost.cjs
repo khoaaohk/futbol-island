@@ -76,7 +76,7 @@ const L=rel=>load(path.join(root,rel));
  // ---- 2. built site ---------------------------------------------------------------------------------------------------------------
  const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
  if(!fs.existsSync(path.join(app,'sitemap.xml.body'))||!fs.existsSync(path.join(app,'learn/soccer-drills.html'))){console.log(`  SKIP built-site checks: no build in ${path.relative(root,dist)}`);console.log('seo-boost: source checks OK');return;}
- const urls=[...fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1].replace(SITE,'')||'/');
+ const urls=[...require('./lib/builtSitemap.cjs')(app).matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1].replace(SITE,'')||'/');
  const html=p=>{const f=path.join(app,p==='/'?'index.html':p.slice(1)+'.html');return fs.existsSync(f)?fs.readFileSync(f,'utf8'):null;};
  const strip=s=>s.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<style[\s\S]*?<\/style>/g,' ').replace(/<svg[\s\S]*?<\/svg>/g,' ');
  const textOf=h=>{const m=h.match(/<main[\s\S]*<\/main>/);return strip(m?m[0]:h).replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'\'').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim();};

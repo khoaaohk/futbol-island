@@ -4,7 +4,7 @@ import IslandLoadingStatic from '@/components/IslandLoadingStatic';
 import RootSwitch from '@/components/root/RootSwitch';
 import {ROOT_VIEW_BOOT} from '@/lib/rootView';
 import JsonLd from '@/components/seo/JsonLd';
-import {PLAY_OG,playLd} from '@/lib/site/seo';
+import {FEED_TYPES,PLAY_OG,playLd} from '@/lib/site/seo';
 import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
 
 /**
@@ -29,7 +29,7 @@ const DESCRIPTION_PUBLIC='Play a free 3D soccer game for kids in your browser, n
 const description=publicWorldEnabled()?DESCRIPTION_PUBLIC:DESCRIPTION_TODAY;
 export const metadata:Metadata={
  title,description,
- alternates:{canonical:'/play'},
+ alternates:{canonical:'/play',types:FEED_TYPES/* the Atom feed (lib/site/feed.ts) */},
  openGraph:{title,description,url:'/play',siteName:'Futbol Island',type:'website',images:[{url:PLAY_OG.url,width:1200,height:630,alt:PLAY_OG.alt}]},
  twitter:{card:'summary_large_image',title,description,images:[PLAY_OG.url]},
 };

@@ -56,7 +56,10 @@ async function main(argv){
  const dry=argv.includes('--dry-run'),since=arg('--changed-since'),src=arg('--sitemap')||`https://${HOST}/sitemap.xml`;
  if(since!==null&&!/^\d{4}-\d{2}-\d{2}$/.test(since)){console.error('indexnow: --changed-since needs a date like 2026-11-08');return 2;}
  const key=readKey();
- const xml=/^https?:/.test(src)?await fetch(src).then(r=>{if(!r.ok)throw new Error(`sitemap HTTP ${r.status}`);return r.text();}):fs.readFileSync(src,'utf8');
+ const read=s=>/^https?:/.test(s)?fetch(s).then(r=>{if(!r.ok)throw new Error(`sitemap HTTP ${r.status}`);return r.text();}):fs.readFileSync(s,'utf8');
+ /* Nov 21 2026: /sitemap.xml is a sitemap index (lib/site/sitemaps.ts): read every family sitemap it names */
+ let xml=await read(src);
+ if(/<sitemapindex\b/.test(xml))xml=(await Promise.all([...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map(m=>read(m[1].replace(/&amp;/g,'&'))))).join('\n');
  const all=parseSitemap(xml),urls=selectUrls(all,{since});
  const head=`indexnow: ${urls.length} of ${all.length} sitemap URLs${since?` changed since ${since}`:''}, key file /${key}.txt`;
  if(dry){console.log(`${head}; dry run, nothing sent (${batches(urls).length} batch${batches(urls).length===1?'':'es'}).`);return 0;}

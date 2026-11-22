@@ -10,6 +10,7 @@ export const dynamic='force-static';
 // Nov 8 2026 (owner, AI search): + Claude-User, Perplexity-User, Applebot-Extended, so every answer engine's search and
 // user-fetch agent is allowed by name. CCBot (Common Crawl) stays allowed, as before (owner's call).
 const AI_AND_SEARCH_BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Google-Extended','CCBot','Bingbot','Googlebot','Applebot','Applebot-Extended'] as const;
+// Nov 21 2026 (split sitemaps): /sitemap.xml is now a sitemap index naming one sitemap per page family (lib/site/sitemaps.ts).
 // Nov 20 2026 (SEO foundation): the two names Anthropic does not document (the old Claude web agent and the old company token)
 // are gone; its documented agents (ClaudeBot, Claude-SearchBot, Claude-User) stay allowed, and `*` still allows everyone else.
 // The non-standard Host: line is gone too (Google ignores it; the canonical tags and sitemap already name the host).

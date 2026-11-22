@@ -124,5 +124,5 @@ if(!fs.existsSync(path.join(app,'marketing.html'))){console.log('marketing page 
 {const h=fs.readFileSync(path.join(app,'marketing/overview.html'),'utf8');
  assert.match(h,/<meta name="robots" content="noindex, nofollow/,'/marketing/overview: robots noindex, nofollow');
  assert(!/<meta property="og:/.test(h),'/marketing/overview: no Open Graph card');}
-if(fs.existsSync(path.join(app,'sitemap.xml.body'))){const b=fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8');assert(/\/marketing</.test(b)&&!/marketing\/overview/.test(b),'the built sitemap lists /marketing but not its print page');}
+if(fs.existsSync(path.join(app,'sitemap.xml.body'))){const b=require('./lib/builtSitemap.cjs')(app);assert(/\/marketing</.test(b)&&!/marketing\/overview/.test(b),'the built sitemap lists /marketing but not its print page');}
 console.log('marketing page ok (sources and build)');
