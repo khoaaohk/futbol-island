@@ -124,12 +124,14 @@ export function meshLinks(path:string,{skip=[],lang='en'}:{skip?:Iterable<string
  const rn=readNext(en),taken=new Set<string>([en,...(rn?[rn.prev.path,rn.next.path]:[])]);
  for(const s of skip){const p=s.split('#')[0];taken.add(p.startsWith('/es')?toEn(p)??p:p);}
  const ok=(p:string)=>!taken.has(p)&&(lang==='en'||hasEs(p));
- const all=ranked(en).filter(x=>x.score>0&&ok(x.node.path));
+ const all=ranked(en).filter(x=>ok(x.node.path));
+ /* a small family fills up with its last pages even at score 0; a cross-family link needs a shared topic */
  const same=all.filter(x=>x.node.family===self.family).slice(0,MESH_SAME),fams=new Set<MeshFamily>([self.family]),cross:typeof all=[];
- for(const x of all){if(cross.length>=MESH_CROSS)break;if(!fams.has(x.node.family)){fams.add(x.node.family);cross.push(x);}}
+ for(const x of all){if(cross.length>=MESH_CROSS||x.score<=0)break;if(!fams.has(x.node.family)){fams.add(x.node.family);cross.push(x);}}
  const out=[...same,...cross].map(({node}):MeshLink=>{
-  if(lang==='en')return {path:node.path,name:node.name,...(node.line?{line:node.line}:{})};
-  const w=esWords().get(node.path);return w??{path:toEs(node.path),name:node.name};
+  /* the short title only: no summary line, so the grid adds links, not repeated text (word budgets, unique-text checks) */
+  if(lang==='en')return {path:node.path,name:node.name};
+  const w=esWords().get(node.path);return {path:w?.path??toEs(node.path),name:w?.name??node.name};
  });
  return out;
 }

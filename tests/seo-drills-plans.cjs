@@ -140,7 +140,8 @@ for(const p of plans.PLANS)assert(html.get(PH).includes(`href="${p.path}"`),`pla
 
 // ---- 3. content shape and safety ------------------------------------------------------------------------------------------------
 const two=s=>(s.match(/[^.!?]+[.!?]+(?=\s|$)/g)||[]).length;
-for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/,'').replace(/<p[^>]*data-onward[\s\S]*?<\/p>/,'').replace(/<li[^>]*><a href="\/(?:library|games)">[\s\S]*?<\/li>/g,''));/* the section rail and the onward row are navigation, not the drill's words (Nov 20 2026); so are the Keep-reading grid's two shared hub cards (Library, games: added to every grid Nov 20 2026, owner "boost traffic to these three main pages"), left out of the word count only */
+const MESH=p=>new Set(L('lib/site/mesh.ts').meshLinks(p).map(l=>l.path));
+for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h.replace(/<nav[^>]*data-rail[\s\S]*?<\/nav>/,'').replace(/<p[^>]*data-onward[\s\S]*?<\/p>/,'').replace(/<li[^>]*><a href="\/(?:library|games)">[\s\S]*?<\/li>/g,'').replace(/<li[^>]*><a href="([^"]+)">[\s\S]*?<\/li>/g,(x,u)=>MESH(d.path).has(u)?'':x));/* Nov 21 2026: the linking mesh's cards (lib/site/mesh.ts) are navigation too *//* the section rail and the onward row are navigation, not the drill's words (Nov 20 2026); so are the Keep-reading grid's two shared hub cards (Library, games: added to every grid Nov 20 2026, owner "boost traffic to these three main pages"), left out of the word count only */
  assert(d.ages.length>=1&&d.ages.every(a=>drills.AGES.includes(a)),`${where}: ages`);
  assert(/^\d+ x \d+ yd \(\d+ x \d+ m\)/.test(d.space),`${where}: space in yards and metres (${d.space})`);
  assert(d.equipment.length>=10&&d.players.length>=1&&/minute/.test(d.time),`${where}: equipment, players and time`);
