@@ -1,0 +1,113 @@
+{
+ "id": "marta",
+ "title": "Marta",
+ "subtitle": "Un lugar donde pertenecer",
+ "player": "Marta",
+ "country": "Brazil",
+ "description": "Libro desplegable gratis para niños sobre Marta, la brasileña que aprendió fútbol en la calle y es la máxima goleadora de la historia de los Mundiales.",
+ "summary": "Marta: Un lugar donde pertenecer es un libro desplegable gratis de seis capítulos para niños sobre Marta, la futbolista brasileña que aprendió a jugar en la calle con los niños y dejó su casa a los catorce años para jugar. Perdió grandes finales, volvió de una lesión de rodilla y ha anotado más goles en Mundiales que nadie, mujer u hombre. La historia enseña que tú perteneces al juego.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Nació",
+   "value": "1986, Dois Riachos"
+  },
+  {
+   "label": "Dejó su casa",
+   "value": "A los 14 años, rumbo al Vasco da Gama"
+  },
+  {
+   "label": "Goles en Mundiales",
+   "value": "17, la mayor cantidad de la historia"
+  },
+  {
+   "label": "Mundial 2007",
+   "value": "Balón de Oro y Bota de Oro"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde aprendió Marta a jugar fútbol?",
+   "a": "En las calles de Dois Riachos, un pueblo pequeño del noreste de Brasil, donde jugaba con los niños. Su papá dejó a la familia cuando ella era bebé. Su mamá se llama Tereza, y Marta tiene tres hermanos."
+  },
+  {
+   "q": "¿Cuántos años tenía Marta cuando dejó su casa?",
+   "a": "Catorce. Una entrenadora llamada Helena Pacheco vio cuánto talento tenía, y Marta dejó a su familia para jugar en el Vasco da Gama, en Río de Janeiro. Dos años después ese equipo desapareció. Marta siguió adelante, y en 2004 se fue al Umeå IK, en Suecia, aprendió sueco y ayudó al Umeå a ganar la Copa Femenina de la UEFA en su primera temporada."
+  },
+  {
+   "q": "¿Cuántos goles ha anotado Marta en Mundiales?",
+   "a": "Diecisiete, hasta el Mundial 2019. Nadie, mujer u hombre, ha anotado más goles en Mundiales. En el Mundial 2007 ganó el Balón de Oro como mejor jugadora y la Bota de Oro como máxima goleadora, con siete goles, aunque Brasil perdió la final 2–0 contra Alemania."
+  },
+  {
+   "q": "¿Qué quiso decir Marta con “llorar al principio para sonreír al final”?",
+   "a": "En 2019, después de que Francia eliminó a Brasil del Mundial, Marta habló ante las cámaras de televisión. Les pidió a las niñas brasileñas que siguieran adelante con el fútbol femenino y que lo valoraran más, y que lloraran al principio para poder sonreír al final."
+  },
+  {
+   "q": "¿Cómo volvió Marta de su lesión de rodilla?",
+   "a": "En marzo de 2022, jugando con el Orlando Pride, Marta se rompió un ligamento de la rodilla izquierda. Necesitó una operación, y su temporada terminó. En 2023 volvió y jugó dieciocho partidos. En 2024 ayudó al Orlando Pride a ganar el campeonato de la NWSL, el primer título de la NWSL de su carrera."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Dois Riachos, Brasil",
+   "title": "Una niña en el juego de los niños",
+   "paragraphs": [
+    "Marta Vieira da Silva nació en 1986 en Dois Riachos, un pueblo pequeño del noreste de Brasil. Su papá dejó a la familia cuando ella era bebé. Su mamá se llama Tereza, y Marta tiene tres hermanos: José, Valdir y Angela.",
+    "Marta aprendió a jugar fútbol en la calle con los niños. Abre la reja y déjala entrar al partido de la calle. Muchos niños crecen con solo un papá o una mamá, o son la única niña, o la única cara nueva, en un partido. Eso no hace que pertenezcan menos."
+   ],
+   "lesson": "Ser diferente puede ser una fuerza. Tú perteneces al juego que amas."
+  },
+  {
+   "year": "A los 14 años",
+   "title": "Dejar su casa a los catorce",
+   "paragraphs": [
+    "Cuando Marta tenía catorce años, una entrenadora llamada Helena Pacheco vio cuánto talento tenía. Marta dejó a su familia y viajó unos tres días en autobús hasta Río de Janeiro para hacer una prueba en el club Vasco da Gama.",
+    "Mueve el autobús de papel por la carretera, pasando pueblo tras pueblo. Dejar tu casa es un paso muy grande, incluso para un adulto. Muchas personas se sentirían emocionadas, asustadas y con ganas de volver a casa, todo al mismo tiempo. Ser valiente no significa dejar de sentir nervios. Significa seguir adelante y llevar contigo a las personas que quieres."
+   ],
+   "lesson": "Ser valiente no significa no tener miedo. Está bien extrañar tu casa."
+  },
+  {
+   "year": "De 2000 a 2004",
+   "title": "Una puerta se cierra, otra se abre",
+   "paragraphs": [
+    "Marta empezó a jugar en el Vasco da Gama en 2000, pero dos años después el equipo desapareció. Marta siguió adelante. Jugó dos temporadas en el Santa Cruz, un club pequeño de Minas Gerais, y en 2004 se fue muy lejos, al club Umeå IK, en Suecia.",
+    "Suecia era un país nuevo, con un idioma nuevo y una casa nueva. Marta aprendió a hablar sueco, y en su primera temporada ayudó al Umeå a ganar la Copa Femenina de la UEFA. Abre la puerta de papel hacia el país nuevo. Cuando una puerta se cierra puede doler, pero quizás se abra otra."
+   ],
+   "lesson": "Ser nueva en un lugar es difícil. Pide ayuda y date tiempo."
+  },
+  {
+   "year": "De 2004 a 2008",
+   "title": "Tan cerca, una y otra vez",
+   "paragraphs": [
+    "Con Marta, Brasil llegó a las finales más grandes, y las perdió. Ganaron medallas de plata en los Juegos Olímpicos de 2004 y 2008. En la final del Mundial Femenino 2007 perdieron 2–0 contra Alemania, y le atajaron el penal a Marta.",
+    "Pero en ese mismo Mundial, Marta ganó el Balón de Oro como mejor jugadora y la Bota de Oro como máxima goleadora, con siete goles. Levanta la medalla de plata y mira debajo. Perder una final duele, y está bien sentirse triste por eso. Un solo partido nunca cuenta toda la historia de quién eres."
+   ],
+   "lesson": "Eres más que un resultado. Una derrota es algo que pasó, no lo que eres."
+  },
+  {
+   "year": "De 2022 a 2024",
+   "title": "Una rodilla que sanar",
+   "paragraphs": [
+    "En marzo de 2022, mientras jugaba con el Orlando Pride en Estados Unidos, Marta se rompió un ligamento de la rodilla izquierda. Necesitó una operación, y su temporada terminó.",
+    "Sanar una rodilla toma muchos meses de paciencia. En 2023 Marta volvió y jugó dieciocho partidos. En 2024 ayudó al Orlando Pride a ganar el campeonato de la NWSL, el primer título de la NWSL de su carrera. Despliega el puente de papel, tabla por tabla, desde 2022 de vuelta a la cancha. Los pasos pequeños, uno tras otro, pueden llevarte muy lejos."
+   ],
+   "lesson": "Sanar toma tiempo. Un tropiezo no es el final de tu historia."
+  },
+  {
+   "year": "2019",
+   "title": "Llorar al principio",
+   "paragraphs": [
+    "En el Mundial 2019, Marta anotó su gol número diecisiete en Mundiales. Nadie, mujer u hombre, ha anotado más goles en Mundiales. Luego Francia eliminó a Brasil.",
+    "Después, Marta habló ante las cámaras de televisión. Les pidió a las niñas brasileñas que siguieran adelante con el fútbol femenino, que lo valoraran más y que “lloraran al principio para poder sonreír al final”. En 2018 las Naciones Unidas la nombraron Embajadora de Buena Voluntad para las mujeres en el deporte. Pásale el balón a la siguiente niña de la fila y que siga el juego."
+   ],
+   "lesson": "Levanta a los demás. Cuando superes algo difícil, ayuda a la siguiente persona a superarlo."
+  }
+ ]
+}

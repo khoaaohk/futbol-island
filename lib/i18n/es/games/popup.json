@@ -1,0 +1,134 @@
+{
+ "id": "popup",
+ "name": "Pop-Up Shot",
+ "title": "Juego de tiro al blanco con balón: Pop-Up Shot gratis",
+ "h1": "Juego de tiro al blanco de fútbol: Pop-Up Shot",
+ "description": "Pop-Up Shot es un juego de tiro al blanco de fútbol gratis para niños. Lanza balones a blancos que salen de ventanas, barcos y gradas. Sin anuncios.",
+ "lead": "Pop-Up Shot es un juego de tiro al blanco de fútbol gratis en el navegador: una galería de tiro con un balón. Los blancos salen de vitrinas de tiendas, botes de basura, barcos, casetas y las gradas, y se esconden otra vez un momento después. Levanta la mirada, elige uno y lánzale el balón, balón tras balón, durante 50 segundos.",
+ "blurb": "Lanza balón tras balón a los blancos antes de que se escondan",
+ "skill": "Levantar la mirada, elegir un objetivo y tirar rápido",
+ "about": [
+  "Pop-Up Shot es un juego rápido de tiro al blanco dibujado como un cómic. Tu propio personaje de la isla está abajo en la pantalla con un estante de cinco balones que se vuelve a llenar, y los blancos salen por toda una escena en 3D: cerca, en el medio y lejos.",
+  "Hay cinco lugares: la Plaza del Pueblo, el Puerto, la Cancha de Entrenamiento, la Playa y las Gradas del Estadio, cada uno visto desde su propia cámara. El Daily Arena elige un lugar y un grupo de blancos cada día, igual en todos los dispositivos."
+ ],
+ "phone": [
+  "Sostén el celular en vertical y desliza el dedo en cualquier parte. La dirección del deslizamiento es la puntería, su velocidad es la fuerza, y un deslizamiento curvo le da efecto al balón.",
+  "Un deslizamiento rápido tira enseguida, así que puedes lanzar en ráfagas. También puedes tocar un blanco para mandarle un balón."
+ ],
+ "desktop": [
+  "Izquierda y Derecha eligen un blanco, y Espacio o Enter le lanzan el balón.",
+  "El mouse puede deslizar como un dedo. P o Escape pone pausa."
+ ],
+ "rules": [
+  "Una ronda dura 50 segundos (60 en el Daily Arena). Cada blanco vale puntos, y los blancos lejanos valen más que los cercanos.",
+  "Los aciertos seguidos forman un combo de hasta el triple de puntos; ocho aciertos seguidos sin desperdiciar un balón te ponen en racha de fuego. Una mascota dorada da tres balones por lanzamiento durante un rato, y una bolsa de balones llena el estante de inmediato.",
+  "El entrenador y el árbitro también salen: si les pegas, pierdes tu combo y tu racha. Si nunca les pegas, ganas un bono de Fair Play al final, con un bono por puntería. Tu mejor puntaje entra en la tabla de récords de la isla."
+ ],
+ "teaches": [
+  "Los buenos jugadores levantan la mirada antes de que llegue el balón. Los blancos aparecen por toda la escena, así que aprendes a mirar toda la imagen, no solo el centro.",
+  "Elige primero el blanco libre más cercano y tira: una decisión rápida y segura es mejor que mirar mucho rato uno que está a punto de esconderse.",
+  "Puntería bajo presión: cada balón desperdiciado corta tu racha, y el blanco equivocado (el entrenador o el árbitro) te cuesta, como lo haría un pase o una entrada descuidada."
+ ],
+ "tips": [
+  "Mira toda la escena, no solo el centro: las ventanas lejanas y las gradas de arriba dan más puntos.",
+  "Tira primero al blanco más cercano a tu línea de deslizamiento, y luego al siguiente.",
+  "Busca la mascota dorada: da tres balones por lanzamiento.",
+  "No les tires al entrenador ni al árbitro."
+ ],
+ "harder": [
+  "Los primeros blancos se quedan afuera más de tres segundos; al final de la ronda se esconden después de un segundo y medio.",
+  "Al principio solo salen dos blancos, y después hasta cinco.",
+  "En los primeros diez segundos no salen ni el entrenador, ni el árbitro, ni los blancos que se asoman rápido; después, sí."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: mirar alrededor y decidir rápido. La tarjeta de resultados da un consejo de la ronda.",
+  "Duración: una ronda dura menos de un minuto. Se puede jugar sin sonido. No hay rachas de días."
+ ],
+ "faq": [
+  {
+   "q": "¿Pop-Up Shot es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Pop-Up Shot funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega Pop-Up Shot?",
+   "a": "Desliza el dedo en cualquier parte para lanzar un balón: la dirección es la puntería y la velocidad es la fuerza. Tumba todos los blancos que puedas antes de que se escondan, y no les tires al entrenador ni al árbitro."
+  },
+  {
+   "q": "¿Para qué edad es Pop-Up Shot?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Los primeros blancos se quedan afuera más de tres segundos, tiempo suficiente para que un niño de siete años vea, elija y lance; la ronda se acelera a medida que avanza."
+  },
+  {
+   "q": "¿Cómo ayuda un juego de tiro al blanco en el fútbol de verdad?",
+   "a": "Antes de un pase o un tiro, los buenos jugadores levantan la mirada y eligen rápido. Pop-Up Shot entrena ese hábito: mira alrededor, elige el mejor objetivo y tira antes de que desaparezca."
+  }
+ ],
+ "controls": [
+  "desliza el dedo hacia los blancos",
+  "apunta con las flechas y patea con Espacio"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-terms/scanning",
+   "name": "Mirar alrededor (escaneo)",
+   "line": "Mirar a tu alrededor antes de que llegue el balón"
+  },
+  {
+   "path": "/learn/soccer-drills/shoulder-check-colors",
+   "name": "Ejercicio de colores mirando por encima del hombro",
+   "line": "Levanta la mirada y di lo que ves"
+  },
+  {
+   "path": "/learn/soccer-drills/shooting",
+   "name": "Ejercicios de tiro",
+   "line": "Golpea bien el balón hacia un objetivo"
+  },
+  {
+   "path": "/learn/soccer-drills/world-cup-shooting-game",
+   "name": "Juego de tiro del Mundial",
+   "line": "Un juego de tiro para un grupo"
+  },
+  {
+   "path": "/learn/soccer-terms/one-touch",
+   "name": "A un toque",
+   "line": "Jugar el balón de primera"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Pop-Up Shot, Plaza del Pueblo: un blanco en una vitrina cae con un SLAP! +680 en un combo x3, durante un triple (tres balones por lanzamiento)",
+   "caption": "Un triple: tres balones por lanzamiento."
+  },
+  {
+   "alt": "Pop-Up Shot, el Puerto: un blanco junto a los barcos recibe un golpe con SNAP! CLACK! +590 mientras el combo marca x3",
+   "caption": "SNAP!: pégale en cuanto aparece."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Pop-Up Shot, Plaza del Pueblo: un blanco en una vitrina cae con un SLAP! +680 en un combo x3, durante un triple (tres balones por lanzamiento)",
+   "caption": "Un triple: tres balones por lanzamiento."
+  },
+  {
+   "alt": "Pop-Up Shot, el Puerto: un blanco junto a los barcos recibe un golpe con SNAP! CLACK! +590 mientras el combo marca x3",
+   "caption": "SNAP!: pégale en cuanto aparece."
+  },
+  {
+   "alt": "Pop-Up Shot, Cancha de Entrenamiento: un balón vuela hacia un blanco junto a la barrera amarilla de maniquíes, con las pilas de llantas, la caseta y el arco detrás",
+   "caption": "Blancos cerca, en el medio y lejos."
+  },
+  {
+   "alt": "Pop-Up Shot, Gradas del Estadio: un blanco en las gradas cae con DOWN! por +300, con tres niveles de asientos y el túnel detrás",
+   "caption": "Arriba en las gradas: los blancos lejanos dan más puntos."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Pop-Up Shot: tumbando blancos en el Puerto",
+  "alt": "Partida de Pop-Up Shot en un celular en el Puerto: los blancos salen detrás de cajas, en los barcos y en las ventanas del almacén; el jugador lanza balón tras balón y los tumba con CLACK!, DOWN! y SNAP! mientras el combo sube a x3",
+  "caption": "Pop-Up Shot: lanza balón tras balón antes de que se escondan."
+ }
+}

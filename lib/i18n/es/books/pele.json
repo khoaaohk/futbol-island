@@ -1,0 +1,113 @@
+{
+ "id": "pele",
+ "title": "Pelé",
+ "subtitle": "Aprovecha lo que tienes",
+ "player": "Pelé",
+ "country": "Brazil",
+ "summary": "Pelé: Aprovecha lo que tienes es un libro desplegable gratis de seis capítulos para niños sobre Pelé, el futbolista brasileño que creció pobre en Bauru y aprendió a jugar con un calcetín relleno de periódico. Se lesionó en Mundiales y le hicieron falta una y otra vez, y aun así fue el único jugador en ganar tres Mundiales. La historia te enseña a aprovechar al máximo lo que tienes.",
+ "description": "Libro desplegable gratis para niños sobre Pelé: de jugar con un calcetín en Bauru a ser el único jugador en ganar tres Mundiales.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Nació",
+   "value": "1940; creció en Bauru"
+  },
+  {
+   "label": "Club",
+   "value": "Santos, desde 1956"
+  },
+  {
+   "label": "Mundiales ganados",
+   "value": "1958, 1962 y 1970"
+  },
+  {
+   "label": "Apodo",
+   "value": "O Rei, el Rey"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Pelé jugaba con un calcetín?",
+   "a": "Su familia no podía comprar un balón de verdad. Así que Pelé casi siempre jugaba con una toronja, o con un calcetín relleno de periódico y amarrado. Su papá, Dondinho, era futbolista, y le enseñó a jugar a su hijo."
+  },
+  {
+   "q": "¿Cuántos años tenía Pelé en su primer Mundial?",
+   "a": "Diecisiete. En 1958 fue al Mundial de Suecia con una lesión de rodilla y no jugó los dos primeros partidos de Brasil. Un psicólogo del equipo dijo que era demasiado infantil para jugar, pero el entrenador, Vicente Feola, lo puso de todos modos. Pelé marcó en los cuartos de final y en la semifinal, y luego dos veces en la final, cuando Brasil le ganó 5–2 a Suecia."
+  },
+  {
+   "q": "¿Cuántos Mundiales ganó Pelé?",
+   "a": "Tres: 1958, 1962 y 1970. Es el único jugador que ha ganado tres Mundiales. En 1962 se lesionó en el segundo partido de Brasil y no pudo volver a jugar, pero Brasil ganó, y en 2007 también le dieron su medalla de campeón. En la final de 1970 marcó de cabeza, y Brasil le ganó 4–1 a Italia."
+  },
+  {
+   "q": "¿Qué le pasó a Pelé en el Mundial de 1966?",
+   "a": "Los rivales le hicieron falta una y otra vez, y se lesionó. En esa época no se permitían cambios, así que siguió jugando cojeando. Brasil quedó eliminado, y Pelé dijo que nunca volvería a jugar un Mundial. Pero cuando Brasil se lo pidió, volvió para 1970."
+  },
+  {
+   "q": "¿Por qué a Pelé le decían O Rei?",
+   "a": "O Rei significa el Rey, y así le decía la gente a Pelé. El niño que creció pobre se convirtió en un hombre que hablaba por los pobres. Apoyó a muchas organizaciones benéficas para niños, y en 2018 creó la Fundación Pelé, para ayudar contra la pobreza y por la educación en todo el mundo."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Bauru, Brasil",
+   "title": "Un balón hecho con un calcetín",
+   "paragraphs": [
+    "Edson Arantes do Nascimento, conocido como Pelé, nació en 1940 en Brasil. Creció en la pobreza en el pueblo de Bauru. De niño, ganaba dinero sirviendo en casas de té. Su papá, Dondinho, era futbolista, y le enseñó a jugar a su hijo.",
+    "Abre nuestra calle de papel. La familia no podía comprar un balón de verdad. Así que Pelé casi siempre jugaba con una toronja, o con un calcetín relleno de periódico y amarrado. Jugó en varios equipos pequeños, y siguió jugando."
+   ],
+   "lesson": "No necesitas las mejores cosas para empezar. Aprovecha al máximo lo que tienes."
+  },
+  {
+   "year": "1956 · A los 15 años",
+   "title": "¿Demasiado joven?",
+   "paragraphs": [
+    "En Bauru, Pelé también jugaba futsal, un juego rápido en una cancha pequeña. En un torneo, al principio la gente pensó que era demasiado joven para jugar. Terminó siendo el goleador. Después dijo: “Eso me dio mucha confianza”.",
+    "Su entrenador juvenil, Waldemar de Brito, creía en él. En 1956 llevó al chico de quince años a probarse en el Santos, un club junto al mar. Súbete al tren de papel hasta la costa. Pelé impresionó al entrenador, firmó con el Santos y marcó en su primer partido con el primer equipo."
+   ],
+   "lesson": "Cuando alguien cree en ti, te puede ayudar a creer en ti mismo."
+  },
+  {
+   "year": "1958 · Suecia",
+   "title": "Esperando en la banca",
+   "paragraphs": [
+    "En 1958, Pelé fue al Mundial de Suecia. Solo tenía diecisiete años, y llegó con una lesión de rodilla. No pudo jugar los dos primeros partidos de Brasil. Un psicólogo del equipo hasta le dijo al entrenador que Pelé era demasiado infantil para jugar.",
+    "El entrenador, Vicente Feola, decidió ponerlo de todos modos. Mándalo a la cancha desde la banca de papel. Pelé marcó en los cuartos de final y en la semifinal, y luego dos veces en la final, cuando Brasil le ganó 5–2 a Suecia. Al final, lloró mientras sus compañeros lo felicitaban."
+   ],
+   "lesson": "Cuando estás lesionado, ten paciencia. Tu oportunidad todavía puede llegar."
+  },
+  {
+   "year": "1962 · Chile",
+   "title": "Lesionado otra vez",
+   "paragraphs": [
+    "Para el Mundial de 1962 en Chile, mucha gente pensaba que Pelé era el mejor jugador del mundo. Marcó en el primer partido de Brasil. Pero en el siguiente, contra Checoslovaquia, se lesionó al intentar un tiro de lejos. No pudo volver a jugar en ese Mundial.",
+    "Toca tres veces para animar a sus compañeros. Brasil siguió adelante y ganó la final. En esa época, solo los jugadores de la final recibían medalla. Muchos años después, en 2007, a Pelé también le dieron su medalla de campeón."
+   ],
+   "lesson": "Aunque no puedas jugar, sigues siendo parte del equipo."
+  },
+  {
+   "year": "1966 a 1970",
+   "title": "Derribado, y de pie otra vez",
+   "paragraphs": [
+    "En el Mundial de 1966 en Inglaterra, los jugadores de Bulgaria le hicieron falta a Pelé una y otra vez, y se lesionó. Contra Portugal, le hicieron dos faltas más. En esa época no se permitían cambios, así que siguió jugando cojeando. Brasil quedó eliminado, y Pelé dijo que nunca volvería a jugar un Mundial.",
+    "Pero cuando Brasil se lo pidió, volvió. En la final de 1970 en México, marcó de cabeza, y Brasil le ganó 4–1 a Italia. Mete de cabeza el balón de papel. Es el único jugador que ha ganado tres Mundiales."
+   ],
+   "lesson": "Un tropiezo no es el final de la historia. Puedes volver."
+  },
+  {
+   "year": "Recordando a Pelé",
+   "title": "Ayudar a los demás",
+   "paragraphs": [
+    "La gente le decía a Pelé O Rei, el Rey. El niño que creció pobre se convirtió en un hombre que hablaba por los pobres. Apoyó a muchas organizaciones benéficas para niños, y en 2018 creó la Fundación Pelé, para ayudar contra la pobreza y por la educación en todo el mundo.",
+    "Pelé murió en 2022, a los 82 años, después de una enfermedad. Más de 230,000 personas fueron a despedirse. En nuestra última página, unos niños juegan en la calle donde todo empezó. Pasa el balón."
+   ],
+   "lesson": "Cuando las cosas te van bien, úsalo para ayudar a los demás."
+  }
+ ]
+}

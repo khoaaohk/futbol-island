@@ -1,0 +1,113 @@
+{
+ "id": "milla",
+ "title": "Milla",
+ "subtitle": "Nunca es tarde",
+ "player": "Roger Milla",
+ "country": "Cameroon",
+ "summary": "Milla: Nunca es tarde es un libro desplegable gratis de seis capítulos para niños sobre Roger Milla, que de niño se mudó una y otra vez en Camerún, jugó muchos años en Francia y disfrutaba del fútbol en una isla tranquila cuando su país lo volvió a llamar a los treinta y ocho años. En el Mundial de 1990 entró desde la banca, marcó cuatro goles y bailó junto al banderín de esquina. La historia enseña que nunca eres demasiado mayor para intentarlo.",
+ "description": "Libro desplegable gratis para niños sobre Roger Milla, que a los 38 años marcó cuatro goles en el Mundial de 1990 y bailó junto al banderín.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Camerún"
+  },
+  {
+   "label": "Lo volvieron a llamar",
+   "value": "A los 38 años, para Italia 90"
+  },
+  {
+   "label": "Goles en Italia 90",
+   "value": "4, todos como suplente"
+  },
+  {
+   "label": "Goleador más veterano de un Mundial",
+   "value": "42 años, en 1994"
+  },
+  {
+   "label": "Futbolista Africano del Año",
+   "value": "1976 y 1990"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde creció Roger Milla?",
+   "a": "Roger Milla nació en 1952 en Yaundé, en Camerún. Su papá trabajaba en los ferrocarriles, así que la familia se mudaba seguido, y cuando Roger tenía once años se mudaron a Duala. Dondequiera que iban, él encontraba un partido."
+  },
+  {
+   "q": "¿Cuántos años tenía Roger Milla en el Mundial de 1990?",
+   "a": "Tenía treinta y ocho. Había dejado de jugar con Camerún en 1988 y jugaba en Reunión, una isla del océano Índico, cuando el presidente de Camerún le pidió que volviera."
+  },
+  {
+   "q": "¿Cuántos goles marcó Roger Milla en Italia 90?",
+   "a": "Cuatro, todos después de entrar como suplente: dos contra Rumania y dos contra Colombia. Después de cada gol bailó junto al banderín de esquina, y Camerún se convirtió en el primer equipo africano en llegar a los cuartos de final de un Mundial."
+  },
+  {
+   "q": "¿Quién es el jugador más veterano en marcar en un Mundial?",
+   "a": "Roger Milla. En el Mundial de 1994 en Estados Unidos le marcó a Rusia a los cuarenta y dos años, el jugador más veterano en anotar en un Mundial."
+  },
+  {
+   "q": "¿Qué premios ganó Roger Milla?",
+   "a": "Fue Futbolista Africano del Año en 1976 y otra vez en 1990, y en 2007 fue nombrado el mejor jugador africano de los últimos cincuenta años."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Yaundé · Infancia",
+   "title": "Siempre de un lado a otro",
+   "paragraphs": [
+    "Roger Milla nació en 1952 en Yaundé, en Camerún. Su papá trabajaba en los ferrocarriles, así que la familia se mudaba seguido. Cuando Roger tenía once años, se mudaron a Duala, una gran ciudad junto al mar. Cambiar de casa una y otra vez puede ser difícil para un niño.",
+    "Mudarse seguido significa nuevos amigos y nuevos lugares para jugar. Roger siempre encontraba un partido. Jugaba dondequiera que podía."
+   ],
+   "lesson": "Cuando la vida cambia mucho, el balón te puede ayudar a hacer nuevos amigos."
+  },
+  {
+   "year": "1967 a 1976",
+   "title": "Aprendiendo en casa",
+   "paragraphs": [
+    "Roger jugó en clubes de Camerún, como el Léopard Douala y el Tonnerre Yaoundé, y ganó títulos de liga allí. Era rápido, fuerte y lleno de trucos, y marcaba muchísimos goles.",
+    "En 1976 fue nombrado Futbolista Africano del Año. Es uno de los premios más grandes que puede ganar un futbolista en África."
+   ],
+   "lesson": "Que te vaya bien en casa es un gran primer paso."
+  },
+  {
+   "year": "1977 a 1989",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "En 1977, Roger se fue a Francia, lejos de su familia y de su país. Jugó en muchos clubes franceses, como el Mónaco, el Saint-Étienne y el Montpellier. Mudarse a otro país significaba un idioma nuevo, un clima nuevo y compañeros nuevos.",
+    "En 1989 se mudó otra vez, a Reunión, una isla del océano Índico. Mucha gente pensaba que sus mejores días ya habían pasado. Pero a Roger todavía le encantaba jugar."
+   ],
+   "lesson": "Empezar de nuevo en otro lugar requiere valor a cualquier edad."
+  },
+  {
+   "year": "1990",
+   "title": "Una llamada sorpresa",
+   "paragraphs": [
+    "En 1988, Roger había dejado de jugar con Camerún. Pero antes del Mundial de 1990, el presidente de Camerún le pidió que volviera. Él disfrutaba del fútbol en una isla tranquila, lejos de los grandes escenarios.",
+    "Roger dijo que sí. Tenía treinta y ocho años, una edad en la que casi todos los delanteros ya dejaron de jugar. Después contó que no estaba seguro de que sus piernas aguantaran."
+   ],
+   "lesson": "Sentir dudas es normal. Puedes ser valiente e intentarlo de todos modos."
+  },
+  {
+   "year": "Italia 90",
+   "title": "Bailando junto al banderín",
+   "paragraphs": [
+    "En el Mundial de 1990 en Italia, Roger entró como suplente y marcó cuatro goles: dos contra Rumania y dos contra Colombia. Después de sus goles, corría al banderín de esquina y bailaba.",
+    "Camerún se convirtió en el primer equipo africano en llegar a los cuartos de final de un Mundial. Gente de todo el mundo copió su baile."
+   ],
+   "lesson": "La alegría es parte del fútbol. ¡Celebra con tu equipo!"
+  },
+  {
+   "year": "1994 · A los 42 años",
+   "title": "El goleador más veterano",
+   "paragraphs": [
+    "Cuatro años después, en el Mundial de 1994 en Estados Unidos, Roger le marcó un gol a Rusia. Tenía cuarenta y dos años, el jugador más veterano en anotar en un Mundial. Mucha gente estaba asombrada de que siguiera jugando a esa edad.",
+    "En 1990 había sido nombrado Futbolista Africano del Año por segunda vez, y en 2007 fue nombrado el mejor jugador africano de los últimos cincuenta años."
+   ],
+   "lesson": "Quizás te digan que eres demasiado mayor o demasiado joven. Ama el juego y sigue adelante."
+  }
+ ]
+}

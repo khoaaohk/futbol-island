@@ -1,0 +1,113 @@
+{
+ "id": "eusebio",
+ "title": "Eusébio",
+ "subtitle": "Lejos de casa",
+ "player": "Eusébio",
+ "country": "Portugal",
+ "summary": "Eusébio: Lejos de casa es un libro desplegable gratis de seis capítulos para niños sobre Eusébio, que creció en un barrio muy pobre de Mozambique y jugaba descalzo con un balón hecho de calcetines. Su papá murió cuando él tenía ocho años. A los dieciocho se fue a Lisboa, lejos de su mamá, y fue el máximo goleador del Mundial de 1966. La historia enseña que, ganes o pierdas, siempre puedes ser amable.",
+ "description": "Libro desplegable gratis para niños sobre Eusébio: jugaba descalzo con un balón de calcetines y fue el máximo goleador del Mundial 1966.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Mozambique, luego Portugal"
+  },
+  {
+   "label": "Nació",
+   "value": "1942, Mafalala, Lourenço Marques"
+  },
+  {
+   "label": "Primer equipo",
+   "value": "Os Brasileiros, con un balón de calcetines"
+  },
+  {
+   "label": "Club",
+   "value": "Benfica, desde 1961"
+  },
+  {
+   "label": "Mundial de 1966",
+   "value": "Máximo goleador, nueve goles"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Cómo jugaba fútbol Eusébio de niño?",
+   "a": "Eusébio nació en 1942 en Mafalala, un barrio muy pobre de Lourenço Marques, la ciudad que hoy se llama Maputo, en Mozambique. Jugaba descalzo con sus amigos en canchas disparejas hechas por ellos mismos. No tenían un balón de verdad, así que rellenaban calcetines con periódico y los enrollaban para hacer un balón. Llamaron a su equipo Os Brasileiros, por la gran selección de Brasil."
+  },
+  {
+   "q": "¿Qué le pasó al papá de Eusébio?",
+   "a": "Su papá, Laurindo, trabajaba en el ferrocarril y amaba al Benfica. En 1950, cuando Eusébio tenía ocho años, su papá murió de una enfermedad llamada tétanos. Después de eso, su mamá, Elisa, crió a Eusébio casi sola. Eran cinco hijos en la familia."
+  },
+  {
+   "q": "¿Qué clubes rechazaron a Eusébio?",
+   "a": "Con algunos amigos, intentó entrar en su club favorito, el Desportivo, pero lo rechazaron sin darle una oportunidad. Otro club, el Ferroviário, también dijo que no. A los doce años probó en el Sporting Lourenço Marques, y le dijeron que sí a él y a sus amigos. De 1957 a 1960 metió 77 goles en 42 partidos."
+  },
+  {
+   "q": "¿Cómo llegó Eusébio a Lisboa?",
+   "a": "El 15 de diciembre de 1960, a los dieciocho años, llegó a Lisboa, en Portugal, lejos de su mamá. Dos grandes clubes se lo disputaron, y el traspaso tardó meses. Durante un tiempo lo mandaron a un lugar tranquilo junto al mar, y él le dijo a su mamá que iba a volver a casa. Su mamá firmó el acuerdo. En mayo de 1961 jugó su primer partido con el Benfica y metió tres goles."
+  },
+  {
+   "q": "¿Qué es el Partido de las Lágrimas?",
+   "a": "En el Mundial de 1966, Portugal perdía 3–0 contra Corea del Norte, y Eusébio metió cuatro goles seguidos para que Portugal ganara 5–3. En la semifinal contra Inglaterra metió un penal, pero Portugal perdió 2–1. Salió de la cancha llorando, y jugadores de los dos equipos lo consolaron. En Portugal, ese partido se llama el Partido de las Lágrimas."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Mafalala · 1942",
+   "title": "Un balón hecho de calcetines",
+   "paragraphs": [
+    "Eusébio nació en 1942 en Mafalala, un barrio muy pobre de Lourenço Marques, la ciudad que hoy se llama Maputo, en Mozambique. Le encantaba el fútbol, y jugaba descalzo con sus amigos en canchas disparejas hechas por ellos mismos.",
+    "No tenían un balón de verdad, así que hicieron uno. Los niños rellenaban calcetines con periódico y los enrollaban para hacer un balón. Llamaron a su equipo Os Brasileiros, por la gran selección de Brasil, y jugaban usando los nombres de sus héroes."
+   ],
+   "lesson": "No necesitas mucho para empezar. Los amigos y un poco de imaginación pueden convertir casi nada en algo especial."
+  },
+  {
+   "year": "Lourenço Marques · 1950",
+   "title": "La foto en la pared",
+   "paragraphs": [
+    "El papá de Eusébio, Laurindo, trabajaba en el ferrocarril. Había jugado fútbol de joven, y amaba al Benfica. En 1950, cuando Eusébio tenía ocho años, su papá murió de una enfermedad llamada tétanos.",
+    "Levanta el marco de la foto para recordarlo. Después de eso, su mamá, Elisa, crió a Eusébio casi sola. Eran cinco hijos en la familia. Años después, su mamá y su hermano mayor lo ayudarían a tomar la decisión más grande de su vida."
+   ],
+   "lesson": "Cuando alguien que queremos muere, está bien sentirse triste. Guarda su recuerdo cerca, y apóyate en las personas que te quieren."
+  },
+  {
+   "year": "Lourenço Marques · años 50",
+   "title": "Rechazado",
+   "paragraphs": [
+    "Con algunos amigos, Eusébio intentó entrar en su club favorito, el Desportivo. Lo rechazaron sin siquiera darle una oportunidad. Otro club, el Ferroviário, también dijo que no. Más tarde, Eusébio contó que el entrenador del Desportivo trataba injustamente a las personas por el color de su piel.",
+    "A los doce años, probó en el Sporting Lourenço Marques, y le dijeron que sí a él y a sus amigos. Recibió su primer uniforme de fútbol de verdad, y de 1957 a 1960 metió 77 goles en 42 partidos."
+   ],
+   "lesson": "Escuchar un no es duro, y no siempre es justo. Sigue tocando puertas, y quédate cerca de los amigos que se quedan cerca de ti."
+  },
+  {
+   "year": "Lisboa · 1960 a 1961",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "El 15 de diciembre de 1960, a los dieciocho años, Eusébio llegó a Lisboa, en Portugal, lejos de su mamá y de Mozambique. Dos grandes clubes se lo disputaron, y el traspaso tardó meses. Durante un tiempo, lo mandaron a un lugar tranquilo junto al mar, y él le dijo a su mamá que iba a volver a casa.",
+    "Su hermano había ayudado con el acuerdo, y su mamá lo firmó. Mientras esperaba, aprobó su examen escolar. En mayo de 1961 jugó su primer partido con el Benfica, y metió tres goles."
+   ],
+   "lesson": "Ser nuevo y estar lejos de casa es difícil. Mantente en contacto con tu familia, y pide ayuda cuando la necesites."
+  },
+  {
+   "year": "Mundial · 1966",
+   "title": "El Partido de las Lágrimas",
+   "paragraphs": [
+    "En el Mundial de 1966 en Inglaterra, Portugal perdía 3–0 contra Corea del Norte. Eusébio no se rindió. Metió cuatro goles seguidos, y Portugal ganó 5–3.",
+    "En la semifinal contra Inglaterra, Eusébio metió un penal, pero Portugal perdió 2–1. Salió de la cancha llorando, y jugadores de los dos equipos lo consolaron. En Portugal, ese partido se llama el Partido de las Lágrimas. Aun así, Eusébio terminó como máximo goleador del Mundial, con nueve goles."
+   ],
+   "lesson": "Está bien llorar cuando algo te importa. Deja que otros te consuelen, y sé amable cuando alguien más esté triste."
+  },
+  {
+   "year": "Wembley · 1968 en adelante",
+   "title": "Aplaudir al rival",
+   "paragraphs": [
+    "En la final de la Copa de Europa de 1968, Eusébio tuvo una oportunidad de ganar el partido en los últimos segundos, pero el portero Alex Stepney atajó su tiro. Enseguida, Eusébio se detuvo para aplaudirlo. El Benfica perdió 4–1 en el tiempo extra, pero Eusébio igual felicitó a Stepney.",
+    "Aplaude al portero. Al niño descalzo de Mafalala lo han llamado el primer gran futbolista de África. En 2019, cuando el papa Francisco visitó Mozambique, nombró a Eusébio como ejemplo de perseverancia."
+   ],
+   "lesson": "Ganes o pierdas, siempre puedes ser amable. Sigue adelante, y siéntete orgulloso de dónde vienes."
+  }
+ ]
+}

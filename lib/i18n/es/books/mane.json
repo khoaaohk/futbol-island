@@ -1,0 +1,113 @@
+{
+ "id": "mane",
+ "title": "Mané",
+ "subtitle": "Dejar el pueblo",
+ "player": "Sadio Mané",
+ "country": "Senegal",
+ "description": "Libro desplegable gratis para niños sobre Sadio Mané: dejó su pueblo a los quince años, falló penales y le dio a Senegal su primera Copa Africana.",
+ "summary": "Mané: Dejar el pueblo es un libro desplegable gratis de seis capítulos para niños sobre Sadio Mané, que nació en Bambali, un pueblo de Senegal, y dejó su casa a los quince años para seguir su sueño del fútbol en Dakar. Falló penales con Senegal, y luego anotó el tiro ganador cuando Senegal ganó la Copa Africana de Naciones por primera vez. La historia enseña que un fallo no es el final de la historia.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Senegal"
+  },
+  {
+   "label": "Nació",
+   "value": "1992, Bambali"
+  },
+  {
+   "label": "Dejó su casa",
+   "value": "A los quince años, rumbo a Dakar"
+  },
+  {
+   "label": "Primer club en Europa",
+   "value": "Metz, Francia, en 2011"
+  },
+  {
+   "label": "Copa Africana de Naciones",
+   "value": "Campeón con Senegal, 2021"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Sadio Mané no podía jugar fútbol de niño?",
+   "a": "Sadio nació en 1992 en Bambali, un pueblo de Senegal. Sus papás venían de Guinea, y creció en una familia religiosa. Más que nada, quería jugar fútbol. Pero su papá, un imán, no lo dejaba jugar, porque quería que Sadio pusiera primero sus estudios religiosos. Cuando Sadio tenía siete años, su papá murió."
+  },
+  {
+   "q": "¿Cómo llegó Sadio Mané a Dakar?",
+   "a": "Cuando tenía quince años, Sadio dejó su pueblo con la ayuda de un amigo de la infancia, Luc Djiboune, y se fue a Dakar, la capital de Senegal. No le avisó a nadie antes. Desde entonces, su familia lo apoyó para seguir su sueño. El consejo del libro: los grandes sueños necesitan valor, y siempre debes contarle tus planes a un adulto de confianza."
+  },
+  {
+   "q": "¿Cómo descubrieron a Sadio Mané?",
+   "a": "En 2009, cuando Sadio jugaba en la ciudad de M’Bour, unos cazatalentos lo vieron y lo mandaron a un club llamado Génération Foot. En la temporada 2010–11 los ayudó a lograr el ascenso a la segunda división. En 2011 se fue al Metz, en Francia. En 2012 se fue al Salzburgo, en Austria, donde ganó la liga y la copa, y en 2014 llegó al Southampton, en Inglaterra."
+  },
+  {
+   "q": "¿Sadio Mané falló penales?",
+   "a": "Sí. En la Copa Africana de Naciones 2017, los cuartos de final contra Camerún se definieron en tanda de penales. Sadio falló su penal, y Senegal quedó eliminado. En el torneo de 2019 falló dos penales en partidos anteriores. Senegal llegó a la final pero perdió 1–0 contra Argelia. Aun así, Sadio fue elegido en el Equipo Ideal del Torneo."
+  },
+  {
+   "q": "¿Cómo ganó Senegal la Copa Africana de Naciones?",
+   "a": "En la Copa Africana de Naciones 2021, Senegal jugó la final contra Egipto. En el minuto siete, Sadio cobró un penal, y el portero lo atajó. La final se definió en tanda de penales, y Sadio dio un paso al frente otra vez. Anotó el tiro ganador, y Senegal ganó la copa por primera vez. Sadio también ha donado dinero para construir una escuela y un hospital en Bambali."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Bambali · Senegal",
+   "title": "Un sueño en Bambali",
+   "paragraphs": [
+    "Sadio Mané nació en 1992 en Bambali, un pueblo de Senegal. Sus papás venían de Guinea, y creció en una familia religiosa. Más que nada, Sadio quería jugar fútbol.",
+    "Pero su papá, un imán, no lo dejaba jugar. Quería que Sadio pusiera primero sus estudios religiosos. Luego, cuando Sadio tenía siete años, su papá murió. Levanta el marco de la foto para recordarlo."
+   ],
+   "lesson": "Cuando muere alguien que quieres, está bien sentirse triste. Guarda su recuerdo cerca y habla con personas de confianza."
+  },
+  {
+   "year": "A los 15 años",
+   "title": "Dejar el pueblo",
+   "paragraphs": [
+    "Sadio seguía soñando con el fútbol. Cuando tenía quince años, tomó una decisión muy grande. Con la ayuda de un amigo de la infancia, Luc Djiboune, dejó su pueblo en secreto y se fue a Dakar, la capital de Senegal.",
+    "Abre la puerta hacia Dakar. Estaba muy lejos de casa, y a muchas personas un cambio así les daría miedo. Desde entonces, su familia lo apoyó para seguir su sueño."
+   ],
+   "lesson": "Los grandes sueños necesitan valor, y un buen amigo ayuda. Siempre cuéntale tus planes a un adulto de confianza."
+  },
+  {
+   "year": "M’Bour · 2009",
+   "title": "Alguien se fijó en él",
+   "paragraphs": [
+    "Sadio siguió jugando. En 2009, cuando jugaba en la ciudad de M’Bour, unos cazatalentos lo vieron. Lo mandaron a un club llamado Génération Foot.",
+    "Levanta las tres solapas para ver quién lo ayudó. Su amigo Luc lo ayudó a partir, su familia lo respaldó y el club le dio un lugar para crecer. En la temporada 2010–11, Sadio ayudó al Génération Foot a lograr el ascenso a la segunda división."
+   ],
+   "lesson": "Nadie llega solo. Acuérdate de dar las gracias a quienes te ayudan."
+  },
+  {
+   "year": "Francia · de 2011 a 2012",
+   "title": "Un país nuevo",
+   "paragraphs": [
+    "En 2011, Sadio se mudó a Francia para jugar en el Metz. Tenía diecinueve años y estaba muy lejos de casa. Jugó 19 partidos de liga esa temporada y anotó un gol, pero el Metz descendió, es decir, bajó a una liga inferior.",
+    "Despliega el puente hacia Austria. En 2012 se fue a un club de Salzburgo, y allí ganó la liga y la copa. En 2014 se fue a Inglaterra, a jugar en el Southampton."
+   ],
+   "lesson": "Ser nuevo en un lugar es difícil, y una mala temporada no es el final. Sigue adelante."
+  },
+  {
+   "year": "Copa Africana de Naciones · 2017 y 2019",
+   "title": "Penales fallados",
+   "paragraphs": [
+    "Sadio juega con su país, Senegal. En la Copa Africana de Naciones 2017, los cuartos de final contra Camerún se definieron en tanda de penales. Sadio falló su penal, y Senegal quedó eliminado.",
+    "En el torneo de 2019 falló dos penales en partidos anteriores. Senegal llegó a la final, pero perdió 1–0 contra Argelia. Aun así, Sadio fue elegido en el Equipo Ideal del Torneo, y siguió dando un paso al frente por su país."
+   ],
+   "lesson": "Un fallo no es el final de la historia. Eres más que un resultado."
+  },
+  {
+   "year": "Copa Africana de Naciones · 2021",
+   "title": "Valiente para intentarlo otra vez",
+   "paragraphs": [
+    "En la Copa Africana de Naciones 2021, Senegal jugó la final contra Egipto. En el minuto siete, Sadio cobró un penal, y el portero lo atajó. La final se definió en tanda de penales, y Sadio dio un paso al frente otra vez. ¡Anotó el tiro ganador, y Senegal ganó la copa por primera vez!",
+    "Sadio también ha donado dinero para construir una escuela y un hospital en su pueblo, Bambali."
+   ],
+   "lesson": "Sé valiente para intentarlo otra vez, y recuerda el lugar de donde vienes."
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+{
+ "id": "debruyne",
+ "title": "De Bruyne",
+ "subtitle": "No lo querían, pero no estaba acabado",
+ "player": "Kevin De Bruyne",
+ "country": "Belgium",
+ "summary": "De Bruyne: No lo querían, pero no estaba acabado es un libro desplegable gratis de seis capítulos para niños sobre Kevin De Bruyne, que se fue de casa a los catorce años para entrar a la academia juvenil del Genk, en Bélgica, y cuya familia de acogida no quiso que se quedara. Después lo dejaron en la banca en el Chelsea, se fue al Wolfsburgo y ganó la Champions League con el Manchester City. La historia enseña que las opiniones de los demás no deciden tu futuro.",
+ "description": "Libro desplegable gratis para niños sobre Kevin De Bruyne: rechazado por su familia de acogida y en el Chelsea, triunfó en el Manchester City.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Bélgica"
+  },
+  {
+   "label": "Creció en",
+   "value": "Drongen, Bélgica"
+  },
+  {
+   "label": "Academia juvenil",
+   "value": "Genk, desde los 14 años"
+  },
+  {
+   "label": "Récord de la Bundesliga",
+   "value": "21 asistencias en una temporada"
+  },
+  {
+   "label": "Manchester City",
+   "value": "Diez temporadas, desde 2015"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Kevin De Bruyne se fue de casa a los catorce años?",
+   "a": "Kevin creció en Drongen, en Bélgica. Cuando tenía catorce años, se fue de casa para entrar a la academia juvenil del club Genk, en otra parte del país. Su primer año vivió en una residencia. Luego se fue a vivir con una familia de acogida, una familia que cuida a un jugador joven."
+  },
+  {
+   "q": "¿Qué pasó con su familia de acogida?",
+   "a": "Después de una temporada, la familia de acogida no quiso que Kevin se quedara más tiempo. Pensaban que era demasiado callado, demasiado tímido con la gente y demasiado terco. A los dieciséis años tuvo que mudarse a otra residencia. Fue un momento muy difícil para él."
+  },
+  {
+   "q": "¿Cómo se levantó Kevin?",
+   "a": "Entrenó más duro que antes. Una vez, entrando como cambio con el segundo equipo del Genk, marcó cinco goles en un solo tiempo. Más tarde dijo que esa época difícil con la familia de acogida fue una lección para la vida. En 2009 jugó su primer partido con el primer equipo del Genk, y en 2011 el Genk fue campeón de Bélgica."
+  },
+  {
+   "q": "¿Por qué Kevin se fue del Chelsea?",
+   "a": "Firmó con el Chelsea en 2012 y jugó bien a préstamo en el Werder Bremen, en Alemania. De vuelta en el Chelsea, casi siempre lo dejaban en la banca, y el entrenador, José Mourinho, dijo que no encajaba en el estilo del Chelsea. El entrenador de Bélgica les dijo a sus jugadores que jugaran todo lo posible en sus clubes, así que Kevin pidió irse. En enero de 2014 se fue al Wolfsburgo."
+  },
+  {
+   "q": "¿Qué ganó Kevin De Bruyne en el Manchester City?",
+   "a": "En 2015, el Manchester City pagó una cifra récord para el club para ficharlo, y se quedó diez temporadas. Ganó la Champions League, seis títulos de la Premier League, cinco Copas de la Liga y dos FA Cup. También ayudó al City a ser el único equipo en llegar a 100 puntos en una temporada de la Premier League."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Genk · A los 14 años",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "Kevin De Bruyne creció en Drongen, cerca de la ciudad de Gante, en Bélgica. Cuando tenía catorce años, se fue de casa para entrar a la academia juvenil del club Genk, en otra parte del país.",
+    "Su primer año vivió en una residencia. Luego se fue a vivir con una familia de acogida, una familia que cuida a un jugador joven. Resultó ser un momento muy difícil para él."
+   ],
+   "lesson": "Estar lejos de casa es difícil. Está bien extrañar tu casa, y decirlo."
+  },
+  {
+   "year": "Genk · A los 16 años",
+   "title": "Ya no era bienvenido",
+   "paragraphs": [
+    "Después de una temporada, la familia de acogida no quiso que Kevin se quedara más tiempo. Pensaban que era demasiado callado, demasiado tímido con la gente y demasiado terco.",
+    "Lleva la maleta a la casa nueva. A los dieciséis años, tuvo que mudarse a otra residencia. Mucha gente se sentiría herida y sola si le pasara eso. Que te digan que no te quieren es una de las cosas más difíciles que hay."
+   ],
+   "lesson": "Ser callado no es algo malo. Si la gente no te entiende, no es el final de tu historia."
+  },
+  {
+   "year": "Genk · Levantándose",
+   "title": "Cinco goles en un tiempo",
+   "paragraphs": [
+    "Kevin se levantó. Entrenó más duro que antes. Una vez, entrando como cambio con el segundo equipo del Genk, marcó cinco goles en un solo tiempo.",
+    "Más tarde dijo que esa época difícil con la familia de acogida fue una lección para la vida. En 2009 jugó su primer partido con el primer equipo del Genk, y en 2011 el Genk fue campeón de Bélgica."
+   ],
+   "lesson": "Puedes convertir el dolor en esfuerzo. Sigue trabajando en lo que te gusta."
+  },
+  {
+   "year": "2012 a 2014 · Chelsea",
+   "title": "Atorado en la banca",
+   "paragraphs": [
+    "En 2012, Kevin firmó con el Chelsea, en Inglaterra, un fichaje soñado. Primero lo prestaron al Werder Bremen, en Alemania, donde jugó bien. De vuelta en el Chelsea, dio una asistencia de gol en su primer partido de liga.",
+    "Después de eso, casi siempre lo dejaban en la banca. El entrenador, José Mourinho, dijo que no encajaba en el estilo del Chelsea. Con tan pocas oportunidades de jugar, Kevin perdió su nivel."
+   ],
+   "lesson": "Que no te elijan duele. No significa que no seas lo bastante bueno."
+  },
+  {
+   "year": "2014 a 2015 · Wolfsburgo",
+   "title": "Valiente para cambiar",
+   "paragraphs": [
+    "El entrenador de Bélgica les dijo a sus jugadores que jugaran todo lo posible en sus clubes. Kevin casi no jugaba, así que pidió irse del Chelsea. En enero de 2014 se fue al Wolfsburgo, en Alemania.",
+    "Abre la puerta del Wolfsburgo. Ahí se convirtió en uno de los mejores jugadores de la Bundesliga. En la temporada 2014 a 2015 logró un récord de la Bundesliga con 21 asistencias, y marcó en la final de la Copa de Alemania, que ganó el Wolfsburgo."
+   ],
+   "lesson": "A veces necesitas empezar de nuevo. Está bien pedir un cambio."
+  },
+  {
+   "year": "2015 en adelante · Manchester City",
+   "title": "No estaba acabado",
+   "paragraphs": [
+    "En 2015, el Manchester City pagó una cifra récord para el club para fichar a Kevin. Se quedó diez temporadas. Ganó la Champions League y seis títulos de la Premier League, y ayudó al City a ser el único equipo en llegar a 100 puntos en una temporada de la Premier League.",
+    "También ganó cinco Copas de la Liga y dos FA Cup. El niño al que su familia de acogida mandó lejos se convirtió en uno de los mejores jugadores de su generación."
+   ],
+   "lesson": "Las opiniones de los demás no deciden tu futuro. Sigue adelante."
+  }
+ ]
+}

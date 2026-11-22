@@ -1,0 +1,125 @@
+{
+ "id": "airhockey",
+ "name": "Air Futbol",
+ "title": "Hockey de aire de fútbol: Air Futbol gratis contra la compu",
+ "h1": "Juego de hockey de aire de fútbol: Air Futbol",
+ "description": "Air Futbol es un hockey de aire de fútbol gratis contra la computadora, en celular, tableta o computadora. Cuida tu arco y anota de rebote. Sin anuncios.",
+ "lead": "Hockey de aire en una cancha de fútbol pequeña. Arrastra tu mazo, mete el disco en el otro arco y enfrenta a una fila de rivales de la computadora que se vuelven más listos cada vez que ganas.",
+ "blurb": "Hockey de aire en una cancha de fútbol, contra la computadora",
+ "skill": "Los ángulos y los rebotes, y el trabajo del portero de quedarse entre el balón y el arco",
+ "about": [
+  "Air Futbol es la mesa de hockey de aire que está en el arcade de Futbol Island, ahora para jugar de verdad. La mesa está dibujada como una cancha de fútbol pequeña, el disco es un balón plano y cada jugador tiene un mazo redondo y un arco que defender.",
+  "El disco rebota en las bandas, así que cada tiro es una cuestión de ángulos. Jugando solo, enfrentas a una fila de rivales con nombre: le ganas a uno y entra el siguiente, un poco más rápido y más listo. Es un juego de un solo jugador: tú contra la computadora."
+ ],
+ "phone": [
+  "Sostén el celular en vertical y pon un dedo sobre tu mazo, abajo en la mesa. Sigue a tu dedo por cualquier parte de tu mitad de la cancha.",
+  "También sirve con el celular de lado: no hace falta girarlo de vuelta, la mesa simplemente se acuesta. Las tabletas funcionan igual."
+ ],
+ "desktop": [
+  "Mueve el mouse para llevar tu mazo; no necesitas presionar ningún botón. Las flechas del teclado también sirven, y P pausa el juego."
+ ],
+ "rules": [
+  "Un gol cuenta cuando todo el disco cruza la línea. Luego el disco sale desde el centro hacia el lado que recibió el gol, en cuanto hay un dedo sobre la mesa.",
+  "Tu mazo no puede cruzar la línea media.",
+  "Jugando solo, gana el partido quien llegue primero a cinco goles. Si ganas, entra el siguiente rival; tus puntos se mantienen.",
+  "Tienes tres vidas. Perder un partido te quita una y vuelves a enfrentar al mismo rival; cada tres victorias recuperas una vida.",
+  "Puntos: 100 por un gol, 75 más si entra de rebote en las bandas, 50 más si llega dentro de los cuatro segundos del saque o justo después de una atajada, 300 por ganar un partido sin recibir goles, y un bono por cada victoria."
+ ],
+ "teaches": [
+  "Los ángulos y los rebotes. El disco sale de la banda con el mismo ángulo con que llegó, igual que un pase contra una pared que regresa. ",
+  "La regla del portero: quédate entre el balón y el arco, y cubre primero el palo cercano. La tarjeta de resultados termina con una frase del entrenador sobre cómo entraron los goles.",
+  "El contraataque. El mejor momento para anotar es justo después de una atajada, antes de que el otro jugador vuelva a su posición, y el juego da un bono por eso."
+ ],
+ "tips": [
+  "Después de cada tiro, regresa tu mazo directo frente a tu arco.",
+  "Cuando el disco está de un lado, muévete hacia ese lado: cuida primero el palo cercano.",
+  "Si el portero estorba, apunta a la banda más o menos a la mitad del camino al arco.",
+  "Un empujón corto y rápido manda el disco más rápido que uno largo y lento."
+ ],
+ "harder": [
+  "El primer rival, Sandy, es lento, se para en el medio del arco y casi nunca ataca.",
+  "Cada uno de los siguientes reacciona antes, se mueve más rápido, tira más fuerte y lee los rebotes más seguido; desde el cuarto, ellos también usan las bandas.",
+  "Hay doce rivales con nombre. Después del duodécimo sigue jugando el más fuerte, así que la partida solo termina cuando se acaban tus vidas."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: los ángulos, la posición frente al arco y volver rápido después de un tiro.",
+  "Es un juego de un solo jugador contra la computadora, así que no hay nadie más en el partido. Un partido dura de uno a tres minutos."
+ ],
+ "faq": [
+  {
+   "q": "¿Air Futbol es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Air Futbol funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Contra quién juegas en Air Futbol?",
+   "a": "Contra la computadora. Air Futbol es un juego de un solo jugador: enfrentas a doce rivales con nombre, uno tras otro, cada uno un poco más rápido y más listo, y tu mejor partida va a la tabla de récords."
+  },
+  {
+   "q": "¿Cómo se juega Air Futbol?",
+   "a": "Arrastra tu mazo redondo con un dedo (o con el mouse) para pegarle al disco y meterlo en el arco del otro lado, y no dejes que entre en el tuyo. Los tiros pueden rebotar en las bandas."
+  },
+  {
+   "q": "¿Para qué edad es Air Futbol?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Basta con un dedo, y el primer rival es suave, así que es uno de los juegos del arcade más fáciles para empezar."
+  }
+ ],
+ "controls": [
+  "arrastra tu mazo con un dedo",
+  "mueve el mouse"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-positions/goalkeeper",
+   "name": "Portero",
+   "line": "Dónde se para un portero y por qué"
+  },
+  {
+   "path": "/learn/soccer-drills/wall-passing",
+   "name": "Ejercicio de pases contra la pared",
+   "line": "Ángulos contra una pared, la versión real de un tiro de rebote"
+  },
+  {
+   "path": "/learn/soccer-terms/counterattack",
+   "name": "Contraataque",
+   "line": "Atacar en el momento en que se recupera el balón"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Air Futbol en un celular: un mazo verde azulado y un mazo rojo en una cancha de fútbol pequeña con el disco moviéndose entre ellos",
+   "caption": "Tu mitad es la parte de abajo de la mesa. Los números grandes impresos en la cancha son el marcador."
+  },
+  {
+   "alt": "Air Futbol muestra GOAL! y un bono de tiro de rebote después de que el disco entró rebotando en la banda",
+   "caption": "Un gol de rebote en la banda paga extra."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Air Futbol: un peloteo contra Sandy, con el disco cruzando la línea media entre el mazo rojo y el verde azulado",
+   "caption": "Mantén el peloteo."
+  },
+  {
+   "alt": "Air Futbol: SMASH! El mazo verde azulado sube contra el disco y lo manda volando por la cancha",
+   "caption": "Desliza contra el disco para un remate."
+  },
+  {
+   "alt": "Air Futbol: el disco rebota en la banda izquierda en medio de un peloteo",
+   "caption": "Los tiros de rebote dan puntos extra."
+  },
+  {
+   "alt": "Air Futbol contra Pip, el rival del nivel 2: SAVE! cuando el mazo verde azulado detiene un tiro de fuego frente a su propio arco",
+   "caption": "Cada victoria trae un nuevo rival."
+  }
+ ],
+ "clip": {
+  "name": "Air Futbol en acción: hockey de aire en una cancha de fútbol",
+  "alt": "Air Futbol en un celular contra Sandy, un frijol con gorra amarilla detrás del arco lejano: un tiro CLOSE!, un SMASH!, HEATING UP!, una atajada, ON FIRE! y luego un gol de contraataque",
+  "caption": "Air Futbol: cuida tu arco y anota de rebote en la banda."
+ }
+}

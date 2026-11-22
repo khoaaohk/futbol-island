@@ -1,0 +1,113 @@
+{
+ "id": "bale",
+ "title": "Bale",
+ "subtitle": "La mala racha",
+ "player": "Gareth Bale",
+ "country": "Wales",
+ "summary": "Bale: La mala racha es un libro desplegable gratis de seis capítulos para niños sobre Gareth Bale, descubierto a los nueve años jugando fútbol de seis contra seis en Cardiff, al que su maestro de educación física le puso reglas de un solo toque y que jugó con Gales a los dieciséis. En el Tottenham, su equipo no ganó en sus primeros 24 partidos de la Premier League, y la gente decía que tenía mala suerte. Luego la racha terminó y se convirtió en una estrella como extremo. La historia enseña que una mala racha no dice quién eres.",
+ "description": "Libro desplegable gratis para niños sobre Gareth Bale: la mala racha en el Tottenham, su cambio a extremo y sus logros con Gales.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Gales"
+  },
+  {
+   "label": "El más joven de Gales",
+   "value": "16 años y 315 días, 2006"
+  },
+  {
+   "label": "Racha sin ganar",
+   "value": "24 partidos de la Premier League"
+  },
+  {
+   "label": "Champions League",
+   "value": "5, con el Real Madrid"
+  },
+  {
+   "label": "Mundial",
+   "value": "2022, el primero de Gales desde 1958"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde empezó a jugar Gareth Bale?",
+   "a": "Gareth Bale nació en 1989 en Cardiff, en Gales. Cuando tenía nueve años, unos ojeadores del Southampton lo vieron jugar fútbol de seis contra seis con su primer club, el Cardiff Civil Service, y lo invitaron a entrenar con ellos."
+  },
+  {
+   "q": "¿Qué reglas especiales le dio a Gareth Bale su maestro de educación física?",
+   "a": "Era tan bueno en el fútbol de la escuela que su maestro de educación física, Gwyn Morris, solo le permitía un toque del balón y no lo dejaba usar el pie izquierdo, su mejor pie. Así los partidos eran más justos y él practicaba otras habilidades."
+  },
+  {
+   "q": "¿Cuál fue la mala racha de Gareth Bale?",
+   "a": "En el Tottenham, su equipo no ganó ninguno de los primeros 24 partidos de la Premier League en los que él jugó. La racha duró dos años, y algunas personas decían que tenía mala suerte, aunque no era su culpa. Terminó en septiembre de 2009, cuando entró cerca del final de una victoria 5–0 sobre el Burnley."
+  },
+  {
+   "q": "¿Cómo se convirtió Gareth Bale en una estrella?",
+   "a": "Su entrenador lo pasó de lateral izquierdo a extremo, y se convirtió en uno de los jugadores más emocionantes del mundo. Los demás jugadores lo eligieron Jugador del Año en 2011 y 2013. En 2013 el Real Madrid lo fichó por una cifra récord mundial, y ganó la Champions League cinco veces."
+  },
+  {
+   "q": "¿Qué hizo Gareth Bale por Gales?",
+   "a": "Se convirtió en el jugador más joven en jugar con Gales, a los dieciséis años y 315 días. En 2016 llevó a Gales a las semifinales de la Eurocopa, y en 2022 ayudó a Gales a llegar al Mundial por primera vez desde 1958. Dejó de jugar en enero de 2023."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Cardiff · A los 9 años",
+   "title": "Descubierto en el seis contra seis",
+   "paragraphs": [
+    "Gareth Bale nació en 1989 en Cardiff, en Gales. Cuando tenía nueve años, unos ojeadores del Southampton lo vieron jugar fútbol de seis contra seis con su primer club, el Cardiff Civil Service. Era rápido y le encantaba correr con el balón.",
+    "El Southampton lo invitó a entrenar con ellos. Era el comienzo de un largo viaje. Todavía era un niño de escuela, y entrenó con el Southampton mientras crecía."
+   ],
+   "lesson": "Disfruta jugando. Los grandes jugadores empiezan en los partidos divertidos."
+  },
+  {
+   "year": "Días de escuela",
+   "title": "Reglas especiales",
+   "paragraphs": [
+    "Gareth era tan bueno en el fútbol de la escuela que su maestro de educación física, Gwyn Morris, le puso reglas especiales. Solo podía dar un toque al balón, y no podía usar el pie izquierdo, su mejor pie. Así los partidos eran más justos para los demás niños.",
+    "Las reglas hicieron el juego justo para todos, y obligaron a Gareth a practicar sus otras habilidades."
+   ],
+   "lesson": "Ponerte las cosas más difíciles es una gran manera de mejorar."
+  },
+  {
+   "year": "2006 · A los 16 años",
+   "title": "El más joven de Gales",
+   "paragraphs": [
+    "En abril de 2006, cuando tenía dieciséis años, Gareth jugó su primer partido con el Southampton. Unas semanas después, se convirtió en el jugador más joven en jugar con Gales, a los dieciséis años y 315 días. Jugaba de lateral izquierdo, subiendo y bajando por la banda.",
+    "En 2007 se fue al Tottenham Hotspur, en Londres. Londres era una ciudad grande y nueva, y el Tottenham era un club grande y nuevo para él."
+   ],
+   "lesson": "Los jugadores jóvenes pueden hacer cosas grandes cuando están listos y reciben una oportunidad."
+  },
+  {
+   "year": "2007 a 2009",
+   "title": "La mala racha",
+   "paragraphs": [
+    "En el Tottenham pasó algo raro. Gareth jugó 24 partidos de la Premier League, y su equipo no ganó ninguno. La racha siguió durante dos años, y algunas personas hasta decían que tenía mala suerte. No era su culpa, pero la gente seguía hablando de eso.",
+    "Es difícil cuando la gente dice que tienes mala suerte. Gareth siguió entrenando y siguió dando lo mejor de sí."
+   ],
+   "lesson": "Una mala racha es solo una racha. No dice quién eres."
+  },
+  {
+   "year": "Septiembre de 2009",
+   "title": "Se acabó la racha",
+   "paragraphs": [
+    "En septiembre de 2009, Gareth entró como cambio cerca del final de un partido contra el Burnley. El Tottenham ganó 5–0. ¡Por fin se acabó la racha! Sus compañeros se alegraron por él.",
+    "Luego su entrenador lo pasó de lateral izquierdo a extremo, y Gareth se convirtió en uno de los jugadores más emocionantes del mundo. En 2011 y 2013, los demás jugadores lo eligieron Jugador del Año."
+   ],
+   "lesson": "A veces un cambio pequeño, como una nueva posición, te ayuda a brillar."
+  },
+  {
+   "year": "2013 a 2023",
+   "title": "Un héroe para Gales",
+   "paragraphs": [
+    "En 2013, el Real Madrid fichó a Gareth por una cifra récord mundial, y ganó la Champions League cinco veces. En 2016 llevó a Gales a las semifinales de la Eurocopa. Marcó muchos goles importantes en grandes finales.",
+    "En 2022 ayudó a Gales a llegar al Mundial por primera vez desde 1958. Gareth dejó de jugar en enero de 2023."
+   ],
+   "lesson": "Los momentos de mala suerte pasan. Sigue trabajando, y tu suerte puede cambiar."
+  }
+ ]
+}

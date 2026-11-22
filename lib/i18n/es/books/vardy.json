@@ -1,0 +1,113 @@
+{
+ "id": "vardy",
+ "title": "Vardy",
+ "subtitle": "¿Muy pequeño? No para siempre",
+ "player": "Jamie Vardy",
+ "country": "England",
+ "summary": "Vardy: ¿Muy pequeño? No para siempre es un libro desplegable gratis de seis capítulos para niños sobre Jamie Vardy, a quien el Sheffield Wednesday dejó ir de adolescente y que jugó en clubes pequeños mientras trabajaba como técnico haciendo férulas médicas. Subió un escalón a la vez y fue campeón de Inglaterra con el Leicester City. La historia enseña que la opinión de un club no decide en qué te puedes convertir.",
+ "description": "Libro desplegable gratis para niños sobre Jamie Vardy: lo dejaron ir por pequeño y subió paso a paso hasta ser campeón con el Leicester.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Inglaterra"
+  },
+  {
+   "label": "Creció en",
+   "value": "Hillsborough, Sheffield"
+  },
+  {
+   "label": "Primer club adulto",
+   "value": "Stocksbridge Park Steels, £120 a la semana"
+  },
+  {
+   "label": "Leicester City",
+   "value": "Fichó en 2012, a los 25 años"
+  },
+  {
+   "label": "Récord",
+   "value": "Goles en 11 partidos seguidos de la Premier League"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué el Sheffield Wednesday dejó ir a Vardy?",
+   "a": "Jamie creció en Hillsborough, en Sheffield, amaba al Sheffield Wednesday y jugaba en sus equipos juveniles. De adolescente lo dejaron ir porque el club pensó que era muy pequeño. Durante un tiempo dejó de jugar fútbol por completo."
+  },
+  {
+   "q": "¿En qué trabajaba Vardy?",
+   "a": "Cuando volvió a jugar, con el pequeño club Stocksbridge Park Steels, ganaba £120 a la semana. También trabajaba como técnico, haciendo férulas médicas que sostienen brazos y piernas lesionados. Siguió mejorando, llegó al primer equipo y anotó 55 goles con el club."
+  },
+  {
+   "q": "¿Cómo llegó Vardy al Leicester City?",
+   "a": "En 2009 pasó una semana a prueba con el Crewe Alexandra, pero el fichaje no se dio. En 2010, Neil Aspin lo fichó para el FC Halifax Town, donde fue el máximo goleador con 25 goles. En 2011 se fue al Fleetwood Town, anotó 31 goles de liga, y el Fleetwood ascendió a la Football League. En 2012 el Leicester City lo fichó por cerca de un millón de libras. Tenía veinticinco años."
+  },
+  {
+   "q": "¿Vardy estuvo a punto de dejar el fútbol?",
+   "a": "Sí. Su primera temporada en el Leicester fue difícil. Perdió su nivel, algunos aficionados lo criticaron en internet, y pensó en dejar el fútbol. Su entrenador, Nigel Pearson, y el asistente, Craig Shakespeare, lo convencieron de quedarse. La temporada siguiente anotó 16 goles de liga, y el Leicester ascendió a la Premier League."
+  },
+  {
+   "q": "¿Qué récord logró Vardy?",
+   "a": "En la temporada 2015–16 anotó en once partidos seguidos de la Premier League, un nuevo récord. El Leicester no era favorito, era un equipo del que pocos esperaban que ganara, pero se convirtió en campeón de Inglaterra. Jamie fue nombrado el Jugador de la Temporada de la Premier League, y también jugó con Inglaterra."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Sheffield · A los 16 años",
+   "title": "Le dijeron que era muy pequeño",
+   "paragraphs": [
+    "Jamie Vardy creció en Hillsborough, un barrio de Sheffield, en Inglaterra. Amaba al club local, el Sheffield Wednesday, y jugaba en sus equipos juveniles. Pero cuando tenía dieciséis años, el club lo dejó ir. Pensaban que era muy pequeño.",
+    "Durante un tiempo, Jamie dejó de jugar fútbol por completo. A muchas personas les dolería que les dijeran que no son suficientemente grandes. Pero la opinión de un club no decidió en qué se podía convertir."
+   ],
+   "lesson": "Ser pequeño, o que te digan que no, no decide quién vas a ser."
+  },
+  {
+   "year": "Stocksbridge · Fútbol aficionado",
+   "title": "Trabajo y fútbol",
+   "paragraphs": [
+    "Después de un descanso, Jamie volvió a jugar con el Stocksbridge Park Steels, un club pequeño muy por debajo de las grandes ligas. Allí ganaba £120 a la semana. También tenía un trabajo como técnico, haciendo férulas médicas que sostienen brazos y piernas lesionados.",
+    "Jala la pestaña para mover las férulas. Jamie cumplía con su trabajo y jugaba con su equipo, y siguió mejorando. Llegó al primer equipo y, al final, anotó 55 goles con el club."
+   ],
+   "lesson": "Dar lo mejor de ti en un lugar pequeño también cuenta. El trabajo duro nunca se pierde."
+  },
+  {
+   "year": "De 2009 a 2011 · Halifax",
+   "title": "Una puerta que no se abrió",
+   "paragraphs": [
+    "En 2009, clubes más grandes se fijaron en él, y Jamie pasó una semana a prueba con el Crewe Alexandra. Pero el fichaje no se dio, y se quedó en el Stocksbridge. Muchas personas querrían rendirse después de otro no.",
+    "En 2010, Neil Aspin, un entrenador que admiraba a Jamie desde hacía mucho tiempo, lo fichó para el FC Halifax Town. Jamie fue el máximo goleador del equipo con 25 goles, y sus compañeros lo votaron como el Jugador de la Temporada elegido por los jugadores."
+   ],
+   "lesson": "Sigue adelante después de un no. A veces la persona indicada está detrás de la siguiente puerta."
+  },
+  {
+   "year": "De 2011 a 2012",
+   "title": "Un escalón a la vez",
+   "paragraphs": [
+    "En 2011, Jamie subió de nivel y se fue al Fleetwood Town. Anotó 31 goles de liga, más que nadie en toda la división, y el Fleetwood ganó el título y su primer ascenso a la Football League.",
+    "En 2012, el Leicester City lo fichó por cerca de un millón de libras, una cifra récord por un jugador de fuera de la Football League. Jamie tenía veinticinco años. Muchos jugadores llegan a clubes grandes de adolescentes, pero su camino fue más largo, un escalón a la vez."
+   ],
+   "lesson": "Tu camino puede ser más lento que el de otros. Cada paso igual te lleva hacia adelante."
+  },
+  {
+   "year": "Leicester · De 2012 a 2014",
+   "title": "Cuando casi lo deja",
+   "paragraphs": [
+    "La primera temporada de Jamie en el Leicester fue difícil. Perdió su nivel, y algunos aficionados lo criticaron en internet. Hasta pensó en dejar el fútbol.",
+    "Levanta la solapa para ver quién lo ayudó. Su entrenador, Nigel Pearson, y el asistente, Craig Shakespeare, lo convencieron de quedarse. La temporada siguiente, Jamie anotó 16 goles de liga. El Leicester ganó la Championship y ascendió a la Premier League, y sus compañeros lo votaron como el Jugador de la Temporada elegido por los jugadores."
+   ],
+   "lesson": "Cuando tengas ganas de rendirte, habla con la gente que cree en ti."
+  },
+  {
+   "year": "De 2015 a 2016",
+   "title": "Campeones de Inglaterra",
+   "paragraphs": [
+    "En la temporada 2015–16, Jamie anotó en once partidos seguidos de la Premier League, un nuevo récord. El Leicester no era favorito, era un equipo del que pocos esperaban que ganara, pero se convirtió en campeón de Inglaterra.",
+    "Jamie fue nombrado el Jugador de la Temporada de la Premier League, y también jugó con Inglaterra. El niño al que dejaron ir por ser muy pequeño siguió adelante, hasta llegar a lo más alto."
+   ],
+   "lesson": "Cada quien crece a su propio ritmo. Nunca es tarde para seguir adelante."
+  }
+ ]
+}

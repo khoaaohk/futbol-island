@@ -1,0 +1,113 @@
+{
+ "id": "nadim",
+ "title": "Nadim",
+ "subtitle": "Un largo camino hacia un nuevo hogar",
+ "player": "Nadia Nadim",
+ "country": "Denmark",
+ "summary": "Nadim: Un largo camino hacia un nuevo hogar es un libro desplegable gratis de seis capítulos para niños sobre Nadia Nadim, que nació en Herat, Afganistán, y llegó a Dinamarca como refugiada cuando tenía unos once años. Jugó al fútbol por primera vez junto a un centro de refugiados, fue la primera danesa naturalizada en jugar con una selección mayor de Dinamarca y se recibió de médica en 2022. La historia enseña que puedes ser más de una cosa.",
+ "description": "Libro desplegable gratis para niños sobre Nadia Nadim: de refugiada afgana a jugadora de la selección de Dinamarca y médica.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Dinamarca"
+  },
+  {
+   "label": "Nació",
+   "value": "1988, Herat, Afganistán"
+  },
+  {
+   "label": "Primer club",
+   "value": "Un club pequeño de Aalborg, a los doce años"
+  },
+  {
+   "label": "Primer partido con Dinamarca",
+   "value": "2009, Copa del Algarve"
+  },
+  {
+   "label": "Médica",
+   "value": "Se recibió en enero de 2022"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué la familia de Nadia Nadim se fue de Afganistán?",
+   "a": "Nadia nació en 1988 en Herat, una ciudad de Afganistán. Cuando era niña, su país estaba en guerra. Su papá era general del ejército, y murió en la guerra. Su mamá, Hamida, decidió que la familia tenía que irse para estar a salvo. Nadia, su mamá y sus cuatro hermanas solo pudieron llevar lo que podían cargar."
+  },
+  {
+   "q": "¿Cómo llegó Nadia a Dinamarca?",
+   "a": "Primero la familia viajó a Pakistán. Después se escondieron en la parte de atrás de un camión para un largo viaje hacia el norte. Esperaban llegar al Reino Unido, donde tenían familia, pero el camión los llevó a Dinamarca. Nadia tenía unos once años. Dinamarca recibió a la familia como refugiados."
+  },
+  {
+   "q": "¿Dónde empezó Nadia a jugar al fútbol?",
+   "a": "La familia fue llevada a un centro de refugiados cerca de la ciudad de Aalborg. Justo al lado había un club de fútbol, y allí Nadia vio a niñas jugando al fútbol en las canchas. Ella también quería jugar. Entrenó en el centro, y a los doce años entró a un pequeño club local de Aalborg."
+  },
+  {
+   "q": "¿Por qué Nadia tuvo que esperar para jugar con Dinamarca?",
+   "a": "Nadia se hizo ciudadana danesa en 2008, pero una regla de la FIFA decía que todavía tenía que esperar. La federación danesa de fútbol le pidió a la FIFA que revisara su caso otra vez, y la FIFA hizo una excepción. En 2009 jugó su primer partido con Dinamarca, en la Copa del Algarve. Fue la primera danesa naturalizada en jugar con una selección mayor de Dinamarca."
+  },
+  {
+   "q": "¿Nadia Nadim es médica?",
+   "a": "Sí. Mientras todavía era futbolista profesional, Nadia estudió medicina en la Universidad de Aarhus, y siguió estudiando durante la temporada de fútbol. En enero de 2022 se recibió de médica. En 2019 la UNESCO la nombró defensora de la educación de niñas y mujeres."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Afganistán · 1988 a 2000",
+   "title": "Una niña de Herat",
+   "paragraphs": [
+    "Nadia Nadim nació en 1988 en Herat, una ciudad de Afganistán. Cuando era niña, su país estaba en guerra. Su papá era general del ejército, y murió en la guerra.",
+    "Su mamá, Hamida, decidió que la familia tenía que irse para estar a salvo. Nadia, su mamá y sus cuatro hermanas solo pudieron llevar lo que podían cargar. Estaba por empezar un viaje muy largo."
+   ],
+   "lesson": "Cuando algo da miedo, quédate cerca de las personas que te cuidan. En la cancha, quédate cerca de tu equipo también."
+  },
+  {
+   "year": "De Pakistán a Dinamarca · 2000",
+   "title": "El largo viaje",
+   "paragraphs": [
+    "Primero la familia viajó a Pakistán. Desde allí volaron a Italia. Después se escondieron en la parte de atrás de un camión para un viaje largo y oscuro hacia el norte. Esperaban llegar al Reino Unido, donde tenían familia.",
+    "¡Pero el camión los llevó a Dinamarca! Nadia tenía unos once años, en un país donde no conocía el idioma. Dinamarca recibió a la familia como refugiados."
+   ],
+   "lesson": "Los planes cambian. Los buenos jugadores se adaptan al partido que tienen enfrente, no al que esperaban."
+  },
+  {
+   "year": "Aalborg · 2000",
+   "title": "La cancha de al lado",
+   "paragraphs": [
+    "La familia fue llevada a un centro de refugiados cerca de la ciudad de Aalborg. Justo al lado había un club de fútbol, y allí Nadia vio a niñas jugando al fútbol en las canchas.",
+    "Ella también quería jugar. Empezó a patear un balón todos los días, y entrenó en el centro. A los doce años entró a un pequeño club local de Aalborg. Su historia de fútbol en Dinamarca había comenzado."
+   ],
+   "lesson": "Mira con atención a los buenos jugadores y luego practica lo que viste. Cada toque que practicas hace más fácil el siguiente."
+  },
+  {
+   "year": "Dinamarca · 2008 a 2009",
+   "title": "Esperando para jugar con Dinamarca",
+   "paragraphs": [
+    "Nadia se hizo ciudadana danesa en 2008. Pero una regla de la FIFA decía que todavía tenía que esperar antes de poder jugar con la selección. La federación danesa de fútbol le pidió a la FIFA que revisara su caso otra vez.",
+    "La FIFA hizo una excepción, y en 2009 jugó su primer partido con Dinamarca, en la Copa del Algarve. Fue la primera danesa naturalizada en jugar con una selección mayor de Dinamarca. Después jugó más de cien partidos con su nuevo país."
+   ],
+   "lesson": "Esperar es difícil. Sigue entrenando mientras esperas, para estar lista cuando llegue tu oportunidad."
+  },
+  {
+   "year": "Países Bajos · 2017",
+   "title": "El penal en la final",
+   "paragraphs": [
+    "En la Eurocopa de 2017, Nadia ayudó a Dinamarca en una campaña brillante. En los cuartos de final marcó el empate contra Alemania, la favorita, y Dinamarca ganó 2–1.",
+    "En la final contra Países Bajos, le dieron un penal a Dinamarca. Nadia dio un paso al frente y lo marcó. Dinamarca perdió la final 4–2, pero el equipo había llegado a la final unido, y Nadia había sido valiente desde el punto penal."
+   ],
+   "lesson": "Antes de un penal, elige tu lugar temprano, respira lento una vez y no cambies de idea."
+  },
+  {
+   "year": "Aarhus · 2022",
+   "title": "La doctora Nadia",
+   "paragraphs": [
+    "Mientras todavía era futbolista profesional, Nadia estudió medicina en la Universidad de Aarhus. Siguió estudiando durante la temporada de fútbol, incluso cuando jugaba lejos de Dinamarca.",
+    "En enero de 2022 se recibió de médica. Habla muchos idiomas, y en 2019 la UNESCO la nombró defensora de la educación de niñas y mujeres. Ella dice que todas las mujeres deberían tener las mismas oportunidades."
+   ],
+   "lesson": "Puedes ser más de una cosa. Esfuérzate en la escuela y en el fútbol: las dos cosas te hacen más fuerte."
+  }
+ ]
+}

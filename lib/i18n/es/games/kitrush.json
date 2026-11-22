@@ -1,0 +1,135 @@
+{
+ "id": "kitrush",
+ "name": "Kit Rush",
+ "title": "Juego de fútbol para deslizar: Kit Rush, gratis en línea",
+ "h1": "Juego de fútbol para deslizar: Kit Rush",
+ "description": "Kit Rush es un juego de fútbol gratis para niños. Desliza el dedo por la ropa de tu equipo, deja la del rival y esquiva el silbato. Sin anuncios.",
+ "lead": "Una bolsa de uniformes se abre y camisetas, tacos, petos y balones salen volando. Corta todo lo que tenga los colores de tu equipo, deja en paz la ropa del otro equipo y nunca toques el silbato.",
+ "blurb": "Corta la ropa de tu equipo, deja la del rival y esquiva el silbato",
+ "skill": "Reconocer a tu equipo de un vistazo y mirar antes de actuar",
+ "about": [
+  "Kit Rush es la versión futbolera del clásico juego de arcade de deslizar y cortar. Los objetos salen volando en oleadas, y cada uno lleva un uniforme: un color y un diseño juntos (liso, aros, rayas o banda). Tu trabajo es cortar solo el uniforme de tu propio equipo.",
+  "Una partida dura hasta que pierdes tus tres vidas, y casi todas duran de uno a tres minutos."
+ ],
+ "phone": [
+  "Sostén el celular en vertical y desliza un dedo por la pantalla, a través de los objetos con el uniforme de tu equipo.",
+  "Tocar no hace nada: tienes que dibujar una línea.",
+  "Pausa con el botón de la esquina de arriba."
+ ],
+ "desktop": [
+  "Mantén presionado el botón del mouse y arrastra por los objetos, o desliza el dedo en una pantalla táctil.",
+  "El juego se ve en una página vertical en el centro de la pantalla."
+ ],
+ "rules": [
+  "La franja de arriba y el marco alrededor de la pantalla siempre muestran tu uniforme.",
+  "El primer objeto de un corte da 10 puntos, el segundo 20, y así hasta 60. Un corte de tres o más da un bono y un grito: HAT-TRICK, TIKI-TAKA, TOTAL FOOTBALL, GOLAZO.",
+  "Cortar el uniforme del otro equipo o el silbato te quita una vida. Dejar pasar uno de tus objetos no cuesta nada, pero termina tu racha limpia.",
+  "Doce cortes limpios seguidos traen un SUPER SUB: una vida de vuelta, hasta tener tres.",
+  "¡SWITCH! De vez en cuando tu equipo cambia. La franja y el marco pasan al nuevo uniforme y el juego sigue.",
+  "Tres objetos especiales ayudan: el balón dorado (cinco segundos solo de balones dorados), el cronómetro (cinco segundos en cámara lenta) y el brazalete de capitán (puntos dobles durante ocho segundos)."
+ ],
+ "teaches": [
+  "En un partido de verdad, un jugador tiene menos de un segundo para distinguir a un compañero de un rival. Por eso los dos equipos deben usar uniformes diferentes, y por eso el portero usa un tercer color. Kit Rush entrena esa mirada rápida: primero el color, luego el diseño para confirmar.",
+  "También entrena a mirar antes de actuar. El mejor corte se planea. Lees toda la oleada, encuentras una línea a través de tus colores y cortas una sola vez. Los entrenadores piden el mismo hábito en la cancha con las palabras “mira por encima del hombro”.",
+  "El momento del Switch es la transición de un partido real, cuando el balón cambia de equipo y cada jugador tiene que volver a leer la jugada al instante."
+ ],
+ "tips": [
+  "Lee toda la oleada antes de moverte. Un corte planeado a través de cuatro de tus objetos da al menos 100 puntos; cuatro cortes sueltos dan 40.",
+  "Revisa el diseño además del color, sobre todo cuando entran un tercer y un cuarto uniforme.",
+  "Después de un SWITCH, mira la franja antes de tocar algo.",
+  "Deja ir un objeto difícil. Fallar no te quita vida; un corte apurado que pasa por un silbato sí.",
+  "Cuida tu racha limpia cuando te queda una sola vida: doce cortes limpios te devuelven una vida."
+ ],
+ "harder": [
+  "Las tres primeras oleadas son para aprender: uno de tus objetos, luego dos, luego uno del rival.",
+  "Después, las oleadas llegan más seguidas y vuelan más rápido, y más objetos de cada oleada son del otro equipo (cerca de una quinta parte al principio, casi la mitad después).",
+  "Los silbatos aparecen desde la quinta oleada. Más tarde entra un tercer uniforme, luego un cuarto, y el color solo ya no basta.",
+  "Las medallas marcan el camino: Bronce con 500 puntos, Plata con 1,200, Oro con 2,500 y Capitán con 5,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: reconocer rápido y mirar alrededor, el hábito de mirar antes de actuar. Durante el juego solo hay números, íconos y gritos cortos, así que los niños que empiezan a leer pueden jugar solos.",
+  "Duración: de uno a tres minutos por partida. El Daily Rush les da a todos las mismas oleadas una vez al día, y eso hace un reto justo para toda la familia."
+ ],
+ "faq": [
+  {
+   "q": "¿Kit Rush es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Kit Rush funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega Kit Rush?",
+   "a": "Desliza el dedo por los objetos que llevan el uniforme de tu equipo, que se ve en la franja de arriba. No toques el uniforme del otro equipo ni el silbato: cada uno te quita una de tus tres vidas. Los cortes más largos, por varios de tus objetos, dan más puntos."
+  },
+  {
+   "q": "¿Para qué edad es Kit Rush?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Kit Rush no necesita lectura durante el juego, así que los hermanos más pequeños casi siempre pueden jugar también."
+  },
+  {
+   "q": "¿Qué enseña un juego de fútbol para deslizar?",
+   "a": "A reconocer rápido a tu propio equipo por el color y el diseño, y a mirar toda la jugada antes de actuar. Cada partida también termina con un dato sobre los uniformes, los petos, el brazalete o el silbato."
+  }
+ ],
+ "controls": [
+  "desliza el dedo por la ropa de tu equipo",
+  "arrastra el mouse por ella"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/shoulder-check-colors",
+   "name": "Ejercicio de mirar por encima del hombro con colores",
+   "line": "Un ejercicio para mirar alrededor: mira, di el color y luego recibe"
+  },
+  {
+   "path": "/learn/soccer-drills/rondo-3v1",
+   "name": "Rondo 3v1",
+   "line": "Un juego de posesión que premia mirar antes de que llegue el balón"
+  },
+  {
+   "path": "/learn/soccer-terms/counterattack",
+   "name": "Contraataque (término de fútbol)",
+   "line": "Lo que pasa en los segundos después de que el balón cambia de equipo"
+  },
+  {
+   "path": "/learn/soccer-terms/marking",
+   "name": "Marca (término de fútbol)",
+   "line": "Saber qué rival te toca"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Kit Rush en un celular: un corte parte dos tacos verde azulado frente a un arco y aparece la palabra ONE-TWO",
+   "caption": "Un corte de dos objetos: la franja de arriba muestra tu uniforme y tus tres vidas."
+  },
+  {
+   "alt": "Tarjeta de resultados de Kit Rush con los puntos, el mejor corte y un dato sobre por qué los equipos usan dos uniformes",
+   "caption": "Cada partida termina con un dato real de fútbol."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Kit Rush al atardecer: CLEAN RUN! Doce prendas rosas cortadas seguidas mientras compañeros de rosa celebran en la línea de banda",
+   "caption": "Doce cortes limpios hacen una racha limpia."
+  },
+  {
+   "alt": "Kit Rush al anochecer: una oleada de ropa roja vuela frente al arco con un taco verde azulado de otro equipo en medio",
+   "caption": "Lee toda la oleada: deja el taco del otro equipo."
+  },
+  {
+   "alt": "Kit Rush al final de una partida: ropa roja y una estrella de tarjeta roja suben mientras el cielo se vuelve de noche",
+   "caption": "El cielo se oscurece a medida que avanza la partida."
+  },
+  {
+   "alt": "Kit Rush: SWITCH! NEW KIT. La tarjeta muestra los aros verde azulado que ahora debes cortar, y el marco se vuelve verde azulado",
+   "caption": "Tu uniforme puede cambiar en plena partida."
+  }
+ ],
+ "clip": {
+  "name": "Kit Rush en acción: cortar el uniforme de tu equipo en el aire",
+  "alt": "Kit Rush en un celular: ropa rosa, botellas y un cronómetro suben al atardecer, una racha limpia de doce seguidas, SLOW-MO, y luego el uniforme cambia a bandas rojas mientras los compañeros celebran en la línea de banda",
+  "caption": "Kit Rush: corta tu propio uniforme y deja el del otro equipo."
+ }
+}

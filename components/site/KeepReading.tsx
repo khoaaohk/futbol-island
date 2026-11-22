@@ -46,7 +46,7 @@ const WORDS={en:{title:'Keep reading',more:(n:number)=>`Show ${n} more`},es:{tit
 const MAIN={en:[{path:LIBRARY_PATH,name:'Learn soccer: the whole Library',line:'Lessons, rules, drills and more, free',tag:'Library'},
   {path:GAMES_HUB.path,name:'Free soccer games for kids',line:GAMES_HUB.blurb}],
  es:[{path:'/es'+LIBRARY_PATH,name:'Aprende fútbol: toda la biblioteca',line:'Lecciones, reglas, ejercicios y más, gratis',tag:'Biblioteca'},
-  {path:GAMES_HUB.path,name:'Juegos de fútbol gratis para niños',line:'Juegos de arcade, cada uno sobre una idea del fútbol (en inglés)'}]} as const satisfies Record<'en'|'es',readonly ReadLink[]>;
+  {path:'/es'+GAMES_HUB.path,name:'Juegos de fútbol gratis para niños',line:'Juegos de arcade, cada uno sobre una idea del fútbol'}]} as const satisfies Record<'en'|'es',readonly ReadLink[]>;
 
 /** Visible slots per group: one each in turn until `show` is used up or every group is empty. */
 export function shareOut(sizes:readonly number[],show:number):number[]{

@@ -1,0 +1,113 @@
+{
+ "id": "buffon",
+ "title": "Buffon",
+ "subtitle": "Fuerte para hablar",
+ "player": "Gianluigi Buffon",
+ "country": "Italy",
+ "summary": "Buffon: Fuerte para hablar es un libro desplegable gratis de seis capítulos para niños sobre Gianluigi Buffon, uno de los mejores porteros del mundo, que tuvo depresión en 2003 y 2004. Fue a ver a un psicólogo, se recuperó y ganó el Mundial con Italia en 2006. La historia enseña que pedir ayuda es de fuertes, y que hablar de los sentimientos es de valientes.",
+ "description": "Libro desplegable gratis para niños sobre Gianluigi Buffon: su depresión, la ayuda de un psicólogo y el Mundial que ganó con Italia en 2006.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Italia"
+  },
+  {
+   "label": "Posición",
+   "value": "Portero"
+  },
+  {
+   "label": "Club",
+   "value": "Juventus"
+  },
+  {
+   "label": "Mundial",
+   "value": "Campeón con Italia, 2006"
+  },
+  {
+   "label": "Sus libros",
+   "value": "Numero 1 (2008) y un segundo libro (2024)"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Qué es la depresión?",
+   "a": "La depresión es una enfermedad de la mente. Puede hacer que alguien se sienta triste, cansado o vacío durante mucho tiempo, aunque desde fuera todo parezca estar bien. Gianluigi Buffon tuvo depresión entre diciembre de 2003 y junio de 2004, cuando era uno de los mejores porteros del mundo."
+  },
+  {
+   "q": "¿Cómo recibió ayuda Gianluigi Buffon?",
+   "a": "Entre diciembre de 2003 y junio de 2004, fue con regularidad a ver a un psicólogo. Un psicólogo es una persona preparada para ayudarnos a entender nuestros sentimientos, sobre todo escuchando y hablando. Tomó tiempo y paciencia. Para el verano de 2004, antes de la Eurocopa, ya había superado su depresión."
+  },
+  {
+   "q": "¿Qué pasó cuando Buffon se sintió mejor?",
+   "a": "Jugó todos los partidos de Italia en la Eurocopa 2004. En el Mundial de 2006 solo recibió dos goles en siete partidos y dejó el arco en cero cinco veces. Italia ganó el Mundial, y él fue elegido el mejor portero del torneo."
+  },
+  {
+   "q": "¿Por qué Buffon jugó en la Serie B?",
+   "a": "En 2006, la Juventus fue castigada por un escándalo llamado Calciopoli y bajó a la Serie B, la segunda división del fútbol italiano. Buffon decidió quedarse con su equipo. Jugó 37 partidos en la Serie B, y la Juventus ganó el título y volvió directo a la Serie A."
+  },
+  {
+   "q": "¿Cómo habló Buffon de su depresión?",
+   "a": "En 2008 escribió un libro sobre su vida, llamado Numero 1, y le contó a todo el mundo sobre su depresión. Habló de ella abiertamente en entrevistas en 2013 y otra vez en 2019. Dijo que también había tenido ataques de pánico en sus primeros años en la Juventus. En 2024 escribió un segundo libro. Su título quiere decir: caer, volver a levantarse, caer, volver a levantarse."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "2003 · Final de la Champions League",
+   "title": "Hasta los mejores pueden perder",
+   "paragraphs": [
+    "En 2003, Gianluigi Buffon era uno de los mejores porteros del mundo. Ese año se convirtió en el único portero en ganar el premio de la UEFA al mejor jugador de clubes. Su equipo, la Juventus, llegó a la final de la Champions League contra el Milan.",
+    "La final terminó en tanda de penales, y la Juventus perdió. La temporada siguiente también fue difícil, porque la Juventus no jugó bien. Buffon escribió después que, tras esa derrota, empezó a sentirse muy decaído."
+   ],
+   "lesson": "Puedes dar lo mejor de ti y aun así perder. Una derrota no cambia quién eres."
+  },
+  {
+   "year": "2003 a 2004",
+   "title": "Una nube gris y pesada",
+   "paragraphs": [
+    "Entre diciembre de 2003 y junio de 2004, Buffon tuvo depresión. La depresión es una enfermedad de la mente. Puede hacer que alguien se sienta triste, cansado o vacío durante mucho tiempo, aunque desde fuera todo parezca estar bien.",
+    "Años después, Buffon contó que también tuvo ataques de pánico en sus primeros años en la Juventus, y que una vez hasta se perdió un partido por ellos. Los aficionados veían a una superestrella en el arco. Por dentro, él la estaba pasando mal."
+   ],
+   "lesson": "Cualquiera puede sentirse decaído, hasta un héroe. Lo que sientes por dentro importa mucho."
+  },
+  {
+   "year": "Diciembre de 2003 a junio de 2004",
+   "title": "Alguien con quien hablar",
+   "paragraphs": [
+    "Buffon no se lo guardó todo. Entre diciembre de 2003 y junio de 2004, fue con regularidad a ver a un psicólogo. Un psicólogo es una persona preparada para ayudarnos a entender nuestros sentimientos, sobre todo escuchando y hablando.",
+    "Toca tres veces la puerta. Semana tras semana, Buffon siguió volviendo a hablar. Tomó tiempo y paciencia. Con esa ayuda, paso a paso, empezó a sentirse otra vez él mismo."
+   ],
+   "lesson": "Pedir ayuda es de fuertes, no de débiles. Dile a un adulto de confianza cómo te sientes."
+  },
+  {
+   "year": "2004 a 2006",
+   "title": "Vuelve el sol",
+   "paragraphs": [
+    "Para el verano de 2004, antes de la Eurocopa, Buffon ya había superado su depresión. Jugó todos los partidos de Italia en la Eurocopa 2004.",
+    "Sube el sol por encima de las colinas. Dos años después, en el Mundial de 2006, Buffon solo recibió dos goles en siete partidos, y dejó el arco en cero cinco veces. Italia ganó el Mundial, y él fue elegido el mejor portero del torneo. La nube gris no había durado para siempre."
+   ],
+   "lesson": "Los sentimientos difíciles pueden pasar. Con ayuda y tiempo, las cosas pueden mejorar."
+  },
+  {
+   "year": "2006 a 2007 · Serie B",
+   "title": "Quedarse con su equipo",
+   "paragraphs": [
+    "En 2006, poco después del Mundial, la Juventus fue castigada por un escándalo llamado Calciopoli. El club bajó a la Serie B, la segunda división del fútbol italiano. Fue una gran caída para un equipo famoso.",
+    "Sube la bandera otra vez por la escalera. Buffon decidió quedarse con la Juventus. Jugó 37 partidos en la Serie B, y la Juventus ganó el título y volvió directo a la Serie A. Cuando su equipo lo necesitó, él estuvo ahí."
+   ],
+   "lesson": "Quedarte con tu equipo en tiempos difíciles es una forma de valentía."
+  },
+  {
+   "year": "2008 en adelante",
+   "title": "Valiente para contarlo",
+   "paragraphs": [
+    "En 2008, Buffon escribió un libro sobre su vida, llamado Numero 1. En él, le contó a todo el mundo sobre su depresión. En 2013 y otra vez en 2019, habló de ella abiertamente en entrevistas.",
+    "Buffon siguió jugando hasta los 45 años. En 2024 escribió un segundo libro. Su título quiere decir: caer, volver a levantarse, caer, volver a levantarse. Cuando un héroe habla, otras personas pueden sentirse menos solas."
+   ],
+   "lesson": "Hablar de los sentimientos es de valientes. Te ayuda a ti, y también puede ayudar a otros."
+  }
+ ]
+}

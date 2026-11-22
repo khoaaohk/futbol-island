@@ -1,0 +1,142 @@
+{
+ "id": "keepyuppy",
+ "name": "Keepy-Uppy Beat",
+ "title": "Juego de dominadas para niños: Keepy-Uppy Beat gratis",
+ "h1": "Juego de dominadas de fútbol: Keepy-Uppy Beat",
+ "description": "Keepy-Uppy Beat es un juego de dominadas gratis para niños. Mantén el balón en el aire al ritmo con pies, muslo y cabeza, y entrena tu pie débil.",
+ "lead": "Keepy-Uppy Beat es un juego gratis de dominadas con balón en el navegador, con música. Los balones caen hacia cuatro botones: pie izquierdo, muslo, cabeza y pie derecho. Toca el botón correcto cuando cae el balón, al ritmo, y mantenlo en el aire hasta el final de la canción.",
+ "blurb": "Haz dominadas al ritmo con pies, muslo y cabeza",
+ "skill": "Dominadas: un toque suave, ritmo, la parte correcta del cuerpo y los dos pies",
+ "about": [
+  "Keepy-Uppy Beat es un juego de ritmo sobre hacer dominadas con un balón, dibujado como un cómic. Tu propio personaje de la isla hace dominadas arriba en la pantalla; abajo, los balones bajan por cuatro carriles hasta cuatro anillos, uno por cada botón.",
+  "Hay seis canciones, desde una cascarita en el parque a 80 pulsos por minuto hasta la Final de Copa a 140, con música hecha para el juego."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. El pulgar izquierdo toca los botones del pie izquierdo y del muslo; el pulgar derecho, los de la cabeza y el pie derecho.",
+  "Toca un botón cuando su balón cae en el anillo. Para un truco, desliza sobre el botón del pie (un círculo para la Vuelta al Mundo, hacia arriba para un Heel Flick, de lado para un Crossover) o mantén presionado el botón de la cabeza para un Neck Stall."
+ ],
+ "desktop": [
+  "D, F, J y K (o las flechas) son el pie izquierdo, el muslo, la cabeza y el pie derecho.",
+  "Mantén presionado Espacio con una tecla de pie para un truco deslizado, mantén una tecla para un control quieto y presiona P para pausar."
+ ],
+ "rules": [
+  "Toca cuando cae el balón: Sweet es dentro de una vigésima de segundo, más o menos, y Good un poco más. Early y Late mantienen el balón en el aire pero cortan tu serie de toques limpios.",
+  "Un balón que no tocas se cae. Tienes cinco balones en las tres primeras canciones y tres después, y ocho toques seguidos sin que caiga te devuelven un balón.",
+  "Termina una canción para ganar una estrella, y toca limpio para dos o tres. La canción del día es una de las tres primeras con un cambio, como solo el pie débil, igual para todos ese día."
+ ],
+ "teaches": [
+  "Las dominadas de verdad tienen ritmo: toque, toque, toque. Aquí cada toque cae en el pulso de la música, y las canciones posteriores ponen toques entre los golpes del tambor, así que aprendes a contar y a llevar el tiempo.",
+  "El balón vuela en un arco real entre dos toques, así que un toque más alto y suave te da más tiempo antes del siguiente. Cada canción tiene una parte de pie débil que se puntúa aparte, y se guarda tu mejor puntaje con el pie débil.",
+  "Hay seis trucos reales: Muslo-Pie-Muslo, Seal Taps, el Neck Stall, la Vuelta al Mundo, el Heel Flick y el Crossover. Cada uno tiene una lección de 10 segundos y una tarjeta en el Trick Book que explica cómo se hace."
+ ],
+ "tips": [
+  "Mira el anillo, no el botón: toca cuando el balón está dentro.",
+  "Si siempre tocas un poco antes o un poco tarde, vuelve a hacer la prueba de tiempo desde la tarjeta de inicio.",
+  "Antes de un truco, mira su dibujo en el balón: un círculo significa deslizar en redondo, una flecha significa deslizar hacia ese lado."
+ ],
+ "harder": [
+  "Cada canción es más rápida que la anterior, de 80 a 140 pulsos por minuto, con más toques entre los golpes del tambor.",
+  "Desde la segunda canción se suman trucos nuevos, y la parte de pie débil se hace más larga.",
+  "Medallas: Bronce con 4,000 puntos, Plata con 10,000 y Oro con 20,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: el momento justo y los dos pies. La tarjeta de resultados dice qué falló más, como tocar antes de tiempo.",
+  "Duración: una canción dura más o menos un minuto. Se puede jugar sin sonido. No hay rachas de días ni temporizadores."
+ ],
+ "faq": [
+  {
+   "q": "¿Keepy-Uppy Beat es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Keepy-Uppy Beat funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega Keepy-Uppy Beat?",
+   "a": "Toca los botones del pie, el muslo y la cabeza cuando cada balón cae en su anillo, al ritmo. Puedes jugar sin sonido: cada balón cae en un anillo, así que puedes jugar mirando."
+  },
+  {
+   "q": "¿Para qué edad es Keepy-Uppy Beat?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. La primera canción es la más lenta, a 80 pulsos por minuto; cada canción después es más rápida y suma más toques."
+  },
+  {
+   "q": "¿Enseña a hacer dominadas de verdad?",
+   "a": "Enseña lo que se puede aprender en una pantalla: el ritmo, qué parte del cuerpo usar, usar los dos pies y los nombres de trucos reales. Después toma un balón de verdad: suéltalo, da un toque, atrápalo y cuenta tu récord."
+  },
+  {
+   "q": "¿Qué es un keepy-uppy?",
+   "a": "Keepy-uppy es la palabra británica para hacer dominadas con un balón: mantenerlo en el aire con los pies, los muslos y la cabeza sin dejar que toque el suelo. En inglés también tiene otro nombre que significa “patadas hacia arriba”."
+  }
+ ],
+ "controls": [
+  "toca los botones con los dos pulgares",
+  "presiona D, F, J y K"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/first-touch",
+   "name": "Ejercicios de primer toque",
+   "line": "Controla el balón cuando llega"
+  },
+  {
+   "path": "/learn/soccer-drills/thigh-and-chest-control",
+   "name": "Ejercicio de control con muslo y pecho",
+   "line": "Amortigua un balón alto con el muslo"
+  },
+  {
+   "path": "/learn/soccer-drills/at-home",
+   "name": "Ejercicios para hacer en casa",
+   "line": "Trabajo con balón que puedes hacer solo"
+  },
+  {
+   "path": "/learn/soccer-terms/weak-foot",
+   "name": "¿Qué es el pie débil?",
+   "line": "Y cómo hacerlo más fuerte"
+  },
+  {
+   "path": "/learn/soccer-terms/first-touch",
+   "name": "Primer toque",
+   "line": "Cómo se ve un buen primer toque"
+  },
+  {
+   "path": "/learn/soccer-rules/heading-rules-for-kids",
+   "name": "Reglas de cabeceo para niños",
+   "line": "Los límites de edad para cabecear el balón"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Keepy-Uppy Beat, Park Kickabout: el balón cae en el anillo sobre el botón del pie izquierdo, se presiona el botón y el pie izquierdo del personaje lo sube con un SWEET!",
+   "caption": "Toca el botón cuando el balón cae en su anillo."
+  },
+  {
+   "alt": "Keepy-Uppy Beat, Cup Final Carnival: el personaje logra un Neck Stall con NECK STALL! +225 en la parte de pie débil, con balones cayendo hacia los botones del pie izquierdo y de la cabeza",
+   "caption": "Un Neck Stall: mantén presionado el botón de la cabeza hasta que se llene la barra."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Keepy-Uppy Beat, Park Kickabout: el balón cae en el anillo sobre el botón del pie izquierdo, se presiona el botón y el pie izquierdo del personaje lo sube con un SWEET!",
+   "caption": "Toca el botón cuando el balón cae en su anillo."
+  },
+  {
+   "alt": "Keepy-Uppy Beat, Cup Final Carnival: el personaje logra un Neck Stall con NECK STALL! +225 en la parte de pie débil, con balones cayendo hacia los botones del pie izquierdo y de la cabeza",
+   "caption": "Un Neck Stall: mantén presionado el botón de la cabeza hasta que se llene la barra."
+  },
+  {
+   "alt": "Keepy-Uppy Beat, Cup Final Carnival de noche: el aviso de la Vuelta al Mundo +240 y 62 seguidos, bajo las luces del estadio y los banderines",
+   "caption": "La Final de Copa: todos los trucos, los dos pies, 140 pulsos por minuto."
+  },
+  {
+   "alt": "El Trick Book de Keepy-Uppy Beat: tarjetas de Muslo-Pie-Muslo, Seal Taps, el Neck Stall, la Vuelta al Mundo y el Heel Flick, cada una con cómo hacerlo, un consejo del entrenador y cinco intentos logrados para llenarla",
+   "caption": "El Trick Book: cómo se hace cada truco real."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Keepy-Uppy Beat: dominadas con un balón al ritmo",
+  "alt": "Partida de Keepy-Uppy Beat en un celular: los balones bajan por cuatro carriles de colores hasta los anillos sobre los botones del pie izquierdo, el muslo, la cabeza y el pie derecho, y el personaje mantiene el balón en el aire con toques SWEET! al ritmo",
+  "caption": "Keepy-Uppy Beat: toca cada botón cuando cae su balón, al ritmo."
+ }
+}

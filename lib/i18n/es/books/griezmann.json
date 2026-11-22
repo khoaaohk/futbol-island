@@ -1,0 +1,113 @@
+{
+ "id": "griezmann",
+ "title": "Griezmann",
+ "subtitle": "¿Demasiado pequeño para Francia?",
+ "player": "Antoine Griezmann",
+ "country": "France",
+ "summary": "Griezmann: ¿Demasiado pequeño para Francia? es un libro desplegable gratis de seis capítulos para niños sobre Antoine Griezmann, el niño de Mâcon al que las academias francesas rechazaron por ser pequeño. Un ojeador de la Real Sociedad lo vio en 2005, y él cruzaba a España para entrenar cada tarde. Fue el máximo goleador de la Euro 2016, perdió esa final en casa y fue campeón del mundo en 2018. La historia enseña que el tamaño no lo es todo.",
+ "description": "Libro desplegable gratis para niños sobre Antoine Griezmann: los clubes franceses lo rechazaron por pequeño y fue campeón del mundo.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Francia"
+  },
+  {
+   "label": "Creció en",
+   "value": "Mâcon, Francia"
+  },
+  {
+   "label": "Equipo juvenil",
+   "value": "Real Sociedad, España"
+  },
+  {
+   "label": "Euro 2016",
+   "value": "Máximo goleador, seis goles"
+  },
+  {
+   "label": "Campeón del mundo",
+   "value": "2018"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué los clubes franceses rechazaron a Antoine Griezmann?",
+   "a": "Antoine hizo pruebas en varios clubes profesionales de Francia, como el Lyon, el Auxerre, el Saint-Étienne y el Sochaux, y una y otra vez le dijeron que no. No estaban seguros de él porque era muy pequeño, y algunos entrenadores temían que no fuera lo bastante fuerte."
+  },
+  {
+   "q": "¿Cómo llegó Antoine Griezmann a la Real Sociedad?",
+   "a": "En 2005, durante una prueba con el Montpellier, jugó un partido amistoso. Éric Olhats, ojeador de la Real Sociedad, estaba mirando y le gustó su técnica. Invitó a Antoine a una prueba de una semana en San Sebastián, que se alargó a una segunda semana, y luego la Real Sociedad le ofreció un lugar en su equipo juvenil."
+  },
+  {
+   "q": "¿Dónde vivió Antoine Griezmann de adolescente?",
+   "a": "Vivió con Éric Olhats en Bayona, un pueblo francés cerca de la frontera con España, y fue a la escuela allí. Por las tardes cruzaba a España para entrenar con la Real Sociedad."
+  },
+  {
+   "q": "¿Qué le pasó a Antoine Griezmann en la Euro 2016?",
+   "a": "La Euro 2016 se jugó en Francia. Antoine fue el máximo goleador, con seis goles, y lo eligieron mejor jugador del torneo. Pero en la final, Francia perdió 1–0 contra Portugal."
+  },
+  {
+   "q": "¿Qué hizo Antoine Griezmann en la final del Mundial 2018?",
+   "a": "En la final del Mundial 2018, Francia le ganó 4–2 a Croacia. Antoine metió un penal y fue elegido jugador del partido. Fue el segundo Mundial ganado por Francia. Dejó de jugar con Francia en 2024."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Mâcon · Infancia",
+   "title": "Un niño pequeño con mucha técnica",
+   "paragraphs": [
+    "Antoine Griezmann nació en 1991 en Mâcon, un pueblo de Francia. Jugaba en el club de su ciudad, el UF Mâconnais. Era pequeño y delgado, pero era muy bueno con el balón.",
+    "Antoine soñaba con entrar en la academia de un gran club francés, donde los jóvenes entrenan para llegar a ser profesionales. Cada semana jugaba, y cada semana esperaba que alguien se fijara en él."
+   ],
+   "lesson": "Tu tamaño de hoy no es el tamaño de tus sueños."
+  },
+  {
+   "year": "De los 13 a los 14 años",
+   "title": "Le dijeron que no, una y otra vez",
+   "paragraphs": [
+    "Antoine hizo pruebas en varios clubes profesionales de Francia, como el Lyon, el Auxerre, el Saint-Étienne y el Sochaux. Una y otra vez, le dijeron que no. Los clubes no estaban seguros de él porque era muy pequeño. Ser pequeño no te hace peor jugador, pero algunos entrenadores temían que no fuera lo bastante fuerte.",
+    "Escuchar un no tantas veces pondría triste a cualquiera. Pero Antoine siguió yendo a pruebas y siguió jugando."
+   ],
+   "lesson": "Sigue adelante después de un no. La opinión de un club no decide en quién te puedes convertir."
+  },
+  {
+   "year": "2005",
+   "title": "Alguien estaba mirando",
+   "paragraphs": [
+    "En 2005, durante una prueba con el Montpellier, Antoine jugó un partido amistoso. Mirando estaba Éric Olhats, ojeador de la Real Sociedad, un club de España. A Olhats le gustó lo que vio: un niño con gran técnica que parecía entender el juego.",
+    "Olhats lo invitó a una prueba de una semana en San Sebastián. Se alargó a una segunda semana, y luego la Real Sociedad le ofreció un lugar en su equipo juvenil. El sueño de Antoine se estaba cumpliendo, pero en un país distinto del que esperaba."
+   ],
+   "lesson": "Sigue mostrando lo que sabes hacer. La persona indicada podría estar mirando."
+  },
+  {
+   "year": "2005 a 2009",
+   "title": "Al otro lado de la frontera",
+   "paragraphs": [
+    "Antoine todavía era un adolescente muy joven, lejos de su familia. Vivía con Éric Olhats en Bayona, un pueblo francés cerca de la frontera con España, y fue a la escuela allí. Estar lejos de casa a esa edad es difícil para cualquiera.",
+    "Por las tardes, cruzaba a España para entrenar con la Real Sociedad. Era un viaje largo, pero siguió adelante. Cada año se hacía más fuerte y más hábil."
+   ],
+   "lesson": "Un camino difícil puede valer la pena cuando amas lo que haces."
+  },
+  {
+   "year": "2009 a 2016",
+   "title": "Una final en casa",
+   "paragraphs": [
+    "En 2009, Antoine jugó su primer partido con la Real Sociedad, y en 2014 pasó al Atlético de Madrid. En la Euro 2016, que se jugó en Francia, fue el máximo goleador, con seis goles, y lo eligieron mejor jugador del torneo.",
+    "Pero en la final, Francia perdió 1–0 contra Portugal. Perder una final en tu propio país es muy duro. Antoine y sus compañeros tuvieron que levantarse y empezar de nuevo."
+   ],
+   "lesson": "Perder duele. Date permiso para sentirlo, y luego prepárate para la siguiente oportunidad."
+  },
+  {
+   "year": "2018 · Rusia",
+   "title": "Campeón del mundo",
+   "paragraphs": [
+    "Dos años después, en el Mundial 2018, Francia volvió a llegar a la final. Le ganó 4–2 a Croacia. Antoine metió un penal, y fue elegido jugador del partido. Fue el segundo Mundial ganado por Francia.",
+    "El niño al que los clubes franceses habían llamado demasiado pequeño ahora era campeón del mundo con Francia. Dejó de jugar con Francia en 2024."
+   ],
+   "lesson": "El tamaño no lo es todo. La técnica, el trabajo duro y la confianza te pueden llevar muy lejos."
+  }
+ ]
+}

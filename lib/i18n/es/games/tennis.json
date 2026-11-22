@@ -1,0 +1,138 @@
+{
+ "id": "tennis",
+ "name": "Futbol Tennis",
+ "title": "Juego de fútbol tenis para niños: Futbol Tennis gratis",
+ "h1": "Juego de fútbol tenis: Futbol Tennis",
+ "description": "Futbol Tennis es un juego de fútbol tenis gratis que juegas en el navegador. Sin descargas y sin anuncios. Peloteos en nueve canchas de playa.",
+ "lead": "Futbol Tennis es un juego de fútbol tenis gratis, también llamado futtenis, que juegas en el navegador sin descargas: mantén el balón en el aire, contrólalo con tu primer toque y pásalo sobre la red con los pies y la cabeza, contra rivales cada vez más difíciles en nueve canchas de un club de playa.",
+ "blurb": "Fútbol tenis: primer toque y elegir el golpe sobre una red",
+ "skill": "El primer toque y elegir el golpe correcto",
+ "about": [
+  "El fútbol tenis, también llamado futtenis, es un juego de entrenamiento real: dos lados, una red baja y un balón que debe pasar al otro lado con cualquier parte del cuerpo menos las manos y los brazos. Futbol Tennis lo convierte en un juego de arcade uno contra uno en un club junto al mar.",
+  "Avanzas por nueve canchas, desde una cancha de práctica de arcilla por la mañana hasta la arena, una cancha dura, un muelle con viento y un césped de campeonato, cada una con un rival más difícil."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. La palanca bajo tu pulgar izquierdo mueve a tu jugador.",
+  "El botón amarillo grande es para patear: mantenlo más tiempo para más fuerza. Lob y Drop están a su lado, con Header, Scissor y Trap cuando el balón lo pide.",
+  "Los anillos en la cancha muestran dónde caerá el balón y dónde debe dejarlo un buen primer toque."
+ ],
+ "desktop": [
+  "Muévete con las flechas del teclado o con W, A, S y D.",
+  "La barra espaciadora patea (mantenla para más fuerza), J hace un globo y K una dejada. H es un cabezazo, L una chilena y T un control.",
+  "Escape o P pausan."
+ ],
+ "rules": [
+  "Llega al anillo donde cae el balón antes que él y luego elige un golpe.",
+  "Un control es un primer toque suave que deja el balón frente a ti para un segundo toque.",
+  "Un globo pasa por encima de un rival que está cerca de la red; una dejada cae corta frente a uno que está muy atrás.",
+  "El viento es real: un banderín en el marcador muestra su dirección y unas líneas de ráfaga cruzan la cancha.",
+  "El conteo del peloteo se ve mientras juegas, y cada punto ganado o perdido se anuncia en pantalla."
+ ],
+ "teaches": [
+  "El primer toque es la habilidad que decide lo que un jugador puede hacer después. En Futbol Tennis, un buen control deja el balón donde tu siguiente patada es fácil; uno malo te obliga a estirarte. Los niños sienten la diferencia al instante.",
+  "Elegir el golpe es la segunda lección. No hay un golpe mejor, solo el mejor para donde está parado el rival: globo si se acercó, dejada corta si se queda atrás, fuerza si está fuera de posición."
+ ],
+ "tips": [
+  "Primero muévete, después golpea: llega temprano al anillo y cada golpe será más fácil.",
+  "Usa el control cuando estés bajo presión. Un segundo toque tranquilo es mejor que un primer toque apurado.",
+  "Mira dónde está el rival. Cerca de la red: globo. Muy atrás: dejada.",
+  "Revisa el banderín del viento antes de un globo; un globo contra el viento se queda corto y uno a favor del viento se va largo.",
+  "Mantén el botón de patear para más fuerza solo cuando estés equilibrado y el rival esté fuera de posición."
+ ],
+ "harder": [
+  "Cada cancha trae un rival más difícil y su propia superficie, hora y clima: la cancha de arena, la cancha dura, el muelle con viento, la noche con faroles, el césped.",
+  "La cancha de práctica es el lugar para aprender los botones antes de seguir.",
+  "También hay dos giras más difíciles, Pro y Legend."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: el primer toque, mover los pies para ponerse detrás del balón y elegir un golpe según la situación. El cabezazo aparece como una jugada de arcade; en los partidos reales, las reglas de Estados Unidos no permiten cabecear a los jugadores de 10 años o menos.",
+  "Duración: unos minutos por cancha, con una pausa natural después de cada una."
+ ],
+ "faq": [
+  {
+   "q": "¿Futbol Tennis es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Futbol Tennis funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con el teclado."
+  },
+  {
+   "q": "¿Cómo se juega al fútbol tenis en línea?",
+   "a": "Mueve a tu jugador a donde caerá el balón y devuélvelo sobre la red con una patada, un globo, una dejada, un cabezazo o una chilena. Usa el control para dominar un balón fuerte con tu primer toque antes de golpearlo."
+  },
+  {
+   "q": "¿Para qué edad es Futbol Tennis?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Futbol Tennis tiene más botones que todos los otros juegos del arcade, así que es ideal para niños que ya juegan los demás con facilidad."
+  },
+  {
+   "q": "¿Qué es el fútbol tenis?",
+   "a": "Un juego de entrenamiento que usan futbolistas de todos los niveles: dos lados se pasan un balón sobre una red baja con los pies, los muslos, el pecho y la cabeza, nunca con las manos. Mejora el toque y el control. Futbol Tennis es una versión de videojuego uno contra uno."
+  }
+ ],
+ "controls": [
+  "muévete con la palanca bajo tu pulgar",
+  "muévete con las flechas del teclado"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-terms/first-touch",
+   "name": "Primer toque (término de fútbol)",
+   "line": "El toque que das cuando llega el balón"
+  },
+  {
+   "path": "/learn/soccer-drills/first-touch",
+   "name": "Ejercicios de primer toque",
+   "line": "Ejercicios para recibir y controlar el balón"
+  },
+  {
+   "path": "/learn/soccer-drills/thigh-and-chest-control",
+   "name": "Ejercicio de control con el muslo y el pecho",
+   "line": "Baja un balón que viene por el aire"
+  },
+  {
+   "path": "/learn/soccer-drills/wall-passing",
+   "name": "Ejercicio de pases contra la pared",
+   "line": "Toca y pasa contra una pared en casa"
+  },
+  {
+   "path": "/learn/soccer-rules/heading-rules-for-kids",
+   "name": "Reglas de cabeceo para niños en Estados Unidos",
+   "line": "Por qué los jugadores pequeños no cabecean el balón en los partidos"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Futbol Tennis en un celular: dos jugadores frente a frente con una red en medio en una cancha de arcilla, con una palanca y los botones de patear, Lob y Drop",
+   "caption": "Un peloteo en la cancha de práctica de arcilla, con anillos que muestran dónde caerá el balón."
+  },
+  {
+   "alt": "Futbol Tennis después de un peloteo: el aviso de punto ganado aparece sobre la cancha en letras de cómic",
+   "caption": "Un punto ganado: el aviso aparece como una viñeta de cómic."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Futbol Tennis: una devolución estirada pasa la red y la etiqueta de puntos dice STRETCHED +6",
+   "caption": "Hasta una devolución estirada suma puntos."
+  },
+  {
+   "alt": "Futbol Tennis: un anillo dorado espera en el lado cercano mientras el tiro del rival pasa la red",
+   "caption": "Haz caer el balón en un anillo para ganar un bono."
+  },
+  {
+   "alt": "Futbol Tennis: el aviso de punto ganado estalla sobre la cancha de arcilla y el marcador pasa a 1-4",
+   "caption": "Gana el punto y gana los puntos del peloteo."
+  },
+  {
+   "alt": "Futbol Tennis de noche en la cancha Neon Final: un peloteo contra el Campeón bajo la luna, con los botones Trap, Header y Scissor para golpes de truco",
+   "caption": "Las canchas siguientes agregan golpes de truco."
+  }
+ ],
+ "clip": {
+  "name": "Futbol Tennis en acción: un peloteo sobre la red",
+  "alt": "Futbol Tennis en un celular: el jugador frijol gana un punto en la cancha de arcilla junto al mar, y luego un nuevo peloteo va y viene sobre la red con anillos de objetivo en el lado lejano",
+  "caption": "Futbol Tennis: patea, haz globos y dejadas sobre la red."
+ }
+}

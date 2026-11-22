@@ -1,0 +1,133 @@
+{
+ "id": "trophydrop",
+ "name": "Trophy Drop",
+ "title": "Juego de fútbol para combinar: Trophy Drop gratis",
+ "h1": "Juego de fútbol para combinar: Trophy Drop",
+ "description": "Trophy Drop es un juego de fútbol gratis para niños. Suelta balones en una vitrina; dos iguales se unen hasta el trofeo dorado. Sin anuncios.",
+ "lead": "Trophy Drop es un juego de fútbol gratis para combinar objetos en el navegador. Desliza para apuntar, suelta y deja caer un balón en una vitrina de trofeos de vidrio. Dos iguales que se tocan se convierten en el siguiente objeto, desde un balón pequeño hasta el trofeo dorado.",
+ "blurb": "Suelta y combina, desde un balón pequeño hasta el trofeo dorado",
+ "skill": "Paciencia, planear con tiempo y cómo los toques pequeños suman",
+ "about": [
+  "Trophy Drop es un juego de soltar y combinar en la sala de trofeos de un club. Los objetos redondos caen en una vitrina de vidrio y ruedan y se acomodan como objetos reales. Cuando dos del mismo tipo se tocan, se unen en el siguiente objeto.",
+  "Hay nueve objetos, de pequeño a grande: un balón talla 1, un balón talla 3, un balón talla 5, un botín, un guante de portero, una medalla, un escudo, una copa y el trofeo dorado. Dos trofeos dorados juntos forman un Golden Double. Cada objeto tiene cara, y las luces de la sala cambian cuando haces trofeos más grandes."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Pon un dedo en la vitrina y desliza a la izquierda o a la derecha para apuntar; luego suelta para dejarlo caer.",
+  "Una línea punteada muestra dónde caerá el objeto, y una etiqueta muestra los dos objetos siguientes.",
+  "Toca el botón Shake cuando hayas ganado un Shake."
+ ],
+ "desktop": [
+  "Presiona el botón del mouse, muévelo para apuntar y suelta para dejarlo caer.",
+  "O apunta con las flechas izquierda y derecha (o A y D) y suelta con Espacio o Enter. X sacude. P o Escape pone pausa."
+ ],
+ "rules": [
+  "Dos objetos del mismo tipo que se tocan se unen en el siguiente. El objeto nuevo da puntos: 2 por un balón talla 3, y sube hasta 320 por el trofeo dorado y 640 por un Golden Double. Un Golden Double también hace la vitrina un poco más grande otra vez.",
+  "Una cadena es un objeto nuevo que vuelve a unirse enseguida. Cada paso de una cadena multiplica los puntos, hasta cinco veces.",
+  "Desde el nivel 3 puede caer una pelota de playa. Rebota y nunca se une, pero dos golpes fuertes la convierten en un balón talla 5.",
+  "Logra que cinco caídas seguidas se unan para ganar un Shake. Un Shake sacude la pila y detiene un momento el reloj de la línea de arriba. Puedes guardar un Shake y ganar dos en una partida.",
+  "La partida termina cuando la pila se queda por encima de la línea de arriba durante dos segundos. Antes, la línea se pone roja y hace una cuenta atrás, así que todavía hay tiempo para salvarla."
+ ],
+ "teaches": [
+  "Las grandes victorias en el fútbol se construyen con cosas pequeñas bien hechas: un primer toque suave, un pase corto, diez minutos de práctica cada día. En Trophy Drop nada grande llega solo. Cada trofeo dorado empieza como dos balones pequeños.",
+  "También premia la paciencia y planear con tiempo. Deja los objetos pequeños cerca de los pequeños y los grandes juntos, y las uniones siguen llegando. Cada partida termina con un dato corto de fútbol sobre hábitos pequeños, como usar muchos toques pequeños al regatear."
+ ],
+ "tips": [
+  "Deja el objeto más grande en una esquina y ordena los demás lejos de él, de grande a pequeño.",
+  "Suelta cada objeto junto a su gemelo, para que se unan de inmediato.",
+  "Mira la etiqueta NEXT antes de soltar y planea dos objetos por adelantado.",
+  "Busca cadenas: un objeto nuevo que cae sobre otro gemelo se une otra vez y da más puntos.",
+  "Mantén bajo el centro. Una pila alta en el centro llega primero a la línea de arriba."
+ ],
+ "harder": [
+  "El nivel sube cada 18 caídas, y nunca se detiene.",
+  "Los niveles más altos sueltan más objetos grandes y difíciles, y la pelota de playa sale más seguido, hasta una de cada cinco caídas.",
+  "La vitrina se hace más pequeña: desde el nivel 2 las paredes se acercan y el piso sube un poco en cada nivel, hasta un límite. Nada se cae; las paredes juntan la pila.",
+  "Medallas: Bronce con 1,500 puntos, Plata con 5,000 y Oro con 12,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: paciencia, planear con tiempo y la idea de que los pasos pequeños suman. Es un juego tranquilo: no hay reloj, y la única presión es la línea de arriba.",
+  "Duración: unos minutos por partida. El Daily Drop les da a todos los mismos objetos en el mismo orden una vez al día. Una tabla histórica de la isla guarda los 20 mejores puntajes."
+ ],
+ "faq": [
+  {
+   "q": "¿Trophy Drop es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Trophy Drop funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con el mouse o con las flechas."
+  },
+  {
+   "q": "¿Cómo se juega Trophy Drop?",
+   "a": "Desliza para apuntar y suelta para dejar caer un objeto en la vitrina. Dos del mismo tipo que se tocan se unen en el siguiente objeto. Mantén la pila debajo de la línea de arriba: si se queda por encima de la línea durante dos segundos, la partida termina."
+  },
+  {
+   "q": "¿Para qué edad es Trophy Drop?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Basta con un dedo y no hay reloj, así que es uno de los juegos del arcade más fáciles para empezar."
+  },
+  {
+   "q": "¿Cuál es el objeto más grande de Trophy Drop?",
+   "a": "El trofeo dorado, que se forma con dos copas. Dos trofeos dorados que se tocan salen juntos de la vitrina como un Golden Double, que vale 640 puntos."
+  }
+ ],
+ "controls": [
+  "desliza para apuntar y suelta para dejarlo caer",
+  "apunta con el mouse y suelta"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/toe-taps-and-foundations",
+   "name": "Toques con la punta y bases",
+   "line": "Toques pequeños al balón, un poco cada día"
+  },
+  {
+   "path": "/learn/soccer-drills/dribbling",
+   "name": "Ejercicios de regate",
+   "line": "Lleva el balón cerca con muchos toques pequeños"
+  },
+  {
+   "path": "/learn/soccer-terms/first-touch",
+   "name": "Primer toque (término de fútbol)",
+   "line": "El toque suave que prepara el siguiente"
+  },
+  {
+   "path": "/learn/soccer-drills/at-home",
+   "name": "Ejercicios de fútbol en casa",
+   "line": "Práctica corta que suma con el tiempo"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Trophy Drop en un celular: un balón pequeño cuelga sobre una vitrina de trofeos de vidrio con un escudo, una medalla, dos guantes, un botín y balones abajo",
+   "caption": "Desliza para apuntar el balón. La línea punteada muestra dónde caerá."
+  },
+  {
+   "alt": "Trophy Drop después de una unión: MEDAL! aparece en un recuadro de cómic bajo la vitrina y CHAIN x3 se ve sobre la pila",
+   "caption": "Dos guantes formaron una medalla, y una cadena triplicó los puntos."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Trophy Drop al inicio: un botín cuelga sobre la vitrina, con un guante y balones abajo",
+   "caption": "Apunta y luego suelta."
+  },
+  {
+   "alt": "Trophy Drop: un estallido CHAIN x2 cuando dos objetos se unen en la pila",
+   "caption": "Las uniones pueden encadenarse."
+  },
+  {
+   "alt": "Trophy Drop en el nivel 2: la vitrina se hace más pequeña, con una medalla en la pila",
+   "caption": "La vitrina se hace más pequeña."
+  },
+  {
+   "alt": "Trophy Drop en el nivel 4: un gran trofeo plateado, una medalla y un guante en la vitrina mientras aparece CHAIN x2!",
+   "caption": "Combina hasta llegar a un trofeo."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Trophy Drop: soltar y combinar en la vitrina de trofeos",
+  "alt": "Partida de Trophy Drop en un celular: balones, botines y guantes caen en una vitrina de vidrio y dos iguales se unen",
+  "caption": "Trophy Drop: dos iguales se unen en el siguiente."
+ }
+}

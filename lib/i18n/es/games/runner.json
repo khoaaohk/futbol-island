@@ -1,0 +1,138 @@
+{
+ "id": "runner",
+ "name": "Breakaway Run",
+ "title": "Juego de correr con balón para niños: Breakaway Run gratis",
+ "h1": "Juego de correr con el balón: Breakaway Run",
+ "description": "Breakaway Run es un juego de fútbol gratis para niños: regatea por una carretera, esquiva entradas con un salto o una finta y tira al arco. Sin anuncios.",
+ "lead": "Un juego de correr sin fin con el balón en los pies. Regatea por una carretera de la costa de la isla al atardecer, cambia de carril para encontrar espacio, supera cada entrada y define ante el portero.",
+ "blurb": "Corre sin fin con el balón: supera la entrada y encuentra el arco",
+ "skill": "Superar una entrada, el momento justo y la definición",
+ "about": [
+  "Breakaway Run es la versión futbolera del juego de correr sin fin de tres carriles. La carretera se curva y sube por la costa, los defensas se meten en tu carril y, de vez en cuando, aparece un arco con un portero al que hay que vencer.",
+  "Llegar a la línea de meta no termina la partida: te da un bono, te devuelve un corazón y empieza la siguiente ronda. La partida solo termina cuando te quedas sin corazones."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Desliza el dedo a la izquierda o a la derecha sobre la carretera para cambiar de carril, o presiona el lado izquierdo y mueve la palanca; mantenla para seguir moviéndote de lado.",
+  "Bajo tu pulgar derecho están Jump (saltar), Slide (barrerse) y Shoot (tirar); deslizar hacia arriba salta y deslizar hacia abajo te barre. Mantén Shoot para cargar el tiro y suéltalo para patear.",
+  "Cuando un defensa está cerca, se enciende un botón Skill con el nombre de la jugada, por ejemplo una cola de vaca hacia atrás (drag-back)."
+ ],
+ "desktop": [
+  "Las flechas izquierda y derecha (o A y D) cambian de carril. Arriba (o W) salta y abajo (o S) te barre.",
+  "La barra espaciadora tira, E hace la finta, y Escape o P pausan."
+ ],
+ "rules": [
+  "Un defensa parado en tu carril es una entrada: pásate al carril libre de al lado.",
+  "Una barrida que viene por el suelo se puede saltar o superar con la finta.",
+  "Recoge los balones de la carretera y ponte en línea con el hueco del arco antes de tirar.",
+  "Cada momento difícil tiene una respuesta clara: siempre hay un carril, un salto o una barrida libre.",
+  "Hay varias rutas, desde el Warm-up (cinco corazones, más lento) hasta el Night Derby, la Storm Final, la Cup Final y Legend, además de un Daily Run con un recorrido nuevo cada día."
+ ],
+ "teaches": [
+  "Regatear no es solo tener pies rápidos. Es una decisión que se toma temprano: ¿dónde está el defensa, dónde está el espacio y cuándo me voy? El juego muestra al defensa lo bastante lejos para leerlo y premia a quien decide antes de que llegue la entrada.",
+  "En la primera partida, el juego va más lento en cada decisión nueva, dice cuál es la acción y enciende el único botón, así los niños aprenden haciendo. La definición sigue la misma idea: ponte en línea con el hueco y luego patea."
+ ],
+ "tips": [
+  "Mira al siguiente defensa, no a tus pies: si cambias de carril temprano, nunca necesitas saltar.",
+  "Salta la barrida; no intentes ganarle corriendo.",
+  "Empieza con la ruta Warm-up. Te da cinco corazones y huecos más anchos mientras aprendes los botones.",
+  "Ponte en línea con el hueco del arco antes de cargar el tiro.",
+  "Pasar una ronda te devuelve un corazón, así que llegar a la línea de meta importa más que recoger todos los balones."
+ ],
+ "harder": [
+  "Dentro de una partida, la velocidad y los patrones crecen con la distancia, y las subidas y las curvas son más empinadas.",
+  "Cada ronda superada suma un poco más: la velocidad sube unos pocos por ciento, las líneas defensivas se juntan más y más defensas cruzan los carriles antes de quedarse quietos.",
+  "Desde la segunda ronda aparecen balones rodando, y las rondas siguientes agregan combinaciones de saltar y luego barrerse, y defensas frente al arco. Siempre queda un carril libre.",
+  "El bono por ronda también crece: 1,000 puntos por la primera ronda, 1,500 por la segunda, y así sucesivamente."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: leer temprano a un defensa, elegir el momento de una jugada y definir. En el celular se juega en vertical con uno o dos pulgares, con botones grandes.",
+  "Duración: unos minutos por partida, y el final de una ronda es un buen momento para parar."
+ ],
+ "faq": [
+  {
+   "q": "¿Breakaway Run es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Breakaway Run funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con las flechas y la barra espaciadora."
+  },
+  {
+   "q": "¿Cómo se juega Breakaway Run?",
+   "a": "Cambia de carril para rodear a los defensas, salta las barridas, bárrete por debajo de la línea cuando el juego lo pide y usa la finta cuando un defensa está cerca. En el arco, ponte en línea con el hueco y tira. Pierdes un corazón cuando te quitan el balón, y la partida termina cuando te quedas sin corazones."
+  },
+  {
+   "q": "¿Para qué edad es Breakaway Run?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. La ruta Warm-up es el comienzo suave; Night Derby y las siguientes son para quienes quieren un juego difícil."
+  },
+  {
+   "q": "¿Breakaway Run de verdad no tiene fin?",
+   "a": "Sí. La línea de meta termina la ronda y la carretera sigue con tus puntos y tus corazones. Cada ronda es un poco más difícil que la anterior, y la partida solo termina cuando te quedas sin corazones."
+  }
+ ],
+ "controls": [
+  "desliza el dedo a la izquierda o a la derecha para cambiar de carril",
+  "usa las flechas del teclado"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/dribbling",
+   "name": "Ejercicios de regate",
+   "line": "Ejercicios de control cercano y para superar a un rival"
+  },
+  {
+   "path": "/learn/soccer-drills/dribble-and-shoot",
+   "name": "Ejercicio de regatear y tirar",
+   "line": "Corre con el balón y luego define"
+  },
+  {
+   "path": "/learn/soccer-drills/one-v-one-to-end-zones",
+   "name": "1v1 hacia zonas de meta",
+   "line": "Encara a un defensa y pásalo"
+  },
+  {
+   "path": "/learn/soccer-terms/tackle",
+   "name": "Entrada (término de fútbol)",
+   "line": "Qué es una entrada limpia y cómo la evitan los atacantes"
+  },
+  {
+   "path": "/learn/soccer-terms/nutmeg",
+   "name": "Caño (término de fútbol)",
+   "line": "La forma más famosa de pasar a un defensa"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Breakaway Run en un celular en vertical: un jugador regatea por una carretera de la costa de tres carriles hacia un defensa, con balones en el camino y los botones Jump, Slide, Skill y Shoot",
+   "caption": "Tres carriles, un defensa adelante y balones para recoger en el camino."
+  },
+  {
+   "alt": "Breakaway Run después de un tiro: el balón entra en la red y aparece GOAL! en letras de cómic",
+   "caption": "Un gol termina la ronda y la carretera sigue."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Breakaway Run: un arco pequeño con dos porteros atraviesa la carretera verde frente al jugador",
+   "caption": "Elige el carril que los porteros dejan libre."
+  },
+  {
+   "alt": "Breakaway Run: balones y un cono en la carretera entre las tribunas, con el botón Shoot listo",
+   "caption": "Recoge balones en el camino."
+  },
+  {
+   "alt": "Breakaway Run en la calle empedrada: dos defensas presionan desde los dos lados con señales de alerta sobre la cabeza",
+   "caption": "Dos defensas presionan: encuentra el hueco."
+  },
+  {
+   "alt": "Breakaway Run en la carretera de arena: el jugador corre hacia un arco con dos defensas rojos enfrente",
+   "caption": "Termina la carrera con un tiro."
+  }
+ ],
+ "clip": {
+  "name": "Breakaway Run en acción: regatear por la carretera de la costa",
+  "alt": "Breakaway Run en un celular: el jugador frijol regatea por la carretera verde de la costa al atardecer entre conos y balones, y llega a una calle empedrada donde dos defensas presionan con señales de alerta",
+  "caption": "Breakaway Run: cambia de carril, salta y bárrete para superar las entradas."
+ }
+}

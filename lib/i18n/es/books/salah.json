@@ -1,0 +1,113 @@
+{
+ "id": "salah",
+ "title": "Salah",
+ "subtitle": "El largo viaje al entrenamiento",
+ "player": "Mohamed Salah",
+ "country": "Egypt",
+ "summary": "Salah: El largo viaje al entrenamiento es un libro desplegable gratis de seis capítulos para niños sobre Mohamed Salah, quien creció en Nagrig, un pueblo de Egipto. A los catorce años, su viaje al entrenamiento duraba unas tres horas. Después jugó en Suiza, Italia e Inglaterra, y llegó al Liverpool en 2017. La historia enseña que está bien llorar cuando las cosas son difíciles, y que hay que recordar de dónde vienes.",
+ "description": "Libro desplegable gratis para niños sobre Mohamed Salah: de su pueblo en Egipto y sus viajes de tres horas a entrenar, hasta el Liverpool.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Egipto"
+  },
+  {
+   "label": "Creció en",
+   "value": "Nagrig, un pueblo de Egipto"
+  },
+  {
+   "label": "Equipo juvenil",
+   "value": "Al Mokawloon, El Cairo, a los catorce años"
+  },
+  {
+   "label": "Liverpool",
+   "value": "Llegó en 2017"
+  },
+  {
+   "label": "Primera temporada en el Liverpool",
+   "value": "32 goles en la Premier League, un récord"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Qué tan lejos viajaba Mohamed Salah para entrenar?",
+   "a": "En 2006, cuando Mohamed tenía catorce años, entró al equipo juvenil del Al Mokawloon, un club de El Cairo, a más de 150 kilómetros de su casa. El viaje al entrenamiento duraba unas tres horas, y muchas veces tenía que faltar a la escuela para llegar. Más tarde contó que, cuando llegaba a casa en la noche, tenía que irse directo a dormir y levantarse temprano al día siguiente."
+  },
+  {
+   "q": "¿Por qué Mohamed Salah lloraba después de los partidos?",
+   "a": "En 2010, Mohamed empezó a jugar en la Liga Premier de Egipto. Al principio le costaba anotar, y a veces lloraba en el vestidor después de los partidos. Su entrenador, Mohamed Radwan, dijo que eso solo le daba más ganas de mejorar. El día de Navidad de 2010 anotó su primer gol con el club."
+  },
+  {
+   "q": "¿Por qué Mohamed Salah se fue a Suiza?",
+   "a": "En febrero de 2012 pasó algo terrible en un estadio de la ciudad de Port Said, y murieron muchas personas. Después, la liga de Egipto se detuvo y se canceló el resto de la temporada. El club suizo Basilea había estado observando a Mohamed, y lo fichó. Al principio le costó adaptarse, porque no hablaba el idioma. Pero el Basilea ganó la liga suiza en su primera temporada."
+  },
+  {
+   "q": "¿Qué le pasó a Mohamed Salah en el Chelsea?",
+   "a": "En 2014, Mohamed se convirtió en el primer egipcio en llegar al Chelsea, en Londres. Pero casi nunca lo elegían. Jugó solo tres partidos de la Premier League, y su entrenador lo criticó en público. En 2015, el Chelsea lo mandó a préstamo a la Fiorentina, en Italia. Luego, a préstamo en la Roma, anotó 15 goles y fue nombrado el Jugador de la Temporada del club."
+  },
+  {
+   "q": "¿Cómo ayuda Mohamed Salah a su pueblo?",
+   "a": "Mohamed nunca olvidó Nagrig, el pueblo donde creció. Allí muchas familias tienen muy poco dinero. Ha donado dinero para ayudar a construir una escuela y un hospital en Nagrig, y ayuda a muchas familias."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Nagrig · Egipto",
+   "title": "Un niño de pueblo",
+   "paragraphs": [
+    "Mohamed Salah nació en 1992 y creció en Nagrig, un pueblo del norte de Egipto donde muchas familias tienen muy poco dinero. Su mamá cuidaba la casa, y su papá trabajaba en una oficina de un hospital. Mohamed pasaba casi todo su tiempo libre jugando fútbol en la calle.",
+    "A los doce años entró a un pequeño equipo local, el Ittihad Basyoun, y un año después a un club de la ciudad cercana de Tanta."
+   ],
+   "lesson": "El lugar donde empiezas no decide hasta dónde puedes llegar."
+  },
+  {
+   "year": "A los 14 años · 2006",
+   "title": "El largo viaje",
+   "paragraphs": [
+    "En 2006, cuando Mohamed tenía catorce años, un cazatalentos fue a ver jugar a otro niño, pero se fijó en Mohamed. Mohamed entró al equipo juvenil del Al Mokawloon, un club de la capital de Egipto, El Cairo, a más de 150 kilómetros de su casa.",
+    "El viaje al entrenamiento duraba unas tres horas, y muchas veces tenía que faltar a la escuela para llegar. Más tarde contó que, cuando llegaba a casa en la noche, tenía que irse directo a dormir y levantarse temprano al día siguiente."
+   ],
+   "lesson": "Los grandes sueños pueden costar muchos días de cansancio. Descansa bien y sigue adelante."
+  },
+  {
+   "year": "Al Mokawloon · 2010",
+   "title": "Lágrimas después del partido",
+   "paragraphs": [
+    "Cuando Mohamed tenía quince años, el entrenador del primer equipo, Mohamed Radwan, lo subió a entrenar con los adultos. Todavía estaba creciendo, así que el club le dio una dieta y un plan de entrenamiento especiales. En 2010 empezó a jugar en la Liga Premier de Egipto.",
+    "Al principio, a Mohamed le costaba anotar. A veces lloraba en el vestidor después de los partidos. Su entrenador dijo que eso solo le daba más ganas de mejorar. El día de Navidad de 2010 anotó su primer gol con el club."
+   ],
+   "lesson": "Está bien llorar cuando las cosas son difíciles. Tus sentimientos pueden ayudarte a intentarlo otra vez."
+  },
+  {
+   "year": "2012 · Suiza",
+   "title": "Un país nuevo",
+   "paragraphs": [
+    "En febrero de 2012 pasó algo terrible en un estadio de la ciudad de Port Said, y murieron muchas personas. Después, la liga de Egipto se detuvo, y se canceló el resto de la temporada.",
+    "Abre la puerta a Suiza. El club suizo Basilea había estado observando a Mohamed, y lo fichó. Al principio le costó adaptarse. No hablaba el idioma, y llegaba a reemplazar a un jugador muy conocido. Pero el Basilea ganó la liga suiza en su primera temporada."
+   ],
+   "lesson": "Ser nuevo en un lugar es difícil. Adaptarse toma tiempo, así que ten paciencia contigo."
+  },
+  {
+   "year": "De 2014 a 2016",
+   "title": "En la banca",
+   "paragraphs": [
+    "En 2014, Mohamed se convirtió en el primer egipcio en llegar al Chelsea, en Londres. Pero en su segunda temporada allí casi nunca lo elegían. Jugó solo tres partidos de la Premier League, y su entrenador lo criticó en público.",
+    "En 2015, el Chelsea lo mandó a préstamo a la Fiorentina, en Italia. Eligió el número 74, para honrar a las personas que murieron en Port Said. Luego, a préstamo en la Roma, anotó 15 goles y fue nombrado el Jugador de la Temporada del club."
+   ],
+   "lesson": "Que te dejen fuera no significa que no seas suficientemente bueno. Un nuevo comienzo puede ayudarte a brillar."
+  },
+  {
+   "year": "De 2017 en adelante",
+   "title": "Recordar su hogar",
+   "paragraphs": [
+    "En 2017, Mohamed llegó al Liverpool. En su primera temporada anotó 32 goles en la Premier League, un récord para una temporada de 38 partidos. Más tarde ayudó al Liverpool a ser campeón de Europa y campeón de Inglaterra.",
+    "Mohamed nunca olvidó Nagrig. Ha donado dinero para ayudar a construir una escuela y un hospital allí, y ayuda a muchas familias. El niño que viajaba horas para entrenar ahora ayuda a su pueblo."
+   ],
+   "lesson": "Recuerda de dónde vienes. Ayudar a otros es una forma de dar las gracias."
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+{
+ "id": "messi",
+ "title": "Messi",
+ "subtitle": "Sigue adelante, juntos",
+ "player": "Lionel Messi",
+ "country": "Argentina",
+ "description": "Libro desplegable gratis para niños sobre Lionel Messi: de Rosario a Barcelona, tres finales perdidas y el Mundial 2022 con Argentina.",
+ "summary": "Messi: Sigue adelante, juntos es un libro desplegable gratis de seis capítulos para niños sobre Lionel Messi, que creció en Rosario, Argentina, necesitó un tratamiento para ayudarlo a crecer y se mudó a Barcelona a los trece años. Perdió tres finales en tres años con Argentina, y luego ganó la Copa América en 2021 y el Mundial en 2022. La historia enseña que un tropiezo no es el final de tu historia.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Argentina"
+  },
+  {
+   "label": "Creció en",
+   "value": "Rosario, Argentina"
+  },
+  {
+   "label": "Nuevo hogar",
+   "value": "Barcelona, desde los 13 años"
+  },
+  {
+   "label": "Finales perdidas",
+   "value": "2014, 2015 y 2016"
+  },
+  {
+   "label": "Ganó con Argentina",
+   "value": "Copa América 2021, Mundial 2022"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Messi señala al cielo cuando anota?",
+   "a": "Su abuela Celia lo acompañaba a los entrenamientos y a los partidos. Murió poco antes de que él cumpliera once años. Desde entonces, cuando anota, Messi mira hacia arriba y señala al cielo por ella."
+  },
+  {
+   "q": "¿Por qué Messi necesitó un tratamiento para crecer?",
+   "a": "Cuando Messi tenía diez años, los médicos descubrieron que tenía una deficiencia de la hormona del crecimiento. A los once empezó un tratamiento para ayudarlo a crecer, pero el seguro médico de su papá solo pagó dos años. Terminó su tratamiento a los catorce, en Barcelona."
+  },
+  {
+   "q": "¿Cómo fue para Messi mudarse a Barcelona?",
+   "a": "Messi se mudó de Rosario a Barcelona a los trece años. En su primer año casi nunca podía jugar partidos, y era tan callado que algunos compañeros pensaban que no podía hablar. Cuando su mamá, sus hermanos y su hermana volvieron a Rosario, él se quedó con su papá y extrañaba su casa. En 2002 ya pudo jugar en todas las competiciones e hizo amigos, entre ellos Cesc Fàbregas y Gerard Piqué."
+  },
+  {
+   "q": "¿Por qué Messi dejó de jugar con Argentina?",
+   "a": "Argentina perdió la final del Mundial contra Alemania en 2014, y luego la final de la Copa América en 2015 y otra vez en 2016. Después de tres finales perdidas en tres años, Messi dijo que dejaría de jugar con su selección. Una campaña en toda Argentina, y una estatua suya en Buenos Aires, ayudaron a convencerlo de volver."
+  },
+  {
+   "q": "¿Cuándo ganó Messi el Mundial?",
+   "a": "En 2022. La final contra Francia terminó 3–3 después del tiempo extra, con dos goles de Messi, y Argentina ganó la tanda de penales 4–2. Un año antes, en 2021, Argentina ganó la Copa América, el primer gran trofeo del equipo en 28 años."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Rosario · a los 10 y 11 años",
+   "title": "Dos cosas difíciles a la vez",
+   "paragraphs": [
+    "Lionel Messi creció en Rosario, Argentina. Su abuela Celia lo acompañaba a los entrenamientos y a los partidos. Murió poco antes de que él cumpliera once años, y eso le afectó mucho. Desde entonces, cuando anota, mira hacia arriba y señala al cielo por ella.",
+    "A los diez años, los médicos descubrieron que Messi tenía una deficiencia de la hormona del crecimiento. A los once empezó un tratamiento para ayudarlo a crecer, pero el seguro médico de su papá solo pagó dos años. Levanta la nube para encontrar la estrella que él señala."
+   ],
+   "lesson": "Está bien sentirse triste. Habla con alguien de confianza y sigue recordando a las personas que quieres."
+  },
+  {
+   "year": "2001 · a los 13 años",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "A los trece años, Messi se mudó de Rosario a Barcelona, España. En su primer año casi nunca podía jugar partidos. Era tan callado que algunos compañeros pensaban que no podía hablar. Cuando su mamá, sus hermanos y su hermana volvieron a Rosario, él se quedó con su papá y extrañaba su casa.",
+    "En 2002 por fin pudo jugar en todas las competiciones, y pronto hizo amigos, entre ellos Cesc Fàbregas y Gerard Piqué. Terminó su tratamiento a los catorce. Saluda tres veces, un amigo nuevo a la vez."
+   ],
+   "lesson": "Ser nuevo en un lugar es difícil. Saluda, pide ayuda y dale tiempo a la amistad."
+  },
+  {
+   "year": "2014 · final del Mundial",
+   "title": "Una final difícil",
+   "paragraphs": [
+    "Años después, Messi era el capitán de Argentina. En 2014 su equipo llegó a la final del Mundial en Brasil, y Alemania ganó 1–0. Messi recibió el Balón de Oro, el premio al mejor jugador del torneo, pero Argentina no levantó el trofeo. Un gran premio y una derrota dolorosa llegaron el mismo día.",
+    "Muchas personas se sentirían tristes después de un día así. Levanta la solapa del marcador para encontrar un mensaje. Después de una derrota difícil, ayuda descansar, respirar hondo y hablar con alguien de confianza."
+   ],
+   "lesson": "Eres más que un resultado, y un día difícil no es toda la historia."
+  },
+  {
+   "year": "2015 → 2016",
+   "title": "Necesitar un descanso",
+   "paragraphs": [
+    "Luego Argentina perdió la final de la Copa América en 2015, y otra vez en 2016. Perder tres finales en tres años llevó a Messi a anunciar que dejaría de jugar con su selección.",
+    "Una campaña en todo el país ayudó a convencerlo de volver. En Buenos Aires hasta pusieron una estatua suya para animarlo. Pronto regresó. Abre el puente de papel para traerlo de vuelta con sus compañeros, que lo esperan."
+   ],
+   "lesson": "Está bien necesitar un descanso. Las personas que te quieren pueden ayudarte a volver cuando estés listo."
+  },
+  {
+   "year": "2021 · Copa América",
+   "title": "No está solo",
+   "paragraphs": [
+    "En 2021, Argentina ganó la Copa América, el primer gran trofeo del equipo en 28 años. Messi no lo hizo solo. El portero Emiliano Martínez atajó tres penales en la tanda de la semifinal contra Colombia. En la final, Ángel Di María anotó el único gol, y Argentina le ganó 1–0 a Brasil.",
+    "Haz el pase en esta página y mira cómo llega un compañero, listo para ayudar. Después de años de finales difíciles, compartir la carga con amigos marcó la diferencia."
+   ],
+   "lesson": "No tienes que cargar con todo tú solo. Deja que te ayuden las personas que te rodean."
+  },
+  {
+   "year": "2022 · Mundial",
+   "title": "Juntos, por fin",
+   "paragraphs": [
+    "La final del Mundial 2022 estuvo llena de sorpresas. Argentina y Francia terminaron el tiempo extra empatados 3–3, con dos goles de Messi. Argentina ganó la tanda de penales 4–2, y Messi y sus compañeros por fin pudieron levantar juntos la Copa del Mundo.",
+    "Levanta el trofeo y mira cómo festeja todo el equipo. Los días difíciles siguen siendo parte de esta historia: perder a su abuela, el tratamiento, extrañar su casa y las finales perdidas. No fueron el final."
+   ],
+   "lesson": "Un tropiezo no es el final de tu historia. Celebra a las personas que te ayudaron a seguir adelante."
+  }
+ ]
+}

@@ -1,0 +1,131 @@
+{
+ "id": "rollball",
+ "name": "Roll It In",
+ "title": "Juego de rompecabezas con balón: Roll It In gratis",
+ "h1": "Juego de rompecabezas con balón rodando: Roll It In",
+ "description": "Roll It In es un juego de rompecabezas de fútbol gratis para niños. Eres el balón: rueda por colinas y arena, pisa placas y abre puertas hasta el arco.",
+ "lead": "Roll It In es un juego de rompecabezas en 3D gratis en el navegador donde tú eres el balón. Rueda por pasto, arena, baldosas mojadas y tablones de madera, pisa placas, tumba conos y abre puertas, y luego mete el balón en el arco.",
+ "blurb": "Eres el balón: rueda sobre las placas para abrir el camino al arco",
+ "skill": "La fuerza del pase y planear el siguiente toque",
+ "about": [
+  "Roll It In es un juego de rompecabezas visto desde detrás del balón. Cada nivel es un recorrido corto de pequeños rompecabezas en islas en el mar, y cada nivel termina en un arco.",
+  "Los rompecabezas usan placas, puertas, conos, interruptores, cajas, elevadores, puentes, ventiladores y un silbato que sirve como llave. El suelo también cambia: el pasto corto, el pasto largo, la arena, el lodo, las baldosas mojadas, los tablones y las rampas de metal hacen rodar el balón de forma distinta."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Presiona en cualquier parte de la pantalla y empuja el pulgar hacia donde quieres que ruede el balón. Suelta y el balón va más despacio.",
+  "El botón Retry vuelve a empezar el rompecabezas en el que estás, gratis."
+ ],
+ "desktop": [
+  "Rueda con las flechas o con W, A, S y D. También puedes presionar y arrastrar con el mouse.",
+  "Presiona R para empezar de nuevo el rompecabezas. P o Escape pone pausa."
+ ],
+ "rules": [
+  "Tienes tres corazones. Caer al agua cuesta uno, y el balón vuelve al inicio del rompecabezas en el que estabas.",
+  "La partida termina cuando se acaba el último corazón. Desde el nivel 4 cada nivel tiene un reloj, y quedarse sin tiempo también cuesta un corazón.",
+  "Puntos: 50 por cada rompecabezas, 200 por cada gol, 10 por cada segundo por debajo del tiempo par del nivel y 100 por cada estrella. Las estrellas están fuera del camino principal.",
+  "Los goles seguidos sin perder un corazón forman una racha, que multiplica los puntos del gol, hasta tres veces."
+ ],
+ "teaches": [
+  "La lección de la máquina es: mira antes de rodar, planea el siguiente toque. Cada rompecabezas se puede leer antes de que el balón se mueva. ¿Qué placa abre qué puerta? ¿Hay que poner primero una caja sobre la placa?",
+  "Un balón rueda distinto en cada cancha, y el mismo empujón lo manda lejos sobre baldosas mojadas y solo un poco sobre arena. Los jugadores llaman a esto la fuerza del pase. Un buen jugador mira primero, planea adónde debe ir el balón después y le da justo el toque correcto."
+ ],
+ "tips": [
+  "Detente y mira todo el rompecabezas antes de rodar.",
+  "Suelta el control cerca de un borde. El balón va más despacio solo.",
+  "La arena y el lodo frenan rápido el balón. Las baldosas mojadas y los tablones lo dejan seguir rodando.",
+  "Toma una rampa rápido para saltar un hueco. Un balón lento no llega.",
+  "Las placas con un símbolo de peso necesitan una caja. Empújala desde atrás."
+ ],
+ "harder": [
+  "Cada nivel hasta el 17 trae un rompecabezas nuevo, primero solo y luego mezclado con los que ya conoces. Hay 17 rompecabezas en una cancha de entrenamiento, una playa, los techos de la ciudad y un estadio de noche.",
+  "Los niveles crecen de un rompecabezas a seis. Los rompecabezas posteriores combinan tres ideas o más, así que el orden importa.",
+  "Desde el nivel 4 hay un reloj por nivel, y se acorta un poco en cada nivel.",
+  "Medallas: Bronce con 1,500 puntos, Plata con 6,000 y Oro con 20,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: planear con tiempo, leer un rompecabezas y control suave. No hay reloj en los tres primeros niveles, así que va bien para un niño cuidadoso.",
+  "Duración: una partida suele durar de cinco a quince minutos. El Daily Roll les da a todos los mismos rompecabezas una vez al día, y la primera partida diaria terminada entra en la tabla. Una tabla histórica de la isla guarda los 20 mejores puntajes."
+ ],
+ "faq": [
+  {
+   "q": "¿Roll It In es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Roll It In funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con las flechas o con el mouse."
+  },
+  {
+   "q": "¿Cómo se juega Roll It In?",
+   "a": "Tú eres el balón. Empuja en cualquier parte de la pantalla para rodar. Rueda sobre las placas, tumba los conos y lleva el silbato hasta el candado para abrir las puertas; luego mete el balón en el arco. No te caigas al agua."
+  },
+  {
+   "q": "¿Para qué edad es Roll It In?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Los primeros niveles enseñan una idea a la vez y sin reloj, y los niveles posteriores mezclan varios rompecabezas, así que a los niños mayores y a los adultos también les resultan difíciles."
+  },
+  {
+   "q": "¿Qué es el Daily Roll?",
+   "a": "Un reto diario en la tarjeta de inicio. Ese día todos reciben los mismos rompecabezas en el mismo orden. Tu primera partida diaria terminada entra en la tabla de la isla; las partidas siguientes de ese día son de práctica."
+  }
+ ],
+ "controls": [
+  "empuja el pulgar hacia donde quieres rodar",
+  "usa las flechas"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/partner-passing-through-gates",
+   "name": "Pases en pareja entre puertas",
+   "line": "Pasa el balón por una puerta con la fuerza justa"
+  },
+  {
+   "path": "/learn/soccer-drills/first-touch-gates",
+   "name": "Puertas de primer toque",
+   "line": "Mueve el balón adonde lo quieres después"
+  },
+  {
+   "path": "/learn/soccer-terms/first-touch",
+   "name": "Primer toque (término de fútbol)",
+   "line": "Lo que hace un buen primer toque"
+  },
+  {
+   "path": "/learn/passing-and-support",
+   "name": "Pase y apoyo",
+   "line": "Por qué importa la fuerza del pase"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Roll It In en un celular: el balón salta un hueco sobre el agua desde una rampa de metal, con una placa amarilla, una puerta roja y blanca y el arco adelante",
+   "caption": "Toma la rampa rápido para saltar el hueco."
+  },
+  {
+   "alt": "Roll It In en la cancha de entrenamiento: el balón baja por una colina y tumba una pila de conos naranjas para abrir la puerta",
+   "caption": "Baja por la colina para pegarles fuerte a los conos."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Roll It In, Crab Walk: unos cangrejos cruzan un tablón de madera sobre el agua mientras el balón rueda entre ellos hacia una estrella",
+   "caption": "Calcula tu paso entre los cangrejos."
+  },
+  {
+   "alt": "Roll It In: dos muñecos de portero se deslizan por el camino más allá de una placa de impulso, con una placa conectada a la puerta",
+   "caption": "Mira a los muñecos que barren y luego avanza."
+  },
+  {
+   "alt": "Roll It In, Keeper Drill de noche: el balón cruza una placa de impulso con un ZOOM! y muñecos de portero deslizándose a cada lado",
+   "caption": "Las flechas te dan velocidad."
+  },
+  {
+   "alt": "Roll It In en la playa: el balón rueda por un tablón de madera estrecho sobre el agua hacia una placa y el arco",
+   "caption": "Ve despacio en los tablones estrechos."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Roll It In: un balón rodando por un rompecabezas",
+  "alt": "Partida de Roll It In en un celular: el balón pasa junto a muñecos de portero que se deslizan en un camino de playa; luego, de noche, pisa una placa de impulso con un ZOOM!, presiona la placa y la puerta anuncia OPEN!",
+  "caption": "Roll It In: esquiva a los muñecos, pisa la placa de impulso y mete el balón."
+ }
+}

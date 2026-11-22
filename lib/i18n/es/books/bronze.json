@@ -1,0 +1,113 @@
+{
+ "id": "bronze",
+ "title": "Bronze",
+ "subtitle": "Valiente para empezar de nuevo",
+ "player": "Lucy Bronze",
+ "country": "England",
+ "summary": "Bronze: Valiente para empezar de nuevo es un libro desplegable gratis de seis capítulos para niños sobre Lucy Bronze, que tuvo que dejar su equipo de niños a los doce años, cruzó el océano para jugar en Carolina del Norte y pasó gran parte de un año con un aparato ortopédico en la pierna tras una lesión de rodilla. Hizo su propio plan de recuperación, y en 2020 ganó el premio de la FIFA a la mejor jugadora del mundo. La historia enseña que empezar de nuevo es de valientes.",
+ "description": "Libro desplegable gratis para niños sobre Lucy Bronze: dejó su equipo de niños, se recuperó de la rodilla y fue la mejor jugadora de la FIFA.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Inglaterra"
+  },
+  {
+   "label": "Nació",
+   "value": "1991, norte de Inglaterra"
+  },
+  {
+   "label": "Primer equipo",
+   "value": "Equipo de niños del Alnwick Town"
+  },
+  {
+   "label": "Universidad",
+   "value": "Carolina del Norte, Estados Unidos"
+  },
+  {
+   "label": "Premio de la FIFA",
+   "value": "Mejor jugadora, 2020"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Lucy Bronze tuvo que dejar su equipo de niños?",
+   "a": "Lucy jugaba en el equipo de niños del Alnwick Town y fue elegida la mejor jugadora en seis de sus ocho partidos. Pero cuando cumplió doce años, las reglas decían que ya no podía jugar en un equipo de niños. Su entrenador se esforzó mucho para cambiar la regla por ella. No cambió, pero la Federación Inglesa de Fútbol (Football Association) prometió más equipos de niñas en el campo."
+  },
+  {
+   "q": "¿Cuánto viajaba Lucy para jugar fútbol?",
+   "a": "El equipo de niñas más cercano era el Sunderland, a horas de su casa. Lucy contó que entre la escuela y los entrenamientos no le quedaba tiempo para nada más, y los viajes la dejaban agotada. Su mamá encontró campamentos de fútbol de verano en Estados Unidos, y Lucy también se unió al Blyth Town, un equipo más cerca de casa."
+  },
+  {
+   "q": "¿Por qué Lucy fue a ver a un psicólogo deportivo?",
+   "a": "En 2009 ganó la Eurocopa con la selección sub-19 de Inglaterra. Por esas fechas murió un amigo de su infancia, y ella no fue a su funeral porque estaba jugando el torneo. Se sintió culpable, y durante un tiempo sintió que no podía correr. Un psicólogo deportivo la ayudó. Más tarde dijo que, junto a la pérdida de su amigo, su propio dolor le parecía pequeño."
+  },
+  {
+   "q": "¿Por qué Lucy se fue a Carolina del Norte?",
+   "a": "A los diecisiete años la rechazaron en un programa de fútbol de una universidad de Inglaterra, así que se mudó a Carolina del Norte, en Estados Unidos. Era la jugadora más joven del equipo y le dijeron que no jugaría mucho. Entrenó duro, pronto fue titular y se convirtió en la primera jugadora británica en ganar el campeonato universitario de Estados Unidos."
+  },
+  {
+   "q": "¿Cómo se recuperó Lucy de su lesión de rodilla?",
+   "a": "En diciembre de 2009 se lastimó la rodilla en un entrenamiento. Se le infectó, y pasó gran parte del año siguiente con un aparato ortopédico en la pierna. En el Everton casi no jugó, y trabajó en una pizzería. Usó lo que aprendía en su carrera de ciencias del deporte para hacer su propio plan de recuperación. Ganó la liga con el Liverpool en 2013 y 2014, y en el Mundial de 2015 marcó el gol de la victoria contra Noruega desde fuera del área."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "2003 · Alnwick",
+   "title": "La regla que la detuvo",
+   "paragraphs": [
+    "Lucy Bronze nació en 1991 en el norte de Inglaterra, hija de un papá portugués y una mamá inglesa. Primero jugó fútbol con su hermano mayor y sus amigos, y luego se unió al equipo de niños del Alnwick Town. Fue elegida la mejor jugadora en seis de sus ocho partidos.",
+    "Cuando Lucy cumplió doce años, las reglas decían que ya no podía jugar en un equipo de niños. Su entrenador se esforzó mucho para cambiar la regla por ella. No cambió, pero la Federación Inglesa de Fútbol prometió más equipos de niñas en el campo."
+   ],
+   "lesson": "Algunas reglas son injustas. Alzar la voz puede ayudar a quienes vienen después de ti."
+  },
+  {
+   "year": "2002 a 2007 · Sunderland",
+   "title": "El largo camino",
+   "paragraphs": [
+    "Lucy era muy tímida de pequeña y casi no hablaba. El equipo de niñas más cercano era el Sunderland, a horas de su casa. Lucy contó que entre la escuela y los entrenamientos no le quedaba tiempo para nada más, y los viajes la dejaban agotada.",
+    "Maneja el carro por el largo camino. Su mamá buscó maneras de ayudarla a seguir jugando y encontró campamentos de fútbol de verano en Estados Unidos. Lucy también se unió al Blyth Town, un equipo más cerca de casa. Mucho después, contó que tiene autismo, TDAH y dislexia."
+   ],
+   "lesson": "Ser tímida o diferente está bien. Los pasos pequeños y valientes también te llevan adelante."
+  },
+  {
+   "year": "2009 · Inglaterra sub-19",
+   "title": "Extrañar a un amigo",
+   "paragraphs": [
+    "En 2009, Lucy jugó con la selección sub-19 de Inglaterra, y ganaron la Eurocopa. Pero por esas fechas murió un amigo de su infancia, y ella no fue a su funeral porque estaba jugando el torneo.",
+    "Abre la puerta para encontrar ayuda. Lucy se sintió culpable, y durante un tiempo sintió que no podía correr. Fue a ver a un psicólogo deportivo, alguien que ayuda a los atletas con sus pensamientos y sentimientos. Más tarde dijo que, junto a la pérdida de su amigo, su propio dolor le parecía pequeño, y eso la ayudó a seguir adelante."
+   ],
+   "lesson": "La culpa y la tristeza pesan mucho. Hablar con alguien que puede ayudarte es de valientes."
+  },
+  {
+   "year": "2009 · Carolina del Norte",
+   "title": "Al otro lado del océano",
+   "paragraphs": [
+    "A los diecisiete años, a Lucy la rechazaron en un programa de fútbol de una universidad de Inglaterra. Así que cruzó el océano para estudiar y jugar en Carolina del Norte, en Estados Unidos. Era la jugadora más joven del equipo, y le dijeron que no jugaría mucho.",
+    "Lucy entrenó duro, pronto fue titular y se convirtió en la primera jugadora británica en ganar el campeonato universitario de Estados Unidos. Pero Inglaterra le dijo que, si seguía jugando en Estados Unidos, no la convocarían."
+   ],
+   "lesson": "Ser nueva en un lugar es difícil. Un no en un sitio puede abrirte una puerta en otro."
+  },
+  {
+   "year": "2009 a 2012",
+   "title": "La rodilla que no sanaba",
+   "paragraphs": [
+    "En diciembre de 2009, ya de vuelta en Inglaterra, Lucy se lastimó la rodilla en un entrenamiento. Se le infectó, y pasó gran parte del año siguiente con un aparato ortopédico en la pierna. Le dijeron que se perdería el siguiente torneo juvenil, y más tarde contó que sintió falta de apoyo.",
+    "Marca cada paso del plan, uno por uno. En el Everton casi no jugó, y trabajó en una pizzería. Pero usó lo que aprendía en su carrera de ciencias del deporte para hacer su propio plan de recuperación, y siguió adelante."
+   ],
+   "lesson": "Cuando te sientas sola, sigue dando pasos pequeños y busca personas que te apoyen."
+  },
+  {
+   "year": "2012 a 2020",
+   "title": "Más fuerte que antes",
+   "paragraphs": [
+    "Cuando Lucy se lastimó la rodilla por primera vez, le dijeron que probablemente no podría seguir jugando después de los veintisiete años. En 2012 se fue al Liverpool para tener mejor apoyo médico, y ganó la liga en 2013 y 2014.",
+    "En 2015, después de otra operación de rodilla, Lucy fue al Mundial. Contra Noruega marcó el gol de la victoria desde muy lejos, fuera del área, e Inglaterra ganó 2–1. En 2020 ganó el premio de la FIFA a la mejor jugadora del mundo."
+   ],
+   "lesson": "Las dudas de los demás no deciden tu futuro. Puedes empezar de nuevo, todas las veces que lo necesites."
+  }
+ ]
+}

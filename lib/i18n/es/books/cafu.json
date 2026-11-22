@@ -1,0 +1,113 @@
+{
+ "id": "cafu",
+ "title": "Cafu",
+ "subtitle": "Le dijeron que no, una y otra vez",
+ "player": "Cafu",
+ "country": "Brazil",
+ "summary": "Cafu: Le dijeron que no, una y otra vez es un libro desplegable gratis de seis capítulos para niños sobre Cafu, el lateral derecho brasileño al que cinco clubes grandes rechazaron en sus pruebas antes de que el club de su ciudad, el São Paulo, le dijera que sí en 1988. Después jugó tres finales de la Copa del Mundo seguidas. La historia enseña que el no de un entrenador no es el final de tu historia.",
+ "description": "Libro desplegable gratis para niños sobre Cafu: cinco clubes le dijeron que no, el São Paulo le dijo que sí y jugó tres finales del Mundial.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Posición",
+   "value": "Lateral derecho"
+  },
+  {
+   "label": "Nació",
+   "value": "1970, cerca de São Paulo"
+  },
+  {
+   "label": "Club",
+   "value": "São Paulo, desde 1988"
+  },
+  {
+   "label": "Finales del Mundial",
+   "value": "1994, 1998 y 2002"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Qué clubes le dijeron que no a Cafu?",
+   "a": "De niño, Cafu fue a pruebas en algunos de los clubes más grandes de Brasil. Corinthians, Palmeiras, Santos, Atlético Mineiro y Portuguesa le dijeron que no. Cafu pudo haberse rendido. En cambio, siguió entrenando y siguió intentándolo, y en 1988 el club de su ciudad, el São Paulo, le dijo que sí."
+  },
+  {
+   "q": "¿Por qué se llama Cafu?",
+   "a": "Su nombre real es Marcos. Sus amigos lo llamaban Cafu, por un extremo brasileño llamado Cafuringa."
+  },
+  {
+   "q": "¿Cómo se convirtió Cafu en lateral derecho?",
+   "a": "Cafu era mediocampista por la derecha. Su entrenador en el São Paulo, Telê Santana, lo retrasó a lateral derecho, una posición en la que nunca había jugado. Le quedó perfecta: defendía y luego corría hacia adelante en el desdoble para atacar. Con Cafu de lateral derecho, el São Paulo ganó la Copa Libertadores en 1992 y 1993."
+  },
+  {
+   "q": "¿Cuántas finales del Mundial jugó Cafu?",
+   "a": "Tres seguidas, y ningún otro jugador lo ha logrado. En 1994 entró desde la banca en la final contra Italia y Brasil ganó. En 1998 Brasil perdió la final contra Francia. En 2002 era el capitán de Brasil, y Brasil le ganó 2–0 a Alemania."
+  },
+  {
+   "q": "¿Qué significaba “100% Jardim Irene”?",
+   "a": "Cuando Cafu levantó el trofeo del Mundial en 2002, su camiseta decía 100% Jardim Irene, por el barrio pobre de São Paulo donde creció."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "São Paulo · años 70",
+   "title": "Fútbol en Jardim Irene",
+   "paragraphs": [
+    "Cafu nació en 1970 en São Paulo, Brasil. Era uno de seis hermanos, y creció en Jardim Irene, un barrio pobre de la ciudad. Ahí jugaba fútbol en la calle.",
+    "Su nombre real es Marcos, pero sus amigos lo llamaban Cafu, por un extremo brasileño llamado Cafuringa. A los siete años entró a una escuela de fútbol, y también jugaba futsal. Algún día sería famoso por subir y bajar por la banda."
+   ],
+   "lesson": "Los partidos en la calle y el futsal enseñan pies rápidos. Juega donde puedas, con quien puedas."
+  },
+  {
+   "year": "Brasil · años 80",
+   "title": "No, no, no, no, no",
+   "paragraphs": [
+    "De niño, Cafu fue a pruebas en algunos de los clubes más grandes de Brasil. Corinthians dijo que no. Palmeiras dijo que no. Santos dijo que no. Atlético Mineiro y Portuguesa también dijeron que no.",
+    "Son muchos noes. Cafu pudo haberse rendido. En cambio, siguió entrenando y siguió intentándolo."
+   ],
+   "lesson": "El no de un entrenador no es el final de tu historia. Sigue practicando y sigue pidiendo oportunidades."
+  },
+  {
+   "year": "São Paulo · 1988",
+   "title": "Por fin, un sí",
+   "paragraphs": [
+    "En 1988, el club de su ciudad, el São Paulo, le dijo que sí. Cafu entró a su equipo juvenil, y ese mismo año el equipo ganó la Copa São Paulo, un famoso torneo juvenil.",
+    "Después de tantas pruebas, por fin la respuesta fue sí, y tenía un lugar donde crecer."
+   ],
+   "lesson": "Cuando te llegue tu oportunidad, sigue trabajando tan duro como cuando la esperabas."
+  },
+  {
+   "year": "São Paulo · años 90",
+   "title": "Una posición nueva",
+   "paragraphs": [
+    "Cafu era mediocampista por la derecha. Su entrenador, Telê Santana, tuvo una idea: retrasarlo a lateral derecho. Cafu nunca había jugado ahí, pero lo intentó.",
+    "¡Le quedó perfecta! Defendía y luego corría hacia adelante en el desdoble para atacar. Con Cafu de lateral derecho, el São Paulo ganó la competencia de clubes más grande de Sudamérica, la Copa Libertadores, en 1992 y 1993."
+   ],
+   "lesson": "Prueba posiciones nuevas cuando un entrenador te lo pida. En el desdoble, corre por fuera de tu extremo para darle una opción de pase."
+  },
+  {
+   "year": "Mundiales · 1994 y 1998",
+   "title": "Tres finales seguidas",
+   "paragraphs": [
+    "En el Mundial de 1994, Cafu empezó en la banca. En la final contra Italia, un compañero se lastimó al principio. ¡Entró Cafu, y Brasil ganó el Mundial!",
+    "En 1998 jugó otra vez la final, pero esta vez Brasil perdió contra Francia. Cuatro años después, jugaría una tercera final seguida. Ningún otro jugador lo ha logrado."
+   ],
+   "lesson": "Los suplentes importan. Prepárate desde la banca, porque tu oportunidad puede llegar en cualquier momento."
+  },
+  {
+   "year": "Japón · 2002",
+   "title": "Capitán de Brasil",
+   "paragraphs": [
+    "En 2002, Cafu era el capitán de Brasil. En la final del Mundial, Brasil le ganó 2–0 a Alemania. Cuando Cafu levantó el trofeo, su camiseta decía 100% Jardim Irene, por el lugar donde creció.",
+    "Más tarde creó una fundación en Jardim Irene para ayudar a los niños de ahí. Él dice que todo lo que tiene se lo debe a Jardim Irene."
+   ],
+   "lesson": "Recuerda dónde empezaste, y ayuda a los jugadores que vienen detrás de ti."
+  }
+ ]
+}

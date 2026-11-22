@@ -1,0 +1,113 @@
+{
+ "id": "caicedo",
+ "title": "Caicedo",
+ "subtitle": "Valiente para volver",
+ "player": "Linda Caicedo",
+ "country": "Colombia",
+ "summary": "Caicedo: Valiente para volver es un libro desplegable gratis de seis capítulos para niños sobre Linda Caicedo, que entró a un club de pueblo en Colombia donde hasta entonces solo jugaban niños. A los quince años se enfermó gravemente, pidió ayuda, se curó y volvió a entrenar días después. En el Mundial de 2023, su gol contra Alemania fue elegido el mejor del torneo. La historia enseña que pedir ayuda es de valientes.",
+ "description": "Libro desplegable gratis para niños sobre Linda Caicedo: venció una enfermedad grave a los quince y marcó el mejor gol del Mundial de 2023.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Colombia"
+  },
+  {
+   "label": "Creció en",
+   "value": "Candelaria, Colombia"
+  },
+  {
+   "label": "Primer club",
+   "value": "Real Juanchito, a los cinco años"
+  },
+  {
+   "label": "Volvió tras la enfermedad",
+   "value": "2020"
+  },
+  {
+   "label": "Mundial 2023",
+   "value": "Mejor gol del torneo"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Cómo empezó a jugar fútbol Linda Caicedo?",
+   "a": "Linda nació en 2005 en Candelaria, un pueblo pequeño de Colombia. Cuando tenía cinco años, entró a Real Juanchito, un club de pueblo donde hasta entonces solo jugaban niños. Sus entrenadores la recibieron con cariño y la ayudaron a aprender. A los diez años entró a su primer equipo de niñas, y a los once se fue a un club de Cali."
+  },
+  {
+   "q": "¿Qué pasó en el primer partido profesional de Linda Caicedo?",
+   "a": "En julio de 2019, cuando tenía solo catorce años, Linda jugó su primer partido profesional, con el América de Cali, y marcó el único gol del partido. Al final de ese año era la goleadora de la liga, y su gol le dio al club su primer título de liga."
+  },
+  {
+   "q": "¿Cómo volvió Linda Caicedo después de su enfermedad?",
+   "a": "A principios de 2020, cuando tenía quince años, los médicos descubrieron que Linda tenía cáncer, una enfermedad grave. Recibió tratamiento, y pidió ayuda a los psicólogos de su club, personas preparadas para ayudar con las preocupaciones y la tristeza. Con el tratamiento y toda esa ayuda se curó, y volvió a entrenar solo unos días después de su último tratamiento."
+  },
+  {
+   "q": "¿Qué ganó Linda Caicedo en el Mundial Sub-17?",
+   "a": "En 2022, Linda fue la capitana de Colombia en el Mundial Sub-17 en India. Colombia perdió la final 1–0 contra España, pero Linda ganó el Balón de Plata, el premio a la segunda mejor jugadora de ese Mundial."
+  },
+  {
+   "q": "¿Qué gol marcó Linda Caicedo en el Mundial de 2023?",
+   "a": "En el Mundial de 2023, Linda marcó en la victoria 2–0 de Colombia sobre Corea del Sur, y luego marcó contra Alemania. Colombia ganó 2–1, y su gol contra Alemania fue elegido el mejor gol de todo el torneo."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Candelaria · A los 5 años",
+   "title": "Un club donde solo jugaban niños",
+   "paragraphs": [
+    "Linda Caicedo nació en 2005 en Candelaria, un pueblo pequeño de Colombia. Su mamá recuerda que pateaba muñecas y cucharas de cocina por toda la casa como si fueran balones. Cuando Linda tenía cinco años, entró a Real Juanchito, un club de pueblo donde hasta entonces solo jugaban niños.",
+    "Sus entrenadores la recibieron con cariño y la ayudaron a aprender. A los diez años entró a su primer equipo de niñas, y a los once se fue a un club de la gran ciudad de Cali, donde sus equipos ganaron tres torneos nacionales sub-13."
+   ],
+   "lesson": "Si todavía no hay un lugar para ti, un primer paso valiente puede abrirles la puerta a otros también."
+  },
+  {
+   "year": "2019 · A los 14 años",
+   "title": "Un gol en su primer partido",
+   "paragraphs": [
+    "En julio de 2019, cuando tenía solo catorce años, Linda jugó su primer partido profesional, con el América de Cali. Marcó el único gol del partido. Al final de ese año era la goleadora de la liga, y su gol le dio al club su primer título de liga.",
+    "Fue un comienzo brillante. Pero unos meses después, Linda enfrentaría el reto más difícil de su vida, y no sería en una cancha de fútbol."
+   ],
+   "lesson": "Vale la pena celebrar los días buenos. También te dan fuerza para los días difíciles."
+  },
+  {
+   "year": "2020 · A los 15 años",
+   "title": "El reto más difícil",
+   "paragraphs": [
+    "A principios de 2020, poco después de cumplir quince años, a Linda empezó a dolerle la panza. Los médicos descubrieron que tenía cáncer, una enfermedad grave. La operaron, y luego tomó medicinas fuertes durante meses. Por un tiempo, tuvo que quedarse en cama.",
+    "Linda contó después que también fue difícil para sus sentimientos, así que pidió ayuda a los psicólogos de su club, personas preparadas para ayudar con las preocupaciones y la tristeza. Poco a poco, con el tratamiento y toda esa ayuda, empezó a mejorar."
+   ],
+   "lesson": "Cuando estás enferma o triste, pedir ayuda es de valientes. Los médicos, la familia y quienes te ayudan son parte de tu equipo."
+  },
+  {
+   "year": "2020 · De vuelta a entrenar",
+   "title": "Un pasito a la vez",
+   "paragraphs": [
+    "Linda volvió a entrenar solo unos días después de su último tratamiento. Todavía estaba recuperando fuerzas, pero estaba feliz de volver a tener el balón. En octubre de 2020 jugó su primer partido con su nuevo club, el Deportivo Cali.",
+    "Se fue haciendo más fuerte, paso a paso. En 2022, la Copa América Femenina, el gran torneo de las selecciones de Sudamérica, se jugó en Colombia, y Linda fue elegida la mejor jugadora."
+   ],
+   "lesson": "Volver requiere pasos pequeños. Cada uno de ellos cuenta."
+  },
+  {
+   "year": "2022 · Dos finales",
+   "title": "Tan cerca, dos veces",
+   "paragraphs": [
+    "En 2022, Linda jugó dos grandes finales. Colombia perdió la final de la Copa América 1–0 contra Brasil. Luego, en el Mundial Sub-17 en India, fue la capitana de Colombia y llevó el número 10, pero Colombia perdió la final 1–0 contra España.",
+    "Perder una final duele. Pero Linda ganó el Balón de Plata, el premio a la segunda mejor jugadora de ese Mundial. En febrero de 2023, dos días después de cumplir dieciocho años, se fue al Real Madrid, en España."
+   ],
+   "lesson": "Perder una final significa que llegaste muy cerca. Aprende de eso y sigue adelante."
+  },
+  {
+   "year": "2023 · Mundial",
+   "title": "Un gol contra Alemania",
+   "paragraphs": [
+    "En el Mundial de 2023, en Australia y Nueva Zelanda, Linda marcó en el primer partido de Colombia, una victoria 2–0 sobre Corea del Sur. Luego jugó contra Alemania, uno de los equipos más fuertes del mundo, y volvió a marcar. Colombia ganó 2–1, y su gol fue elegido el mejor gol de todo el torneo.",
+    "La niña que había superado una enfermedad grave a los quince años ahora era una estrella del Mundial, jugando por su país con sus compañeras a su alrededor."
+   ],
+   "lesson": "Los tiempos difíciles pueden hacerte más fuerte y más amable. Tu historia puede darles esperanza a otras personas."
+  }
+ ]
+}

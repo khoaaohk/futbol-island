@@ -1,0 +1,113 @@
+{
+ "id": "baggio",
+ "title": "Baggio",
+ "subtitle": "Después del penal fallado",
+ "player": "Roberto Baggio",
+ "country": "Italy",
+ "summary": "Baggio: Después del penal fallado es un libro desplegable gratis de seis capítulos para niños sobre Roberto Baggio, que se lastimó gravemente la rodilla a los dieciocho años, justo antes de pasar a la Fiorentina, y necesitó una larga recuperación. Fue el mejor jugador del mundo en 1993, llevó a Italia a la final del Mundial de 1994 y luego falló el último penal de la tanda. La historia enseña que un fallo es un momento, no lo que eres.",
+ "description": "Libro desplegable gratis para niños sobre Roberto Baggio: su lesión de rodilla, el Balón de Oro y el penal fallado en la final de 1994.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Italia"
+  },
+  {
+   "label": "Lesión de rodilla",
+   "value": "A los 18, mayo de 1985"
+  },
+  {
+   "label": "Balón de Oro",
+   "value": "1993, y Jugador Mundial de la FIFA"
+  },
+  {
+   "label": "Mundial de 1994",
+   "value": "5 goles en las rondas de eliminación"
+  },
+  {
+   "label": "Goles en la Serie A",
+   "value": "205"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Cómo se lastimó la rodilla Roberto Baggio?",
+   "a": "El 5 de mayo de 1985, cuando tenía dieciocho años, Roberto Baggio se lastimó gravemente la rodilla en un partido, solo dos días antes de que se cerrara su pase a la Fiorentina. Algunos médicos temían que nunca volviera a jugar, pero la Fiorentina cumplió su promesa y lo fichó de todos modos."
+  },
+  {
+   "q": "¿Cuánto tardó Roberto Baggio en recuperarse?",
+   "a": "Mucho tiempo. Necesitó una segunda operación de rodilla, con 220 puntos, bajó mucho de peso y se perdió casi toda una temporada. Siguió trabajando y, poco a poco, su rodilla se hizo lo bastante fuerte para jugar. Más tarde volvieron los problemas de rodilla, y cada vez él trabajó para regresar."
+  },
+  {
+   "q": "¿Fue Roberto Baggio el mejor jugador del mundo?",
+   "a": "En 1993 ganó el Balón de Oro, y la FIFA lo nombró Jugador Mundial del Año. En el Mundial de 1990, en Italia, había marcado un gol brillante contra Checoslovaquia."
+  },
+  {
+   "q": "¿Qué le pasó a Roberto Baggio en la final del Mundial de 1994?",
+   "a": "Marcó cinco goles en las rondas de eliminación para ayudar a Italia a llegar a la final contra Brasil, incluso con un isquiotibial adolorido. La final terminó sin goles y, en la tanda de penales, Roberto tiró el último penal de Italia, que se fue por encima del travesaño. Brasil fue campeón del mundo."
+  },
+  {
+   "q": "¿Qué hizo Roberto Baggio después de 1994?",
+   "a": "Siguió jugando: fue al Mundial de 1998 y jugó en el Brescia de 2000 a 2004, y marcó 205 goles en la Serie A. En 2002 se convirtió en Embajador de Buena Voluntad de las Naciones Unidas en la lucha contra el hambre, y en 2010 ganó el premio Hombre de Paz."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "1985 · A los 18 años",
+   "title": "Lesionado antes del gran paso",
+   "paragraphs": [
+    "Roberto Baggio nació en 1967 en Caldogno, un pueblo pequeño de Italia. El 5 de mayo de 1985, cuando tenía dieciocho años, se lastimó gravemente la rodilla en un partido. Pasó solo dos días antes de que se cerrara su pase a un club grande, la Fiorentina.",
+    "Algunos médicos temían que nunca volviera a jugar. Pero la Fiorentina cumplió su promesa y lo fichó de todos modos. Esperaron a que se recuperara."
+   ],
+   "lesson": "Cuando la gente cumple sus promesas en tiempos difíciles, te da esperanza."
+  },
+  {
+   "year": "1985 a 1987",
+   "title": "Una larga recuperación",
+   "paragraphs": [
+    "Roberto necesitó una segunda operación de rodilla, con 220 puntos. Bajó mucho de peso y se perdió casi toda la temporada siguiente. Para un jugador joven, esperar tanto para jugar puede ser muy duro.",
+    "Recuperarse tomó muchísimo tiempo. Roberto siguió trabajando y, poco a poco, su rodilla se hizo lo bastante fuerte para volver a jugar. Más adelante en su carrera volvieron los problemas de rodilla, y cada vez él trabajó para regresar."
+   ],
+   "lesson": "Las recuperaciones largas necesitan paciencia. Sigue creyendo en tu cuerpo."
+  },
+  {
+   "year": "1990 a 1993",
+   "title": "El mejor del mundo",
+   "paragraphs": [
+    "En el Mundial de 1990, que se jugó en Italia, Roberto marcó un gol brillante contra Checoslovaquia. Se estaba convirtiendo en uno de los jugadores más hábiles del mundo.",
+    "En 1993 ganó el Balón de Oro, y la FIFA lo nombró Jugador Mundial del Año. El joven de la rodilla lesionada era el mejor jugador del mundo. Los aficionados amaban su habilidad, su calma y su famosa coleta."
+   ],
+   "lesson": "Los tropiezos al principio no te impiden llegar a ser grande."
+  },
+  {
+   "year": "1994 · Estados Unidos",
+   "title": "Cargando con el equipo",
+   "paragraphs": [
+    "En el Mundial de 1994, en Estados Unidos, Roberto marcó cinco goles en las rondas de eliminación. Siguió jugando incluso con un isquiotibial adolorido, un músculo de la parte de atrás de la pierna, e Italia llegó a la final.",
+    "Gol tras gol, Roberto ayudó a su equipo a avanzar, hasta la final contra Brasil. Mucha gente dijo que Italia no habría llegado a la final sin él."
+   ],
+   "lesson": "Ayudar a tu equipo puede significar darlo todo."
+  },
+  {
+   "year": "17 de julio de 1994",
+   "title": "El penal",
+   "paragraphs": [
+    "La final contra Brasil terminó sin goles, así que se fue a la tanda de penales. Roberto tiró el último penal de Italia, y el balón se fue por encima del travesaño. Brasil fue campeón del mundo. El fútbol puede ser muy cruel en una tanda de penales.",
+    "Roberto estaba muy triste. Millones de personas lo habían visto. Pero un penal fallado no cambió todo lo bueno que había hecho por su equipo."
+   ],
+   "lesson": "Todos fallamos a veces, incluso los mejores. Un fallo es un momento, no lo que eres."
+  },
+  {
+   "year": "1998 a 2010",
+   "title": "Seguir jugando y dar a los demás",
+   "paragraphs": [
+    "Roberto siguió jugando. Fue al Mundial de 1998 y, de 2000 a 2004, jugó en el Brescia, un club más pequeño, que retiró su camiseta número 10 para honrarlo. Marcó 205 goles en la primera división de Italia. No dejó que un solo momento lo detuviera.",
+    "En 2002 se convirtió en Embajador de Buena Voluntad de las Naciones Unidas, para ayudar en la lucha contra el hambre. En 2010 ganó el premio Hombre de Paz por su trabajo por los derechos humanos."
+   ],
+   "lesson": "Después de un momento doloroso, sigue jugando y sigue dando. La gente recuerda cómo volviste."
+  }
+ ]
+}

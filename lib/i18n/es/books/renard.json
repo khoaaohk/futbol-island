@@ -1,0 +1,109 @@
+{
+ "id": "renard",
+ "title": "Renard",
+ "subtitle": "No la eligieron, y luego fue capitana",
+ "player": "Wendie Renard",
+ "country": "France",
+ "summary": "Renard: No la eligieron, y luego fue capitana es un libro desplegable gratis de seis capítulos para niños sobre Wendie Renard, de Martinica, en el Caribe. Perdió a su papá a los ocho años, no la eligieron en el centro de entrenamiento de Francia y dejó su casa a los dieciséis para irse al Lyon, donde ganó la Champions League ocho veces. La historia enseña que un no no es el final, y que cuidar tu mente es importante.",
+ "description": "Libro desplegable gratis para niños sobre Wendie Renard, de Martinica: no la eligieron, y luego fue capitana de Francia y del Lyon.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Francia (Martinica)"
+  },
+  {
+   "label": "Llegó al Lyon",
+   "value": "A los dieciséis años, en 2006"
+  },
+  {
+   "label": "Champions League",
+   "value": "8 títulos"
+  },
+  {
+   "label": "Estatura",
+   "value": "1.87 m"
+  },
+  {
+   "label": "Capitana de Francia",
+   "value": "Desde 2013"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde creció Wendie Renard?",
+   "a": "Wendie nació en 1990 en Schœlcher, en Martinica, una isla francesa del mar Caribe. Empezó a jugar a los siete años en un club local, L’Essor Préchotin. Martinica está muy lejos de Francia continental, donde están los clubes más grandes."
+  },
+  {
+   "q": "¿Cómo siguió adelante Wendie Renard después de que murió su papá?",
+   "a": "Cuando Wendie tenía ocho años, su papá murió por una enfermedad. Fue un momento muy triste. Las personas a su alrededor, sobre todo las mujeres de su familia, la animaron a seguir jugando, y el fútbol la ayudó a seguir adelante."
+  },
+  {
+   "q": "¿Rechazaron a Wendie Renard?",
+   "a": "Sí. Cuando era una adolescente joven, voló a Francia continental para una prueba en Clairefontaine, el centro nacional de entrenamiento, y no la eligieron. Volvió a casa, siguió entrenando y después tuvo una prueba en el Lyon que salió mucho mejor. A los dieciséis se mudó a Lyon."
+  },
+  {
+   "q": "¿Por qué Wendie Renard se apartó antes del Mundial de 2023?",
+   "a": "En febrero de 2023 dijo que no jugaría el Mundial, para proteger su salud mental: la salud de sus pensamientos y sentimientos. Unas semanas después Francia tuvo un nuevo entrenador que la invitó a volver. Ella dijo que sí, y en el Mundial marcó el gol de la victoria contra Brasil."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "1990 · Martinica",
+   "title": "Una niña de la isla",
+   "paragraphs": [
+    "Wendie Renard nació en 1990 en Schœlcher, en Martinica, una isla francesa del mar Caribe. Empezó a jugar al fútbol a los siete años, en un club local llamado L’Essor Préchotin. Martinica es una isla cálida y verde, con montañas y playas.",
+    "Martinica está muy lejos de Francia continental, donde están los clubes más grandes y el centro nacional de entrenamiento. Para una niña de Martinica, llegar a los grandes clubes significaba un viaje larguísimo cruzando el océano."
+   ],
+   "lesson": "Los grandes sueños pueden empezar en una isla pequeña."
+  },
+  {
+   "year": "A los 8 años",
+   "title": "Perder a su papá",
+   "paragraphs": [
+    "Cuando Wendie tenía ocho años, su papá murió por una enfermedad. Fue un momento muy triste para su familia. Perder a un papá o una mamá cuando eres pequeño es una de las cosas más difíciles que pueden pasar.",
+    "Las personas a su alrededor, sobre todo las mujeres de su familia, la animaron a seguir jugando al fútbol. El fútbol se volvió algo que la ayudaba a seguir adelante, con su familia animándola."
+   ],
+   "lesson": "Cuando alguien que quieres ya no está, las personas a tu alrededor te pueden ayudar a seguir."
+  },
+  {
+   "year": "Una adolescente joven",
+   "title": "No la eligieron",
+   "paragraphs": [
+    "Cuando era una adolescente joven, Wendie voló a Francia continental para una prueba en Clairefontaine, el centro nacional de entrenamiento de fútbol. No la eligieron para el programa. Había viajado miles de kilómetros cruzando el océano por esa oportunidad.",
+    "Que le dijeran que no, tan lejos de casa, pudo haber sido el final de su sueño. Pero Wendie no se rindió. Volvió a casa, siguió entrenando y esperó su siguiente oportunidad."
+   ],
+   "lesson": "Que no te elijan duele. Es un momento, no el final de tu historia."
+  },
+  {
+   "year": "2006 · A los 16 años",
+   "title": "Muy lejos de casa",
+   "paragraphs": [
+    "Wendie tuvo otra prueba, esta vez en el club Lyon, y salió mucho mejor. A los dieciséis, dejó Martinica y se fue a vivir a Lyon, a miles de kilómetros de su isla. Estaba muy lejos de su mamá y de su familia.",
+    "Vivir lejos de tu familia cuando eres joven puede hacerte sentir solo. Wendie trabajó mucho, y se convirtió en una defensa muy alta, de 1.87 metros."
+   ],
+   "lesson": "Irse de casa es valiente. Puedes llevar contigo el amor de tu familia."
+  },
+  {
+   "year": "2011 a 2022",
+   "title": "Ocho veces campeonas de Europa",
+   "paragraphs": [
+    "Con el Lyon, Wendie ganó la Champions League, la competencia de clubes más grande de Europa, ocho veces. En 2013 se convirtió en capitana de Francia. Era alta, fuerte en el juego aéreo y tranquila con el balón, y era una líder en el equipo.",
+    "La niña a la que no eligieron en Clairefontaine se había convertido en una de las mejores defensas del mundo. Demostró que un no al principio no tiene que ser el final."
+   ],
+   "lesson": "Sigue trabajando después de un no. Tu esfuerzo te puede llevar más lejos de lo que nadie esperaba."
+  },
+  {
+   "year": "2023",
+   "title": "Cuidar su mente",
+   "paragraphs": [
+    "En febrero de 2023, Wendie dijo que no jugaría el Mundial de ese año, para poder proteger su salud mental: la salud de sus pensamientos y sentimientos. Fue una decisión difícil y valiente, porque el Mundial es el torneo más grande de todos.",
+    "Unas semanas después, Francia tuvo un nuevo entrenador, que la invitó a volver. Wendie dijo que sí, y en el Mundial marcó el gol de la victoria contra Brasil. Cuidarse primero la había ayudado a volver más fuerte."
+   ],
+   "lesson": "Cuidar tu mente es tan importante como cuidar tu cuerpo."
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+{
+ "id": "falcao",
+ "title": "Falcão",
+ "subtitle": "Puertas cerradas y volver a empezar",
+ "player": "Falcão",
+ "country": "Brazil",
+ "summary": "Falcão: Puertas cerradas y volver a empezar es un libro desplegable gratis de seis capítulos para niños sobre Falcão, el jugador brasileño de futsal que probó el gran fútbol en césped una y otra vez, pero siempre volvía al futsal, su verdadero amor. Perdió una final del Mundial en 2000 y luego ganó el Mundial de Futsal en 2008 y 2012. La historia enseña que una puerta cerrada no es el final de tu historia.",
+ "description": "Libro desplegable gratis para niños sobre Falcão, la estrella brasileña del futsal: puertas cerradas, regresos y dos títulos mundiales.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Deporte",
+   "value": "Futsal"
+  },
+  {
+   "label": "Creció en",
+   "value": "El norte de São Paulo"
+  },
+  {
+   "label": "Títulos mundiales",
+   "value": "2008 y 2012"
+  },
+  {
+   "label": "Goles en Mundiales",
+   "value": "48, la mayor cantidad en la historia"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué se llama Falcão?",
+   "a": "Su nombre real es Alessandro Rosa Vieira. Su papá, João, era carnicero y también jugaba fútbol en las canchas del barrio, y allí la gente le decía “Falcão”. A su hijo le pusieron el mismo apodo."
+  },
+  {
+   "q": "¿Falcão jugó alguna vez fútbol en césped?",
+   "a": "Sí, muchas veces. De adolescente, en el Corinthians, probó el fútbol en césped siete veces, y cada vez volvió al futsal. En 2001 el Palmeiras le hizo una prueba y él marcó, pero el club nunca le dio una respuesta clara. En 2005 lo fichó el São Paulo. Jugó trece partidos en unos seis meses y luego volvió al futsal."
+  },
+  {
+   "q": "¿Por qué Falcão jugó con el São Paulo en 2005?",
+   "a": "Su papá siempre había soñado con ver a su hijo jugar fútbol en una gran cancha de césped. Su papá murió a principios de 2004. El primer partido de Falcão con el São Paulo fue exactamente un año después de la muerte de su papá."
+  },
+  {
+   "q": "¿Cuántos Mundiales de Futsal ganó Falcão?",
+   "a": "Dos. En 2000 Brasil perdió la final contra España, cuatro goles a tres, y en 2004 terminó tercero. En 2008 Brasil ganó en casa, y Falcão fue el mejor jugador del torneo. En 2012 estaba lesionado y jugó solo treinta y siete minutos, pero metió el gol del empate en la final contra España, y Brasil ganó en el tiempo extra."
+  },
+  {
+   "q": "¿Qué pasó en el último Mundial de Falcão?",
+   "a": "En 2016, a los treinta y nueve años, metió diez goles y se convirtió en el máximo goleador de la historia de los Mundiales, con cuarenta y ocho. Brasil empató con Irán, cuatro goles cada uno, y perdió la tanda de penales. Los jugadores de Irán levantaron a Falcão en el aire para hacerle un homenaje, y él lloró."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "São Paulo, Brasil",
+   "title": "Un apodo de papá",
+   "paragraphs": [
+    "Alessandro Rosa Vieira creció en el norte de São Paulo, Brasil. Su papá, João, era carnicero y también jugaba fútbol en las canchas del barrio. Allí la gente le decía “Falcão”, y a su hijo le pusieron el mismo apodo. A los doce años, el niño entró en Guapira, un pequeño club de futsal cerca de casa.",
+    "De adolescente, en el Corinthians, probó el gran fútbol en césped una y otra vez. Siete veces pasó dos o tres meses jugando en césped, y siete veces volvió al futsal, el pequeño juego bajo techo que era su verdadero amor."
+   ],
+   "lesson": "No todos los caminos encajan a la primera. Está bien volver a lo que amas."
+  },
+  {
+   "year": "2001 a 2003 · Nuevos clubes",
+   "title": "Puertas que no se abrieron",
+   "paragraphs": [
+    "Durante unos años, Falcão cambió de equipo una y otra vez. En 2001, un gran club de fútbol llamado Palmeiras le hizo una prueba en césped. Marcó, y la gente elogió su juego, pero el club solo pidió más tiempo y nunca le dio una respuesta clara. Así que volvió a su equipo de futsal.",
+    "En 2002 probó en otro club, la Portuguesa, y otra vez no funcionó. Toca las tres puertas de papel. Dos siguen cerradas. La tercera se abre en 2003, en el Jaraguá, el equipo de futsal donde por fin se quedó."
+   ],
+   "lesson": "Un no no es el final de tu historia. Sigue tocando, y otra puerta se puede abrir."
+  },
+  {
+   "year": "2004 a 2005 · Un sueño para papá",
+   "title": "Un sueño para papá",
+   "paragraphs": [
+    "A principios de 2004, murió el papá de Falcão. Su papá siempre había soñado con ver a su hijo jugar fútbol en una gran cancha de césped. Ese mismo año, Falcão fue elegido el mejor jugador de futsal del mundo, pero mucha gente sigue sintiendo una tristeza profunda después de perder a su papá o a su mamá.",
+    "En 2005, el club de fútbol São Paulo lo fichó para jugar en césped. Su primer partido fue exactamente un año después de la muerte de su papá. Jugó trece partidos en unos seis meses, y luego volvió al futsal. Intentar algo por alguien que quieres es valiente, aunque no dure."
+   ],
+   "lesson": "Está bien sentirse triste y hablar de alguien que extrañas. Su amor va contigo."
+  },
+  {
+   "year": "2000 a 2008 · Mundial de Futsal",
+   "title": "Tan cerca, una y otra vez",
+   "paragraphs": [
+    "El primer Mundial de Falcão fue en 2000, cuando tenía veintitrés años. Brasil llegó a la final, pero perdió contra España, cuatro goles a tres. En 2004 lo eligieron mejor jugador del torneo, pero Brasil terminó tercero. La espera por un título mundial continuaba.",
+    "En 2008, el Mundial se jugó en Brasil. Falcão dijo que si volvían a perder, le costaría volver a ponerse la camiseta de Brasil. Esta vez Brasil fue campeón en casa, y él fue otra vez el mejor jugador del torneo."
+   ],
+   "lesson": "Eres más que un resultado. Una derrota puede ser el comienzo de volver a intentarlo."
+  },
+  {
+   "year": "2012 · Tailandia",
+   "title": "Lesionado, pero no solo",
+   "paragraphs": [
+    "Pocos días antes del Mundial 2012 en Tailandia, Falcão se lesionó la pantorrilla izquierda y casi quedó fuera del equipo. Los entrenadores insistieron en que se quedara con el grupo y recibiera un tratamiento intensivo. El estrés hasta hizo que una parte de su cara dejara de moverse por un tiempo.",
+    "Jugó solo treinta y siete minutos en todo el torneo. En la final, Brasil perdía contra España a falta de tres minutos, cuando Falcão marcó el empate. Mete el gol del empate, y luego mira cómo su compañero Neto lo gana en el tiempo extra, tres goles a dos."
+   ],
+   "lesson": "Cuando estás lesionado, deja que otros te ayuden. Un equipo puede sacarte adelante."
+  },
+  {
+   "year": "2016 · Colombia",
+   "title": "Un último Mundial",
+   "paragraphs": [
+    "Después de 2012, Falcão dijo que ese había sido su último Mundial, pero cambió de opinión. A los treinta y nueve años, se preparó todo un año para uno más. En Colombia metió diez goles y se convirtió en el máximo goleador de la historia de los Mundiales, con cuarenta y ocho.",
+    "Luego Brasil jugó contra Irán y empató, cuatro goles cada uno. Falcão metió tres, y también su penal, pero Brasil perdió la tanda y quedó eliminado. Levanta a los jugadores de papel. El equipo de Irán levantó a Falcão en el aire para hacerle un homenaje, y él lloró. Un final triste puede estar lleno de respeto."
+   ],
+   "lesson": "Los tropiezos y los caminos nuevos son parte de toda gran historia. Eres más que un resultado."
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+{
+ "id": "modric",
+ "title": "Modrić",
+ "subtitle": "De refugiado a Balón de Oro",
+ "player": "Luka Modrić",
+ "country": "Croatia",
+ "summary": "Modrić: De refugiado a Balón de Oro es un libro desplegable gratis de seis capítulos para niños sobre Luka Modrić, que creció en la montaña Velebit, en Croacia, y vivió en hoteles de Zadar como refugiado durante una guerra. Un club grande pensó que era demasiado joven y demasiado ligero, y él llegó a ser el mejor jugador del Mundial de 2018. La historia enseña que oír un no no es el final, y que la familia y los entrenadores pueden ser tu equipo.",
+ "description": "Libro desplegable gratis para niños sobre Luka Modrić: de refugiado en Zadar a mejor jugador del Mundial de 2018 y Balón de Oro.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Croacia"
+  },
+  {
+   "label": "Creció en",
+   "value": "La montaña Velebit, cerca de Zadar"
+  },
+  {
+   "label": "Hogar de refugiado",
+   "value": "Hoteles en Zadar"
+  },
+  {
+   "label": "Gran cambio",
+   "value": "Dinamo Zagreb, a los 16 años"
+  },
+  {
+   "label": "Mundial de 2018",
+   "value": "Mejor jugador del torneo"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Luka Modrić fue refugiado?",
+   "a": "En 1991 llegó una guerra a la zona donde vivía, y su familia tuvo que dejar su casa. Ese diciembre, su abuelo Luka murió cerca de la casa, y después quemaron la casa. Durante siete años la familia vivió en el Hotel Kolovare de Zadar, y más tarde en el Hotel Iž. Luka jugaba al fútbol casi siempre en el estacionamiento del hotel."
+  },
+  {
+   "q": "¿Quién ayudó al joven Modrić?",
+   "a": "Su familia tenía muy poco dinero, pero pagó su academia deportiva, y a veces su tío ayudaba. Tomislav Bašić, el jefe de la academia juvenil del NK Zadar, también lo ayudó. Luka lo llama su padre deportivo."
+  },
+  {
+   "q": "¿Por qué el Hajduk Split no fichó a Modrić?",
+   "a": "El gran club Hajduk Split pensó que era demasiado joven y demasiado ligero. Luka siguió jugando. Tomislav Bašić lo ayudó a pasar al Dinamo Zagreb a los dieciséis años. En 2003 el Dinamo lo prestó al Zrinjski Mostar, en Bosnia, una liga muy dura, y a los dieciocho fue su Jugador del Año."
+  },
+  {
+   "q": "¿Llamaron a Modrić un peso ligero?",
+   "a": "Sí. En 2008 se fue al Tottenham Hotspur, en Inglaterra, y se lastimó la rodilla, y algunos periódicos, y hasta el entrenador del Arsenal, lo llamaron peso ligero. Luka dijo después que las críticas te empujan hacia adelante para demostrarles que están equivocados. En 2009 se rompió un hueso de la pierna derecha. Cuando volvió, marcó en su primer partido, con la pierna que se había roto."
+  },
+  {
+   "q": "¿Qué pasó en el Mundial de 2018?",
+   "a": "Contra Dinamarca, a Luka le atajaron un penal en el tiempo extra. En la tanda de penales volvió a patear y marcó, y Croacia pasó. Croacia llegó a la final y perdió 4–2 contra Francia, pero Luka fue nombrado el mejor jugador del torneo, y después ganó el Balón de Oro. En Zadar, decenas de miles de personas le dieron la bienvenida a casa."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Velebit · 1985 a 1991",
+   "title": "Una casa de piedra en la montaña",
+   "paragraphs": [
+    "Luka Modrić nació en 1985 cerca de Zadar, en Croacia. Pasó casi todos sus primeros años en una casa de piedra en las laderas de la montaña Velebit, donde vivía su abuelo. A Luka le pusieron su nombre. A los cinco años ayudaba a cuidar las cabras.",
+    "En 1991 llegó una guerra a la zona, y la familia tuvo que dejar su casa. Ese diciembre, su abuelo Luka murió cerca de la casa, y después quemaron la casa. Levanta el portarretratos para recordarlo."
+   ],
+   "lesson": "Cuando pierdes a alguien que quieres, está bien sentirse triste. Comparte tus recuerdos con personas de confianza."
+  },
+  {
+   "year": "Zadar · Los años de refugiado",
+   "title": "Un hotel como hogar",
+   "paragraphs": [
+    "Luka y su familia se volvieron refugiados. Durante siete años vivieron en el Hotel Kolovare de Zadar, y más tarde en el Hotel Iž. Su papá se unió al Ejército croata y trabajaba con aviones. En esos años cayeron muchas bombas sobre la ciudad.",
+    "Luka jugaba al fútbol casi siempre en el estacionamiento del hotel, y el fútbol era una forma de escapar de la guerra. Después contó que se hizo amigo de muchos otros niños, y que sus papás no dejaron que la guerra les arruinara la infancia."
+   ],
+   "lesson": "En tiempos difíciles, los amigos y el juego pueden ayudar. Está bien divertirse aunque la vida sea difícil."
+  },
+  {
+   "year": "Zadar · 1992",
+   "title": "La gente que lo apoyó",
+   "paragraphs": [
+    "En 1992, Luka empezó la escuela primaria y también entró a una academia deportiva. Su familia tenía muy poco dinero, pero pagó la academia, y a veces su tío ayudaba. Con el apoyo de su familia, entrenaba en el club NK Zadar.",
+    "Levanta las tres solapas para ver quién lo ayudó. Estaban su familia, su tío y Tomislav Bašić, el jefe de la academia juvenil, a quien Luka llama su padre deportivo. Cuando la gente cree en ti, no tienes que cargar con todo tú solo."
+   ],
+   "lesson": "No tienes que enfrentar las cosas difíciles solo. La familia, los amigos y los entrenadores pueden ser tu equipo."
+  },
+  {
+   "year": "De Split a Mostar · 2001 a 2005",
+   "title": "Demasiado pequeño, dijeron",
+   "paragraphs": [
+    "El gran club Hajduk Split no fichó a Luka, porque pensaba que era demasiado joven y demasiado ligero. Muchos jóvenes jugadores habrían querido rendirse. Luka siguió jugando.",
+    "Su entrenador, Tomislav Bašić, lo ayudó a pasar al Dinamo Zagreb a los dieciséis años. En 2003 el Dinamo lo prestó al Zrinjski Mostar, en Bosnia, una liga muy dura, y a los dieciocho fue su Jugador del Año. En 2005, con su primer contrato largo, le compró un departamento en Zadar a su familia."
+   ],
+   "lesson": "Ser pequeño, u oír un no, no es el final. Sigue adelante, y otra puerta se puede abrir."
+  },
+  {
+   "year": "Londres · 2008 a 2009",
+   "title": "Lo llamaron peso ligero",
+   "paragraphs": [
+    "En 2008 Luka se fue al Tottenham Hotspur, en Inglaterra. Al principio fue difícil. Se lastimó la rodilla, y algunos periódicos, y hasta el entrenador del Arsenal, lo llamaron peso ligero. Luka dijo después que las críticas te empujan hacia adelante para demostrarles que están equivocados.",
+    "En 2009 se rompió un hueso de la pierna derecha y no jugó hasta diciembre. Despliega el puente de vuelta a la cancha. Cuando regresó, marcó en su primer partido, con la pierna que se había roto."
+   ],
+   "lesson": "Lo que dicen los demás no decide quién eres. Puedes recuperarte de un tropiezo."
+  },
+  {
+   "year": "Mundial · 2018",
+   "title": "Bienvenido a casa",
+   "paragraphs": [
+    "En el Mundial de 2018, Croacia jugó contra Dinamarca. Luka pateó un penal en el tiempo extra, y el portero lo atajó. Pero en la tanda de penales volvió a patear y marcó, y Croacia pasó. Llegaron a su primera final de un Mundial, y perdieron 4–2 contra Francia.",
+    "Aun así, Luka fue nombrado el mejor jugador del torneo, y después ganó el Balón de Oro. En Zadar, donde había vivido como refugiado, decenas de miles de personas le dieron la bienvenida a casa."
+   ],
+   "lesson": "Fallar no es el final. Ten el valor de intentarlo otra vez, y recuerda de dónde vienes."
+  }
+ ]
+}

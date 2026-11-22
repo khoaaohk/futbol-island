@@ -1,0 +1,113 @@
+{
+ "id": "ronaldo",
+ "title": "Ronaldo",
+ "subtitle": "De vuelta tras dos lesiones de rodilla",
+ "player": "Ronaldo Nazário",
+ "country": "Brazil",
+ "summary": "Ronaldo: De vuelta tras dos lesiones de rodilla es un libro desplegable gratis de seis capítulos para niños sobre Ronaldo Nazário, el futbolista brasileño al que le falló la rodilla dos veces y que se perdió una temporada entera. Paso a paso se recuperó, y en el Mundial de 2002 marcó ocho goles, dos de ellos en la final. La historia enseña que mejorar toma tiempo, y que un tropiezo no es el final de tu historia.",
+ "description": "Libro desplegable gratis para niños sobre Ronaldo Nazário, que volvió de dos lesiones de rodilla y marcó ocho goles en el Mundial de 2002.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Nació",
+   "value": "1976; creció en Río de Janeiro"
+  },
+  {
+   "label": "Primer amor",
+   "value": "Futsal: 166 goles en una temporada"
+  },
+  {
+   "label": "Mundiales ganados",
+   "value": "1994 y 2002"
+  },
+  {
+   "label": "Mundial de 2002",
+   "value": "8 goles, 2 en la final"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué el Flamengo rechazó a Ronaldo?",
+   "a": "Ronaldo era aficionado del Flamengo, pero el viaje en autobús a sus entrenamientos tardaba una hora y no podía pagar el pasaje. Faltó a los entrenamientos, y el Flamengo lo rechazó. Jairzinho, un exjugador de Brasil que entrenaba al pequeño club São Cristóvão, había visto lo bueno que era Ronaldo, y lo ayudó a pasar al club Cruzeiro."
+  },
+  {
+   "q": "¿Qué le pasó a Ronaldo en la final del Mundial de 1998?",
+   "a": "Horas antes de la final contra Francia, Ronaldo de repente se enfermó mucho. Lo sacaron de la alineación, pero él dijo que se sentía bien y pidió jugar, así que el entrenador lo volvió a poner. No jugó como siempre, y Brasil perdió 3–0. Aun así fue nombrado el mejor jugador del torneo."
+  },
+  {
+   "q": "¿Cómo se lastimó Ronaldo la rodilla?",
+   "a": "En noviembre de 1999, jugando con el Inter de Milán contra el Lecce, se le dobló la rodilla. Se le rompió un tendón de la rodilla, y necesitó una operación. El 12 de abril de 2000 volvió, y a los seis minutos la rodilla le falló otra vez, peor que antes."
+  },
+  {
+   "q": "¿Cómo se recuperó Ronaldo?",
+   "a": "Tuvo dos operaciones y luego rehabilitación: meses de ejercicios que ayudan al cuerpo a sanar. Un cirujano francés, Gérard Saillant, le operó la rodilla. Ronaldo se perdió toda la temporada 2000 a 2001. Contó que se imaginaba el trofeo del Mundial frente a sus ojos, y se imaginaba levantándolo."
+  },
+  {
+   "q": "¿Qué hizo Ronaldo en la final del Mundial de 2002?",
+   "a": "Le marcó dos goles a Alemania en Yokohama, Japón, y Brasil ganó 2–0. Luego fue el primer jugador en ir a consolar a los jugadores alemanes. Su cirujano estaba en las gradas como su invitado, y después Ronaldo le dedicó su premio al Mejor Jugador del Mundo al equipo médico que lo ayudó a recuperarse."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Río de Janeiro · 1976 a 1989",
+   "title": "Un niño y un balón",
+   "paragraphs": [
+    "Ronaldo Luís Nazário de Lima nació en 1976. Creció en Bento Ribeiro, un barrio de las afueras de Río de Janeiro, en Brasil, y jugaba al fútbol en la calle con sus amigos.",
+    "Cuando Ronaldo tenía once años, sus papás se separaron. Eso puede ser un cambio muy difícil para cualquier niño. Ronaldo siguió jugando, y a los doce entró a un equipo de futsal llamado Social Ramos. En su primera temporada marcó 166 goles, un récord juvenil de la ciudad. Después dijo que el futsal fue su primer amor."
+   ],
+   "lesson": "Cuando tu familia cambia, está bien sentirse triste o confundido. Los amigos y las cosas que amas pueden ayudar."
+  },
+  {
+   "year": "Río de Janeiro · 1990 a 1994",
+   "title": "El pasaje del autobús",
+   "paragraphs": [
+    "Ronaldo era aficionado del Flamengo, un gran club de Río. Pero el viaje en autobús a sus entrenamientos tardaba una hora, y no podía pagar el pasaje. Faltó a los entrenamientos, y el Flamengo lo rechazó.",
+    "Pero Jairzinho, un exjugador de Brasil que entrenaba al pequeño club São Cristóvão, había visto lo bueno que era Ronaldo. Ronaldo jugó en sus equipos juveniles, y Jairzinho lo ayudó a pasar al club Cruzeiro. Gira el letrero del autobús hacia un nuevo camino. En 1994, a los diecisiete años, Ronaldo era el jugador más joven de la selección de Brasil que ganó el Mundial."
+   ],
+   "lesson": "Un no no es el final. Cuando alguien cree en ti, deja que te ayude a encontrar otro camino."
+  },
+  {
+   "year": "Francia · 1998",
+   "title": "Horas antes de la final",
+   "paragraphs": [
+    "En el Mundial de 1998, la gente decía que Ronaldo era el mejor jugador del mundo. Marcó cuatro goles y ayudó a Brasil a llegar a la final contra Francia.",
+    "Pero horas antes de la final, Ronaldo de repente se enfermó mucho. Lo sacaron de la alineación, pero él dijo que se sentía bien y pidió jugar, así que el entrenador lo volvió a poner. No jugó como siempre, y Brasil perdió 3–0. Aun así fue nombrado el mejor jugador del torneo. Después Ronaldo dijo: “Perdimos el Mundial, pero gané otra copa: mi vida”."
+   ],
+   "lesson": "Tu salud importa más que cualquier partido. Eres más que un resultado."
+  },
+  {
+   "year": "Milán · 1999 a 2000",
+   "title": "La rodilla que falló",
+   "paragraphs": [
+    "En 1999 Ronaldo jugaba en el Inter de Milán, en Italia. En noviembre, durante un partido contra el Lecce, se le dobló la rodilla, y tuvo que salir cojeando. Se le rompió un tendón de la rodilla, y necesitó una operación.",
+    "Cinco meses después, el 12 de abril de 2000, volvió. A los seis minutos, la rodilla le falló otra vez, peor que antes. La lesión pudo haber terminado su carrera. Ronaldo tenía un largo camino por delante, pero ese no era el final de su historia."
+   ],
+   "lesson": "A veces un tropiezo pasa dos veces. Está bien sentirse triste, y está bien descansar y sanar."
+  },
+  {
+   "year": "Milán · 2000 a 2002",
+   "title": "Paso a paso",
+   "paragraphs": [
+    "Recuperarse tomó mucho tiempo. Ronaldo tuvo dos operaciones, y luego rehabilitación: meses de ejercicios que ayudan al cuerpo a sanar. Un cirujano francés, Gérard Saillant, le operó la rodilla, y un equipo médico lo ayudó a recuperarse. Se perdió toda la temporada 2000 a 2001.",
+    "Mientras no estaba, su compañero Javier Zanetti se convirtió en el capitán. A finales de 2001, Ronaldo pasó a ser el capitán del Inter. Contó que se imaginaba el trofeo del Mundial frente a sus ojos, y se imaginaba levantándolo."
+   ],
+   "lesson": "Sanar toma tiempo. Da un pasito a la vez, y deja que la gente te ayude."
+  },
+  {
+   "year": "Japón · 2002",
+   "title": "El regreso",
+   "paragraphs": [
+    "Ronaldo se había perdido todos los partidos de clasificación de Brasil, pero estaba listo para el Mundial de 2002 en Corea del Sur y Japón. Marcó ocho goles, más que cualquier otro jugador.",
+    "En la final contra Alemania, en Yokohama, marcó dos goles, y Brasil ganó 2–0. Ronaldo fue el primer jugador en ir a consolar a los jugadores alemanes. Su cirujano estaba en las gradas como su invitado. Después, Ronaldo le dedicó su premio al Mejor Jugador del Mundo al equipo médico que lo ayudó a recuperarse."
+   ],
+   "lesson": "Un tropiezo no es el final de la historia. Cuando ganes, sé amable, y dale las gracias a quienes te ayudaron."
+  }
+ ]
+}

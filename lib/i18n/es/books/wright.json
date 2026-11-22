@@ -1,0 +1,113 @@
+{
+ "id": "wright",
+ "title": "Wright",
+ "subtitle": "Un maestro que creyó en él",
+ "player": "Ian Wright",
+ "country": "England",
+ "summary": "Wright: Un maestro que creyó en él es un libro desplegable gratis de seis capítulos para niños sobre Ian Wright, quien creció en el sur de Londres, donde su casa no siempre era un lugar feliz. Un maestro, el señor Pigden, lo ayudó a aprender a leer y creyó en él. Dos clubes lo rechazaron, fichó con el Crystal Palace a los veintiún años y anotó 185 goles con el Arsenal. La historia enseña que un adulto amable puede cambiar una vida.",
+ "description": "Libro desplegable gratis para niños sobre Ian Wright: el maestro que creyó en él, un comienzo tardío y 185 goles con el Arsenal.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Inglaterra"
+  },
+  {
+   "label": "Su maestro",
+   "value": "El señor Pigden"
+  },
+  {
+   "label": "Primer club profesional",
+   "value": "Crystal Palace, a los 21 años"
+  },
+  {
+   "label": "Goles con el Arsenal",
+   "value": "185"
+  },
+  {
+   "label": "Gracias",
+   "value": "Reencuentro en la BBC, 2005"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Quién era el señor Pigden, el maestro de Ian Wright?",
+   "a": "Sydney Pigden fue uno de los maestros de Ian en la primaria, y mucho antes había sido piloto en la Segunda Guerra Mundial. Se fijó en Ian, lo ayudó a aprender a leer y escribir, y creyó en él. Más tarde, Ian dijo que fue la primera figura masculina positiva de su vida."
+  },
+  {
+   "q": "¿Algunos clubes rechazaron a Ian Wright?",
+   "a": "Sí. De adolescente hizo pruebas en el Southend United y en el Brighton, y ninguno le ofreció un contrato. Siguió jugando en una liga dominical y se convirtió en el máximo goleador de su liga."
+  },
+  {
+   "q": "¿Cuándo se hizo futbolista profesional Ian Wright?",
+   "a": "En agosto de 1985, a los veintiún años, fichó con el Crystal Palace después de jugar en el Greenwich Borough. Casi todos los nuevos profesionales son mucho más jóvenes. En 1989 anotó 24 goles de liga y ayudó al Palace a ascender a la primera división."
+  },
+  {
+   "q": "¿Cuántos goles anotó Ian Wright con el Arsenal?",
+   "a": "Anotó 185 goles con el Arsenal, más que nadie antes que él, y ganó la FA Cup, la Copa de la Liga y el título de liga. Thierry Henry superó su récord en 2005."
+  },
+  {
+   "q": "¿Qué pasó cuando Ian Wright volvió a ver al señor Pigden?",
+   "a": "A Ian le habían dicho que el señor Pigden había muerto. Pero en 2005, en un programa de televisión de la BBC, su antiguo maestro entró para verlo. Ian se puso tan feliz que lloró, y se abrazaron. Más tarde, Ian le dedicó al señor Pigden la historia de su vida, escrita en 2016."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Brockley · Infancia",
+   "title": "Un comienzo difícil",
+   "paragraphs": [
+    "Ian Wright nació en 1963 en Woolwich, en Londres, de padres de Jamaica, y creció en Brockley. Su papá no estaba, y su mamá, Nesta, lo crio. Su casa no siempre era un lugar feliz ni seguro.",
+    "Cuando las cosas en casa son difíciles, la escuela y su gente pueden ser un lugar de ayuda. Ian amaba el fútbol, y el fútbol le dio un lugar donde ser feliz."
+   ],
+   "lesson": "Si las cosas en casa son difíciles, nunca es tu culpa. Cuéntaselo a un maestro o a otro adulto de confianza."
+  },
+  {
+   "year": "La primaria",
+   "title": "El señor Pigden",
+   "paragraphs": [
+    "En la primaria, Ian tuvo un maestro llamado Sydney Pigden. Mucho antes, el señor Pigden había sido piloto en la Segunda Guerra Mundial. El señor Pigden era uno de sus maestros, y se fijó en Ian.",
+    "El señor Pigden ayudó a Ian a aprender a leer y escribir, y creyó en él. Más tarde, Ian dijo que fue la primera figura masculina positiva de su vida. A veces, un adulto que cree en ti puede cambiarlo todo."
+   ],
+   "lesson": "Un maestro amable puede cambiar una vida. Deja que quienes quieren ayudarte te ayuden."
+  },
+  {
+   "year": "La adolescencia",
+   "title": "Dos pruebas, dos noes",
+   "paragraphs": [
+    "De adolescente, Ian hizo pruebas en dos clubes profesionales, el Southend United y el Brighton. Ninguno de los dos le ofreció un contrato. Que te rechacen puede hacerte sentir que tu sueño se acabó.",
+    "Aun así, Ian siguió jugando, en una liga dominical. Se convirtió en el máximo goleador de su liga. Jugaba por diversión, pero mejoraba cada semana."
+   ],
+   "lesson": "Sigue jugando por amor al juego, aunque las grandes puertas sigan cerradas."
+  },
+  {
+   "year": "1985 · A los 21 años",
+   "title": "Un comienzo tardío",
+   "paragraphs": [
+    "Ian jugaba en un club pequeño, el Greenwich Borough. Luego, en agosto de 1985, cuando tenía veintiún años, fichó con el Crystal Palace. Casi todos los nuevos jugadores profesionales son mucho más jóvenes.",
+    "Ian trabajó duro y anotó muchos goles. En 1989 anotó 24 goles de liga y ayudó al Palace a ascender a la primera división."
+   ],
+   "lesson": "Nunca es tarde para empezar. Tu camino puede ser distinto al de los demás."
+  },
+  {
+   "year": "De 1991 a 1998",
+   "title": "Goles para el Arsenal",
+   "paragraphs": [
+    "En 1991, Ian llegó al Arsenal, y también jugó con Inglaterra. Anotó 185 goles con el Arsenal, más que nadie antes que él. Años después, en 2005, Thierry Henry superó su récord. El Arsenal pagó por él una cifra récord para el club.",
+    "Con el Arsenal, Ian ganó la FA Cup, la Copa de la Liga y el título de liga. El joven que empezó tarde se había convertido en uno de los mejores delanteros de Inglaterra."
+   ],
+   "lesson": "El trabajo duro y la alegría juntos pueden llevarte muy lejos."
+  },
+  {
+   "year": "2005",
+   "title": "Gracias, señor Pigden",
+   "paragraphs": [
+    "A Ian le habían dicho que el señor Pigden había muerto. Pero en 2005, en un programa de televisión de la BBC, su antiguo maestro entró para verlo. Ian se puso tan feliz que lloró. Se abrazaron, y gente de todo el país vio ese momento.",
+    "Más tarde, Ian le dedicó al señor Pigden la historia de su vida, un libro que escribió en 2016. Nunca olvidó al maestro que creyó en él cuando era niño."
+   ],
+   "lesson": "Recuerda a las personas que te ayudaron, y dales las gracias."
+  }
+ ]
+}

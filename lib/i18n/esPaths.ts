@@ -26,10 +26,15 @@ export const ES_LESSON_PAGES:readonly string[]=['/learn/lessons',...LESSON_TABLE
 export const ES_HUB_PAGES:readonly string[]=['/learn/football-rules-for-kids','/learn/soccer-quiz-for-kids','/learn/passing-and-support','/learn/futsal-for-kids','/learn/7v7-9v9-11v11',
  '/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age','/learn/soccer-age-groups','/safe-football-game-for-kids'];
 export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder','/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'];
+/** Round E (Nov 22 2026): the arcade game pages (hub + one page per listed game, lib/site/games.ts GAME_PAGES order) and the
+    pop-up book pages (hub + one page per player book, lib/site/books.ts BUILT_BOOKS); words in lib/i18n/es/{games,books}/. */
+export const ES_GAME_SLUGS=['soccer-swipe-game','soccer-snake-game','soccer-runner-game','soccer-tennis-game','soccer-pinball','soccer-passing-puzzle-game','air-hockey-soccer-game','soccer-block-puzzle-game','soccer-merge-game','soccer-ball-rolling-puzzle-game','soccer-shooting-game','soccer-juggling-game','soccer-target-game','soccer-free-kick-game','soccer-golf-game'] as const;
+export const ES_BOOK_IDS=['messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala','caicedo','vinicius','son','earps','griezmann','vandijk','hamm','sawa','cech','mahrez','sinclair','morgan','renard','howard','wright','baggio','formiga','milla','dzeko','bale'] as const;
+const ROUNDE=['/games',...ES_GAME_SLUGS.map(s=>`/games/${s}`),'/books',...ES_BOOK_IDS.map(id=>`/books/${id}`)];
 /** English paths with a Spanish page. */
 /** Nov 20 2026: the Library (lib/site/library.ts), the hub of hubs. */
 export const ES_LIBRARY='/library';
-export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC];
+export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE];
 const SET=new Set(ES_PAGES);
 export const hasEs=(enPath:string)=>SET.has(enPath);
 export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+enPath;

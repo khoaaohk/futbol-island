@@ -1,0 +1,148 @@
+{
+ "id": "puzzle",
+ "name": "Pass Puzzles",
+ "title": "Juego de pases de fútbol para niños: Pass Puzzles gratis",
+ "h1": "Juego de rompecabezas de pases: Pass Puzzles",
+ "description": "Pass Puzzles es un juego de fútbol gratis para niños. Lee una jugada congelada, dibuja el pase entre los defensas y anota. 46 niveles. Sin anuncios.",
+ "lead": "Un juego de rompecabezas de táctica. El partido está congelado: lees dónde están los defensas y tus compañeros, dibujas el pase de un solo trazo y miras si pasa.",
+ "blurb": "Dibuja el pase entre los defensas: espacio, líneas de pase y fuera de juego",
+ "skill": "Ver el espacio, las líneas de pase y el fuera de juego",
+ "about": [
+  "Cada rompecabezas es un momento de un partido de fútbol, preparado por un entrenador: unos atacantes de amarillo, defensas de azul, un portero y un arco al que llegar. Nada se mueve hasta que dibujas.",
+  "Hay dos formas de jugar. Endless Run te da un rompecabezas tras otro, un poco más difícil cada vez, hasta que pierdes tres vidas. Los niveles creados a mano son 46 rompecabezas en paquetes, cada uno con estrellas por ganar."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Pon un dedo sobre el jugador con el balón y arrastra hacia un compañero o hacia el arco, y luego levanta el dedo.",
+  "Las teclas de abajo eligen el tipo de pase: Auto, Ground (por el suelo), Lift (elevado) o Shoot (tiro).",
+  "Scan muestra las líneas de pase libres y Undo deshace un pase."
+ ],
+ "desktop": [
+  "Haz clic en el jugador con el balón, arrastra hacia un compañero o hacia el arco, y suelta.",
+  "Las mismas teclas están debajo de la cancha: Scan, Auto, Ground, Lift, Shoot."
+ ],
+ "rules": [
+  "La línea que dibujas cambia de color: libre, justa o bloqueada. Un defensa que alcanza la línea corta el pase.",
+  "Muchos rompecabezas necesitan dos o tres pases seguidos. Un pase puede ir al pie o al espacio para que un compañero corra hacia él.",
+  "La línea del fuera de juego se dibuja en la cancha cuando importa: un pase a un jugador más allá de ella se marca como fuera de juego.",
+  "Apunta tu definición dibujando hacia la red: abajo en la esquina es lo más seguro; las esquinas de arriba se arriesgan a pegar en el travesaño.",
+  "En Endless Run, un rompecabezas fallado o un Skip cuesta una de tus tres vidas, y el rompecabezas fallado vuelve a aparecer.",
+  "Estrellas en Endless Run: una por resolverlo, una por usar la jugada que enseña el rompecabezas y una por resolverlo al primer intento."
+ ],
+ "teaches": [
+  "Los buenos pasadores ven la línea de pase antes de ver al compañero. Pass Puzzles hace visible esa línea: donde un defensa puede meterse, la línea se pone roja; donde hay un hueco, queda libre. Después de unos cuantos rompecabezas, los niños empiezan a buscar primero el hueco.",
+  "Los rompecabezas llevan nombres de ideas reales, cada una explicada en una línea: la pared, el tercer hombre, el cambio de juego, el pase al hueco, el centro atrás. Los rompecabezas de fuera de juego muestran por qué el momento de una carrera importa más que su velocidad."
+ ],
+ "tips": [
+  "Antes de dibujar, encuentra a los defensas. El pase que parece más corto muchas veces pasa justo por encima de uno de ellos.",
+  "Usa Scan en los primeros niveles para aprender cómo se ve una línea de pase libre; desde el nivel 5 de Endless Run ya no está disponible.",
+  "Resuelve al primer intento cuando puedas: vale una estrella extra, y cada cinco resueltos seguidos al primer intento ganas una estrella de bono.",
+  "Cuando el camino directo está bloqueado, busca a un tercer hombre o juega hacia atrás para ir hacia adelante.",
+  "Con viento, mantén el balón por el suelo, y elévalo solo cuando un defensa esté en la línea de pase."
+ ],
+ "harder": [
+  "Endless Run empieza con dos rompecabezas suaves con Scan encendido.",
+  "Desde el nivel 5 ya no hay Scan y solo queda la tecla de pista. Desde el nivel 6 hay un reloj para pensar: 45 segundos al principio, menos en cada nivel, hasta 15.",
+  "Desde el nivel 7 se agrega un defensa extra junto a las líneas de pase; desde el nivel 10 no hay pistas; más adelante el defensa extra presiona, y luego son dos.",
+  "El juego revisa cada rompecabezas mezclado antes de mostrarlo, así que siempre tiene solución."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: leer el espacio y las líneas de pase, la paciencia y la regla del fuera de juego. Es uno de los juegos más tranquilos del arcade: sin reloj en los primeros niveles y con sonido suave.",
+  "Duración: un rompecabezas toma de diez segundos a un minuto, así que cabe en cualquier rato libre. No se necesitan monedas para jugar."
+ ],
+ "faq": [
+  {
+   "q": "¿Pass Puzzles es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Como todos los juegos del arcade, Pass Puzzles no necesita monedas: puedes intentar cada rompecabezas gratis todas las veces que quieras."
+  },
+  {
+   "q": "¿Pass Puzzles funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora dibujas el pase con el mouse o un trackpad."
+  },
+  {
+   "q": "¿Cómo se juega Pass Puzzles?",
+   "a": "Arrastra desde el jugador con el balón hasta un compañero, o hasta el arco para tirar. Si ningún defensa alcanza la línea, el pase llega. Encadena pases hasta anotar. Una línea que se pone roja está bloqueada: busca otra línea de pase."
+  },
+  {
+   "q": "¿Para qué edad es Pass Puzzles?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Los primeros rompecabezas necesitan un solo pase y nada de lectura; los siguientes son una prueba de verdad para niños más grandes y para adultos."
+  },
+  {
+   "q": "¿Pass Puzzles enseña la regla del fuera de juego?",
+   "a": "Sí. Varios rompecabezas dibujan la línea del fuera de juego en la cancha y marcan un pase a un jugador más allá de ella, así los niños ven cuándo una carrera empieza demasiado pronto. La guía del fuera de juego de este sitio explica la regla con diagramas."
+  },
+  {
+   "q": "¿Cuántos niveles hay?",
+   "a": "Hay 46 rompecabezas creados a mano en paquetes, y Endless Run no tiene un último nivel: mezcla los rompecabezas (en espejo, movidos, con defensas extra) y se vuelve más difícil a medida que avanzas."
+  }
+ ],
+ "controls": [
+  "arrastra el pase hacia un compañero",
+  "arrastra el pase con el mouse"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-rules/offside",
+   "name": "La regla del fuera de juego para niños",
+   "line": "Dónde está la línea y cuándo se revisa"
+  },
+  {
+   "path": "/learn/soccer-drills/passing",
+   "name": "Ejercicios de pases de fútbol",
+   "line": "Ejercicios para pasar y moverse"
+  },
+  {
+   "path": "/learn/soccer-terms/through-ball",
+   "name": "Pase al hueco (término de fútbol)",
+   "line": "Un pase al espacio detrás de la defensa"
+  },
+  {
+   "path": "/learn/soccer-terms/give-and-go",
+   "name": "Pared (término de fútbol)",
+   "line": "Pasa, corre y recíbelo de vuelta"
+  },
+  {
+   "path": "/learn/soccer-terms/switching-play",
+   "name": "Cambio de juego (término de fútbol)",
+   "line": "Mover el balón al lado vacío"
+  },
+  {
+   "path": "/learn/passing-and-support",
+   "name": "Lecciones de pases y apoyo",
+   "line": "Lecciones animadas cortas con una prueba rápida"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Pass Puzzles en un celular: se dibuja un pase del jugador 10 al jugador 9 cerca del arco, con las teclas Scan, Auto, Ground, Lift y Shoot",
+   "caption": "Dibuja de un jugador al siguiente; las teclas eligen un pase por el suelo, un pase elevado o un tiro."
+  },
+  {
+   "alt": "Pass Puzzles en Endless Run, nivel 7, con tres vidas, un texto que pide mantener el balón bajo con viento y un pase dibujado entre jugadores con número",
+   "caption": "Endless Run: nivel 7, tres vidas y la idea del rompecabezas en una línea."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Pass Puzzles: después del pase abierto a la banda, el número 11 tira y el balón vuela hacia el arco del portero",
+   "caption": "Primero el pase, luego dibuja hacia la red."
+  },
+  {
+   "alt": "Pass Puzzles: una cruz roja muestra que el pase dibujado chocaría directo con el defensa número 4",
+   "caption": "Un pase que pasa por un defensa queda cortado."
+  },
+  {
+   "alt": "Pass Puzzles en Endless Run, nivel 2: se dibuja un pase del número 11 al número 10, con defensas entre ellos y el arco",
+   "caption": "Endless Run: más difícil en cada rompecabezas."
+  },
+  {
+   "alt": "Pass Puzzles: GOAL! STRAIGHT IN cuando el tiro vence al portero, visto desde muy cerca detrás del delantero",
+   "caption": "Termina con un tiro al arco."
+  }
+ ],
+ "clip": {
+  "name": "Pass Puzzles en acción: pases alrededor de los defensas",
+  "alt": "Pass Puzzles en un celular: se dibuja un pase del número 10 hacia el número 11 a la banda, pasando a un defensa, luego se dibuja la línea hacia la red y el número 11 tira al portero",
+  "caption": "Pass Puzzles: encuentra al compañero libre y luego el arco."
+ }
+}

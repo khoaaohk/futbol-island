@@ -55,7 +55,7 @@ for(const [enF,enK,esF,esK,slugK] of fam){
 // ---- 2 + 3. every Spanish page ----
 const STOP=/\b(the|and|with|your|you|when|which|this|that|player|players|ball|kick|team|from|have)\b/i;
 const strings=(x,out=[])=>{if(typeof x==='string')out.push(x);else if(Array.isArray(x))x.forEach(y=>strings(y,out));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strings(y,out));return out;};
-const ALLOWED=/U\.S\. Soccer|US Youth Soccer|build-out line|Laws of the Game|The FA|Futbol Island|nutmeg|hat-trick|clean sheet|give-and-go|one-two|soccer|White Sports Ventures|Ocean Discovery Institute|Kitchens for Good|Big Brothers Big Sisters|“[A-Z][^”]*” \([^)]*\)|\(en inglés\)/g;
+const ALLOWED=/U\.S\. Soccer|US Youth Soccer|build-out line|Laws of the Game|The FA|Futbol Island|nutmeg|hat-trick|clean sheet|give-and-go|one-two|soccer|White Sports Ventures|Ball Blaster|Coach Bella|Ocean Discovery Institute|Kitchens for Good|Big Brothers Big Sisters|“[A-Z][^”]*” \([^)]*\)|\(en inglés\)/g;
 for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/positions.ts','lib/i18n/es/formations.ts','lib/i18n/es/comparisons.ts','lib/i18n/es/drills.ts','lib/i18n/es/drillGuides.ts','lib/i18n/es/plans.ts','lib/i18n/es/lessons.ts','lib/i18n/es/safety.ts','lib/i18n/es/hubs.ts','lib/i18n/es/charts.ts','lib/i18n/es/tools.ts']){
  for(const s of strings(L(f))){
   if(s==='U13 and up')continue;
@@ -64,6 +64,20 @@ for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/posit
   const bare=s.replace(ALLOWED,'');assert(!STOP.test(bare),`${f}: English left? “${s.slice(0,120)}”`);
  }
 }
+{/* round E (Nov 22 2026): the games (hub + every listed game) and the pop-up books (hub + every built book), 1:1 with English */
+ const G=L('lib/site/games.ts'),ge=L('lib/i18n/es/games.ts').GAMES_ES,M=L('lib/site/gameMedia.ts'),B=L('lib/site/books.ts'),be=L('lib/i18n/es/books.ts');
+ assert.deepEqual([...ep.ES_GAME_SLUGS],G.GAME_PAGES.map(g=>g.slug),'esPaths ES_GAME_SLUGS: the listed game pages, in order');
+ assert.deepEqual(Object.keys(ge).sort(),G.ALL_GAME_PAGES.map(g=>g.id).sort(),'GAMES_ES: one file per game');
+ for(const g of G.ALL_GAME_PAGES){const e=ge[g.id];assert.equal(e.id,g.id);assert.equal(e.name,g.name,`${g.id}: name kept`);assert(e.h1.endsWith(': '+g.name),`${g.id}: h1 ends with the name`);
+  for(const k of ['about','phone','desktop','rules','teaches','tips','harder','parents','faq','guides','shots'])assert.equal(e[k].length,g[k].length,`GAMES_ES.${g.id}.${k}: 1:1`);
+  e.guides.forEach((x,i)=>assert.equal(x.path,g.guides[i].path,`${g.id}.guides[${i}]: same path`));assert.equal(e.stills.length,M.gameStills(g.id,4).length,`${g.id}.stills 1:1`);
+  assert.equal(e.controls.length,2);assert.equal(!!e.clip,!!M.gameClip(g.id),`${g.id}: clip words`);
+  for(const s of strings(e))for(const re of gl.ES_BANNED)assert(!re.test(s),`games/${g.id}: banned ${re}`);}
+ assert.deepEqual([...ep.ES_BOOK_IDS],[...B.BUILT_BOOKS],'esPaths ES_BOOK_IDS: every built book, in shelf order');
+ for(const id of B.BUILT_BOOKS){const x=B.bookBySlug(id),e=be.esBook(id);assert(e,`${id}: Spanish book`);assert.equal(e.title,x.title);assert.equal(e.player,x.player);
+  assert.equal(e.facts.length,x.page.facts.length,`${id}.facts 1:1`);assert.equal(e.faq.length,x.page.faq.length,`${id}.faq 1:1`);assert.equal(e.chapters.length,x.chapters.length,`${id}.chapters 1:1`);
+  e.chapters.forEach((c,i)=>assert.equal(c.paragraphs.length,x.chapters[i].paragraphs.length,`${id}.chapters[${i}].paragraphs 1:1`));
+  for(const s of strings(e))for(const re of gl.ES_BANNED)assert(!re.test(s),`books/${id}: banned ${re}`);}}
 const titles=new Set(),descs=new Set(),h1s=new Set();
 for(const enPath of ep.ES_PAGES){
  const r=routes.esRoute(enPath);assert(r,`${enPath}: a Spanish route`);const m=r.meta(),esPath=ep.toEs(enPath);

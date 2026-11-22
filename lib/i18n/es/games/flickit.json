@@ -1,0 +1,142 @@
+{
+ "id": "flickit",
+ "name": "Flick It",
+ "title": "Juego de tiros libres: Flick It, gratis en línea",
+ "h1": "Juego de tiros libres de fútbol: Flick It",
+ "description": "Flick It es un juego de tiros libres gratis para niños. Desliza para dar efecto, elevar y bajar el balón sobre barreras hacia latas, llantas y arcos en 3D.",
+ "lead": "Flick It es un juego gratis de patear el balón con el dedo en el navegador: un juego de tiros libres y tiros de truco en 3D. Desliza hacia arriba a través de un balón quieto y vuela hacia latas, cajas, llantas, globos, campanas y a veces un arco. Rodea una barrera con efecto, elévalo sobre una cerca y tumba todo lo que puedas con una sola patada.",
+ "blurb": "Desliza para dar efecto, elevar y bajar el balón hacia los blancos",
+ "skill": "Golpear un balón quieto y darle efecto",
+ "about": [
+  "Flick It es un juego de tiros de truco en 3D dibujado como un cómic. Tu propio personaje de la isla se para frente al balón, toma carrera mientras mueves el dedo y lo golpea, y la cámara sigue al balón por la escena.",
+  "Hay seis lugares en la isla, cada uno visto desde su propia cámara: el Jardín Trasero, la Plaza del Pueblo, la Cancha de Entrenamiento, Palm Beach, una Jaula en la Azotea y el Estadio de la Isla de noche. El Daily Flick es una etapa más cada día, igual en todos los dispositivos."
+ ],
+ "phone": [
+  "Sostén el celular en vertical y desliza un dedo hacia arriba a través del balón. Solo cuenta el final del deslizamiento, así que un arrastre lento y luego un golpe rápido cuenta como golpe rápido.",
+  "Un deslizamiento más rápido patea más fuerte, uno más largo eleva más el balón, y un deslizamiento que se curva a la izquierda o a la derecha curva el balón hacia el mismo lado."
+ ],
+ "desktop": [
+  "Las flechas apuntan y elevan la patada, y una línea punteada muestra adónde irá.",
+  "Mantén presionado Espacio para la fuerza y suelta para patear. Q o E le dan efecto, y P o Escape pone pausa."
+ ],
+ "rules": [
+  "Cada etapa te da de seis a ocho tiros. Los blancos dan puntos, y cada cosa extra que golpea un mismo tiro vale más: una vez y media, luego el doble, hasta cuatro veces.",
+  "Bonos de truco: por dar efecto, por rodear la barrera, por pasar por encima, por rebote y por tiro de larga distancia. Despeja todos los blancos con tiros de sobra y cada tiro que sobra también da puntos.",
+  "Una etapa da hasta tres estrellas según sus puntos; una estrella abre el siguiente lugar. El Tour juega los seis lugares en orden, y su total entra en la tabla de récords de la isla."
+ ],
+ "teaches": [
+  "Cada patada lleva el nombre de la parte del pie que la haría: recto a través del balón es el empeine, un balón que se curva hacia un lado es el borde interno del pie, y hacia el otro, el borde externo.",
+  "La fuerza del tiro importa: los barriles necesitan un golpe firme y con uno suave solo se tambalean, mientras que en un bote de basura se anota dejando caer el balón suavemente desde arriba.",
+  "Barreras de maniquíes, una cerca y un portero están delante de algunos blancos, así que aprendes las decisiones reales de un tiro libre: rodear con efecto, elevar y bajar el balón, o elegir otro blanco."
+ ],
+ "tips": [
+  "Elige un blanco antes de deslizar. La frase al inicio de cada etapa dice de qué se trata ese lugar.",
+  "Busca una fila: un tiro que atraviesa dos o tres blancos en línea da muchos más puntos que uno.",
+  "Si el balón sigue volando demasiado alto, haz el deslizamiento más corto, no más lento."
+ ],
+ "harder": [
+  "Cada lugar pone su propio problema, desde una fila de latas hasta una cerca que hay que pasar por encima, y da un poco menos de ayuda para apuntar.",
+  "Las primeras patadas muestran el vuelo punteado y un dedo que dibuja el deslizamiento; después estás solo.",
+  "El Estadio de la Isla, de noche, tiene una barrera de maniquíes y un portero delante del arco."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: golpear un balón quieto, el efecto y la fuerza del tiro. Cada patada con efecto dice qué parte del pie se usaría, y la tarjeta de resultados da un consejo según lo que acaba de pasar.",
+  "Duración: una etapa son de seis a ocho tiros, un par de minutos. Se puede jugar sin sonido. No hay temporizadores."
+ ],
+ "faq": [
+  {
+   "q": "¿Flick It es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Flick It funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega Flick It?",
+   "a": "Desliza hacia arriba a través del balón. Un deslizamiento más rápido patea más fuerte, uno más largo eleva el balón, y curvar el deslizamiento curva el balón. Golpea todos los blancos que puedas con cada tiro."
+  },
+  {
+   "q": "¿Para qué edad es Flick It?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. El Jardín Trasero es el lugar más fácil, con la puntería a la vista en las primeras patadas; la Jaula en la Azotea y el Estadio de la Isla van bien para niños mayores."
+  },
+  {
+   "q": "¿Flick It es un juego de tiros libres de verdad?",
+   "a": "Trata sobre la parte del golpe en un tiro libre: un balón quieto, una barrera que hay que rodear o pasar por encima, y un portero en el estadio. La mayoría de los blancos no son arcos sino latas, llantas, globos y campanas, así que aprendes a elegir un blanco y darle."
+  },
+  {
+   "q": "¿Cómo se le da efecto al balón en Flick It?",
+   "a": "Curva tu deslizamiento. El balón se curva hacia donde gira tu dedo, y el juego dice qué parte del pie sería: el borde interno o el borde externo."
+  }
+ ],
+ "controls": [
+  "desliza hacia arriba a través del balón",
+  "apunta con las flechas"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-rules/fouls-and-free-kicks",
+   "name": "Faltas y tiros libres",
+   "line": "Cuándo se marca un tiro libre, en palabras simples"
+  },
+  {
+   "path": "/learn/soccer-terms/free-kick-wall",
+   "name": "La barrera en un tiro libre",
+   "line": "Por qué los defensas se ponen en fila"
+  },
+  {
+   "path": "/learn/soccer-terms/set-piece",
+   "name": "Jugada a balón parado",
+   "line": "Tiros libres, saques de esquina y otras jugadas preparadas"
+  },
+  {
+   "path": "/learn/soccer-terms/chip",
+   "name": "Vaselina",
+   "line": "Elevar el balón por encima de un jugador"
+  },
+  {
+   "path": "/learn/soccer-drills/shooting",
+   "name": "Ejercicios de tiro",
+   "line": "Golpea bien el balón hacia un objetivo"
+  },
+  {
+   "path": "/learn/soccer-terms/weak-foot",
+   "name": "¿Qué es el pie débil?",
+   "line": "Y cómo hacerlo más fuerte"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Flick It, Cancha de Entrenamiento: un tiro con efecto pasó por la llanta en la esquina superior con TOP CORNER! y DOUBLE! +750, con el portero robot al lado",
+   "caption": "Alrededor de la barrera y por la llanta."
+  },
+  {
+   "alt": "Flick It, Estadio de la Isla de noche: un tiro largo que pasa la barrera de maniquíes logra LONG RANGE! +100 y GOAL +300 frente al público",
+   "caption": "Un gol de larga distancia de noche."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Flick It, Cancha de Entrenamiento: un tiro con efecto pasó por la llanta en la esquina superior con TOP CORNER! y DOUBLE! +750, con el portero robot al lado",
+   "caption": "Alrededor de la barrera y por la llanta."
+  },
+  {
+   "alt": "Flick It, Estadio de la Isla de noche: un tiro largo que pasa la barrera de maniquíes logra LONG RANGE! +100 y GOAL +300 frente al público",
+   "caption": "Un gol de larga distancia de noche."
+  },
+  {
+   "alt": "Flick It, Jaula en la Azotea: el personaje del jugador termina el movimiento después de elevar el balón por encima de la cerca de alambre, con el camino del balón en puntos rojos",
+   "caption": "Por encima de la cerca."
+  },
+  {
+   "alt": "Flick It, Jardín Trasero: el balón en el pasto, latas apiladas en una caja detrás de la cerca y la frase de la lección: elige un blanco, desliza recto hacia arriba a través del balón, ese es tu empeine",
+   "caption": "Primero elige un blanco."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Flick It: rodear la barrera con efecto",
+  "alt": "Partida de Flick It en un celular en la Cancha de Entrenamiento: el balón sale con el borde interno del pie, se curva junto a la barrera amarilla de maniquíes y pasa por la llanta con TOP CORNER! y THREADED!; luego tumba una lata de una caja con CLANG!",
+  "caption": "Flick It: rodea la barrera con efecto."
+ }
+}

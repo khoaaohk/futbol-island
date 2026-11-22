@@ -1,0 +1,113 @@
+{
+ "id": "son",
+ "title": "Son",
+ "subtitle": "Practica lo básico, y luego vuela",
+ "player": "Son Heung-min",
+ "country": "South Korea",
+ "summary": "Son: Practica lo básico, y luego vuela es un libro desplegable gratis de seis capítulos para niños sobre Son Heung-min, quien durante años practicó con su papá solo el control del balón, el regate y el pase en Corea del Sur. Se fue de casa a los dieciséis años a Alemania, anotó un gol de un extremo de la cancha al otro que ganó el Premio Puskás, compartió la Bota de Oro y ganó la Europa League en 2025. La historia enseña paciencia y lo básico.",
+ "description": "Libro desplegable gratis para niños sobre Son Heung-min: años de práctica básica, el Premio Puskás y la Europa League de 2025.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Corea del Sur"
+  },
+  {
+   "label": "Se fue de casa",
+   "value": "A los dieciséis años, al Hamburgo"
+  },
+  {
+   "label": "Premio Puskás",
+   "value": "Gol de diciembre de 2019 contra el Burnley"
+  },
+  {
+   "label": "Bota de Oro",
+   "value": "2021–22, 23 goles"
+  },
+  {
+   "label": "Europa League",
+   "value": "2025"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Cómo aprendió Son Heung-min a jugar fútbol?",
+   "a": "Son nació en 1992 en Chuncheon, Corea del Sur. Su papá, Son Woong-jung, había sido futbolista y lo entrenaba él mismo. Durante años practicaron solo lo básico: control del balón, regate y pase. Su papá no lo dejó jugar en una liga de verdad hasta que fue adolescente."
+  },
+  {
+   "q": "¿Cuándo se fue Son Heung-min a Alemania?",
+   "a": "En 2008, cuando tenía dieciséis años, entró a la academia juvenil del Hamburgo SV, en Alemania. Tuvo que aprender alemán, y su representante contó que lo aprendió en parte viendo caricaturas. El 30 de octubre de 2010 anotó su primer gol en la Bundesliga, contra el FC Colonia."
+  },
+  {
+   "q": "¿Por qué Son Heung-min ganó el Premio Puskás?",
+   "a": "En diciembre de 2019, jugando con el Tottenham contra el Burnley, conduciendo el balón recorrió casi toda la cancha de un extremo al otro y anotó. Ese gol ganó el Premio Puskás, el premio de la FIFA al mejor gol del año."
+  },
+  {
+   "q": "¿Con quién compartió Son Heung-min la Bota de Oro?",
+   "a": "En la temporada 2021–22 anotó 23 goles en la Premier League y compartió la Bota de Oro, el premio al máximo goleador de la liga, con Mohamed Salah. Fue el primer jugador de Asia en ganarla."
+  },
+  {
+   "q": "¿Cuál fue el primer gran trofeo de Son Heung-min?",
+   "a": "El 21 de mayo de 2025, el Tottenham jugó contra el Manchester United la final de la Europa League. Son entró como suplente, y el Tottenham ganó 1–0. Fue su primer gran trofeo. En agosto de 2025 se fue al Los Angeles FC."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Chuncheon · Infancia",
+   "title": "Años de lo básico",
+   "paragraphs": [
+    "Son Heung-min nació en 1992 en Chuncheon, en Corea del Sur. Su papá, Son Woong-jung, había sido futbolista, y él mismo entrenaba a Heung-min. Durante años practicaron solo lo básico: control del balón, regate y pase.",
+    "Su papá no lo dejó jugar en una liga de verdad hasta que fue adolescente. Practicar las mismas habilidades una y otra vez puede parecer aburrido, pero eso le dio a Heung-min un toque muy bueno."
+   ],
+   "lesson": "Lo básico puede parecer aburrido, pero es la base de todo lo demás."
+  },
+  {
+   "year": "2008 · A los 16 años",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "En 2008, cuando tenía dieciséis años, Heung-min se fue a Alemania para entrar a la academia juvenil del Hamburgo SV, gracias a un proyecto para jóvenes jugadores coreanos. Tuvo que vivir lejos de casa, en un país con un idioma nuevo. Estar tan lejos de la familia es difícil para cualquiera.",
+    "Heung-min aprendió alemán, y después también aprendió inglés. Su representante contó que aprendió alemán en parte viendo caricaturas."
+   ],
+   "lesson": "Vivir en un lugar nuevo es difícil al principio. Aprender un poco cada día te ayuda a sentirte parte."
+  },
+  {
+   "year": "De 2010 a 2013",
+   "title": "Primer gol en Alemania",
+   "paragraphs": [
+    "En 2010, Heung-min jugó su primer partido en la Bundesliga, la liga más alta de Alemania. El 30 de octubre de 2010 anotó su primer gol de liga, contra el FC Colonia. Tenía solo dieciocho años, y jugaba contra hombres adultos en una de las mejores ligas del mundo.",
+    "En 2013 se fue a otro club alemán, el Bayer Leverkusen. Paso a paso, el niño que había practicado lo básico se estaba convirtiendo en una estrella."
+   ],
+   "lesson": "Cada paso adelante merece celebrarse, hasta los pequeños."
+  },
+  {
+   "year": "De 2015 a 2020",
+   "title": "Un gol de punta a punta",
+   "paragraphs": [
+    "En 2015, Heung-min llegó al Tottenham Hotspur, en Londres. En 2018 ganó una medalla de oro con Corea del Sur en los Juegos Asiáticos, y dio los pases de los dos goles de la final. Jugar en Inglaterra significaba otro país nuevo y otro idioma nuevo.",
+    "En diciembre de 2019, contra el Burnley, conduciendo el balón recorrió casi toda la cancha de un extremo al otro y anotó. Ese gol ganó el Premio Puskás, el premio de la FIFA al mejor gol del año."
+   ],
+   "lesson": "Todos esos años practicando el regate pueden juntarse en un solo momento."
+  },
+  {
+   "year": "2021–22",
+   "title": "Máximo goleador",
+   "paragraphs": [
+    "En la temporada 2021–22, Heung-min anotó 23 goles en la Premier League. Compartió la Bota de Oro, el premio al máximo goleador de la liga, con Mohamed Salah. Muchos de sus goles llegaron con el tiro limpio y rápido que practicaba desde niño.",
+    "Fue el primer jugador de Asia en ganarla. En 2023 se convirtió en el capitán del Tottenham. Había demostrado que un jugador de cualquier lugar puede llegar a lo más alto."
+   ],
+   "lesson": "Sigue trabajando en tus habilidades, y puedes hacer historia."
+  },
+  {
+   "year": "2025",
+   "title": "Por fin un trofeo",
+   "paragraphs": [
+    "Durante años, Heung-min había jugado de maravilla sin ganar un gran trofeo con su club. El 21 de mayo de 2025, el Tottenham jugó contra el Manchester United la final de la Europa League. Heung-min entró como suplente, y el Tottenham ganó 1–0.",
+    "Fue su primer gran trofeo. En agosto de 2025 se fue al Los Angeles FC, en Estados Unidos. Todos esos años de lo básico, práctica y paciencia lo habían llevado a este momento."
+   ],
+   "lesson": "Esperar mucho tiempo el éxito puede ser difícil. Sigue trabajando, y disfrútalo cuando llegue."
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+{
+ "id": "kante",
+ "title": "Kanté",
+ "subtitle": "Le dijeron que no, y siguió trabajando",
+ "player": "N’Golo Kanté",
+ "country": "France",
+ "description": "Libro desplegable gratis para niños sobre N’Golo Kanté: las academias le dijeron que no tres veces, y siguió trabajando hasta ser campeón del mundo.",
+ "summary": "Kanté: Le dijeron que no, y siguió trabajando es un libro desplegable gratis de seis capítulos para niños sobre N’Golo Kanté, a quien rechazaron academias profesionales a los doce, catorce y dieciséis años. Siguió trabajando, tuvo su oportunidad en el Boulogne a los diecinueve, ganó la Premier League con el Leicester City y el Chelsea, y ganó el Mundial con Francia en 2018. La historia enseña que cuando te dicen que no, puedes seguir trabajando.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Francia"
+  },
+  {
+   "label": "Nació",
+   "value": "1991, París"
+  },
+  {
+   "label": "Primer club",
+   "value": "JS Suresnes, desde los 8 años"
+  },
+  {
+   "label": "Estudió",
+   "value": "Contabilidad"
+  },
+  {
+   "label": "Mundial",
+   "value": "Campeón con Francia, 2018"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿N’Golo Kanté jugó en un club grande de niño?",
+   "a": "No. N’Golo nació en París en 1991, y sus papás se habían mudado a Francia desde Malí. A los ocho años empezó a jugar en el JS Suresnes, un club pequeño cerca de París, y se quedó allí unos diez años. Cuando tenía once años murió su papá, y su familia tuvo que ser fuerte unida. N’Golo siguió yendo a entrenar."
+  },
+  {
+   "q": "¿Cuántas veces le dijeron que no a N’Golo Kanté?",
+   "a": "A los doce, catorce y dieciséis años hizo pruebas en las academias de clubes profesionales. La respuesta siempre fue la misma: no. Le dijeron que ya tenían jugadores como él, o mejores. N’Golo se dijo a sí mismo que debía seguir trabajando, porque quizás la próxima vez sería la buena."
+  },
+  {
+   "q": "¿Cómo tuvo N’Golo su oportunidad?",
+   "a": "A los diecinueve años llegó al Boulogne y jugó en el segundo equipo. Al mismo tiempo estudió contabilidad, por si el fútbol no funcionaba. A los veintiuno empezó a entrenar con el primer equipo, y en mayo de 2012 jugó su primer partido profesional: los últimos once minutos del último partido de la temporada."
+  },
+  {
+   "q": "¿Qué hizo N’Golo en el Caen y en el Leicester City?",
+   "a": "Llegó al Caen en 2013 y jugó los 38 partidos de liga de su primera temporada, y el equipo logró el ascenso. La temporada siguiente recuperó el balón más veces que cualquier otro jugador de Europa. En el Leicester City hizo más entradas e intercepciones que nadie en la liga, y en 2016 el Leicester fue campeón de la Premier League."
+  },
+  {
+   "q": "¿Qué ganó N’Golo Kanté después del Leicester?",
+   "a": "Se unió al Chelsea, y en 2017 volvió a ganar la liga. Ese año los jugadores lo votaron como el mejor jugador de Inglaterra. En 2018 jugó los siete partidos de Francia en el Mundial, y en la final Francia le ganó 4–2 a Croacia."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "París · 1999",
+   "title": "Un club pequeño cerca de París",
+   "paragraphs": [
+    "N’Golo Kanté nació en París en 1991. Sus papás se habían mudado a Francia desde Malí. Cuando tenía ocho años, empezó a jugar en el JS Suresnes, un club pequeño cerca de París.",
+    "Cuando N’Golo tenía once años, murió su papá. Fue un tiempo muy triste, y su familia tuvo que ser fuerte unida. N’Golo siguió yendo a entrenar, y se quedó en el Suresnes unos diez años."
+   ],
+   "lesson": "Tu club puede ser una segunda familia. Ve siempre, trabaja duro y cuida a tus compañeros."
+  },
+  {
+   "year": "Francia · de los 12 a los 16 años",
+   "title": "La respuesta siempre fue no",
+   "paragraphs": [
+    "A los doce, catorce y dieciséis años, N’Golo hizo pruebas en las academias de clubes profesionales. La respuesta siempre fue la misma: no. Le dijeron que ya tenían jugadores como él, o mejores.",
+    "Su entrenador en el Suresnes dijo que los clubes grandes no se fijaban en él porque era pequeño y nunca presumía. N’Golo fue honesto consigo mismo. Se dijo que debía seguir trabajando, porque quizás la próxima vez sería la buena."
+   ],
+   "lesson": "Cuando te digan que no, pregunta qué puedes mejorar y sigue trabajando en eso."
+  },
+  {
+   "year": "Boulogne · de 2010 a 2012",
+   "title": "A seis divisiones de la cima",
+   "paragraphs": [
+    "A los diecinueve años, N’Golo por fin tuvo su oportunidad en el Boulogne. Jugaba en el segundo equipo, seis divisiones por debajo de la cima del fútbol francés. Al mismo tiempo estudió contabilidad, por si el fútbol no funcionaba.",
+    "A los veintiuno empezó a entrenar con el primer equipo, y observaba cómo trabajaban los profesionales. En mayo de 2012 jugó su primer partido profesional: los últimos once minutos del último partido de la temporada."
+   ],
+   "lesson": "Ve paso a paso. Aprende de jugadores mejores mirando cómo entrenan."
+  },
+  {
+   "year": "Caen · de 2013 a 2015",
+   "title": "Recuperar el balón",
+   "paragraphs": [
+    "En 2013 N’Golo llegó al Caen. Jugó los 38 partidos de liga de su primera temporada, y el equipo logró el ascenso a primera división.",
+    "La temporada siguiente, recuperó el balón más veces que cualquier otro jugador de Europa. Leía el juego antes que nadie y se adelantaba para robar el pase. Pequeño, rápido y listo, siempre estaba en el lugar correcto."
+   ],
+   "lesson": "Para recuperar el balón, mira los ojos y la cadera de quien va a pasar, ponte de puntitas y adelántate a tiempo."
+  },
+  {
+   "year": "Inglaterra · 2016 y 2017",
+   "title": "Campeón, y campeón otra vez",
+   "paragraphs": [
+    "En 2015 N’Golo se fue al Leicester City, en Inglaterra. Pocos esperaban que el Leicester ganara algo, ¡pero en 2016 fue campeón de la Premier League! N’Golo hizo más entradas e intercepciones que nadie en la liga.",
+    "Luego se unió al Chelsea, y en 2017 volvió a ganar la liga. Ese año los jugadores lo votaron como el mejor jugador de Inglaterra."
+   ],
+   "lesson": "El trabajo duro ayuda a todo el equipo. Cuando recuperes el balón, pásaselo rápido a un compañero."
+  },
+  {
+   "year": "Rusia · 2018",
+   "title": "Campeón del mundo",
+   "paragraphs": [
+    "En 2018 N’Golo jugó con Francia en el Mundial. Jugó los siete partidos, y en la final Francia le ganó 4–2 a Croacia.",
+    "El niño pequeño al que rechazaron las academias ahora era campeón del mundo. N’Golo dice que el éxito en el fútbol es algo que se comparte, y que dar lo mejor por tu equipo es lo mejor del fútbol."
+   ],
+   "lesson": "Juega para tu equipo, no para ti. Ganar juntos es el mejor sentimiento del fútbol."
+  }
+ ]
+}

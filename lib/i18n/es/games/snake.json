@@ -1,0 +1,140 @@
+{
+ "id": "snake",
+ "name": "Squad Snake",
+ "title": "Juego de la serpiente de fútbol: Squad Snake gratis",
+ "h1": "Juego de la serpiente de fútbol: Squad Snake",
+ "description": "Squad Snake es un juego de la serpiente de fútbol gratis. Tu capitán junta compañeros por posición hasta formar un 4-3-3 u otra formación. Sin anuncios.",
+ "lead": "El clásico juego de la serpiente, jugado con un equipo de fútbol. Tu capitán recorre la cancha y los compañeros se suman a la fila en orden de posición, hasta que once forman una formación de verdad.",
+ "blurb": "La serpiente con un equipo: junta once jugadores y arma una formación",
+ "skill": "Las posiciones y cómo se cuenta una formación",
+ "about": [
+  "Squad Snake mantiene la regla que todos conocen del juego de la serpiente: la fila detrás de ti se hace más larga, y no puedes chocar con una pared ni contigo mismo. Aquí la fila es un equipo de fútbol. Primero se suma el portero, luego los defensas, los mediocampistas y los delanteros, cada uno con su número de camiseta y un color por posición.",
+  "Cuando diez compañeros siguen al capitán, el juego dice qué formación armaste, te da un bono y empieza el siguiente equipo un nivel más arriba."
+ ],
+ "phone": [
+  "Sostén el celular en vertical y desliza el dedo hacia arriba, abajo, la izquierda o la derecha en cualquier parte de la pantalla para girar al capitán.",
+  "Un solo arrastre puede girar dos veces, y el juego recuerda dos giros, así que un doble deslizamiento rápido hace una vuelta en U.",
+  "Puedes activar una cruceta en pantalla si prefieres botones."
+ ],
+ "desktop": [
+  "Usa las flechas del teclado o W, A, S y D para girar.",
+  "El juego se ve en una página vertical en el centro de la pantalla."
+ ],
+ "rules": [
+  "Las líneas de banda son paredes: salirte de la cancha, chocar con tu propia fila o con un defensa que presiona termina la partida. Cada equipo tiene un salvamento LAST-DITCH que te desvía del primer choque.",
+  "Los compañeros se suman desde atrás: el portero, luego de tres a cinco defensas, de tres a cinco mediocampistas y de uno a tres delanteros.",
+  "Mientras una línea está abierta, la cancha te da a elegir: uno más de esa línea, o el primer jugador de la siguiente. Esa decisión define la forma.",
+  "Se pueden armar siete formas: 3-4-3, 3-5-2, 4-3-3, 4-4-2, 4-5-1, 5-3-2 y 5-4-1.",
+  "El pedido del entrenador es un 4-4-2, un 4-3-3 o un 3-5-2. Si lo armas, el bono de equipo completo se duplica.",
+  "Un balón suelto da un THROUGH PASS: un pique corto que pasa a los rivales. Una bota dorada aparece en una línea de banda por unos segundos y vale puntos extra.",
+  "Si tocas a un árbitro, tu último compañero se va de vuelta."
+ ],
+ "teaches": [
+  "Las formaciones se cuentan desde atrás y nunca incluyen al portero: un 4-3-3 son cuatro defensas, tres mediocampistas y tres delanteros. En Squad Snake armas esa cuenta jugador por jugador, así que los números dejan de ser un código.",
+  "Las etiquetas de posición (GK, DEF, MID, FWD), los colores y los números de camiseta siguen la forma en que se lee una alineación, y la tarjeta de resultados agrega un dato sobre la forma que armaste."
+ ],
+ "tips": [
+  "Lee el pedido del entrenador antes de juntar al primer defensa, y luego cuenta: en cuanto recoges a un mediocampista, la defensa se cierra.",
+  "Arma la forma del entrenador siempre que puedas: el bono de equipo completo vale el doble.",
+  "Con una fila larga, avanza por las líneas de banda y deja libre el centro de la cancha para girar.",
+  "No puedes dar media vuelta directo, así que haz una vuelta en U con dos deslizamientos rápidos.",
+  "Usa el THROUGH PASS de un balón suelto para pasar a un defensa que presiona, y esquiva a los árbitros cuando tu fila esté casi llena."
+ ],
+ "harder": [
+  "El nivel 1 es una cancha tranquila, a unas tres casillas por segundo. Cada equipo completo sube el nivel, y los puntos se multiplican por el nivel.",
+  "Desde el nivel 2, defensas que presionan patrullan carriles marcados; desde el nivel 3, los árbitros caminan por la cancha.",
+  "En el nivel 12 el capitán va el doble de rápido, con hasta cuatro defensas que presionan y tres árbitros, y la bota dorada dura la mitad del tiempo.",
+  "Medallas: Bronce con 300 puntos (más o menos un equipo), Plata con 1,000, Oro con 2,500 y Capitán con 6,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: los nombres y el orden de las posiciones, y cómo se cuenta una formación. Un álbum de formas en la tarjeta de inicio muestra cuáles de las siete formas ya armó tu hijo.",
+  "Duración: el primer equipo toma uno o dos minutos; una buena partida dura unos minutos. El Daily Squad es igual para todos una vez al día."
+ ],
+ "faq": [
+  {
+   "q": "¿Squad Snake es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Squad Snake funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega Squad Snake?",
+   "a": "Desliza el dedo (o usa las flechas) para guiar a tu capitán por la cancha. Pasa sobre tus compañeros para sumarlos a tu fila, en orden del portero a los delanteros. No choques con la línea de banda, con tu propia fila ni con un defensa que presiona. Once jugadores completan una formación."
+  },
+  {
+   "q": "¿Para qué edad es Squad Snake?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Squad Snake empieza despacio, así que sirve para un niño que nunca ha jugado a la serpiente."
+  },
+  {
+   "q": "¿Qué formaciones puedes armar en Squad Snake?",
+   "a": "Siete: 3-4-3, 3-5-2, 4-3-3, 4-4-2, 4-5-1, 5-3-2 y 5-4-1. Eliges la forma al decidir cuándo dejar de juntar una línea y empezar la siguiente."
+  }
+ ],
+ "controls": [
+  "desliza el dedo para girar al capitán",
+  "usa las flechas del teclado"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-formations",
+   "name": "Formaciones de fútbol explicadas",
+   "line": "Cada forma para 7v7, 9v9, 11v11 y futsal, con un diagrama"
+  },
+  {
+   "path": "/learn/soccer-positions",
+   "name": "Posiciones de fútbol",
+   "line": "Qué hace cada posición y los números del 1 al 11"
+  },
+  {
+   "path": "/learn/soccer-formations/11v11-4-3-3",
+   "name": "Formación 4-3-3",
+   "line": "Funciones, puntos fuertes y puntos débiles"
+  },
+  {
+   "path": "/learn/soccer-formations/11v11-4-4-2",
+   "name": "Formación 4-4-2",
+   "line": "Dos líneas de cuatro y dos delanteros"
+  },
+  {
+   "path": "/learn/soccer-formations/11v11-3-5-2",
+   "name": "Formación 3-5-2",
+   "line": "Tres atrás y carrileros"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Squad Snake en un celular: una fila de jugadores con número sigue al capitán por la cancha hacia un delantero por recoger",
+   "caption": "La alineación de arriba se llena con los colores de cada posición a medida que se suman jugadores."
+  },
+  {
+   "alt": "Squad Snake muestra FULL SQUAD y 4-3-3 después de juntar once jugadores, con el bono del pedido del entrenador",
+   "caption": "Once jugadores: la forma recibe su nombre y el pedido del entrenador duplica el bono."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Squad Snake al atardecer, nivel 1: el capitán da la vuelta con siete compañeros detrás y una cadena QUICK x4",
+   "caption": "Junta rápido para hacer una cadena Quick."
+  },
+  {
+   "alt": "Squad Snake en el nivel 2: QUICK x2, MIDFIELD FOUR! mientras el capitán recoge a un mediocampista, con un delantero esperando abajo",
+   "caption": "Completa una línea de la formación: cuatro en el medio."
+  },
+  {
+   "alt": "Squad Snake en el nivel 3 bajo los reflectores de noche: una fila larga de jugadores sigue al capitán por la cancha",
+   "caption": "Cada nivel trae una nueva formación y un nuevo estadio."
+  },
+  {
+   "alt": "Squad Snake: diez jugadores siguen al capitán en una fila larga en forma de L por la parte de abajo de la cancha",
+   "caption": "Planea tus giros cuando la fila se hace larga."
+  }
+ ],
+ "clip": {
+  "name": "Squad Snake en acción: el capitán junta compañeros",
+  "alt": "Squad Snake en un celular en el nivel 2, frente a las tribunas: el capitán guía una fila creciente de jugadores con número, una cadena QUICK junta el mediocampo y luego FULL SQUAD! 3-4-3",
+  "caption": "Squad Snake: cada compañero se suma a la fila en orden de posición."
+ }
+}

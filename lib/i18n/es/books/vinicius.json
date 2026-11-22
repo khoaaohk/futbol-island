@@ -1,0 +1,109 @@
+{
+ "id": "vinicius",
+ "title": "Vinícius",
+ "subtitle": "De pie contra el racismo",
+ "player": "Vinícius Júnior",
+ "country": "Brazil",
+ "summary": "Vinícius: De pie contra el racismo es un libro desplegable gratis de seis capítulos para niños sobre Vinícius Júnior, quien creció en São Gonçalo, en Brasil, aprendió futsal en una escuela de fútbol del Flamengo y se fue al Real Madrid a los dieciocho años. Anotó el gol de la victoria en la final de la Champions League de 2022, alzó la voz contra el racismo y creó una organización benéfica que ayuda a los niños a seguir aprendiendo. La historia enseña que el racismo nunca está bien.",
+ "description": "Libro desplegable gratis para niños sobre Vinícius Júnior: del futsal en Brasil al gol de la final de la Champions y su lucha contra el racismo.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Brasil"
+  },
+  {
+   "label": "Creció en",
+   "value": "São Gonçalo, cerca de Río de Janeiro"
+  },
+  {
+   "label": "Gol en la final de la Champions League",
+   "value": "2022, el único gol"
+  },
+  {
+   "label": "Embajador de Buena Voluntad de la UNESCO",
+   "value": "2024"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde aprendió a jugar Vinícius Júnior?",
+   "a": "Vinícius nació en 2000 en São Gonçalo, cerca de Río de Janeiro. Cuando tenía seis años, su papá lo llevó a una escuela de fútbol del Flamengo cerca de su casa. Allí jugó futsal, el juego rápido con pocos jugadores en una cancha dura y con un balón más pequeño, que enseña pies rápidos y a pensar rápido."
+  },
+  {
+   "q": "¿Quién ayudó a Vinícius Júnior cuando entró al Flamengo?",
+   "a": "En 2010, Vinícius fue aceptado en el equipo juvenil del Flamengo, pero el campo de entrenamiento quedaba muy lejos de su casa. Se fue a vivir con su tío Ulisses para estar más cerca del entrenamiento, y el club y algunos comerciantes del barrio también ayudaron a la familia con dinero."
+  },
+  {
+   "q": "¿Qué hizo Vinícius Júnior en la final de la Champions League de 2022?",
+   "a": "En mayo de 2022, el Real Madrid jugó contra el Liverpool la final de la Champions League en París. Vinícius anotó el único gol del partido, y el Real Madrid ganó 1–0. Algunas personas habían dicho que su tiro no era suficientemente bueno, así que siguió practicando."
+  },
+  {
+   "q": "¿Cómo se enfrentó Vinícius Júnior al racismo?",
+   "a": "En España, algunas personas en las tribunas insultaron a Vinícius por el color de su piel. El racismo siempre está mal. Vinícius alzó la voz y pidió medidas más fuertes. En Brasil, nuevas leyes con su nombre permiten detener los partidos cuando hay insultos racistas, y la FIFA le pidió dirigir un grupo de jugadores que trabaja contra el racismo."
+  },
+  {
+   "q": "¿Qué es el Instituto Vini Jr.?",
+   "a": "En 2021, Vinícius creó el Instituto Vini Jr., que ayuda a niños y adolescentes de barrios pobres de Brasil a ir a la escuela y seguir aprendiendo. En 2024, la UNESCO lo nombró Embajador de Buena Voluntad para la educación, y en diciembre de ese año la FIFA lo nombró mejor jugador del mundo con el premio “The Best” (en inglés)."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "São Gonçalo · A los 6 años",
+   "title": "Un niño que amaba el balón",
+   "paragraphs": [
+    "Vinícius Júnior nació en 2000 en São Gonçalo, cerca de Río de Janeiro, en Brasil. Su familia no tenía mucho dinero. Cuando tenía seis años, su papá lo llevó a una escuela de fútbol del club Flamengo, cerca de su casa.",
+    "Allí Vinícius jugó futsal, el juego rápido con pocos jugadores, antes de elegir el fútbol. El futsal se juega en una cancha dura con un balón más pequeño, y enseña pies rápidos y a pensar rápido. Esas habilidades se quedaron con él."
+   ],
+   "lesson": "No necesitas mucho para empezar. Un balón y una oportunidad pueden ser suficientes."
+  },
+  {
+   "year": "2010 · Flamengo",
+   "title": "La ayuda de su familia",
+   "paragraphs": [
+    "En 2010, Vinícius hizo una prueba para el equipo juvenil del Flamengo, y lo aceptaron. Pero el campo de entrenamiento quedaba muy lejos de su casa. Llegar allí todos los días habría sido muy difícil.",
+    "Vinícius se fue a vivir con su tío Ulisses, para estar más cerca del entrenamiento. El club y algunos comerciantes del barrio también ayudaron a la familia con dinero. Mucha gente ayudó a un niño a perseguir su sueño."
+   ],
+   "lesson": "Las personas que te ayudan son parte de tu equipo."
+  },
+  {
+   "year": "De 2017 a 2018",
+   "title": "Un gran cambio, y mucha presión",
+   "paragraphs": [
+    "Vinícius jugó su primer partido con el primer equipo del Flamengo a los dieciséis años. El Real Madrid acordó ficharlo, y en 2018, cuando tenía dieciocho años, se fue a España. Mudarse a un país nuevo a los dieciocho, con un idioma nuevo, es un gran cambio.",
+    "Algunas personas decían que su tiro no era suficientemente bueno. Vinícius siguió practicando, y siguió mejorando. Trabajó en su tiro y en sus decisiones frente al arco."
+   ],
+   "lesson": "Cuando te critiquen, úsalo para practicar, no para rendirte."
+  },
+  {
+   "year": "2022 · París",
+   "title": "El gol de la victoria",
+   "paragraphs": [
+    "En mayo de 2022, el Real Madrid jugó contra el Liverpool la final de la Champions League, en París. Vinícius anotó el único gol del partido. Millones de personas lo veían en todo el mundo.",
+    "El Real Madrid ganó 1–0 y fue campeón de Europa. El jugador del que muchos dudaban había anotado el gol de la victoria en la final de clubes más grande de todas."
+   ],
+   "lesson": "Sigue creyendo en ti, aunque otros duden de ti."
+  },
+  {
+   "year": "2023 · España",
+   "title": "Alzar la voz",
+   "paragraphs": [
+    "En España, algunas personas en las tribunas insultaron a Vinícius por el color de su piel. Esto se llama racismo, y siempre está mal. Nadie debería ser maltratado nunca por su aspecto.",
+    "Vinícius no se quedó callado. Alzó la voz y pidió medidas más fuertes. En Brasil, nuevas leyes con su nombre permiten detener los partidos cuando hay insultos racistas, y la FIFA le pidió dirigir un grupo de jugadores que trabaja contra el racismo."
+   ],
+   "lesson": "El racismo nunca está bien. Alzar la voz, y apoyar a quienes son tratados injustamente, requiere valor."
+  },
+  {
+   "year": "De 2021 a 2024",
+   "title": "Ayudar a los niños a aprender",
+   "paragraphs": [
+    "En 2021, Vinícius creó el Instituto Vini Jr., que ayuda a niños y adolescentes de barrios pobres de Brasil a ir a la escuela y seguir aprendiendo. Vinícius había crecido en una familia sin mucho dinero.",
+    "En 2024, la UNESCO, que es parte de las Naciones Unidas, lo nombró Embajador de Buena Voluntad para la educación. Fue apenas el segundo futbolista brasileño en hacer este trabajo, después de Pelé. En diciembre de ese año, la FIFA lo nombró mejor jugador del mundo con el premio “The Best” (en inglés)."
+   ],
+   "lesson": "Usa lo que tienes para ayudar a otros. Aprender abre puertas."
+  }
+ ]
+}

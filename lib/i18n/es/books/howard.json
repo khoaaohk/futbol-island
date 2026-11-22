@@ -1,0 +1,109 @@
+{
+ "id": "howard",
+ "title": "Howard",
+ "subtitle": "Diferente, y concentrado",
+ "player": "Tim Howard",
+ "country": "USA",
+ "summary": "Howard: Diferente, y concentrado es un libro desplegable gratis de seis capítulos para niños sobre Tim Howard, el portero de Estados Unidos que creció con síndrome de Tourette y TOC. Intentaba esconder sus tics, encontró la concentración en el arco, jugó en el Manchester United y el Everton, e hizo quince atajadas contra Bélgica en el Mundial 2014. La historia enseña que ser diferente no está mal, y que tu historia puede ayudar a alguien a sentirse menos solo.",
+ "description": "Libro desplegable gratis para niños sobre Tim Howard: el portero con síndrome de Tourette que hizo 15 atajadas en un Mundial.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Estados Unidos"
+  },
+  {
+   "label": "Posición",
+   "value": "Portero"
+  },
+  {
+   "label": "Vive con",
+   "value": "Síndrome de Tourette y TOC"
+  },
+  {
+   "label": "Atajadas contra Bélgica, 2014",
+   "value": "15, un récord en los Mundiales"
+  },
+  {
+   "label": "Partidos con Estados Unidos",
+   "value": "121"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Qué es el síndrome de Tourette?",
+   "a": "El síndrome de Tourette hace que las personas tengan tics: movimientos o sonidos repentinos que son muy difíciles de detener. Tim Howard supo que lo tenía cuando era niño. También tiene TOC (trastorno obsesivo-compulsivo), que puede llenarte la cabeza de preocupaciones que te hacen repetir cosas. Ser diferente no está mal."
+  },
+  {
+   "q": "¿Cómo ayudó a Tim Howard ser portero?",
+   "a": "Tim intentaba esconder sus tics en la escuela, y eso lo cansaba mucho. En el arco podía poner toda su energía en mirar el balón. Ha escrito que la forma en que funciona su cerebro lo ayuda a concentrarse muchísimo y a reaccionar rápido."
+  },
+  {
+   "q": "¿Cómo ayudó Tim Howard a otros niños?",
+   "a": "Siendo un joven profesional en los MetroStars, empezó a ayudar a niños con síndrome de Tourette, y en 2001 ganó el premio Humanitario del Año de la liga. En 2014 escribió un libro sobre su vida, “The Keeper” (en inglés), y un programa de liderazgo para adolescentes con síndrome de Tourette en la Universidad Rutgers lleva su nombre."
+  },
+  {
+   "q": "¿Qué pasó contra Bélgica en el Mundial 2014?",
+   "a": "En un partido de eliminación directa en Brasil, Bélgica atacó una y otra vez. Tim hizo quince atajadas, un récord de los Mundiales en un solo partido. Estados Unidos perdió 2–1 en el tiempo extra, pero en todas partes la gente habló de su valiente actuación en el arco."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Nueva Jersey · Infancia",
+   "title": "Tics que no podía detener",
+   "paragraphs": [
+    "Tim Howard nació en 1979 en North Brunswick, Nueva Jersey, en Estados Unidos. Después de que sus papás se separaron, cuando él tenía tres años, vivió con su mamá. De niño, Tim supo que tenía síndrome de Tourette.",
+    "El síndrome de Tourette hace que las personas tengan tics: movimientos o sonidos repentinos que son muy difíciles de detener. Tim también tiene TOC (trastorno obsesivo-compulsivo), que puede llenarte la cabeza de preocupaciones que te hacen repetir cosas."
+   ],
+   "lesson": "El cerebro y el cuerpo de algunas personas funcionan de forma diferente. Ser diferente no está mal."
+  },
+  {
+   "year": "Años de escuela",
+   "title": "Intentar esconderlo",
+   "paragraphs": [
+    "Como muchos niños con síndrome de Tourette, Tim intentaba esconder sus tics. Esconderlos todo el día lo cansaba mucho. Mucha gente no entendía qué era el síndrome de Tourette.",
+    "Tim descubrió que le encantaba ser portero. Ha escrito que la forma en que funciona su cerebro lo ayuda a concentrarse muchísimo y a reaccionar rápido en el arco. En el arco, podía poner toda su energía en mirar el balón."
+   ],
+   "lesson": "No tienes que esconder quién eres. Contárselo a personas de confianza puede ayudar."
+  },
+  {
+   "year": "1998 a 2001",
+   "title": "Un joven profesional",
+   "paragraphs": [
+    "En 1998, a los diecinueve años, Tim jugó su primer partido en la Major League Soccer, con los MetroStars. También empezó a ayudar a niños con síndrome de Tourette. Él mismo todavía era muy joven.",
+    "En 2001, ganó el premio Humanitario del Año de la liga por ese trabajo, y entró en la junta directiva de un grupo de síndrome de Tourette en Nueva Jersey. Quería que los niños con síndrome de Tourette supieran que ellos también podían seguir sus sueños."
+   ],
+   "lesson": "Puedes ayudar a otros mientras tú mismo sigues creciendo."
+  },
+  {
+   "year": "2003 a 2016",
+   "title": "Un gran cambio",
+   "paragraphs": [
+    "En 2003, Tim llegó al Manchester United, en Inglaterra, uno de los clubes más grandes del mundo, y ganó la FA Cup en 2004. Mudarse a otro país, con compañeros nuevos y mucha atención, fue un gran paso.",
+    "En 2006, pasó al Everton, y jugó allí diez temporadas. Gente de todo el mundo vio que un portero con síndrome de Tourette podía jugar al más alto nivel."
+   ],
+   "lesson": "Siéntete orgulloso de quién eres. Puedes mostrarle a la gente lo que es posible."
+  },
+  {
+   "year": "2014 · Mundial",
+   "title": "Quince atajadas",
+   "paragraphs": [
+    "En el Mundial 2014 en Brasil, Estados Unidos jugó contra Bélgica. Bélgica atacó una y otra vez, y Tim los seguía frenando. Era un partido de eliminación directa: el equipo que perdiera se iba a casa.",
+    "Tim hizo quince atajadas, un récord de los Mundiales en un solo partido. Estados Unidos perdió 2–1 en el tiempo extra, pero en todas partes la gente habló de su valiente actuación en el arco."
+   ],
+   "lesson": "Puedes estar orgulloso de tu esfuerzo incluso cuando el resultado no te favorece."
+  },
+  {
+   "year": "2014 a 2019",
+   "title": "Ayudar a otros niños",
+   "paragraphs": [
+    "Tim jugó 121 partidos con Estados Unidos, más que cualquier otro portero de la selección masculina de su país. En 2014, escribió un libro sobre su vida con síndrome de Tourette y TOC, llamado “The Keeper” (en inglés). En el libro, habló abiertamente de las cosas que una vez intentó esconder.",
+    "Un programa de liderazgo para adolescentes con síndrome de Tourette, en la Universidad Rutgers, lleva su nombre. Tim dejó de jugar en 2019. Demostró que ser diferente también puede ser una fortaleza."
+   ],
+   "lesson": "Tu historia puede ayudar a otra persona a sentirse menos sola."
+  }
+ ]
+}

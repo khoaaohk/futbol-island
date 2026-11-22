@@ -1,0 +1,113 @@
+{
+ "id": "zidane",
+ "title": "Zidane",
+ "subtitle": "Dos hogares, una historia",
+ "player": "Zinedine Zidane",
+ "country": "France",
+ "summary": "Zidane: Dos hogares, una historia es un libro desplegable gratis de seis capítulos para niños sobre Zinedine Zidane, quien nació en Marsella, hijo de padres de Cabilia, Argelia. Lo expulsaron en el Mundial de 1998, volvió y anotó dos goles de cabeza en la final, y Francia ganó 3–0. La historia enseña que un tropiezo, o un mal momento, no es el final de tu historia.",
+ "description": "Libro desplegable gratis para niños sobre Zinedine Zidane: sus raíces en Argelia, la expulsión de 1998 y sus dos goles en la final del Mundial.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Francia"
+  },
+  {
+   "label": "Nació",
+   "value": "1972, Marsella"
+  },
+  {
+   "label": "Raíces familiares",
+   "value": "Cabilia, Argelia"
+  },
+  {
+   "label": "Primer club",
+   "value": "Cannes, desde los 14 años"
+  },
+  {
+   "label": "Mundial ganado",
+   "value": "1998, dos goles en la final"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿De dónde es la familia de Zidane?",
+   "a": "En 1953, sus padres dejaron su pueblo en Cabilia, Argelia, y se mudaron a París. En los años 60 se mudaron a La Castellane, un barrio difícil de Marsella, y Zinedine nació allí en 1972, el menor de cinco hijos. Ha dicho que está orgulloso de ser francés, y también orgulloso de las raíces de su familia."
+  },
+  {
+   "q": "¿Cómo llegó Zidane al Cannes?",
+   "a": "Cuando tenía catorce años, un cazatalentos del Cannes, Jean Varraud, lo descubrió en un campamento de entrenamiento. Fue al Cannes por seis semanas y se quedó cuatro años. Al principio dormía en un dormitorio con otros veinte jugadores jóvenes. Luego, el director del club, Jean-Claude Elineau, lo invitó a vivir con su propia familia, y Zidane contó después que allí encontró equilibrio."
+  },
+  {
+   "q": "¿Expulsaron a Zidane en el Mundial de 1998?",
+   "a": "Sí. En el segundo partido de Francia lo expulsaron por pisar a un rival, y fue el primer jugador francés en recibir una tarjeta roja en un Mundial. Su equipo ganó sin él. Cuando volvió, Francia llegó a la final contra Brasil, Zidane anotó dos goles de cabeza, y Francia ganó 3–0."
+  },
+  {
+   "q": "¿Por qué Zidane volvió a la selección de Francia?",
+   "a": "Dejó de jugar con Francia en 2004, después de que Grecia los eliminara de la Eurocopa. Luego a Francia le costó clasificar al Mundial de 2006. El entrenador, Raymond Domenech, le pidió que regresara, y en 2005 volvió como capitán junto con Lilian Thuram y Claude Makélélé. Francia subió del cuarto lugar al primero de su grupo."
+  },
+  {
+   "q": "¿Qué pasó en la final del Mundial de 2006?",
+   "a": "Fue el último partido de Zidane. Anotó un penal, pero en el tiempo extra un jugador insultó a su hermana, y Zidane le dio un cabezazo en el pecho. Lo expulsaron, y Francia perdió en penales. Más tarde dijo que doce de sus catorce tarjetas rojas llegaron después de que alguien lo provocara, pero que eso no era excusa."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "De Cabilia a Marsella",
+   "title": "Dos hogares, una familia",
+   "paragraphs": [
+    "En 1953, los padres de Zidane dejaron su pueblo en Cabilia, Argelia, y se mudaron a París. Era difícil encontrar trabajo, así que en los años 60 se mudaron a La Castellane, un barrio difícil de Marsella. Zinedine nació allí en 1972, el menor de cinco hijos.",
+    "Su papá muchas veces trabajaba de noche en un almacén y como guardia de seguridad. Sus padres eran estrictos, y Zidane dice que su papá es la luz que guió su carrera. Más tarde dijo que está orgulloso de ser francés, y también orgulloso de las raíces de su familia."
+   ],
+   "lesson": "La historia de tu familia es parte de ti. Venir de dos lugares puede ser una fortaleza."
+  },
+  {
+   "year": "Cannes · A los 14 años",
+   "title": "Lejos de casa",
+   "paragraphs": [
+    "Cuando Zidane tenía catorce años, un cazatalentos del club Cannes, Jean Varraud, lo descubrió en un campamento de entrenamiento. Fue al Cannes por seis semanas, y terminó quedándose cuatro años. Eso significó dejar a su familia y dormir en un dormitorio con otros veinte jugadores jóvenes.",
+    "Toca tres veces la puerta de papel. El director del club, Jean-Claude Elineau, invitó a Zidane a dejar el dormitorio y vivir con su propia familia. Zidane contó después que en esa casa encontró equilibrio. Estar lejos de casa es difícil, y un adulto amable puede hacer una gran diferencia."
+   ],
+   "lesson": "Ser nuevo en un lugar es difícil. Está bien pedir ayuda y aceptar la amabilidad."
+  },
+  {
+   "year": "Cannes · Creciendo",
+   "title": "Palabras que duelen",
+   "paragraphs": [
+    "En el Cannes, algunos espectadores gritaban insultos sobre la raza y la familia de Zidane. Sus primeros entrenadores vieron que era sensible. Una vez le dio un puñetazo a un rival que se había burlado del barrio de donde venía, y como castigo pasó sus primeras semanas limpiando.",
+    "Levanta la solapa para ver quién lo ayudó. Su entrenador, Jean Varraud, lo animó a convertir su enojo en concentración en su propio juego. Algunos escritores describen a Zidane como alguien atrapado entre dos culturas. Las palabras crueles sobre quién eres nunca están bien, y responder con golpes solo empeora las cosas."
+   ],
+   "lesson": "Si alguien es cruel contigo por quién eres, no es tu culpa. Cuéntaselo a alguien de confianza."
+  },
+  {
+   "year": "1998 · Mundial",
+   "title": "Expulsado, y de vuelta",
+   "paragraphs": [
+    "En 1998, Francia fue sede del Mundial. En el segundo partido de Francia, a Zidane lo expulsaron por pisar a un rival. Fue el primer jugador francés en recibir una tarjeta roja en un Mundial, y durante un tiempo solo pudo mirar.",
+    "Abre la reja del túnel para traerlo de vuelta. Su equipo ganó sin él, y cuando regresó siguieron avanzando, hasta la final contra Brasil. Allí, Zidane anotó dos goles de cabeza, y Francia ganó 3–0. Una tarjeta roja no fue el final de su historia."
+   ],
+   "lesson": "Un tropiezo no es el final de la historia. Tu equipo puede sostenerte mientras no estás."
+  },
+  {
+   "year": "De 2004 a 2005",
+   "title": "El regreso",
+   "paragraphs": [
+    "En 2004, después de que Grecia eliminara a Francia de la Eurocopa, Zidane dejó de jugar con Francia. Otros jugadores veteranos también se fueron, y a Francia le costó clasificar al Mundial de 2006.",
+    "Despliega el puente de vuelta al equipo. El entrenador, Raymond Domenech, le pidió a Zidane con insistencia que regresara, y en 2005 volvió como capitán, con sus antiguos compañeros Lilian Thuram y Claude Makélélé. Juntos ayudaron a Francia a subir del cuarto lugar al primero de su grupo. A veces lo más valiente es volver y ayudar."
+   ],
+   "lesson": "Está bien hacerse a un lado. Volver cuando la gente te necesita también es valiente."
+  },
+  {
+   "year": "2006 y después",
+   "title": "Una noche difícil, y después",
+   "paragraphs": [
+    "La final del Mundial de 2006 contra Italia fue el último partido de Zidane. Anotó un penal, pero en el tiempo extra un jugador insultó a su hermana, y Zidane le dio un cabezazo en el pecho. Lo expulsaron, y Francia perdió en penales.",
+    "De vuelta en París, miles de aficionados seguían gritando su nombre. Más tarde, Zidane dijo que doce de sus catorce tarjetas rojas llegaron después de que alguien lo provocara, pero que eso no era excusa. Después, como entrenador del Real Madrid, ganó la Champions League tres años seguidos."
+   ],
+   "lesson": "Cuando alguien intente hacerte enojar, respira y aléjate. Eres más que un mal momento."
+  }
+ ]
+}

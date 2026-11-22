@@ -1,0 +1,136 @@
+{
+ "id": "pinball",
+ "name": "Futbol Pinball",
+ "title": "Pinball de fútbol gratis en línea: Futbol Pinball",
+ "h1": "Pinball de fútbol: Futbol Pinball",
+ "description": "Futbol Pinball es un pinball de fútbol gratis. Lanza el balón por una mesa con forma de cancha, rompe la barrera, vence al portero y anota. Sin anuncios.",
+ "lead": "Una mesa de pinball con forma de cancha de fútbol. Las dos paletas son tu pie izquierdo y tu pie derecho: pasa el balón contra los rebotadores, tumba la barrera, saca al portero de su lugar y anota.",
+ "blurb": "Una mesa de pinball que es una cancha: rebotes, paredes y el momento justo",
+ "skill": "Leer los rebotes, las paredes y el momento justo",
+ "about": [
+  "Futbol Pinball es fútbol jugado en una mesa de pinball. El arco está arriba con un portero que se mueve sobre la línea, una barrera se para frente a él y los defensas salen a bloquear.",
+  "Un partido en la mesa dura tres minutos, que el reloj muestra como 90. El silbatazo final no termina tu partida: te da un bono, sube el nivel y empieza el siguiente partido. La partida solo termina cuando pierdes tu último balón."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Las teclas Left y Right de abajo mueven las dos paletas.",
+  "Al empezar cada balón, la tecla del medio es Launch: mantenla para cargar y suéltala. Durante el juego se convierte en Nudge, una pequeña sacudida de la mesa."
+ ],
+ "desktop": [
+  "A o la flecha izquierda es la paleta izquierda; D o la flecha derecha es la paleta derecha.",
+  "La barra espaciadora lanza el balón (mantenla para cargar) y sacude la mesa durante el juego. Escape o P pausan."
+ ],
+ "rules": [
+  "La paleta izquierda es tu pie izquierdo y la paleta derecha es tu pie derecho; la mesa usa amarillo y azul para mostrar de qué lado es cada objetivo.",
+  "Tumba la barrera para encender el arco por un rato y luego tira para vencer al portero.",
+  "Un tiro atajado sigue vivo: síguelo para un REBOUND GOAL.",
+  "Los carriles y objetivos encendidos arman misiones con nombres de fútbol, como Build Up, y una frase corta del entrenador explica cada una.",
+  "Un balón que se cuela entre las paletas se pierde. Un salvador de balón protege cada balón nuevo durante sus primeros segundos."
+ ],
+ "teaches": [
+  "El pinball es un juego de ángulos, igual que hacer una pared contra un muro o con un compañero. El balón sale de la paleta con un ángulo distinto según cuándo presionas, que es la misma lección que golpear el balón antes o después cruzando el cuerpo.",
+  "La mesa también nombra ideas reales cuando aparecen. Un portero que suelta un tiro le da una segunda oportunidad al delantero, y por eso a los delanteros les dicen que sigan cada tiro. Un defensa que sale deja un hueco detrás."
+ ],
+ "tips": [
+  "No muevas las dos paletas a la vez. Deja que el balón ruede por la paleta y luego presiona: el momento en que presionas cambia el ángulo, así que prueba antes y después y mira a dónde va el balón.",
+  "Primero rompe la barrera. Tirar a un arco cubierto casi siempre le devuelve el balón a los defensas.",
+  "Mira al portero y tira al lado que acaba de dejar.",
+  "Mantente listo después de una atajada: los goles de rebote cuentan.",
+  "Guarda la sacudida para un balón que baja por un lado o va directo entre las paletas."
+ ],
+ "harder": [
+  "El nivel 1 es la mesa suave: un defensa, el portero en su velocidad más lenta y un salvador gratis en la línea de meta.",
+  "Cada silbatazo final sube el nivel: toda la mesa va unos pocos por ciento más rápido, el portero se mueve más rápido y llega más lejos, y más defensas empiezan en la cancha.",
+  "Los objetivos con tiempo quedan encendidos menos rato, el tiempo del salvador de balón se acorta, y en los niveles siguientes las paletas se hacen un poco más cortas, lo que agranda el hueco entre ellas."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: el momento justo, leer ángulos y rebotes, y la idea de seguir un tiro. Cada frase del entrenador es una sola oración corta.",
+  "Duración: un partido dura tres minutos, y una partida dura tantos partidos como tu hijo logre mantener un balón en juego."
+ ],
+ "faq": [
+  {
+   "q": "¿Futbol Pinball es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Futbol Pinball funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora, las paletas son las teclas A y D o las flechas izquierda y derecha."
+  },
+  {
+   "q": "¿Cómo se juega al pinball de fútbol?",
+   "a": "Lanza el balón y usa las paletas izquierda y derecha para mantenerlo en la mesa y mandarlo hacia arriba de la cancha. Tumba la barrera y luego tira para vencer al portero y anotar. Si el balón se cuela entre las paletas lo pierdes, y la partida termina cuando pierdes el último balón."
+  },
+  {
+   "q": "¿Para qué edad es Futbol Pinball?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Con dos botones basta para jugar, así que es uno de los juegos del arcade más fáciles para empezar."
+  },
+  {
+   "q": "¿Tengo que descargar algo para jugar?",
+   "a": "No. Futbol Pinball funciona en el navegador en futbolisland.app. No hay app que instalar ni complementos."
+  }
+ ],
+ "controls": [
+  "toca Left y Right para mover las paletas",
+  "presiona A y D"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/wall-passing",
+   "name": "Ejercicio de pases contra la pared",
+   "line": "Pasa contra una pared y controla el rebote"
+  },
+  {
+   "path": "/learn/soccer-drills/follow-the-shot",
+   "name": "Ejercicio de seguir el tiro",
+   "line": "Anota de rebote como un delantero"
+  },
+  {
+   "path": "/learn/soccer-terms/give-and-go",
+   "name": "Pared (término de fútbol)",
+   "line": "Pasa, muévete y recibe el balón de vuelta: la pared"
+  },
+  {
+   "path": "/learn/soccer-positions/goalkeeper",
+   "name": "El portero en el fútbol",
+   "line": "Cómo un portero cubre el arco"
+  },
+  {
+   "path": "/learn/soccer-positions/striker",
+   "name": "El delantero en el fútbol",
+   "line": "El jugador que define las ocasiones"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Futbol Pinball en un celular: una mesa de pinball dibujada como una cancha de fútbol con portero, barrera, rebotadores y dos paletas, y las teclas Left, Nudge y Right",
+   "caption": "Toda la mesa en un celular, con las dos teclas de las paletas bajo tus pulgares."
+  },
+  {
+   "alt": "Futbol Pinball después de un gol: GOAL! y +800 aparecen sobre la mesa, con una frase del entrenador sobre los goles de rebote",
+   "caption": "Un gol de rebote: la frase del entrenador explica la idea de fútbol detrás."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Futbol Pinball: DUGOUT OPEN! se enciende sobre el arco mientras el balón rueda junto al círculo central",
+   "caption": "Pégale al banquillo para abrirlo."
+  },
+  {
+   "alt": "Futbol Pinball: G-O-A-L AGAIN! con el Golden Pot en 30 puntos y duplicado en la barra de puntos",
+   "caption": "Anota otra vez para hacer crecer el Golden Pot."
+  },
+  {
+   "alt": "Futbol Pinball: DEFENDER DAZED cuando el balón choca con un defensa en el círculo central, con el Golden Pot en 120",
+   "caption": "Quita a los defensas del camino."
+  },
+  {
+   "alt": "Futbol Pinball: GOAL! y +240 se encienden cuando el balón vence al portero en la parte de arriba de la mesa",
+   "caption": "Un gol enciende la mesa."
+  }
+ ],
+ "clip": {
+  "name": "Futbol Pinball en acción: paletas y rebotadores en una mesa con forma de cancha",
+  "alt": "Futbol Pinball en un celular: el balón vence al portero para GOAL! +630, el banquillo se abre, las paletas lo mandan de vuelta arriba y la mesa anuncia G-O-A-L AGAIN! mientras crece el Golden Pot",
+  "caption": "Futbol Pinball: dos paletas, un portero y una barrera."
+ }
+}

@@ -9,7 +9,7 @@ import s from './books.module.css';
  * before the tap.
  */
 type Reader=ComponentType<{book:ReaderBook;onClose:()=>void}>;
-export default function OpenBook({book,label='Open the pop-up book'}:{book:ReaderBook;label?:string}){
+export default function OpenBook({book,label='Open the pop-up book',busyLabel='Opening the book…'}:{book:ReaderBook;label?:string;busyLabel?:string}){
  const [Reader,setReader]=useState<Reader|null>(null),[open,setOpen]=useState(false),[busy,setBusy]=useState(false);
  const btn=useRef<HTMLAnchorElement>(null);
  const go=(e:React.MouseEvent)=>{
@@ -20,7 +20,7 @@ export default function OpenBook({book,label='Open the pop-up book'}:{book:Reade
  };
  return <>
   <a ref={btn} href="#story" className={s.openBtn} onClick={go} aria-haspopup="dialog" aria-busy={busy||undefined} data-open-book="">
-   {busy?'Opening the book…':label}
+   {busy?busyLabel:label}
   </a>
   {open&&Reader&&<Reader book={book} onClose={()=>{setOpen(false);requestAnimationFrame(()=>btn.current?.focus({preventScroll:true}));}}/>}
  </>;

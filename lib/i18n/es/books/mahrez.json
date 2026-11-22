@@ -1,0 +1,113 @@
+{
+ "id": "mahrez",
+ "title": "Mahrez",
+ "subtitle": "¿Muy flaco? Mira esto",
+ "player": "Riyad Mahrez",
+ "country": "Algeria",
+ "description": "Libro desplegable gratis para niños sobre Riyad Mahrez: lo creían muy flaco, ganó la Premier League con el Leicester y la Copa Africana con Argelia.",
+ "summary": "Mahrez: ¿Muy flaco? Mira esto es un libro desplegable gratis de seis capítulos para niños sobre Riyad Mahrez, que aprendió fútbol en las calles de Sarcelles, perdió a su papá a los quince años y no lo tomaban en cuenta por ser muy delgado. El Leicester lo fichó por poco dinero, ganó la Premier League y, como capitán, llevó a Argelia, el país de su papá, a ganar la Copa Africana de Naciones. La historia enseña que un precio pequeño no significa un talento pequeño.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Argelia"
+  },
+  {
+   "label": "Creció en",
+   "value": "Sarcelles, cerca de París"
+  },
+  {
+   "label": "Precio en el Leicester",
+   "value": "Unas £450,000, 2014"
+  },
+  {
+   "label": "Mejor jugador de la PFA según los jugadores",
+   "value": "2016, primer ganador africano"
+  },
+  {
+   "label": "Copa Africana de Naciones",
+   "value": "2019, capitán"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde aprendió fútbol Riyad Mahrez?",
+   "a": "Riyad Mahrez nació en 1991 en Sarcelles, cerca de París, y creció allí. Aprendió a jugar en las calles, con pies rápidos y trucos ingeniosos, y en 2004 entró al equipo juvenil del club de su ciudad, el AAS Sarcelles."
+  },
+  {
+   "q": "¿Por qué Riyad Mahrez jugó con Argelia?",
+   "a": "Su papá, Ahmed, venía de Argelia. Cuando Riyad tenía quince años, su papá murió de repente. Más tarde, Riyad eligió jugar con Argelia, el país de su papá, en parte para honrarlo. Un estadio en Sarcelles lleva el nombre de Riyad, y él se lo dedicó a su papá."
+  },
+  {
+   "q": "¿Decían que Riyad Mahrez era muy flaco?",
+   "a": "Sí. Era muy delgado, y por eso los cazatalentos de los clubes grandes muchas veces no lo tomaban en cuenta. Empezó en clubes más pequeños, el Quimper en 2009 y el Le Havre en 2010, y siguió practicando su regate y su pie izquierdo."
+  },
+  {
+   "q": "¿Cuánto pagó el Leicester por Riyad Mahrez?",
+   "a": "En enero de 2014, el Leicester City lo fichó del Le Havre por unas £450,000, poco dinero para un futbolista. El Leicester logró el ascenso en su primera temporada, y en 2015–16 sorprendió a todos y ganó la Premier League. Riyad fue nombrado Mejor Jugador del Año de la PFA, votado por los jugadores, y fue el primer jugador africano en ganarlo."
+  },
+  {
+   "q": "¿Qué ganó Riyad Mahrez con Argelia?",
+   "a": "En 2019 fue el capitán de Argelia en la Copa Africana de Naciones. En la semifinal contra Nigeria anotó el gol ganador de tiro libre en el último minuto, y Argelia ganó todo el torneo. En 2023 también ganó la Champions League con el Manchester City."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Sarcelles · infancia",
+   "title": "Fútbol en la calle",
+   "paragraphs": [
+    "Riyad Mahrez nació en 1991 en Sarcelles, una ciudad cerca de París, en Francia, y creció allí. Su papá, Ahmed, venía de Argelia. Riyad aprendió a jugar en las calles, con pies rápidos y trucos ingeniosos.",
+    "En 2004 entró al equipo juvenil del club de su ciudad, el AAS Sarcelles. Siguió amando los trucos y las habilidades que aprendió en la calle."
+   ],
+   "lesson": "Puedes aprender mucho en cualquier lugar donde haya un balón y algunos amigos."
+  },
+  {
+   "year": "2006 · a los 15 años",
+   "title": "Perder a su papá",
+   "paragraphs": [
+    "Cuando Riyad tenía quince años, su papá murió de repente de un ataque al corazón. Fue un tiempo muy triste para Riyad, su mamá y sus hermanos y hermanas. Perder a un papá o a una mamá cuando eres pequeño es una de las cosas más difíciles que pueden pasar.",
+    "Más tarde, Riyad eligió jugar con Argelia, el país de su papá, en parte para honrarlo. Un estadio en Sarcelles lleva el nombre de Riyad, y él se lo dedicó a su papá."
+   ],
+   "lesson": "Extrañar a alguien es difícil. Puedes llevar su cariño contigo."
+  },
+  {
+   "year": "De 2009 a 2013",
+   "title": "¿Muy flaco?",
+   "paragraphs": [
+    "Riyad era muy delgado, y por eso los cazatalentos de los clubes grandes muchas veces no lo tomaban en cuenta. Así que empezó en clubes más pequeños: el Quimper en 2009, y luego el Le Havre en 2010. Algunas personas pensaban que no era lo bastante fuerte.",
+    "Riyad siguió practicando su regate y su pie izquierdo, y siguió mejorando. Los clubes pequeños le dieron la oportunidad de jugar cada semana y crecer."
+   ],
+   "lesson": "La gente puede juzgarte por tu apariencia. Muéstrales cómo juegas."
+  },
+  {
+   "year": "Enero de 2014",
+   "title": "Un precio pequeño",
+   "paragraphs": [
+    "En enero de 2014, el Leicester City fichó a Riyad del Le Havre por unas £450,000. Para un futbolista, era poco dinero. El Leicester todavía no estaba en la Premier League.",
+    "Riyad se mudó a Inglaterra, a un país nuevo y un idioma nuevo. Trabajó duro y pronto se convirtió en uno de los jugadores más emocionantes del equipo. En su primera temporada, el Leicester logró el ascenso."
+   ],
+   "lesson": "Un precio pequeño no significa un talento pequeño."
+  },
+  {
+   "year": "2015–16",
+   "title": "Campeones de Inglaterra",
+   "paragraphs": [
+    "En la temporada 2015–16, el Leicester City sorprendió a todos y ganó la Premier League. Al empezar esa temporada, muy pocos pensaban que el Leicester tuviera alguna oportunidad.",
+    "Riyad fue nombrado Mejor Jugador del Año de la PFA, votado por los demás jugadores. Fue el primer jugador africano en ganarlo. Su compañero Jamie Vardy anotó muchos goles, y Riyad también anotó y dio muchas asistencias."
+   ],
+   "lesson": "Cree en tu equipo, aunque nadie espere que ganen."
+  },
+  {
+   "year": "2019",
+   "title": "Capitán de Argelia",
+   "paragraphs": [
+    "En 2019, Riyad fue el capitán de Argelia en la Copa Africana de Naciones. En la semifinal contra Nigeria anotó el gol ganador de tiro libre, en el último minuto del partido.",
+    "Argelia ganó todo el torneo. En 2023 también ganó la Champions League con el Manchester City. El niño flaco de la calle se había convertido en campeón. Había ayudado a llevar la copa al país de su papá."
+   ],
+   "lesson": "Sigue creyendo en ti, hasta el último minuto."
+  }
+ ]
+}

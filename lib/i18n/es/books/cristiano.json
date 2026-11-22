@@ -1,0 +1,113 @@
+{
+ "id": "cristiano",
+ "title": "Cristiano Ronaldo",
+ "subtitle": "Muy lejos de casa",
+ "player": "Cristiano Ronaldo",
+ "country": "Portugal",
+ "summary": "Cristiano Ronaldo: Muy lejos de casa es un libro desplegable gratis de seis capítulos para niños sobre Cristiano Ronaldo, que creció pobre en la isla de Madeira, se mudó a Lisboa a los doce años y fue operado del corazón a los quince. Perdió a su papá, lo abuchearon en Inglaterra y salió temprano de la final de la Euro 2016 que Portugal ganó. La historia enseña que tu equipo puede cargar contigo, y que después tú puedes ayudar a cargar a otros.",
+ "description": "Libro desplegable gratis para niños sobre Cristiano Ronaldo: de Madeira a Lisboa a los doce, su operación del corazón y la Euro 2016.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Portugal"
+  },
+  {
+   "label": "Nació",
+   "value": "1985, Funchal, Madeira"
+  },
+  {
+   "label": "Primer club",
+   "value": "Andorinha, desde los 7 años"
+  },
+  {
+   "label": "Se fue de casa",
+   "value": "Sporting, Lisboa, a los 12"
+  },
+  {
+   "label": "Campeón con Portugal",
+   "value": "Euro 2016"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde creció Cristiano Ronaldo?",
+   "a": "En Funchal, en la isla portuguesa de Madeira. Su familia era pobre, y compartía un solo cuarto con su hermano, Hugo, y sus hermanas, Elma y Kátia. Su mamá, Dolores, trabajaba de cocinera y de limpieza. Su papá, José, era jardinero y ayudaba a cuidar la ropa y el equipo de un club local, el Andorinha, donde Cristiano empezó a jugar a los siete años."
+  },
+  {
+   "q": "¿Qué edad tenía Ronaldo cuando se fue de casa?",
+   "a": "Doce años. En 1997, el gran club Sporting, de Lisboa, le hizo una prueba de tres días y luego lo fichó. Tuvo que dejar Madeira y a su familia y cruzar el mar. En su nueva escuela era popular, pero las tareas escolares le costaban. Una vez perdió la paciencia con un maestro, y tuvo que dejar esa escuela."
+  },
+  {
+   "q": "¿Qué problema tenía Ronaldo en el corazón?",
+   "a": "Cuando tenía quince años, los médicos descubrieron que a veces su corazón latía demasiado rápido. Eso podría haberle impedido jugar fútbol. El club se lo dijo a su mamá, y ella estuvo de acuerdo en que fuera al hospital. Los médicos arreglaron el problema con un láser, él volvió a casa el mismo día y unos días después ya estaba entrenando otra vez."
+  },
+  {
+   "q": "¿Por qué abuchearon a Ronaldo en Inglaterra?",
+   "a": "En el Mundial de 2006, Portugal jugó contra Inglaterra. Después de una jugada en la que estuvo involucrado Cristiano, expulsaron a su compañero del Manchester United, Wayne Rooney. El público en Inglaterra abucheó a Cristiano durante toda la temporada siguiente. Él pidió irse del club, pero el United le dijo que no. Esa temporada marcó veinte goles de liga por primera vez, y el United ganó la Premier League."
+  },
+  {
+   "q": "¿Cómo ganó Portugal la Euro 2016?",
+   "a": "En 2004, cuando Cristiano tenía diecinueve años, Portugal perdió la final de la Eurocopa contra Grecia. En la Euro 2016 era el capitán de Portugal en la final contra Francia, pero salió del partido a los veinticinco minutos. Sus compañeros siguieron luchando, y Portugal ganó su primer gran trofeo. Más tarde, el aeropuerto de Madeira recibió su nombre."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Madeira · 1985",
+   "title": "Un cuarto, toda una familia",
+   "paragraphs": [
+    "Cristiano Ronaldo nació en 1985 en Funchal, en la isla portuguesa de Madeira. Su familia era pobre. Compartía un solo cuarto con su hermano, Hugo, y sus hermanas, Elma y Kátia.",
+    "Abre la ventana de la casita. Su mamá, Dolores, trabajaba de cocinera y de limpieza. Su papá, José, era jardinero, y ayudaba a cuidar la ropa y el equipo de un club local, el Andorinha. Ahí empezó a jugar Cristiano, cuando tenía siete años."
+   ],
+   "lesson": "No necesitas muchas cosas para tener un gran sueño. Tu familia puede ser tu primer equipo."
+  },
+  {
+   "year": "Lisboa · 1997",
+   "title": "Al otro lado del mar a los doce",
+   "paragraphs": [
+    "En 1997, cuando Cristiano tenía doce años, el gran club Sporting, de Lisboa, le hizo una prueba de tres días, y luego lo fichó. Tuvo que dejar Madeira y a su familia, y cruzar el mar hasta Lisboa.",
+    "Irse tan lejos de casa a los doce años sería difícil para cualquiera. En su nueva escuela era popular, pero las tareas escolares le costaban. Una vez perdió la paciencia con un maestro, y tuvo que dejar esa escuela."
+   ],
+   "lesson": "Ser nuevo en un lugar es difícil. Está bien extrañar tu casa y pedirle ayuda a un adulto."
+  },
+  {
+   "year": "Lisboa · A los 15 años",
+   "title": "Un corazón acelerado",
+   "paragraphs": [
+    "Cuando Cristiano tenía quince años, los médicos encontraron un problema en su corazón. A veces latía demasiado rápido. El problema era tan serio que podría haberle impedido jugar fútbol.",
+    "El club se lo dijo a su mamá, Dolores, y ella estuvo de acuerdo en que fuera al hospital. Los médicos arreglaron el problema con un láser, en una operación del corazón. Volvió a casa el mismo día, y unos días después ya estaba entrenando otra vez."
+   ],
+   "lesson": "Si sientes que algo anda mal en tu cuerpo, avísale a un adulto. Pedir ayuda es de valientes."
+  },
+  {
+   "year": "Mánchester · 2005",
+   "title": "Extrañar a su papá",
+   "paragraphs": [
+    "En 2003, a los dieciocho años, Cristiano se fue al Manchester United, en Inglaterra. Más tarde llamó a su entrenador de ahí, Alex Ferguson, su padre en el deporte.",
+    "Pero en 2005, cuando Cristiano tenía veinte años, su propio papá, José, murió después de una larga enfermedad. José había sido el utilero del primer club de Cristiano. Levanta el portarretratos para recordarlo. Perder a un papá o a una mamá es una de las cosas más tristes que pueden pasar, y sentirse mejor puede tomar mucho tiempo."
+   ],
+   "lesson": "El duelo puede sentirse pesado. Habla de las personas que extrañas, y deja que otros te cuiden."
+  },
+  {
+   "year": "Inglaterra · 2006 a 2007",
+   "title": "Abucheado, pero no vencido",
+   "paragraphs": [
+    "En el Mundial de 2006, Portugal jugó contra Inglaterra. Después de una jugada en la que estuvo involucrado Cristiano, expulsaron a su compañero del Manchester United, Wayne Rooney. De vuelta en Inglaterra, el público abucheó a Cristiano durante toda la temporada siguiente. Él pidió irse del club, pero el United le dijo que no.",
+    "Cristiano siguió dando lo mejor de sí. Esa temporada marcó veinte goles de liga por primera vez, y el Manchester United ganó la Premier League."
+   ],
+   "lesson": "Cuando la gente no es amable, no tienes que creerle. Sigue dando lo mejor de ti."
+  },
+  {
+   "year": "De la Euro 2004 a la Euro 2016",
+   "title": "Cargado por su equipo",
+   "paragraphs": [
+    "En 2004, cuando Cristiano tenía diecinueve años, Portugal perdió la final de la Eurocopa contra Grecia. Doce años después, en la Euro 2016, era el capitán de Portugal en la final contra Francia. Pero salió del partido a los veinticinco minutos.",
+    "Sus compañeros siguieron luchando, y Portugal ganó su primer gran trofeo. En Madeira, el aeropuerto recibió su nombre. Años antes, él había donado dinero al hospital que le salvó la vida a su mamá, para construir un centro contra el cáncer."
+   ],
+   "lesson": "Tu equipo puede cargar contigo cuando ya no puedes más. Después, tú puedes ayudar a cargar a otros."
+  }
+ ]
+}

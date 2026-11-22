@@ -1,0 +1,137 @@
+{
+ "id": "footgolf",
+ "name": "FootGolf Island",
+ "title": "Fútbol golf para niños: FootGolf Island, juego gratis",
+ "h1": "Juego de fútbol golf: FootGolf Island",
+ "description": "FootGolf Island es un juego de fútbol golf gratis para niños. Patea un balón por nueve hoyos en 3D hasta un gran hoyo con patada larga, vaselina o pase.",
+ "lead": "FootGolf Island es un juego de footgolf gratis en el navegador: golf jugado con un balón de fútbol. Patea el balón por nueve hoyos en la isla, sobre colinas, arena y agua, hasta un gran hoyo con la menor cantidad de patadas posible.",
+ "blurb": "Patea un balón por nueve hoyos hasta meterlo en el hoyo",
+ "skill": "Elegir una patada y su fuerza",
+ "about": [
+  "FootGolf Island es footgolf de verdad dibujado como un cómic. Nueve hoyos, par 34 en total, están en lugares de la isla, desde el Muelle del Faro y Palm Beach hasta la Granja, la Cumbre y el Estadio de la Isla.",
+  "El terreno es en 3D, con colinas, hondonadas, pendientes, búnkeres y agua donde puede caer el balón. Cada hoyo empieza con un vuelo de cámara desde la bandera hasta la salida, y el Daily Hole es un hoyo cada día, igual en todos los dispositivos."
+ ],
+ "phone": [
+  "Elige la patada con los cuatro botones de abajo; el juego te sugiere una. Luego arrastra hacia atrás desde cualquier parte como una resortera: el estirón es la fuerza, el ángulo es la puntería, y al soltar pateas.",
+  "Un selector de cinco pasos le da efecto con el borde interno o el borde externo del pie, y los botones de giro mueven la vista alrededor."
+ ],
+ "desktop": [
+  "El mouse funciona igual que un dedo. Izquierda y Derecha apuntan, Arriba y Abajo ponen la fuerza, y Espacio patea.",
+  "Las teclas 1 a 4 eligen la patada, Q y E le dan efecto, y P pone pausa."
+ ],
+ "rules": [
+  "Cada hoyo tiene un par, como en el golf, y tus patadas se cuentan contra él: Ace (hoyo en uno), Eagle, Birdie, Par o Bogey. Después de ocho patadas en un hoyo, recoges el balón y pasas al siguiente.",
+  "Un balón en el agua o fuera de los límites cuesta una patada de castigo, y vuelves a patear desde donde pateaste la última vez.",
+  "El hoyo tiene el tamaño real del footgolf, 53 cm de ancho. Un balón que va demasiado rápido roza el borde y sale o salta por encima; uno lento cae adentro. Tu total de los nueve hoyos entra en la tabla de récords de la isla."
+ ],
+ "teaches": [
+  "Hay cuatro patadas, como las que usan los jugadores de verdad: el empeine para ir lejos, una vaselina que eleva el balón y lo frena con efecto hacia atrás, un pase por el suelo con el borde interno del pie y un toque suave para embocar.",
+  "Cerca del hoyo, la fuerza lo es todo: el mismo pase que es perfecto sobre piedra corre demasiado, la arena entierra el balón y el pasto largo lo frena. Unas flechas en cada green muestran hacia dónde rueda el balón cuesta abajo.",
+  "El viento mueve un balón alto pero no uno bajo, y algunos hoyos dan un camino seguro alrededor y uno valiente por encima del agua, así que aprendes a elegir un objetivo seguro."
+ ],
+ "tips": [
+  "Usa la patada que sugiere el juego hasta que conozcas el recorrido: la elige según la distancia y dónde está el balón.",
+  "En el green, lee primero las flechas y luego apunta un poco cuesta arriba del hoyo.",
+  "Una vaselina se frena poco después de caer; una patada larga sigue corriendo. Usa la vaselina cuando el hoyo está cerca de un peligro."
+ ],
+ "harder": [
+  "Los hoyos van de 48 metros a 140, con más colinas, más agua y viento en contra en la Cumbre.",
+  "La vista previa del vuelo se muestra completa en los tres primeros hoyos, solo en parte en los tres siguientes y menos en los tres últimos.",
+  "El par del recorrido es 34. Igualarlo requiere la patada correcta y la fuerza correcta en casi todos los hoyos."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: elegir una patada y su fuerza. Cada patada dice qué parte del pie se usa, y un consejo después de cada hoyo dice qué salió bien o mal.",
+  "Duración: un hoyo toma uno o dos minutos, y puedes jugar un hoyo o los nueve. Se puede jugar sin sonido. No hay temporizadores."
+ ],
+ "faq": [
+  {
+   "q": "¿FootGolf Island es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿FootGolf Island funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app."
+  },
+  {
+   "q": "¿Cómo se juega FootGolf Island?",
+   "a": "Elige una patada (patada larga, vaselina, pase o toque para embocar), arrastra hacia atrás desde cualquier parte como una resortera y suelta. Mete el balón en el hoyo con la menor cantidad de patadas posible."
+  },
+  {
+   "q": "¿Para qué edad es FootGolf Island?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Los primeros hoyos son cortos y muestran todo el vuelo del balón; los siguientes son más largos y con menos ayuda."
+  },
+  {
+   "q": "¿Qué es el footgolf?",
+   "a": "El footgolf es un deporte real: golf jugado con un balón de fútbol en un campo, pateando el balón hasta un hoyo grande con la menor cantidad de patadas posible. Los hoyos miden más o menos medio metro de ancho."
+  },
+  {
+   "q": "¿FootGolf Island ayuda en el fútbol de verdad?",
+   "a": "Sí: elegir la patada correcta y su fuerza es lo que también necesitan el pase y el tiro. Pruébalo con un balón de verdad: elige un objetivo en el parque y cuenta tus patadas."
+  }
+ ],
+ "controls": [
+  "arrastra hacia atrás como una resortera y suelta",
+  "arrastra hacia atrás con el mouse"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/passing",
+   "name": "Ejercicios de pase",
+   "line": "Pasa por el suelo con el borde interno del pie"
+  },
+  {
+   "path": "/learn/soccer-drills/partner-passing-through-gates",
+   "name": "Pases en pareja entre puertas",
+   "line": "La fuerza y la puntería de un pase"
+  },
+  {
+   "path": "/learn/soccer-terms/chip",
+   "name": "Vaselina",
+   "line": "Elevar el balón por encima de un jugador"
+  },
+  {
+   "path": "/learn/soccer-drills/shooting",
+   "name": "Ejercicios de tiro",
+   "line": "Golpea bien el balón con el empeine"
+  },
+  {
+   "path": "/learn/soccer-drills/at-home",
+   "name": "Ejercicios para hacer en casa",
+   "line": "Trabajo con balón que puedes hacer solo"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "FootGolf Island, hoyo 1 Muelle del Faro: el personaje está en la salida, par 3, 53 metros, con el selector de patadas (patada larga, vaselina, pase, toque para embocar) y el consejo de salida: empeine para llegar, borde interno del pie para terminar",
+   "caption": "Elige una de cuatro patadas."
+  },
+  {
+   "alt": "FootGolf Island, hoyo 7 Coral Cay: una patada larga con el empeine vuela sobre el agua hacia el green en una isla y su bandera roja, con la manga de viento marcando 5 metros por segundo",
+   "caption": "Pasa el agua hasta el green."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "FootGolf Island, hoyo 1 Muelle del Faro: el personaje está en la salida, par 3, 53 metros, con el selector de patadas (patada larga, vaselina, pase, toque para embocar) y el consejo de salida: empeine para llegar, borde interno del pie para terminar",
+   "caption": "Elige una de cuatro patadas."
+  },
+  {
+   "alt": "FootGolf Island, hoyo 7 Coral Cay: una patada larga con el empeine vuela sobre el agua hacia el green en una isla y su bandera roja, con la manga de viento marcando 5 metros por segundo",
+   "caption": "Pasa el agua hasta el green."
+  },
+  {
+   "alt": "FootGolf Island, un toque en el green: flechas blancas en el pasto muestran hacia dónde rueda el balón cuesta abajo, y el consejo dice que leas las flechas",
+   "caption": "Las flechas apuntan cuesta abajo."
+  },
+  {
+   "alt": "FootGolf Island, Coral Cay: BIRDIE! sobre el hoyo: el balón cayó adentro con la segunda patada en un par 3",
+   "caption": "En el hoyo: un birdie."
+  }
+ ],
+ "clip": {
+  "name": "Partida de FootGolf Island: una patada larga y un toque para un birdie",
+  "alt": "Partida de FootGolf Island en un celular en Coral Cay: el personaje patea con el empeine sobre el agua hacia el green en una isla; luego un toque con el borde interno del pie rueda por el green hasta el hoyo con un BIRDIE!",
+  "caption": "FootGolf Island: una patada larga y luego un toque."
+ }
+}

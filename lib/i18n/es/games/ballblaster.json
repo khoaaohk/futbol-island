@@ -1,0 +1,131 @@
+{
+ "id": "ballblaster",
+ "name": "Ball Blaster",
+ "title": "Juego de tiros de fútbol para niños: Ball Blaster gratis",
+ "h1": "Juego de tiros de fútbol: Ball Blaster",
+ "description": "Ball Blaster es un juego de tiros de fútbol gratis para niños. Patea balones a robots, cajas y barriles antes de que lleguen a tu arco. Sin anuncios.",
+ "lead": "Ball Blaster es un juego de tiros de fútbol gratis en el navegador. Unos robots de entrenamiento de cuerda marchan por la cancha hacia tu arco. Arrastra para apuntar, suelta para patear y rómpelos con balones antes de que lleguen.",
+ "blurb": "Patea balones a los robots antes de que lleguen a tu arco",
+ "skill": "Elegir un objetivo y golpear el balón limpio",
+ "about": [
+  "Ball Blaster es un juego de tiros sin fin en una cancha de fútbol. Máquinas de entrenamiento marchan hacia tu arco en oleadas: robots de cuerda, robots-cono rápidos, muñecos que saltan, drones, robots con escudo y robots que saltan a un lado.",
+  "Los detienes con balones. En la cancha también hay cajas, vidrios, torres de conos, llantas, barriles de agua y marcadores. Una torre que cae o un barril que revienta tumba lo que tiene cerca. Cada quinta oleada llega un gigante, el Mega Mannequin."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Presiona en cualquier parte y arrastra para mover el anillo de mira; luego suelta para patear. El anillo queda un poco arriba de tu dedo para que puedas verlo.",
+  "Mantén presionado más tiempo antes de soltar para un tiro más fuerte. Mueve el dedo de lado al soltar para darle efecto al balón."
+ ],
+ "desktop": [
+  "Presiona y arrastra con el mouse para apuntar, y suelta para patear.",
+  "O usa las teclas: las flechas mueven el anillo, Espacio patea (mantenlo presionado para más fuerza), y Q o E presionadas al soltar le dan efecto al balón. P o Escape pone pausa."
+ ],
+ "rules": [
+  "Tienes tres corazones. Una máquina que llega a tu línea de meta te cuesta uno. La partida termina cuando se acaba el último corazón.",
+  "Seis balones esperan en tu estante, y llega uno nuevo más o menos cada 0.7 segundos. Los tiros desperdiciados te dejan sin balones.",
+  "Rompe cosas una tras otra para un combo que multiplica los puntos. Dos o más roturas con un solo balón dan un bono de truco. Cada oleada superada suma un bono por puntería.",
+  "Los escudos bloquean los tiros rectos: dale efecto al balón o hazlo rebotar en las vallas laterales. Los robots blindados necesitan dos golpes, o un tiro con toda la fuerza. Las cajas doradas dan un poder: varios balones, balón de fuego, balón gigante o cámara lenta."
+ ],
+ "teaches": [
+  "La lección de la máquina es: elige tu objetivo y golpea a través del balón. Los buenos delanteros eligen el lugar antes de patear. En Ball Blaster el robot más cercano es el peligro, así que hay que elegir a cuál pegarle primero.",
+  "Golpear a través del balón significa un contacto limpio y firme hacia el objetivo. Un tiro cargado vuela más fuerte y más recto, como un tiro con el empeine. Un movimiento de lado le da efecto, como un tiro con el borde interno del pie. Cada partida termina con un consejo corto sobre el tiro."
+ ],
+ "tips": [
+  "Tira primero a la máquina más cercana a tu arco.",
+  "Mantén presionado más tiempo para un tiro fuerte y recto que rompe el blindaje.",
+  "Mueve el dedo de lado al soltar para rodear un escudo con efecto.",
+  "Tira a un barril de agua cuando haya robots junto a él.",
+  "Los tiros tranquilos y apuntados ahorran balones. Un estante vacío es una espera larga."
+ ],
+ "harder": [
+  "Cada oleada trae más máquinas, llegan más juntas y caminan más rápido. La velocidad sigue subiendo después de la oleada 12.",
+  "Las máquinas nuevas se suman una a la vez: robots-cono en la oleada 2, muñecos en la 3, blindaje en la 4, drones en la 6, escudos en la 7 y robots que esquivan en la 8.",
+  "Cada quinta oleada trae al Mega Mannequin. Llama a robots-cono para que lo ayuden y luego empieza a saltar a un lado.",
+  "Medallas: Bronce con 8,000 puntos, Plata con 30,000 y Oro con 100,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: elegir un objetivo, apuntar y calcular el momento. Ningún ser vivo sale herido: los objetivos son robots de juguete, conos, cajas y muñecos que se rompen en pedazos.",
+  "Duración: una partida suele durar de dos a cinco minutos. El Daily Blast les da a todos las mismas oleadas una vez al día, y la primera partida diaria terminada entra en la tabla. Una tabla histórica de la isla guarda los 20 mejores puntajes."
+ ],
+ "faq": [
+  {
+   "q": "¿Ball Blaster es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Jugar da monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Ball Blaster funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en un navegador web sin instalar nada, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con el mouse o con las teclas."
+  },
+  {
+   "q": "¿Cómo se juega Ball Blaster?",
+   "a": "Presiona y arrastra para apuntar; luego suelta para patear un balón. Mantén presionado más tiempo para un tiro más fuerte y mueve el dedo de lado para darle efecto. Rompe las máquinas antes de que lleguen a tu arco. Si pasan tres, la partida termina."
+  },
+  {
+   "q": "¿Para qué edad es Ball Blaster?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. La primera oleada es lenta y solo tiene robots. Las oleadas se vuelven más rápidas y llenas sin fin, así que también es un reto para niños mayores y adultos."
+  },
+  {
+   "q": "¿Qué es el Daily Blast?",
+   "a": "Un reto diario en la tarjeta de inicio. Ese día todos reciben las mismas oleadas. Tu primera partida diaria terminada entra en la tabla de la isla; las partidas siguientes de ese día son de práctica."
+  }
+ ],
+ "controls": [
+  "arrastra para apuntar y suelta para patear",
+  "arrastra con el mouse y suelta"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-drills/shooting",
+   "name": "Ejercicios de tiro",
+   "line": "Practica darle al objetivo"
+  },
+  {
+   "path": "/learn/soccer-drills/dribble-and-shoot",
+   "name": "Regatea y tira",
+   "line": "Conduce el balón y luego tira"
+  },
+  {
+   "path": "/learn/soccer-positions/striker",
+   "name": "El delantero (número 9)",
+   "line": "El jugador cuyo trabajo es definir"
+  },
+  {
+   "path": "/learn/soccer-rules/fouls-and-free-kicks",
+   "name": "Faltas y tiros libres",
+   "line": "De dónde vienen los tiros con efecto"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Ball Blaster en un celular: un balón rompe un robot en la cancha, con tres corazones, el puntaje y el estante de balones en la pantalla",
+   "caption": "Rompe los robots antes de que lleguen a tu arco."
+  },
+  {
+   "alt": "Ball Blaster al apuntar: una línea punteada muestra el camino del balón por la cancha hasta el anillo de mira",
+   "caption": "Arrastra para apuntar. La línea punteada muestra el tiro."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Ball Blaster: SUPER SHOT! El balón de fuego del personaje rompe tres robots y da +300 por tiro de truco",
+   "caption": "Llena la barra Super, mantén presionado hasta que esté roja y luego patea."
+  },
+  {
+   "alt": "Oleada del jefe en Ball Blaster bajo los reflectores: el Mega Mannequin avanza detrás de conos, barriles y un panel de vidrio mientras un balón pega con un SMASH! +80",
+   "caption": "Oleada del jefe: sigue pegándole al Mega Mannequin."
+  },
+  {
+   "alt": "Práctica de tiro al blanco en Ball Blaster después del jefe: un balón le da a un blanco con un DING! +75 y quedan cinco blancos",
+   "caption": "Tiro al blanco: elige un objetivo y golpea a través del balón."
+  },
+  {
+   "alt": "Ball Blaster al final de la oleada 1: grandes robots de cuerda marchan cerca del arco mientras el anillo de mira espera entre ellos",
+   "caption": "Detenlos antes de que lleguen a tu arco."
+  }
+ ],
+ "clip": {
+  "name": "Partida de Ball Blaster: tu propio personaje patea balones a robots de cuerda",
+  "alt": "Partida de Ball Blaster en un celular: el personaje del jugador patea varios balones; luego un súper tiro de balón de fuego rompe tres robots con un tiro de truco, la oleada se supera y empieza la oleada del jefe bajo los reflectores",
+  "caption": "Ball Blaster: apunta, llena la barra Super y rompe los robots antes de que lleguen a tu arco."
+ }
+}

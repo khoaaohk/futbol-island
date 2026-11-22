@@ -1,0 +1,113 @@
+{
+ "id": "weah",
+ "title": "Weah",
+ "subtitle": "De Clara Town al mundo",
+ "player": "George Weah",
+ "country": "Liberia",
+ "summary": "Weah: De Clara Town al mundo es un libro desplegable gratis de seis capítulos para niños sobre George Weah, quien creció en Clara Town, un barrio muy pobre de Monrovia, en Liberia, y lo crio sobre todo su abuela. En 1995 se convirtió en el primer jugador africano en ganar el Balón de Oro. La historia enseña que el lugar donde empiezas no es donde tienes que quedarte, y que debes ayudar a otros cuando la vida mejora.",
+ "description": "Libro desplegable gratis para niños sobre George Weah: de un barrio pobre de Liberia a ser el primer africano en ganar el Balón de Oro.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Liberia"
+  },
+  {
+   "label": "Nació",
+   "value": "1 de octubre de 1966, Monrovia"
+  },
+  {
+   "label": "Primer club",
+   "value": "Young Survivors, Clara Town"
+  },
+  {
+   "label": "Balón de Oro",
+   "value": "Primer ganador africano, 1995"
+  },
+  {
+   "label": "Su club juvenil",
+   "value": "Junior Professional, 1994: primero la escuela"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Quién crio a George Weah?",
+   "a": "George Weah nació el 1 de octubre de 1966 en Monrovia, la capital de Liberia. Creció en Clara Town, un barrio muy pobre de la ciudad. Cuando George todavía era un bebé, sus padres se separaron. Fue uno de trece niños criados sobre todo por su abuela, Emma Klonjlaleh Brown."
+  },
+  {
+   "q": "¿Cómo empezó George Weah a jugar fútbol?",
+   "a": "A los quince años, George empezó a jugar con el Young Survivors, un club pequeño de Clara Town. En 1982, en su primer partido, anotó dos goles, y esa temporada anotó 34 goles en la cuarta división. En tres años con George, el Young Survivors subió dos veces, del cuarto nivel del fútbol de Liberia al segundo."
+  },
+  {
+   "q": "¿Cómo llegó George Weah a Europa?",
+   "a": "En el Mighty Barrolle, uno de los clubes más grandes de Liberia, George anotaba seguido, pero casi nunca lo ponían de titular. También trabajaba en la compañía telefónica de Liberia, como operador de conmutador. En 1986 se fue al Invincible Eleven, y en 1987 ganaron la liga. Ese año se fue al Tonnerre Yaoundé, en Camerún. El entrenador de la selección de Camerún, Claude Le Roy, le habló de él a Arsène Wenger, y Wenger viajó en avión a África para verlo jugar. En 1988 George fichó con el Mónaco."
+  },
+  {
+   "q": "¿George Weah jugó un Mundial?",
+   "a": "No. Liberia era un país pequeño en el fútbol, dañado por años de guerra. George jugó con Liberia, después entrenó al equipo, y hasta pagó gran parte de los gastos él mismo. En la eliminatoria para el Mundial de 2002, a Liberia le faltó solo un punto. En 1995 fue el primer jugador africano en ganar el Balón de Oro y el premio al Jugador Mundial de la FIFA, y le dedicó el premio de la FIFA a Arsène Wenger."
+  },
+  {
+   "q": "¿Qué era el Junior Professional?",
+   "a": "En 1994, George creó un club de fútbol en Monrovia llamado Junior Professional. Para entrar había una sola regla: tenías que ir a la escuela. Muchos de sus jóvenes jugadores llegaron a jugar con Liberia. Mientras todavía jugaba, George se convirtió en Embajador de Buena Voluntad de las Naciones Unidas, y en 2004 ganó el Premio Arthur Ashe al Valor por su trabajo."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "Monrovia · 1966",
+   "title": "La casa de la abuela Emma",
+   "paragraphs": [
+    "George Weah nació el 1 de octubre de 1966 en Monrovia, la capital de Liberia. Creció en Clara Town, un barrio muy pobre de la ciudad. Cuando George todavía era un bebé, sus padres se separaron.",
+    "Levanta el techo para ver quién lo cuidaba. George fue uno de trece niños criados sobre todo por su abuela, Emma Klonjlaleh Brown. En su casa crecieron juntos muchos primos y hermanos, con muy poco dinero pero mucha compañía."
+   ],
+   "lesson": "Las familias son de muchas formas. Las personas que te cuidan todos los días son tu familia."
+  },
+  {
+   "year": "Clara Town · De 1981 a 1984",
+   "title": "Los Young Survivors",
+   "paragraphs": [
+    "A los quince años, George empezó a jugar con un club pequeño de Clara Town. Se llamaba Young Survivors. En 1982, en su primer partido, anotó dos goles increíbles, y esa temporada anotó 34 goles en la cuarta división.",
+    "Cada ascenso es un paso hacia una liga más alta. En tres años con George, el Young Survivors subió dos veces, del cuarto nivel del fútbol de Liberia al segundo. Paso a paso, el pequeño club de un barrio pobre siguió subiendo."
+   ],
+   "lesson": "El lugar donde empiezas no es donde tienes que quedarte. Pasos pequeños, uno tras otro, pueden llevarte muy lejos."
+  },
+  {
+   "year": "Monrovia · De 1985 a 1987",
+   "title": "En la banca",
+   "paragraphs": [
+    "Después, George llegó al Mighty Barrolle, uno de los clubes más grandes de Liberia. Anotaba goles seguido, pero aun así casi nunca lo ponían de titular. Antes de jugar en el extranjero, también trabajó en la compañía telefónica de Liberia, como operador de conmutador.",
+    "En 1986, George se fue a un club rival, el Invincible Eleven, para tener su oportunidad. En 1987 ganaron la liga, y George fue el máximo goleador y el mejor jugador de la temporada."
+   ],
+   "lesson": "Que te dejen fuera duele, pero no significa que no seas suficientemente bueno. Sigue trabajando y busca una nueva oportunidad."
+  },
+  {
+   "year": "De Camerún a Mónaco · De 1987 a 1989",
+   "title": "Alguien que creyó en él",
+   "paragraphs": [
+    "En 1987, George se fue a Camerún para jugar con el Tonnerre Yaoundé, y anotó dos goles en su primer partido. El entrenador de la selección de Camerún, Claude Le Roy, se fijó en él y se lo contó a Arsène Wenger, el entrenador del Mónaco. Wenger viajó en avión a África para ver jugar a George.",
+    "En 1988, George fichó con el Mónaco, y ha dicho que Wenger fue muy importante en su carrera. En 1989 fue nombrado Futbolista Africano del Año, y llevó el premio a casa para que toda Liberia lo celebrara."
+   ],
+   "lesson": "Cuando alguien cree en ti, todo puede cambiar. Acuérdate de darles las gracias a quienes te ayudan."
+  },
+  {
+   "year": "Liberia · De 1995 a 2002",
+   "title": "A un punto",
+   "paragraphs": [
+    "En 1995, George se convirtió en el primer jugador africano en ganar el Balón de Oro y el premio al Jugador Mundial de la FIFA, y le dedicó el premio de la FIFA a Arsène Wenger. Pero su país, Liberia, era un país pequeño en el fútbol, dañado por años de guerra.",
+    "George jugó con Liberia, después entrenó al equipo, y hasta pagó gran parte de los gastos él mismo. En la eliminatoria para el Mundial de 2002, a Liberia le faltó solo un punto. George nunca jugó un Mundial, pero hizo muchísimo por su equipo."
+   ],
+   "lesson": "A veces te esfuerzas al máximo y aun así no alcanzas. Eso no borra todo lo bueno que hiciste."
+  },
+  {
+   "year": "Monrovia · De 1994 a 2004",
+   "title": "Primero la escuela",
+   "paragraphs": [
+    "Liberia sufrió muchos años de guerra. Mientras todavía jugaba, George se convirtió en Embajador de Buena Voluntad de las Naciones Unidas, y trató de usar el fútbol para darles alegría a los niños de Liberia.",
+    "Abre las puertas de la escuela. En 1994, George creó un club en Monrovia llamado Junior Professional. Para entrar había una sola regla: tenías que ir a la escuela. Muchos de sus jóvenes jugadores llegaron a jugar con Liberia. En 2004 ganó el Premio Arthur Ashe al Valor por su trabajo."
+   ],
+   "lesson": "Cuando la vida mejore para ti, ayuda a los demás. Aprender es una fuerza que se queda contigo."
+  }
+ ]
+}

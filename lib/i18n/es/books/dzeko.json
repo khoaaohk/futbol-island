@@ -1,0 +1,113 @@
+{
+ "id": "dzeko",
+ "title": "Džeko",
+ "subtitle": "Esperanza después del asedio",
+ "player": "Edin Džeko",
+ "country": "Bosnia and Herzegovina",
+ "summary": "Džeko: Esperanza después del asedio es un libro desplegable gratis de seis capítulos para niños sobre Edin Džeko, que creció en Sarajevo mientras la ciudad estaba rodeada durante una guerra y vivía en un pequeño apartamento con quince familiares. Más tarde, un club lo vendió barato por ser demasiado alto, pero fue campeón en Alemania e Inglaterra y capitán de Bosnia y Herzegovina en su primer Mundial. La historia enseña que la esperanza puede crecer después de los tiempos difíciles.",
+ "description": "Libro desplegable gratis para niños sobre Edin Džeko: creció en Sarajevo durante el asedio y llevó a Bosnia a su primer Mundial.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "Bosnia y Herzegovina"
+  },
+  {
+   "label": "Creció en",
+   "value": "Sarajevo, durante el asedio"
+  },
+  {
+   "label": "Vendido al Teplice",
+   "value": "Por 25.000 €"
+  },
+  {
+   "label": "Campeón",
+   "value": "Alemania 2009, Inglaterra 2012 y 2014"
+  },
+  {
+   "label": "Primer Mundial",
+   "value": "2014, Brasil"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Dónde creció Edin Džeko?",
+   "a": "En Sarajevo, la capital de Bosnia y Herzegovina. Cuando tenía seis años, empezó una guerra y la ciudad estuvo rodeada casi cuatro años. Eso se llama asedio. La casa de su familia quedó destruida, así que quince familiares vivieron juntos en el pequeño apartamento de sus abuelos."
+  },
+  {
+   "q": "¿Por qué la mamá de Edin Džeko lo dejó en casa?",
+   "a": "Incluso durante la guerra, Edin jugaba fútbol afuera en su barrio, Otoka. Un día su mamá le dijo que no podía salir a jugar. Ese mismo día la cancha fue alcanzada durante los combates, y Edin estaba a salvo en casa porque ella le había dicho que no."
+  },
+  {
+   "q": "¿Por qué vendieron a Edin Džeko por solo 25.000 euros?",
+   "a": "En el Željezničar de Sarajevo, algunas personas pensaban que era demasiado alto y que no tenía suficiente técnica para el mediocampo. El club lo vendió al Teplice, en la República Checa, por 25.000 euros. Allí jugó de delantero y empezó a meter goles."
+  },
+  {
+   "q": "¿Qué ganó Edin Džeko?",
+   "a": "Ganó la Bundesliga con el Wolfsburgo en 2009, el primer título alemán del club, y con el Manchester City ganó la Premier League en 2012 y 2014 y la FA Cup en 2011."
+  },
+  {
+   "q": "¿Qué hizo Edin Džeko por Bosnia y Herzegovina?",
+   "a": "Metió diez goles para ayudar a Bosnia y Herzegovina a llegar al Mundial 2014, su primer gran torneo, y marcó contra Irán en la primera victoria del equipo en un Mundial. Llegó a ser capitán y ha jugado y marcado más que nadie con su país. En 2026 escribió una carta a los niños de Bosnia sobre cómo fue crecer durante el asedio."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "1992 · Sarajevo",
+   "title": "Una ciudad rodeada",
+   "paragraphs": [
+    "Edin Džeko nació en 1986 en Sarajevo, la capital de Bosnia y Herzegovina. Cuando tenía seis años, empezó una guerra, y la ciudad estuvo rodeada casi cuatro años. Eso se llama asedio. La vida era peligrosa y difícil para todos en la ciudad.",
+    "La casa de la familia de Edin quedó destruida, así que quince familiares vivieron juntos en el pequeño apartamento de sus abuelos. Compartían lo que tenían y se cuidaban unos a otros."
+   ],
+   "lesson": "En los tiempos difíciles, las familias que comparten y se mantienen unidas se dan fuerzas."
+  },
+  {
+   "year": "Durante la guerra",
+   "title": "Su mamá dijo que no",
+   "paragraphs": [
+    "Incluso durante la guerra, Edin seguía jugando fútbol afuera, en su barrio, Otoka. Pero un día, su mamá le dijo que no podía salir a jugar. El fútbol ayudaba a los niños a sentirse un poquito normales.",
+    "Ese mismo día, la cancha fue alcanzada durante los combates. Edin estaba a salvo en casa, porque su mamá le había dicho que no."
+   ],
+   "lesson": "A veces los adultos dicen que no para protegerte. Hacerles caso es sabio."
+  },
+  {
+   "year": "2003 a 2005",
+   "title": "Demasiado alto, decían",
+   "paragraphs": [
+    "Después de la guerra, Edin jugó en un club de Sarajevo llamado Željezničar. Algunas personas allí pensaban que era demasiado alto y que no tenía suficiente técnica para el mediocampo. Ser muy alto puede hacer más difícil controlar el balón cuando eres joven.",
+    "El club lo vendió al Teplice, en la República Checa, por solo 25.000 euros. Era muy poco dinero, pero era un nuevo comienzo. En la República Checa, Edin jugó de delantero y empezó a meter goles."
+   ],
+   "lesson": "Si la gente duda de ti, sigue mejorando tu técnica."
+  },
+  {
+   "year": "2008–09",
+   "title": "Campeones de Alemania",
+   "paragraphs": [
+    "Edin pasó al Wolfsburgo, en Alemania, y se convirtió en un delantero que metía muchos goles. Aprendió a usar su estatura, su fuerza y sus pies hábiles.",
+    "En 2009, el Wolfsburgo ganó la Bundesliga, la liga alemana, por primera vez en su historia. Edin era una de las estrellas del equipo, y el niño de Sarajevo era campeón."
+   ],
+   "lesson": "Encuentra el lugar donde puedes brillar, y sigue creciendo ahí."
+  },
+  {
+   "year": "2011 a 2014",
+   "title": "Títulos en Inglaterra",
+   "paragraphs": [
+    "Edin llegó al Manchester City, en Inglaterra. Con el City ganó la Premier League dos veces, en 2012 y en 2014, y la FA Cup en 2011. Muchas veces entraba desde la banca y metía goles importantes.",
+    "El niño que había crecido durante un asedio ahora era campeón en una de las ligas más grandes del mundo."
+   ],
+   "lesson": "Donde empiezas no decide hasta dónde puedes llegar."
+  },
+  {
+   "year": "2014 · Brasil",
+   "title": "Un primer Mundial para Bosnia",
+   "paragraphs": [
+    "Edin metió diez goles para ayudar a Bosnia y Herzegovina a clasificarse al Mundial 2014, su primer gran torneo. En Brasil, marcó contra Irán en la primera victoria del equipo en la historia de los Mundiales.",
+    "Edin llegó a ser el capitán de Bosnia, y ha jugado y marcado más que nadie con su país. En 2026, escribió una carta a los niños de Bosnia sobre cómo fue crecer durante el asedio. Contó cómo había sido la vida, para que los niños de hoy pudieran entenderlo."
+   ],
+   "lesson": "La esperanza puede crecer incluso después de los tiempos más difíciles. Comparte tu historia para ayudar a otros."
+  }
+ ]
+}

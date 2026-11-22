@@ -9,6 +9,6 @@ import {languageAlternates,toEs} from '../esPaths';
 export function esMeta(title:string,description:string,enPath:string,image?:{url:string;alt:string}):Metadata{
  const url=toEs(enPath),images=[image?{url:image.url,width:1200,height:630,alt:image.alt}:{url:'/opengraph-image.png',width:1200,height:630,alt:SITE_NAME}];
  return {title:{absolute:title},description,alternates:{canonical:url,languages:languageAlternates(enPath)},
-  openGraph:{title,description,url,siteName:SITE_NAME,type:enPath==='/'||enPath==='/library'/* Nov 20 2026: the Library is a hub page, like the English one */?'website':'article',locale:'es_US',alternateLocale:['en_US'],images},
+  openGraph:{title,description,url,siteName:SITE_NAME,type:enPath==='/'||enPath==='/library'/* Nov 20 2026: the Library is a hub page, like the English one */||enPath==='/games'||enPath.startsWith('/games/')/* round E: as the English game pages */?'website':'article',locale:'es_US',alternateLocale:['en_US'],images},
   twitter:{card:'summary_large_image',title,description,images:[images[0].url]}};
 }

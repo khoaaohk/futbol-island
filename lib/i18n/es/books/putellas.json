@@ -1,0 +1,113 @@
+{
+ "id": "putellas",
+ "title": "Putellas",
+ "subtitle": "Por mi papá",
+ "player": "Alexia Putellas",
+ "country": "Spain",
+ "summary": "Putellas: Por mi papá es un libro desplegable gratis de seis capítulos para niños sobre Alexia Putellas, que creció cerca de Barcelona, tuvo que dejar el equipo femenil del Barcelona cuando ya no hubo equipo para su edad y perdió a su papá en 2012. Volvió al Barcelona, ganó el Balón de Oro en 2021 y se lo dedicó a él. La historia enseña que una puerta cerrada no es el final, y que las personas que queremos siguen con nosotros.",
+ "description": "Libro desplegable gratis para niños sobre Alexia Putellas, que volvió al Barcelona y ganó el Balón de Oro en 2021 dedicado a su papá.",
+ "facts": [
+  {
+   "label": "País",
+   "value": "España"
+  },
+  {
+   "label": "Nació",
+   "value": "1994, Mollet del Vallès"
+  },
+  {
+   "label": "Primer equipo de niñas",
+   "value": "Sabadell, a los siete años"
+  },
+  {
+   "label": "De vuelta en el Barcelona",
+   "value": "Firmó el 10 de julio de 2012"
+  },
+  {
+   "label": "Balón de Oro",
+   "value": "Lo ganó en 2021"
+  },
+  {
+   "label": "El libro",
+   "value": "6 capítulos, narrado en inglés"
+  }
+ ],
+ "faq": [
+  {
+   "q": "¿Por qué Alexia Putellas señala al cielo?",
+   "a": "Por su papá. Muchas veces viajaba con él para ver jugar al Barcelona en el Camp Nou. Después, cuando jugaba en el Levante, en Valencia, él estaba enfermo del corazón, pero aun así viajaba una y otra vez para verla. En 2012, justo antes de un gran torneo juvenil con España, él murió. Cuando marca, Alexia muchas veces señala al cielo con los dedos por él."
+  },
+  {
+   "q": "¿Por qué Alexia tuvo que dejar el Barcelona de niña?",
+   "a": "En 2005 entró a un equipo juvenil de niñas del Barcelona, y ganaron su liga. Al año siguiente el club cambió sus equipos de niñas, y ya no quedó equipo para su edad. A los doce años se fue al Espanyol, el otro club de Barcelona, con muchas otras niñas que tuvieron que irse. A los dieciséis jugaba en el primer equipo del Espanyol."
+  },
+  {
+   "q": "¿Las niñas podían jugar al fútbol fácilmente cuando Alexia era pequeña?",
+   "a": "No siempre. A Alexia le encantaba jugar al fútbol en la escuela, pero en esa época no creía que una niña pudiera hacer del fútbol su trabajo. Su mamá la dejó entrar a un equipo solo si dejaba de jugar en la escuela. Alexia dijo después que eso mostraba lo injusta que era la sociedad con las niñas que jugaban al fútbol."
+  },
+  {
+   "q": "¿Cuándo ganó Alexia Putellas el Balón de Oro?",
+   "a": "En 2021. Se lo dedicó a su papá y les dio las gracias a sus compañeras. Uno de sus tatuajes muestra a su papá cargándola de bebé y dándole un balón de fútbol."
+  },
+  {
+   "q": "¿Qué le pasó en la rodilla a Alexia?",
+   "a": "El 5 de julio de 2022, un día antes de que empezara la Eurocopa, se lastimó gravemente la rodilla izquierda en un entrenamiento. Necesitó una operación y casi un año para recuperarse, y vio el primer partido de España desde las gradas. Mientras sanaba, empezó a planear una forma de ayudar a las niñas a jugar al fútbol, que se convirtió en su Eleven Foundation. En 2023 volvió a jugar, y entró en la final del Mundial que ganó España."
+  }
+ ],
+ "chapters": [
+  {
+   "year": "1994 · Mollet del Vallès",
+   "title": "Una niña a la que le encantaba el fútbol",
+   "paragraphs": [
+    "Alexia Putellas nació en 1994 en Mollet del Vallès, cerca de Barcelona. Muchas veces viajaba con su papá para ver jugar al Barcelona en el Camp Nou. A Alexia le encantaba jugar al fútbol en la escuela, pero en esa época no creía que una niña pudiera hacer del fútbol su trabajo.",
+    "Su mamá la dejó entrar a un equipo solo si dejaba de jugar en la escuela. Alexia dijo después que eso mostraba lo injusta que era la sociedad con las niñas que jugaban al fútbol. Pero contó que su familia siempre aceptó sus sueños, y ella siguió jugando."
+   ],
+   "lesson": "Nadie puede decidir que un sueño no es para ti. Quédate cerca de las personas que creen en ti."
+  },
+  {
+   "year": "2001 · A los siete años",
+   "title": "Pequeña, pero encontrando espacio",
+   "paragraphs": [
+    "A los siete años, Alexia probó en un equipo local de niños, pero solo entrenó allí tres veces, porque no se sentía a gusto. En cambio, entró al equipo de niñas del Sabadell. Era más joven, más pequeña y menos fuerte que muchas compañeras, y todavía no podía tirar de lejos. Eso la frustraba.",
+    "Algunos periodistas escribieron que Alexia encontraba espacio donde no lo había. Hasta la nombraron capitana del equipo. Llevarla a los entrenamientos era difícil para su familia, pero para 2004 ya jugaba todo el tiempo."
+   ],
+   "lesson": "Si un lugar no se siente bien, está bien buscar uno mejor. Aunque seas pequeña, puedes encontrar la manera."
+  },
+  {
+   "year": "2005 · Una puerta se cierra",
+   "title": "La puerta que se cerró",
+   "paragraphs": [
+    "En 2005, el sueño de Alexia se hizo realidad. Entró a un equipo juvenil de niñas del Barcelona, y juntas ganaron su liga. Pero al año siguiente, el club cambió sus equipos de niñas, y ya no quedó equipo para su edad. Tuvo que irse.",
+    "A los doce años, Alexia se fue al Espanyol, el otro club de Barcelona, junto con muchas otras niñas que tuvieron que irse. Allí siguió aprendiendo, y a los dieciséis jugaba en el primer equipo del Espanyol. Xavi Llorens, que después fue entrenador del Barcelona, dijo que siempre esperó que ella volviera."
+   ],
+   "lesson": "Cuando una puerta se cierra, sigue adelante. Un tropiezo no es el final de la historia."
+  },
+  {
+   "year": "2011 a 2012 · Levante",
+   "title": "Su mayor fan",
+   "paragraphs": [
+    "A los diecisiete, Alexia se fue al club Levante, en Valencia, lejos de casa. Su papá estaba enfermo del corazón, pero aun así viajaba a Valencia una y otra vez para verla jugar. Alexia hasta pensó en estudiar medicina para ayudarlo. En 2012, justo antes de un gran torneo juvenil con España, su papá murió.",
+    "Enciende la estrella para su papá. Menos de un mes después, Alexia fue de todos modos al torneo, y fue la capitana de España. Después dijo que el fútbol era su escape, y también su conexión con su papá."
+   ],
+   "lesson": "Está bien sentirse muy triste cuando pierdes a alguien. Hacer las cosas que compartían te puede ayudar a sentirte cerca."
+  },
+  {
+   "year": "2012 a 2021 · Barcelona",
+   "title": "Los dedos al cielo",
+   "paragraphs": [
+    "En el verano de 2012, después de que murió su papá, el Barcelona le pidió a Alexia que volviera, y ella firmó el 10 de julio. Al año siguiente ganó su primer título de liga con ellas. Cuando marca, Alexia muchas veces señala al cielo con los dedos, por su papá.",
+    "Levanta la solapa para ver a quién le da las gracias. En 2021, Alexia ganó el Balón de Oro, uno de los premios más grandes del fútbol. Se lo dedicó a su papá y les dio las gracias a sus compañeras. Uno de sus tatuajes muestra a su papá cargándola de bebé y dándole un balón de fútbol."
+   ],
+   "lesson": "Las personas que queremos siguen siendo parte de nuestra historia. Puedes mantenerlas cerca a tu manera."
+  },
+  {
+   "year": "2022 a 2023",
+   "title": "El largo camino de vuelta",
+   "paragraphs": [
+    "El 5 de julio de 2022, un día antes de que empezara la Eurocopa, Alexia se lastimó gravemente la rodilla izquierda en un entrenamiento. Necesitó una operación y casi un año para recuperarse, y vio el primer partido de España desde las gradas. Después dijo que fue uno de sus peores momentos.",
+    "Sube los escalones de vuelta, uno por uno. Mientras sanaba, Alexia empezó a planear una forma de ayudar a las niñas a jugar al fútbol, que se convirtió en su Eleven Foundation. En 2023 volvió a jugar, y ese verano entró en la final del Mundial que ganó España."
+   ],
+   "lesson": "Mejorar puede tardar mucho. Los pasos pequeños cuentan, y ayudar a otros también te puede ayudar a sanar."
+  }
+ ]
+}

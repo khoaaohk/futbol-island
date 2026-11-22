@@ -1,0 +1,136 @@
+{
+ "id": "lineup",
+ "name": "Line Up!",
+ "title": "Juego de bloques de fútbol para niños: Line Up! gratis",
+ "h1": "Juego de bloques de fútbol: Line Up!",
+ "description": "Line Up! es un juego de bloques de fútbol gratis para niños. Arrastra figuras de balones a una cancha de 8 por 8 y llena filas o columnas. Sin anuncios.",
+ "lead": "Line Up! es un juego de bloques de fútbol gratis en tu navegador. Arrastra figuras hechas de balones a una cancha de 8 por 8. Una fila o columna llena es una línea completa, y se borra.",
+ "blurb": "Acomoda figuras de balones en líneas completas sobre una cancha",
+ "skill": "Mantener la forma del equipo y cerrar los huecos de una línea",
+ "about": [
+  "Line Up! es un juego de bloques con una idea de fútbol. La cancha es una cuadrícula de 8 por 8 casillas. Cada figura tiene de uno a cinco balones. Hay seis tipos de balón, como un balón de estrellas, un balón de playa y un balón trofeo dorado, y 18 tipos de figuras, giradas y en espejo.",
+  "Una bandeja debajo de la cancha tiene tres figuras. Coloca las tres y al instante sale una bandeja nueva. La partida termina cuando ninguna de las figuras de la bandeja cabe en la cancha."
+ ],
+ "phone": [
+  "Sostén el celular en vertical. Pon un dedo sobre una figura de la bandeja, arrástrala a la cancha y levanta el dedo.",
+  "La figura va un poco por encima de tu dedo, así tu pulgar nunca la tapa, y una sombra muestra dónde va a caer.",
+  "Las líneas que se van a borrar brillan en amarillo antes de que sueltes. Una figura que sueltas donde no cabe vuelve volando a la bandeja."
+ ],
+ "desktop": [
+  "Arrastra una figura con el mouse; se queda debajo del puntero.",
+  "O usa las teclas: 1, 2 o 3 eligen una figura, las flechas la mueven y Enter la coloca. P o Escape pausan."
+ ],
+ "rules": [
+  "Llena todas las casillas de una fila o una columna y esa línea se borra.",
+  "Cada balón colocado da 1 punto. Una figura que borra una línea da 100, dos líneas 300, tres líneas 600 y cuatro líneas 1,000.",
+  "Se arma una racha cuando figura tras figura borra una línea, hasta cuatro veces los puntos. Colocar una figura sin borrar nada no la rompe.",
+  "Limpia toda la cancha para ganar un bono de arco en cero de 500 puntos.",
+  "Una línea borrada con seis o más balones iguales es una línea de equipo. Da 100 puntos más.",
+  "El banquillo junto a la bandeja guarda una figura para después. Arrastra una figura hasta ahí, o presiona B.",
+  "Desde el nivel 4 entra un árbitro y se para en una casilla durante unos turnos. Una línea con el árbitro dentro no se puede borrar."
+ ],
+ "teaches": [
+  "Los equipos defienden en líneas. Cuando cada jugador cuida su lugar, la línea está cerrada y no hay por dónde pasar. Un hueco en la línea es por donde entra el otro equipo. Line Up! hace simple esa imagen: una línea llena se borra, una línea con un hueco se queda.",
+  "También enseña a planear con tiempo. Los buenos jugadores piensan en el siguiente pase antes de que llegue el balón. En Line Up! colocas cada figura para que las siguientes todavía quepan.",
+  "Cada partida termina con un consejo corto del entrenador sobre la forma del equipo, como subir juntos o cubrir el espacio que deja un compañero."
+ ],
+ "tips": [
+  "Guarda un área grande vacía. Una figura de cinco balones necesita espacio, y es la figura que termina casi todas las partidas.",
+  "Antes de colocar una figura, mira las otras dos y asegúrate de que todavía van a caber.",
+  "Termina primero las líneas que están casi llenas. Una línea con un solo hueco es la más fácil de borrar.",
+  "Intenta borrar dos líneas con una figura: dos líneas dan 300 puntos, no 200.",
+  "Juega alrededor del árbitro. Llena las otras líneas mientras el árbitro está ahí, y vuelve cuando se vaya."
+ ],
+ "harder": [
+  "El nivel sube cada 15 figuras colocadas.",
+  "Los primeros niveles dan sobre todo figuras pequeñas y simples, y cada bandeja se revisa para que cada figura quepa en algún lugar. Los niveles siguientes dan más figuras grandes y difíciles, la revisión es menos estricta, y desde el nivel 12 ya no hay revisión.",
+  "Los árbitros llegan desde el nivel 4: uno al principio, hasta tres después, y se quedan más turnos.",
+  "Los puntos crecen un 10% por nivel, hasta el triple. Medallas: Bronce con 1,500 puntos, Plata con 4,000 y Oro con 10,000."
+ ],
+ "parents": [
+  "Gratis, sin anuncios, sin cuenta y sin chat abierto. La tabla de récords solo acepta unas pocas letras al estilo arcade, nunca un nombre completo ni un mensaje.",
+  "Habilidad: la forma del equipo, cerrar huecos y planear unas cuantas jugadas por adelantado. No hay reloj, así que tu hijo puede pensar todo lo que quiera.",
+  "Duración: unos minutos por partida. El Daily Line-Up les da a todos las mismas figuras una vez al día, y la primera partida diaria terminada va a la tabla. Una tabla histórica de la isla guarda los 20 mejores puntajes."
+ ],
+ "faq": [
+  {
+   "q": "¿Line Up! es gratis?",
+   "a": "Sí. No hay nada que comprar, ningún anuncio y ninguna cuenta que crear. Cada partida es gratis, como todos los juegos del arcade. Al jugar ganas monedas de la isla: se ganan jugando y aprendiendo en Futbol Island y nunca se venden por dinero real."
+  },
+  {
+   "q": "¿Line Up! funciona en un celular o en una Chromebook de la escuela?",
+   "a": "Funciona en el navegador, sin descargas, y está hecho primero para celulares. También funciona en tabletas y computadoras, así que una Chromebook sirve siempre que el filtro de la escuela permita futbolisland.app. En una computadora se juega con el mouse o con las teclas."
+  },
+  {
+   "q": "¿Cómo se juega Line Up!?",
+   "a": "Arrastra una figura de balones desde la bandeja hasta la cancha. Llena toda una fila o columna y esa línea se borra. Cuando ninguna de las tres figuras de la bandeja cabe en ningún lugar, la partida termina."
+  },
+  {
+   "q": "¿Para qué edad es Line Up!?",
+   "a": "Futbol Island está hecho para niños de 7 a 12 años. Line Up! no tiene reloj y no necesita lectura durante el juego, así que los niños más pequeños también pueden jugarlo."
+  },
+  {
+   "q": "¿Qué es el Daily Line-Up?",
+   "a": "Un reto diario en la tarjeta de inicio. Ese día todos reciben las mismas figuras en el mismo orden. Tu primera partida diaria terminada va a la tabla de la isla; las siguientes de ese día son de práctica."
+  }
+ ],
+ "controls": [
+  "arrastra las figuras a la cancha",
+  "arrástralas con el mouse"
+ ],
+ "guides": [
+  {
+   "path": "/learn/soccer-formations/11v11-4-4-2",
+   "name": "Formación 4-4-2",
+   "line": "Dos líneas de cuatro que defienden juntas"
+  },
+  {
+   "path": "/learn/soccer-drills/pressure-and-cover-2v2",
+   "name": "Presión y cobertura 2v2",
+   "line": "Cierra el hueco que deja un compañero"
+  },
+  {
+   "path": "/learn/soccer-positions/center-back",
+   "name": "El defensa central en el fútbol",
+   "line": "Los jugadores que sostienen la línea de atrás"
+  },
+  {
+   "path": "/learn/soccer-rules/offside",
+   "name": "La regla del fuera de juego para niños",
+   "line": "Por qué la línea de atrás sube junta"
+  }
+ ],
+ "shots": [
+  {
+   "alt": "Line Up! en un celular: figuras de balones llenan una cancha de 8 por 8 frente a una tribuna de aficionados, y aparece LINE UP! cuando se borra una línea",
+   "caption": "Una línea se borra y los balones salen pateados de la cancha."
+  },
+  {
+   "alt": "Line Up! al principio de una partida: unas figuras de balones en la cancha sobre la bandeja, con una figura por colocar y el banquillo al lado",
+   "caption": "La bandeja tiene tres figuras. Coloca las tres y llegan tres nuevas."
+  }
+ ],
+ "stills": [
+  {
+   "alt": "Line Up! al principio de una partida: unas figuras de balones en la cancha, una figura en la bandeja y el banquillo vacío al lado",
+   "caption": "Una bandeja de figuras y un banquillo."
+  },
+  {
+   "alt": "Line Up!: una línea se llena, los balones salen pateados de la cancha y aparecen LINE UP! y +100",
+   "caption": "Una línea llena se borra."
+  },
+  {
+   "alt": "Line Up!: una figura de tres balones de estrellas sostenida sobre una cancha llena, con su sombra en la casilla donde va a caer",
+   "caption": "Arrastra una figura a su lugar."
+  },
+  {
+   "alt": "Line Up! en el nivel 5: el árbitro está parado en una casilla de una cancha llena, y el aviso x2 dice que borres una línea ya",
+   "caption": "El árbitro bloquea una casilla: juega alrededor de él."
+  }
+ ],
+ "clip": {
+  "name": "Line Up! en acción: figuras de balones llenan las líneas",
+  "alt": "Line Up! en un celular: se arrastran figuras de balones desde la bandeja hasta la cancha y una línea llena se borra",
+  "caption": "Line Up!: llena una fila o una columna y se borra."
+ }
+}
