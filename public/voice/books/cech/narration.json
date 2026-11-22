@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "leg": {
+      "src": "/voice/books/cech/leg.m4a?v=coach-bella-1",
+      "duration": 35.0,
+      "scriptSha256": "a1c7f2cfcd15d64f7146783ca1936efbcc73f05db53da8edac67a6900d3be858",
+      "cues": [
+        {
+          "text": "From striker to goalkeeper",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "Petr \u010cech was born in 1982 in Plze\u0148, in what is now the Czech Republic.",
+          "start": 2.525,
+          "duration": 6.475
+        },
+        {
+          "text": "He started playing at seven, for \u0160koda Plze\u0148, as a striker.",
+          "start": 9.0,
+          "duration": 4.7
+        },
+        {
+          "text": "When he was ten, he broke his leg.",
+          "start": 13.7,
+          "duration": 2.85
+        },
+        {
+          "text": "A broken leg means weeks of rest, and not being able to play.",
+          "start": 16.55,
+          "duration": 4.6
+        },
+        {
+          "text": "Flip the shirt.",
+          "start": 21.15,
+          "duration": 1.775
+        },
+        {
+          "text": "After his leg healed, Petr switched to playing in goal.",
+          "start": 22.925,
+          "duration": 4.0
+        },
+        {
+          "text": "The injury had led him to a new position, and he loved it.",
+          "start": 26.925,
+          "duration": 4.3
+        },
+        {
+          "text": "A setback can lead you somewhere new and surprising.",
+          "start": 31.225,
+          "duration": 3.75
+        }
+      ]
+    },
+    "wall": {
+      "src": "/voice/books/cech/wall.m4a?v=coach-bella-1",
+      "duration": 36.6,
+      "scriptSha256": "ee16a226de9dc9c4a619fbfc3884255178e78e6c960133852c4c6527db8de370",
+      "cues": [
+        {
+          "text": "A wall in goal",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "Petr joined Chelsea in London in 2004.",
+          "start": 1.95,
+          "duration": 3.8
+        },
+        {
+          "text": "In March 2005, he set a Premier League record: 1,025 minutes without letting in a goal.",
+          "start": 5.75,
+          "duration": 7.85
+        },
+        {
+          "text": "That is more than eleven whole matches.",
+          "start": 13.6,
+          "duration": 2.9
+        },
+        {
+          "text": "Chelsea won the Premier League that season.",
+          "start": 16.5,
+          "duration": 3.025
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 19.525,
+          "duration": 2.0
+        },
+        {
+          "text": "Petr was calm, tall and brave, and he worked hard on every part of goalkeeping.",
+          "start": 21.525,
+          "duration": 5.85
+        },
+        {
+          "text": "A goalkeeper has to stay ready all game, even when the ball is far away.",
+          "start": 27.375,
+          "duration": 5.275
+        },
+        {
+          "text": "Calm, careful practice can make you very hard to beat.",
+          "start": 32.65,
+          "duration": 3.95
+        }
+      ]
+    },
+    "injury": {
+      "src": "/voice/books/cech/injury.m4a?v=coach-bella-1",
+      "duration": 38.0,
+      "scriptSha256": "9be849229f5e6959da9c48af77f852cea11d14884940b8ba5976e95bc365a1af",
+      "cues": [
+        {
+          "text": "A serious head injury",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "On 14 October 2006, in a match at Reading, Petr and another player collided.",
+          "start": 2.2,
+          "duration": 6.775
+        },
+        {
+          "text": "Petr\u2019s head was badly hurt, and he needed an operation.",
+          "start": 8.975,
+          "duration": 4.25
+        },
+        {
+          "text": "Doctors said later that it had been very dangerous.",
+          "start": 13.225,
+          "duration": 3.85
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 17.075,
+          "duration": 2.1
+        },
+        {
+          "text": "Petr needed about three months to heal.",
+          "start": 19.175,
+          "duration": 2.875
+        },
+        {
+          "text": "Head injuries are serious, and taking time to recover properly is the right thing to do.",
+          "start": 22.05,
+          "duration": 6.425
+        },
+        {
+          "text": "Petr rested and followed his doctors\u2019 advice.",
+          "start": 28.475,
+          "duration": 3.775
+        },
+        {
+          "text": "Head injuries are serious. If you bump your head, always stop and tell a grown-up.",
+          "start": 32.25,
+          "duration": 5.725
+        }
+      ]
+    },
+    "headguard": {
+      "src": "/voice/books/cech/headguard.m4a?v=coach-bella-1",
+      "duration": 39.9,
+      "scriptSha256": "6d2387f1b309b31b7b021d23fef42abb504320e12eb253f2c2051169a69b3eec",
+      "cues": [
+        {
+          "text": "Back, in a headguard",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "On 20 January 2007, Petr played again, against Liverpool.",
+          "start": 2.125,
+          "duration": 5.725
+        },
+        {
+          "text": "He wore a padded headguard, first made by a company that makes rugby kit.",
+          "start": 7.85,
+          "duration": 5.175
+        },
+        {
+          "text": "The referee checked it and said yes.",
+          "start": 13.025,
+          "duration": 2.825
+        },
+        {
+          "text": "Coming back after such a serious injury took a lot of courage.",
+          "start": 15.85,
+          "duration": 4.55
+        },
+        {
+          "text": "Put on the headguard.",
+          "start": 20.4,
+          "duration": 1.9
+        },
+        {
+          "text": "Petr wore a headguard for the rest of his career.",
+          "start": 22.3,
+          "duration": 3.375
+        },
+        {
+          "text": "It became his trademark, and it is now in Chelsea\u2019s museum.",
+          "start": 25.675,
+          "duration": 4.425
+        },
+        {
+          "text": "Keeping yourself safe is part of being a good player.",
+          "start": 30.1,
+          "duration": 3.925
+        },
+        {
+          "text": "Protective gear is smart, not silly. Look after yourself so you can keep playing.",
+          "start": 34.025,
+          "duration": 5.8
+        }
+      ]
+    },
+    "munich": {
+      "src": "/voice/books/cech/munich.m4a?v=coach-bella-1",
+      "duration": 32.2,
+      "scriptSha256": "2abfb18fa9b9ec4fb2cf436a13aa1c0ad6612431f5a6a98fc82487345ec2beb9",
+      "cues": [
+        {
+          "text": "Saves in the big final",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "In 2012, Chelsea played Bayern Munich in the Champions League final.",
+          "start": 2.15,
+          "duration": 5.275
+        },
+        {
+          "text": "In extra time, Petr saved a penalty from Arjen Robben.",
+          "start": 7.425,
+          "duration": 4.65
+        },
+        {
+          "text": "The match was played in Bayern\u2019s own stadium, and they were the favourites.",
+          "start": 12.075,
+          "duration": 4.775
+        },
+        {
+          "text": "Dive for the save.",
+          "start": 16.85,
+          "duration": 2.0
+        },
+        {
+          "text": "The final went to a penalty shootout, and Petr saved two more.",
+          "start": 18.85,
+          "duration": 4.6
+        },
+        {
+          "text": "Chelsea won the Champions League for the first time.",
+          "start": 23.45,
+          "duration": 3.675
+        },
+        {
+          "text": "Stay brave after a hard time. Your best moments can still be ahead.",
+          "start": 27.125,
+          "duration": 5.05
+        }
+      ]
+    },
+    "new": {
+      "src": "/voice/books/cech/new.m4a?v=coach-bella-1",
+      "duration": 31.1,
+      "scriptSha256": "a5c4a583a9d44c7c07e8fee4d47e962f5f7a1856d1ea81ab7b8d8991f0884b39",
+      "cues": [
+        {
+          "text": "Still learning new things",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "Petr stopped playing football in 2019.",
+          "start": 2.125,
+          "duration": 3.4
+        },
+        {
+          "text": "He holds the Premier League record for the most clean sheets, 202 matches without letting in a goal.",
+          "start": 5.525,
+          "duration": 7.05
+        },
+        {
+          "text": "Lift the three flaps.",
+          "start": 12.575,
+          "duration": 2.15
+        },
+        {
+          "text": "Then he became an ice hockey goalkeeper, and he also plays the drums in a band.",
+          "start": 14.725,
+          "duration": 5.5
+        },
+        {
+          "text": "He keeps trying new things.",
+          "start": 20.225,
+          "duration": 2.375
+        },
+        {
+          "text": "Being a beginner again takes courage, but it is fun too.",
+          "start": 22.6,
+          "duration": 4.125
+        },
+        {
+          "text": "Keep trying new things. Being a beginner again is brave.",
+          "start": 26.725,
+          "duration": 4.3
+        }
+      ]
+    }
+  }
+}

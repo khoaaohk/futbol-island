@@ -6,6 +6,7 @@ import {BRONZE_BOOK as b_bronze} from './stories/bronze';
 import {BUFFON_BOOK as b_buffon} from './stories/buffon';
 import {CAFU_BOOK as b_cafu} from './stories/cafu';
 import {CAICEDO_BOOK as b_caicedo} from './stories/caicedo';
+import {CECH_BOOK as b_cech} from './stories/cech';
 import {CRISTIANO_BOOK as b_cristiano} from './stories/cristiano';
 import {CRUYFF_BOOK as b_cruyff} from './stories/cruyff';
 import {DAVIES_BOOK as b_davies} from './stories/davies';
@@ -51,6 +52,7 @@ import v_b_bronze from '../../public/voice/books/bronze/narration.json';
 import v_b_buffon from '../../public/voice/books/buffon/narration.json';
 import v_b_cafu from '../../public/voice/books/cafu/narration.json';
 import v_b_caicedo from '../../public/voice/books/caicedo/narration.json';
+import v_b_cech from '../../public/voice/books/cech/narration.json';
 import v_b_cristiano from '../../public/voice/books/cristiano/narration.json';
 import v_b_cruyff from '../../public/voice/books/cruyff/narration.json';
 import v_b_davies from '../../public/voice/books/davies/narration.json';
@@ -98,6 +100,7 @@ export const REGISTRY_BOOKS:Record<string,BookData>={
  "buffon":b_buffon,
  "cafu":b_cafu,
  "caicedo":b_caicedo,
+ "cech":b_cech,
  "cristiano":b_cristiano,
  "cruyff":b_cruyff,
  "davies":b_davies,
@@ -146,6 +149,7 @@ export const REGISTRY_NARRATION:Record<string,unknown>={
  "buffon":v_b_buffon,
  "cafu":v_b_cafu,
  "caicedo":v_b_caicedo,
+ "cech":v_b_cech,
  "cristiano":v_b_cristiano,
  "cruyff":v_b_cruyff,
  "davies":v_b_davies,
@@ -194,6 +198,7 @@ export const REGISTRY_SPREADS:Record<string,()=>Promise<{SPREADS:Record<string,S
  "buffon":()=>import('./spreads/buffon'),
  "cafu":()=>import('./spreads/cafu'),
  "caicedo":()=>import('./spreads/caicedo'),
+ "cech":()=>import('./spreads/cech'),
  "cristiano":()=>import('./spreads/cristiano'),
  "cruyff":()=>import('./spreads/cruyff'),
  "davies":()=>import('./spreads/davies'),
