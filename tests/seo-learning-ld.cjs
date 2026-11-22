@@ -37,7 +37,22 @@ for(const [file,items,type] of guidePages){const P=L(file);for(const it of items
  assert.equal(a[0].learningResourceType,type,`${it.path}: learningResourceType`);shape(a[0],it.path);n++;}}
 const g=ll.guideQuizPart({path:'/learn/soccer-rules/offside',name:'Offside quiz',questions:[{q:'Is it offside?',options:['Yes','No'],correct:1,explain:'No. Level is onside.'}]});
 assert.equal(g['@type'],'Quiz');assert.equal(g.url,'https://futbolisland.app/learn/soccer-rules/offside#quiz');
-assert.deepEqual(g.hasPart[0].acceptedAnswer,{'@type':'Answer',position:2,text:'No',answerExplanation:{'@type':'Comment',text:'No. Level is onside.'}});
+assert.deepEqual(g.hasPart[0].acceptedAnswer,{'@type':'Answer',position:2,text:'No',encodingFormat:'text/plain',answerExplanation:{'@type':'Comment',text:'No. Level is onside.'},comment:{'@type':'Comment',text:'Yes! No. Level is onside.'}});
+assert.equal(g.hasPart[0].suggestedAnswer[0].comment.text,'Not quite. The answer is: No. Level is onside.','wrong-answer comment = the shown feedback');
+assert.equal(g.assesses,'Offside');assert.equal(g.hasPart[0].assesses,'Offside');assert.deepEqual(g.about,{'@type':'Thing',name:'Offside'});
+// Google practice-problems rules (required + the recommended fields Search Console warned about on Nov 21 2026).
+const practiceOk=(z,where)=>{const C=c=>c&&c['@type']==='Comment'&&typeof c.text==='string'&&c.text.length>0;
+ assert(z['@type']==='Quiz'&&z.about&&z.about.name&&Array.isArray(z.hasPart)&&z.hasPart.length,`${where}: Quiz about + hasPart`);
+ for(const k of ['educationalLevel','typicalAgeRange','assesses'])assert(z[k],`${where}: Quiz ${k}`);
+ for(const x of z.hasPart){const w=`${where} "${x.text}"`;
+  assert.equal(x['@type'],'Question');assert.equal(x.eduQuestionType,'Multiple choice',w);assert.equal(x.learningResourceType,'Practice problem',w);
+  assert(x.text&&x.encodingFormat==='text/plain'&&x.typicalAgeRange==='7-12'&&x.assesses&&x.educationalLevel&&C(x.comment),`${w}: Question fields`);
+  assert(Array.isArray(x.educationalAlignment)&&x.educationalAlignment.every(a=>a['@type']==='AlignmentObject'&&['educationalSubject','educationalLevel'].includes(a.alignmentType)&&a.targetName),`${w}: educationalAlignment`);
+  assert(x.acceptedAnswer&&!Array.isArray(x.acceptedAnswer),`${w}: exactly one acceptedAnswer`);
+  assert(Array.isArray(x.suggestedAnswer)&&x.suggestedAnswer.length>=1,`${w}: suggestedAnswer`);
+  for(const a of [x.acceptedAnswer,...x.suggestedAnswer])assert(a['@type']==='Answer'&&a.text&&Number.isInteger(a.position)&&a.encodingFormat==='text/plain'&&C(a.comment),`${w}: Answer fields`);
+  const pos=[x.acceptedAnswer,...x.suggestedAnswer].map(a=>a.position);assert.equal(new Set(pos).size,pos.length,`${w}: distinct positions`);}};
+practiceOk(g,'sample');
 assert.deepEqual(g.hasPart[0].suggestedAnswer.map(a=>a.text),['Yes']);
 assert.throws(()=>ll.guideQuizPart({path:'/x',name:'x',questions:[{q:'?',options:['a'],correct:3,explain:'x'}]}),'a Question without a right option is refused');
 // Every emitted Question: acceptedAnswer = the visible right option, suggestedAnswer = the visible wrong ones, a real question.
@@ -63,6 +78,6 @@ for(const [file,items,quizOf] of quizPages){const P=L(file);for(const it of item
  const a=ld.filter(x=>[].concat(x['@type']).includes('LearningResource'));assert.equal(a.length,1,`${it.path}: one learning node`);
  const z=a[0].hasPart,vis=quizOf(it);assert(z&&z['@type']==='Quiz'&&!z['@context'],`${it.path}: nested end-of-guide Quiz`);
  assert(/id="quiz"/.test(html)&&z.url.endsWith(it.path+'#quiz'),`${it.path}: Quiz url points at the visible #quiz`);
- checkQuestions(z,vis,it.path);for(const v of vis){assert(html.includes(esc(v.q)),`${it.path}: question shown`);for(const o of v.options)assert(html.includes(esc(o)),`${it.path}: option shown`);}
+ checkQuestions(z,vis,it.path);practiceOk(z,it.path);for(const v of vis){assert(html.includes(esc(v.q)),`${it.path}: question shown`);for(const o of v.options)assert(html.includes(esc(o)),`${it.path}: option shown`);}
  gn++;}}
 console.log(`seo-learning-ld: ok (${n} pages, ${q} lessons with an unmarked quiz, ${gn} guide quizzes)`);

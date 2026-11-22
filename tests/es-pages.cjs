@@ -88,7 +88,10 @@ for(const enPath of ep.ES_PAGES){
   if(/\/lecciones\//.test(esPath)||/\/lessons\//.test(esPath))assert(!quiz,`${esPath}: no Quiz on a lesson (the answer is never shown)`);
   if(quiz)for(const x of quiz.hasPart){const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
    assert(x.acceptedAnswer&&x.acceptedAnswer.text&&html.includes(esc(x.acceptedAnswer.text)),`${esPath}: Question "${x.name}" has a shown acceptedAnswer`);
-   assert(html.includes(esc(x.text)),`${esPath}: Question "${x.name}" is shown`);}
+   assert(html.includes(esc(x.text)),`${esPath}: Question "${x.name}" is shown`);
+   // Nov 22 2026: answer comments are the Spanish feedback line the quiz shows; practice-problem fields present.
+   assert(x.suggestedAnswer.every(s=>s.comment&&s.comment.text.startsWith('Casi. La respuesta es:'))&&x.acceptedAnswer.comment.text.startsWith('¡Sí!'),`${esPath}: Spanish answer comments`);
+   assert(x.typicalAgeRange==='7-12'&&x.assesses&&x.encodingFormat==='text/plain'&&x.learningResourceType==='Practice problem',`${esPath}: practice-problem fields`);}
   if(ld['@type']==='BreadcrumbList')for(const c of ld.itemListElement)assert(/^https:\/\/futbolisland\.app\/es(\/|$)/.test(c.item),`${esPath}: breadcrumbs stay in Spanish`);
  }
  const text=html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g,' ').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/g,' ').replace(/\S*futbolisland\.app\S*/g,' ').replace(ALLOWED,'');
