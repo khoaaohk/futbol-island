@@ -8,7 +8,7 @@ import {addStoppage,applyChange,buildPlan,confirmChange,planWithLate,changeBetwe
 import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,loadStore,minutesCsv,newId,saveStore,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
 import c from './coach.module.css';
-import {AppHeader} from '@/components/motion/AppHeader';
+import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
 import TeamShare from '@/components/share/TeamShare';
 import type {ShareLesson} from '@/lib/share/teamShare';
 import {exitHref,noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
@@ -128,6 +128,10 @@ function Stepper({w,label,value,options,fmt,onChange,id}:{w:Words;label:string;v
    <button type="button" className={c.stepBtn} aria-label={`${label}, ${w.more}`} disabled={i>=options.length-1} onClick={()=>onChange(options[i+1])}>+</button>
   </div></div>;
 }
+/** Where a tool leads next (the tab bar's replacement): Lineup -> Playing time -> Substitution rotation -> Start the game. */
+function NextBtn({label,onClick}:{label:string;onClick:()=>void}){
+ return <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide} ${c.nextBtn} ${c.noPrint}`} onClick={onClick} data-coach-next="">{label}<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>;
+}
 /** Equal segments in one track (a 2-4 option choice): the same 52 px pill as the steppers. */
 function Seg<T extends string|number|boolean>({label,value,options,names,onPick}:{label:string;value:T;options:readonly T[];names:(v:T)=>ReactNode;onPick:(v:T)=>void}){
  return <div className={c.sec}><p className={c.lbl}>{label}</p><div className={c.segTrack} role="group" aria-label={label} style={{gridTemplateColumns:`repeat(${options.length},minmax(0,1fr))`}}>
@@ -152,13 +156,11 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  const [enter,setEnter]=useState<Dir|null>(null);
  /* the motion model (owner, Nov 22 2026: "polished and smooth", like native apps): the bottom tabs swap in place with a 120 ms
     opacity crossfade and keep each screen's scroll; only Home -> a tool pushes (slides in) and Home/Back pops (slides back).
-    Screens stay mounted once visited (hidden when inactive), so a tab switch never rebuilds a screen. */
- const [seen,setSeen]=useState<ReadonlySet<Tab>>(()=>new Set());
- useEffect(()=>{if(ready)setSeen(v=>v.has(tab)?v:new Set([...v,tab]));},[tab,ready]);
+    The tab bar was removed later the same day (hub and spoke): Home -> a tool pushes, Back pops, Next moves along. */
  const scrollAt=useRef<Partial<Record<Tab,number>>>({});
  const go=(t:Tab,via:'tab'|'push'='push')=>{if(t===tab)return;const dir:Dir=via==='tab'?'tab':t==='home'?'back':tab==='home'?'forward':'tab';
   scrollAt.current[tab]=window.scrollY;
-  screenChange(dir,()=>{setEnter(dir);setSeen(v=>v.has(t)?v:new Set([...v,t]));setTab(t);},()=>{window.scrollTo(0,dir==='forward'?0:scrollAt.current[t]??0);});};
+  screenChange(dir,()=>{setEnter(dir);setTab(t);},()=>{window.scrollTo(0,dir==='forward'?0:scrollAt.current[t]??0);});};
  const lang:Lang=store.lang??'en',w=WORDS[lang];
  const audio=useRef<AudioContext|null>(null);
  /* load once: the saved team, the language, a shared link; register the app's own service worker */
@@ -215,29 +217,25 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   {/* the shared header (components/motion/AppHeader): the title centred, the language and then Exit on the right */}
   {/* the language button only on Home (owner, Nov 22 2026); the choice is saved (fi-coach-v1) and the tools follow it */}
   <AppHeader lang={lang} exit={tab==='home'} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
-   /* the left slot stays empty (owner, Nov 22 2026): every coach screen shows the tab bar, whose Home tab is the one way home */
+   /* hub and spoke (owner, Nov 22 2026; the tab bar is gone): every tool has the gold Back to the dashboard, top left */
+   left={tab!=='home'?<HeaderGoldBack key="tool" lang={lang} onBack={()=>go('home')} data={{'data-coach-home':''}}/>:null}
    title={TITLE(w,tab)} sub={tab==='home'&&team.name?team.name:<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
-   {ready&&SCREENS.filter(t=>seen.has(t)||t===tab).map(t=><div key={t} className="fi-screen" hidden={t!==tab} data-enter={t===tab&&enter?enter:undefined}>
+   {ready&&SCREENS.filter(t=>t===tab).map(t=><div key={t} className="fi-screen" hidden={t!==tab} data-enter={t===tab&&enter?enter:undefined}>
     {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
      onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else go('team');}}
      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
     :t==='team'?<TeamTab w={w} store={store} update={update} d={d} share={shareBlock}/>
-    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
-    :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>go('team')}/>
+    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
+    :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>go('team')} onNext={()=>go('subs','tab')}/>
     :<SummaryTab w={w} store={store} now={now} share={shareBlock} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
       onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes');}}}/>}
    </div>)}
   </main>
-  <nav className={c.tabs} aria-label={w.appName}>
-   {/* one indicator that glides to the current tab (transform only); hidden on the summary, which has no tab */}
-   <span className={c.tabInd} aria-hidden="true" data-off={TABS.includes(tab)?undefined:''} style={{transform:`translateX(calc(${Math.max(0,TABS.indexOf(tab))} * (100% + 4px)))`}}/>
-   {TABS.map(t=><button key={t} type="button" className={c.tab} data-tool={t} aria-current={tab===t?'page':undefined} onClick={()=>go(t,'tab')}>
-    <span className={c.tabDot}/><Icon d={ICONS[t]}/>{t==='home'?w.tabHome:t==='team'?w.tabTeam:t==='lineup'?w.tabLineup:t==='minutes'?w.tabMinutes:t==='subs'?w.tabSubs:w.tabSummary}</button>)}
-  </nav>
   {live&&game&&<LiveGame w={w} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
    sound={store.sound} toggleSound={()=>update(s=>({...s,sound:!s.sound}))}
-   onExit={()=>{const st=game.clock.status;if(st==='done'||window.confirm(w.exitConfirm)){setLive(false);setTab(st==='done'?'summary':liveFrom.current);}}}
+   onExit={()=>{/* Back leaves the live screen without stopping the game: the clock is time-stamped and Home's Continue card returns to it */
+    setLive(false);setTab(game.clock.status==='done'?'summary':'home');}}
    onSummary={()=>{setLive(false);setTab('summary');}} onSub={()=>count('ca:sub')}/>}
   {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}</div>}
  </div>;
@@ -272,7 +270,7 @@ function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:
   </section>}
   {has&&(running||last)&&<button type="button" className={`${c.continue} ${intro?'fi-in':''}`} style={{'--i':1} as React.CSSProperties} data-tool={running?'subs':last??'home'} onClick={running?onResume:()=>go(last!)}>
    <span className={c.tileIcon} aria-hidden="true"><Icon d={ICONS[running?'subs':last!]}/></span>
-   <span className={c.tileText}><small>{w.continueOn}</small><b>{running?w.resumeGame:TITLE(w,last!)}</b></span>
+   <span className={c.tileText}><small>{running?w.gameOn:w.continueOn}</small><b>{running?w.tapReturn:TITLE(w,last!)}</b></span>
    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
   <h2 className={c.h2}>{w.tools}</h2>
   <ul className={c.tiles}>{tiles.map((t,i)=>{const icon=<span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span>;
@@ -351,7 +349,7 @@ function TeamTab({w,store,update,d,share}:{w:Words;store:Store;update:Up;d:D;sha
 type Ref={k:'s';i:number}|{k:'b';id:string};
 const refKey=(r:Ref)=>r.k==='s'?`s:${r.i}`:`b:${r.id}`;
 const parseRef=(s:string|null):Ref|null=>{if(!s)return null;const [k,v]=s.split(':');return k==='s'?{k:'s',i:Number(v)}:k==='b'?{k:'b',id:v}:null;};
-function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void}){
+function LineupTab({w,store,update,d,onShare,onNext}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void;onNext:()=>void}){
  const byId=new Map(store.team.players.map(p=>[p.id,p])),keeper=store.settings.keeper!=='none';
  const [sel,setSel]=useState<Ref|null>(null);
  const [ghost,setGhost]=useState<{x:number;y:number;text:string}|null>(null);
@@ -395,11 +393,12 @@ function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onShare}>{w.share}</button>
   </div>
+  <NextBtn label={w.nextTo(w.titleMinutes)} onClick={onNext}/>
   {ghost&&<div className={c.ghost} style={{left:ghost.x,top:ghost.y}} aria-hidden="true"><span className={c.disc}>{ghost.text}</span></div>}
  </>;
 }
 /* ------------------------------------------------------------------ Game (the plan) -------------------------------------- */
-function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam}:{view:'minutes'|'subs';w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void}){
+function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'minutes'|'subs';w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void;onNext:()=>void}){
  const s=store.settings,g=store.game,running=g&&g.clock.status!=='done';
  if(!d.here.length)return <><h1 className={c.h1}>{view==='subs'?w.titleSubs:w.titleMinutes}</h1><div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={goTeam}>{w.startHere}</button></div></>;
  const sec=planSeconds(d.plan.blocks),keeper=s.keeper!=='none',fixed=s.keeper==='fixed'?d.plan.blocks[0]?.gk:null,byId=new Map(store.team.players.map(p=>[p.id,p]));
@@ -416,6 +415,7 @@ function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam}:{view:'minutes
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   <Legend w={w} keeper={keeper}/>
   <TimelineRows w={w} rows={rows} blocks={d.plan.blocks} roles={roles} settings={s} seconds={sec}/>
+  <NextBtn label={w.nextTo(w.titleSubs)} onClick={onNext}/>
   </>:<>
   {/* the substitution rotation: who starts, then one card per change, in order (the timeline lives on Playing time) */}
   <h1 className={c.h1}>{w.titleSubs}</h1>
@@ -465,7 +465,7 @@ function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,kee
   <b>{p.num}</b><span>{p.name}{game.gk===p.id?` · ${w.gk}`:''}{extra?` · ${extra}`:''}</span><em>{mins(played[p.id]??0)}′</em></button>;
  return <div className={c.live} role="dialog" aria-modal="true" aria-label={w.tabGame}>
   <div className={c.liveTop}>
-   <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onExit}>{w.exit}</button>
+   <HeaderGoldBack lang={w.langCode==='es'?'es':'en'} onBack={onExit} data={{'data-live-back':''}}/>
    <div className={c.period}>{st==='break'?w.breakName(s.periods):st==='done'?w.over:pName}<small>{team.name||w.appName}</small></div>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onUndo} disabled={!canUndo} aria-disabled={!canUndo}>{w.undo}</button>
   </div>

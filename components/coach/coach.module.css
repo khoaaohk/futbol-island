@@ -376,3 +376,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .cardBtns .btn.done{background:var(--gold);color:var(--ink)}
 @media (hover:hover) and (pointer:fine){.homeTeam .btnGhost:hover,.homeEmpty .btnGhost:hover{background:#fff}}
 .btn.cardGhost{background:rgb(255 255 255 / .14);color:#fff}
+/* hub and spoke (Nov 22 2026): no tab bar, so the bottom space comes back; Next leads to the following tool */
+.main{padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+.sticky{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.toast{bottom:calc(16px + env(safe-area-inset-bottom))}
+.nextBtn{margin-top:24px;justify-content:space-between;padding:0 16px 0 20px}
