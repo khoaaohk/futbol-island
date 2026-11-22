@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "basics": {
+      "src": "/voice/books/son/basics.m4a?v=coach-bella-1",
+      "duration": 36.9,
+      "scriptSha256": "a5710343442e0e49cc0e3e20bf59db735b18e5ab50eb6f497492ca464e4dd383",
+      "cues": [
+        {
+          "text": "Years of basics",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "Son Heung-min was born in 1992 in Chuncheon, in South Korea.",
+          "start": 1.925,
+          "duration": 5.275
+        },
+        {
+          "text": "His father, Son Woong-jung, had been a footballer, and he coached Heung-min himself.",
+          "start": 7.2,
+          "duration": 5.5
+        },
+        {
+          "text": "For years, they practised only the basics: ball control, dribbling and passing.",
+          "start": 12.7,
+          "duration": 5.75
+        },
+        {
+          "text": "Tap the ball three times.",
+          "start": 18.45,
+          "duration": 2.275
+        },
+        {
+          "text": "His father did not let him play in a proper league until he was a teenager.",
+          "start": 20.725,
+          "duration": 5.025
+        },
+        {
+          "text": "Practising the same skills again and again can feel boring, but it made Heung-min\u2019s touch very good.",
+          "start": 25.75,
+          "duration": 6.9
+        },
+        {
+          "text": "The basics can feel boring, but they build everything else.",
+          "start": 32.65,
+          "duration": 4.225
+        }
+      ]
+    },
+    "hamburg": {
+      "src": "/voice/books/son/hamburg.m4a?v=coach-bella-1",
+      "duration": 37.7,
+      "scriptSha256": "4a0a7221322acc049352a47b14bfdf0c449e06d70703375572bcc0a5e18808f6",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In 2008, when he was sixteen, Heung-min went to Germany to join the youth academy of Hamburger SV, through a project for young Korean players.",
+          "start": 1.825,
+          "duration": 10.7
+        },
+        {
+          "text": "He had to live far from home, in a country with a new language.",
+          "start": 12.525,
+          "duration": 4.45
+        },
+        {
+          "text": "Being so far from family is hard for anyone.",
+          "start": 16.975,
+          "duration": 3.825
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 20.8,
+          "duration": 2.075
+        },
+        {
+          "text": "Heung-min learned German, and he later learned English too.",
+          "start": 22.875,
+          "duration": 4.275
+        },
+        {
+          "text": "His agent said he picked up German partly by watching cartoons.",
+          "start": 27.15,
+          "duration": 4.85
+        },
+        {
+          "text": "Living somewhere new is hard at first. Learning a little every day helps you belong.",
+          "start": 32.0,
+          "duration": 5.7
+        }
+      ]
+    },
+    "firstgoal": {
+      "src": "/voice/books/son/firstgoal.m4a?v=coach-bella-1",
+      "duration": 37.9,
+      "scriptSha256": "32798647fb405aa5c4a07ca9939616e3cb389d7b2a65d3fdf3cae3ac6a615e79",
+      "cues": [
+        {
+          "text": "First goal in Germany",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "In 2010, Heung-min played his first match in the Bundesliga, the top league in Germany.",
+          "start": 2.275,
+          "duration": 6.3
+        },
+        {
+          "text": "On 30 October 2010, he scored his first league goal, against FC K\u00f6ln.",
+          "start": 8.575,
+          "duration": 6.025
+        },
+        {
+          "text": "He was only eighteen, and he was playing against grown men in one of the best leagues in the world.",
+          "start": 14.6,
+          "duration": 6.225
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 20.825,
+          "duration": 1.75
+        },
+        {
+          "text": "In 2013, he moved to another German club, Bayer Leverkusen.",
+          "start": 22.575,
+          "duration": 5.55
+        },
+        {
+          "text": "Step by step, the boy who had practised the basics was becoming a star.",
+          "start": 28.125,
+          "duration": 5.225
+        },
+        {
+          "text": "Each step forward is worth celebrating, even the small ones.",
+          "start": 33.35,
+          "duration": 4.525
+        }
+      ]
+    },
+    "london": {
+      "src": "/voice/books/son/london.m4a?v=coach-bella-1",
+      "duration": 40.2,
+      "scriptSha256": "e65f1e0c41360eedebce514c2d70768ffce4a4aa495f510089b1fbdecb2d21eb",
+      "cues": [
+        {
+          "text": "A goal from end to end",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "In 2015, Heung-min joined Tottenham Hotspur in London.",
+          "start": 2.325,
+          "duration": 4.825
+        },
+        {
+          "text": "In 2018, he won a gold medal with South Korea at the Asian Games, setting up both goals in the final.",
+          "start": 7.15,
+          "duration": 7.75
+        },
+        {
+          "text": "Playing in England meant another new country and another new language.",
+          "start": 14.9,
+          "duration": 5.075
+        },
+        {
+          "text": "Roll the ball down the pitch.",
+          "start": 19.975,
+          "duration": 2.35
+        },
+        {
+          "text": "In December 2019, against Burnley, he dribbled with the ball nearly the whole length of the pitch and scored.",
+          "start": 22.325,
+          "duration": 7.65
+        },
+        {
+          "text": "That goal won the Pusk\u00e1s Award, FIFA\u2019s prize for the best goal of the year.",
+          "start": 29.975,
+          "duration": 5.275
+        },
+        {
+          "text": "All those years of dribbling practice can come together in one moment.",
+          "start": 35.25,
+          "duration": 4.95
+        }
+      ]
+    },
+    "boot": {
+      "src": "/voice/books/son/boot.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "195dd7d336d98e9e832837a355313e7f93a05b9e7dc3218df1512ed304600d32",
+      "cues": [
+        {
+          "text": "Top scorer",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "In the 2021\u201322 season, Heung-min scored 23 Premier League goals.",
+          "start": 1.675,
+          "duration": 6.35
+        },
+        {
+          "text": "He shared the Golden Boot, the prize for the league\u2019s top scorer, with Mohamed Salah.",
+          "start": 8.025,
+          "duration": 5.85
+        },
+        {
+          "text": "Many of his goals came from the clean, quick shooting he had practised since he was a boy.",
+          "start": 13.875,
+          "duration": 5.825
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 19.7,
+          "duration": 2.0
+        },
+        {
+          "text": "He was the first Asian player ever to win it.",
+          "start": 21.7,
+          "duration": 3.35
+        },
+        {
+          "text": "In 2023, he became Tottenham\u2019s captain.",
+          "start": 25.05,
+          "duration": 4.1
+        },
+        {
+          "text": "He had shown that a player from anywhere can reach the top.",
+          "start": 29.15,
+          "duration": 3.775
+        },
+        {
+          "text": "Keep working on your skills, and you can make history.",
+          "start": 32.925,
+          "duration": 3.725
+        }
+      ]
+    },
+    "trophy": {
+      "src": "/voice/books/son/trophy.m4a?v=coach-bella-1",
+      "duration": 42.2,
+      "scriptSha256": "754698464c43dc1ec56ff1e73665ca4f02581addcb76a39d2287382434de69b0",
+      "cues": [
+        {
+          "text": "A trophy at last",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "For years, Heung-min had played brilliantly without winning a big trophy with his club.",
+          "start": 2.0,
+          "duration": 5.75
+        },
+        {
+          "text": "On 21 May 2025, Tottenham played Manchester United in the Europa League final.",
+          "start": 7.75,
+          "duration": 7.3
+        },
+        {
+          "text": "Heung-min came on as a substitute, and Tottenham won 1\u20130.",
+          "start": 15.05,
+          "duration": 4.875
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 19.925,
+          "duration": 1.95
+        },
+        {
+          "text": "It was his first major trophy.",
+          "start": 21.875,
+          "duration": 2.575
+        },
+        {
+          "text": "In August 2025, he moved to Los Angeles FC, in the United States.",
+          "start": 24.45,
+          "duration": 6.325
+        },
+        {
+          "text": "All those years of basics, practice and patience had led to this moment.",
+          "start": 30.775,
+          "duration": 5.075
+        },
+        {
+          "text": "Waiting a long time for success can be hard. Keep working, and enjoy it when it comes.",
+          "start": 35.85,
+          "duration": 6.275
+        }
+      ]
+    }
+  }
+}
