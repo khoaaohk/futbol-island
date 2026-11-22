@@ -43,13 +43,14 @@ const POS:Record<string,string>={GK:'goalkeeper',LB:'fullback',RB:'fullback',CB:
  CM:'central-midfielder',LCM:'central-midfielder',RCM:'central-midfielder',AM:'attacking-midfielder',LAM:'attacking-midfielder',RAM:'attacking-midfielder',LM:'winger',RM:'winger',LW:'winger',RW:'winger',ST:'striker',LS:'striker',RS:'striker'};
 const rows=(rs:string[]):Line[]=>rs.map(r=>{const [name,toks]=r.split('|');return {name,spots:toks.split(' ').map(t=>{const [n,label,dy]=t.split(':');return {n,label,pos:POS[label],...(dy?{dy:Number(dy)}:{})};})};});
 const pick=(ids:string[])=>ids.map(id=>{const l=lessonById(id);if(!l)throw new Error(`formation lesson ${id} is not in the lesson catalog`);return l;});
-type Raw=Omit<Formation,'path'|'lines'|'lessons'|'title'|'h1'|'name'>&{rows:string[];lessonIds:string[];tag?:string};
+/** `title` (optional, Nov 22 2026 CTR round): a page's own search title, used instead of the pattern below. */
+type Raw=Omit<Formation,'path'|'lines'|'lessons'|'title'|'h1'|'name'>&{rows:string[];lessonIds:string[];tag?:string;title?:string};
 const make=(r:Raw):Formation=>{
- const {rows:rs,lessonIds,tag,...rest}=r,lines=rows(rs),n=lines.reduce((a,l)=>a+l.spots.length,0),fs=r.format==='futsal';
+ const {rows:rs,lessonIds,tag,title,...rest}=r,lines=rows(rs),n=lines.reduce((a,l)=>a+l.spots.length,0),fs=r.format==='futsal';
  if(n!==PLAYERS_PER_TEAM[r.format])throw new Error(`${r.slug}: ${n} players drawn for ${r.format}`);
  const shape=tag?`${r.shape} ${tag}`:r.shape;
  return {...rest,lines,lessons:pick(lessonIds),path:formationPath(r.slug),name:fs?`${shape} (futsal)`:`${shape} (${r.format})`,
-  title:fs?`${shape} Futsal Formation: Roles and Diagram`:`${shape} Soccer Formation for ${r.format}: Roles and Diagram`,
+  title:title??(fs?`${shape} Futsal Formation: Roles and Diagram`:`${shape} Soccer Formation for ${r.format}: Roles and Diagram`),
   h1:fs?`${shape} futsal formation`:`${shape} soccer formation (${r.format})`};
 };
 /** How U.S. Soccer writes the same shape: goalkeeper first. */
@@ -58,7 +59,8 @@ export const withKeeper=(f:{shape:string})=>`1-${f.shape}`;
 const RAW:Raw[]=[
  // ---- 7v7 ----------------------------------------------------------------------------------------------------------------
  {slug:'7v7-2-3-1',format:'7v7',shape:'2-3-1',best:'Most teams. A balanced first shape.',watch:'Only two defenders on a fast break.',
-  desc:'The 2-3-1 formation for 7v7 soccer, explained for kids, parents and coaches: a clear diagram, every role, strengths, weak spots and free lessons.',
+  title:'2-3-1 Formation for 7v7 Soccer: Diagram, Roles and Tips',
+  desc:'The 2-3-1 formation for 7v7 soccer: a diagram, the job of every position, the goal-kick shape, strengths, weak spots and how to teach it to 9-year-olds.',
   answer:'The 2-3-1 is a 7v7 soccer formation with two defenders, three midfielders and one forward in front of the goalkeeper. It suits most teams aged 9 and 10, because every player has a clear job and the team learns to use the whole width of the field.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 2:RB','Midfielders|11:LM 8:CM 7:RM','Forward|9:ST'],
   roles:[

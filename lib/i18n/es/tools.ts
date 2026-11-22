@@ -69,8 +69,8 @@ export const LINEUP_PAGES_ES:Readonly<Record<string,ToolPageEs>>={
 };
 
 export const PLANNER_PAGES_ES:Readonly<Record<string,ToolPageEs>>={
- 'soccer-playing-time-calculator':{crumb:'Calculadora de minutos',title:'Calculadora de minutos de juego de fútbol (cambios)',h1:'Calculadora de minutos de juego de fútbol',
-  description:'Calculadora gratis de minutos de juego y de cambios: escribe tus jugadores y la duración del partido y obtén una rotación justa, para imprimir.',
+ 'soccer-playing-time-calculator':{crumb:'Calculadora de minutos',title:'Calculadora de minutos de fútbol gratis: cambios justos',h1:'Calculadora de minutos de juego de fútbol',
+  description:'Calculadora de minutos de juego de fútbol, gratis: escribe tus jugadores y la duración del partido y obtén cambios justos, los mismos minutos para todos.',
   lead:'Dile cuántos jugadores vinieron, cuántos juegan a la vez y cuánto dura el partido. Te da un plan de cambios en el que cada jugador recibe la misma parte del partido, con una diferencia de un cambio como máximo.',
   blurb:'Un plan de cambios justo, con los mismos minutos para cada jugador',
   intro:['Repartir los minutos con justicia de memoria, con un partido en marcha delante de ti, es difícil. Nueve niños, siete lugares, dos tiempos: ¿quién ya descansó dos veces? Esta calculadora hace las cuentas antes del partido, así que al lado de la cancha solo lees la siguiente línea de la tabla.',
