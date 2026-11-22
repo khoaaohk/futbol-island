@@ -1,4 +1,5 @@
 'use client';
+import TeamShare from '@/components/share/TeamShare';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {PITCH,GUIDE_FORMATS,type GuideFormat} from '@/lib/site/pitch';
 import {cleanLineup,DEFAULT_FORMATION,emptyLineup,encodeLineup,lineupSheet,MAX_BENCH,MAX_NOTE,readHash,sameRef,shapeLabel,spotsOf,swap,withFormation,type Lineup,type Ref,type Shape} from '@/lib/site/tools/lineup';
@@ -23,7 +24,8 @@ const FORMAT_LABEL:Record<GuideFormat,string>={'7v7':'7v7','9v9':'9v9','11v11':'
 const refId=(r:Ref)=>`${r.k}:${r.i}`;
 const parseRef=(s:string|null|undefined):Ref|null=>{const m=/^(on|bench):(\d+)$/.exec(s??'');return m?{k:m[1] as Ref['k'],i:Number(m[2])}:null;};
 /** `lang="es"` (Spanish round D, Nov 16 2026): Spanish words (./toolWordsEs.ts); the page passes shapes with Spanish spot labels. English output is unchanged without it. */
-export default function LineupBuilder({shapes,initial,lockFormat,lang}:{shapes:readonly Shape[];initial:string;lockFormat?:GuideFormat;lang?:'es'}){
+/** `teamShare`: the quiet "Send your players the free game" line under the actions (the site pages; not the club embed). */
+export default function LineupBuilder({shapes,initial,lockFormat,lang,teamShare}:{shapes:readonly Shape[];initial:string;lockFormat?:GuideFormat;lang?:'es';teamShare?:boolean}){
  const es=lang==='es',sLabel=es?shapeLabelEs:shapeLabel,sheetOf=es?lineupSheetEs:lineupSheet;
  const first=shapes.find(s=>s.slug===initial)??shapes[0];
  const [l,setL]=useState<Lineup>(()=>emptyLineup(first));
@@ -143,6 +145,7 @@ export default function LineupBuilder({shapes,initial,lockFormat,lang}:{shapes:r
    </div>
    {link&&<label className={t.fieldLabel}>{es?W.linkLabel:'Link to this lineup'}<input className={`${t.input} ${t.link}`} readOnly value={link} onFocus={e=>e.currentTarget.select()}/></label>}
    <p className={t.hint}>{es?W.privacy:'Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server. A copied link holds the lineup inside the link itself, so use first names or nicknames.'}</p>
+   {teamShare&&<TeamShare surface="lineup" lang={es?'es':'en'} format={shape.format} team={l.team}/>}
   </div>
   <details className={`${t.panel} ${t.noPrint}`} open>
    <summary className={t.summary}>{es?W.names:'Player names and match note'}</summary>

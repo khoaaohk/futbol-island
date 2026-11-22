@@ -15,6 +15,7 @@ import {Checklist,Glance} from '@/components/site/PageParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import TeamShare from '@/components/share/TeamShare';
 import styles from '../../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
 import {planRail} from '@/lib/site/railNavMore';
@@ -61,7 +62,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
    </Section>
   </div>
   <div className={styles.noPrint}>
-   <Section id="structure" title="How this plan is built"><p>{PPP_LINE}</p><p>To print this plan on one page, use your browser’s Print command.</p></Section>
+   <Section id="structure" title="How this plan is built"><p>{PPP_LINE}</p><p>To print this plan on one page, use your browser’s Print command.</p><TeamShare surface="practice"/></Section>
    <Section id="drills" title="Drills in this plan">
     <GridFigure id="s0" scene={shown.scene} image={diagramUrl(shown.picture)}/>
     <DrillList items={p.drills.map(d=>({drill:d,line:drillLine(d)}))}/>

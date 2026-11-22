@@ -1,0 +1,32 @@
+/* "Share the game with your team" (components/share/TeamShare.tsx). It sits inside the coach app (coach.module.css tokens) and
+   the reading pages (site.module.css tokens), so every colour takes the host's token first and falls back to the shared palette.
+   No motion. Never printed with the page around it: the Team homework sheet is its own document. */
+.root{--ts-ink:var(--ink,#14221d);--ts-paper:var(--paper,#fbf7ee);--ts-tint:var(--tint,var(--surface,#ecefdf));--ts-soft:var(--soft,var(--ink-soft,#4f5b53));
+ --ts-line:var(--line,var(--rule,rgb(20 34 29 / .12)));--ts-focus:var(--pitch,var(--link,#1d6b55));
+ width:100%;max-width:640px;margin:28px 0 0;color:var(--ts-ink);text-align:left;box-sizing:border-box}
+.root *{box-sizing:border-box}
+.line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.title{flex:1 1 220px;margin:0;font-size:19px;line-height:1.2;font-weight:700;letter-spacing:0}
+.quiet{flex:1 1 220px;margin:0;font-size:16px;line-height:1.4;color:var(--ts-soft)}
+.panel{display:grid;gap:14px;margin:12px 0 0;min-width:0}
+/* the coach app: a tinted panel of its own; on the tool pages it sits plainly in the page or the tool's own panel */
+.boxed{background:var(--ts-tint);border-radius:16px;padding:16px}
+.note{margin:0;font-size:15px;line-height:1.45;color:var(--ts-soft)}
+.field{display:grid;gap:6px;font-size:14px;font-weight:600;color:var(--ts-soft);min-width:0}
+.select,.message{width:100%;min-width:0;border-radius:12px;border:1px solid rgb(20 34 29 / .22);background:#fff;color:var(--ts-ink);font:400 16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.select{min-height:48px;padding:0 12px}
+.message{padding:12px;resize:vertical;overflow-wrap:anywhere;field-sizing:content}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{min-height:48px;padding:0 20px;border-radius:999px;border:1px solid var(--ts-ink);background:var(--ts-ink);color:var(--ts-paper);font:700 16px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ghost{background:transparent;color:var(--ts-ink);border-color:var(--ts-line)}
+.boxed .ghost{background:var(--ts-paper);border-color:transparent}
+.btn:active{translate:0 1px}
+.btn:focus-visible,.select:focus-visible,.message:focus-visible{outline:3px solid var(--ts-focus);outline-offset:2px}
+.status{margin:0;min-height:1.45em;font-size:15px;font-weight:600;color:var(--ts-ink)}
+.status:empty{display:none}
+.qr{display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:#fff;border-radius:12px;padding:16px}
+.qr img{display:block;width:min(240px,100%);height:auto;aspect-ratio:1;image-rendering:pixelated}
+.qrText{flex:1 1 180px;margin:0;font-size:16px;line-height:1.45}
+.qrText b{display:block;font-size:19px;margin-top:4px;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){.btn:active{translate:none}}
+@media print{.root{display:none!important}}

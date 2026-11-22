@@ -59,6 +59,8 @@
  *   gp:<step>_<game>               game pages to Play (GAME_PLAY_COUNT_IDS, lib/analytics/gamePlayIds.ts; Nov 22 2026): per arcade
  *                                  game, its page's views, Play taps on its page (once per view) and Play taps on its /games card.
  *                                  Never a URL or anything about the visitor.
+ *   ts:<event>_<surface>           Share the game with your team (SHARE_COUNT_IDS, lib/analytics/shareIds.ts; Nov 20 2026): the block
+ *                                  opened, message copied, share sheet used, QR shown, Team homework printed, per tool. Totals only
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
@@ -72,6 +74,7 @@ import {SITE_FUNNEL_COUNT_IDS} from './siteFunnelIds';
 import {GAME_PLAY_COUNT_IDS} from './gamePlayIds';
 import {isSearchId} from './searchIds';
 import {GASHAPON_TOYS} from '../gashapon/toys';
+import {SHARE_COUNT_IDS} from './shareIds';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -422,6 +425,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...SCAN_COUNT_EVENTS.map(([e])=>'sn:'+e),// sn: Scan Trainer (components/scan/ScanApp.tsx, Nov 16 2026)
  ...SITE_FUNNEL_COUNT_IDS,// sf: site pages to Play, per section (siteFunnelIds.ts, Nov 20 2026)
  ...GAME_PLAY_COUNT_IDS,// gp: game pages to Play, per game (gamePlayIds.ts, Nov 22 2026)
+ ...SHARE_COUNT_IDS,// ts: Share the game with your team (shareIds.ts, Nov 20 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
