@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "gloves": {
+      "src": "/voice/books/earps/gloves.m4a?v=coach-bella-1",
+      "duration": 39.3,
+      "scriptSha256": "bb23c27921bb484b0fed9353180047fb425dfe40445e1f01bdb8fd43fc1a86ac",
+      "cues": [
+        {
+          "text": "Picked for goal",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Mary Earps was born in 1993 in Nottingham, England.",
+          "start": 1.85,
+          "duration": 5.075
+        },
+        {
+          "text": "She started playing football when she was ten, for a team called West Bridgford, and her coaches saw that she could be a goalkeeper.",
+          "start": 6.925,
+          "duration": 8.075
+        },
+        {
+          "text": "Pull on the gloves.",
+          "start": 15.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Being a goalkeeper can be hard: when you make a mistake, everyone sees it.",
+          "start": 16.875,
+          "duration": 5.125
+        },
+        {
+          "text": "Mary played for many clubs as she grew up, such as Doncaster Rovers Belles, Bristol and Reading, and in 2018 she moved to Wolfsburg in Germany, where her team won the league and the cup.",
+          "start": 22.0,
+          "duration": 12.575
+        },
+        {
+          "text": "Every club, every team and every coach can teach you something new.",
+          "start": 34.575,
+          "duration": 4.725
+        }
+      ]
+    },
+    "leftout": {
+      "src": "/voice/books/earps/leftout.m4a?v=coach-bella-1",
+      "duration": 39.7,
+      "scriptSha256": "3dfec7a9b621ea64f14043e11e9db8d4c27952620c590198a906acc325a33cc4",
+      "cues": [
+        {
+          "text": "Left out",
+          "start": 0.0,
+          "duration": 1.6
+        },
+        {
+          "text": "In 2019, the England manager at the time stopped picking Mary for the national team.",
+          "start": 1.6,
+          "duration": 6.375
+        },
+        {
+          "text": "She thought it might be the end of her England story.",
+          "start": 7.975,
+          "duration": 3.45
+        },
+        {
+          "text": "In 2021, she even thought about stopping football altogether.",
+          "start": 11.425,
+          "duration": 5.125
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 16.55,
+          "duration": 2.1
+        },
+        {
+          "text": "Mary talked honestly about those hard feelings later, in a BBC film about her team.",
+          "start": 18.65,
+          "duration": 6.3
+        },
+        {
+          "text": "Being left out can make anyone feel sad, or wonder if they are good enough.",
+          "start": 24.95,
+          "duration": 5.025
+        },
+        {
+          "text": "Mary kept training anyway, even though she did not know if she would ever be picked again.",
+          "start": 29.975,
+          "duration": 5.5
+        },
+        {
+          "text": "Being left out hurts. It does not mean you are not good enough.",
+          "start": 35.475,
+          "duration": 4.225
+        }
+      ]
+    },
+    "chance": {
+      "src": "/voice/books/earps/chance.m4a?v=coach-bella-1",
+      "duration": 42.4,
+      "scriptSha256": "5f98afe62b5fe9c203674bff342ea7c39d9da5d94e81332a9823e8fb45b6bcff",
+      "cues": [
+        {
+          "text": "A new coach, a new chance",
+          "start": 0.0,
+          "duration": 2.55
+        },
+        {
+          "text": "In 2021, England had a new manager, Sarina Wiegman.",
+          "start": 2.55,
+          "duration": 5.075
+        },
+        {
+          "text": "In her very first match, in September 2021, she picked Mary as the starting goalkeeper.",
+          "start": 7.625,
+          "duration": 7.15
+        },
+        {
+          "text": "A new coach meant a fresh start for everyone, and a chance for players who had been left out to show what they could do.",
+          "start": 14.775,
+          "duration": 7.05
+        },
+        {
+          "text": "Open the door.",
+          "start": 21.825,
+          "duration": 1.8
+        },
+        {
+          "text": "Mary was ready for the chance.",
+          "start": 23.625,
+          "duration": 2.5
+        },
+        {
+          "text": "She kept training and kept improving, and soon she was England\u2019s number one goalkeeper.",
+          "start": 26.125,
+          "duration": 5.875
+        },
+        {
+          "text": "The goalkeeper who had nearly stopped playing was back in the team, and this time she stayed.",
+          "start": 32.0,
+          "duration": 5.725
+        },
+        {
+          "text": "Keep practising while you wait, so you are ready when the door opens.",
+          "start": 37.725,
+          "duration": 4.625
+        }
+      ]
+    },
+    "euros": {
+      "src": "/voice/books/earps/euros.m4a?v=coach-bella-1",
+      "duration": 33.8,
+      "scriptSha256": "6b81a65a34431102ac2d2b2a4be97b33e2cb4f7806664e400b5dad49195f89a5",
+      "cues": [
+        {
+          "text": "Every minute",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "In 2022, England hosted the European Championship.",
+          "start": 1.675,
+          "duration": 4.825
+        },
+        {
+          "text": "Mary played every minute of all six of England\u2019s matches, and she was named in the Team of the Tournament.",
+          "start": 6.5,
+          "duration": 6.8
+        },
+        {
+          "text": "Every match was full of fans, and the whole country was watching.",
+          "start": 13.3,
+          "duration": 4.425
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 17.725,
+          "duration": 1.95
+        },
+        {
+          "text": "England won the European Championship.",
+          "start": 19.675,
+          "duration": 3.2
+        },
+        {
+          "text": "The goalkeeper who had once been left out was now a champion of Europe, with her teammates all around her.",
+          "start": 22.875,
+          "duration": 6.85
+        },
+        {
+          "text": "Your teammates need you to keep going, and you need them too.",
+          "start": 29.725,
+          "duration": 4.025
+        }
+      ]
+    },
+    "save": {
+      "src": "/voice/books/earps/save.m4a?v=coach-bella-1",
+      "duration": 39.8,
+      "scriptSha256": "32bb21378ce3165e945968df78341f936a59ed4339e5c1ba199d4fe682fa0708",
+      "cues": [
+        {
+          "text": "A save in a hard final",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "At the 2023 World Cup, England reached the final against Spain.",
+          "start": 2.25,
+          "duration": 5.45
+        },
+        {
+          "text": "In the sixty-eighth minute, Mary dived and saved a penalty.",
+          "start": 7.7,
+          "duration": 4.35
+        },
+        {
+          "text": "England still lost 1\u20130, but she won the Golden Glove, the prize for the best goalkeeper of the tournament.",
+          "start": 12.05,
+          "duration": 7.725
+        },
+        {
+          "text": "Dive for the save.",
+          "start": 19.775,
+          "duration": 2.0
+        },
+        {
+          "text": "That summer, fans could not buy an England goalkeeper shirt with her name on it, because the shirt maker had not made one.",
+          "start": 21.775,
+          "duration": 7.95
+        },
+        {
+          "text": "Mary spoke up about it, for the fans and for young goalkeepers who wanted one.",
+          "start": 29.725,
+          "duration": 5.575
+        },
+        {
+          "text": "You can be proud of your effort, even on a day your team loses.",
+          "start": 35.3,
+          "duration": 4.425
+        }
+      ]
+    },
+    "best": {
+      "src": "/voice/books/earps/best.m4a?v=coach-bella-1",
+      "duration": 42.1,
+      "scriptSha256": "53e1b6ccb4f58b729d1d3d8fc73ee4611eb828488b1d6e3632935b18823b390f",
+      "cues": [
+        {
+          "text": "The best in the world",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "Mary was named The Best FIFA Women\u2019s Goalkeeper in 2022, and again in 2023.",
+          "start": 1.925,
+          "duration": 7.075
+        },
+        {
+          "text": "In December 2023, she won BBC Sports Personality of the Year, an award voted for by the public.",
+          "start": 9.0,
+          "duration": 8.275
+        },
+        {
+          "text": "Lift the photo frame.",
+          "start": 17.275,
+          "duration": 2.225
+        },
+        {
+          "text": "In May 2025, Mary stopped playing for England, after 53 matches.",
+          "start": 19.5,
+          "duration": 6.2
+        },
+        {
+          "text": "The goalkeeper who was once left out had become one of the best in the world.",
+          "start": 25.7,
+          "duration": 5.075
+        },
+        {
+          "text": "She showed that being left out does not decide how your story ends.",
+          "start": 30.775,
+          "duration": 4.525
+        },
+        {
+          "text": "A setback is not the end of your story. Keep going, and you can surprise everyone, even yourself.",
+          "start": 35.3,
+          "duration": 6.775
+        }
+      ]
+    }
+  }
+}
