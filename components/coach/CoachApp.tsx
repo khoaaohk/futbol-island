@@ -19,7 +19,14 @@ import {BackButton} from '@/components/BackButton';
 type Role='gk'|'def'|'mid'|'fwd';
 type SpotPos={x:number;y:number;label:string;role:Role};
 type Formation={slug:string;label:string;spots:SpotPos[]};
-type Tab='team'|'lineup'|'game'|'summary';
+type Tab='home'|'team'|'lineup'|'minutes'|'subs'|'summary';
+/** the bottom bar: Home and the four tools; the summary opens from Home and after a game */
+const TABS:readonly Tab[]=['home','team','lineup','minutes','subs'];
+/** the last tool used, for Home's "Continue" card: its own key, so the team record (fi-coach-v1) is untouched */
+const LAST_KEY='fi-coach-last-tool';
+/** Nov 22 2026 (owner: "it's confusing to know which one I'm on"): each screen is its own tool with its own title, icon and accent;
+ *  the tool pages open the matching one (/coach#tool=lineup, #tool=minutes, #tool=subs). */
+const toolFromHash=(h:string):Tab|null=>{const m=/[#&]tool=(home|team|lineup|minutes|subs|summary)\b/.exec(h);return m?m[1] as Tab:null;};
 const ROLE_CLASS:Record<Role,string>={gk:c.gk,def:c.def,mid:c.midC,fwd:c.fwd};
 const SMALL:Record<string,Formation>={
  '4v4':{slug:'4v4-diamond',label:'Diamond',spots:[{x:50,y:22,label:'D',role:'def'},{x:22,y:48,label:'L',role:'mid'},{x:78,y:48,label:'R',role:'mid'},{x:50,y:76,label:'F',role:'fwd'}]},
@@ -31,6 +38,7 @@ function formationsFor(format:string,shapes:readonly Shape[]):Formation[]{
   return {slug:s.slug,label:shapeLabel(s),spots:place(s.lines).map((p,i)=>{const li=names.indexOf(p.line);return {x:p.x,y:p.y,label:p.label,role:(i===0?'gk':L<=1?'mid':li===1?'def':li===L?'fwd':'mid') as Role};})};});
 }
 const mins=(s:number)=>Math.round(s/60);
+const TITLE=(w:Words,t:Tab)=>t==='home'?w.titleHome:t==='team'?w.titleTeam:t==='lineup'?w.titleLineup:t==='minutes'?w.titleMinutes:t==='subs'?w.titleSubs:w.titleSummary;
 /* ------------------------------------------------------------------ derived plan ----------------------------------------- */
 function derive(store:Store,shapes:readonly Shape[]){
  const s=store.settings,keeper=s.keeper!=='none',lateOf=store.late;
@@ -67,8 +75,8 @@ function blockRoles(blocks:readonly PBlock[],start:Record<string,number>,form:Fo
 }
 /* ------------------------------------------------------------------ small parts ------------------------------------------ */
 const Icon=({d}:{d:string})=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
-const ICONS:Record<Tab,string>={team:'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.4.9 2.3 2.6 2.5 5.2',
- lineup:'M4 3h16v18H4zM4 12h16M9 3v4h6V3M9 21v-4h6v4',game:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4l3 2M9 2h6',summary:'M5 20V10M12 20V4M19 20v-7'};
+const ICONS:Record<Tab,string>={home:'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5',subs:'M7 20V5M3.5 8.5 7 5l3.5 3.5M17 4v15M13.5 15.5 17 19l3.5-3.5',minutes:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4l3 2M9 2h6',team:'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.4.9 2.3 2.6 2.5 5.2',
+ lineup:'M4 3h16v18H4zM4 12h16M9 3v4h6V3M9 21v-4h6v4',summary:'M5 20V10M12 20V4M19 20v-7'};
 /* The timeline rows are built inline (a component per row would remount on every tick). */
 type TimelineProps={w:Words;rows:readonly Player[];blocks:readonly PBlock[];roles?:Record<string,Role>[];settings:Settings;nowAt?:{period:number;sec:number};seconds:Readonly<Record<string,number>>};
 function TimelineRows({w,rows,blocks,roles,settings,nowAt,seconds}:TimelineProps){
@@ -107,7 +115,8 @@ function NumberInput({value,taken,onCommit,w}:{value:number;taken:ReadonlySet<nu
 export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  const [store,setStore]=useState<Store>(()=>emptyStore());
  const [ready,setReady]=useState(false);
- const [tab,setTab]=useState<Tab>('team');
+ const [tab,setTab]=useState<Tab>('home');
+ const [lastTool,setLastTool]=useState<Tab|null>(null);
  const [live,setLive]=useState(false);
  const [shared,setShared]=useState<Shared|null>(null);
  const [undo,setUndo]=useState<Game[]>([]);
@@ -122,8 +131,10 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
   if(q==='es'||q==='en')s.lang=q;else if(!s.lang)s.lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';
   setStore(s);
   const m=/[#&]s=([A-Za-z0-9_-]+)/.exec(window.location.hash);if(m){const d=decodeShare(m[1]);if(d)setShared(d);}
-  if(s.game&&s.game.clock.status!=='done'&&s.game.clock.status!=='pre'){setLive(true);setTab('game');}
-  else setTab(s.team.players.length?'game':'team');
+  const asked=toolFromHash(window.location.hash);
+  if(s.game&&s.game.clock.status!=='done'&&s.game.clock.status!=='pre'){setLive(true);setTab('subs');}
+  else setTab(asked??'home');
+  try{const l=window.localStorage.getItem(LAST_KEY);if(l&&l!=='home'&&(TABS.includes(l as Tab)||l==='summary'))setLastTool(l as Tab);}catch{/* storage blocked */}
   /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
   document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/coach/manifest.webmanifest';else l.remove();});
   setReady(true);count('ca:open');
@@ -132,6 +143,7 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);document.documentElement.lang=lang;},[store,ready,lang]);
  const update=useCallback((f:(s:Store)=>Store)=>setStore(s=>f(s)),[]);
  const d=useMemo(()=>derive(store,shapes),[store,shapes]);
+ useEffect(()=>{if(!ready||tab==='home')return;setLastTool(tab);try{window.localStorage.setItem(LAST_KEY,tab);}catch{/* optional */}},[tab,ready]);
  const game=store.game;
  /* the live clock: a tick only while the live screen is open */
  useEffect(()=>{if(!live)return;const t=setInterval(()=>setNow(Date.now()),250);return ()=>clearInterval(t);},[live]);
@@ -157,32 +169,72 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  };
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
  const team=store.team;
- return <div className={c.app} data-reading-page="" data-coach-app="">
+ return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab}>
   <header className={c.top}>
    {/* Back (owner, Nov 20 2026): the game's own Back button in place of the app mark; it leaves for the coach tools page. */}
-   <BackButton data-coach-back label={lang==='es'?'Volver':'Back'} onBack={()=>{window.location.assign(lang==='es'?'/es/tools':'/tools');}}/>
-   <div className={c.topTitle}><b>{team.name||w.appName}</b><span>{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</span></div>
-   <button type="button" className={c.langBtn} lang={w.langCode} onClick={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))}>{w.lang}</button>
+   {/* Nov 22 2026: from a tool, Back returns to Home; from Home it leaves for the coach tools page (a fresh button per screen: it locks once pressed) */}
+   <BackButton key={tab==='home'?'home':'tool'} data-coach-back label={lang==='es'?'Volver':'Back'} onBack={tab==='home'?()=>{window.location.assign(lang==='es'?'/es/tools':'/tools');}:()=>setTab('home')}/>
+   <span className={c.toolMark} data-tool={tab} aria-hidden="true"><Icon d={ICONS[tab]}/></span>
+   <div className={c.topTitle}><b>{TITLE(w,tab)}</b><span>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</span></div>
+   <button type="button" className={c.langBtn} lang={w.langCode} aria-label={w.lang} onClick={()=>update(s=>({...s,lang:lang==='es'?'en':'es'}))}>{w.langCode.toUpperCase()}</button>
   </header>
   <main className={c.main} id="coach-main">
-   {!ready?null:tab==='team'?<TeamTab w={w} store={store} update={update} d={d}/>
+   {!ready?null:tab==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={setTab} running={!!game&&game.clock.status!=='done'&&game.clock.status!=='pre'} onResume={()=>setLive(true)}
+     onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else setTab('team');}}
+     onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
+    :tab==='team'?<TeamTab w={w} store={store} update={update} d={d}/>
     :tab==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
-    :tab==='game'?<GameTab w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>setTab('team')}/>
+    :tab==='minutes'||tab==='subs'?<GameTab view={tab} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>setTab('team')}/>
     :<SummaryTab w={w} store={store} now={now} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
-      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));setTab('game');}}}/>}
+      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));setTab('minutes');}}}/>}
   </main>
   <nav className={c.tabs} aria-label={w.appName}>
-   {(['team','lineup','game','summary'] as Tab[]).map(t=><button key={t} type="button" className={c.tab} aria-current={tab===t?'page':undefined} onClick={()=>setTab(t)}>
-    <span className={c.tabDot}/><Icon d={ICONS[t]}/>{t==='team'?w.tabTeam:t==='lineup'?w.tabLineup:t==='game'?w.tabGame:w.tabSummary}</button>)}
+   {TABS.map(t=><button key={t} type="button" className={c.tab} data-tool={t} aria-current={tab===t?'page':undefined} onClick={()=>setTab(t)}>
+    <span className={c.tabDot}/><Icon d={ICONS[t]}/>{t==='home'?w.tabHome:t==='team'?w.tabTeam:t==='lineup'?w.tabLineup:t==='minutes'?w.tabMinutes:t==='subs'?w.tabSubs:w.tabSummary}</button>)}
   </nav>
   {live&&game&&<LiveGame w={w} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
    sound={store.sound} toggleSound={()=>update(s=>({...s,sound:!s.sound}))}
-   onExit={()=>{const st=game.clock.status;if(st==='done'||window.confirm(w.exitConfirm)){setLive(false);setTab(st==='done'?'summary':'game');}}}
+   onExit={()=>{const st=game.clock.status;if(st==='done'||window.confirm(w.exitConfirm)){setLive(false);setTab(st==='done'?'summary':'subs');}}}
    onSummary={()=>{setLive(false);setTab('summary');}} onSub={()=>count('ca:sub')}/>}
   {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}</div>}
  </div>;
 }
 type D=ReturnType<typeof derive>;
+const EXAMPLE=['Ava','Ben','Carlos','Dani','Eli','Fatima','Gus','Hana','Isla','Jonah','Kai','Leo'];
+/* ------------------------------------------------------------------ Home -------------------------------------------------- */
+/** Home (Nov 22 2026, owner: "a simple dashboard"): the team at a glance, Continue, and one tile per tool with its icon and accent. */
+function HomeTab({w,store,d,last,lang,go,running,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;running:boolean;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
+ const s=store.settings,team=store.team,has=team.players.length>0,fmt=presetOf(s.format).id==='futsal'?'Futsal':s.format;
+ const tiles:{key:string;tool:string;name:string;line:string;icon:string;on?:()=>void;href?:string}[]=[
+  {key:'lineup',tool:'lineup',name:w.titleLineup,line:w.lineLineup,icon:ICONS.lineup,on:()=>go('lineup')},
+  {key:'minutes',tool:'minutes',name:w.titleMinutes,line:w.lineMinutes,icon:ICONS.minutes,on:()=>go('minutes')},
+  {key:'subs',tool:'subs',name:w.titleSubs,line:w.lineSubs,icon:ICONS.subs,on:()=>go('subs')},
+  {key:'match',tool:'match',name:w.matchDay,line:w.lineMatch,icon:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4M9 2h6M19 6l1.5-1.5',on:onMatch},
+  {key:'summary',tool:'summary',name:w.titleSummary,line:w.lineSummary,icon:ICONS.summary,on:()=>go('summary')},
+  {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es':'/scan'},
+  {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans'}];
+ return <>
+  <h1 className={c.srOnly}>{w.titleHome}</h1>
+  {has?<section className={c.homeTeam} aria-label={w.homeTeam}>
+   <div><p className={c.homeTeamName}>{team.name||w.homeTeam}</p><p className={c.homeTeamMeta}>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.playersN(team.players.length)}</p>
+    <p className={c.homeTeamMeta}>{w.ready(d.here.length,d.F)}</p></div>
+   <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} onClick={()=>go('team')}>{w.editTeam}</button>
+  </section>:<section className={c.homeEmpty} aria-label={w.homeTeam}>
+   <p className={c.homeTeamName}>{w.homeTeam}</p><p className={c.homeTeamMeta}>{w.homeEmpty}</p>
+   <div className={c.homeEmptyBtns}><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>go('team')}>{w.setupTeam}</button>
+    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onExample}>{w.tryExample}</button></div>
+  </section>}
+  {has&&(running||last)&&<button type="button" className={c.continue} data-tool={running?'subs':last??'home'} onClick={running?onResume:()=>go(last!)}>
+   <span className={c.tileIcon} aria-hidden="true"><Icon d={ICONS[running?'subs':last!]}/></span>
+   <span className={c.tileText}><small>{w.continueOn}</small><b>{running?w.resumeGame:TITLE(w,last!)}</b></span>
+   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
+  <h2 className={c.h2}>{w.tools}</h2>
+  <ul className={c.tiles}>{tiles.map(t=><li key={t.key}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href}>
+    <span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span><span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
+   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}><span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span><span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>)}</ul>
+  <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
+ </>;
+}
 /** Minutes a late player can be expected at: every change interval from the first one to the last minute of the game. */
 const lateMinutes=(s:Settings)=>{const out:number[]=[],end=s.periods*s.periodMin;for(let m=s.subEvery;m<end;m+=s.subEvery)out.push(m);return out;};
 type Up=(f:(s:Store)=>Store)=>void;
@@ -194,30 +246,43 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
   for(let k=0;k<n;k++){while(nums.has(num)||added.some(a=>a.num===num))num++;if(num>99)break;const id=newId(new Set([...ids,...added.map(a=>a.id)]),Date.now()%100000+k);added.push({id,num,name:'',gk:false});}
   setPlayers(ps=>[...ps,...added],added.map(a=>a.id));};
  const s=store.settings;
- const [quick,setQuick]=useState(12);
+ const [quick,setQuick]=useState(12),[sheet,setSheet]=useState(false);
+ const pre=presetOf(s.format),fmt=pre.id==='futsal'?'Futsal':s.format;
+ /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the squad is the screen; the game settings sit behind one summary card
+    and open in a sheet. Same settings, same store (fi-coach-v1). */
  return <>
-  <h1 className={c.h1}>{w.tabTeam}</h1>
-  <p className={c.note}>{w.privacy}</p>
-  <label className={c.field} style={{marginTop:16}}>{w.teamName}<input className={c.input} value={store.team.name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,name:v.slice(0,24)}}));}}/></label>
-  <h2 className={c.h2}>{w.format}</h2>
-  <div className={c.seg} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.chip} aria-pressed={s.format===p.id}
-   onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}>{p.id==='futsal'?'Futsal':p.id}{p.ages&&<small>{p.ages}</small>}</button>)}</div>
-  <div className={c.grid3} style={{marginTop:14}}>
-   <label className={c.field}>{w.periods}<select className={c.input} value={s.periods} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periods:v}}));}}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>
-   <label className={c.field}>{w.minutes}<select className={c.input} value={s.periodMin} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periodMin:v,subEvery:Math.min(x.settings.subEvery,v)}}));}}>{[8,10,12,15,20,25,30,35,40,45].map(n=><option key={n}>{n}</option>)}</select></label>
-   <label className={c.field}>{w.subEvery}<select className={c.input} value={s.subEvery} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,subEvery:v}}));}}>{[2,3,4,5,6,8,10,12,15].filter(n=>n<=s.periodMin).map(n=><option key={n} value={n}>{n} {w.min}</option>)}</select></label>
-  </div>
-  {presetOf(s.format).keeper&&<><h2 className={c.h2}>{w.keeper}</h2><div className={c.seg} role="group" aria-label={w.keeper}>
-   {(['rotate','fixed'] as const).map(k=><button key={k} type="button" className={c.chip} aria-pressed={s.keeper===k} onClick={()=>update(x=>({...x,settings:{...x.settings,keeper:k}}))}>{k==='rotate'?w.keeperRotate:w.keeperFixed}</button>)}</div></>}
-  <h2 className={c.h2}>{w.subStyle}</h2>
-  <div className={c.seg} role="group" aria-label={w.subStyle}>{([false,true] as const).map(r=><button key={String(r)} type="button" className={c.chip} aria-pressed={s.rolling===r} onClick={()=>update(x=>({...x,settings:{...x.settings,rolling:r}}))}>{r?w.rolling:w.stoppages}</button>)}</div>
-  <h2 className={c.h2}>{w.squad}</h2>
+  <h1 className={c.h1}>{w.titleTeam}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)}</p>
+  <button type="button" className={c.setCard} onClick={()=>setSheet(true)} aria-haspopup="dialog" data-coach-settings="">
+   <span className={c.setMain}><b>{store.team.name||w.teamName}</b><span>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}{pre.keeper?` · ${s.keeper==='fixed'?w.keeperFixed:w.keeperRotate}`:''}</span></span>
+   <span className={c.setGo}>{w.gameSettings}<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+  </button>
+  {sheet&&<div className={c.sheet} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
+   <div className={`${c.sheetIn} ${c.setSheet}`} role="dialog" aria-modal="true" aria-labelledby="coach-settings">
+    <div className={c.sheetHead}><p className={c.sheetTitle} id="coach-settings">{w.gameSettings}</p><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.sheetDone}</button></div>
+    <div className={c.sheetBody}>
+     <label className={c.field}>{w.teamName}<input className={c.input} value={store.team.name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,name:v.slice(0,24)}}));}}/></label>
+     <h2 className={c.h2}>{w.format}</h2>
+     <div className={c.seg} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.chip} aria-pressed={s.format===p.id}
+      onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}>{p.id==='futsal'?'Futsal':p.id}{p.ages&&<small>{p.ages}</small>}</button>)}</div>
+     <div className={`${c.grid3} ${c.gap}`}>
+      <label className={c.field}>{w.periods}<select className={c.input} value={s.periods} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periods:v}}));}}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></label>
+      <label className={c.field}>{w.minutes}<select className={c.input} value={s.periodMin} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,periodMin:v,subEvery:Math.min(x.settings.subEvery,v)}}));}}>{[8,10,12,15,20,25,30,35,40,45].map(n=><option key={n}>{n}</option>)}</select></label>
+      <label className={c.field}>{w.subEvery}<select className={c.input} value={s.subEvery} onChange={e=>{const v=Number(e.target.value);update(x=>({...x,settings:{...x.settings,subEvery:v}}));}}>{[2,3,4,5,6,8,10,12,15].filter(n=>n<=s.periodMin).map(n=><option key={n} value={n}>{n} {w.min}</option>)}</select></label>
+     </div>
+     {pre.keeper&&<><h2 className={c.h2}>{w.keeper}</h2><div className={c.seg} role="group" aria-label={w.keeper}>
+      {(['rotate','fixed'] as const).map(k=><button key={k} type="button" className={c.chip} aria-pressed={s.keeper===k} onClick={()=>update(x=>({...x,settings:{...x.settings,keeper:k}}))}>{k==='rotate'?w.keeperRotate:w.keeperFixed}</button>)}</div></>}
+     <h2 className={c.h2}>{w.subStyle}</h2>
+     <div className={c.seg} role="group" aria-label={w.subStyle}>{([false,true] as const).map(r=><button key={String(r)} type="button" className={c.chip} aria-pressed={s.rolling===r} onClick={()=>update(x=>({...x,settings:{...x.settings,rolling:r}}))}>{r?w.rolling:w.stoppages}</button>)}</div>
+    </div>
+   </div>
+  </div>}
+  <h2 className={c.h2}>{w.squad}</h2>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   {d.here.length>0&&d.here.length<s.onField&&<p className={c.err}>{w.notEnough(s.onField)}</p>}
-  {!players.length&&<div className={c.empty}><p style={{margin:'0 0 12px',fontWeight:600}}>{w.emptyTeam}</p>
-   <div className={c.btnRow} style={{marginTop:0}}><label className={c.field} style={{flexDirection:'row',alignItems:'center',gap:10}}>{w.quickAdd}<select className={c.input} style={{width:84}} value={quick} onChange={e=>setQuick(Number(e.target.value))}>{Array.from({length:23},(_,i)=>i+4).map(n=><option key={n}>{n}</option>)}</select></label>
-    <button type="button" className={c.btn} onClick={()=>add(quick)}>{w.startHere}</button></div></div>}
+  {!players.length&&<div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p>
+   <div className={c.quickRow}><label className={c.quickLabel}>{w.quickAdd}<select className={`${c.input} ${c.quickSel}`} value={quick} onChange={e=>setQuick(Number(e.target.value))}>{Array.from({length:23},(_,i)=>i+4).map(n=><option key={n}>{n}</option>)}</select></label>
+    <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>add(quick)}>{w.startHere}</button></div></div>}
   <ul className={c.squad}>{[...players].sort((a,b)=>a.num-b.num).map(p=><li key={p.id} className={c.row}>
    <NumberInput w={w} value={p.num} taken={nums} onCommit={n=>setPlayers(ps=>ps.map(x=>x.id===p.id?{...x,num:n}:x))}/>
    <input className={c.input} aria-label={`${w.nameOpt}, #${p.num}`} placeholder={w.nameOpt} value={p.name} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,players:x.team.players.map(q=>q.id===p.id?{...q,name:v.slice(0,24)}:q)}}));}}/>
@@ -235,6 +300,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
     <option value="">{w.arrivesUnknown}</option>{lateMinutes(s).map(m=><option key={m} value={m}>{w.minuteN(m)}</option>)}</select></label>}
   </li>)}</ul>
   {players.length>0&&<div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>add(1)}>{w.addPlayer}</button></div>}
+  <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </>;
 }
 /* ------------------------------------------------------------------ Lineup ----------------------------------------------- */
@@ -269,7 +335,7 @@ function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D
   <h1 className={c.h1}>{w.tabLineup}</h1>
   <p className={c.note}>{w.dragHint}</p>
   {d.forms.length>1&&<><h2 className={c.h2}>{w.formation}</h2><div className={c.seg} role="group" aria-label={w.formation}>{d.forms.map(f=><button key={f.slug} type="button" className={c.chip} aria-pressed={d.form?.slug===f.slug} onClick={()=>update(s=>({...s,settings:{...s.settings,formation:f.slug}}))}>{f.label}</button>)}</div></>}
-  <div className={c.pitchWrap} style={{marginTop:16}}>
+  <div className={c.pitchWrap}>
    <div className={c.pitch} role="group" aria-label={`${w.formation} ${d.form?.label??''}`}>
     <div className={c.pitchLines}/><div className={`${c.box} ${c.boxTop}`}/><div className={`${c.box} ${c.boxBottom}`}/>
     {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0;
@@ -277,10 +343,9 @@ function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D
       aria-label={`${sp.label}: ${p?label(p):'—'}`} {...handlers(r,p?String(p.num):sp.label)}>
       <span className={c.disc}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?.name||sp.label}</span></button>;})}
    </div>
-   <div><h2 className={c.h2} style={{marginTop:4}}>{w.bench}</h2>
+   <div><h2 className={`${c.h2} ${c.benchH}`}>{w.bench}</h2>
     <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};return <button key={p.id} type="button" className={c.benchChip} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
   </div>
-  {keeper&&<><h2 className={c.h2}>{w.keeper}</h2><div className={c.seg} role="group" aria-label={w.keeper}>{(['rotate','fixed'] as const).map(k=><button key={k} type="button" className={c.chip} aria-pressed={store.settings.keeper===k} onClick={()=>update(s=>({...s,settings:{...s.settings,keeper:k}}))}>{k==='rotate'?w.keeperRotate:w.keeperFixed}</button>)}</div></>}
   <div className={`${c.btnRow} ${c.noPrint}`}>
    <button type="button" className={c.btn} onClick={()=>{update(s=>({...s,spots:[]}));setSel(null);}}>{w.autoFill}</button>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button>
@@ -290,9 +355,9 @@ function LineupTab({w,store,update,d,onShare}:{w:Words;store:Store;update:Up;d:D
  </>;
 }
 /* ------------------------------------------------------------------ Game (the plan) -------------------------------------- */
-function GameTab({w,store,d,onStart,onResume,onShare,goTeam}:{w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void}){
+function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam}:{view:'minutes'|'subs';w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void}){
  const s=store.settings,g=store.game,running=g&&g.clock.status!=='done';
- if(!d.here.length)return <><h1 className={c.h1}>{w.plan}</h1><div className={c.empty}><p style={{marginTop:0}}>{w.emptyTeam}</p><button type="button" className={c.btn} onClick={goTeam}>{w.startHere}</button></div></>;
+ if(!d.here.length)return <><h1 className={c.h1}>{view==='subs'?w.titleSubs:w.titleMinutes}</h1><div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={goTeam}>{w.startHere}</button></div></>;
  const sec=planSeconds(d.plan.blocks),keeper=s.keeper!=='none',fixed=s.keeper==='fixed'?d.plan.blocks[0]?.gk:null,byId=new Map(store.team.players.map(p=>[p.id,p]));
  const roles=blockRoles(d.plan.blocks,d.spotOf,d.form,keeper),rows=[...d.here].sort((a,b)=>a.num-b.num);
  const changes:{at:string;out:string[];in:string[];gk:string|null}[]=[];
@@ -300,17 +365,29 @@ function GameTab({w,store,d,onStart,onResume,onShare,goTeam}:{w:Words;store:Stor
   changes.push({at:b.start===0?w.periodName(b.period,s.periods):fmtClock(b.start),out:ch.out,in:ch.in,gk:ch.gkTo!==ch.gkFrom?ch.gkTo:null});});
  const nm=(id:string)=>label(byId.get(id));
  return <>
-  <h1 className={c.h1}>{w.plan}</h1>
+  {view==='minutes'?<>
+  <h1 className={c.h1}>{w.titleMinutes}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)} · {s.periods} × {s.periodMin} {w.min}</p>
   <Fair w={w} seconds={sec} ids={d.ready.map(p=>p.id)} skip={new Set(fixed?[fixed]:[])} fixedName={fixed?nm(fixed):undefined} step={s.subEvery}/>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   <Legend w={w} keeper={keeper}/>
   <TimelineRows w={w} rows={rows} blocks={d.plan.blocks} roles={roles} settings={s} seconds={sec}/>
-  <h2 className={c.h2}>{w.changes}</h2>
-  <ol className={c.changes}>{changes.map((x,i)=><li key={i}><time>{x.at}</time><span>{x.out.length>0&&<><span className={c.outTxt}>{w.out}</span> {x.out.map(nm).join(', ')} </>}{x.in.length>0&&<>→ <span className={c.inTxt}>{w.in}</span> {x.in.map(nm).join(', ')}</>}{x.gk&&<> · {nm(x.gk)} {w.goesInGoal}</>}</span></li>)}</ol>
+  </>:<>
+  {/* the substitution rotation: who starts, then one card per change, in order (the timeline lives on Playing time) */}
+  <h1 className={c.h1}>{w.titleSubs}</h1>
+  <p className={c.note}>{w.ready(d.here.length,d.F)} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}</p>
+  {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
+  <ol className={c.subList}>
+   <li className={c.subCard} data-start=""><time>{w.atKick}</time><div className={c.subRows}><div className={c.subRow}><span className={c.inTxt}>{w.in}</span><span className={c.nums}>{(d.plan.blocks[0]?.on??[]).map(id=>{const p=byId.get(id);return p?<b key={id} data-gk={d.plan.blocks[0]?.gk===id?'':undefined}>{p.num}<small>{p.name}</small></b>:null;})}</span></div></div></li>
+   {changes.map((x,i)=><li key={i} className={c.subCard}><time>{x.at}</time><div className={c.subRows}>
+    {x.out.length>0&&<div className={c.subRow}><span className={c.outTxt}>{w.out}</span><span className={c.nums}>{x.out.map(id=>{const p=byId.get(id);return p?<b key={id}>{p.num}<small>{p.name}</small></b>:null;})}</span></div>}
+    {x.in.length>0&&<div className={c.subRow}><span className={c.inTxt}>{w.in}</span><span className={c.nums}>{x.in.map(id=>{const p=byId.get(id);return p?<b key={id} data-on="">{p.num}<small>{p.name}</small></b>:null;})}</span></div>}
+    {x.gk&&<p className={c.subGk}>{nm(x.gk)} {w.goesInGoal}</p>}</div></li>)}
+  </ol>
+  </>}
   <div className={`${c.btnRow} ${c.noPrint}`}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onShare}>{w.share}</button></div>
-  <div className={`${c.sticky} ${c.noPrint}`}>{running?<button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} style={{minHeight:60}} onClick={onResume}>{w.resumeGame}</button>
-   :<button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} style={{minHeight:60}} onClick={onStart}>{w.startGame}</button>}</div>
+  <div className={`${c.sticky} ${c.noPrint}`}>{running?<button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={onResume}>{w.resumeGame}</button>
+   :<button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={onStart}>{w.startGame}</button>}</div>
  </>;
 }
 /* ------------------------------------------------------------------ Live game -------------------------------------------- */
@@ -357,7 +434,7 @@ function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,kee
      <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>act(g=>({...g,clock:addStoppage(g.clock)}))}>{w.stoppage}</button>
     </div>}
    </div>
-   <p className={c.wake}>{wake==='on'?w.wakeOn:w.wakeOff} · <button type="button" className={`${c.btn} ${c.btnGhost}`} style={{minHeight:40,padding:'0 12px',fontSize:14}} aria-pressed={sound} onClick={toggleSound}>{sound?w.soundOn:w.soundOff}</button></p>
+   <p className={c.wake}>{wake==='on'?w.wakeOn:w.wakeOff} · <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} aria-pressed={sound} onClick={toggleSound}>{sound?w.soundOn:w.soundOff}</button></p>
    <div className={c.who}>
     <div className={c.whoHead}>{w.onField} · {onP.length}</div>
     <div className={c.whoList}>{onP.map(p=><Who key={p.id} p={p} cls={c.whoOn}/>)}</div>

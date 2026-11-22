@@ -98,7 +98,7 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
  /* Nov 20 2026 night (owner: "it should list what's on that page to smooth scroll down"): the side nav's in-page links (#top, #faq...) are not
     page links; each must land on an id on this page */
  for(const l of new Set(h.match(/href="#[^"]+"/g)||[]))assert(h.includes(` id="${l.slice(7,-1)}"`),`${where}: in-page link ${l} has its target`);
- for(const l of links){assert(l.startsWith('/')&&!l.includes('?'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l),`${where}: link target ${l} exists`);}
+ for(const l of links){assert(l.startsWith('/')&&!l.includes('?'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l.split('#')[0]),`${where}: link target ${l} exists`);/* Nov 22 2026: /coach#tool=… opens one coach tool */}
  for(const m of h.matchAll(/<img[^>]*src="([^"]+)"[^>]*>/g)){assert(SERVED.has(m[1]),`${where}: image ${m[1]} exists`);assert(/ alt="[^"]{8,}"/.test(m[0])&&/ width="\d+"/.test(m[0]),`${where}: image alt and size`);}
  assert(links.some(l=>l!==p.path&&PAGES.some(x=>x.path===l)),`${where}: links to another tool page`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(p.path);}}

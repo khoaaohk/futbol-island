@@ -238,6 +238,7 @@ for(const arr of [300,605,720,900,1205]){
  for(const re of G.ES_BANNED)ok(!re.test(esText),'Spanish avoids '+re);
  const page=read('app/(site)/tools/[slug]/page.tsx'),es=read('components/es/pages/ToolsEs.tsx');
  ok(/Substitution calculator: a worked example/.test(page)&&/Playing time calculator in Excel or Google Sheets/.test(page)&&/Equal playing time during the game/.test(page),'front door: worked example, Excel, equal playing time');
- ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href="\/coach\?lang=es"/.test(es),'front doors link to the app (English and Spanish)');
+ ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href=\{`\/coach\?lang=es#tool=\$\{app\}`\}/.test(es),'front doors link to the app (English and Spanish), each to its own tool (Nov 22 2026)');
+ ok(/COACH_APP_PATH\+'#tool=lineup'/.test(page)&&/'#tool=subs':'#tool=minutes'/.test(page),'lineup pages open the lineup builder; the calculator Playing time; the rotations Substitution rotation');
 }
 console.log(`coach-app: ${checks} checks passed`);

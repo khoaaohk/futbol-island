@@ -56,7 +56,7 @@ function Lineup({p}:{p:LineupPage}){
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={lineupRail(!!p.format)} current="#top"/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH+'#tool=lineup',label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
   <LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={p.format}/>
   <Screen>
    <Section id="how" title="How to build your lineup">
@@ -111,7 +111,7 @@ function Planner({p}:{p:PlannerPage}){
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={plannerRail(!!p.format)} current="#top"/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH+(p.format?'#tool=subs':'#tool=minutes'),label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>
   <Screen>
    <Section id="about" title={p.format?`Sharing a ${p.format} game`:'Why plan the changes'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
