@@ -549,7 +549,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .attend .segBtn{min-height:40px;font-size:15px}
 .attend .segBtn[data-att=late][aria-pressed=true]{background:#fdefc6;color:#244d40;box-shadow:0 3px 0 #e6cf8f}
 .attend .segBtn[data-att=away][aria-pressed=true]{background:#fffaf0;color:var(--ink);box-shadow:inset 0 0 0 1.5px #e6d6b0}
-@media (max-width:420px){.attend{margin-left:60px}}
+@media (max-width:420px){.attend{margin-left:0}}
 /* C17: game details sheet, the game line, the score row on Match day */
 .detailsPair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .detailsPair .sec{margin-top:24px}

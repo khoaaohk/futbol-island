@@ -232,8 +232,11 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
     if(!a.team.players.length)all=updateActive(all,x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));
     else if(other)all=switchTeam(all,other.id);else ask=f;}}
   setTeams(all);
+  /* the history stack is written after Next's router has patched pushState/replaceState (its effect runs after this child's):
+     an entry written before that lacks Next's __NA mark, and Back onto it made Next reload the page, which, with a game on the
+     clock, reopened Match day, so Back from Match day looked dead (round 4C, Nov 22 2026) */
   if(!m){const stack=landingStack({...r,format:undefined});
-   stack.forEach((x,i)=>{if(i===0)window.history.replaceState({fiCoach:0},'',url(x));else window.history.pushState({fiCoach:i},'',url(x));});}
+   window.setTimeout(()=>stack.forEach((x,i)=>{if(i===0)window.history.replaceState({fiCoach:0},'',url(x));else window.history.pushState({fiCoach:i},'',url(x));}),0);}
   const top={...r,format:undefined};setRoute(top);setLiveRaw(!!top.live);setHomeTab(homeOf(top.screen));
   if(ask){const f=ask;const cur=activeOf(all).settings.format;setToast({msg:WORDS[lg].formatLink(f,cur),undo:false,action:{label:WORDS[lg].useFormat(f),run:()=>{setStore(x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));setToast(null);}}});}
   /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
@@ -578,7 +581,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
     is two minutes overdue (UX audit B3); none for a change the coach's own tap just made due */
  const key=alertKey(game,now),overdue=due!=null&&due<=-OVERDUE_SEC;
  useEffect(()=>{if(!key||alerted.current===key)return;alerted.current=key;if(Date.now()-quiet.current<2000)return;const soft=key.endsWith(':late');
-  try{navigator.vibrate?.(soft?[180]:[250,120,250,120,400]);}catch{/* none */}beep(soft);},[key,beep]);
+  try{if((navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation?.hasBeenActive!==false)navigator.vibrate?.(soft?[180]:[250,120,250,120,400]);}catch{/* none */}beep(soft);},[key,beep]);
  const nm=(id:string)=>byId.get(id);
  const okIds=Object.keys(game.status).filter(p=>(game.status[p]??'ok')==='ok'),onSet=new Set(game.on);
  const bench=okIds.filter(p=>!onSet.has(p)).map(nm).filter((p):p is Player=>!!p).sort((a,b)=>a.num-b.num);
@@ -591,7 +594,10 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
     change and this phase (far / soon), so the 30 s mark always opens it again */
  const foldable=!!nc&&inPlay&&!up&&due!=null,soon=due!=null&&due<=30,pinKey=`${nc?.index??-1}:${game.delay}:${soon?'s':'f'}`;
  const [pin,setPin]=useState<{k:string;open:boolean}|null>(null);
- const open=!foldable||(pin&&pin.k===pinKey?pin.open:soon);
+ /* landscape phone and wide screens: the panel has its own column, so it stays open (UX audit B8) */
+ const [side,setSide]=useState(false);
+ useEffect(()=>{const q=window.matchMedia('(orientation:landscape) and (max-height:520px), (min-width:900px)'),f=()=>setSide(q.matches);f();q.addEventListener('change',f);return ()=>q.removeEventListener('change',f);},[]);
+ const open=!foldable||side||(pin&&pin.k===pinKey?pin.open:soon);
  const when=due!=null&&due>0?fmtClock(due):'';
  const Who=({p,cls,extra}:{p:Player;cls:string;extra?:string})=><button type="button" className={`${c.whoBtn} ${cls}`} onClick={()=>setSheet(p)} aria-label={`${label(p)}, ${mins(played[p.id]??0)} ${w.min}${extra?', '+extra:''}`}>
   <b>{p.num}</b><span>{p.name}{game.gk===p.id?` · ${w.gk}`:''}{extra?` · ${extra}`:''}</span><em>{mins(played[p.id]??0)}′</em></button>;
@@ -648,7 +654,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
    :<>
     <div className={c.cardHead}><span>{nc?(now_?w.subNow:w.nextSub):w.noMoreSubs}</span>
      {nc&&<strong>{due==null?(st==='pre'?fmtClock(nc.block.start):w.subAtBreak):due<=0?(s.rolling?'':w.subStopped):w.subIn(fmtClock(due))}</strong>}
-     {nc&&foldable&&<button type="button" className={c.foldBtn} aria-expanded={true} aria-label={w.hideChange} onClick={()=>setPin({k:pinKey,open:false})} data-next-toggle="">
+     {nc&&foldable&&!side&&<button type="button" className={c.foldBtn} aria-expanded={true} aria-label={w.hideChange} onClick={()=>setPin({k:pinKey,open:false})} data-next-toggle="">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}</div>
     {nc&&pairs.length>0&&<div className={c.swapList} role="table" aria-label={w.nextSub}>
      <div className={c.swapHead} role="row"><span role="columnheader">{w.out}</span><span aria-hidden="true"/><span role="columnheader">{w.in}</span></div>
