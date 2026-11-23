@@ -208,8 +208,9 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
     ['U13 and up','En 11v11 el punto está a 12 yardas del arco, y algunos partidos que necesitan un ganador terminan en tanda de penales.']]}},
  // ---- yellow and red cards -----------------------------------------------------------------------------------------------
  'yellow-and-red-cards':{name:'Tarjetas amarilla y roja',law:'Regla 12',
-  title:'Tarjeta amarilla y roja en el fútbol: significado y reglas',h1:'Tarjeta amarilla y roja en el fútbol: qué significan y todas las reglas',
-  desc:'¿Qué significan la tarjeta amarilla y la roja en el fútbol? Amarilla es advertencia, roja es expulsión. Las 14 faltas de la Regla 12 y un juego de árbitro.',
+  /* Nov 23 2026: como en inglés, el significado de cada tarjeta es de las páginas de términos; esta es la guía de reglas. */
+  title:'Reglas de la tarjeta amarilla y roja en el fútbol (Regla 12)',h1:'Reglas de la tarjeta amarilla y roja en el fútbol: todas las faltas',
+  desc:'Reglas de la tarjeta amarilla y roja en el fútbol (Regla 12): las 14 faltas que dan tarjeta, amarilla contra roja, qué pasa tras una roja y un juego.',
   answer:'En el fútbol, una tarjeta amarilla significa una advertencia del árbitro: el jugador sigue jugando, pero una segunda amarilla en el mismo partido se convierte en roja. Una tarjeta roja significa la expulsión del jugador por el resto del partido, y el equipo juega con un jugador menos, sin nadie que lo reemplace.',
   scenes:[{title:'Impedir una ocasión clara de gol',
    caption:'El número 9 se escapa con solo el portero por delante, y el defensa número 4 lo jala desde atrás. Impedir una ocasión manifiesta de gol con una falta así es tarjeta roja. El espacio sombreado muestra el camino libre al arco.'}],
