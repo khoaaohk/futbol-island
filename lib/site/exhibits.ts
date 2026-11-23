@@ -2,6 +2,7 @@ import {EXHIBITS,GALLERIES,timelineOrder,type Exhibit} from '@/lib/endgame/museu
 import * as ballCurve from '@/components/museum/experiences/ball-curve/content';
 import * as copa from '@/components/museum/experiences/copa-america-1916/content';
 import * as firstIntl from '@/components/museum/experiences/first-international-1872/content';
+import {STADIUMS,aboutSeats} from '@/components/museum/experiences/stadiums/data';
 import * as floodlights from '@/components/museum/experiences/floodlights-1878/content';
 import * as freeKick from '@/components/museum/experiences/free-kick-wall/content';
 import * as futsal from '@/components/museum/experiences/futsal-1989/content';
@@ -42,6 +43,8 @@ const STORY:Record<string,Raw[]>={
  'floodlights-1878':[floodlights.EXTRA],'free-kick-wall':[freeKick.HISTORY],'futsal-1989':[futsal.MORE_FACTS],'keeper-hands-1912':[keeper.EXTRA],
  'offside-rules':[offside.MILESTONES,[offside.KID_RULE]],'penalty-1891':[penalty.HISTORY,penalty.RESEARCH],'telstar-1970':[telstar.EXTRA],
  'throw-in':[throwIn.HISTORY],'shirts':[shirtsExtra],
+ /* Nov 23 2026 (SEO deep round): the seven stadiums of the workshop, one line each, from the case's own data (one source each) */
+ 'stadiums':[STADIUMS.map(s=>({head:`${s.name} · ${s.city}, ${s.country} · opened ${s.opened}`,text:`${s.famous} ${s.lines.stands} Seats today: ${aboutSeats(s.seats)}.`}))],
  'worldcup-1930':[wc1930.CASE_FACTS,wc1930.PORTS.map(p=>({head:p.date?`${p.name} · ${p.date}`:p.name,text:p.text})),wc1930.SEA_NOTES.map(n=>({head:n.title,text:n.text}))],
  'wwc-1991':[wwc.EDITIONS.slice(0,1).flatMap(e=>[{text:e.note},{text:e.starWhy}]),wwc.BANS.map(b=>({head:`${b.country}, ${b.from} to ${b.to}`,text:[b.banned,b.before,b.after].filter(Boolean).join(' ')/* Nov 20 2026: a ban with no `before` line printed the word undefined */}))],
  'var-2018':[varCase.CASE_FACTS,[{head:`${varCase.REAL_CASE.when} · ${varCase.REAL_CASE.match}`,text:varCase.REAL_CASE.story.join(' ')}],[varCase.TOURNAMENT_NUMBERS]],
@@ -64,7 +67,7 @@ const SEARCH:Record<string,[title:string,h1:string]>={
  'worldcup-1930':['The First World Cup, 1930 in Uruguay: History for Kids','The first World Cup: Uruguay, 1930'],
  'wwc-1991':['The First Women’s World Cup, 1991: History for Kids','The first Women’s World Cup: China, 1991'],
  'futsal-1989':['History of Futsal: From 1930 to the 1989 World Cup','Futsal and its first World Cup, 1989'],
- 'stadiums':['Famous Soccer Stadiums of the World: Facts for Kids','Famous football stadiums of the world'],
+ 'stadiums':['Famous Soccer Stadiums: Maracanã 1950, Azteca, Wembley','Famous football stadiums of the world, from the 1950 Maracanã'],
  'laced-leather':['Old Leather Soccer Balls and Ball Sizes Today','Laced leather footballs and ball sizes'],
  'telstar-1970':['The Telstar: The Black and White 1970 World Cup Ball','The Telstar, the 1970 World Cup ball'],
  'boots':['History of Football Boots: Heavy Leather to Light Knit','Football boots through time'],

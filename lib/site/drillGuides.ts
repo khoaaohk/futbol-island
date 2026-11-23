@@ -28,7 +28,7 @@ const PLANS='/learn/soccer-practice-plans';
 const plan=(slug:string,name:string,line:string):DrillLink=>({path:`${PLANS}/${slug}`,name,line});
 const NOTE='Game format, field, ball and game length are U.S. Soccer’s small-sided standards; practice length is US Youth Soccer’s coaching guidance. Your league may differ.';
 const RAW:RawGuide[]=[
- {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'Soccer Drills for 6 Year Olds: Fun U6 Soccer Games',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
+ {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'Soccer Drills for 5 and 6 Year Olds: 9 Fun U6 Games',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
   desc:'Soccer drills for 5 and 6 year olds work best as games: a ball for every child, a story and no lines. Nine fun U6 drills, plus what to avoid at this age.',
   blurb:'Nine games for 5 and 6 year olds, a ball each, with what to avoid',
   lead:'The best soccer drills for 5 and 6 year olds do not look like drills at all. They are games with a story, where every child has a ball and nobody waits for a turn.',
@@ -46,7 +46,8 @@ const RAW:RawGuide[]=[
   faq:[{q:'What should a U6 soccer practice look like?',a:'About 45 minutes: a small game as children arrive, three or four ball-each games of about eight minutes with water breaks, and a 3v3 or 4v4 game to finish.'},
    {q:'How do I coach 5-year-olds who will not listen?',a:'Talk less and play more. Use games with a story, give every child a ball, and change activity before they get bored. It is their attention span, not their attitude.'},
    {q:'Should U6 players learn to pass?',a:'A little, in pairs, for a few minutes. Most five-year-olds are not ready to give the ball away, and dribbling is the skill to build first.'},
-   {q:'How many kids should be on a U6 team?',a:'Small rosters work best because the game is 4v4. Ask your league for its roster limit.'}],
+   {q:'How many kids should be on a U6 team?',a:'Small rosters work best because the game is 4v4. Ask your league for its roster limit.'},
+   {q:'What are the best soccer drills for 5 and 6 year olds?',a:'Games where every child has a ball and a story to play: Simon says soccer, red light green light, sharks and minnows, and pirates and treasure. Finish with a 3v3 game on a small field.'}],
   lessons:['learn7_carry','learn7_receive','learn7_roles'],links:[plan('u6-first-practice','U6 first practice plan','A 45-minute plan for the first day'),G.ages,G.ball,G.field,G.calc],featured:'sharks-and-minnows'},
 
  {slug:'u8',kind:'age',age:'U8',name:'U8 drills',title:'Soccer Drills for 7 and 8 Year Olds: 10 Fun U8 Drills',h1:'U8 soccer drills for 7 and 8 year olds',
@@ -67,7 +68,8 @@ const RAW:RawGuide[]=[
   faq:[{q:'How long should a U8 soccer practice be?',a:'45 to 60 minutes, according to US Youth Soccer’s coaching guidance. Three or four activities of eight to ten minutes and a game at the end fills it well.'},
    {q:'What skills should U8 players learn?',a:'Dribbling with both feet, turning, 1v1 attacking and defending, striking the ball with the laces and passing with the inside of the foot to a partner.'},
    {q:'How do I stop U8 players bunching up?',a:'Play 3v3 on a small field and praise the player who finds space. Fewer players means less of a bunch, and the habit of spreading out grows from there.'},
-   {q:'Should U8 teams have set positions?',a:'Not fixed ones. In 4v4 everyone attacks and everyone defends. Simple ideas such as “one player stays back a little” are enough.'}],
+   {q:'Should U8 teams have set positions?',a:'Not fixed ones. In 4v4 everyone attacks and everyone defends. Simple ideas such as “one player stays back a little” are enough.'},
+   {q:'What are good soccer drills for 7 year olds?',a:'Dribbling games with a defender, such as sharks and minnows and gates dribbling, then 1v1 to end zones, the first passing in pairs through gates, and a 3v3 game to finish. Keep each one to eight to ten minutes.'}],
   lessons:['learn7_carry','learn7_receive','prn_7_support','prn_7_spread'],links:[plan('u8-first-practice','U8 first practice plan','A 60-minute plan for the first day'),plan('u8-dribbling-practice-plan','U8 dribbling practice plan','One hour built around 1v1'),G.ages,G.field,G.positions,G.calc],featured:'gates-dribbling'},
 
  {slug:'u10',kind:'age',age:'U10',name:'U10 drills',title:'Soccer Drills for 9 and 10 Year Olds: 10 U10 Drills',h1:'U10 soccer drills for 9 and 10 year olds',
@@ -112,7 +114,7 @@ const RAW:RawGuide[]=[
    {q:'What formation do U12 teams play?',a:'U12 teams play 9v9. Shapes such as 3-2-3 and 3-3-2 are common, and our 9v9 formations page shows each one.'}],
   lessons:['learn9_receive','learn9_cover','learn9_switch','gap11_runoncue'],links:[plan('u12-first-practice','U12 first practice plan','A 75-minute plan for the first day'),plan('u12-possession-practice-plan','U12 possession practice plan','Rondos into a three-team game'),G.f9,G.offside,G.heading,G.positions,G.calc],featured:'rondo-4v2'},
 
- {slug:'at-home',kind:'skill',name:'Drills to do at home',title:'Soccer Drills to Do by Yourself at Home, or With a Parent',h1:'Soccer drills to do at home',
+ {slug:'at-home',kind:'skill',name:'Drills to do at home',title:'Soccer Drills to Do by Yourself at Home, or With a Parent',h1:'Soccer drills to do by yourself at home',
   desc:'Soccer drills to do by yourself at home, or with one parent, in a small space: toe taps, cone weave, wall passing, turns and first touch. A 15-minute plan.',
   blurb:'Solo and parent-and-child drills for a yard, a driveway or a wall',
   lead:'These soccer drills work at home with one ball and a few yards of space. Most are drills for one person that you can do by yourself, and a few need a wall or a parent. Ten to fifteen minutes on most days does more than one long session a week.',
@@ -129,7 +131,8 @@ const RAW:RawGuide[]=[
   faq:[{q:'How can my child practice soccer alone?',a:'With ball mastery and a wall: toe taps, foundations, a cone weave, turns and wall passing. All of them work in a small space with one ball.'},
    {q:'How long should a child practice at home?',a:'Ten to fifteen minutes on most days is plenty for ages 7 to 12. Short and regular beats long and rare.'},
    {q:'What is the best soccer drill to do at home?',a:'Wall passing. It trains the pass and the first touch together, with both feet, and a child can count and beat their own score.'},
-   {q:'Can we practice indoors?',a:'Toe taps, foundations and slow turns work indoors on a soft floor with a soft or futsal-style ball, if there is nothing breakable nearby.'}],
+   {q:'Can we practice indoors?',a:'Toe taps, foundations and slow turns work indoors on a soft floor with a soft or futsal-style ball, if there is nothing breakable nearby.'},
+   {q:'What soccer drills can you do by yourself?',a:'Toe taps and foundations, a cone weave, turn and go between two markers, wall passing and first touch gates. Each needs one ball and a small space, and a wall turns the passing drills into solo drills.'}],
   lessons:['learn7_receive','learn7_carry','s_onetwo'],links:[G.ball,G.firstTouch,G.giveGo],featured:'wall-passing'},
 
  {slug:'passing',kind:'skill',name:'Passing drills',title:'Soccer Passing Drills for Kids: From Pairs to Rondos',h1:'Soccer passing drills for kids',
