@@ -52,7 +52,7 @@ type Props={npcTarget?:MutableRefObject<OnboardingNpcTarget|null>;onNpcStepChang
 type Step={id:'welcome'|'paths'|'balls'|'earn'|'learn';eyebrow:string;title:string;copy:string;note?:string;
  /** HUD controls to ring while this step is shown (the card moves into the largest clear gap). */tour?:string};
 const steps:Step[]=[
- {id:'welcome',eyebrow:'PICK YOUR PLAYER',title:'Welcome to Futbol Island',copy:'Learn real football plays, one path at a time. Choose your character to begin.'},
+ {id:'welcome',eyebrow:'PICK YOUR PLAYER',title:'Welcome',copy:'Learn real football plays, one path at a time. Choose your character to begin.'},
  {id:'paths',eyebrow:'START HERE',title:'Follow your Path',copy:'Your first lesson is waiting in Paths. Watch a play through a player\'s eyes, then try a quick quiz.',note:'Paths start with 7v7 and grow into 9v9 and 11v11 as you learn.',tour:'[data-tour="quests"]'},
  {id:'balls',eyebrow:'THE BALL HUNT',title:'Find hidden balls',copy:`${COIN_QUEST.length} balls are hidden around the island. Each one you find teaches you a football tip.`,note:'Every 10 balls unlock new costumes, each with its club’s story. See your count in Paths → Ball hunt.'},
  {id:'earn',eyebrow:'YOUR ISLAND POCKET',title:'Earn coins',copy:'Walk or ride around the island to catch fish, pick fruit and help with island jobs.',note:'Sell your catch to Rosa at the market stand. Your coins show at the top of the screen.',tour:'[data-job-wallet]'},
