@@ -54,7 +54,7 @@ export default function RulePage({params}:{params:{slug:string}}){
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
  const deck=cards?{id:CARD_RULES.deck.id,n:cardDeckOf(CARD_RULES).slides.length}:play?{id:play.deck.id,n:play.slides.length}:null;
  /* visual pass Nov 17 2026: the key facts under the answer, all from this page's own data, three of them jump links */
- const facts:Fact[]=[{icon:'law',label:'Rule',value:r.law},{icon:'steps',label:'Common mix-ups',value:`${r.mixups.length} cleared up`,href:'#mixups'},
+ const facts:Fact[]=[{icon:'law',label:'Rule',value:/^Laws? \d/.test(r.law)?`IFAB ${r.law}`:r.law/* Nov 23 2026 (seo-ai-speed): the rule's owner named in the first lines, for answer engines */},{icon:'steps',label:'Common mix-ups',value:`${r.mixups.length} cleared up`,href:'#mixups'},
   deck?{icon:cards?'cards':'deck',label:'Flip cards',value:`${deck.n} to try`,href:`#${deck.id}`}:{icon:'diagram',label:'Diagram',value:moving?'A moving picture':'A pitch picture',href:'#diagram'},
   {icon:'quiz',label:'Quick quiz',value:`${quiz.length} questions`,href:'#quiz'}];
  return <>
