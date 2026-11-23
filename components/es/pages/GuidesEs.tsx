@@ -1,4 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
+import {GAME_PAGES} from '@/lib/site/games';
+import {esGame} from '@/lib/i18n/es/games';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
@@ -53,6 +55,8 @@ function esLink(path:string,line?:string){
  const pos=ES_POSITIONS().find(p=>p.path===path);if(pos)return {path:pos.esPath,name:pos.name,line:line??pos.job};
  const r=ES_RULES().find(x=>x.path===path);if(r)return {path:r.esPath,name:r.h1,line:line??`${r.law}, con diagrama`};
  const t=ES_TERMS().find(x=>x.path===path);if(t)return {path:t.esPath,name:t.name,line:line??t.short};
+ /* Nov 23 2026: the arcade games have Spanish pages now (penalty kick -> Ball Blaster / Flick It, offside -> Pass Puzzles, …) */
+ const g=GAME_PAGES.find(x=>x.path===path);if(g){const e=esGame(g.id);return {path:toEs(g.path),name:`${e.name}: ${e.h1.split(':')[0].toLowerCase()}`,line:line??e.blurb};}
  return null;
 }
 const links=(xs:readonly {path:string}[])=>xs.map(x=>esLink(x.path)).filter((x):x is NonNullable<typeof x>=>!!x);
