@@ -24,10 +24,13 @@ export type PitchSpec={
 export const PITCHES:Record<Format,PitchSpec>={
  futsal:{format:'futsal',title:'Futsal',players:5,length:40,width:20,runoff:1.6,goal:3,goalDepth:1.2,box:null,futsalArea:6,goalArea:null,spot:6,secondSpot:10,centreR:3,arcR:0,corner:.25,subs:{from:5,length:5}},
  '7v7':{format:'7v7',title:'7v7',players:7,length:55,width:37,runoff:2.4,goal:5.64,goalDepth:1.6,box:{depth:9.1,width:16.5},goalArea:null,spot:7.3,centreR:5.5,arcR:0,corner:.8},
+ /* fútbol 8 (Nov 23 2026): 50–65 × 30–45 m, drawn 60 × 40 like the guide diagrams (lib/site/pitch.ts); goals 6 × 2 m; one area
+    12 m deep reaching 9 m beside each post (24 m wide), no goal area; penalty mark 9 m (Álava F8 rules 2025-26). A keeper and seven. */
+ '8v8':{format:'8v8',title:'8v8',players:8,length:60,width:40,runoff:2.6,goal:6,goalDepth:1.7,box:{depth:12,width:24},goalArea:null,spot:9,centreR:6,arcR:0,corner:.8},
  '9v9':{format:'9v9',title:'9v9',players:9,length:73,width:46,runoff:3,goal:6.4,goalDepth:1.8,box:{depth:11.9,width:29.3},goalArea:{depth:3.7,width:12.8},spot:8.2,centreR:6.4,arcR:6.4,corner:1},
  '11v11':{format:'11v11',title:'11v11',players:11,length:105,width:68,runoff:4,goal:7.32,goalDepth:2.2,box:{depth:16.5,width:40.32},goalArea:{depth:5.5,width:18.32},spot:11,centreR:9.15,arcR:9.15,corner:1},
 };
-export const FORMAT_LABEL:Record<Format,string>={futsal:'Futsal','7v7':'7v7','9v9':'9v9','11v11':'11v11'};
+export const FORMAT_LABEL:Record<Format,string>={futsal:'Futsal','7v7':'7v7','8v8':'8v8','9v9':'9v9','11v11':'11v11'};
 
 /** Chips may sit a little outside the lines (corner takers, throw-ins): this fraction of the run-off. */
 export const CHIP_MARGIN=.7;
@@ -75,6 +78,9 @@ export const FORMATIONS:readonly Formation[]=[
  {id:'futsal-22',format:'futsal',name:'2–2 square',why:'Two back, two up: simple to rotate and cover.',rows:[[3,2],[5,4]]},
  {id:'7v7-231',format:'7v7',name:'2–3–1',why:'Fewer players means more touches for everyone.',rows:[[3,2],[6,4,7],[9]]},
  {id:'7v7-321',format:'7v7',name:'3–2–1',why:'A back three keeps the team safe while it learns to build.',rows:[[3,4,2],[6,8],[9]]},
+ {id:'8v8-331',format:'8v8',name:'3–3–1',why:'A back three, a midfield three and one striker: the usual fútbol 8 shape.',rows:[[3,4,2],[11,8,7],[9]]},
+ {id:'8v8-322',format:'8v8',name:'3–2–2',why:'Two strikers press the other back line together.',rows:[[3,4,2],[6,8],[11,9]]},
+ {id:'8v8-232',format:'8v8',name:'2–3–2',why:'Two at the back so more players join the attack.',rows:[[3,2],[11,8,7],[10,9]]},
  {id:'9v9-323',format:'9v9',name:'3–2–3',why:'A back three that defends together.',rows:[[3,4,2],[6,8],[11,9,7]]},
  {id:'9v9-332',format:'9v9',name:'3–3–2',why:'A midfield three to win the middle.',rows:[[3,4,2],[6,8,7],[10,9]]},
  {id:'11v11-433',format:'11v11',name:'4–3–3',why:'The full game with a midfield three.',rows:[[3,5,4,2],[8,6,10],[11,9,7]]},

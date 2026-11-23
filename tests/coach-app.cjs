@@ -493,6 +493,10 @@ for(const arr of [300,605,720,900,1205]){
  ok(/options=\{APP_LANGS\}/.test(sc)&&/isAppLang\(q\)/.test(sc)&&/isAppLang\(q\)/.test(bd)&&/BOARD_TITLE/.test(bd),'/scan and /board take all ten');
  for(const l of A.APP_LANGS)ok(bd.includes(`${l}:'${W[l].boardName}'`),'/board title = the coach app\'s board name, '+l);
  ok(/toLocaleDateString\(LOCALE\[lang\]/.test(read('components/coach/TabPages.tsx')),'dates via Intl in the chosen language');
+ /* Nov 23 2026: "Show on the tactics board" opens the team's format (8v8 included); 4v4/5v5 open the board as it is */
+ ok(/boardHref=\(lang:Lang,format\?:string\)=>`\/board\?from=coach\$\{isFormat\(format\)\?`&format=\$\{format\}`:''\}/.test(pt),'board link carries a board format');
+ ok(/href=\{boardHref\(lang,format\)\}/.test(pt)&&/href:boardHref\(lang,format\)/.test(read('components/coach/TabPages.tsx')),'plan drills and the Training tile pass the format');
+ ok((app.match(/format=\{store\.settings\.format\}/g)||[]).length===2,'the coach app hands the team format to both');
  ok(/inline:true/.test(app)&&/data-lineup-undo/.test(app)&&/toastInline\{position:static/.test(read('components/coach/coach.module.css')),'the lineup Undo sits under the bench, not over it (4D leftover), 6 s');
  ok(/html:lang\(ja\)\{--btn-font:Arial,'Hiragino Sans'/.test(read('components/motion/motion.css')),'Japanese: the phone\'s own font, no webfont');
  for(const f of ['app/coach/layout.tsx','app/scan/layout.tsx','app/board/layout.tsx'])ok(/index:false/.test(read(f)),f+' stays noindex');

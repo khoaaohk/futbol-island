@@ -63,6 +63,16 @@ export function removeMarks(p:Play,step:number,ids:string[]):Play{
 }
 export const clearMarks=(p:Play,step:number)=>mapStep(p,step,s=>({...s,arrows:[],ink:[]}));
 export const setFormat=(p:Play,format:Format)=>p.format===format?p:touch(p,{format});
+/**
+ * A deep link asked for a format (/board?format=8v8, the coach app's "Show on the tactics board" for its team; Nov 23 2026).
+ * null: the board already shows that format, keep it. An unsaved draft switches format the way the picker does (its first shape
+ * for both teams; `undoable`, the draft stays one undo away); a saved play is never changed, a new board opens instead.
+ */
+export function boardForFormat(open:Play|null,openIsSaved:boolean,format:Format,name:string):{play:Play;undoable:boolean}|null{
+ if(open?.format===format)return null;const shape=FORMATIONS.find(x=>x.format===format)!;
+ if(open&&!openIsSaved)return {play:loadFormation(setFormat(open,format),shape.id,'both'),undoable:true};
+ return {play:loadFormation(newPlay(format,name),shape.id,'both'),undoable:false};
+}
 
 /**
  * Loads a team shape. `side` 'home' or 'away' replaces that team's players (in every step) with the shape; 'both' sets up

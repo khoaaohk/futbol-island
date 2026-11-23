@@ -10,6 +10,10 @@ import type {Chip} from './types';
  *  surface '#78a970' (lib/town/venues.ts) in its mown light/dark bands (×1.06 / ×0.94 in linear light, lib/graphics/pitchStripes.ts
  *  STRIPE_LIGHT/DARK), the plain light shade on the run-off, and the island lawn '#608870' (lib/town/shoreline.ts) beyond it. */
 export const GREEN={lawn:'#608870',surface:'#78a970',a:'#7bad73',b:'#75a46d',line:'#f5f8f0'};
+/** Futsal (Nov 23 2026, owner: "use the game's grey for the futsal court"): the Palm Coast Rooftop court's hard surface '#737c75'
+ *  (lib/town/venues.ts), which the game lays 3 m past the lines on every side, with the game's cream lines '#f5eed5', its goal frame
+ *  '#fff6df' and its net '#c6d4cc' (lib/town/fields.ts). The grass formats keep GREEN. */
+export const COURT={surface:'#737c75',line:'#f5eed5',frame:'#fff6df',net:'#c6d4cc'};
 /** A hex colour times a linear-light factor (the same sum three.js does for the game's stripes, without loading three here). */
 export function shadeLinear(hex:string,f:number){const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
  return '#'+c.map(v=>{v=Math.min(1,v*f);const s=v<=.0031308?v*12.92:1.055*v**(1/2.4)-.055;return Math.round(Math.min(1,Math.max(0,s))*255).toString(16).padStart(2,'0');}).join('');}
@@ -25,28 +29,29 @@ export function lineWidthPx(view:View){return Math.max(1.4,Math.min(2.6,view.s*.
 export function pitchMarkup(spec:PitchSpec,view:View,idp='cb'):string{
  const L=spec.length,W=spec.width,r=spec.runoff,lw=lineWidthPx(view)/view.s,{d,spots,goals}=pitchMarkings(spec);
  // Futsal has no mown bands (the game's futsal court has none either); the grass grounds are mown like the island's.
- const plan=spec.format==='futsal'?null:boardStripes(L,spec.box?.depth,spec.format==='11v11'?W:undefined);
+ const court=spec.format==='futsal',plan=court?null:boardStripes(L,spec.box?.depth,spec.format==='11v11'?W:undefined);
+ const line=court?COURT.line:GREEN.line,frame=court?COURT.frame:GREEN.line,surf=court?COURT.surface:GREEN.surface,mesh=court?COURT.net:'#ffffff';
  let stripes='';
  if(plan){const bl=L/plan.bands,ln=plan.lanes?W/plan.lanes:W;
   for(let k=0;k<plan.bands;k++)for(let j=0;j<(plan.lanes||1);j++){const f=(k%2?.94:1.06)*(plan.lanes?(j%2?.98:1.02):1);
    stripes+=`<rect x="${(k*bl).toFixed(3)}" y="${(j*ln).toFixed(3)}" width="${(bl+.01).toFixed(3)}" height="${(ln+.01).toFixed(3)}" fill="${shadeLinear(GREEN.surface,f)}"/>`;}}
- const net=`<pattern id="${idp}-net" patternUnits="userSpaceOnUse" width=".5" height=".5"><path d="M0 0L.5 .5M.5 0L0 .5" stroke="#ffffff" stroke-opacity=".7" stroke-width="${(lw*.4).toFixed(4)}"/></pattern>`;
+ const net=`<pattern id="${idp}-net" patternUnits="userSpaceOnUse" width=".5" height=".5"><path d="M0 0L.5 .5M.5 0L0 .5" stroke="${mesh}" stroke-opacity=".7" stroke-width="${(lw*.4).toFixed(4)}"/></pattern>`;
  const shade=`<radialGradient id="${idp}-vig" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient>`;
  // Goals (Nov 23 2026, owner: "the goals look small"): a darker net box behind the goal line with its mesh, a white frame, and the
  // two posts as solid round heads on the goal line, so the mouth reads at a glance on a phone at both ends.
  const goalSvg=goals.map(g=>{const home=g.x<0,mx=home?0:L,bx=home?g.x:g.x+g.w,pw=lw*1.7;
   return `<rect x="${g.x.toFixed(3)}" y="${g.y.toFixed(3)}" width="${g.w}" height="${g.h.toFixed(3)}" fill="#1f3a2c" fill-opacity=".45"/>`+
    `<rect x="${g.x.toFixed(3)}" y="${g.y.toFixed(3)}" width="${g.w}" height="${g.h.toFixed(3)}" fill="url(#${idp}-net)"/>`+
-   `<path d="M${mx} ${g.y.toFixed(3)}H${bx.toFixed(3)}V${(g.y+g.h).toFixed(3)}H${mx}" fill="none" stroke="${GREEN.line}" stroke-width="${(lw*.9).toFixed(4)}" stroke-linejoin="round"/>`+
-   `<path d="M${mx} ${g.y.toFixed(3)}V${(g.y+g.h).toFixed(3)}" stroke="${GREEN.line}" stroke-width="${(lw*1.5).toFixed(4)}"/>`+
-   [g.y,g.y+g.h].map(y=>`<circle cx="${mx}" cy="${y.toFixed(3)}" r="${pw.toFixed(4)}" fill="#ffffff" stroke="#22283a" stroke-opacity=".35" stroke-width="${(lw*.3).toFixed(4)}"/>`).join('');}).join('');
+   `<path d="M${mx} ${g.y.toFixed(3)}H${bx.toFixed(3)}V${(g.y+g.h).toFixed(3)}H${mx}" fill="none" stroke="${frame}" stroke-width="${(lw*.9).toFixed(4)}" stroke-linejoin="round"/>`+
+   `<path d="M${mx} ${g.y.toFixed(3)}V${(g.y+g.h).toFixed(3)}" stroke="${frame}" stroke-width="${(lw*1.5).toFixed(4)}"/>`+
+   [g.y,g.y+g.h].map(y=>`<circle cx="${mx}" cy="${y.toFixed(3)}" r="${pw.toFixed(4)}" fill="${court?COURT.frame:'#ffffff'}" stroke="#22283a" stroke-opacity=".35" stroke-width="${(lw*.3).toFixed(4)}"/>`).join('');}).join('');
  return `<defs>${net}${shade}</defs><g transform="${svgMatrix(view)}">`+
   `<rect x="${-r-spec.goalDepth-2}" y="${-r-2}" width="${L+2*r+2*spec.goalDepth+4}" height="${W+2*r+4}" fill="${GREEN.lawn}"/>`+
-  `<rect x="${-r}" y="${-r}" width="${L+2*r}" height="${W+2*r}" fill="${plan?GREEN.a:GREEN.surface}"/>`+
-  `<rect x="0" y="0" width="${L}" height="${W}" fill="${GREEN.surface}"/>${stripes}`+
-  `<path d="${d}" fill="none" stroke="${GREEN.line}" stroke-width="${lw.toFixed(4)}" stroke-linecap="round" stroke-linejoin="round"/>`+
+  `<rect x="${-r}" y="${-r}" width="${L+2*r}" height="${W+2*r}" fill="${plan?GREEN.a:surf}"/>`+
+  `<rect x="0" y="0" width="${L}" height="${W}" fill="${surf}"/>${stripes}`+
+  `<path d="${d}" fill="none" stroke="${line}" stroke-width="${lw.toFixed(4)}" stroke-linecap="round" stroke-linejoin="round"/>`+
   goalSvg+
-  spots.map(([x,y])=>`<circle cx="${x.toFixed(3)}" cy="${y.toFixed(3)}" r="${(lw*1.5).toFixed(4)}" fill="${GREEN.line}"/>`).join('')+
+  spots.map(([x,y])=>`<circle cx="${x.toFixed(3)}" cy="${y.toFixed(3)}" r="${(lw*1.5).toFixed(4)}" fill="${line}"/>`).join('')+
   `</g><rect width="${view.w}" height="${view.h}" fill="url(#${idp}-vig)"/>`;
 }
 export type ChipLook={face:string;light:string;edge:string;ink:string};

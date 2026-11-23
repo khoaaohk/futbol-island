@@ -12,7 +12,7 @@
  *    tools pick it up (only while open) as the play to attach to the next goal QR.
  */
 export const BOARD_PLAY_ID=/^[a-z0-9][a-z0-9-]{0,31}$/;
-export type BoardPlayRef={id:string;title:string;format?:'7v7'|'9v9'|'11v11'|'futsal';
+export type BoardPlayRef={id:string;title:string;format?:'7v7'|'8v8'|'9v9'|'11v11'|'futsal';
  /** Optional IDP skill family the play teaches (lib/coaches/idp.ts SkillId), so the IDP can suggest it for a goal. */
  skill?:string};
 export const BOARD_OPEN_PLAY='fi2-board-open-play';

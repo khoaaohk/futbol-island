@@ -6,7 +6,7 @@ import {pitchMarkup} from '@/lib/coaches/board/art';
 import {EXAMPLE_PLAYS} from '@/lib/coaches/board/examples';
 import {commit,redo as redoH,startHistory,undo as undoH,type History} from '@/lib/coaches/board/history';
 import {FORMAT_LABEL,PITCHES,formationSlots,formationsFor,mirror,viewRect,zoneName} from '@/lib/coaches/board/pitch';
-import {addArrow,addChip,addInk,addStep,clearMarks,fitBend,loadFormation,moveChips,movesBetween,newPlay,removeChips,removeMarks,moveStep,removeStep,
+import {addArrow,addChip,boardForFormat,addInk,addStep,clearMarks,fitBend,loadFormation,moveChips,movesBetween,newPlay,removeChips,removeMarks,moveStep,removeStep,
  setFormat,toM,toV,uid,updateArrow,updateChip,type M} from '@/lib/coaches/board/play';
 import {distToPolyline,pointInPolygon,sampleQuad,simplify,smoothPath,type P} from '@/lib/coaches/board/render';
 import {copyOf,deletePlay,duplicatePlay,emptyLibrary,loadLibrary,saveLibrary,upsertPlay,type Library} from '@/lib/coaches/board/storage';
@@ -64,7 +64,8 @@ function storeOk(){try{const k='__cb';localStorage.setItem(k,'1');localStorage.r
 
 /** saveSlot (/board only, Nov 23 2026): the web shell's header slot; Save moves there (opposite the header's Back) and the top bar
  *  becomes format | name (centred) | undo/redo. The game passes none and keeps its own top bar. */
-export default function TacticsBoard({onBack,words,saveSlot}:{onBack?:()=>void;onProgress?:()=>void;words?:BoardWords;saveSlot?:HTMLElement|null}){
+/*  format (/board only): a deep link's ?format= (BoardApp); the game passes none. */
+export default function TacticsBoard({onBack,words,saveSlot,format}:{onBack?:()=>void;onProgress?:()=>void;words?:BoardWords;saveSlot?:HTMLElement|null;format?:Format}){
  /* round 4G (audit B4): the board's words; the game passes none and keeps English */
  const L=words??BOARD_EN,KL:Record<ArrowKind,string>={pass:L.pass,run:L.run,dribble:L.dribble};
  const [lib,setLib]=useState<Library>(emptyLibrary);
@@ -106,11 +107,13 @@ export default function TacticsBoard({onBack,words,saveSlot}:{onBack?:()=>void;o
   const l=loadLibrary();setLib(l);
   const open=l.plays.find(p=>p.id===l.open)??l.draft;if(open)setHist(startHistory(open));
   const code=readShareHash(location.hash);
+  if(format&&!code){const r=boardForFormat(open,!!open&&l.plays.some(p=>p.id===open.id),format,L.myPlay);
+   if(r)setHist(r.undoable&&open?commit(startHistory(open),r.play):startHistory(r.play));}
   if(code){history.replaceState(null,'',location.pathname+location.search);
    decodePlay(code).then(p=>{if(p){setMode({kind:'view',source:'shared',play:p});setStep(0);setAnnounce(`Shared play opened: ${p.name}`);}else setToast('That share link could not be opened.');});}
   setReady(true);
   return ()=>stage.destroy();
- },[stage]);
+ },[stage]);// eslint-disable-line react-hooks/exhaustive-deps -- mount only: the shell passes format and words before the board mounts
  // ── a development-plan goal asked for a play (docs/idp/BOARD-LINK.md): an example, a saved play, or the list ──
  useEffect(()=>{if(!ready)return;const take=()=>{const id=takePendingPlay();if(!id)return;const ex=EXAMPLE_PLAYS.find(p=>p.id===id),own=loadLibrary().plays.find(p=>p.id===id);
    if(ex)watchRef.current(ex,'example');else if(own)openRef.current(own);else{setSheet('plays');setToast('That play is on your coach’s board. Here are the plays on this one.');}};
