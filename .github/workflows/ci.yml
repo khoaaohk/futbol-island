@@ -89,3 +89,7 @@ jobs:
       # Nov 11 2026: tests/gashapon-viewer.cjs builds 84 toys six ways (about 2 min on a fast laptop) and passed the runner's
       # default 240 s per-test limit on these machines, failing every run. A longer limit, not a skipped test.
       - run: npm run test:quiet -- --core --jobs 3 --timeout 900
+        # Nov 23 2026: tests/mp-avatars.cjs needs about 3.2 GB (it transpiles the island + three.js); node's default heap on the
+        # runner (~2 GB) ran out (SIGABRT). More heap for the test processes, not a skipped test.
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
