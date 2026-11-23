@@ -1,3 +1,4 @@
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -67,6 +68,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <QA id="faq" title={`Questions about the ${lower}`} faq={p.faq}/>
   <CoachNotesSection name={p.name} notes={POSITION_NOTES[p.slug]}/>
   <GuideQuiz id="quiz" name={`the ${lower}`} questions={quiz}/>
+  {/* Nov 23 2026: the matching quiz page (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={p.path}/>
   {/* batch 3, Nov 17 2026: lessons, formations, player cards, drills (lib/site/drillLinks.ts), comparisons and the other positions
       as one "Keep reading" row (every link kept; the rest under "Show N more") */}
   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},

@@ -38,12 +38,12 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  {const menu=html.match(/<nav[^>]*id="library-menu"[^>]*>([\s\S]*?)<\/nav>/);assert(menu&&/aria-label="Library sections"/.test(menu[0]),'the menu is a labelled nav');
   // Nov 20 2026 night, sections (owner: "we need to fix the library page. each of the side nav should smooth scroll the user down to that section.
   // each section is a little information about that section then cta to drill into internal page"): the menu is Overview (#top, lit
-  // from the server) and the fifteen sections as in-page anchors in RAIL_ORDER; the page is one <section id> per item in that order,
+  // from the server) and the sixteen sections (Quizzes added Nov 23 2026) as in-page anchors in RAIL_ORDER; the page is one <section id> per item in that order,
   // each with its picture, H2, count, sentences, 3-5 real example pages and ONE mint button into the section; no group bands.
   const RO=L('lib/site/railNav.ts').RAIL_ORDER,secs=lib.librarySections(),byPath=Object.fromEntries(secs.map(x=>[x.href,x]));
   assert.deepEqual(secs.map(x=>x.href).sort(),cards.map(c=>c.href).sort(),'one section per footer link');
   const items=[...menu[1].matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map(m=>[m[1],m[2]]);
-  assert.deepEqual(items,[['#top','Overview'],...RO.map(p=>['#'+byPath[p].id,byPath[p].name])],'Overview then the 15 sections, as anchors, in RAIL_ORDER');
+  assert.deepEqual(items,[['#top','Overview'],...RO.map(p=>['#'+byPath[p].id,byPath[p].name])],'Overview then the 16 sections, as anchors, in RAIL_ORDER');
   assert(/<a href="#top"[^>]*data-on=""[^>]*>Overview<\/a>/.test(menu[1])&&(menu[1].match(/data-on/g)||[]).length===1&&!/aria-current/.test(menu[1]),'Overview lit from the server, nothing else; anchors are never aria-current');
   const order=[...html.matchAll(/<section id="([a-z-]+)"[^>]*data-library-section/g)].map(m=>m[1]);
   assert.deepEqual(order,RO.map(p=>byPath[p].id),'the sections, in the menu order');assert(!/data-library-group|id="group-/.test(html),'no group bands');
@@ -89,7 +89,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
  const es=L('components/es/routes.tsx').esRoute('/library'),em=es.meta(),eh=render(es.render()),E=L('components/es/pages/LibraryEs.tsx');
  assert(em.title.absolute.length<=60&&em.description.length>=120&&em.description.length<=155,`Spanish title ${em.title.absolute.length}, description ${em.description.length}`);
  assert.equal(em.alternates.canonical,'/es/library');assert.match(eh,/<h1[^>]*>Aprende fútbol: la biblioteca de Futbol Island<\/h1>/);
- {const es=E.librarySectionsEs();assert.equal(es.length,15);for(const x of es){assert(eh.includes(`<section id="${x.id}"`)&&eh.includes(`href="#${x.id}"`),`es ${x.id}`);assert(eh.includes(`href="${x.href}">${x.cta}</a>`));
+ {const es=E.librarySectionsEs();assert.equal(es.length,16);/* Nov 23 2026: + Quizzes */for(const x of es){assert(eh.includes(`<section id="${x.id}"`)&&eh.includes(`href="#${x.id}"`),`es ${x.id}`);assert(eh.includes(`href="${x.href}">${x.cta}</a>`));
    assert(x.examples.length>=3,`es ${x.id}: examples`);for(const e of x.examples)assert(x.href.startsWith('/es/')?e.href.startsWith('/es/')&&ep.hasEs(ep.toEn(e.href.split('#')[0])):!e.href.startsWith('/es/'),`es ${x.id}: ${e.href}`);
    if(!x.href.startsWith('/es/'))assert(/\(en inglés\)$/.test(x.cta),`${x.href}: the button says English`);}
   assert(/<a href="#top"[^>]*data-on=""[^>]*>Resumen<\/a>/.test(eh));}

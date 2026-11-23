@@ -32,16 +32,26 @@ export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-bui
 export const ES_GAME_SLUGS=['soccer-swipe-game','soccer-snake-game','soccer-runner-game','soccer-tennis-game','soccer-pinball','soccer-passing-puzzle-game','air-hockey-soccer-game','soccer-block-puzzle-game','soccer-merge-game','soccer-ball-rolling-puzzle-game','soccer-shooting-game','soccer-juggling-game','soccer-target-game','soccer-free-kick-game','soccer-golf-game'] as const;
 export const ES_BOOK_IDS=['messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala','caicedo','vinicius','son','earps','griezmann','vandijk','hamm','sawa','cech','mahrez','sinclair','morgan','renard','howard','wright','baggio','formiga','milla','dzeko','bale'] as const;
 const ROUNDE=['/games',...ES_GAME_SLUGS.map(s=>`/games/${s}`),'/books',...ES_BOOK_IDS.map(id=>`/books/${id}`)];
+/** The quiz pages (Nov 23 2026; lib/site/quizzes.ts): the hub and each quiz have Spanish slugs (ES_SLUGS below), because Spanish
+    searches are "preguntas de fútbol" and "quiz del fuera de juego", not "offside quiz". English quiz slug -> Spanish slug. */
+export const ES_QUIZ_HUB='/learn/preguntas-de-futbol';
+export const ES_QUIZ_SLUGS:Readonly<Record<string,string>>={'soccer-rules-quiz':'quiz-de-reglas-del-futbol','offside-quiz':'quiz-del-fuera-de-juego',
+ 'fouls-and-cards-quiz':'quiz-de-faltas-y-tarjetas','soccer-positions-quiz':'quiz-de-posiciones-del-futbol','soccer-positions-by-number-quiz':'quiz-de-numeros-de-las-posiciones',
+ 'penalty-kick-quiz':'quiz-del-penal','soccer-terms-quiz':'quiz-de-terminos-del-futbol','futsal-rules-quiz':'quiz-de-reglas-del-futsal',
+ '7v7-soccer-rules-quiz':'quiz-de-reglas-del-futbol-7','world-cup-quiz':'quiz-del-mundial'};
+const QZ='/learn/quizzes';
+export const ES_QUIZ_PAGES:readonly string[]=[QZ,...Object.keys(ES_QUIZ_SLUGS).map(s=>`${QZ}/${s}`)];
 /** English paths with a Spanish page. */
 /** Nov 20 2026: the Library (lib/site/library.ts), the hub of hubs. */
 export const ES_LIBRARY='/library';
-export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE];
+export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE,...ES_QUIZ_PAGES];
 const SET=new Set(ES_PAGES);
 export const hasEs=(enPath:string)=>SET.has(enPath);
 /** Round 4D: the one exception to "English slug kept": a Spanish page with its own slug, because Spanish coaches search for
     "alineación fútbol 8", not "8v8 lineup builder". English path -> the Spanish path after /es. */
 export const ES_SLUGS:Readonly<Record<string,string>>={'/tools/8v8-lineup-builder':'/tools/alineacion-futbol-8',
- /* round 4F: the fútbol 8 formation guide (the three formation pages keep the English-slug pattern of their family) */'/learn/8v8-soccer-formations':'/learn/formaciones-futbol-8'};
+ /* round 4F: the fútbol 8 formation guide (the three formation pages keep the English-slug pattern of their family) */'/learn/8v8-soccer-formations':'/learn/formaciones-futbol-8',
+ /* Nov 23 2026: the quiz hub and its quizzes */[QZ]:ES_QUIZ_HUB,...Object.fromEntries(Object.entries(ES_QUIZ_SLUGS).map(([en,es])=>[`${QZ}/${en}`,`${ES_QUIZ_HUB}/${es}`]))};
 const ES_SLUGS_BACK:Readonly<Record<string,string>>=Object.fromEntries(Object.entries(ES_SLUGS).map(([en,es])=>[es,en]));
 export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+(ES_SLUGS[enPath]??enPath);
 /** The English path for what follows /es in a Spanish URL; null for an English slug whose Spanish page has its own slug

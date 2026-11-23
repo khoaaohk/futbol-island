@@ -51,7 +51,7 @@ export function sectionRailEs(family:RailFamily):Rail{
  * collections, whose pages answer few football searches. Order in a menu weighs little with search engines; this mostly decides which
  * links a reader meets first. Spanish paths sort by their English path. */
 // Nov 23 2026 (owner: "move the coach tools after overview. make that more prominent" + "also move up storybooks and players cards")
-export const RAIL_ORDER=['/tools','/books','/cards','/learn/lessons','/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills','/learn/soccer-positions','/learn/soccer-formations',
+export const RAIL_ORDER=['/tools','/books','/cards','/learn/lessons','/learn/quizzes'/* Nov 23 2026: after Lessons (owner brief) */,'/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills','/learn/soccer-positions','/learn/soccer-formations',
  '/learn/soccer-practice-plans','/learn/soccer-age-groups','/games','/videos','/fish','/exhibits'] as const;
 export function railOrder<T extends {href:string}>(items:T[]):T[]{
  const at=(h:string)=>{const i=(RAIL_ORDER as readonly string[]).indexOf(h.replace(/^\/es(?=\/)/,''));return i<0?RAIL_ORDER.length:i;};

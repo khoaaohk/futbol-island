@@ -1,3 +1,4 @@
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import type {GuideFormat as GuideFormatAll} from '@/lib/site/pitch';
 import JsonLd from '@/components/seo/JsonLd';
 import {GAME_PAGES} from '@/lib/site/games';
@@ -134,7 +135,7 @@ export function RuleEsPage({r}:{r:EsRule}){
    {cards&&<CardRulesSources c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
   </QA>
   <EsCoachNotes name={r.name} notes={r.notes}/>
-  <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/>
+  <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/><TestYourself enPath={r.path} lang="es"/>
   <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(r.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(r.path)},{id:'related',links:related}],r.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.rules} lessonId={r.cta?.id}/>
   <EsReadNext order={esOrder('rules')} path={r.esPath}/>
@@ -192,7 +193,7 @@ export function TermEsPage({t}:{t:EsTerm}){
   <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
-  <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/>
+  <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/><TestYourself enPath={t.path} lang="es"/>
   <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(t.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(t.path)},{id:'related',links:related}],t.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.terms} lessonId={t.cta?.id}/>
   <EsReadNext order={esOrder('terms')} path={t.esPath}/>
@@ -264,7 +265,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <Section id="small" title="En 7v7, 9v9 y futsal" fold><p>{p.small}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${lower}`} faq={p.faq}/>
   <EsCoachNotes name={p.name} notes={p.notes}/>
-  <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>
+  <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/><TestYourself enPath={p.path} lang="es"/>
   {/* batch 3, Nov 17 2026: as English, one "Sigue leyendo" grid (every link kept) */}
   <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
    {id:'formations',label:'Formación',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]:[]},

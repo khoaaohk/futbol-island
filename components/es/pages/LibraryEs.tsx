@@ -7,6 +7,7 @@ import {ES_LESSONS} from '@/lib/i18n/es/lessons';
 import {LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_ES} from '@/lib/i18n/es/tools';
 import {TOOL_PAGES} from '@/lib/site/tools/registry';
 import {LESSONS} from '@/lib/site/lessons';
+import {QUIZZES_ES,quizBySlug} from '@/lib/site/quizzes';
 import {DRILLS} from '@/lib/site/drills';
 import {GAME_PAGES} from '@/lib/site/games';
 import {SITE_BOOKS} from '@/lib/site/books';
@@ -23,7 +24,7 @@ import type {EsRoute} from '../routes';
  * pages (lib/i18n/esPaths.ts); the game's other sections (games, videos, cards, Fishbook, museum, story books) are in English
  * for now, so they sit in one last group that says so and links to the English pages, as the Spanish footer does.
  */
-const ES_COUNTS:Readonly<Record<string,number>>={'/learn/lessons':LESSONS.length,'/learn/soccer-rules':ES_RULE_SLUGS.length,'/learn/soccer-positions':ES_POSITION_SLUGS.length,
+const ES_COUNTS:Readonly<Record<string,number>>={'/learn/lessons':LESSONS.length,'/learn/quizzes':QUIZZES_ES.length,'/learn/soccer-rules':ES_RULE_SLUGS.length,'/learn/soccer-positions':ES_POSITION_SLUGS.length,
  '/learn/soccer-formations':ES_FORMATION_SLUGS.length,'/learn/soccer-terms':ES_TERM_SLUGS.length,'/learn/soccer-drills':DRILLS.length,'/learn/soccer-practice-plans':ES_PLAN_SLUGS.length,
  '/games':GAME_PAGES.length,'/books':SITE_BOOKS.length,'/tools':TOOL_PAGES.filter(t=>t.kind!=='hub'&&t.kind!=='printables'&&hasEs(t.path)).length};
 const W:Omit<LibraryWords,'groups'>&{groups:Record<'game'|'train'|'more',{title:string;line:string}>}={
@@ -39,6 +40,7 @@ const W:Omit<LibraryWords,'groups'>&{groups:Record<'game'|'train'|'more',{title:
   train:{title:'Entrena',line:'Para entrenadores y padres. Listo para usar en la práctica o en casa.'},
   more:{title:'Más en la isla',line:'Estas secciones están en inglés por ahora. Tienen muchas imágenes y son fáciles de mirar.'}},
  items:{
+  '/learn/quizzes':{name:'Quizzes',alt:'Una pregunta de quiz en el juego: una cancha con jugadores y tres respuestas para tocar',line:'Quizzes cortos de fútbol con respuestas, que se juegan en la misma página. Para niños a los que les gustan los retos.',count:n=>`${n} quizzes`,more:'Cada quiz repasa un tema, del fuera de juego y las tarjetas a las posiciones, las palabras del fútbol y la historia del Mundial, y explica por qué cada respuesta es la correcta.',cta:n=>`Juega los ${n} quizzes`},
   '/learn/lessons':{name:'Lecciones',alt:'Una lección del juego: dos equipos en una cancha con la frase del entrenador debajo',line:'Lecciones cortas de fútbol con un quiz. Para niños que quieren aprender el juego.',count:n=>`${n} lecciones`,more:'Cada lección muestra una idea en una cancha en tres pasos y dice lo que diría el entrenador. Hay lecciones de 7v7, 9v9, 11v11 y futsal.',cta:n=>`Ver las ${n} lecciones`},
   '/learn/soccer-rules':{name:'Reglas',alt:'Cuatro reglas en la cancha: la línea del fuera de juego, un saque de banda, un penalti y una barrera de tiro libre',line:'Fuera de juego, saques, faltas y más, con un diagrama. Para niños, padres y entrenadores nuevos.',count:n=>`${n} reglas`,more:'Cada página dice también lo que mira el árbitro y las confusiones más comunes.',cta:n=>`Ver las ${n} reglas`},
   '/learn/soccer-positions':{name:'Posiciones',alt:'La lección de futsal 3-1: conoce los puestos de la cancha, de cerca: el portero en su arco, el cierre marcado con un aro detrás del balón, un ala marcada en la banda y líneas que los unen con el pívot adelante; abajo, el cierre y el pívot otra vez',line:'Qué hace cada jugador y dónde se coloca. Para niños que buscan su lugar en el equipo.',count:n=>`${n} posiciones`,more:'Cada página muestra dónde se coloca el jugador, qué hace con y sin el balón, tres hábitos para practicar y su número de camiseta.',cta:n=>`Ver las ${n} posiciones`},
@@ -65,6 +67,7 @@ export function libraryGroupsEs():LibraryGroup[]{
 const AGE_ES:Readonly<Record<string,string>>={chart:'La tabla de categorías',how:'Encuentra la categoría de tu hijo',formats:'Qué partido juega cada categoría',faq:'Preguntas sobre las categorías'};
 function esName(en:string):string|undefined{
  const [path,hash]=en.split('#');if(hash)return AGE_ES[hash];
+ if(path.startsWith('/learn/quizzes/'))return quizBySlug(path.slice('/learn/quizzes/'.length),'es')?.h1;
  const slug=path.split('/').pop()!;
  const all:{path:string;name?:string;title?:string}[]=[...ES_RULES(),...ES_TERMS(),...ES_POSITIONS(),...ES_FORMATIONS(),...ES_DRILLS(),...ES_PLANS()];
  const hit=all.find(x=>x.path===path);if(hit)return hit.name??hit.title;

@@ -3,6 +3,7 @@ import {INDEXED_FISH,SITE_FISH,fishIndexed,fishPath} from './fish';
 import {SITE_CARDS,cardPath} from './cards';
 import {SITE_EXHIBITS,exhibitPath} from './exhibits';
 import {HUB_PATHS,SAFE_GUIDE} from './hubs';
+import {QUIZZES,QUIZZES_PATH} from './quizzes';
 import {SITE_UPDATED} from './updated';
 import {ALL_GUIDE_PAGES} from './guides';
 import {TOOL_PAGES,TOOLS_UPDATED} from './tools/registry';
@@ -47,6 +48,7 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
   {path:FACTS_PATH,priority:.5,lastmod:FAMILY_CHECKED.rules},/* the trust page (lib/site/checked.ts, Nov 15 2026) */
   {path:LIBRARY_PATH,priority:.9,lastmod:U.library},/* the Library (lib/site/library.ts, Nov 20 2026) */{path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
   ...GUIDE_PATHS.map(path=>({path,priority:.8,lastmod:U.hubs})),
+  {path:QUIZZES_PATH,priority:.8,lastmod:U.guides},...QUIZZES.map(q=>({path:q.path,priority:.7,lastmod:U.guides})),/* the quiz pages (lib/site/quizzes.ts, Nov 23 2026) */
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
   ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.9:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */

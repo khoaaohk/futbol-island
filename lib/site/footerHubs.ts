@@ -8,7 +8,7 @@
  */
 export type FooterGroup={id:'game'|'train'|'play'|'collect';title:string;titleEs:string;links:readonly (readonly [string,string])[]};
 export const FOOTER_GROUPS:readonly FooterGroup[]=[
- {id:'game',title:'Learn the game',titleEs:'Aprende el juego',links:[['/learn/lessons','Lessons'],['/learn/soccer-rules','Rules'],['/learn/soccer-positions','Positions'],
+ {id:'game',title:'Learn the game',titleEs:'Aprende el juego',links:[['/learn/lessons','Lessons'],['/learn/quizzes','Quizzes'],['/learn/soccer-rules','Rules'],['/learn/soccer-positions','Positions'],
   ['/learn/soccer-formations','Formations'],['/learn/soccer-terms','Soccer terms'],['/learn/soccer-age-groups','Age groups']]},
  {id:'train',title:'Train',titleEs:'Entrena',links:[['/learn/soccer-drills','Drills'],['/learn/soccer-practice-plans','Practice plans'],['/tools','Coach tools']]},
  {id:'play',title:'Play and watch',titleEs:'Juega y mira',links:[['/games','Games'],['/videos','Videos']]},
@@ -17,7 +17,7 @@ export const FOOTER_GROUPS:readonly FooterGroup[]=[
 export const FOOTER_HUBS:readonly (readonly [string,string])[]=FOOTER_GROUPS.flatMap(g=>g.links);
 /** The Spanish footer's names (the Spanish Library's card names, components/es/pages/LibraryEs.tsx, shortened). A section with no
  *  Spanish page yet links to the English one and says so. */
-export const FOOTER_ES:Readonly<Record<string,string>>={'/learn/lessons':'Lecciones','/learn/soccer-rules':'Reglas','/learn/soccer-positions':'Posiciones',
+export const FOOTER_ES:Readonly<Record<string,string>>={'/learn/lessons':'Lecciones','/learn/quizzes':'Quizzes','/learn/soccer-rules':'Reglas','/learn/soccer-positions':'Posiciones',
  '/learn/soccer-formations':'Formaciones','/learn/soccer-terms':'Términos del fútbol','/learn/soccer-age-groups':'Categorías por edad','/learn/soccer-drills':'Ejercicios',
  '/learn/soccer-practice-plans':'Planes de práctica','/tools':'Herramientas','/games':'Juegos','/videos':'Videos','/cards':'Cartas de jugadores','/fish':'Libro de peces',
  '/exhibits':'Museo','/books':'Cuentos'};

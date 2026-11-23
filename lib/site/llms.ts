@@ -1,3 +1,4 @@
+import {QUIZZES,QUIZZES_PATH,QUIZ_QUESTIONS} from './quizzes';
 import {LESSONS} from './lessons';
 import {SITE_FISH} from './fish';
 import {SITE_CARDS} from './cards';
@@ -56,6 +57,7 @@ export function llmsText():string{
   ...SAFE_FACTS.map(f=>`- ${f.title}: ${f.text}`),'',
   '## Learn','',
   `- [Football lessons](https://futbolisland.app/learn/lessons): every lesson (${LESSONS.length}) in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions (the answers are not marked).`,
+  `- [Soccer quizzes by topic](https://futbolisland.app${QUIZZES_PATH}): ${QUIZZES.length} quizzes for kids with ${QUIZ_QUESTIONS} questions (rules, offside, cards, penalties, positions, shirt numbers, soccer terms, futsal, 7v7 and World Cup history), played on the page, each with an answer key that gives the right answer and the reason. Spanish: https://futbolisland.app/es/learn/preguntas-de-futbol`,
   ...['football-rules-for-kids','soccer-quiz-for-kids','passing-and-support','futsal-for-kids','7v7-9v9-11v11'].map(slug=>{const h=hub(slug);return `- [${h.h1}](https://futbolisland.app${h.path}): ${h.blurb}.`;}),
   ...GUIDE_HUBS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Free tools for coaches','',/* lib/site/tools/registry.ts */

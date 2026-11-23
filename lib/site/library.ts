@@ -1,6 +1,7 @@
 import type {FactIconKind} from '@/components/site/FactIcons';
 import {FOOTER_HUBS} from './footerHubs';
 import {LESSONS,lessonPath} from './lessons';
+import {QUIZZES} from './quizzes';
 import {DRILLS,SKILLS,drillsBySkill} from './drills';
 import {PLANS} from './plans';
 import {FORMATIONS} from './formations';
@@ -28,12 +29,12 @@ export type LibraryGroupId='game'|'train'|'play'|'collect';
 export type LibraryItem={path:string;label:string;group:LibraryGroupId;icon:FactIconKind;count?:number};
 /** What each count counts, by path (the same data the linked hub lists). */
 export const LIBRARY_COUNTS:Readonly<Record<string,number>>={
- '/learn/lessons':LESSONS.length,'/learn/soccer-drills':DRILLS.length,'/learn/soccer-practice-plans':PLANS.length,'/learn/soccer-formations':FORMATIONS.length,
+ '/learn/lessons':LESSONS.length,'/learn/quizzes':QUIZZES.length,'/learn/soccer-drills':DRILLS.length,'/learn/soccer-practice-plans':PLANS.length,'/learn/soccer-formations':FORMATIONS.length,
  '/learn/soccer-positions':POSITIONS.length,'/learn/soccer-rules':RULES.length,'/learn/soccer-terms':TERM_PAGES.length,
  '/tools':TOOL_PAGES.filter(t=>t.kind!=='hub'&&t.kind!=='printables').length,'/games':GAME_PAGES.length,'/videos':allWatchVideos().length,
  '/cards':SITE_CARDS.length,'/fish':SITE_FISH.length,'/exhibits':SITE_EXHIBITS.length,'/books':BUILT_BOOKS.length};
 const PLACE:Readonly<Record<string,readonly [LibraryGroupId,FactIconKind]>>={
- '/learn/lessons':['game','quiz'],'/learn/soccer-rules':['game','law'],'/learn/soccer-positions':['game','shirt'],'/learn/soccer-formations':['game','lineup'],
+ '/learn/lessons':['game','quiz'],'/learn/quizzes':['game','quiz'],'/learn/soccer-rules':['game','law'],'/learn/soccer-positions':['game','shirt'],'/learn/soccer-formations':['game','lineup'],
  '/learn/soccer-terms':['game','tag'],'/learn/soccer-age-groups':['game','kid'],
  '/learn/soccer-drills':['train','cone'],'/learn/soccer-practice-plans':['train','clock'],'/tools':['train','whistle'],
  '/games':['play','ball'],'/videos':['play','eye'],
@@ -58,7 +59,7 @@ export type LibraryPic={src:string;w:number;h:number;/** object-position of a cr
 const still=(src:string,w:number,h:number,pos?:string):LibraryPic=>({src:learnUrl(src),w,h,...(pos?{pos}:{})}),S=(name:string)=>still(`/learn/sections/${name}.webp`,1440,900);
 const firstBook=SITE_BOOKS.find(b=>BUILT_BOOKS.includes(b.id));
 export const LIBRARY_PICS:Readonly<Record<string,LibraryPic|undefined>>={
- '/learn/lessons':still('/learn/slide_stories.webp',1600,900),'/learn/soccer-rules':S('rules'),'/learn/soccer-positions':still('/learn/sections/positions-game.webp',1440,900),
+ '/learn/lessons':still('/learn/slide_stories.webp',1600,900),'/learn/quizzes':still('/learn/quiz_question.webp',780,1688,'50% 40%')/* Nov 23 2026: a quiz question in the game */,'/learn/soccer-rules':S('rules'),'/learn/soccer-positions':still('/learn/sections/positions-game.webp',1440,900),
  '/learn/soccer-formations':still('/learn/sections/formations-game.webp',1440,900),'/learn/soccer-terms':S('terms'),'/learn/soccer-age-groups':S('ages'),
  '/learn/soccer-drills':S('drills'),'/learn/soccer-practice-plans':S('plans'),'/tools':S('tools'),
  '/games':S('games')/* four of today's arcade phone screens on sage (Nov 20 2026: the neon pitch still did not say "arcade games") */,
@@ -99,6 +100,7 @@ export const LIBRARY_EN:LibraryWords={
   collect:{title:'Collect and explore',line:'Things to find on the island, with a page to read about each one.'}},
  items:{
   '/learn/lessons':{alt:'A lesson in the game: two teams on a pitch with the coach line under it',name:'Lessons',line:'Short football lessons with a quiz. For kids who want to learn the game.',count:n=>`${n} lessons`,more:'Each lesson plays one idea on a pitch in three steps and says what the coach would say. There are lessons for 7v7, 9v9, 11v11 and futsal.',cta:n=>`See all ${n} lessons`},
+  '/learn/quizzes':{alt:'A quiz question in the game: a pitch with players and three answers to tap',name:'Quizzes',line:'Quick soccer quizzes with answers, played right on the page. For kids who like a challenge.',count:n=>`${n} quizzes`,more:'Each quiz checks one topic, from offside and cards to positions, soccer words and World Cup history, and says why every answer is right.',cta:n=>`Play the ${n} quizzes`},
   '/learn/soccer-rules':{alt:'Four rules on the pitch: the offside line, a throw-in, a penalty kick and a free-kick wall',name:'Rules',line:'Offside, throw-ins, fouls and more, with a diagram. For kids, parents and new coaches.',count:n=>`${n} rules`,more:'Each page also says what the referee looks for and the common mix-ups. They are sorted into restarts, fouls, offside and the goalkeeper, and youth soccer.',cta:n=>`See all ${n} rules`},
   '/learn/soccer-positions':{alt:'The futsal lesson 3-1: Meet the Court Roles, close up: the goalkeeper in goal, the defender ringed behind the ball, a winger ringed out wide and lines joining them to the pivot up front, with the defender and the pivot shown again below',name:'Positions',line:'What each player does and where they stand. For kids finding their place on the team.',count:n=>`${n} positions`,more:'Each page shows where the player stands, what they do with and without the ball, three habits to practise and their shirt number.',cta:n=>`See all ${n} positions`},
   '/learn/soccer-formations':{alt:'Two team shapes from the game’s lessons: the futsal 2-2, the goalkeeper with a back pair and a front pair each joined by a dashed line, and a 7v7 team with its two defenders ringed in front of the goalkeeper',name:'Formations',line:'Team shapes for 7v7, 9v9, 11v11 and futsal, each with a diagram. For coaches and curious kids.',count:n=>`${n} formations`,more:'Each page shows who plays where, the strengths and weak spots of the shape, and how it moves when your team has the ball.',cta:n=>`See all ${n} formations`},
@@ -135,7 +137,7 @@ export const libraryGroups=():LibraryGroup[]=>LIBRARY_GROUP_ORDER.map(g=>({id:g,
 export type LibraryLink={href:string;name:string};
 export type LibrarySection=LibraryCard&{id:string;more:string;cta:string;examples:LibraryLink[]};
 /** The section's anchor on the Library (#rules, #story-books ...): the same in both languages. */
-export const LIBRARY_IDS:Readonly<Record<string,string>>={'/learn/lessons':'lessons','/learn/soccer-rules':'rules','/learn/soccer-terms':'soccer-terms','/learn/soccer-drills':'drills',
+export const LIBRARY_IDS:Readonly<Record<string,string>>={'/learn/lessons':'lessons','/learn/quizzes':'quizzes','/learn/soccer-rules':'rules','/learn/soccer-terms':'soccer-terms','/learn/soccer-drills':'drills',
  '/learn/soccer-positions':'positions','/learn/soccer-formations':'formations','/learn/soccer-practice-plans':'practice-plans','/tools':'coach-tools','/learn/soccer-age-groups':'age-groups',
  '/games':'games','/videos':'videos','/cards':'player-cards','/books':'story-books','/fish':'fishbook','/exhibits':'museum'};
 const firstOfEach=<T,K>(xs:readonly T[],key:(x:T)=>K,n=4)=>xs.filter((x,i)=>xs.findIndex(y=>key(y)===key(x))===i).slice(0,n);
@@ -144,6 +146,7 @@ const CARD_PICKS=['strikers','goalkeepers','women','world-cup-winners'];
 export function libraryExamples(path:string):LibraryLink[]{
  switch(path){
   case '/learn/lessons':return LESSONS.slice(0,4).map(x=>({href:lessonPath(x.id),name:x.title}));
+  case '/learn/quizzes':return QUIZZES.slice(0,4).map(x=>({href:x.path,name:x.h1}));
   case '/learn/soccer-rules':return RULES_HUB.groups.slice(0,4).map(g=>({href:g.rules[0].path,name:g.rules[0].name}));
   case '/learn/soccer-terms':return TERM_PAGES.slice(0,4).map(x=>({href:x.path,name:x.name}));
   case '/learn/soccer-drills':return SKILLS.map(k=>drillsBySkill(k.id)[0]).filter(Boolean).slice(0,4).map(x=>({href:x.path,name:x.name}));
