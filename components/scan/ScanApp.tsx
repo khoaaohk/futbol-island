@@ -10,7 +10,7 @@ import {activeOf,loadTeams} from '@/lib/coach/teams';
 import {ageFor} from '@/lib/coach/route';
 import c from './scan.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
-import {miniBackHref,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
+import {goMiniBack,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
 import '@/components/motion/motion.css';
 import {CheckMark,CrossMark} from '@/components/coach/GameIcons';
 /**
@@ -261,7 +261,7 @@ function Top({w,lang,embed,onBack}:{w:Words;lang:Lang;embed:boolean;onBack?:()=>
  /* left: from the summary a light Back to the start screen; on the start screen the gold Back (the coach app's Home when it opened
     the trainer, else the page the coach came from); no Exit in a mini app (owner, Nov 22 2026: Exit only on the coach app's Home) */
  const left=embed?null:onBack?<HeaderGoldBack key="summary" lang={lang} onBack={onBack} data={{'data-scan-back':''}}/>
-  :<HeaderGoldBack key="settings" lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,guide));}} data={{'data-scan-coach':''}}/>;
+  :<HeaderGoldBack key="settings" lang={lang} onBack={()=>goMiniBack(lang,guide)} data={{'data-scan-coach':''}}/>;
  /* the language lives in the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
  return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria="" exit={false}/>;
 }

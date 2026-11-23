@@ -65,5 +65,6 @@ export const pl:Words={
  home:'Dom',awayGame:'Wyjazd',notSet:'Nie ustawiono',vs:(o:string)=>`vs ${o}`,score:'Wynik',us:'My',them:'Oni',addGoalUs:'Nasz gol',addGoalThem:'Ich gol',
  lessUs:'Cofnij nasz ostatni gol',lessThem:'Cofnij ich ostatni gol',whoScored:'Kto strzelił?',notSure:'Nie wiem',scorers:'Strzelcy',namesNote:'Wyłączone: tylko inicjały',minCol:'Min',
  exitAria:'Wyjdź z aplikacji trenera i wróć do Futbol Island',plansEnNote:'Tekst planu po angielsku',diamond:'Romb',
+ missedBreak:'Zaplanowana na wznowienie. Zrób ją teraz albo zaplanuj od nowa.',arrivedQ:(n:string)=>`${n} już jest?`,addToPlan:'Dodaj do planu',skipped:'Zmiana pominięta. Kolejne zmiany wyrównają, ile się da.',unevenHead:'Skąd różnice w minutach',missedMin:(n:string,m:number)=>`${n}: ${m} min mniej`,whyHurt:'kontuzja',whyLeft:'wyszedł wcześniej',whyLate:'przyszedł później',whySkip:'pominięto zmianę',whyOther:'zmiany zrobione później',
  fmt:(id:string)=>id==='futsal'?'Futsal':id
 };

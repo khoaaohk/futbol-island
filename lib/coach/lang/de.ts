@@ -61,5 +61,6 @@ export const de:Words={
  home:'Heim',awayGame:'Auswärts',notSet:'Offen',vs:(o:string)=>`gegen ${o}`,score:'Stand',us:'Wir',them:'Gegner',addGoalUs:'Tor für uns',addGoalThem:'Tor für Gegner',
  lessUs:'Unser letztes Tor streichen',lessThem:'Ihr letztes Tor streichen',whoScored:'Wer hat getroffen?',notSure:'Weiß nicht',scorers:'Torschützen',namesNote:'Aus: nur Initialen',minCol:'Min.',
  exitAria:'Trainer-App verlassen und zurück zu Futbol Island',plansEnNote:'Plantext auf Englisch',diamond:'Raute',
+ missedBreak:'Für den Wiederanpfiff geplant. Jetzt wechseln oder ab jetzt neu planen.',arrivedQ:(n:string)=>`Ist ${n} da?`,addToPlan:'In den Plan',skipped:'Wechsel übersprungen. Die nächsten Wechsel gleichen aus, was geht.',unevenHead:'Warum die Minuten abweichen',missedMin:(n:string,m:number)=>`${n}: ${m} Min. weniger`,whyHurt:'verletzt',whyLeft:'früher gegangen',whyLate:'kam später',whySkip:'ein Wechsel wurde übersprungen',whyOther:'Wechsel kamen zu spät',
  fmt:(id:string)=>id==='futsal'?'Futsal':id
 };

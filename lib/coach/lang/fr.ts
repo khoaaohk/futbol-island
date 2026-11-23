@@ -61,5 +61,6 @@ export const fr:Words={
  home:'Domicile',awayGame:'Extérieur',notSet:'Non défini',vs:(o:string)=>`contre ${o}`,score:'Score',us:'Nous',them:'Eux',addGoalUs:'But pour nous',addGoalThem:'But pour eux',
  lessUs:'Retirer notre dernier but',lessThem:'Retirer leur dernier but',whoScored:'Qui a marqué ?',notSure:'Pas sûr',scorers:'Buteurs',namesNote:'Désactivé : initiales seulement',minCol:'Min',
  exitAria:'Quitter l’appli du coach et revenir à Futbol Island',plansEnNote:'Texte de la séance en anglais',diamond:'Losange',
+ missedBreak:'Prévu pour la reprise. Fais-le maintenant ou recalcule avec les minutes jouées.',arrivedQ:(n:string)=>`${n} est arrivé ?`,addToPlan:'Ajouter au plan',skipped:'Changement sauté. Les suivants équilibrent ce qu’ils peuvent.',unevenHead:'Pourquoi les minutes diffèrent',missedMin:(n:string,m:number)=>`${n} : ${m} min de moins`,whyHurt:'blessé',whyLeft:'parti plus tôt',whyLate:'arrivé en retard',whySkip:'un changement a été sauté',whyOther:'changements faits en retard',
  fmt:(id:string)=>id==='futsal'?'Futsal':id
 };

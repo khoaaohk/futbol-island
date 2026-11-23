@@ -61,6 +61,8 @@ const cleanGame=(g:unknown,ids:ReadonlySet<string>):Game|null=>{
   blocks:o.blocks.map(b=>({period:num(b.period),start:num(b.start),end:num(b.end),on:[...b.on],gk:okId(b.gk)?b.gk:null})),next:Math.max(0,Math.round(num(o.next))),delay:Math.max(0,num(o.delay)),
   on:[...o.on],gk:okId(o.gk)?o.gk:null,spots,stints:o.stints.filter(s=>s&&okId(s.p)).map(s=>({p:s.p,period:num(s.period),from:num(s.from),to:s.to==null?null:num(s.to),gk:!!s.gk})),status,subs:Math.max(0,Math.round(num(o.subs))),
   ...(Array.isArray(o.joined)?{joined:[...new Set(o.joined.filter(okId))] as string[]}:{}),
+  ...(o.arrive&&typeof o.arrive==='object'?{arrive:Object.fromEntries(Object.entries(o.arrive).filter(([k,v])=>ids.has(k)&&num(v)>0).map(([k,v])=>[k,Math.min(240,Math.round(num(v)))]))}:{}),
+  ...(o.skips?{skips:Math.max(0,Math.min(99,Math.round(num(o.skips))))}:{}),
   ...(o.info?{info:cleanMatch(o.info)}:{}),
   ...(o.score&&typeof o.score==='object'?{score:{goals:Array.isArray(o.score.goals)?o.score.goals.slice(0,99).map(x=>okId(x)?x as string:''):[],them:Math.max(0,Math.min(99,Math.round(num(o.score.them))))}}:{})};
 };

@@ -497,4 +497,74 @@ for(const arr of [300,605,720,900,1205]){
  ok(/html:lang\(ja\)\{--btn-font:Arial,'Hiragino Sans'/.test(read('components/motion/motion.css')),'Japanese: the phone\'s own font, no webfont');
  for(const f of ['app/coach/layout.tsx','app/scan/layout.tsx','app/board/layout.tsx'])ok(/index:false/.test(read(f)),f+' stays noindex');
 }
+/* ---- round 4G (Nov 22 2026): the independent audit's blockers ---- */
+{
+ const s=E.settingsFor(E.presetOf('7v7'));s.keeper='rotate';
+ const order=Array.from({length:10},(_,i)=>'q'+i),K=['q0','q1'];
+ const plan=E.buildPlan(order,s,K),spots=Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i]));
+ const ps=s.periodMin*60;
+ /* play the 1st half with every change made on time */
+ let g=E.newGame(plan,s,spots,Object.fromEntries(order.map(p=>[p,'ok'])),0),now=1_000_000;
+ g=E.kickOff(g,now);
+ for(let t=0;t<ps;t+=5){now+=5000;const n=E.nextChange(g);if(n&&n.due!=null&&n.due<=E.nowSec(g,now))g=E.confirmChange(g,now,n.change,n.index,K);}
+ g=E.endCurrentPeriod(g,now,K);
+ const brk=E.nextChange(g);
+ ok(brk&&brk.due==null&&!brk.missed,'B1: the half-time change waits for the restart during the break');
+ const gkTo=brk.change.gkTo;ok(gkTo&&gkTo!==g.gk,'B1: the plan swaps the keeper at half-time');
+ /* the coach restarts without pressing Done on the break change */
+ now+=60000;g=E.kickOff(g,now);now+=1000;
+ const miss=E.nextChange(g);
+ ok(miss&&miss.missed&&miss.due!=null&&miss.due-E.nowSec(g,now)<=0,'B1: after the restart the missed change is due now (missed, overdue)');
+ ok(E.alertKey(g,now)!=='','B1: and it alerts at the restart');
+ now+=E.OVERDUE_SEC*1000+1000;ok(/:late$/.test(E.alertKey(g,now)),'B1: and alerts again when 2 min late');
+ const r=E.replanNow(g,now,K),rn=E.nextChange(r);
+ ok(rn&&rn.change.gkTo===gkTo,'B1: "Replan from now" keeps the half-time keeper swap (planned keeper goes in goal)');
+ const done=E.confirmChange(r,now,rn.change,rn.index,K);ok(done.gk===gkTo,'B1: Done on the re-planned change puts the 2nd-half keeper in goal');
+ /* or Done straight away on the missed change */
+ const d2=E.confirmChange(g,now,miss.change,miss.index,K);ok(d2.gk===gkTo,'B1: Done on the missed change makes the keeper swap');
+ /* finish the game from the replanned state: minutes end level-ish, not 12 vs 51 */
+ let h=done;for(let t=E.nowSec(h,now);t<ps;t+=5){now+=5000;const n=E.nextChange(h);if(n&&n.due!=null&&n.due<=E.nowSec(h,now))h=E.confirmChange(h,now,n.change,n.index,K);}
+ h=E.endCurrentPeriod(h,now,K);const {played}=E.playedSeconds(h,0),vals=order.map(p=>played[p]??0);
+ ok(Math.max(...vals)-Math.min(...vals)<=s.subEvery*60*2+180,'B1: after a missed half-time change and a replan the minutes stay within two changes: '+vals.map(v=>Math.round(v/60)).join(','));
+ /* C1: the played blocks follow the stints (the keeper is the one who really kept goal) */
+ const pb=E.playedBlocks(h,now),pbSec=E.planSeconds(pb);
+ ok(order.every(p=>Math.abs((pbSec[p]??0)-(played[p]??0))<=1),'C1: played blocks add up to the minutes really played');
+ ok(pb.filter(b=>b.period===1&&b.start>=E.nowSec(g,now)).every(b=>b.gk===gkTo||b.start<60),'C1: the 2nd-half keeper drawn is the one who kept goal');
+}
+{
+ /* B2: a late player with an expected minute is asked about at that minute; one tap adds them and they get minutes */
+ const s=E.settingsFor(E.presetOf('7v7'));const order=Array.from({length:10},(_,i)=>'r'+i),K=['r0'];
+ const plan=E.buildPlan(order,s,K),status={...Object.fromEntries(order.map(p=>[p,'ok'])),r10:'late',r11:'late'};
+ let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0,undefined,{r10:10,r11:null}),now=0;
+ ok(g.arrive&&g.arrive.r10===10&&!('r11' in g.arrive),'B2: the expected minute goes into the game (unknown left out)');
+ g=E.kickOff(g,now);now+=9*60000;ok(E.arrivalsDue(g,now).length===0,'B2: not asked before minute 10');
+ now+=60000;ok(E.arrivalsDue(g,now).join()==='r10','B2: asked at minute 10 (only the player with a minute)');
+ g=E.setStatus(g,now,'r10','ok',K);ok(E.arrivalsDue(g,now).length===0&&(g.joined??[]).includes('r10'),'B2: one tap: here, in the plan, counted as joined late');
+ for(let t=E.nowSec(g,now);t<s.periodMin*60;t+=5){now+=5000;const n=E.nextChange(g);if(n&&n.due!=null&&n.due<=E.nowSec(g,now))g=E.confirmChange(g,now,n.change,n.index,K);}
+ g=E.endCurrentPeriod(g,now,K);
+ ok((E.playedSeconds(g,0).played.r10??0)>0||E.planSeconds(g.blocks.filter(b=>b.period===1)).r10>0,'B2: the late player gets minutes after arriving');
+ const store=S.cleanStore({v:1,team:{name:'T',players:[...order,'r10','r11'].map((id,i)=>({id,num:i+1}))},here:[...order,'r10','r11'],game:{...g}});
+ ok(store.game&&store.game.arrive&&store.game.arrive.r10===10,'B2: the expected minute survives save/load');
+ /* C7: why the minutes ended uneven */
+ let u=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok']))},0);u=E.kickOff(u,0);let t=0;
+ let sk=0;for(let k=0;k<6;k++){t+=4*60000;if(E.nextChange(u)){u=E.skipChange(u,t,K);sk++;}}
+ ok(sk>0&&u.skips===sk,'C7: skipped changes are counted ('+sk+')');
+ const un=E.unevenNotes(u,{r0:3000,r1:3000,r2:600,r3:3000,r4:3000,r5:3000,r6:3000,r7:3000,r8:3000,r9:3000});
+ ok(un.length===1&&un[0].p==='r2'&&un[0].why==='skip','C7: a player far behind after skipped changes is explained ("a change was skipped")');
+ ok(E.unevenNotes({...u,skips:0,status:{...u.status,r2:'hurt'}},{r0:3000,r1:3000,r2:600,r3:3000,r4:3000,r5:3000,r6:3000,r7:3000,r8:3000,r9:3000})[0].why==='hurt','C7: hurt explained');
+ ok(E.unevenNotes(u,Object.fromEntries(order.map(p=>[p,1800]))).length===0,'C7: level minutes: no note');
+}
+{
+ /* B4/C5 words: every language has its own OUT/IN and every board word; the board stays English by default (the game) */
+ const W=load('lib/coach/words.ts').WORDS,B=load('lib/coach/lang/board.ts');
+ ok(W.ja.out!=='OUT'&&W.ja.in!=='IN','C5: Japanese has its own Off/On words');
+ for(const l of Object.keys(W)){for(const k of ['missedBreak','addToPlan','skipped','unevenHead','whySkip'])ok(typeof W[l][k]==='string'&&W[l][k].length>0,`${l}.${k}`);
+  ok(Object.keys(B.BOARD_WORDS[l]).join()===Object.keys(B.BOARD_EN).join(),`board words ${l}: same keys`);
+  if(l!=='en')ok(B.BOARD_WORDS[l].save!==B.BOARD_EN.save||l==='nl','board words '+l+' translated');}
+ ok(W.en.skipped!==W.en.replanned&&!/level/.test(W.en.skipped),'C7: the Skip toast does not promise level minutes');
+ const tb=read('components/coaches-board/TacticsBoard.tsx');
+ ok(/words\?:BoardWords/.test(tb)&&/const L=words\?\?BOARD_EN/.test(tb)&&!/>Save</.test(tb),'B4: the board takes words, English by default');
+ ok(/words=\{BOARD_WORDS\[lang\]\}/.test(read('components/coaches-board/BoardApp.tsx')),'B4: /board passes the app language');
+ const mo=read('components/motion/motion.tsx');ok(/history\.back\(\)/.test(mo)&&/location\.replace\(/.test(mo)&&!/location\.assign\(miniBackHref/.test(read('components/scan/ScanApp.tsx')+read('components/coaches-board/BoardApp.tsx')),'B6: mini app Back steps back or replaces, never pushes');
+}
 console.log(`coach-app: ${checks} checks passed`);

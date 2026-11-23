@@ -71,7 +71,9 @@ const en={
  lessUs:'Take away our last goal',lessThem:'Take away their last goal',whoScored:'Who scored?',notSure:'Not sure',scorers:'Scorers',namesNote:'Off: initials only',minCol:'Min',
  /* round 4E (Nov 22 2026): ten languages */
  exitAria:'Exit the coach app and go back to Futbol Island',plansEnNote:'Plan text in English',diamond:'Diamond',
- fmt:(id:string)=>id==='futsal'?'Futsal':id
+ /* round 4G (Nov 22 2026): the independent audit */
+ missedBreak:'Planned for the restart. Make it now, or replan from the minutes played.',arrivedQ:(n:string)=>`Has ${n} arrived?`,addToPlan:'Add to the plan',skipped:'Change skipped. Later changes even out what they can.',unevenHead:'Why the minutes differ',missedMin:(n:string,m:number)=>`${n} missed ${m} min`,whyHurt:'hurt',whyLeft:'left early',whyLate:'arrived late',whySkip:'a change was skipped',whyOther:'changes made late',
+fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
 export type Words=typeof en;
 const es:Words={
@@ -136,7 +138,8 @@ const es:Words={
  home:'Local',awayGame:'Visitante',notSet:'Sin definir',vs:(o:string)=>`vs ${o}`,score:'Marcador',us:'Nosotros',them:'Ellos',addGoalUs:'Gol nuestro',addGoalThem:'Gol de ellos',
  lessUs:'Quitar nuestro último gol',lessThem:'Quitar su último gol',whoScored:'¿Quién marcó?',notSure:'No sé',scorers:'Goleadores',namesNote:'Sin marcar: solo iniciales',minCol:'Min',
  exitAria:'Salir de la app del entrenador y volver a Futbol Island',plansEnNote:'Texto del plan en inglés',diamond:'Rombo',
- fmt:(id:string)=>id==='futsal'?'Futsal':id
+ missedBreak:'Planeado para la reanudación. Hazlo ahora o replanea con los minutos jugados.',arrivedQ:(n:string)=>`¿Ya llegó ${n}?`,addToPlan:'Agregar al plan',skipped:'Cambio saltado. Los próximos cambios emparejan lo que pueden.',unevenHead:'Por qué varían los minutos',missedMin:(n:string,m:number)=>`${n}: ${m} min menos`,whyHurt:'lesionado',whyLeft:'se fue antes',whyLate:'llegó tarde',whySkip:'se saltó un cambio',whyOther:'cambios hechos tarde',
+fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
 import {pt} from './lang/pt';
 import {fr} from './lang/fr';

@@ -257,6 +257,8 @@ export type Game={
  stints:Stint[];status:Record<string,Status>;
  subs:number;/* changes confirmed */
  joined?:string[];/* players who came late (marked late, then arrived): left out of the fairness spread, like the calculator */
+ arrive?:Record<string,number>;/* round 4G (audit B2): a late player's expected minute of the game (from kick-off, across periods) */
+ skips?:number;/* round 4G (audit C7): changes the coach skipped (the summary says why minutes ended uneven) */
  info?:MatchInfo;/* the game's details (UX audit C17), copied from the team's next game at the start */
  score?:Score;
 };
@@ -270,10 +272,11 @@ export const addGoal=(g:Game,scorer=''):Game=>({...g,score:{goals:[...(g.score?.
 export const setScorer=(g:Game,i:number,scorer:string):Game=>g.score&&i>=0&&i<g.score.goals.length?{...g,score:{...g.score,goals:g.score.goals.map((x,k)=>k===i?scorer:x)}}:g;
 export const removeGoal=(g:Game):Game=>({...g,score:{goals:(g.score?.goals??[]).slice(0,-1),them:g.score?.them??0}});
 export const theirGoal=(g:Game,d:1|-1):Game=>({...g,score:{goals:g.score?.goals??[],them:Math.max(0,Math.min(99,(g.score?.them??0)+d))}});
-export function newGame(plan:Plan,s:Settings,spots:Record<string,number>,status:Record<string,Status>,now:number,info?:MatchInfo):Game{
- const b=plan.blocks[0];
+export function newGame(plan:Plan,s:Settings,spots:Record<string,number>,status:Record<string,Status>,now:number,info?:MatchInfo,late?:Readonly<Record<string,number|null>>):Game{
+ const b=plan.blocks[0],arrive:Record<string,number>={};
+ for(const [p,m] of Object.entries(late??{}))if(status[p]==='late'&&typeof m==='number'&&m>0)arrive[p]=m;
  return {v:1,started:now,settings:s,clock:newClock(),blocks:plan.blocks,next:1,delay:0,on:b?[...b.on]:[],gk:b?.gk??null,spots:{...spots},stints:[],status:{...status},subs:0,
-  ...(info?{info:{...info}}:{}),score:{goals:[],them:0}};
+  ...(info?{info:{...info}}:{}),...(Object.keys(arrive).length?{arrive}:{}),score:{goals:[],them:0}};
 }
 export const periodSecOf=(g:Game)=>g.settings.periodMin*60;
 export const nowSec=(g:Game,now:number)=>clockSec(g.clock,now);
@@ -307,13 +310,41 @@ export function driftSec(g:Game,period:number):number{
  let worst=0;for(const p of new Set([...Object.keys(plan),...Object.keys(played)]))worst=Math.max(worst,Math.abs((plan[p]??0)-(played[p]??0)));
  return worst;
 }
-/** The next planned change: the block it leads to, the change, and when it is due (seconds into the period; null = at kick-off). */
-export function nextChange(g:Game):{index:number;block:PBlock;change:Change;due:number|null}|null{
+/** The next planned change: the block it leads to, the change, and when it is due (seconds into the period; null = at kick-off).
+ *  Round 4G (audit B1): a change planned for the break that was not made before the restart is due at once when play restarts
+ *  (`missed`: the live screen shows it overdue, alerts again and offers "Replan from now"), never left waiting for a kick-off. */
+export function nextChange(g:Game):{index:number;block:PBlock;change:Change;due:number|null;missed:boolean}|null{
  if(g.clock.status==='done')return null;
+ const inPlay=g.clock.status==='live'||g.clock.status==='paused';
  for(let k=g.next;k<g.blocks.length;k++){const b=g.blocks[k];if(b.period!==g.clock.period)return null;
   const c=changeBetween(g.on,g.gk,{...b,on:b.on.filter(p=>(g.status[p]??'ok')==='ok')});
-  if(isChange(c))return {index:k,block:b,change:c,due:b.start===0?null:b.start+(k===g.next?g.delay:0)};}
+  if(isChange(c)){const missed=b.start===0&&inPlay;return {index:k,block:b,change:c,due:b.start===0&&!inPlay?null:b.start+(k===g.next?g.delay:0),missed};}}
  return null;
+}
+/** Round 4G (audit B2): the minute of the game (from kick-off, across periods) the clock is at now. */
+export function gameMinuteSec(g:Game,now:number):number{
+ const st=g.clock.status,ps=periodSecOf(g);
+ return st==='done'?g.settings.periods*ps:g.clock.period*ps+(st==='live'||st==='paused'?Math.min(ps,nowSec(g,now)):0);
+}
+/** Late players whose expected minute has come and who are still not marked here: the live screen asks "Has … arrived?". */
+export function arrivalsDue(g:Game,now:number):string[]{
+ if(g.clock.status==='pre'||g.clock.status==='done'||!g.arrive)return [];
+ const t=gameMinuteSec(g,now);
+ return Object.keys(g.arrive).filter(p=>g.status[p]==='late'&&g.arrive![p]*60<=t).sort((a,b)=>g.arrive![a]-g.arrive![b]);
+}
+/** Round 4G (audit C7): why a player's minutes ended well under the most played (more than one change interval, at least 2 min).
+ *  `why`: hurt, left early, came late (or never came), the coach skipped changes, or changes were made late / missed. */
+export type Uneven={p:string;short:number;why:'hurt'|'left'|'late'|'skip'|'other'};
+export function unevenNotes(g:Game,seconds:Readonly<Record<string,number>>):Uneven[]{
+ const ids=Object.keys(g.status),joined=new Set(g.joined??[]),fixed=g.settings.keeper==='fixed'?soleKeeper(g.blocks):null;
+ const base=ids.filter(p=>g.status[p]==='ok'&&!joined.has(p)&&p!==fixed);
+ if(!base.length)return [];
+ const top=Math.max(...base.map(p=>seconds[p]??0)),limit=Math.max(120,g.settings.subEvery*60);
+ const out:Uneven[]=[];
+ for(const p of ids){if(p===fixed)continue;const short=top-(seconds[p]??0);if(short<=limit)continue;
+  const st=g.status[p];
+  out.push({p,short,why:st==='hurt'?'hurt':st==='left'?'left':st==='late'||joined.has(p)?'late':(g.skips??0)>0?'skip':'other'});}
+ return out.sort((a,b)=>b.short-a.short);
 }
 const nSpotsOf=(g:Game)=>g.settings.onField;
 /** Make a change now (the coach pressed Done). */
@@ -356,10 +387,14 @@ export function skipChange(g:Game,now:number,keepers:readonly string[]=[]):Game{
  const n=nextChange(g);if(!n)return g;
  const inPlay=g.clock.status==='live'||g.clock.status==='paused',sec=inPlay?nowSec(g,now):0,ps=periodSecOf(g),nb=g.blocks[n.index+1];
  const to=nb&&nb.period===g.clock.period?nb.start:ps,holdTo=to>sec+30?to:Math.min(ps,sec+g.settings.subEvery*60);
- return withReplan({...g,next:n.index+1,delay:0},now,keepers,{holdTo});
+ return withReplan({...g,next:n.index+1,delay:0,skips:(g.skips??0)+1},now,keepers,{holdTo});
 }
 /** "Replan from now" (UX audit B3): a change missed for a while is replaced by a fresh one from the minutes really played. */
-export const replanNow=(g:Game,now:number,keepers:readonly string[]=[]):Game=>withReplan({...g,delay:0},now,keepers,{swapNow:true});
+export const replanNow=(g:Game,now:number,keepers:readonly string[]=[]):Game=>{
+ /* round 4G (audit B1): a missed half-time change keeps its keeper swap: the period's planned keeper goes in goal in the new plan */
+ const n=nextChange(g),to=n?.missed?n.change.gkTo:null,gk=to&&to!==g.gk&&(g.status[to]??'ok')==='ok'?to:undefined;
+ return withReplan({...g,delay:0},now,keepers,{swapNow:true,...(gk?{gk}:{})});
+};
 /** The live screen's alerts (UX audit B3): once when a change is due, once more (gently) when it is OVERDUE_SEC late, once when
  *  the period's time is up. '' = nothing to alert. */
 export const OVERDUE_SEC=120;
@@ -373,14 +408,14 @@ export function alertKey(g:Game,now:number):string{
 /** UX audit B4: one tap on Done makes one change; a second tap within this time is ignored. */
 export const TAP_GUARD_MS=1500;
 export const tapOk=(last:number,now:number)=>now-last>=TAP_GUARD_MS;
-type ReOpt={holdTo?:number;swapNow?:boolean};
+type ReOpt={holdTo?:number;swapNow?:boolean;gk?:string};
 function replanFrom(g:Game,now:number,keepers:readonly string[],secIn?:number,o:ReOpt={}):PBlock[]{
  const s=g.settings,live=g.clock.status==='live'||g.clock.status==='paused';
  const sec=secIn??(live?nowSec(g,now):0);
  const {played,kept}=playedSeconds(g,sec);
  const available=Object.keys(g.status).filter(p=>(g.status[p]??'ok')==='ok');
  const period=g.clock.status==='done'?s.periods:g.clock.period;
- return replan({settings:s,period,sec,periodSec:periodSecOf(g),available,on:g.on.filter(p=>available.includes(p)),gk:g.gk,played,kept,keepers,...(o.holdTo!=null?{holdOn:true,holdTo:o.holdTo}:{}),...(o.swapNow?{swapNow:true}:{})});
+ return replan({settings:s,period,sec,periodSec:periodSecOf(g),available,on:g.on.filter(p=>available.includes(p)),gk:o.gk??g.gk,played,kept,keepers,...(o.holdTo!=null?{holdOn:true,holdTo:o.holdTo}:{}),...(o.swapNow?{swapNow:true}:{})});
 }
 export function withReplan(g:Game,now:number,keepers:readonly string[]=[],o:ReOpt={}):Game{
  const sec=g.clock.status==='live'||g.clock.status==='paused'?nowSec(g,now):0;
@@ -394,6 +429,26 @@ export function withReplan(g:Game,now:number,keepers:readonly string[]=[],o:ReOp
 /** A step back: the UI keeps the last states (each action pushes one). */
 export const MAX_UNDO=30;
 export const pushUndo=(stack:readonly Game[],g:Game)=>[...stack.slice(-(MAX_UNDO-1)),g];
+/** Round 4G (audit C1): the game as PLAYED, as blocks: every stretch between two real changes (from the stints, the keeper from the
+ *  stint marked in goal), then the plan for what is still to come (players hurt, gone or not here left out). The summary's timeline
+ *  and the parents' link draw these, not the plan made before the game. */
+export function playedBlocks(g:Game,now:number):PBlock[]{
+ const st=g.clock.status;if(st==='pre')return g.blocks;
+ const inPlay=st==='live'||st==='paused',sec=inPlay?nowSec(g,now):0,cp=g.clock.period,out:PBlock[]=[];
+ const lastP=st==='done'?g.settings.periods-1:inPlay?cp:cp-1;
+ for(let p=0;p<=lastP;p++){
+  const ss=g.stints.filter(x=>x.period===p).map(x=>({...x,to:x.to??(p===cp&&inPlay?sec:x.from)})).filter(x=>x.to>x.from);
+  const cuts=[...new Set(ss.flatMap(x=>[x.from,x.to]))].sort((a,b)=>a-b);
+  for(let k=0;k+1<cuts.length;k++){const a=cuts[k],b=cuts[k+1],cov=ss.filter(x=>x.from<=a&&x.to>=b);if(!cov.length)continue;
+   out.push({period:p,start:a,end:b,on:[...new Set(cov.map(x=>x.p))],gk:cov.find(x=>x.gk)?.p??null});}
+ }
+ if(st==='done')return out;
+ const ok=(q:string)=>(g.status[q]??'ok')==='ok';
+ for(const b of g.blocks){if(b.period<cp||(inPlay&&b.period===cp&&b.end<=sec))continue;
+  const start=inPlay&&b.period===cp?Math.max(b.start,sec):b.start;
+  out.push({...b,start,on:b.on.filter(ok),gk:b.gk&&ok(b.gk)?b.gk:null});}
+ return out;
+}
 /** Minutes per player for the summary: actual stints, plus the plan for whatever is still to come. */
 export function summarySeconds(g:Game,now:number):Record<string,number>{
  const st=g.clock.status,inPlay=st==='live'||st==='paused',sec=inPlay?nowSec(g,now):0,{played}=playedSeconds(g,sec);

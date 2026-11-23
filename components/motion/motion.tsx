@@ -111,3 +111,11 @@ export const exitHref=(lang:AppLang,home?:string)=>{try{const e=window.sessionSt
 export const coachHref=(lang:AppLang)=>`/coach${langParam(lang)}`;
 /** A mini app's Back (/scan, /board): the coach app's Home when it opened this app, else the site page the coach came from, else the app's guide page. */
 export const miniBackHref=(lang:AppLang,guide:string)=>openedFromCoach()?coachHref(lang):exitHref(lang,guide);
+/** Round 4G (audit B6): a mini app's Back. When the page before this one is the coach app, it is a real step back (history.back(),
+ *  so the coach app opens on the tab it came from and the phone's Back cannot loop); otherwise the page is replaced, never pushed. */
+export function goMiniBack(lang:AppLang,guide:string){
+ try{const r=document.referrer?new URL(document.referrer):null;
+  if(r&&r.origin===location.origin&&/^\/(es\/)?coach(\/|$)/.test(r.pathname)&&window.history.length>1){window.history.back();return;}}catch{/* fall through */}
+ const href=miniBackHref(lang,guide);
+ window.location.replace(href.startsWith('/coach')?href+'#tool=training':href);
+}

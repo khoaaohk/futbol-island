@@ -61,5 +61,6 @@ export const nl:Words={
  home:'Thuis',awayGame:'Uit',notSet:'Nog open',vs:(o:string)=>`tegen ${o}`,score:'Stand',us:'Wij',them:'Zij',addGoalUs:'Goal voor ons',addGoalThem:'Goal voor hen',
  lessUs:'Ons laatste doelpunt schrappen',lessThem:'Hun laatste doelpunt schrappen',whoScored:'Wie scoorde?',notSure:'Weet niet',scorers:'Doelpuntenmakers',namesNote:'Uit: alleen initialen',minCol:'Min',
  exitAria:'De trainersapp verlaten en terug naar Futbol Island',plansEnNote:'Plantekst in het Engels',diamond:'Ruit',
+ missedBreak:'Gepland voor de herstart. Doe hem nu of plan opnieuw vanaf de gespeelde minuten.',arrivedQ:(n:string)=>`Is ${n} er?`,addToPlan:'In het plan',skipped:'Wissel overgeslagen. De volgende wissels trekken gelijk wat kan.',unevenHead:'Waarom de minuten verschillen',missedMin:(n:string,m:number)=>`${n}: ${m} min minder`,whyHurt:'geblesseerd',whyLeft:'eerder weg',whyLate:'later gekomen',whySkip:'een wissel is overgeslagen',whyOther:'wissels te laat gedaan',
  fmt:(id:string)=>id==='futsal'?'Futsal':id
 };

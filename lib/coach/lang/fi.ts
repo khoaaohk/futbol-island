@@ -61,5 +61,6 @@ export const fi:Words={
  home:'Koti',awayGame:'Vieras',notSet:'Ei asetettu',vs:(o:string)=>`vs. ${o}`,score:'Tulos',us:'Me',them:'He',addGoalUs:'Maali meille',addGoalThem:'Maali vastustajalle',
  lessUs:'Poista oma viimeisin maali',lessThem:'Poista vastustajan viimeisin maali',whoScored:'Kuka teki maalin?',notSure:'En tiedä',scorers:'Maalintekijät',namesNote:'Pois: vain nimikirjaimet',minCol:'Min',
  exitAria:'Poistu valmentajan sovelluksesta ja palaa Futbol Islandiin',plansEnNote:'Suunnitelman teksti englanniksi',diamond:'Timantti',
+ missedBreak:'Suunniteltu jatkon alkuun. Tee se nyt tai suunnittele uudelleen pelatuista minuuteista.',arrivedQ:(n:string)=>`Onko ${n} paikalla?`,addToPlan:'Lisää suunnitelmaan',skipped:'Vaihto ohitettiin. Seuraavat vaihdot tasaavat minkä voivat.',unevenHead:'Miksi minuutit eroavat',missedMin:(n:string,m:number)=>`${n}: ${m} min vähemmän`,whyHurt:'loukkaantui',whyLeft:'lähti aiemmin',whyLate:'tuli myöhässä',whySkip:'vaihto ohitettiin',whyOther:'vaihdot tehtiin myöhässä',
  fmt:(id:string)=>id==='futsal'?'Futsal':id
 };

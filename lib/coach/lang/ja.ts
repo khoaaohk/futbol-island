@@ -25,7 +25,7 @@ export const ja:Words={
  breakName:(n:number)=>n===2?'ハーフタイム':'休憩',
  kickOff:'キックオフ',kickOffNext:(p:string)=>`${p}開始`,endPeriod:(p:string)=>`${p}終了`,pause:'一時停止',resume:'再開',stoppage:'+1分',
  nextSub:'次の交代',subIn:(t:string)=>`あと${t}`,subNow:'今すぐ交代',subAtBreak:'再開前に',subStopped:'次にプレーが止まった時',
- out:'OUT',in:'IN',goesInGoal:'GKへ',done:'完了',delay:'1分遅らせる',skip:'スキップ',noMoreSubs:'予定の交代はもうありません',
+ out:'下がる',in:'入る',goesInGoal:'GKへ',done:'完了',delay:'1分遅らせる',skip:'スキップ',noMoreSubs:'予定の交代はもうありません',
  undo:'元に戻す',exit:'終了',exitConfirm:'試合画面を離れますか？時計は動き続け、あとで戻れます。',
  hurt:'ケガ',left:'早退',late:'未到着',arrived:'到着',back:'復帰',playerActions:'選手',
  replanned:'出場時間がそろうようにプランを更新しました',
@@ -61,5 +61,6 @@ export const ja:Words={
  home:'ホーム',awayGame:'アウェイ',notSet:'未設定',vs:(o:string)=>`vs ${o}`,score:'スコア',us:'自チーム',them:'相手',addGoalUs:'自チームの得点',addGoalThem:'相手の得点',
  lessUs:'自チームの最後の得点を取り消す',lessThem:'相手の最後の得点を取り消す',whoScored:'誰が決めた？',notSure:'わからない',scorers:'得点者',namesNote:'オフ：イニシャルのみ',minCol:'分',
  exitAria:'コーチアプリを終了してFutbol Islandに戻る',plansEnNote:'プランの本文は英語です',diamond:'ダイヤモンド',
+ missedBreak:'後半開始前の交代です。今交代するか、出場時間から組み直してください。',arrivedQ:(n:string)=>`${n}が到着しましたか？`,addToPlan:'プランに入れる',skipped:'交代をスキップしました。この後の交代でできるだけ均等にします。',unevenHead:'出場時間に差がある理由',missedMin:(n:string,m:number)=>`${n}：${m}分少ない`,whyHurt:'けが',whyLeft:'早退',whyLate:'遅れて到着',whySkip:'交代をスキップ',whyOther:'交代が遅れた',
  fmt:(id:string)=>{if(id==='futsal')return 'フットサル';const m=/^(\d+)v\d+$/.exec(id);return m?`${m[1]}人制`:id;}
 };

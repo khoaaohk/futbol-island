@@ -3,7 +3,8 @@ import {useEffect,useState} from 'react';
 import TacticsBoard from './TacticsBoard';
 import s from './TacticsBoard.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
-import {miniBackHref,noteAppEntry} from '@/components/motion/motion';
+import {goMiniBack,noteAppEntry} from '@/components/motion/motion';
+import {BOARD_WORDS} from '@/lib/coach/lang/board';
 import web from './BoardWeb.module.css';
 import {isAppLang,LOCALE,siteLang,type AppLang} from '@/lib/i18n/appLangs';
 /** the board's name in the ten app languages (the coach app's `boardName`) */
@@ -17,15 +18,15 @@ import '@/components/motion/motion.css';
  * light chrome here is only a scope of its CSS variables (BoardWeb.module.css), and it gets no Back of its own.
  */
 export default function BoardApp(){
- /* the coach app's language (round 4A, UX audit C9; round 4E: all ten): ?lang= from the coach app; the header follows it (the board
-    itself is shared with the game and keeps its own English words) */
+ /* the coach app's language (round 4A, UX audit C9; round 4E: all ten): ?lang= from the coach app; the header follows it (round 4G:
+    the board's own words too, passed in; the game passes none and keeps English) */
  const [lang,setLang]=useState<AppLang>('en');
  useEffect(()=>{noteAppEntry('board');try{const q=new URLSearchParams(location.search).get('lang');if(isAppLang(q)&&q!=='en'){setLang(q);document.documentElement.lang=LOCALE[q];}}catch{/* none */}},[]);
  const title=BOARD_TITLE[lang],guide=siteLang(lang)==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board';
  return <div className={web.web} data-board-app="" translate="no">
   <h1 className={web.srOnly}>{title}</h1>
   <AppHeader lang={lang} title={title} sub="Futbol Island" exitAria="" exit={false}
-   left={<HeaderGoldBack lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,guide));}} data={{'data-board-coach':''}}/>}/>
-  <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard/></div></div>
+   left={<HeaderGoldBack lang={lang} onBack={()=>goMiniBack(lang,guide)} data={{'data-board-coach':''}}/>}/>
+  <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard words={BOARD_WORDS[lang]}/></div></div>
  </div>;
 }
