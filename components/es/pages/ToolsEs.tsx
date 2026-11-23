@@ -68,7 +68,7 @@ function esLink(enPath:string,o:{name?:string;line?:string;key?:boolean}={}):Lin
  const f=ES_FORMATIONS().find(x=>x.path===enPath);if(f)return {path:f.esPath,name:o.name??`Formación ${f.name}`,line:o.line??f.best};
  const p=ES_POSITIONS().find(x=>x.path===enPath);if(p)return {path:p.esPath,name:o.name??p.name,line:o.line??'Qué hace esta posición'};
  const hub=Object.values(ES_HUBS).find(h=>h.enPath===enPath);if(hub)return {path:hub.path,name:o.name??hub.h1,line:o.line??hub.blurb};
- const g=(['7v7','9v9','11v11'] as const).find(x=>`/learn/${x}-soccer-formations`===enPath);if(g){const e=esFormatGuide(g);return {path:e.esPath,name:o.name??`Formaciones de fútbol ${g}`,line:o.line??e.blurb};}
+ const g=(['7v7','8v8','9v9','11v11'] as const).find(x=>`/learn/${x}-soccer-formations`===enPath);if(g){const e=esFormatGuide(g);return {path:e.esPath,name:o.name??e.h1,line:o.line??e.blurb};}
  const other=OTHER[enPath],name=o.name??other?.[0],line=o.line??other?.[1]??'';if(!name)return null;
  if(hasEs(enPath))return {path:toEs(enPath),name,line};
  return o.key?{path:enPath,name:`${name} (en inglés)`,line}:null;
@@ -186,7 +186,7 @@ function ToolsHubEs(){
    <ToolCards links={[toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!)]} tint="print"/>
   </Section>
   <QA id="faq" title="Preguntas sobre las herramientas" faq={HUB.faq}/>
-  <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),
+  <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, fútbol 8, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/8v8-soccer-formations',{line:'El 3-3-1, el 3-2-2 y el 2-3-2 comparados, con las normas regionales'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),
    esLink('/learn/soccer-rules',{name:'Reglas del fútbol para niños',line:'Cada regla con un diagrama'}),esLink('/learn/soccer-age-groups'),esLink('/learn/lessons')])}/></Section>
   <EsToolEnd/>
  </>;
@@ -196,10 +196,10 @@ function ToolsHubEs(){
 const shapesEs=SHAPES.map(s=>({...s,lines:esLines(s.lines)}));
 function LineupEs({p}:{p:LineupPage}){
  const e=lineupEs(p),format=p.format??'7v7',f=esFormation(DEFAULT_FORMATION[format]),crumbs=toolCrumbsEs({name:e.crumb,path:toEs(p.path)});
- /* round 4D: fútbol 8 has builder shapes but no formation guides yet: the field size guide, the comparison and the other builders */
+ /* round 4D: fútbol 8 has no printables; round 4F: its formation guides first, then the field size guide, the comparison and the other builders */
  const eight=format==='8v8';
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>{const o=toolLink(x.path)!;return {...o,name:cap(o.name)};});
- const related=eight?links([esLink('/learn/soccer-field-size-by-age',{line:'Medidas de cancha, arco y balón para cada edad'}),esLink('/learn/7v7-9v9-11v11',{line:'Cómo crecen las modalidades reducidas hasta el fútbol 11'}),esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]):links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
+ const related=eight?links([...esFormationsIn('8v8').map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})),esLink('/learn/8v8-soccer-formations',{line:'Las tres formas del fútbol 8 comparadas, con las normas que las marcan'}),esLink('/learn/soccer-field-size-by-age',{line:'Medidas de cancha, arco y balón para cada edad'}),esLink('/learn/7v7-9v9-11v11',{line:'Cómo crecen las modalidades reducidas hasta el fútbol 11'}),esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]):links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
   p.format?esLink(format==='futsal'?'/learn/futsal-for-kids':`/learn/${format}-soccer-formations`,{line:'Cómo elegir una forma, con un diagrama de cada una',key:true}):esLink('/learn/soccer-formations',{name:'Las formaciones de fútbol explicadas',line:'Cómo elegir una forma, con un diagrama de cada una'}),
   p.format?esLink(cheatSheetPath(format),{line:'Cada forma de esta modalidad en una página para imprimir'}):esLink(PRINTABLES_HUB_PATH,{name:'Hojas de referencia de formaciones y canchas en blanco'}),
   esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]);
@@ -228,7 +228,7 @@ function LineupEs({p}:{p:LineupPage}){
    </Section>
    <Section id="about" title={p.format?`Sobre las alineaciones de ${fmtWord}`:'Por qué dibujar la alineación'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
    {!p.format&&<Section id="shapes" title="Todas las formaciones que puedes armar" fold>
-    <p>{ES_FORMATIONS().length} formas en cuatro modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
+    <p>{ES_FORMATIONS().length} formas en cinco modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
     <LinkList links={ES_FORMATIONS().map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best}))}/>
    </Section>}
    {eight&&e.rules&&<Section id="rules" title="Reglas del fútbol 8 de un vistazo">

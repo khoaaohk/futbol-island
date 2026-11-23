@@ -8,7 +8,7 @@ import type {Line} from '@/lib/site/pitch';
 import {RULES_ES,RULES_HUB_ES} from './rules';
 import {TERMS_ES,TERMS_HUB_ES} from './terms';
 import {POSITIONS_ES,POSITIONS_HUB_ES} from './positions';
-import {FORMATIONS_ES,FORMAT_GUIDES_ES,FORMATIONS_HUB_ES,shapeEs} from './formations';
+import {F8_SOURCES_ES,FORMATIONS_ES,FORMAT_GUIDES_ES,FORMATIONS_HUB_ES,shapeEs} from './formations';
 import {COMPARISONS_ES} from './comparisons';
 import type {CoachNotesEs,SceneEs} from './types';
 import {toEs} from '../esPaths';
@@ -44,15 +44,15 @@ const same=(slug:string,what:string,a:readonly unknown[],b:readonly unknown[])=>
 export function esFormation(slug:string):EsFormation|null{
  const f=formationBySlug(slug);if(!f)return null;const e=need(FORMATIONS_ES,slug,'formation');
  same(slug,'roles',f.roles,e.roles);same(slug,'strengths',f.strengths,e.strengths);same(slug,'weak',f.weak,e.weak);
- const sh=shapeEs(f.shape,slug),fs=f.format==='futsal';
- return {...f,shapeEs:sh,name:fs?`${sh} (futsal)`:`${sh} (${f.format})`,title:fs?`Formación ${sh} de futsal: roles y diagrama`:`Formación ${sh} en fútbol ${f.format}: roles y diagrama`,
-  h1:fs?`Formación ${sh} de futsal`:`Formación ${sh} de fútbol (${f.format})`,best:e.best,watch:e.watch,desc:e.desc,answer:e.answer,
+ const sh=shapeEs(f.shape,slug),fs=f.format==='futsal',f8=f.format==='8v8';/* round 4F: Spanish says “fútbol 8”, not “8v8” */
+ return {...f,shapeEs:sh,name:fs?`${sh} (futsal)`:f8?`${sh} (fútbol 8)`:`${sh} (${f.format})`,title:fs?`Formación ${sh} de futsal: roles y diagrama`:f8?`Formación ${sh} en fútbol 8: roles y diagrama`:`Formación ${sh} en fútbol ${f.format}: roles y diagrama`,
+  h1:fs?`Formación ${sh} de futsal`:f8?`Formación ${sh} de fútbol 8`:`Formación ${sh} de fútbol (${f.format})`,sources:f.sources?F8_SOURCES_ES:undefined,best:e.best,watch:e.watch,desc:e.desc,answer:e.answer,
   roles:f.roles.map((r,i)=>({...r,title:e.roles[i].title,job:e.roles[i].job})),strengths:[...e.strengths],weak:f.weak.map((w,i)=>({...w,spot:e.weak[i].spot,cover:e.weak[i].cover})),
   attack:e.attack,defend:e.defend,suits:e.suits,faq:e.faq.map(q=>({...q})),esPath:toEs(f.path),notes:e.notes};
 }
 export const ES_FORMATIONS=():EsFormation[]=>FORMATIONS.map(f=>esFormation(f.slug)!);
 export const esFormationsIn=(format:string)=>ES_FORMATIONS().filter(f=>f.format===format);
-export const esFormatGuide=(format:'7v7'|'9v9'|'11v11')=>{const g=FORMAT_GUIDES.find(x=>x.format===format)!;return {...g,...FORMAT_GUIDES_ES[format],esPath:toEs(g.path)};};
+export const esFormatGuide=(format:'7v7'|'8v8'|'9v9'|'11v11')=>{const g=FORMAT_GUIDES.find(x=>x.format===format)!;return {...g,...FORMAT_GUIDES_ES[format],esPath:toEs(g.path)};};
 export type EsComparison=Comparison&{esPath:string};
 export function esComparison(slug:string):EsComparison|null{const c=comparisonBySlug(slug);if(!c)return null;const e=need(COMPARISONS_ES,slug,'comparison');
  return {...c,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,fit:[...e.fit],switching:[...e.switching],esPath:toEs(c.path)};}

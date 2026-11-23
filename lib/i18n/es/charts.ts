@@ -112,6 +112,7 @@ export const LINKS_ES:Readonly<Record<string,LinkEs>>={
  '/learn/soccer-rules/build-out-line':{name:'La línea de salida en 7v7',line:'La línea discontinua de una cancha de 7v7'},
  '/learn/soccer-rules/heading-rules-for-kids':{name:'Reglas para cabecear en EE. UU.',line:'No se cabecea a los 10 años o menos'},
  '/learn/7v7-soccer-formations':{name:'Formaciones de fútbol 7v7',line:'Formas para equipos U9 y U10'},
+ '/learn/8v8-soccer-formations':{name:'Formaciones de fútbol 8',line:'Formas para la modalidad de ocho que se juega en España'},/* round 4F */
  '/learn/9v9-soccer-formations':{name:'Formaciones de fútbol 9v9',line:'Formas para equipos U11 y U12'},
  '/learn/11v11-soccer-formations':{name:'Formaciones de fútbol 11v11',line:'Formas para el juego completo'},
  '/learn/soccer-rules/futsal-rules':{name:'Reglas del futsal que son diferentes del fútbol',line:'Un balón más pequeño, una cancha más pequeña'},
