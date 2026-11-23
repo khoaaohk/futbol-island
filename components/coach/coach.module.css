@@ -579,4 +579,6 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
  .card>.cardBtns,.card .cardBtns{position:sticky;bottom:0;margin-top:auto;background:#fff;padding:10px 0 max(10px,env(safe-area-inset-bottom));z-index:1}
  .clock{font-size:52px}
  .scoreNum{font-size:32px}
+ /* the toast stays in the left column, clear of the panel's buttons */
+ .app[data-tool] .toast{right:calc(50% + 8px)}
 }
