@@ -5,7 +5,7 @@ import type {CoachDrill,CoachPlan,CoachPlans} from '@/lib/coach/plansData';
 import {AGES,type Age} from '@/lib/coach/route';
 import type {Words} from '@/lib/coach/words';
 import type {Lang} from '@/lib/coach/store';
-import {langParam} from '@/lib/i18n/appLangs';
+import {langParam,LOCALE} from '@/lib/i18n/appLangs';
 import c from './coach.module.css';
 import t from './tabs.module.css';
 /**
@@ -32,9 +32,9 @@ export function planOfDay(plans:readonly CoachPlan[],age:Age,day:number){const l
 const SCAN=new Set(['scanning']),BOARD=new Set(['small-sided','passing','attacking-1v1','defending-1v1','first-touch','shooting']);
 export const boardHref=(lang:Lang)=>`/board?from=coach${langParam(lang,'&')}`;
 export const scanHref=(lang:Lang)=>`/scan?from=coach${langParam(lang,'&')}`;
-/** the plans' text exists in English and Spanish only (round 4E): the other eight languages get the English plans under their
- *  own words, with a small "Plan text in English" note (lib/coach/plansData.ts; translating the 46 drills is a follow-up) */
-export const planLang=(lang:Lang):'en'|'es'=>lang==='es'?'es':'en';
+/** the plans' text in every app language (round 4F: one file per language, fetched on demand); a language without a translation
+ *  file comes back as the English plans flagged `en` and shows a small "Plan text in English" note (lib/coach/plansData.ts) */
+export const planLang=(lang:Lang):Lang=>lang;
 type Props={w:Words;lang:Lang;version:string;teamAge:Age;age?:Age;plan?:string;run?:boolean;onAge:(a:Age)=>void;onPlan:(slug:string)=>void;onRun:(on:boolean)=>void};
 export default function PlansTool(p:Props){
  const {data,retry}=usePlans(planLang(p.lang),p.version),w=p.w;
@@ -42,11 +42,11 @@ export default function PlansTool(p:Props){
  if(!data)return <p className={c.note} aria-live="polite">{w.loadingPlans}</p>;
  const plan=p.plan?data.plans.find(x=>x.slug===p.plan):undefined;
  if(plan&&p.run)return <Session w={w} plan={plan} onEnd={()=>p.onRun(false)}/>;
- if(plan)return <PlanView w={w} lang={p.lang} onRun={p.onRun} plan={plan} drills={data.drills}/>;
+ if(plan)return <PlanView w={w} lang={p.lang} en={!!data.en} onRun={p.onRun} plan={plan} drills={data.drills}/>;
  const age=p.age??p.teamAge,list=data.plans.filter(x=>x.age===age);
  return <>
   <h1 className={c.srOnly}>{w.plansTitle}</h1>
-  {planLang(p.lang)!==p.lang&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
+  {data.en&&p.lang!=='en'&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
   <div className={t.ages} role="tablist" aria-label={w.plansTitle}>{AGES.map(a=><button key={a} type="button" role="tab" aria-selected={a===age} className={t.age} onClick={()=>p.onAge(a)}>{a}{a===p.teamAge&&<small>{w.teamAge}</small>}</button>)}</div>
   <ul className={t.planList}>{list.map((x,i)=>{const d=data.drills[x.drills[1]??x.drills[0]];return <li key={x.slug} className="fi-in" style={{'--i':i} as React.CSSProperties}>
    <button type="button" className={t.planCard} onClick={()=>p.onPlan(x.slug)} data-plan={x.slug}>
@@ -55,12 +55,12 @@ export default function PlansTool(p:Props){
    </button></li>;})}</ul>
  </>;
 }
-function PlanView({w,lang,plan,drills,onRun}:{w:Words;lang:Lang;onRun:(on:boolean)=>void;plan:CoachPlan;drills:Record<string,CoachDrill>}){
+function PlanView({w,lang,en,plan,drills,onRun}:{w:Words;lang:Lang;en:boolean;onRun:(on:boolean)=>void;plan:CoachPlan;drills:Record<string,CoachDrill>}){
  const [open,setOpen]=useState<string|null>(null);
  const clock=(m:number)=>`${m}′`;
  return <article className={t.plan}>
-  <h1 className={t.planH1} lang={planLang(lang)}>{plan.h1}</h1>
-  {planLang(lang)!==lang&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
+  <h1 className={t.planH1} lang={en?'en':LOCALE[lang]}>{plan.h1}</h1>
+  {en&&lang!=='en'&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
   <p className={t.planMeta}>{w.minutesN(plan.minutes)} · {plan.players} · {plan.goal}</p>
   <div className={`${c.btnRow} ${c.noPrint}`}>
    <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>onRun(true)} data-plan-start="">{w.startSession}</button>
