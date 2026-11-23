@@ -20,6 +20,7 @@ import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {esRuleCrossLinks,esTermCrossLinks} from '@/lib/i18n/es/crossLinks';
+import {positionTermSlugs} from '@/lib/site/crossLinks';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
 import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLibCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
@@ -261,6 +262,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
    {id:'formations',label:'Formación',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]:[]},
    {id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(p.path)},
+   {id:'terms',links:positionTermSlugs(p.slug).map(s=>ES_TERMS().find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:`${x.name} (término)`,line:x.short}))},/* Nov 22 2026, as in English */
    {id:'compare',label:'Comparar',icon:'swap',links:compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}],p.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>

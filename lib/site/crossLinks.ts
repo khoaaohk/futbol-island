@@ -27,11 +27,11 @@ const R='/learn/soccer-rules/';
 const RULE_LINKS:Record<string,{tool:ToolKey;terms:string[];rules?:string[]}>={
  'kick-off':{tool:'calc',terms:['set-piece','pressing','own-goal','extra-time']},
  'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal','support'],rules:['yellow-and-red-cards']},
- 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up','goal-area']},
+ 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up','goal-area','penalty-area']},
  'corner-kick':{tool:'fields',terms:['set-piece','cross','cutback','marking','far-post','near-post'],rules:['heading-rules-for-kids']},
  'drop-ball':{tool:'fields',terms:['set-piece','first-touch']},
  'yellow-and-red-cards':{tool:'lineup',terms:['yellow-card','red-card','tackle']},
- 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying'],rules:['yellow-and-red-cards']},
+ 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying','penalty-area'],rules:['yellow-and-red-cards']},
  'penalty-kick':{tool:'fields',terms:['set-piece','red-card','brace','penalty-area','penalty-shoot-out'],rules:['yellow-and-red-cards']},
  'handball':{tool:'fields',terms:['free-kick-wall','yellow-card','red-card','sweeper-keeper','penalty-area'],rules:['yellow-and-red-cards']},
  'advantage':{tool:'fields',terms:['counterattack','tackle','yellow-card'],rules:['yellow-and-red-cards']},
@@ -98,6 +98,22 @@ for(const t of TERM_PAGES){const row=TERM_RULES[t.slug];if(!row||row.length===0)
 Object.values(TERM_TOOL).forEach(tool);Object.values(ROLE_TOPICS).flat().forEach(topic);
 
 /** A rule page's links out of its cluster: its coach tool, its terms, a sister rule. */
+/** Position page -> the glossary terms that position uses most (SEO striking-distance round, Nov 22 2026): contextual links
+ *  into the term pages near page one (through ball, 2v1, cutback, give-and-go, jockeying, penalty area, false nine). */
+const POSITION_TERMS:Record<string,string[]>={
+ 'goalkeeper':['penalty-area','sweeper-keeper','goal-area','clean-sheet'],
+ 'center-back':['jockeying','goal-side','high-line','clearance','header'],
+ 'fullback':['overlap','jockeying','cross','underlap'],
+ 'wingback':['overlap','cross','cutback','width'],
+ 'defensive-midfielder':['pivot','cover','pressing','box-to-box'],
+ 'central-midfielder':['box-to-box','give-and-go','switching-play','scanning'],
+ 'attacking-midfielder':['through-ball','give-and-go','two-v-one','false-nine','assist'],
+ 'winger':['cutback','two-v-one','cross','dribble'],
+ 'striker':['false-nine','through-ball','cutback','penalty-area','hat-trick'],
+};
+for(const [p,ts] of Object.entries(POSITION_TERMS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(termLink);}
+export const positionTermSlugs=(slug:string):readonly string[]=>POSITION_TERMS[slug]??[];
+export const positionTermLinks=(slug:string):XLink[]=>positionTermSlugs(slug).map(termLink);
 export function ruleCrossLinks(slug:string):XLink[]{
  const row=RULE_LINKS[slug];if(!row)return [];
  return uniq([toolLink(row.tool),...row.terms.map(termLink),...(row.rules??[]).map(ruleLink)],R+slug);

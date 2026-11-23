@@ -251,9 +251,9 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next7_shotreaction','expf_keeperposition','def_7_goalside'],cta:'next7_shotreaction',exhibitIds:['penalty-1891'],links:[L.gk,L.st,L.cb]},
  // ---- yellow and red cards -----------------------------------------------------------------------------------------------
  {slug:'yellow-and-red-cards',name:'Yellow and red cards',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'Yellow and Red Card Rules in Soccer: Full List of Offenses',h1:'Yellow and red card rules in soccer: the full list of offenses',
-  desc:'The yellow and red card rules in soccer (Law 12), listed: all 14 card offenses, a yellow vs red table, sin bins in kids’ soccer and a referee quiz game.',
-  answer:'A yellow card in soccer is a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card sends the player off for the rest of the game, and the team plays one player short, with no one to replace them.',
+  title:'Yellow and Red Card Rules in Soccer: Meaning + All Offenses',h1:'Yellow and red cards in soccer: what they mean and the full rules',
+  desc:'Yellow and red card rules in soccer: yellow is a warning, red is a sending-off. What each card means, Law 12’s 14 card offenses and a referee game.',
+  answer:'In soccer (football), a yellow card means a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card means a sending-off for the rest of the game, and the team plays one player short, with no one to replace them.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
   refs:['Yellow: a reckless foul, stopping a promising attack with a foul, arguing with the referee, delaying a restart, not giving the distance at a free kick, pretending to be fouled.',
