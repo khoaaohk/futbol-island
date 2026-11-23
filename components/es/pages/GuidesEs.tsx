@@ -27,6 +27,7 @@ import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
+import {RuleExtraSection} from '@/lib/site/GuideParts';
 import {CardRulesGame,CardRulesPages,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import {cardDeckOf} from '@/lib/site/cardRules';
@@ -106,6 +107,7 @@ export function RuleEsPage({r}:{r:EsRule}){
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`pase: ${s.title.toLowerCase()}`:undefined}/></div>)}</div>
     :<EsSceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
+  {r.extra&&<RuleExtraSection x={r.extra}/>}
   {cards&&<CardRulesGame c={CARD_RULES_ES} lang="es"/>}
   {play&&<RulePlayGame c={play} lang="es"/>}
   <Section id="referee" title="Lo que mira el árbitro">
