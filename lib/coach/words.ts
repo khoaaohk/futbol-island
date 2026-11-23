@@ -49,8 +49,17 @@ const en={
  squadFrom:'Players',startEmpty:'Start with an empty squad',copyFrom:(n:string)=>`Copy players from ${n}`,liveTag:'Game in progress',endFirst:'End its game first',maxTeams:'You can keep up to 12 teams.',
  /* the live game: the mini bar on every screen and the Next change panel */
  groupGame:'Game day',groupTraining:'Training',
- changeIn:(t:string)=>`Next change ${t}`,changeNow:'Change now',swapsN:(n:number)=>`${n} swap${n===1?'':'s'}`,openMatch:'Open Match day',showChange:'Show the change',hideChange:'Hide the change'
-
+ changeIn:(t:string)=>`Next change ${t}`,changeNow:'Change now',swapsN:(n:number)=>`${n} swap${n===1?'':'s'}`,openMatch:'Open Match day',showChange:'Show the change',hideChange:'Hide the change',
+ /* round 4A (Nov 22 2026): the two tab pages, the language sheet, practice plans in the app */
+ navGameDay:'Game Day',navTraining:'Training',navLang:'Language',langTitle:'Language',
+ nextGame:'Next game',startMatch:'Start Match day',backToGame:'Back to the game',gameDone:'Game finished',seeSummary:'See the summary',
+ squadLine:(n:number)=>`${n} in the squad`,editSquad:'Edit squad',gdMore:'Plan the game',trMore:'More for practice',
+ tonight:'Tonight\'s practice',openPlan:'Open plan',inTonight:'In this plan',fieldDiagrams:'Field diagrams',lineFieldDiagrams:'Every format, with the measurements',
+ plansTitle:'Practice plans',plansAge:(a:string)=>`Plans for ${a}`,plansN:(n:number)=>`${n} plans`,minutesN:(n:number)=>`${n} min`,teamAge:'Your team',
+ planClock:'The plan',equipment:'Equipment',coachNotes:'Coach notes',goingBadly:'If it is going badly',drillsInPlan:'Drills in this plan',howItWorks:'How it works',coachPoints:'Coaching points',
+ startSession:'Start session',endSession:'End session',nextPart:'Next part',prevPart:'Previous',partOf:(a:number,b:number)=>`${a} of ${b}`,sessionDone:'Practice done. Great work.',upNext:'Up next',
+ onBoard:'Show on the tactics board',inScan:'Run in Scan trainer',fullPage:'Full plan page',loadingPlans:'Loading plans…',plansFail:'The plans did not load. Check your connection.',retry:'Try again',
+ soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`
 };
 export type Words=typeof en;
 const es:Words={
@@ -97,7 +106,15 @@ const es:Words={
  teamN:(i:number)=>`Equipo ${i}`,newTeam:'Equipo nuevo',stepN:(a:number,b:number)=>`Paso ${a} de ${b}`,nextStep:'Siguiente',prevStep:'Atrás',createTeam:'Crear equipo',
  squadFrom:'Jugadores',startEmpty:'Empezar con el plantel vacío',copyFrom:(n:string)=>`Copiar jugadores de ${n}`,liveTag:'Partido en curso',endFirst:'Termina su partido primero',maxTeams:'Puedes tener hasta 12 equipos.',
  groupGame:'Día de partido',groupTraining:'Entrenamiento',
- changeIn:(t:string)=>`Próximo cambio ${t}`,changeNow:'Cambio ahora',swapsN:(n:number)=>`${n} cambio${n===1?'':'s'}`,openMatch:'Abrir Día de partido',showChange:'Ver el cambio',hideChange:'Ocultar el cambio'
-
+ changeIn:(t:string)=>`Próximo cambio ${t}`,changeNow:'Cambio ahora',swapsN:(n:number)=>`${n} cambio${n===1?'':'s'}`,openMatch:'Abrir Día de partido',showChange:'Ver el cambio',hideChange:'Ocultar el cambio',
+ navGameDay:'Partido',navTraining:'Entrenamiento',navLang:'Idioma',langTitle:'Idioma',
+ nextGame:'Próximo partido',startMatch:'Empezar Día de partido',backToGame:'Volver al partido',gameDone:'Partido terminado',seeSummary:'Ver el resumen',
+ squadLine:(n:number)=>`${n} en el plantel`,editSquad:'Editar plantel',gdMore:'Planear el partido',trMore:'Más para entrenar',
+ tonight:'El entrenamiento de hoy',openPlan:'Abrir plan',inTonight:'En este plan',fieldDiagrams:'Diagramas de cancha',lineFieldDiagrams:'Cada formato, con sus medidas',
+ plansTitle:'Planes de entrenamiento',plansAge:(a:string)=>`Planes para ${a}`,plansN:(n:number)=>`${n} planes`,minutesN:(n:number)=>`${n} min`,teamAge:'Tu equipo',
+ planClock:'El plan',equipment:'Material',coachNotes:'Notas para el entrenador',goingBadly:'Si no está funcionando',drillsInPlan:'Ejercicios de este plan',howItWorks:'Cómo se hace',coachPoints:'Puntos clave',
+ startSession:'Empezar sesión',endSession:'Terminar sesión',nextPart:'Siguiente parte',prevPart:'Anterior',partOf:(a:number,b:number)=>`${a} de ${b}`,sessionDone:'Entrenamiento terminado. Buen trabajo.',upNext:'Después',
+ onBoard:'Ver en la pizarra táctica',inScan:'Hacerlo en el Entrenador de escaneo',fullPage:'Página del plan',loadingPlans:'Cargando planes…',plansFail:'No se cargaron los planes. Revisa tu conexión.',retry:'Intentar de nuevo',
+ soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`
 };
 export const WORDS={en,es};

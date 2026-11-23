@@ -12,8 +12,13 @@ import {TeamButton,TeamSheet,presetSettings} from './TeamSheet';
 import {LiveBar,toggleClock} from './LiveDock';
 import c from './coach.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
-import {exitHref,noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
+import {noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
 import '@/components/motion/motion.css';
+import {ROOTS,TOOLS,ageFor,hashFor,hashNamesScreen,homeOf,isRoot,landingStack,parseHash,sameRoute,type Age,type Root,type Route,type Screen} from '@/lib/coach/route';
+import PlansTool from './PlansTool';
+import {GameDayTab,HOME_Y,TrainingTab} from './TabPages';
+import {liveLine} from './LiveDock';
+import t4 from './tabs.module.css';
 /**
  * The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): Team · Lineup · Game · Summary, and the live game screen.
  * One client component on purpose (a coach opens it once and lives in it). The engine is pure (lib/coach/engine.ts) and the
@@ -24,17 +29,11 @@ import '@/components/motion/motion.css';
 type Role='gk'|'def'|'mid'|'fwd';
 type SpotPos={x:number;y:number;label:string;role:Role};
 type Formation={slug:string;label:string;spots:SpotPos[]};
-type Tab='home'|'team'|'lineup'|'minutes'|'subs'|'summary';
-/** the bottom bar: Home and the four tools; the summary opens from Home and after a game */
-const TABS:readonly Tab[]=['home','team','lineup','minutes','subs'];
-const SCREENS:readonly Tab[]=[...TABS,'summary'];
-/** the last tool used, for Home's "Continue" card: its own key, so the team record (fi-coach-v1) is untouched */
-const LAST_KEY='fi-coach-last-tool';
-/** Home's scroll when a tile leaves for another page (/board, /scan, practice plans), restored on the way back */
-const HOME_Y='fi-coach-home-y';
-/** Nov 22 2026 (owner: "it's confusing to know which one I'm on"): each screen is its own tool with its own title, icon and accent;
- *  the tool pages open the matching one (/coach#tool=lineup, #tool=minutes, #tool=subs). */
-const toolFromHash=(h:string):Tab|null=>{const m=/[#&]tool=(home|team|lineup|minutes|subs|summary)\b/.exec(h);return m?m[1] as Tab:null;};
+type Tab=Screen;
+/** the screens drawn in <main> (the live game is an overlay over them) */
+const SCREENS:readonly Screen[]=[...ROOTS,...TOOLS];
+/** the last tab page shown (Game Day or Training): a bare /coach opens it again */
+const TAB_KEY='fi-coach-tab';
 const ROLE_CLASS:Record<Role,string>={gk:c.gk,def:c.def,mid:c.midC,fwd:c.fwd};
 const SMALL:Record<string,Formation>={
  '4v4':{slug:'4v4-diamond',label:'Diamond',spots:[{x:50,y:22,label:'D',role:'def'},{x:22,y:48,label:'L',role:'mid'},{x:78,y:48,label:'R',role:'mid'},{x:50,y:76,label:'F',role:'fwd'}]},
@@ -46,7 +45,7 @@ function formationsFor(format:string,shapes:readonly Shape[]):Formation[]{
   return {slug:s.slug,label:shapeLabel(s),spots:place(s.lines).map((p,i)=>{const li=names.indexOf(p.line);return {x:p.x,y:p.y,label:p.label,role:(i===0?'gk':L<=1?'mid':li===1?'def':li===L?'fwd':'mid') as Role};})};});
 }
 const mins=(s:number)=>Math.round(s/60);
-const TITLE=(w:Words,t:Tab)=>t==='home'?w.titleHome:t==='team'?w.titleTeam:t==='lineup'?w.titleLineup:t==='minutes'?w.titleMinutes:t==='subs'?w.titleSubs:w.titleSummary;
+const TITLE=(w:Words,t:Tab)=>t==='gameday'||t==='training'?w.titleHome:t==='plans'?w.plansTitle:t==='team'?w.titleTeam:t==='lineup'?w.titleLineup:t==='minutes'?w.titleMinutes:t==='subs'?w.titleSubs:w.titleSummary;
 /* ------------------------------------------------------------------ derived plan ----------------------------------------- */
 function derive(store:Store,shapes:readonly Shape[]){
  const s=store.settings,keeper=s.keeper!=='none',lateOf=store.late;
@@ -83,7 +82,7 @@ function blockRoles(blocks:readonly PBlock[],start:Record<string,number>,form:Fo
 }
 /* ------------------------------------------------------------------ small parts ------------------------------------------ */
 const Icon=({d}:{d:string})=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
-const ICONS:Record<Tab,string>={home:'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5',subs:'M7 20V5M3.5 8.5 7 5l3.5 3.5M17 4v15M13.5 15.5 17 19l3.5-3.5',minutes:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4l3 2M9 2h6',team:'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.4.9 2.3 2.6 2.5 5.2',
+const ICONS:Record<string,string>={home:'M4 11 12 4l8 7M6 9.5V20h12V9.5M10 20v-5h4v5',subs:'M7 20V5M3.5 8.5 7 5l3.5 3.5M17 4v15M13.5 15.5 17 19l3.5-3.5',minutes:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4l3 2M9 2h6',team:'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.4.9 2.3 2.6 2.5 5.2',
  lineup:'M4 3h16v18H4zM4 12h16M9 3v4h6V3M9 21v-4h6v4',summary:'M5 20V10M12 20V4M19 20v-7'};
 /* The timeline rows are built inline (a component per row would remount on every tick). */
 type TimelineProps={w:Words;rows:readonly Player[];blocks:readonly PBlock[];roles?:Record<string,Role>[];settings:Settings;nowAt?:{period:number;sec:number};seconds:Readonly<Record<string,number>>};
@@ -139,73 +138,118 @@ function Seg<T extends string|number|boolean>({label,value,options,names,onPick}
   {options.map(o=><button key={String(o)} type="button" className={c.segBtn} aria-pressed={o===value} onClick={()=>onPick(o)}>{names(o)}</button>)}</div></div>;
 }
 /* ------------------------------------------------------------------ the app ---------------------------------------------- */
-export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
+export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape[];plansVersion?:string}){
  /* several teams (Nov 22 2026; lib/coach/teams.ts): the screens read and write the active team's store */
  const [teams,setTeams]=useState<Teams>(()=>({v:1,activeId:'t1',teams:[{...emptyStore(),id:'t1'}]}));
  const store=activeOf(teams),place=teams.teams.indexOf(store)+1;
  const setStore=useCallback((f:Store|((s:Store)=>Store))=>setTeams(t=>updateActive(t,typeof f==='function'?f:()=>f)),[]);
- const teamSheet=useSheet<true>();
+ const teamSheet=useSheet<true>(),langSheet=useSheet<true>();
  const [ready,setReady]=useState(false);
- const [tab,setTab]=useState<Tab>('home');
- const tabRef=useRef<Tab>('home');tabRef.current=tab;
- const [lastTool,setLastTool]=useState<Tab|null>(null);
- const [live,setLiveRaw]=useState(false),liveFrom=useRef<Tab>('subs');
- /* the live screen returns to where it was opened from: Home (the Match day tile) or the plan */
- const setLive=(v:boolean)=>{if(v)liveFrom.current=tabRef.current==='home'?'home':'subs';setLiveRaw(v);};
+ /* round 4A (Nov 22 2026): the screen lives in the URL hash (lib/coach/route.ts). Two tab pages (Game Day, Training) and the
+    tools that push over them; every screen change writes history, so the phone's Back returns from a tool to its tab page, and
+    from a tab page leaves the app (UX audit B1). */
+ const [route,setRoute]=useState<Route>({screen:'gameday'});
+ const tab=route.screen;
+ const routeRef=useRef<Route>(route);routeRef.current=route;
+ const [homeTab,setHomeTab]=useState<Root>('gameday');
+ const [live,setLiveRaw]=useState(false);
+ /* "Add your squad" from a tool: the squad screen offers the way back to that tool (UX audit C6) */
+ const [returnTo,setReturnTo]=useState<Screen|null>(null);
  const [shared,setShared]=useState<Shared|null>(null);
  const [undo,setUndo]=useState<Game[]>([]);
- const [toast,setToast]=useState<{msg:string;undo:boolean}|null>(null);
+ const [toast,setToast]=useState<{msg:string;undo:boolean;action?:{label:string;run:()=>void}}|null>(null);
  const [now,setNow]=useState(()=>Date.now());
- /* screen motion (components/motion): the direction of the last move (the CSS fallback's entrance) and the tool whose Home tile
-    receives the header mark on the way back (a shared element in the View Transition) */
  const [enter,setEnter]=useState<Dir|null>(null);
- /* the motion model (owner, Nov 22 2026: "polished and smooth", like native apps): the bottom tabs swap in place with a 120 ms
-    opacity crossfade and keep each screen's scroll; only Home -> a tool pushes (slides in) and Home/Back pops (slides back).
-    The tab bar was removed later the same day (hub and spoke): Home -> a tool pushes, Back pops, Next moves along. */
- const scrollAt=useRef<Partial<Record<Tab,number>>>({});
- const go=(t:Tab,via:'tab'|'push'='push')=>{if(t===tab)return;const dir:Dir=via==='tab'?'tab':t==='home'?'back':tab==='home'?'forward':'tab';
-  scrollAt.current[tab]=window.scrollY;
-  screenChange(dir,()=>{setEnter(dir);setTab(t);},()=>{window.scrollTo(0,dir==='forward'?0:scrollAt.current[t]??0);});};
+ /* the motion model (owner, Nov 22 2026): tab switches crossfade in place (120 ms) and keep each page's scroll; a tool pushes in
+    (slides) and Back pops it (slides back) */
+ const scrollAt=useRef<Partial<Record<string,number>>>({});
+ /* fast taps (UX audit C16): one screen change at a time; a second tap within the transition is ignored */
+ const busy=useRef(0);
+ const depth=()=>{const st=window.history.state as {fiCoach?:number}|null;return typeof st?.fiCoach==='number'?st.fiCoach:0;};
+ const url=(r:Route)=>window.location.pathname+window.location.search+hashFor(r);
+ /** draw a route (no history work): the direction picks the motion */
+ const draw=useCallback((r:Route,dir:Dir)=>{
+  const from=routeRef.current;
+  scrollAt.current[from.screen]=window.scrollY;
+  setToast(null);/* a toast belongs to the screen it was shown on (UX audit C15) */
+  const apply=()=>{setEnter(dir);setRoute(r);setLiveRaw(!!r.live);if(isRoot(r.screen)){setHomeTab(r.screen);try{window.localStorage.setItem(TAB_KEY,r.screen);}catch{/* optional */}}};
+  if(from.screen===r.screen&&!!from.live===!!r.live){apply();if(dir==='forward')window.scrollTo(0,0);return;}
+  screenChange(dir,apply,()=>{window.scrollTo(0,dir==='forward'?0:scrollAt.current[r.screen]??0);});
+ },[]);
+ /** move to a route: push (a tool over a tab page), replace (a tab switch, Next, the squad from a tool) */
+ const nav=useCallback((r:Route,mode:'push'|'replace',dir?:Dir)=>{
+  const t0=Date.now();if(t0-busy.current<320)return;busy.current=t0;
+  const from=routeRef.current;if(sameRoute(from,r))return;
+  const d0=depth();
+  if(mode==='push')window.history.pushState({fiCoach:d0+1},'',url(r));else window.history.replaceState({fiCoach:d0},'',url(r));
+  draw(r,dir??(mode==='push'?'forward':isRoot(r.screen)&&isRoot(from.screen)?'tab':'tab'));
+ },[draw]);
+ /** Back inside the app: the history entry under this one when the app made it, else the tab page this screen belongs to */
+ const back=useCallback(()=>{
+  const t0=Date.now();if(t0-busy.current<320)return;busy.current=t0;
+  if(depth()>0){window.history.back();return;}
+  const r:Route=routeRef.current.screen==='plans'&&routeRef.current.plan?{screen:'plans',age:routeRef.current.age}:{screen:homeTab};
+  window.history.replaceState({fiCoach:0},'',url(r));draw(r,'back');
+ },[draw,homeTab]);
+ const go=(t:Tab,via:'tab'|'push'='push')=>{if(isRoot(t))nav({screen:t},'replace','tab');else nav({screen:t},via==='tab'?'replace':'push');};
+ /* the phone's Back and Forward, and a hash typed or followed by a link: draw what the URL says */
+ useEffect(()=>{
+  const on=()=>{const r=parseHash(window.location.hash),from=routeRef.current;if(sameRoute(r,from))return;
+   const dir:Dir=isRoot(r.screen)&&!isRoot(from.screen)||from.live&&!r.live||from.screen==='plans'&&r.screen==='plans'&&(!r.plan||!r.run&&from.run)?'back':isRoot(r.screen)&&isRoot(from.screen)?'tab':'forward';
+   draw(r,dir);};
+  window.addEventListener('popstate',on);window.addEventListener('hashchange',on);
+  return ()=>{window.removeEventListener('popstate',on);window.removeEventListener('hashchange',on);};
+ },[draw]);
+ const setLive=(v:boolean)=>{if(v){if(!routeRef.current.live)nav({screen:'subs',live:true},'push');}else if(routeRef.current.live)back();};
  const lang:Lang=store.lang??'en',w=WORDS[lang];
  const audio=useRef<AudioContext|null>(null);
- /* load once: the saved team, the language, a shared link; register the app's own service worker */
+ /* load once: the saved team, the language, a shared link, the screen in the URL; register the app's own service worker */
  useEffect(()=>{
   let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* storage blocked */}
   /* the teams record; the first time, the single team in fi-coach-v1 becomes the first team. A game on the clock opens its team. */
   let all=loadTeams(ls);const lv=liveTeam(all);if(lv)all=switchTeam(all,lv.id);
   const q=new URLSearchParams(window.location.search).get('lang'),l0=activeOf(all).lang;
   const lg:Lang=q==='es'||q==='en'?q:l0??((navigator.language||'').toLowerCase().startsWith('es')?'es':'en');
-  all=updateActive(all,x=>({...x,lang:lg}));const s=activeOf(all);
-  setTeams(all);
+  all=updateActive(all,x=>({...x,lang:lg}));
   const m=/[#&]s=([A-Za-z0-9_-]+)/.exec(window.location.hash);if(m){const d=decodeShare(m[1]);if(d)setShared(d);}
-  const asked=toolFromHash(window.location.hash);
-  if(isRunning(s)){setLive(true);setTab('subs');}
-  else setTab(asked??'home');
-  try{const l=window.localStorage.getItem(LAST_KEY);if(l&&l!=='home'&&(TABS.includes(l as Tab)||l==='summary'))setLastTool(l as Tab);}catch{/* storage blocked */}
-  /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
+  /* the screen: the URL's; a bare /coach opens the last tab page; a game on the clock opens Match day over its tab page */
+  let saved:Root='gameday';try{if(window.localStorage.getItem(TAB_KEY)==='training')saved='training';}catch{/* optional */}
+  const named=hashNamesScreen(window.location.hash);let r:Route=named?parseHash(window.location.hash):{screen:saved};
+  if(isRunning(activeOf(all))&&!m)r={screen:'subs',live:true};
+  /* a deep link's format (UX audit C6, /tools/9v9-substitution-rotation): an empty team takes it; a team with players keeps its
+     own and is offered the switch */
+  let ask:string|null=null;
+  if(r.format&&!isRunning(activeOf(all))){const f=r.format,a=activeOf(all);
+   if(a.settings.format!==f){const other=all.teams.find(x=>x.settings.format===f&&x.team.players.length);
+    if(!a.team.players.length)all=updateActive(all,x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));
+    else if(other)all=switchTeam(all,other.id);else ask=f;}}
+  setTeams(all);
+  if(!m){const stack=landingStack({...r,format:undefined});
+   stack.forEach((x,i)=>{if(i===0)window.history.replaceState({fiCoach:0},'',url(x));else window.history.pushState({fiCoach:i},'',url(x));});}
+  const top={...r,format:undefined};setRoute(top);setLiveRaw(!!top.live);setHomeTab(homeOf(top.screen));
+  if(ask){const f=ask;const cur=activeOf(all).settings.format;setToast({msg:WORDS[lg].formatLink(f,cur),undo:false,action:{label:WORDS[lg].useFormat(f),run:()=>{setStore(x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));setToast(null);}}});}
   /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
      throw "Cannot read properties of null (reading 'removeChild')" (Nov 22 2026) */
   document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/coach/manifest.webmanifest';});
   setReady(true);count('ca:open');noteAppEntry('coach');
-  if(!asked&&!isRunning(s))try{const y=Number(window.sessionStorage.getItem(HOME_Y));window.sessionStorage.removeItem(HOME_Y);if(y>0)requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,y)));}catch{/* optional */}
+  if(isRoot(top.screen)&&!top.live)try{const y=Number(window.sessionStorage.getItem(HOME_Y));window.sessionStorage.removeItem(HOME_Y);if(y>0)requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,y)));}catch{/* optional */}
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/coach-sw.js',{scope:'/coach'}).catch(()=>{});
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
  useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveTeams(ls,teams);document.documentElement.lang=lang;},[teams,ready,lang]);
  const update=useCallback((f:(s:Store)=>Store)=>setStore(s=>f(s)),[setStore]);
  const d=useMemo(()=>derive(store,shapes),[store,shapes]);
- useEffect(()=>{if(!ready||tab==='home')return;setLastTool(tab);try{window.localStorage.setItem(LAST_KEY,tab);}catch{/* optional */}},[tab,ready]);
  const game=store.game;
- /* the team whose game is on the clock (maybe not the one shown): Home's Continue card and the mini live bar return to it */
+ /* the team whose game is on the clock (maybe not the one shown): the feature card and the mini live bar return to it */
  const liveRec=liveTeam(teams),liveOther=liveRec&&liveRec.id!==store.id?liveRec:null;
  const openLive=()=>{if(liveOther){setTeams(t=>switchTeam(t,liveOther.id));setUndo([]);}setLive(true);};
- /* the clock: 4 ticks a second on the live screen; 1 a second for the mini live bar on the other screens; none without a game */
+ /* the clock: 4 ticks a second on the live screen; 1 a second for the mini live bar and Game Day's live card; none without a game */
  const ticking=live?250:liveRec?1000:0;
  useEffect(()=>{if(!ticking)return;setNow(Date.now());const t=setInterval(()=>setNow(Date.now()),ticking);return ()=>clearInterval(t);},[ticking]);
  /* switch team: a quick crossfade; the undo list belongs to the team that was shown */
  const pickTeam=(id:string,then?:()=>void)=>{teamSheet.close();if(id===store.id){then?.();return;}
   screenChange('fade',()=>{setEnter('fade');setTeams(t=>switchTeam(t,id));setUndo([]);then?.();});};
- /* the live clock: a tick only while the live screen is open */
- useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),6000);return ()=>clearTimeout(t);},[toast]);
+ useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),toast.action?12000:6000);return ()=>clearTimeout(t);},[toast]);
  /* never lose a live game by accident */
  const anyLive=!!liveRec;
  useEffect(()=>{if(!anyLive)return;
@@ -215,6 +259,11 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
   if(msg)setToast({msg,undo:true});
  },[setStore]);
  const doUndo=()=>{setUndo(u=>{const prev=u[u.length-1];if(prev)setStore(s=>({...s,game:prev}));return u.slice(0,-1);});setToast(null);};
+ /* the sound after a refresh or a round trip to /board (UX audit B7): the phone blocks sound and vibration until the first tap */
+ const [muted,setMuted]=useState(false);
+ useEffect(()=>{if(!ready||!anyLive)return;const ua=(navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation;if(ua&&!ua.hasBeenActive)setMuted(true);
+  const u=()=>{setMuted(false);try{audio.current??=new (window.AudioContext||(window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext)();void audio.current.resume();}catch{/* no audio */}};
+  window.addEventListener('pointerdown',u,{once:true});return ()=>window.removeEventListener('pointerdown',u);},[ready,anyLive]);
  const beep=()=>{if(!store.sound)return;try{const a=audio.current;if(!a)return;for(const t of [0,0.35]){const o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.setValueAtTime(0.0001,a.currentTime+t);g.gain.exponentialRampToValueAtTime(0.5,a.currentTime+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+t+0.25);o.connect(g).connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+0.3);}}catch{/* no audio */}};
  const startGame=()=>{
   const status:Record<string,Status>={};for(const p of d.ready)status[p.id]='ok';for(const p of d.late)status[p.id]='late';
@@ -227,84 +276,81 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
   try{await navigator.clipboard.writeText(url);setToast({msg:w.copied,undo:false});}catch{window.prompt(w.copyLink,url);}
  };
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
- const team=store.team;
- return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab} data-dock={!live&&liveRec?'':undefined}>
-  {/* the shared header (components/motion/AppHeader): the title centred, the language and then Exit on the right */}
-  {/* the language button only on Home (owner, Nov 22 2026); the choice is saved (fi-coach-v1) and the tools follow it */}
-  <AppHeader lang={lang} exit={tab==='home'} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
-   /* hub and spoke (owner, Nov 22 2026; the tab bar is gone): every tool has the gold Back to the dashboard, top left */
-   left={tab!=='home'?<HeaderGoldBack key="tool" lang={lang} onBack={()=>go('home')} data={{'data-coach-home':''}}/>:<TeamButton key="teams" w={w} name={team.name} place={place} onClick={()=>teamSheet.open(true)}/>}
-   title={TITLE(w,tab)} sub={tab==='home'?team.name||w.teamN(place):<>{team.name?`${team.name} · `:''}{presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
+ const team=store.team,root=isRoot(tab),fmtName=presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format;
+ const teamAge:Age=ageFor(store.settings.format,team.name);
+ const goTeam=()=>{setReturnTo(tab);nav({screen:'team'},'replace','tab');};
+ const liveCard=liveRec?.game?(()=>{const l=liveLine(w,liveRec.game!,now);return {period:l.period,clock:l.clock,change:l.change,team:liveRec.team.name||w.teamN(teams.teams.indexOf(liveRec)+1)};})():null;
+ const navItem=(k:'gameday'|'training'|'lang',label:string,icon:ReactNode)=><button type="button" className={t4.navBtn} aria-current={k===tab?'page':undefined} data-nav={k}
+  onClick={()=>{if(k==='lang')langSheet.open(true);else if(k!==tab)go(k,'tab');else window.scrollTo({top:0,behavior:'smooth'});}} aria-haspopup={k==='lang'?'dialog':undefined}>
+  <span className={t4.navIcon} aria-hidden="true">{icon}</span>{label}</button>;
+ return <div className={c.app} translate="no" data-reading-page="" data-coach-app="" data-tool={tab} data-dock={!live&&liveRec?'':undefined} data-nav={root?'':undefined}>
+  {/* the shared header (components/motion/AppHeader). Tab pages: the team switcher, "Coach" and the team, Exit. Tools: Back, the
+      title, nothing on the right (owner, Nov 22 2026). The language lives in the bottom nav. */}
+  <AppHeader lang={lang} exit={root} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
+   left={!root?<HeaderGoldBack key="tool" lang={lang} onBack={back} data={{'data-coach-home':''}}/>:<TeamButton key="teams" w={w} name={team.name} place={place} onClick={()=>teamSheet.open(true)}/>}
+   title={TITLE(w,tab)} sub={root?team.name||w.teamN(place):tab==='plans'?`${team.name?team.name+' · ':''}${teamAge}`:<>{team.name?`${team.name} · `:''}{fmtName} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
-   {ready&&SCREENS.filter(t=>t===tab).map(t=><div key={t} className="fi-screen" hidden={t!==tab} data-enter={t===tab&&enter?enter:undefined}>
-    {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} running={!!liveRec} liveName={liveOther?liveOther.team.name||w.teamN(teams.teams.indexOf(liveOther)+1):null} onResume={openLive}
-     onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else go('team');}}
-     onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
-    :t==='team'?<TeamTab w={w} store={store} update={update} d={d}/>
+   {ready&&SCREENS.filter(t=>t===tab).map(t=><div key={t} className="fi-screen" data-enter={enter??undefined}>
+    {t==='gameday'?<GameDayTab w={w} store={store} place={place} fmt={fmtName} ready={w.ready(d.here.length,d.F)} intro={false} live={liveCard} gameDone={game?.clock.status==='done'||!!store.last&&!game}
+      onMatch={()=>{if(liveRec&&liveRec.game?.clock.status!=='done')openLive();else if(d.here.length)startGame();else goTeam();}}
+      onTool={k=>go(k)}
+      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
+    :t==='training'?<TrainingTab w={w} lang={lang} version={plansVersion} age={teamAge} intro={false} onPlans={(plan,run)=>{
+      if(!plan){nav({screen:'plans'},'push');return;}
+      /* a plan from Training: the list under it, so Back goes plan -> list -> Training */
+      const t0=Date.now();if(t0-busy.current<320)return;busy.current=t0;
+      window.history.pushState({fiCoach:depth()+1},'',url({screen:'plans'}));
+      if(run)window.history.pushState({fiCoach:depth()+1},'',url({screen:'plans',plan}));
+      const r:Route={screen:'plans',plan,run};window.history.pushState({fiCoach:depth()+1},'',url(r));draw(r,'forward');}}/>
+    :t==='team'?<>
+      <TeamTab w={w} store={store} update={update} d={d}/>
+      {returnTo&&!isRoot(returnTo)&&returnTo!=='team'&&d.here.length>0&&<NextBtn label={w.backTo(TITLE(w,returnTo))} onClick={()=>{const r=returnTo;setReturnTo(null);nav({screen:r},'replace','tab');}}/>}</>
     :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
-    :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>go('team')} onNext={()=>go('subs','tab')}/>
+    :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={goTeam} onNext={()=>go('subs','tab')}/>
+    :t==='plans'?<PlansTool w={w} lang={lang} version={plansVersion} teamAge={teamAge} age={route.age} plan={route.plan} run={route.run}
+      onAge={a=>{const r:Route={screen:'plans',age:a};window.history.replaceState({fiCoach:depth()},'',url(r));setRoute(r);}}
+      onPlan={slug=>nav({screen:'plans',plan:slug,age:route.age},'push')}
+      onRun={on=>{if(on)nav({...route,run:true},'push');else back();}}/>
     :<SummaryTab w={w} store={store} now={now} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
-      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes');}}}/>}
+      onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes','tab');}}}/>}
    </div>)}
   </main>
   {live&&game&&<LiveGame w={w} lang={lang} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
    sound={store.sound} toggleSound={()=>update(s=>({...s,sound:!s.sound}))}
-   onExit={()=>{/* Back leaves the live screen without stopping the game: the clock is time-stamped and Home's Continue card returns to it */
-    setLive(false);setTab(game.clock.status==='done'?'summary':'home');}}
-   onSummary={()=>{setLive(false);setTab('summary');}} onSub={()=>count('ca:sub')}/>}
+   onExit={()=>{/* Back leaves the live screen without stopping the game: the clock is time-stamped and Game Day's card returns to it */
+    if(game.clock.status==='done'){window.history.replaceState({fiCoach:depth()},'',url({screen:'summary'}));draw({screen:'summary'},'back');}else back();}}
+   onSummary={()=>{window.history.replaceState({fiCoach:depth()},'',url({screen:'summary'}));draw({screen:'summary'},'back');}} onSub={()=>count('ca:sub')}/>}
+  {ready&&live&&muted&&<button type="button" className={c.soundBack} onClick={()=>setMuted(false)} data-sound-back="">{w.soundBack}</button>}
   {/* the mini live bar (Nov 22 2026): a game on the clock stays one tap away from every screen */}
   {ready&&!live&&liveRec?.game&&<LiveBar w={w} game={liveRec.game} team={liveRec.team.name||w.teamN(teams.teams.indexOf(liveRec)+1)} now={now} sound={store.sound} onOpen={openLive}
    onToggle={()=>setTeams(t=>updateTeam(t,liveRec.id,x=>x.game?{...x,game:toggleClock(x.game,Date.now())}:x))}/>}
+  {ready&&root&&!live&&<nav className={t4.nav} aria-label={w.appName}>
+   {navItem('gameday',w.navGameDay,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7 4 3-1.5 4.5h-5L8 10z"/></svg>)}
+   {navItem('training',w.navTraining,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 20 9.5 5h5L18 20M8 14h8M4 20h16"/></svg>)}
+   {navItem('lang',w.navLang,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.5 5.7 3.5 9s-1 6.3-3.5 9c-2.5-2.7-3.5-5.7-3.5-9s1-6.3 3.5-9Z"/></svg>)}
+  </nav>}
+  {langSheet.value&&<LangSheet w={w} lang={lang} closing={langSheet.closing} onClose={langSheet.close} onPick={l=>{update(s=>({...s,lang:l}));langSheet.close();}}/>}
   {teamSheet.value&&<TeamSheet w={w} teams={teams} closing={teamSheet.closing} onClose={teamSheet.close}
-   onPick={id=>pickTeam(id)} onEdit={id=>pickTeam(id,()=>{setEnter('forward');setTab('team');})}
+   onPick={id=>pickTeam(id)} onEdit={id=>pickTeam(id,()=>{setReturnTo(null);nav({screen:'team'},'push');})}
    onDelete={id=>{const wasActive=id===store.id;const apply=()=>{setTeams(t=>deleteTeam(t,id,Date.now()%100000));if(wasActive)setUndo([]);};if(wasActive)screenChange('fade',apply);else apply();}}
-   onAdd={x=>{teamSheet.close();screenChange('fade',()=>{setEnter('fade');setTeams(t=>addTeam(t,{name:x.name,settings:presetSettings(x.format),from:x.from},Date.now()%1000000));setUndo([]);setTab('home');});}}/>}
-  {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}</div>}
+   onAdd={x=>{teamSheet.close();screenChange('fade',()=>{setEnter('fade');setTeams(t=>addTeam(t,{name:x.name,settings:presetSettings(x.format),from:x.from},Date.now()%1000000));setUndo([]);});if(!root)nav({screen:homeTab},'replace','fade');}}/>}
+  {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}{toast.action&&<button type="button" onClick={toast.action.run}>{toast.action.label}</button>}</div>}
+ </div>;
+}
+/** The language sheet (round 4A): opened from the bottom nav; the choice is the whole app's (saved in fi-coach-v1; /scan and /board
+ *  get it as ?lang=). */
+function LangSheet({w,lang,closing,onClose,onPick}:{w:Words;lang:Lang;closing:boolean;onClose:()=>void;onPick:(l:Lang)=>void}){
+ const panel=useRef<HTMLDivElement>(null),swipe=useSwipeDown(panel,onClose);
+ return <div className={c.sheet} data-closing={closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)onClose();}} onKeyDown={e=>{if(e.key==='Escape')onClose();}}>
+  <div className={c.sheetIn} ref={panel} role="dialog" aria-modal="true" aria-labelledby="coach-lang" data-lang-sheet="">
+   <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><p className={c.sheetTitle} id="coach-lang">{w.langTitle}</p><button type="button" className={c.doneBtn} onClick={onClose}>{w.sheetDone}</button></div>
+   <ul className={t4.langList}>{(['en','es'] as const).map(l=><li key={l}><button type="button" className={t4.langOpt} lang={l} aria-pressed={l===lang} onClick={()=>onPick(l)} autoFocus={l===lang}>
+    {l==='es'?'Español':'English'}{l===lang&&<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}</button></li>)}</ul>
+  </div>
  </div>;
 }
 type D=ReturnType<typeof derive>;
 const EXAMPLE=['Ava','Ben','Carlos','Dani','Eli','Fatima','Gus','Hana','Isla','Jonah','Kai','Leo'];
-/* ------------------------------------------------------------------ Home -------------------------------------------------- */
-/** Home (Nov 22 2026, owner: "a simple dashboard"): the team at a glance, Continue, and one tile per tool with its icon and accent. */
-const GAME_DAY=['lineup','minutes','subs','match','summary'] as const,TRAINING=['drills','scan','board'] as const;
-function HomeTab({w,store,d,last,lang,go,running,liveName,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;running:boolean;liveName:string|null;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
- /* motion: the tiles rise in once per browser session; the team card pops in when "Try an example team" fills it */
- const intro=useOncePerSession('fi-coach-intro'),[filled,setFilled]=useState(false);
- const s=store.settings,team=store.team,has=team.players.length>0,fmt=presetOf(s.format).id==='futsal'?'Futsal':s.format;
- const tiles:{key:string;tool:string;name:string;line:string;icon:string;on?:()=>void;href?:string}[]=[
-  {key:'lineup',tool:'lineup',name:w.titleLineup,line:w.lineLineup,icon:ICONS.lineup,on:()=>go('lineup')},
-  {key:'minutes',tool:'minutes',name:w.titleMinutes,line:w.lineMinutes,icon:ICONS.minutes,on:()=>go('minutes')},
-  {key:'subs',tool:'subs',name:w.titleSubs,line:w.lineSubs,icon:ICONS.subs,on:()=>go('subs')},
-  {key:'match',tool:'match',name:w.matchDay,line:w.lineMatch,icon:'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-12v4M9 2h6M19 6l1.5-1.5',on:onMatch},
-  {key:'summary',tool:'summary',name:w.titleSummary,line:w.lineSummary,icon:ICONS.summary,on:()=>go('summary')},
-  {key:'board',tool:'board',name:w.boardName,line:w.lineBoard,icon:'M4 4h16v16H4zM8 9l3 3-3 3M13 15h4',href:'/board?from=coach'},
-  {key:'scan',tool:'scan',name:w.scanName,line:w.lineScan,icon:'M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',href:lang==='es'?'/scan?lang=es&from=coach':'/scan?from=coach'},
-  {key:'drills',tool:'drills',name:w.drillsName,line:w.lineDrills,icon:'M5 4h14v16H5zM9 9h6M9 13h6M9 17h3',href:'/learn/soccer-practice-plans?from=coach'}];
- return <>
-  <h1 className={c.srOnly}>{w.titleHome}</h1>
-  {has?<section className={`${c.homeTeam} ${filled?'fi-pop':intro?'fi-in':''}`} aria-label={w.homeTeam}>
-   <div><p className={c.homeTeamName}>{team.name||w.homeTeam}</p><p className={c.homeTeamMeta}>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.playersN(team.players.length)}</p>
-    <p className={c.homeTeamMeta}>{w.ready(d.here.length,d.F)}</p></div>
-   <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} onClick={()=>go('team')}>{w.editTeam}</button>
-  </section>:<section className={`${c.homeEmpty} ${intro?'fi-in':''}`} aria-label={w.homeTeam}>
-   <p className={c.homeTeamName}>{w.homeTeam}</p><p className={c.homeTeamMeta}>{w.homeEmpty}</p>
-   <div className={c.homeEmptyBtns}><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>go('team')}>{w.setupTeam}</button>
-    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>{setFilled(true);onExample();}}>{w.tryExample}</button></div>
-  </section>}
-  {(running||has&&last)&&<button type="button" className={`${c.continue} ${intro?'fi-in':''}`} style={{'--i':1} as React.CSSProperties} data-tool={running?'subs':last??'home'} onClick={running?onResume:()=>go(last!)}>
-   <span className={c.tileIcon} aria-hidden="true"><Icon d={ICONS[running?'subs':last!]}/></span>
-   <span className={c.tileText}><small>{running?w.gameOn:w.continueOn}{running&&liveName?` · ${liveName}`:''}</small><b>{running?w.tapReturn:TITLE(w,last!)}</b></span>
-   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
-  {/* two kinds of tools (owner, Nov 22 2026): Game day first (later: Training first on non-game days, once games are scheduled) */}
-  {([['game',w.groupGame,GAME_DAY],['training',w.groupTraining,TRAINING]] as const).map(([g,title,keys],gi)=><section key={g} aria-labelledby={`coach-g-${g}`} data-tool-group={g}>
-  <h2 className={c.h2} id={`coach-g-${g}`}>{title}</h2>
-  <ul className={c.tiles}>{keys.map(k=>tiles.find(t=>t.key===k)!).map((t,j)=>{const i=gi*GAME_DAY.length+j;const icon=<span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span>;
-   return <li key={t.key} className={intro?'fi-in':undefined} style={intro?{'--i':i+2} as React.CSSProperties:undefined}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href} onClick={()=>{try{window.sessionStorage.setItem(HOME_Y,String(window.scrollY));}catch{/* optional */}}}>
-    {icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
-   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}>{icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>;})}</ul></section>)}
-  <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
- </>;
-}
 /** Minutes a late player can be expected at: every change interval from the first one to the last minute of the game. */
 const lateMinutes=(s:Settings)=>{const out:number[]=[],end=s.periods*s.periodMin;for(let m=s.subEvery;m<end;m+=s.subEvery)out.push(m);return out;};
 type Up=(f:(s:Store)=>Store)=>void;
@@ -321,7 +367,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
  /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the squad is the screen; the game settings sit behind one summary card
     and open in a sheet. Same settings, same store (fi-coach-v1). */
  return <>
-  <h1 className={c.h1}>{w.titleTeam}</h1>
+  <h1 className={c.srOnly}>{w.titleTeam}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)}</p>
   <button type="button" className={c.setCard} onClick={()=>sheet.open(true)} aria-haspopup="dialog" data-coach-settings="">
    <span className={c.setMain}><b>{store.team.name||w.teamName}</b><span>{fmt} · {s.periods} × {s.periodMin} {w.min} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}{pre.keeper?` · ${s.keeper==='fixed'?w.keeperFixed:w.keeperRotate}`:''}</span></span>
@@ -343,7 +389,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
     </div>
    </div>
   </div>}
-  <h2 className={c.h2}>{w.squad}</h2>
+  <h2 className={c.h2}>{w.playersN(players.length)}</h2>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   {d.here.length>0&&d.here.length<s.onField&&<p className={c.err}>{w.notEnough(s.onField)}</p>}
   {!players.length&&<div className={`${c.empty} ${c.squadEmpty} fi-pop`}><p className={c.emptyTitle}>{w.startHere}</p><p className={c.emptyHelp}>{w.squadHelp}</p>
@@ -396,9 +442,9 @@ function LineupTab({w,store,update,d,onShare,onNext}:{w:Words;store:Store;update
   onPointerCancel:()=>{drag.current=null;setGhost(null);setOver(null);},
   onClick:(e:React.MouseEvent)=>{if(e.detail===0)tap(r);/* keyboard: Enter or Space */},
  });
- if(!d.here.length)return <><h1 className={c.h1}>{w.tabLineup}</h1><div className={c.empty}>{w.emptyTeam}</div></>;
+ if(!d.here.length)return <><h1 className={c.srOnly}>{w.titleLineup}</h1><div className={c.empty}>{w.emptyTeam}</div></>;
  return <>
-  <h1 className={c.h1}>{w.tabLineup}</h1>
+  <h1 className={c.srOnly}>{w.titleLineup}</h1>
   <p className={c.note}>{w.dragHint}</p>
   {d.forms.length>1&&<><h2 className={c.h2}>{w.formation}</h2><div className={`${c.seg} ${c.formSeg}`} role="group" aria-label={w.formation}>{d.forms.map(f=><button key={f.slug} type="button" className={c.chip} aria-pressed={d.form?.slug===f.slug} onClick={()=>update(s=>({...s,settings:{...s.settings,formation:f.slug}}))}>{f.label}</button>)}</div></>}
   <div className={c.pitchWrap}>
@@ -407,7 +453,7 @@ function LineupTab({w,store,update,d,onShare,onNext}:{w:Words;store:Store;update
     {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0;
      return <button key={i} type="button" className={`${c.spot} ${gk?c.spotGk:''} ${p?'':c.spotEmpty}`} style={{left:`${4+sp.x*0.92}%`,top:`${4+(100-sp.y)*0.92}%`}} data-over={over===refKey(r)}
       aria-label={`${sp.label}: ${p?label(p):'—'}`} {...handlers(r,p?String(p.num):sp.label)}>
-      <span className={`${c.disc} ${p?'fi-pop':''}`} key={p?.id??'none'}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?.name||sp.label}</span></button>;})}
+      <span className={`${c.disc} ${p?'fi-pop':''}`} key={p?.id??'none'}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?p.name||`#${p.num}`:sp.label}</span></button>;})}
    </div>
    <div><h2 className={`${c.h2} ${c.benchH}`}>{w.bench}</h2>
     <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};return <button key={p.id} type="button" className={`${c.benchChip} fi-pop`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
@@ -424,7 +470,7 @@ function LineupTab({w,store,update,d,onShare,onNext}:{w:Words;store:Store;update
 /* ------------------------------------------------------------------ Game (the plan) -------------------------------------- */
 function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'minutes'|'subs';w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void;onNext:()=>void}){
  const s=store.settings,g=store.game,running=g&&g.clock.status!=='done';
- if(!d.here.length)return <><h1 className={c.h1}>{view==='subs'?w.titleSubs:w.titleMinutes}</h1><div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={goTeam}>{w.startHere}</button></div></>;
+ if(!d.here.length)return <><h1 className={c.srOnly}>{view==='subs'?w.titleSubs:w.titleMinutes}</h1><div className={c.empty}><p className={c.emptyLine}>{w.emptyTeam}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={goTeam}>{w.startHere}</button></div></>;
  const sec=planSeconds(d.plan.blocks),keeper=s.keeper!=='none',fixed=s.keeper==='fixed'?d.plan.blocks[0]?.gk:null,byId=new Map(store.team.players.map(p=>[p.id,p]));
  const roles=blockRoles(d.plan.blocks,d.spotOf,d.form,keeper),rows=[...d.here].sort((a,b)=>a.num-b.num);
  const changes:{at:string;out:string[];in:string[];gk:string|null}[]=[];
@@ -433,7 +479,7 @@ function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'
  const nm=(id:string)=>label(byId.get(id));
  return <>
   {view==='minutes'?<>
-  <h1 className={c.h1}>{w.titleMinutes}</h1>
+  <h1 className={c.srOnly}>{w.titleMinutes}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)} · {s.periods} × {s.periodMin} {w.min}</p>
   <Fair w={w} seconds={sec} ids={d.ready.map(p=>p.id)} skip={new Set(fixed?[fixed]:[])} fixedName={fixed?nm(fixed):undefined} step={s.subEvery}/>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
@@ -442,7 +488,7 @@ function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'
   <NextBtn label={w.nextTo(w.titleSubs)} onClick={onNext}/>
   </>:<>
   {/* the substitution rotation: who starts, then one card per change, in order (the timeline lives on Playing time) */}
-  <h1 className={c.h1}>{w.titleSubs}</h1>
+  <h1 className={c.srOnly}>{w.titleSubs}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)} · {w.subEvery.toLowerCase()} {s.subEvery} {w.min}</p>
   {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   <ol className={c.subList}>
@@ -567,7 +613,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
 /* ------------------------------------------------------------------ Summary ---------------------------------------------- */
 function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;onShare:(names:boolean)=>void;onNew:()=>void}){
  const g=store.game??store.last,[names,setNames]=useState(true);
- if(!g)return <><h1 className={c.h1}>{w.tabSummary}</h1><div className={c.empty}>{w.noGame}</div></>;
+ if(!g)return <><h1 className={c.srOnly}>{w.titleSummary}</h1><div className={c.empty}>{w.noGame}</div></>;
  const done=g.clock.status==='done',sec=done?playedSeconds(g,0).played:summarySeconds(g,now),kept=playedSeconds(g,0).kept;
  const ids=Object.keys(g.status),rows=store.team.players.filter(p=>ids.includes(p.id)).sort((a,b)=>a.num-b.num),max=Math.max(1,...rows.map(p=>sec[p.id]??0));
  const fixed=g.settings.keeper==='fixed'?g.blocks[0]?.gk??null:null,skip=new Set([...(fixed?[fixed]:[]),...ids.filter(p=>g.status[p]!=='ok'),...(g.joined??[])]);

@@ -429,3 +429,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 @media (hover:hover) and (pointer:fine){.foldBtn:hover,.cardFold:hover svg{background:var(--well)}}
 /* the toast in the same light style (no dark slab at the bottom) */
 .toast{background:#fff;color:var(--ink);box-shadow:0 10px 30px rgb(20 34 29 / .18),0 0 0 1px rgb(20 34 29 / .08)}
+/* round 4A (Nov 22 2026): room for the bottom nav on the tab pages; the mini live bar sits above it; the sound hint (UX audit B7) */
+.app[data-nav] .main{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.app[data-nav][data-dock] .main{padding-bottom:calc(180px + env(safe-area-inset-bottom))}
+.app[data-nav] :global([data-live-bar]){bottom:calc(84px + env(safe-area-inset-bottom))}
+.soundBack{position:fixed;z-index:60;left:50%;top:calc(70px + env(safe-area-inset-top));transform:translateX(-50%);border:0;border-radius:999px;background:var(--gold);color:var(--ink);font:800 16px/1.2 var(--sans);padding:12px 18px;min-height:48px;box-shadow:0 8px 24px rgb(20 34 29 / .2)}
