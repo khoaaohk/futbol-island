@@ -335,3 +335,8 @@
 
 /* round 4E (Nov 22 2026): ten languages in two columns */
 .seg.langSeg{grid-template-columns:1fr 1fr}
+/* round 4G (audit C9/P4): long words (DE "Erwachsene", PL "Pomarańczowy") wrap or hyphenate inside their button at 360 px instead of
+   spilling out; the summary cards' labels wrap too */
+.seg .chip{min-width:0;overflow-wrap:anywhere;hyphens:auto;line-height:1.1;padding:4px 8px}
+.swatch{min-width:0;overflow-wrap:anywhere;hyphens:auto;line-height:1.15}
+@media (max-width:400px){.summaryCard small,.summaryCard b{white-space:normal;overflow-wrap:anywhere;hyphens:auto}}

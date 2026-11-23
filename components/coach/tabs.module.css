@@ -23,7 +23,7 @@ a.feature{transition:transform .12s}
 .tonight{background:#fdf3dc;border-radius:22px;padding:16px 18px 18px;margin-bottom:12px}
 .tTitle{margin:0;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
 .fBtns button:disabled{opacity:.5}
-.fLink{margin-top:14px;border:0;background:none;color:#85621f;font-size:15px;font-weight:800;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
+.fLink{margin-top:14px;border:0;background:none;color:#85621f;font-size:15px;font-weight:800;padding:6px 0;min-height:44px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
 .fArt{display:block;height:180px;overflow:hidden}
 .fArt svg{display:block;width:100%;height:100%}
 /* large picture tiles */

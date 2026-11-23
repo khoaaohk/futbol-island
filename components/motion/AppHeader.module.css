@@ -14,6 +14,9 @@
 .backText{width:auto;padding:0 14px 0 10px;gap:4px}
 .lang:active,.back:active{transform:scale(.96)}
 .exit{--navigation-width:76px}
+/* round 4G (audit C10): the header's gold Back/Exit move like the apps' game buttons: same .16s press timing, weight 800 */
+:is(button,a).exit.exit.exit{font-weight:800;transition:width .16s cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s,filter .16s}
+@media(prefers-reduced-motion:reduce){:is(button,a).exit.exit.exit{transition:none}}
 .lang:focus:not(:focus-visible),.back:focus:not(:focus-visible){outline:none}.lang:focus-visible,.back:focus-visible{outline:2px solid rgb(61 139 214 / .55);outline-offset:-2px}
 @media (hover:hover) and (pointer:fine){.lang:hover,.back:hover{background:var(--well,#e4e8d4)}}
 @media (prefers-reduced-motion:reduce){.lang,.back{transition:background-color .15s ease}.lang:active,.back:active{transform:none}}
@@ -23,3 +26,5 @@
 /* round 4E (Nov 22 2026): a long title (German, Finnish, Dutch) takes two lines, hyphenated in its language, instead of "Trainingsplä…" */
 .title b{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.15;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
 @media (max-width:380px){.bar{--side:100px}}
+/* round 4G (audit P4): on a phone the subtitle (team · format · periods) takes two short lines instead of being cut */
+@media (max-width:420px){.title span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2;overflow:hidden}}

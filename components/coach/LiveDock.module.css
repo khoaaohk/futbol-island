@@ -10,7 +10,7 @@
 .text b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .text small{font-size:13px;font-weight:600;color:#4f5b53;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .num{font-variant-numeric:tabular-nums}
-.toggle{flex:0 0 auto;min-height:44px;min-width:84px;padding:0 14px;border:0;border-radius:999px;background:#efeee2;color:#14221d;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,background-color .15s}
+.toggle{flex:0 0 auto;min-height:52px;/* round 4G (C10): the bar's own height */min-width:84px;padding:0 14px;border:0;border-radius:999px;background:#efeee2;color:#14221d;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,background-color .15s}
 .toggle[data-paused]{background:#e9c16b}
 .toggle:active,.main:active{transform:scale(.97)}
 .main:focus-visible,.toggle:focus-visible{outline:3px solid #1d6b55;outline-offset:2px}

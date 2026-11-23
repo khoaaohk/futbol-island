@@ -33,7 +33,8 @@ export function TeamSheet({w,teams,closing,onClose,onPick,onEdit,onDelete,onAdd}
  const title=view.k==='add'?w.addTeam:view.k==='del'&&del>=0?w.deleteQ(label(del)):w.yourTeams;
  return <div className={c.sheet} data-closing={closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)onClose();}} onKeyDown={e=>{if(e.key==='Escape')onClose();}}>
   <div className={`${c.sheetIn} ${c.setSheet}`} ref={panel} role="dialog" aria-modal="true" aria-labelledby="coach-teams" data-team-sheet="">
-   <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><p className={c.sheetTitle} id="coach-teams">{title}</p><button type="button" className={c.doneBtn} onClick={onClose} autoFocus>{w.sheetDone}</button></div>
+   <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><p className={c.sheetTitle} id="coach-teams">{title}</p>{/* round 4G (audit C8): step 2 of a new team has one way forward (Back / Create team), no second Done */}
+    {!(view.k==='add'&&view.step===2)&&<button type="button" className={c.doneBtn} onClick={onClose} autoFocus>{w.sheetDone}</button>}</div>
    <div className={c.sheetBody} key={view.k+(view.k==='add'?view.step:'')} data-view={view.k}>
     {view.k==='list'&&<>
      <ul className={c.teamList}>{teams.teams.map((t,i)=>{const cur=t.id===teams.activeId,live=isRunning(t);

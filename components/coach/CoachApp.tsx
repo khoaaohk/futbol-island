@@ -3,7 +3,7 @@ import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type React
 import {count} from '@/lib/analytics/tracker';
 import {place} from '@/lib/site/pitch';
 import {shapeLabel,type Shape} from '@/lib/site/tools/lineup';
-import {addGoal,addStoppage,alertKey,applyChange,buildPlan,confirmChange,planWithLate,changeBetween,clockSec,delayChange,endCurrentPeriod,fairness,fmtClock,kickOff,newGame,nextChange,nextSpots,OVERDUE_SEC,pauseClock,
+import {addGoal,addStoppage,alertKey,applyChange,arrivalsDue,unevenNotes,playedBlocks,buildPlan,confirmChange,planWithLate,changeBetween,clockSec,delayChange,endCurrentPeriod,fairness,fmtClock,kickOff,newGame,nextChange,nextSpots,OVERDUE_SEC,pauseClock,
  planSeconds,playedSeconds,PRESETS,presetOf,pushUndo,removeGoal,replanNow,resumeClock,scoreOf,setScorer,setStatus,settingsFor,skipChange,soleKeeper,summarySeconds,tapOk,theirGoal,type Game,type MatchInfo,type PBlock,type Settings,type Status} from '@/lib/coach/engine';
 import {cleanMatch,cleanPlayers,decodeShare,emptyStore,encodeShare,label,minutesCsv,newId,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
@@ -18,7 +18,7 @@ import {noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,u
 import '@/components/motion/motion.css';
 import {ROOTS,TOOLS,ageFor,hashFor,hashNamesScreen,homeOf,isRoot,landingStack,parseHash,sameRoute,type Age,type Root,type Route,type Screen} from '@/lib/coach/route';
 import PlansTool from './PlansTool';
-import {GameDayTab,HOME_Y,TrainingTab,whenLine} from './TabPages';
+import {GameDayTab,HOME_Y,TrainingTab,dateIn,timeIn,whenLine} from './TabPages';
 import {liveLine} from './LiveDock';
 import t4 from './tabs.module.css';
 import {BallIcon,CheckMark,ConeIcon,CrossMark,GlobeIcon} from './GameIcons';
@@ -112,7 +112,7 @@ function Legend({w,keeper}:{w:Words;keeper:boolean}){
 function Fair({w,seconds,ids,skip,fixedName,step,verdict=true}:{w:Words;seconds:Readonly<Record<string,number>>;ids:readonly string[];skip:ReadonlySet<string>;fixedName?:string;step:number;verdict?:boolean}){
  /* uneven = a spread of more than one change interval (the planner keeps everyone there all game within one; tests/coach-app.cjs) */
  const f=fairness(seconds,ids,skip),bad=f.spread>step*60+1,lo=useCountUp(mins(f.min)),hi=useCountUp(mins(f.max));
- return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(lo,hi)}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
+ return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(lo,hi).replace(/ (\S+)$/,'\u00a0$1')/* round 4G (P1): the unit never sits alone on a line */}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
   {/* a parents' link never shows a verdict (UX audit B3/C2); the coach sees a neutral word */}
   {verdict&&<span className={`${c.fairTag} fi-pop`} key={String(bad)} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span>}</div>;
 }
@@ -175,8 +175,9 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  const depth=()=>{const st=window.history.state as {fiCoach?:number}|null;return typeof st?.fiCoach==='number'?st.fiCoach:0;};
  const url=(r:Route)=>window.location.pathname+window.location.search+hashFor(r);
  /** draw a route (no history work): the direction picks the motion */
+ const lastDepth=useRef(0);
  const draw=useCallback((r:Route,dir:Dir)=>{
-  const from=routeRef.current;
+  const from=routeRef.current;lastDepth.current=depth();
   scrollAt.current[from.screen]=window.scrollY;
   setToast(null);/* a toast belongs to the screen it was shown on (UX audit C15) */
   const apply=()=>{setEnter(dir);setRoute(r);setLiveRaw(!!r.live);if(isRoot(r.screen)){setHomeTab(r.screen);try{window.localStorage.setItem(TAB_KEY,r.screen);}catch{/* optional */}}};
@@ -201,8 +202,9 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  const go=(t:Tab,via:'tab'|'push'='push')=>{if(isRoot(t))nav({screen:t},'replace','tab');else nav({screen:t},via==='tab'?'replace':'push');};
  /* the phone's Back and Forward, and a hash typed or followed by a link: draw what the URL says */
  useEffect(()=>{
-  const on=()=>{const r=parseHash(window.location.hash),from=routeRef.current;if(sameRoute(r,from))return;
-   const dir:Dir=isRoot(r.screen)&&!isRoot(from.screen)||from.live&&!r.live||from.screen==='plans'&&r.screen==='plans'&&(!r.plan||!r.run&&from.run)?'back':isRoot(r.screen)&&isRoot(from.screen)?'tab':'forward';
+  const on=()=>{const r=parseHash(window.location.hash),from=routeRef.current,d=depth(),popBack=d<lastDepth.current;lastDepth.current=d;if(sameRoute(r,from))return;
+   /* round 4G (audit C11): a step back in the app's own history always plays the reverse (back) transition */
+   const dir:Dir=popBack||isRoot(r.screen)&&!isRoot(from.screen)||from.live&&!r.live||from.screen==='plans'&&r.screen==='plans'&&(!r.plan||!r.run&&from.run)?'back':isRoot(r.screen)&&isRoot(from.screen)?'tab':'forward';
    draw(r,dir);};
   window.addEventListener('popstate',on);window.addEventListener('hashchange',on);
   return ()=>{window.removeEventListener('popstate',on);window.removeEventListener('hashchange',on);};
@@ -288,11 +290,15 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  useEffect(()=>{if(!ready||!anyLive)return;const ua=(navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation;if(ua&&!ua.hasBeenActive)setMuted(true);
   const u=()=>{setMuted(false);try{audio.current??=new (window.AudioContext||(window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext)();void audio.current.resume();}catch{/* no audio */}};
   window.addEventListener('pointerdown',u,{once:true});return ()=>window.removeEventListener('pointerdown',u);},[ready,anyLive]);
+ /* round 4G (audit C2): one team name everywhere: a team without a name gets its default ("Team 1") once, saved, so the settings
+    field, the dashboard, Match day and the score all show the same name, and the coach edits that one */
+ const defName=w.teamN(place);
+ useEffect(()=>{if(ready&&!store.team.name&&!shared)update(x=>x.team.name?x:{...x,team:{...x.team,name:defName}});},[ready,store.team.name,defName,update,shared]);
  const beep=(soft=false)=>{if(!store.sound)return;try{const a=audio.current;if(!a)return;for(const t of soft?[0]:[0,0.35]){const o=a.createOscillator(),g=a.createGain();o.frequency.value=soft?660:880;g.gain.setValueAtTime(0.0001,a.currentTime+t);g.gain.exponentialRampToValueAtTime(soft?0.25:0.5,a.currentTime+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+t+0.25);o.connect(g).connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+0.3);}}catch{/* no audio */}};
  const startGame=()=>{
   const status:Record<string,Status>={};for(const p of d.ready)status[p.id]='ok';for(const p of d.late)status[p.id]='late';
   try{audio.current??=new (window.AudioContext||(window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext)();void audio.current.resume();}catch{/* no audio */}
-  setUndo([]);update(s=>({...s,last:s.game?.clock.status==='done'?s.game:s.last,game:newGame(d.startPlan,s.settings,d.spotOf,status,Date.now(),cleanMatch(s.match))}));setLive(true);count('ca:game');
+  setUndo([]);update(s=>({...s,last:s.game?.clock.status==='done'?s.game:s.last,game:newGame(d.startPlan,s.settings,d.spotOf,status,Date.now(),cleanMatch(s.match),s.late)}));setLive(true);count('ca:game');
  };
  const shareLink=async(x:Shared,title?:string)=>{
   const url=`${location.origin}/coach${langParam(lang)}#s=${encodeShare(x)}`;
@@ -318,7 +324,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
     {t==='gameday'?<GameDayTab w={w} store={store} place={place} fmt={fmtName} coming={d.ready.length} late={d.late.length} onDetails={()=>detailsSheet.open(true)} onField={d.F} intro={false} live={liveCard} gameDone={game?.clock.status==='done'||!!store.last&&!game}
       onMatch={()=>{if(liveRec&&liveRec.game?.clock.status!=='done')openLive();else if(d.here.length)startGame();else goTeam();}}
       onTool={k=>go(k)}
-      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
+      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:!x.team.name||x.team.name===w.teamN(place)?'Blue Sharks':x.team.name,players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
     :t==='training'?<TrainingTab w={w} lang={lang} version={plansVersion} age={teamAge} intro={false} onPlans={(plan,run)=>{
       if(!plan){nav({screen:'plans'},'push');return;}
       /* a plan from Training: the list under it, so Back goes plan -> list -> Training */
@@ -336,7 +342,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
       onPlan={slug=>nav({screen:'plans',plan:slug,age:route.age},'push')}
       onRun={on=>{if(on)nav({...route,run:true},'push');else back();}}/>
     :<SummaryTab w={w} store={store} now={now} onShare={(names:boolean)=>{const g=store.game??store.last;if(!g)return;const sc=scoreOf(g);
-       shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names,{opp:g.info?.opp??'',date:g.info?.date??'',us:g.clock.status==='pre'?null:sc.us,them:g.clock.status==='pre'?null:sc.them}),w.sharedTitle);}}
+       shareLink(toShared(team,g.settings,playedBlocks(g,Date.now()),summarySeconds(g,Date.now()),g.clock.status==='done',names,{opp:g.info?.opp??'',date:g.info?.date??'',us:g.clock.status==='pre'?null:sc.us,them:g.clock.status==='pre'?null:sc.them}),w.sharedTitle);}}
       onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes','tab');}}}/>}
    </div>)}
   </main>
@@ -354,7 +360,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
    {navItem('training',w.navTraining,<ConeIcon size={26}/>)}
    {navItem('lang',w.navLang,<GlobeIcon size={26}/>)}
   </nav>}
-  {detailsSheet.value&&<DetailsSheet w={w} match={cleanMatch(store.match)} closing={detailsSheet.closing} onClose={detailsSheet.close} onChange={m=>update(s=>({...s,match:m}))}/>}
+  {detailsSheet.value&&<DetailsSheet w={w} lang={lang} match={cleanMatch(store.match)} closing={detailsSheet.closing} onClose={detailsSheet.close} onChange={m=>update(s=>({...s,match:m}))}/>}
   {langSheet.value&&<LangSheet w={w} lang={lang} closing={langSheet.closing} onClose={langSheet.close} onPick={l=>{update(s=>({...s,lang:l}));langSheet.close();}}/>}
   {teamSheet.value&&<TeamSheet w={w} teams={teams} closing={teamSheet.closing} onClose={teamSheet.close}
    onPick={id=>pickTeam(id)} onEdit={id=>pickTeam(id,()=>{setReturnTo(null);nav({screen:'team'},'push');})}
@@ -376,7 +382,7 @@ function LangSheet({w,lang,closing,onClose,onPick}:{w:Words;lang:Lang;closing:bo
  </div>;
 }
 /** The next game's details (UX audit C17): opponent, date, kick-off, home or away. Saved as typed; copied into the game at the start. */
-function DetailsSheet({w,match,closing,onClose,onChange}:{w:Words;match:MatchInfo;closing:boolean;onClose:()=>void;onChange:(m:MatchInfo)=>void}){
+function DetailsSheet({w,lang,match,closing,onClose,onChange}:{w:Words;lang:Lang;match:MatchInfo;closing:boolean;onClose:()=>void;onChange:(m:MatchInfo)=>void}){
  const panel=useRef<HTMLDivElement>(null),swipe=useSwipeDown(panel,onClose),m=match,set=(x:Partial<MatchInfo>)=>onChange({...m,...x});
  return <div className={c.sheet} data-closing={closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)onClose();}} onKeyDown={e=>{if(e.key==='Escape')onClose();}}>
   <div className={`${c.sheetIn} ${c.setSheet}`} ref={panel} role="dialog" aria-modal="true" aria-labelledby="coach-details" data-game-details="">
@@ -384,8 +390,8 @@ function DetailsSheet({w,match,closing,onClose,onChange}:{w:Words;match:MatchInf
    <div className={c.sheetBody}>
     <label className={c.sec}><span className={c.lbl}>{w.opponent}</span><input className={c.input} value={m.opp} placeholder={w.opponentPh} maxLength={24} onChange={e=>set({opp:e.target.value.slice(0,24)})} autoFocus/></label>
     <div className={c.detailsPair}>
-     <label className={c.sec}><span className={c.lbl}>{w.date}</span><input className={c.input} type="date" value={m.date} onChange={e=>set({date:e.target.value})}/></label>
-     <label className={c.sec}><span className={c.lbl}>{w.kickTime}</span><input className={c.input} type="time" value={m.time} onChange={e=>set({time:e.target.value})}/></label>
+     <label className={c.sec}><span className={c.lbl}>{w.date}</span><input className={c.input} type="date" lang={LOCALE[lang]} value={m.date} onChange={e=>set({date:e.target.value})}/>{m.date&&<small className={c.inputSay} data-date-say="">{dateIn(m.date,lang)}</small>}</label>
+     <label className={c.sec}><span className={c.lbl}>{w.kickTime}</span><input className={c.input} type="time" lang={LOCALE[lang]} value={m.time} onChange={e=>set({time:e.target.value})}/>{m.time&&<small className={c.inputSay}>{timeIn(m.time,lang)}</small>}</label>
     </div>
     <Seg label={w.homeAway} value={m.home} options={['','home','away'] as const} names={h=>h==='home'?w.home:h==='away'?w.awayGame:w.notSet} onPick={h=>set({home:h})}/>
    </div>
@@ -657,7 +663,7 @@ type WakeLockNav=Navigator&{wakeLock?:{request(t:'screen'):Promise<{release():Pr
 function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,keepers,beep,sound,toggleSound}:{w:Words;lang:Lang;game:Game;team:Store['team'];now:number;act:(f:(g:Game)=>Game,msg?:string)=>void;
  canUndo:boolean;onUndo:()=>void;onExit:()=>void;onSummary:()=>void;onSub:()=>void;keepers:readonly string[];beep:(soft?:boolean)=>void;sound:boolean;toggleSound:()=>void}){
  const s=game.settings,st=game.clock.status,inPlay=st==='live'||st==='paused',sec=inPlay?clockSec(game.clock,now):0,len=s.periodMin*60+game.clock.added;
- const byId=new Map(team.players.map(p=>[p.id,p])),{played}=playedSeconds(game,sec),nc=nextChange(game);
+ const byId=new Map(team.players.map(p=>[p.id,p])),{played}=playedSeconds(game,sec),nc=nextChange(game),nm=(id:string)=>byId.get(id);
  const pName=w.periodName(Math.min(game.clock.period,s.periods-1),s.periods),up=st==='live'&&sec>=len;
  const due=nc&&nc.due!=null&&inPlay?nc.due-sec:null,now_=due!=null&&due<=0;
  const [wake,setWake]=useState<'on'|'off'|'none'>('off');
@@ -675,10 +681,11 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
   return ()=>{gone=true;document.removeEventListener('visibilitychange',vis);lock?.release().catch(()=>{});};},[]);
  /* alerts: once per planned change (and once when the period's time is up): vibrate, beep, flash; once more, gently, when the change
     is two minutes overdue (UX audit B3); none for a change the coach's own tap just made due */
- const key=alertKey(game,now),overdue=due!=null&&due<=-OVERDUE_SEC;
+ const key=alertKey(game,now),missed=!!nc?.missed&&inPlay,overdue=due!=null&&(due<=-OVERDUE_SEC||missed);
+ /* round 4G (audit B2): a late player whose expected minute has come: one tap adds them to the plan */
+ const [notYet,setNotYet]=useState<string[]>([]),arriving=arrivalsDue(game,now).filter(p=>!notYet.includes(p)).map(nm).filter((p):p is Player=>!!p)[0]??null;
  useEffect(()=>{if(!key||alerted.current===key)return;alerted.current=key;if(Date.now()-quiet.current<2000)return;const soft=key.endsWith(':late');
   try{if((navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation?.hasBeenActive!==false)navigator.vibrate?.(soft?[180]:[250,120,250,120,400]);}catch{/* none */}beep(soft);},[key,beep]);
- const nm=(id:string)=>byId.get(id);
  const okIds=Object.keys(game.status).filter(p=>(game.status[p]??'ok')==='ok'),onSet=new Set(game.on);
  const bench=okIds.filter(p=>!onSet.has(p)).map(nm).filter((p):p is Player=>!!p).sort((a,b)=>a.num-b.num);
  const away=Object.keys(game.status).filter(p=>game.status[p]!=='ok').map(nm).filter((p):p is Player=>!!p);
@@ -696,7 +703,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
  const open=!foldable||side||(pin&&pin.k===pinKey?pin.open:soon);
  const when=due!=null&&due>0?fmtClock(due):'';
  const Who=({p,cls,extra}:{p:Player;cls:string;extra?:string})=><button type="button" className={`${c.whoBtn} ${cls}`} onClick={()=>setSheet(p)} aria-label={`${label(p)}, ${mins(played[p.id]??0)} ${w.min}${extra?', '+extra:''}`}>
-  <b>{p.num}</b><span>{p.name}{game.gk===p.id?` · ${w.gk}`:''}{extra?` · ${extra}`:''}</span><em>{mins(played[p.id]??0)}′</em></button>;
+  <b>{p.num}</b><span>{p.name}{extra?` · ${extra}`:''}</span>{/* round 4G (audit C3): the GK mark never truncates; the name does */}{game.gk===p.id&&<i className={c.gkTag}>{w.gk}</i>}<em>{mins(played[p.id]??0)}′</em></button>;
  return <div className={c.live} role="dialog" aria-modal="true" aria-label={w.tabGame}>
   <div className={c.liveTop}>
    {/* the app's language (w.langCode is the OTHER language, for the toggle: it made Back read "Volver" in English) */}
@@ -725,14 +732,16 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
      <button type="button" className={`${c.btn} ${c.scoreBtn}`} aria-label={w.addGoalThem} data-goal-them="" onClick={()=>act(g=>theirGoal(g,1))}>+</button></div></div>
    </div>}
    {(game.score?.goals??[]).some(Boolean)&&<p className={c.scorers}>{w.scorers}: {(game.score?.goals??[]).filter(Boolean).map(id=>label(nm(id))).join(', ')}</p>}
-   <p className={c.wake}>{wake==='on'?w.wakeOn:w.wakeOff} · <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} aria-pressed={sound} onClick={toggleSound}>{sound?w.soundOn:w.soundOff}</button></p>
+   <p className={c.wake}><span>{wake==='on'?w.wakeOn:w.wakeOff}</span><button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} aria-pressed={sound} onClick={toggleSound}>{sound?w.soundOn:w.soundOff}</button></p>
    <div className={c.who}>
     <div className={c.whoHead}>{w.onField} · {onP.length}</div>
     <div className={c.whoList}>{onP.map(p=><Who key={p.id} p={p} cls={c.whoOn}/>)}</div>
     <div className={c.whoHead}>{w.bench} · {bench.length}</div>
     <div className={c.whoList}>{bench.map(p=><Who key={p.id} p={p} cls=""/>)}</div>
     {away.length>0&&<><div className={c.whoHead}>{w.hurt} / {w.left} / {w.late}</div>
-     <div className={c.whoList}>{away.map(p=><Who key={p.id} p={p} cls={c.whoOut} extra={game.status[p.id]==='hurt'?w.hurt:game.status[p.id]==='left'?w.left:w.late}/>)}</div></>}
+     <div className={c.whoList}>{away.map(p=>game.status[p.id]==='late'
+      ?<div key={p.id} className={c.lateWho}><Who p={p} cls={c.whoOut} extra={w.late}/><button type="button" className={`${c.btn} ${c.btnGold}`} data-arrived={p.id} onClick={()=>mark(p,'ok')}>{w.arrived}</button></div>
+      :<Who key={p.id} p={p} cls={c.whoOut} extra={game.status[p.id]==='hurt'?w.hurt:w.left}/>)}</div></>}
    </div>
    {inPlay&&!up&&<div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>act(g=>endCurrentPeriod(g,Date.now(),keepers))}>{w.endPeriod(pName)}</button></div>}
   </div>
@@ -740,6 +749,10 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
      line while the change is far off, open 30 s before it (or on tap); Off -> On in two columns of player chips; Done is the gold
      primary, "1 min later" and Skip are light. It never covers the bench for long: after Done it folds back to one line. */}
   <section className={c.card} data-flash={now_||up} data-open={open?'':undefined} aria-live="assertive" aria-atomic="true" data-next-panel="">
+   {arriving&&st!=='done'&&<div className={c.arrive} data-arrive-prompt="">
+    <p><b>{w.arrivedQ(label(arriving))}</b></p>
+    <div className={c.cardBtns}><button type="button" className={`${c.btn} ${c.done}`} data-arrive-yes="" onClick={()=>mark(arriving,'ok')}>{w.addToPlan}</button>
+     <button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>setNotYet(x=>[...x,arriving.id])}>{w.notYet}</button></div></div>}
    {st==='done'?<><div className={c.cardHead}><span>{w.over}</span></div><p className={c.calm}>{w.summary}</p><div className={c.cardBtns}><button type="button" className={`${c.btn} ${c.done}`} onClick={onSummary}>{w.tabSummary}</button></div></>
    :up?<><div className={c.cardHead}><span>{w.timeUp}</span><strong>{fmtClock(sec)}</strong></div><div className={c.cardBtns} style={{marginTop:12}}>
      <button type="button" className={`${c.btn} ${c.done}`} onClick={()=>act(g=>endCurrentPeriod(g,Date.now(),keepers))}>{w.endPeriod(pName)}</button>
@@ -759,14 +772,19 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
       <span className={c.swapArrow} aria-hidden="true">→</span>
       <span role="cell" className={`${c.swapChip} ${c.swapOn}`}>{i?<><b>{nm(i)?.num}</b><span>{nm(i)?.name}</span><em className={c.swapMin} aria-label={`${mins(played[i]??0)} ${w.min}`}>{mins(played[i]??0)}′</em></>:<b>—</b>}</span></div>)}
     </div>}
+    {/* round 4G (audit P9): with no change left the panel is not an empty card: the score and the minutes so far */}
+    {!nc&&st!=='pre'&&(()=>{const ok=okIds.map(p=>played[p]??0),lo=Math.min(...ok),hi=Math.max(...ok);
+     return <div className={c.restCard} data-rest-card=""><p className={c.restScore}><span>{team.name||w.us}</span><b>{sc.us}–{sc.them}</b><span>{info?.opp||w.opponent}</span></p>
+      {ok.length>0&&<p className={c.note}>{w.fairEveryone(mins(lo),mins(hi)).replace(/ (\S+)$/,'\u00a0$1')}</p>}</div>;})()}
     {gkNew&&<p className={c.gkLine}>#{nm(gkNew)?.num} {nm(gkNew)?.name} {w.goesInGoal}</p>}
-    {nc&&overdue&&<p className={c.overdue} data-overdue="">{w.overdueNote(Math.round(-due!/60))}</p>}
+    {nc&&overdue&&<p className={c.overdue} data-overdue="">{missed?w.missedBreak:w.overdueNote(Math.max(1,Math.round(-due!/60)))}</p>}
     <div className={c.cardBtns}>
      {nc&&(inPlay||st==='break')&&<button type="button" className={`${c.btn} ${c.done}`} data-done="" onClick={()=>{if(due!=null&&due>0&&tapOk(lastTap.current,Date.now())){earlyS.open(true);return;}doDone();}}>{w.done}<CheckMark/></button>}
      {(st==='pre'||st==='break')&&<button type="button" className={`${c.btn} ${nc&&st==='break'?c.cardGhost:c.done}`} style={nc&&st==='break'?{gridColumn:'1/-1'}:undefined} onClick={()=>act(g=>kickOff(g,Date.now()))}>{st==='pre'?w.kickOff:w.kickOffNext(pName)}</button>}
+     {/* round 4G (audit C6): on an overdue change "Replan from now" sits next to Done, in the first row, always in view */}
+     {nc&&inPlay&&overdue&&<button type="button" className={`${c.btn} ${c.cardGhost}`} data-replan-now="" onClick={()=>{quiet.current=Date.now();act(g=>replanNow(g,Date.now(),keepers),w.replanned);}}>{w.replanNow}</button>}
      {nc&&inPlay&&<><button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>act(g=>delayChange(g,60))}>{w.delay}</button>
-      <button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>{quiet.current=Date.now();act(g=>skipChange(g,Date.now(),keepers),w.replanned);}}>{w.skip}</button></>}
-     {nc&&inPlay&&overdue&&<button type="button" className={`${c.btn} ${c.cardGhost}`} style={{gridColumn:'1/-1'}} data-replan-now="" onClick={()=>{quiet.current=Date.now();act(g=>replanNow(g,Date.now(),keepers),w.replanned);}}>{w.replanNow}</button>}
+      <button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>{quiet.current=Date.now();act(g=>skipChange(g,Date.now(),keepers),w.skipped);}}>{w.skip}</button></>}
     </div>
    </>}
   </section>
@@ -809,11 +827,14 @@ function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;
   <GameLine w={w} lang={store.lang??'en'} info={g.info} score={g.clock.status==='pre'?null:scoreOf(g)} team={store.team.name}/>
   {(g.score?.goals??[]).some(Boolean)&&<p className={c.note}>{w.scorers}: {(g.score?.goals??[]).filter(Boolean).map(id=>label(store.team.players.find(p=>p.id===id))).join(', ')}</p>}
   <Fair w={w} seconds={sec} ids={ids} skip={skip} fixedName={fixed?label(store.team.players.find(p=>p.id===fixed)):undefined} step={g.settings.subEvery}/>
+  {/* round 4G (audit C7): minutes that ended well apart say why */}
+  {(()=>{const un=unevenNotes(g,sec);if(!un.length)return null;const why={hurt:w.whyHurt,left:w.whyLeft,late:w.whyLate,skip:w.whySkip,other:w.whyOther};
+   return <div className={c.uneven} data-uneven=""><p className={c.lbl}>{w.unevenHead}</p><ul>{un.slice(0,8).map(u=><li key={u.p}>{w.missedMin(label(store.team.players.find(p=>p.id===u.p)),mins(u.short))} · {why[u.why]}</li>)}</ul></div>;})()}
   <table className={c.sumTable}><thead><tr><th>#</th><th>{w.nameOpt.split(' (')[0]}</th><th style={{width:'34%'}}><span className="sr-only"/></th><th className={c.r}>{w.inGoal}</th><th className={c.r}>{w.min}</th></tr></thead>
    <tbody>{rows.map(p=><tr key={p.id}><td><b>{p.num}</b></td><td>{p.name}{g.status[p.id]!=='ok'?` · ${g.status[p.id]==='hurt'?w.hurt:g.status[p.id]==='left'?w.left:w.late}`:''}</td>
     <td><span className={c.sumBar} style={{width:`${(sec[p.id]??0)/max*100}%`}}/></td><td className={c.r}>{kept[p.id]?mins(kept[p.id]):''}</td><td className={c.r}><b><Tick value={mins(sec[p.id]??0)}/></b></td></tr>)}</tbody></table>
   <h2 className={c.h2}>{w.plan}</h2>
-  <TimelineRows w={w} rows={rows} blocks={g.blocks} settings={g.settings} seconds={sec}/>
+  <TimelineRows w={w} rows={rows} blocks={playedBlocks(g,now)} settings={g.settings} seconds={sec}/>
   <div className={c.noPrint}>
    <label className={c.check}><input type="checkbox" checked={names} onChange={e=>setNames(e.target.checked)}/>{w.showNames}<span className={c.checkNote}>{names?'':w.namesNote}</span></label>
    <div className={c.btnRow}><button type="button" className={c.btn} onClick={csv}>{w.csv}</button>
@@ -826,23 +847,22 @@ function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;
 /** "Sharks 2–1 Tigers · Sat 29 Nov" (UX audit C17/C2): the game's opponent, date and score, when there are any. */
 function GameLine({w,lang,info,score,team}:{w:Words;lang:Lang;info?:MatchInfo;score:{us:number;them:number}|null;team:string}){
  const when=whenLine(info,lang);if(!info?.opp&&!when&&!score)return null;
- return <p className={c.gameLine} data-game-line="">{score?<b>{team||w.us} {score.us}–{score.them} {info?.opp||w.them}</b>:info?.opp?<b>{w.vs(info.opp)}</b>:null}{when&&<span>{when}</span>}</p>;
+ return <p className={c.gameLine} data-game-line="">{score?<b>{team||w.us} {score.us}–{score.them} {info?.opp||w.opponent}</b>:info?.opp?<b>{w.vs(info.opp)}</b>:null}{when&&<span>{when}</span>}</p>;
 }
 /* ------------------------------------------------------------------ a shared link (read-only) ---------------------------- */
 function SharedView({w,x,onClose}:{w:Words;x:Shared;onClose:()=>void}){
+ const lang=APP_LANGS.find(l=>WORDS[l]===w)??'en';
  const rows:Player[]=x.players.map((p,i)=>({id:String(i),num:p.num,name:p.name,gk:false}));
  const sec:Record<string,number>={};x.seconds.forEach((v,i)=>{sec[String(i)]=v;});
  const shown=x.seconds.some(v=>v>0)?sec:planSeconds(x.blocks),fixed=x.settings.keeper!=='none'?soleKeeper(x.blocks):null;
  const ids=rows.map(p=>p.id).filter(id=>(shown[id]??0)>0);
  return <div className={c.app} data-reading-page="" data-coach-app="">
-  <header className={c.top}>
-   {/* eslint-disable-next-line @next/next/no-img-element */}
-   <img className={c.mark} src="/coach/icon.svg" alt="" width={32} height={32}/>
-   <div className={c.topTitle}><b>{x.team||w.shared}</b><span>{x.settings.format} · {x.settings.periods} × {x.settings.periodMin} {w.min}</span></div></header>
+  {/* round 4G (audit C1): the apps' shared header; the team's name, the format */}
+  <AppHeader lang={lang} exit={false} exitAria="" title={x.team||w.sharedTitle} sub={<>{w.fmt(x.settings.format)} · {x.settings.periods} × {x.settings.periodMin} {w.min}</>}/>
   <main className={c.main}>
    {/* the parents' link (UX audit C2): "Minutes played", the game's details and score, no verdict */}
    <h1 className={c.h1}>{x.info||x.done?w.sharedTitle:w.planned}</h1>
-   <GameLine w={w} lang={APP_LANGS.find(l=>WORDS[l]===w)??'en'} info={x.info?{opp:x.info.opp,date:x.info.date,time:'',home:''}:undefined} score={x.info&&x.info.us!=null&&x.info.them!=null?{us:x.info.us,them:x.info.them}:null} team={x.team}/>
+   <GameLine w={w} lang={lang} info={x.info?{opp:x.info.opp,date:x.info.date,time:'',home:''}:undefined} score={x.info&&x.info.us!=null&&x.info.them!=null?{us:x.info.us,them:x.info.them}:null} team={x.team}/>
    <Fair w={w} seconds={shown} ids={ids} skip={new Set(fixed?[fixed]:[])} step={x.settings.subEvery} verdict={false}/>
    <TimelineRows w={w} rows={rows.filter(p=>ids.includes(p.id))} blocks={x.blocks} settings={x.settings} seconds={shown}/>
    <div className={c.btnRow}><button type="button" className={c.btn} onClick={onClose}>{w.openMine}</button><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button></div>

@@ -71,10 +71,13 @@ export const ART={
 type GD={w:Words;store:Store;place:number;fmt:string;coming:number;late?:number;onField:number;intro:boolean;onDetails?:()=>void;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
  onMatch:()=>void;onTool:(k:'team'|'lineup'|'minutes'|'subs'|'summary')=>void;onExample:()=>void};
 /** "Sat 29 Nov · 10:30" in the app's language, from the game details (UX audit C17). */
+export function timeIn(t:string,lang:Lang):string{const m=/^(\d{2}):(\d{2})$/.exec(t||'');if(!m)return t||'';try{return new Date(2000,0,1,Number(m[1]),Number(m[2])).toLocaleTimeString(LOCALE[lang],{hour:'numeric',minute:'2-digit'});}catch{return t;}}
+export function dateIn(d:string,lang:Lang):string{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');if(!m)return '';try{return new Date(Number(m[1]),Number(m[2])-1,Number(m[3])).toLocaleDateString(LOCALE[lang],{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return d;}}
 export function whenLine(m:{date:string;time:string}|undefined,lang:Lang):string{
  if(!m)return '';let d='';
  if(m.date){const [y,mo,da]=m.date.split('-').map(Number);try{d=new Date(y,mo-1,da).toLocaleDateString(LOCALE[lang],{weekday:'short',day:'numeric',month:'short'});}catch{d=m.date;}}
- return [d,m.time].filter(Boolean).join(' · ');
+ /* round 4G (audit C12): the kick-off time in the app's language too (10:30 / 10.30 / 午前10:30), not as typed */
+ return [d,timeIn(m.time,lang)].filter(Boolean).join(' · ');
 }
 export function GameDayTab({w,store,place,fmt,coming,late=0,onField,intro,live,gameDone,onMatch,onTool,onExample,onDetails}:GD){
  const s=store.settings,team=store.team,has=team.players.length>0,name=team.name||w.teamN(place),m=store.match,when=whenLine(m,store.lang??'en');
