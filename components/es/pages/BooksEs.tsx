@@ -96,8 +96,9 @@ const ES_PREFIX='Libro desplegable gratis para niños sobre ';
 const restEs=(w:BookEs)=>w.description.startsWith(ES_PREFIX)?w.description.slice(ES_PREFIX.length):'';
 const lessonEs=(w:BookEs)=>w.summary.match(/La historia enseña[^.]*\./)?.[0]??'';
 export function bookDescriptionEs(w:BookEs):string{
- const r=restEs(w),l=lessonEs(w).replace(/^La historia enseña/,'Enseña');if(!r)return w.description;
- return [l?`${r} ${l}`:'',`${r} Cuento desplegable gratis para niños.`,`${r} Libro desplegable gratis.`].find(d=>d.length>=70&&d.length<=155)??w.description;
+ const r=restEs(w),m=lessonEs(w).replace(/^La historia enseña (que )?/,'');if(!r)return w.description;
+ const l=m?m[0].toUpperCase()+m.slice(1):'',first=l?l.split(/,? y (?:que |a )?|, o /)[0].replace(/[.,]$/,'')+'.':'';
+ return [l?`${r} Lección: ${l}`:'',first?`${r} Lección: ${first}`:'',`${r} Cuento desplegable gratis para niños.`].find(d=>d.length>=70&&d.length<=155)??w.description;
 }
 function bookLdEs(x:SiteBook,w:BookEs,modified:string){
  const path=pathEs(x.id),wiki=x.sources.find(s=>/wikipedia\.org\/wiki\//.test(s.url));

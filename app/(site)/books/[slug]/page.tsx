@@ -61,7 +61,7 @@ export default function BookPage({params}:{params:{slug:string}}){
   {/* Nov 23 2026 (seo-books-games): a paragraph of its own per book: who, the turn of the story, the lesson, the ages, the position */}
   <section className={styles.section} aria-labelledby="about">
    <h2 className={styles.h2} id="about">About this book</h2>
-   <p>{intro.who} {intro.tail&&<>In six short chapters: {intro.tail} </>}{intro.lesson} It is written for children aged 7 to 12, takes about four minutes to read, and Coach Bella can read it aloud.{intro.guide&&intro.role&&<> To see what {/^[aeiou]/.test(intro.role)?'an':'a'} {intro.role} does on the pitch, read <a href={intro.guide.path}>{intro.guide.name.toLowerCase()}</a>.</>}</p>
+   <p>{intro.who} {intro.tail&&<>In six short chapters: {intro.tail} </>}{intro.lesson} It is written for children aged 7 to 12, takes about four minutes to read, and Coach Bella can read it aloud.{intro.guide&&intro.role&&<> To learn the position, read <a href={intro.guide.path}>{intro.guide.name.toLowerCase()}</a> on the pitch.</>}</p>
   </section>
   <section className={`${styles.section} ${tgt.target}`} aria-labelledby="story-title" id="story">
    <h2 className={styles.h2} id="story-title">The story</h2>

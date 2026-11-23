@@ -103,7 +103,7 @@ export function bookLd(b:SiteBook,o:{modified:string}){
   ...(b.chapters[0]?{image:abs(bookImage(b))}:{}),/* Nov 20 2026: the first chapter's pop-up picture (tests/books-site.cjs checks the file exists) */
   about:{'@type':'Person',name:b.player,...(wiki?{sameAs:wiki.url}:{})},author:PUBLISHER,publisher:PUBLISHER,
   /* Nov 23 2026: the lesson the page states, the age range the hub states, and the Spanish edition (its own Book node) */
-  ...(bookLesson(b)?{teaches:bookLesson(b).replace(/^The story teaches (that )?/,'').replace(/\.$/,'')}:{}),typicalAgeRange:'7-12',
+  ...(bookLesson(b)?{teaches:bookLesson(b).replace(/^The story teaches (that |you to )?/,'').replace(/\.$/,'')}:{}),typicalAgeRange:'7-12',
   ...((ES_BOOK_IDS as readonly string[]).includes(b.id)?{workTranslation:{'@type':'Book','@id':abs(toEs(path))+'#book',inLanguage:'es',url:abs(toEs(path))}}:{}),
   citation:b.sources.map(s=>({'@type':'CreativeWork',name:s.label,url:s.url})),
   hasPart:b.chapters.map((c,i)=>({'@type':'Chapter',name:c.title,position:i+1,url:`${abs(path)}#${chapterAnchor(c.id)}`})),
