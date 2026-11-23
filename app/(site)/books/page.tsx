@@ -4,7 +4,7 @@ import {booksHubRail,regionId} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {QuickAnswer,PlayEnd,type Fact} from '@/lib/site/GuideParts';
-import {BOOKS_PATH,BUILT_BOOKS,SITE_BOOKS,bookBySlug,shelf} from '@/lib/site/books';
+import {BOOKS_PATH,BUILT_BOOKS,SITE_BOOKS,bookBySlug,byPosition,shelf} from '@/lib/site/books';
 import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
 import {SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {BookCover,BookShelf,GuideCover} from '@/components/site/books/BookParts';
@@ -18,6 +18,7 @@ import {libraryCrumbs} from '@/lib/site/libraryPath';
  */
 export const dynamic='force-static';
 const N=SITE_BOOKS.length;
+const POSITION_PLURAL:Record<string,string>={goalkeeper:'Goalkeepers',fullback:'Fullbacks',centerback:'Center backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers'};
 const LEAD=`Futbol Island has ${N} free pop-up books for kids, each a short true story about a real football player in six chapters. Every chapter ends with what it teaches, like keeping going after a no or being ready from the bench, and every fact is checked against its sources.`;
 /* Nov 23 2026 (seo-unindexed): US searches say "soccer books for kids"; the h1 keeps "Football pop-up books for kids" */
 export const metadata=pageMeta(`Soccer Books for Kids: ${N} Free Pop-Up Player Stories`,
@@ -55,6 +56,12 @@ export default function BooksHub(){
     <h2 className={`${styles.h2} ${tgt.target}`} id={id}>Players from {g.region}</h2>
     <BookShelf books={g.books} start={s}/>
    </section>;})}
+  {/* Nov 23 2026 (seo-books-games): the same books by the player's position, each with the guide to that position */}
+  <section className={styles.section} aria-labelledby="by-position">
+   <h2 className={`${styles.h2} ${tgt.target}`} id="by-position">Books by position</h2>
+   <p>Every player book, grouped by the position on the player’s card. The position link explains what that player does on the pitch.</p>
+   <ul>{byPosition().map(g=><li key={g.role}><strong>{g.guide?<a href={g.guide.path}>{POSITION_PLURAL[g.role]}</a>:POSITION_PLURAL[g.role]}</strong>: {g.books.map((x,i)=><span key={x.id}>{i?', ':''}<a href={x.path!}>{x.player}</a></span>)}</li>)}</ul>
+  </section>
   <section className={styles.section} aria-labelledby="guides">
    <h2 className={`${styles.h2} ${tgt.target}`} id="guides">Island field guides</h2>
    <ul className={b.shelf}><li className={b.shelfItem}>

@@ -8,7 +8,7 @@ import {BookMark,coverTone,GuideCover,SPREAD_H,SPREAD_W,spreadSrc} from '@/compo
 import {QA} from '@/components/site/LessonHub';
 import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,esLibCrumbs} from '../EsParts';
-import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookPath,chapterAnchor,readerBook,relatedBooks,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
+import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookPath,byPosition,chapterAnchor,readerBook,relatedBooks,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
 import {regionId} from '@/lib/site/railNavCollections';
 import {hubRail,pageRail,sec} from '@/lib/site/railNavMore';
 import {roleGuide} from '@/lib/site/related';
@@ -90,11 +90,24 @@ function TilesEs({links}:{links:Tile[]}){
 }
 /** "Historia de Lionel Messi para niños: libro desplegable" when it fits in 60 characters, else the book title. */
 export const bookTitleEs=(x:SiteBook)=>{const t=`Historia de ${x.player} para niños: libro desplegable`;return t.length<=60?t:`${x.title}: cuento desplegable para niños`;};
+/** Nov 23 2026 (seo-books-games): the snippet leads with the player (the description's own words after "Libro desplegable gratis
+ *  para niños sobre "), then the lesson from the summary; 70-155 characters or the old description. */
+const ES_PREFIX='Libro desplegable gratis para niños sobre ';
+const restEs=(w:BookEs)=>w.description.startsWith(ES_PREFIX)?w.description.slice(ES_PREFIX.length):'';
+const lessonEs=(w:BookEs)=>w.summary.match(/La historia enseña[^.]*\./)?.[0]??'';
+export function bookDescriptionEs(w:BookEs):string{
+ const r=restEs(w),l=lessonEs(w).replace(/^La historia enseña/,'Enseña');if(!r)return w.description;
+ return [l?`${r} ${l}`:'',`${r} Cuento desplegable gratis para niños.`,`${r} Libro desplegable gratis.`].find(d=>d.length>=70&&d.length<=155)??w.description;
+}
 function bookLdEs(x:SiteBook,w:BookEs,modified:string){
  const path=pathEs(x.id),wiki=x.sources.find(s=>/wikipedia\.org\/wiki\//.test(s.url));
- return {'@context':'https://schema.org','@type':'WebPage','@id':abs(path)+'#page',url:abs(path),name:bookTitleEs(x),description:w.description,inLanguage:'es',
+ return {'@context':'https://schema.org','@type':'WebPage','@id':abs(path)+'#page',url:abs(path),name:bookTitleEs(x),description:bookDescriptionEs(w),inLanguage:'es',
   isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,dateModified:modified,
-  mainEntity:{'@type':'Book','@id':abs(bookPath(x.id))+'#book',name:`${x.title}: ${w.subtitle}`,alternateName:x.fullTitle,url:abs(bookPath(x.id)),description:w.summary,
+  /* Nov 23 2026: the Spanish edition is its own Book (its @id and url on this page, inLanguage es), a translation of the English one;
+     it used to reuse the English Book's @id with Spanish names. */
+  mainEntity:{'@type':'Book','@id':abs(path)+'#book',name:`${x.title}: ${w.subtitle}`,alternateName:x.fullTitle,url:abs(path),description:w.summary,inLanguage:'es',
+   translationOfWork:{'@type':'Book','@id':abs(bookPath(x.id))+'#book',inLanguage:'en',url:abs(bookPath(x.id))},
+   ...(lessonEs(w)?{teaches:lessonEs(w).replace(/^La historia enseña (que )?/,'').replace(/\.$/,'')}:{}),typicalAgeRange:'7-12',
    isAccessibleForFree:true,bookFormat:'https://schema.org/EBook',numberOfPages:x.chapters.length,genre:'Biografía infantil',audience:KIDS_AUDIENCE,
    datePublished:x.page?.published,dateModified:modified,...(x.chapters[0]?{image:abs(bookImage(x))}:{}),
    about:{'@type':'Person',name:x.player,...(wiki?{sameAs:wiki.url}:{})},author:PUBLISHER,publisher:PUBLISHER,
@@ -102,6 +115,7 @@ function bookLdEs(x:SiteBook,w:BookEs,modified:string){
    hasPart:x.chapters.map((c,i)=>({'@type':'Chapter',name:w.chapters[i].title,position:i+1,url:`${abs(path)}#${chapterAnchor(c.id)}`}))}};
 }
 export function BookEsPage({book}:{book:SiteBook}){
+ const guide=book.card?roleGuide(book.card.role):undefined,gw=book.card?ROLE_ES[book.card.role]:undefined;
  const w=es(book),path=pathEs(book.id),crumbs=esLibCrumbs({name:'Cuentos desplegables',path:HUB_ES},{name:book.title,path});
  const modified=sitePaths().find(p=>p.path===bookPath(book.id))?.lastmod??SITE_UPDATED.books;
  const facts:Fact[]=book.page!.facts.map((f,i)=>({icon:f.icon,label:w.facts[i].label,value:w.facts[i].value,href:f.href&&hasEs(f.href)?toEs(f.href):f.href}));
@@ -124,6 +138,11 @@ export function BookEsPage({book}:{book:SiteBook}){
     <OpenBook book={readerBook(book)} label="Abrir el libro desplegable (en inglés)" busyLabel="Abriendo el libro…"/>
     <p className={b.openNote}>Las mismas {book.chapters.length} páginas del libro de la isla. Abajo está toda la historia en español.</p>
    </div>
+  </section>
+  {/* Nov 23 2026 (seo-books-games): the page's own paragraph, as in English: who, the story's turn, the lesson, the ages, the position */}
+  <section className={styles.section} aria-labelledby="about">
+   <h2 className={styles.h2} id="about">Sobre este libro</h2>
+   <p>{restEs(w)?<>Este libro cuenta la historia de {restEs(w).replace(/\.$/,'')}. </>:null}{lessonEs(w)} Está escrito para niños de 7 a 12 años, se lee en unos 4 minutos y Coach Bella lo lee en voz alta (en inglés).{guide&&gw&&<> Su posición en el campo: <a href={hasEs(guide.path)?toEs(guide.path):guide.path}>{gw.name.toLowerCase()}</a>.</>}</p>
   </section>
   <section className={`${styles.section} ${tgt.target}`} aria-labelledby="story-title" id="story">
    <h2 className={styles.h2} id="story-title">La historia</h2>
@@ -149,6 +168,7 @@ const HUB=()=>({title:'Cuentos de fútbol para niños: libros desplegables grati
  description:`${N()} cuentos desplegables gratis para niños sobre jugadores de fútbol reales, de Cafu y Marta a Salah y Kerr: seis capítulos cortos, con fuentes.`,
  h1:'Cuentos de fútbol para niños: libros desplegables',
  lead:`Futbol Island tiene ${N()} libros desplegables gratis para niños, cada uno una historia real y corta sobre un jugador de fútbol, en seis capítulos. Cada capítulo termina con lo que enseña, como seguir adelante después de un no o estar listo desde la banca, y cada dato se revisa con sus fuentes. Las historias están en español en esta página; el libro desplegable y su narración están en inglés.`});
+const POSITION_PLURAL_ES:Record<string,string>={goalkeeper:'Porteros',fullback:'Laterales',centerback:'Defensas centrales',midfielder:'Mediocampistas',winger:'Extremos',striker:'Delanteros'};
 export function BooksHubEsPage(){
  const h=HUB(),crumbs=esLibCrumbs({name:'Cuentos desplegables',path:HUB_ES}),featured=bookBySlug(BUILT_BOOKS[0]??''),groups=shelf();let start=0;
  const facts:Fact[]=[{icon:'deck',label:'Libros',value:`${N()} historias reales`},{icon:'steps',label:'Cada libro',value:'6 capítulos, una lección cada uno'},
@@ -179,6 +199,12 @@ export function BooksHubEsPage(){
     <h2 className={`${styles.h2} ${tgt.target}`} id={id}>Jugadores de {REGION_ES[g.region]??g.region}</h2>
     <ShelfEs books={g.books} start={s}/>
    </section>;})}
+  {/* Nov 23 2026: the same books by position, as in English */}
+  <section className={styles.section} aria-labelledby="by-position">
+   <h2 className={`${styles.h2} ${tgt.target}`} id="by-position">Libros por posición</h2>
+   <p>Todos los cuentos, agrupados por la posición de la carta del jugador. El enlace de cada posición explica lo que hace ese jugador en el campo.</p>
+   <ul>{byPosition().map(g=><li key={g.role}><strong>{g.guide?<a href={hasEs(g.guide.path)?toEs(g.guide.path):g.guide.path}>{POSITION_PLURAL_ES[g.role]}</a>:POSITION_PLURAL_ES[g.role]}</strong>: {g.books.map((x,i)=><span key={x.id}>{i?', ':''}<a href={pathEs(x.id)}>{x.player}</a></span>)}</li>)}</ul>
+  </section>
   <section className={styles.section} aria-labelledby="guides">
    <h2 className={`${styles.h2} ${tgt.target}`} id="guides">Guías de la isla</h2>
    <ul className={b.shelf}><li className={b.shelfItem}>
@@ -199,5 +225,5 @@ export function booksEsRoute(enPath:string):{meta:()=>Metadata;render:()=>JSX.El
  if(!enPath.startsWith(BOOKS_PATH+'/'))return null;
  const book=bookBySlug(enPath.slice(BOOKS_PATH.length+1));if(!book||!esBook(book.id))return null;
  const w=es(book);
- return {meta:()=>esMeta(bookTitleEs(book),w.description,enPath,book.chapters[0]?{url:bookImage(book),alt:`Página desplegable del libro de ${book.player}`}:undefined),render:()=><BookEsPage book={book}/>};
+ return {meta:()=>esMeta(bookTitleEs(book),bookDescriptionEs(w),enPath,book.chapters[0]?{url:bookImage(book),alt:`Página desplegable del libro de ${book.player}`}:undefined),render:()=><BookEsPage book={book}/>};
 }

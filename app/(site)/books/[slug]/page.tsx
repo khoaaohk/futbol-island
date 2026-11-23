@@ -6,7 +6,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {QA} from '@/components/site/LessonHub';
 import {CheckedLine,PlayEnd,QuickAnswer,type Fact} from '@/lib/site/GuideParts';
-import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookLd,bookLinks,bookPath,readerBook} from '@/lib/site/books';
+import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookDescription,bookIntro,bookLd,bookLinks,bookPath,readerBook} from '@/lib/site/books';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {sitePaths} from '@/lib/site/paths';
 import {checkedOn} from '@/lib/site/checked';
@@ -30,12 +30,13 @@ export const generateStaticParams=()=>BUILT_BOOKS.map(slug=>({slug}));
 const headline=(t:string)=>`${t} Book for Kids: a Free Pop-Up Story`;
 export function generateMetadata({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book)return {};
- return pageMeta(headline(book.title),book.page!.summary,bookPath(book.slug));
+ return pageMeta(headline(book.title),bookDescription(book),bookPath(book.slug));/* Nov 23 2026: player + story + lesson (was the summary cut at 155) */
 }
 export default function BookPage({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book||!book.page)notFound();
  const path=bookPath(book.slug),crumbs=libraryCrumbs({name:'Pop-up books',path:BOOKS_PATH},{name:book.title,path});/* Nov 20 2026: through the Library */
  const modified=sitePaths().find(p=>p.path===path)?.lastmod??SITE_UPDATED.books;
+ const intro=bookIntro(book);
  const facts:Fact[]=book.page.facts.map(f=>({icon:f.icon,label:f.label,value:f.value,href:f.href}));
  return <>
   <JsonLd data={bookLd(book,{modified})}/>
@@ -56,6 +57,11 @@ export default function BookPage({params}:{params:{slug:string}}){
     <OpenBook book={readerBook(book)}/>
     <p className={b.openNote}>The same {book.chapters.length} pages as the book on the island. The whole story is also written out below.</p>
    </div>
+  </section>
+  {/* Nov 23 2026 (seo-books-games): a paragraph of its own per book: who, the turn of the story, the lesson, the ages, the position */}
+  <section className={styles.section} aria-labelledby="about">
+   <h2 className={styles.h2} id="about">About this book</h2>
+   <p>{intro.who} {intro.tail&&<>In six short chapters: {intro.tail} </>}{intro.lesson} It is written for children aged 7 to 12, takes about four minutes to read, and Coach Bella can read it aloud.{intro.guide&&intro.role&&<> To see what {/^[aeiou]/.test(intro.role)?'an':'a'} {intro.role} does on the pitch, read <a href={intro.guide.path}>{intro.guide.name.toLowerCase()}</a>.</>}</p>
   </section>
   <section className={`${styles.section} ${tgt.target}`} aria-labelledby="story-title" id="story">
    <h2 className={styles.h2} id="story-title">The story</h2>

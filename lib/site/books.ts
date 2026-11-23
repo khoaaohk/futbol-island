@@ -24,6 +24,8 @@ export const BOOK_IDS=(Object.keys(PLAYER_BOOKS) as PlayerBookId[]).filter(id=>i
 export type {BookFaq,BookFact} from './bookPages/types';
 import type {BookPageSpec} from './bookPages/types';
 import {BOOK_PAGES} from './bookPages/index';
+import {BOOK_HOOKS} from './bookPages/hooks';
+import {ES_BOOK_IDS,toEs} from '@/lib/i18n/esPaths';
 
 /** The books that have their own page (all of them since Nov 17 2026; a new book shows on the hub once its spec exists). */
 export const BUILT_BOOKS=BOOK_IDS.filter(id=>!!BOOK_PAGES[id]);
@@ -100,11 +102,35 @@ export function bookLd(b:SiteBook,o:{modified:string}){
   genre:'Children’s biography',audience:KIDS_AUDIENCE,datePublished:b.page?.published,dateModified:o.modified,
   ...(b.chapters[0]?{image:abs(bookImage(b))}:{}),/* Nov 20 2026: the first chapter's pop-up picture (tests/books-site.cjs checks the file exists) */
   about:{'@type':'Person',name:b.player,...(wiki?{sameAs:wiki.url}:{})},author:PUBLISHER,publisher:PUBLISHER,
+  /* Nov 23 2026: the lesson the page states, the age range the hub states, and the Spanish edition (its own Book node) */
+  ...(bookLesson(b)?{teaches:bookLesson(b).replace(/^The story teaches (that )?/,'').replace(/\.$/,'')}:{}),typicalAgeRange:'7-12',
+  ...((ES_BOOK_IDS as readonly string[]).includes(b.id)?{workTranslation:{'@type':'Book','@id':abs(toEs(path))+'#book',inLanguage:'es',url:abs(toEs(path))}}:{}),
   citation:b.sources.map(s=>({'@type':'CreativeWork',name:s.label,url:s.url})),
   hasPart:b.chapters.map((c,i)=>({'@type':'Chapter',name:c.title,position:i+1,url:`${abs(path)}#${chapterAnchor(c.id)}`})),
   isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}};
 }
 export const chapterAnchor=(id:string)=>`chapter-${id}`;
+/** Nov 23 2026 (seo-books-games): the book's lesson, the summary's own "The story teaches …" sentence. */
+export const bookLesson=(b:Pick<SiteBook,'page'>)=>b.page?.summary.match(/The story teaches[^.]*\./)?.[0]??'';
+/** The player's position as a word, from their card's role (lib/site/cards.ts). */
+export const ROLE_WORD:Readonly<Record<string,string>>={goalkeeper:'goalkeeper',fullback:'fullback',centerback:'center back',midfielder:'midfielder',winger:'winger',striker:'striker'};
+/** The shelf by position (Nov 23 2026): the books whose player's card has that role, for the hub's "Books by position" links. */
+export const byPosition=()=>Object.keys(ROLE_WORD).map(role=>({role,guide:roleGuide(role),books:SITE_BOOKS.filter(b=>!!b.page&&b.card?.role===role)})).filter(g=>g.books.length>0);
+/** The search snippet: the player and the turn of the story (bookPages/hooks.ts), then the lesson; 70-155 characters, never cut
+ *  mid-sentence (before, the summary cut at 155 led with the book's title and stopped mid-word). */
+export function bookDescription(b:SiteBook):string{
+ const hook=BOOK_HOOKS[b.id],les=bookLesson(b).replace(/^The story teaches/,'It teaches');
+ if(!hook)return b.page?.summary??b.blurb;
+ return [les?`${hook} ${les}`:'',`${hook} A free pop-up book for kids, read aloud.`,`${hook} A free pop-up book for kids.`,hook].find(d=>d.length>=70&&d.length<=155)??hook;
+}
+/** The page's own "About this book" paragraph: who the player is (their card's position and country), the turn of the story, the
+ *  lesson, the age range, and the position guide that explains the player's job on the pitch. Every part is page data. */
+export function bookIntro(b:SiteBook){
+ const hook=BOOK_HOOKS[b.id]??'',m=hook.match(/^.+?’s story: (.+)$/),tail=m?m[1]:'';
+ const role=b.card?ROLE_WORD[b.card.role]:undefined,guide=b.card?roleGuide(b.card.role):undefined;
+ const who=`This book is about ${b.player}`+(role?`, ${/^[aeiou]/.test(role)?'an':'a'} ${role}`:'')+(b.country?`${role?' from':', from'} ${b.country==='USA'?'the USA':b.country}`:'')+'.';
+ return {who,tail,lesson:bookLesson(b),role,guide};
+}
 /** What the client reader needs (and nothing more: the reader chunk never imports the registry). */
 export type ReaderBook={id:string;title:string;subtitle:string;narration:string;chapters:Pick<BookChapter,'id'|'year'|'title'|'text'|'prompt'|'response'|'steps'>[]};
 export const readerBook=(b:SiteBook):ReaderBook=>({id:b.id,title:b.title,subtitle:b.subtitle,narration:b.narration,
