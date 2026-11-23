@@ -158,7 +158,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
      <button type="button" className={s.secondary} onClick={()=>void share()} data-quiz-share="">{w.share}</button>
     </div>
     {copied&&<p className={s.copied} role="status">{copied}</p>}
-    {missed.length>0&&<div className={s.missed}><h4 className={s.missedTitle}>{w.missed}</h4><ul>{missed.map(m=><li key={m.q}><span>{m.q}</span> <a href={m.more.href}>{w.more}: {m.more.name}</a></li>)}</ul></div>}
+    {missed.length>0&&<div className={s.missed}><h4 className={s.missedTitle}>{w.missed}</h4><ul>{missed.map(m=><li key={m.q}><span>{m.q} {w.answer} {m.options[m.correct]}</span> <a href={m.more.href}>{w.more}: {m.more.name}</a></li>)}</ul></div>}
    </div>
   </div>;}
 
@@ -183,7 +183,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
    {q.pic&&<img className={s.pic} src={q.pic.src} alt={q.pic.alt} width={1200} height={630} loading="lazy" decoding="async"/>}
    <div className={grid?s.grid:s.list} role="group" aria-labelledby={`${slug}-q`}>
     {q.options.map((o,j)=>{const state=!checked?(pick===j?'picked':undefined):j===q.correct?'right':pick===j?'wrong':'off';
-     return <button key={o} type="button" className={s.card} data-state={state} aria-pressed={pick===j} disabled={checked&&state==='off'}
+     return <button key={o} type="button" className={s.card} data-quiz-option="" data-state={state} aria-pressed={pick===j} disabled={checked&&state==='off'}
       onClick={()=>{if(!checked){setPick(j);}}}><kbd className={s.key} aria-hidden="true">{j+1}</kbd><span>{o}</span></button>;})}
    </div>
   </div>}
