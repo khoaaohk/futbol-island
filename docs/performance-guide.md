@@ -1,5 +1,13 @@
 # Performance reference for future Futbol Island updates
 
+## Reading pages: phone-sized posters on the home reel and the /games hero (Nov 23 2026, branch `seo-ai-speed-nov23`, not deployed)
+- Home "See it in action" reel: all 11 posters `loading="lazy"` (the first two were eager 1920 px stills, ~180 KB, below the fold) and a
+  srcset with a 1080 px copy (`public/learn/sm/`, `lib/site/learnMedia.ts posterSrcSet`, sizes = the reel's `--cw`). /games hero
+  (`matchmix`): same 1080 px copy (`public/games/clips/sm/`), matching `imageSrcSet` on the preload, `fetchpriority="high"`. Wide screens
+  still get the 1920 px stills. Lab numbers (headless Chrome, 412 px phone, 4x CPU, 1.6 Mbps): /games LCP 2.03 s -> 1.43 s, 674 -> 637 KB;
+  home 703 -> 591 KB, LCP unchanged (1.6 s, the hero still). Less to download and decode; no runtime work added. No iPhone heat claim.
+  Data: `.claude/worktrees/_recovery-nov20/seo-ai-speed/` (speed.cjs, before.json, after.json).
+
 ## Zero-heat graphics batch 1: split greens, light ratio, richer load-time bake, window gradient (Nov 21 2026, branch `gfx-zero-heat-1`, local, not deployed, no phone test)
 
 Owner brief: make the island read better (pitches stand out, less milky, night with warm pools) with **no added heat**. Everything in this batch is a constant or one-time load work. Four commits, one per item, so any one can be dropped.
