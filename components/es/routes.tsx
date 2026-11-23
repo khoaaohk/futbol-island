@@ -24,7 +24,7 @@ import {PositionEsPage,PositionsHubEsPage,RuleEsPage,RulesHubEsPage,TermEsPage,T
 export type EsRoute={meta:()=>Metadata;render:()=>JSX.Element};
 const R='/learn/soccer-rules/',T='/learn/soccer-terms/',P='/learn/soccer-positions/',F='/learn/soccer-formations/';
 const COMPARE:Readonly<Record<string,string>>={'/learn/soccer-positions/fullback-vs-wingback':'fullback-vs-wingback','/learn/soccer-positions/striker-vs-winger':'striker-vs-winger','/learn/soccer-formations/4-3-3-vs-4-4-2':'4-3-3-vs-4-4-2'};
-const GUIDES:Readonly<Record<string,'7v7'|'9v9'|'11v11'>>={'/learn/7v7-soccer-formations':'7v7','/learn/9v9-soccer-formations':'9v9','/learn/11v11-soccer-formations':'11v11'};
+const GUIDES:Readonly<Record<string,'7v7'|'8v8'|'9v9'|'11v11'>>={'/learn/7v7-soccer-formations':'7v7','/learn/8v8-soccer-formations':'8v8','/learn/9v9-soccer-formations':'9v9','/learn/11v11-soccer-formations':'11v11'};
 export function esRoute(enPath:string):EsRoute|null{
  if(enPath==='/learn')return lessonsEsRoute(enPath);/* /es/learn?q= search: noindex, not a sitemap page */
  if(!hasEs(enPath))return null;
@@ -43,7 +43,7 @@ export function esRoute(enPath:string):EsRoute|null{
   return {meta:()=>esMeta(p.title,p.desc,enPath,{url:diagramUrl(p.picture),alt:`Diagrama de un ejercicio del ${p.h1.toLowerCase()}`}),render:()=><PlanEsPage p={p}/>};}
  const cmp=COMPARE[enPath];if(cmp){const c=esComparison(cmp)!;return {meta:()=>esMeta(c.title,c.desc,enPath,{url:c.images[0],alt:c.h1.replace(/:.*$/,'')}),render:()=><CompareEsPage c={c}/>};}
  if(enPath===H.formations.enPath)return {meta:()=>esMeta(H.formations.title,H.formations.description,enPath,{url:formationImage('11v11-4-3-3'),alt:'Diagrama de la formación 4-3-3'}),render:()=><FormationsHubEsPage/>};
- const fg=GUIDES[enPath];if(fg){const g=esFormatGuide(fg);return {meta:()=>esMeta(g.title,g.description,enPath,{url:guideByPath(enPath)!.image!,alt:`Diagrama de una formación de fútbol ${fg}`}),render:()=><FormatGuideEsPage format={fg}/>};}
+ const fg=GUIDES[enPath];if(fg){const g=esFormatGuide(fg);return {meta:()=>esMeta(g.title,g.description,enPath,{url:guideByPath(enPath)!.image!,alt:fg==='8v8'?'Diagrama de una formación de fútbol 8':`Diagrama de una formación de fútbol ${fg}`}),render:()=><FormatGuideEsPage format={fg}/>};}
  if(enPath.startsWith(F)){const f=esFormation(enPath.slice(F.length));if(!f)return null;
   return {meta:()=>esMeta(f.title,f.desc,enPath,{url:formationImage(f.slug),alt:`Diagrama de la formación ${f.name}`}),render:()=><FormationEsPage f={f}/>};}
  if(enPath===H.rules.enPath)return {meta:()=>esMeta(H.rules.title,H.rules.description,enPath,{url:diagramUrl('offside-rule.png'),alt:'Diagrama de la regla del fuera de juego'}),render:()=><RulesHubEsPage/>};

@@ -235,3 +235,7 @@ path.picked{filter:drop-shadow(0 0 3px #ffe36e)}
 
 @media (max-width:420px){.timeline{gap:5px}.track{margin:0 12px}.addStep{padding:0 10px 0 6px}}
 @media (prefers-reduced-motion:reduce){.chipFace,.tool,.pill,.save,.railBtn{transition:none}.chip[data-fresh] .chipFace,.toast,.sheet{animation:none}}
+/* round 4G (audit P8), /board only (the game has no [data-board-app]): the Save sticker fits its word in every language, and its
+   larger tap area no longer pokes out sideways */
+[data-board-app] .sticker{min-width:max-content;white-space:nowrap}
+[data-board-app] .sticker::before{inset:-7px 0}

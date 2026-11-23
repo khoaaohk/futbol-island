@@ -5,11 +5,12 @@ import {onwardFor} from '@/lib/site/railNav';
 import {anchor,guideRail,hubRail,pageRail,sec} from '@/lib/site/railNavMore';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
-import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
+import {arrows,place,PLAYERS_PER_TEAM,FORMATION_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
 import {formationImage,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {withKeeper} from '@/lib/site/formations';
 import {lineupLinkFor} from '@/lib/site/tools/registry';
+import {AppLink} from '@/components/site/tools/ToolParts';
 import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
@@ -37,7 +38,7 @@ export function FormationDiagram({id,format,lines,what,image,small,mode}:{id:str
 const firstSentence=(s:string)=>s.split('. ')[0].replace(/\.$/,'')+'.';
 const hubLink=()=>({path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb});
 const posHubLink=()=>({path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb});
-const LABEL:Record<Fmt,string>={'7v7':'Formaciones de fútbol 7v7','9v9':'Formaciones de fútbol 9v9','11v11':'Formaciones de fútbol 11v11',futsal:'Formaciones de futsal'};
+const LABEL:Record<Fmt,string>={'7v7':'Formaciones de fútbol 7v7','8v8':'Formaciones de fútbol 8','9v9':'Formaciones de fútbol 9v9','11v11':'Formaciones de fútbol 11v11',futsal:'Formaciones de futsal'};
 
 // ---- hub ----
 export function FormationsHubEsPage(){
@@ -46,11 +47,11 @@ export function FormationsHubEsPage(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
-  <EsIntro top rail={<RailNav rail={hubRail('Formaciones en esta página',GUIDE_FORMATS.map(fmt=>({title:LABEL[fmt],items:esFormationsIn(fmt).map(f=>anchor('formation',f.esPath,f.name))})),true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <EsIntro top rail={<RailNav rail={hubRail('Formaciones en esta página',FORMATION_FORMATS.map(fmt=>({title:LABEL[fmt],items:esFormationsIn(fmt).map(f=>anchor('formation',f.esPath,f.name))})),true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="what" title="¿Qué es una formación?"><Bullets items={H.what}/></Section>
-  {GUIDE_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
+  {FORMATION_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
-    <p>{H.groups[fmt]} {guide&&<><a href={guide.esPath}>Compara las {list.length} en la guía de {fmt}</a>.</>}</p>
+    <p>{H.groups[fmt]} {guide&&<><a href={guide.esPath}>Compara las {list.length} en la guía de {fmt==='8v8'?'fútbol 8':fmt}</a>.</>}</p>
     <div className={styles.pair}>
      <FormationDiagram id={`d-${fmt}`} format={fmt} lines={first.lines} what={`la formación ${first.name}`} small/>
      <LinkList ids="formation" links={list.map(f=>({path:f.esPath,name:`Formación ${f.name}`,line:f.best}))}/>
@@ -66,7 +67,7 @@ export function FormationsHubEsPage(){
 export function FormationEsPage({f}:{f:EsFormation}){
  const H=ES_HUBS.formations,futsal=f.format==='futsal',what=`la formación ${f.name}`;
  const crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:f.name,path:f.esPath});
- const guide=futsal?null:esFormatGuide(f.format as '7v7'|'9v9'|'11v11');
+ const guide=futsal?null:esFormatGuide(f.format as '7v7'|'8v8'|'9v9'|'11v11');
  const compare=ES_COMPARISONS().filter(c=>c.links.slice(0,2).some(l=>l.path===f.path));
  const related=[...(guide?[{path:guide.esPath,name:guide.h1,line:guide.blurb}]:[]),
   ...esFormationsIn(f.format).filter(x=>x.slug!==f.slug).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})),posHubLink(),hubLink()];
@@ -78,6 +79,8 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <Section id="diagram" title={`Diagrama del ${f.shapeEs}`}>
    <FormationDiagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
    <p><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>: pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>
+   {/* round 4F: el fútbol 8 se juega con cambios volantes, que planea la app del entrenador */}
+   {f.format==='8v8'&&<AppLink href="/coach?lang=es#tool=lineup&format=8v8" label="Abrir la app del entrenador" line={`Elige el ${f.shapeEs} en la app gratis del entrenador, escribe los nombres y la app planea los cambios volantes del fútbol 8 para que todos jueguen.`}/>}
    {futsal
     ?<p>El {f.shape} cuenta a los cuatro jugadores de campo de atrás hacia adelante. Al portero se le cuenta aparte, así que un equipo de futsal tiene {PLAYERS_PER_TEAM.futsal} jugadores en la cancha.</p>
     :<p>Los entrenadores escriben esta forma de dos maneras. <b>{f.shape}</b> cuenta a los {PLAYERS_PER_TEAM[f.format]-1} jugadores de campo, desde la defensa hacia adelante. U.S. Soccer cuenta primero al portero y escribe <b>{withKeeper(f)}</b>. Las dos quieren decir la misma formación. Los números de los puntos son una costumbre común de los entrenadores, no una regla: los jugadores pueden usar cualquier número de camiseta.</p>}
@@ -98,6 +101,9 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <Section id="suits" title="A quién le sirve"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Preguntas sobre el ${f.shapeEs}`} faq={f.faq}/>
   <EsCoachNotes name={f.name} notes={f.notes}/>
+  {f.sources&&<Section id="sources" title="Fuentes">
+   <ul>{f.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
+  </Section>}
   <KeepReading lang="es" groups={withMesh([{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}],f.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>
@@ -111,31 +117,38 @@ const formatToolsEs=(f:'7v7'|'9v9'|'11v11')=>{const n=f.replace(/v\d+$/,'');retu
  [`/tools/soccer-field-diagrams/blank-${f}-soccer-field`,`Cancha de fútbol ${n} (${f}) en blanco para imprimir`,'Para dibujar jugadas y ejercicios'],
  [`/tools/soccer-field-diagrams/${f}-soccer-formations-cheat-sheet`,`Formaciones de fútbol ${n} (${f}) en una hoja`,'Todas las formaciones para imprimir']] as const)
  .filter(([p])=>hasEs(p)).map(([p,name,line])=>({path:toEs(p),name,line}));};
-export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
+export function FormatGuideEsPage({format}:{format:'7v7'|'8v8'|'9v9'|'11v11'}){
+ /* round 4F: “fútbol 8”, not “8v8”, in Spanish text */
+ const word=format==='8v8'?'fútbol 8':format,game=format==='8v8'?'fútbol 8':`fútbol ${format}`;
  const H=ES_HUBS.formations,g=esFormatGuide(format),list=esFormationsIn(format),crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:g.crumb,path:g.esPath});
- const others=(['7v7','9v9','11v11'] as const).filter(x=>x!==format).map(esFormatGuide);
+ const others=(['7v7','8v8','9v9','11v11'] as const).filter(x=>x!==format).map(esFormatGuide);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:g.h1,path:g.esPath,description:g.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:list.map(f=>({name:`Formación ${f.name}`,path:f.esPath}))}))}/>
   <JsonLd data={faqLd(g.faq)}/>
-  <EsIntro top rail={<RailNav rail={pageRail(`${format}: en esta página`,{href:H.path,name:'Todas las formaciones'},[sec('compare','Comparadas'),sec('pick','Cuál elegir'),
-   sec('shapes','Diagramas'),sec('basics','En breve'),sec('faq','Preguntas'),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
-  <Section id="compare" title={`Formaciones de ${format} comparadas`}>
-   <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`Formaciones de ${format} comparadas`}><table className={styles.table}>
+  <EsIntro top rail={<RailNav rail={pageRail(`${word[0].toUpperCase()+word.slice(1)}: en esta página`,{href:H.path,name:'Todas las formaciones'},[sec('compare','Comparadas'),sec('pick','Cuál elegir'),
+   sec('shapes','Diagramas'),sec('basics','En breve'),sec('faq','Preguntas'),...(g.sources?[sec('sources','Fuentes')]:[]),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
+  <Section id="compare" title={`Formaciones de ${word} comparadas`}>
+   <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`Formaciones de ${word} comparadas`}><table className={styles.table}>
     <thead><tr><th scope="col">Formación</th><th scope="col">Con el portero</th><th scope="col">Ideal para</th><th scope="col">Cuidado con</th></tr></thead>
     <tbody>{list.map(f=><tr key={f.slug}><th scope="row"><a href={f.esPath}>{f.shape}</a></th><td>{withKeeper(f)}</td><td>{f.best}</td><td>{f.watch}</td></tr>)}</tbody>
    </table></div>
-   <p className={styles.caption}>U.S. Soccer escribe las formaciones juveniles con el portero primero, así que un {list[0].shape} en {format} también se escribe {withKeeper(list[0])}.</p>
+   <p className={styles.caption}>U.S. Soccer escribe las formaciones juveniles con el portero primero, así que un {list[0].shape} en {word} también se escribe {withKeeper(list[0])}.</p>
   </Section>
   <Section id="pick" title={g.pickTitle}><Bullets items={g.pick}/></Section>
-  <Section id="shapes" title={`Diagramas de cada formación de ${format}`}>
+  <Section id="shapes" title={`Diagramas de cada formación de ${word}`}>
    <div className={styles.pair}>{list.map(f=><div key={f.slug}><h3 className={styles.h3}><a href={f.esPath}>{f.shape}</a></h3>
     <FormationDiagram id={`d-${f.slug}`} format={f.format} lines={f.lines} what={`la formación ${f.name}`} small/><p className={styles.caption}>{lineWords(f)}. <a href={formationImage(f.slug)}>Imagen</a></p></div>)}</div>
   </Section>
-  <Section id="basics" title={`El fútbol ${format} en breve`}><Bullets items={g.basics}/></Section>
-  <QA id="faq" title={`Preguntas sobre las formaciones de ${format}`} faq={g.faq}/>
+  <Section id="basics" title={`El ${game} en breve`}><Bullets items={g.basics}/>
+   {format==='8v8'&&<AppLink href="/coach?lang=es#tool=lineup&format=8v8" label="Abrir la app del entrenador" line="El fútbol 8 en tu teléfono junto a la cancha: elige un 3-3-1, un 3-2-2 o un 2-3-2, pon los nombres y deja que la app planee los cambios volantes."/>}</Section>
+  <QA id="faq" title={`Preguntas sobre las formaciones de ${word}`} faq={g.faq}/>
+  {g.sources&&<Section id="sources" title="Fuentes">
+   <ul>{g.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
+   <p className={styles.caption}>En España, las normas del fútbol 8 las escribe cada región, así que revisa las de tu federación o tu liga.</p>
+  </Section>}
   {/* Nov 23 2026 (seo-unindexed): the format's Spanish tools (lineup builder, rotation, blank field, cheat sheet) had 2-5 inlinks */}
-  <KeepReading lang="es" groups={[{id:'related',links:[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),hubLink(),posHubLink(),...formatToolsEs(format)]}]}/>
+  <KeepReading lang="es" groups={[{id:'related',links:[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),...(format==='8v8'?[{path:toEs('/tools/8v8-lineup-builder'),name:'Creador de alineaciones de fútbol 8',line:'Pon los nombres de tu equipo en la cancha e imprímelo'}]:[]),hubLink(),posHubLink(),...(format==='8v8'?[]:formatToolsEs(format))]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }

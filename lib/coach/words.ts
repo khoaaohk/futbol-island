@@ -1,24 +1,29 @@
 /**
- * The coach app's words in English and Spanish (/coach; Spanish: US Latino, "tú", the glossary in lib/i18n/es-glossary.ts:
+ * The coach app's words (round 4E: ten languages, English the source, Spanish here, the other eight in lib/coach/lang/*.ts) in English and Spanish (/coach; Spanish: US Latino, "tú", the glossary in lib/i18n/es-glossary.ts:
  * cambio, portero, cancha, partido, tiempo, entrenador; "banca" for the bench). Keys are the same in both; tests/coach-app.cjs
  * checks that and the banned words.
  */
+import type {AppLang} from '../i18n/appLangs';
 const en={
  appName:'Coach app',appShort:'Coach',
- tabTeam:'Team',tabLineup:'Lineup',tabGame:'Game',tabSummary:'Summary',
+ tabTeam:'Team',tabLineup:'Lineup',tabGame:'Game',tabSummary:'Summary',tabMinutes:'Minutes',tabSubs:'Subs',
+ tabHome:'Home',titleHome:'Coach',homeTeam:'Your team',editTeam:'Edit team',setupTeam:'Set up my team',tryExample:'Try an example team',homeEmpty:'Add your squad to start. Shirt numbers are enough; names are optional.',
+ playersN:(n:number)=>`${n} player${n===1?'':'s'}`,continueOn:'Continue',tools:'Tools',lineLineup:'Put your starters on the field',lineMinutes:'Equal minutes for every player',lineSubs:'Who comes off and on, and when',
+ lineMatch:'Live clock and change alerts at the field',lineSummary:'Minutes played, and a CSV for your sheet',lineScan:'Players learn to check their shoulder',lineDrills:'Drills and practice plans by age',scanName:'Scanning trainer',boardName:'Tactics board',lineBoard:'Draw a play and run it step by step',drillsName:'Practice plans',
+ titleTeam:'Squad',titleLineup:'Lineup builder',titleMinutes:'Playing time',titleSubs:'Substitution rotation',titleSummary:'Game summary',matchDay:'Match day',
  teamName:'Team name',teamNamePh:'e.g. Tigers U10',
- squad:'Squad',here:'Coming',away:'Not coming',lateBtn:'Late',arrives:'Arrives around',arrivesUnknown:'Not sure',minuteN:(m:number)=>`minute ${m}`,lateNote:(n:number)=>`${n} late: they join the plan at the minute you pick, or when you tap Arrived.`,lateRow:'late',addPlayer:'Add player',quickAdd:'Add numbers 1 to',number:'Number',nameOpt:'Name (optional)',
+ squad:'Squad',here:'Coming',away:'Not coming',lateBtn:'Late',arrives:'Arrives',arrivesUnknown:'Not sure when',minuteN:(m:number)=>`Minute ${m}`,lateNote:(n:number)=>`${n} late. They join the plan at the minute you pick, or when you tap Arrived.`,lateRow:'late',addPlayer:'Add player',quickAdd:'Add numbers 1 to',number:'Number',nameOpt:'Name (optional)',
  gkMark:'Can keep goal',remove:'Remove',numberTaken:'That number is taken',numberNeeded:'Give each player a number',
  privacy:'Your team stays on this phone. Nothing is sent anywhere, and there is no account.',
  format:'Game',periods:'Periods',minutes:'Minutes each',subEvery:'Change about every',min:'min',
  keeper:'Goalkeeper',keeperRotate:'Changes each period',keeperFixed:'Same all game',keeperNone:'No goalkeeper',
- subStyle:'Changes',rolling:'On the fly (rolling)',stoppages:'At stoppages',
- ready:(n:number,f:number)=>`${n} coming · ${f} on the field`,notEnough:(f:number)=>`You need at least ${f} players for a full field. The plan uses everyone coming.`,
- emptyTeam:'Add your players first: numbers are enough.',startHere:'Add your squad',
+ gameSettings:'Game settings',sheetDone:'Done', subStyle:'Changes',rolling:'On the fly (rolling)',stoppages:'At stoppages',
+ ready:(n:number,f:number,late=0)=>`${n} coming${late?` · ${late} late`:''} · ${f} on the field`,notEnough:(f:number)=>`You need at least ${f} players for a full field. The plan uses everyone coming.`,
+ emptyTeam:'Add your squad first. Numbers are enough.',startHere:'Add your squad',squadHelp:'Numbers are enough. You can add names later.',playersLbl:'Players',gameOn:'Game in progress',tapReturn:'Tap to return',nextTo:(n:string)=>`Next: ${n}`,less:'Less',more:'More',addN:(n:number)=>`Add ${n} players`,
  formation:'Formation',autoFill:'Fair starting lineup',bench:'Bench',dragHint:'Drag a player, or tap two players to swap them.',
  print:'Print',share:'Share',copyLink:'Copy link',copied:'Link copied',
  plan:'Playing time plan',fairEveryone:(a:number,b:number)=>a===b?`Everyone ${a} min`:`Everyone ${a}–${b} min`,
- fairGood:'Fair',fairCheck:'Uneven: check the plan',keeperAll:(n:string)=>`${n} in goal all game`,
+ fairGood:'Fair',fairCheck:'Minutes vary',keeperAll:(n:string)=>`${n} in goal all game`,
  changes:'Changes',atKick:'At kick-off',startGame:'Start game',resumeGame:'Back to the game',
  gk:'GK',def:'Defence',mid:'Midfield',fwd:'Attack',onField:'On the field',
  periodName:(i:number,n:number)=>n===2?['1st half','2nd half'][i]:n===4?`Quarter ${i+1}`:n===1?'Game':`Period ${i+1}`,
@@ -29,33 +34,68 @@ const en={
  undo:'Undo',exit:'Exit',exitConfirm:'Leave the live game? The clock keeps running and you can come back.',
  hurt:'Hurt',left:'Left early',late:'Not here yet',arrived:'Arrived',back:'Back to play',playerActions:'Player',
  replanned:'Plan updated so the minutes stay level',
- wakeOff:'Your screen may lock: keep it awake in your phone settings while the game runs.',wakeOn:'Screen stays on',
+ wakeOff:'Your screen may lock. Keep it awake in your phone settings while the game runs.',wakeOn:'Screen stays on',
  sound:'Beep at changes',soundOn:'Beep on',soundOff:'Beep off',
  timeUp:'Time is up',over:'Full time',
  summary:'Minutes played',planned:'Planned minutes',noGame:'No game yet. Start one from the Game tab and the minutes show here.',
  csv:'Download CSV (Excel, Sheets)',showNames:'Include names',newGame:'New game',newGameConfirm:'Start a new game? The last one stays in the summary until then.',
  shared:'Shared plan',sharedNote:'This plan was shared with you. It is read-only and lives only in this link.',openMine:'Open my own team',
- inGoal:'in goal',total:'Total',share_:'Share of game',lang:'Español',langCode:'es',
- offline:'Works offline once opened',landscape:'',
+ inGoal:'in goal',total:'Total',share_:'Share of game',
+ offline:'Works offline once opened',
  csvWords:{number:'Number',name:'Name',total:'Minutes',share:'Share of game',period:(i:number)=>`Period ${i+1}`,gk:'Minutes in goal'},
+ /* several teams (Nov 22 2026) */
+ changeTeam:'Change team',yourTeams:'Your teams',addTeam:'Add a team',editT:'Edit',deleteT:'Delete',cancel:'Cancel',
+ deleteQ:(n:string)=>`Delete ${n}?`,deleteNote:'Its squad, lineup and games on this phone are deleted too. This cannot be undone.',
+ teamN:(i:number)=>`Team ${i}`,newTeam:'New team',stepN:(a:number,b:number)=>`Step ${a} of ${b}`,nextStep:'Next',prevStep:'Back',createTeam:'Create team',
+ squadFrom:'Players',startEmpty:'Start with an empty squad',copyFrom:(n:string)=>`Copy players from ${n}`,liveTag:'Game in progress',endFirst:'End its game first',maxTeams:'You can keep up to 12 teams.',
+ /* the live game: the mini bar on every screen and the Next change panel */
+ groupGame:'Game day',groupTraining:'Training',
+ changeIn:(t:string)=>`Next change ${t}`,changeNow:'Change now',swapsN:(n:number)=>`${n} swap${n===1?'':'s'}`,openMatch:'Open Match day',showChange:'Show the change',hideChange:'Hide the change',
+ /* round 4A (Nov 22 2026): the two tab pages, the language sheet, practice plans in the app */
+ navGameDay:'Game Day',navTraining:'Training',navLang:'Language',langTitle:'Language',
+ nextGame:'Next game',startMatch:'Start Match day',backToGame:'Back to the game',gameDone:'Game finished',seeSummary:'See the summary',
+ squadLine:(n:number)=>`${n} in the squad`,editSquad:'Edit squad',gdMore:'Plan the game',trMore:'More for practice',
+ tonight:'Tonight\'s practice',openPlan:'Open plan',inTonight:'In this plan',fieldDiagrams:'Field diagrams',lineFieldDiagrams:'Every format, with the measurements',
+ plansTitle:'Practice plans',plansAge:(a:string)=>`Plans for ${a}`,plansN:(n:number)=>`${n} plans`,minutesN:(n:number)=>`${n} min`,teamAge:'Your team',
+ planClock:'The plan',equipment:'Equipment',coachNotes:'Coach notes',goingBadly:'If it is going badly',drillsInPlan:'Drills in this plan',howItWorks:'How it works',coachPoints:'Coaching points',
+ startSession:'Start session',endSession:'End session',nextPart:'Next part',prevPart:'Previous',partOf:(a:number,b:number)=>`${a} of ${b}`,sessionDone:'Practice done. Great work.',upNext:'Up next',
+ onBoard:'Show on the tactics board',inScan:'Run in Scan trainer',fullPage:'Full plan page',loadingPlans:'Loading plans…',plansFail:'The plans did not load. Check your connection.',retry:'Try again',
+ soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',comingN:(n:number,late=0)=>`${n} coming${late?` · ${late} late`:''}`,onFieldN:(n:number)=>`${n} on the field`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`,
+ /* round 4C (Nov 22 2026) */
+ sharedTitle:'Minutes played',lineupSwap:(a:string,b:string)=>`${a} and ${b} swapped places`,lineupIn:(a:string,b:string)=>`${a} on, ${b} to the bench`,lineupPlace:(a:string,spot:string)=>`${a} to ${spot}`,changeEarly:'Change early?',changeEarlyNote:(t:string)=>`This change is planned in ${t}. Make it now?`,changeNowBtn:'Change now',notYet:'Not yet',
+ replanNow:'Replan from now',overdueNote:(m:number)=>`Planned ${m} min ago. Make it now, or replan from the minutes played.`,otherTab:'Updated from another tab',
+ attend:'Coming to the next game',noKeeper:'No one is marked “Can keep goal”, so everyone takes a turn in goal. Mark your keepers in the squad.',
+ oneKeeper:(n:string)=>`${n} is the only player marked “Can keep goal” and stays in goal all game.`,maxSwaps:'Most changes at one stoppage',noLimit:'No limit',
+ details:'Game details',addDetails:'Add game details',editDetails:'Edit game details',opponent:'Opponent',opponentPh:'Who you play',date:'Date',kickTime:'Kick-off',homeAway:'Where',
+ home:'Home',awayGame:'Away',notSet:'Not set',vs:(o:string)=>`vs ${o}`,score:'Score',us:'Us',them:'Them',addGoalUs:'Goal for us',addGoalThem:'Goal for them',
+ lessUs:'Take away our last goal',lessThem:'Take away their last goal',whoScored:'Who scored?',notSure:'Not sure',scorers:'Scorers',namesNote:'Off: initials only',minCol:'Min',
+ /* round 4E (Nov 22 2026): ten languages */
+ exitAria:'Exit the coach app and go back to Futbol Island',plansEnNote:'Plan text in English',diamond:'Diamond',
+ /* round 4G (Nov 22 2026): the independent audit */
+ missedBreak:'Planned for the restart. Make it now, or replan from the minutes played.',arrivedQ:(n:string)=>`Has ${n} arrived?`,addToPlan:'Add to the plan',skipped:'Change skipped. Later changes even out what they can.',unevenHead:'Why the minutes differ',missedMin:(n:string,m:number)=>`${n} missed ${m} min`,whyHurt:'hurt',whyLeft:'left early',whyLate:'arrived late',whySkip:'a change was skipped',whyOther:'changes made late',
+fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
 export type Words=typeof en;
 const es:Words={
  appName:'App del entrenador',appShort:'Entrenador',
- tabTeam:'Equipo',tabLineup:'Alineación',tabGame:'Partido',tabSummary:'Resumen',
+ tabTeam:'Equipo',tabLineup:'Alineación',tabGame:'Partido',tabSummary:'Resumen',tabMinutes:'Minutos',tabSubs:'Cambios',
+ tabHome:'Inicio',titleHome:'Entrenador',homeTeam:'Tu equipo',editTeam:'Editar equipo',setupTeam:'Armar mi equipo',tryExample:'Probar con un equipo de ejemplo',homeEmpty:'Agrega tu plantel para empezar. Basta con los números de camiseta; los nombres son opcionales.',
+ playersN:(n:number)=>`${n} jugador${n===1?'':'es'}`,continueOn:'Seguir',tools:'Herramientas',lineLineup:'Pon a tus titulares en la cancha',lineMinutes:'Los mismos minutos para cada jugador',lineSubs:'Quién sale y quién entra, y cuándo',
+ lineMatch:'Reloj en vivo y avisos de cambio en la cancha',lineSummary:'Minutos jugados y un CSV para tu hoja',lineScan:'Los jugadores aprenden a mirar por encima del hombro',lineDrills:'Ejercicios y planes de práctica por edad',scanName:'Entrenador de escaneo',boardName:'Pizarra táctica',lineBoard:'Dibuja una jugada y reprodúcela paso a paso',drillsName:'Planes de práctica',
+ titleTeam:'Plantel',titleLineup:'Creador de alineaciones',titleMinutes:'Minutos de juego',titleSubs:'Rotación de cambios',titleSummary:'Resumen del partido',matchDay:'Día de partido',
  teamName:'Nombre del equipo',teamNamePh:'p. ej. Tigres U10',
- squad:'Plantel',here:'Viene',away:'No viene',lateBtn:'Tarde',arrives:'Llega como al',arrivesUnknown:'No se sabe',minuteN:(m:number)=>`minuto ${m}`,lateNote:(n:number)=>`${n} llegan tarde: entran al plan en el minuto que elijas, o cuando toques Ya llegó.`,lateRow:'tarde',addPlayer:'Agregar jugador',quickAdd:'Agregar números del 1 al',number:'Número',nameOpt:'Nombre (opcional)',
+ squad:'Plantel',here:'Viene',away:'No viene',lateBtn:'Tarde',arrives:'Llega',arrivesUnknown:'No se sabe',minuteN:(m:number)=>`Minuto ${m}`,lateNote:(n:number)=>`${n} llegan tarde. Entran al plan en el minuto que elijas, o cuando toques Ya llegó.`,lateRow:'tarde',addPlayer:'Agregar jugador',quickAdd:'Agregar números del 1 al',number:'Número',nameOpt:'Nombre (opcional)',
  gkMark:'Puede ser portero',remove:'Quitar',numberTaken:'Ese número ya está',numberNeeded:'Ponle un número a cada jugador',
  privacy:'Tu equipo se queda en este teléfono. No se envía nada a ningún lado y no hay cuenta.',
  format:'Partido',periods:'Tiempos',minutes:'Minutos cada uno',subEvery:'Cambios cada',min:'min',
  keeper:'Portero',keeperRotate:'Cambia cada tiempo',keeperFixed:'El mismo todo el partido',keeperNone:'Sin portero',
- subStyle:'Cambios',rolling:'Sobre la marcha',stoppages:'Con el juego detenido',
- ready:(n:number,f:number)=>`${n} vienen · ${f} en la cancha`,notEnough:(f:number)=>`Necesitas al menos ${f} jugadores para llenar la cancha. El plan usa a todos los que vienen.`,
- emptyTeam:'Primero agrega a tus jugadores: con los números basta.',startHere:'Agrega tu plantel',
+ gameSettings:'Ajustes del partido',sheetDone:'Listo', subStyle:'Cambios',rolling:'Sobre la marcha',stoppages:'Con el juego detenido',
+ ready:(n:number,f:number,late=0)=>`${n} vienen${late?` · ${late} tarde`:''} · ${f} en la cancha`,notEnough:(f:number)=>`Necesitas al menos ${f} jugadores para llenar la cancha. El plan usa a todos los que vienen.`,
+ emptyTeam:'Primero agrega tu plantel. Con los números basta.',startHere:'Agrega tu plantel',squadHelp:'Con los números basta. Puedes agregar nombres después.',playersLbl:'Jugadores',gameOn:'Partido en curso',tapReturn:'Toca para volver',nextTo:(n:string)=>`Siguiente: ${n}`,less:'Menos',more:'Más',addN:(n:number)=>`Agregar ${n} jugadores`,
  formation:'Formación',autoFill:'Alineación inicial justa',bench:'Banca',dragHint:'Arrastra a un jugador, o toca dos jugadores para cambiarlos.',
  print:'Imprimir',share:'Compartir',copyLink:'Copiar enlace',copied:'Enlace copiado',
  plan:'Plan de minutos',fairEveryone:(a:number,b:number)=>a===b?`Todos ${a} min`:`Todos ${a}–${b} min`,
- fairGood:'Justo',fairCheck:'Desigual: revisa el plan',keeperAll:(n:string)=>`${n} de portero todo el partido`,
+ fairGood:'Justo',fairCheck:'Los minutos varían',keeperAll:(n:string)=>`${n} de portero todo el partido`,
  changes:'Cambios',atKick:'Al saque inicial',startGame:'Empezar partido',resumeGame:'Volver al partido',
  gk:'POR',def:'Defensa',mid:'Medio',fwd:'Ataque',onField:'En la cancha',
  periodName:(i:number,n:number)=>n===2?['1.er tiempo','2.º tiempo'][i]:n===4?`Cuarto ${i+1}`:n===1?'Partido':`Tiempo ${i+1}`,
@@ -66,14 +106,49 @@ const es:Words={
  undo:'Deshacer',exit:'Salir',exitConfirm:'¿Salir del partido en vivo? El reloj sigue y puedes volver.',
  hurt:'Lesionado',left:'Se fue',late:'Todavía no llega',arrived:'Ya llegó',back:'Vuelve a jugar',playerActions:'Jugador',
  replanned:'Plan actualizado para que los minutos queden parejos',
- wakeOff:'La pantalla puede bloquearse: mantenla encendida en los ajustes del teléfono durante el partido.',wakeOn:'La pantalla se queda encendida',
+ wakeOff:'La pantalla puede bloquearse. Mantenla encendida en los ajustes del teléfono durante el partido.',wakeOn:'La pantalla se queda encendida',
  sound:'Pitido en los cambios',soundOn:'Pitido sí',soundOff:'Pitido no',
  timeUp:'Se acabó el tiempo',over:'Final del partido',
  summary:'Minutos jugados',planned:'Minutos planeados',noGame:'Todavía no hay partido. Empieza uno en la pestaña Partido y aquí verás los minutos.',
  csv:'Descargar CSV (Excel, Sheets)',showNames:'Incluir nombres',newGame:'Nuevo partido',newGameConfirm:'¿Empezar un partido nuevo? El último se queda en el resumen hasta entonces.',
  shared:'Plan compartido',sharedNote:'Te compartieron este plan. Es de solo lectura y vive solo en este enlace.',openMine:'Abrir mi equipo',
- inGoal:'de portero',total:'Total',share_:'Parte del partido',lang:'English',langCode:'en',
- offline:'Funciona sin conexión después de abrirla',landscape:'',
+ inGoal:'de portero',total:'Total',share_:'Parte del partido',
+ offline:'Funciona sin conexión después de abrirla',
  csvWords:{number:'Número',name:'Nombre',total:'Minutos',share:'Parte del partido',period:(i:number)=>`Tiempo ${i+1}`,gk:'Minutos de portero'},
+ changeTeam:'Cambiar de equipo',yourTeams:'Tus equipos',addTeam:'Agregar un equipo',editT:'Editar',deleteT:'Borrar',cancel:'Cancelar',
+ deleteQ:(n:string)=>`¿Borrar ${n}?`,deleteNote:'También se borran su plantel, su alineación y sus partidos en este teléfono. No se puede deshacer.',
+ teamN:(i:number)=>`Equipo ${i}`,newTeam:'Equipo nuevo',stepN:(a:number,b:number)=>`Paso ${a} de ${b}`,nextStep:'Siguiente',prevStep:'Atrás',createTeam:'Crear equipo',
+ squadFrom:'Jugadores',startEmpty:'Empezar con el plantel vacío',copyFrom:(n:string)=>`Copiar jugadores de ${n}`,liveTag:'Partido en curso',endFirst:'Termina su partido primero',maxTeams:'Puedes tener hasta 12 equipos.',
+ groupGame:'Día de partido',groupTraining:'Entrenamiento',
+ changeIn:(t:string)=>`Próximo cambio ${t}`,changeNow:'Cambio ahora',swapsN:(n:number)=>`${n} cambio${n===1?'':'s'}`,openMatch:'Abrir Día de partido',showChange:'Ver el cambio',hideChange:'Ocultar el cambio',
+ navGameDay:'Partido',navTraining:'Entrenamiento',navLang:'Idioma',langTitle:'Idioma',
+ nextGame:'Próximo partido',startMatch:'Empezar Día de partido',backToGame:'Volver al partido',gameDone:'Partido terminado',seeSummary:'Ver el resumen',
+ squadLine:(n:number)=>`${n} en el plantel`,editSquad:'Editar plantel',gdMore:'Planear el partido',trMore:'Más para entrenar',
+ tonight:'El entrenamiento de hoy',openPlan:'Abrir plan',inTonight:'En este plan',fieldDiagrams:'Diagramas de cancha',lineFieldDiagrams:'Cada formato, con sus medidas',
+ plansTitle:'Planes de entrenamiento',plansAge:(a:string)=>`Planes para ${a}`,plansN:(n:number)=>`${n} planes`,minutesN:(n:number)=>`${n} min`,teamAge:'Tu equipo',
+ planClock:'El plan',equipment:'Material',coachNotes:'Notas para el entrenador',goingBadly:'Si no está funcionando',drillsInPlan:'Ejercicios de este plan',howItWorks:'Cómo se hace',coachPoints:'Puntos clave',
+ startSession:'Empezar sesión',endSession:'Terminar sesión',nextPart:'Siguiente parte',prevPart:'Anterior',partOf:(a:number,b:number)=>`${a} de ${b}`,sessionDone:'Entrenamiento terminado. Buen trabajo.',upNext:'Después',
+ onBoard:'Ver en la pizarra táctica',inScan:'Hacerlo en el Entrenador de escaneo',fullPage:'Página del plan',loadingPlans:'Cargando planes…',plansFail:'No se cargaron los planes. Revisa tu conexión.',retry:'Intentar de nuevo',
+ soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',comingN:(n:number,late=0)=>`${n} vienen${late?` · ${late} tarde`:''}`,onFieldN:(n:number)=>`${n} en la cancha`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`,
+ sharedTitle:'Minutos jugados',lineupSwap:(a:string,b:string)=>`${a} y ${b} cambiaron de lugar`,lineupIn:(a:string,b:string)=>`Entra ${a}, ${b} a la banca`,lineupPlace:(a:string,spot:string)=>`${a} a ${spot}`,changeEarly:'¿Cambiar antes?',changeEarlyNote:(t:string)=>`Este cambio está planeado en ${t}. ¿Hacerlo ahora?`,changeNowBtn:'Cambiar ahora',notYet:'Todavía no',
+ replanNow:'Replanear desde ahora',overdueNote:(m:number)=>`Planeado hace ${m} min. Hazlo ahora o replanea con los minutos jugados.`,otherTab:'Actualizado desde otra pestaña',
+ attend:'Viene al próximo partido',noKeeper:'Nadie tiene marcado “Puede ser portero”, así que todos pasan por el arco. Marca a tus porteros en el plantel.',
+ oneKeeper:(n:string)=>`${n} es el único marcado “Puede ser portero” y se queda en el arco todo el partido.`,maxSwaps:'Máximo de cambios en una pausa',noLimit:'Sin límite',
+ details:'Datos del partido',addDetails:'Agregar datos del partido',editDetails:'Editar datos del partido',opponent:'Rival',opponentPh:'Contra quién juegan',date:'Fecha',kickTime:'Hora',homeAway:'Dónde',
+ home:'Local',awayGame:'Visitante',notSet:'Sin definir',vs:(o:string)=>`vs ${o}`,score:'Marcador',us:'Nosotros',them:'Ellos',addGoalUs:'Gol nuestro',addGoalThem:'Gol de ellos',
+ lessUs:'Quitar nuestro último gol',lessThem:'Quitar su último gol',whoScored:'¿Quién marcó?',notSure:'No sé',scorers:'Goleadores',namesNote:'Sin marcar: solo iniciales',minCol:'Min',
+ exitAria:'Salir de la app del entrenador y volver a Futbol Island',plansEnNote:'Texto del plan en inglés',diamond:'Rombo',
+ missedBreak:'Planeado para la reanudación. Hazlo ahora o replanea con los minutos jugados.',arrivedQ:(n:string)=>`¿Ya llegó ${n}?`,addToPlan:'Agregar al plan',skipped:'Cambio saltado. Los próximos cambios emparejan lo que pueden.',unevenHead:'Por qué varían los minutos',missedMin:(n:string,m:number)=>`${n}: ${m} min menos`,whyHurt:'lesionado',whyLeft:'se fue antes',whyLate:'llegó tarde',whySkip:'se saltó un cambio',whyOther:'cambios hechos tarde',
+fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
-export const WORDS={en,es};
+import {pt} from './lang/pt';
+import {fr} from './lang/fr';
+import {de} from './lang/de';
+import {it} from './lang/it';
+import {nl} from './lang/nl';
+import {pl} from './lang/pl';
+import {fi} from './lang/fi';
+import {ja} from './lang/ja';
+/** every language has every key: `Words` is the English object's type, and each language file is typed `Words`, so a missing or
+ *  extra key is a tsc error (tests/coach-app.cjs checks the same at run time) */
+export const WORDS:Readonly<Record<AppLang,Words>>={en,es,pt,fr,de,it,nl,pl,fi,ja};

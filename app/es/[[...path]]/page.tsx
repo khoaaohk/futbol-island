@@ -1,6 +1,7 @@
 import {notFound} from 'next/navigation';
 import type {Metadata} from 'next';
 import {esRoute} from '@/components/es/routes';
+import {enOfEs} from '@/lib/i18n/esPaths';
 /**
  * Every Spanish page (Spanish round 1, Nov 15 2026; docs/i18n/HANDOFF.md): /es + the English path, one dispatcher
  * (components/es/routes.tsx). BUILD COST: nothing is prerendered here (generateStaticParams returns []), each page renders on
@@ -10,7 +11,8 @@ import {esRoute} from '@/components/es/routes';
 export const dynamicParams=true;
 export const revalidate=false;
 export const generateStaticParams=()=>[] as {path?:string[]}[];
-const pathOf=(p?:string[])=>'/'+(p??[]).join('/');
+/* round 4D: a Spanish slug maps back to its English path (lib/i18n/esPaths.ts ES_SLUGS); an English slug that has one is not a page */
+const pathOf=(p?:string[])=>enOfEs('/'+(p??[]).join('/'))??'/__none__';
 export function generateMetadata({params}:{params:{path?:string[]}}):Metadata{
  const r=esRoute(pathOf(params.path));return r?r.meta():{};
 }

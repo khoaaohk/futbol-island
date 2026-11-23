@@ -20,6 +20,7 @@ import {lineupLinkFor} from '@/lib/site/tools/registry';
 import {FORMATION_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
 import {comparisonsFor} from '@/lib/site/comparisons';
+import {AppLink} from '@/components/site/tools/ToolParts';
 import styles from '../../../site.module.css';
 
 /** One formation (lib/site/formations.ts): the answer first, a pitch diagram, every role, strengths, weak spots, how it moves, FAQ, lessons. */
@@ -45,7 +46,9 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <GuideIntro top rail={<RailNav rail={guideRail('formations')} current="#top"/>} onward={onwardFor(f.lessons[0])} crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`${f.name} diagram`}>
    <Diagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
-   <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link.</p>
+   <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link. To show how the shape moves, draw a play on the <a href="/tools/soccer-tactics-board">free tactics board</a>.</p>
+   {/* round 4F: fútbol 8 is played with rolling changes, which the coach app plans (lib/coach/route.ts: the hash names a tool and a format) */}
+   {f.format==='8v8'&&<AppLink href="/coach#tool=lineup&format=8v8" label="Open the coach app" line={`Pick the ${f.shape} in the free coach app, put the names on it, and it plans fútbol 8’s rolling changes so every child plays.`}/>}
    {futsal
     ?<p>{f.shape} counts the four outfield players from the back to the front. The goalkeeper is counted separately, so a futsal team has {PLAYERS_PER_TEAM.futsal} players on the court.</p>
     :<p>Coaches write this shape in two ways. <b>{f.shape}</b> counts the {PLAYERS_PER_TEAM[f.format]-1} outfield players, from the defense forward. U.S. Soccer counts the goalkeeper first and writes <b>{withKeeper(f)}</b>. Both mean the same formation. The numbers on the dots are a common coaching custom, not a rule: players can wear any shirt number.</p>}
@@ -67,6 +70,9 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <Section id="suits" title="Who it suits"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Questions about the ${f.shape}`} faq={f.faq}/>
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
+  {f.sources&&<Section id="sources" title="Sources">
+   <ul>{f.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener">{x.name}</a>: {x.says}.</li>)}</ul>
+  </Section>}
   {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}],f.path)}/>
   <GuideEnd path={f.path} checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>

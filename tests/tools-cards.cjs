@@ -22,7 +22,7 @@ function load(file){
 }
 const L=rel=>load(path.join(root,rel));
 const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
-const reg=L('lib/site/tools/registry.ts'),icons=L('components/site/tools/ToolIcons.tsx');
+const reg=L('lib/site/tools/registry.ts'),esP=L('lib/i18n/esPaths.ts'),icons=L('components/site/tools/ToolIcons.tsx');
 const en=renderToStaticMarkup(React.createElement(L('app/(site)/tools/page.tsx').default,{}));
 const es=renderToStaticMarkup(L('components/es/pages/ToolsEs.tsx').toolsEsRoute('/tools').render());
 
@@ -34,8 +34,8 @@ function check(h,lang,prefix){
  const hrefs=cards.map(m=>/href="([^"]+)"/.exec(m[0])[1]);
  const subs=[...h.matchAll(/<div[^>]*data-tool-sublinks=""[^>]*>([\s\S]*?)<\/div>/g)].flatMap(m=>[...m[1].matchAll(/href="([^"]+)"/g)].map(x=>x[1]));
  const groups=L('lib/site/tools/toolGroups.ts').TOOL_GROUPS;
- assert.deepEqual(hrefs,[...groups.training,reg.LINEUP_PAGES[0].path,...groups.gameDay].map(p=>prefix+p),`${lang}: the cards of the two groups, in order`);
- const want=reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path);
+ assert.deepEqual(hrefs,[...groups.training,reg.LINEUP_PAGES[0].path,...groups.gameDay].map(p=>prefix?esP.toEs(p):p),`${lang}: the cards of the two groups, in order`);
+ const want=reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix?esP.toEs(p.path):p.path);/* round 4D: a Spanish page may have its own slug */
  assert.deepEqual([...hrefs,...subs].sort(),[...want].sort(),`${lang}: every tool page is a card or a sub-link, once`);
  for(const [a,kind,inner] of cards){
   const where=`${lang} card ${/href="([^"]+)"/.exec(a)[1]}`;

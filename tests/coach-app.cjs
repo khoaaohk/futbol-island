@@ -57,8 +57,17 @@ function checkPlan(plan,order,s,where){
  return fr;
 }
 for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pre.keeper?['fixed','rotate']:['none']){
- const s={...E.settingsFor(pre),keeper},order=ids(pre.onField+extra),plan=E.buildPlan(order,s);
+ /* the calculator's own plan (no swap cap); the capped default is checked just below */
+ const s={...E.settingsFor(pre),keeper,maxSwaps:0},order=ids(pre.onField+extra),plan=E.buildPlan(order,s);
  checkPlan(plan,order,s,`${pre.id}+${extra} ${keeper}`);
+ /* UX audit C14: at most 3 players come on at one stoppage (the default); same totals, starters start, spread within two blocks */
+ {const sc={...s,maxSwaps:E.MAX_SWAPS},pc=E.buildPlan(order,sc),F=Math.min(sc.onField,order.length);
+  for(const b of pc.blocks)ok(b.on.length===F&&new Set(b.on).size===F&&(sc.keeper==='none'||b.on.includes(b.gk)),`${pre.id}+${extra} capped: full field`);
+  ok(Object.values(E.planSeconds(pc.blocks)).reduce((a,x)=>a+x,0)===sc.periods*sc.periodMin*60*F,`${pre.id}+${extra} capped: totals`);
+  if(!sc.rolling)ok(pc.blocks.every((b,k)=>!k||!b.start||b.on.filter(p=>!pc.blocks[k-1].on.includes(p)).length<=3),`${pre.id}+${extra} ${keeper}: at most 3 swaps at a stoppage`);
+  ok(order.slice(0,F).every(p=>pc.blocks[0].on.includes(p))&&(sc.keeper==='none'||pc.blocks[0].gk===order[0]),`${pre.id}+${extra} capped: the coach's starters start`);
+  const mb=Math.max(...pc.blocks.map(b=>b.end-b.start)),fr=E.fairness(E.planSeconds(pc.blocks),order,new Set(sc.keeper==='fixed'?[order[0]]:[]));
+  ok(fr.spread<=2*mb+120,`${pre.id}+${extra} ${keeper} capped: spread ${fr.spread}`);}
  ok(new Set(plan.blocks[0].on).size===s.onField&&order.slice(0,s.onField).every(p=>plan.blocks[0].on.includes(p)),`${pre.id}+${extra}: the coach's starters start`);
  if(keeper!=='none')ok(plan.blocks[0].gk===order[0],'the coach keeper starts in goal');
 }
@@ -140,16 +149,16 @@ for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pr
  ok(/^[A-Za-z0-9_-]+$/.test(code),'link code is URL safe');
  ok(back&&back.players.length===10&&back.blocks.length===g.blocks.length&&back.done&&back.seconds[0]===Math.round(played.p0),'share round trip');
  ok(JSON.stringify(back.blocks[1].on)===JSON.stringify(sh.blocks[1].on),'share blocks round trip');
- ok(S.toShared(T,s,g.blocks,played,true,false).players.every(p=>p.name===''),'names left out when asked');
+ ok(S.toShared(T,s,g.blocks,played,true,false).players.every((p,i)=>p.name===(i===2?'C.':i===3?'Z.Z.':'')),'names as initials unless the coach includes them (UX audit C2)');
  for(const bad of ['','!!!','eyJ4IjoxfQ',S.encodeShare(sh).slice(0,20)])ok(S.decodeShare(bad)===null,'garbage link: '+bad);
 }
 /* ---- 5b. simulated live games with a keeper per half: the planner's look-ahead keeps everyone there all game within one change
    interval (the fairness meter's limit); property sweep over formats, squad sizes and keeper modes with injuries and arrivals ---- */
-function simGame(fmt,N,keeper,hurtAt,lateAt){
- const s={...E.settingsFor(E.presetOf(fmt)),keeper},team=ids(N),late=lateAt!=null?team[N-1]:null,order=team.filter(p=>p!==late);
+function simGame(fmt,N,keeper,hurtAt,lateAt,cap=Number(process.env.COACH_CAP??E.MAX_SWAPS)){
+ const s={...E.settingsFor(E.presetOf(fmt)),keeper,maxSwaps:cap},team=ids(N),late=lateAt!=null?team[N-1]:null,order=team.filter(p=>p!==late);
  const status=Object.fromEntries(team.map(p=>[p,p===late?'late':'ok'])),plan=E.buildPlan(order,s),ps=s.periodMin*60;
- let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0),now=1_000_000;const log=[];
- const due=()=>{for(let n=0;n<20;n++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))return;g=E.applyChange(g,now,nc.change,nc.index);log.push(`${g.clock.period}:${E.nowSec(g,now)} off ${nc.change.out} on ${nc.change.in}${nc.change.gkTo!==nc.change.gkFrom?' gk '+nc.change.gkTo:''}`);}};
+ let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0),now=1_000_000;const log=[];let maxIn=0;
+ const due=()=>{for(let n=0;n<20;n++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))return;if(nc.due!=null)maxIn=Math.max(maxIn,nc.change.in.length);g=E.applyChange(g,now,nc.change,nc.index);log.push(`${g.clock.period}:${E.nowSec(g,now)} off ${nc.change.out} on ${nc.change.in}${nc.change.gkTo!==nc.change.gkFrom?' gk '+nc.change.gkTo:''}`);}};
  for(let per=0;per<s.periods;per++){due();g=E.kickOff(g,now);
   for(let t=0;t<ps;t+=30){now+=30_000;const abs=per*ps+E.nowSec(g,now);
    if(hurtAt!=null&&abs===hurtAt){const v=g.on.find(p=>p!==g.gk);g=E.setStatus(g,now,v,'hurt');log.push('hurt '+v);}
@@ -158,7 +167,7 @@ function simGame(fmt,N,keeper,hurtAt,lateAt){
   g=E.endCurrentPeriod(g,now);now+=300_000;}
  const {played}=E.playedSeconds(g,0),hurt=Object.keys(g.status).find(p=>g.status[p]==='hurt'),fixed=keeper==='fixed'?plan.blocks[0].gk:null;
  const whole=team.filter(p=>p!==hurt&&p!==late&&p!==fixed&&!(g.joined??[]).includes(p));
- return {g,s,played,late,fr:E.fairness(played,whole),log,total:Object.values(played).reduce((a,b)=>a+b,0)};
+ return {g,s,played,late,maxIn,fr:E.fairness(played,whole),log,total:Object.values(played).reduce((a,b)=>a+b,0)};
 }
 {
  /* the owner's case: 7v7 2x25, 11 players, a keeper each half, an injury at 8:00 and a late arrival at 12:00 */
@@ -170,22 +179,27 @@ function simGame(fmt,N,keeper,hurtAt,lateAt){
  for(const pre of E.PRESETS)for(const extra of [1,2,3,4,5,6])for(const keeper of pre.keeper?['fixed','rotate']:['none']){
   const half=pre.periodMin*60;
   for(const [h,l] of [[null,null],[480,null],[null,720],[480,720],[900,300],[half+120,half-60]]){
-   const x=simGame(pre.id,pre.onField+extra,keeper,h,l),lim=x.s.subEvery*60;n++;worst=Math.max(worst,x.fr.spread/lim);
+   for(const cap of [0,E.MAX_SWAPS]){
+   const x=simGame(pre.id,pre.onField+extra,keeper,h,l,cap),lim=x.s.subEvery*60;n++;worst=Math.max(worst,x.fr.spread/lim);
    ok(x.total===x.s.periods*half*Math.min(pre.onField,pre.onField+extra-(h!=null?1:0))||h!=null||l!=null,`sim ${pre.id}: places filled`);
    /* with nothing happening: one interval; an injury or arrival mid-block can cost up to half a block more (blocks are whole) */
-   ok(x.fr.spread<=(h==null&&l==null?lim:lim*1.5),`sim ${pre.id} ${pre.onField+extra} ${keeper} hurt ${h} late ${l}: spread ${x.fr.spread/60} min`);
-  }}
- ok(n>=390,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
+   /* the calculator's promise without a swap cap; with the default cap of 3 at a stoppage (C14) the plan may need up to two */
+   ok(x.fr.spread<=(cap?lim*2+90:h==null&&l==null?lim:lim*1.5),`sim ${pre.id} ${pre.onField+extra} ${keeper} cap ${cap} hurt ${h} late ${l}: spread ${x.fr.spread/60} min`);
+   if(cap&&!x.s.rolling)ok(!x.maxIn||x.maxIn<=cap,`sim ${pre.id} cap: at most ${cap} on at a stoppage (${x.maxIn})`);
+  }}}
+ ok(n>=780,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
 }
 /* changes confirmed late (waiting for a stoppage): confirmChange re-levels, so a 40 s wait at every change stays within about one
    change interval for the owner's 7v7 with a late arrival at any time */
 for(const arr of [300,605,720,900,1205]){
- const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.slice(0,10),L='p10',ps=1500,K=['p0'];
- const plan=E.buildPlan(order,s);let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),[L]:'late'},0),now=0;
+ const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.slice(0,10),L='p10',ps=1500,K=['p0','p1'];
+ const plan=E.buildPlan(order,s,K);let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),[L]:'late'},0),now=0;
  const due=()=>{const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due+40>E.nowSec(g,now)))return;g=E.confirmChange(g,now,nc.change,nc.index,K);};
- for(let per=0;per<2;per++){due();g=E.kickOff(g,now);for(let t=0;t<ps;t+=5){now+=5000;if(per*ps+E.nowSec(g,now)===arr)g=E.setStatus(g,now,L,'ok',K);due();}g=E.endCurrentPeriod(g,now);}
+ for(let per=0;per<2;per++){due();g=E.kickOff(g,now);for(let t=0;t<ps;t+=5){now+=5000;if(per*ps+E.nowSec(g,now)===arr)g=E.setStatus(g,now,L,'ok',K);due();}g=E.endCurrentPeriod(g,now,K);}
  const {played}=E.playedSeconds(g,0),fr=E.fairness(played,order),tot=Object.values(played).reduce((a,b)=>a+b,0);
  ok(tot===3000*7,'lagged changes: every place filled');ok(fr.spread<=1.25*300,`lagged changes, arrival at ${arr}s: spread ${fr.spread/60} min`);
+ /* UX audit B2: p0 and p1 are the players marked "Can keep goal": one each half, nobody unmarked goes in */
+ ok(g.blocks.every(b=>K.includes(b.gk))&&new Set(g.blocks.map(b=>b.gk)).size===2,'lagged changes: only the marked keepers in goal, one each half');
 }
 /* ---- 5c. late players before the game: the plan brings them in at the expected minute, as the live game will ---- */
 {
@@ -238,6 +252,320 @@ for(const arr of [300,605,720,900,1205]){
  for(const re of G.ES_BANNED)ok(!re.test(esText),'Spanish avoids '+re);
  const page=read('app/(site)/tools/[slug]/page.tsx'),es=read('components/es/pages/ToolsEs.tsx');
  ok(/Substitution calculator: a worked example/.test(page)&&/Playing time calculator in Excel or Google Sheets/.test(page)&&/Equal playing time during the game/.test(page),'front door: worked example, Excel, equal playing time');
- ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href="\/coach\?lang=es"/.test(es),'front doors link to the app (English and Spanish)');
+ ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href=\{`\/coach\?lang=es#tool=\$\{app\}/.test(es),'front doors link to the app (English and Spanish), each to its own tool (Nov 22 2026)');
+ ok(/COACH_APP_PATH\+'#tool=lineup'/.test(page)&&/'#tool=subs':'#tool=minutes'/.test(page),'lineup pages open the lineup builder; the calculator Playing time; the rotations Substitution rotation');
+}
+/* ---- 9. Several teams (Nov 22 2026; lib/coach/teams.ts): migration from fi-coach-v1, switching, deleting ---- */
+{
+ const T=load('lib/coach/teams.ts');
+ ok(!/Math\.random|Date\.now|new Date|window\.|document\./.test(read('lib/coach/teams.ts').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'teams.ts is pure');
+ const mem=(o={})=>{const m={...o};return {m,getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v);}};};
+ const one={v:1,team:{name:'Blue Sharks',players:[{id:'a',num:1,name:'Ava',gk:true},{id:'b',num:2,name:'Ben'}]},settings:{format:'7v7'},here:['a','b'],spots:[],game:null,lang:'es',sound:false,last:null};
+ // empty storage: one empty team
+ let t=T.loadTeams(mem());ok(t.teams.length===1&&t.teams[0].team.players.length===0&&t.activeId===t.teams[0].id,'empty storage: one empty team');
+ // one team in fi-coach-v1 migrates as the first team, then both keys are written
+ const st=mem({'fi-coach-v1':JSON.stringify(one)});t=T.loadTeams(st);
+ ok(t.teams.length===1&&t.teams[0].team.name==='Blue Sharks'&&t.teams[0].team.players.length===2&&t.teams[0].lang==='es'&&t.teams[0].sound===false,'fi-coach-v1 migrates as the first team');
+ ok(T.saveTeams(st,t)&&JSON.parse(st.m['fi-coach-teams-v1']).teams.length===1&&JSON.parse(st.m['fi-coach-v1']).team.name==='Blue Sharks'&&!('id' in JSON.parse(st.m['fi-coach-v1'])),'save writes the teams and the active team to fi-coach-v1');
+ // two teams: add (copy players), switch, data separate, fi-coach-v1 follows the active team
+ t=T.addTeam(t,{name:'Red Foxes',from:t.teams[0].id},7);
+ ok(t.teams.length===2&&t.activeId===t.teams[1].id&&t.teams[1].team.players.length===2&&t.teams[1].game===null,'add a team copying players: made active, no games copied');
+ t=T.updateActive(t,s=>({...s,team:{...s.team,players:s.team.players.slice(0,1)}}));
+ ok(t.teams[0].team.players.length===2&&t.teams[1].team.players.length===1,'editing one team leaves the other alone');
+ t=T.updateActive(t,s=>({...s,lang:'en'}));ok(t.teams.every(x=>x.lang==='en'),'the language is the coach\'s: every team follows');
+ T.saveTeams(st,t);ok(JSON.parse(st.m['fi-coach-v1']).team.name==='Red Foxes','fi-coach-v1 holds the active team');
+ const back=T.loadTeams(st);ok(back.teams.length===2&&back.activeId===t.activeId&&back.teams[1].team.players.length===1,'two teams round-trip');
+ t=T.switchTeam(t,t.teams[0].id);ok(T.activeOf(t).team.name==='Blue Sharks','switch team');
+ ok(T.switchTeam(t,'tnope')===t,'switching to an unknown team does nothing');
+ // corrupted JSON in the teams key: migrate from fi-coach-v1 again; garbage teams are cleaned
+ ok(T.loadTeams(mem({'fi-coach-teams-v1':'{bad json','fi-coach-v1':JSON.stringify(one)})).teams[0].team.name==='Blue Sharks','corrupted teams JSON: migrate from fi-coach-v1');
+ ok(T.loadTeams(mem({'fi-coach-teams-v1':JSON.stringify({v:1,activeId:'x',teams:[]})})).teams.length===1,'no teams: one empty team');
+ const g=T.cleanTeams({v:1,activeId:'tz',teams:[null,{id:'tA',v:1,team:{name:'X',players:[]}},{id:'tA',v:1,team:{name:'Y',players:[]}},'x']});
+ ok(g&&g.teams.length===2&&new Set(g.teams.map(x=>x.id)).size===2&&g.activeId===g.teams[0].id,'bad ids, duplicates and an unknown active id are fixed');
+ ok(T.cleanTeams({v:2,teams:[{}]})===null&&T.cleanTeams('x')===null,'unknown version or shape: not a teams record');
+ // deleting: the active team (next one becomes active), another team, the last team (one empty team)
+ const three=T.addTeam(T.addTeam(T.loadTeams(mem({'fi-coach-v1':JSON.stringify(one)})),{name:'B'},2),{name:'C'},3);
+ let d=T.deleteTeam(three,three.activeId);ok(d.teams.length===2&&d.activeId===d.teams[0].id&&!d.teams.some(x=>x.team.name==='C'),'delete the active team: the first other team becomes active');
+ d=T.deleteTeam(d,d.teams[1].id);ok(d.teams.length===1&&T.activeOf(d).team.name==='Blue Sharks','delete another team: the active one stays');
+ d=T.deleteTeam(d,d.activeId,5);ok(d.teams.length===1&&d.teams[0].team.players.length===0&&d.teams[0].lang==='es','delete the last team: one empty team, the language kept');
+ // a live game belongs to its team
+ const live={...one,game:null};const L=T.cleanTeams({v:1,activeId:'t1',teams:[{...live,id:'t1'},{...live,id:'t2',team:{name:'Other',players:[]}}]});
+ ok(T.liveTeam(L)===null,'no live game');
+ const fakeLive={...T.activeOf(L),game:{clock:{status:'live'}}};const L2={...L,teams:[fakeLive,L.teams[1]],activeId:'t2'};
+ ok(T.liveTeam(L2).id==='t1'&&T.activeOf(L2).game===null,'the live game stays with its team when another team is shown');
+ ok(T.initials('Blue Sharks',1)==='BS'&&T.initials('tigers',2)==='TI'&&T.initials('',3)==='T3','team badge initials');
+}
+/* ---- 10. Screens in the URL (round 4A, Nov 22 2026; lib/coach/route.ts): history routing, deep links, the practice age ---- */
+{
+ const R=load('lib/coach/route.ts');
+ ok(!/window\.|document\.|localStorage/.test(read('lib/coach/route.ts').replace(/\/\*[\s\S]*?\*\//g,'')),'route.ts is pure');
+ const P=h=>R.parseHash(h);
+ ok(P('').screen==='gameday'&&P('#tool=home').screen==='gameday','no hash / old #tool=home -> Game Day');
+ ok(P('#tool=training').screen==='training'&&P('#tab=training').screen==='training','Training tab');
+ ok(P('#tool=match').live===true&&P('#tool=match').screen==='subs','#tool=match opens the live game over the rotation');
+ for(const t of ['team','lineup','minutes','subs','summary','plans'])ok(P('#tool='+t).screen===t,'tool '+t);
+ ok(P('#tool=nope').screen==='gameday'&&P('#tool=<script>').screen==='gameday','unknown tools fall back to Game Day');
+ ok(P('#tool=subs&format=9v9').format==='9v9'&&P('#tool=subs&format=99v99').format===undefined,'format kept, garbage dropped (C6)');
+ const pl=P('#tool=plans&plan=u8-passing-practice-plan&age=u8&run=1');
+ ok(pl.plan==='u8-passing-practice-plan'&&pl.age==='U8'&&pl.run===true,'plan, age and the session in the hash');
+ ok(P('#tool=plans&plan=../../x').plan===undefined&&P('#tool=lineup&plan=x').plan===undefined,'plan slugs are checked and only on the plans screen');
+ for(const h of ['#tool=gameday','#tool=training','#tool=subs&format=9v9','#tool=plans&plan=u6-first-practice&age=U6&run=1','#tool=match'])
+  ok(R.hashFor(P(h))===h,'round trip '+h);
+ const st=r=>R.landingStack(r).map(R.hashFor).join(' ');
+ ok(st({screen:'gameday'})==='#tool=gameday','a tab page: one entry');
+ ok(st({screen:'subs'})==='#tool=gameday #tool=subs','a deep-linked tool gets its tab page underneath (Back returns to it, B1)');
+ ok(st({screen:'plans'})==='#tool=training #tool=plans','plans belong to Training');
+ ok(st({screen:'plans',plan:'u6-first-practice'})==='#tool=training #tool=plans #tool=plans&plan=u6-first-practice','a plan link: Training, the list, the plan');
+ ok(st({screen:'subs',live:true})==='#tool=gameday #tool=match','a live game opens over Game Day');
+ ok(R.homeOf('plans')==='training'&&R.homeOf('lineup')==='gameday'&&R.homeOf('summary')==='gameday','each tool returns to its own tab');
+ ok(R.sameRoute(P('#tool=subs&format=9v9'),P('#tool=subs'))&&!R.sameRoute(P('#tool=subs'),P('#tool=lineup')),'same route ignores the format hint');
+ /* the practice age: an age in the team name wins, else the format */
+ for(const [f,n,want] of [['4v4','','U6'],['5v5','','U8'],['7v7','','U10'],['futsal','','U10'],['9v9','','U12'],['11v11','','U12'],['7v7','Tigers U8','U8'],['9v9','u9 Blue','U10'],['5v5','U5 Minis','U6'],['7v7','Lions U-11','U12'],['7v7','Under the sea','U10']])
+  ok(R.ageFor(f,n)===want,`ageFor(${f}, "${n}") = ${want}`);
+ /* the app wires it: history entries, popstate, the plans data on demand; the tab pages and the language sheet */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(/history\.pushState\(/.test(app)&&/addEventListener\('popstate'/.test(app)&&/addEventListener\('hashchange'/.test(app),'pushState + popstate + hashchange');
+ ok(/translate="no"/.test(app),'translate="no" on the app root (C10)');
+ ok(/setToast\(null\);\/\* a toast belongs/.test(app),'the undo toast stays on its screen (C15)');
+ ok(/<LangSheet /.test(app)&&/data-nav=\{k\}/.test(app),'bottom nav + language sheet');
+ ok(/plans-data\/\$\{lang\}\?v=/.test(read('components/coach/PlansTool.tsx')),'practice plans are fetched on demand, versioned for the cache-first SW');
+ ok(/#tool=plans&plan=\$\{p\.slug\}/.test(read('app/(site)/learn/soccer-practice-plans/[slug]/page.tsx'))&&/lang=es#tool=plans&plan=\$\{p\.slug\}/.test(read('components/es/pages/DrillsEs.tsx')),'plan pages open the plan in the coach app (EN + ES)');
+ ok(/&format=\$\{p\.format\}/.test(read('app/(site)/tools/[slug]/page.tsx')),'tool pages keep their format in the app link');
+}
+/* ---- 11. Round 4C (Nov 22 2026): the game-day logic from the UX audit ---- */
+{
+ const T=load('lib/coach/teams.ts');
+ const mem=(o={})=>{const m={...o};return {m,getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v);}};};
+ const ps=1500,mkGame=(s,order,keepers=[])=>{const plan=E.buildPlan(order,s,keepers);return E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),Object.fromEntries(order.map(p=>[p,'ok'])),0);};
+ /* B2: only players marked "Can keep goal" go in goal: opening plan, half-time and every re-plan */
+ for(const fmt of ['5v5','7v7','9v9','11v11'])for(const extra of [1,3,5]){
+  const pre=E.presetOf(fmt),s=E.settingsFor(pre),order=ids(pre.onField+extra),K=['p0',order[order.length-1]];
+  const plan=E.buildPlan(order,s,K);ok(plan.blocks.every(b=>K.includes(b.gk)),`B2 ${fmt}+${extra}: only marked keepers in goal in the plan`);
+  ok(plan.blocks[0].gk==='p0'&&new Set(plan.blocks.map(b=>b.gk)).size===2,`B2 ${fmt}+${extra}: one marked keeper each half`);
+  let g=mkGame(s,order,K),now=0;g=E.kickOff(g,now);now+=480_000;
+  g=E.setStatus(g,now,g.on.find(p=>p!==g.gk),'hurt',K);now+=600_000;g=E.endCurrentPeriod(g,now,K);
+  ok(g.blocks.every(b=>K.includes(b.gk)),`B2 ${fmt}+${extra}: after an injury and half-time, still only marked keepers`);
+ }
+ {/* one marked keeper keeps goal all game; the coach's own starting keeper keeps the first period; none marked = everyone rotates */
+  const s=E.settingsFor(E.presetOf('7v7')),order=ids(11);
+  const one=E.buildPlan(order,s,['p0']);ok(one.blocks.every(b=>b.gk==='p0')&&E.soleKeeper(one.blocks)==='p0','B2: the one marked keeper keeps goal all game');
+  const other=E.buildPlan(order,s,['p5']);ok(other.blocks.filter(b=>b.period===0).every(b=>b.gk==='p0')&&other.blocks.filter(b=>b.period===1).every(b=>b.gk==='p5'),'B2: the coach\'s starting keeper, then the marked one');
+  ok(E.soleKeeper(E.buildPlan(order,s,[]).blocks)===null,'B2: nobody marked: the keeper rotates (the app warns)');
+  /* a re-plan at half-time never keeps an unmarked keeper on */
+  const r=E.replan({settings:s,period:1,sec:0,periodSec:ps,available:order,on:order.slice(0,7),gk:'p3',played:{},kept:{p3:1500},keepers:['p0','p1']});
+  ok(r.every(b=>b.gk==='p0'||b.gk==='p1'),'B2: half-time re-plan hands goal to a marked keeper');
+ }
+ /* B3: a change missed for 20 minutes: a gentle second alert at 2 min overdue, "Replan from now", re-levelled at half-time */
+ {
+  const s={...E.settingsFor(E.presetOf('7v7')),keeper:'fixed'},order=ids(11);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);
+  const nc=E.nextChange(g),at=nc.due;now=at*1000;ok(E.alertKey(g,now)===`c${nc.index}:0`,'B3: alert when the change is due');
+  now=(at+60)*1000;ok(E.alertKey(g,now)===`c${nc.index}:0`,'B3: no second alert before 2 min');
+  now=(at+E.OVERDUE_SEC)*1000;ok(E.alertKey(g,now)===`c${nc.index}:0:late`,'B3: one gentle re-alert at 2 min overdue');
+  now=(at+900)*1000;/* 15 min missed */
+  const before=E.playedSeconds(g,E.nowSec(g,now)).played;
+  g=E.replanNow(g,now);const n2=E.nextChange(g);
+  ok(n2&&n2.due===E.nowSec(g,now),'B3: Replan from now: a fresh change due now');
+  ok(n2.change.in.every(p=>(before[p]??0)===0||(before[p]??0)<Math.max(...Object.values(before))),'B3: the replan brings on players owed time');
+  g=E.confirmChange(g,now,n2.change,n2.index);
+  /* a whole first half with every change missed: half-time re-levels the second half from the minutes really played */
+  let h=mkGame(s,order);h=E.kickOff(h,0);const end=ps*1000;
+  const old={...h,clock:E.endPeriod(h.clock,end,2),stints:h.stints.map(x=>x.to==null?{...x,to:ps}:x),next:h.blocks.findIndex(b=>b.period===1),delay:0};
+  const half=E.endCurrentPeriod(h,end);ok(E.driftSec(old,0)>=30&&half.blocks!==h.blocks,'B3: drift found at half-time, plan re-levelled');
+  const finish=x=>{let y=x,t=end+300_000;const run=()=>{for(let j=0;j<8;j++){const c=E.nextChange(y);if(!c||(c.due!=null&&c.due>E.nowSec(y,t)))break;y=E.applyChange(y,t,c.change,c.index);}};
+   run();y=E.kickOff(y,t);for(let k=0;k<60;k++){t+=25_000;run();}return E.endCurrentPeriod(y,t);};
+  const sp=x=>E.fairness(E.playedSeconds(x,0).played,order.slice(1)).spread;
+  const a=sp(finish(old)),b=sp(finish(half));
+  ok(b<a&&b<=600,`B3: half-time re-levels missed changes (${a/60} -> ${b/60} min)`);
+ }
+ /* B4: the tap guard */
+ ok(E.tapOk(0,1500)&&!E.tapOk(1000,2000)&&E.TAP_GUARD_MS===1500,'B4: a second tap within 1.5 s is ignored');
+ {/* B4: one Done = one round even when tapped twice (the UI guard), and Done early changes only that change */
+  const s=E.settingsFor(E.presetOf('7v7')),order=ids(11);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);now=60_000;
+  const nc=E.nextChange(g);ok(nc.due-E.nowSec(g,now)>0,'B4: the change is not due yet (the app asks "Change early?")');
+  const g1=E.confirmChange(g,now,nc.change,nc.index);ok(g1.subs===1&&E.nextChange(g1).index>nc.index,'B4: early Done makes one change');
+ }
+ /* C4: Skip keeps the players on until the next planned change, never an instant "Change now" */
+ for(const fmt of ['7v7','9v9','5v5']){
+  const s=E.settingsFor(E.presetOf(fmt)),order=ids(E.presetOf(fmt).onField+3);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);
+  const nc=E.nextChange(g),nextPlanned=g.blocks[nc.index+1];now=nc.due*1000;
+  const k=E.skipChange(g,now),n2=E.nextChange(k);
+  ok(JSON.stringify([...k.on].sort())===JSON.stringify([...g.on].sort()),`C4 ${fmt}: Skip keeps the players on`);
+  ok(!n2||n2.due==null||n2.due>E.nowSec(k,now)+30,`C4 ${fmt}: after Skip the next change is not due at once (${n2&&n2.due})`);
+  if(nextPlanned&&nextPlanned.period===0&&n2&&n2.due!=null)ok(n2.due===nextPlanned.start,`C4 ${fmt}: next change at its planned time ${nextPlanned.start}`);
+  ok(Object.values(E.planSeconds(k.blocks)).reduce((a,x)=>a+x,0)===s.periods*s.periodMin*60*s.onField,`C4 ${fmt}: totals still fill every place`);
+ }
+ /* C14: the cap is a setting (default 3, 0 = no limit), cleaned */
+ ok(E.cleanSettings({format:'9v9'}).maxSwaps===3&&E.cleanSettings({format:'9v9',maxSwaps:0}).maxSwaps===0&&E.cleanSettings({format:'9v9',maxSwaps:99}).maxSwaps===11,'C14: max swaps setting');
+ {const s={...E.settingsFor(E.presetOf('11v11')),maxSwaps:2},order=ids(18),p=E.buildPlan(order,s);
+  ok(p.blocks.every((b,k)=>!k||!b.start||b.on.filter(x=>!p.blocks[k-1].on.includes(x)).length<=2),'C14: a cap of 2 holds in the plan');}
+ /* C17: game details and the score, kept through a reload */
+ {const s=E.settingsFor(E.presetOf('7v7')),order=ids(9),plan=E.buildPlan(order,s);
+  let g=E.newGame(plan,s,{},Object.fromEntries(order.map(p=>[p,'ok'])),0,{opp:'Tigers',date:'2026-11-29',time:'10:30',home:'away'});
+  g=E.addGoal(g,'p3');g=E.addGoal(g);g=E.theirGoal(g,1);g=E.setScorer(g,1,'p4');g=E.addGoal(g,'p5');g=E.removeGoal(g);
+  ok(JSON.stringify(E.scoreOf(g))==='{"us":2,"them":1}'&&g.score.goals.join()==='p3,p4','C17: score with scorers');
+  const st=S.cleanStore({v:1,team:{players:order.map((id,i)=>({id,num:i+1}))},here:order,game:JSON.parse(JSON.stringify(g)),match:{opp:'  Tigers ',date:'2026-11-29',time:'10:30',home:'away'}});
+  ok(st.game.info.opp==='Tigers'&&st.game.score.goals.join()==='p3,p4'&&st.game.score.them===1,'C17: details + score survive a reload');
+  ok(st.match.opp==='Tigers'&&st.match.home==='away'&&S.cleanMatch({date:'tomorrow',time:'9',home:'x'}).date===''&&S.cleanMatch({time:'9'}).time===''&&S.cleanMatch(null).home==='','C17: next game cleaned');
+  ok(S.hasMatch(st.match)&&!S.hasMatch(S.cleanMatch({})),'C17: has details');
+  /* C2: the parents' link carries the date, opponent and score; names as initials by default */
+  const T2={name:'Sharks',players:order.map((id,i)=>({id,num:i+1,name:i===0?'Ana Lopez':'',gk:false}))};
+  const sh=S.toShared(T2,s,plan.blocks,E.planSeconds(plan.blocks),true,false,{opp:'Tigers',date:'2026-11-29',us:2,them:1}),back=S.decodeShare(S.encodeShare(sh));
+  ok(back.info.opp==='Tigers'&&back.info.date==='2026-11-29'&&back.info.us===2&&back.info.them===1&&back.players[0].name==='A.L.','C2: details, score and initials in the link');
+  ok(S.decodeShare(S.encodeShare({...sh,info:undefined})).info===undefined,'C2: a plan link without a game has no details');
+ }
+ /* B5: two tabs: the revision counter, newer wins */
+ {const st=mem(),t=T.loadTeams(st),r1=T.saveTeamsRev(st,t);ok(r1===1&&T.storedRev(st)===1,'B5: first save is revision 1');
+  const other={...t,teams:t.teams.map(x=>({...x,team:{...x.team,name:'Renamed'}}))};const r2=T.saveTeamsRev(st,{...other,rev:0});
+  ok(r2===2,'B5: a save goes above the stored revision even from a stale tab');
+  ok(T.newerTeams(st.m['fi-coach-teams-v1'],1).teams[0].team.name==='Renamed'&&T.newerTeams(st.m['fi-coach-teams-v1'],2)===null&&T.newerTeams('{bad',0)===null,'B5: the other tab takes only a newer record');
+  ok(T.loadTeams(st).rev===2,'B5: the revision is read back');}
+ /* UI wiring that has no browser here (the Playwright walkthrough covers the behaviour) */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(!/window\.confirm\(w\.(changeEarly|earlyQ)/.test(app)&&/data-early-sheet/.test(app)&&/tapOk\(/.test(app),'B4: an in-app "Change early?" sheet and the tap guard');
+ ok(/addEventListener\('storage'/.test(app)&&/newerTeams\(/.test(app),'B5: the app listens for the other tab');
+ ok(/data-attend=/.test(app)&&!/one tap cycles Coming/.test(app),'C5: three visible attendance choices');
+ ok(/data-replan-now/.test(app)&&/alertKey\(/.test(app),'B3: Replan from now + the gentle re-alert');
+ ok(/data-score=/.test(app)&&/data-game-details/.test(app),'C17: score on Match day, game details sheet');
+ for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(!/uneven|desigual/i.test(w.fairCheck)&&w.sharedTitle&&w.changeEarly&&w.replanNow,'neutral words, '+l);}
+}
+/* ---- 12. round 4D: lineup moves (lib/coach/lineup.ts) and the stranded-disc regression ---- */
+{
+ const L=load('lib/coach/lineup.ts');
+ const b=['h','i'],sp=['a','b','c','d',''];
+ let m=L.moveSpots(sp,b,{k:'b',id:'h'},{k:'s',i:1});ok(m&&m.spots[1]==='h'&&m.kind==='in'&&m.on==='h'&&m.off==='b'&&m.to===1,'bench onto a spot: replaces, the spot player goes to the bench');
+ m=L.moveSpots(sp,b,{k:'s',i:1},{k:'b',id:'h'});ok(m&&m.spots[1]==='h'&&m.off==='b','spot onto a bench chip: the same swap');
+ m=L.moveSpots(sp,b,{k:'s',i:0},{k:'s',i:2});ok(m&&m.spots[0]==='c'&&m.spots[2]==='a'&&m.kind==='swap','spot onto spot: swap');
+ m=L.moveSpots(sp,b,{k:'s',i:0},{k:'s',i:4});ok(m&&m.spots[4]==='a'&&m.spots[0]===''&&m.kind==='place','a player onto an empty spot moves there');
+ m=L.moveSpots(sp,b,{k:'b',id:'i'},{k:'s',i:4});ok(m&&m.spots[4]==='i'&&m.kind==='place'&&m.off==='','bench onto an empty spot: placed');
+ ok(L.moveSpots(sp,b,{k:'b',id:'h'},{k:'b',id:'i'})===null&&L.moveSpots(sp,b,{k:'s',i:2},{k:'s',i:2})===null&&L.moveSpots(sp,b,{k:'s',i:4},{k:'s',i:1})===null,'no-ops: bench onto bench, onto itself, from an empty spot');
+ ok(L.moveSpots(sp,b,{k:'b',id:'zz'},{k:'s',i:1})===null&&L.moveSpots(sp,b,{k:'s',i:9},{k:'s',i:1})===null&&L.moveSpots(sp,['a'],{k:'b',id:'a'},{k:'s',i:2})===null,'no-ops: unknown player, a spot out of range, a "bench" player already on the pitch');
+ ok(L.parseRef('s:3').i===3&&L.parseRef('b:p1').id==='p1'&&L.parseRef('s:x')===null&&L.parseRef('')===null&&L.refKey({k:'b',id:'q'})==='b:q','refs round trip, garbage is null');
+ /* property: 3000 random moves (drag, tap or keyboard all call moveSpots) never put a player in two places */
+ let seed=7;const rnd=n=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed%n;};
+ const all=['p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11'];let spots=all.slice(0,7);
+ for(let k=0;k<3000;k++){const bench=all.filter(x=>!spots.includes(x));const ref=()=>rnd(3)?{k:'s',i:rnd(spots.length)}:{k:'b',id:bench[rnd(bench.length)]||'p1'};
+  const r=L.moveSpots(spots,bench,ref(),ref());if(r)spots=r.spots;const bn=all.filter(x=>!spots.includes(x));
+  if(!L.onePlace(spots,bn)||spots.filter(Boolean).length+bn.length!==all.length){ok(false,'one place after move '+k);}}
+ ok(true,'3000 random moves: every player in exactly one place');ok(!L.onePlace(['a','a'],[])&&!L.onePlace(['a'],['a']),'onePlace catches a player twice');
+ /* the drag controller ends on every release path and draws on a <body> layer (the owner's stranded "8") */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(/addEventListener\('pointercancel'/.test(app)&&/addEventListener\('blur'/.test(app)&&/visibilitychange/.test(app)&&/addEventListener\('pagehide'/.test(app),'drag ends on cancel, blur, hidden page, pagehide');
+ ok(/addEventListener\('pointerup'/.test(app)&&/document\.body\.appendChild\(el\)/.test(app)&&/el\.remove\(\)/.test(app),'release is heard on the window; the ghost layer lives on <body> and is removed on unmount');
+ ok(/setSel\(null\);setLifted\(L\.key\)/.test(app),'lifting a player clears the tap selection');
+ ok(!/\.ghost\{position:fixed;z-index:50/.test(read('components/coach/coach.module.css'))&&/prefers-reduced-motion:reduce\)\{\n \.discHit/.test(read('components/coach/coach.module.css')),'old ghost gone; reduced motion = fades');
+ for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(w.lineupSwap('a','b')&&w.lineupIn('a','b')&&w.lineupPlace('a','LD'),'lineup toasts, '+l);}
+ ok(!/sharedNote\}/.test(app),'parents\' link: no "shared with you" line');
+ /* 8v8 (fútbol 8): FFCV Circular 26 2025/26 (alevín 2 x 30, unlimited rolling changes) */
+ const p8=E.presetOf('8v8');ok(p8.id==='8v8'&&p8.onField===8&&p8.keeper&&p8.periods===2&&p8.periodMin===30&&p8.rolling,'8v8 preset: keeper + 7, 2 x 30, rolling');
+ ok(E.PRESETS[2].id==='7v7'&&E.presetOf('nope').id==='7v7','the default format is still 7v7');
+ const R8=load('lib/coach/route.ts');ok(R8.parseHash('#tool=lineup&format=8v8').format==='8v8','#tool=lineup&format=8v8 is read');
+ {const sh=load('lib/site/tools/shapes8.ts').SHAPES_8V8;ok(sh.map(x=>x.shape).join()==='3-3-1,3-2-2,2-3-2','8v8 shapes 3-3-1, 3-2-2, 2-3-2');}
+}
+/* ---- 14. Ten languages (round 4E, Nov 22 2026; lib/i18n/appLangs.ts, lib/coach/lang/*.ts, lib/scan/lang/*.ts) ---- */
+{
+ const A=load('lib/i18n/appLangs.ts'),W=load('lib/coach/words.ts').WORDS,SW=load('lib/scan/words.ts').WORDS;
+ ok(A.APP_LANGS.join()==='en,es,pt,fr,de,it,nl,pl,fi,ja','the ten: en es pt fr de it nl pl fi ja');
+ ok(A.LANG_NAMES.ja==='日本語'&&A.LANG_NAMES.pt==='Português'&&A.LANG_NAMES.fi==='Suomi'&&A.LOCALE.pt==='pt-BR','each in its own name; Portuguese is Brazilian');
+ ok(A.langFromNavigator(['ja-JP'])==='ja'&&A.langFromNavigator(['pt-PT','en'])==='pt'&&A.langFromNavigator(['zh-CN','de-AT'])==='de'&&A.langFromNavigator(['ar'])==='en'&&A.langFromNavigator([])==='en','the phone\'s language, else English');
+ ok(A.langParam('en')===''&&A.langParam('fi')==='?lang=fi'&&A.langParam('ja','&')==='&lang=ja'&&A.siteLang('de')==='en'&&A.siteLang('es')==='es','?lang= for all ten; the site stays English and Spanish');
+ const S=load('lib/coach/store.ts');ok(S.cleanStore({v:1,lang:'ja'}).lang==='ja'&&S.cleanStore({v:1,lang:'xx'}).lang===null,'the saved choice: any of the ten, nothing else');
+ ok(load('lib/scan/store.ts').cleanStore({v:1,lang:'fi'}).lang==='fi','Scan Trainer saves any of the ten');
+ /* every language has every key (deep), the same value types, functions that return text; and no value is the English one except
+    the intentional ones: numbers and units, the brand, ages, file names, cognates */
+ const SAME=new Set(['minCol','min','stoppage','csv','total','fmt','minutesN','partOf','fairEveryone','vs','sec','sessions.60','sessions.90','sessions.180','ages.u8','ages.u10','ages.u12','ages.u14','ofN','gk','print','pause','start','preview','show','formation','sounds.pop','sounds.tick','sounds.bell','modes.mix','numbers','modes.numbers','arrows','modes.arrows','score','tabSummary','summary','sharedTitle','teamAge','csvWords.total','csvWords.number','csvWords.name','name','squad','titleTeam','teammates','screen','session','training','navTraining','groupTraining','plansTitle','drillsName','lineDrills','status','soundOn','soundOff','sound','in','out','home','opponent','details','plan','planClock','cancel','editT','share','copyLink','retry','openTool','offline','nameOpt','number','fwd','mid','def','squadFrom','playersLbl','tabTeam','homeTeam','continueOn','csvWords.period','periodName','online','minuteN','resume','fairGood','end','tools','ok','info','team','format','teamName','lang','scorers','date','kickTime','kickOff','kickOffNext','endPeriod','time','colourNames.pink','colourNames.orange',/* cognates a native would write the same: fr Coach, Minutes; de in, Team; nl later, Open plan */'appShort','titleHome','tabMinutes','subIn','teamN','delay','openPlan']);
+ const walk=(en,x,where,out)=>{for(const k of Object.keys(en)){const a=en[k],b=x[k],p=where+k;out.keys++;
+  if(!(k in x)){out.bad.push('missing '+p);continue;}if(typeof a!==typeof b){out.bad.push('type '+p);continue;}
+  if(typeof a==='function'){for(const g of [[1,2],[3,7],[0,4],['Ana','Ben']]){let e;try{e=a(...g);}catch{continue;}if(typeof e!=='string')continue;const r=b(...g);if(typeof r!=='string'||!r&&e)out.bad.push('fn '+p);}
+   if(a(3,7)===b(3,7)&&a(1,2)===b(1,2))out.same.push(p);}
+  else if(a&&typeof a==='object')walk(a,b,p+'.',out);else if(a===b&&a!=='')out.same.push(p);}
+  for(const k of Object.keys(x))if(!(k in en))out.bad.push('extra '+where+k);};
+ let oddN=0;for(const [name,D] of [['coach',W],['scan',SW]])for(const l of A.APP_LANGS){if(l==='en')continue;const out={keys:0,bad:[],same:[]};walk(D.en,D[l],'',out);
+  ok(!out.bad.length,`${name} ${l}: every key (${out.keys}) ${out.bad.slice(0,5).join(', ')}`);
+  const odd=out.same.filter(k=>!SAME.has(k)&&!SAME.has(k.split('.').pop()));
+  if(odd.length)console.log(`ODD ${name} ${l}: ${odd.map(k=>k+'='+String(k.split('.').reduce((o,x)=>o[x],D[l])).slice(0,30)).join(', ')}`);oddN+=odd.length;}
+ ok(!oddN||process.env.SHOW_ODD,'nothing left in English but numbers, units, names and cognates');
+ ok(W.ja.fmt('7v7')==='7人制'&&W.ja.fmt('futsal')==='フットサル'&&W.de.fmt('7v7')==='7v7','formats: 7人制 in Japanese');
+ ok(W.ja.playersN(5).includes('5')&&W.pl.playersN(1)!==W.pl.playersN(5)&&W.fi.playersN(1)!==W.fi.playersN(5),'counts: Polish and Finnish plural forms');
+ ok(/goleiro/i.test(W.pt.keeper+W.pt.gkMark)&&/Torwart/.test(W.de.keeper)&&/gardien/i.test(W.fr.keeper)&&/portiere/i.test(W.it.keeper)&&/keeper/i.test(W.nl.keeper)&&/bramkarz/i.test(W.pl.keeper)&&/maalivahti/i.test(W.fi.keeper)&&/キーパー|GK/.test(W.ja.keeper),'the keeper in each country\'s word');
+ const app=read('components/coach/CoachApp.tsx'),pt=read('components/coach/PlansTool.tsx'),sc=read('components/scan/ScanApp.tsx'),bd=read('components/coaches-board/BoardApp.tsx');
+ ok(/APP_LANGS\.map\(l=>/.test(app)&&/LANG_NAMES\[l\]/.test(app)&&/isAppLang\(q\)\?q:l0\?\?phoneLang\(\)/.test(app)&&/documentElement\.lang=LOCALE\[lang\]/.test(app),'Language sheet: the ten in their own names; ?lang=, the saved choice, the phone; <html lang>');
+ ok(/langParam\(lang,'&'\)/.test(pt)&&/planLang/.test(pt)&&/plansEnNote/.test(pt),'?lang= to /scan and /board for all ten; plans in English with a note');
+ ok(/options=\{APP_LANGS\}/.test(sc)&&/isAppLang\(q\)/.test(sc)&&/isAppLang\(q\)/.test(bd)&&/BOARD_TITLE/.test(bd),'/scan and /board take all ten');
+ for(const l of A.APP_LANGS)ok(bd.includes(`${l}:'${W[l].boardName}'`),'/board title = the coach app\'s board name, '+l);
+ ok(/toLocaleDateString\(LOCALE\[lang\]/.test(read('components/coach/TabPages.tsx')),'dates via Intl in the chosen language');
+ ok(/inline:true/.test(app)&&/data-lineup-undo/.test(app)&&/toastInline\{position:static/.test(read('components/coach/coach.module.css')),'the lineup Undo sits under the bench, not over it (4D leftover), 6 s');
+ ok(/html:lang\(ja\)\{--btn-font:Arial,'Hiragino Sans'/.test(read('components/motion/motion.css')),'Japanese: the phone\'s own font, no webfont');
+ for(const f of ['app/coach/layout.tsx','app/scan/layout.tsx','app/board/layout.tsx'])ok(/index:false/.test(read(f)),f+' stays noindex');
+}
+/* ---- round 4G (Nov 22 2026): the independent audit's blockers ---- */
+{
+ const s=E.settingsFor(E.presetOf('7v7'));s.keeper='rotate';
+ const order=Array.from({length:10},(_,i)=>'q'+i),K=['q0','q1'];
+ const plan=E.buildPlan(order,s,K),spots=Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i]));
+ const ps=s.periodMin*60;
+ /* play the 1st half with every change made on time */
+ let g=E.newGame(plan,s,spots,Object.fromEntries(order.map(p=>[p,'ok'])),0),now=1_000_000;
+ g=E.kickOff(g,now);
+ for(let t=0;t<ps;t+=5){now+=5000;const n=E.nextChange(g);if(n&&n.due!=null&&n.due<=E.nowSec(g,now))g=E.confirmChange(g,now,n.change,n.index,K);}
+ g=E.endCurrentPeriod(g,now,K);
+ const brk=E.nextChange(g);
+ ok(brk&&brk.due==null&&!brk.missed,'B1: the half-time change waits for the restart during the break');
+ const gkTo=brk.change.gkTo;ok(gkTo&&gkTo!==g.gk,'B1: the plan swaps the keeper at half-time');
+ /* the coach restarts without pressing Done on the break change */
+ now+=60000;g=E.kickOff(g,now);now+=1000;
+ const miss=E.nextChange(g);
+ ok(miss&&miss.missed&&miss.due!=null&&miss.due-E.nowSec(g,now)<=0,'B1: after the restart the missed change is due now (missed, overdue)');
+ ok(E.alertKey(g,now)!=='','B1: and it alerts at the restart');
+ now+=E.OVERDUE_SEC*1000+1000;ok(/:late$/.test(E.alertKey(g,now)),'B1: and alerts again when 2 min late');
+ const r=E.replanNow(g,now,K),rn=E.nextChange(r);
+ ok(rn&&rn.change.gkTo===gkTo,'B1: "Replan from now" keeps the half-time keeper swap (planned keeper goes in goal)');
+ const done=E.confirmChange(r,now,rn.change,rn.index,K);ok(done.gk===gkTo,'B1: Done on the re-planned change puts the 2nd-half keeper in goal');
+ /* or Done straight away on the missed change */
+ const d2=E.confirmChange(g,now,miss.change,miss.index,K);ok(d2.gk===gkTo,'B1: Done on the missed change makes the keeper swap');
+ /* finish the game from the replanned state: minutes end level-ish, not 12 vs 51 */
+ let h=done;for(let t=E.nowSec(h,now);t<ps;t+=5){now+=5000;const n=E.nextChange(h);if(n&&n.due!=null&&n.due<=E.nowSec(h,now))h=E.confirmChange(h,now,n.change,n.index,K);}
+ h=E.endCurrentPeriod(h,now,K);const {played}=E.playedSeconds(h,0),vals=order.map(p=>played[p]??0);
+ ok(Math.max(...vals)-Math.min(...vals)<=s.subEvery*60*2+180,'B1: after a missed half-time change and a replan the minutes stay within two changes: '+vals.map(v=>Math.round(v/60)).join(','));
+ /* C1: the played blocks follow the stints (the keeper is the one who really kept goal) */
+ const pb=E.playedBlocks(h,now),pbSec=E.planSeconds(pb);
+ ok(order.every(p=>Math.abs((pbSec[p]??0)-(played[p]??0))<=1),'C1: played blocks add up to the minutes really played');
+ ok(pb.filter(b=>b.period===1&&b.start>=E.nowSec(g,now)).every(b=>b.gk===gkTo||b.start<60),'C1: the 2nd-half keeper drawn is the one who kept goal');
+}
+{
+ /* B2: a late player with an expected minute is asked about at that minute; one tap adds them and they get minutes */
+ const s=E.settingsFor(E.presetOf('7v7'));const order=Array.from({length:10},(_,i)=>'r'+i),K=['r0'];
+ const plan=E.buildPlan(order,s,K),status={...Object.fromEntries(order.map(p=>[p,'ok'])),r10:'late',r11:'late'};
+ let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0,undefined,{r10:10,r11:null}),now=0;
+ ok(g.arrive&&g.arrive.r10===10&&!('r11' in g.arrive),'B2: the expected minute goes into the game (unknown left out)');
+ g=E.kickOff(g,now);now+=9*60000;ok(E.arrivalsDue(g,now).length===0,'B2: not asked before minute 10');
+ now+=60000;ok(E.arrivalsDue(g,now).join()==='r10','B2: asked at minute 10 (only the player with a minute)');
+ g=E.setStatus(g,now,'r10','ok',K);ok(E.arrivalsDue(g,now).length===0&&(g.joined??[]).includes('r10'),'B2: one tap: here, in the plan, counted as joined late');
+ for(let t=E.nowSec(g,now);t<s.periodMin*60;t+=5){now+=5000;const n=E.nextChange(g);if(n&&n.due!=null&&n.due<=E.nowSec(g,now))g=E.confirmChange(g,now,n.change,n.index,K);}
+ g=E.endCurrentPeriod(g,now,K);
+ ok((E.playedSeconds(g,0).played.r10??0)>0||E.planSeconds(g.blocks.filter(b=>b.period===1)).r10>0,'B2: the late player gets minutes after arriving');
+ const store=S.cleanStore({v:1,team:{name:'T',players:[...order,'r10','r11'].map((id,i)=>({id,num:i+1}))},here:[...order,'r10','r11'],game:{...g}});
+ ok(store.game&&store.game.arrive&&store.game.arrive.r10===10,'B2: the expected minute survives save/load');
+ /* C7: why the minutes ended uneven */
+ let u=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok']))},0);u=E.kickOff(u,0);let t=0;
+ let sk=0;for(let k=0;k<6;k++){t+=4*60000;if(E.nextChange(u)){u=E.skipChange(u,t,K);sk++;}}
+ ok(sk>0&&u.skips===sk,'C7: skipped changes are counted ('+sk+')');
+ const un=E.unevenNotes(u,{r0:3000,r1:3000,r2:600,r3:3000,r4:3000,r5:3000,r6:3000,r7:3000,r8:3000,r9:3000});
+ ok(un.length===1&&un[0].p==='r2'&&un[0].why==='skip','C7: a player far behind after skipped changes is explained ("a change was skipped")');
+ ok(E.unevenNotes({...u,skips:0,status:{...u.status,r2:'hurt'}},{r0:3000,r1:3000,r2:600,r3:3000,r4:3000,r5:3000,r6:3000,r7:3000,r8:3000,r9:3000})[0].why==='hurt','C7: hurt explained');
+ ok(E.unevenNotes(u,Object.fromEntries(order.map(p=>[p,1800]))).length===0,'C7: level minutes: no note');
+ ok(E.unevenNotes(u,{r0:2700,r1:2400,r2:2100,r3:1800,r4:1800,r5:1800,r6:1800,r7:1800,r8:1800,r9:1800}).length===0,'C7: a keeper with more minutes does not make everyone else "missed"');
+}
+{
+ /* B4/C5 words: every language has its own OUT/IN and every board word; the board stays English by default (the game) */
+ const W=load('lib/coach/words.ts').WORDS,B=load('lib/coach/lang/board.ts');
+ ok(W.ja.out!=='OUT'&&W.ja.in!=='IN','C5: Japanese has its own Off/On words');
+ for(const l of Object.keys(W)){for(const k of ['missedBreak','addToPlan','skipped','unevenHead','whySkip'])ok(typeof W[l][k]==='string'&&W[l][k].length>0,`${l}.${k}`);
+  ok(Object.keys(B.BOARD_WORDS[l]).join()===Object.keys(B.BOARD_EN).join(),`board words ${l}: same keys`);
+  if(l!=='en')ok(B.BOARD_WORDS[l].save!==B.BOARD_EN.save||l==='nl','board words '+l+' translated');}
+ ok(W.en.skipped!==W.en.replanned&&!/level/.test(W.en.skipped),'C7: the Skip toast does not promise level minutes');
+ const tb=read('components/coaches-board/TacticsBoard.tsx');
+ ok(/words\?:BoardWords/.test(tb)&&/const L=words\?\?BOARD_EN/.test(tb)&&!/>Save</.test(tb),'B4: the board takes words, English by default');
+ ok(/words=\{BOARD_WORDS\[langQ?\]\}/.test(read('components/coaches-board/BoardApp.tsx')),'B4: /board passes the app language');
+ const mo=read('components/motion/motion.tsx');ok(/history\.back\(\)/.test(mo)&&/location\.replace\(/.test(mo)&&!/location\.assign\(miniBackHref/.test(read('components/scan/ScanApp.tsx')+read('components/coaches-board/BoardApp.tsx')),'B6: mini app Back steps back or replaces, never pushes');
 }
 console.log(`coach-app: ${checks} checks passed`);

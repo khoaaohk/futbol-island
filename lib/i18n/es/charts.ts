@@ -107,6 +107,7 @@ export const LINKS_ES:Readonly<Record<string,LinkEs>>={
  '/tools/youth-soccer-field-size-guide':{name:'Guía de medidas de canchas de fútbol infantil',line:'Cada modalidad a escala, con un plan de conos para marcarla'},
  '/tools/soccer-juggling-challenge':{name:'Reto de dominadas de fútbol',line:'Niveles de 5 a 100 toques y un registro de récords'},
  '/tools/soccer-team-name-generator':{name:'Generador de nombres de equipos de fútbol',line:'Nombres para un equipo infantil nuevo'},
+ '/tools/8v8-lineup-builder':{name:'Creador de alineaciones de fútbol 8',line:'El fútbol 8 de España: portero y siete, con su cancha y sus reglas'},/* round 4D */
  '/learn/soccer-ball-size-by-age':{name:'Tamaño del balón de fútbol por edad',line:'Tamaño 3, 4 o 5 para cada categoría, con una tabla'},
  '/learn/soccer-field-size-by-age':{name:'Tamaño de la cancha de fútbol por edad',line:'Cancha, arco y duración del partido para cada categoría'},
  '/learn/soccer-age-groups':{name:'Las categorías de edad del fútbol explicadas',line:'De U6 a U19, fechas de nacimiento y el partido de cada una'},
@@ -115,6 +116,7 @@ export const LINKS_ES:Readonly<Record<string,LinkEs>>={
  '/learn/soccer-rules/build-out-line':{name:'La línea de salida en 7v7',line:'La línea discontinua de una cancha de 7v7'},
  '/learn/soccer-rules/heading-rules-for-kids':{name:'Reglas para cabecear en EE. UU.',line:'No se cabecea a los 10 años o menos'},
  '/learn/7v7-soccer-formations':{name:'Formaciones de fútbol 7v7',line:'Formas para equipos U9 y U10'},
+ '/learn/8v8-soccer-formations':{name:'Formaciones de fútbol 8',line:'Formas para la modalidad de ocho que se juega en España'},/* round 4F */
  '/learn/9v9-soccer-formations':{name:'Formaciones de fútbol 9v9',line:'Formas para equipos U11 y U12'},
  '/learn/11v11-soccer-formations':{name:'Formaciones de fútbol 11v11',line:'Formas para el juego completo'},
  '/learn/soccer-rules/futsal-rules':{name:'Reglas del futsal que son diferentes del fútbol',line:'Un balón más pequeño, una cancha más pequeña'},

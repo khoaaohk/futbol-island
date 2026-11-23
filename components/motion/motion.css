@@ -1,0 +1,65 @@
+/* One motion language for /coach and /scan (Nov 22 2026; components/motion/motion.tsx). Global on purpose: the View Transition
+   pseudo-elements live on <html>. Every move is a one-shot on transform/opacity, 120-350 ms, ease-out in and a shorter ease-in out;
+   nothing loops. Reduced motion: no travel, at most a quick fade. */
+:root{--fi-out:cubic-bezier(.22,1,.36,1);--fi-in:cubic-bezier(.55,.06,.68,.19)}
+
+/* ---- screen to screen (View Transitions API) ---- */
+::view-transition-group(root){animation-duration:280ms}
+html[data-vt=forward]::view-transition-old(root){animation:180ms var(--fi-in) both fi-out-left}
+html[data-vt=forward]::view-transition-new(root){animation:300ms var(--fi-out) both fi-in-right}
+html[data-vt=back]::view-transition-old(root){animation:180ms var(--fi-in) both fi-out-right}
+html[data-vt=back]::view-transition-new(root){animation:300ms var(--fi-out) both fi-in-left}
+/* bottom tabs: no travel, a 120 ms crossfade of the content, the title and the mark */
+html[data-vt=tab]::view-transition-group(*){animation-duration:120ms}
+html[data-vt=tab]::view-transition-old(root),html[data-vt=tab]::view-transition-old(app-title){animation:120ms ease-out both fi-fade-out}
+html[data-vt=tab]::view-transition-new(root),html[data-vt=tab]::view-transition-new(app-title){animation:120ms ease-out both fi-fade-in}
+html[data-vt=fade]::view-transition-old(root){animation:160ms ease-out both fi-fade-out}
+html[data-vt=fade]::view-transition-new(root){animation:260ms var(--fi-out) both fi-fade-in}
+/* the header bar and the tab bar stay put (their live content animates itself: the indicator glides) */
+::view-transition-old(app-top),::view-transition-old(coach-tabs){display:none}
+::view-transition-new(app-top),::view-transition-new(coach-tabs){animation:none}
+/* the header title crossfades with a small rise */
+::view-transition-group(app-title){animation-duration:260ms;animation-timing-function:var(--fi-out)}
+::view-transition-old(app-title){animation:120ms ease-out both fi-fade-out;height:100%;object-fit:none;object-position:center}
+::view-transition-new(app-title){animation:260ms var(--fi-out) both fi-fade-up-sm;height:100%;object-fit:none;object-position:center}
+/* the scan summary's big score */
+@keyframes fi-out-left{to{opacity:0;transform:translateX(-24px)}}
+@keyframes fi-out-right{to{opacity:0;transform:translateX(24px)}}
+@keyframes fi-in-right{from{opacity:0;transform:translateX(40px)}}
+@keyframes fi-in-left{from{opacity:0;transform:translateX(-40px)}}
+@keyframes fi-fade-out{to{opacity:0}}
+@keyframes fi-fade-in{from{opacity:0}}
+@keyframes fi-fade-up{from{opacity:0;transform:translateY(10px)}}
+@keyframes fi-fade-up-sm{from{opacity:0;transform:translateY(5px)}}
+@keyframes fi-pop{from{opacity:.4;transform:scale(.94)}}
+@keyframes fi-tick{40%{transform:scale(1.14)}}
+
+/* ---- the CSS fallback (no View Transitions): the keyed screen wrapper enters; skipped while a View Transition runs ---- */
+.fi-screen[data-enter=forward]{animation:300ms var(--fi-out) both fi-in-right}
+.fi-screen[data-enter=back]{animation:300ms var(--fi-out) both fi-in-left}
+.fi-screen[data-enter=tab]{animation:120ms ease-out both fi-fade-in}
+.fi-screen[data-enter=fade]{animation:240ms var(--fi-out) both fi-fade-in}
+.fi-screen[hidden]{display:none}
+html[data-vt] .fi-screen{animation:none}
+@supports (view-transition-name:none){.fi-screen[data-enter]{animation:none}}
+
+/* ---- small parts ---- */
+.fi-tick{display:inline-block}
+.fi-tick[data-tick]{animation:220ms var(--fi-out) fi-tick}
+/* an entrance for a list item or card: set --i on it for the stagger (capped by the caller) */
+.fi-in{animation:320ms var(--fi-out) both fi-fade-up;animation-delay:calc(var(--i,0) * 40ms)}
+.fi-pop{animation:220ms var(--fi-out) both fi-pop}
+
+@media (prefers-reduced-motion:reduce){
+ ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+ .fi-screen[data-enter]{animation:160ms ease-out both fi-fade-in}
+ .fi-in,.fi-pop{animation:160ms ease-out both fi-fade-in;animation-delay:0ms}
+ .fi-tick[data-tick]{animation:none}
+}
+
+/* round 4E (Nov 22 2026): Japanese in the coach apps uses the phone's own Japanese font (no webfont download): Hiragino on Apple,
+   Yu Gothic / Meiryo on Windows, Noto Sans CJK JP on Android, after the Latin face so digits and Latin keep their look; strict
+   Japanese line breaking (no small kana or closing brackets at a line start) */
+html:lang(ja){--btn-font:Arial,'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic UI','Yu Gothic',Meiryo,'Noto Sans JP','Noto Sans CJK JP',sans-serif}
+html:lang(ja) body{font-family:var(--btn-font)}
+html:lang(ja) body *{line-break:strict;word-break:normal;overflow-wrap:anywhere}

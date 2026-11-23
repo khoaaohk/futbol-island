@@ -61,6 +61,7 @@ export async function decodePlay(code:string):Promise<Play|null>{
   return unpack(JSON.parse(new TextDecoder().decode(bytes)));
  }catch{return null;}
 }
-export const shareUrl=(code:string,base:string)=>`${base.replace(/[#?].*$/,'').replace(/\/$/,'')}/#${SHARE_HASH}=${code}`;
+/** Nov 22 2026: links made on the web board (/board) open there: a base with a path gets no extra slash (…/board#play=…). */
+export const shareUrl=(code:string,base:string)=>{const b=base.replace(/[#?].*$/,'').replace(/\/$/,'');return `${b}${/^[a-z]+:\/\/[^/]+$/i.test(b)?'/':''}#${SHARE_HASH}=${code}`;};
 /** The code from a location hash like '#play=z…', or null. */
 export function readShareHash(hash:string):string|null{const m=new RegExp(`^#${SHARE_HASH}=([zj][A-Za-z0-9_-]+)$`).exec(hash||'');return m?m[1]:null;}

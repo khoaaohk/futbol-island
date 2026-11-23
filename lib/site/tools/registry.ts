@@ -1,12 +1,13 @@
 import {pageModified} from '../lastmod';
 import type {Faq} from '../safety';
-import {formationBySlug} from '../formations';
+import {formationBySlug,F8_SOURCES,type Source} from '../formations';
 import {chartBySlug} from '../sizes';
 import {abs,PUBLISHER,SITE_NAME,SITE_URL} from '../seo';
 import {PLAYERS_PER_TEAM,type GuideFormat} from '../pitch';
 import {DEFAULT_FORMATION} from './lineup';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,type Printable} from './printables';
 import {SCAN_EN,SCAN_IMAGE,SCAN_PATH} from './scanTrainer';
+import {BOARD_EN,BOARD_PATH} from './board';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 import {NEW_TOOLS_EN,newToolImage,newToolPath} from './newTools';
 import {MORE_TOOLS_EN} from './moreTools';
@@ -29,7 +30,10 @@ export const PRIVACY_LINE='Names stay on your device. Nothing you type is sent t
 export const TOOL_NAMES='Soccer is called football in most of the world. These tools are free, with no account and no ads, from Futbol Island, a football learning game for kids aged 7 to 12.';
 /** A deep link that opens the builder with one formation chosen (the formation pages' "Build this lineup"). */
 export const lineupLinkFor=(formationSlug:string)=>{const f=formationBySlug(formationSlug);return `${f?`/tools/${f.format}-lineup-builder`:LINEUP_PATH}#f=${formationSlug}`;};
-export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideFormat;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
+export type {Source};
+export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideFormat;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[];/** round 4D: rules quoted on the page, with where they come from */rules?:[string,string][];sources?:readonly Source[]};
+/** Round 4D: fútbol 8 sources (moved to lib/site/formations.ts in round 4F, where the 8v8 formation guides cite them too). */
+export {F8_SOURCES};
 const formationImg=(slug:string)=>`/learn/diagrams/${slug}-formation.png`;
 export const LINEUP_PAGES:readonly LineupPage[]=[
  {kind:'lineup',slug:'soccer-lineup-builder',path:LINEUP_PATH,crumb:'Lineup builder',title:'Soccer Lineup Builder: Free, Printable, No Sign-Up',h1:'Soccer lineup builder',
@@ -51,6 +55,19 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
   faq:[{q:'What is the best 7v7 formation to start with?',a:'Most coaches start with a 2-3-1: two defenders, three midfielders and one forward in front of the goalkeeper. It gives width in the middle and is easy for young players to understand.'},
    {q:'How many substitutes should a 7v7 team have?',a:'Three to five is common, which makes a squad of ten to twelve. With more than that it becomes hard to give every child a fair share of the game.'},
    {q:'Does the 7v7 field in the builder have build-out lines?',a:'Yes. The two dashed lines are the build-out lines used in US 7v7. The other team waits behind the line while your goalkeeper restarts play, so show your defenders where to stand to receive the ball.'}]},
+ {kind:'lineup',slug:'8v8-lineup-builder',path:'/tools/8v8-lineup-builder',format:'8v8',crumb:'8v8 lineup builder',title:'8v8 Lineup Builder: Free Fútbol 8 Soccer Lineup',h1:'8v8 soccer lineup builder',
+  description:'A free 8v8 (fútbol 8) lineup builder: a keeper and seven players in a 3-3-1, 3-2-2 or 2-3-2. Type names, drag players and subs, then print or share it.',
+  lead:'Put your goalkeeper and seven outfield players on an 8v8 field in a 3-3-1, 3-2-2 or 2-3-2, add the substitutes, and open the same lineup in the coach app for rolling changes on game day.',
+  blurb:'A keeper, seven players and the bench on a fútbol 8 field',
+  intro:['8v8, called fútbol 8 in Spain, is the game many Spanish clubs play before 11-a-side: a goalkeeper and seven outfield players on a field about half the size of a full pitch. In the Valencian federation it covers the prebenjamín, benjamín and alevín categories, roughly ages 7 to 12.',
+   'The rules are written by each regional federation, so they differ. The Valencian federation plays alevín games as two halves of 30 minutes and benjamín games as two halves of 25, allows unlimited rolling changes with players going back on, and requires every player on the match sheet to take part. The Basque school-sport rules call offside only inside the last 13 metres.',
+   'Because changes are rolling and everyone must play, the lineup is only the start. Build it here, then open it in the coach app, which plans equal minutes and tells you who goes on next.'],
+  faq:[{q:'How many players are on the field in fútbol 8?',a:'Eight a side: a goalkeeper and seven outfield players. The Valencian federation allows up to 15 players on the match sheet, so a squad usually has five to seven substitutes.'},
+   {q:'What is the best 8v8 formation?',a:'A 3-3-1 is the usual first shape: three defenders, three midfielders and one forward. A 3-2-2 gives two forwards a partner each, and a 2-3-2 is the attacking choice with only two at the back.'},
+   {q:'How long is a fútbol 8 game?',a:'It depends on the region and the age. In the Valencian federation, alevín games are 2 × 30 minutes and benjamín and prebenjamín games are 2 × 25. Check your own federation’s rules.'},
+   {q:'Are substitutions unlimited in fútbol 8?',a:'In the Valencian and Basque rules, yes: changes are unlimited and a player who comes off can go back on. The coach app plans those rolling changes so every child gets a fair share.'}],
+  rules:[['Players','8 a side: a goalkeeper and 7 outfield players'],['Field','50 to 65 m long, 30 to 45 m wide (Álava)'],['Goals','6 × 2 m (Álava)'],['Penalty mark','9 m (Álava, Euskadi)'],['Ball','Size 4 (Álava)'],['Game length','Alevín 2 × 30 min, benjamín and prebenjamín 2 × 25 min (FFCV)'],['Changes','Unlimited, rolling, players may go back on (FFCV, Álava)'],['Playing time','Everyone on the match sheet must play (FFCV)'],['Offside','Only inside the last 13 m (Álava, Euskadi)']],
+  sources:F8_SOURCES},
  {kind:'lineup',slug:'9v9-lineup-builder',path:'/tools/9v9-lineup-builder',format:'9v9',crumb:'9v9 lineup builder',title:'9v9 Lineup Builder: Free Printable Soccer Lineup',h1:'9v9 soccer lineup builder',
   description:'Build a 9v9 soccer lineup in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1. Type names, drag players and subs, then print or share it. Free, no sign-up.',
   lead:'Place your nine starters on a 9v9 field in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1, add the substitutes, and hand every player a clear picture of where they begin.',
@@ -71,7 +88,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    {q:'Can adult and school teams use it?',a:'Yes. It is free for any team, club or school. The picture and the printed sheet carry a small futbolisland.app credit.'},
    {q:'How do I make a starting 11?',a:'Pick a formation, type a name under each of the 11 dots, add your substitutes to the bench, then print the sheet or share the link. The lineup travels in the link itself, so there is nothing to sign up for.'},
    {q:'What is the best formation for a starting 11?',a:'For most youth teams moving up from 9v9, the 4-3-3, because it keeps the back line and wide forwards they already know. The 4-4-2 is the simplest to explain. Both are in the builder, with a guide page for each.'}]},
- {kind:'lineup',slug:'futsal-lineup-builder',path:'/tools/futsal-lineup-builder',format:'futsal',crumb:'Futsal lineup builder',title:'Futsal Lineup Builder: Free Printable Lineup Sheet',h1:'Futsal lineup builder',
+ {kind:'lineup',slug:'futsal-lineup-builder',path:'/tools/futsal-lineup-builder',format:'futsal',crumb:'Futsal lineup builder',title:'Futsal Formation Maker: Free Futsal Lineup Builder'/* Nov 22 2026 (GSC: "formation maker futsal" @77); was "Futsal Lineup Builder: Free Printable Lineup Sheet" */,h1:'Futsal lineup builder',
   description:'Build a futsal lineup in a 2-2, a 1-2-1 diamond or a 3-1 on a real futsal court. Type names, swap players and subs, then print or share it. Free.',
   lead:'Set your goalkeeper and four court players on a futsal court in a 2-2, a 1-2-1 diamond or a 3-1, and list the rest of the squad as rolling substitutes.',
   blurb:'Five starters and rolling subs on a futsal court',
@@ -138,7 +155,7 @@ export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',tit
   {q:'Should I download the PNG or the SVG?',a:'Take the PNG to print at home or to drop into a document or a slide. Take the SVG if you want to edit the diagram in a drawing program or print it very large: it stays sharp at any size.'},
   {q:'Will the sheets print on A4 paper?',a:'Yes. They are drawn for US Letter; choose “fit to page” in the print window and they fill an A4 page with a slightly wider margin.'},
   {q:'Why is a 7v7 field drawn differently from a full-size field?',a:'Because it is a different field, not a smaller copy. In the US a 7v7 field has build-out lines and its own penalty area size. Each template here keeps the markings of its own game.'}] as Faq[]};
-export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'|'timer'|'schedule'|'beep'|'names'|'plan'|'field'|'juggling'|'stats'};
+export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'|'timer'|'schedule'|'beep'|'names'|'plan'|'field'|'juggling'|'stats'|'board'};
 const lineupImage=(p:LineupPage)=>formationImg(DEFAULT_FORMATION[p.format??'7v7']);
 /** Nov 20 2026 (SEO foundation): the calculator's own picture is a real screenshot of the tool (public/tools/, captured from the
  *  built page with headless Chrome at 1200 x 630), not a formation diagram. */
@@ -158,6 +175,8 @@ export const TOOL_PAGES:readonly ToolPage[]=[
  {path:SCAN_PATH,name:SCAN_EN.h1,title:SCAN_EN.title,description:SCAN_EN.description,blurb:SCAN_EN.blurb,hub:true,kind:'scan',image:SCAN_IMAGE},
  /* the game-day and practice tools (Nov 22 2026; lib/site/tools/newTools.ts): hub-level, so llms.txt, search and "More to learn" list them */
  ...[...NEW_TOOLS_EN,...MORE_TOOLS_EN].map(t=>({path:newToolPath(t.slug),name:t.h1,title:t.title,description:t.description,blurb:t.blurb,hub:true,kind:NEW_TOOL_KIND[t.slug],image:newToolImage(t.slug)})),
+ /* the tactics board's front door (Nov 22 2026; lib/site/tools/board.ts): the game's Coaches Board, full screen at /board */
+ {path:BOARD_PATH,name:BOARD_EN.h1,title:BOARD_EN.title,description:BOARD_EN.description,blurb:BOARD_EN.blurb,hub:true,kind:'board',image:formationImg('11v11-4-3-3')},
 ];
 /** The pages the lesson hubs' "More to learn" list and llms.txt name (the tools hub and the three main tools). */
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);

@@ -5,8 +5,14 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
  seeded,SESSIONS,SOUNDS,startRun,tally,type Cue,type Dir,type Result,type Run,type Score,type Settings,type Sound} from '@/lib/scan/engine';
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
+import {APP_LANGS,LANG_NAMES,LOCALE,isAppLang,phoneLang,siteLang,type AppLang} from '@/lib/i18n/appLangs';
+import {activeOf,loadTeams} from '@/lib/coach/teams';
+import {ageFor} from '@/lib/coach/route';
 import c from './scan.module.css';
-import {BackButton} from '@/components/BackButton';
+import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
+import {goMiniBack,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
+import '@/components/motion/motion.css';
+import {CheckMark,CrossMark} from '@/components/coach/GameIcons';
 /**
  * Scan Trainer (/scan and the club embed /embed/soccer-scanning-trainer; Nov 16 2026; docs/scan-trainer/HANDOFF.md).
  * Three screens: settings, the full-screen cue (3-2-1, then a new cue every interval; tap anywhere to pause) and the summary.
@@ -48,13 +54,18 @@ function CueView({cue,s,w,small}:{cue:Cue;s:Settings;w:Words;small?:boolean}){
   <span className={c.passRow}><span className={c.shirt} style={{fontSize:small?'18vmin':'44vmin'}}>{cue.n}</span><Arrow dir={cue.dir} size={small?'20vmin':'46vmin'}/></span>
  </div>;
 }
-function Seg<T extends string|number>({label,value,options,names,onPick,id}:{label:string;value:T;options:readonly T[];names:(v:T)=>string;onPick:(v:T)=>void;id:string}){
+function Seg<T extends string|number>({label,value,options,names,onPick,id,cls='',langs=false}:{label:string;value:T;options:readonly T[];names:(v:T)=>string;onPick:(v:T)=>void;id:string;cls?:string;langs?:boolean}){
  return <div className={c.group} role="group" aria-labelledby={id}><h2 className={c.h2} id={id}>{label}</h2>
-  <div className={c.seg}>{options.map(o=><button key={String(o)} type="button" className={c.chip} aria-pressed={o===value} onClick={()=>onPick(o)}>{names(o)}</button>)}</div></div>;
+  <div className={`${c.seg} ${cls}`}>{options.map(o=><button key={String(o)} type="button" className={c.chip} aria-pressed={o===value} onClick={()=>onPick(o)} lang={langs?LOCALE[o as AppLang]:undefined}>{names(o)}</button>)}</div></div>;
 }
 function Toggle({label,line,on,onFlip}:{label:string;line?:string;on:boolean;onFlip:()=>void}){
  return <button type="button" role="switch" aria-checked={on} className={c.toggle} onClick={onFlip}><span className={c.toggleText}><b>{label}</b>{line&&<span>{line}</span>}</span><span className={c.knob} aria-hidden="true"/></button>;
 }
+/** Summary numbers count up from 0 once (about 600 ms); reduced motion shows them at once. */
+function Count({n}:{n:number}){return <>{useCountUp(n,600,0)}</>;}
+function CountOf({w,hit,total}:{w:Words;hit:number;total:number}){return <>{w.ofN(useCountUp(hit,600,0),total)}</>;}
+/** A personal best: a short star burst, CSS only, once (700 ms), then nothing. */
+function Burst(){return <span className={c.burst} aria-hidden="true">{Array.from({length:10},(_,i)=><i key={i} style={{'--a':`${i*36}deg`} as React.CSSProperties}/>)}</span>;}
 export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initialLang?:Lang}){
  const [store,setStore]=useState<Store>(()=>({...emptyStore(),...(initialLang?{lang:initialLang}:{})}));
  const [ready,setReady]=useState(false);
@@ -65,6 +76,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  const [score,setScore]=useState<Score>({hit:0,miss:0});
  const [result,setResult]=useState<{r:Result;best:boolean;prevBest?:Result;cues:number;sec:number}|null>(null);
  const [wake,setWake]=useState<'on'|'none'|'off'>('off');
+ const sheetS=useSheet<true>(),sheet=!!sheetS.value,setSheet=(v:boolean)=>{if(v)sheetS.open(true);else sheetS.close();},panel=useRef<HTMLDivElement>(null),swipe=useSwipeDown(panel,sheetS.close);
  const audio=useRef<AudioContext|null>(null),rand=useRef<()=>number>(Math.random),lastSound=useRef(-9),finished=useRef(false);
  const s=store.settings,lang:Lang=store.lang??'en',w=WORDS[lang];
  const update=useCallback((f:(x:Store)=>Store)=>setStore(f),[]);
@@ -72,13 +84,19 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  /* load once: saved settings, the language (?lang=, saved, the phone's), the app's own service worker */
  useEffect(()=>{let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}
   const st=loadStore(ls),q=new URLSearchParams(window.location.search).get('lang');
-  if(q==='es'||q==='en')st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';
+  if(isAppLang(q))st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=phoneLang();
+  /* no age chosen yet and opened from the coach app (round 4A, owner): the active team's age (lib/coach/route.ts ageFor) */
+  if(!embed&&!st.settings.age&&new URLSearchParams(window.location.search).get('from')==='coach')try{const tm=activeOf(loadTeams(ls));
+   if(tm.team.players.length||tm.team.name){const a=ageFor(tm.settings.format,tm.team.name);st.settings=applyPreset(st.settings,a==='U12'?'u12':a==='U10'?'u10':'u8');}}catch{/* no team */}
   setStore(st);setReady(true);
   if(embed)return;
-  document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/scan/manifest.webmanifest';else l.remove();});
+  noteAppEntry('scan');
+  /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
+     throw "Cannot read properties of null (reading 'removeChild')" (Nov 22 2026) */
+  document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/scan/manifest.webmanifest';});
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/scan-sw.js',{scope:'/scan'}).catch(()=>{});
  },[embed,initialLang]);
- useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);if(!embed)document.documentElement.lang=lang;},[store,ready,lang,embed]);
+ useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);if(!embed)document.documentElement.lang=LOCALE[lang];},[store,ready,lang,embed]);
  /* the run clock: one animation frame loop while the cue screen is open */
  useEffect(()=>{if(view!=='run')return;let raf=0;const tick=()=>{setNow(Date.now());raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return ()=>cancelAnimationFrame(raf);},[view]);
  /* keep the screen on during a run */
@@ -99,7 +117,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   const res:Result={hit:score.hit,total,cues:shown,sec:Math.round(ms/1000),interval:s.interval,at:today()};
   const prev=store.results[s.mode]?.best,isBest=s.score&&better(res,prev);
   if(s.score&&total>0)update(x=>({...x,results:{...x.results,[s.mode]:{last:res,best:isBest?res:prev}}}));
-  setResult({r:res,best:isBest&&!!prev,prevBest:prev,cues:shown,sec:Math.round(ms/1000)});setView('summary');setRun(null);
+  screenChange('fade',()=>{setResult({r:res,best:isBest&&!!prev,prevBest:prev,cues:shown,sec:Math.round(ms/1000)});setView('summary');setRun(null);});
   if(!embed)count('sn:finish');
   try{if(document.fullscreenElement)void document.exitFullscreen();}catch{/* none */}
  },[s,score,store.results,update,embed]);
@@ -120,51 +138,92 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   const paused=run.pausedAt!=null,cue=cues[ph.phase==='run'?ph.cue:-1];
   return <div className={`${c.app} ${c.stage}`} data-scan-view="run" data-paused={paused?'':undefined}>
    <button type="button" className={c.tapZone} onClick={togglePause} aria-label={paused?w.resume:w.tapPause}>
-    {ph.phase==='count'?<div className={c.cue} style={{background:'#14221d',color:'#fbf7ee'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={c.num} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
-     :cue?<CueView cue={cue} s={s} w={w}/>:null}
+    {ph.phase==='count'?<div className={c.cue} style={{background:'#fbf5e8',color:'#244d40'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={`${c.num} ${c.countNum}`} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
+     :cue?<div className={c.cueIn} key={ph.phase==='run'?ph.cue:-1}><CueView cue={cue} s={s} w={w}/></div>:null}
    </button>
-   <div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>
+   {ph.phase==='run'&&s.session>0&&<div className={c.progress} aria-hidden="true"><i style={{transform:`scaleX(${Math.min(1,ph.ms/(s.session*1000))})`}}/></div>}
+   {!paused&&<div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>}
    {s.score&&ph.phase==='run'&&!paused&&<div className={c.scoreStrip}>
-    <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><span aria-hidden="true">✓</span> {score.hit}</button>
-    <button type="button" className={`${c.scoreBtn} ${c.scoreMiss}`} data-score="miss" onClick={()=>mark(false)} aria-label={`${w.wrong}: ${score.miss}`}><span aria-hidden="true">✗</span> {score.miss}</button>
+    <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><CheckMark/> {score.hit}</button>
+    <button type="button" className={`${c.scoreBtn} ${c.scoreMiss}`} data-score="miss" onClick={()=>mark(false)} aria-label={`${w.wrong}: ${score.miss}`}><CrossMark/> {score.miss}</button>
    </div>}
+   {/* paused (owner, Nov 22 2026): a light overlay with one centred group: pause icon, "Paused", time left, Resume (gold) and End
+       session (cream) 12 px apart; the run chips are hidden under it */}
    {paused&&<div className={c.pause} role="dialog" aria-modal="true" aria-labelledby="scan-paused">
-    <h1 className={c.pauseH} id="scan-paused">{w.paused}</h1>
-    {s.score&&<p className={c.pauseScore}>{w.ofN(score.hit,score.hit+score.miss)}</p>}
-    <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={togglePause} autoFocus>{w.resume}</button>
-    <button type="button" className={`${c.btn} ${c.btnLight} ${c.btnWide}`} onClick={()=>finish(run,run.pausedAt??Date.now())}>{w.end}</button>
-    {wake==='none'&&<p className={c.pauseNote}>{w.wake}</p>}
+    <div className={c.pauseCard}>
+     <span className={c.pauseIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><rect x="6" y="5" width="4.2" height="14" rx="1.6" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" fill="currentColor"/></svg></span>
+     <h1 className={c.pauseH} id="scan-paused">{w.paused}</h1>
+     {ph.phase==='run'&&<p className={c.pauseTime}>{ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)}</p>}
+     {s.score&&<p className={c.pauseScore}>{w.ofN(score.hit,score.hit+score.miss)}</p>}
+     <div className={c.pauseBtns}>
+      <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={togglePause} autoFocus>{w.resume}</button>
+      <button type="button" className={`${c.btn} ${c.btnWide}`} onClick={()=>finish(run,run.pausedAt??Date.now())}>{w.end}</button>
+     </div>
+     {wake==='none'&&<p className={c.pauseNote}>{w.wake}</p>}
+    </div>
    </div>}
   </div>;
  }
  if(view==='summary'&&result){
-  const r=result.r;
-  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>setView('settings')}/>
+  const r=result.r,best=store.results[s.mode]?.best;
+  return <div className={c.app} translate="no" data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onBack={()=>screenChange('back',()=>setView('settings'))}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
+    <p className={c.sumCtx}>{w.modes[s.mode]} · {w.every} {w.sec(r.interval)}</p>
     <dl className={c.stats}>
-     <div><dt>{w.cuesShown}</dt><dd>{result.cues}</dd></div>
-     <div><dt>{w.time}</dt><dd>{fmtTime(result.sec)}</dd></div>
-     {s.score&&r.total>0&&<div className={c.statWide}><dt>{w.scoreHead}</dt><dd>{w.ofN(r.hit,r.total)}</dd></div>}
+     <div className="fi-in" style={{'--i':1} as React.CSSProperties}><dt>{w.cuesShown}</dt><dd><Count n={result.cues}/></dd></div>
+     <div className="fi-in" style={{'--i':2} as React.CSSProperties}><dt>{w.time}</dt><dd>{fmtTime(result.sec)}</dd></div>
+     {s.score&&r.total>0&&<div className={`${c.statWide} fi-in`}><dt>{w.scoreHead}</dt><dd><CountOf w={w} hit={r.hit} total={r.total}/></dd>{result.best&&<Burst/>}</div>}
     </dl>
-    {s.score&&r.total>0?<p className={c.resultLine}>{result.best?w.newBest:result.prevBest?w.toBeat(w.ofN(result.prevBest.hit,result.prevBest.total)):w.toBeat(w.ofN(r.hit,r.total))}</p>:<p className={c.note}>{w.noScore}</p>}
+    {s.score&&r.total>0?<p className={`${c.resultLine} fi-in`} style={{'--i':3} as React.CSSProperties}>{result.best?w.newBest:result.prevBest?w.toBeat(w.ofN(result.prevBest.hit,result.prevBest.total)):w.toBeat(w.ofN(r.hit,r.total))}</p>:<p className={c.note}>{w.noScore}</p>}
     <div className={c.btnCol}>
      <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={start} autoFocus>{w.goAgain}</button>
-     <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide}`} onClick={()=>setView('settings')}>{w.change}</button>
+     <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide}`} onClick={()=>screenChange('back',()=>setView('settings'))}>{w.change}</button>
     </div>
+    {/* the lower half: one coaching tip for this mode (what the drill teaches) and the best on this phone */}
+    <section className={c.tip} aria-labelledby="scan-tip">
+     <h2 className={c.tipH} id="scan-tip"><span className={c.tipIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></span>{w.tipHead}</h2>
+     <p className={c.tipText}>{w.tips[s.mode]}</p>
+     {best&&best.total>0&&<p className={c.tipBest}><span>{w.bestHead} · {w.modes[s.mode]}</span><b>{w.ofN(best.hit,best.total)}</b></p>}
+    </section>
    </main></div>;
  }
- return <div className={c.app} data-scan-view="settings"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
-  <main className={c.main}>
-   <h1 className={c.h1}>{w.app}</h1>
-   <p className={c.lead}>{w.tagline}</p>
+ const glyph=(m:typeof MODES[number])=>m==='colours'?<span className={c.modeDot} aria-hidden="true"/>:m==='numbers'?<span className={c.modeNum} aria-hidden="true">7</span>
+  :m==='arrows'?<Arrow dir="up" size="22px"/>:m==='mix'?<span className={c.modeMix} aria-hidden="true"><i/><b>3</b></span>:<span className={c.modeNum} aria-hidden="true">3<Arrow dir="right" size="14px"/></span>;
+ /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the start screen shows the cue, the five modes and one summary of the
+    settings; everything else lives in the Settings sheet. Same settings, same store (fi-scan-v1), same Start. */
+ return <div className={c.app} translate="no" data-scan-view="settings"><Top w={w} lang={lang} embed={embed}/>
+  <main className={`${c.main} ${c.home}`}>
+   <h1 className={c.srOnly}>{w.app}</h1>
    <figure className={c.preview} aria-label={w.preview}><CueView cue={sample} s={s} w={w} small/><figcaption>{w.modeLines[s.mode]}</figcaption></figure>
+   <div className={c.homeSide}>
+    <div className={c.modes} role="group" aria-label={w.show}>{MODES.map(m=><button key={m} type="button" className={c.mode} aria-pressed={s.mode===m} onClick={()=>set({mode:m})}>{glyph(m)}<span>{w.modes[m]}</span></button>)}</div>
+    <button type="button" className={c.summaryCard} onClick={()=>setSheet(true)} data-scan-settings="" aria-haspopup="dialog">
+     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:w.any}</b></span>
+     <span><small>{w.every}</small><b>{w.sec(s.interval)}</b></span>
+     <span><small>{w.session}</small><b>{w.sessions[s.session]}</b></span>
+     <span className={c.summaryGo}><span className={c.srOnly}>{w.settings}</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+    </button>
+    {res?.best&&<p className={c.best} data-scan-best="">{w.modes[s.mode]}: {w.lastBest(res.last?w.ofN(res.last.hit,res.last.total):'–',w.ofN(res.best.hit,res.best.total))}</p>}
+    <p className={c.place}>{w.place}</p>
+    {/* fixed to the bottom on a phone; in the column beside the cue on a wide screen */}
+  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
+    {/* what this mode teaches, under Start (fills the column beside the cue on a wide screen) */}
+    <section className={`${c.tip} ${c.tipHome}`} aria-labelledby="scan-tip-home">
+     <h2 className={c.tipH} id="scan-tip-home"><span className={c.tipIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></span>{w.tipHead}</h2>
+     <p className={c.tipText}>{w.tips[s.mode]}</p>
+    </section>
+   </div>
+  </main>
+  {sheet&&<div className={c.sheet} data-closing={sheetS.closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>
+   <div className={c.sheetIn} ref={panel} role="dialog" aria-modal="true" aria-labelledby="scan-settings">
+    <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><h2 className={c.sheetTitle} id="scan-settings">{w.settings}</h2><button type="button" className={c.doneBtn} onClick={()=>setSheet(false)} autoFocus>{w.doneBtn}</button></div>
+    <div className={c.sheetBody}>
    <Seg id="sg-age" label={w.age} value={s.age??('' as never)} options={AGES} names={a=>w.ages[a]} onPick={a=>update(x=>({...x,settings:applyPreset(x.settings,a)}))}/>
-   <Seg id="sg-mode" label={w.show} value={s.mode} options={MODES} names={m=>w.modes[m]} onPick={m=>set({mode:m})}/>
-   <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={c.h2} id="sg-every">{w.every}: <span className={c.val}>{w.sec(s.interval)}</span></h2>
+   <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={`${c.h2} ${c.h2Val}`} id="sg-every"><span>{w.every}</span><span className={c.val}>{w.sec(s.interval)}</span></h2>
     <div className={c.stepper}>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.min(MAX_INTERVAL,s.interval+.5)})} disabled={s.interval>=MAX_INTERVAL} aria-label={w.slower}>−</button>
-     <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} step={0.5} value={MAX_INTERVAL+MIN_INTERVAL-s.interval} onChange={e=>set({interval:MAX_INTERVAL+MIN_INTERVAL-Number(e.target.value)})} aria-label={w.every} aria-valuetext={w.sec(s.interval)} className={c.range}/>
+     <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} step={0.5} value={MAX_INTERVAL+MIN_INTERVAL-s.interval} onChange={e=>set({interval:MAX_INTERVAL+MIN_INTERVAL-Number(e.target.value)})} aria-label={w.every} aria-valuetext={w.sec(s.interval)} className={c.range} style={{'--fill':`${(MAX_INTERVAL-s.interval)/(MAX_INTERVAL-MIN_INTERVAL)*100}%`} as React.CSSProperties}/>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.max(MIN_INTERVAL,s.interval-.5)})} disabled={s.interval<=MIN_INTERVAL} aria-label={w.faster}>+</button>
     </div>
     <p className={c.scale}><span>{w.slower}</span><span>{w.faster}</span></p>
@@ -179,31 +238,30 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <div className={c.compass}>{(['upLeft','up','upRight','left','','right','downLeft','down','downRight'] as (Dir|'')[]).map((d,i)=>d===''?<span key={i} className={c.compassMid} aria-hidden="true"/>:
      <button key={d} type="button" className={c.dirBtn} aria-pressed={s.dirs.includes(d)} aria-label={w.dirNames[d]}
       onClick={()=>{const on=s.dirs.includes(d),next=on?s.dirs.filter(x=>x!==d):[...s.dirs,d];if(next.length>=2)set({dirs:DIRS.filter(x=>next.includes(x))});}}><Arrow dir={d} size="28px"/></button>)}</div></div>}
-   {s.mode==='pass'&&<div className={c.group} role="group" aria-labelledby="sg-tm"><h2 className={c.h2} id="sg-tm">{w.teammates}: <span className={c.val}>{s.teammates}</span></h2><p className={c.note}>{w.teammatesNote} {s.teammates}.</p>
+   {s.mode==='pass'&&<div className={c.group} role="group" aria-labelledby="sg-tm"><h2 className={`${c.h2} ${c.h2Val}`} id="sg-tm"><span>{w.teammates}</span><span className={c.val}>{s.teammates}</span></h2><p className={c.note}>{w.teammatesNote} {s.teammates}.</p>
     <div className={c.seg}>{Array.from({length:MAX_TEAMMATES-MIN_TEAMMATES+1},(_,i)=>i+MIN_TEAMMATES).map(n=><button key={n} type="button" className={c.chip} aria-pressed={s.teammates===n} onClick={()=>set({teammates:n})}>{n}</button>)}</div></div>}
    <div className={c.group} role="group" aria-labelledby="sg-screen"><h2 className={c.h2} id="sg-screen">{w.screen}</h2>
     <Toggle label={w.bg} line={w.bgLine} on={s.bg} onFlip={()=>set({bg:!s.bg})}/>
     <Toggle label={w.names} line={w.namesLine} on={s.names} onFlip={()=>set({names:!s.names})}/>
     <Toggle label={w.score} line={w.scoreLine} on={s.score} onFlip={()=>set({score:!s.score})}/>
    </div>
+   <Seg id="sg-lang" label={w.langLabel} value={lang} options={APP_LANGS} names={x=>LANG_NAMES[x]} cls={c.langSeg} langs onPick={x=>update(st=>({...st,lang:x}))}/>
    <Seg id="sg-sound" label={w.sound} value={s.sound} options={SOUNDS} names={x=>w.sounds[x]} onPick={x=>{set({sound:x});try{const AC=window.AudioContext;if(x!=='off'&&AC){audio.current??=new AC();void audio.current.resume();play(audio.current,x);}}catch{/* none */}}}/>
-   {res?.best&&<p className={c.note} data-scan-best="">{w.modes[s.mode]}: {w.lastBest(res.last?w.ofN(res.last.hit,res.last.total):'–',w.ofN(res.best.hit,res.best.total))}</p>}
-   <p className={c.note}>{w.place}</p>
-   <p className={c.note}>{w.offline}{!embed&&<> <a href={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
-  </main>
-  <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
+   <p className={c.note}>{w.offline}{!embed&&<> <a href={siteLang(lang)==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
+    </div>
+   </div>
+  </div>}
  </div>;
 }
-/** Back (owner, Nov 20 2026): the app mark in this corner looked like a back button and did nothing. It is now the game's own Back
- *  button (components/BackButton.tsx). From the summary it returns to the settings; from the settings it leaves for the trainer's
- *  guide page. The embed has no Back: the page that frames it is the way out. */
-function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
- const leave=()=>{window.location.assign(lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer');};
- return <header className={c.top}>
-  {/* key: the button locks itself once pressed (it expects its screen to go away), and React kept the same one from the summary to
-      the settings, so Back was dead on the settings after a session (found Nov 20 2026). A fresh button per screen. */}
-  {!embed&&<BackButton key={onBack?'summary':'settings'} data-scan-back label={lang==='es'?'Volver':'Back'} onBack={onBack??leave}/>}
-  <span className={c.topTitle}><b>{w.app}</b><span>Futbol Island</span></span>
-  <button type="button" className={c.langBtn} lang={lang==='es'?'en':'es'} onClick={onLang}>{w.lang}</button>
- </header>;
+/** The shared coach-apps header (components/motion/AppHeader; owner Nov 22 2026): the title centred; on the left, from the summary a
+ *  back arrow to the start screen, else "Coach" back to the coach app's Home when it opened the trainer (?from=coach); on the right the
+ *  language and then Exit (back to the page the coach came from). The embed has no header buttons: the page that frames it is the way out. */
+function Top({w,lang,embed,onBack}:{w:Words;lang:Lang;embed:boolean;onBack?:()=>void}){
+ const guide=siteLang(lang)==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer';
+ /* left: from the summary a light Back to the start screen; on the start screen the gold Back (the coach app's Home when it opened
+    the trainer, else the page the coach came from); no Exit in a mini app (owner, Nov 22 2026: Exit only on the coach app's Home) */
+ const left=embed?null:onBack?<HeaderGoldBack key="summary" lang={lang} onBack={onBack} data={{'data-scan-back':''}}/>
+  :<HeaderGoldBack key="settings" lang={lang} onBack={()=>goMiniBack(lang,guide)} data={{'data-scan-coach':''}}/>;
+ /* the language lives in the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
+ return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria="" exit={false}/>;
 }

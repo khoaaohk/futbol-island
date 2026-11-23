@@ -142,8 +142,8 @@ function checkPage(h,p,where,lang){
  ok(headersFor('/tools/soccer-scanning-trainer')['X-Robots-Tag']===undefined,'the front door is indexable');}
 /* Nov 20 2026: Back in the header. The shared button locks itself once pressed, so each screen needs its own (a key): without it Back
    was dead on the settings after a session's summary. From the summary it returns to the settings; from the settings it leaves. */
-{const app=read('components/scan/ScanApp.tsx');ok(/<BackButton key=\{onBack\?'summary':'settings'\} data-scan-back /.test(app),'a fresh Back button per screen');
- ok(/data-scan-view="summary"><Top .*onBack=\{\(\)=>setView\('settings'\)\}/.test(app),'summary Back returns to the settings');
- ok(/window\.location\.assign\(lang==='es'\?'\/es\/tools\/soccer-scanning-trainer':'\/tools\/soccer-scanning-trainer'\)/.test(app),'settings Back leaves for the guide page');}
+{const app=read('components/scan/ScanApp.tsx');ok(/<AppHeader /.test(app)&&/data-scan-back/.test(app)&&/<HeaderGoldBack /.test(app)&&/exit=\{false\}/.test(app),'the shared header: the gold Back on the left, no Exit in a mini app');
+ ok(/data-scan-view="summary"><Top .*onBack=\{\(\)=>screenChange\('back',\(\)=>setView\('settings'\)\)\}/.test(app),'summary Back returns to the settings');
+ ok(/window\.location\.assign\(exitHref\(lang,exitHome\)\)/.test(read('components/motion/AppHeader.tsx')),'Exit leaves for the page the coach came from (else the tools hub)');}
 console.log(`PASS scan-trainer: ${checks} checks`);
 })().catch(e=>{console.error(e);process.exit(1);});

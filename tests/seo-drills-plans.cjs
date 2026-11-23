@@ -121,14 +121,16 @@ for(const g of PAGES){
  for(const l of links){
   if(l.startsWith('#')){assert(ids.has(l.slice(1)),`${where}: anchor ${l} exists`);continue;}
   assert(l.startsWith('/'),`${where}: no external link (${l})`);
-  const [p,hash]=l.split('#');assert(PATHS.has(p)||(SERVED.has(p)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);
-  if(hash)assert(html.get(p)&&html.get(p).includes(` id="${hash}"`),`${where}: anchor ${l} exists on the target page`);}
+  const [p,hash]=l.split('#');/* the coach apps (/coach, /scan, /board: noindex app routes, deep links like /coach#tool=plans&plan=<slug>, round 4A) */
+  const APP=/^\/(coach|scan|board)(\?|$)/.test(p);
+  assert(APP||PATHS.has(p)||(SERVED.has(p)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);
+  if(hash&&!APP)assert(html.get(p)&&html.get(p).includes(` id="${hash}"`),`${where}: anchor ${l} exists on the target page`);}
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  assert(links.some(l=>l!==g.path&&PAGES.some(x=>x.path===l)),`${where}: links to another page of the cluster`);
  assert(links.some(l=>earlier.some(x=>x.path===l)),`${where}: links to a rule, position, term, formation or size guide`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
 }
-const SHARED=new Set([guides.GUIDE_FOOT,guides.GUIDE_NAMES,drills.DRILL_SAFETY_LINE,plans.PPP_LINE,dg.DRILL_GUIDES[0].facts.note,plans.PLAN_SAFETY_LINE,'Times are minutes from the start of practice. Tap an activity for its setup diagram and coaching points.'].map(s=>s.replace(/'/g,'’')));
+const SHARED=new Set([guides.GUIDE_FOOT,guides.GUIDE_NAMES,drills.DRILL_SAFETY_LINE,plans.PPP_LINE,dg.DRILL_GUIDES[0].facts.note,plans.PLAN_SAFETY_LINE,'Times are minutes from the start of practice. Tap an activity for its setup diagram and coaching points.',/* the Coach app band on every plan page (round 4A) */'The same plan in the free coach app: a step timer for each part, every drill with its diagram, works offline.'].map(s=>s.replace(/'/g,'’')));
 for(const [t,set] of paraPages)if(!SHARED.has(t)&&![...SHARED].some(s=>t.endsWith(s)))assert(set.size<=2,`a paragraph repeats on ${set.size} pages (${[...set].slice(0,3).join(', ')}): ${t.slice(0,80)}`);
 // hubs reach every page; the home page links none of them (owner, Nov 10 2026: SEO-only pages)
 for(const d of drills.DRILLS)assert(html.get(DH).includes(`href="${d.path}"`),`drills hub links ${d.path}`);
@@ -183,7 +185,7 @@ for(const p of plans.PLANS){const where=p.path,h=html.get(p.path);
   assert(text(h).includes(`${plans.clock(r.start)} to ${plans.clock(r.end)}`),`${where}: clock row ${r.start}`);}
  assert((h.match(/<tr>/g)||[]).length>=p.rows.length+1,`${where}: a row per activity`);
  assert(p.equipment.length>=5&&p.notes.length>=3&&p.swap.sign&&p.swap.instead.length>40&&/If it is going badly/.test(h),`${where}: equipment, notes and a swap`);
- assert(/class="printPage"/.test(h)&&/class="noPrint"/.test(h)&&h.indexOf('class="noPrint"')>h.indexOf('If it is going badly'),`${where}: the plan part prints, the rest does not`);
+ assert(/class="printPage"/.test(h)&&/class="noPrint"/.test(h)&&h.lastIndexOf('class="noPrint"')>h.indexOf('If it is going badly'),`${where}: the plan part prints, the rest does not`);
  assert(!/\blaps?\b/i.test(p.rows.map(r=>r.activity+' '+r.purpose).join(' ')),`${where}: no laps`);
  assert(text(h).includes(plans.PPP_LINE.replace(/'/g,'’')),`${where}: says how it is built`);
  // the final game's format and field come from lib/site/sizes.ts (U.S. Soccer small-sided standards)

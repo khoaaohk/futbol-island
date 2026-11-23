@@ -120,7 +120,7 @@ export const CHARTS:readonly ChartPage[]=[
    {q:'How big is a full-size soccer field?',a:'The Laws of the Game allow 100 to 130 yards long and 50 to 100 yards wide. For international games the range is 110 to 120 yards by 70 to 80 yards.'},
    {q:'How big is a U8 soccer field?',a:'In the U.S. Soccer standards, U6 to U8 teams play 4v4 on a field 25 to 35 yards long and 15 to 25 yards wide, with goals no bigger than 4 feet by 6 feet.'},
    {q:'How big is a soccer goal?',a:'A full-size goal is 8 yards wide and 8 feet high. Youth goals are smaller: at most 4 x 6 feet for 4v4, 6.5 x 18.5 feet for 7v7 and 7 x 21 feet for 9v9.'}],
-  lessons:pick(['learn7_shape','prn_7_spread','learn9_shape','learn11_shape']),links:[BALL,AGES,BUILD,F7,F9,F11,TIMER,FIELD_GUIDE],
+  lessons:pick(['learn7_shape','prn_7_spread','learn9_shape','learn11_shape']),links:[BALL,AGES,BUILD,F7,{path:'/learn/8v8-soccer-formations',name:'8v8 soccer formations (fútbol 8)',line:'Shapes for the 8-a-side game played in Spain'}/* round 4F */,F9,F11,TIMER,FIELD_GUIDE,{path:'/tools/8v8-lineup-builder',name:'8v8 lineup builder (fútbol 8)',line:'Spain’s 8-a-side game: a keeper and seven, with its field and rules'}/* round 4D */],
   picture:'soccer-field-size-by-age-chart.png',pictureTitle:'Soccer field size by age',pictureSub:'4v4, 7v7, 9v9 and 11v11 fields in yards'},
 
  {slug:'soccer-age-groups',path:AGES.path,crumb:'Age groups',blurb:'U6 to U19 explained: birth dates for each group and which game it plays',

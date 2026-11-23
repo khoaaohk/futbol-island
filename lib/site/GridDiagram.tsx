@@ -8,9 +8,11 @@ import type {Arrow} from './pitch';
  * cones and gates, small goals, several balls, shaded zones, and three kinds of arrow that never look alike: a solid white
  * arrow is a pass, a dashed white arrow is a run without the ball, a wavy gold arrow is a dribble.
  */
-const INK='#14221d',PAPER='#ffffff',GOLD='#e9c16b',GRASS='#1d6b55';
+const INK='#14221d',PAPER='#ffffff',GOLD='#e9c16b',SITE_GRASS='#1d6b55',LIGHT_GRASS='#8fcca6';
 /** `desc` replaces the English text alternative (the Spanish pages pass their own, lib/i18n/es/drillsRegistry.ts gridDescEs). */
-export default function GridDiagram({id,scene:g,small,desc:descIn}:{id:string;scene:GridScene;small?:boolean;desc?:string}){
+/** `light` (the coach app, Nov 22 2026; owner: no dark surfaces in the coach screens): a soft pitch green; the site keeps its own. */
+export default function GridDiagram({id,scene:g,small,desc:descIn,light}:{id:string;scene:GridScene;small?:boolean;desc?:string;light?:boolean}){
+ const GRASS=light?LIGHT_GRASS:SITE_GRASS;
  const k=Math.min(300/g.w,360/g.l),W=Math.round(g.w*k),H=Math.round(g.l*k),M=30,FOOT=22,VW=Math.max(W+2*M,small?220:280),VH=H+2*M+FOOT,ox=(VW-W)/2,r=small?10:12;
  const X=(x:number)=>ox+x/100*W,Y=(y:number)=>M+H-y/100*H;
  const cone=(x:number,y:number,key:string)=><path key={key} data-cone="" d={`M${X(x)} ${Y(y)-6}L${X(x)+5.5} ${Y(y)+4.5}H${X(x)-5.5}z`} fill={GOLD} stroke={INK} strokeWidth={1.5} strokeLinejoin="round"/>;
@@ -43,6 +45,6 @@ export default function GridDiagram({id,scene:g,small,desc:descIn}:{id:string;sc
    <text x={X(s.x)} y={Y(s.y)+4} textAnchor="middle" fontSize={s.n.length>1?9.5:12} fontWeight={700} fill={s.opp?PAPER:INK}>{s.n}</text>
   </g>)}
   {g.balls.map(([x,y],i)=><circle key={`b${i}`} data-ball="" cx={X(x)} cy={Y(y)} r={5} fill={PAPER} stroke={INK} strokeWidth={2}/>)}
-  <text data-size="" x={VW/2} y={VH-11} textAnchor="middle" fontSize={12} fontWeight={700} fill={PAPER}>{gridSize(g)}</text>
+  <text data-size="" x={VW/2} y={VH-11} textAnchor="middle" fontSize={12} fontWeight={700} fill={light?INK:PAPER}>{gridSize(g)}</text>
  </svg>;
 }

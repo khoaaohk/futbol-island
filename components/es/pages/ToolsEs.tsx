@@ -1,5 +1,6 @@
 import RailNav from '@/components/site/shell/RailNav';
 import {lineupRail,plannerRail,printableRail,printablesHubRail,toolsHubRail} from '@/lib/site/railNavCollections';
+import {CoachAppBand} from '@/components/site/tools/CoachAppBand';
 import KeepReading from '@/components/site/KeepReading';
 import type {EsRoute} from '../routes';
 import JsonLd from '@/components/seo/JsonLd';
@@ -23,6 +24,8 @@ import {SHAPES} from '@/lib/site/tools/shapes';
 import ScanTrainerPage from '@/components/site/tools/ScanTrainerPage';
 import {EsGridFigure} from './DrillsEs';
 import {SCAN_IMAGE,SCAN_PATH,SCAN_RELATED_EN} from '@/lib/site/tools/scanTrainer';
+import {BOARD_APP_PATH,BOARD_ES,BOARD_PATH,BOARD_RELATED} from '@/lib/site/tools/board';
+import BoardPage from '@/components/site/tools/BoardPage';
 import {SCAN_ES} from '@/lib/i18n/es/scanTrainer';
 import NewToolPage from '@/components/site/tools/NewToolPage';
 import MatchTimer from '@/components/site/tools/MatchTimer';
@@ -76,7 +79,7 @@ function esLink(enPath:string,o:{name?:string;line?:string;key?:boolean}={}):Lin
  const f=ES_FORMATIONS().find(x=>x.path===enPath);if(f)return {path:f.esPath,name:o.name??`Formación ${f.name}`,line:o.line??f.best};
  const p=ES_POSITIONS().find(x=>x.path===enPath);if(p)return {path:p.esPath,name:o.name??p.name,line:o.line??'Qué hace esta posición'};
  const hub=Object.values(ES_HUBS).find(h=>h.enPath===enPath);if(hub)return {path:hub.path,name:o.name??hub.h1,line:o.line??hub.blurb};
- const g=(['7v7','9v9','11v11'] as const).find(x=>`/learn/${x}-soccer-formations`===enPath);if(g){const e=esFormatGuide(g);return {path:e.esPath,name:o.name??`Formaciones de fútbol ${g}`,line:o.line??e.blurb};}
+ const g=(['7v7','8v8','9v9','11v11'] as const).find(x=>`/learn/${x}-soccer-formations`===enPath);if(g){const e=esFormatGuide(g);return {path:e.esPath,name:o.name??e.h1,line:o.line??e.blurb};}
  const other=OTHER[enPath],name=o.name??other?.[0],line=o.line??other?.[1]??'';if(!name)return null;
  if(hasEs(enPath))return {path:toEs(enPath),name,line};
  return o.key?{path:enPath,name:`${name} (en inglés)`,line}:null;
@@ -86,6 +89,7 @@ function toolLink(enPath:string):Link|null{
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {path:toEs(r.path),name:e.h1,line:e.blurb};}
  if(enPath===PRINTABLES_HUB_PATH)return {path:toEs(enPath),name:PRINT_HUB.h1,line:PRINT_HUB.blurb};
  if(enPath===SCAN_PATH)return {path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb};
+ if(enPath===BOARD_PATH)return {path:toEs(BOARD_PATH),name:BOARD_ES.h1,line:BOARD_ES.blurb};
  const nt=ALL_NEW_ES[enPath.replace('/tools/','')];if(nt&&enPath.startsWith('/tools/'))return {path:toEs(enPath),name:nt.h1,line:nt.blurb};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);return {path:toEs(s.path),name:e.h1,line:e.blurb};}
  return null;
@@ -93,12 +97,14 @@ function toolLink(enPath:string):Link|null{
 const links=(xs:(Link|null)[])=>xs.filter((x):x is Link=>!!x);
 
 // ---- shared parts ----
-function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:boolean;facts?:readonly Fact[]}){
+function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts,fmt:fmtHint}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;fmt?:string;/** the coach tool to open (Nov 22 2026: /coach#tool=…) */app?:'lineup'|'minutes'|'subs';facts?:readonly Fact[]}){
+ /* round 4A: the link keeps the page's format (/coach#tool=subs&format=9v9) */
+ const fq=headingFormat??fmtHint;
  return <header className={`${site.intro} ${t.head}`} id="top">
   <EsBreadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title} lang="es"/>:<h1 className={site.title}>{h1}</h1>}
   <QuickAnswer lead={lead} facts={facts}/>
-  {app&&<AppLink href="/coach?lang=es" label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
+  {app&&<AppLink href={`/coach?lang=es#tool=${app}${fq?`&format=${fq}`:''}`} label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
   <p className={site.caption}>{TOOL_NAMES_ES}</p>
  </header>;
 }
@@ -169,7 +175,7 @@ function SheetThumbEs({file,alt}:{file:PrintFile;alt:string}){
 // ---- /es/tools ----
 function ToolsHubEs(){
  const crumbs=esLibCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)});
- const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},...NEW_LINKS_ES()];
+ const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:toEs(BOARD_PATH),name:BOARD_ES.h1,line:BOARD_ES.blurb},...NEW_LINKS_ES()];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:HUB.h1,path:toEs(TOOLS_HUB.path),description:HUB.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:items.map(x=>({name:x.name,path:x.path}))}))}/>
@@ -177,8 +183,9 @@ function ToolsHubEs(){
   <RailNav rail={toolsHubRail(true)} current="#top"/>
   <EsToolIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead}/>
   {/* Nov 22 2026: two groups (owner), the same paths as /tools (lib/site/tools/toolGroups.ts); the coach-app band goes above them */}
+  <CoachAppBand lang="es"/>
   <Section id="training" title="Herramientas de entrenamiento">
-   <p>Para los días de entrenamiento: un plan con tiempos hecho con nuestros ejercicios, un entrenador de escaneo, canchas para dibujar, un test de pitidos y un reto de dominadas para los jugadores, y un nombre para un equipo nuevo. Todo funciona en tu navegador, y lo que escribes se queda en tu dispositivo.</p>
+   <p>Para los días de entrenamiento: un plan con tiempos hecho con nuestros ejercicios, un entrenador de escaneo, una pizarra táctica para dibujar una jugada y verla paso a paso, canchas para dibujar, un test de pitidos y un reto de dominadas para los jugadores, y un nombre para un equipo nuevo. Todo funciona en tu navegador, y lo que escribes se queda en tu dispositivo.</p>
    <ToolCards links={TOOL_GROUPS.training.map(p=>toolLink(p)!)} tint="practice"/>
    <ToolSubLinks label="Para imprimir" links={PRINTABLES.map(p=>{const l=toolLink(p.path)!;return {path:l.path,name:l.name};})}/>
   </Section>
@@ -188,7 +195,7 @@ function ToolsHubEs(){
    <ToolSubLinks label="Alineaciones por modalidad" links={LINEUP_PAGES.slice(1).map(p=>{const l=toolLink(p.path)!;return {path:l.path,name:l.name};})}/>
   </Section>
   <QA id="faq" title="Preguntas sobre las herramientas" faq={HUB.faq}/>
-  <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),
+  <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, fútbol 8, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/8v8-soccer-formations',{line:'El 3-3-1, el 3-2-2 y el 2-3-2 comparados, con las normas regionales'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),
    esLink('/learn/soccer-rules',{name:'Reglas del fútbol para niños',line:'Cada regla con un diagrama'}),esLink('/learn/soccer-age-groups'),esLink('/learn/lessons')])}/></Section>
   <EsToolEnd/>
  </>;
@@ -197,25 +204,27 @@ function ToolsHubEs(){
 // ---- the lineup builder and its landings ----
 const shapesEs=SHAPES.map(s=>({...s,lines:esLines(s.lines)}));
 function LineupEs({p}:{p:LineupPage}){
- const e=lineupEs(p),format=p.format??'7v7',f=esFormation(DEFAULT_FORMATION[format])!,crumbs=toolCrumbsEs({name:e.crumb,path:toEs(p.path)});
+ const e=lineupEs(p),format=p.format??'7v7',f=esFormation(DEFAULT_FORMATION[format]),crumbs=toolCrumbsEs({name:e.crumb,path:toEs(p.path)});
+ /* round 4D: fútbol 8 has no printables; round 4F: its formation guides first, then the field size guide, the comparison and the other builders */
+ const eight=format==='8v8';
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>{const o=toolLink(x.path)!;return {...o,name:cap(o.name)};});
- const related=links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
+ const related=eight?links([...esFormationsIn('8v8').map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})),esLink('/learn/8v8-soccer-formations',{line:'Las tres formas del fútbol 8 comparadas, con las normas que las marcan'}),esLink('/learn/soccer-field-size-by-age',{line:'Medidas de cancha, arco y balón para cada edad'}),esLink('/learn/7v7-9v9-11v11',{line:'Cómo crecen las modalidades reducidas hasta el fútbol 11'}),esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]):links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
   p.format?esLink(format==='futsal'?'/learn/futsal-for-kids':`/learn/${format}-soccer-formations`,{line:'Cómo elegir una forma, con un diagrama de cada una',key:true}):esLink('/learn/soccer-formations',{name:'Las formaciones de fútbol explicadas',line:'Cómo elegir una forma, con un diagrama de cada una'}),
   p.format?esLink(cheatSheetPath(format),{line:'Cada forma de esta modalidad en una página para imprimir'}):esLink(PRINTABLES_HUB_PATH,{name:'Hojas de referencia de formaciones y canchas en blanco'}),
   esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]);
- const fmtWord=format==='futsal'?'futsal':format;
+ const fmtWord=format==='futsal'?'futsal':eight?'fútbol 8':format;
  /* visual pass Nov 17 2026: the same key facts as the English page (app/(site)/tools/[slug]/page.tsx) */
  const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Modalidades',value:p.format?fmtWord:'7v7, 9v9, 11v11, futsal'},
-  {icon:'diagram',label:'Formaciones',value:`${p.format?esFormationsIn(format).length:ES_FORMATIONS().length} para elegir`},{icon:'share',label:'Compártela',value:'Imprimir, imagen o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
+  {icon:'diagram',label:'Formaciones',value:`${eight?SHAPES.filter(x=>x.format==='8v8').length:p.format?esFormationsIn(format).length:ES_FORMATIONS().length} para elegir`},{icon:'share',label:'Compártela',value:'Imprimir, imagen o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppEs({name:e.h1,path:toEs(p.path),description:e.description,image:image(p.path),
-   features:['Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
+   features:[eight?'Alineaciones de fútbol 8: 3-3-1, 3-2-2 y 2-3-2':'Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <RailNav rail={lineupRail(!!p.format,true)} current="#top"/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app facts={facts}/></Screen>
-  <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
+  <RailNav rail={lineupRail(!!p.format,true,eight)} current="#top"/>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app="lineup" facts={facts}/></Screen>
+  <LineupBuilder shapes={shapesEs} initial={DEFAULT_FORMATION[format]} lockFormat={p.format} lang="es"/>
   <Screen>
    <Section id="how" title="Cómo armar tu alineación">
     <ol>
@@ -228,10 +237,17 @@ function LineupEs({p}:{p:LineupPage}){
    </Section>
    <Section id="about" title={p.format?`Sobre las alineaciones de ${fmtWord}`:'Por qué dibujar la alineación'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
    {!p.format&&<Section id="shapes" title="Todas las formaciones que puedes armar" fold>
-    <p>{ES_FORMATIONS().length} formas en cuatro modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
+    <p>{ES_FORMATIONS().length} formas en cinco modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
     <LinkList links={ES_FORMATIONS().map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best}))}/>
    </Section>}
-   {p.format&&<Section id="roles" title={`Quién juega dónde en un ${f.shapeEs}`}>
+   {eight&&e.rules&&<Section id="rules" title="Reglas del fútbol 8 de un vistazo">
+    <p>No hay un único reglamento nacional de fútbol 8: cada federación territorial de España escribe el suyo, así que consulta el tuyo. Estas son las reglas de los documentos que leímos, con la fuente de cada una.</p>
+    <DataTable label="Reglas del fútbol 8 y su fuente" head={['Regla','Qué dicen los documentos']} rows={e.rules.map(r=>[...r])}/>
+   </Section>}
+   {e.sources&&<Section id="sources" title="Fuentes">
+    <ul>{e.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
+   </Section>}
+   {p.format&&f&&<Section id="roles" title={`Quién juega dónde en un ${f.shapeEs}`}>
     <p>El creador se abre con la formación {f.name}. Estas son sus tareas; <a href={f.esPath}>la guía del {f.shapeEs}</a> tiene las fortalezas, los puntos débiles y cómo se mueve la forma.</p>
     <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos&&hasEs(positionPath(r.pos))?<a href={toEs(positionPath(r.pos))}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
    </Section>}
@@ -263,7 +279,7 @@ function PlannerEs({p}:{p:PlannerPage}){
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
   <RailNav rail={plannerRail(!!p.format,true)} current="#top"/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app facts={facts}/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app={p.format?'subs':'minutes'} fmt={p.format} facts={facts}/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
@@ -379,6 +395,18 @@ function NewToolEs({slug}:{slug:NewToolSlug}){
  return <NewToolPage p={e} path={path} crumbs={crumbs} lang="es" related={e.related.map(l=>({...l,path:hasEs(l.path)?toEs(l.path):l.path}))} tool={tool}
   intro={<EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead}/>} end={<EsToolEnd/>}/>;
 }
+const BOARD_RELATED_ES:readonly [string,string][]=[['Formaciones de fútbol','Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'],['Posiciones de fútbol','Qué hace cada posición y los números del 1 al 11'],
+ ['Ejercicios de fútbol para niños','Ejercicios con diagrama para practicar la jugada que dibujaste'],['Creador de alineaciones de fútbol','Nombres en un diagrama de cancha para el partido'],
+ ['Diagramas de cancha de fútbol en blanco','Imprime una cancha para dibujar jugadas en papel'],['Entrenador de escaneo','Los jugadores aprenden a mirar por encima del hombro']];
+/** The tactics board's front door in Spanish (Nov 22 2026; the same body as the English page) */
+function BoardEs(){
+ const crumbs=toolCrumbsEs({name:BOARD_ES.crumb,path:toEs(BOARD_PATH)});
+ const related=BOARD_RELATED.map((l,i)=>({path:hasEs(l.path)?toEs(l.path):l.path,name:BOARD_RELATED_ES[i][0],line:BOARD_RELATED_ES[i][1]}));
+ return <BoardPage p={BOARD_ES} path={toEs(BOARD_PATH)} image={image(BOARD_PATH)} crumbs={crumbs} lang="es" related={related}
+  intro={<header className={site.intro} id="top"><EsBreadcrumbs crumbs={crumbs}/><h1 className={site.title}>{BOARD_ES.h1}</h1><p className={site.lead} data-answer="">{BOARD_ES.lead}</p>
+   <AppLink href={`${BOARD_APP_PATH}?lang=es`} label={BOARD_ES.openLabel} line={BOARD_ES.openLine}/><p className={site.caption}>{TOOL_NAMES_ES}</p></header>}
+  end={<EsToolEnd/>}/>;
+}
 
 // ---- the route table ----
 const H1_IMAGE_ALT='Un diagrama de formación de fútbol 9v9';
@@ -388,6 +416,7 @@ export function toolsEsRoute(enPath:string):EsRoute|null{
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol'}),render:()=><PlannerEs p={r}/>};}
  const nt=ALL_NEW_EN.find(x=>newToolPath(x.slug)===enPath);if(nt){const e=ALL_NEW_ES[nt.slug];return {meta:()=>esMeta(e.title,e.description,enPath,{url:newToolImage(nt.slug),alt:e.imageAlt}),render:()=><NewToolEs slug={nt.slug}/>};}
  if(enPath===SCAN_PATH)return {meta:()=>esMeta(SCAN_ES.title,SCAN_ES.description,enPath,{url:SCAN_IMAGE,alt:'El entrenador de escaneo en dos teléfonos: una señal de color azul y un pase al compañero 3 a la derecha'}),render:()=><ScanEs/>};
+ if(enPath===BOARD_PATH)return {meta:()=>esMeta(BOARD_ES.title,BOARD_ES.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol 11v11, la forma que se arma en la pizarra táctica'}),render:()=><BoardEs/>};
  if(enPath===PRINTABLES_HUB.path)return {meta:()=>esMeta(PRINT_HUB.title,PRINT_HUB.description,enPath,{url:image(enPath),alt:'Un diagrama de cancha de fútbol 11v11 en blanco'}),render:()=><PrintablesHubEs/>};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);
   return {meta:()=>{const sh=fileEs(s,s.files[0]).sheet,url=printableImage(s),m=esMeta(e.title,e.description,enPath,{url,alt:sh.title});return {...m,openGraph:{...m.openGraph,images:[{url,width:sh.w*1.5,height:sh.h*1.5,alt:sh.title}]}};},render:()=><PrintableEsPage p={s}/>};}

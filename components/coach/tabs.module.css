@@ -1,0 +1,171 @@
+/* The coach app's tab pages, bottom nav, language sheet and practice plans (round 4A, Nov 22 2026). The site's tokens from
+   coach.module.css (.app): flat surfaces, tone steps, no shadows at rest, no gradients; buttons in the UI sans 800. */
+.h2{font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin:30px 0 12px}
+/* feature cards */
+.feature{position:relative;display:block;border-radius:26px;padding:0;margin:4px 0 0;overflow:hidden;color:var(--ink);text-decoration:none}
+.fBody{display:block;padding:16px 20px 20px}
+.fBody>span{display:block}
+.gap{height:12px}
+.featureGame{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+.featureTrain{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+a.feature:active{transform:scale(.98)}
+a.feature{transition:transform .12s}
+.fKicker{margin:0;font-size:15px;font-weight:800;opacity:.78}
+.featureGame .fKicker{color:#85621f;opacity:1}
+.fTitle{margin:6px 0 0;font-size:28px;line-height:1.05;font-weight:800;letter-spacing:-.03em;overflow-wrap:anywhere}
+.fMeta{margin:8px 0 0;font-size:16px;opacity:.85}
+.fLive{margin:10px 0 0;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fLive b{font-variant-numeric:tabular-nums;font-size:24px}
+.liveDot{width:12px;height:12px;border-radius:50%;background:#e2725b;flex:0 0 auto}
+.fBtns{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.fBtns .btnFill{flex:1}
+.fOutline{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px rgb(20 34 29 / .18)}
+.tonight{background:#fdf3dc;border-radius:22px;padding:16px 18px 18px;margin-bottom:12px}
+.tTitle{margin:0;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+.fBtns button:disabled{opacity:.5}
+.fLink{margin-top:14px;border:0;background:none;color:#85621f;font-size:15px;font-weight:800;padding:6px 0;min-height:44px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:3px}
+.fArt{display:block;height:180px;overflow:hidden}
+.fArt svg{display:block;width:100%;height:100%}
+/* large picture tiles */
+.tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tiles>li[data-wide]{grid-column:1/-1}
+.tile{width:100%;height:100%;border:0;border-radius:22px;background:var(--tint);color:var(--ink);display:flex;flex-direction:column;padding:0;overflow:hidden;text-align:left;text-decoration:none;transition:transform .12s}
+.tile:active{transform:scale(.97)}
+.art{display:block;width:100%;aspect-ratio:16/10;overflow:hidden}
+li[data-wide] .art{aspect-ratio:16/7}
+.art svg{display:block;width:100%;height:100%}
+.tText{display:flex;flex-direction:column;gap:3px;padding:12px 14px 14px}
+.tText b{font-size:18px;font-weight:800;line-height:1.2;letter-spacing:-.01em}
+.tText small{font-size:14px;color:var(--soft);line-height:1.35}
+.tilesGame .tile,.tilesTrain .tile{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+
+.training .h2{color:var(--ink)}
+/* Training: a row that scrolls sideways */
+.rail{list-style:none;margin:0 -16px;padding:0 16px 6px;scroll-padding-inline:16px;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.rail::-webkit-scrollbar{display:none}
+.rail li{flex:0 0 72%;max-width:260px;scroll-snap-align:start}
+.railCard{width:100%;border:0;border-radius:20px;background:#fff;color:var(--ink);padding:0 0 12px;box-shadow:inset 0 0 0 2px #e3f3e8;overflow:hidden;text-align:left;display:flex;flex-direction:column;gap:10px}
+.railCard b{font-size:16px;font-weight:800;padding:0 14px;line-height:1.25}
+.railArt{display:grid;place-items:center;background:#e3f3e8;height:140px;overflow:hidden}
+.railArt svg{height:100%;width:auto}
+/* bottom nav: Game Day | Training | Language */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 8px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.navBtn{-webkit-tap-highlight-color:transparent;outline:none;transition:transform .12s;border:0;background:none;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:800;color:var(--soft);border-radius:14px}
+.navBtn svg{width:26px;height:26px}
+.navBtn[aria-current=page]{color:var(--ink)}
+.navBtn[aria-current=page] .navIcon{background:var(--gold)}
+.navIcon{display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background-color .12s}
+/* language sheet */
+.langList{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.langOpt{width:100%;min-height:60px;border:0;border-radius:16px;background:var(--tint);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:18px;font-weight:800}
+.langOpt[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+/* practice plans */
+.ages{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--tint);border-radius:999px;padding:4px;margin:6px 0 16px}
+.age{border:0;background:none;min-height:48px;border-radius:999px;font-size:17px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.age small{font-size:10px;font-weight:700;opacity:.75}
+.age[aria-selected=true]{background:var(--ink);color:var(--paper)}
+.planList{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.planCard{width:100%;border:0;border-radius:22px;background:#fff4e2;color:var(--ink);display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;padding:10px;text-align:left}
+.planArt{display:grid;place-items:center;background:#e3f3e8;border-radius:14px;height:112px;overflow:hidden}
+.planArt svg{height:100%;width:auto}
+.planText{display:flex;flex-direction:column;gap:4px;min-width:0}
+.planText b{font-size:18px;font-weight:800;line-height:1.2}
+.planText span{font-size:15px;line-height:1.35}
+.planText small{font-size:14px;color:var(--soft)}
+.plan{padding-top:4px}
+.planH1{font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.025em;margin:6px 0 4px}
+.planMeta{margin:0;font-size:16px;color:var(--soft)}
+.clock{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.clock li{display:grid;grid-template-columns:76px 1fr;gap:10px;background:var(--tint);border-radius:14px;padding:10px 12px}
+.clock li[data-stage=Break],.clock li[data-stage=Descanso]{background:#e6f1f8}
+.clock time{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px}
+.clock b{display:block;font-size:16px;line-height:1.3}
+.clock span{font-size:14px;color:var(--soft);line-height:1.35}
+.twoCol{display:grid;gap:0 18px}
+@media (min-width:700px){.twoCol{grid-template-columns:1fr 1fr}}
+.bullets{margin:0;padding-left:20px;display:grid;gap:4px;font-size:16px}
+.swap{background:var(--warnTint);border-radius:16px;padding:14px}
+.swap b{display:block;font-size:16px}
+.swap p{margin:6px 0 0;font-size:16px}
+.drills{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.drill{background:#fff4e2;border-radius:22px;overflow:hidden;display:grid}
+@media (min-width:700px){.drill{grid-template-columns:240px 1fr}}
+.drillArt{background:#e3f3e8;display:grid;place-items:center;max-height:260px;overflow:hidden}
+.drillArt svg{max-height:260px;width:auto;max-width:100%}
+.drillBody{padding:14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.drillBody>b{font-size:18px;font-weight:800}
+.drillBody>p{margin:0;font-size:15px;line-height:1.4}
+.steps{margin:0;padding-left:22px;display:grid;gap:4px;font-size:15px}
+.cueH{margin:4px 0 0;font-weight:800;font-size:15px}
+.drillLinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+/* session timer */
+.session{display:flex;flex-direction:column;gap:12px;padding-top:8px}
+.sessStep{margin:0;font-size:16px;font-weight:800;color:#1d6b55}
+.sessAct{margin:0;font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+.sessClock{margin:4px 0;font-size:96px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.sessClock[data-over]{color:var(--warn)}
+.sessWhy{margin:0;font-size:17px}
+.sessBar{display:flex;gap:3px;height:10px}
+.sessBar i{display:block;border-radius:5px;background:var(--tint)}
+.sessBar i[data-on]{background:#1d6b55}
+.sessNext{margin:0;font-size:16px;color:var(--soft)}
+.sessBtns{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-top:6px}
+.sessBtns button:disabled{opacity:.45}
+.sessBig{font-size:30px;font-weight:800;line-height:1.15;margin:20px 0}
+/* tablet: three tiles to a row on Game Day, more room */
+@media (min-width:700px){
+ .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+ .tiles>li[data-wide]{grid-column:span 2}
+ .tilesGame>li:last-child,.tilesTrain>li:last-child{grid-column:span 1}
+ .fTitle{font-size:32px}
+ .fArt{height:220px}
+ .rail li{flex-basis:240px}
+}
+@media print{.nav{display:none}}
+
+.navBtn:focus-visible{box-shadow:inset 0 0 0 2px rgb(61 139 214 / .55)}
+.navBtn:active{transform:scale(.95)}
+.tile,.railCard,.planCard,.langOpt,.age{-webkit-tap-highlight-color:transparent}
+.railCard:active,.planCard:active,.langOpt:active{transform:scale(.98)}
+/* the island game's look (owner, Nov 22 2026): tinted stat pills with a game icon and a bold figure, icons beside the tile names */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 6px;border-radius:999px;background:#e3f3e8;font-size:15px}
+.pill b{font-weight:800;color:var(--ink)}
+.pill[data-tone=gold]{background:#fdefc6}
+.pill[data-tone=peach]{background:#fde3d2}
+.pill[data-tone=sky]{background:#e1eefb}
+.tHead{display:flex;align-items:center;gap:8px}
+.tHead svg{flex:0 0 auto}
+.navIcon svg{width:26px;height:26px}
+.navBtn{color:#5d7268}
+.navBtn[aria-current=page] .navIcon{background:#fdefc6}
+
+/* ---- Round 4B: selected age / language choices are mint chips (no dark fills); 12 px between session buttons; the site's heading
+   weights (title 600 at -0.028em, section head 600, card title 700); icon + label rows centred on one line ---- */
+.age[aria-selected=true],.langOpt[aria-pressed=true]{background:#cfeedb;color:#244d40;box-shadow:0 3px 0 #9fd1b2}
+.sessBtns{gap:12px}
+.h2{font-weight:600;letter-spacing:-.025em}
+.fTitle{font-weight:600;letter-spacing:-.028em}
+.tTitle{font-weight:700;letter-spacing:-.02em}
+/* icons aligned with text (owner, Nov 22 2026): icon and label in one centred flex row, a fixed gap, the icon a set size per text size,
+   no margins pushing either off the row */
+.tHead{align-items:center;gap:10px}
+.tHead>*{margin:0}
+.tHead svg,.pill svg,.navBtn svg{display:block;flex:0 0 auto}
+.featureTrain .tHead{margin-top:2px}
+.featureTrain .tHead svg{width:32px;height:32px}
+.pill{gap:8px}
+/* wide screens: the three destinations sit over the content column (728 px), not spread across the whole window */
+@media (min-width:800px){.nav{padding-left:max(8px,calc(50vw - 372px));padding-right:max(8px,calc(50vw - 372px))}}
+.fBody .tHead,.tText .tHead{display:flex;align-items:center;gap:10px}
+
+/* round 4C (Nov 22 2026): the next game's opponent after the team name, and the game details link at full tap height */
+.fVs{font-weight:600;color:var(--soft,#3d4a42)}
+.fLinkTap{min-height:44px;display:inline-flex;align-items:center;margin-top:8px;margin-right:16px}
+
+/* round 4E: ten languages, two columns so the sheet stays short on a phone */
+.langList{grid-template-columns:1fr 1fr}
+.langOpt{min-height:52px;padding:0 14px;font-size:17px}
+.enNote{margin:0 0 10px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#5b6b63;background:var(--tint);border-radius:999px;padding:4px 10px}
+/* round 4E: one long word in a tile name ("Treenisuunnitelmat", "Trainingspläne") breaks with a hyphen in its own language */
+.tText b{min-width:0;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}

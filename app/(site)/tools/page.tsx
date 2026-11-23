@@ -3,6 +3,7 @@ import {toolsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {ToolCards,ToolSubLinks} from '@/components/site/tools/ToolCards';
+import {CoachAppBand} from '@/components/site/tools/CoachAppBand';
 import {ToolIntro} from '@/components/site/tools/ToolParts';
 import {GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -29,9 +30,9 @@ export default function ToolsHub(){
   <ToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   {/* Nov 22 2026 (owner: "reorganize the tools: two types, regular training tools and game day tools"). The coach-app feature
      band from the coach branch goes above these two groups. */}
+  <CoachAppBand/>
   <Section id="training" title="Training tools">
-   <p>For practice nights: a timed practice plan from our drills, a scanning trainer, field diagrams to draw on, a beep test and a juggling challenge for the players, and a name for a new team. Each works in your browser, and what you type stays on your device.</p>
-   {/* TODO(tools-wt merge): add the tactics board card (/tools/soccer-tactics-board) here once that route lands from the coach branch. */}
+   <p>For practice nights: a timed practice plan from our drills, a scanning trainer, a tactics board to draw a play and run it step by step, field diagrams to draw on, a beep test and a juggling challenge for the players, and a name for a new team. Each works in your browser, and what you type stays on your device.</p>
    <ToolCards links={TRAINING.map(link)} tint="practice"/>
    <ToolSubLinks label="Printables" links={PRINTABLES.map(p=>({path:p.path,name:cap(p.h1)}))}/>
   </Section>
@@ -41,7 +42,7 @@ export default function ToolsHub(){
    <ToolSubLinks label="Lineup builders by format" links={LINEUP_PAGES.slice(1).map(p=>({path:p.path,name:cap(p.h1)}))}/>
   </Section>
   <QA id="faq" title="Questions about the tools" faq={H.faq}/>
-  <Section id="guides" title="Guides that go with the tools"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation for 7v7, 9v9, 11v11 and futsal, with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
+  <Section id="guides" title="Guides that go with the tools"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation for 7v7, 8v8, 9v9, 11v11 and futsal, with a diagram'},{path:'/learn/8v8-soccer-formations',name:'8v8 soccer formations (fútbol 8)',line:'The 3-3-1, 3-2-2 and 2-3-2 compared, with the regional rules'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
    {path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},{path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz'}]}/></Section>
   <GuideEnd sticky={false}/>
  </>;

@@ -29,13 +29,27 @@ import {PLAYERS_PER_TEAM,type GuideFormat,type Line} from './pitch';
  *  - The numbers on the dots follow one common coaching custom (1 keeper, 2 and 3 fullbacks, 4 and 5 center backs, 6, 8 and 10
  *    in midfield, 7 and 11 wide, 9 striker). It is a custom, not a law, and it differs by country; the pages say so. Not found
  *    on a primary ussoccer.com page in this pass: treat the exact number-to-spot mapping as convention.
+ *  - Round 4F (Nov 22 2026): 8v8 (fútbol 8): the 3-3-1, 3-2-2 and 2-3-2 of the coach app (lib/site/tools/shapes8.ts) get guide
+ *    pages and /learn/8v8-soccer-formations. Rules only from F8_SOURCES below (FFCV, Álava, Euskadi; read in round 4D); no 8v8
+ *    lessons exist, so the pages pick 7v7 and 9v9 lessons that teach the same idea. '8v8' stays out of GUIDE_FORMATS (no
+ *    printables or cheat sheet): FORMATION_FORMATS in lib/site/pitch.ts is the list of formats with formation pages.
  * Local leagues change details (ages, build-out line), so the pages tell readers to check their own league's rules.
  * No statistics, no named players, no claims about what professional teams "always" do.
  */
 export type Role={title:string;pos?:string;job:string};
+/** A document a page quotes rules from (round 4D for the 8v8 lineup builder; round 4F: the 8v8 formation guides too). */
+export type Source={name:string;url:string;says:string};
+/** Round 4D: fútbol 8. Spain has no single national rule book for it: each regional federation writes its own, so the page quotes
+ *  the documents it read and says that regions differ. */
+export const F8_SOURCES:readonly Source[]=[
+ {name:'FFCV (Valencian Football Federation), Circular nº 26: rules for the alevín, benjamín and prebenjamín fútbol 8 competitions, 2025/26',url:'https://ffcv.es/wp/wp-content/uploads/2025/09/Circular-F8-25-26-V.3.0-publicada.pdf',says:'alevín 2 × 30 minutes, benjamín and prebenjamín 2 × 25; up to 15 players on the match sheet; unlimited rolling changes and a player who comes off may go back on; every player on the match sheet must take part'},
+ {name:'Diputación Foral de Álava, school sport fútbol 8 competition rules 2025-26',url:'https://web.araba.eus/documents/d/araba/futbol-8-femenino-2025-26_ca-pdf',says:'field 50 to 65 m long and 30 to 45 m wide; goals 6 × 2 m; penalty mark at 9 m; size 4 ball; offside only inside the 13 m zone; unlimited substitutions'},
+ {name:'Basque Government with the Basque Football Federation, Euskadi school games 2024, fútbol 8 rules',url:'https://euskadi.eus/contenidos/informacion/futbolapartaidetza/es_def/adjuntos/F-8-partaidetza-24-Normativa.pdf',says:'offside inside the 13 m zone; penalty from 9 m'},
+];
 export type Weak={spot:string;cover:string;lesson?:string};
 export type Formation={slug:string;path:string;format:GuideFormat;shape:string;name:string;title:string;h1:string;desc:string;answer:string;best:string;watch:string;
- lines:Line[];roles:Role[];strengths:string[];weak:Weak[];attack:string;defend:string;suits:string;faq:Faq[];lessons:SiteLesson[]};
+ lines:Line[];roles:Role[];strengths:string[];weak:Weak[];attack:string;defend:string;suits:string;faq:Faq[];lessons:SiteLesson[];
+ /** round 4F: the rule documents a page quotes (the 8v8 pages: fútbol 8 rules differ by region) */sources?:readonly Source[]};
 export const FORMATIONS_HUB_PATH='/learn/soccer-formations';
 export const formationPath=(slug:string)=>`${FORMATIONS_HUB_PATH}/${slug}`;
 export const formatGuidePath=(f:GuideFormat)=>f==='futsal'?'/learn/futsal-for-kids':`/learn/${f}-soccer-formations`;
@@ -151,6 +165,84 @@ const RAW:Raw[]=[
    {q:'What does the single midfielder do in a 3-1-2?',a:'Connects the team. With the ball, this player shows for a pass from the defenders, then finds a forward. Without the ball, this player slows the attack down until teammates get back.'},
    {q:'Should both forwards stay up the field?',a:'No. If both stay high, the pass to them is too long. One comes toward the ball and one keeps the height. They take turns.'}],
   lessonIds:['next7_outsideback','next7_reachableforward','learn7_shape','prn_7_support']},
+ // ---- 8v8 (round 4F, fútbol 8): the same spots and labels as lib/site/tools/shapes8.ts (the coach app's shapes; tests/seo-tools.cjs) ----
+ {slug:'8v8-3-3-1',format:'8v8',shape:'3-3-1',best:'Most teams. Three clear units, a good first shape.',watch:'The lone forward can be left on their own.',
+  title:'3-3-1 Formation for 8v8 Soccer (Fútbol 8): Diagram, Roles',
+  desc:'The 3-3-1 formation for 8v8 soccer (fútbol 8): three defenders, three midfielders, one forward. A diagram, every role, weak spots and how to teach it.',
+  answer:'The 3-3-1 is an 8v8 soccer formation with three defenders, three midfielders and one forward in front of the goalkeeper. It is the usual first shape in fútbol 8, because it splits the team into three clear units and covers the whole width of the field.',
+  rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Midfielders|11:LM 8:CM 7:RM','Forward|9:ST'],
+  roles:[
+   {title:'Goalkeeper (1)',pos:'goalkeeper',job:'Stops shots and starts attacks. With three defenders spread out in front, the keeper always has a short pass to one side.'},
+   {title:'Center back (4)',pos:'center-back',job:'Holds the middle of the back three and covers behind whichever outside back steps out to the ball.'},
+   {title:'Outside backs (2 and 3)',pos:'fullback',job:'Defend the sides. With the ball they move wide, so the keeper and the center back have a pass on each side.'},
+   {title:'Wide midfielders (7 and 11)',pos:'winger',job:'Stay near the sideline to stretch the other team, run up to join the forward and come back to help the outside back.'},
+   {title:'Middle midfielder (8)',pos:'central-midfielder',job:'The link between the three units. Shows for a pass from the defenders, then looks for the forward or a wide player.'},
+   {title:'Forward (9)',pos:'striker',job:'The target up the field. Holds the ball until help arrives and is the first to chase when it is lost.'}],
+  strengths:['Three units, of three, three and one, are easy to see: every child knows which group they belong to.','Three players across the back and three across the middle cover the whole width of the field.',
+   'Triangles on both sides: an outside back, a wide midfielder and the middle midfielder can pass around a defender.'],
+  weak:[
+   {spot:'The forward is alone up front and can be crowded out by two or three defenders.',cover:'A wide midfielder runs up to join the forward when the ball goes to that side, and the middle midfielder follows close behind.',lesson:'next7_reachableforward'},
+   {spot:'Big gaps can open between the three units, and long kicks replace passes.',cover:'Keep the team short: when the ball goes forward, the back three step up together and the midfield stays close to the forward.',lesson:'nx9_twoblocks'},
+   {spot:'The wide midfielders have the most running to do, up and down the whole side.',cover:'Use the rolling changes: swap the wide players often, so every child gets a turn and nobody runs out of legs.'}],
+  attack:'With the ball, the outside backs move wide and the wide midfielders step up near the sideline. The forward stays high to stretch the field, and the middle midfielder moves to whichever side the ball is on.',
+  defend:'Without the ball, the wide midfielders tuck in level with the middle midfielder, and the back three squeeze together in front of the goal. The forward blocks the pass across the field.',
+  suits:'Most fútbol 8 teams, above all in a first 8v8 season, and teams moving up from a 7v7 2-3-1, which becomes a 3-3-1 when a center back joins the two defenders.',
+  faq:[
+   {q:'Is the 3-3-1 the best formation for 8v8?',a:'It is the most common place to start, not the only good shape. Three defenders, three midfielders and one forward give every child a clear job and cover the whole field. Pick a shape your players understand, then teach the jobs.'},
+   {q:'How do you stop the 3-3-1 forward being left alone?',a:'Give the wide midfielders a cue: when the ball is played to their side, they run up to join the forward. The middle midfielder follows behind, so the forward has a pass back and a pass wide.'},
+   {q:'Who should play in the middle of a 3-3-1?',a:'A player who likes being near the ball and looks around a lot. The middle midfielder links the defenders, the wide players and the forward. With rolling changes, every child can still have a turn in each line.'},
+   {q:'How does a 7v7 team change to a 3-3-1 for 8v8?',a:'Add one defender. The 7v7 2-3-1 keeps its three midfielders and its forward, and the extra player joins the two defenders as a center back, so the back two becomes a back three.'}],
+  sources:F8_SOURCES,lessonIds:['learn9_shape','nx9_twoblocks','next7_reachableforward','prn_7_spread','learn7_shape','gap7_lostball']},
+ {slug:'8v8-3-2-2',format:'8v8',shape:'3-2-2',best:'Teams with two forwards who play as a pair.',watch:'A narrow midfield. The width must come from the back.',
+  title:'3-2-2 Formation for 8v8 Soccer (Fútbol 8): Diagram, Roles',
+  desc:'The 3-2-2 formation for 8v8 soccer (fútbol 8): three defenders, two midfielders and two forwards. See the diagram, each role, the weak spots and fixes.',
+  answer:'The 3-2-2 is an 8v8 soccer formation with three defenders, two central midfielders and two forwards. It suits teams with two forwards who like playing together, but the midfield is narrow, so the width has to come from the outside backs.',
+  rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Midfielders|6:LCM 8:RCM','Forwards|11:LS 9:RS'],
+  roles:[
+   {title:'Goalkeeper (1)',pos:'goalkeeper',job:'Guards the goal and is a safe pass behind the back three when the midfield pair is closed down.'},
+   {title:'Center back (4)',pos:'center-back',job:'Stays in the middle of the back three and covers behind when an outside back goes forward.'},
+   {title:'Outside backs (2 and 3)',pos:'fullback',job:'Defend the sides, then run up the side with the ball, because no midfielder starts wide. One goes, the other stays.'},
+   {title:'Two midfielders (6 and 8)',pos:'central-midfielder',job:'Work as a pair in the middle: one goes to the ball, the other stays close behind to help and to protect the back three.'},
+   {title:'Two forwards (9 and 11)',pos:'striker',job:'Share the front at different heights: one comes short for the ball, the other runs behind the defenders. Then they swap.'}],
+  strengths:['Two forwards: a pass up the field has two targets, and the other team’s defenders always have two players to watch.','Three defenders cover the width of the field behind the play.',
+   'Pairs are easy to teach: in midfield and up front, one player goes and the partner supports.'],
+  weak:[
+   {spot:'Nobody starts wide in midfield, so attacks get squeezed into the middle.',cover:'The outside back on the ball side runs up along the sideline to give the wide pass, and the center back slides across to cover.',lesson:'next7_outsideback'},
+   {spot:'Two central midfielders can be outnumbered by a midfield three.',cover:'One forward drops back into midfield without the ball, so the pair becomes a three again.',lesson:'nx9_midfieldhelper'},
+   {spot:'If both forwards stay high, the pass to them is too long and the ball comes straight back.',cover:'The forwards split the jobs: one shows short toward the ball, the other keeps the height. They take turns.',lesson:'nx9_twostrikers'}],
+  attack:'With the ball, one outside back moves up the side to give width, and the two midfielders stand at different heights. One forward comes short and the other stays high, so the passer has a near choice and a far choice.',
+  defend:'Without the ball, the two midfielders sit just in front of the back three, and one forward drops back to help them. The other forward stays up to slow down the other team’s defenders.',
+  suits:'Teams with two keen forwards and outside backs with plenty of energy. Where offside only counts inside the last 13 metres, as in the Álava and Basque fútbol 8 rules, the forwards still have to time their runs near the goal.',
+  faq:[
+   {q:'Is the 3-2-2 a good 8v8 formation?',a:'Yes, when the outside backs give width. With no wide midfielders, the team needs an outside back to run up the side with the ball. If all three defenders stay back, the attack gets stuck in the middle.'},
+   {q:'How do the two forwards work together in a 3-2-2?',a:'They take different jobs. One comes toward the ball to receive it at the feet, the other stays higher to keep a defender busy. When one goes short, the other goes long, and then they swap.'},
+   {q:'What is the difference between the 3-2-2 and the 3-3-1?',a:'Where the eighth player starts. The 3-3-1 has three midfielders, two of them wide, and one forward. The 3-2-2 moves one midfielder up front: two forwards, but only two midfielders and nobody wide.'}],
+  sources:F8_SOURCES,lessonIds:['nx9_twostrikers','next7_outsideback','nx9_midfieldhelper','prn_7_support','def_7_goalside','next9_frontpairpress']},
+ {slug:'8v8-2-3-2',format:'8v8',shape:'2-3-2',best:'Attacking teams that already pass well.',watch:'Only two at the back. A midfielder must drop.',
+  title:'2-3-2 Formation for 8v8 Soccer (Fútbol 8): Diagram, Roles',
+  desc:'The 2-3-2 formation for 8v8 soccer (fútbol 8): two defenders, three midfielders and two forwards, with a diagram, every role and how to cover the back.',
+  answer:'The 2-3-2 is an 8v8 soccer formation with two defenders, three midfielders and two forwards. It is the attacking choice in fútbol 8: five players start in midfield and up front, but with only two at the back, the middle midfielder has to drop between the defenders whenever the ball is lost.',
+  rows:['Goalkeeper|1:GK','Defenders|3:LB 2:RB','Midfielders|11:LM 8:CM 7:RM','Forwards|10:LS 9:RS'],
+  roles:[
+   {title:'Goalkeeper (1)',pos:'goalkeeper',job:'Protects the goal and plays as an extra defender behind the back two, ready to come off the line for a ball over the top.'},
+   {title:'Two defenders (2 and 3)',pos:'fullback',job:'Defend the middle and the sides together: one goes to the ball, the other covers behind. With the ball they split wide.'},
+   {title:'Wide midfielders (7 and 11)',pos:'winger',job:'Give width and help the forwards, then run back down the side when the ball is lost, because nobody else covers it.'},
+   {title:'Middle midfielder (8)',pos:'central-midfielder',job:'The key job: links the team with the ball, and drops between the two defenders as the third protector without it.'},
+   {title:'Two forwards (9 and 10)',pos:'striker',job:'Press the other team’s defenders and share the front: one shows for the ball, the other runs behind.'}],
+  strengths:['Five players start in midfield and attack, so the team can press high and win the ball near the other goal.','Two forwards and two wide midfielders give the player with the ball many passes forward.',
+   'The middle midfielder learns a job that matters in every bigger game: dropping in to protect the back.'],
+  weak:[
+   {spot:'Only two defenders, so a fast break can catch them two against three.',cover:'When the ball is lost, the middle midfielder drops between the two defenders straight away, and the keeper comes off the line.',lesson:'nx9_twobackcover'},
+   {spot:'Space opens behind the wide midfielders when they push up.',cover:'The defender on that side slides across to slow the attacker down, and the wide midfielder sprints back to help.',lesson:'next9_backtwoflanks'},
+   {spot:'With five attackers, the team can forget to come back.',cover:'Agree on one rule: when the ball is lost, the nearest player presses and everyone else runs back behind the ball.',lesson:'gap7_lostball'}],
+  attack:'With the ball, the two defenders split wide and the keeper joins in as a passing option. The wide midfielders push up, one forward comes short and the other runs behind, and the middle midfielder stays a little behind to be safe.',
+  defend:'Without the ball, the middle midfielder drops in between the two defenders to make a back three, the wide midfielders come back into line, and the two forwards press the ball.',
+  suits:'Older fútbol 8 teams, such as alevín teams that already pass and move well, and games where you need a goal. For a new team, start with the 3-3-1 and move to a 2-3-2 later.',
+  faq:[
+   {q:'Is the 2-3-2 too risky for kids?',a:'Not if the team has a rule for losing the ball. The middle midfielder drops between the two defenders, and the keeper is ready to come out. Without that rule, a fast break catches the two defenders on their own.'},
+   {q:'Who covers when a defender goes to the ball in a 2-3-2?',a:'The other defender covers behind, and the middle midfielder fills the space in front of the goal. That is why the middle midfielder in a 2-3-2 must keep looking back as well as forward.'},
+   {q:'When should a team switch from a 3-3-1 to a 2-3-2?',a:'When the players pass well and the middle midfielder reads the game. Some coaches also switch late in a game they are losing, to put one more player forward.'}],
+  sources:F8_SOURCES,lessonIds:['nx9_twobackcover','nx9_keeperthird','gap7_lostball','next9_backtwoflanks','learn9_cover','bld_7_usekeeper']},
  // ---- 9v9 ----------------------------------------------------------------------------------------------------------------
  {slug:'9v9-3-2-3',format:'9v9',shape:'3-2-3',title:'3-2-3 Soccer Formation (9v9): Diagram, Roles and Tips',best:'Most teams. Wide forwards and a clear back three.',watch:'Two midfielders can face three.',
   desc:'The 3-2-3 formation for 9v9 soccer, explained for kids, parents and coaches: diagram, the three units, strengths, weak spots and free lessons.',
@@ -444,9 +536,9 @@ export const formationsIn=(format:GuideFormat)=>FORMATIONS.filter(f=>f.format===
 /** Formations whose diagram includes a position (lib/site/positions.ts slugs). */
 export const formationsUsing=(pos:string)=>FORMATIONS.filter(f=>f.lines.some(l=>l.spots.some(s=>s.pos===pos)));
 
-// ---- the three format guides (head terms: "7v7 soccer formations" …) ------------------------------------------------------------
+// ---- the format guides (round 4F: + 8v8) (head terms: "7v7 soccer formations" …) ------------------------------------------------------------
 export type FormatGuide={format:Exclude<GuideFormat,'futsal'>;path:string;crumb:string;title:string;description:string;h1:string;lead:string;blurb:string;
- basics:string[];pickTitle:string;pick:string[];faq:Faq[];lessons:SiteLesson[]};
+ basics:string[];pickTitle:string;pick:string[];faq:Faq[];lessons:SiteLesson[];sources?:readonly Source[]};
 const LEAGUE='Leagues can set their own details, so check your league’s rules.';
 export const FORMAT_GUIDES:readonly FormatGuide[]=[
  {format:'7v7',path:formatGuidePath('7v7'),crumb:'7v7 formations',blurb:'2-3-1, 3-2-1, 2-2-2 and 3-1-2 compared, with diagrams',
@@ -468,6 +560,29 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'Should 7v7 players stay in one position all season?',a:'No. At nine and ten, children learn most by trying every job: defending, playing wide, playing in the middle and scoring. Rotate positions from game to game.'},
    {q:'How many defenders should a 7v7 team have?',a:'Two or three. Two defenders leave more players for midfield. Three defenders are safer but need the outside backs to go forward, or the team has too few attackers.'}],
   lessons:pick(['learn7_roles','learn7_shape','learn7_buildout','next7_offsideboundary','bld_7_usekeeper','prn_7_spread'])},
+ /* round 4F: 8v8 (fútbol 8). Rules quoted only from the documents in F8_SOURCES; outside Spain, only "some leagues" (not verified further). */
+ {format:'8v8',path:formatGuidePath('8v8'),crumb:'8v8 formations',blurb:'3-3-1, 3-2-2 and 2-3-2 compared, with diagrams',
+  title:'8v8 Soccer Formations: 3-3-1, 3-2-2, 2-3-2 (Fútbol 8)',
+  description:'The three common 8v8 soccer formations, or fútbol 8 formations (3-3-1, 3-2-2, 2-3-2), compared in one table, with diagrams and the rules that shape them.',
+  h1:'8v8 soccer formations',
+  lead:'In 8v8 soccer, called fútbol 8 in Spain, each team has a goalkeeper and seven outfield players. The three common formations are the 3-3-1, the 3-2-2 and the 2-3-2. For most teams, the 3-3-1 is the best place to start.',
+  basics:['Eight players: one goalkeeper and seven outfield players.','In Spain, fútbol 8 is the game before 11-a-side. In the Valencian federation it covers the prebenjamín, benjamín and alevín categories. Some leagues elsewhere play 8v8 too.',
+   'Spain has no single national rule book for fútbol 8: each regional federation writes its own, so the details differ.',
+   'In the Álava school-sport rules the field is 50 to 65 m long and 30 to 45 m wide, the goals are 6 × 2 m, the penalty mark is 9 m from goal and the ball is a size 4.',
+   'In the Álava and Basque rules offside is only called inside a 13 m zone in front of each goal, not on the rest of the field.',
+   'In the Valencian federation, alevín games are 2 × 30 minutes and benjamín games 2 × 25, changes are unlimited and rolling, and every player on the match sheet must play.',LEAGUE],
+  pickTitle:'Which 8v8 formation should my team use?',
+  pick:['Start with the 3-3-1 if you are not sure. It has three clear units, three at the back, three across the middle and one forward, so every child meets every kind of job.',
+   'Choose the 3-2-2 if you have two forwards who like to play together and outside backs who can run up the side. The midfield is narrow, so the width has to come from the back.',
+   'Choose the 2-3-2 for an attacking team that already passes well. With only two defenders, the middle midfielder must drop back between them whenever the ball is lost.',
+   'Coming from 7v7? A 2-3-1 becomes a 3-3-1 when a center back joins the two defenders. Moving on to 11v11? Add a defender and two forwards, and the 3-3-1 grows into a 4-3-3.',
+   'Whatever you pick, a formation is a starting arrangement. With rolling changes and everyone playing, rotate children through the lines so nobody is only ever a defender.'],
+  faq:[
+   {q:'What is the best formation for 8v8 soccer?',a:'There is no single best one. The 3-3-1 is the usual starting point because it is balanced and has three clear units. The best formation for your team is the one your players understand.'},
+   {q:'What does 1-3-3-1 mean?',a:'It is the 3-3-1 with the goalkeeper counted first: one keeper, three defenders, three midfielders and one forward. Some coaches write youth formations this way.'},
+   {q:'Is 8v8 the same game as fútbol 8?',a:'Yes. Fútbol 8 is the Spanish name for eight-a-side: a goalkeeper and seven outfield players on a field about half the size of a full pitch. The rules are written by each regional federation, so check yours.'},
+   {q:'How many defenders should an 8v8 team have?',a:'Two or three. Three defenders, as in the 3-3-1 and the 3-2-2, are simpler and safer. Two defenders, as in the 2-3-2, leave one more player for the attack, but the middle midfielder must drop back to help.'}],
+  sources:F8_SOURCES,lessons:pick(['learn9_shape','learn7_shape','nx9_twostrikers','nx9_twobackcover','prn_7_spread','learn9_cover'])},
  {format:'9v9',path:formatGuidePath('9v9'),crumb:'9v9 formations',blurb:'3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 and 4-3-1 compared, with diagrams',
   title:'9v9 Soccer Formations: 3-2-3, 3-3-2 and More, for Kids',
   description:'Five 9v9 soccer formations (3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1, 4-3-1) compared in one table, with diagrams and a clear answer on which to choose.',
@@ -510,16 +625,16 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
 export const formatGuide=(f:GuideFormat)=>FORMAT_GUIDES.find(g=>g.format===f);
 
 // ---- the hub -------------------------------------------------------------------------------------------------------------------
-export const FORMATIONS_HUB={path:FORMATIONS_HUB_PATH,crumb:'Soccer formations',blurb:`${FORMATIONS.length} formations for 7v7, 9v9, 11v11 and futsal, each with a diagram`,
+export const FORMATIONS_HUB={path:FORMATIONS_HUB_PATH,crumb:'Soccer formations',blurb:`${FORMATIONS.length} formations for 7v7, 8v8, 9v9, 11v11 and futsal, each with a diagram`,
  title:'Soccer Formations for Kids: 7v7, 9v9, 11v11, Futsal',
- description:`${FORMATIONS.length} soccer formations explained for kids, parents and coaches, with a diagram for each: 7v7, 9v9, 11v11 and futsal shapes, roles and free lessons.`,
+ description:`${FORMATIONS.length} soccer formations explained for kids, parents and coaches, with a diagram for each: 7v7, 8v8, 9v9, 11v11 and futsal shapes, roles and lessons.`,
  h1:'Soccer formations for kids',
  lessons:pick(['learn7_shape','learn9_shape','learn11_shape','learnf_roles31','learnf_shape22']),
- lead:'A soccer formation is the way a team lines up at the start: how many defenders, midfielders and forwards stand in front of the goalkeeper. This guide explains the common formations for 7v7, 9v9, 11v11 and futsal, each with a diagram and the job of every player.',
+ lead:'A soccer formation is the way a team lines up at the start: how many defenders, midfielders and forwards stand in front of the goalkeeper. This guide explains the common formations for 7v7, 8v8 (fútbol 8), 9v9, 11v11 and futsal, each with a diagram and the job of every player.',
  what:['A formation is a starting arrangement. It gives every player a first job and a place to return to.','It is written as numbers from the back to the front. A 2-3-1 has two defenders, three midfielders and one forward.',
   'The goalkeeper is usually left out of the numbers. U.S. Soccer counts the keeper first, so the same shape is written 1-2-3-1.','Players do not stay on their spots. They move to help the teammate with the ball, and to protect the goal without it.',
   'The numbers on our diagrams follow a common coaching custom, such as 1 for the goalkeeper and 9 for the striker. Players can wear any shirt number.'],
- groups:{'7v7':'Seven players a side. In the U.S. Soccer standards, the game for under-9s and under-10s.','9v9':'Nine players a side. In the U.S. Soccer standards, the game for under-11s and under-12s.',
+ groups:{'7v7':'Seven players a side. In the U.S. Soccer standards, the game for under-9s and under-10s.','8v8':'Eight players a side, called fútbol 8 in Spain, where it is the game before 11-a-side. Each regional federation writes its own rules.','9v9':'Nine players a side. In the U.S. Soccer standards, the game for under-11s and under-12s.',
   '11v11':'The full game, played from under-13 upward.',futsal:'Five players a side on a hard court, with a smaller ball made to bounce low.'} as Record<GuideFormat,string>,
  faq:[
   {q:'What is a formation in soccer?',a:'The starting arrangement of a team: how many players are in defense, midfield and attack. It gives players starting jobs. They still move as the game changes.'},

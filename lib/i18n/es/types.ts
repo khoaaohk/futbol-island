@@ -33,9 +33,10 @@ export type PositionsHubEs={crumb:string;blurb:string;title:string;description:s
 /** Formations (Spanish round 2, Nov 16 2026): the words of one lib/site/formations.ts record; roles/strengths/weak/faq 1:1. */
 export type FormationEs={best:string;watch:string;desc:string;answer:string;roles:readonly {title:string;job:string}[];strengths:readonly string[];
  weak:readonly {spot:string;cover:string}[];attack:string;defend:string;suits:string;faq:readonly Faq[];notes:CoachNotesEs};
-export type FormatGuideEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;basics:readonly string[];pickTitle:string;pick:readonly string[];faq:readonly Faq[]};
+export type FormatGuideEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;basics:readonly string[];pickTitle:string;pick:readonly string[];faq:readonly Faq[];
+ /** round 4F (fútbol 8): the rule documents, in Spanish */sources?:readonly {name:string;url:string;says:string}[]};
 export type FormationsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;what:readonly string[];
- groups:Readonly<Record<'7v7'|'9v9'|'11v11'|'futsal',string>>;faq:readonly Faq[]};
+ groups:Readonly<Record<'7v7'|'8v8'|'9v9'|'11v11'|'futsal',string>>;faq:readonly Faq[]};
 /** Comparison pages: the table cells come from the Spanish position / formation records. */
 export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[]};
 /** Lessons (Spanish round D, Nov 16 2026): the words of one lib/site/lessons.ts SiteLesson. steps / questions / options are 1:1 with
@@ -44,7 +45,7 @@ export type LessonQuestionEs={q:string;options:readonly string[];explain:string}
 export type LessonEs={title:string;concept:string;steps:readonly string[];questions:readonly LessonQuestionEs[]};
 /** Tools (Spanish round D, Nov 16 2026): the words of one lib/site/tools/registry.ts LineupPage / PlannerPage (intro and faq 1:1),
  *  of the two hubs, and of one lib/site/tools/printables.ts Printable (use 1:1). Keyed by the English slug. */
-export type ToolPageEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:readonly string[];faq:readonly Faq[]};
+export type ToolPageEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:readonly string[];faq:readonly Faq[];/** round 4D (fútbol 8) */rules?:readonly [string,string][];sources?:readonly {name:string;url:string;says:string}[]};
 export type ToolsHubEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;faq:readonly Faq[]};
 export type PrintableEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;use:readonly string[]};
 /** Lesson hubs, size charts and the parents' guide (Spanish round D, Nov 16 2026; lib/i18n/es/hubs.ts, charts.ts, safety.ts).

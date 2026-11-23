@@ -41,23 +41,25 @@ const FORMAT_WORD=(f:GuideFormat)=>f==='futsal'?'futsal':f;
 /* seo-nov18: every lineup and playing-time page links the positions hub once */
 const POSITIONS_LINK={path:'/learn/soccer-positions',name:'Soccer positions explained',line:'What each position does, and the numbers 1 to 11'};
 function Lineup({p}:{p:LineupPage}){
- const format=p.format??'7v7',f=formationBySlug(DEFAULT_FORMATION[format])!,crumbs=toolCrumbs({name:p.crumb,path:p.path});
+ const format=p.format??'7v7',f=formationBySlug(DEFAULT_FORMATION[format]),crumbs=toolCrumbs({name:p.crumb,path:p.path});
+ /* round 4D: 8v8 (fútbol 8) has no printables; round 4F: it has formation guides, so it links them first, then the field size guide */
+ const eight=format==='8v8',shapes8=SHAPES.filter(x=>x.format==='8v8');
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb}));
- const related=[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
+ const related=eight?[...formationsIn('8v8').map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})),{path:formatGuidePath('8v8'),name:'8v8 soccer formations',line:'The three fútbol 8 shapes compared, with the rules that shape them'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and ball sizes for every age group'},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 compared',line:'How the small-sided games grow into the full game'},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others]:[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
   p.format?{path:cheatSheetPath(format),name:`${format==='futsal'?'Futsal':format} formations cheat sheet`,line:'Every shape of this game on one printable page'}:{path:PRINTABLES_HUB_PATH,name:'Formation cheat sheets and blank fields',line:PRINTABLES_HUB.blurb},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others];
  /* visual pass Nov 17 2026: key facts under the lead, from the tool's own features (webAppLd below) */
  const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Games',value:p.format?FORMAT_WORD(format):'7v7, 9v9, 11v11, futsal'},
-  {icon:'diagram',label:'Formations',value:`${p.format?formationsIn(format).length:FORMATIONS.length} to choose from`},{icon:'share',label:'Share it',value:'Print, picture or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
+  {icon:'diagram',label:'Formations',value:`${eight?shapes8.length:p.format?formationsIn(format).length:FORMATIONS.length} to choose from`},{icon:'share',label:'Share it',value:'Print, picture or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppLd({name:p.h1[0].toUpperCase()+p.h1.slice(1),path:p.path,description:p.description,image:TOOL_PAGES.find(t=>t.path===p.path)!.image,
-   features:['Lineups for 7v7, 9v9, 11v11 and futsal','Drag or tap to swap players and substitutes','One-page print','Picture download','Share by link','No account; names stay on the device']})}/>
+   features:[eight?'Fútbol 8 lineups: 3-3-1, 3-2-2 and 2-3-2':'Lineups for 7v7, 9v9, 11v11 and futsal','Drag or tap to swap players and substitutes','One-page print','Picture download','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
-  <RailNav rail={lineupRail(!!p.format)} current="#top"/>
+  <RailNav rail={lineupRail(!!p.format,false,eight)} current="#top"/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
-  <LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={p.format}/>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH+'#tool=lineup'+(p.format?`&format=${p.format}`:''),label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
+  <LineupBuilder shapes={SHAPES} initial={DEFAULT_FORMATION[format]} lockFormat={p.format}/>
   <Screen>
    <Section id="how" title="How to build your lineup">
     <ol>
@@ -70,10 +72,17 @@ function Lineup({p}:{p:LineupPage}){
    </Section>
    <Section id="about" title={p.format?`About ${FORMAT_WORD(format)} lineups`:'Why draw the lineup'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
    {!p.format&&<Section id="shapes" title="Every formation you can build" fold>
-    <p>{FORMATIONS.length} shapes across four games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
+    <p>{FORMATIONS.length} shapes across five games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
     <LinkList links={FORMATIONS.map(x=>({path:x.path,name:`${x.name} formation`,line:x.best}))}/>
    </Section>}
-   {p.format&&<Section id="roles" title={`Who plays where in a ${f.shape}`}>
+   {eight&&p.rules&&<Section id="rules" title="Fútbol 8 rules at a glance">
+    <p>There is no single national rule book for fútbol 8: each regional federation in Spain writes its own, so check yours. These are the rules in the documents we read, with where each one comes from.</p>
+    <DataTable label="Fútbol 8 rules and where they come from" head={['Rule','What the documents say']} rows={p.rules}/>
+   </Section>}
+   {p.sources&&<Section id="sources" title="Sources">
+    <ul>{p.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener">{x.name}</a>: {x.says}.</li>)}</ul>
+   </Section>}
+   {p.format&&f&&<Section id="roles" title={`Who plays where in a ${f.shape}`}>
     <p>The builder opens with the {f.name} formation. These are its jobs; <a href={f.path}>the {f.shape} guide</a> has the strengths, the weak spots and how the shape moves.</p>
     <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos?<a href={positionPath(r.pos)}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
    </Section>}
@@ -111,7 +120,7 @@ function Planner({p}:{p:PlannerPage}){
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={plannerRail(!!p.format)} current="#top"/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH+(p.format?'#tool=subs':'#tool=minutes')+(p.format?`&format=${p.format}`:''),label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>
   <Screen>
    <Section id="about" title={p.format?`Sharing a ${p.format} game`:'Why plan the changes'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>

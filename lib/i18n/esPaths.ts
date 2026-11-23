@@ -11,10 +11,10 @@ const R='/learn/soccer-rules',T='/learn/soccer-terms',P='/learn/soccer-positions
 export const ES_RULE_SLUGS=['offside','throw-in','goal-kick','corner-kick','handball','fouls-and-free-kicks','penalty-kick','yellow-and-red-cards','back-pass-rule','build-out-line','kick-off','drop-ball','advantage','substitutions-and-game-length','heading-rules-for-kids','futsal-rules'] as const;
 export const ES_TERM_SLUGS=['give-and-go','third-man-run','overlap','through-ball','switching-play','two-v-one','cutback','cross','first-touch','pressing','marking','goal-side','tackle','counterattack','set-piece','free-kick-wall','nutmeg','clean-sheet','hat-trick','yellow-card','red-card','dribble','shielding','volley','half-volley','square-pass','man-on','overload','underlap','far-post','offside-trap','jockeying','cover','clearance','build-up','false-nine','sweeper-keeper','box-to-box','assist','brace','own-goal','header','weak-foot','one-touch','scanning','support','possession','width','step-over','dummy','chip','tap-in','near-post','low-block','high-line','pivot','penalty-area','goal-area','stoppage-time','extra-time','penalty-shoot-out'] as const;
 export const ES_POSITION_SLUGS=['goalkeeper','center-back','fullback','wingback','defensive-midfielder','central-midfielder','attacking-midfielder','winger','striker'] as const;
-export const ES_FORMATION_SLUGS=['7v7-2-3-1','7v7-3-2-1','7v7-2-2-2','7v7-3-1-2','9v9-3-2-3','9v9-3-3-2','9v9-2-3-2-1','9v9-3-1-3-1','9v9-4-3-1','11v11-4-3-3','11v11-4-4-2','11v11-4-2-3-1','11v11-3-5-2','futsal-2-2','futsal-1-2-1-diamond','futsal-3-1'] as const;
+export const ES_FORMATION_SLUGS=['7v7-2-3-1','7v7-3-2-1','7v7-2-2-2','7v7-3-1-2','8v8-3-3-1','8v8-3-2-2','8v8-2-3-2','9v9-3-2-3','9v9-3-3-2','9v9-2-3-2-1','9v9-3-1-3-1','9v9-4-3-1','11v11-4-3-3','11v11-4-4-2','11v11-4-2-3-1','11v11-3-5-2','futsal-2-2','futsal-1-2-1-diamond','futsal-3-1'] as const;
 const F='/learn/soccer-formations';
 /** Round 2: the formations family (hub, pages, the three format guides) and the three comparison pages. */
-const ROUND2=[F,...ES_FORMATION_SLUGS.map(s=>`${F}/${s}`),'/learn/7v7-soccer-formations','/learn/9v9-soccer-formations','/learn/11v11-soccer-formations',
+const ROUND2=[F,...ES_FORMATION_SLUGS.map(s=>`${F}/${s}`),'/learn/7v7-soccer-formations','/learn/8v8-soccer-formations','/learn/9v9-soccer-formations','/learn/11v11-soccer-formations',
  `${P}/fullback-vs-wingback`,`${P}/striker-vs-winger`,`${F}/4-3-3-vs-4-4-2`];
 /** Round C (Nov 16 2026): the drills family (hub, 10 age/skill guides, 46 drills) and the practice plans (hub, 12 plans). */
 const D='/learn/soccer-drills',PL='/learn/soccer-practice-plans';
@@ -25,7 +25,7 @@ const ROUNDC=[D,...ES_DRILL_SLUGS.map(s=>`${D}/${s}`),PL,...ES_PLAN_SLUGS.map(s=
 export const ES_LESSON_PAGES:readonly string[]=['/learn/lessons',...LESSON_TABLE.map(([,id])=>`/learn/lessons/${id}`)];
 export const ES_HUB_PAGES:readonly string[]=['/learn/football-rules-for-kids','/learn/soccer-quiz-for-kids','/learn/passing-and-support','/learn/futsal-for-kids','/learn/7v7-9v9-11v11',
  '/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age','/learn/soccer-age-groups','/safe-football-game-for-kids'];
-export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder','/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer',/* Nov 22 2026 */'/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker','/tools/soccer-beep-test',
+export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/8v8-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder','/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer','/tools/soccer-tactics-board',/* Nov 22 2026 */'/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker','/tools/soccer-beep-test',
  /* Nov 22 2026, second batch */'/tools/soccer-team-name-generator','/tools/soccer-practice-plan-generator','/tools/youth-soccer-field-size-guide','/tools/soccer-juggling-challenge','/tools/youth-soccer-stats-tracker'];
 /** Round E (Nov 22 2026): the arcade game pages (hub + one page per listed game, lib/site/games.ts GAME_PAGES order) and the
     pop-up book pages (hub + one page per player book, lib/site/books.ts BUILT_BOOKS); words in lib/i18n/es/{games,books}/. */
@@ -38,8 +38,16 @@ export const ES_LIBRARY='/library';
 export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE];
 const SET=new Set(ES_PAGES);
 export const hasEs=(enPath:string)=>SET.has(enPath);
-export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+enPath;
+/** Round 4D: the one exception to "English slug kept": a Spanish page with its own slug, because Spanish coaches search for
+    "alineación fútbol 8", not "8v8 lineup builder". English path -> the Spanish path after /es. */
+export const ES_SLUGS:Readonly<Record<string,string>>={'/tools/8v8-lineup-builder':'/tools/alineacion-futbol-8',
+ /* round 4F: the fútbol 8 formation guide (the three formation pages keep the English-slug pattern of their family) */'/learn/8v8-soccer-formations':'/learn/formaciones-futbol-8'};
+const ES_SLUGS_BACK:Readonly<Record<string,string>>=Object.fromEntries(Object.entries(ES_SLUGS).map(([en,es])=>[es,en]));
+export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+(ES_SLUGS[enPath]??enPath);
+/** The English path for what follows /es in a Spanish URL; null for an English slug whose Spanish page has its own slug
+    (/es/tools/8v8-lineup-builder is not a page: /es/tools/alineacion-futbol-8 is). */
+export const enOfEs=(suffix:string):string|null=>ES_SLUGS_BACK[suffix]??(ES_SLUGS[suffix]?null:suffix);
 /** /es/learn/x -> /learn/x, /es -> / (null when the path is not a Spanish one). */
-export const toEn=(esPath:string)=>esPath===ES_PREFIX||esPath===ES_PREFIX+'/'?'/':esPath.startsWith(ES_PREFIX+'/')?esPath.slice(ES_PREFIX.length):null;
+export const toEn=(esPath:string)=>{if(esPath===ES_PREFIX||esPath===ES_PREFIX+'/')return '/';if(!esPath.startsWith(ES_PREFIX+'/'))return null;const rest=esPath.slice(ES_PREFIX.length);return ES_SLUGS_BACK[rest]??rest;};
 /** hreflang alternates for a page pair, the same on both language versions (x-default = English). */
 export const languageAlternates=(enPath:string)=>({en:enPath,es:toEs(enPath),'x-default':enPath});

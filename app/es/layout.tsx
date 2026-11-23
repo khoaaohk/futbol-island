@@ -1,5 +1,6 @@
 import HtmlShell from '@/components/site/HtmlShell';
 import SiteNavEs from '@/components/es/SiteNavEs';
+import FromCoachBar from '@/components/motion/FromCoachBar';
 import LangSwitch from '@/components/site/LangSwitch';
 import FooterHubs from '@/components/site/FooterHubs';
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
@@ -21,6 +22,7 @@ export default function EsLayout({children}:{children:React.ReactNode}){
   <script dangerouslySetInnerHTML={{__html:"addEventListener('pageswap',function(e){var v=e.viewTransition,a=e.activation,u=a&&a.entry&&a.entry.url;if(v&&u){var p=new URL(u).pathname;if(/^\\/(play|arcade|coach|admin)(\\/|$)/.test(p))v.skipTransition()}})"}}/>
   <header className={styles.header}><div className={styles.headerInner}><SiteNavEs/></div></header>
   <main className={styles.main}>{children}</main>
+  <FromCoachBar/>
   <footer className={styles.footer}>
   <FooterHubs es/>
   <div className={styles.footerInner}>
