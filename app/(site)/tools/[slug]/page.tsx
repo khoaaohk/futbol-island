@@ -42,10 +42,10 @@ const FORMAT_WORD=(f:GuideFormat)=>f==='futsal'?'futsal':f;
 const POSITIONS_LINK={path:'/learn/soccer-positions',name:'Soccer positions explained',line:'What each position does, and the numbers 1 to 11'};
 function Lineup({p}:{p:LineupPage}){
  const format=p.format??'7v7',f=formationBySlug(DEFAULT_FORMATION[format]),crumbs=toolCrumbs({name:p.crumb,path:p.path});
- /* round 4D: 8v8 (fútbol 8) has builder shapes but no formation guide pages yet: it links the field size guide and the other builders */
+ /* round 4D: 8v8 (fútbol 8) has no printables; round 4F: it has formation guides, so it links them first, then the field size guide */
  const eight=format==='8v8',shapes8=SHAPES.filter(x=>x.format==='8v8');
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb}));
- const related=eight?[{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and ball sizes for every age group'},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 compared',line:'How the small-sided games grow into the full game'},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others]:[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
+ const related=eight?[...formationsIn('8v8').map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})),{path:formatGuidePath('8v8'),name:'8v8 soccer formations',line:'The three fútbol 8 shapes compared, with the rules that shape them'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and ball sizes for every age group'},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 compared',line:'How the small-sided games grow into the full game'},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others]:[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
   p.format?{path:cheatSheetPath(format),name:`${format==='futsal'?'Futsal':format} formations cheat sheet`,line:'Every shape of this game on one printable page'}:{path:PRINTABLES_HUB_PATH,name:'Formation cheat sheets and blank fields',line:PRINTABLES_HUB.blurb},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others];
  /* visual pass Nov 17 2026: key facts under the lead, from the tool's own features (webAppLd below) */
  const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Games',value:p.format?FORMAT_WORD(format):'7v7, 9v9, 11v11, futsal'},
@@ -72,7 +72,7 @@ function Lineup({p}:{p:LineupPage}){
    </Section>
    <Section id="about" title={p.format?`About ${FORMAT_WORD(format)} lineups`:'Why draw the lineup'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
    {!p.format&&<Section id="shapes" title="Every formation you can build" fold>
-    <p>{FORMATIONS.length} shapes across four games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
+    <p>{FORMATIONS.length} shapes across five games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
     <LinkList links={FORMATIONS.map(x=>({path:x.path,name:`${x.name} formation`,line:x.best}))}/>
    </Section>}
    {eight&&p.rules&&<Section id="rules" title="Fútbol 8 rules at a glance">

@@ -45,7 +45,7 @@ export default function ToolsHub(){
    <ToolCards links={[{path:PRINTABLES_HUB.path,name:cap(PRINTABLES_HUB.h1),line:PRINTABLES_HUB.blurb},...PRINTABLES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))]} tint="print"/>
   </Section>
   <QA id="faq" title="Questions about the tools" faq={H.faq}/>
-  <Section id="guides" title="Guides that go with the tools"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation for 7v7, 9v9, 11v11 and futsal, with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
+  <Section id="guides" title="Guides that go with the tools"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation for 7v7, 8v8, 9v9, 11v11 and futsal, with a diagram'},{path:'/learn/8v8-soccer-formations',name:'8v8 soccer formations (fútbol 8)',line:'The 3-3-1, 3-2-2 and 2-3-2 compared, with the regional rules'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},
    {path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},{path:'/learn/lessons',name:'All football lessons',line:'Short animated lessons with a quiz'}]}/></Section>
   <GuideEnd sticky={false}/>
  </>;

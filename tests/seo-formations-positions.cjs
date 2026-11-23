@@ -40,14 +40,14 @@ const PATHS=new Set([...paths.sitePaths().map(p=>p.path),...paths.NOINDEX_PATHS]
 const A='app/(site)/learn';
 
 // ---- 1. registry, sitemap, metadata -------------------------------------------------------------------------------------------
-const WANT_F={'7v7':['2-3-1','3-2-1','2-2-2','3-1-2'],'9v9':['3-2-3','3-3-2','2-3-2-1','3-1-3-1','4-3-1'],'11v11':['4-3-3','4-4-2','4-2-3-1','3-5-2'],futsal:['2-2','1-2-1','3-1']};
+const WANT_F={'7v7':['2-3-1','3-2-1','2-2-2','3-1-2'],'8v8':['3-3-1','3-2-2','2-3-2']/* round 4F */,'9v9':['3-2-3','3-3-2','2-3-2-1','3-1-3-1','4-3-1'],'11v11':['4-3-3','4-4-2','4-2-3-1','3-5-2'],futsal:['2-2','1-2-1','3-1']};
 for(const [fmt,shapes] of Object.entries(WANT_F))assert.deepEqual(formations.formationsIn(fmt).map(f=>f.shape),shapes,`${fmt} formations`);
 assert.deepEqual(positions.POSITIONS.map(p=>p.slug),['goalkeeper','center-back','fullback','wingback','defensive-midfielder','central-midfielder','attacking-midfielder','winger','striker'],'the nine positions');
-for(const p of ['/learn/soccer-formations','/learn/soccer-positions','/learn/7v7-soccer-formations','/learn/9v9-soccer-formations','/learn/11v11-soccer-formations'])assert(guides.GUIDE_HUBS.some(g=>g.path===p),`${p} is a guide hub`);
-assert.equal(guides.GUIDE_PAGES.length,5+16+9+1,'5 hub-level pages, 16 formations, 9 positions, positions by number');
+for(const p of ['/learn/soccer-formations','/learn/soccer-positions','/learn/7v7-soccer-formations','/learn/8v8-soccer-formations','/learn/9v9-soccer-formations','/learn/11v11-soccer-formations'])assert(guides.GUIDE_HUBS.some(g=>g.path===p),`${p} is a guide hub`);
+assert.equal(guides.GUIDE_PAGES.length,6+19+9+1,'6 hub-level pages, 19 formations, 9 positions, positions by number');/* round 4F: + the 8v8 guide and its 3 formations */
 assert.equal(new Set(guides.GUIDE_PAGES.map(g=>g.path)).size,guides.GUIDE_PAGES.length,'unique paths');
 const PAGE_FILES=[`${A}/soccer-formations/page.tsx`,`${A}/soccer-formations/[slug]/page.tsx`,`${A}/soccer-positions/page.tsx`,`${A}/soccer-positions/[slug]/page.tsx`,
- `${A}/7v7-soccer-formations/page.tsx`,`${A}/9v9-soccer-formations/page.tsx`,`${A}/11v11-soccer-formations/page.tsx`,`${A}/diagrams/[file]/route.tsx`];
+ `${A}/7v7-soccer-formations/page.tsx`,`${A}/8v8-soccer-formations/page.tsx`,`${A}/9v9-soccer-formations/page.tsx`,`${A}/11v11-soccer-formations/page.tsx`,`${A}/diagrams/[file]/route.tsx`];
 for(const f of PAGE_FILES){const s=read(f);
  assert.match(s,/export const dynamic='force-static';/,`${f} is force-static`);
  if(/\[[a-z]+\]/.test(f)){assert.match(s,/export const dynamicParams=false;/,`${f}: unknown ids 404`);assert.match(s,/generateStaticParams/,`${f} prerenders every id`);}}
@@ -79,7 +79,7 @@ const sp=paths.sitePaths(),LM=JSON.parse(require('node:fs').readFileSync(require
 
 // ---- 2. rendered HTML ---------------------------------------------------------------------------------------------------------
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)[\s\S]*?<\/\1>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'’').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
-const SERVED=new Set(['/play','/privacy',...guides.DIAGRAM_FILES.map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
+const SERVED=new Set(['/play','/privacy','/coach'/* round 4F: the 8v8 pages open the coach app (noindex app, not in the sitemap) */,...guides.DIAGRAM_FILES.map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
 /* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
 const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
 const paraPages=new Map();let words=0;
@@ -101,7 +101,7 @@ for(const g of guides.GUIDE_PAGES){
  for(const c of crumbs)assert(PATHS.has(c.item.replace('https://futbolisland.app','')||'/'),`${where}: crumb ${c.item} exists`);
  const faq=ld.find(x=>x['@type']==='FAQPage').mainEntity;assert(faq.length>=3&&faq.length<=5,`${where}: 3-5 questions`);
  for(const q of faq){assert(body.includes(q.name.replace(/'/g,'’')),`${where}: FAQ question is on the page: ${q.name}`);assert(q.acceptedAnswer.text.length>=60,`${where}: a real answer to ${q.name}`);}
- if(g.hub){const c=ld.find(x=>x['@type']==='CollectionPage');assert(c&&c.mainEntity['@type']==='ItemList'&&c.mainEntity.numberOfItems>=4,`${where}: ItemList on the hub`);
+ if(g.hub){const c=ld.find(x=>x['@type']==='CollectionPage');assert(c&&c.mainEntity['@type']==='ItemList'&&c.mainEntity.numberOfItems>=(g.path==='/learn/8v8-soccer-formations'?3:4)/* round 4F: fútbol 8 has three shapes */,`${where}: ItemList on the hub`);
   for(const it of c.mainEntity.itemListElement)assert(PATHS.has(it.url.replace('https://futbolisland.app','')),`${where}: list item ${it.url} exists`);assert(c.audience,`${where}: audience`);}
  else{const a=ld.find(x=>[].concat(x['@type']).includes('Article'));assert(a&&a.audience&&a.datePublished&&a.dateModified&&a.headline===g.title,`${where}: Article with audience and dates`);
   assert.equal(a.image,'https://futbolisland.app'+g.image,`${where}: Article image is the diagram`);}
@@ -125,7 +125,8 @@ for(const g of guides.GUIDE_PAGES){
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one Play button`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: internal links`);
  for(const l of links){if(l.startsWith('#')){assert(h.includes(` id="${l.slice(1)}"`),`${where}: jump link ${l} has its target`);continue;}/* key-facts jump links (visual pass, Nov 17 2026) */
-  assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
+  if(formations.F8_SOURCES.some(s=>s.url===l))continue;/* round 4F: the 8v8 pages' Sources (the rule documents they quote) */
+  assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||(SERVED.has(l.split('#')[0])||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
 }
@@ -141,7 +142,7 @@ for(const g of formations.FORMAT_GUIDES)assert(/<table/.test(html.get(g.path))&&
 // ---- 3. pictures, lesson links, llms.txt, hub lists ---------------------------------------------------------------------------
 (async()=>{
  const img=L('lib/site/pitchImage.tsx'),{ImageResponse}=require('next/og');
- assert.equal(guides.DIAGRAM_FILES.length,28);/* round 4D: + the three fútbol 8 shapes (lib/site/tools/shapes8.ts) */
+ assert.equal(guides.DIAGRAM_FILES.length,28);/* round 4D: + the three fútbol 8 shapes; round 4F: they are formations now, counted once */
  for(const f of guides.DIAGRAM_FILES)assert(img.diagramFor(f),`${f} has a picture`);
  assert.equal(img.diagramFor('nope-formation.png'),null);
  for(const f of ['7v7-2-3-1-formation.png','futsal-3-1-formation.png','wingback-position.png']){

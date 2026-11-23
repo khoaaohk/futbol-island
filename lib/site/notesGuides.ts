@@ -32,6 +32,27 @@ export const FORMATION_NOTES:Readonly<Record<string,CoachNotes>>={
   ages:[['U10','Works for a U9 or U10 team with two keen goal scorers. Rotate the middle job often, because one player covers the whole width.'],
    ['U12','The front pair carries into 9v9 two-forward shapes such as the 3-3-2.']],
   mistakes:['The two forwards stand side by side waiting for the ball instead of making different runs.','The three defenders stay back while the lone midfielder is outnumbered, so the other team walks through the middle.']},
+ /* round 4F: fútbol 8 (8v8). Ages as Spanish categories only where the FFCV circular names them (lib/site/formations.ts F8_SOURCES). */
+ '8v8-3-3-1':{
+  coach:'Name the three units out loud: “back three”, “middle three” and “nine”. When the ball is lost, call “middle three in” so the wide midfielders tuck inside next to the 8.',
+  match:'When a 3-3-1 struggles, you usually see the forward alone against two defenders while the midfield watches from deep. When it works, a wide midfielder arrives next to the forward soon after the ball does.',
+  ages:[['U10','A good shape for a first fútbol 8 season. Keep it to three lines and rotate children through all of them, so nobody is only ever a defender.'],
+   ['U12','Older fútbol 8 players, such as alevín teams, can learn when a wide midfielder joins the forward and when they stay back.'],
+   ['U13 and up','The three units grow into 11v11 shapes such as the 4-3-3: one more defender and two more forwards.']],
+  mistakes:['The back three stand in a flat line on the edge of the area on a goal kick, so the keeper has no pass to the side.','The wide midfielders drift inside to chase the ball and the team loses its width.']},
+ '8v8-3-2-2':{
+  coach:'Give the two forwards one rule: if one comes short, the other goes long. Give the outside backs another: only one of you goes up at a time.',
+  match:'A 3-2-2 that goes wrong plays everything through the middle, where the two midfielders are crowded. Watch for an outside back running up the line: when that happens, the shape opens up.',
+  ages:[['U10','Pairs are easy at this age: one goes, one covers. Keep the outside backs’ job simple too: one goes forward, two stay.'],
+   ['U12','Teach the forwards to time their runs. Where offside only counts near the goal, as in the Álava and Basque fútbol 8 rules, that is where timing matters.'],
+   ['U13 and up','The front pair and the midfield pair carry over to an 11v11 4-4-2, with two strikers and two central midfielders.']],
+  mistakes:['Both forwards stay high, so the pass from the back is too long to reach them.','Both outside backs run forward at once and leave the center back alone.']},
+ '8v8-2-3-2':{
+  coach:'Before kick-off, tell the middle midfielder: “When we lose it, you are a defender.” Practise that drop in training until it happens without a shout.',
+  match:'You can read a 2-3-2 in the moment the ball is lost: either the middle midfielder runs back between the two defenders, or the other team gets two against two at your goal.',
+  ages:[['U10','Usually too much for a first fútbol 8 season. Start with a 3-3-1 and add the 2-3-2 once the team passes well.'],
+   ['U12','For older fútbol 8 teams that pass well. Rotate the middle midfielder job, so several children learn to drop back.']],
+  mistakes:['The middle midfielder joins every attack and nobody drops between the two defenders.','The keeper stays on the goal line, so a ball played over the two defenders runs free.']},
  '9v9-3-2-3':{
   coach:'Ask the wide forwards to start with a foot near the sideline when your team has the ball; their width opens space for the center forward and the two midfielders.',
   match:'On a goal kick you see the back three spread across the penalty area and the two midfielders come to show for a pass. If one midfielder hides, the keeper has to kick long.',

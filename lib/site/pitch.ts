@@ -5,9 +5,12 @@
  * is not a small 11v11 field: it has build-out lines; a futsal court has rounded penalty areas and a second penalty mark).
  * Sizes are in metres and are only used for drawing in proportion; the pages do not quote them as rules.
  */
-/** '8v8' (round 4D, fútbol 8) draws and builds lineups but is not in GUIDE_FORMATS: it has no formation lesson pages yet. */
+/** '8v8' (round 4D, fútbol 8) draws and builds lineups but is not in GUIDE_FORMATS (blank fields, cheat sheets, timer presets,
+ *  the lineup builder's format menu): it has no printables. It has formation guide pages (round 4F), so it is in FORMATION_FORMATS,
+ *  the formats the formation hubs list. */
 export type GuideFormat='7v7'|'8v8'|'9v9'|'11v11'|'futsal';
 export const GUIDE_FORMATS=['7v7','9v9','11v11','futsal'] as const;
+export const FORMATION_FORMATS=['7v7','8v8','9v9','11v11','futsal'] as const;
 export const PLAYERS_PER_TEAM:Record<GuideFormat,number>={'7v7':7,'8v8':8,'9v9':9,'11v11':11,futsal:5};
 export const FORMAT_NAME:Record<GuideFormat,string>={'7v7':'7v7','8v8':'8v8','9v9':'9v9','11v11':'11v11',futsal:'futsal'};
 export type PitchSpec={w:number;l:number;px:number;box?:[number,number];six?:[number,number];circle:number;spot:number;spot2?:number;goal:number;buildOut?:number;arc?:number};

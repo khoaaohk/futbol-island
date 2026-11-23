@@ -22,7 +22,7 @@ export type Rail={label:string;up:RailItem[];groups:RailGroup[]};
 export type RailFamily='rules'|'terms'|'drills'|'positions'|'formations';
 const byName=(a:RailItem,b:RailItem)=>a.name.localeCompare(b.name);
 const LIB_EN={href:LIBRARY_PATH,name:'Library'},LIB_ES={href:toEs(LIBRARY_PATH),name:'Biblioteca'};
-const FORMAT_ORDER=['7v7','9v9','11v11','futsal'] as const;
+const FORMAT_ORDER=['7v7','8v8','9v9','11v11','futsal'] as const;
 
 export function sectionRail(family:RailFamily):Rail{
  switch(family){
@@ -43,7 +43,7 @@ export function sectionRailEs(family:RailFamily):Rail{
    return {label:ES_DRILL_HUBS.drills.crumb,up:[{href:ES_DRILL_HUBS.drills.path,name:'Todos los ejercicios'},LIB_ES],groups:skills.map(s=>({title:s,items:ds.filter(d=>d.skillName===s).map(d=>({href:d.esPath,name:d.name}))}))};}
   case 'positions':return {label:H.positions.crumb,up:[{href:H.positions.path,name:'Todas las posiciones'},LIB_ES],groups:[{items:ES_POSITIONS().map(p=>({href:p.esPath,name:p.name}))}]};
   case 'formations':{const fs=ES_FORMATIONS();return {label:H.formations.crumb,up:[{href:H.formations.path,name:'Todas las formaciones'},LIB_ES],
-   groups:FORMAT_ORDER.map(f=>({title:f==='futsal'?'Fútbol sala':f,items:fs.filter(x=>x.format===f).map(x=>({href:x.esPath,name:x.name}))})).filter(g=>g.items.length)};}
+   groups:FORMAT_ORDER.map(f=>({title:f==='futsal'?'Fútbol sala':f==='8v8'?'Fútbol 8':f,items:fs.filter(x=>x.format===f).map(x=>({href:x.esPath,name:x.name}))})).filter(g=>g.items.length)};}
  }
 }
 /** The order of the sections in every Library menu (owner, Nov 20 2026: "put them in the best order you think for SEO"). The pages people

@@ -1,6 +1,6 @@
 import {pageModified} from '../lastmod';
 import type {Faq} from '../safety';
-import {formationBySlug} from '../formations';
+import {formationBySlug,F8_SOURCES,type Source} from '../formations';
 import {chartBySlug} from '../sizes';
 import {abs,PUBLISHER,SITE_NAME,SITE_URL} from '../seo';
 import {PLAYERS_PER_TEAM,type GuideFormat} from '../pitch';
@@ -28,15 +28,10 @@ export const PRIVACY_LINE='Names stay on your device. Nothing you type is sent t
 export const TOOL_NAMES='Soccer is called football in most of the world. These tools are free, with no account and no ads, from Futbol Island, a football learning game for kids aged 7 to 12.';
 /** A deep link that opens the builder with one formation chosen (the formation pages' "Build this lineup"). */
 export const lineupLinkFor=(formationSlug:string)=>{const f=formationBySlug(formationSlug);return `${f?`/tools/${f.format}-lineup-builder`:LINEUP_PATH}#f=${formationSlug}`;};
-export type Source={name:string;url:string;says:string};
+export type {Source};
 export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideFormat;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[];/** round 4D: rules quoted on the page, with where they come from */rules?:[string,string][];sources?:readonly Source[]};
-/** Round 4D: fútbol 8. Spain has no single national rule book for it: each regional federation writes its own, so the page quotes
- *  the documents it read and says that regions differ. */
-export const F8_SOURCES:readonly Source[]=[
- {name:'FFCV (Valencian Football Federation), Circular nº 26: rules for the alevín, benjamín and prebenjamín fútbol 8 competitions, 2025/26',url:'https://ffcv.es/wp/wp-content/uploads/2025/09/Circular-F8-25-26-V.3.0-publicada.pdf',says:'alevín 2 × 30 minutes, benjamín and prebenjamín 2 × 25; up to 15 players on the match sheet; unlimited rolling changes and a player who comes off may go back on; every player on the match sheet must take part'},
- {name:'Diputación Foral de Álava, school sport fútbol 8 competition rules 2025-26',url:'https://web.araba.eus/documents/d/araba/futbol-8-femenino-2025-26_ca-pdf',says:'field 50 to 65 m long and 30 to 45 m wide; goals 6 × 2 m; penalty mark at 9 m; size 4 ball; offside only inside the 13 m zone; unlimited substitutions'},
- {name:'Basque Government with the Basque Football Federation, Euskadi school games 2024, fútbol 8 rules',url:'https://euskadi.eus/contenidos/informacion/futbolapartaidetza/es_def/adjuntos/F-8-partaidetza-24-Normativa.pdf',says:'offside inside the 13 m zone; penalty from 9 m'},
-];
+/** Round 4D: fútbol 8 sources (moved to lib/site/formations.ts in round 4F, where the 8v8 formation guides cite them too). */
+export {F8_SOURCES};
 const formationImg=(slug:string)=>`/learn/diagrams/${slug}-formation.png`;
 export const LINEUP_PAGES:readonly LineupPage[]=[
  {kind:'lineup',slug:'soccer-lineup-builder',path:LINEUP_PATH,crumb:'Lineup builder',title:'Soccer Lineup Builder: Free, Printable, No Sign-Up',h1:'Soccer lineup builder',

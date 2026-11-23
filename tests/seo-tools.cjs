@@ -126,7 +126,11 @@ for(const p of pr.PRINTABLES)assert(html.get('/tools/soccer-field-diagrams').inc
  const llms=L('lib/site/llms.ts').llmsText();for(const t of reg.TOOL_HUBS)assert(llms.includes(`(https://futbolisland.app${t.path})`),`llms.txt lists ${t.path}`);}
 
 // ---- 4. the lineup link code and the client components -----------------------------------------------------------------------
-{const S=shapes.SHAPES;assert.equal(S.length,forms.FORMATIONS.length+shapes.SHAPES_8V8.length);assert(shapes.SHAPES_8V8.every(s=>s.format==="8v8"&&s.lines.reduce((a,l)=>a+l.spots.length,0)===8),"8v8 shapes: a keeper and seven");for(const f of Object.values(lineup.DEFAULT_FORMATION))assert(shapes.shapeBySlug(f),`default formation ${f} exists`);
+{const S=shapes.SHAPES;assert.equal(S.length,forms.FORMATIONS.filter(f=>f.format!=='8v8').length+shapes.SHAPES_8V8.length);assert.equal(new Set(S.map(s=>s.slug)).size,S.length,'one shape per slug');
+ /* round 4F: the 8v8 guide pages draw exactly the coach app's shapes (same slug, shape, lines, numbers and labels) */
+ {const strip=ls=>ls.map(l=>({name:l.name,spots:l.spots.map(s=>s.n+':'+s.label)}));const f8=forms.formationsIn('8v8');assert.deepEqual(f8.map(f=>f.slug),shapes.SHAPES_8V8.map(s=>s.slug),'8v8 guides = SHAPES_8V8');
+  for(const f of f8)assert.deepEqual(strip(f.lines),strip(shapes.SHAPES_8V8.find(s=>s.slug===f.slug).lines),`${f.slug}: same spots as the coach app`);}
+assert(shapes.SHAPES_8V8.every(s=>s.format==="8v8"&&s.lines.reduce((a,l)=>a+l.spots.length,0)===8),"8v8 shapes: a keeper and seven");for(const f of Object.values(lineup.DEFAULT_FORMATION))assert(shapes.shapeBySlug(f),`default formation ${f} exists`);
  const l={f:'9v9-3-2-3',team:'Tiburones ⚽',note:'Kick-off 9:30.\nField 4 — white shirts',on:['Zoë','José','李','Ava','Ben','Cal','Dee','Eli',''],bench:['Fay','Gus']};
  const code=lineup.encodeLineup(l);assert(/^[A-Za-z0-9_-]+$/.test(code),'the code is URL-fragment safe');assert.deepEqual(lineup.decodeLineup(code,S),l,'a lineup survives the link, accents and all');
  assert.deepEqual(lineup.readHash(`#l=${code}`,S),l);assert.deepEqual(lineup.readHash('#f=futsal-3-1',S),lineup.emptyLineup(shapes.shapeBySlug('futsal-3-1')));assert.equal(lineup.readHash('#f=nope',S),null);assert.equal(lineup.readHash('',S),null);

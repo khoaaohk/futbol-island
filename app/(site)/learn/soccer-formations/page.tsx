@@ -8,7 +8,7 @@ import {POSITIONS_HUB} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {gameLink} from '@/lib/site/games';
 import {Bullets,Diagram,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
-import {GUIDE_FORMATS} from '@/lib/site/pitch';
+import {FORMATION_FORMATS} from '@/lib/site/pitch';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {COMPARISONS} from '@/lib/site/comparisons';
@@ -17,16 +17,16 @@ import styles from '../../site.module.css';
 /** /learn/soccer-formations: the formations hub (lib/site/formations.ts): what a formation is, then every shape by format. */
 export const dynamic='force-static';
 export const metadata=pageMeta(HUB.title,HUB.description,HUB.path,{whole:true,image:{url:formationImage('11v11-4-3-3'),alt:'Diagram of the 4-3-3 soccer formation'}});
-const LABEL={'7v7':'7v7 soccer formations','9v9':'9v9 soccer formations','11v11':'11v11 soccer formations',futsal:'Futsal formations'} as const;
+const LABEL={'7v7':'7v7 soccer formations','8v8':'8v8 soccer formations (fútbol 8)','9v9':'9v9 soccer formations','11v11':'11v11 soccer formations',futsal:'Futsal formations'} as const;
 export default function FormationsHub(){
  const crumbs=guideCrumbs({name:HUB.crumb,path:HUB.path});
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:HUB.h1,path:HUB.path,description:HUB.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:FORMATIONS.map(f=>({name:`${f.name} formation`,path:f.path}))})}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro top rail={<RailNav rail={hubRail('Soccer formations on this page',GUIDE_FORMATS.map(fmt=>({title:LABEL[fmt],items:formationsIn(fmt).map(f=>anchor('formation',f.path,f.name))})))} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer formations on this page',FORMATION_FORMATS.map(fmt=>({title:LABEL[fmt],items:formationsIn(fmt).map(f=>anchor('formation',f.path,f.name))})))} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
   <Section id="what" title="What is a formation?"><Bullets items={HUB.what}/></Section>
-  {GUIDE_FORMATS.map(fmt=>{const list=formationsIn(fmt),first=list[0],guide=formatGuide(fmt);
+  {FORMATION_FORMATS.map(fmt=>{const list=formationsIn(fmt),first=list[0],guide=formatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
     <p>{HUB.groups[fmt]} {guide&&<a href={guide.path}>Compare all {list.length} in the {fmt} guide</a>}{guide&&'.'}</p>
     <div className={styles.pair}>
