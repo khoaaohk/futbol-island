@@ -10,6 +10,17 @@ The shared tokens are the `--btn-*` custom properties in `app/globals.css`, in t
 
 When you write a new button, use a shared component or these tokens. Do not use raw hex values.
 
+## Hover (owner, Nov 23 2026)
+
+One mouse hover for every button, site and game: `@media (hover:hover) and (pointer:fine)` only, never on touch. Tokens in
+`app/globals.css`: `--btn-hover-filter: brightness(1.05)` (the coach app's gold Open) and `--btn-hover-ring: 3px solid #ffd451`
+(offset `--btn-hover-ring-offset`, 3px; the rail's entries draw it inside at -3px). Every `<button>`/`<summary>` gets the
+brightness from a zero-specificity `:where()` rule (a button's own filter or transition wins); raised and pill families add the
+gold ring as an outline (no layout or lip-shadow change) in their own module, with `filter .16s` appended to that class's own
+transition list. Hover only: press (`:active`), the Back folding into the arrow, sizes and handlers stay as they are. Excluded:
+thumb/touch game controls (island action cluster, arcade and konbini action keys), the fishing reel, buttons holding a canvas.
+New button? Use the tokens; the full list is `.claude/worktrees/_recovery-nov20/hover/INVENTORY.md` (Nov 23 audit).
+
 ## Families
 
 The textured gold face is `var(--btn-gold) var(--btn-grain) center/128px 128px`, with a `var(--btn-rim-width) solid var(--btn-rim)` border (3px `#fff2cd`). The "edge" is the solid `0 Npx 0` drop shadow in the face's darker colour. Pressing a button moves it down (`translate: 0 var(--btn-press)`) and shortens the edge. Focus shows the global `button:focus-visible` outline, or `var(--btn-focus)` inside components.
