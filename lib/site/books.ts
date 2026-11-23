@@ -119,9 +119,10 @@ export const byPosition=()=>Object.keys(ROLE_WORD).map(role=>({role,guide:roleGu
 /** The search snippet: the player and the turn of the story (bookPages/hooks.ts), then the lesson; 70-155 characters, never cut
  *  mid-sentence (before, the summary cut at 155 led with the book's title and stopped mid-word). */
 export function bookDescription(b:SiteBook):string{
- const hook=BOOK_HOOKS[b.id],les=bookLesson(b).replace(/^The story teaches/,'It teaches');
- if(!hook)return b.page?.summary??b.blurb;
- return [les?`${hook} ${les}`:'',`${hook} A free pop-up book for kids, read aloud.`,`${hook} A free pop-up book for kids.`,hook].find(d=>d.length>=70&&d.length<=155)??hook;
+ const hook=BOOK_HOOKS[b.id];if(!hook)return b.page?.summary??b.blurb;
+ const short=hook.replace('’s story:',':'),l=bookLesson(b).replace(/^The story teaches (that |you to )?/,''),les=l?l[0].toUpperCase()+l.slice(1):'';
+ const first=les?les.split(/,? and (?:that |to )?|, or /)[0].replace(/[.,]$/,'')+'.':'';/* "X, and Y." -> "X." when the whole lesson does not fit */
+ return [les?`${short} Lesson: ${les}`:'',first?`${short} Lesson: ${first}`:'',`${hook} A free pop-up book for kids.`,hook].find(d=>d.length>=70&&d.length<=155)??hook;
 }
 /** The page's own "About this book" paragraph: who the player is (their card's position and country), the turn of the story, the
  *  lesson, the age range, and the position guide that explains the player's job on the pitch. Every part is page data. */
