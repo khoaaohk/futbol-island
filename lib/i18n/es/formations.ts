@@ -430,7 +430,7 @@ export const FORMAT_GUIDES_ES:Readonly<Record<'7v7'|'9v9'|'11v11',FormatGuideEs>
    {q:'¿Cómo se convierten las formaciones de 7v7 en formaciones de 9v9?',a:'Se agrega un defensa y un delantero. El 2-3-1 de 7v7 se vuelve un 3-2-3 cuando un defensa central se suma a los dos defensas y los mediocampistas abiertos suben para jugar de extremos al lado del delantero.'},
    {q:'¿Un equipo de 9v9 debe jugar con dos o con tres defensas?',a:'Con tres es más sencillo: uno puede ir al balón y dos siguen cubriendo. Dos defensas solo funcionan si un mediocampista baja como tercer protector cuando ataca el otro equipo.'}]},
  '11v11':{crumb:'Formaciones de 11v11',blurb:'4-3-3, 4-4-2, 4-2-3-1 y 3-5-2 comparadas, con diagramas',
-  title:'Formaciones de fútbol 11 para niños: 4-3-3, 4-4-2 y más',
+  title:'Formaciones de fútbol 11: 4-3-3, 4-4-2, 4-2-3-1 y 3-5-2',
   description:'Las principales formaciones de fútbol 11v11 (4-3-3, 4-4-2, 4-2-3-1 y 3-5-2) comparadas en una tabla, con diagramas y cuál le sirve a un equipo juvenil.',
   h1:'Formaciones de fútbol 11v11',
   lead:'En el fútbol 11v11 cada equipo tiene un portero y diez jugadores de campo. Cuatro formaciones cubren casi todo lo que ven los jugadores jóvenes: el 4-3-3, el 4-4-2, el 4-2-3-1 y el 3-5-2. Para los equipos que suben del 9v9, el 4-3-3 suele ser el paso más fácil.',

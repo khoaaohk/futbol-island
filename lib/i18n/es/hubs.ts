@@ -67,7 +67,7 @@ function words(h:Hub):HubEs{
    groups:PASS_GROUPS_ES,
    faq:one({q:'¿Cómo me desmarco para recibir un pase?',a:conceptEs('prn_7_support')},{q:'¿Cuándo debo hacer una pared?',a:conceptEs('s_onetwo')},{q:'¿Por qué cambiar el juego?',a:conceptEs('e_switch')}),video};
   case 'futsal-for-kids':{const Q=qs(ls),cats=g.map(x=>catEs(x.title.replace(' (futsal)','')));
-   return {crumb:'Futsal',blurb:`${n} lecciones para la cancha de futsal`,title:'Futsal para niños: lecciones y pruebas gratis',
+   return {crumb:'Futsal',blurb:`${n} lecciones para la cancha de futsal`,title:'Futsal y fútbol sala para niños: lecciones y pruebas',
    description:`${n} lecciones gratis de futsal para niños: funciones en la cancha, el pívot, paredes, saques de banda, de esquina y defensa, cada una con prueba.`,
    h1:'Lecciones de futsal para niños',
    lead:`${DEFINITION_ES} Tiene ${n} lecciones de futsal con ${Q} preguntas de prueba, agrupadas aquí en ${andEs(cats.map(c=>c.toLowerCase()))}.`,
@@ -76,7 +76,7 @@ function words(h:Hub):HubEs{
     {q:'¿Cuáles son las funciones en la cancha de futsal?',a:conceptEs('learnf_roles31')},
     {q:'¿Qué es un saque de banda con el pie en futsal?',a:`La reanudación del futsal desde la línea de banda. ${conceptEs('set_f_throwin')}`}),video};}
   case '7v7-9v9-11v11':{const a=count('7v7'),b=count('9v9'),c=count('11v11');
-   return {crumb:'7v7, 9v9 y 11v11',blurb:`${a}, ${b} y ${c} lecciones por tamaño de equipo`,title:'Lecciones de fútbol 7v7, 9v9 y 11v11 para niños',
+   return {crumb:'7v7, 9v9 y 11v11',blurb:`${a}, ${b} y ${c} lecciones por tamaño de equipo`,title:'Fútbol 7, 9 y 11 para niños: lecciones 7v7, 9v9 y 11v11',
    description:`Lecciones de fútbol para niños según el tamaño del equipo: ${a} de 7v7, ${b} de 9v9 y ${c} de 11v11, cada una con su prueba. Gratis y sin anuncios.`,
    h1:'Lecciones de 7v7, 9v9 y 11v11',
    lead:`${DEFINITION_ES} Los niños aprenden el juego con el tamaño de equipo con el que juegan: ${a} lecciones de 7v7, ${b} de 9v9 y ${c} de 11v11, ordenadas abajo en los capítulos de cada ruta de aprendizaje.`,

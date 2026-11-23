@@ -73,7 +73,7 @@ export const CHARTS_ES:Readonly<Record<string,ChartEs>>={
   pictureTitle:'Tamaño de la cancha de fútbol por edad'},
 
  'soccer-age-groups':{crumb:'Categorías de edad',blurb:'De U6 a U19: las fechas de nacimiento de cada categoría y el partido que juega',
-  title:'Categorías de edad del fútbol: tabla de U6 a U19',h1:'Categorías de edad del fútbol: de U6 a U19',
+  title:'Categorías del fútbol por edad: tabla sub-6 a sub-19',h1:'Categorías de edad del fútbol: de U6 a U19',
   description:`Qué significa U8, U10 o U12 en el fútbol juvenil: tabla de categorías ${S} de U6 a U19 con fechas de nacimiento, formato, balón y duración.`,
   lead:'En el fútbol juvenil, la “U” significa “menores de”, así que un equipo U10 es para niños de 10 años o menos. Cada categoría tiene su propio partido: 4v4 hasta U8, 7v7 en U9 y U10, 9v9 en U11 y U12, y 11v11 desde U13.',
   more:`La categoría de un niño depende de su fecha de nacimiento y de la fecha de corte que usa su liga. Para la temporada ${S}, las organizaciones juveniles más grandes de EE. UU. cambiaron la fecha de corte del 1 de enero al 1 de agosto.`,
