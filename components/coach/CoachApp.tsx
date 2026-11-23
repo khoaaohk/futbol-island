@@ -19,7 +19,7 @@ import PlansTool from './PlansTool';
 import {GameDayTab,HOME_Y,TrainingTab} from './TabPages';
 import {liveLine} from './LiveDock';
 import t4 from './tabs.module.css';
-import {BallIcon,ConeIcon,GlobeIcon} from './GameIcons';
+import {BallIcon,CheckMark,ConeIcon,CrossMark,GlobeIcon} from './GameIcons';
 /**
  * The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): Team · Lineup · Game · Summary, and the live game screen.
  * One client component on purpose (a coach opens it once and lives in it). The engine is pure (lib/coach/engine.ts) and the
@@ -410,7 +410,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
      onClick={()=>update(x=>{const {[p.id]:_drop,...rest}=x.late;void _drop;
       return !x.here.includes(p.id)?{...x,here:[...x.here,p.id],late:rest}:p.id in x.late?{...x,here:x.here.filter(i=>i!==p.id),late:rest}:{...x,late:{...x.late,[p.id]:null},spots:x.spots.map(i=>i===p.id?'':i)};})}>
      {!hereSet.has(p.id)?w.away:p.id in store.late?w.lateBtn:w.here}</button>
-    <button type="button" className={c.iconBtn} aria-label={`${w.remove} #${p.num}`} onClick={()=>update(x=>({...x,team:{...x.team,players:x.team.players.filter(q=>q.id!==p.id)},here:x.here.filter(i=>i!==p.id)}))}>✕</button>
+    <button type="button" className={c.iconBtn} aria-label={`${w.remove} #${p.num}`} onClick={()=>update(x=>({...x,team:{...x.team,players:x.team.players.filter(q=>q.id!==p.id)},here:x.here.filter(i=>i!==p.id)}))}><CrossMark/></button>
    </div>
    {hereSet.has(p.id)&&p.id in store.late&&<label className={c.lateRow}>{w.arrives}<select className={c.input} value={store.late[p.id]==null?'':String(store.late[p.id])}
     onChange={e=>{const v=e.target.value;update(x=>({...x,late:{...x.late,[p.id]:v===''?null:Number(v)}}));}}>
@@ -596,7 +596,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
     </div>}
     {gkNew&&<p className={c.gkLine}>#{nm(gkNew)?.num} {nm(gkNew)?.name} {w.goesInGoal}</p>}
     <div className={c.cardBtns}>
-     {nc&&(inPlay||st==='break')&&<button type="button" className={`${c.btn} ${c.done}`} onClick={()=>{onSub();act(g=>{const n=nextChange(g);return n?confirmChange(g,Date.now(),n.change,n.index,keepers):g;});}}>{w.done} ✓</button>}
+     {nc&&(inPlay||st==='break')&&<button type="button" className={`${c.btn} ${c.done}`} onClick={()=>{onSub();act(g=>{const n=nextChange(g);return n?confirmChange(g,Date.now(),n.change,n.index,keepers):g;});}}>{w.done}<CheckMark/></button>}
      {(st==='pre'||st==='break')&&<button type="button" className={`${c.btn} ${nc&&st==='break'?c.cardGhost:c.done}`} style={nc&&st==='break'?{gridColumn:'1/-1'}:undefined} onClick={()=>act(g=>kickOff(g,Date.now()))}>{st==='pre'?w.kickOff:w.kickOffNext(pName)}</button>}
      {nc&&inPlay&&<><button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>act(g=>delayChange(g,60))}>{w.delay}</button>
       <button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>act(g=>skipChange(g,Date.now(),keepers),w.replanned)}>{w.skip}</button></>}
@@ -611,7 +611,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
     <button type="button" className={c.btn} onClick={()=>mark(sheet,'left')}>{w.left}</button>
     {!onSet.has(sheet.id)&&<button type="button" className={c.btn} onClick={()=>mark(sheet,'late')}>{w.late}</button>}
    </>:<button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>mark(sheet,'ok')}>{game.status[sheet.id]==='late'?w.arrived:w.back}</button>}
-   <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>setSheet(null)}>✕</button>
+   <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>setSheet(null)}><CrossMark/></button>
   </div></div>}
  </div>;
 }

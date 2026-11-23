@@ -157,3 +157,4 @@ li[data-wide] .art{aspect-ratio:16/7}
 .pill{gap:8px}
 /* wide screens: the three destinations sit over the content column (728 px), not spread across the whole window */
 @media (min-width:800px){.nav{padding-left:max(8px,calc(50vw - 372px));padding-right:max(8px,calc(50vw - 372px))}}
+.fBody .tHead,.tText .tHead{display:flex;align-items:center;gap:10px}

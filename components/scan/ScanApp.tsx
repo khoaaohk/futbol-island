@@ -11,6 +11,7 @@ import c from './scan.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
 import {miniBackHref,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
 import '@/components/motion/motion.css';
+import {CheckMark,CrossMark} from '@/components/coach/GameIcons';
 /**
  * Scan Trainer (/scan and the club embed /embed/soccer-scanning-trainer; Nov 16 2026; docs/scan-trainer/HANDOFF.md).
  * Three screens: settings, the full-screen cue (3-2-1, then a new cue every interval; tap anywhere to pause) and the summary.
@@ -142,8 +143,8 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
    {ph.phase==='run'&&s.session>0&&<div className={c.progress} aria-hidden="true"><i style={{transform:`scaleX(${Math.min(1,ph.ms/(s.session*1000))})`}}/></div>}
    {!paused&&<div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>}
    {s.score&&ph.phase==='run'&&!paused&&<div className={c.scoreStrip}>
-    <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><span aria-hidden="true">✓</span> {score.hit}</button>
-    <button type="button" className={`${c.scoreBtn} ${c.scoreMiss}`} data-score="miss" onClick={()=>mark(false)} aria-label={`${w.wrong}: ${score.miss}`}><span aria-hidden="true">✗</span> {score.miss}</button>
+    <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><CheckMark/> {score.hit}</button>
+    <button type="button" className={`${c.scoreBtn} ${c.scoreMiss}`} data-score="miss" onClick={()=>mark(false)} aria-label={`${w.wrong}: ${score.miss}`}><CrossMark/> {score.miss}</button>
    </div>}
    {/* paused (owner, Nov 22 2026): a light overlay with one centred group: pause icon, "Paused", time left, Resume (gold) and End
        session (cream) 12 px apart; the run chips are hidden under it */}

@@ -3,3 +3,5 @@
 .web{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:#fbf7ee;
  --btn-green:#fbf7ee;--btn-green-edge:rgb(20 34 29 / .14);--btn-ink-on-dark:#14221d;
  --btn-pink:#d9ebe1;--btn-pink-edge:#9cc7b0;--btn-cream:#efeee2;--btn-cream-edge:rgb(20 34 29 / .16);--btn-ink:#14221d;--btn-focus:3px solid #1d6b55}
+/* the screen title for screen readers and the page outline (the visible title is the shared header) */
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;font-size:20px;margin:0}

@@ -18,6 +18,7 @@ export default function BoardApp(){
  const [lang,setLang]=useState<'en'|'es'>('en');
  useEffect(()=>{noteAppEntry('board');try{if(new URLSearchParams(location.search).get('lang')==='es'){setLang('es');document.documentElement.lang='es';}}catch{/* none */}},[]);
  return <div className={web.web} data-board-app="" translate="no">
+  <h1 className={web.srOnly}>{lang==='es'?'Pizarra táctica':'Tactics board'}</h1>
   <AppHeader lang={lang} title={lang==='es'?'Pizarra táctica':'Tactics board'} sub="Futbol Island" exitAria="" exit={false}
    left={<HeaderGoldBack lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,lang==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board'));}} data={{'data-board-coach':''}}/>}/>
   <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard/></div></div>

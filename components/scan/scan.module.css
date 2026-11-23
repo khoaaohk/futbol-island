@@ -321,3 +321,5 @@
 .srOnly{font-size:20px}
 .home,.homeSide{gap:16px}
 .tipHome{margin-top:8px}
+.countNum{color:#244d40}
+.scoreBtn{display:flex;align-items:center;justify-content:center;gap:8px}
