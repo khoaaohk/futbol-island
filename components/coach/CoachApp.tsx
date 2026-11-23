@@ -12,8 +12,6 @@ import {TeamButton,TeamSheet,presetSettings} from './TeamSheet';
 import {LiveBar,toggleClock} from './LiveDock';
 import c from './coach.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
-import TeamShare from '@/components/share/TeamShare';
-import type {ShareLesson} from '@/lib/share/teamShare';
 import {exitHref,noteAppEntry,screenChange,useOncePerSession,useSheet,useSwipeDown,Tick,useCountUp,type Dir} from '@/components/motion/motion';
 import '@/components/motion/motion.css';
 /**
@@ -141,7 +139,7 @@ function Seg<T extends string|number|boolean>({label,value,options,names,onPick}
   {options.map(o=><button key={String(o)} type="button" className={c.segBtn} aria-pressed={o===value} onClick={()=>onPick(o)}>{names(o)}</button>)}</div></div>;
 }
 /* ------------------------------------------------------------------ the app ---------------------------------------------- */
-export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lessons?:readonly ShareLesson[]}){
+export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  /* several teams (Nov 22 2026; lib/coach/teams.ts): the screens read and write the active team's store */
  const [teams,setTeams]=useState<Teams>(()=>({v:1,activeId:'t1',teams:[{...emptyStore(),id:'t1'}]}));
  const store=activeOf(teams),place=teams.teams.indexOf(store)+1;
@@ -228,8 +226,6 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
   try{if(navigator.share){await navigator.share({title:x.team||w.plan,url});return;}}catch{/* cancelled */}
   try{await navigator.clipboard.writeText(url);setToast({msg:w.copied,undo:false});}catch{window.prompt(w.copyLink,url);}
  };
- /* Share the game with your team (Nov 20 2026): the same block on the Team and Summary tabs; the team name is only printed. */
- const shareBlock=<TeamShare surface="coach" lang={lang} format={store.settings.format} team={store.team.name} lessons={lessons} heading/>;
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
  const team=store.team;
  return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab} data-dock={!live&&liveRec?'':undefined}>
@@ -244,10 +240,10 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
     {t==='home'?<HomeTab w={w} store={store} d={d} last={lastTool} lang={lang} go={go} running={!!liveRec} liveName={liveOther?liveOther.team.name||w.teamN(teams.teams.indexOf(liveOther)+1):null} onResume={openLive}
      onMatch={()=>{if(game&&game.clock.status!=='done')setLive(true);else if(d.here.length)startGame();else go('team');}}
      onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
-    :t==='team'?<TeamTab w={w} store={store} update={update} d={d} share={shareBlock}/>
+    :t==='team'?<TeamTab w={w} store={store} update={update} d={d}/>
     :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
     :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={()=>go('team')} onNext={()=>go('subs','tab')}/>
-    :<SummaryTab w={w} store={store} now={now} share={shareBlock} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
+    :<SummaryTab w={w} store={store} now={now} onShare={(names:boolean)=>{const g=store.game??store.last;if(g)shareLink(toShared(team,g.settings,g.blocks,summarySeconds(g,Date.now()),g.clock.status==='done',names));}}
       onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes');}}}/>}
    </div>)}
   </main>
@@ -310,7 +306,7 @@ function HomeTab({w,store,d,last,lang,go,running,liveName,onResume,onMatch,onExa
 const lateMinutes=(s:Settings)=>{const out:number[]=[],end=s.periods*s.periodMin;for(let m=s.subEvery;m<end;m+=s.subEvery)out.push(m);return out;};
 type Up=(f:(s:Store)=>Store)=>void;
 /* ------------------------------------------------------------------ Team ------------------------------------------------- */
-function TeamTab({w,store,update,d,share}:{w:Words;store:Store;update:Up;d:D;share:ReactNode}){
+function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
  const players=store.team.players,nums=new Set(players.map(p=>p.num)),hereSet=new Set(store.here);
  const setPlayers=(f:(ps:Player[])=>Player[],addHere:string[]=[])=>update(s=>({...s,team:{...s.team,players:cleanPlayers(f(s.team.players))},here:[...new Set([...s.here,...addHere])]}));
  const add=(n:number)=>{let num=1;while(nums.has(num)&&num<99)num++;const ids=new Set(players.map(p=>p.id)),added:Player[]=[];
@@ -367,7 +363,6 @@ function TeamTab({w,store,update,d,share}:{w:Words;store:Store;update:Up;d:D;sha
     <option value="">{w.arrivesUnknown}</option>{lateMinutes(s).map(m=><option key={m} value={m}>{w.minuteN(m)}</option>)}</select></label>}
   </li>)}</ul>
   {players.length>0&&<div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>add(1)}>{w.addPlayer}</button></div>}
-  {share}
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </>;
 }
@@ -567,9 +562,9 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
  </div>;
 }
 /* ------------------------------------------------------------------ Summary ---------------------------------------------- */
-function SummaryTab({w,store,now,share,onShare,onNew}:{w:Words;store:Store;now:number;share:ReactNode;onShare:(names:boolean)=>void;onNew:()=>void}){
+function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;onShare:(names:boolean)=>void;onNew:()=>void}){
  const g=store.game??store.last,[names,setNames]=useState(true);
- if(!g)return <><h1 className={c.h1}>{w.tabSummary}</h1><div className={c.empty}>{w.noGame}</div>{share}</>;
+ if(!g)return <><h1 className={c.h1}>{w.tabSummary}</h1><div className={c.empty}>{w.noGame}</div></>;
  const done=g.clock.status==='done',sec=done?playedSeconds(g,0).played:summarySeconds(g,now),kept=playedSeconds(g,0).kept;
  const ids=Object.keys(g.status),rows=store.team.players.filter(p=>ids.includes(p.id)).sort((a,b)=>a.num-b.num),max=Math.max(1,...rows.map(p=>sec[p.id]??0));
  const fixed=g.settings.keeper==='fixed'?g.blocks[0]?.gk??null:null,skip=new Set([...(fixed?[fixed]:[]),...ids.filter(p=>g.status[p]!=='ok'),...(g.joined??[])]);
@@ -590,7 +585,6 @@ function SummaryTab({w,store,now,share,onShare,onNew}:{w:Words;store:Store;now:n
     <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>onShare(names)}>{w.share}</button>
     {store.game&&<button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onNew}>{w.newGame}</button>}</div>
   </div>
-  {share}
  </>;
 }
 /* ------------------------------------------------------------------ a shared link (read-only) ---------------------------- */

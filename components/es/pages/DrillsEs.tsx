@@ -1,4 +1,3 @@
-import TeamShare from '@/components/share/TeamShare';
 import KeepReading from '@/components/site/KeepReading';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -206,7 +205,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
    </Section>
   </div>
   <div className={styles.noPrint}>
-   <Section id="structure" title="Cómo está hecho este plan"><p>{PPP_LINE_ES}</p><p>Para imprimir este plan en una página, usa la opción Imprimir de tu navegador.</p><TeamShare surface="practice" lang="es"/></Section>
+   <Section id="structure" title="Cómo está hecho este plan"><p>{PPP_LINE_ES}</p><p>Para imprimir este plan en una página, usa la opción Imprimir de tu navegador.</p></Section>
    <Section id="drills" title="Ejercicios de este plan">
     <EsGridFigure id="s0" scene={shown.scene} image={diagramUrl(shown.picture)}/>
     <EsDrillList items={p.drills.map(d=>({drill:d,line:drillLineEs(d)}))}/>

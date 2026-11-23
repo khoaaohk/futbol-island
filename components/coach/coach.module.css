@@ -21,9 +21,6 @@
 .note{font-size:15px;color:var(--soft);margin:6px 0 0}
 .panel{background:var(--tint);border-radius:var(--r);padding:16px;margin:12px 0}
 /* bottom tab bar */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--paper);border-top:1px solid var(--line);padding:6px 8px max(6px,env(safe-area-inset-bottom))}
-.tab{min-height:56px;border:0;border-radius:16px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;font-weight:800;color:var(--soft)}
-.tab svg{width:22px;height:22px}
 .tabDot{display:none}
 /* controls */
 .seg{display:flex;flex-wrap:wrap;gap:8px}
@@ -31,7 +28,7 @@
 .chip[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .chip small{font-weight:500;opacity:.75;font-size:13px}
 .btn{min-height:52px;padding:0 20px;border-radius:999px;border:0;background:var(--ink);color:var(--paper);font-size:17px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .12s}
-.btn:active,.chip:active,.setCard:active,.tab:active{transform:scale(.97)}
+.btn:active,.chip:active,.setCard:active{transform:scale(.97)}
 .btnGhost{background:var(--tint);color:var(--ink)}
 .btnSmall{min-height:40px;padding:0 12px;font-size:14px}
 .btnGold{background:var(--gold);color:var(--ink)}
@@ -149,7 +146,7 @@
 }
 @media (min-width:900px){.live{grid-template-columns:1fr 440px;grid-template-rows:auto 1fr}.liveTop{grid-column:1/-1}.card{border-radius:22px 0 0 0}}
 @media (prefers-reduced-motion:reduce){.card[data-flash=true]{animation:none;outline:6px solid var(--gold);outline-offset:-6px}.spot[data-over=true] .disc{transform:none}}
-@media print{.tabs,.top,.noPrint,.toast{display:none!important}.main{padding:0;max-width:none}.app{min-height:0;background:#fff}.pitch{max-width:360px;print-color-adjust:exact;-webkit-print-color-adjust:exact}.tlBar,.tlPeriod,.disc,.sumBar{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+@media print{.top,.noPrint,.toast{display:none!important}.main{padding:0;max-width:none}.app{min-height:0;background:#fff}.pitch{max-width:360px;print-color-adjust:exact;-webkit-print-color-adjust:exact}.tlBar,.tlPeriod,.disc,.sumBar{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 /* Nov 22 2026 redesign: the game settings card on the Team screen and its sheet (owner: "simple, sleek, modern") */
 .setCard{width:100%;min-height:76px;margin:14px 0 0;border:0;border-radius:18px;background:var(--tint);display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;text-align:left;transition:transform .12s}
 .setMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -180,7 +177,6 @@
 .app[data-tool=summary]{--acc:#4f5b53;--accTint:#e6e3d6}
 .toolMark{width:40px;height:40px;flex:0 0 auto;border-radius:12px;background:var(--accTint);color:var(--acc);display:grid;place-items:center}
 .toolMark svg{width:22px;height:22px}
-.tab[aria-current=page]{color:var(--acc);background:var(--accTint)}
 .h1{color:var(--ink)}
 /* the substitution rotation: one card per change */
 .subList{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
@@ -196,8 +192,6 @@
 .nums b[data-on]{background:#d7eadf}
 .nums b[data-gk]{background:var(--gold)}
 .subGk{margin:0;font-size:14px;font-weight:700}
-.tabs{grid-template-columns:repeat(5,1fr)}
-.tab{font-size:12px}
 /* Home (Nov 22 2026): the team at a glance, Continue, one tile per tool */
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .homeTeam,.homeEmpty{background:var(--ink);color:var(--paper);border-radius:22px;padding:18px;margin:6px 0 0}
@@ -252,16 +246,9 @@
 .homeBtn:active,.langBtn:active,.stepBtn:active,.segBtn:active,.fmtBtn:active{transform:scale(.96)}
 .langBtn{min-height:44px;transition:background-color .15s,transform .12s}
 .exitBtn{flex:0 0 auto}
-/* View Transitions (components/motion/motion.css): the bar and the tab bar hold still, the title and the tool mark move */
+/* View Transitions (components/motion/motion.css): the bar holds still, the title and the tool mark move */
 .top{view-transition-name:coach-top}
 .topTitle b{display:block;view-transition-name:coach-title}
-.tabs{view-transition-name:coach-tabs}
-/* ---- the tab bar: one indicator glides to the current tab (transform only) and takes the tool's tint ---- */
-.tabInd{position:absolute;left:8px;top:6px;width:calc((100% - 32px) / 5);height:56px;border-radius:16px;background:var(--accTint);pointer-events:none;
- transition:transform 300ms cubic-bezier(.22,1,.36,1),background-color 200ms ease,opacity 150ms ease}
-.tabInd[data-off]{opacity:0}
-.tab{position:relative;z-index:1;transition:color .18s ease,transform .12s}
-.tab[aria-current=page]{background:transparent}
 /* ---- one control language: 52 px for inputs, chips, steppers, segments and buttons in a row; pills for choices ---- */
 .app{--ctl:52px}
 .chip{min-height:var(--ctl);transition:background-color .18s ease,color .18s ease,transform .12s}
@@ -331,7 +318,6 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
  .chip:not([aria-pressed=true]):hover,.fmtBtn:not([aria-pressed=true]):hover,.benchChip:hover{background:var(--well)}
  .segBtn:not([aria-pressed=true]):hover{background:rgb(20 34 29 / .06)}
  .stepBtn:not(:disabled):hover{background:#fff;box-shadow:0 2px 8px rgb(20 34 29 / .12)}
- .tab:not([aria-current=page]):hover{color:var(--ink);background:rgb(20 34 29 / .05)}
  .setCard:hover,.subCard:hover,.whoBtn:hover{background:var(--well)}
  .row:hover{background:rgb(20 34 29 / .025)}
  .here:hover{filter:brightness(1.06)}
@@ -340,7 +326,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 }
 .app a:focus-visible,.app button:focus-visible{outline:3px solid var(--pitch);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){
- .tabInd,.tab,.tile,.continue,.tileIcon,.homeBtn,.langBtn,.stepBtn,.segBtn,.fmtBtn,.chip,.here,.iconBtn{transition:background-color .15s ease,color .15s ease}
+ .tile,.continue,.tileIcon,.homeBtn,.langBtn,.stepBtn,.segBtn,.fmtBtn,.chip,.here,.iconBtn{transition:background-color .15s ease,color .15s ease}
  .tile:hover,.continue:hover,.tile:active,.continue:active,.tile:hover .tileIcon,.continue:hover .tileIcon,.homeBtn:active,.stepBtn:active,.segBtn:active,.fmtBtn:active,.here:active,.iconBtn:active{transform:none}
  .sheetIn,.sheet[data-closing] .sheetIn{animation:sheetFadeOnly 200ms ease-out both}
  .sheet[data-closing] .sheetIn{animation-name:sheetFadeOnlyOut}

@@ -25,7 +25,6 @@ import {COACH_COUNT_EVENTS,SCAN_COUNT_EVENTS,BEACH_COUNT_EVENTS,EMOTE_COUNT_EVEN
 import {COUNT_SINCE} from './countSince.generated';
 import {SF_SECTIONS,sfId} from './siteFunnelIds';
 import {GP_GAMES,gpId} from './gamePlayIds';
-import {SHARE_COUNT_EVENTS} from './shareIds';
 import {SPONSOR_DEFS} from './sponsor';
 import {LM_FORMAT_LABEL,lmSeconds} from './liveMatchReport';
 import {mmSeconds} from './marketingVisitReport';
@@ -100,7 +99,7 @@ const LABELS=new Map<string,string>();
 const addLabels=(prefix:string,rows:readonly (readonly [string,string,...unknown[]])[])=>{for(const [e,l] of rows)LABELS.set(prefix+e,l);};
 addLabels('sh:',SHOP_COUNT_EVENTS);addLabels('sb:',SANDBAR_COUNT_EVENTS);addLabels('su:',SUMMIT_COUNT_EVENTS);addLabels('bc:pickup_',BEACH_COUNT_EVENTS);
 addLabels('tu:',TUTORIAL_COUNT_EVENTS);addLabels('fi:',FISHING_COUNT_EVENTS);addLabels('wa:',WATER_COUNT_EVENTS);addLabels('ip:',IDP_COUNT_EVENTS);
-addLabels('ts:',SHARE_COUNT_EVENTS);addLabels('ca:',COACH_COUNT_EVENTS);addLabels('sn:',SCAN_COUNT_EVENTS);addLabels('mp:',PARTY_COUNT_EVENTS);addLabels('mp:',PARTY_RETENTION_EVENTS);addLabels('em:',EMOTE_COUNT_EVENTS);
+addLabels('ca:',COACH_COUNT_EVENTS);addLabels('sn:',SCAN_COUNT_EVENTS);addLabels('mp:',PARTY_COUNT_EVENTS);addLabels('mp:',PARTY_RETENTION_EVENTS);addLabels('em:',EMOTE_COUNT_EVENTS);
 for(const [st,what] of [['v','page views'],['p','Play taps (once per view)'],['r','tabs that reached /play after a Play tap'],['rs','reached /play, visit began from search or AI'],['d','tabs that really played after a Play tap']] as const)
  for(const [s,l] of SF_SECTIONS)LABELS.set(sfId(st,s),`${l}: ${what}`);
 for(const [st,what] of [['v','game page views'],['p','Play taps on its game page (once per view)'],['h','Play taps on its /games card']] as const)
