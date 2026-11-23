@@ -103,7 +103,7 @@ export const POSITIONS_ES:Readonly<Record<string,PositionEs>>={
     ['U13 and up','Los carrileros aparecen en sistemas de 11v11 como el 3-5-2, casi siempre con equipos mayores y con mejor condición física.']],
    mistakes:['Quedarse atrás todo el tiempo, así el equipo no tiene amplitud en el ataque.','Subir sin revisar quién cubre el espacio de atrás.']}},
  'defensive-midfielder':{name:'Mediocampista defensivo',short:'MCD',numberLine:'Al mediocampista defensivo muchas veces le dicen el 6. En algunos países el mismo puesto usa el 4.',
-  title:'¿Qué hace un mediocampista defensivo? El número 6 (MCD)',h1:'¿Qué hace un mediocampista defensivo en el fútbol?',
+  title:'¿Qué hace un mediocampista defensivo en el fútbol? El 6',h1:'¿Qué hace un mediocampista defensivo en el fútbol?',
   desc:'Qué hace un mediocampista defensivo (el número 6) en el fútbol, para niños: dónde se para, su trabajo con y sin el balón y tres hábitos para practicar.',
   answer:'Un mediocampista defensivo, al que muchas veces llaman el 6 o el mediocampista de contención, juega justo frente a los defensas. El 6 bloquea pases por el medio, recupera el balón y cubre a los compañeros que suben. Con el balón, el 6 es el pase seguro que lleva el ataque de un lado al otro.',
   job:'Un mediocampista defensivo es un jugador que se queda frente a los defensas, para protegerlos y conectarlos con el resto del equipo.',
@@ -119,7 +119,7 @@ export const POSITIONS_ES:Readonly<Record<string,PositionEs>>={
    {q:'¿Qué hace el número 6 en el fútbol?',a:'El 6 es el mediocampista defensivo. Protege el espacio frente a la defensa y recibe el balón de los defensas para empezar los ataques.'},
    {q:'¿Qué es un mediocampista de contención?',a:'Otro nombre para el mediocampista defensivo. El jugador mantiene su lugar frente a los defensas en vez de correr hacia adelante con el ataque.'},
    {q:'¿Qué es un doble pivote?',a:'Dos mediocampistas de contención que juegan lado a lado, como en un 4-2-3-1. Uno puede subir mientras el otro se queda.'},
-    {q:'¿Qué significa MCD en el fútbol?',a:'MCD significa mediocampista central defensivo. Es el mismo puesto que el mediocampista defensivo, el de contención o el número 6: el jugador que se queda delante de los defensas para proteger el medio y empezar los ataques.'},{q:'¿Cuál es la diferencia entre un MCD y un MC?',a:'El MCD, o el 6, se queda frente a los defensas y protege el medio. El MC, o el 8, va de área a área: ayuda a defender y después corre hacia adelante para apoyar el ataque.'},{q:'¿Es el mediocampista defensivo un buen puesto para niños?',a:'Sí, para jugadores a los que les gusta pasar y mirar alrededor. Enseña a escanear, a mantener la posición y a pasar sencillo, y eso ayuda en todos los demás puestos.'}],
+    {q:'¿Qué significa MCD en el fútbol?',a:'MCD significa mediocampista central defensivo. Es el mismo puesto que el mediocampista defensivo, el de contención o el número 6: el jugador que se queda delante de los defensas para proteger el medio y empezar los ataques.'},{q:'¿Cuál es la diferencia entre un MCD y un MC?',a:'El MCD, o el 6, se queda frente a los defensas y protege el medio. El MC, o el 8, va de área a área: ayuda a defender y después corre hacia adelante para apoyar el ataque.'}],
   notes:{
    coach:'Pídele al mediocampista defensivo que se pare en la línea de pase hacia el delantero rival, para cortar los pases a los pies del delantero.',
    match:'Los papás notan al 6 cuando se cae un ataque: es el jugador que se mete para frenar un contraataque antes de que llegue a los defensas.',

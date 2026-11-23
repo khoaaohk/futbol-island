@@ -58,7 +58,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
   faq:[{q:'What is the most common 9v9 formation?',a:'The 3-2-3 is the usual first choice: three defenders, two central midfielders and three forwards. It prepares players for the 4-3-3 they will meet in 11v11.'},
    {q:'Can I move a player from the bench into the lineup?',a:'Yes. Tap the substitute, then tap the player on the field. They swap places. On a computer you can drag one onto the other.'},
    {q:'Can I print the 9v9 lineup?',a:'Yes. “Print” makes a one-page sheet in black on white with the field, the names, the bench and your match note, ready for a clipboard.'}]},
- {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'Starting 11 Maker: Free Football 11 Lineup Builder',h1:'Starting 11 maker: 11v11 soccer lineup builder',
+ {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'Starting 11 Maker: Free Soccer Lineup Builder (Football 11)',h1:'Starting 11 maker: 11v11 soccer lineup builder',
   description:'Starting 11 maker for soccer and football: put your 11 in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, type names, drag players, then print or share. Free.',
   lead:'This starting 11 maker draws your soccer 11 line up on a full-size field in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, with the customary numbers on the dots and your substitutes listed beside it.',
   blurb:'A starting eleven on a full-size field',
