@@ -139,3 +139,21 @@ li[data-wide] .art{aspect-ratio:16/7}
 .navIcon svg{width:26px;height:26px}
 .navBtn{color:#5d7268}
 .navBtn[aria-current=page] .navIcon{background:#fdefc6}
+
+/* ---- Round 4B: selected age / language choices are mint chips (no dark fills); 12 px between session buttons; the site's heading
+   weights (title 600 at -0.028em, section head 600, card title 700); icon + label rows centred on one line ---- */
+.age[aria-selected=true],.langOpt[aria-pressed=true]{background:#cfeedb;color:#244d40;box-shadow:0 3px 0 #9fd1b2}
+.sessBtns{gap:12px}
+.h2{font-weight:600;letter-spacing:-.025em}
+.fTitle{font-weight:600;letter-spacing:-.028em}
+.tTitle{font-weight:700;letter-spacing:-.02em}
+/* icons aligned with text (owner, Nov 22 2026): icon and label in one centred flex row, a fixed gap, the icon a set size per text size,
+   no margins pushing either off the row */
+.tHead{align-items:center;gap:10px}
+.tHead>*{margin:0}
+.tHead svg,.pill svg,.navBtn svg{display:block;flex:0 0 auto}
+.featureTrain .tHead{margin-top:2px}
+.featureTrain .tHead svg{width:32px;height:32px}
+.pill{gap:8px}
+/* wide screens: the three destinations sit over the content column (728 px), not spread across the whole window */
+@media (min-width:800px){.nav{padding-left:max(8px,calc(50vw - 372px));padding-right:max(8px,calc(50vw - 372px))}}

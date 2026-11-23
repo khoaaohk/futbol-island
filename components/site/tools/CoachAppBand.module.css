@@ -19,3 +19,16 @@
 .band .h2{margin:0}
 .band .line{margin:12px 0 0}
 .band a.btn{color:#14221d;text-decoration:none}
+/* Round 4B (owner, Nov 22 2026): the band's buttons are the game's Back/Exit button (rim, grain, 5 px lip, press sinks 3 px, .16 s), the
+   gold primary and cream secondary the same size; a light phone frame (no dark surface); headings at the site's weight */
+.band .h2{font-weight:600;letter-spacing:-.025em}
+.band .btn{box-sizing:border-box;min-height:48px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);font:800 17px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);
+ background:var(--btn-cream,#fff1d3) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:0 5px 0 #d6c294,0 0 0 4px #fff2cd40;
+ transition:translate .16s,box-shadow .16s,filter .16s;transform:none}
+.band .primary{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d,0 0 0 4px #fff2cd40)}
+.band .btn:active{transform:none;translate:0 var(--btn-press,3px);box-shadow:0 2px 0 #d6c294,0 0 0 4px #fff2cd40}
+.band .primary:active{box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d,0 0 0 4px #fff2cd40)}
+.band .btn:focus{outline:none}.band .btn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+@media (hover:hover) and (pointer:fine){.band .btn:hover{transform:none;filter:brightness(1.05)}.band .ghost:hover{background:var(--btn-cream,#fff1d3) var(--btn-grain) center/128px 128px}}
+.band a.btn{color:var(--btn-ink,#244d40)}
+.phone{background:#fffaf0;box-shadow:0 0 0 2px #e6dcc4,0 10px 24px rgb(36 77 64 / .12)}

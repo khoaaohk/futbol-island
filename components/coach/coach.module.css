@@ -447,7 +447,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 
 /* the island game's look (owner, Nov 22 2026): warm paper with a faint grain (one static SVG noise, no animation), the game's dark
    green ink, rounded bold type, and no dark buttons: the plain button is a light green tint */
-.app{--ink:#244d40;--sans:ui-rounded,'SF Pro Rounded',-apple-system,BlinkMacSystemFont,'Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
+.app{--ink:#244d40;
  background-color:#fbf5e8;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .45 0 0 0 0 .3 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 .btn{background:#d6eedd;color:var(--ink)}
 .btnGhost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px rgb(36 77 64 / .14)}
@@ -480,18 +480,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 /* team badges: the team colour as a light tint with dark-green initials (no dark surfaces) */
 .teamBadge{color:var(--ink);box-shadow:inset 0 0 0 99px rgb(255 255 255 / .62)}
 
-/* the FULL game button at every size (owner, Nov 22 2026): the darker gold lip, a soft drop shadow, hover (mouse only) lifts and
-   brightens, press sinks onto the lip. Primary = .btnGold and the sheets' .doneBtn; secondary = every other .btn (cream, cream lip). */
-.app .btnGold,.app .doneBtn{border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd)!important;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
- box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d),0 7px 14px rgb(36 77 64 / .2)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
-.app .btnGold:active,.app .doneBtn:active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 var(--btn-gold-edge,#a8863d),0 2px 5px rgb(36 77 64 / .18)!important}
-.app .btn:not(.btnGold):not(.btnDanger){background:#fffaf0!important;color:var(--ink)!important;box-shadow:0 4px 0 #e0d2b0,0 6px 12px rgb(36 77 64 / .1)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
-.app .btn:not(.btnGold):not(.btnDanger):active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 #e0d2b0,0 2px 4px rgb(36 77 64 / .1)!important}
-@media (hover:hover) and (pointer:fine){
- .app .btnGold:not(:disabled):hover,.app .doneBtn:hover{translate:0 -1px;filter:brightness(1.06);box-shadow:0 5px 0 var(--btn-gold-edge,#a8863d),0 10px 20px rgb(36 77 64 / .24)!important}
- .app .btn:not(.btnGold):not(.btnDanger):not(:disabled):hover{translate:0 -1px;filter:brightness(1.02);box-shadow:0 5px 0 #e0d2b0,0 9px 16px rgb(36 77 64 / .14)!important}
-}
-.app .btn:disabled{box-shadow:none!important;opacity:.5}
+
 /* the rest of the controls on the same system: attendance "Coming" is a selected chip (mint), "Late" gold tint, "Not coming" cream;
    the keeper mark, bench chips, fold and player buttons are cream chips with a soft lip; the sound hint is the gold primary */
 .here{background:#cfeedb;color:#244d40;box-shadow:0 3px 0 #9fd1b2}
@@ -507,3 +496,50 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .app .btnWide,.app .sticky .btn,.app .startBtn{min-height:56px;font-size:19px}
 .app .btnSmall,.app .doneBtn{min-height:40px;padding:0 16px;font-size:15px}
 .app .btnRow{gap:12px}
+
+/* ---- Round 4B (owner, Nov 22 2026): ONE button, the game's own Back/Exit (components/DoneButton.module.css). Gold primary and cream
+   secondary share every measure (rim, radius, font, lip, height) and differ only in colour; press sinks onto the lip with the Back's
+   timings (translate/box-shadow .16s); a mouse hover only brightens (the coach header's Back/Exit get the same hover). Sizes:
+   56 a screen's main action, 48 default, 44 compact (header, sheet Done: the game Back's height and the 44 px tap minimum). Button text
+   is the site's button face (var(--btn-font), weight 800), as the marketing site's buttons. ---- */
+.app .btn.btn,.app .doneBtn.doneBtn{box-sizing:border-box;margin:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd)!important;border-radius:999px;
+ font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;line-height:1.1;letter-spacing:0;text-align:center;-webkit-tap-highlight-color:transparent;
+ min-height:48px;padding:0 20px;font-size:17px;transition:translate .16s,box-shadow .16s,filter .16s!important;transform:none}
+.app .btnGold.btnGold,.app .doneBtn.doneBtn,.app .btn.done{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
+ box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d,0 0 0 4px #fff2cd40)!important}
+.app .btn.btn:not(.btnGold):not(.done):not(.btnDanger){background:var(--btn-cream,#fff1d3) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
+ box-shadow:0 5px 0 #d6c294,0 0 0 4px #fff2cd40!important}
+.app .btn.btnDanger{box-shadow:0 5px 0 #8f2f22,0 0 0 4px #fff2cd40!important}
+.app .btn.btn:not(:disabled):active,.app .doneBtn.doneBtn:active{transform:none!important;translate:0 var(--btn-press,3px)}
+.app .btnGold.btnGold:not(:disabled):active,.app .doneBtn.doneBtn:active,.app .btn.done:not(:disabled):active{box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d,0 0 0 4px #fff2cd40)!important}
+.app .btn.btn:not(.btnGold):not(.done):not(.btnDanger):not(:disabled):active{box-shadow:0 2px 0 #d6c294,0 0 0 4px #fff2cd40!important}
+.app .btn.btn:focus{outline:none}
+.app .btn.btn:focus-visible,.app .doneBtn.doneBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,3px)}
+@media (hover:hover) and (pointer:fine){
+ .app .btn.btn:not(:disabled):hover,.app .doneBtn.doneBtn:hover{translate:0 0;filter:brightness(1.05)}
+ .app .btn.btn:not(:disabled):hover:active,.app .doneBtn.doneBtn:hover:active{translate:0 var(--btn-press,3px)}
+}
+.app .btn.btn:disabled{opacity:.5;box-shadow:none!important}
+.app .btnWide.btnWide,.app .sticky .btn.btn,.app .startBtn.startBtn{min-height:56px;font-size:19px}
+.app .btnSmall.btnSmall,.app .doneBtn.doneBtn{min-height:44px;padding:0 16px;font-size:15px}
+@media (prefers-reduced-motion:reduce){.app .btn.btn,.app .doneBtn.doneBtn{transition:none!important}}
+@media (hover:hover) and (pointer:fine){.exitBtn:not(:disabled):hover{filter:brightness(1.05)}}
+
+/* ---- Round 4B: Match day on the system. The Done for a change is the screen's main action (56, gold); header buttons pair with the
+   game Back (44); the clock buttons are the default 48; the "On" numbers are mint, not a dark green slab; sentence-case column labels.
+   Type follows the marketing site: titles 600 at -0.028em, section heads 600, card heads 700. ---- */
+.app .cardBtns .btn.done,.app .btn.done{min-height:56px!important;font-size:19px!important}
+.app .liveTop .btn.btn{min-height:44px;min-width:44px;padding:0 16px;font-size:15px}
+.app .clockBtns .btn.btn{min-height:48px;min-width:112px}
+.cardBtns,.clockBtns{gap:12px}
+.swapOn b{background:#9fd1b2;color:#173b30}
+.swapHead span{font-size:14px;font-weight:700;letter-spacing:0;text-transform:none}
+.h1{font-weight:600;letter-spacing:-.028em}
+.h2{font-weight:600;letter-spacing:-.02em}
+.sheetTitle,.emptyTitle{font-weight:600;letter-spacing:-.025em}
+.topTitle b{font-weight:700}
+.cardHead{font-weight:700;letter-spacing:-.015em}
+.app .btn.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.nums b small{color:#3d4a42}
+.stepTag{font-size:14px;font-weight:700;letter-spacing:0;text-transform:none}
+.srOnly{font-size:20px}

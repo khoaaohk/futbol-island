@@ -240,21 +240,84 @@
 .toggle[aria-checked=true] .knob{background:#7fc79a}
 .swatch[aria-pressed=true]{background:#cfeedb;color:#244d40}
 
-/* the FULL game button at every size (owner, Nov 22 2026): the darker gold lip, a soft drop shadow, hover (mouse only) lifts and
-   brightens, press sinks onto the lip. Primary = .btnGold and the sheets' .doneBtn; secondary = every other .btn (cream, cream lip). */
-.app .btnGold,.app .doneBtn{border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd)!important;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
- box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d),0 7px 14px rgb(36 77 64 / .2)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
-.app .btnGold:active,.app .doneBtn:active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 var(--btn-gold-edge,#a8863d),0 2px 5px rgb(36 77 64 / .18)!important}
-.app .btn:not(.btnGold):not(.btnDanger){background:#fffaf0!important;color:var(--ink)!important;box-shadow:0 4px 0 #e0d2b0,0 6px 12px rgb(36 77 64 / .1)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
-.app .btn:not(.btnGold):not(.btnDanger):active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 #e0d2b0,0 2px 4px rgb(36 77 64 / .1)!important}
-@media (hover:hover) and (pointer:fine){
- .app .btnGold:not(:disabled):hover,.app .doneBtn:hover{translate:0 -1px;filter:brightness(1.06);box-shadow:0 5px 0 var(--btn-gold-edge,#a8863d),0 10px 20px rgb(36 77 64 / .24)!important}
- .app .btn:not(.btnGold):not(.btnDanger):not(:disabled):hover{translate:0 -1px;filter:brightness(1.02);box-shadow:0 5px 0 #e0d2b0,0 9px 16px rgb(36 77 64 / .14)!important}
-}
-.app .btn:disabled{box-shadow:none!important;opacity:.5}
+
 /* three sizes only (owner, Nov 22 2026): large 56 px (a screen's main action: sticky bars, full-width), medium 48 px (in cards and
    sheets: the default), compact 40 px (header and sheet Done, small chips); 12 px between buttons in a row */
 .app .btn{min-height:48px;padding:0 20px;font-size:17px;border-radius:999px}
 .app .btnWide,.app .sticky .btn,.app .startBtn{min-height:56px;font-size:19px}
 .app .btnSmall,.app .doneBtn{min-height:40px;padding:0 16px;font-size:15px}
 .app .btnRow{gap:12px}
+
+/* ---- Round 4B (owner, Nov 22 2026): ONE button, the game's own Back/Exit (components/DoneButton.module.css). Gold primary and cream
+   secondary share every measure (rim, radius, font, lip, height) and differ only in colour; press sinks onto the lip with the Back's
+   timings (translate/box-shadow .16s); a mouse hover only brightens (the coach header's Back/Exit get the same hover). Sizes:
+   56 a screen's main action, 48 default, 44 compact (header, sheet Done: the game Back's height and the 44 px tap minimum). Button text
+   is the site's button face (var(--btn-font), weight 800), as the marketing site's buttons. ---- */
+.app .btn.btn,.app .doneBtn.doneBtn{box-sizing:border-box;margin:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd)!important;border-radius:999px;
+ font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;line-height:1.1;letter-spacing:0;text-align:center;-webkit-tap-highlight-color:transparent;
+ min-height:48px;padding:0 20px;font-size:17px;transition:translate .16s,box-shadow .16s,filter .16s!important;transform:none}
+.app .btnGold.btnGold,.app .doneBtn.doneBtn,.app .btn.done{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
+ box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d,0 0 0 4px #fff2cd40)!important}
+.app .btn.btn:not(.btnGold):not(.done):not(.btnDanger){background:var(--btn-cream,#fff1d3) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
+ box-shadow:0 5px 0 #d6c294,0 0 0 4px #fff2cd40!important}
+.app .btn.btnDanger{box-shadow:0 5px 0 #8f2f22,0 0 0 4px #fff2cd40!important}
+.app .btn.btn:not(:disabled):active,.app .doneBtn.doneBtn:active{transform:none!important;translate:0 var(--btn-press,3px)}
+.app .btnGold.btnGold:not(:disabled):active,.app .doneBtn.doneBtn:active,.app .btn.done:not(:disabled):active{box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d,0 0 0 4px #fff2cd40)!important}
+.app .btn.btn:not(.btnGold):not(.done):not(.btnDanger):not(:disabled):active{box-shadow:0 2px 0 #d6c294,0 0 0 4px #fff2cd40!important}
+.app .btn.btn:focus{outline:none}
+.app .btn.btn:focus-visible,.app .doneBtn.doneBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,3px)}
+@media (hover:hover) and (pointer:fine){
+ .app .btn.btn:not(:disabled):hover,.app .doneBtn.doneBtn:hover{translate:0 0;filter:brightness(1.05)}
+ .app .btn.btn:not(:disabled):hover:active,.app .doneBtn.doneBtn:hover:active{translate:0 var(--btn-press,3px)}
+}
+.app .btn.btn:disabled{opacity:.5;box-shadow:none!important}
+.app .btnWide.btnWide,.app .sticky .btn.btn,.app .startBtn.startBtn{min-height:56px;font-size:19px}
+.app .btnSmall.btnSmall,.app .doneBtn.doneBtn{min-height:44px;padding:0 16px;font-size:15px}
+@media (prefers-reduced-motion:reduce){.app .btn.btn,.app .doneBtn.doneBtn{transition:none!important}}
+
+/* ---- Round 4B (owner, Nov 22 2026): no dark surfaces around the cue. The big coloured cue stays; the stage under it, the 3-2-1, the
+   run chips, the progress bar and the score buttons are light paper with dark-green text; paused is a light overlay with one centred
+   group. ---- */
+.stage{background:#fbf5e8}
+.preview{background:var(--tint)}
+.countLabel{color:#244d40}
+.hud span:not(:empty){background:rgb(255 250 240 / .94);color:#244d40;box-shadow:0 2px 0 rgb(36 77 64 / .14)}
+.progress{background:rgb(255 250 240 / .55)}
+.progress i{background:#244d40}
+.scoreBtn{background:rgb(255 250 240 / .94);color:#244d40;box-shadow:0 5px 0 #d6c294;font-family:var(--btn-font,Arial,Helvetica,sans-serif)}
+.scoreBtn:active{translate:0 3px;box-shadow:0 2px 0 #d6c294}
+.scoreMiss{color:#9a3b2b}
+.pause{background:rgb(251 245 232 / .97);color:#244d40;display:grid;place-items:center;padding:24px 16px;gap:0}
+.pauseCard{width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.pauseIcon{width:64px;height:64px;border-radius:999px;display:grid;place-items:center;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ color:#244d40;border:3px solid var(--btn-rim,#fff2cd);box-shadow:0 5px 0 var(--btn-gold-edge,#a8863d);margin-bottom:16px}
+.pauseH{font-size:32px;line-height:1.1;font-weight:600;letter-spacing:-.028em;margin:0}
+.pauseTime{margin:8px 0 0;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;color:#4f5b53}
+.pauseScore{margin:8px 0 0;font-size:24px;font-weight:700;color:#244d40}
+.pauseBtns{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.pauseNote{margin:16px 0 0;font-size:15px;color:#4f5b53;opacity:1}
+/* summary: one type scale (label 14, figure 32, the score 40), mint for the score card (no dark green slab), and the tip block */
+.stats{gap:12px;margin-top:24px}
+.stats dt{font-size:14px;font-weight:600;color:#4f5b53}
+.stats dd{font-size:32px;font-weight:700;letter-spacing:-.02em}
+.stats .statWide{background:#cfeedb;color:#244d40;padding:16px}
+.stats .statWide dt{color:#2f5a4c;opacity:1}
+.stats .statWide dd{font-size:40px}
+.resultLine{margin:12px 0 0;font-size:16px;font-weight:700;color:#244d40}
+.tip{margin-top:32px;padding:16px;border-radius:var(--r-md);background:#fffaf0;box-shadow:inset 0 0 0 1.5px #efe5cc}
+.tipH{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.tipIcon{display:inline-grid;place-items:center;flex:0 0 auto;width:20px;height:20px;color:#244d40}
+.tipText{margin:8px 0 0;font-size:16px;line-height:1.5;color:#244d40}
+.tipBest{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:12px 0 0;padding-top:12px;box-shadow:inset 0 1.5px 0 #efe5cc;font-size:14px;color:#4f5b53}
+.tipBest b{font-size:19px;color:#244d40;font-variant-numeric:tabular-nums}
+/* type: the marketing site's heading weights (title 600 / -0.028em, section 600, card titles 700) */
+.h1{font-weight:600;letter-spacing:-.028em}
+.sheetTitle{font-weight:600;letter-spacing:-.025em}
+.h1{font-size:clamp(26px,6vw,32px)}
+.app .btn.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.pause{display:flex;align-items:center;justify-content:center;background:#fbf5e8}
+.pauseCard{width:min(360px,100%);flex:0 0 auto}
+.pauseBtns>.btn{width:100%}
+.srOnly{font-size:20px}
+.home,.homeSide{gap:16px}
+.tipHome{margin-top:8px}
