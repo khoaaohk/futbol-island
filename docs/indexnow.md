@@ -31,3 +31,9 @@ dry run or send). It is not triggered on push. To automate it later, add a `push
 waits for the Vercel deployment first.
 
 Tests: `node tests/seo-indexnow.cjs` (key file present and valid, change detection, batching, dry run sends nothing).
+
+## Spanish pages (Nov 23 2026)
+`lib/site/lastmod.generated.json` lists English paths only, so a plain run never names the `/es/...` twins (394 of the 917 sitemap
+URLs). Add `--with-es` to also list each changed page's Spanish twin when the live `/sitemap.xml` lists it
+(`--with-es=http://localhost:<port>` reads a local production build instead). It reads the sitemaps even in a dry run; it sends nothing
+without `--send`.

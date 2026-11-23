@@ -17,6 +17,7 @@ const root=path.join(__dirname,'..');
  assert.deepEqual(b.map(x=>x.urlList.length),[10000,10000,5001],'batches of at most 10,000');
  assert(b.every(x=>x.host==='futbolisland.app'&&x.key===k.key&&x.keyLocation===k.keyLocation),'every body has host, key, keyLocation');
  assert.equal(m.ENDPOINT,'https://api.indexnow.org/indexnow');
+ assert.equal(m.esTwin('/'),'/es');assert.equal(m.esTwin('/learn/soccer-terms'),'/es/learn/soccer-terms');// --with-es (Nov 23 2026)
  // dry run: fetch must not be touched
  const realFetch=globalThis.fetch;let calls=0;globalThis.fetch=()=>{calls++;throw new Error('network in a dry run');};
  const lines=[];const r=await m.main(['--all'],x=>lines.push(x));globalThis.fetch=realFetch;
