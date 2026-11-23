@@ -78,7 +78,7 @@ function lessonDrillsEs(l:EsLesson):{path:string;name:string;line?:string}[]{
 const firstSentenceEs=(s:string)=>{const m=s.match(/^.*?[.!?](\s|$)/);return (m?m[0]:s).trim();};
 function lessonIntroEs(l:EsLesson){
  const f=formatPhraseEs(l.formatLabel),lvl=l.difficultyEs?` de nivel ${l.difficultyEs.toLowerCase()}`:'',topic=l.categoryEs?` sobre ${l.categoryEs.toLowerCase()}`:l.chapterEs?` del capítulo “${l.chapterEs}”`:'';
- return `En “${l.title}”, una lección de ${f}${lvl}${topic} para niños de 7 a 12 años, la idea es esta: ${l.concept} El entrenador la explica en ${l.steps.length} ${l.steps.length===1?'paso':'pasos'} y ${l.questions.length>0?`${l.questions.length} ${l.questions.length===1?'pregunta la repasa':'preguntas la repasan'}`:'la cancha la muestra'}.`;
+ return `En “${l.title}”, una lección de ${f}${lvl}${topic} para niños de 7 a 12 años, la idea es esta: ${l.concept.replace(/^(\p{Lu})(?=\p{Ll})/u,c=>c.toLowerCase())} El entrenador la explica en ${l.steps.length} ${l.steps.length===1?'paso':'pasos'} y ${l.questions.length>0?`${l.questions.length} ${l.questions.length===1?'pregunta la repasa':'preguntas la repasan'}`:'la cancha la muestra'}.`;
 }
 function lessonFaqEs(l:EsLesson,drills:{name:string;line?:string}[]){
  const f=formatPhraseEs(l.formatLabel),ctx=FORMAT_CONTEXT_ES[fmtKey(l.format)];
@@ -95,7 +95,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
  const hubs=hubsFor(l.id).map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  const guides=guidesForLesson(l.id).map(g=>guideLinkEs(g.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  const drills=lessonDrillsEs(l),faq=lessonFaqEs(l,drills),ctx=FORMAT_CONTEXT_ES[fmtKey(l.format)];
- const keys=l.questions.map(q=>firstSentenceEs(q.explain)).filter((x,i,a)=>x.length>20&&a.indexOf(x)===i).slice(0,4);
+ const keys=l.questions.map(q=>firstSentenceEs(q.explain)).filter((x,i,a)=>x.length>45&&a.indexOf(x)===i).slice(0,4);
  const mesh=meshLinks(lessonPath(l.id),{lang:'es',skip:[...[...sib.same,sib.prev,sib.next].map(x=>lessonPath(x.id)),...hubs.map(h=>h.path),...guides.map(g=>g.path)]});
  return <>
   <JsonLd data={esLd(lessonLd({name:l.title,path:l.esPath,description:l.concept,teaches:l.concept,level:l.difficulty,about:formatPhraseEs(l.formatLabel),
