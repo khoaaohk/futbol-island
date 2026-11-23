@@ -6,6 +6,8 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
+import {trainCutDistance} from './trainTrack';
+const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import {applyGroundTint} from '../graphics/groundTint';
@@ -154,7 +156,8 @@ export function buildSummitIsle(t:SummitTools){
   // Only where the carve is and the coarse quad misses it by more than FINE_ERR m (sampled 5 × 5 over its two triangles).
   const a=pos(i,k),b=pos(i+1,k),c=pos(i,k+1),d=pos(i+1,k+1);
   for(let u=0;u<=4;u++)for(let v=0;v<=4;v++){const fu=u/4,fv=v/4,x=(a[0]*(1-fu)+b[0]*fu)*(1-fv)+(c[0]*(1-fu)+d[0]*fu)*fv,z=(a[2]*(1-fu)+b[2]*fu)*(1-fv)+(c[2]*(1-fu)+d[2]*fu)*fv;
-   if(summitTrailDistance(x,z)>=SUMMIT_TRAIL_CARVE+.5)continue;
+   // Nov 23 2026: the Island Line's cutting and station flat (trainTrack.ts trainCut) are drawn finer the same way.
+   if(summitTrailDistance(x,z)>=SUMMIT_TRAIL_CARVE+.5&&trainCutDistance(x,z)>=TRAIN_CUT_DRAW)continue;
    // The drawn height there: triangle (a, c, b) when fu + fv ≤ 1, else (b, c, d).
    const y=fu+fv<=1?a[1]+(b[1]-a[1])*fu+(c[1]-a[1])*fv:d[1]+(c[1]-d[1])*(1-fu)+(b[1]-d[1])*(1-fv);
    if(Math.abs(y-(summitGround(x,z)-DROP))>FINE_ERR)return true;}

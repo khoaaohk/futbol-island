@@ -4,6 +4,8 @@
 // that was the south-east flight lobe. Pure data and point tests only (no three.js, no imports): movement and flight
 // (simulation.ts blocked / flightBlocked), land tests (landmass.ts), ground height (venues.ts fieldSurfaceHeight), the 3D build
 // (summitIsleWorld.ts) and the maps all read these same shapes. coralCay.ts stays import-free (many tests load it on its own).
+// Nov 23 2026: one import, trainTrack.ts (itself import-free): the Island Line's cutting carve in summitGround.
+import {trainCut} from './trainTrack';
 //
 // One polar description keeps every query O(1): the coast is a radius per bearing from SUMMIT_CENTER (a 720-entry table traced
 // once from a smooth outline), the summit plateau a rounded rectangle (superellipse) round the same centre, and the ground
@@ -158,7 +160,8 @@ export function summitGround(x:number,z:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return 0;
  // The terrace's flat stays exactly level (the trail arrives at its edge).
  const w=terraceWeight(x,z);if(w>=.999)return PITCH_HEIGHT;
- return trailCarve(x,z,w<=0?naturalHeight(x,z):shapedHeight(x,z));
+ // The Island Line's cutting and embankment (trainTrack.ts, Nov 23 2026): the bed under the track, banks back to the slope.
+ return trainCut(x,z,trailCarve(x,z,w<=0?naturalHeight(x,z):shapedHeight(x,z)));
 }
 /** For colour: 0 deep in a gully … 1 on a crest, weighted by how much relief there is (0.5 = no relief). */
 export function ridgeShade(x:number,z:number){const p=peakPolar(x,z),u=climbU(p.a,p.rho,p.rc),amp=ridgeAmp(p.a,u)/9;return .5+(ridges(p.a,u)-.5)*amp;}

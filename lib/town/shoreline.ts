@@ -27,7 +27,7 @@ export const POND_BEACH_EXTRA=5;
 const easeBand=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/(b-a)));return k*k*(3-2*k);};
 export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9+(p.z>100?POND_BEACH_EXTRA*easeBand(-112,-140,p.x)*easeBand(-225,-195,p.x):0):p.z>110&&p.x<55?8:5;
 export const SHORE_SAND=ISLAND_SHORE.map((p,i)=>{const previous=ISLAND_SHORE[(i+ISLAND_SHORE.length-1)%ISLAND_SHORE.length],next=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length],dx=next.x-previous.x,dz=next.z-previous.z,length=Math.hypot(dx,dz),width=shoreSandWidth(p);return {outer:p,inner:{x:p.x-dz/length*width,z:p.z+dx/length*width}};});
-export const NORTH_BEACH_UMBRELLAS=[{x:-48,z:-218},{x:-15,z:-224},{x:22,z:-229},{x:62,z:-229},{x:105,z:-227},{x:145,z:-220},{x:178,z:-211}];
+export const NORTH_BEACH_UMBRELLAS=[{x:-48,z:-218},{x:-15,z:-224},{x:22,z:-229},{x:62,z:-229},{x:105,z:-227},{x:145,z:-220},{x:181,z:-218}];// Nov 23 2026: the last one 7 m seaward, off the Island Line (was 178,-211)
 export const NORTH_BEACH_PATHS=[{x:-45,z:-185,w:3,d:52},{x:80,z:-189,w:3,d:60}];
 
 /** Distance to the coast lets offshore landing searches skip empty ocean. */

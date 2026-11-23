@@ -17,7 +17,9 @@ import {patchStadiumNight,STADIUM_NIGHT_GAIN} from './stadiumNight';
 import {STADIUM} from './westParkLayout';
 import {buildSummitIsle} from './summitIsleWorld';
 import {buildSummitActivityProps} from './summitActivitiesWorld';
-import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
+import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';
+import {buildTrainWorld} from './trainWorld';// The Island Line (train Phase 1, Nov 23 2026): track, trestles, tunnel, stations, crossings
+import {trackPushOut} from './trainLayout';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {buildPaintEasel} from './paintEaselWorld';
 import {buildGashaponProps} from './gashaponWorld';
 import {createCanopyCollector} from './canopySurfaces';// landable canopies (Oct 14 2026)
@@ -59,6 +61,8 @@ import {createNeonFlicker,NEON_FLICKER_DISTANCE} from './arcadeNeonFlicker';
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
 /** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
 export const DOCK_BEACH_GATE=[222.5,225.5] as const;
+/** Nov 23 2026: the two openings in the boardwalk's south rail onto the South station platform (either side of its house). */
+export const SOUTH_STATION_RAIL_GAPS:[number,number][]=[[146.5,155.2],[164.8,173.5]];
 export function buildTown(scene: T.Scene) {return runSteps(buildTownSteps(scene));}
 export type TownWorld=ReturnType<typeof buildTown>;
 /** Runs a sliced build to the end in one go. */
@@ -1168,16 +1172,21 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const z of [193,205])line(new T.Vector3(237,.7,z),new T.Vector3(242,1,z),.045,'#9d805b');
   // Keep wide routes from both the beach and the school to the pier.
   path(46,150.5,4,117);path(90,188,88,4);path(135,190,5,40);
-  for(let x=43;x<210;x+=6){
+  // Nov 23 2026 (Island Line): the boardwalk starts 6 m further east (x 49, was 43) so the line's SW curve clears it, and its south
+  // rail opens either side of the South station house (SOUTH_STATION_RAIL_GAPS) onto the platform.
+  const BW0=49,railOpen=(x:number)=>SOUTH_STATION_RAIL_GAPS.some(([a,b])=>x>a&&x<b);
+  for(let x=BW0;x<210;x+=6){
     const width=Math.min(6,210-x);box(width,.2,8,'#b98f62',x+width/2,-.1,211);
     for(let dx=.4;dx<width;dx+=.6)box(.025,.008,8,'#91704d',x+dx,.004,211);
     for(const z of [207.4,214.6])cylinder(.12,1.8,'#9d805b',x+.3,-.6,z);
   }
-  prop('fence',()=>{for(let x=43;x<=209;x+=3){cylinder(.065,1.05,'#9d805b',x,.525,214.65);}
-  line(new T.Vector3(43,1.05,214.65),new T.Vector3(210,1.05,214.65),.045,'#eddfbb');
-  line(new T.Vector3(43,.55,214.65),new T.Vector3(210,.55,214.65),.032,'#eddfbb');});
-  obstacles.push({x:126.5,z:214.65,w:167,d:.16});
-  for(const x of [43]){line(new T.Vector3(x,1.05,207),new T.Vector3(x,1.05,214.65),.045,'#eddfbb');obstacles.push({x,z:210.825,w:.16,d:7.65});}
+  {const runs:[number,number][]=[];let a=BW0;for(const [g0,g1] of SOUTH_STATION_RAIL_GAPS){runs.push([a,g0]);a=g1;}runs.push([a,210]);
+  prop('fence',()=>{for(let x=BW0;x<=209;x+=3){if(!railOpen(x))cylinder(.065,1.05,'#9d805b',x,.525,214.65);}
+  for(const [x0,x1] of runs){for(const x of [x0,x1])if(x!==BW0&&x!==210)cylinder(.065,1.05,'#9d805b',x,.525,214.65);
+   line(new T.Vector3(x0,1.05,214.65),new T.Vector3(x1,1.05,214.65),.045,'#eddfbb');
+   line(new T.Vector3(x0,.55,214.65),new T.Vector3(x1,.55,214.65),.032,'#eddfbb');}});
+  for(const [x0,x1] of runs)obstacles.push({x:(x0+x1)/2,z:214.65,w:x1-x0,d:.16});}
+  for(const x of [BW0]){line(new T.Vector3(x,1.05,207),new T.Vector3(x,1.05,214.65),.045,'#eddfbb');obstacles.push({x,z:210.825,w:.16,d:7.65});}
   for(const x of [65,105,173,208.5])bench(x,208);
   districtSign('SOUTH PIER',146,203);
   // A sand court at the western pier approach; paths stay open on every side.
@@ -1437,6 +1446,10 @@ export function* buildTownSteps(scene: T.Scene) {
   try{buildSummitActivityProps({box,cylinder,put,sign,obstacles});}catch(error){console.error('Summit Isle activity props failed to build',error);}
   // The zipline (ziplineWorld.ts): the launch platform, the cable, the hostel roof deck and its outside stair (static, batched).
   const ziplineRails:ZiplineRail[]=[];try{buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails});}catch(error){console.error('Zipline props failed to build',error);}
+  // The Island Line (trainWorld.ts, train Phase 1): all static pieces join the paint batches below; the tunnel tube is its own mesh.
+  let train:ReturnType<typeof buildTrainWorld>|null=null;
+  try{train=buildTrainWorld({put,lit,town,obstacles,walkSurfaces,boardMaterial:(canvas)=>{const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;textures.push(texture);
+    const material=new T.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});materials.push(material);nightSigns.push(material);return material;}});}catch(error){console.error('Island Line failed to build',error);}
   // Summit Isle painting easel (lib/town/paintEaselWorld.ts, Oct 14 2026): easel, stool and paint table, static and batched.
   try{buildPaintEasel({box,cylinder,put,obstacles});}catch(error){console.error('Summit Isle painting easel failed to build',error);}
   // Gashapon capsule machines (lib/town/gashaponWorld.ts, Nov 8 2026): 12 island machines, solid pieces in the paint batches,
@@ -1590,6 +1603,7 @@ export function* buildTownSteps(scene: T.Scene) {
     if(candidate.x>188&&candidate.x<216&&candidate.z>10&&candidate.z<28)continue; // No street poles inside the greenhouse.
     // One-time placement search moves entrance lights off paving too. No frame work.
     let site=candidate;
+    {const push=trackPushOut(site.x,site.z,.4);if(push)site={...site,x:site.x+push.dx,z:site.z+push.dz};}// Island Line: lamps off the track
     if(blocksLamp(site)){
       const alternatives:LampSite[]=[];
       for(let dx=-6;dx<=6;dx++)for(let dz=-6;dz<=6;dz++)alternatives.push({...candidate,x:candidate.x+dx,z:candidate.z+dz,ground:-.10});
@@ -1655,6 +1669,21 @@ export function* buildTownSteps(scene: T.Scene) {
 
   // Spatial/material batches preserve culling: a distant city's meshes never share
   // one giant visible bounding sphere with the current neighborhood.
+  // Island Line (Nov 23 2026, PLAN.md §2): small props within TRACK_CLEAR m of the line (or on a station's platform and house strip)
+  // step aside, whole: pieces grouped by their prop tag or their own group, moved by one offset; colliders, assets and lamp pools
+  // with them. Build-time only. Buildings, ground patches and anything wider than 3 m stay put.
+  if(train){town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();
+   town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
+   let moved=0;
+   for(const [k,list] of groups){gb.makeEmpty();for(const m of list){bb.setFromObject(m);gb.union(bb);}
+    const w=gb.max.x-gb.min.x,d=gb.max.z-gb.min.z,h=gb.max.y-gb.min.y;if(w>3||d>3||(h<.25&&gb.min.y<.1)||gb.min.y>3)continue;
+    const cx=(gb.min.x+gb.max.x)/2,cz=(gb.min.z+gb.max.z)/2,push=trackPushOut(cx,cz,Math.max(w,d)/2);if(!push)continue;moved++;
+    const roots=k instanceof T.Object3D&&!(k instanceof T.Mesh)&&k!==town?[k]:list;
+    for(const r of roots){r.getWorldPosition(v);v.x+=push.dx;v.z+=push.dz;r.parent!.worldToLocal(v);r.position.copy(v);}}
+   town.updateMatrixWorld(true);
+   const shift=(o:{x:number;z:number;w?:number;d?:number})=>{const r=Math.max(o.w??0,o.d??0)/2;if(r>1.5)return;const push=trackPushOut(o.x,o.z,r);if(push){o.x+=push.dx;o.z+=push.dz;}};
+   for(const o of obstacles)if(!(o as {train?:boolean}).train)shift(o);for(const a of assets)shift(a);
+   train.addMoved(moved);}
   town.traverse(o=>{if(o instanceof T.Mesh&&o.geometry instanceof T.ConeGeometry&&o.geometry.parameters.radius>1.5&&o.geometry.parameters.height<=1){const b=buildings.find(b=>Math.abs(o.position.x-b.x)<b.w/2&&Math.abs(o.position.z-b.z)<b.d/2&&o.position.y>b.height);umbrellaReaction.register(o,b?.height??0,o.userData.umbrellaTargets??[]);}});
   town.updateMatrixWorld(true);
   const roofObstacles:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[...museumRails,...arenaRails,...ziplineRails,...stadiumRails];
@@ -1795,6 +1824,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // still refreshed their matrices and walked them in both passes every frame. Only groups whose whole subtree is empty groups go.
   {const empty=(o:T.Object3D):boolean=>o.children.every(c=>c.type==='Group'&&empty(c));let pruned=0;
    for(const o of [...town.children])if(o.type==='Group'&&!o.name&&empty(o)){o.removeFromParent();pruned++;}town.userData.prunedEmptyGroups=pruned;}
+  if(train)scene.add(train.tubeRoot);// Island Line tunnel tube: its own mesh, shown only near the portals (trainWorld.ts)
   // Coral Cay sharks: added after the static batching pass so their instanced meshes stay separate (caySharks.ts).
   const sharks=createCaySharks(scene);
   // Manta rays round Coral Cay and both sandbars (cayMantas.ts): same frame hook and sleep rules as the sharks.
@@ -1909,13 +1939,13 @@ export function* buildTownSteps(scene: T.Scene) {
   const isleRegion=new T.Box3(new T.Vector3(440,-2,-30),new T.Vector3(870,50,300));let isleShown=true;
   const westRegion=new T.Box3(new T.Vector3(-420,-2,-330),new T.Vector3(-100,36,300));let westShown=true;
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;for(const m of isleChunks)m.visible=sceneryShown&&isleShown;for(const m of westChunks)m.visible=sceneryShown&&westShown;for(const m of stadiumRoofs.roofs)m.visible=sceneryShown&&westShown;stadiumLights.lamps.visible=sceneryShown&&westShown;};
-  const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion),west=sharks.frustum.intersectsBox(westRegion);if(show!==cayShown||isle!==isleShown||west!==westShown){cayShown=show;isleShown=isle;westShown=west;applyCayVisibility();}};
-  return {signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?1.25:dusk?.22:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?2.3:dusk?.5:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;arcadeNeonMode=mode;arcadeNeonHaloBase=night?1:dusk?.9:.8;applyArcadeNeon(false);},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+  const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{train?.update(camera);sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion),west=sharks.frustum.intersectsBox(westRegion);if(show!==cayShown||isle!==isleShown||west!==westShown){cayShown=show;isleShown=isle;westShown=west;applyCayVisibility();}};
+  return {train,signalHeads,sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,westChunkCount:westChunks.size,westPark,plazaFlags,stadium,stadiumRoofs,stadiumLights,stadiumGateSign,get westShown(){return westShown;},get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown)&&(!westChunks.has(root as T.Mesh)||westShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';const glow=night?1.25:dusk?.22:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?2.3:dusk?.5:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?(state.material.userData.nightGlow as number|undefined)??.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;arcadeNeonMode=mode;arcadeNeonHaloBase=night?1:dusk?.9:.8;applyArcadeNeon(false);},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
     updateArcade:(now:number,steady:boolean,camera:T.Camera)=>{
       if(!arcadeFlicker.due(now))return;
       let on=!steady&&!!arcadeNeonTubes;
       if(on&&camera.position.distanceTo(arcadeNeonSphere.center)>NEON_FLICKER_DISTANCE)on=false;
       if(on){arcadeNeonView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);arcadeNeonFrustum.setFromProjectionMatrix(arcadeNeonView);on=arcadeNeonFrustum.intersectsSphere(arcadeNeonSphere);}
       if(arcadeFlicker.step(now,on,arcadeNeonMode))applyArcadeNeon(true);
-    },get arcadeNeon(){return arcadeFlicker;},dispose:()=>{sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();stadiumLights.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}plazaFlags.mesh.removeFromParent();plazaFlags.mesh.geometry.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
+    },get arcadeNeon(){return arcadeFlicker;},dispose:()=>{train?.dispose();sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();stadiumLights.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}plazaFlags.mesh.removeFromParent();plazaFlags.mesh.geometry.dispose();textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }
