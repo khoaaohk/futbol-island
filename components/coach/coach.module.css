@@ -654,7 +654,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .arrive p{margin:0 0 10px;font-size:17px}
 .arrive .cardBtns .btn{min-height:48px}
 .lateWho{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
-.lateWho>.btn{min-height:44px;padding:0 14px}
+.lateWho>.btn{min-height:56px;padding:0 14px}
 /* C6: the panel's buttons stay pinned in view while the panel scrolls */
 .card .cardBtns{position:sticky;bottom:0;background:#fff;padding-top:6px;box-shadow:0 -10px 10px -10px rgb(255 255 255)}
 /* P2: the wake line and the Beep toggle sit side by side, no dangling separator */
