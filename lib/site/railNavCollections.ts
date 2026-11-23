@@ -34,8 +34,8 @@ const at=(es:boolean,path:string)=>es?toEs(path):path;
 const toolsBack=(es:boolean):RailItem=>({href:at(es,TOOLS_PATH),name:L(es,'All coach tools','Todas las herramientas')});
 const qa=(es:boolean):Sec=>['faq',L(es,'Questions','Preguntas')],more=(es:boolean,name?:string):Sec=>['keep-reading',name??L(es,'Keep reading','Sigue leyendo')];
 const onPage=(es:boolean)=>L(es,'On this page','En esta página');
-export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[['lineups',L(es,'Lineup builders','Alineaciones')],
- ['playing-time',L(es,'Playing time','Minutos de juego')],['practice',L(es,'Practice and match day','Entrenamiento y partido')],['game-day',L(es,'Timer, tournaments, fitness','Reloj, torneos, forma física')],['printables',L(es,'Printables','Para imprimir')],
+export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[/* Nov 22 2026: two groups (owner) */
+ ['training',L(es,'Training tools','Herramientas de entrenamiento')],['game-day',L(es,'Game day tools','Herramientas para el día del partido')],
  qa(es),['guides',L(es,'Guides','Guías')]],es);
 export const lineupRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],
  format?['roles',L(es,'Who plays where','Quién juega dónde')]:['shapes',L(es,'Every formation','Todas las formaciones')],qa(es),more(es,L(es,'More tools','Más herramientas'))],es);

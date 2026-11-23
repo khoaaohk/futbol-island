@@ -3,6 +3,7 @@ import {GUIDE_FORMATS} from '../pitch';
 import {makeSchedule} from './roundRobin';
 import {KIDS,STANDARD,SHUTTLE_M,type Level} from './beepTest';
 import type {NewToolWords,ToolTable} from './newTools';
+import {moreRows} from './moreToolTables';
 /**
  * The numbers in the three new tool pages' tables, computed from the tools' own code and the sourced age-group chart, so a
  * table can never disagree with its tool (Nov 22 2026). The words of each table (label, head) stay in the page data.
@@ -23,6 +24,7 @@ export function filledTables(p:NewToolWords,lang:Lang):Record<string,ToolTable>{
   if(p.slug==='soccer-tournament-schedule-maker'&&sec.id==='sizes')rows=[3,4,5,6,7,8,10,12].map(n=>{const teams=Array.from({length:n},(_,i)=>`T${i+1}`),slots=(f:number)=>String(makeSchedule({teams,fields:f,matchMin:12,breakMin:3,startMin:0}).slots.length);
    return [String(n),String(n*(n-1)/2),slots(1),slots(2),slots(3)];});
   if(p.slug==='soccer-beep-test')rows=levelRows(sec.id==='kids'?KIDS:STANDARD,es);
+  rows=moreRows(p.slug,sec.id,lang)??rows;
   out[sec.id]={...sec.table,rows};}
  return out;
 }

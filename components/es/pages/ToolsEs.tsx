@@ -38,7 +38,11 @@ import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {ES_FORMATIONS,ES_HUBS,ES_POSITIONS,esFormatGuide,esFormation,esFormationsIn,esLines,esRule} from '@/lib/i18n/es/registry';
 import {LICENCE_ES,LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_ES,PRINTABLES_HUB_ES,PRIVACY_LINE_ES,TOOL_NAMES_ES,TOOLS_HUB_ES,fieldNameEs} from '@/lib/i18n/es/tools';
 import type {PrintableEs,ToolPageEs} from '@/lib/i18n/es/types';
-import {ToolCards} from '@/components/site/tools/ToolCards';
+import {ToolCards,ToolSubLinks} from '@/components/site/tools/ToolCards';
+import {TOOL_GROUPS} from '@/lib/site/tools/toolGroups';
+import {MORE_TOOLS_EN} from '@/lib/site/tools/moreTools';
+import {MORE_TOOLS_ES} from '@/lib/i18n/es/moreTools';
+import {moreToolElement} from '@/components/site/tools/moreToolElement';
 import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,QuickAnswer,Section,esCrumbs,esLibCrumbs,type Fact} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import site from '@/app/(site)/site.module.css';
@@ -81,6 +85,8 @@ function toolLink(enPath:string):Link|null{
  const l=LINEUP_PAGES.find(x=>x.path===enPath);if(l){const e=lineupEs(l);return {path:toEs(l.path),name:e.h1,line:e.blurb};}
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {path:toEs(r.path),name:e.h1,line:e.blurb};}
  if(enPath===PRINTABLES_HUB_PATH)return {path:toEs(enPath),name:PRINT_HUB.h1,line:PRINT_HUB.blurb};
+ if(enPath===SCAN_PATH)return {path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb};
+ const nt=ALL_NEW_ES[enPath.replace('/tools/','')];if(nt&&enPath.startsWith('/tools/'))return {path:toEs(enPath),name:nt.h1,line:nt.blurb};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);return {path:toEs(s.path),name:e.h1,line:e.blurb};}
  return null;
 }
@@ -170,25 +176,16 @@ function ToolsHubEs(){
   <JsonLd data={faqLd(HUB.faq)}/>
   <RailNav rail={toolsHubRail(true)} current="#top"/>
   <EsToolIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead}/>
-  <Section id="lineups" title="Creadores de alineaciones">
-   <p>Pon los nombres en un diagrama de cancha, cambia jugadores con un toque y luego imprime la hoja, guarda una imagen o comparte un enlace. {PRIVACY_LINE_ES}</p>
-   <ToolCards links={LINEUP_PAGES.map(p=>toolLink(p.path)!)} tint="lineups"/>
+  {/* Nov 22 2026: two groups (owner), the same paths as /tools (lib/site/tools/toolGroups.ts); the coach-app band goes above them */}
+  <Section id="training" title="Herramientas de entrenamiento">
+   <p>Para los días de entrenamiento: un plan con tiempos hecho con nuestros ejercicios, un entrenador de escaneo, canchas para dibujar, un test de pitidos y un reto de dominadas para los jugadores, y un nombre para un equipo nuevo. Todo funciona en tu navegador, y lo que escribes se queda en tu dispositivo.</p>
+   <ToolCards links={TOOL_GROUPS.training.map(p=>toolLink(p)!)} tint="practice"/>
+   <ToolSubLinks label="Para imprimir" links={PRINTABLES.map(p=>{const l=toolLink(p.path)!;return {path:l.path,name:l.name};})}/>
   </Section>
-  <Section id="playing-time" title="Minutos de juego y cambios">
-   <p>Escribe cuántos jugadores vinieron y cuánto dura el partido. La calculadora reparte los minutos por igual y te dice quién entra en cada cambio.</p>
-   <ToolCards links={PLANNER_PAGES.map(p=>toolLink(p.path)!)} tint="time"/>
-  </Section>
-  <Section id="practice" title="Apps para el entrenamiento y el partido">
-   <p>Dos apps para la cancha: un entrenador de escaneo que muestra colores, números, flechas y pases para que los jugadores miren por encima del hombro, y una app del entrenador con la alineación y un reloj de cambios en vivo.</p>
-   <ToolCards links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:'/coach?lang=es',name:'App del entrenador para el partido',line:'La alineación y un reloj de cambios en vivo en tu teléfono; funciona sin conexión, sin cuenta'}]} tint="practice"/>
-  </Section>
-  <Section id="game-day" title="Reloj de partido, torneos y forma física">
-   <p>Un reloj y marcador grande con tiempos según la edad, un creador de calendarios todos contra todos para festivales y torneos, y un test de pitidos con una versión más suave para niños. Todo funciona sin conexión en tu navegador, y lo que escribes se queda en tu dispositivo.</p>
-   <ToolCards links={NEW_LINKS_ES()} tint="gameday"/>
-  </Section>
-  <Section id="printables" title="Diagramas de cancha y hojas de referencia para imprimir">
-   <p>Canchas en blanco para dibujar, todas las formaciones de una modalidad en una página, y las posiciones con sus números. Gratis para imprimir y compartir con equipos, clubes y escuelas.</p>
-   <ToolCards links={[toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!)]} tint="print"/>
+  <Section id="game-day" title="Herramientas para el día del partido">
+   <p>Para el día del partido en la cancha: alineaciones en un diagrama, minutos iguales y rotaciones de cambios, un reloj y marcador, un calendario de torneo, la medida de la cancha de tu modalidad y un registro de estadísticas para las familias. {PRIVACY_LINE_ES}</p>
+   <ToolCards links={[toolLink(LINEUP_PAGES[0].path)!,...TOOL_GROUPS.gameDay.map(p=>toolLink(p)!)]} tint="gameday"/>
+   <ToolSubLinks label="Alineaciones por modalidad" links={LINEUP_PAGES.slice(1).map(p=>{const l=toolLink(p.path)!;return {path:l.path,name:l.name};})}/>
   </Section>
   <QA id="faq" title="Preguntas sobre las herramientas" faq={HUB.faq}/>
   <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),
@@ -373,10 +370,12 @@ function ScanEs(){
 }
 
 // ---- the game-day and practice tools (Nov 22 2026; lib/i18n/es/newTools.ts) ----
-const NEW_LINKS_ES=()=>NEW_TOOLS_EN.map(t=>{const e=NEW_TOOLS_ES[t.slug];return {path:toEs(newToolPath(t.slug)),name:e.h1,line:e.blurb};});
+const ALL_NEW_ES:Readonly<Record<string,typeof NEW_TOOLS_ES[string]>>={...NEW_TOOLS_ES,...MORE_TOOLS_ES};
+const ALL_NEW_EN=[...NEW_TOOLS_EN,...MORE_TOOLS_EN];
+const NEW_LINKS_ES=()=>ALL_NEW_EN.map(t=>{const e=ALL_NEW_ES[t.slug];return {path:toEs(newToolPath(t.slug)),name:e.h1,line:e.blurb};});
 function NewToolEs({slug}:{slug:NewToolSlug}){
- const e=NEW_TOOLS_ES[slug],path=toEs(newToolPath(slug)),crumbs=toolCrumbsEs({name:e.crumb,path});
- const tool=slug==='soccer-match-timer'?<MatchTimer presets={timerPresets('es')} initialPreset="7v7-2x25" lang="es"/>:slug==='soccer-tournament-schedule-maker'?<TournamentScheduler lang="es"/>:<BeepTest lang="es"/>;
+ const e=ALL_NEW_ES[slug],path=toEs(newToolPath(slug)),crumbs=toolCrumbsEs({name:e.crumb,path});
+ const tool=moreToolElement(slug,'es')??(slug==='soccer-match-timer'?<MatchTimer presets={timerPresets('es')} initialPreset="7v7-2x25" lang="es"/>:slug==='soccer-tournament-schedule-maker'?<TournamentScheduler lang="es"/>:<BeepTest lang="es"/>);
  return <NewToolPage p={e} path={path} crumbs={crumbs} lang="es" related={e.related.map(l=>({...l,path:hasEs(l.path)?toEs(l.path):l.path}))} tool={tool}
   intro={<EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead}/>} end={<EsToolEnd/>}/>;
 }
@@ -387,7 +386,7 @@ export function toolsEsRoute(enPath:string):EsRoute|null{
  if(enPath===TOOLS_HUB.path)return {meta:()=>esMeta(HUB.title,HUB.description,enPath,{url:image(enPath),alt:H1_IMAGE_ALT}),render:()=><ToolsHubEs/>};
  const l=LINEUP_PAGES.find(x=>x.path===enPath);if(l){const e=lineupEs(l);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:`Un diagrama de formación del ${e.h1.toLowerCase()}`}),render:()=><LineupEs p={l}/>};}
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol'}),render:()=><PlannerEs p={r}/>};}
- const nt=NEW_TOOLS_EN.find(x=>newToolPath(x.slug)===enPath);if(nt){const e=NEW_TOOLS_ES[nt.slug];return {meta:()=>esMeta(e.title,e.description,enPath,{url:newToolImage(nt.slug),alt:e.imageAlt}),render:()=><NewToolEs slug={nt.slug}/>};}
+ const nt=ALL_NEW_EN.find(x=>newToolPath(x.slug)===enPath);if(nt){const e=ALL_NEW_ES[nt.slug];return {meta:()=>esMeta(e.title,e.description,enPath,{url:newToolImage(nt.slug),alt:e.imageAlt}),render:()=><NewToolEs slug={nt.slug}/>};}
  if(enPath===SCAN_PATH)return {meta:()=>esMeta(SCAN_ES.title,SCAN_ES.description,enPath,{url:SCAN_IMAGE,alt:'El entrenador de escaneo en dos teléfonos: una señal de color azul y un pase al compañero 3 a la derecha'}),render:()=><ScanEs/>};
  if(enPath===PRINTABLES_HUB.path)return {meta:()=>esMeta(PRINT_HUB.title,PRINT_HUB.description,enPath,{url:image(enPath),alt:'Un diagrama de cancha de fútbol 11v11 en blanco'}),render:()=><PrintablesHubEs/>};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);

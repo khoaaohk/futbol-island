@@ -52,6 +52,13 @@ textarea.input{min-height:150px;resize:vertical;line-height:1.45}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:var(--r-pill);background:var(--paper)}
 .seg button{min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font:800 16px/1.1 var(--sans);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+/* B6: the in-page "new game?" question (no window.confirm) */
+.ask{display:grid;gap:10px;background:rgb(251 247 238 / .1);border-radius:var(--r-md);padding:14px}
+.ask p{margin:0;font-weight:800;font-size:17px}
+/* C3: the link to the Coach app where a tool overlaps it */
+.coach{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#e1edf0;border-radius:var(--r-md);padding:14px 16px}
+.coach p{margin:0;font-size:16px;line-height:1.45;font-weight:600;flex:1 1 220px}
+a.coachBtn,a.coachBtn:visited{color:var(--paper);text-decoration:none}
 /* schedule */
 .slots{display:grid;gap:10px;list-style:none;margin:0;padding:0!important}
 .slot{display:grid;gap:8px;background:var(--paper);border-radius:var(--r-md);padding:12px 14px;max-width:none!important}

@@ -99,6 +99,12 @@ const EXTRA_TOOLS:Record<string,string[]>={
  [R+'substitutions-and-game-length']:['/tools/soccer-match-timer'],[R+'kick-off']:['/tools/soccer-match-timer'],
  [TM+'stoppage-time']:['/tools/soccer-match-timer'],[TM+'extra-time']:['/tools/soccer-match-timer','/tools/soccer-tournament-schedule-maker'],
  [TM+'penalty-shoot-out']:['/tools/soccer-tournament-schedule-maker'],[TM+'box-to-box']:['/tools/soccer-beep-test'],[TM+'pressing']:['/tools/soccer-beep-test'],
+ /* Nov 22 2026, second batch (lib/site/tools/moreTools.ts) */
+ [R+'build-out-line']:['/tools/youth-soccer-field-size-guide'],[R+'futsal-rules']:['/tools/youth-soccer-field-size-guide'],[R+'penalty-kick']:['/tools/youth-soccer-field-size-guide'],
+ [R+'heading-rules-for-kids']:['/tools/soccer-juggling-challenge'],[TM+'penalty-area']:['/tools/youth-soccer-field-size-guide'],[TM+'goal-area']:['/tools/youth-soccer-field-size-guide'],
+ [TM+'weak-foot']:['/tools/soccer-juggling-challenge'],[TM+'first-touch']:['/tools/soccer-juggling-challenge','/tools/soccer-practice-plan-generator'],
+ [TM+'assist']:['/tools/youth-soccer-stats-tracker'],[TM+'hat-trick']:['/tools/youth-soccer-stats-tracker'],[TM+'brace']:['/tools/youth-soccer-stats-tracker'],[TM+'clean-sheet']:['/tools/youth-soccer-stats-tracker'],
+ [TM+'give-and-go']:['/tools/soccer-practice-plan-generator'],[TM+'two-v-one']:['/tools/soccer-practice-plan-generator'],
 };
 const extraLink=(path:string):XLink=>{const t=TOOL_PAGES.find(x=>x.path===path);if(!t)throw new Error(`crossLinks: tool ${path} does not exist`);return {path:t.path,name:t.name,line:t.blurb};};
 Object.values(EXTRA_TOOLS).flat().forEach(extraLink);

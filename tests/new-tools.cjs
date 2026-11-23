@@ -38,6 +38,16 @@ const T=load('lib/site/tools/matchTimer.ts'),R=load('lib/site/tools/roundRobin.t
  const back=T.readClock(JSON.parse(JSON.stringify(c)));assert.deepEqual(back.goals,[1,1]);assert.equal(back.phase,'done');
  assert.deepEqual(T.clampSetup({periods:9,periodMin:500,breakMin:-1,subEvery:99}),{periods:2,periodMin:60,breakMin:0,subEvery:30});}
 
+// ---- 1b. B6: the match survives a reload (saved as JSON, read back with readClock) ------------------------------------------
+{const M=T.MIN,reload=c=>T.readClock(JSON.parse(JSON.stringify(c)));let c=T.newClock({periods:2,periodMin:25,breakMin:5,subEvery:5});
+ c=T.start(c,1000);c=T.goal(c,0,1000+3*M);c=T.goal(c,1,1000+7*M);c=T.addTime(c,2);
+ let r=reload(c);assert.deepEqual(r,c,'a running game round-trips exactly');assert.equal(T.elapsed(r,1000+12*M),12*M,'the clock keeps counting from its start time after a reload');
+ assert.deepEqual(r.goals,[1,1]);assert.equal(r.events.length,2);assert.equal(T.periodLength(r),27*M,'added time survives');
+ c=T.pause(c,1000+10*M);r=reload(c);assert.equal(r.phase,'paused');assert.equal(T.elapsed(r,1e12),10*M,'a paused clock stays paused after a reload');
+ c=T.endPeriod(T.start(c,2e6),2e6+15*M);r=reload(c);assert.equal(r.phase,'break');c=T.start(c,3e6);r=reload(c);assert.equal(r.period,1,'the second half survives');assert.equal(T.elapsed(r,3e6+M),M);
+ const src=fs.readFileSync(path.join(root,'components/site/tools/MatchTimer.tsx'),'utf8');
+ assert(!/window\.confirm/.test(src),'New game asks inside the page, not with window.confirm');assert(/if\(ready\)store\.set\(KEY/.test(src),'the game is saved only after it has been read back');
+ for(const f of ['MatchTimer','BeepTest','TournamentScheduler'])assert(/<CoachLink kind=/.test(fs.readFileSync(path.join(root,`components/site/tools/${f}.tsx`),'utf8')),`${f} links to the Coach app`);}
 // ---- 2. round robin --------------------------------------------------------------------------------------------------------
 for(const n of [2,3,4,5,6,7,8,9,10,12,16])for(const fields of [1,2,3,4])for(const double of [false,true]){
  const names=Array.from({length:n},(_,i)=>`Team ${i+1}`),s=R.makeSchedule({teams:names,fields,matchMin:12,breakMin:3,startMin:540,double}),where=`${n} teams, ${fields} fields${double?', double':''}`;

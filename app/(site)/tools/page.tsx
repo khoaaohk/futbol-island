@@ -2,20 +2,22 @@ import RailNav from '@/components/site/shell/RailNav';
 import {toolsHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
-import {ToolCards} from '@/components/site/tools/ToolCards';
+import {ToolCards,ToolSubLinks} from '@/components/site/tools/ToolCards';
 import {ToolIntro} from '@/components/site/tools/ToolParts';
 import {GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {PRINTABLES} from '@/lib/site/tools/printables';
-import {LINEUP_PAGES,PLANNER_PAGES,PRINTABLES_HUB,PRIVACY_LINE,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,toolCrumbs} from '@/lib/site/tools/registry';
-import {SCAN_EN,SCAN_PATH} from '@/lib/site/tools/scanTrainer';
-import {NEW_TOOLS_EN,newToolPath} from '@/lib/site/tools/newTools';
+import {LINEUP_PAGES,PRIVACY_LINE,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,toolCrumbs} from '@/lib/site/tools/registry';
+import {TOOL_GROUPS} from '@/lib/site/tools/toolGroups';
 
-/** /tools (lib/site/tools/registry.ts): every free coach tool and printable, in four groups of cards (components/site/tools/ToolCards.tsx). Static, no client code. */
+/** /tools (lib/site/tools/registry.ts): every free coach tool and printable, in two groups of cards (training, game day) (components/site/tools/ToolCards.tsx). Static, no client code. */
 export const dynamic='force-static';
 const H=TOOLS_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:TOOL_PAGES[0].image!,alt:'A 9v9 soccer formation diagram'}});
 const cap=(s:string)=>s[0].toUpperCase()+s.slice(1);
+const byPath=new Map(TOOL_PAGES.map(p=>[p.path,p]));
+const link=(path:string)=>{const p=byPath.get(path);if(!p)throw new Error(`tools hub: ${path} is not a tool page`);return {path,name:cap(p.name),line:p.blurb};};
+const {training:TRAINING,gameDay:GAME_DAY}=TOOL_GROUPS;
 export default function ToolsHub(){
  const crumbs=toolCrumbs();
  return <>
@@ -25,25 +27,18 @@ export default function ToolsHub(){
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={toolsHubRail()} current="#top"/>
   <ToolIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
-  <Section id="lineups" title="Lineup builders">
-   <p>Put names on a field diagram, swap players with a tap, then print the sheet, save a picture or share a link. {PRIVACY_LINE}</p>
-   <ToolCards links={LINEUP_PAGES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))} tint="lineups"/>
+  {/* Nov 22 2026 (owner: "reorganize the tools: two types, regular training tools and game day tools"). The coach-app feature
+     band from the coach branch goes above these two groups. */}
+  <Section id="training" title="Training tools">
+   <p>For practice nights: a timed practice plan from our drills, a scanning trainer, field diagrams to draw on, a beep test and a juggling challenge for the players, and a name for a new team. Each works in your browser, and what you type stays on your device.</p>
+   {/* TODO(tools-wt merge): add the tactics board card (/tools/soccer-tactics-board) here once that route lands from the coach branch. */}
+   <ToolCards links={TRAINING.map(link)} tint="practice"/>
+   <ToolSubLinks label="Printables" links={PRINTABLES.map(p=>({path:p.path,name:cap(p.h1)}))}/>
   </Section>
-  <Section id="playing-time" title="Playing time and substitutions">
-   <p>Enter how many players came and how long the game is. The planner shares the minutes equally and tells you who comes on at each change.</p>
-   <ToolCards links={PLANNER_PAGES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))} tint="time"/>
-  </Section>
-  <Section id="practice" title="Apps for practice and match day">
-   <p>Two phone apps for the field: a scanning trainer that flashes colors, numbers, arrows and passes so players look over the shoulder, and a coach app with the lineup and a live substitution clock.</p>
-   <ToolCards links={[{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb},{path:'/coach',name:'Coach app for match day',line:'Lineup and a live substitution clock on your phone; works offline, no account'}]} tint="practice"/>
-  </Section>
-  <Section id="game-day" title="Match timer, tournaments and fitness">
-   <p>A big game clock and scoreboard with halves set by age group, a round robin schedule maker for festivals and tournaments, and a beep test with a gentler version for children. Each works offline in your browser, and what you type stays on your device.</p>
-   <ToolCards links={NEW_TOOLS_EN.map(t=>({path:newToolPath(t.slug),name:cap(t.h1),line:t.blurb}))} tint="gameday"/>
-  </Section>
-  <Section id="printables" title="Printable field diagrams and cheat sheets">
-   <p>Blank fields to draw on, every formation of a game on one page, and the positions with their numbers. Free to print and share for teams, clubs and schools.</p>
-   <ToolCards links={[{path:PRINTABLES_HUB.path,name:cap(PRINTABLES_HUB.h1),line:PRINTABLES_HUB.blurb},...PRINTABLES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))]} tint="print"/>
+  <Section id="game-day" title="Game day tools">
+   <p>For match day at the field: lineups on a field diagram, equal playing time and substitution rotations, a match timer and scoreboard, a tournament schedule maker, the field size for your format and a stats tracker for parents. {PRIVACY_LINE}</p>
+   <ToolCards links={[{path:LINEUP_PAGES[0].path,name:cap(LINEUP_PAGES[0].h1),line:LINEUP_PAGES[0].blurb},...GAME_DAY.map(link)]} tint="gameday"/>
+   <ToolSubLinks label="Lineup builders by format" links={LINEUP_PAGES.slice(1).map(p=>({path:p.path,name:cap(p.h1)}))}/>
   </Section>
   <QA id="faq" title="Questions about the tools" faq={H.faq}/>
   <Section id="guides" title="Guides that go with the tools"><LinkList links={[{path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation for 7v7, 9v9, 11v11 and futsal, with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions',line:'What each position does and the numbers 1 to 11'},

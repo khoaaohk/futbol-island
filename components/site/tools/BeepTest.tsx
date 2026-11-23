@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {at,beats,levelsFor,score,SHUTTLE_M,type Mode} from '@/lib/site/tools/beepTest';
 import {closeAudio,keepAwake,makeAudio,store,tone} from './toolAudio';
+import CoachLink from './CoachLink';
 import s from './newTools.module.css';
 /**
  * The beep test (Nov 22 2026; /tools/soccer-beep-test and its Spanish twin). The beeps are scheduled on the AudioContext clock
@@ -93,5 +94,6 @@ export default function BeepTest({lang}:{lang?:'es'}){
    {example&&<p className={s.hint}>{w.none}</p>}
    {results.length>1&&<div className={s.actions}><button type="button" className={`${s.btn} ${s.btnQuiet}`} onClick={()=>{if(window.confirm(w.confirm))saveResults([]);}}>{w.clear}</button></div>}
   </section>
+  <CoachLink kind="beep" lang={lang}/>
  </div>;
 }

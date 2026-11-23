@@ -19,7 +19,8 @@ import type {Faq} from '../safety';
 export type ToolTable={label:string;head:string[];rows:string[][];note?:string};
 export type ToolSection={id:string;title:string;paras?:string[];items?:string[];ordered?:boolean;table?:ToolTable;fold?:boolean};
 export type Source={name:string;url:string;says:string};
-export type NewToolSlug='soccer-match-timer'|'soccer-tournament-schedule-maker'|'soccer-beep-test';
+export type NewToolSlug='soccer-match-timer'|'soccer-tournament-schedule-maker'|'soccer-beep-test'
+ /* Nov 22 2026, second batch (./moreTools.ts) */|'soccer-team-name-generator'|'soccer-practice-plan-generator'|'youth-soccer-field-size-guide'|'soccer-juggling-challenge'|'youth-soccer-stats-tracker';
 export type NewToolWords={slug:NewToolSlug;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;features:string[];imageAlt:string;
  toolTitle:string;howTitle:string;how:string[];sections:ToolSection[];sourcesTitle:string;sourcesIntro:string;sources:Source[];faqTitle:string;faq:Faq[];relatedTitle:string;
  related:{path:string;name:string;line:string}[]};

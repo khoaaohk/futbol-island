@@ -1,7 +1,8 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {clock,makeSchedule,MAX_FIELDS,MAX_TEAMS,parseClock,parseTeams,standings,type Score} from '@/lib/site/tools/roundRobin';
 import {store} from './toolAudio';
+import CoachLink from './CoachLink';
 import s from './newTools.module.css';
 /**
  * The round-robin tournament schedule maker (Nov 22 2026; /tools/soccer-tournament-schedule-maker and its Spanish twin). The
@@ -31,12 +32,12 @@ export default function TournamentScheduler({lang}:{lang?:'es'}){
  const [fields,setFields]=useState(2),[matchMin,setMatchMin]=useState(12),[breakMin,setBreakMin]=useState(3),[startAt,setStartAt]=useState('09:00'),[double,setDouble]=useState(false);
  const [scores,setScores]=useState<Record<string,Score>>({});
  const [status,setStatus]=useState('');
- const loaded=useRef(false);
+ const [ready,setReady]=useState(false);/* B6 pattern: save only after the saved state was read back */
  useEffect(()=>{const v=store.get<Saved>(KEY);
   if(v&&typeof v.text==='string'){setText(v.text.slice(0,800));setFields(Math.min(MAX_FIELDS,Math.max(1,Number(v.fields)||2)));setMatchMin(Number(v.matchMin)||12);setBreakMin(Number(v.breakMin)||0);
    setStartAt(parseClock(String(v.start))!==null?String(v.start):'09:00');setDouble(!!v.double);setScores(v.scores&&typeof v.scores==='object'?v.scores:{});}
-  loaded.current=true;},[]);
- useEffect(()=>{if(loaded.current)store.set(KEY,{text,fields,matchMin,breakMin,start:startAt,double,scores} satisfies Saved);},[text,fields,matchMin,breakMin,startAt,double,scores]);
+  setReady(true);},[]);
+ useEffect(()=>{if(ready)store.set(KEY,{text,fields,matchMin,breakMin,start:startAt,double,scores} satisfies Saved);},[ready,text,fields,matchMin,breakMin,startAt,double,scores]);
  const teams=useMemo(()=>parseTeams(text),[text]);
  const sched=useMemo(()=>makeSchedule({teams,fields,matchMin,breakMin,startMin:parseClock(startAt)??540,double}),[teams,fields,matchMin,breakMin,startAt,double]);
  const games=useMemo(()=>sched.slots.flatMap(x=>x.games),[sched]);
@@ -89,5 +90,6 @@ export default function TournamentScheduler({lang}:{lang?:'es'}){
     <button type="button" className={`${s.btn} ${s.btnQuiet}`} onClick={()=>{setScores({});setStatus(w.cleared);}}>{w.clear}</button></div>
    <p className={`${s.status} ${s.noPrint}`} aria-live="polite">{status}</p>
   </section>}
+  <CoachLink kind="tournament" lang={lang}/>
  </div>;
 }

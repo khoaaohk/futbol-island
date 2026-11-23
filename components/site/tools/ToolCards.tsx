@@ -15,3 +15,8 @@ export function ToolCards({links,tint}:{links:readonly {path:string;name:string;
    <span className={styles.body}><span className={styles.name}>{l.name}</span>{l.line&&<span className={styles.line}>{l.line}</span>}</span>
   </a></li>;})}</ul>;
 }
+/** A compact row of related links under a group's cards (Nov 22 2026, owner: "two types, regular training tools and game day
+ * tools"): the format lineup builders, the single printables. Plain links in pills, same tint as the group. */
+export function ToolSubLinks({label,links}:{label:string;links:readonly {path:string;name:string}[]}){
+ return <div className={styles.sub} data-tool-sublinks=""><span className={styles.subLabel}>{label}</span><ul>{links.map(l=><li key={l.path}><a href={l.path}>{l.name}</a></li>)}</ul></div>;
+}

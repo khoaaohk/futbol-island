@@ -9,6 +9,7 @@ import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,type Printable} from 
 import {SCAN_EN,SCAN_IMAGE,SCAN_PATH} from './scanTrainer';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 import {NEW_TOOLS_EN,newToolImage,newToolPath} from './newTools';
+import {MORE_TOOLS_EN} from './moreTools';
 /**
  * The free coach tools (Nov 10 2026): /tools, the lineup builder and its format landings, the playing-time planner and its
  * landings, and the printables (lib/site/tools/printables.ts). TOOL_PAGES is the registry, parallel to lib/site/guides.ts: it
@@ -135,7 +136,7 @@ export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',tit
   {q:'Should I download the PNG or the SVG?',a:'Take the PNG to print at home or to drop into a document or a slide. Take the SVG if you want to edit the diagram in a drawing program or print it very large: it stays sharp at any size.'},
   {q:'Will the sheets print on A4 paper?',a:'Yes. They are drawn for US Letter; choose “fit to page” in the print window and they fill an A4 page with a slightly wider margin.'},
   {q:'Why is a 7v7 field drawn differently from a full-size field?',a:'Because it is a different field, not a smaller copy. In the US a 7v7 field has build-out lines and its own penalty area size. Each template here keeps the markings of its own game.'}] as Faq[]};
-export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'|'timer'|'schedule'|'beep'};
+export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'|'timer'|'schedule'|'beep'|'names'|'plan'|'field'|'juggling'|'stats'};
 const lineupImage=(p:LineupPage)=>formationImg(DEFAULT_FORMATION[p.format??'7v7']);
 /** Nov 20 2026 (SEO foundation): the calculator's own picture is a real screenshot of the tool (public/tools/, captured from the
  *  built page with headless Chrome at 1200 x 630), not a formation diagram. */
@@ -143,7 +144,8 @@ export const PLANNER_SHOT='/tools/soccer-playing-time-calculator.png';
 const PLANNER_IMAGE:Record<string,string>={'7v7':formationImg('7v7-3-2-1'),'9v9':formationImg('9v9-3-3-2')};
 export const plannerImage=(p:PlannerPage)=>PLANNER_IMAGE[p.format??'']??PLANNER_SHOT;
 export const printableImage=(p:Printable)=>fileUrl(p.files[0].name,'png');
-const NEW_TOOL_KIND={'soccer-match-timer':'timer','soccer-tournament-schedule-maker':'schedule','soccer-beep-test':'beep'} as const;
+const NEW_TOOL_KIND={'soccer-match-timer':'timer','soccer-tournament-schedule-maker':'schedule','soccer-beep-test':'beep','soccer-team-name-generator':'names','soccer-practice-plan-generator':'plan',
+ 'youth-soccer-field-size-guide':'field','soccer-juggling-challenge':'juggling','youth-soccer-stats-tracker':'stats'} as const;
 export const TOOL_PAGES:readonly ToolPage[]=[
  {path:TOOLS_HUB.path,name:TOOLS_HUB.h1,title:TOOLS_HUB.title,description:TOOLS_HUB.description,blurb:TOOLS_HUB.blurb,hub:true,kind:'hub',image:formationImg('9v9-3-2-3')},
  ...LINEUP_PAGES.map((p,i)=>({path:p.path,name:p.h1,title:p.title,description:p.description,blurb:p.blurb,hub:i===0,kind:'lineup' as const,image:lineupImage(p)})),
@@ -153,7 +155,7 @@ export const TOOL_PAGES:readonly ToolPage[]=[
  /* Scan Trainer's front door (Nov 16 2026; lib/site/tools/scanTrainer.ts): hub-level, so llms.txt, search and "More to learn" list it */
  {path:SCAN_PATH,name:SCAN_EN.h1,title:SCAN_EN.title,description:SCAN_EN.description,blurb:SCAN_EN.blurb,hub:true,kind:'scan',image:SCAN_IMAGE},
  /* the game-day and practice tools (Nov 22 2026; lib/site/tools/newTools.ts): hub-level, so llms.txt, search and "More to learn" list them */
- ...NEW_TOOLS_EN.map(t=>({path:newToolPath(t.slug),name:t.h1,title:t.title,description:t.description,blurb:t.blurb,hub:true,kind:NEW_TOOL_KIND[t.slug],image:newToolImage(t.slug)})),
+ ...[...NEW_TOOLS_EN,...MORE_TOOLS_EN].map(t=>({path:newToolPath(t.slug),name:t.h1,title:t.title,description:t.description,blurb:t.blurb,hub:true,kind:NEW_TOOL_KIND[t.slug],image:newToolImage(t.slug)})),
 ];
 /** The pages the lesson hubs' "More to learn" list and llms.txt name (the tools hub and the three main tools). */
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);

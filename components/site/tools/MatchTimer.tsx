@@ -1,6 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {addTime,crossed,elapsed,endPeriod,goal,mmss,MIN,newClock,nextSub,pause,periodLength,periodWord,readClock,remaining,start,subMarks,type Clock,type PeriodWord,type Setup} from '@/lib/site/tools/matchTimer';
+import CoachLink from './CoachLink';
 import {closeAudio,doubleBeep,keepAwake,makeAudio,store,whistle} from './toolAudio';
 import s from './newTools.module.css';
 /**
@@ -17,14 +18,14 @@ const W={
   ready:'Ready for kick-off',paused:'Paused',breakFor:(t:string)=>`Break: ${t}`,full:'Full time',over:'Added time',nextSub:(t:string)=>`Next change in ${t}`,subNow:'Time to make your changes',
   addMin:'+ 1 min',added:(n:number)=>`${n} min added`,goal:'Tap to add a goal',minus:'− goal',goalAt:(m:number)=>`${m}′`,
   setup:'Game settings',game:'Game',custom:'Custom',periods:'Periods',length:'Minutes each',breakLen:'Break (minutes)',subs:'Sub reminder',subOff:'Off',subEvery:(n:number)=>`Every ${n} min`,
-  homeName:'Home team',awayName:'Away team',sound:'Sounds (end-of-period beep and sub reminders)',awake:'Keep the screen on while the clock runs',reset:'New game',confirm:'Start a new game? The score will be cleared.',
+  homeName:'Home team',awayName:'Away team',sound:'Sounds (end-of-period beep and sub reminders)',awake:'Keep the screen on while the clock runs',reset:'New game',confirm:'Start a new game? The score will be cleared.',yesNew:'Yes, new game',keep:'Keep this game',
   locked:'Settings are locked while a game is on. Tap New game to change them.',saved:'This game is saved on this device.',aria:'Soccer match clock'},
  es:{home:'Leones',away:'Tigres',example:'Ejemplo',periodName:(w:PeriodWord,n:number)=>({half:['1.er tiempo','2.º tiempo'],quarter:['1.er cuarto','2.º cuarto','3.er cuarto','4.º cuarto'],third:['1.er tercio','2.º tercio','3.er tercio'],period:['Partido']}[w][n]??`Periodo ${n+1}`),
   end:(w:PeriodWord)=>({half:'Fin del tiempo',quarter:'Fin del cuarto',third:'Fin del tercio',period:'Fin del partido'}[w]),endGame:'Fin del partido',start:'Empezar',resume:'Seguir',pause:'Pausa',nextStart:(p:string)=>`Empezar ${p}`,
   ready:'Listos para el saque inicial',paused:'En pausa',breakFor:(t:string)=>`Descanso: ${t}`,full:'Final del partido',over:'Tiempo añadido',nextSub:(t:string)=>`Próximo cambio en ${t}`,subNow:'Hora de hacer los cambios',
   addMin:'+ 1 min',added:(n:number)=>`${n} min añadidos`,goal:'Toca para sumar un gol',minus:'− gol',goalAt:(m:number)=>`${m}′`,
   setup:'Ajustes del partido',game:'Partido',custom:'Personalizado',periods:'Periodos',length:'Minutos cada uno',breakLen:'Descanso (minutos)',subs:'Aviso de cambios',subOff:'No',subEvery:(n:number)=>`Cada ${n} min`,
-  homeName:'Equipo local',awayName:'Equipo visitante',sound:'Sonidos (pitido al final y avisos de cambios)',awake:'Mantener la pantalla encendida con el reloj en marcha',reset:'Partido nuevo',confirm:'¿Empezar un partido nuevo? Se borrará el marcador.',
+  homeName:'Equipo local',awayName:'Equipo visitante',sound:'Sonidos (pitido al final y avisos de cambios)',awake:'Mantener la pantalla encendida con el reloj en marcha',reset:'Partido nuevo',confirm:'¿Empezar un partido nuevo? Se borrará el marcador.',yesNew:'Sí, partido nuevo',keep:'Seguir con este',
   locked:'Los ajustes se bloquean durante el partido. Toca Partido nuevo para cambiarlos.',saved:'Este partido se guarda en este dispositivo.',aria:'Reloj del partido de fútbol'},
 };
 type Saved={clock:Clock;names:[string,string];sound:boolean;awake:boolean;preset:string;edited:boolean};
@@ -39,12 +40,14 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
  const [awake,setAwake]=useState(true);
  const [now,setNow]=useState(0);
  const [flash,setFlash]=useState(0);
- const board=useRef<HTMLElement|null>(null),audio=useRef<AudioContext|null>(null),last=useRef(-1),release=useRef<()=>void>(()=>{}),loaded=useRef(false),whistled=useRef(-1);
+ const board=useRef<HTMLElement|null>(null),audio=useRef<AudioContext|null>(null),last=useRef(-1),release=useRef<()=>void>(()=>{}),whistled=useRef(-1);
+ const [ready,setReady]=useState(false),[askReset,setAskReset]=useState(false);
  /* read the saved game once, after the first paint (the server renders the default) */
  useEffect(()=>{const v=store.get<Saved>(KEY);const c=v?readClock(v.clock):null;
   if(v&&c){setClock(c);setNames([String(v.names?.[0]??w.home).slice(0,24),String(v.names?.[1]??w.away).slice(0,24)]);setSound(!!v.sound);setAwake(v.awake!==false);setEdited(!!v.edited);if(presets.some(p=>p.id===v.preset)||v.preset==='custom')setPreset(v.preset);}
-  setNow(Date.now());loaded.current=true;},[]);// eslint-disable-line react-hooks/exhaustive-deps
- useEffect(()=>{if(loaded.current)store.set(KEY,{clock,names,sound,awake,preset,edited} satisfies Saved);},[clock,names,sound,awake,preset,edited]);
+  setNow(Date.now());setReady(true);},[]);// eslint-disable-line react-hooks/exhaustive-deps
+ /* B6 (Nov 22 2026): save only after the saved game has been read back (a state flag, so the first commit, and React's dev double-mount, never overwrite it with the default) */
+ useEffect(()=>{if(ready)store.set(KEY,{clock,names,sound,awake,preset,edited} satisfies Saved);},[ready,clock,names,sound,awake,preset,edited]);
  const live=clock.phase==='running'||clock.phase==='break';
  /* the redraw: only while the clock runs and the page is visible */
  useEffect(()=>{
@@ -78,7 +81,8 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
  const onPause=()=>{setClock(c=>pause(c,t()));setNow(t());};
  const onEnd=()=>{setClock(c=>endPeriod(c,t()));setNow(t());};
  const onGoal=(team:0|1,d:1|-1=1)=>setClock(c=>goal(c,team,t(),d));
- const onReset=()=>{if(clock.phase!=='ready'&&!window.confirm(w.confirm))return;whistled.current=-1;setClock(c=>newClock(c.setup));};
+ const doReset=()=>{whistled.current=-1;setAskReset(false);setClock(c=>newClock(c.setup));};
+ const onReset=()=>{if(clock.phase!=='ready')setAskReset(true);else doReset();};
  const setup=(patch:Partial<Setup>,id?:string)=>{if(clock.phase!=='ready')return;if(id)setPreset(id);setClock(c=>newClock({...c.setup,...patch}));};
  const onPreset=(id:string)=>{const p=presets.find(x=>x.id===id);if(p)setup({periods:p.periods,periodMin:p.periodMin},id);else setPreset('custom');};
  const wd=periodWord(clock.setup.periods),pname=w.periodName(wd,clock.period),last1=clock.period>=clock.setup.periods-1;
@@ -109,8 +113,10 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
      :<button type="button" className={s.bigBtn} onClick={onStart} disabled={clock.phase==='done'}>{clock.phase==='paused'?w.resume:clock.phase==='break'?w.nextStart(nextName):w.start}</button>}
     <button type="button" className={`${s.bigBtn} ${s.ghost}`} onClick={onEnd} disabled={clock.phase==='ready'||clock.phase==='break'||clock.phase==='done'}>{last1?w.endGame:w.end(wd)}</button>
     <button type="button" className={`${s.bigBtn} ${s.ghost}`} onClick={()=>setClock(c=>addTime(c,1))} disabled={clock.phase!=='running'&&clock.phase!=='paused'}>{w.addMin}</button>
-    <button type="button" className={`${s.bigBtn} ${s.ghost}`} onClick={onReset}>{w.reset}</button>
+    <button type="button" className={`${s.bigBtn} ${s.ghost}`} onClick={onReset} aria-expanded={askReset}>{w.reset}</button>
    </div>
+   {askReset&&<div className={s.ask} role="alertdialog" aria-label={w.confirm}><p>{w.confirm}</p><div className={s.controls}>
+    <button type="button" className={s.bigBtn} onClick={doReset}>{w.yesNew}</button><button type="button" className={`${s.bigBtn} ${s.ghost}`} onClick={()=>setAskReset(false)}>{w.keep}</button></div></div>}
   </section>
   <section className={s.panel} aria-label={w.setup}>
    <h3>{w.setup}</h3>
@@ -128,5 +134,6 @@ export default function MatchTimer({presets,initialPreset,lang}:{presets:readonl
    </div>
    <p className={s.hint}>{clock.phase!=='ready'?w.locked:w.saved}</p>
   </section>
+  <CoachLink kind="match" lang={lang}/>
  </div>;
 }

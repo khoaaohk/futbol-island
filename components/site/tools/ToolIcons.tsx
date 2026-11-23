@@ -8,7 +8,7 @@ import type {ReactNode} from 'react';
 
 const O='#7a4e12',GOLD='#f2b632',GRASS='#7cc36a',LINE='#effbe2',COURT='#e9a35a',CONE='#f07a3a',PAPER='#fffaf0',SKY='#5bb6d9',LEAF='#3f8f4f';
 const S={stroke:O,strokeWidth:1.4,strokeLinejoin:'round' as const,strokeLinecap:'round' as const};
-export type ToolIconKind='lineup'|'court'|'clock'|'rotation'|'diagram'|'blank'|'cheat'|'shirt'|'scan'|'whistle';
+export type ToolIconKind='lineup'|'court'|'clock'|'rotation'|'diagram'|'blank'|'cheat'|'shirt'|'scan'|'whistle'|'pennant'|'ball'|'chart'|'measure';
 export type GameBadge='7v7'|'9v9'|'11v11'|'futsal';
 
 const dots=(pts:readonly [number,number][])=>pts.map(([x,y])=><circle key={`${x}-${y}`} cx={x} cy={y} r={1.35} fill={GOLD} stroke={O} strokeWidth={.9}/>);
@@ -40,6 +40,11 @@ const DRAW:Record<ToolIconKind,ReactNode>={
  scan:<><path d="M3.4 4.6C5.4 1.9 10.6 1.9 12.6 4.6" fill="none" stroke={O} strokeWidth={1.4} strokeLinecap="round"/><path d="M13.1 2.1l-.4 2.7-2.6-.6" fill="none" stroke={O} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/>
   <path d="M1.2 10.2C3 7.4 5.4 6.2 8 6.2s5 1.2 6.8 4C13 13 10.6 14.2 8 14.2S3 13 1.2 10.2Z" fill={PAPER} {...S}/><circle cx={8} cy={10.2} r={2.5} fill={SKY} stroke={O} strokeWidth={1}/><circle cx={8} cy={10.2} r={.9} fill={O}/></>,
  /* the coach's whistle */
+ /* Nov 22 2026, second batch: a team pennant (names), a ball in the air (juggling), a bar chart (stats), a field with its tape (sizes) */
+ pennant:<><path d="M3 1.5v13" stroke={O} strokeWidth={1.4} strokeLinecap="round"/><path d="M3.6 2.4 14 5.6 3.6 9.4Z" fill={GOLD} {...S}/><circle cx={6.4} cy={5.8} r={1.1} fill={O}/></>,
+ ball:<><circle cx={8} cy={6} r={4.4} fill={PAPER} {...S}/><path d="M8 3.6l2 1.5-.8 2.3H6.8L6 5.1Z" fill={O}/><path d="M4 14.4h8" stroke={O} strokeWidth={1.4} strokeLinecap="round"/><path d="M6.2 12.2h3.6" stroke={GOLD} strokeWidth={1.4} strokeLinecap="round"/></>,
+ chart:<><rect x={2} y={8.6} width={3} height={5.4} rx={.6} fill={SKY} {...S}/><rect x={6.5} y={4.6} width={3} height={9.4} rx={.6} fill={GOLD} {...S}/><rect x={11} y={2} width={3} height={12} rx={.6} fill={GRASS} {...S}/></>,
+ measure:<>{field(GRASS)}<path d="M2.4 14.6h11.2M2.4 13.6v2M13.6 13.6v2" stroke={O} strokeWidth={1.1} strokeLinecap="round"/><path d="M3 5.3 4.4 2.6l1.4 2.7Z" fill={CONE} stroke={O} strokeWidth={.9} strokeLinejoin="round"/></>,
  whistle:<><path d="M2 9a4 4 0 1 0 8 0 4 4 0 0 0-.9-2.5h5.4V3.6H6A4 4 0 0 0 2 9Z" fill={GOLD} {...S}/><circle cx={6} cy={9} r={1.3} fill={O}/></>,
 };
 
@@ -61,5 +66,10 @@ export function toolIconFor(path:string):{kind:ToolIconKind;badge?:GameBadge}{
  if(/soccer-match-timer$/.test(p))return {kind:'clock'};/* Nov 22 2026: the game-day and practice tools */
  if(/tournament-schedule-maker$/.test(p))return {kind:'rotation'};
  if(/soccer-beep-test$/.test(p))return {kind:'whistle'};
+ if(/team-name-generator$/.test(p))return {kind:'pennant'};
+ if(/practice-plan-generator$/.test(p))return {kind:'cheat'};
+ if(/field-size-guide$/.test(p))return {kind:'measure'};
+ if(/juggling-challenge$/.test(p))return {kind:'ball'};
+ if(/stats-tracker$/.test(p))return {kind:'chart'};
  return {kind:'diagram'};
 }
