@@ -203,8 +203,12 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  const setLive=(v:boolean)=>{if(v){if(!routeRef.current.live)nav({screen:'subs',live:true},'push');}else if(routeRef.current.live)back();};
  const lang:Lang=store.lang??'en',w=WORDS[lang];
  const audio=useRef<AudioContext|null>(null);
- /* load once: the saved team, the language, a shared link, the screen in the URL; register the app's own service worker */
+ /* load once: the saved team, the language, a shared link, the screen in the URL; register the app's own service worker. Once only,
+    also under React's development double effects: the first run rewrites the URL and the history (a second run would lose the
+    link's format and stack the history twice) */
+ const booted=useRef(false);
  useEffect(()=>{
+  if(booted.current)return;booted.current=true;
   let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* storage blocked */}
   /* the teams record; the first time, the single team in fi-coach-v1 becomes the first team. A game on the clock opens its team. */
   let all=loadTeams(ls);const lv=liveTeam(all);if(lv)all=switchTeam(all,lv.id);
@@ -287,7 +291,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
   {/* the shared header (components/motion/AppHeader). Tab pages: the team switcher, "Coach" and the team, Exit. Tools: Back, the
       title, nothing on the right (owner, Nov 22 2026). The language lives in the bottom nav. */}
   <AppHeader lang={lang} exit={root} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
-   left={!root?<HeaderGoldBack key="tool" lang={lang} onBack={back} data={{'data-coach-home':''}}/>:<TeamButton key="teams" w={w} name={team.name} place={place} onClick={()=>teamSheet.open(true)}/>}
+   left={!root?<HeaderGoldBack key={"tool"+hashFor(route)} lang={lang} onBack={back} data={{'data-coach-home':''}}/>:<TeamButton key="teams" w={w} name={team.name} place={place} onClick={()=>teamSheet.open(true)}/>}
    title={TITLE(w,tab)} sub={root?team.name||w.teamN(place):tab==='plans'?`${team.name?team.name+' · ':''}${teamAge}`:<>{team.name?`${team.name} · `:''}{fmtName} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
    {ready&&SCREENS.filter(t=>t===tab).map(t=><div key={t} className="fi-screen" data-enter={enter??undefined}>

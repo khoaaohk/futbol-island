@@ -2,11 +2,16 @@
    coach.module.css (.app): flat surfaces, tone steps, no shadows at rest, no gradients; buttons in the UI sans 800. */
 .h2{font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin:30px 0 12px}
 /* feature cards */
-.feature{position:relative;border-radius:26px;padding:22px 20px 20px;margin:4px 0 0;overflow:hidden}
-.featureGame{background:var(--ink);color:var(--paper)}
-.featureTrain{background:#ffd9a8;color:var(--ink);padding-top:0}
+.feature{position:relative;display:block;border-radius:26px;padding:0;margin:4px 0 0;overflow:hidden;color:var(--ink);text-decoration:none}
+.fBody{display:block;padding:16px 20px 20px}
+.fBody>span{display:block}
+.gap{height:12px}
+.featureGame{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+.featureTrain{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+a.feature:active{transform:scale(.98)}
+a.feature{transition:transform .12s}
 .fKicker{margin:0;font-size:15px;font-weight:800;opacity:.78}
-.featureGame .fKicker{color:var(--gold);opacity:1}
+.featureGame .fKicker{color:#85621f;opacity:1}
 .fTitle{margin:6px 0 0;font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.03em;overflow-wrap:anywhere}
 .fMeta{margin:8px 0 0;font-size:16px;opacity:.85}
 .fLive{margin:10px 0 0;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -14,12 +19,13 @@
 .liveDot{width:12px;height:12px;border-radius:50%;background:#e2725b;flex:0 0 auto}
 .fBtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
 .fBtns .btnFill{flex:1}
-.fGhost{background:rgb(251 247 238 / .14);color:var(--paper)}
-.fInk{background:var(--ink);color:var(--paper)}
+.fOutline{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px rgb(20 34 29 / .18)}
+.tonight{background:#fdf3dc;border-radius:22px;padding:16px 18px 18px;margin-bottom:12px}
+.tTitle{margin:0;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
 .fBtns button:disabled{opacity:.5}
-.fLink{margin-top:14px;border:0;background:none;color:var(--gold);font-size:15px;font-weight:800;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
-.fArt{margin:0 -20px 16px;height:170px;background:#1d6b55;display:grid;place-items:center;overflow:hidden}
-.fArt svg{height:100%;width:auto;max-width:100%}
+.fLink{margin-top:14px;border:0;background:none;color:#85621f;font-size:15px;font-weight:800;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
+.fArt{display:block;height:180px;overflow:hidden}
+.fArt svg{display:block;width:100%;height:100%}
 /* large picture tiles */
 .tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .tiles>li[data-wide]{grid-column:1/-1}
@@ -31,20 +37,20 @@ li[data-wide] .art{aspect-ratio:16/7}
 .tText{display:flex;flex-direction:column;gap:3px;padding:12px 14px 14px}
 .tText b{font-size:18px;font-weight:800;line-height:1.2;letter-spacing:-.01em}
 .tText small{font-size:14px;color:var(--soft);line-height:1.35}
-.tilesGame .tile{background:#efe8d7}
-.tilesTrain .tile{background:#fff4e2}
-.training .h2{color:#1d6b55}
+.tilesGame .tile,.tilesTrain .tile{background:#fff;box-shadow:0 1px 3px rgb(20 34 29 / .08)}
+
+.training .h2{color:var(--ink)}
 /* Training: a row that scrolls sideways */
 .rail{list-style:none;margin:0 -16px;padding:0 16px 6px;scroll-padding-inline:16px;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .rail::-webkit-scrollbar{display:none}
 .rail li{flex:0 0 72%;max-width:260px;scroll-snap-align:start}
-.railCard{width:100%;border:0;border-radius:20px;background:#d9ebe1;color:var(--ink);padding:0 0 12px;overflow:hidden;text-align:left;display:flex;flex-direction:column;gap:10px}
+.railCard{width:100%;border:0;border-radius:20px;background:#fff;color:var(--ink);padding:0 0 12px;box-shadow:inset 0 0 0 2px #e3f3e8;overflow:hidden;text-align:left;display:flex;flex-direction:column;gap:10px}
 .railCard b{font-size:16px;font-weight:800;padding:0 14px;line-height:1.25}
-.railArt{display:grid;place-items:center;background:#1d6b55;height:140px;overflow:hidden}
+.railArt{display:grid;place-items:center;background:#e3f3e8;height:140px;overflow:hidden}
 .railArt svg{height:100%;width:auto}
 /* bottom nav: Game Day | Training | Language */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 8px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
-.navBtn{border:0;background:none;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:800;color:var(--soft);border-radius:14px}
+.navBtn{-webkit-tap-highlight-color:transparent;outline:none;transition:transform .12s;border:0;background:none;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:800;color:var(--soft);border-radius:14px}
 .navBtn svg{width:26px;height:26px}
 .navBtn[aria-current=page]{color:var(--ink)}
 .navBtn[aria-current=page] .navIcon{background:var(--gold)}
@@ -60,7 +66,7 @@ li[data-wide] .art{aspect-ratio:16/7}
 .age[aria-selected=true]{background:var(--ink);color:var(--paper)}
 .planList{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .planCard{width:100%;border:0;border-radius:22px;background:#fff4e2;color:var(--ink);display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;padding:10px;text-align:left}
-.planArt{display:grid;place-items:center;background:#1d6b55;border-radius:14px;height:112px;overflow:hidden}
+.planArt{display:grid;place-items:center;background:#e3f3e8;border-radius:14px;height:112px;overflow:hidden}
 .planArt svg{height:100%;width:auto}
 .planText{display:flex;flex-direction:column;gap:4px;min-width:0}
 .planText b{font-size:18px;font-weight:800;line-height:1.2}
@@ -84,7 +90,7 @@ li[data-wide] .art{aspect-ratio:16/7}
 .drills{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .drill{background:#fff4e2;border-radius:22px;overflow:hidden;display:grid}
 @media (min-width:700px){.drill{grid-template-columns:240px 1fr}}
-.drillArt{background:#1d6b55;display:grid;place-items:center;max-height:260px;overflow:hidden}
+.drillArt{background:#e3f3e8;display:grid;place-items:center;max-height:260px;overflow:hidden}
 .drillArt svg{max-height:260px;width:auto;max-width:100%}
 .drillBody{padding:14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .drillBody>b{font-size:18px;font-weight:800}
@@ -116,3 +122,8 @@ li[data-wide] .art{aspect-ratio:16/7}
  .rail li{flex-basis:240px}
 }
 @media print{.nav{display:none}}
+
+.navBtn:focus-visible{box-shadow:inset 0 0 0 2px rgb(61 139 214 / .55)}
+.navBtn:active{transform:scale(.95)}
+.tile,.railCard,.planCard,.langOpt,.age{-webkit-tap-highlight-color:transparent}
+.railCard:active,.planCard:active,.langOpt:active{transform:scale(.98)}

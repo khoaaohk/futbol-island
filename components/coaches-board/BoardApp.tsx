@@ -1,5 +1,5 @@
 'use client';
-import {useEffect} from 'react';
+import {useEffect,useState} from 'react';
 import TacticsBoard from './TacticsBoard';
 import s from './TacticsBoard.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
@@ -13,10 +13,13 @@ import '@/components/motion/motion.css';
  * light chrome here is only a scope of its CSS variables (BoardWeb.module.css), and it gets no Back of its own.
  */
 export default function BoardApp(){
- useEffect(()=>{noteAppEntry('board');},[]);
- return <div className={web.web} data-board-app="">
-  <AppHeader lang="en" title="Tactics board" sub="Futbol Island" exitAria="" exit={false}
-   left={<HeaderGoldBack lang="en" onBack={()=>{window.location.assign(miniBackHref('en','/tools/soccer-tactics-board'));}} data={{'data-board-coach':''}}/>}/>
+ /* the coach app's language (round 4A, UX audit C9): ?lang=es from the coach app; the header follows it (the board itself has no
+    Spanish words yet) */
+ const [lang,setLang]=useState<'en'|'es'>('en');
+ useEffect(()=>{noteAppEntry('board');try{if(new URLSearchParams(location.search).get('lang')==='es'){setLang('es');document.documentElement.lang='es';}}catch{/* none */}},[]);
+ return <div className={web.web} data-board-app="" translate="no">
+  <AppHeader lang={lang} title={lang==='es'?'Pizarra táctica':'Tactics board'} sub="Futbol Island" exitAria="" exit={false}
+   left={<HeaderGoldBack lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,lang==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board'));}} data={{'data-board-coach':''}}/>}/>
   <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard/></div></div>
  </div>;
 }

@@ -22,21 +22,45 @@ function Tiles({tiles,cls,intro,from=0}:{tiles:Tile[];cls:string;intro:boolean;f
 /** The tab page's scroll when a tile leaves for another page (/board, /scan, the field diagrams), restored on the way back. */
 export const HOME_Y='fi-coach-home-y';
 const rememberY=()=>{try{window.sessionStorage.setItem(HOME_Y,String(window.scrollY));}catch{/* optional */}};
-/* ------------------------------------------------------------ the drawings (viewBox 160 x 100) ------------------------------ */
-const Pitch=({children,bg='#1d6b55'}:{children?:ReactNode;bg?:string})=><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill={bg}/>
- <g fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="2"><rect x="10" y="8" width="140" height="84" rx="2"/><path d="M80 8v84"/><circle cx="80" cy="50" r="13"/><rect x="10" y="32" width="16" height="36"/><rect x="134" y="32" width="16" height="36"/></g>{children}</svg>;
-const dot=(x:number,y:number,n:string|number,fill='#e9c16b',ink='#14221d')=><g key={`${x}-${y}`}><circle cx={x} cy={y} r="7.5" fill={fill}/><text x={x} y={y+3.4} textAnchor="middle" fontSize="9" fontWeight="800" fill={ink} fontFamily="system-ui,sans-serif">{n}</text></g>;
-const ART={
- lineup:<Pitch>{[[22,50,1],[48,26,2],[48,74,3],[70,50,6],[100,30,7],[100,70,8],[124,50,9]].map(([x,y,n])=>dot(x as number,y as number,n))}</Pitch>,
- minutes:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#f5e6c3"/>{[0,1,2,3,4].map(i=><g key={i}><rect x="18" y={14+i*16} width="124" height="9" rx="4.5" fill="#85621f" fillOpacity=".18"/><rect x={18+(i%2)*30} y={14+i*16} width={[70,64,76,60,72][i]} height="9" rx="4.5" fill="#85621f"/></g>)}</svg>,
- subs:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#dfe8fb"/><g fill="none" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"><path d="M56 78V24M40 40l16-16 16 16" stroke="#1f5fd1"/><path d="M104 22v54M88 60l16 16 16-16" stroke="#9a3b1c"/></g>{dot(56,86,4,'#1f5fd1','#fff')}{dot(104,12,11,'#9a3b1c','#fff')}</svg>,
- summary:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#e6e3d6"/>{[38,52,46,60,50,56,44].map((h,i)=><rect key={i} x={20+i*18} y={86-h} width="12" height={h} rx="3" fill={i===3?'#14221d':'#4f5b53'} fillOpacity={i===3?1:.55}/>)}</svg>,
- plans:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#ffd9a8"/><rect x="34" y="12" width="92" height="80" rx="8" fill="#fff"/><rect x="62" y="6" width="36" height="14" rx="5" fill="#14221d"/>
-  {[0,1,2,3].map(i=><g key={i}><circle cx="50" cy={36+i*15} r="4.5" fill={['#1d6b55','#e9c16b','#3d8bd6','#e2725b'][i]}/><rect x="60" y={33+i*15} width={[50,40,54,34][i]} height="6" rx="3" fill="#14221d" fillOpacity=".7"/></g>)}</svg>,
- scan:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#cfe8ff"/><path d="M80 52 30 18v68z" fill="#fff" fillOpacity=".7"/><path d="M80 52l50-34v68z" fill="#fff" fillOpacity=".35"/>
-  {dot(80,52,10,'#14221d','#fff')}<circle cx="34" cy="30" r="9" fill="#e2725b"/><circle cx="128" cy="74" r="9" fill="#1d6b55"/><circle cx="126" cy="26" r="9" fill="#e9c16b"/></svg>,
- board:<Pitch bg="#2d6f39">{dot(36,66,4)}{dot(76,30,8)}{dot(118,58,9)}<g fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round"><path d="M42 61 70 35"/><path d="M83 33q30 2 32 18" strokeDasharray="5 5"/></g><path d="m66 33 6 0-1 6" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round"/></Pitch>,
- fields:<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><rect width="160" height="100" fill="#d9ebe1"/><g fill="none" stroke="#1d6b55" strokeWidth="3"><rect x="22" y="14" width="116" height="72" rx="3"/><path d="M80 14v72"/><circle cx="80" cy="50" r="12"/></g><path d="M22 94h116" stroke="#14221d" strokeWidth="2"/><path d="M22 90v8M138 90v8" stroke="#14221d" strokeWidth="2"/></svg>,
+/* ------------------------------------------------------------ the drawings (viewBox 160 x 100) ------------------------------
+   One style for every tile (owner, Nov 22 2026: "the images are not great", "don't use dark colors", "remove the borders", "colors are
+   blending too much"): a light panel in its own tint, the subject in strong brand colours on it (a fresh mid green pitch, gold,
+   coral, sky, green), no outlines, a soft shadow under the key objects. Text inside a shape is ink: 4.6:1 or more on every fill
+   (gold 9.0, coral 5.4, sky 4.6, green 4.6, pitch 6.8). */
+const INK='#14221d',GR='#5cb87f',GR2='#67c189',GOLD='#f2b630',CORAL='#ef6c4d',SKY='#3d8bd6',GREEN='#2f9a5b',WHITE='#ffffff';
+const LIFT={filter:'drop-shadow(0 2px 2.5px rgb(20 34 29 / .22))'};
+const PANEL={lineup:'#fdf3dc',minutes:'#fde9b8',subs:'#dbe9fb',match:'#fde3d8',summary:'#e4f3e8',plans:'#fde6cf',scan:'#dbe9fb',board:'#fff4dc',fields:'#e4f3e8'};
+/* the whole drawing always fits its tile (meet), on a field of its own colour */
+const Svg=({bg,children}:{bg:string;children:ReactNode})=><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" style={{background:bg}}><rect width="160" height="100" fill={bg}/>{children}</svg>;
+const Field=({x=14,y=10,w=132,h=80}:{x?:number;y?:number;w?:number;h?:number})=><g>
+ <rect x={x} y={y} width={w} height={h} rx="6" fill={GR} style={LIFT}/>{[1,3,5].map(i=><rect key={i} x={x+w/6*i} y={y} width={w/6} height={h} fill={GR2}/>)}
+ <g fill="none" stroke={WHITE} strokeWidth="1.8" strokeOpacity=".9"><rect x={x+4} y={y+4} width={w-8} height={h-8} rx="2"/><path d={`M${x+w/2} ${y+4}v${h-8}`}/><circle cx={x+w/2} cy={y+h/2} r={h/6}/><rect x={x+4} y={y+h*.3} width={w*.1} height={h*.4}/><rect x={x+w*.9-4} y={y+h*.3} width={w*.1} height={h*.4}/></g></g>;
+const Disc=({x,y,n,fill=GOLD,r=7.5}:{x:number;y:number;n?:string|number;fill?:string;r?:number})=><g style={LIFT}><circle cx={x} cy={y} r={r} fill={fill}/>{n!=null&&n!==''&&<text x={x} y={y+r*.42} textAnchor="middle" fontSize={r*1.2} fontWeight="800" fill={INK} fontFamily="system-ui,sans-serif">{n}</text>}</g>;
+const Arrow=({d,dash,color=INK}:{d:string;dash?:boolean;color?:string})=><path d={d} fill="none" stroke={color} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={dash?'5 5':undefined}/>;
+const Cone=({x,y,c=CORAL}:{x:number;y:number;c?:string})=><path d={`M${x} ${y-8}l6.5 12h-13z`} fill={c} style={LIFT}/>;
+const Card=({x,y,w,h,r=10}:{x:number;y:number;w:number;h:number;r?:number})=><rect x={x} y={y} width={w} height={h} rx={r} fill={WHITE} style={LIFT}/>;
+export const ART={
+ lineup:<Svg bg={PANEL.lineup}><Field/>{[[26,50,1],[50,30,2],[50,70,3],[76,50,6],[104,28,7],[104,72,8],[128,50,9]].map(([x,y,n])=><Disc key={n} x={x} y={y} n={n}/>)}</Svg>,
+ minutes:<Svg bg={PANEL.minutes}><Card x={22} y={12} w={116} h={76}/>
+  {[0,1,2,3].map(i=><g key={i}><Disc x={38} y={27+i*16} r={6.2} n={[4,7,9,11][i]} fill={[GOLD,SKY,CORAL,GREEN][i]}/><rect x="50" y={23+i*16} width="76" height="8" rx="4" fill="#f1ead8"/><rect x="50" y={23+i*16} width={[60,56,62,54][i]} height="8" rx="4" fill={[GOLD,SKY,CORAL,GREEN][i]}/></g>)}</Svg>,
+ subs:<Svg bg={PANEL.subs}><Card x={42} y={14} w={76} h={60}/><rect x="74" y="74" width="12" height="16" rx="2" fill={WHITE}/>
+  <rect x="48" y="20" width="30" height="48" rx="6" fill="#d9f0e1"/><rect x="82" y="20" width="30" height="48" rx="6" fill="#fde0d8"/>
+  <text x="63" y="58" textAnchor="middle" fontSize="24" fontWeight="800" fill="#1f7a45" fontFamily="system-ui,sans-serif">7</text><text x="97" y="58" textAnchor="middle" fontSize="24" fontWeight="800" fill="#b8442a" fontFamily="system-ui,sans-serif">11</text>
+  <Arrow d="M63 36v-9m-4.5 4.5 4.5-4.5 4.5 4.5" color="#1f7a45"/><Arrow d="M97 27v9m-4.5-4.5 4.5 4.5 4.5-4.5" color="#b8442a"/></Svg>,
+ match:<Svg bg={PANEL.match}><circle cx="80" cy="54" r="34" fill={WHITE} style={LIFT}/><rect x="72" y="11" width="16" height="9" rx="3" fill={CORAL}/>
+  <path d="M80 54 L80 22 A32 32 0 0 1 107.7 38 Z" fill={GOLD}/><path d="M80 54V30M80 54l14 8" stroke={INK} strokeWidth={3.2} strokeLinecap="round"/><circle cx="80" cy="54" r="3.5" fill={INK}/>
+  <circle cx="126" cy="24" r="7" fill={CORAL} style={LIFT}/></Svg>,
+ summary:<Svg bg={PANEL.summary}><Card x={30} y={12} w={100} h={76}/>{[30,40,36,46,38].map((h,i)=><rect key={i} x={44+i*15} y={78-h} width="10" height={h} rx="3" fill={[SKY,GOLD,CORAL,GREEN,SKY][i]}/>)}<path d="M40 80h80" stroke="#e3dfd0" strokeWidth={2}/></Svg>,
+ plans:<Svg bg={PANEL.plans}><Card x={38} y={12} w={66} h={80} r={8}/><rect x="56" y="7" width="30" height="11" rx="4" fill={GOLD} style={LIFT}/>
+  {[0,1,2].map(i=><g key={i}><circle cx="52" cy={34+i*16} r="4.5" fill={[GREEN,GOLD,SKY][i]}/><rect x="62" y={31+i*16} width={[30,24,32][i]} height="6" rx="3" fill="#cfc6ae"/></g>)}
+  <circle cx="124" cy="40" r="15" fill={WHITE} style={LIFT}/><path d="M124 40v-8M124 40l6 4" stroke={INK} strokeWidth={2.6} strokeLinecap="round"/><Cone x={116} y={82}/><Cone x={134} y={82} c={GOLD}/></Svg>,
+ scan:<Svg bg={PANEL.scan}><path d="M80 52 L34 22 A56 56 0 0 1 60 10 Z" fill={SKY} fillOpacity=".55"/><path d="M80 52 L126 22 A56 56 0 0 0 100 10 Z" fill={GOLD} fillOpacity=".6"/>
+  <g style={LIFT}><circle cx="80" cy="62" r="15" fill={SKY}/><circle cx="80" cy="47" r="8" fill="#e9a77c"/></g><Arrow d="M69 37q-8-6-15-4"/><Arrow d="M91 37q8-6 15-4"/>
+  <rect x="14" y="60" width="24" height="24" rx="6" fill={CORAL} style={LIFT}/><rect x="122" y="60" width="24" height="24" rx="6" fill={GREEN} style={LIFT}/>
+  <text x="134" y="77" textAnchor="middle" fontSize="14" fontWeight="800" fill={INK} fontFamily="system-ui,sans-serif">3</text><Arrow d="M20 72h11m-4.5-4.5 4.5 4.5-4.5 4.5"/></Svg>,
+ board:<Svg bg={PANEL.board}><Field/><Disc x={38} y={66} n={4}/><Disc x={78} y={30} n={8}/><Disc x={118} y={60} n={9}/><Disc x={98} y={76} fill={CORAL} n=""/><Disc x={60} y={46} fill={CORAL} n=""/>
+  <Arrow d="M44 61 70 37" color={WHITE}/><path d="m63.5 36.5 7.5-.5-1 7.5" fill="none" stroke={WHITE} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/><Arrow d="M86 32q28 2 30 20" dash color={INK}/></Svg>,
+ fields:<Svg bg={PANEL.fields}><Field x={22} y={10} w={116} h={68}/><path d="M22 88h116M22 84v8M138 84v8" stroke={GREEN} strokeWidth={2.4} strokeLinecap="round"/><rect x="64" y="82" width="32" height="12" rx="4" fill={WHITE} style={LIFT}/></Svg>,
 };
 /* ------------------------------------------------------------ Game Day ------------------------------------------------------ */
 type GD={w:Words;store:Store;place:number;fmt:string;ready:string;intro:boolean;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
@@ -46,17 +70,20 @@ export function GameDayTab({w,store,place,fmt,ready,intro,live,gameDone,onMatch,
  return <div className={t.gameday} data-tab-page="gameday">
   <h1 className={c.srOnly}>{w.navGameDay}</h1>
   <section className={`${t.feature} ${t.featureGame} ${intro?'fi-in':''}`} aria-labelledby="gd-feature" data-live={live?'':undefined}>
-   <p className={t.fKicker} id="gd-feature">{live?w.gameOn:w.nextGame}</p>
+   <div className={t.fArt} aria-hidden="true">{ART.match}</div>
+   <div className={t.fBody}>
+   <p className={t.fKicker} id="gd-feature">{live?w.gameOn:`${w.matchDay} · ${w.nextGame}`}</p>
    <p className={t.fTitle}>{name}</p>
    {live?<p className={t.fLive}><span className={t.liveDot} aria-hidden="true"/>{live.period}{live.clock&&<> · <b>{live.clock}</b></>}{live.change&&<> · {live.change}</>}</p>
     :<p className={t.fMeta}>{fmt} · {s.periods} × {s.periodMin} {w.min}{has?<> · {ready}</>:null}</p>}
    {has||live?<div className={t.fBtns}>
      <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={onMatch} data-coach-match="">{live?w.backToGame:w.startMatch}</button>
-     {!live&&<button type="button" className={`${c.btn} ${t.fGhost}`} onClick={()=>onTool('team')}>{w.editSquad}</button>}
+     {!live&&<button type="button" className={`${c.btn} ${t.fOutline}`} onClick={()=>onTool('team')}>{w.editSquad}</button>}
     </div>
     :<><p className={t.fMeta}>{w.homeEmpty}</p><div className={t.fBtns}><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>onTool('team')}>{w.setupTeam}</button>
-     <button type="button" className={`${c.btn} ${t.fGhost}`} onClick={onExample}>{w.tryExample}</button></div></>}
+     <button type="button" className={`${c.btn} ${t.fOutline}`} onClick={onExample}>{w.tryExample}</button></div></>}
    {gameDone&&!live&&<button type="button" className={t.fLink} onClick={()=>onTool('summary')}>{w.gameDone} · {w.seeSummary}</button>}
+   </div>
   </section>
   <h2 className={t.h2}>{w.gdMore}</h2>
   <Tiles intro={intro} from={1} cls={t.tilesGame} tiles={[
@@ -68,6 +95,8 @@ export function GameDayTab({w,store,place,fmt,ready,intro,live,gameDone,onMatch,
  </div>;
 }
 /* ------------------------------------------------------------ Training ------------------------------------------------------ */
+/* owner, Nov 22 2026: Scanning trainer and Tactics board first (the hero and the next big tile), then tonight's plan, practice plans
+   and the field diagrams */
 type TR={w:Words;lang:Lang;version:string;age:Age;intro:boolean;onPlans:(plan?:string,run?:boolean)=>void};
 export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
  const {data}=usePlans(lang,version);
@@ -75,25 +104,28 @@ export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
  const fields=lang==='es'?'/es/tools/soccer-field-diagrams':'/tools/soccer-field-diagrams';
  return <div className={t.training} data-tab-page="training">
   <h1 className={c.srOnly}>{w.navTraining}</h1>
-  <section className={`${t.feature} ${t.featureTrain} ${intro?'fi-in':''}`} aria-labelledby="tr-feature">
-   <div className={t.fArt} aria-hidden="true">{plan&&plans?.drills[plan.drills[1]??plan.drills[0]]?<GridDiagram id="tr-feature-art" scene={plans.drills[plan.drills[1]??plan.drills[0]].scene} small/>:ART.plans}</div>
-   <p className={t.fKicker} id="tr-feature">{w.tonight} · {age}</p>
-   <p className={t.fTitle}>{plan?plan.name:w.plansTitle}</p>
+  <a className={`${t.feature} ${t.featureTrain} ${intro?'fi-in':''}`} href={scanHref(lang)} onClick={rememberY} data-tool="scan">
+   <span className={t.fArt} aria-hidden="true">{ART.scan}</span>
+   <span className={t.fBody}><span className={t.fTitle}>{w.scanName}</span><span className={t.fMeta}>{w.lineScan}</span>
+    <span className={t.fBtns}><span className={`${c.btn} ${c.btnGold}`}>{w.openTool}</span></span></span>
+  </a>
+  <div className={t.gap}/>
+  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[{key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,href:boardHref(lang),wide:true}]}/>
+  <h2 className={t.h2}>{w.tonight} · {age}</h2>
+  <section className={t.tonight} aria-label={w.tonight}>
+   <p className={t.tTitle}>{plan?plan.name:w.plansTitle}</p>
    <p className={t.fMeta}>{plan?<>{w.minutesN(plan.minutes)} · {plan.goal}</>:data==='fail'?w.plansFail:w.loadingPlans}</p>
    <div className={t.fBtns}>
-    <button type="button" className={`${c.btn} ${t.fInk}`} disabled={!plan} onClick={()=>plan&&onPlans(plan.slug)} data-tonight-open="">{w.openPlan}</button>
     <button type="button" className={`${c.btn} ${c.btnGold}`} disabled={!plan} onClick={()=>plan&&onPlans(plan.slug,true)}>{w.startSession}</button>
+    <button type="button" className={`${c.btn} ${t.fOutline}`} disabled={!plan} onClick={()=>plan&&onPlans(plan.slug)} data-tonight-open="">{w.openPlan}</button>
    </div>
   </section>
-  {plan&&plans&&<><h2 className={t.h2}>{w.inTonight}</h2>
-   <ul className={t.rail} aria-label={w.inTonight}>{plan.drills.map(slug=>{const d=plans.drills[slug];return d?<li key={slug}><button type="button" className={t.railCard} onClick={()=>onPlans(plan.slug)}>
-    <span className={t.railArt} aria-hidden="true"><GridDiagram id={`rail-${slug}`} scene={d.scene} small/></span><b>{d.name}</b></button></li>:null;})}</ul></>}
+  {plan&&plans&&<ul className={t.rail} aria-label={w.inTonight}>{plan.drills.map(slug=>{const d=plans.drills[slug];return d?<li key={slug}><button type="button" className={t.railCard} onClick={()=>onPlans(plan.slug)}>
+    <span className={t.railArt} aria-hidden="true"><GridDiagram id={`rail-${slug}`} scene={d.scene} small light/></span><b>{d.name}</b></button></li>:null;})}</ul>}
   <h2 className={t.h2}>{w.trMore}</h2>
-  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[
-   {key:'plans',name:w.plansTitle,line:w.lineDrills,art:ART.plans,on:()=>onPlans(),wide:true},
-   {key:'scan',name:w.scanName,line:w.lineScan,art:ART.scan,href:scanHref(lang)},
-   {key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,href:boardHref(lang)},
-   {key:'fields',name:w.fieldDiagrams,line:w.lineFieldDiagrams,art:ART.fields,href:fields,wide:true}]}/>
+  <Tiles intro={intro} from={2} cls={t.tilesTrain} tiles={[
+   {key:'plans',name:w.plansTitle,line:w.lineDrills,art:ART.plans,on:()=>onPlans()},
+   {key:'fields',name:w.fieldDiagrams,line:w.lineFieldDiagrams,art:ART.fields,href:fields}]}/>
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </div>;
 }

@@ -1,4 +1,5 @@
 import KeepReading from '@/components/site/KeepReading';
+import {AppLink} from '@/components/site/tools/ToolParts';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
@@ -187,6 +188,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
   <RailNav rail={planRail(true)} current="#top"/>
   <div className={styles.printPage}>
    <EsIntro top crumbs={crumbs} h1={p.h1} lead={p.lead}/>
+   <div className={styles.noPrint}><AppLink href={`/coach?lang=es#tool=plans&plan=${p.slug}`} label="Abrir en la app del entrenador" line="El mismo plan en la app gratuita del entrenador: un temporizador para cada parte y cada ejercicio con su diagrama. Funciona sin conexión."/></div>
    <Section id="facts" title="De un vistazo">
     <Glance label={`${p.h1}: de un vistazo`} items={[{icon:'kid',label:'Edad',value:`${p.age} (${AGE_YEARS_ES[p.age]})`},{icon:'clock',label:'Duración',value:`${p.minutes} minutos (guía para ${p.age}: ${PRACTICE_RANGE_ES[p.age]})`},{icon:'people',label:'Jugadores',value:p.players},{icon:'flag',label:'Objetivo del día',value:p.goal},{icon:'court',label:'Partido final',value:FIELD_ES[p.age]}]}/>
    </Section>

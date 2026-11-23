@@ -8,7 +8,9 @@
 .app *{box-sizing:border-box}
 :where(.app) button,:where(.app) input,:where(.app) select{font:inherit;color:inherit}
 :where(.app) button{cursor:pointer}
-.app :focus-visible{outline:3px solid var(--pitch);outline-offset:2px}
+/* focus (owner, Nov 22 2026: no ring after a tap): only keyboard focus shows, as a soft 2 px inset ring; taps show a press state */
+.app :focus:not(:focus-visible){outline:none}
+.app :focus-visible{outline:2px solid rgb(61 139 214 / .55);outline-offset:-2px}
 .top{position:sticky;top:0;z-index:5;background:var(--paper);display:flex;align-items:center;gap:12px;padding:max(10px,env(safe-area-inset-top)) 16px 10px}
 .mark{width:32px;height:32px;border-radius:8px;flex:0 0 auto;display:block}
 .topTitle{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
@@ -384,7 +386,15 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .formSeg{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;max-width:440px;margin:0 0 20px}
 .formSeg .chip{justify-content:center;padding:0 8px}
 .pitch{margin:0}
-.pitchWrap{max-width:440px;gap:16px}
+.pitchWrap{max-width:none;gap:16px}
+/* round 4A (owner: "lineup field needs to be wider", "don't use dark colors"): the pitch spans the content width (the 16 px gutters)
+   up to 560 px, centred; a soft pitch green; the discs and labels scale with it (container units); a label pill keeps a name off the lines */
+.pitch{max-width:560px;width:100%;margin:0 auto;background:#8fcca6;container-type:inline-size}
+.disc{width:clamp(38px,13cqw,60px);height:clamp(38px,13cqw,60px);font-size:clamp(16px,5cqw,22px)}
+.spot{min-width:clamp(44px,15cqw,72px)}
+.spotName{color:var(--ink);background:rgb(255 255 255 / .82);border-radius:6px;padding:0 5px;font-size:clamp(11px,3.2cqw,14px);max-width:clamp(64px,22cqw,110px)}
+.spotEmpty .disc{background:rgb(255 255 255 / .35);color:var(--ink);border:2px dashed rgb(20 34 29 / .35)}
+.formSeg{max-width:560px}
 .fair{margin:16px 0}
 .legend{margin:12px 0 8px}
 .continue{margin-top:12px}

@@ -13,6 +13,7 @@ import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {CheckedLine,Bullets,DataTable,GuideIntro,PlayEnd,Section} from '@/lib/site/GuideParts';
 import {Checklist,Glance} from '@/components/site/PageParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
+import {AppLink} from '@/components/site/tools/ToolParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import styles from '../../../site.module.css';
@@ -43,6 +44,8 @@ export default function PlanPage({params}:{params:{slug:string}}){
   <RailNav rail={planRail()} current="#top"/>{/* outside .printPage: the shell keys on a direct child of main; print hides it */}
   <div className={styles.printPage}>
    <GuideIntro top crumbs={crumbs} h1={p.h1} lead={p.lead}/>
+   {/* round 4A (Nov 22 2026): the same plan inside the coach app, with a session timer */}
+   <div className={styles.noPrint}><AppLink href={`/coach#tool=plans&plan=${p.slug}`} label="Open in the Coach app" line="The same plan in the free coach app: a step timer for each part, every drill with its diagram, works offline."/></div>
    <Section id="facts" title="At a glance">
     <Glance label={`${p.h1}: at a glance`} items={[{icon:'kid',label:'Age group',value:`${p.age} (${AGE_YEARS[p.age]})`},{icon:'clock',label:'Length',value:`${p.minutes} minutes (guidance for ${p.age}: ${PRACTICE_RANGE[p.age]})`},{icon:'people',label:'Players',value:p.players},{icon:'flag',label:'Goal for the day',value:p.goal},{icon:'court',label:'Final game',value:p.field}]}/>
    </Section>

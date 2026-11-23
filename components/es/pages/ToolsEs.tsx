@@ -83,12 +83,14 @@ function toolLink(enPath:string):Link|null{
 const links=(xs:(Link|null)[])=>xs.filter((x):x is Link=>!!x);
 
 // ---- shared parts ----
-function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;/** the coach tool to open (Nov 22 2026: /coach#tool=…) */app?:'lineup'|'minutes'|'subs';facts?:readonly Fact[]}){
+function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts,fmt:fmtHint}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;fmt?:string;/** the coach tool to open (Nov 22 2026: /coach#tool=…) */app?:'lineup'|'minutes'|'subs';facts?:readonly Fact[]}){
+ /* round 4A: the link keeps the page's format (/coach#tool=subs&format=9v9) */
+ const fq=headingFormat??fmtHint;
  return <header className={`${site.intro} ${t.head}`} id="top">
   <EsBreadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title} lang="es"/>:<h1 className={site.title}>{h1}</h1>}
   <QuickAnswer lead={lead} facts={facts}/>
-  {app&&<AppLink href={`/coach?lang=es#tool=${app}`} label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
+  {app&&<AppLink href={`/coach?lang=es#tool=${app}${fq?`&format=${fq}`:''}`} label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
   <p className={site.caption}>{TOOL_NAMES_ES}</p>
  </header>;
 }
@@ -259,7 +261,7 @@ function PlannerEs({p}:{p:PlannerPage}){
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
   <RailNav rail={plannerRail(!!p.format,true)} current="#top"/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app={p.format?'subs':'minutes'} facts={facts}/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app={p.format?'subs':'minutes'} fmt={p.format} facts={facts}/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>

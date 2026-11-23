@@ -151,7 +151,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  }
  if(view==='summary'&&result){
   const r=result.r;
-  return <div className={c.app} data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>screenChange('back',()=>setView('settings'))}/>
+  return <div className={c.app} translate="no" data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>screenChange('back',()=>setView('settings'))}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
     <p className={c.sumCtx}>{w.modes[s.mode]} · {w.every} {w.sec(r.interval)}</p>
@@ -171,7 +171,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   :m==='arrows'?<Arrow dir="up" size="22px"/>:m==='mix'?<span className={c.modeMix} aria-hidden="true"><i/><b>3</b></span>:<span className={c.modeNum} aria-hidden="true">3<Arrow dir="right" size="14px"/></span>;
  /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the start screen shows the cue, the five modes and one summary of the
     settings; everything else lives in the Settings sheet. Same settings, same store (fi-scan-v1), same Start. */
- return <div className={c.app} data-scan-view="settings"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
+ return <div className={c.app} translate="no" data-scan-view="settings"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
   <main className={`${c.main} ${c.home}`}>
    <h1 className={c.srOnly}>{w.app}</h1>
    <figure className={c.preview} aria-label={w.preview}><CueView cue={sample} s={s} w={w} small/><figcaption>{w.modeLines[s.mode]}</figcaption></figure>

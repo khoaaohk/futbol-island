@@ -14,7 +14,7 @@
 .backText{width:auto;padding:0 14px 0 10px;gap:4px}
 .lang:active,.back:active{transform:scale(.96)}
 .exit{--navigation-width:76px}
-.lang:focus-visible,.back:focus-visible{outline:3px solid var(--pitch,#1d6b55);outline-offset:2px}
+.lang:focus:not(:focus-visible),.back:focus:not(:focus-visible){outline:none}.lang:focus-visible,.back:focus-visible{outline:2px solid rgb(61 139 214 / .55);outline-offset:-2px}
 @media (hover:hover) and (pointer:fine){.lang:hover,.back:hover{background:var(--well,#e4e8d4)}}
 @media (prefers-reduced-motion:reduce){.lang,.back{transition:background-color .15s ease}.lang:active,.back:active{transform:none}}
 @media print{.bar{display:none}}

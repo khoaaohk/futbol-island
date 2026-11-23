@@ -45,7 +45,7 @@ export default function PlansTool(p:Props){
   <div className={t.ages} role="tablist" aria-label={w.plansTitle}>{AGES.map(a=><button key={a} type="button" role="tab" aria-selected={a===age} className={t.age} onClick={()=>p.onAge(a)}>{a}{a===p.teamAge&&<small>{w.teamAge}</small>}</button>)}</div>
   <ul className={t.planList}>{list.map((x,i)=>{const d=data.drills[x.drills[1]??x.drills[0]];return <li key={x.slug} className="fi-in" style={{'--i':i} as React.CSSProperties}>
    <button type="button" className={t.planCard} onClick={()=>p.onPlan(x.slug)} data-plan={x.slug}>
-    <span className={t.planArt} aria-hidden="true">{d&&<GridDiagram id={`pl-${x.slug}`} scene={d.scene} small/>}</span>
+    <span className={t.planArt} aria-hidden="true">{d&&<GridDiagram id={`pl-${x.slug}`} scene={d.scene} small light/>}</span>
     <span className={t.planText}><b>{x.name}</b><span>{x.goal}</span><small>{w.minutesN(x.minutes)} · {x.players}</small></span>
    </button></li>;})}</ul>
  </>;
@@ -71,7 +71,7 @@ function PlanView({w,lang,plan,drills,onRun}:{w:Words;lang:Lang;onRun:(on:boolea
   <h2 className={`${c.h2} ${c.noPrint}`}>{w.drillsInPlan}</h2>
   <ul className={`${t.drills} ${c.noPrint}`}>{plan.drills.map(slug=>{const d=drills[slug];if(!d)return null;const more=open===slug;
    return <li key={slug} className={t.drill}>
-    <div className={t.drillArt}><GridDiagram id={`dr-${slug}`} scene={d.scene} small/></div>
+    <div className={t.drillArt}><GridDiagram id={`dr-${slug}`} scene={d.scene} small light/></div>
     <div className={t.drillBody}><b>{d.name}</b><p>{d.desc}</p>
      <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} aria-expanded={more} onClick={()=>setOpen(more?null:slug)}>{w.howItWorks}</button>
      {more&&<><ol className={t.steps}>{d.steps.map(s=><li key={s}>{s}</li>)}</ol><p className={t.cueH}>{w.coachPoints}</p><ul className={t.bullets}>{d.cues.map(s=><li key={s}>{s}</li>)}</ul></>}

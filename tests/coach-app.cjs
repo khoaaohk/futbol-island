@@ -238,7 +238,7 @@ for(const arr of [300,605,720,900,1205]){
  for(const re of G.ES_BANNED)ok(!re.test(esText),'Spanish avoids '+re);
  const page=read('app/(site)/tools/[slug]/page.tsx'),es=read('components/es/pages/ToolsEs.tsx');
  ok(/Substitution calculator: a worked example/.test(page)&&/Playing time calculator in Excel or Google Sheets/.test(page)&&/Equal playing time during the game/.test(page),'front door: worked example, Excel, equal playing time');
- ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href=\{`\/coach\?lang=es#tool=\$\{app\}`\}/.test(es),'front doors link to the app (English and Spanish), each to its own tool (Nov 22 2026)');
+ ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href=\{`\/coach\?lang=es#tool=\$\{app\}/.test(es),'front doors link to the app (English and Spanish), each to its own tool (Nov 22 2026)');
  ok(/COACH_APP_PATH\+'#tool=lineup'/.test(page)&&/'#tool=subs':'#tool=minutes'/.test(page),'lineup pages open the lineup builder; the calculator Playing time; the rotations Substitution rotation');
 }
 /* ---- 9. Several teams (Nov 22 2026; lib/coach/teams.ts): migration from fi-coach-v1, switching, deleting ---- */
@@ -280,5 +280,42 @@ for(const arr of [300,605,720,900,1205]){
  const fakeLive={...T.activeOf(L),game:{clock:{status:'live'}}};const L2={...L,teams:[fakeLive,L.teams[1]],activeId:'t2'};
  ok(T.liveTeam(L2).id==='t1'&&T.activeOf(L2).game===null,'the live game stays with its team when another team is shown');
  ok(T.initials('Blue Sharks',1)==='BS'&&T.initials('tigers',2)==='TI'&&T.initials('',3)==='T3','team badge initials');
+}
+/* ---- 10. Screens in the URL (round 4A, Nov 22 2026; lib/coach/route.ts): history routing, deep links, the practice age ---- */
+{
+ const R=load('lib/coach/route.ts');
+ ok(!/window\.|document\.|localStorage/.test(read('lib/coach/route.ts').replace(/\/\*[\s\S]*?\*\//g,'')),'route.ts is pure');
+ const P=h=>R.parseHash(h);
+ ok(P('').screen==='gameday'&&P('#tool=home').screen==='gameday','no hash / old #tool=home -> Game Day');
+ ok(P('#tool=training').screen==='training'&&P('#tab=training').screen==='training','Training tab');
+ ok(P('#tool=match').live===true&&P('#tool=match').screen==='subs','#tool=match opens the live game over the rotation');
+ for(const t of ['team','lineup','minutes','subs','summary','plans'])ok(P('#tool='+t).screen===t,'tool '+t);
+ ok(P('#tool=nope').screen==='gameday'&&P('#tool=<script>').screen==='gameday','unknown tools fall back to Game Day');
+ ok(P('#tool=subs&format=9v9').format==='9v9'&&P('#tool=subs&format=99v99').format===undefined,'format kept, garbage dropped (C6)');
+ const pl=P('#tool=plans&plan=u8-passing-practice-plan&age=u8&run=1');
+ ok(pl.plan==='u8-passing-practice-plan'&&pl.age==='U8'&&pl.run===true,'plan, age and the session in the hash');
+ ok(P('#tool=plans&plan=../../x').plan===undefined&&P('#tool=lineup&plan=x').plan===undefined,'plan slugs are checked and only on the plans screen');
+ for(const h of ['#tool=gameday','#tool=training','#tool=subs&format=9v9','#tool=plans&plan=u6-first-practice&age=U6&run=1','#tool=match'])
+  ok(R.hashFor(P(h))===h,'round trip '+h);
+ const st=r=>R.landingStack(r).map(R.hashFor).join(' ');
+ ok(st({screen:'gameday'})==='#tool=gameday','a tab page: one entry');
+ ok(st({screen:'subs'})==='#tool=gameday #tool=subs','a deep-linked tool gets its tab page underneath (Back returns to it, B1)');
+ ok(st({screen:'plans'})==='#tool=training #tool=plans','plans belong to Training');
+ ok(st({screen:'plans',plan:'u6-first-practice'})==='#tool=training #tool=plans #tool=plans&plan=u6-first-practice','a plan link: Training, the list, the plan');
+ ok(st({screen:'subs',live:true})==='#tool=gameday #tool=match','a live game opens over Game Day');
+ ok(R.homeOf('plans')==='training'&&R.homeOf('lineup')==='gameday'&&R.homeOf('summary')==='gameday','each tool returns to its own tab');
+ ok(R.sameRoute(P('#tool=subs&format=9v9'),P('#tool=subs'))&&!R.sameRoute(P('#tool=subs'),P('#tool=lineup')),'same route ignores the format hint');
+ /* the practice age: an age in the team name wins, else the format */
+ for(const [f,n,want] of [['4v4','','U6'],['5v5','','U8'],['7v7','','U10'],['futsal','','U10'],['9v9','','U12'],['11v11','','U12'],['7v7','Tigers U8','U8'],['9v9','u9 Blue','U10'],['5v5','U5 Minis','U6'],['7v7','Lions U-11','U12'],['7v7','Under the sea','U10']])
+  ok(R.ageFor(f,n)===want,`ageFor(${f}, "${n}") = ${want}`);
+ /* the app wires it: history entries, popstate, the plans data on demand; the tab pages and the language sheet */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(/history\.pushState\(/.test(app)&&/addEventListener\('popstate'/.test(app)&&/addEventListener\('hashchange'/.test(app),'pushState + popstate + hashchange');
+ ok(/translate="no"/.test(app),'translate="no" on the app root (C10)');
+ ok(/setToast\(null\);\/\* a toast belongs/.test(app),'the undo toast stays on its screen (C15)');
+ ok(/<LangSheet /.test(app)&&/data-nav=\{k\}/.test(app),'bottom nav + language sheet');
+ ok(/plans-data\/\$\{lang\}\?v=/.test(read('components/coach/PlansTool.tsx')),'practice plans are fetched on demand, versioned for the cache-first SW');
+ ok(/#tool=plans&plan=\$\{p\.slug\}/.test(read('app/(site)/learn/soccer-practice-plans/[slug]/page.tsx'))&&/lang=es#tool=plans&plan=\$\{p\.slug\}/.test(read('components/es/pages/DrillsEs.tsx')),'plan pages open the plan in the coach app (EN + ES)');
+ ok(/&format=\$\{p\.format\}/.test(read('app/(site)/tools/[slug]/page.tsx')),'tool pages keep their format in the app link');
 }
 console.log(`coach-app: ${checks} checks passed`);
