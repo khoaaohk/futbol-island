@@ -302,7 +302,8 @@ export const TERM_PAGES:readonly TermPage[]=([
   lessonIds:['learn7_carry','next7_dribbleroom','expf_2v1'],related:['two-v-one','tackle','first-touch','give-and-go','dribble']},
 
  {slug:'clean-sheet',name:'Clean Sheet',also:'shutout',short:'A game in which a team does not let in any goals. In the United States it is also called a shutout.',
-  desc:'A clean sheet in soccer explained for kids: a game with no goals against, why it belongs to the whole team and how teams defend to earn one, with lessons.',
+  title:'What Is a Clean Sheet in Soccer? Meaning for Kids (Shutout)',h1:'What is a clean sheet in soccer?',
+  desc:'What is a clean sheet in soccer? A game with no goals against, also called a shutout. Who gets the credit, why the name, and how teams defend for one.',
   answer:'A clean sheet in soccer is a game in which a team does not let in a single goal. In the United States it is also called a shutout, and although the goalkeeper gets the credit, the whole team earns it by defending well.',
   scene:{title:'A team defending together',who:'G@50,5 4@40,18 5@60,18 3@18,22 2@80,22 6@50,30 8@36,34 !9@50,24 !10@46,38 !7@82,34 !11@16,36',ball:[46,40],zone:[30,0,70,26],
    caption:'The other team attacks down the picture toward the gold goal. Gold’s four defenders are goal-side and close together, the midfielders block passes into the shaded space in front of goal, and the goalkeeper is set for a shot.'},
@@ -312,11 +313,11 @@ export const TERM_PAGES:readonly TermPage[]=([
   formats:'The idea is the same in 7v7, 9v9, 11v11 and futsal. In 4v4 games for the youngest players there are no goalkeepers, and the U.S. Soccer standards say results should not be recorded, so nobody counts clean sheets yet.',
   faq:[{q:'Is a 0-0 game a clean sheet?',a:'Yes, for both teams. Neither one let in a goal.'},
    {q:'Who gets a clean sheet, the goalkeeper or the team?',a:'It is counted for the goalkeeper and for the team. Defenders and midfielders do much of the work.'},
-   {q:'What is the difference between a clean sheet and a shutout?',a:'None. Shutout is the word used in American sports, and clean sheet is the word used in most soccer countries.'}],
+   {q:'What is the difference between a clean sheet and a shutout?',a:'None. Shutout is the word used in American sports, and clean sheet is the word used in most soccer countries.'},{q:'Why is it called a clean sheet?',a:'The usual explanation is the score sheet: a team that lets in no goals has nothing written against it, so its sheet stays clean.'},{q:'Is a 1-0 win a clean sheet?',a:'Yes, for the team that won. Any game in which a team lets in no goals is a clean sheet for that team, whatever it scores itself.'},{q:'Does a penalty shoot-out break a clean sheet?',a:'No. Shoot-out kicks are not goals in the game, so a 0-0 game decided on penalties is still a clean sheet for both teams.'}],
   lessonIds:['def_7_goalside','def_11_pressurecover','expf_keeperposition','gap7_lostball'],related:['goal-side','marking','pressing','hat-trick','own-goal']},
 
- {slug:'hat-trick',title:'What Is a Hat Trick in Soccer? Hat-Trick Meaning for Kids',h1:'What is a hat trick in soccer?',name:'Hat-Trick',also:'hat trick',short:'Three goals scored by one player in one game.',
-  desc:'What is a hat trick in soccer? Three goals by one player in one game. What counts as a hat-trick in football, what a brace is, and how the goals come.',
+ {slug:'hat-trick',title:'What Is a Hat Trick in Soccer? Meaning and Origin, for Kids',h1:'What is a hat trick in soccer?',name:'Hat-Trick',also:'hat trick',short:'Three goals scored by one player in one game.',
+  desc:'What is a hat trick in soccer? Three goals by one player in one game. Where the name comes from, what counts, and the brace and perfect hat-trick.',
   answer:'A hat trick in soccer, or a hat-trick in football, is three goals scored by the same player in one game. The goals can come at any time and in any way, with either foot or from a penalty kick, and two goals in a game is called a brace.',
   scene:{title:'Three places goals come from',who:'9@44,90 9@58,88 9@52,82 7@88,86 !4@48,93 !5@60,93 !G@52,98',ball:[87,87],passes:['87,87>45,91','87,87>58,89','87,87>52,83'],
    caption:'One striker, number 9, shown in three places a goal scorer runs to when the ball is wide: the far post, the near post and the space near the penalty mark. A player who keeps arriving in these places gets chances.'},
@@ -327,7 +328,8 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'What is a perfect hat-trick?',a:'A hat-trick with one goal from the left foot, one from the right foot and one header. It is a nickname, not a rule, and an ordinary hat-trick is just as good.'},
    {q:'How many goals is a hat-trick?',a:'Three, by one player, in one game.'},
    {q:'Do penalty kicks count for a hat-trick?',a:'Yes. A goal from a penalty kick during the game is a goal like any other.'},
-   {q:'What is a brace in soccer?',a:'Two goals by one player in one game.'}],
+   {q:'What is a brace in soccer?',a:'Two goals by one player in one game.'},{q:'Why is it called a hat trick?',a:'The word comes from cricket in the 1800s. A bowler who took three wickets with three balls in a row was given a new hat, and other sports, soccer among them, borrowed the word for three goals.'},{q:'Do own goals count toward a hat-trick?',a:'No. An own goal is not counted for any player on the other team, so it cannot be part of anyone’s hat-trick.'},{q:'Do penalty shoot-out goals count for a hat-trick?',a:'No. A shoot-out comes after the game to decide a winner, and its kicks are not goals in the game. Goals in extra time do count.'},{q:'What does a player get for scoring a hat-trick?',a:'By tradition the player often keeps the match ball, and teammates may sign it. It is a custom, not a rule.'}],
+  kinds:{title:'Brace, hat-trick and the other goal words',rows:[['Brace','Two goals by one player in one game.'],['Hat-trick','Three goals by one player in one game, at any time and in any way.'],['Natural hat-trick','Three goals in a row by one player, with nobody else scoring in between. A nickname, not a rule.'],['Perfect hat-trick','One goal with the left foot, one with the right foot and one header.']]},
   lessonIds:['next7_shotreaction','learnf_farpost','gap11_runoncue'],related:['cross','cutback','through-ball','clean-sheet','brace']},
 
  // ---- the two cards (Nov 18 2026, Search Console: "yellow card soccer", "what is a yellow card in soccer", "red card in soccer").
@@ -1160,10 +1162,10 @@ if(new Set(GLOSSARY.map(g=>g.id)).size!==GLOSSARY.length)throw new Error('glossa
 const letterOf=(g:GlossaryEntry)=>/^\d/.test(g.term)?'T':g.term[0].toUpperCase();
 export const GLOSSARY_LETTERS=[...new Set(GLOSSARY.map(letterOf))].sort().map(letter=>({letter,terms:GLOSSARY.filter(g=>letterOf(g)===letter)}));
 export const TERMS_HUB={path:TERMS_HUB_PATH,crumb:'Soccer terms',blurb:`${GLOSSARY.length} soccer words in plain English, from advantage to yellow card, ${TERM_PAGES.length} with a diagram`,
- title:'Soccer Terms A to Z: Meanings and Glossary for Kids',
- description:`Soccer terms A to Z for kids and parents: ${GLOSSARY.length} soccer words in plain English, from positions and rules to moves and slang, with diagrams.`,
- h1:'Soccer terms for kids: an A-Z glossary',
- lead:`Soccer terms are the words players, coaches and referees use for the game’s rules, positions and moves. This A to Z glossary explains ${GLOSSARY.length} of them in plain English, from advantage to yellow card, so a new player or parent can follow any practice or game from the first season.`,
+ title:'Soccer Terms and Terminology: A to Z Glossary for Kids',
+ description:`Soccer terms and terminology A to Z for kids and parents: ${GLOSSARY.length} words in plain English, from positions and rules to moves and slang, with diagrams.`,
+ h1:'Soccer terms for kids: an A-Z glossary of soccer terminology',
+ lead:`Soccer terms, or soccer terminology, are the words players, coaches and referees use for the game’s rules, positions and moves. This A to Z glossary explains ${GLOSSARY.length} of them in plain English, from advantage to yellow card, so a new player or parent can follow any practice or game from the first season.`,
  more:`${TERM_PAGES.length} of the terms have a page of their own, with a diagram and the steps to do it on the field. Words that are rules link to the rule, and positions link to the position.`,
  faq:[{q:'What are the basic soccer terms a beginner should know?',a:'Start with the restarts (kick-off, throw-in, goal kick, corner kick), the areas (penalty area, goal area, touchline) and four ideas: pass, dribble, mark and support.'},
   {q:'Why do some people say pitch and others say field?',a:'They mean the same place. Pitch, kit, boots and nil are British words. Field, uniform, cleats and zero are the American ones.'},
