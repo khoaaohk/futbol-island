@@ -50,8 +50,9 @@ export function sectionRailEs(family:RailFamily):Rail{
  * search for most come first (lessons, rules, terms, drills, positions, formations), then the coach pages, then play and watch, then the
  * collections, whose pages answer few football searches. Order in a menu weighs little with search engines; this mostly decides which
  * links a reader meets first. Spanish paths sort by their English path. */
-export const RAIL_ORDER=['/learn/lessons','/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills','/learn/soccer-positions','/learn/soccer-formations',
- '/learn/soccer-practice-plans','/tools','/learn/soccer-age-groups','/games','/videos','/cards','/books','/fish','/exhibits'] as const;
+// Nov 23 2026 (owner: "move the coach tools after overview. make that more prominent" + "also move up storybooks and players cards")
+export const RAIL_ORDER=['/tools','/books','/cards','/learn/lessons','/learn/soccer-rules','/learn/soccer-terms','/learn/soccer-drills','/learn/soccer-positions','/learn/soccer-formations',
+ '/learn/soccer-practice-plans','/learn/soccer-age-groups','/games','/videos','/fish','/exhibits'] as const;
 export function railOrder<T extends {href:string}>(items:T[]):T[]{
  const at=(h:string)=>{const i=(RAIL_ORDER as readonly string[]).indexOf(h.replace(/^\/es(?=\/)/,''));return i<0?RAIL_ORDER.length:i;};
  return items.map((x,i)=>[x,i] as const).sort((a,b)=>at(a[0].href)-at(b[0].href)||a[1]-b[1]).map(x=>x[0]);

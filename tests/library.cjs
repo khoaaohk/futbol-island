@@ -50,7 +50,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
   for(const x of secs){const sec=html.match(new RegExp(`<section id="${x.id}"[\\s\\S]*?</section>`))[0];
    assert.match(sec,new RegExp(`<h2[^>]*>${x.name}</h2>`),`${x.id}: H2`);assert((sec.includes('<img ')&&/loading="lazy"/.test(sec))||/<svg [^>]*role="img" aria-label="[^"]{8,}"[^>]*data-pic-anim=/.test(sec),`${x.id}: a lazy picture, or the drawn picture inline`);
    assert(x.examples.length>=3&&x.examples.length<=5,`${x.id}: 3-5 examples`);for(const e of x.examples){assert(PATHS.has(e.href.split('#')[0]),`${x.id}: example ${e.href} is a real page`);assert(sec.includes(`href="${e.href}"`));}
-   assert.equal((sec.match(/class="[^"]*go[^"]*" href=/g)||[]).length,1,`${x.id}: one button`);assert(sec.includes(`href="${x.href}">${x.cta}</a>`),`${x.id}: the button opens the section`);
+   assert.equal((sec.match(/class="[^"]*go[^"]*" href=/g)||[]).length,x.id==='coach-tools'?2:1,`${x.id}: one button (Coach tools: plus Open the Coach app, owner Nov 23)`);if(x.id==='coach-tools')assert(/href="\/coach(\?lang=es)?"/.test(sec),'coach-tools: second button opens the Coach app');assert(sec.includes(`href="${x.href}">${x.cta}</a>`),`${x.id}: the button opens the section`);
    if(x.count)assert(!/\d/.test(x.cta)||x.cta.includes(x.count.split(' ')[0]),`${x.id}: the button's number is the count's`);
    assert(x.more.length>40&&!/\d{2,}/.test(x.more.replace(/11v11|U1[02]|2026-27/g,'')),`${x.id}: more words, no typed count`);}
   assert.equal(byPath['/learn/soccer-rules'].cta,`See all ${L('lib/site/rules.ts').RULES.length} rules`);

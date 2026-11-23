@@ -156,3 +156,10 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 }
 @media(prefers-reduced-motion:reduce){.examples a,.go,.grid a,.pic img,.menu ul a,nav.menu li[data-pill]{transition:none}.grid a:hover img{scale:none}}
 @media print{.hero,.band,.close,.shelf{margin-inline:0;padding:0;background:none}.heroArt,.pic,.secPic,.menu{display:none}.shelf{display:block}.shelfMain{display:block}}
+
+/* Nov 23 2026: the featured Coach tools section (owner: "make that more prominent") */
+.band[data-featured]{--band:color-mix(in srgb,var(--btn-mint,#beded1) 45%,var(--paper));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--btn-mint,#beded1) 70%,transparent)}
+.band[data-featured] .h2{font-size:clamp(30px,4vw,44px)}
+.kicker{display:block;width:100%;font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);opacity:.75}
+.goRow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.goAlt{background:var(--paper)}
