@@ -4,6 +4,7 @@ import {INDEXED_FISH,fishArtPath,fishPath} from '../fish';
 import {SITE_EXHIBITS,exhibitPath} from '../exhibits';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH} from './printables';
 import {TOOL_PAGES} from './registry';
+import {SHAPES_8V8} from './shapes8';
 import {GAME_LISTINGS} from '../games';
 import {COMPARISONS} from '../comparisons';
 /**
@@ -18,7 +19,7 @@ export function imageEntries():ImageEntry[]{
  const printable=new Map(PRINTABLES.map(p=>[p.path,p.files.flatMap(f=>[fileUrl(f.name,'png'),fileUrl(f.name,'svg')])]));
  return [
   ...ALL_GUIDE_PAGES.filter(g=>g.image).map(g=>({path:g.path,images:[g.image!]})),
-  ...TOOL_PAGES.map(t=>({path:t.path,images:printable.get(t.path)??(t.path===PRINTABLES_HUB_PATH?PRINTABLES.map(p=>fileUrl(p.files[0].name,'png')):t.image?[t.image]:[])})).filter(e=>e.images.length>0),
+  ...TOOL_PAGES.map(t=>({path:t.path,images:t.path==='/tools/8v8-lineup-builder'?SHAPES_8V8.map(x=>`/learn/diagrams/${x.slug}-formation.png`)/* round 4D: the fútbol 8 shapes have no guide pages, so their pictures sit on the builder */:printable.get(t.path)??(t.path===PRINTABLES_HUB_PATH?PRINTABLES.map(p=>fileUrl(p.files[0].name,'png')):t.image?[t.image]:[])})).filter(e=>e.images.length>0),
   ...GAME_LISTINGS.map(g=>({path:g.path,images:g.images})),/* the arcade games' screenshots and share pictures (lib/site/games.ts) */
   ...INDEXED_FISH.map(f=>({path:fishPath(f.id),images:[fishArtPath(f.id),ogPath(fishPath(f.id))]})),/* Nov 21 2026: the noindex fish pages (lib/site/paths.ts NOINDEX_FISH_PATHS) are not listed */
   ...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),images:[ogPath(exhibitPath(e.id))]})),

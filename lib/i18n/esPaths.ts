@@ -25,7 +25,7 @@ const ROUNDC=[D,...ES_DRILL_SLUGS.map(s=>`${D}/${s}`),PL,...ES_PLAN_SLUGS.map(s=
 export const ES_LESSON_PAGES:readonly string[]=['/learn/lessons',...LESSON_TABLE.map(([,id])=>`/learn/lessons/${id}`)];
 export const ES_HUB_PAGES:readonly string[]=['/learn/football-rules-for-kids','/learn/soccer-quiz-for-kids','/learn/passing-and-support','/learn/futsal-for-kids','/learn/7v7-9v9-11v11',
  '/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age','/learn/soccer-age-groups','/safe-football-game-for-kids'];
-export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder','/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer','/tools/soccer-tactics-board'];
+export const ES_TOOL_PAGES:readonly string[]=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/8v8-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder','/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer','/tools/soccer-tactics-board'];
 /** Round E (Nov 22 2026): the arcade game pages (hub + one page per listed game, lib/site/games.ts GAME_PAGES order) and the
     pop-up book pages (hub + one page per player book, lib/site/books.ts BUILT_BOOKS); words in lib/i18n/es/{games,books}/. */
 export const ES_GAME_SLUGS=['soccer-swipe-game','soccer-snake-game','soccer-runner-game','soccer-tennis-game','soccer-pinball','soccer-passing-puzzle-game','air-hockey-soccer-game','soccer-block-puzzle-game','soccer-merge-game','soccer-ball-rolling-puzzle-game','soccer-shooting-game','soccer-juggling-game','soccer-target-game','soccer-free-kick-game','soccer-golf-game'] as const;
@@ -37,8 +37,15 @@ export const ES_LIBRARY='/library';
 export const ES_PAGES:readonly string[]=['/',ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE];
 const SET=new Set(ES_PAGES);
 export const hasEs=(enPath:string)=>SET.has(enPath);
-export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+enPath;
+/** Round 4D: the one exception to "English slug kept": a Spanish page with its own slug, because Spanish coaches search for
+    "alineación fútbol 8", not "8v8 lineup builder". English path -> the Spanish path after /es. */
+export const ES_SLUGS:Readonly<Record<string,string>>={'/tools/8v8-lineup-builder':'/tools/alineacion-futbol-8'};
+const ES_SLUGS_BACK:Readonly<Record<string,string>>=Object.fromEntries(Object.entries(ES_SLUGS).map(([en,es])=>[es,en]));
+export const toEs=(enPath:string)=>enPath==='/'?ES_PREFIX:ES_PREFIX+(ES_SLUGS[enPath]??enPath);
+/** The English path for what follows /es in a Spanish URL; null for an English slug whose Spanish page has its own slug
+    (/es/tools/8v8-lineup-builder is not a page: /es/tools/alineacion-futbol-8 is). */
+export const enOfEs=(suffix:string):string|null=>ES_SLUGS_BACK[suffix]??(ES_SLUGS[suffix]?null:suffix);
 /** /es/learn/x -> /learn/x, /es -> / (null when the path is not a Spanish one). */
-export const toEn=(esPath:string)=>esPath===ES_PREFIX||esPath===ES_PREFIX+'/'?'/':esPath.startsWith(ES_PREFIX+'/')?esPath.slice(ES_PREFIX.length):null;
+export const toEn=(esPath:string)=>{if(esPath===ES_PREFIX||esPath===ES_PREFIX+'/')return '/';if(!esPath.startsWith(ES_PREFIX+'/'))return null;const rest=esPath.slice(ES_PREFIX.length);return ES_SLUGS_BACK[rest]??rest;};
 /** hreflang alternates for a page pair, the same on both language versions (x-default = English). */
 export const languageAlternates=(enPath:string)=>({en:enPath,es:toEs(enPath),'x-default':enPath});

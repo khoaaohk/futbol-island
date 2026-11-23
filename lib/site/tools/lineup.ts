@@ -12,7 +12,7 @@ import {CREDIT,dotItems,fieldItems,GRASS,LETTER,wrapText,type Item,type Sheet,ty
 export type Shape={slug:string;format:GuideFormat;shape:string;lines:Line[]};
 export type Lineup={f:string;team:string;note:string;on:string[];bench:string[]};
 export const MAX_BENCH=14,MAX_NOTE=280;
-export const DEFAULT_FORMATION:Record<GuideFormat,string>={'7v7':'7v7-2-3-1','9v9':'9v9-3-2-3','11v11':'11v11-4-3-3',futsal:'futsal-1-2-1-diamond'};
+export const DEFAULT_FORMATION:Record<GuideFormat,string>={'7v7':'7v7-2-3-1','8v8':'8v8-3-3-1','9v9':'9v9-3-2-3','11v11':'11v11-4-3-3',futsal:'futsal-1-2-1-diamond'};
 export const shapeLabel=(s:Shape)=>s.shape==='1-2-1'?'1-2-1 diamond':s.shape;
 export const spotsOf=(s:Shape)=>place(s.lines);
 const find=(shapes:readonly Shape[],slug:unknown)=>shapes.find(s=>s.slug===slug);

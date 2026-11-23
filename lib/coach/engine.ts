@@ -13,13 +13,16 @@ import {blockLengths,planRotation} from '../site/tools/rotation';
  *    (water filling), then every block takes the players with the most time still owed.
  *  - The clock is a sum of closed running spans plus the open one (`since`), so it is right after any pause, lock or reload.
  */
-export type FormatId='4v4'|'5v5'|'7v7'|'9v9'|'11v11'|'futsal';
+export type FormatId='4v4'|'5v5'|'7v7'|'8v8'|'9v9'|'11v11'|'futsal';
 export type KeeperMode='fixed'|'rotate'|'none';
 export type Preset={id:FormatId;ages:string;onField:number;keeper:boolean;periods:number;periodMin:number;subEvery:number;rolling:boolean};
 export const PRESETS:readonly Preset[]=[
  {id:'4v4',ages:'U6–U8',onField:4,keeper:false,periods:4,periodMin:10,subEvery:5,rolling:false},
  {id:'5v5',ages:'U6–U8',onField:5,keeper:true,periods:4,periodMin:10,subEvery:5,rolling:false},
  {id:'7v7',ages:'U9–U10',onField:7,keeper:true,periods:2,periodMin:25,subEvery:5,rolling:false},
+ /* round 4D: fútbol 8 (Spain: prebenjamín, benjamín, alevín). 7 + keeper, 2 x 30 (FFCV alevín; 2 x 25 benjamín), unlimited
+    rolling changes with re-entry ("cambios volantes"); everyone on the match sheet must play (FFCV Circular 26, 2025/26) */
+ {id:'8v8',ages:'U9–U12',onField:8,keeper:true,periods:2,periodMin:30,subEvery:6,rolling:true},
  {id:'9v9',ages:'U11–U12',onField:9,keeper:true,periods:2,periodMin:30,subEvery:10,rolling:false},
  {id:'11v11',ages:'U13+',onField:11,keeper:true,periods:2,periodMin:35,subEvery:10,rolling:false},
  {id:'futsal',ages:'',onField:5,keeper:true,periods:2,periodMin:20,subEvery:4,rolling:true},

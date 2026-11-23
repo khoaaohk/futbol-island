@@ -1,3 +1,4 @@
+import type {GuideFormat as GuideFormatAll} from '@/lib/site/pitch';
 import JsonLd from '@/components/seo/JsonLd';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -192,7 +193,7 @@ export function TermEsPage({t}:{t:EsTerm}){
 }
 
 // ---- positions --------------------------------------------------------------------------------------------------------------
-function EsDiagram({id,format,lines,what,mark,markName,image}:{id:string;format:'7v7'|'9v9'|'11v11'|'futsal';lines:Parameters<typeof esLines>[0];what:string;mark?:string;markName?:string;image?:string}){
+function EsDiagram({id,format,lines,what,mark,markName,image}:{id:string;format:GuideFormatAll;lines:Parameters<typeof esLines>[0];what:string;mark?:string;markName?:string;image?:string}){
  const es=esLines(lines),desc=describeEs({format,what,lines:es,highlight:markName});
  return <figure className={styles.figure}>
   <div className={styles.art}><PitchDiagram id={id} format={format} spots={place(es,'base')} arrows={[]} title={what[0].toUpperCase()+what.slice(1)} desc={desc} mark={mark}/></div>

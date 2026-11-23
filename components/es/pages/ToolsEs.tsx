@@ -195,25 +195,27 @@ function ToolsHubEs(){
 // ---- the lineup builder and its landings ----
 const shapesEs=SHAPES.map(s=>({...s,lines:esLines(s.lines)}));
 function LineupEs({p}:{p:LineupPage}){
- const e=lineupEs(p),format=p.format??'7v7',f=esFormation(DEFAULT_FORMATION[format])!,crumbs=toolCrumbsEs({name:e.crumb,path:toEs(p.path)});
+ const e=lineupEs(p),format=p.format??'7v7',f=esFormation(DEFAULT_FORMATION[format]),crumbs=toolCrumbsEs({name:e.crumb,path:toEs(p.path)});
+ /* round 4D: fútbol 8 has builder shapes but no formation guides yet: the field size guide, the comparison and the other builders */
+ const eight=format==='8v8';
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>{const o=toolLink(x.path)!;return {...o,name:cap(o.name)};});
- const related=links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
+ const related=eight?links([esLink('/learn/soccer-field-size-by-age',{line:'Medidas de cancha, arco y balón para cada edad'}),esLink('/learn/7v7-9v9-11v11',{line:'Cómo crecen las modalidades reducidas hasta el fútbol 11'}),esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]):links([...(p.format?esFormationsIn(format).map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best})):[]),
   p.format?esLink(format==='futsal'?'/learn/futsal-for-kids':`/learn/${format}-soccer-formations`,{line:'Cómo elegir una forma, con un diagrama de cada una',key:true}):esLink('/learn/soccer-formations',{name:'Las formaciones de fútbol explicadas',line:'Cómo elegir una forma, con un diagrama de cada una'}),
   p.format?esLink(cheatSheetPath(format),{line:'Cada forma de esta modalidad en una página para imprimir'}):esLink(PRINTABLES_HUB_PATH,{name:'Hojas de referencia de formaciones y canchas en blanco'}),
   esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]);
- const fmtWord=format==='futsal'?'futsal':format;
+ const fmtWord=format==='futsal'?'futsal':eight?'fútbol 8':format;
  /* visual pass Nov 17 2026: the same key facts as the English page (app/(site)/tools/[slug]/page.tsx) */
  const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Modalidades',value:p.format?fmtWord:'7v7, 9v9, 11v11, futsal'},
-  {icon:'diagram',label:'Formaciones',value:`${p.format?esFormationsIn(format).length:ES_FORMATIONS().length} para elegir`},{icon:'share',label:'Compártela',value:'Imprimir, imagen o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
+  {icon:'diagram',label:'Formaciones',value:`${eight?SHAPES.filter(x=>x.format==='8v8').length:p.format?esFormationsIn(format).length:ES_FORMATIONS().length} para elegir`},{icon:'share',label:'Compártela',value:'Imprimir, imagen o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppEs({name:e.h1,path:toEs(p.path),description:e.description,image:image(p.path),
-   features:['Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
+   features:[eight?'Alineaciones de fútbol 8: 3-3-1, 3-2-2 y 2-3-2':'Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <RailNav rail={lineupRail(!!p.format,true)} current="#top"/>
+  <RailNav rail={lineupRail(!!p.format,true,eight)} current="#top"/>
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app="lineup" facts={facts}/></Screen>
-  <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
+  <LineupBuilder shapes={shapesEs} initial={DEFAULT_FORMATION[format]} lockFormat={p.format} lang="es"/>
   <Screen>
    <Section id="how" title="Cómo armar tu alineación">
     <ol>
@@ -229,7 +231,14 @@ function LineupEs({p}:{p:LineupPage}){
     <p>{ES_FORMATIONS().length} formas en cuatro modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
     <LinkList links={ES_FORMATIONS().map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best}))}/>
    </Section>}
-   {p.format&&<Section id="roles" title={`Quién juega dónde en un ${f.shapeEs}`}>
+   {eight&&e.rules&&<Section id="rules" title="Reglas del fútbol 8 de un vistazo">
+    <p>No hay un único reglamento nacional de fútbol 8: cada federación territorial de España escribe el suyo, así que consulta el tuyo. Estas son las reglas de los documentos que leímos, con la fuente de cada una.</p>
+    <DataTable label="Reglas del fútbol 8 y su fuente" head={['Regla','Qué dicen los documentos']} rows={e.rules.map(r=>[...r])}/>
+   </Section>}
+   {e.sources&&<Section id="sources" title="Fuentes">
+    <ul>{e.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
+   </Section>}
+   {p.format&&f&&<Section id="roles" title={`Quién juega dónde en un ${f.shapeEs}`}>
     <p>El creador se abre con la formación {f.name}. Estas son sus tareas; <a href={f.esPath}>la guía del {f.shapeEs}</a> tiene las fortalezas, los puntos débiles y cómo se mueve la forma.</p>
     <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos&&hasEs(positionPath(r.pos))?<a href={toEs(positionPath(r.pos))}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
    </Section>}

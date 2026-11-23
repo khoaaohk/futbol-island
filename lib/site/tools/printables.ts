@@ -66,10 +66,10 @@ export function positionsSheet():Sheet{
  items.push(...footer(w,h));
  return {w,h,bg:INK.page,title:'Soccer positions and numbers sheet',desc:`An 11v11 soccer field seen from above with a 4-3-3 formation. Each player dot carries its number and short name: ${spots.map(s=>`${s.n} ${s.label}`).join(', ')}. A list beside the field gives the full position name for each number.`,items};
 }
-const AGES:Record<GuideFormat,string>={'7v7':'U9 and U10','9v9':'U11 and U12','11v11':'U13 and older',futsal:'every age'};
+const AGES:Record<GuideFormat,string>={'8v8':'U9 to U12 (fútbol 8 in Spain)','7v7':'U9 and U10','9v9':'U11 and U12','11v11':'U13 and older',futsal:'every age'};
 const FORMATION_LINK=(f:GuideFormat)=>f==='futsal'?{path:'/learn/futsal-for-kids',name:'Futsal lessons for kids',line:'Every futsal lesson, grouped by topic'}:{path:`/learn/${f}-soccer-formations`,name:`${f} soccer formations`,line:`Shapes for ${AGES[f]} teams, each with a diagram`};
 const BUILDER=(f:GuideFormat)=>({path:`/tools/${f}-lineup-builder`,name:`${f==='futsal'?'Futsal':f} lineup builder`,line:'Put your players’ names on this field'});
-const TEMPLATE_USE:Record<GuideFormat,string[]>={
+const TEMPLATE_USE:Record<Exclude<GuideFormat,'8v8'>,string[]>={
  '7v7':['A 7v7 field is the small-sided field US teams play on at U9 and U10. It is not a shrunken full-size field: it has its own penalty area and two dashed build-out lines, one in each half. Print the blank sheet and draw on it with a pen at practice, or slide it into a plastic sleeve and use a dry-erase marker so it lasts the season.',
   'Use the portrait sheet when you talk about your own team: you attack up the page, the way the players see it from their goal. Use the landscape sheet for the whole game seen from the side line, with both teams. The thirds sheet helps to explain where to dribble and where to pass safely. The zones sheet marks the wide channels, so a wide player can see “my lane” at a glance.',
   'Some leagues play 7v7 without build-out lines, so there is a sheet with no dashed lines too. Check your league’s rules before you teach the line.'],
@@ -91,7 +91,7 @@ const templates:Printable[]=GUIDE_FORMATS.map(f=>{const name=fieldName(f),cap=na
  lead:`${cap} templates you can print, draw on and share: ${VARIANTS(f).length*2} sheets, each as a page-sized PNG and a sharp SVG.`,
  blurb:`${VARIANTS(f).length*2} blank ${name} sheets: plain, thirds and zones`,use:TEMPLATE_USE[f],files:templateFiles(f),
  links:[BUILDER(f),FORMATION_LINK(f),{path:`${PRINTABLES_HUB_PATH}/${f==='futsal'?'futsal':`${f}-soccer`}-formations-cheat-sheet`,name:`${f==='futsal'?'Futsal':f} formations cheat sheet`,line:'Every shape of this game on one page'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'}]};});
-const CHEAT_USE:Record<GuideFormat,string[]>={
+const CHEAT_USE:Record<Exclude<GuideFormat,'8v8'>,string[]>={
  '7v7':['Four 7v7 shapes on one page: 2-3-1, 3-2-1, 2-2-2 and 3-1-2. Each small field shows where the seven players start, with the goalkeeper in the lighter dot. Tape it inside your clipboard, or give one to every family at the first practice so parents know what “two-three-one” means when they hear it from the side line.',
   'A formation is only where players start. At U9 and U10 the shape matters less than the habits inside it: spread out when your team has the ball and squeeze together when it does not. Use the sheet to pick one shape, stay with it for a few weeks, and let every child try every line. The line under each shape says who it suits.'],
  '9v9':['Five 9v9 shapes on one page: 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 and 4-3-1. Nine players leave room for three real lines, so this is the age when children first learn to play as a back line, a midfield and an attack. The sheet lets you compare the shapes side by side before you choose.',

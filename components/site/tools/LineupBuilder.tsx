@@ -19,7 +19,7 @@ import {LINEUP_ES as W,lineupSheetEs,shapeLabelEs} from './toolWordsEs';
  * The server renders the default formation with position labels, so the page has a real diagram without JavaScript.
  */
 const KEY='fi-lineup-v1';
-const FORMAT_LABEL:Record<GuideFormat,string>={'7v7':'7v7','9v9':'9v9','11v11':'11v11',futsal:'Futsal'};
+const FORMAT_LABEL:Record<GuideFormat,string>={'7v7':'7v7','8v8':'8v8','9v9':'9v9','11v11':'11v11',futsal:'Futsal'};
 const refId=(r:Ref)=>`${r.k}:${r.i}`;
 const parseRef=(s:string|null|undefined):Ref|null=>{const m=/^(on|bench):(\d+)$/.exec(s??'');return m?{k:m[1] as Ref['k'],i:Number(m[2])}:null;};
 /** `lang="es"` (Spanish round D, Nov 16 2026): Spanish words (./toolWordsEs.ts); the page passes shapes with Spanish spot labels. English output is unchanged without it. */
@@ -101,7 +101,7 @@ export default function LineupBuilder({shapes,initial,lockFormat,lang}:{shapes:r
   <div className={`${t.panel} ${t.noPrint}`}>
    <div className={t.grid}>
     <label className={t.fieldLabel}>{es?W.game:'Game'}
-     <select className={t.input} value={format} onChange={e=>setFormat(e.target.value as GuideFormat)}>{GUIDE_FORMATS.map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>
+     <select className={t.input} value={format} onChange={e=>setFormat(e.target.value as GuideFormat)}>{(lockFormat&&!(GUIDE_FORMATS as readonly string[]).includes(lockFormat)?[lockFormat]:GUIDE_FORMATS).map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>
     <label className={t.fieldLabel}>{es?W.formation:'Formation'}
      <select className={t.input} value={shape.slug} onChange={e=>setShape(e.target.value)}>{shapes.filter(s=>s.format===format).map(s=><option key={s.slug} value={s.slug}>{sLabel(s)}</option>)}</select></label>
     <label className={`${t.fieldLabel} ${t.wide}`}>{es?W.team:'Team name'}

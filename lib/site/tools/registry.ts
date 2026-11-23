@@ -28,7 +28,15 @@ export const PRIVACY_LINE='Names stay on your device. Nothing you type is sent t
 export const TOOL_NAMES='Soccer is called football in most of the world. These tools are free, with no account and no ads, from Futbol Island, a football learning game for kids aged 7 to 12.';
 /** A deep link that opens the builder with one formation chosen (the formation pages' "Build this lineup"). */
 export const lineupLinkFor=(formationSlug:string)=>{const f=formationBySlug(formationSlug);return `${f?`/tools/${f.format}-lineup-builder`:LINEUP_PATH}#f=${formationSlug}`;};
-export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideFormat;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
+export type Source={name:string;url:string;says:string};
+export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideFormat;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[];/** round 4D: rules quoted on the page, with where they come from */rules?:[string,string][];sources?:readonly Source[]};
+/** Round 4D: fútbol 8. Spain has no single national rule book for it: each regional federation writes its own, so the page quotes
+ *  the documents it read and says that regions differ. */
+export const F8_SOURCES:readonly Source[]=[
+ {name:'FFCV (Valencian Football Federation), Circular nº 26: rules for the alevín, benjamín and prebenjamín fútbol 8 competitions, 2025/26',url:'https://ffcv.es/wp/wp-content/uploads/2025/09/Circular-F8-25-26-V.3.0-publicada.pdf',says:'alevín 2 × 30 minutes, benjamín and prebenjamín 2 × 25; up to 15 players on the match sheet; unlimited rolling changes and a player who comes off may go back on; every player on the match sheet must take part'},
+ {name:'Diputación Foral de Álava, school sport fútbol 8 competition rules 2025-26',url:'https://web.araba.eus/documents/d/araba/futbol-8-femenino-2025-26_ca-pdf',says:'field 50 to 65 m long and 30 to 45 m wide; goals 6 × 2 m; penalty mark at 9 m; size 4 ball; offside only inside the 13 m zone; unlimited substitutions'},
+ {name:'Basque Government with the Basque Football Federation, Euskadi school games 2024, fútbol 8 rules',url:'https://euskadi.eus/contenidos/informacion/futbolapartaidetza/es_def/adjuntos/F-8-partaidetza-24-Normativa.pdf',says:'offside inside the 13 m zone; penalty from 9 m'},
+];
 const formationImg=(slug:string)=>`/learn/diagrams/${slug}-formation.png`;
 export const LINEUP_PAGES:readonly LineupPage[]=[
  {kind:'lineup',slug:'soccer-lineup-builder',path:LINEUP_PATH,crumb:'Lineup builder',title:'Soccer Lineup Builder: Free, Printable, No Sign-Up',h1:'Soccer lineup builder',
@@ -50,6 +58,19 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
   faq:[{q:'What is the best 7v7 formation to start with?',a:'Most coaches start with a 2-3-1: two defenders, three midfielders and one forward in front of the goalkeeper. It gives width in the middle and is easy for young players to understand.'},
    {q:'How many substitutes should a 7v7 team have?',a:'Three to five is common, which makes a squad of ten to twelve. With more than that it becomes hard to give every child a fair share of the game.'},
    {q:'Does the 7v7 field in the builder have build-out lines?',a:'Yes. The two dashed lines are the build-out lines used in US 7v7. The other team waits behind the line while your goalkeeper restarts play, so show your defenders where to stand to receive the ball.'}]},
+ {kind:'lineup',slug:'8v8-lineup-builder',path:'/tools/8v8-lineup-builder',format:'8v8',crumb:'8v8 lineup builder',title:'8v8 Lineup Builder: Free Fútbol 8 Soccer Lineup',h1:'8v8 soccer lineup builder',
+  description:'A free 8v8 (fútbol 8) lineup builder: a keeper and seven players in a 3-3-1, 3-2-2 or 2-3-2. Type names, drag players and subs, then print or share it.',
+  lead:'Put your goalkeeper and seven outfield players on an 8v8 field in a 3-3-1, 3-2-2 or 2-3-2, add the substitutes, and open the same lineup in the coach app for rolling changes on game day.',
+  blurb:'A keeper, seven players and the bench on a fútbol 8 field',
+  intro:['8v8, called fútbol 8 in Spain, is the game many Spanish clubs play before 11-a-side: a goalkeeper and seven outfield players on a field about half the size of a full pitch. In the Valencian federation it covers the prebenjamín, benjamín and alevín categories, roughly ages 7 to 12.',
+   'The rules are written by each regional federation, so they differ. The Valencian federation plays alevín games as two halves of 30 minutes and benjamín games as two halves of 25, allows unlimited rolling changes with players going back on, and requires every player on the match sheet to take part. The Basque school-sport rules call offside only inside the last 13 metres.',
+   'Because changes are rolling and everyone must play, the lineup is only the start. Build it here, then open it in the coach app, which plans equal minutes and tells you who goes on next.'],
+  faq:[{q:'How many players are on the field in fútbol 8?',a:'Eight a side: a goalkeeper and seven outfield players. The Valencian federation allows up to 15 players on the match sheet, so a squad usually has five to seven substitutes.'},
+   {q:'What is the best 8v8 formation?',a:'A 3-3-1 is the usual first shape: three defenders, three midfielders and one forward. A 3-2-2 gives two forwards a partner each, and a 2-3-2 is the attacking choice with only two at the back.'},
+   {q:'How long is a fútbol 8 game?',a:'It depends on the region and the age. In the Valencian federation, alevín games are 2 × 30 minutes and benjamín and prebenjamín games are 2 × 25. Check your own federation’s rules.'},
+   {q:'Are substitutions unlimited in fútbol 8?',a:'In the Valencian and Basque rules, yes: changes are unlimited and a player who comes off can go back on. The coach app plans those rolling changes so every child gets a fair share.'}],
+  rules:[['Players','8 a side: a goalkeeper and 7 outfield players'],['Field','50 to 65 m long, 30 to 45 m wide (Álava)'],['Goals','6 × 2 m (Álava)'],['Penalty mark','9 m (Álava, Euskadi)'],['Ball','Size 4 (Álava)'],['Game length','Alevín 2 × 30 min, benjamín and prebenjamín 2 × 25 min (FFCV)'],['Changes','Unlimited, rolling, players may go back on (FFCV, Álava)'],['Playing time','Everyone on the match sheet must play (FFCV)'],['Offside','Only inside the last 13 m (Álava, Euskadi)']],
+  sources:F8_SOURCES},
  {kind:'lineup',slug:'9v9-lineup-builder',path:'/tools/9v9-lineup-builder',format:'9v9',crumb:'9v9 lineup builder',title:'9v9 Lineup Builder: Free Printable Soccer Lineup',h1:'9v9 soccer lineup builder',
   description:'Build a 9v9 soccer lineup in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1. Type names, drag players and subs, then print or share it. Free, no sign-up.',
   lead:'Place your nine starters on a 9v9 field in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1, add the substitutes, and hand every player a clear picture of where they begin.',

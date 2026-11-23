@@ -37,7 +37,7 @@ export function FormationDiagram({id,format,lines,what,image,small,mode}:{id:str
 const firstSentence=(s:string)=>s.split('. ')[0].replace(/\.$/,'')+'.';
 const hubLink=()=>({path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb});
 const posHubLink=()=>({path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb});
-const LABEL:Record<Fmt,string>={'7v7':'Formaciones de fútbol 7v7','9v9':'Formaciones de fútbol 9v9','11v11':'Formaciones de fútbol 11v11',futsal:'Formaciones de futsal'};
+const LABEL:Record<Fmt,string>={'7v7':'Formaciones de fútbol 7v7','8v8':'Formaciones de fútbol 8','9v9':'Formaciones de fútbol 9v9','11v11':'Formaciones de fútbol 11v11',futsal:'Formaciones de futsal'};
 
 // ---- hub ----
 export function FormationsHubEsPage(){

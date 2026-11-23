@@ -1,3 +1,4 @@
+import {SHAPES_8V8} from './tools/shapes8';
 import {PITCH,place,type Arrow,type GuideFormat,type Placed} from './pitch';
 import {formationBySlug} from './formations';
 import {positionBySlug} from './positions';
@@ -73,7 +74,10 @@ export function diagramFor(file:string){
   return pitchImage({format:sc.format,spots:sc.spots,scene:sc,title:r.name,sub:r.slug==='futsal-rules'?'Futsal rules for kids, with a diagram':'Soccer rule for kids, with a diagram'});}
  if(m[2]==='term'){const t=termBySlug(m[1]);if(!t)return null;
   return pitchImage({format:t.scene.format,spots:t.scene.spots,scene:t.scene,title:t.name,sub:'Soccer term for kids, with a diagram'});}
- if(m[2]==='formation'){const f=formationBySlug(m[1]);if(!f)return null;
+ if(m[2]==='formation'){const f=formationBySlug(m[1]);
+  /* round 4D: the fútbol 8 shapes (no lesson pages yet) have a picture for the 8v8 lineup builder */
+  const e=f?null:SHAPES_8V8.find(x=>x.slug===m[1]);if(e)return pitchImage({format:'8v8',spots:place(e.lines),title:e.shape,sub:'Fútbol 8 (8v8) formation for kids'});
+  if(!f)return null;
   return pitchImage({format:f.format,spots:place(f.lines),title:f.format==='futsal'?f.name.replace(' (futsal)',''):f.shape,sub:f.format==='futsal'?'Futsal formation for kids':`${f.format} soccer formation for kids`});}
  const p=positionBySlug(m[1]),f=p&&formationBySlug(p.diagram);if(!p||!f)return null;
  return pitchImage({format:f.format,spots:place(f.lines),mark:p.slug,title:p.name,sub:`Soccer position for kids, shown in a ${f.shape}`});

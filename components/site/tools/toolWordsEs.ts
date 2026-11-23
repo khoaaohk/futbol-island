@@ -7,7 +7,7 @@ import {CREDIT,dotItems,fieldItems,GRASS,LETTER,wrapText,type Item,type Sheet,ty
  * EmbedSnippet take `lang="es"` and read their words here; without the prop their English output is unchanged. Kept small and
  * import-free of lib/i18n (client bundle). Glossary: lib/i18n/es-glossary.ts (banca = bench, suplente = substitute, portero).
  */
-export const lineupHeadingEs=(f:GuideFormat)=>f==='futsal'?'Creador de alineaciones de futsal':`Creador de alineaciones de fútbol ${f}`;
+export const lineupHeadingEs=(f:GuideFormat)=>f==='futsal'?'Creador de alineaciones de futsal':f==='8v8'?'Creador de alineaciones de fútbol 8':`Creador de alineaciones de fútbol ${f}`;
 export const shapeLabelEs=(s:Shape)=>s.shape==='1-2-1'?'1-2-1 en rombo':s.shape;
 /** 1st half, Quarter 2... (lib/site/tools/rotation.ts periodName). */
 export const periodNameEs=(i:number,periods:number)=>periods===2?['1.er tiempo','2.º tiempo'][i]:periods===4?`Cuarto ${i+1}`:periods===1?'Partido':`Periodo ${i+1}`;

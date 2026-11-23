@@ -42,7 +42,7 @@ export type LessonQuestionEs={q:string;options:readonly string[];explain:string}
 export type LessonEs={title:string;concept:string;steps:readonly string[];questions:readonly LessonQuestionEs[]};
 /** Tools (Spanish round D, Nov 16 2026): the words of one lib/site/tools/registry.ts LineupPage / PlannerPage (intro and faq 1:1),
  *  of the two hubs, and of one lib/site/tools/printables.ts Printable (use 1:1). Keyed by the English slug. */
-export type ToolPageEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:readonly string[];faq:readonly Faq[]};
+export type ToolPageEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:readonly string[];faq:readonly Faq[];/** round 4D (fútbol 8) */rules?:readonly [string,string][];sources?:readonly {name:string;url:string;says:string}[]};
 export type ToolsHubEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;faq:readonly Faq[]};
 export type PrintableEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;use:readonly string[]};
 /** Lesson hubs, size charts and the parents' guide (Spanish round D, Nov 16 2026; lib/i18n/es/hubs.ts, charts.ts, safety.ts).

@@ -455,5 +455,10 @@ for(const arr of [300,605,720,900,1205]){
  ok(!/\.ghost\{position:fixed;z-index:50/.test(read('components/coach/coach.module.css'))&&/prefers-reduced-motion:reduce\)\{\n \.discHit/.test(read('components/coach/coach.module.css')),'old ghost gone; reduced motion = fades');
  for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(w.lineupSwap('a','b')&&w.lineupIn('a','b')&&w.lineupPlace('a','LD'),'lineup toasts, '+l);}
  ok(!/sharedNote\}/.test(app),'parents\' link: no "shared with you" line');
+ /* 8v8 (fútbol 8): FFCV Circular 26 2025/26 (alevín 2 x 30, unlimited rolling changes) */
+ const p8=E.presetOf('8v8');ok(p8.id==='8v8'&&p8.onField===8&&p8.keeper&&p8.periods===2&&p8.periodMin===30&&p8.rolling,'8v8 preset: keeper + 7, 2 x 30, rolling');
+ ok(E.PRESETS[2].id==='7v7'&&E.presetOf('nope').id==='7v7','the default format is still 7v7');
+ const R8=load('lib/coach/route.ts');ok(R8.parseHash('#tool=lineup&format=8v8').format==='8v8','#tool=lineup&format=8v8 is read');
+ {const sh=load('lib/site/tools/shapes8.ts').SHAPES_8V8;ok(sh.map(x=>x.shape).join()==='3-3-1,3-2-2,2-3-2','8v8 shapes 3-3-1, 3-2-2, 2-3-2');}
 }
 console.log(`coach-app: ${checks} checks passed`);

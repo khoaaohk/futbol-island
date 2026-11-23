@@ -1,3 +1,4 @@
+import {SHAPES_8V8} from './tools/shapes8';
 import {FORMATIONS,FORMATIONS_HUB,FORMAT_GUIDES} from './formations';
 import {POSITIONS,POSITIONS_HUB} from './positions';
 import {NUMBERS_PAGE} from './positionNumbers';
@@ -35,7 +36,7 @@ export type GuidePage={path:string;name:string;title:string;description:string;b
 export const DIAGRAM_DIR='/learn/diagrams';
 export const formationImage=(slug:string)=>`${DIAGRAM_DIR}/${slug}-formation.png`;
 export const positionImage=(slug:string)=>`${DIAGRAM_DIR}/${slug}-position.png`;
-export const DIAGRAM_FILES:readonly string[]=[...FORMATIONS.map(f=>`${f.slug}-formation.png`),...POSITIONS.map(p=>`${p.slug}-position.png`)];
+export const DIAGRAM_FILES:readonly string[]=[...FORMATIONS.map(f=>`${f.slug}-formation.png`),...SHAPES_8V8.map(f=>`${f.slug}-formation.png`),...POSITIONS.map(p=>`${p.slug}-position.png`)];
 const FEATURED:Record<string,string>={'7v7':'7v7-2-3-1','9v9':'9v9-3-2-3','11v11':'11v11-4-3-3'};
 export const GUIDE_PAGES:readonly GuidePage[]=[
  {path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,title:FORMATIONS_HUB.title,description:FORMATIONS_HUB.description,blurb:FORMATIONS_HUB.blurb,hub:true,lessonIds:FORMATIONS_HUB.lessons.map(l=>l.id),image:formationImage('11v11-4-3-3')},

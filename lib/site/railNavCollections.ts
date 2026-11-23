@@ -37,8 +37,9 @@ const onPage=(es:boolean)=>L(es,'On this page','En esta página');
 export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[['coach-app',L(es,'Coach app','App del entrenador')],['lineups',L(es,'Lineup builders','Alineaciones')],
  ['playing-time',L(es,'Playing time','Minutos de juego')],['practice',L(es,'Practice and match day','Entrenamiento y partido')],['printables',L(es,'Printables','Para imprimir')],
  qa(es),['guides',L(es,'Guides','Guías')]],es);
-export const lineupRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],
- format?['roles',L(es,'Who plays where','Quién juega dónde')]:['shapes',L(es,'Every formation','Todas las formaciones')],qa(es),more(es,L(es,'More tools','Más herramientas'))],es);
+/** `rules` (round 4D, fútbol 8): the page has a rules table and its sources instead of a formation's roles */
+export const lineupRail=(format:boolean,es=false,rules=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],
+ ...(rules?[['rules',L(es,'Fútbol 8 rules','Reglas del fútbol 8')],['sources',L(es,'Sources','Fuentes')]] as const:[format?['roles',L(es,'Who plays where','Quién juega dónde')] as const:['shapes',L(es,'Every formation','Todas las formaciones')] as const]),qa(es),more(es,L(es,'More tools','Más herramientas'))],es);
 export const plannerRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['plan',L(es,'Your plan','Tu plan')],['about',L(es,'Why plan','Por qué planear')],
  ['why',L(es,'Equal playing time','Minutos iguales')],['lengths',L(es,'Game lengths','Duración de los partidos')],['method',L(es,'How the plan is made','Cómo se hace el plan')],
  ...(es?[]:format?[['game-day','Game day'] as const]:[['example','A worked example'],['game-day','During the game'],['uk','In the UK'],['sources','Sources'],['excel','Excel or Sheets']] as const),

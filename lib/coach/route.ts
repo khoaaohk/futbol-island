@@ -15,7 +15,7 @@ export type Route={screen:Screen;live?:boolean;format?:string;plan?:string;age?:
 export const ROOTS:readonly Root[]=['gameday','training'];
 export const TOOLS:readonly Tool[]=['team','lineup','minutes','subs','summary','plans'];
 export const AGES:readonly Age[]=['U6','U8','U10','U12'];
-const FORMATS=['4v4','5v5','7v7','9v9','11v11','futsal'];
+const FORMATS=['4v4','5v5','7v7','8v8','9v9','11v11','futsal'];
 export const isRoot=(s:Screen):s is Root=>s==='gameday'||s==='training';
 /** The tab a tool belongs to (Back returns there when the tool was opened by a link, not from a tab). */
 export const homeOf=(s:Screen):Root=>isRoot(s)?s:s==='plans'?'training':'gameday';

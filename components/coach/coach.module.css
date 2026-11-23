@@ -272,12 +272,12 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .segTrack{display:grid;gap:4px;height:var(--ctl);padding:4px;border-radius:999px;background:var(--tint)}
 .segBtn{min-width:0;border:0;border-radius:999px;background:transparent;font-size:15px;font-weight:800;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background-color .18s ease,color .18s ease,transform .12s}
 .segBtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
-.fmtGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fmtGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .fmtBtn{min-height:60px;border:0;border-radius:16px;background:var(--tint);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;transition:background-color .18s ease,color .18s ease,transform .12s}
 .fmtBtn b{font-size:17px;font-weight:800;line-height:1.1}
 .fmtBtn small{font-size:12px;font-weight:600;opacity:.75;line-height:1.1}
 .fmtBtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
-@media (min-width:700px){.fmtGrid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (min-width:700px){.fmtGrid{grid-template-columns:repeat(7,minmax(0,1fr))}}
 .sheetBody>.sec:first-child{margin-top:8px}
 /* the empty squad card */
 .squadEmpty{padding:20px 16px}

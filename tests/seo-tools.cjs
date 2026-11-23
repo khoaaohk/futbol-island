@@ -38,7 +38,7 @@ const PATHS=new Set(paths.sitePaths().map(p=>p.path)),T='app/(site)/tools',PAGES
 const text=h=>h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<svg[\s\S]*?<\/svg>/g,' ').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 
 // ---- 1. registry, sitemap, metadata ---------------------------------------------------------------------------------------
-const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder',
+const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder','/tools/8v8-lineup-builder','/tools/9v9-lineup-builder','/tools/11v11-lineup-builder','/tools/futsal-lineup-builder',
  '/tools/soccer-playing-time-calculator','/tools/7v7-substitution-rotation','/tools/9v9-substitution-rotation','/tools/soccer-field-diagrams',
  ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */,'/tools/soccer-tactics-board'/* the tactics board's front door (Nov 22 2026) */];
 assert.deepEqual(PAGES.map(p=>p.path),WANT,'the tool pages');
@@ -55,8 +55,8 @@ for(const p of PAGES){
 const file=p=>p.path===reg.TOOLS_PATH?`${T}/page.tsx`:p.kind==='printables'?`${T}/soccer-field-diagrams/page.tsx`:p.kind==='printable'?`${T}/soccer-field-diagrams/[sheet]/page.tsx`:p.kind==='scan'?`${T}/soccer-scanning-trainer/page.tsx`:p.kind==='board'?`${T}/soccer-tactics-board/page.tsx`:`${T}/[slug]/page.tsx`;
 const params=p=>p.kind==='printable'?{sheet:p.path.split('/').pop()}:{slug:p.path.split('/').pop()};
 for(const f of new Set(PAGES.map(file))){const s=read(f);assert(/export const dynamic='force-static';/.test(s),`${f} is force-static`);if(/\[/.test(f))assert(/dynamicParams=false/.test(s)&&/generateStaticParams/.test(s),`${f}: unknown slugs 404`);}
-assert.deepEqual(L(`${T}/[slug]/page.tsx`).generateStaticParams().map(x=>x.slug),WANT.slice(1,9).map(p=>p.split('/').pop()),'tool slugs');
-assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(10,-2)/* the last two: scan and board front doors */.map(p=>p.split('/').pop()),'printable slugs');
+assert.deepEqual(L(`${T}/[slug]/page.tsx`).generateStaticParams().map(x=>x.slug),WANT.slice(1,10).map(p=>p.split('/').pop()),'tool slugs');
+assert.deepEqual(L(`${T}/soccer-field-diagrams/[sheet]/page.tsx`).generateStaticParams().map(x=>x.sheet),WANT.slice(11,-2)/* the last two: scan and board front doors */.map(p=>p.split('/').pop()),'printable slugs');
 
 // ---- 2. rendered pages ----------------------------------------------------------------------------------------------------
 const html=new Map(),paraPages=new Map();let words=0;
@@ -78,7 +78,10 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
   assert.equal(app.applicationCategory,'SportsApplication');assert.equal(app.offers.price,0);assert.equal(app.isAccessibleForFree,true);assert.equal(app.url,`https://futbolisland.app${p.path}`);assert(app.featureList.length>=4);
   assert(body.includes('Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server.'),`${where}: the privacy line`);
   assert(/data-tool="(lineup|rotation)"/.test(h),`${where}: the tool is server-rendered`);}
- if(p.kind==='lineup'){assert(/<svg[^>]*data-diagram=/.test(h)&&(h.match(/data-player=/g)||[]).length>=5,`${where}: a default formation diagram without JavaScript`);assert(/Who plays where|Every formation you can build/.test(body)&&/How to build your lineup/.test(body),`${where}: roles and instructions`);
+ if(p.kind==='lineup'){assert(/<svg[^>]*data-diagram=/.test(h)&&(h.match(/data-player=/g)||[]).length>=5,`${where}: a default formation diagram without JavaScript`);assert(/Who plays where|Every formation you can build|Fútbol 8 rules at a glance/.test(body)&&/How to build your lineup/.test(body),`${where}: roles and instructions`);
+  if(p.format==='8v8'){assert(/Fútbol 8 rules at a glance/.test(body)&&/<table/.test(h)&&/ffcv\.es\/wp\/wp-content\/uploads\/2025\/09\/Circular-F8/.test(h)&&/web\.araba\.eus/.test(h)&&/2 × 30/.test(body),`${where}: the rules table with its sources (FFCV, Álava)`);
+   assert(h.includes('/coach#tool=lineup&amp;format=8v8')||h.includes('/coach#tool=lineup&format=8v8'),`${where}: opens the app at 8v8`);
+   assert(h.includes('hrefLang="es" href="https://futbolisland.app/es/tools/alineacion-futbol-8"')||/hreflang="es"[^>]*alineacion-futbol-8|alineacion-futbol-8[^>]*hreflang="es"/i.test(h),`${where}: hreflang to the Spanish slug`);}
   for(const b of ['Print','Download picture','Copy link'])assert(h.includes(`>${b}</button>`),`${where}: ${b} button`);}
  if(p.kind==='planner'){assert(/<table[\s\S]*?<th scope="col">Goalkeeper<\/th>/.test(h)&&/data-minutes=/.test(h),`${where}: a default plan without JavaScript`);assert(/Why equal playing time matters/.test(body)&&/2 halves of 25 min/.test(body)&&/your league may differ/.test(body),`${where}: the football point and sourced game lengths`);
   for(const b of ['Print','Copy as text','Copy link'])assert(h.includes(`>${b}</button>`),`${where}: ${b} button`);}
@@ -93,7 +96,7 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
  assert.equal(new Set(h.match(/ id="[^"]+"/g)||[]).size,(h.match(/ id="[^"]+"/g)||[]).length,`${where}: unique ids`);
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one gold button`);assert(!/IslandBrush/.test(h));
  /* Nov 20 2026: the calculator's Sources list links its official pages (registry PLANNER_SOURCES); every other link is internal */
- const SRC=new Set(reg.PLANNER_SOURCES.map(x=>x.url));if(p.path===reg.PLANNER_PATH)for(const u of SRC)assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
+ const SRC=new Set([...reg.PLANNER_SOURCES,...reg.F8_SOURCES].map(x=>x.url));/* round 4D: the fútbol 8 page cites its federation documents */if(p.path===reg.PLANNER_PATH)for(const u of reg.PLANNER_SOURCES.map(x=>x.url))assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]).filter(l=>!SRC.has(l)&&!l.startsWith('#'));assert(links.length>=8,`${where}: links`);
  /* Nov 20 2026 night (owner: "it should list what's on that page to smooth scroll down"): the side nav's in-page links (#top, #faq...) are not
     page links; each must land on an id on this page */
@@ -123,7 +126,7 @@ for(const p of pr.PRINTABLES)assert(html.get('/tools/soccer-field-diagrams').inc
  const llms=L('lib/site/llms.ts').llmsText();for(const t of reg.TOOL_HUBS)assert(llms.includes(`(https://futbolisland.app${t.path})`),`llms.txt lists ${t.path}`);}
 
 // ---- 4. the lineup link code and the client components -----------------------------------------------------------------------
-{const S=shapes.SHAPES;assert.equal(S.length,forms.FORMATIONS.length);for(const f of Object.values(lineup.DEFAULT_FORMATION))assert(shapes.shapeBySlug(f),`default formation ${f} exists`);
+{const S=shapes.SHAPES;assert.equal(S.length,forms.FORMATIONS.length+shapes.SHAPES_8V8.length);assert(shapes.SHAPES_8V8.every(s=>s.format==="8v8"&&s.lines.reduce((a,l)=>a+l.spots.length,0)===8),"8v8 shapes: a keeper and seven");for(const f of Object.values(lineup.DEFAULT_FORMATION))assert(shapes.shapeBySlug(f),`default formation ${f} exists`);
  const l={f:'9v9-3-2-3',team:'Tiburones ⚽',note:'Kick-off 9:30.\nField 4 — white shirts',on:['Zoë','José','李','Ava','Ben','Cal','Dee','Eli',''],bench:['Fay','Gus']};
  const code=lineup.encodeLineup(l);assert(/^[A-Za-z0-9_-]+$/.test(code),'the code is URL-fragment safe');assert.deepEqual(lineup.decodeLineup(code,S),l,'a lineup survives the link, accents and all');
  assert.deepEqual(lineup.readHash(`#l=${code}`,S),l);assert.deepEqual(lineup.readHash('#f=futsal-3-1',S),lineup.emptyLineup(shapes.shapeBySlug('futsal-3-1')));assert.equal(lineup.readHash('#f=nope',S),null);assert.equal(lineup.readHash('',S),null);
