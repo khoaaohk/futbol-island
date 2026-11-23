@@ -17,6 +17,7 @@ import {esHubLink as hubLink} from '@/lib/i18n/es/hubs';
 /** Only hubs that already have a Spanish page. */
 const esHubLink=(enPath:string)=>hasEs(enPath)?hubLink(enPath):null;
 import {esMeta} from '@/lib/i18n/es/seo';
+import {esDrill,esDrillGuide,esDrillLinksFor,drillLineEs} from '@/lib/i18n/es/drillsRegistry';
 import {ES_UI} from '@/lib/i18n/es/ui';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,EsPrintSheet,EsReadNext,QA,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
@@ -52,6 +53,40 @@ function guideLinkEs(path:string):{path:string;name:string}|null{
 const ParentsLine=()=><p className={styles.caption}>{SAFE_TRUST_LINE_ES} {hasEs('/safe-football-game-for-kids')?<a href={PARENTS}>Lee la guía para padres</a>:<a href="/safe-football-game-for-kids">Lee la guía para padres (en inglés)</a>}.</p>;
 
 // ---- one lesson ---------------------------------------------------------------------------------------------------------------
+/* Nov 23 2026 (seo-unindexed): Google crawled the Spanish lesson pages and did not index them; they were the Spanish family with the
+   most shared template text (the same three FAQs on all 97 pages, one intro pattern, no drill to run at practice). Each page now gets a
+   lesson-specific intro, key points from its own quiz explanations, drills to practise it, the format's Spanish names (fútbol 7,
+   fútbol sala…) and a FAQ whose first answers come from the lesson's own data. */
+const FORMAT_CONTEXT_ES:Readonly<Record<string,{line:string;path:string;name:string}>>={
+ '7v7':{line:'En Estados Unidos el 7v7 es el partido de U9 y U10; en España y en buena parte de Latinoamérica este formato se llama fútbol 7 y es el más común en las categorías infantiles.',path:'/learn/7v7-soccer-formations',name:'Formaciones de fútbol 7 (7v7)'},
+ '9v9':{line:'En Estados Unidos el 9v9 es el partido de U11 y U12, el paso entre el fútbol 7 y el fútbol 11; en otros países se le dice fútbol 9, y algunas ligas usan el fútbol 8 para ese mismo paso.',path:'/learn/9v9-soccer-formations',name:'Formaciones de fútbol 9 (9v9)'},
+ '11v11':{line:'El 11v11 es el fútbol 11, el partido completo en la cancha grande, que en Estados Unidos empieza en U13.',path:'/learn/11v11-soccer-formations',name:'Formaciones de fútbol 11 (11v11)'},
+ futsal:{line:'En España se llama fútbol sala; en Latinoamérica, futsal o fútbol de salón. Se juega cinco contra cinco en una cancha dura, con un balón más pesado que rebota menos.',path:'/learn/futsal-for-kids',name:'Futsal para niños'}};
+const fmtKey=(f:string)=>/futsal/i.test(f)?'futsal':f;
+/** Drills that practise a lesson: the drill page its guide list names, then the drills tied to its rule/term guides, then the drill guide for its topic. */
+const TOPIC_GUIDE:Readonly<Record<string,string>>={Attacking:'passing',Defending:'defending',Finishing:'shooting',Transition:'passing','Set Piece':'first-touch','Rules of the Game':'passing'};
+function lessonDrillsEs(l:EsLesson):{path:string;name:string;line?:string}[]{
+ const out:{path:string;name:string;line?:string}[]=[],seen=new Set<string>(),add=(x:{path:string;name:string;line?:string}|null)=>{if(x&&!seen.has(x.path)){seen.add(x.path);out.push(x);}};
+ const D='/learn/soccer-drills/';
+ for(const g of guidesForLesson(l.id)){
+  if(g.path.startsWith(D)){const s=g.path.slice(D.length),d=esDrill(s);if(d)add({path:d.esPath,name:`${d.name} (ejercicio)`,line:drillLineEs(d)});else{const gg=esDrillGuide(s);if(gg)add({path:gg.esPath,name:gg.h1});}}
+  else for(const x of esDrillLinksFor(g.path))add(x);
+ }
+ const t=esDrillGuide(TOPIC_GUIDE[l.category??'']??(fmtKey(l.format)==='futsal'?'first-touch':'passing'));if(t)add({path:t.esPath,name:t.h1});
+ return out.slice(0,4);
+}
+const firstSentenceEs=(s:string)=>{const m=s.match(/^.*?[.!?](\s|$)/);return (m?m[0]:s).trim();};
+function lessonIntroEs(l:EsLesson){
+ const f=formatPhraseEs(l.formatLabel),lvl=l.difficultyEs?` de nivel ${l.difficultyEs.toLowerCase()}`:'',topic=l.categoryEs?` sobre ${l.categoryEs.toLowerCase()}`:l.chapterEs?` del capítulo “${l.chapterEs}”`:'';
+ return `En “${l.title}”, una lección de ${f}${lvl}${topic} para niños de 7 a 12 años, la idea es esta: ${l.concept.replace(/^(\p{Lu})(?=\p{Ll})/u,c=>c.toLowerCase())} El entrenador la explica en ${l.steps.length} ${l.steps.length===1?'paso':'pasos'} y ${l.questions.length>0?`${l.questions.length} ${l.questions.length===1?'pregunta la repasa':'preguntas la repasan'}`:'la cancha la muestra'}.`;
+}
+function lessonFaqEs(l:EsLesson,drills:{name:string;line?:string}[]){
+ const f=formatPhraseEs(l.formatLabel),ctx=FORMAT_CONTEXT_ES[fmtKey(l.format)];
+ const own=[{q:`¿Qué aprende un niño en “${l.title}”?`,a:`${l.concept} Es una lección de ${f}${l.categoryEs?` sobre ${l.categoryEs.toLowerCase()}`:''}${l.difficultyEs?`, de nivel ${l.difficultyEs.toLowerCase()}`:''}, con ${l.steps.length} pasos del entrenador${l.questions.length?` y ${l.questions.length} preguntas de prueba`:''}.`}];
+ if(drills.length)own.push({q:`¿Cómo se practica “${l.title}” en el entrenamiento?`,a:`Lleva la idea a la cancha con ${drills.slice(0,2).map(d=>d.name.replace(/ \(ejercicio\)$/,'')).join(' o ')}. ${drills[0].line??''} Antes de empezar, repite en voz alta la idea de la lección: ${firstSentenceEs(l.concept)}`.replace(/\s+/g,' ').trim()});
+ if(ctx)own.push({q:`¿Sirve esta lección si mi hijo juega ${fmtKey(l.format)==='futsal'?'fútbol sala':fmtKey(l.format)==='7v7'?'fútbol 7':fmtKey(l.format)==='9v9'?'fútbol 9 o fútbol 8':'fútbol 11'}?`,a:`Sí. ${ctx.line} La lección usa ese mismo número de jugadores, así que la idea se puede llevar tal cual al partido del fin de semana.`});
+ return [...own,...LESSON_FAQ];
+}
 const LESSON_FAQ=[{q:'¿Cómo juego esta lección?',a:'Abre Futbol Island en futbolisland.app/play y empieza una isla o sigue con un código de guardado. En el juego, la voz de un entrenador muestra cada idea en una cancha con jugadores que se mueven, paso a paso, y una prueba rápida la repasa. El juego está en inglés por ahora.'},...HUB_COMMON_FAQ_ES];
 export function LessonEsPage({l}:{l:EsLesson}){
  const crumbs=esLibCrumbs(crumbIndex,{name:l.title,path:l.esPath});
@@ -59,22 +94,28 @@ export function LessonEsPage({l}:{l:EsLesson}){
  const fw=fmtWord(l.formatLabel),group=l.categoryEs?`Más lecciones de ${l.categoryEs.toLowerCase()} en ${fw}`:l.chapterEs?`Más lecciones de ${fw}: ${l.chapterEs.toLowerCase()}`:`Más lecciones de ${fw}`;
  const hubs=hubsFor(l.id).map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  const guides=guidesForLesson(l.id).map(g=>guideLinkEs(g.path)).filter((x):x is NonNullable<typeof x>=>!!x);
+ const drills=lessonDrillsEs(l),faq=lessonFaqEs(l,drills),ctx=FORMAT_CONTEXT_ES[fmtKey(l.format)];
+ const keys=l.questions.map(q=>firstSentenceEs(q.explain)).filter((x,i,a)=>x.length>45&&a.indexOf(x)===i).slice(0,4);
  const mesh=meshLinks(lessonPath(l.id),{lang:'es',skip:[...[...sib.same,sib.prev,sib.next].map(x=>lessonPath(x.id)),...hubs.map(h=>h.path),...guides.map(g=>g.path)]});
  return <>
   <JsonLd data={esLd(lessonLd({name:l.title,path:l.esPath,description:l.concept,teaches:l.concept,level:l.difficulty,about:formatPhraseEs(l.formatLabel),
    keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <JsonLd data={faqLd(LESSON_FAQ)}/>
+  <JsonLd data={faqLd(faq)}/>
   <RailNav rail={lessonRail({quiz:l.questions.length>0,hubs:hubs.length>0,guides:guides.length>0},true)} current="#top"/>
   <header className={`${styles.intro} ${rt.target}`} id="top">
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{l.title}</h1>
    <LearnCard lang="es" id={l.id} concept={l.concept} formatLabel={fmtWord(l.formatLabel)} difficulty={l.difficulty} difficultyLabel={l.difficultyEs} questions={l.questions.length} chapter={l.chapterEs} answer/>
-   <p>“{l.title}” es una lección y prueba gratis de {formatPhraseEs(l.formatLabel)} para niños de 7 a 12 años en Futbol Island, un juego para aprender que se juega en el navegador. El juego está en inglés por ahora.</p>
+   <p>{lessonIntroEs(l)} {ctx?ctx.line:''}</p>
+   <p>Es gratis en Futbol Island, un juego para aprender fútbol que se juega en el navegador. El juego está en inglés por ahora; esta página tiene toda la lección en español.</p>
    <ParentsLine/>
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Juega esta lección</a>
   </header>
   <EsPrintSheet path={l.esPath} what="hoja de la lección" has="la idea, los pasos y las preguntas"/>
+  {keys.length>0&&<section className={styles.section} aria-labelledby="keys"><h2 className={styles.h2} id="keys">Puntos clave de la lección</h2>
+   <ul>{keys.map(k=><li key={k}>{k}</li>)}</ul>
+  </section>}
   <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={`${styles.h2} ${rt.target}`} id="coach">Lo que dice el entrenador</h2>
    <CoachChapters lang="es" id={l.id} format={l.format} formatLabel={fmtWord(l.formatLabel)} steps={l.steps}/>
   </section>
@@ -93,7 +134,12 @@ export function LessonEsPage({l}:{l:EsLesson}){
   {guides.length>0&&<section className={styles.section} aria-labelledby="guides"><h2 className={`${styles.h2} ${rt.target}`} id="guides">Guías relacionadas</h2>
    <ul className={styles.list}>{guides.map(g=><li key={g.path}><a href={g.path}><span className={styles.itemTitle}>{g.name}</span></a></li>)}</ul>
   </section>}
-  <QA id="faq" title="Preguntas de los adultos" faq={LESSON_FAQ}/>
+  {drills.length>0&&<section className={styles.section} aria-labelledby="practice"><h2 className={styles.h2} id="practice">Practícalo en el entrenamiento</h2>
+   <p className={styles.caption}>Ejercicios en español para llevar “{l.title}” a la cancha con tu equipo o en casa.</p>
+   <ul className={styles.list}>{drills.map(d=><li key={d.path}><a href={d.path}><span className={styles.itemTitle}>{d.name}</span>{d.line&&<span className={styles.itemMeta}>{d.line}</span>}</a></li>)}
+    {ctx&&hasEs(ctx.path)&&<li><a href={toEs(ctx.path)}><span className={styles.itemTitle}>{ctx.name}</span></a></li>}</ul>
+  </section>}
+  <QA id="faq" title={`Preguntas sobre “${l.title}”`} faq={faq}/>
   <div className={styles.endNote}><p className={styles.caption}>{ES_UI.guideFoot}</p><EsCheckedLine date={CHECKED}/></div>
   <EsPlayEnd href={playLessonHref(l.id)} label="Juega esta lección en la isla" bar={`Juega “${l.title}”`}/>
   <EsReadNext order={[{path:INDEX_ES,name:'Lecciones de fútbol para niños'},...ES_LESSONS().map(x=>({path:x.esPath,name:x.title}))]} path={l.esPath}/>

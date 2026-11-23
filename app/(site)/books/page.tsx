@@ -19,8 +19,9 @@ import {libraryCrumbs} from '@/lib/site/libraryPath';
 export const dynamic='force-static';
 const N=SITE_BOOKS.length;
 const LEAD=`Futbol Island has ${N} free pop-up books for kids, each a short true story about a real football player in six chapters. Every chapter ends with what it teaches, like keeping going after a no or being ready from the bench, and every fact is checked against its sources.`;
-export const metadata=pageMeta('Football pop-up books for kids',
- `${N} free pop-up story books for kids about real football players, from Cafu and Marta to Salah and Kerr: six short chapters each, read aloud, with sources.`,BOOKS_PATH);
+/* Nov 23 2026 (seo-unindexed): US searches say "soccer books for kids"; the h1 keeps "Football pop-up books for kids" */
+export const metadata=pageMeta(`Soccer Books for Kids: ${N} Free Pop-Up Player Stories`,
+ `${N} free soccer (football) books for kids: true pop-up stories about Messi, Marta, Salah, Kerr and more, six short chapters each, read aloud, with sources.`,BOOKS_PATH);
 const CRUMBS=libraryCrumbs({name:'Pop-up books',path:BOOKS_PATH});/* Nov 20 2026: through the Library */
 const FACTS:Fact[]=[
  {icon:'deck',label:'Books',value:`${N} true stories`},

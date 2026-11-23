@@ -8,7 +8,7 @@ import {BookMark,coverTone,GuideCover,SPREAD_H,SPREAD_W,spreadSrc} from '@/compo
 import {QA} from '@/components/site/LessonHub';
 import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,esLibCrumbs} from '../EsParts';
-import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookPath,chapterAnchor,readerBook,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
+import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookPath,chapterAnchor,readerBook,relatedBooks,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
 import {regionId} from '@/lib/site/railNavCollections';
 import {hubRail,pageRail,sec} from '@/lib/site/railNavMore';
 import {roleGuide} from '@/lib/site/related';
@@ -79,6 +79,7 @@ function linksEs(x:SiteBook):Tile[]{
  const guide=x.card?roleGuide(x.card.role):undefined,gw=x.card?ROLE_ES[x.card.role]:undefined;
  if(guide&&gw)out.push({path:hasEs(guide.path)?toEs(guide.path):guide.path,name:gw.name,meta:gw.meta,icon:'shirt'});
  for(const id of x.page?.exhibits??[]){const e=exhibitById(id);if(e)out.push({path:exhibitPath(e.id),name:enNote(e.title),meta:/^\d{4}$/.test(e.year)?`Museo · ${e.year}`:"Museo de la isla",icon:'law'});}
+ for(const y of relatedBooks(x))out.push({path:toEs(bookPath(y.slug)),name:`${es(y).title}: ${es(y).subtitle}`,meta:`Cuento desplegable · ${REGION_ES[y.region]??y.region}`,icon:'deck'});/* Nov 23 2026: three more stories */
  out.push({path:HUB_ES,name:'Todos los cuentos desplegables',meta:`${SITE_BOOKS.length} historias reales de fútbol`,icon:'deck'});
  return out;
 }

@@ -396,7 +396,7 @@ export const FORMATIONS_ES:Readonly<Record<string,FormationEs>>={
 export const shapeEs=(shape:string,slug:string)=>slug==='futsal-1-2-1-diamond'?'1-2-1 en rombo':shape;
 export const FORMAT_GUIDES_ES:Readonly<Record<'7v7'|'9v9'|'11v11',FormatGuideEs>>={
  '7v7':{crumb:'Formaciones de 7v7',blurb:'2-3-1, 3-2-1, 2-2-2 y 3-1-2 comparadas, con diagramas',
-  title:'Formaciones de fútbol 7v7 para niños: 2-3-1, 3-2-1 y más',
+  title:'Formaciones de fútbol 7 (7v7) para niños: 2-3-1, 3-2-1 y más',
   description:'Las cuatro formaciones comunes de fútbol 7v7 (2-3-1, 3-2-1, 2-2-2 y 3-1-2) comparadas en una tabla, con diagramas y cuál conviene usar.',
   h1:'Formaciones de fútbol 7v7',
   lead:'En el fútbol 7v7 cada equipo tiene un portero y seis jugadores de campo. Las cuatro formaciones comunes son el 2-3-1, el 3-2-1, el 2-2-2 y el 3-1-2. Para casi todos los equipos de niños de nueve y diez años, el 2-3-1 es el mejor lugar para empezar.',
@@ -413,7 +413,7 @@ export const FORMAT_GUIDES_ES:Readonly<Record<'7v7'|'9v9'|'11v11',FormatGuideEs>
    {q:'¿Los jugadores de 7v7 deben quedarse en una posición toda la temporada?',a:'No. A los nueve y diez años, los niños aprenden más probando cada tarea: defender, jugar abierto, jugar en el medio y meter goles. Rota las posiciones de un partido a otro.'},
    {q:'¿Cuántos defensas debe tener un equipo de 7v7?',a:'Dos o tres. Con dos defensas quedan más jugadores para el mediocampo. Tres defensas son más seguros, pero los defensas de los lados tienen que subir, o el equipo tiene muy pocos atacantes.'}]},
  '9v9':{crumb:'Formaciones de 9v9',blurb:'3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 y 4-3-1 comparadas, con diagramas',
-  title:'Formaciones de fútbol 9v9 para niños: 3-2-3, 3-3-2 y más',
+  title:'Formaciones de fútbol 9 (9v9) para niños: 3-2-3, 3-3-2 y más',
   description:'Cinco formaciones de fútbol 9v9 (3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 y 4-3-1) comparadas en una tabla, con diagramas y una respuesta clara sobre cuál elegir.',
   h1:'Formaciones de fútbol 9v9',
   lead:'En el fútbol 9v9 cada equipo tiene un portero y ocho jugadores de campo. Las formaciones comunes son el 3-2-3, el 3-3-2, el 2-3-2-1, el 3-1-3-1 y el 4-3-1. Para casi todos los equipos de niños de once y doce años, el 3-2-3 es una buena primera opción.',
@@ -430,7 +430,7 @@ export const FORMAT_GUIDES_ES:Readonly<Record<'7v7'|'9v9'|'11v11',FormatGuideEs>
    {q:'¿Cómo se convierten las formaciones de 7v7 en formaciones de 9v9?',a:'Se agrega un defensa y un delantero. El 2-3-1 de 7v7 se vuelve un 3-2-3 cuando un defensa central se suma a los dos defensas y los mediocampistas abiertos suben para jugar de extremos al lado del delantero.'},
    {q:'¿Un equipo de 9v9 debe jugar con dos o con tres defensas?',a:'Con tres es más sencillo: uno puede ir al balón y dos siguen cubriendo. Dos defensas solo funcionan si un mediocampista baja como tercer protector cuando ataca el otro equipo.'}]},
  '11v11':{crumb:'Formaciones de 11v11',blurb:'4-3-3, 4-4-2, 4-2-3-1 y 3-5-2 comparadas, con diagramas',
-  title:'Formaciones de fútbol 11v11 para niños: 4-3-3, 4-4-2 y más',
+  title:'Formaciones de fútbol 11 para niños: 4-3-3, 4-4-2 y más',
   description:'Las principales formaciones de fútbol 11v11 (4-3-3, 4-4-2, 4-2-3-1 y 3-5-2) comparadas en una tabla, con diagramas y cuál le sirve a un equipo juvenil.',
   h1:'Formaciones de fútbol 11v11',
   lead:'En el fútbol 11v11 cada equipo tiene un portero y diez jugadores de campo. Cuatro formaciones cubren casi todo lo que ven los jugadores jóvenes: el 4-3-3, el 4-4-2, el 4-2-3-1 y el 3-5-2. Para los equipos que suben del 9v9, el 4-3-3 suele ser el paso más fácil.',

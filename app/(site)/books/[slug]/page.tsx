@@ -25,8 +25,9 @@ import {libraryCrumbs} from '@/lib/site/libraryPath';
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>BUILT_BOOKS.map(slug=>({slug}));
-/** "Cafu: a pop-up story for kids · Futbol Island" (the site's title shape, under 60 characters; the h1 carries the subtitle). */
-const headline=(t:string)=>`${t}: a pop-up story for kids`;
+/** "Cafu Book for Kids: a Free Pop-Up Story" (Nov 23 2026, seo-unindexed: people search "<player> book for kids"; was
+ *  "Cafu: a pop-up story for kids"; under 60 characters; the h1 carries the subtitle). */
+const headline=(t:string)=>`${t} Book for Kids: a Free Pop-Up Story`;
 export function generateMetadata({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book)return {};
  return pageMeta(headline(book.title),book.page!.summary,bookPath(book.slug));

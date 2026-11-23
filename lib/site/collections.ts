@@ -120,10 +120,10 @@ export const FISH_COLLECTIONS:readonly Collection[]=([
   more:'In the Fishbook every animal is linked to a real football club, team or story. Where each one lives on the island is a made-up island story.',
   learn:[{path:'/fish/spots',name:'Fishing spots',line:'Where to catch each animal on the island'}],
   groups:[{title:'Crabs',links:group('crab').map(fishLink)},{title:'Lobsters',links:group('lobster').map(fishLink)},{title:'Shrimp, scallops and other shellfish',links:group('shellfish').map(fishLink)}]},
- {slug:'octopus-squid-and-rays',crumb:'Octopuses, squid and rays',h1:'Octopuses, squid, rays and more in the Fishbook',title:'Octopuses, Squid and Rays in the Fishbook',
-  description:n=>`${n} octopuses, squid, rays, eels and seahorses in the Futbol Island Fishbook, each linked to a real football club or story.`,
+ {slug:'octopus-squid-and-rays',crumb:'Octopuses, squid and rays',h1:'Octopuses, squid, rays and more in the Fishbook',title:'Octopus, Squid and Ray Facts for Kids: the Fishbook',/* Nov 23 2026 (seo-unindexed): was "…in the Fishbook" (crawled, not indexed, thinnest fish page) */
+  description:n=>`Octopus, squid, ray, eel and seahorse facts for kids: three hearts, ink clouds, seahorse dads that carry the eggs, and ${n} animals linked to football clubs.`,
   blurb:n=>`${n} octopuses, squid, rays, eels and seahorses`,
-  intro:'Octopuses and squid have no bones at all. Rays are flat cousins of sharks, eels are long, wiggly fish, and a seahorse is a fish that swims upright.',
+  intro:'Octopuses and squid have no bones at all. Rays are flat cousins of sharks, eels are long, wiggly fish, and a seahorse is a fish that swims upright. An octopus has eight arms, three hearts and blue blood, and it can change the colour of its skin in a moment to hide. A squid has eight arms and two longer tentacles, and both can squirt a cloud of ink to escape. Rays breathe through gill slits on their underside, and a stingray has a sharp spine on its tail. A seahorse dad carries the eggs in a pouch on his belly until the babies hatch.',
   more:'In the Fishbook every animal is linked to a real football club, team or story. Where each one lives on the island is a made-up island story.',
   learn:[{path:'/fish/sharks',name:'Sharks',line:'Every shark in the Fishbook'}],
   groups:[{title:'Octopuses',links:group('octopus').map(fishLink)},{title:'Squid',links:group('squid').map(fishLink)},{title:'Rays',links:group('ray').map(fishLink)},
