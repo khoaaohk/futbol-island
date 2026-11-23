@@ -7,7 +7,8 @@ import {CREDIT,dotItems,fieldItems,GRASS,LETTER,wrapText,type Item,type Sheet,ty
  * EmbedSnippet take `lang="es"` and read their words here; without the prop their English output is unchanged. Kept small and
  * import-free of lib/i18n (client bundle). Glossary: lib/i18n/es-glossary.ts (banca = bench, suplente = substitute, portero).
  */
-export const lineupHeadingEs=(f:GuideFormat)=>f==='futsal'?'Creador de alineaciones de futsal':`Creador de alineaciones de fútbol ${f}`;
+/* Nov 23 2026: 11v11 says "alineación de fútbol 11" and "once inicial", the words Spanish coaches search (lib/i18n/es/tools.ts h1). */
+export const lineupHeadingEs=(f:GuideFormat)=>f==='futsal'?'Creador de alineaciones de futsal':f==='11v11'?'Crear una alineación de fútbol 11: tu once inicial':`Creador de alineaciones de fútbol ${f}`;
 export const shapeLabelEs=(s:Shape)=>s.shape==='1-2-1'?'1-2-1 en rombo':s.shape;
 /** 1st half, Quarter 2... (lib/site/tools/rotation.ts periodName). */
 export const periodNameEs=(i:number,periods:number)=>periods===2?['1.er tiempo','2.º tiempo'][i]:periods===4?`Cuarto ${i+1}`:periods===1?'Partido':`Periodo ${i+1}`;
