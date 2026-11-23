@@ -1448,7 +1448,9 @@ export function* buildTownSteps(scene: T.Scene) {
   const ziplineRails:ZiplineRail[]=[];try{buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails});}catch(error){console.error('Zipline props failed to build',error);}
   // The Island Line (trainWorld.ts, train Phase 1): all static pieces join the paint batches below; the tunnel tube is its own mesh.
   let train:ReturnType<typeof buildTrainWorld>|null=null;
-  try{train=buildTrainWorld({put,lit,town,obstacles,walkSurfaces,boardMaterial:(canvas)=>{const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;textures.push(texture);
+  // A/B switch for heat measurements (localStorage 'fi-no-train' = '1': the island without the line; never set by the game).
+  const noTrain=(()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi-no-train')==='1';}catch{return false;}})();
+  if(!noTrain)try{train=buildTrainWorld({put,lit,town,obstacles,walkSurfaces,boardMaterial:(canvas)=>{const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;textures.push(texture);
     const material=new T.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});materials.push(material);nightSigns.push(material);return material;}});}catch(error){console.error('Island Line failed to build',error);}
   // Summit Isle painting easel (lib/town/paintEaselWorld.ts, Oct 14 2026): easel, stool and paint table, static and batched.
   try{buildPaintEasel({box,cylinder,put,obstacles});}catch(error){console.error('Summit Isle painting easel failed to build',error);}
