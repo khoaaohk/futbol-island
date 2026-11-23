@@ -1,6 +1,7 @@
 import {lessonById,type SiteLesson} from './lessons';
 import type {Faq} from './safety';
 import {scene,type RawScene,type Scene} from './scenes';
+import {gameLink,isGameListed} from './games';
 /**
  * The GLOSSARY (SEO cluster 2, Nov 10 2026): /learn/soccer-terms with every term on one page in A-Z sections, and a page of
  * its own under /learn/soccer-terms/<slug> only for the terms people search for and that can carry a diagram and 250+ useful
@@ -706,7 +707,8 @@ export const TERM_PAGES:readonly TermPage[]=([
   formats:'An assist means the same thing in every game size, and in futsal too. Some youth leagues do not keep score for the youngest age groups, so nobody counts assists there. A coach can still praise the pass as loudly as the goal.',
   faq:[{q:'Do the Laws of the Game say what an assist is?',a:'No. The Laws only say how a goal is scored. Leagues and competitions that count assists use their own rules for what counts.'},
    {q:'Can a goalkeeper get an assist?',a:'Yes. If a goalkeeper’s pass, throw or long kick goes to a teammate who then scores, leagues that count assists usually give it to the goalkeeper.'},
-   {q:'Is an assist as important as a goal?',a:'Coaches value both. Most goals need a good pass first, so a player who makes assists helps the team as much as the player who scores.'}],
+   {q:'Is an assist as important as a goal?',a:'Coaches value both. Most goals need a good pass first, so a player who makes assists helps the team as much as the player who scores.'},
+   {q:'What is an assist in soccer, in simple words?',a:'An assist is the pass that sets up a goal: the last pass before a teammate scores. In leagues that keep stats, the scorer gets the goal and the passer gets the assist.'}],
   links:[{path:'/learn/soccer-drills/passing',name:'Passing drills for kids',line:'Practise the pass before the goal'}],
   lessonIds:['learn11_cutback','s_onetwo','expf_cornercutback'],related:['cutback','cross','through-ball','brace']},
 
@@ -1038,9 +1040,9 @@ export const TERM_PAGES:readonly TermPage[]=([
 
  {slug:'stoppage-time',sides:{title:'What do teams do in stoppage time?',items:['Keep playing until the whistle. The half ends when the referee says so.','A team that is ahead keeps the ball and keeps players behind it.','A team that is behind sends more players forward and takes restarts quickly.','Wasting time can be a yellow card, and the referee adds the lost time.']},
   name:'Stoppage Time',also:'added time, injury time, additional time',short:'Time the referee adds at the end of a half for substitutions, injuries and other delays. Also called added time or injury time.',
-  title:'Stoppage Time in Soccer: What Added Time Means',h1:'What is stoppage time in soccer?',
-  desc:'Stoppage time in soccer is the time the referee adds at the end of each half for delays such as injuries and substitutions. How it is decided, for kids.',
-  answer:'Stoppage time in soccer (football) is the time the referee adds at the end of each half to make up for delays, such as injuries and substitutions. It is also called added time or injury time. The clock does not stop in soccer, so the lost time is played at the end.',
+  title:'What Is Stoppage Time in Soccer? Added Time Explained',h1:'What is stoppage time in soccer?',
+  desc:'Stoppage time is the time the referee adds at the end of each half of a soccer game for injuries, substitutions and other delays. Who decides and how much.',
+  answer:'Stoppage time is the time the referee adds at the end of each half of a soccer game to make up for delays, such as injuries and substitutions. It is also called added time or injury time. The clock does not stop in soccer, so the lost time is played at the end.',
   scene:{title:'A substitution adds time',who:'14@5,50 7@27,55 8@40,56 10@56,62 4@38,30 5@60,30 G@50,6 !6@46,68 !9@50,40',ball:[2,44],runs:['27,55>10,51'],
    caption:'Play has stopped for a substitution. Number 7 walks off at the halfway line, and number 14 waits there to come on. The referee adds the time this takes to the end of the half.'},
   howTitle:'How does stoppage time work?',howFact:{label:'Who decides',value:'The referee'},quizHow:{q:'Which one is true about stoppage time?',why:'The referee keeps the time and decides how much to add. The clock keeps running during a soccer game, so the time lost is played at the end of the half.'},
@@ -1051,6 +1053,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'Is stoppage time the same as injury time?',a:'Yes. Stoppage time, added time, additional time and injury time all mean the time the referee adds at the end of a half.'},
    {q:'Is stoppage time the same as extra time?',a:'No. Stoppage time is added to a half. Extra time is two more periods, played only when a game that needs a winner is tied.'},
    {q:'Who decides how much stoppage time there is?',a:'The referee. In games with a fourth official, the referee tells that official, who shows the minimum on a board.'},
+   {q:'What does stoppage time mean in soccer?',a:'It means the minutes played after the normal time of a half is up, to make up for the time lost to delays. The half ends when the referee blows the whistle.'},
    {q:'Can a goal be scored in stoppage time?',a:'Yes. Stoppage time is part of the half, and a goal counts the same as at any other time.'}],
   links:[{path:'/learn/soccer-rules/substitutions-and-game-length',name:'Substitutions and game length by age',line:'How long a half is at each age'}],
   lessonIds:['trn_11_restdefense','trn_9_firstpass','learn9_restart'],related:['extra-time','penalty-shoot-out','clean-sheet','yellow-card']},
@@ -1076,21 +1079,25 @@ export const TERM_PAGES:readonly TermPage[]=([
 
  {slug:'penalty-shoot-out',sides:{title:'What can a goalkeeper do in a shoot-out?',items:['Stay on the goal line until the ball is kicked. Part of one foot must be on the line or level with it.','Stand tall in the middle and stay calm. The kicker feels the pressure too.','Watch the kicker’s run and the standing foot.','Choose a side and dive with full effort.']},
   name:'Penalty Shoot-Out',also:'penalty shootout, shootout, penalties, kicks from the penalty mark, PKs',short:'A way to decide a tied cup game: each team takes five kicks from the penalty mark in turns, and more if it is still tied.',
-  title:'Penalty Shootout in Soccer: The Rules, for Kids',h1:'What is a penalty shoot-out in soccer?',
-  desc:'A penalty shoot-out in soccer decides a tied game that needs a winner. Each team takes five kicks from the penalty mark in turns. The rules, step by step.',
-  answer:'A penalty shoot-out in soccer (football) is a way to decide a tied game that needs a winner. Each team takes five kicks from the penalty mark in turns, against the other team’s goalkeeper. The team that scores more kicks wins, and if they are level the kicks go on.',
+  title:'Penalty Shootout in Soccer: How It Works and the Rules',h1:'What is a penalty shootout in soccer?',
+  desc:'A penalty shootout decides a tied knockout game: five kicks each from the penalty mark, in turns, then sudden death. Who may kick and the keeper rules.',
+  answer:'A penalty shootout is how a tied knockout soccer (football) game that needs a winner is decided. Each team takes five kicks from the penalty mark in turns. The team that scores more wins, and if they are level the kicks go on until one team is ahead. The Laws of the Game call it kicks from the penalty mark.',
   scene:{title:'A penalty shoot-out',who:'9@50,86 G@82,99.5 4@39,50 5@45,56 10@45,44 !G@50,99.5 !7@56,44 !8@56,56 !6@62,50',ball:[50,89.5],passes:['50,89.5>46.6,100'],
    caption:'Number 9 takes a kick from the penalty mark against the other team’s goalkeeper. The other players wait in the center circle, and number 9’s own goalkeeper waits on the goal line beside the penalty area.'},
   howTitle:'How does a penalty shoot-out work?',howFact:{label:'Kicks',value:'5 each, then one each'},quizHow:{q:'Which one is true about a penalty shoot-out?',why:'Each team takes five kicks in turns. If the score in kicks is level after five each, the teams keep taking one kick each until one team is ahead.'},
   how:['Each team takes five kicks in turns, and the team that scores more wins.','The referee tosses a coin to choose the goal, and again to decide which team kicks first.',
-   'The kicks stop early when one team cannot catch up with the kicks it has left.','If it is level after five kicks each, the teams take one kick each until one scores and the other does not.','A different player takes each kick. Everyone on a team kicks once before anyone kicks twice.'],
+   'The kicks stop early when one team cannot catch up with the kicks it has left.','If it is level after five kicks each, the teams take one kick each until one scores and the other does not. This is called sudden death.','A different player takes each kick. Everyone on a team kicks once before anyone kicks twice.',
+   'Only players on the field when the game ends may take part. If one team has more players, it leaves some out, so both teams have the same number.',
+   'The goalkeeper stays on the goal line, between the posts and facing the kicker, until the ball is kicked. A goalkeeper who is hurt may be replaced by a named substitute.'],
   mistakes:['Mixing it up with a penalty kick, which is given for a foul during the game.','Trying to score from a rebound. In a shoot-out the kicker gets one touch and the kick is over.','Thinking any player may kick. The kickers come from the players who were in the game when it ended.'],
-  formats:'Shoot-outs decide cup and playoff games in 7v7, 9v9, 11v11 and futsal. The details change with the competition. Some youth events go straight to kicks with no extra time, and some use fewer than five kicks to begin with. The kicks are taken after the game has ended, and they decide which team goes on.',
+  formats:'Shootouts are used only when a game must have a winner: knockout cup games, tournament playoffs and finals. Most kids’ leagues do not use them, because a tied league game simply ends as a tie. When they are used, they work the same way in 7v7, 9v9, 11v11 and futsal, and the details change with the competition. Some youth events go straight to kicks with no extra time, and some use fewer than five kicks to begin with. The kicks are taken after the game has ended, and they decide which team goes on.',
   faq:[{q:'How many kicks does each team get in a shoot-out?',a:'Five each to begin with. If the teams are level after five, they take one kick each until one team is ahead after the same number of kicks.'},
    {q:'What is the difference between a penalty kick and a penalty shoot-out?',a:'A penalty kick is given during the game for a foul in the penalty area. A shoot-out comes after a tied game, and uses kicks from the same mark to find a winner.'},
    {q:'Can the goalkeeper take a kick in a shoot-out?',a:'Yes. The goalkeeper is one of the players on the field, so they may take a kick, and they must take one before any teammate kicks twice.'},
-   {q:'Who goes first in a penalty shoot-out?',a:'The referee tosses a coin. The team that wins the toss chooses to kick first or second.'}],
-  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'The kick given for a foul, with a diagram'}],
+   {q:'Who goes first in a penalty shoot-out?',a:'The referee tosses a coin. The team that wins the toss chooses to kick first or second.'},
+   {q:'Do kids’ soccer leagues have penalty shootouts?',a:'Most do not. A tied league game ends as a tie. Shootouts are for tournament and cup games that need a winner, and some young age groups skip them altogether.'}],
+  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'The kick given for a foul, with a diagram'},{path:'/learn/soccer-positions/goalkeeper',name:'Goalkeeper in soccer',line:'The player who faces every kick in a shootout'},
+   ...(['ballblaster','flickit'] as const).filter(isGameListed).map(gameLink)/* Nov 23 2026: practise the kick from the spot as a game */],
   lessonIds:['next7_shotreaction','expf_keeperposition','learn7_roles'],related:['extra-time','stoppage-time','penalty-area','set-piece']},
 ] as Raw[]).map(make);
 export const termBySlug=(slug:string)=>TERM_PAGES.find(t=>t.slug===slug);
