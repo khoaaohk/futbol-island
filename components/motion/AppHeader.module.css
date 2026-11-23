@@ -20,3 +20,6 @@
 @media print{.bar{display:none}}
 /* Round 4B: the gold Back/Exit and every app button share one hover (mouse only: a slight brighten, no lift) */
 @media (hover:hover) and (pointer:fine){.exit:not(:disabled):hover{filter:brightness(1.05)}}
+/* round 4E (Nov 22 2026): a long title (German, Finnish, Dutch) takes two lines, hyphenated in its language, instead of "Trainingsplä…" */
+.title b{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.15;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+@media (max-width:380px){.bar{--side:100px}}

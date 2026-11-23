@@ -5,6 +5,7 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
  seeded,SESSIONS,SOUNDS,startRun,tally,type Cue,type Dir,type Result,type Run,type Score,type Settings,type Sound} from '@/lib/scan/engine';
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
+import {APP_LANGS,LANG_NAMES,LOCALE,isAppLang,phoneLang,siteLang,type AppLang} from '@/lib/i18n/appLangs';
 import {activeOf,loadTeams} from '@/lib/coach/teams';
 import {ageFor} from '@/lib/coach/route';
 import c from './scan.module.css';
@@ -53,9 +54,9 @@ function CueView({cue,s,w,small}:{cue:Cue;s:Settings;w:Words;small?:boolean}){
   <span className={c.passRow}><span className={c.shirt} style={{fontSize:small?'18vmin':'44vmin'}}>{cue.n}</span><Arrow dir={cue.dir} size={small?'20vmin':'46vmin'}/></span>
  </div>;
 }
-function Seg<T extends string|number>({label,value,options,names,onPick,id}:{label:string;value:T;options:readonly T[];names:(v:T)=>string;onPick:(v:T)=>void;id:string}){
+function Seg<T extends string|number>({label,value,options,names,onPick,id,cls='',langs=false}:{label:string;value:T;options:readonly T[];names:(v:T)=>string;onPick:(v:T)=>void;id:string;cls?:string;langs?:boolean}){
  return <div className={c.group} role="group" aria-labelledby={id}><h2 className={c.h2} id={id}>{label}</h2>
-  <div className={c.seg}>{options.map(o=><button key={String(o)} type="button" className={c.chip} aria-pressed={o===value} onClick={()=>onPick(o)}>{names(o)}</button>)}</div></div>;
+  <div className={`${c.seg} ${cls}`}>{options.map(o=><button key={String(o)} type="button" className={c.chip} aria-pressed={o===value} onClick={()=>onPick(o)} lang={langs?LOCALE[o as AppLang]:undefined}>{names(o)}</button>)}</div></div>;
 }
 function Toggle({label,line,on,onFlip}:{label:string;line?:string;on:boolean;onFlip:()=>void}){
  return <button type="button" role="switch" aria-checked={on} className={c.toggle} onClick={onFlip}><span className={c.toggleText}><b>{label}</b>{line&&<span>{line}</span>}</span><span className={c.knob} aria-hidden="true"/></button>;
@@ -83,7 +84,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  /* load once: saved settings, the language (?lang=, saved, the phone's), the app's own service worker */
  useEffect(()=>{let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}
   const st=loadStore(ls),q=new URLSearchParams(window.location.search).get('lang');
-  if(q==='es'||q==='en')st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';
+  if(isAppLang(q))st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=phoneLang();
   /* no age chosen yet and opened from the coach app (round 4A, owner): the active team's age (lib/coach/route.ts ageFor) */
   if(!embed&&!st.settings.age&&new URLSearchParams(window.location.search).get('from')==='coach')try{const tm=activeOf(loadTeams(ls));
    if(tm.team.players.length||tm.team.name){const a=ageFor(tm.settings.format,tm.team.name);st.settings=applyPreset(st.settings,a==='U12'?'u12':a==='U10'?'u10':'u8');}}catch{/* no team */}
@@ -95,7 +96,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/scan/manifest.webmanifest';});
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/scan-sw.js',{scope:'/scan'}).catch(()=>{});
  },[embed,initialLang]);
- useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);if(!embed)document.documentElement.lang=lang;},[store,ready,lang,embed]);
+ useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}saveStore(ls,store);if(!embed)document.documentElement.lang=LOCALE[lang];},[store,ready,lang,embed]);
  /* the run clock: one animation frame loop while the cue screen is open */
  useEffect(()=>{if(view!=='run')return;let raf=0;const tick=()=>{setNow(Date.now());raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return ()=>cancelAnimationFrame(raf);},[view]);
  /* keep the screen on during a run */
@@ -165,7 +166,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  }
  if(view==='summary'&&result){
   const r=result.r,best=store.results[s.mode]?.best;
-  return <div className={c.app} translate="no" data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>screenChange('back',()=>setView('settings'))}/>
+  return <div className={c.app} translate="no" data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onBack={()=>screenChange('back',()=>setView('settings'))}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
     <p className={c.sumCtx}>{w.modes[s.mode]} · {w.every} {w.sec(r.interval)}</p>
@@ -191,14 +192,14 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   :m==='arrows'?<Arrow dir="up" size="22px"/>:m==='mix'?<span className={c.modeMix} aria-hidden="true"><i/><b>3</b></span>:<span className={c.modeNum} aria-hidden="true">3<Arrow dir="right" size="14px"/></span>;
  /* Nov 22 2026 redesign (owner: "simple, sleek, modern"): the start screen shows the cue, the five modes and one summary of the
     settings; everything else lives in the Settings sheet. Same settings, same store (fi-scan-v1), same Start. */
- return <div className={c.app} translate="no" data-scan-view="settings"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))}/>
+ return <div className={c.app} translate="no" data-scan-view="settings"><Top w={w} lang={lang} embed={embed}/>
   <main className={`${c.main} ${c.home}`}>
    <h1 className={c.srOnly}>{w.app}</h1>
    <figure className={c.preview} aria-label={w.preview}><CueView cue={sample} s={s} w={w} small/><figcaption>{w.modeLines[s.mode]}</figcaption></figure>
    <div className={c.homeSide}>
     <div className={c.modes} role="group" aria-label={w.show}>{MODES.map(m=><button key={m} type="button" className={c.mode} aria-pressed={s.mode===m} onClick={()=>set({mode:m})}>{glyph(m)}<span>{w.modes[m]}</span></button>)}</div>
     <button type="button" className={c.summaryCard} onClick={()=>setSheet(true)} data-scan-settings="" aria-haspopup="dialog">
-     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:lang==='es'?'Todas':'Any'}</b></span>
+     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:w.any}</b></span>
      <span><small>{w.every}</small><b>{w.sec(s.interval)}</b></span>
      <span><small>{w.session}</small><b>{w.sessions[s.session]}</b></span>
      <span className={c.summaryGo}><span className={c.srOnly}>{w.settings}</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
@@ -244,9 +245,9 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <Toggle label={w.names} line={w.namesLine} on={s.names} onFlip={()=>set({names:!s.names})}/>
     <Toggle label={w.score} line={w.scoreLine} on={s.score} onFlip={()=>set({score:!s.score})}/>
    </div>
-   <Seg id="sg-lang" label={lang==='es'?'Idioma':'Language'} value={lang} options={['en','es'] as const} names={x=>x==='es'?'Español':'English'} onPick={x=>update(st=>({...st,lang:x}))}/>
+   <Seg id="sg-lang" label={w.langLabel} value={lang} options={APP_LANGS} names={x=>LANG_NAMES[x]} cls={c.langSeg} langs onPick={x=>update(st=>({...st,lang:x}))}/>
    <Seg id="sg-sound" label={w.sound} value={s.sound} options={SOUNDS} names={x=>w.sounds[x]} onPick={x=>{set({sound:x});try{const AC=window.AudioContext;if(x!=='off'&&AC){audio.current??=new AC();void audio.current.resume();play(audio.current,x);}}catch{/* none */}}}/>
-   <p className={c.note}>{w.offline}{!embed&&<> <a href={lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
+   <p className={c.note}>{w.offline}{!embed&&<> <a href={siteLang(lang)==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer'}>{w.guide}</a></>}</p>
     </div>
    </div>
   </div>}
@@ -255,12 +256,12 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
 /** The shared coach-apps header (components/motion/AppHeader; owner Nov 22 2026): the title centred; on the left, from the summary a
  *  back arrow to the start screen, else "Coach" back to the coach app's Home when it opened the trainer (?from=coach); on the right the
  *  language and then Exit (back to the page the coach came from). The embed has no header buttons: the page that frames it is the way out. */
-function Top({w,lang,embed,onLang,onBack}:{w:Words;lang:Lang;embed:boolean;onLang:()=>void;onBack?:()=>void}){
- const guide=lang==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer';
+function Top({w,lang,embed,onBack}:{w:Words;lang:Lang;embed:boolean;onBack?:()=>void}){
+ const guide=siteLang(lang)==='es'?'/es/tools/soccer-scanning-trainer':'/tools/soccer-scanning-trainer';
  /* left: from the summary a light Back to the start screen; on the start screen the gold Back (the coach app's Home when it opened
     the trainer, else the page the coach came from); no Exit in a mini app (owner, Nov 22 2026: Exit only on the coach app's Home) */
  const left=embed?null:onBack?<HeaderGoldBack key="summary" lang={lang} onBack={onBack} data={{'data-scan-back':''}}/>
   :<HeaderGoldBack key="settings" lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,guide));}} data={{'data-scan-coach':''}}/>;
- void onLang;/* the language moved to the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
+ /* the language lives in the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
  return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria="" exit={false}/>;
 }

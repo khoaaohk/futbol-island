@@ -6,6 +6,7 @@
  * Heat (AGENTS.md): every move is a one-shot of 120-350 ms on transform/opacity; nothing loops, nothing runs while hidden.
  * Reduced motion: no travel at all; screens swap instantly, sheets appear without sliding, numbers jump straight to their value.
  */
+import {langParam,siteLang,type AppLang} from '@/lib/i18n/appLangs';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {flushSync} from 'react-dom';
 
@@ -26,7 +27,7 @@ export function screenChange(dir:Dir,change:()=>void,after?:()=>void){
  if(!hasViewTransitions()||reducedMotion()||document.visibilityState!=='visible'||document.documentElement.dataset.vt){run();return;}
  const root=document.documentElement;root.dataset.vt=dir;
  try{const t=d.startViewTransition!(run);
-  t.finished.finally(()=>{if(root.dataset.vt===dir)delete root.dataset.vt;});
+  t.finished.finally(()=>{if(root.dataset.vt===dir)delete root.dataset.vt;}).catch(()=>{/* aborted (the viewport changed): the change already ran */});
  }catch{delete root.dataset.vt;run();}
 }
 
@@ -105,7 +106,8 @@ export function noteAppEntry(app:'coach'|'scan'|'board'){
 }
 export const openedFromCoach=()=>{try{return new URLSearchParams(location.search).get('from')==='coach'||window.sessionStorage.getItem(FROM_KEY)==='1';}catch{return false;}};
 /** Exit: the site page the coach came from, else the app's own guide page (`home`), else the tools hub. */
-export const exitHref=(lang:'en'|'es',home?:string)=>{try{const e=window.sessionStorage.getItem(ENTRY_KEY);if(e)return e;}catch{/* none */}return home??(lang==='es'?'/es/tools':'/tools');};
-export const coachHref=(lang:'en'|'es')=>lang==='es'?'/coach?lang=es':'/coach';
+export const exitHref=(lang:AppLang,home?:string)=>{try{const e=window.sessionStorage.getItem(ENTRY_KEY);if(e)return e;}catch{/* none */}return home??(siteLang(lang)==='es'?'/es/tools':'/tools');};
+/** the coach app in the same language (round 4E: all ten go along as ?lang=) */
+export const coachHref=(lang:AppLang)=>`/coach${langParam(lang)}`;
 /** A mini app's Back (/scan, /board): the coach app's Home when it opened this app, else the site page the coach came from, else the app's guide page. */
-export const miniBackHref=(lang:'en'|'es',guide:string)=>openedFromCoach()?coachHref(lang):exitHref(lang,guide);
+export const miniBackHref=(lang:AppLang,guide:string)=>openedFromCoach()?coachHref(lang):exitHref(lang,guide);

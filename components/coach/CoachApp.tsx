@@ -7,6 +7,7 @@ import {addGoal,addStoppage,alertKey,applyChange,buildPlan,confirmChange,planWit
  planSeconds,playedSeconds,PRESETS,presetOf,pushUndo,removeGoal,replanNow,resumeClock,scoreOf,setScorer,setStatus,settingsFor,skipChange,soleKeeper,summarySeconds,tapOk,theirGoal,type Game,type MatchInfo,type PBlock,type Settings,type Status} from '@/lib/coach/engine';
 import {cleanMatch,cleanPlayers,decodeShare,emptyStore,encodeShare,label,minutesCsv,newId,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
+import {APP_LANGS,LANG_NAMES,LOCALE,isAppLang,langParam,phoneLang} from '@/lib/i18n/appLangs';
 import {moveSpots,parseRef,refKey,type Move,type Ref} from '@/lib/coach/lineup';
 import {activeOf,addTeam,deleteTeam,isRunning,liveTeam,loadTeams,newerTeams,saveTeamsRev,storedRev,switchTeam,TEAMS_KEY,updateActive,updateTeam,type Teams} from '@/lib/coach/teams';
 import {TeamButton,TeamSheet,presetSettings} from './TeamSheet';
@@ -162,7 +163,8 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  const [returnTo,setReturnTo]=useState<Screen|null>(null);
  const [shared,setShared]=useState<Shared|null>(null);
  const [undo,setUndo]=useState<Game[]>([]);
- const [toast,setToast]=useState<{msg:string;undo:boolean;action?:{label:string;run:()=>void}}|null>(null);
+ /* `inline`: a lineup move's Undo, drawn under the bench (round 4E: the fixed toast covered the bench chips) */
+ const [toast,setToast]=useState<{msg:string;undo:boolean;action?:{label:string;run:()=>void};inline?:boolean}|null>(null);
  const [now,setNow]=useState(()=>Date.now());
  const [enter,setEnter]=useState<Dir|null>(null);
  /* the motion model (owner, Nov 22 2026): tab switches crossfade in place (120 ms) and keep each page's scroll; a tool pushes in
@@ -218,7 +220,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
   /* the teams record; the first time, the single team in fi-coach-v1 becomes the first team. A game on the clock opens its team. */
   let all=loadTeams(ls);revRef.current=all.rev??0;const lv=liveTeam(all);if(lv)all=switchTeam(all,lv.id);
   const q=new URLSearchParams(window.location.search).get('lang'),l0=activeOf(all).lang;
-  const lg:Lang=q==='es'||q==='en'?q:l0??((navigator.language||'').toLowerCase().startsWith('es')?'es':'en');
+  const lg:Lang=isAppLang(q)?q:l0??phoneLang();
   all=updateActive(all,x=>({...x,lang:lg}));
   const m=/[#&]s=([A-Za-z0-9_-]+)/.exec(window.location.hash);if(m){const d=decodeShare(m[1]);if(d)setShared(d);}
   /* the screen: the URL's; a bare /coach opens the last tab page; a game on the clock opens Match day over its tab page */
@@ -239,7 +241,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
   if(!m){const stack=landingStack({...r,format:undefined});
    window.setTimeout(()=>stack.forEach((x,i)=>{if(i===0)window.history.replaceState({fiCoach:0},'',url(x));else window.history.pushState({fiCoach:i},'',url(x));}),0);}
   const top={...r,format:undefined};setRoute(top);setLiveRaw(!!top.live);setHomeTab(homeOf(top.screen));
-  if(ask){const f=ask;const cur=activeOf(all).settings.format;setToast({msg:WORDS[lg].formatLink(f,cur),undo:false,action:{label:WORDS[lg].useFormat(f),run:()=>{setStore(x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));setToast(null);}}});}
+  if(ask){const f=ask;const cur=activeOf(all).settings.format;setToast({msg:WORDS[lg].formatLink(WORDS[lg].fmt(f),WORDS[lg].fmt(cur)),undo:false,action:{label:WORDS[lg].useFormat(WORDS[lg].fmt(f)),run:()=>{setStore(x=>({...x,settings:presetSettings(f as Parameters<typeof presetSettings>[0]),spots:[]}));setToast(null);}}});}
   /* point every manifest link at the app's own; never remove one: React owns them, and a removed node made its next head update
      throw "Cannot read properties of null (reading 'removeChild')" (Nov 22 2026) */
   document.querySelectorAll('link[rel=manifest]').forEach(l=>{(l as HTMLLinkElement).href='/coach/manifest.webmanifest';});
@@ -253,7 +255,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  const revRef=useRef(0),adopted=useRef<Teams|null>(null);
  const adopt=useCallback((t:Teams)=>{revRef.current=t.rev??0;setTeams(cur=>{const x={...t,activeId:t.teams.some(y=>y.id===cur.activeId)?cur.activeId:t.activeId};adopted.current=x;return x;});
   setUndo([]);setToast({msg:WORDS[activeOf(t).lang??'en'].otherTab,undo:false});},[]);
- useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}document.documentElement.lang=lang;
+ useEffect(()=>{if(!ready)return;let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}document.documentElement.lang=LOCALE[lang];
   if(teams===adopted.current)return;
   if(ls&&storedRev(ls)>revRef.current){const t=newerTeams(ls.getItem(TEAMS_KEY),revRef.current);if(t){adopt(t);return;}}
   const r=saveTeamsRev(ls,teams);if(r)revRef.current=r;},[teams,ready,lang,adopt]);
@@ -271,7 +273,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  /* switch team: a quick crossfade; the undo list belongs to the team that was shown */
  const pickTeam=(id:string,then?:()=>void)=>{teamSheet.close();if(id===store.id){then?.();return;}
   screenChange('fade',()=>{setEnter('fade');setTeams(t=>switchTeam(t,id));setUndo([]);then?.();});};
- useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),toast.action?12000:6000);return ()=>clearTimeout(t);},[toast]);
+ useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),toast.action&&!toast.inline?12000:6000);return ()=>clearTimeout(t);},[toast]);
  /* never lose a live game by accident */
  const anyLive=!!liveRec;
  useEffect(()=>{if(!anyLive)return;
@@ -293,12 +295,12 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
   setUndo([]);update(s=>({...s,last:s.game?.clock.status==='done'?s.game:s.last,game:newGame(d.startPlan,s.settings,d.spotOf,status,Date.now(),cleanMatch(s.match))}));setLive(true);count('ca:game');
  };
  const shareLink=async(x:Shared,title?:string)=>{
-  const url=`${location.origin}/coach${lang==='es'?'?lang=es':''}#s=${encodeShare(x)}`;
+  const url=`${location.origin}/coach${langParam(lang)}#s=${encodeShare(x)}`;
   try{if(navigator.share){await navigator.share({title:title?`${title}${x.team?' · '+x.team:''}`:x.team||w.plan,url});return;}}catch{/* cancelled */}
   try{await navigator.clipboard.writeText(url);setToast({msg:w.copied,undo:false});}catch{window.prompt(w.copyLink,url);}
  };
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
- const team=store.team,root=isRoot(tab),fmtName=presetOf(store.settings.format).id==='futsal'?'Futsal':store.settings.format;
+ const team=store.team,root=isRoot(tab),fmtName=w.fmt(presetOf(store.settings.format).id);
  const teamAge:Age=ageFor(store.settings.format,team.name);
  const goTeam=()=>{setReturnTo(tab);nav({screen:'team'},'replace','tab');};
  const liveCard=liveRec?.game?(()=>{const l=liveLine(w,liveRec.game!,now);return {period:l.period,clock:l.clock,change:l.change,team:liveRec.team.name||w.teamN(teams.teams.indexOf(liveRec)+1)};})():null;
@@ -308,7 +310,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
  return <div className={c.app} translate="no" data-reading-page="" data-coach-app="" data-tool={tab} data-dock={!live&&liveRec?'':undefined} data-nav={root?'':undefined}>
   {/* the shared header (components/motion/AppHeader). Tab pages: the team switcher, "Coach" and the team, Exit. Tools: Back, the
       title, nothing on the right (owner, Nov 22 2026). The language lives in the bottom nav. */}
-  <AppHeader lang={lang} exit={root} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
+  <AppHeader lang={lang} exit={root} exitAria={w.exitAria} exitData={{'data-coach-back':'','data-coach-exit':''}}
    left={!root?<HeaderGoldBack key={"tool"+hashFor(route)} lang={lang} onBack={back} data={{'data-coach-home':''}}/>:<TeamButton key="teams" w={w} name={team.name} place={place} onClick={()=>teamSheet.open(true)}/>}
    title={TITLE(w,tab)} sub={root?team.name||w.teamN(place):tab==='plans'?`${team.name?team.name+' · ':''}${teamAge}`:<>{team.name?`${team.name} · `:''}{fmtName} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
@@ -327,7 +329,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
     :t==='team'?<>
       <TeamTab w={w} store={store} update={update} d={d}/>
       {returnTo&&!isRoot(returnTo)&&returnTo!=='team'&&d.here.length>0&&<NextBtn label={w.backTo(TITLE(w,returnTo))} onClick={()=>{const r=returnTo;setReturnTo(null);nav({screen:r},'replace','tab');}}/>}</>
-    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} onMoved={(msg,undo)=>setToast({msg,undo:false,action:{label:w.undo,run:()=>{setToast(null);undo();}}})}/>
+    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} note={toast?.inline?toast:null} onMoved={(msg,undo)=>setToast({msg,undo:false,inline:true,action:{label:w.undo,run:()=>{setToast(null);undo();}}})}/>
     :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={goTeam} onNext={()=>go('subs','tab')}/>
     :t==='plans'?<PlansTool w={w} lang={lang} version={plansVersion} teamAge={teamAge} age={route.age} plan={route.plan} run={route.run}
       onAge={a=>{const r:Route={screen:'plans',age:a};window.history.replaceState({fiCoach:depth()},'',url(r));setRoute(r);}}
@@ -358,7 +360,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
    onPick={id=>pickTeam(id)} onEdit={id=>pickTeam(id,()=>{setReturnTo(null);nav({screen:'team'},'push');})}
    onDelete={id=>{const wasActive=id===store.id;const apply=()=>{setTeams(t=>deleteTeam(t,id,Date.now()%100000));if(wasActive)setUndo([]);};if(wasActive)screenChange('fade',apply);else apply();}}
    onAdd={x=>{teamSheet.close();screenChange('fade',()=>{setEnter('fade');setTeams(t=>addTeam(t,{name:x.name,settings:presetSettings(x.format),from:x.from},Date.now()%1000000));setUndo([]);});if(!root)nav({screen:homeTab},'replace','fade');}}/>}
-  {toast&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}{toast.action&&<button type="button" onClick={toast.action.run}>{toast.action.label}</button>}</div>}
+  {toast&&!toast.inline&&<div className={c.toast} role="status"><span>{toast.msg}</span>{toast.undo&&undo.length>0&&<button type="button" onClick={doUndo}>{w.undo}</button>}{toast.action&&<button type="button" onClick={toast.action.run}>{toast.action.label}</button>}</div>}
  </div>;
 }
 /** The language sheet (round 4A): opened from the bottom nav; the choice is the whole app's (saved in fi-coach-v1; /scan and /board
@@ -368,8 +370,8 @@ function LangSheet({w,lang,closing,onClose,onPick}:{w:Words;lang:Lang;closing:bo
  return <div className={c.sheet} data-closing={closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)onClose();}} onKeyDown={e=>{if(e.key==='Escape')onClose();}}>
   <div className={c.sheetIn} ref={panel} role="dialog" aria-modal="true" aria-labelledby="coach-lang" data-lang-sheet="">
    <div className={c.sheetHead} {...swipe}><span className={c.grab} aria-hidden="true"/><p className={c.sheetTitle} id="coach-lang">{w.langTitle}</p><button type="button" className={c.doneBtn} onClick={onClose}>{w.sheetDone}</button></div>
-   <ul className={t4.langList}>{(['en','es'] as const).map(l=><li key={l}><button type="button" className={t4.langOpt} lang={l} aria-pressed={l===lang} onClick={()=>onPick(l)} autoFocus={l===lang}>
-    {l==='es'?'Español':'English'}{l===lang&&<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}</button></li>)}</ul>
+   <ul className={t4.langList}>{APP_LANGS.map(l=><li key={l}><button type="button" className={t4.langOpt} lang={LOCALE[l]} aria-pressed={l===lang} onClick={()=>onPick(l)} autoFocus={l===lang} data-lang={l}>
+    {LANG_NAMES[l]}{l===lang&&<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="m5 12 5 5 9-10" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}</button></li>)}</ul>
   </div>
  </div>;
 }
@@ -429,7 +431,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
      <label className={c.sec}><span className={c.lbl}>{w.teamName}</span><input className={c.input} value={store.team.name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,name:v.slice(0,24)}}));}}/></label>
      <div className={c.sec}><p className={c.lbl}>{w.format}</p>
       <div className={c.fmtGrid} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.fmtBtn} aria-pressed={s.format===p.id}
-       onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}><b>{p.id==='futsal'?'Futsal':p.id}</b>{p.ages&&<small>{p.ages}</small>}</button>)}</div></div>
+       onClick={()=>update(x=>({...x,settings:settingsFor(p),spots:[]}))}><b>{w.fmt(p.id)}</b>{p.ages&&<small>{p.ages}</small>}</button>)}</div></div>
      <Seg label={w.periods} value={s.periods} options={[1,2,3,4]} names={n=>n} onPick={v=>update(x=>({...x,settings:{...x.settings,periods:v}}))}/>
      <div className={c.sec}><Stepper w={w} id="cs-min" label={w.minutes} value={s.periodMin} options={[8,10,12,15,20,25,30,35,40,45]} fmt={n=>`${n} ${w.min}`} onChange={v=>update(x=>({...x,settings:{...x.settings,periodMin:v,subEvery:Math.min(x.settings.subEvery,v)}}))}/></div>
      <div className={c.secTight}><Stepper w={w} id="cs-sub" label={w.subEvery} value={s.subEvery} options={[2,3,4,5,6,8,10,12,15].filter(n=>n<=s.periodMin)} fmt={n=>`${n} ${w.min}`} onChange={v=>update(x=>({...x,settings:{...x.settings,subEvery:v}}))}/></div>
@@ -479,7 +481,7 @@ type Fx={n:number;slots:Record<number,string>;hit:number|null;chipsIn:string[]};
 const reduced=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{return false;}};
 const buzz=(ms:number)=>{try{const ua=(navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation;if(ua&&!ua.hasBeenActive)return;navigator.vibrate?.(ms);}catch{/* no vibration */}};
 const centre=(r:DOMRect)=>({x:r.left+r.width/2,y:r.top+r.height/2});
-function LineupTab({w,store,update,d,onShare,onNext,onMoved}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void;onNext:()=>void;onMoved:(msg:string,undo:()=>void)=>void}){
+function LineupTab({w,store,update,d,onShare,onNext,onMoved,note}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void;onNext:()=>void;onMoved:(msg:string,undo:()=>void)=>void;note:{msg:string;action?:{label:string;run:()=>void}}|null}){
  const byId=new Map(store.team.players.map(p=>[p.id,p])),keeper=store.settings.keeper!=='none';
  const [sel,setSel]=useState<Ref|null>(null);
  const [lifted,setLifted]=useState<string|null>(null);
@@ -586,7 +588,7 @@ function LineupTab({w,store,update,d,onShare,onNext,onMoved}:{w:Words;store:Stor
   <p className={c.note}>{w.dragHint}</p>
   {d.forms.length>1&&<><h2 className={c.h2}>{w.formation}</h2><div className={`${c.seg} ${c.formSeg}`} role="group" aria-label={w.formation}>{d.forms.map(f=><button key={f.slug} type="button" className={c.chip} aria-pressed={d.form?.slug===f.slug} onClick={()=>update(s=>({...s,settings:{...s.settings,formation:f.slug}}))}>{f.label}</button>)}</div></>}
   <div className={c.pitchWrap}>
-   <div className={c.pitch} role="group" aria-label={`${w.formation} ${d.form?.label??''}`}>
+   <div className={c.pitch} role="group" aria-label={`${w.formation} ${d.form?.slug==='4v4-diamond'?w.diamond:d.form?.label??''}`}>
     <div className={c.pitchLines}/><div className={`${c.box} ${c.boxTop}`}/><div className={`${c.box} ${c.boxBottom}`}/>
     {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0,m=fx?fx.slots[i]:undefined,txt=p?String(p.num):sp.label;
      return <button key={i} type="button" className={`${c.spot} ${gk?c.spotGk:''} ${p?'':c.spotEmpty}`} style={{left:`${4+sp.x*0.92}%`,top:`${4+(100-sp.y)*0.92}%`}}
@@ -600,7 +602,8 @@ function LineupTab({w,store,update,d,onShare,onNext,onMoved}:{w:Words;store:Stor
    </div>
    <div><h2 className={`${c.h2} ${c.benchH}`}>{w.bench}</h2>
     <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};const pop=fx?.chipsIn.includes(p.id);
-     return <button key={pop?`${p.id}-${fx!.n}`:p.id} type="button" className={`${c.benchChip} ${pop?c.chipIn:''}`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
+     return <button key={pop?`${p.id}-${fx!.n}`:p.id} type="button" className={`${c.benchChip} ${pop?c.chipIn:''}`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div>
+    {note&&<div className={`${c.toast} ${c.toastInline}`} role="status" data-lineup-undo=""><span>{note.msg}</span>{note.action&&<button type="button" onClick={note.action.run}>{note.action.label}</button>}</div>}</div>
   </div>
   <div className={`${c.btnRow} ${c.noPrint}`}>
    <button type="button" className={c.btn} onClick={()=>commit([],null,null,null)}>{w.autoFill}</button>
@@ -839,7 +842,7 @@ function SharedView({w,x,onClose}:{w:Words;x:Shared;onClose:()=>void}){
   <main className={c.main}>
    {/* the parents' link (UX audit C2): "Minutes played", the game's details and score, no verdict */}
    <h1 className={c.h1}>{x.info||x.done?w.sharedTitle:w.planned}</h1>
-   <GameLine w={w} lang={w===WORDS.es?'es':'en'} info={x.info?{opp:x.info.opp,date:x.info.date,time:'',home:''}:undefined} score={x.info&&x.info.us!=null&&x.info.them!=null?{us:x.info.us,them:x.info.them}:null} team={x.team}/>
+   <GameLine w={w} lang={APP_LANGS.find(l=>WORDS[l]===w)??'en'} info={x.info?{opp:x.info.opp,date:x.info.date,time:'',home:''}:undefined} score={x.info&&x.info.us!=null&&x.info.them!=null?{us:x.info.us,them:x.info.them}:null} team={x.team}/>
    <Fair w={w} seconds={shown} ids={ids} skip={new Set(fixed?[fixed]:[])} step={x.settings.subEvery} verdict={false}/>
    <TimelineRows w={w} rows={rows.filter(p=>ids.includes(p.id))} blocks={x.blocks} settings={x.settings} seconds={shown}/>
    <div className={c.btnRow}><button type="button" className={c.btn} onClick={onClose}>{w.openMine}</button><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button></div>

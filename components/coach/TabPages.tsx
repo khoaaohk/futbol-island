@@ -4,7 +4,8 @@ import GridDiagram from '@/lib/site/GridDiagram';
 import type {Words} from '@/lib/coach/words';
 import type {Lang,Store} from '@/lib/coach/store';
 import type {Age} from '@/lib/coach/route';
-import {planOfDay,usePlans,boardHref,scanHref} from './PlansTool';
+import {planOfDay,usePlans,boardHref,scanHref,planLang} from './PlansTool';
+import {LOCALE,siteLang} from '@/lib/i18n/appLangs';
 import c from './coach.module.css';
 import t from './tabs.module.css';
 import {BoardIcon,BookIcon,ChartIcon,ClockIcon,EyeIcon,PitchIcon,RulerIcon,ShirtIcon,SwapIcon} from './GameIcons';
@@ -72,7 +73,7 @@ type GD={w:Words;store:Store;place:number;fmt:string;coming:number;late?:number;
 /** "Sat 29 Nov · 10:30" in the app's language, from the game details (UX audit C17). */
 export function whenLine(m:{date:string;time:string}|undefined,lang:Lang):string{
  if(!m)return '';let d='';
- if(m.date){const [y,mo,da]=m.date.split('-').map(Number);try{d=new Date(y,mo-1,da).toLocaleDateString(lang,{weekday:'short',day:'numeric',month:'short'});}catch{d=m.date;}}
+ if(m.date){const [y,mo,da]=m.date.split('-').map(Number);try{d=new Date(y,mo-1,da).toLocaleDateString(LOCALE[lang],{weekday:'short',day:'numeric',month:'short'});}catch{d=m.date;}}
  return [d,m.time].filter(Boolean).join(' · ');
 }
 export function GameDayTab({w,store,place,fmt,coming,late=0,onField,intro,live,gameDone,onMatch,onTool,onExample,onDetails}:GD){
@@ -110,9 +111,9 @@ export function GameDayTab({w,store,place,fmt,coming,late=0,onField,intro,live,g
    and the field diagrams */
 type TR={w:Words;lang:Lang;version:string;age:Age;intro:boolean;onPlans:(plan?:string,run?:boolean)=>void};
 export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
- const {data}=usePlans(lang,version);
+ const {data}=usePlans(planLang(lang),version);
  const plans=data&&data!=='fail'?data:null,day=Math.floor(Date.now()/864e5),plan=plans?planOfDay(plans.plans,age,day):null;
- const fields=lang==='es'?'/es/tools/soccer-field-diagrams':'/tools/soccer-field-diagrams';
+ const fields=siteLang(lang)==='es'?'/es/tools/soccer-field-diagrams':'/tools/soccer-field-diagrams';
  return <div className={t.training} data-tab-page="training">
   <h1 className={c.srOnly}>{w.navTraining}</h1>
   <a className={`${t.feature} ${t.featureTrain} ${intro?'fi-in':''}`} href={scanHref(lang)} onClick={rememberY} data-tool="scan">

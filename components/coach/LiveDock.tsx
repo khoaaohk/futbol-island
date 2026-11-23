@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {clockSec,fmtClock,nextChange,pauseClock,resumeClock,type Game} from '@/lib/coach/engine';
 import {activeOf,liveTeam,loadTeams,saveTeams,updateTeam,type Teams} from '@/lib/coach/teams';
 import {WORDS,type Words} from '@/lib/coach/words';
+import {langParam} from '@/lib/i18n/appLangs';
 import {openedFromCoach} from '@/components/motion/motion';
 import s from './LiveDock.module.css';
 /**
@@ -59,6 +60,6 @@ export default function CoachLiveDock(){
  if(!teams||!rec||!rec.game)return null;
  const lang=activeOf(teams).lang??'en',w=WORDS[lang];
  return <LiveBar w={w} game={rec.game} team={rec.team.name||w.appName} now={now} sound={rec.sound}
-  onOpen={()=>{window.location.assign(lang==='es'?'/coach?lang=es':'/coach');}}
+  onOpen={()=>{window.location.assign(`/coach${langParam(lang)}`);}}
   onToggle={()=>{const t=updateTeam(teams,rec.id,x=>x.game?{...x,game:toggleClock(x.game,Date.now())}:x);try{saveTeams(window.localStorage,t);}catch{/* blocked */}setTeams(t);setNow(Date.now());}}/>;
 }

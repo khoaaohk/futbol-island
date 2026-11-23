@@ -162,3 +162,10 @@ li[data-wide] .art{aspect-ratio:16/7}
 /* round 4C (Nov 22 2026): the next game's opponent after the team name, and the game details link at full tap height */
 .fVs{font-weight:600;color:var(--soft,#3d4a42)}
 .fLinkTap{min-height:44px;display:inline-flex;align-items:center;margin-top:8px;margin-right:16px}
+
+/* round 4E: ten languages, two columns so the sheet stays short on a phone */
+.langList{grid-template-columns:1fr 1fr}
+.langOpt{min-height:52px;padding:0 14px;font-size:17px}
+.enNote{margin:0 0 10px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#5b6b63;background:var(--tint);border-radius:999px;padding:4px 10px}
+/* round 4E: one long word in a tile name ("Treenisuunnitelmat", "Trainingspläne") breaks with a hyphen in its own language */
+.tText b{min-width:0;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}

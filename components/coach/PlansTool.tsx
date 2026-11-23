@@ -5,6 +5,7 @@ import type {CoachDrill,CoachPlan,CoachPlans} from '@/lib/coach/plansData';
 import {AGES,type Age} from '@/lib/coach/route';
 import type {Words} from '@/lib/coach/words';
 import type {Lang} from '@/lib/coach/store';
+import {langParam} from '@/lib/i18n/appLangs';
 import c from './coach.module.css';
 import t from './tabs.module.css';
 /**
@@ -29,11 +30,14 @@ export function usePlans(lang:Lang,v:string){
 /** The plan of the day at an age (Training's feature card): the same one all day, the next one tomorrow. */
 export function planOfDay(plans:readonly CoachPlan[],age:Age,day:number){const list=plans.filter(p=>p.age===age);return list.length?list[day%list.length]:plans[0];}
 const SCAN=new Set(['scanning']),BOARD=new Set(['small-sided','passing','attacking-1v1','defending-1v1','first-touch','shooting']);
-export const boardHref=(lang:Lang)=>`/board?from=coach${lang==='es'?'&lang=es':''}`;
-export const scanHref=(lang:Lang)=>`/scan?from=coach${lang==='es'?'&lang=es':''}`;
+export const boardHref=(lang:Lang)=>`/board?from=coach${langParam(lang,'&')}`;
+export const scanHref=(lang:Lang)=>`/scan?from=coach${langParam(lang,'&')}`;
+/** the plans' text exists in English and Spanish only (round 4E): the other eight languages get the English plans under their
+ *  own words, with a small "Plan text in English" note (lib/coach/plansData.ts; translating the 46 drills is a follow-up) */
+export const planLang=(lang:Lang):'en'|'es'=>lang==='es'?'es':'en';
 type Props={w:Words;lang:Lang;version:string;teamAge:Age;age?:Age;plan?:string;run?:boolean;onAge:(a:Age)=>void;onPlan:(slug:string)=>void;onRun:(on:boolean)=>void};
 export default function PlansTool(p:Props){
- const {data,retry}=usePlans(p.lang,p.version),w=p.w;
+ const {data,retry}=usePlans(planLang(p.lang),p.version),w=p.w;
  if(data==='fail')return <div className={c.empty}><p className={c.emptyLine}>{w.plansFail}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={retry}>{w.retry}</button></div>;
  if(!data)return <p className={c.note} aria-live="polite">{w.loadingPlans}</p>;
  const plan=p.plan?data.plans.find(x=>x.slug===p.plan):undefined;
@@ -42,6 +46,7 @@ export default function PlansTool(p:Props){
  const age=p.age??p.teamAge,list=data.plans.filter(x=>x.age===age);
  return <>
   <h1 className={c.srOnly}>{w.plansTitle}</h1>
+  {planLang(p.lang)!==p.lang&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
   <div className={t.ages} role="tablist" aria-label={w.plansTitle}>{AGES.map(a=><button key={a} type="button" role="tab" aria-selected={a===age} className={t.age} onClick={()=>p.onAge(a)}>{a}{a===p.teamAge&&<small>{w.teamAge}</small>}</button>)}</div>
   <ul className={t.planList}>{list.map((x,i)=>{const d=data.drills[x.drills[1]??x.drills[0]];return <li key={x.slug} className="fi-in" style={{'--i':i} as React.CSSProperties}>
    <button type="button" className={t.planCard} onClick={()=>p.onPlan(x.slug)} data-plan={x.slug}>
@@ -54,7 +59,8 @@ function PlanView({w,lang,plan,drills,onRun}:{w:Words;lang:Lang;onRun:(on:boolea
  const [open,setOpen]=useState<string|null>(null);
  const clock=(m:number)=>`${m}′`;
  return <article className={t.plan}>
-  <h1 className={t.planH1}>{plan.h1}</h1>
+  <h1 className={t.planH1} lang={planLang(lang)}>{plan.h1}</h1>
+  {planLang(lang)!==lang&&<p className={t.enNote} data-plans-en="">{w.plansEnNote}</p>}
   <p className={t.planMeta}>{w.minutesN(plan.minutes)} · {plan.players} · {plan.goal}</p>
   <div className={`${c.btnRow} ${c.noPrint}`}>
    <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>onRun(true)} data-plan-start="">{w.startSession}</button>

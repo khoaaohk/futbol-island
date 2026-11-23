@@ -631,3 +631,13 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 }
 @keyframes lu-fade{from{opacity:0}}
 @keyframes lu-fade-out{to{opacity:0}}
+
+/* round 4E (Nov 22 2026): a lineup move's Undo sits under the bench, in the page, so it never covers a bench chip (it was fixed
+   over the bottom of the screen for 12 s); 6 s */
+.toast.toastInline{position:static;margin-top:10px;left:auto;right:auto;bottom:auto;box-shadow:0 4px 14px rgb(36 77 64 / .14);animation:toastIn .2s ease-out both}
+@keyframes toastIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.toast.toastInline{animation:none}}
+/* round 4E: longer languages (de, fi, nl). A period name in the change time column ("2. Halbzeit", "2. puoliaika") breaks onto two
+   lines, hyphenated in its language; the Off / On word column is as wide as its word ("Sisään") */
+.subCard time{overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;min-width:0}
+.subRow{grid-template-columns:minmax(34px,max-content) minmax(0,1fr)}

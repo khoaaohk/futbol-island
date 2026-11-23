@@ -40,7 +40,7 @@ export function TeamSheet({w,teams,closing,onClose,onPick,onEdit,onDelete,onAdd}
       return <li key={t.id} className={c.teamRow} data-current={cur||undefined}>
        <button type="button" className={c.teamPick} aria-pressed={cur} onClick={()=>onPick(t.id)} data-team-pick={t.id}>
         <TeamBadge name={t.team.name} place={i+1}/>
-        <span className={c.teamText}><b>{label(i)}</b><small>{fmtName(t.settings.format)} · {w.playersN(t.team.players.length)}{live?<> · <em className={c.liveTag}>{w.liveTag}</em></>:null}</small></span>
+        <span className={c.teamText}><b>{label(i)}</b><small>{w.fmt(presetOf(t.settings.format).id)} · {w.playersN(t.team.players.length)}{live?<> · <em className={c.liveTag}>{w.liveTag}</em></>:null}</small></span>
         {cur&&<svg className={c.teamCheck} viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
        </button>
        <div className={c.teamTools}>
@@ -61,7 +61,7 @@ export function TeamSheet({w,teams,closing,onClose,onPick,onEdit,onDelete,onAdd}
      {view.step===1?<>
       <label className={c.sec} style={{marginTop:0}}><span className={c.lbl}>{w.teamName}</span><input className={c.input} value={name} placeholder={w.teamNamePh} maxLength={24} onChange={e=>setName(e.target.value.slice(0,24))} data-team-name=""/></label>
       <div className={c.sec}><p className={c.lbl}>{w.format}</p>
-       <div className={c.fmtGrid} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.fmtBtn} aria-pressed={format===p.id} onClick={()=>setFormat(p.id)}><b>{fmtName(p.id)}</b>{p.ages&&<small>{p.ages}</small>}</button>)}</div></div>
+       <div className={c.fmtGrid} role="group" aria-label={w.format}>{PRESETS.map(p=><button key={p.id} type="button" className={c.fmtBtn} aria-pressed={format===p.id} onClick={()=>setFormat(p.id)}><b>{w.fmt(p.id)}</b>{p.ages&&<small>{p.ages}</small>}</button>)}</div></div>
       <div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>setView({k:'list'})}>{w.cancel}</button>
        <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>setView({k:'add',step:2})} data-team-next="">{w.nextStep}</button></div>
      </>:<>

@@ -5,6 +5,10 @@ import s from './TacticsBoard.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
 import {miniBackHref,noteAppEntry} from '@/components/motion/motion';
 import web from './BoardWeb.module.css';
+import {isAppLang,LOCALE,siteLang,type AppLang} from '@/lib/i18n/appLangs';
+/** the board's name in the ten app languages (the coach app's `boardName`) */
+const BOARD_TITLE:Readonly<Record<AppLang,string>>={en:'Tactics board',es:'Pizarra táctica',pt:'Prancheta tática',fr:'Tableau tactique',de:'Taktiktafel',
+ it:'Lavagna tattica',nl:'Tactiekbord',pl:'Tablica taktyczna',fi:'Taktiikkataulu',ja:'作戦ボード'};
 import '@/components/motion/motion.css';
 /**
  * /board (Nov 22 2026): the in-game tactics board on its own page, full screen under the coach apps' shared header (owner: the
@@ -13,14 +17,15 @@ import '@/components/motion/motion.css';
  * light chrome here is only a scope of its CSS variables (BoardWeb.module.css), and it gets no Back of its own.
  */
 export default function BoardApp(){
- /* the coach app's language (round 4A, UX audit C9): ?lang=es from the coach app; the header follows it (the board itself has no
-    Spanish words yet) */
- const [lang,setLang]=useState<'en'|'es'>('en');
- useEffect(()=>{noteAppEntry('board');try{if(new URLSearchParams(location.search).get('lang')==='es'){setLang('es');document.documentElement.lang='es';}}catch{/* none */}},[]);
+ /* the coach app's language (round 4A, UX audit C9; round 4E: all ten): ?lang= from the coach app; the header follows it (the board
+    itself is shared with the game and keeps its own English words) */
+ const [lang,setLang]=useState<AppLang>('en');
+ useEffect(()=>{noteAppEntry('board');try{const q=new URLSearchParams(location.search).get('lang');if(isAppLang(q)&&q!=='en'){setLang(q);document.documentElement.lang=LOCALE[q];}}catch{/* none */}},[]);
+ const title=BOARD_TITLE[lang],guide=siteLang(lang)==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board';
  return <div className={web.web} data-board-app="" translate="no">
-  <h1 className={web.srOnly}>{lang==='es'?'Pizarra táctica':'Tactics board'}</h1>
-  <AppHeader lang={lang} title={lang==='es'?'Pizarra táctica':'Tactics board'} sub="Futbol Island" exitAria="" exit={false}
-   left={<HeaderGoldBack lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,lang==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board'));}} data={{'data-board-coach':''}}/>}/>
+  <h1 className={web.srOnly}>{title}</h1>
+  <AppHeader lang={lang} title={title} sub="Futbol Island" exitAria="" exit={false}
+   left={<HeaderGoldBack lang={lang} onBack={()=>{window.location.assign(miniBackHref(lang,guide));}} data={{'data-board-coach':''}}/>}/>
   <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard/></div></div>
  </div>;
 }
