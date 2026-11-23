@@ -136,26 +136,34 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
   const paused=run.pausedAt!=null,cue=cues[ph.phase==='run'?ph.cue:-1];
   return <div className={`${c.app} ${c.stage}`} data-scan-view="run" data-paused={paused?'':undefined}>
    <button type="button" className={c.tapZone} onClick={togglePause} aria-label={paused?w.resume:w.tapPause}>
-    {ph.phase==='count'?<div className={c.cue} style={{background:'#14221d',color:'#fbf7ee'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={`${c.num} ${c.countNum}`} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
+    {ph.phase==='count'?<div className={c.cue} style={{background:'#fbf5e8',color:'#244d40'}} data-cue="count"><span className={c.countLabel}>{w.getReady}</span><span className={`${c.num} ${c.countNum}`} style={{fontSize:'70vmin'}} key={ph.n}>{ph.n}</span></div>
      :cue?<div className={c.cueIn} key={ph.phase==='run'?ph.cue:-1}><CueView cue={cue} s={s} w={w}/></div>:null}
    </button>
    {ph.phase==='run'&&s.session>0&&<div className={c.progress} aria-hidden="true"><i style={{transform:`scaleX(${Math.min(1,ph.ms/(s.session*1000))})`}}/></div>}
-   <div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>
+   {!paused&&<div className={c.hud} aria-live="off"><span>{ph.phase==='run'?(ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)):''}</span><span>{w.tapPause}</span></div>}
    {s.score&&ph.phase==='run'&&!paused&&<div className={c.scoreStrip}>
     <button type="button" className={c.scoreBtn} data-score="hit" onClick={()=>mark(true)} aria-label={`${w.right}: ${score.hit}`}><span aria-hidden="true">✓</span> {score.hit}</button>
     <button type="button" className={`${c.scoreBtn} ${c.scoreMiss}`} data-score="miss" onClick={()=>mark(false)} aria-label={`${w.wrong}: ${score.miss}`}><span aria-hidden="true">✗</span> {score.miss}</button>
    </div>}
+   {/* paused (owner, Nov 22 2026): a light overlay with one centred group: pause icon, "Paused", time left, Resume (gold) and End
+       session (cream) 12 px apart; the run chips are hidden under it */}
    {paused&&<div className={c.pause} role="dialog" aria-modal="true" aria-labelledby="scan-paused">
-    <h1 className={c.pauseH} id="scan-paused">{w.paused}</h1>
-    {s.score&&<p className={c.pauseScore}>{w.ofN(score.hit,score.hit+score.miss)}</p>}
-    <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={togglePause} autoFocus>{w.resume}</button>
-    <button type="button" className={`${c.btn} ${c.btnLight} ${c.btnWide}`} onClick={()=>finish(run,run.pausedAt??Date.now())}>{w.end}</button>
-    {wake==='none'&&<p className={c.pauseNote}>{w.wake}</p>}
+    <div className={c.pauseCard}>
+     <span className={c.pauseIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><rect x="6" y="5" width="4.2" height="14" rx="1.6" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.6" fill="currentColor"/></svg></span>
+     <h1 className={c.pauseH} id="scan-paused">{w.paused}</h1>
+     {ph.phase==='run'&&<p className={c.pauseTime}>{ph.left!=null?w.left(fmtTime(ph.left)):fmtTime(ph.ms/1000)}</p>}
+     {s.score&&<p className={c.pauseScore}>{w.ofN(score.hit,score.hit+score.miss)}</p>}
+     <div className={c.pauseBtns}>
+      <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={togglePause} autoFocus>{w.resume}</button>
+      <button type="button" className={`${c.btn} ${c.btnWide}`} onClick={()=>finish(run,run.pausedAt??Date.now())}>{w.end}</button>
+     </div>
+     {wake==='none'&&<p className={c.pauseNote}>{w.wake}</p>}
+    </div>
    </div>}
   </div>;
  }
  if(view==='summary'&&result){
-  const r=result.r;
+  const r=result.r,best=store.results[s.mode]?.best;
   return <div className={c.app} translate="no" data-scan-view="summary"><Top w={w} lang={lang} embed={embed} onLang={()=>update(x=>({...x,lang:lang==='es'?'en':'es'}))} onBack={()=>screenChange('back',()=>setView('settings'))}/>
    <main className={c.main}>
     <h1 className={c.h1}>{w.done}</h1>
@@ -170,6 +178,12 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
      <button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide}`} onClick={start} autoFocus>{w.goAgain}</button>
      <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnWide}`} onClick={()=>screenChange('back',()=>setView('settings'))}>{w.change}</button>
     </div>
+    {/* the lower half: one coaching tip for this mode (what the drill teaches) and the best on this phone */}
+    <section className={c.tip} aria-labelledby="scan-tip">
+     <h2 className={c.tipH} id="scan-tip"><span className={c.tipIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></span>{w.tipHead}</h2>
+     <p className={c.tipText}>{w.tips[s.mode]}</p>
+     {best&&best.total>0&&<p className={c.tipBest}><span>{w.bestHead} · {w.modes[s.mode]}</span><b>{w.ofN(best.hit,best.total)}</b></p>}
+    </section>
    </main></div>;
  }
  const glyph=(m:typeof MODES[number])=>m==='colours'?<span className={c.modeDot} aria-hidden="true"/>:m==='numbers'?<span className={c.modeNum} aria-hidden="true">7</span>
@@ -192,6 +206,11 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
     <p className={c.place}>{w.place}</p>
     {/* fixed to the bottom on a phone; in the column beside the cue on a wide screen */}
   <div className={c.dock}><button type="button" className={`${c.btn} ${c.btnGold} ${c.btnWide} ${c.startBtn}`} onClick={start} data-scan-start="">{w.start}</button></div>
+    {/* what this mode teaches, under Start (fills the column beside the cue on a wide screen) */}
+    <section className={`${c.tip} ${c.tipHome}`} aria-labelledby="scan-tip-home">
+     <h2 className={c.tipH} id="scan-tip-home"><span className={c.tipIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12s-3.6 6.5-9.5 6.5S2.5 12 2.5 12Z" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></span>{w.tipHead}</h2>
+     <p className={c.tipText}>{w.tips[s.mode]}</p>
+    </section>
    </div>
   </main>
   {sheet&&<div className={c.sheet} data-closing={sheetS.closing?'':undefined} onClick={e=>{if(e.target===e.currentTarget)setSheet(false);}} onKeyDown={e=>{if(e.key==='Escape')setSheet(false);}}>

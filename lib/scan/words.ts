@@ -10,7 +10,8 @@ export type Words={langCode:'en'|'es';lang:string;app:string;tagline:string;age:
  sound:string;sounds:Record<Sound,string>;score:string;scoreLine:string;on:string;off:string;start:string;place:string;
  lastBest:(last:string,best:string)=>string;ofN:(hit:number,total:number)=>string;getReady:string;tapPause:string;left:(t:string)=>string;endless:string;
  paused:string;resume:string;end:string;right:string;wrong:string;passTo:(n:number)=>string;done:string;cuesShown:string;time:string;scoreHead:string;newBest:string;toBeat:(s:string)=>string;
- goAgain:string;change:string;noScore:string;wake:string;offline:string;guide:string;preview:string;pausedHint:string;settings:string;doneBtn:string};
+ goAgain:string;change:string;noScore:string;wake:string;offline:string;guide:string;preview:string;pausedHint:string;settings:string;doneBtn:string;
+ tipHead:string;tips:Record<Mode,string>;bestHead:string};
 const EN:Words={langCode:'en',lang:'Español',app:'Scan Trainer',tagline:'Look over the shoulder. Call it. Play.',age:'Age group',
  ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Adult'},show:'Show',
  modes:{colours:'Colors',numbers:'Numbers',arrows:'Arrows',mix:'Mix',pass:'Pass it'},
@@ -29,7 +30,9 @@ const EN:Words={langCode:'en',lang:'Español',app:'Scan Trainer',tagline:'Look o
  paused:'Paused',resume:'Resume',end:'End session',right:'Right',wrong:'Missed',passTo:n=>`Pass to ${n}`,done:'Session done',cuesShown:'Cues shown',time:'Time',scoreHead:'Calls right',
  newBest:'New best on this phone',toBeat:s=>`To beat next time: ${s}`,goAgain:'Go again',change:'Change settings',noScore:'Turn on “Coach keeps score” to get a result to beat.',
  wake:'Keep the screen on in your phone’s settings: this browser cannot.',offline:'Works offline once opened. Nothing leaves this phone.',guide:'How to use it, and drills',
- preview:'Preview',pausedHint:'Tap anywhere on the cue to pause.',settings:'Settings',doneBtn:'Done'};
+ preview:'Preview',pausedHint:'Tap anywhere on the cue to pause.',settings:'Settings',doneBtn:'Done',
+ tipHead:'Coach’s tip',bestHead:'Best on this phone',
+ tips:{colours:'Look over your shoulder before the ball arrives, not after. Two quick looks beat one long stare.',numbers:'Call the number out loud. Saying it proves you saw it, and it builds the habit of talking to teammates.',arrows:'Open your hips toward the arrow as you look, so your first touch can go that way.',mix:'Glance, then decide. When the cue changes type, your eyes should already be up.',pass:'Know where your teammate is before the ball comes. Then the pass is one touch, not three.'}};
 const ES:Words={langCode:'es',lang:'English',app:'Entrenador de escaneo',tagline:'Mira por encima del hombro. Dilo. Juega.',age:'Edad',
  ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Adultos'},show:'Mostrar',
  modes:{colours:'Colores',numbers:'Números',arrows:'Flechas',mix:'Mezcla',pass:'Pásala'},
@@ -48,5 +51,7 @@ const ES:Words={langCode:'es',lang:'English',app:'Entrenador de escaneo',tagline
  paused:'En pausa',resume:'Seguir',end:'Terminar la sesión',right:'Bien',wrong:'Falló',passTo:n=>`Pásale al ${n}`,done:'Sesión terminada',cuesShown:'Señales mostradas',time:'Tiempo',scoreHead:'Respuestas bien',
  newBest:'Nueva mejor marca en este teléfono',toBeat:s=>`Para superar la próxima vez: ${s}`,goAgain:'Otra vez',change:'Cambiar ajustes',noScore:'Activa “El entrenador lleva la cuenta” para tener una marca que superar.',
  wake:'Deja la pantalla encendida en los ajustes del teléfono: este navegador no puede.',offline:'Funciona sin conexión una vez abierto. Nada sale de este teléfono.',guide:'Cómo usarlo y ejercicios',
- preview:'Vista previa',pausedHint:'Toca la señal en cualquier parte para pausar.',settings:'Ajustes',doneBtn:'Listo'};
+ preview:'Vista previa',pausedHint:'Toca la señal en cualquier parte para pausar.',settings:'Ajustes',doneBtn:'Listo',
+ tipHead:'Consejo del entrenador',bestHead:'Mejor marca en este teléfono',
+ tips:{colours:'Mira por encima del hombro antes de que llegue el balón, no después. Dos miradas rápidas valen más que una larga.',numbers:'Di el número en voz alta. Decirlo demuestra que lo viste y crea el hábito de hablar con tus compañeros.',arrows:'Abre la cadera hacia la flecha mientras miras, así tu primer toque puede ir hacia allá.',mix:'Mira y luego decide. Cuando cambia el tipo de señal, tus ojos ya deben estar arriba.',pass:'Sabe dónde está tu compañero antes de que llegue el balón. Así el pase es de un toque, no de tres.'}};
 export const WORDS:Readonly<Record<'en'|'es',Words>>={en:EN,es:ES};
