@@ -12,7 +12,7 @@
 /* Buttons. */
 .tool,.pill,.save{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:44px;padding:0;border:0;border-radius:var(--btn-radius);
  background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-cream-edge);font:700 14px/1 var(--btn-font);cursor:pointer;flex:none;
- transition:translate .16s,box-shadow .16s,background-color .16s}
+ transition:translate .16s,box-shadow .16s,background-color .16s,filter .16s}
 .tool:active,.pill:active,.save:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-cream-edge)}
 .tool[aria-pressed=true],.pill[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 .tool:disabled,.pill:disabled,.save:disabled{opacity:.5;box-shadow:none;cursor:default;translate:none}
@@ -38,7 +38,7 @@
 
 /* Rail buttons: icon first, a small label under it (full and dock), a tooltip and shortcut on hover. */
 .railBtn{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:var(--rail-w);min-width:44px;height:52px;padding:0;border:0;border-radius:16px;
- background:transparent;color:var(--btn-ink-on-dark);font:800 10px/1 var(--btn-font);letter-spacing:.02em;cursor:pointer;flex:none;transition:background-color .16s,color .16s,translate .16s}
+ background:transparent;color:var(--btn-ink-on-dark);font:800 10px/1 var(--btn-font);letter-spacing:.02em;cursor:pointer;flex:none;transition:background-color .16s,color .16s,translate .16s,filter .16s}
 .railBtn svg{flex:none}
 .railBtn:not(:disabled):active{translate:0 2px}
 .railBtn[aria-pressed=true]{background:var(--btn-pink);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-pink-edge)}
@@ -258,3 +258,9 @@ path.picked{filter:drop-shadow(0 0 3px #ffe36e)}
 @media (prefers-reduced-motion:reduce){.headerSave{transition:none}.headerSave:active{translate:none}}
 /* the web board's play button: flat gold, no paper grain (owner, Nov 23 2026); the game keeps its textured face */
 [data-board-app] .playBtn{background:var(--btn-gold)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*, docs/ui/BUTTONS.md): mouse only, brighten +
+   gold ring outline on the raised pills; the transparent rail buttons get the global brightness only. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .tool.tool:not(:disabled,[aria-disabled=true]):hover,.pill.pill:not(:disabled,[aria-disabled=true]):hover,.save.save:not(:disabled,[aria-disabled=true]):hover,.sticker.sticker:not(:disabled,[aria-disabled=true]):hover,.fitChip.fitChip:not(:disabled,[aria-disabled=true]):hover,.headerSave.headerSave:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

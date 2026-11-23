@@ -14,7 +14,10 @@
 .testTitle{margin:0;font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
 .testLine{margin:0;font-size:17px;line-height:1.4}
 .page .testBtn,.testBtn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;margin:6px 0 5px;box-sizing:border-box;border:3px solid #fff2cd;border-radius:999px;
- background:#beded1;color:#244d40;box-shadow:0 5px 0 #8bac9d;font:800 17px/1 var(--sans,Arial,sans-serif);text-decoration:none;transition:transform .1s,box-shadow .1s}
+ background:#beded1;color:#244d40;box-shadow:0 5px 0 #8bac9d;font:800 17px/1 var(--sans,Arial,sans-serif);text-decoration:none;transition:transform .1s,box-shadow .1s,filter .16s}
 .testBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #8bac9d}
 @media(hover:hover){.testBtn:hover{background:#cbe6db}}
 .testBtn:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring. Hover only. */
+@media(hover:hover) and (pointer:fine){.testBtn.testBtn:hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}}

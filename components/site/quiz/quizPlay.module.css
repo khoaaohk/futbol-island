@@ -11,7 +11,7 @@
 
 /* top row: quit · progress with its net · streak · sound */
 .top{display:flex;align-items:center;gap:10px}
-.iconBtn{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--q-soft);cursor:pointer;transition:color .15s,transform .12s}
+.iconBtn{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--q-soft);cursor:pointer;transition:color .15s,transform .12s,filter .16s}
 .iconBtn:disabled{opacity:.35;cursor:default}
 @media(hover:hover){.iconBtn:not(:disabled):hover{color:var(--q-ink)}}
 .iconBtn:active:not(:disabled){transform:scale(.92)}
@@ -36,7 +36,7 @@
 .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
 .card{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:14px 16px;box-sizing:border-box;margin-bottom:5px;
  border:3px solid var(--q-edge);border-radius:18px;background:var(--q-face);box-shadow:0 5px 0 var(--q-edge);color:var(--q-ink);
- font:800 19px/1.25 var(--q-font);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s,background-color .15s,border-color .15s}
+ font:800 19px/1.25 var(--q-font);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s,background-color .15s,border-color .15s,filter .16s}
 .grid .card{justify-content:center;text-align:center;min-height:76px}
 .card:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--q-edge)}
 @media(hover:hover){.card:not(:disabled):not([data-state]):hover{background:#fff6d6}}
@@ -68,7 +68,7 @@
 
 /* buttons: the game's raised faces */
 .primary,.secondary,.wrongBtn{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;padding:0 24px;box-sizing:border-box;margin-bottom:5px;
- border:3px solid #fff2cd;border-radius:999px;font:800 19px/1 var(--q-font);letter-spacing:.01em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s,opacity .15s}
+ border:3px solid #fff2cd;border-radius:999px;font:800 19px/1 var(--q-font);letter-spacing:.01em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s,opacity .15s,filter .16s}
 .primary{background:#e9c16b;color:#244d40;box-shadow:0 5px 0 #a8863d}
 .secondary{background:#beded1;color:#244d40;box-shadow:0 5px 0 #8bac9d}
 .wrongBtn{background:#c9604b;border-color:#ffe3da;color:#fff;box-shadow:0 5px 0 #8f3d2d}
@@ -116,3 +116,10 @@
  .fill{transition:transform .2s linear}
 }
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*, docs/ui/BUTTONS.md): mouse only, brighten +
+   gold ring outline on the raised faces (answer cards before they are marked, gold/mint/coral pills); the round close icon gets
+   the global brightness only. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .card.card:not(:disabled,[aria-disabled=true],[data-state]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.wrongBtn.wrongBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}
