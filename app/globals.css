@@ -611,7 +611,7 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
     he saw around the site menu button): a mouse hover only brightens a touch (filter .16s) and, on the raised game-style buttons
     (gold, cream, mint pills, chips, rail pills), shows the gold ring as an outline, so the layout and the lip shadow never change.
     Hover only: press/click effects, sizes and handlers stay each button's own. */
- --btn-hover-filter:brightness(1.05);--btn-hover-ring:3px solid #ffd451;--btn-hover-ring-offset:3px;
+ --btn-hover-filter:brightness(1.05);--btn-hover-ring:0 solid transparent;--btn-hover-ring-offset:3px;
 }
 /* Every button gets the brightness (zero specificity: any button with its own filter or transition keeps it; the raised families
    add the ring and append filter to their own transition lists in their modules). Mouse only; never touch screens; never the
