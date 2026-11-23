@@ -36,7 +36,7 @@
 .hud .head em{flex:none;font-style:normal;font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1}
 .hud p{grid-column:1/-1;margin:2px 0 0;font-size:13px;line-height:1.35}
 .hud .head+p{margin-top:4px}
-.stop{grid-column:2;grid-row:1;align-self:start;min-height:var(--btn-height);padding:4px 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge);font:700 14px/1.15 var(--btn-font);transition:translate .16s,box-shadow .16s}
+.stop{grid-column:2;grid-row:1;align-self:start;min-height:var(--btn-height);padding:4px 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge);font:700 14px/1.15 var(--btn-font);transition:translate .16s,box-shadow .16s,filter .16s}
 .stop:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
 @media(prefers-reduced-motion:reduce){.stop{transition:none}}
 .payout{position:relative;display:flex;align-items:baseline;gap:8px;margin:6px 0 10px}
@@ -175,7 +175,7 @@
 @media (prefers-reduced-motion:reduce){.jarMeter span,.jarMeterWide span{transition:none}}
 .chipMain:focus-visible,.chipStop:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .chipStop{flex:none;display:grid;place-items:center;width:var(--btn-height,44px);height:var(--btn-height,44px);padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-mint);color:var(--btn-ink);
- box-shadow:0 3px 0 var(--btn-mint-edge);font:700 22px/1 var(--btn-font);cursor:pointer;transition:translate .16s,box-shadow .16s}
+ box-shadow:0 3px 0 var(--btn-mint-edge);font:700 22px/1 var(--btn-font);cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s}
 .chipStop:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
 @keyframes chipIn{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.hud[data-job-panel=fading]{transition:none}.hud[data-compact]{animation:none}.chipStop{transition:none}}
@@ -219,3 +219,8 @@
 .meter i{display:block;height:100%;border-radius:inherit;background:#5fae6e;transition:width .35s ease}
 .meter[data-chip]{position:absolute;left:16px;right:56px;bottom:3px;height:3px;margin:0;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.meter i{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .offer.offer:not(:disabled,[aria-disabled=true]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.chipStop.chipStop:not(:disabled,[aria-disabled=true]):hover,.stop.stop:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

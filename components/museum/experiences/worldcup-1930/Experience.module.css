@@ -17,7 +17,7 @@
 @media(max-width:600px),(pointer:coarse){.header{padding-top:calc(16px + env(safe-area-inset-top,0px));padding-right:var(--gr);padding-left:calc(100px + env(safe-area-inset-left,0px))}}
 .chapters{pointer-events:auto;display:flex;gap:0;background:var(--ground);border:1px solid var(--hair);border-radius:999px;padding:2px}
 .chapterBtn{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--muted);
- font:500 13px/1 var(--sans);transition:background-color .2s,color .2s,transform .12s}
+ font:500 13px/1 var(--sans);transition:background-color .2s,color .2s,transform .12s,filter .16s}
 .chapterBtn i{font-style:normal;font-variant-numeric:tabular-nums;font-weight:700}
 .chapterBtn[aria-current]{background:var(--ink);color:var(--ground)}
 .chapterBtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
@@ -198,7 +198,7 @@
 .swapBox{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;animation:rise .5s var(--spring) both}
 .swapBox p{margin:0;font-size:14px;color:var(--muted)}
 .swapBtn,.playBtn,.againBtn{min-height:48px;min-width:44px;padding:0 22px;border:0;border-radius:999px;background:var(--ink);color:var(--ground);font:600 15px/1 var(--sans);display:inline-flex;align-items:center;justify-content:center;gap:8px;
- transition:transform .12s,background-color .2s,opacity .2s}
+ transition:transform .12s,background-color .2s,opacity .2s,filter .16s}
 .swapBtn{background:var(--accent)}
 .swapBtn:active,.playBtn:active:not(:disabled),.againBtn:active{transform:scale(.95)}
 .playBtn:disabled{opacity:.35}
@@ -274,3 +274,8 @@
  .burst line{stroke-dashoffset:0}.hud,.spot,.goalMark{transition:none}.endRing,.endDot{transition:none}}
 /* The shared ending (modern/Ending, Oct 10 2026 play pass): shown once the ticket is punched, so the gold stamp waits for it. */
 .endWait{margin:0;font:500 15px/1.5 var(--sans);color:var(--muted)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .chapterBtn.chapterBtn:not(:disabled,[aria-disabled=true]):hover,.againBtn.againBtn:not(:disabled,[aria-disabled=true]):hover,.swapBtn.swapBtn:not(:disabled,[aria-disabled=true]):hover,.playBtn.playBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

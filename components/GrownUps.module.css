@@ -33,7 +33,7 @@
 .inline input{flex:1 1 200px;min-width:0;min-height:44px;border:1px solid #a8b78d;border-radius:14px;padding:8px 12px;font:inherit;font-size:16px;color:#244d40;background:#fffaf0}
 .inline input:focus-visible,.select select:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .preview{width:100%;height:520px;border:1px solid #d9dcc8;border-radius:14px;background:#fff}
-.primary{justify-self:start;min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;background:var(--btn-green);color:var(--btn-ink-on-dark);border:1px solid var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge);transition:translate .16s,box-shadow .16s}
+.primary{justify-self:start;min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;background:var(--btn-green);color:var(--btn-ink-on-dark);border:1px solid var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge);transition:translate .16s,box-shadow .16s,filter .16s}
 .primary:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
 .toggle,.select{display:flex;justify-content:space-between;align-items:center;gap:14px;width:100%;min-height:56px;padding:10px 14px;border:0;border-radius:18px;background:#fff9e9;color:#244d40;font:inherit;text-align:left;cursor:pointer}
 .toggle>span:first-child,.select>span{display:grid;gap:2px}.toggle small,.select small{font-size:12px;color:#69715d;line-height:1.35}
@@ -43,3 +43,8 @@
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(max-width:700px){.dialog{width:100vw;height:100dvh;max-height:100dvh;border-radius:0}.formats,.two,.practice{grid-template-columns:1fr}.stats b{font-size:24px}.card{padding:18px}.preview{height:440px}}
 @media(prefers-reduced-motion:reduce){.primary{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .jump a:not(:disabled,[aria-disabled=true]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -53,7 +53,7 @@
 
 /* controls (in the sheet) */
 .seg{display:flex;flex-wrap:wrap;gap:8px}
-.chip{min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);border:0;background:var(--tint);font-size:16px;font-weight:800;transition:transform .12s,background-color .12s}
+.chip{min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);border:0;background:var(--tint);font-size:16px;font-weight:800;transition:transform .12s,background-color .12s,filter .16s}
 .chip[aria-pressed=true]{background:var(--ink);color:var(--paper)}
 .stepper{display:flex;align-items:center;gap:12px}
 .stepBtn{width:56px;height:56px;flex:0 0 auto;border-radius:var(--r-pill);border:0;background:var(--tint);font-size:28px;font-weight:800;line-height:1}
@@ -86,7 +86,7 @@
 .doneBtn{min-height:44px;padding:0 20px;border:0;border-radius:var(--r-pill);background:var(--ink);color:var(--paper);font-size:16px;font-weight:800}
 .sheetBody{overflow-y:auto;padding:4px 16px max(20px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 
-.btn{min-height:60px;padding:0 24px;border-radius:var(--r-pill);border:0;background:var(--ink);color:var(--paper);font-size:19px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .12s}
+.btn{min-height:60px;padding:0 24px;border-radius:var(--r-pill);border:0;background:var(--ink);color:var(--paper);font-size:19px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .12s,filter .16s}
 .btnGold{background:var(--gold);color:var(--ink)}
 .btnGhost{background:var(--tint);color:var(--ink)}
 .btnLight{background:rgb(255 255 255 / .14);color:#fff}
@@ -152,7 +152,7 @@
 .chip{min-height:52px;padding:0 10px}
 .swatch{transition:background-color .18s ease,color .18s ease,opacity .18s ease,transform .12s}
 .dirBtn{transition:background-color .18s ease,color .18s ease,opacity .18s ease,transform .12s}
-.stepBtn{width:52px;height:52px;transition:background-color .15s,transform .12s,opacity .15s}
+.stepBtn{width:52px;height:52px;transition:background-color .15s,transform .12s,opacity .15s,filter .16s}
 .scale{margin:2px 64px 0}
 /* sheets: slide up with the backdrop fading in; on close slide down and fade out, then unmount (useSheet, 240 ms) */
 .sheet{animation:sheetFade 240ms ease-out both}
@@ -216,7 +216,7 @@
 /* the game's primary button (owner, Nov 22 2026: "like the primary button in the app"): gold on paper grain, a light rim, the darker
    raised bottom edge, and it sinks on press (the tokens of app/globals.css, as components/DoneButton.module.css) */
 .btnGold{border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);
- box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .16s,box-shadow .16s;margin-bottom:5px}
+ box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .16s,box-shadow .16s,filter .16s;margin-bottom:5px}
 .btnGold:active{transform:none;translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .btnGold:disabled{translate:none}
 
@@ -225,11 +225,11 @@
    SECONDARY: light cream, raised with a darker cream edge. SELECTED chip/segment: a warm mint tint with dark-green text and a raised
    edge, never a dark fill. UNSELECTED: light cream with a soft edge. Press: sinks 2-3 px. Focus ring only for the keyboard. */
 .doneBtn{min-height:42px;padding:0 18px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
- color:var(--btn-ink,#244d40);font-weight:800;box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d);transition:translate .14s,box-shadow .14s}
+ color:var(--btn-ink,#244d40);font-weight:800;box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d);transition:translate .14s,box-shadow .14s,filter .16s}
 .doneBtn:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
-.btn:not(.btnGold):not(.btnDanger){background:#fffaf0;color:var(--ink);box-shadow:0 3px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc;transition:translate .14s,box-shadow .14s}
+.btn:not(.btnGold):not(.btnDanger){background:#fffaf0;color:var(--ink);box-shadow:0 3px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc;transition:translate .14s,box-shadow .14s,filter .16s}
 .btn:not(.btnGold):not(.btnDanger):active{transform:none;translate:0 2px;box-shadow:0 1px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc}
-.chip,.segBtn,.fmtBtn,.mode,.swatch,.dirBtn,.stepBtn{transition:translate .12s,box-shadow .12s,background-color .12s}
+.chip,.segBtn,.fmtBtn,.mode,.swatch,.dirBtn,.stepBtn{transition:translate .12s,box-shadow .12s,background-color .12s,filter .16s}
 .chip:not([aria-pressed=true]),.segBtn:not([aria-pressed=true]),.fmtBtn:not([aria-pressed=true]),.mode:not([aria-pressed=true]),.dirBtn:not([aria-pressed=true]){background:#fffaf0;color:var(--ink);box-shadow:inset 0 0 0 1.5px #efe5cc}
 .chip[aria-pressed=true],.segBtn[aria-pressed=true],.fmtBtn[aria-pressed=true],.mode[aria-pressed=true],.dirBtn[aria-pressed=true],.choice[aria-checked=true]{background:#cfeedb;color:#244d40;border-color:transparent;box-shadow:0 3px 0 #9fd1b2}
 .swatch[aria-pressed=true]{box-shadow:0 3px 0 #9fd1b2,0 0 0 3px #cfeedb}
@@ -340,3 +340,9 @@
 .seg .chip{min-width:0;overflow-wrap:anywhere;hyphens:auto;line-height:1.1;padding:4px 8px}
 .swatch{min-width:0;overflow-wrap:anywhere;hyphens:auto;line-height:1.15}
 @media (max-width:400px){.summaryCard small,.summaryCard b{white-space:normal;overflow-wrap:anywhere;hyphens:auto}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .chip.chip:not(:disabled,[aria-disabled=true]):hover,.btnGold.btnGold:not(:disabled,[aria-disabled=true]):hover,.stepBtn.stepBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover,.doneBtn.doneBtn:not(:disabled,[aria-disabled=true]):hover{outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -27,7 +27,7 @@
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .secondary{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 /* Watch again / Replay level / Skip are the shared mint secondary pill (docs/ui/BUTTONS.md). */
-.row>.secondary.secondary,.skip.skip{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-mint-edge);transition:translate .16s,box-shadow .16s}
+.row>.secondary.secondary,.skip.skip{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-mint-edge);transition:translate .16s,box-shadow .16s,filter .16s}
 .row>.secondary.secondary:active,.skip.skip:active{translate:0 var(--btn-press);box-shadow:0 2px 0 var(--btn-mint-edge)}
 
 /* Loft meter: follows the finger; fills while the stroke is held still at its end. */
@@ -585,3 +585,8 @@
 @media(prefers-reduced-motion:no-preference){.game[data-game=puzzle] .callout[data-slow]{animation-duration:2.6s}}
 /* the ramp's words are a small tag, one line, so the goal and the keeper stay in view while they are read */
 .game[data-game=puzzle] .callout[data-slow]{padding:9px 18px 8px;max-width:calc(100% - 40px)}.game[data-game=puzzle] .callout[data-slow] b{font-size:19px;white-space:nowrap;-webkit-text-stroke-width:4px;text-shadow:3px 3px 0 var(--cm-ink)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .skip.skip:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

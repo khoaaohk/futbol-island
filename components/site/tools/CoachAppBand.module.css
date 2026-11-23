@@ -5,7 +5,7 @@
 .line{margin:12px 0 0;font-size:17px;line-height:1.5;max-width:46ch}
 .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:999px;font:800 17px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',ui-sans-serif,Roboto,Arial,sans-serif;text-decoration:none;
- transition:transform .14s cubic-bezier(.22,1,.36,1),box-shadow .14s ease,background-color .14s ease}
+ transition:transform .14s cubic-bezier(.22,1,.36,1),box-shadow .14s ease,background-color .14s ease,filter .16s}
 .primary{background:#e9c16b;color:#14221d}
 .ghost{background:#fbf7ee;color:#14221d}
 .btn:active{transform:scale(.97)}
@@ -32,3 +32,9 @@
 @media (hover:hover) and (pointer:fine){.band .btn:hover{transform:none;filter:brightness(1.05)}.band .ghost:hover{background:var(--btn-cream,#fff1d3) var(--btn-grain) center/128px 128px}}
 .band a.btn{color:var(--btn-ink,#244d40)}
 .phone{background:#fffaf0;box-shadow:0 0 0 2px #e6dcc4,0 10px 24px rgb(36 77 64 / .12)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .primary.primary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover{outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

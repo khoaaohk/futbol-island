@@ -42,3 +42,8 @@
 .ends b{position:absolute;top:-86px;transform:translateX(-50%);padding:3px 8px;border-radius:999px;background:var(--ink);color:#fff;font-size:12px;white-space:nowrap;pointer-events:none}
 @media(max-height:560px){.label{bottom:calc(112px + env(safe-area-inset-bottom,0px))}.timeline{bottom:calc(14px + env(safe-area-inset-bottom,0px))}.rail{height:52px}.facts{max-height:22vh}}
 @media(prefers-reduced-motion:reduce){.root,.label,.hint{animation:none}.rail i{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .finalToggle.finalToggle:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

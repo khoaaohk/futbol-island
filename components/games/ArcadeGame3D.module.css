@@ -28,9 +28,9 @@
    Show a hint) keep their quiet look with a 44px tap height. In-game action controls above are the documented
    arcade exception and are unchanged. */
 .game button{font-family:var(--btn-font)}
-.game .primary{min-height:var(--btn-height-lg);padding:12px 22px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s;background-blend-mode:soft-light}
+.game .primary{min-height:var(--btn-height-lg);padding:12px 22px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s,filter .16s;background-blend-mode:soft-light}
 .game .primary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
-.game .pause{width:var(--btn-icon);height:var(--btn-icon);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s;background-blend-mode:soft-light}
+.game .pause{width:var(--btn-icon);height:var(--btn-icon);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s,filter .16s;background-blend-mode:soft-light}
 .game .pause:not(:disabled):active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 .game .exit{min-height:var(--btn-height);padding:10px 16px;border-radius:var(--btn-radius);color:var(--btn-ink)}
 .game :is(.primary,.pause,.exit):focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
@@ -277,3 +277,8 @@
 .game[data-arcade-kind=pinball] .pbHud .pbPattern b{color:#ffe86d;font-weight:900}
 .game[data-arcade-kind=pinball] .pbHud .pbPattern[data-on]{opacity:1;transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .pbHud .pbPattern{transition:none;transform:translate(-50%,0)}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .primary.primary:not(:disabled,[aria-disabled=true]):hover,.boards.boards:not(:disabled,[aria-disabled=true]):hover,.pause.pause:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

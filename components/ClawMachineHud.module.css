@@ -46,3 +46,8 @@
 /* the win card sits at the top so the toy in the tray stays in view */
 .panel[data-claw-result]{top:calc(max(12px,env(safe-area-inset-top)) + 96px);bottom:auto}/* under the coins + tries pills */
 @media (max-height:500px){.panel[data-claw-result]{top:auto;bottom:10px;left:auto;right:16px;translate:0 0;width:min(340px,46%)}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .done.done:not(:disabled,[aria-disabled=true]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

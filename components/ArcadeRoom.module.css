@@ -59,3 +59,8 @@
 @media(max-width:430px){.headerActions{gap:6px}.header .headerActions button{min-width:0}.header .headerActions .buttonFace{padding:8px 13px}}
 /* Nov 21 2026: while the Claw Club is zoomed, its own HUD replaces the room's header, stick, actions and prompts. */
 .root[data-claw="true"] .header,.root[data-claw="true"] .partySlot,.root[data-claw="true"] :global(.touch-controls),.root[data-claw="true"] :global(.travel-actions),.root[data-claw="true"] .machinePrompt,.root[data-claw="true"] .gashaPrompt{display:none}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .header button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

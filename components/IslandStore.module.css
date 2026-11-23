@@ -63,3 +63,8 @@
 .equipped .details button:not(.learnButton),.details button:not(.learnButton):disabled{box-shadow:none}
 .equipped .details button:not(.learnButton){background:#e5e9ce;color:#355840}
 .details button:not(.learnButton):disabled{background:#e5e1c8;color:#61705b}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .tabs button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

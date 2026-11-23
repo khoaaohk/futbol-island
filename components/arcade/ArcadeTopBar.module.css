@@ -19,7 +19,7 @@
 .pill[data-hidden]{visibility:hidden}
 .pause.pause{justify-self:end;display:grid;place-items:center;width:var(--arcade-bar-h,44px);height:var(--arcade-bar-h,44px);min-width:0;min-height:0;margin:0;padding:0;
  border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:50%;background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
- color:var(--btn-ink,#e9f5ff);box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;transition:translate .16s,box-shadow .16s;touch-action:manipulation}
+ color:var(--btn-ink,#e9f5ff);box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s;touch-action:manipulation}
 .pause.pause:not(:disabled):active{transform:none;translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #121329)}
 .pause.pause:disabled{opacity:.5;cursor:default}
 .pause.pause:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
@@ -32,3 +32,8 @@
 }
 @media (max-width:360px){.pill.pill{gap:6px;padding:6px 10px}.pill b{font-size:22px}.pill span{font-size:10px;letter-spacing:.04em}}
 @media (prefers-reduced-motion:reduce){.bump{animation:none}.pause.pause{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .pause.pause:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -50,13 +50,13 @@
  .deck[data-ready] .card[data-flipped] .back{transform:rotateY(0)}
  /* The Flip button sits at the foot of the card (keyboard and screen readers); a tap anywhere on the card flips it too. */
  .flip{position:absolute;left:20px;bottom:16px;min-height:var(--tap,44px);padding:0 20px;border:0;border-radius:var(--r-pill,999px);font:inherit;font-size:16px;font-weight:700;
-  background:var(--ink,#14221d);color:#fff;cursor:pointer;z-index:2;transition:transform .15s ease}
+  background:var(--ink,#14221d);color:#fff;cursor:pointer;z-index:2;transition:transform .15s ease,filter .16s}
  .card[data-color=red] .flip{background:#fff;color:var(--card-red)}
  .card[data-color=pitch] .flip{background:#fff;color:var(--card-pitch)}
  .flip:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
  .flip:active{transform:scale(.96)}
  .controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s2,16px)}
- .arrow{flex:none;width:52px;height:52px;border:0;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fff;font:inherit;font-size:22px;font-weight:700;cursor:pointer;transition:transform .15s ease,opacity .15s ease}
+ .arrow{flex:none;width:52px;height:52px;border:0;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fff;font:inherit;font-size:22px;font-weight:700;cursor:pointer;transition:transform .15s ease,opacity .15s ease,filter .16s}
  .arrow:disabled{opacity:.3;cursor:default}
  .arrow:not(:disabled):active{transform:scale(.94)}
  .arrow:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
@@ -98,4 +98,9 @@
  .kind{font-size:7.5pt}
  .back p{font-size:8.5pt!important;line-height:1.25!important}
  .name{font-size:9.5pt!important}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .flip.flip:not(:disabled,[aria-disabled=true]):hover,.arrow.arrow:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

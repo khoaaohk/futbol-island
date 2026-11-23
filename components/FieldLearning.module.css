@@ -94,7 +94,7 @@
 .bottom .quizTools svg{width:20px;height:20px}
 
 .corners .close{width:auto;min-width:76px;flex-basis:auto;padding:10px 18px;border-radius:999px;font-weight:700}
-.camera.camera,.chat.chat,.transport button,.choose.choose{background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
+.camera.camera,.chat.chat,.transport button,.choose.choose{background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s,filter .16s}
 .camera.camera,.chat.chat,.transport button{border-radius:50%}
 .camera:active,.chat:active,.transport button:active,.choose:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #a8863d!important}
 @media(prefers-reduced-motion:reduce){.camera.camera,.chat.chat,.transport button,.choose.choose{transition:none}}
@@ -121,7 +121,7 @@
 
 /* End-of-play choices (Quiz yourself / Watch again) are the shared gold primary pill (docs/ui/BUTTONS.md), matching
    the textured round transport controls beside them instead of a flat #f4cc7c face with a thin rim. */
-.bottom .endActions>button{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s;background-blend-mode:soft-light}
+.bottom .endActions>button{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s,filter .16s;background-blend-mode:soft-light}
 .bottom .endActions>button:hover{background:var(--btn-gold) var(--btn-grain) center/128px 128px;transform:none;background-blend-mode:soft-light}
 .bottom .endActions>button:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 @media(prefers-reduced-motion:reduce){.bottom .endActions>button{transition:none}}
@@ -146,3 +146,8 @@
 /* QA Nov 14 2026: at 320 px the centred "Choose plays" pill touched Done (≈1 px). A touch narrower and nudged left on the
    smallest phones; the camera button keeps 20 px of air on the left. */
 @media(max-width:350px){.corners .choose,.corners button.choose[data-navigation]{--navigation-width:132px;left:calc(50% - 12px)}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .transport button:not(:disabled,[aria-disabled=true]):hover,.bottom .endActions>button:not(:disabled,[aria-disabled=true]):hover,.bottom .endActions>button:nth-child(2):not(:disabled,[aria-disabled=true]):hover,.retry.retry:not(:disabled,[aria-disabled=true]):hover,.quizSecondary.quizSecondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

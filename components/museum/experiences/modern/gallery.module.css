@@ -31,7 +31,7 @@
 .art svg{display:block;width:100%;height:auto;overflow:visible}
 /* Buttons: an ink pill (primary), an outlined pill (ghost); ≥ 44 px; press = scale. */
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.btn,.ghost{min-height:48px;padding:12px 22px;border-radius:999px;font:600 15px/1.2 var(--sans);letter-spacing:.01em;transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s}
+.btn,.ghost{min-height:48px;padding:12px 22px;border-radius:999px;font:600 15px/1.2 var(--sans);letter-spacing:.01em;transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s,filter .16s}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--ground)}
 .ghost{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
 .btn:active:not(:disabled),.ghost:active:not(:disabled){transform:scale(.96)}
@@ -56,3 +56,8 @@
 .veil{position:absolute;z-index:1;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 84px);pointer-events:none;background:linear-gradient(var(--ground) 62%,rgba(246,244,239,0))}
 /* A ghost pill that is a chosen answer (aria-pressed) fills with the accent. */
 .ghost[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover,.ghost.ghost:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

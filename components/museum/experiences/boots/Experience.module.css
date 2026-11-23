@@ -185,3 +185,8 @@
 
 /* One start button, centred with its line under it (Oct 14 2026, user: no second copy above). */
 .introDock{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.introDock .say{flex:none}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .tool.tool:not(:disabled,[aria-disabled=true]):hover,.hold.hold:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

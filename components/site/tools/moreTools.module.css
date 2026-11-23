@@ -103,3 +103,8 @@ a.linkBtn,a.linkBtn:visited{color:var(--paper);text-decoration:none}
 .levelBar{display:block;width:100%;height:16px}
 .levelBar rect:first-child{fill:rgb(251 247 238 / .14)}
 .levelBar rect+rect{fill:var(--gold)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .round.round:not(:disabled,[aria-disabled=true]):hover,.star.star:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -100,7 +100,7 @@
 .tag{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:999px;background:#1d1d1b10;font:600 11px/1.5 var(--mono);letter-spacing:.06em;vertical-align:1px}
 .buttons{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end}
 .btn,.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 24px;border-radius:999px;font:600 16px/1.2 var(--sans);letter-spacing:.01em;cursor:pointer;
- transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s;touch-action:manipulation}
+ transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s,filter .16s;touch-action:manipulation}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:#f7f7f3}
 .ghost{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
 .btn[data-accent]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -126,3 +126,8 @@
 
 /* Paper halo (shared look, anatomy/paper-kit PAPER_CSS): one soft diffuse shadow under each base plate. */
 .card :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -290,3 +290,8 @@
 .catchFotd{background:#e3f4ec;color:#244d40}.catchFotd b{color:#1f6b4c;font-weight:900}
 .condition{margin:5px 0 0;font-size:12.5px;font-weight:700;line-height:1.35;color:#3a5b50}
 @media(max-width:600px),(pointer:coarse){.condition{font-size:12px}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .catchSell.catchSell:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

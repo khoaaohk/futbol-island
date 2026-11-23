@@ -21,3 +21,8 @@
 .coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a3,#e9b33b 60%,#a8863d)}
 .list{list-style:none;margin:0;padding:0;width:min(420px,100%);display:grid;gap:8px}
 .list li{padding:12px 14px;background:#fff;border:1px solid #d9d6cf;border-radius:6px}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .row button:not(:disabled,[aria-disabled=true]):hover,.block>button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

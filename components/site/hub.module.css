@@ -38,7 +38,7 @@ main:has(>nav[data-rail]) .inner.inner{grid-template-columns:minmax(0,1fr);gap:v
 .line{grid-column:2;grid-row:3;align-self:start;max-height:2.8em;margin-top:2px;font-size:15px;line-height:1.4;color:var(--ink-soft);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .more{display:grid;gap:var(--s2)}
 .moreSum{display:inline-flex;align-items:center;justify-self:start;gap:12px;min-height:var(--tap);padding:0 20px;box-sizing:border-box;border-radius:var(--r-pill);
- background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font:700 var(--t-cap)/1 var(--sans);cursor:pointer;list-style:none;transition:translate .16s}
+ background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font:700 var(--t-cap)/1 var(--sans);cursor:pointer;list-style:none;transition:translate .16s,filter .16s}
 .moreSum::-webkit-details-marker{display:none}
 .moreSum:active{translate:0 2px}
 .moreSum:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
@@ -74,4 +74,9 @@ main:has(>nav[data-rail]) .inner.inner{grid-template-columns:minmax(0,1fr);gap:v
  .ico{width:36px;height:36px;border-radius:10px}
  .line{-webkit-line-clamp:1;line-clamp:1;max-height:1.4em}
  .bigIco{width:52px;height:52px}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .moreSum.moreSum:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

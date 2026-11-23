@@ -25,3 +25,8 @@
 @media (pointer:coarse){.keys.keys{display:none}}
 @media (max-height:520px){.card.card{gap:8px}.resume.resume{font-size:18px}}
 @media (prefers-reduced-motion:reduce){.resume.resume:active{translate:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .resume.resume:not(:disabled,[aria-disabled=true]):hover,.small.small:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

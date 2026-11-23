@@ -48,3 +48,8 @@
 .spot .dismiss{position:absolute;right:-14px;top:-18px;width:44px;height:44px;font-size:18px;border-radius:50%;border:2px solid #fff2cd;background:#244d40;color:#fff2cd;font-weight:800;line-height:1;padding:0}
 @keyframes spotIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(prefers-reduced-motion:reduce){.spot{animation:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

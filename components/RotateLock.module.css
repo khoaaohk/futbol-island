@@ -29,3 +29,8 @@
 :global(body:has([data-arcade-kind])) .lock .leave:active{transform:none;translate:0 3px;box-shadow:0 1px 0 #121329}
 :global(body:has([data-arcade-kind])) .lock .leave:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){:global(body:has([data-arcade-kind])) .lock p{rotate:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .leave.leave:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

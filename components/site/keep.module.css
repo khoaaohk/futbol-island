@@ -23,7 +23,7 @@
 /* the rest of the links: one quiet disclosure under the grid */
 .more{display:grid;gap:var(--s2)}
 .moreSum{display:inline-flex;align-items:center;justify-self:start;gap:12px;min-height:var(--tap);padding:0 20px;box-sizing:border-box;border-radius:var(--r-pill);
- background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font:700 var(--t-cap)/1 var(--sans);cursor:pointer;list-style:none;transition:translate .16s}
+ background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font:700 var(--t-cap)/1 var(--sans);cursor:pointer;list-style:none;transition:translate .16s,filter .16s}
 .moreSum::-webkit-details-marker{display:none}
 .moreSum:active{translate:0 2px}
 .moreSum:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
@@ -54,3 +54,8 @@ nav.toc li a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-of
 /* a page with a rail lists its sections in the rail (owner, Nov 20 2026: "it should list what's on that page to smooth scroll down"),
    so "On this page" is not shown twice; it stays in the HTML */
 main:has(>nav[data-rail]) .toc{display:none}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .moreSum.moreSum:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

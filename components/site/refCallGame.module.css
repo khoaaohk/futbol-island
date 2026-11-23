@@ -3,7 +3,7 @@
 .intro,.play,.done{display:grid;gap:var(--s2,16px);--yellow:#f5c518;--red:#c8202f;--pitch:#1d6b55;--gold:#e9c16b}
 .intro p,.done p{margin:0}
 .start{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border:0;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fff;
- font:inherit;font-size:17px;font-weight:700;cursor:pointer;transition:transform .15s ease}
+ font:inherit;font-size:17px;font-weight:700;cursor:pointer;transition:transform .15s ease,filter .16s}
 .start:active{transform:scale(.97)}
 .start:focus-visible,.choice:focus-visible,.card:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
 @media(hover:hover){.start:hover{transform:translateY(-1px)}}
@@ -55,3 +55,8 @@
  .card[data-answered] .back{opacity:1}
 }
 @media print{.play,.intro button{display:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .start.start:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

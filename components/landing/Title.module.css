@@ -133,7 +133,7 @@ button.backLink.backLink.backLink.backLink{position:absolute}
 :global(html[data-title-code]) .actions[data-title-state=boot] [data-boot-card=returning]{display:grid}
 .start{position:relative;overflow:hidden;display:grid;justify-items:center;gap:2px;width:100%;min-height:68px;padding:8px 24px 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
  background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;
- transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+ transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1),filter .16s}
 .start span{font-family:var(--btn-font,inherit);font-weight:800;font-size:29px;line-height:1}
 .start small{font-size:13px;font-weight:800;letter-spacing:.03em}
 /* A long label ("Welcome back, let's play") stays on ONE line at the same pill height (user, Oct 22 2026). */
@@ -150,7 +150,7 @@ button.backLink.backLink.backLink.backLink{position:absolute}
 .start:focus-visible,.haveCode:focus-visible,.quiet:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .start:disabled,.haveCode:disabled{cursor:progress}
 .haveCode{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;width:100%;padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);
- box-shadow:0 4px 0 var(--btn-mint-edge);font-size:16px;font-weight:800;cursor:pointer;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+ box-shadow:0 4px 0 var(--btn-mint-edge);font-size:16px;font-weight:800;cursor:pointer;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1),filter .16s}
 @media(hover:hover){.haveCode:hover{scale:1.03}}
 .haveCode:active{translate:0 var(--btn-press);scale:.98;box-shadow:0 1px 0 var(--btn-mint-edge)}
 .quiet{min-height:44px;padding:8px 14px;border:0;background:none;color:inherit;font-size:15px;font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
@@ -400,3 +400,8 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 /* Under the 320 px floor (200% zoom ≈ 195 px wide; QA robust pass 2): "For grown-ups" overlapped Back. Two short lines beside it. */
 @media(max-width:299px){.grownLink.grownTop.grownTop.grownTop{max-width:84px;padding:0 2px;white-space:normal;text-align:right;line-height:1.15;font-size:12px}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .start.start:not(:disabled,[aria-disabled=true]):hover,.haveCode.haveCode:not(:disabled,[aria-disabled=true]):hover,.donateButton.donateButton:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

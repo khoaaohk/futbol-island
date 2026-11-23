@@ -11,10 +11,15 @@
 .depth summary::before{content:'+';display:grid;place-items:center;flex:none;width:32px;height:32px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 20px/1 var(--btn-font);box-shadow:0 3px 0 var(--btn-green-edge);transition:rotate .2s ease}
 .depth[open] summary::before{rotate:45deg}
 .depth>p{margin:8px 0 6px 42px;font-size:14px;color:#4c6a5e}
-.depth button{margin-top:12px;padding:14px 14px 14px 18px;min-height:var(--btn-height-lg);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:#fffaf0;color:var(--btn-ink);font-weight:700;box-shadow:0 4px 0 #d9cfb2;transition:translate .12s ease,box-shadow .12s ease}
+.depth button{margin-top:12px;padding:14px 14px 14px 18px;min-height:var(--btn-height-lg);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:#fffaf0;color:var(--btn-ink);font-weight:700;box-shadow:0 4px 0 #d9cfb2;transition:translate .12s ease,box-shadow .12s ease,filter .16s}
 .depth button span{flex:1;min-width:0}
 .depth button small{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:2px solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font-size:12px;font-weight:800;box-shadow:0 2px 0 var(--btn-gold-edge)}
 .depth button small::after{content:'→'}
 @media(hover:hover){.depth button:hover{background:#fffdf5}}
 .depth button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #d9cfb2}
 @media(prefers-reduced-motion:reduce){.depth summary::before,.depth button{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .depth button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

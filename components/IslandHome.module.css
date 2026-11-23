@@ -8,3 +8,8 @@
 .home .collection button{box-shadow:0 4px 0 var(--btn-cream-edge)}
 .home .collection button[aria-pressed=true]{border-color:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 @media(prefers-reduced-motion:reduce){.home .tools button:active,.home .shop:active{translate:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .home .tools button:not(:disabled,[aria-disabled=true]):hover,.home .collection button:not(:disabled,[aria-disabled=true]):hover,.shop.shop:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

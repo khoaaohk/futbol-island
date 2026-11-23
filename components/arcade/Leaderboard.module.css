@@ -117,3 +117,8 @@
 /* Drawn board pictures (BoardIcon.tsx): ink line art needs a light ground, so on the dark island / neon boards each sits on a small
    paper disc. The comic page (components/games/comic) is already paper and drops the disc. */
 .pic svg,.dialog .icon svg{box-sizing:content-box;padding:3px;border-radius:50%;background:#fff3d6}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .chip.chip:not(:disabled,[aria-disabled=true]):hover,.step.step:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

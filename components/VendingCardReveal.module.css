@@ -17,3 +17,8 @@
 .reveal button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(max-height:550px) and (orientation:landscape){.content{width:min(820px,100%);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto auto;gap:7px 20px}.content header{grid-column:2}.cardTouch{grid-column:1;grid-row:1/5;min-height:0;height:100%}.card{--w:min(55vh,240px)}.caption{grid-column:2;min-height:0}.caption strong{font-size:23px}.caption p{font-size:13px}.content nav,.content small{grid-column:2}.content nav{gap:6px}.content nav button{padding-inline:10px}}
 @media(prefers-reduced-motion:reduce){.firstCard,.nextCard{animation:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .content nav button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

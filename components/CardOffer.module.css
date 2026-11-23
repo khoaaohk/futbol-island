@@ -31,7 +31,7 @@
 .mini{width:var(--w)!important}
 /* The dock's round yellow page arrows, over the peeking cards just outside the front card. */
 .arrow{position:absolute;z-index:4;top:50%;display:grid;place-items:center;width:60px;height:60px;margin-top:-30px;padding:0;border-radius:50%;border:0;background:var(--btn-gold-bright);color:#244d40;cursor:pointer;
- box-shadow:0 3px 0 var(--btn-gold-bright-edge),0 0 0 3px #244d4055;touch-action:manipulation;transition:translate .16s,box-shadow .16s}
+ box-shadow:0 3px 0 var(--btn-gold-bright-edge),0 0 0 3px #244d4055;touch-action:manipulation;transition:translate .16s,box-shadow .16s,filter .16s}
 .arrow svg{width:26px;height:26px}
 .prev{left:max(4px,calc(50% - var(--w) * .5 - 48px))}
 .next{right:max(4px,calc(50% - var(--w) * .5 - 48px))}
@@ -58,7 +58,7 @@
 .stage[data-chosen] [data-picked] .shine::before{transform:translateX(16%);transition:transform .5s cubic-bezier(.3,0,.3,1)}
 .stage[data-chosen] .choice[data-pos=left]:not([data-picked]){opacity:0;transform:translateX(calc(var(--w) * -.9)) scale(.7) rotate(-12deg);transition:transform .32s cubic-bezier(.5,0,.8,.4),opacity .32s ease-in}
 .stage[data-chosen] .choice[data-pos=right]:not([data-picked]){opacity:0;transform:translateX(calc(var(--w) * .9)) scale(.7) rotate(12deg);transition:transform .32s cubic-bezier(.5,0,.8,.4),opacity .32s ease-in}
-.stage[data-chosen] .caption,.stage[data-chosen] .note,.stage[data-chosen] .choose,.stage[data-chosen] .arrow{opacity:0;transition:opacity .2s ease-out}
+.stage[data-chosen] .caption,.stage[data-chosen] .note,.stage[data-chosen] .choose,.stage[data-chosen] .arrow{opacity:0;transition:opacity .2s ease-out,filter .16s}
 /* The chosen back is one layer for its short turn (MiniCard is static at rest). */
 .stage[data-chosen] [data-picked]>span{will-change:transform,opacity}
 
@@ -146,3 +146,8 @@
 
 /* Oct 15 2026 (user): Done sits top right in the reveal, even while Flip has not loaded yet. */
 .reveal .doneRight{margin-left:auto}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .primary.primary:not(:disabled,[aria-disabled=true]):hover,.arrow.arrow:not(:disabled,[aria-disabled=true]):hover,.pill.pill:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

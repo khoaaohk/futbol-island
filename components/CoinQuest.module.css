@@ -25,7 +25,7 @@
 .quest{background:#fff2d3f5;border:0;border-radius:28px 48px 24px 24px;box-shadow:0 7px 0 #173e3726;padding:26px}
 .quest h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:28px;line-height:1.3}
 .ballSelector{padding:18px 0;gap:10px}
-.ballSelector button{background:var(--btn-gold-bright);border:2px solid #fff0cc;border-radius:40% 35% 42% 32%;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate 150ms ease,box-shadow 150ms ease}
+.ballSelector button{background:var(--btn-gold-bright);border:2px solid #fff0cc;border-radius:40% 35% 42% 32%;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate 150ms ease,box-shadow 150ms ease,filter .16s}
 .ballSelector button[data-earned=true]{background:#b4d9bd;color:#214d3d}
 .ballSelector button[aria-pressed=true]{background:#244d40;color:#fff3d2;outline:3px solid #fa8bd2;outline-offset:2px}
 .selectedBall{background:#d7e8d4;border:0;border-radius:24px 12px 26px 14px;padding:20px}
@@ -36,7 +36,7 @@
 @media(max-width:600px){.quest{padding:24px 22px}}
 
 /* Shared families (docs/ui/BUTTONS.md): green primary pill and mint secondary pill; 44px tap height everywhere. */
-.primary,.secondary{border-radius:var(--btn-radius);font-family:var(--btn-font);transition:translate .16s,box-shadow .16s}
+.primary,.secondary{border-radius:var(--btn-radius);font-family:var(--btn-font);transition:translate .16s,box-shadow .16s,filter .16s}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge)}
 .secondary{background:var(--btn-mint);color:var(--btn-ink);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-mint-edge)}
 /* Button families are 700 weight (docs/ui/UI_SPEC.md); the 3px rim stays inside the 44px height. */
@@ -51,3 +51,8 @@
 .hud{width:min(360px,calc(100% - 36px))}
 .near{box-sizing:border-box;min-height:66px;display:flex;align-items:center;padding:10px 16px;border-radius:14px;background:rgba(244,232,193,.95);color:#294c40;border:1px solid #ffefd0;box-shadow:0 0 0 2px #fff3c9ad,0 0 24px #ffdd828c,0 0 40px #ffe8a838;font-size:15px;font-weight:700;line-height:1.35}
 @media(max-width:600px),(pointer:coarse){.near{min-height:58px;padding:6px 12px;font-size:14px}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .ballSelector button:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

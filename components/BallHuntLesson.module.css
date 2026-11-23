@@ -140,7 +140,7 @@
 
 /* Sep 30 2026: "Previous step" is a round arrow (the book reader's arrow style), so the step button on the right gets the rest
    of the row and its label doesn't wrap. The footer is always one row: arrow left, main button filling the remaining width. */
-.previousArrow{display:grid;place-items:center;box-sizing:border-box;flex:none;width:var(--btn-icon,48px);height:var(--btn-icon,48px);min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:translate .15s,box-shadow .15s}
+.previousArrow{display:grid;place-items:center;box-sizing:border-box;flex:none;width:var(--btn-icon,48px);height:var(--btn-icon,48px);min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:translate .15s,box-shadow .15s,filter .16s}
 .previousArrow:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
 .previousArrow:disabled{opacity:.45;cursor:default;translate:none}
 .previousArrow:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
@@ -152,3 +152,8 @@
 /* The shared pill (DoneButton.module.css) forces flex:0 0 auto !important, so with width:auto and an absolutely placed label the
    button above collapsed to its border (an empty sliver right of the arrow). Out-rank it so it grows into the row. */
 .footer.footer button.next.next{flex:1 1 0!important}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .pathLink button:not(:disabled,[aria-disabled=true]):hover,.previousArrow.previousArrow:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}
