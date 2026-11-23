@@ -1,7 +1,7 @@
 /* Coaches Board → Tactics board. Full screen since Oct 10 2026 (Miro/Figma style): the pitch is a canvas filling the screen,
    with floating rails over it. Board look: green pitch, magnetic counters, marker ink. Controls use the island's tokens
    (docs/ui/BUTTONS.md): cream buttons, pink when selected, dark green trays. Motion is transform/opacity only. */
-.fullscreen{position:fixed;inset:0;z-index:40;background:#2d6f39}
+.fullscreen{position:fixed;inset:0;z-index:40;background:#608870}
 .root:focus{outline:none}
 .root{position:absolute;inset:0;overflow:hidden;color:var(--btn-ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;touch-action:none;
  --rail-w:64px;--gap:12px;--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}
@@ -151,7 +151,7 @@
 .root[data-viewing] .fitChip{top:auto;bottom:calc(140px + var(--sab))}
 
 /* The canvas: the whole screen; the pitch is drawn inside it. */
-.surface{position:absolute;inset:0;overflow:hidden;touch-action:none;background:#2d6f39;contain:strict}
+.surface{position:absolute;inset:0;overflow:hidden;touch-action:none;background:#608870/* the island lawn around the pitch (lib/coaches/board/art.ts GREEN.lawn) */;contain:strict}
 .world{position:absolute;inset:0;transform-origin:0 0}
 .surface::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;
  background:linear-gradient(115deg,#ffffff00 30%,#ffffff1f 44%,#ffffff08 52%,#ffffff00 64%),linear-gradient(#ffffff12,#ffffff00 18%)}
@@ -239,3 +239,22 @@ path.picked{filter:drop-shadow(0 0 3px #ffe36e)}
    larger tap area no longer pokes out sideways */
 [data-board-app] .sticker{min-width:max-content;white-space:nowrap}
 [data-board-app] .sticker::before{inset:-7px 0}
+/* Nov 23 2026 (owner), /board only (the game passes no saveSlot, so it never gets these classes): the top bar over the pitch is
+   format | the play's name, centred | undo/redo, three pills of one height; Save lives in the shell's header, opposite Back. */
+.topWeb{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);justify-content:stretch}
+.topWeb>.group{box-sizing:border-box;min-height:52px;padding:4px}
+.topWeb>.webFormat{justify-self:start;padding:4px 10px}
+.topWeb>.webName{justify-self:center;max-width:min(40vw,360px);padding:4px 10px}
+.topWeb>.webRight{justify-self:end}
+.topWeb .tape{rotate:none}
+.root[data-mode=full] .topWeb>.webName{max-width:min(36vw,420px)}
+/* the header's Save: Back's size, rim, radius and gold lip, flat gold (no grain), UI sans 800, keyboard-only focus ring */
+.headerSave{box-sizing:border-box;height:var(--btn-height,44px);min-width:var(--btn-nav-width,76px);padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);
+ border-radius:999px;background:var(--btn-gold,#e9c16b);color:var(--btn-ink,#244d40);font:800 14px/1 var(--btn-font);white-space:nowrap;cursor:pointer;
+ box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s,filter .16s;-webkit-tap-highlight-color:transparent}
+.headerSave:active{translate:0 2px;box-shadow:0 1px 0 var(--btn-gold-edge),var(--btn-halo)}
+.headerSave:focus{outline:none}.headerSave:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset,3px)}
+@media (hover:hover) and (pointer:fine){.headerSave:hover{filter:brightness(1.05)}}
+@media (prefers-reduced-motion:reduce){.headerSave{transition:none}.headerSave:active{translate:none}}
+/* the web board's play button: flat gold, no paper grain (owner, Nov 23 2026); the game keeps its textured face */
+[data-board-app] .playBtn{background:var(--btn-gold)}

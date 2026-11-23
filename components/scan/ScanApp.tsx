@@ -263,5 +263,5 @@ function Top({w,lang,embed,onBack}:{w:Words;lang:Lang;embed:boolean;onBack?:()=>
  const left=embed?null:onBack?<HeaderGoldBack key="summary" lang={lang} onBack={onBack} data={{'data-scan-back':''}}/>
   :<HeaderGoldBack key="settings" lang={lang} onBack={()=>goMiniBack(lang,guide)} data={{'data-scan-coach':''}}/>;
  /* the language lives in the settings sheet (owner, Nov 22 2026: the language button only on the coach app's Home) */
- return <AppHeader lang={lang} left={left} title={w.app} sub="Futbol Island" exitAria="" exit={false}/>;
+ return <AppHeader lang={lang} left={left} title={w.app} exitAria="" exit={false}/>;
 }

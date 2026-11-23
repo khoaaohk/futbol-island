@@ -9,14 +9,16 @@ import {SHELL_WORDS,type AppLang} from '@/lib/i18n/appLangs';
  * A 1fr | auto | 1fr grid, so the title is centred on the screen whatever sits at the sides: left = the way back inside the coach
  * apps (Home inside a coach tool, "Coach" in /scan and /board when opened from the coach app, else an empty slot); centre = the
  * screen's title and a small line under it (they crossfade between screens, components/motion/motion.css); right = the language
- * (a two-letter code) and then the gold Exit, the game's navigation button, which leaves for the page the coach came from.
+ * (a two-letter code) and then the gold Exit, the game's navigation button, which leaves for the page the coach came from; or the
+ * screen's own action in `right` (/board: Save, mirroring Back; owner Nov 23 2026).
  */
-export function AppHeader({left,title,sub,lang,onLang,exitLabel,exitAria,exitData,exit=true,exitHome,className=''}:{left?:ReactNode;title:ReactNode;sub?:ReactNode;lang:AppLang;onLang?:()=>void;exitLabel?:string;exitAria:string;exitData?:Record<string,string>;exit?:boolean;exitHome?:string;className?:string}){
+export function AppHeader({left,right,title,sub,lang,onLang,exitLabel,exitAria,exitData,exit=true,exitHome,className=''}:{left?:ReactNode;right?:ReactNode;title:ReactNode;sub?:ReactNode;lang:AppLang;onLang?:()=>void;exitLabel?:string;exitAria:string;exitData?:Record<string,string>;exit?:boolean;exitHome?:string;className?:string}){
  const other=lang==='es'?'en':'es';
  return <header className={`${h.bar} ${className}`}>
   <div className={h.left}>{left}</div>
   <div className={h.title}><b>{title}</b>{sub!=null&&<span>{sub}</span>}</div>
   <div className={h.right}>
+   {right}
    {onLang&&<button type="button" className={h.lang} lang={other} aria-label={other==='es'?'Español':'English'} onClick={onLang}>{other.toUpperCase()}</button>}
    {exit&&<BackButton {...exitData} className={h.exit} label={exitLabel??SHELL_WORDS[lang].exit} aria-label={exitAria} onBack={()=>{window.location.assign(exitHref(lang,exitHome));}}/>}
   </div>

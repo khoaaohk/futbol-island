@@ -5,6 +5,9 @@ import type {Format,Vec,ZoomView} from './types';
  * touchline). Sizes follow the common youth guidance: futsal 40×20 (the Laws of the Game for futsal), 7v7 60×40 yd, 9v9
  * 80×50 yd (the FA's recommended youth sizes) and 105×68 m for 11v11. The boards teach that the same game is played in
  * smaller spaces: the markings shrink with the format.
+ * Goals (Nov 23 2026, owner: "the goals look small for the format"): the biggest goal each format allows, as the field size guide
+ * cites (lib/site/sizes.ts): futsal 3 m (Futsal Laws), 7v7 18.5 ft = 5.64 m and 9v9 21 ft = 6.40 m (U.S. Soccer small-sided
+ * standards), 11v11 8 yd = 7.32 m (IFAB Law 1). The drawn net depth is a little deeper than life so the box reads on a phone.
  */
 export type PitchSpec={
  format:Format;title:string;players:number;length:number;width:number;runoff:number;
@@ -19,10 +22,10 @@ export type PitchSpec={
  subs?:{from:number;length:number};
 };
 export const PITCHES:Record<Format,PitchSpec>={
- futsal:{format:'futsal',title:'Futsal',players:5,length:40,width:20,runoff:1.6,goal:3,goalDepth:1,box:null,futsalArea:6,goalArea:null,spot:6,secondSpot:10,centreR:3,arcR:0,corner:.25,subs:{from:5,length:5}},
- '7v7':{format:'7v7',title:'7v7',players:7,length:55,width:37,runoff:2.4,goal:3.66,goalDepth:1.2,box:{depth:9.1,width:16.5},goalArea:null,spot:7.3,centreR:5.5,arcR:0,corner:.8},
- '9v9':{format:'9v9',title:'9v9',players:9,length:73,width:46,runoff:3,goal:4.88,goalDepth:1.4,box:{depth:11.9,width:29.3},goalArea:{depth:3.7,width:12.8},spot:8.2,centreR:6.4,arcR:6.4,corner:1},
- '11v11':{format:'11v11',title:'11v11',players:11,length:105,width:68,runoff:4,goal:7.32,goalDepth:2,box:{depth:16.5,width:40.32},goalArea:{depth:5.5,width:18.32},spot:11,centreR:9.15,arcR:9.15,corner:1},
+ futsal:{format:'futsal',title:'Futsal',players:5,length:40,width:20,runoff:1.6,goal:3,goalDepth:1.2,box:null,futsalArea:6,goalArea:null,spot:6,secondSpot:10,centreR:3,arcR:0,corner:.25,subs:{from:5,length:5}},
+ '7v7':{format:'7v7',title:'7v7',players:7,length:55,width:37,runoff:2.4,goal:5.64,goalDepth:1.6,box:{depth:9.1,width:16.5},goalArea:null,spot:7.3,centreR:5.5,arcR:0,corner:.8},
+ '9v9':{format:'9v9',title:'9v9',players:9,length:73,width:46,runoff:3,goal:6.4,goalDepth:1.8,box:{depth:11.9,width:29.3},goalArea:{depth:3.7,width:12.8},spot:8.2,centreR:6.4,arcR:6.4,corner:1},
+ '11v11':{format:'11v11',title:'11v11',players:11,length:105,width:68,runoff:4,goal:7.32,goalDepth:2.2,box:{depth:16.5,width:40.32},goalArea:{depth:5.5,width:18.32},spot:11,centreR:9.15,arcR:9.15,corner:1},
 };
 export const FORMAT_LABEL:Record<Format,string>={futsal:'Futsal','7v7':'7v7','9v9':'9v9','11v11':'11v11'};
 
