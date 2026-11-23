@@ -53,7 +53,7 @@ ok(coll.mainEntity.numberOfItems===TOTAL&&B.SITE_BOOKS.every(x=>coll.mainEntity.
 // ---- 3. every built page (Cafu, the sample, also checks card #26) ----
 const P=L('app/(site)/books/[slug]/page.tsx');
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const allowed=new Set(['image','@context','@type','@id','name','url','mainEntityOfPage','description','inLanguage','isAccessibleForFree','bookFormat','numberOfPages','genre','audience','datePublished','dateModified','about','author','publisher','citation','hasPart','isPartOf']);
+const allowed=new Set(['image','@context','@type','@id','name','url','mainEntityOfPage','description','inLanguage','isAccessibleForFree','bookFormat','numberOfPages','genre','audience','datePublished','dateModified','about','author','publisher','citation','hasPart','isPartOf',/* Nov 23 2026 (seo-books-games): CreativeWork properties */'teaches','typicalAgeRange','workTranslation']);
 const pageHtml=id=>decode(render(React.createElement(P.default,{params:{slug:id}})));
 for(const id of B.BUILT_BOOKS){const bk=B.bookBySlug(id),h=pageHtml(id);
  ok((h.match(/<h1\b/g)||[]).length===1&&new RegExp('<h1[^>]*>'+esc(bk.fullTitle)+'<span[^>]*> — </span><span[^>]*>a pop-up story for kids</span></h1>').test(h),`${id}: h1 names the book and says pop-up story for kids`);

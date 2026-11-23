@@ -70,7 +70,7 @@ const RAW:RawPlan[]=[
    {q:'Why start with 2v2 games?',a:'It is the first “play” of U.S. Soccer’s Play-Practice-Play structure: children arrive and play at once, and nobody waits for practice to start.'}],
   lessons:['learn7_carry','next7_dribbleroom'],links:[G.ages,G.wg]},
 
- {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Shooting Practice Plan: Kicking Games (45 Minutes)',
+ {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Soccer Shooting Practice Plan: Kicking Games (45 Min)',
   desc:'A 45-minute U6 soccer practice plan for kicking and shooting: Clean Your Room, dribble and shoot at small goals with no goalkeeper, and a 3v3 game.',
   lead:'A 45-minute practice that lets 5 and 6 year olds do what they like best: kick the ball and score. Small goals, no goalkeepers, lots of balls and no lines.',
   goal:'Kick with the laces and score',minutes:45,players:'6 to 12',field:FIELD.U6,

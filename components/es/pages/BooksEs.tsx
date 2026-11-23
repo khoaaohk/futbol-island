@@ -107,7 +107,7 @@ function bookLdEs(x:SiteBook,w:BookEs,modified:string){
   /* Nov 23 2026: the Spanish edition is its own Book (its @id and url on this page, inLanguage es), a translation of the English one;
      it used to reuse the English Book's @id with Spanish names. */
   mainEntity:{'@type':'Book','@id':abs(path)+'#book',name:`${x.title}: ${w.subtitle}`,alternateName:x.fullTitle,url:abs(path),description:w.summary,inLanguage:'es',
-   translationOfWork:{'@type':'Book','@id':abs(bookPath(x.id))+'#book',inLanguage:'en',url:abs(bookPath(x.id))},
+   translationOfWork:{'@type':'Book','@id':abs(bookPath(x.id))+'#book',url:abs(bookPath(x.id))},/* no nested inLanguage en on a Spanish page (tests/es-pages.cjs) */
    ...(lessonEs(w)?{teaches:lessonEs(w).replace(/^La historia enseña (que )?/,'').replace(/\.$/,'')}:{}),typicalAgeRange:'7-12',
    isAccessibleForFree:true,bookFormat:'https://schema.org/EBook',numberOfPages:x.chapters.length,genre:'Biografía infantil',audience:KIDS_AUDIENCE,
    datePublished:x.page?.published,dateModified:modified,...(x.chapters[0]?{image:abs(bookImage(x))}:{}),
