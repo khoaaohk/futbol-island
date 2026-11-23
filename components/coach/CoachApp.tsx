@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {count} from '@/lib/analytics/tracker';
 import {place} from '@/lib/site/pitch';
 import {shapeLabel,type Shape} from '@/lib/site/tools/lineup';
@@ -7,6 +7,7 @@ import {addGoal,addStoppage,alertKey,applyChange,buildPlan,confirmChange,planWit
  planSeconds,playedSeconds,PRESETS,presetOf,pushUndo,removeGoal,replanNow,resumeClock,scoreOf,setScorer,setStatus,settingsFor,skipChange,soleKeeper,summarySeconds,tapOk,theirGoal,type Game,type MatchInfo,type PBlock,type Settings,type Status} from '@/lib/coach/engine';
 import {cleanMatch,cleanPlayers,decodeShare,emptyStore,encodeShare,label,minutesCsv,newId,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
+import {moveSpots,parseRef,refKey,type Move,type Ref} from '@/lib/coach/lineup';
 import {activeOf,addTeam,deleteTeam,isRunning,liveTeam,loadTeams,newerTeams,saveTeamsRev,storedRev,switchTeam,TEAMS_KEY,updateActive,updateTeam,type Teams} from '@/lib/coach/teams';
 import {TeamButton,TeamSheet,presetSettings} from './TeamSheet';
 import {LiveBar,toggleClock} from './LiveDock';
@@ -326,7 +327,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
     :t==='team'?<>
       <TeamTab w={w} store={store} update={update} d={d}/>
       {returnTo&&!isRoot(returnTo)&&returnTo!=='team'&&d.here.length>0&&<NextBtn label={w.backTo(TITLE(w,returnTo))} onClick={()=>{const r=returnTo;setReturnTo(null);nav({screen:r},'replace','tab');}}/>}</>
-    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))}/>
+    :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} onMoved={(msg,undo)=>setToast({msg,undo:false,action:{label:w.undo,run:()=>{setToast(null);undo();}}})}/>
     :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={goTeam} onNext={()=>go('subs','tab')}/>
     :t==='plans'?<PlansTool w={w} lang={lang} version={plansVersion} teamAge={teamAge} age={route.age} plan={route.plan} run={route.run}
       onAge={a=>{const r:Route={screen:'plans',age:a};window.history.replaceState({fiCoach:depth()},'',url(r));setRoute(r);}}
@@ -466,56 +467,148 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
  </>;
 }
 /* ------------------------------------------------------------------ Lineup ----------------------------------------------- */
-type Ref={k:'s';i:number}|{k:'b';id:string};
-const refKey=(r:Ref)=>r.k==='s'?`s:${r.i}`:`b:${r.id}`;
-const parseRef=(s:string|null):Ref|null=>{if(!s)return null;const [k,v]=s.split(':');return k==='s'?{k:'s',i:Number(v)}:k==='b'?{k:'b',id:v}:null;};
-function LineupTab({w,store,update,d,onShare,onNext}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void;onNext:()=>void}){
+/* ------------------------------------------------------------------ Lineup (round 4D: drag, drop, pop, morph) ------------ */
+/* One drag controller per tab. The lineup itself is only `store.spots` (lib/coach/lineup.ts: a player is always in exactly
+   one place); everything a drag draws (the lifted ghost, the flying discs, the shrinking chip) lives in a fixed layer on
+   <body> and is removed on EVERY way a press can end: pointerup, pointercancel, lostpointercapture, window blur, a hidden page
+   and unmount, with a timer behind each landing animation. Heat: transform/opacity only (CSS keyframes and WAAPI), no rAF
+   loop; the glow pulse runs only while a finger is down. */
+type Lift={ref:Ref;key:string;pid:number;x0:number;y0:number;moved:boolean;src:HTMLElement;ghost:HTMLDivElement|null;gw:number;gh:number;offY:number;
+ targets:{key:string;cx:number;cy:number;r:DOMRect;chip:boolean}[];over:string|null;cx:number;cy:number;done:boolean;canLift:boolean;off:()=>void};
+type Fx={n:number;slots:Record<number,string>;hit:number|null;chipsIn:string[]};
+const reduced=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{return false;}};
+const buzz=(ms:number)=>{try{const ua=(navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation;if(ua&&!ua.hasBeenActive)return;navigator.vibrate?.(ms);}catch{/* no vibration */}};
+const centre=(r:DOMRect)=>({x:r.left+r.width/2,y:r.top+r.height/2});
+function LineupTab({w,store,update,d,onShare,onNext,onMoved}:{w:Words;store:Store;update:Up;d:D;onShare:()=>void;onNext:()=>void;onMoved:(msg:string,undo:()=>void)=>void}){
  const byId=new Map(store.team.players.map(p=>[p.id,p])),keeper=store.settings.keeper!=='none';
  const [sel,setSel]=useState<Ref|null>(null);
- const [ghost,setGhost]=useState<{x:number;y:number;text:string}|null>(null);
+ const [lifted,setLifted]=useState<string|null>(null);
  const [over,setOver]=useState<string|null>(null);
- const drag=useRef<{ref:Ref;x0:number;y0:number;moved:boolean;text:string}|null>(null);
- const swap=(a:Ref,b:Ref)=>{
-  const spots=[...d.spots];if(a.k==='b'&&b.k==='b')return;
-  const get=(r:Ref)=>r.k==='s'?spots[r.i]:r.id;const x=get(a),y=get(b);
-  if(a.k==='s')spots[a.i]=y;if(b.k==='s')spots[b.i]=x;
-  update(s=>({...s,spots}));
+ const [fx,setFx]=useState<Fx|null>(null);
+ const [layer,setLayer]=useState<HTMLDivElement|null>(null);
+ const lift=useRef<Lift|null>(null),root=useRef<HTMLDivElement>(null),fxN=useRef(0),timers=useRef<number[]>([]);
+ const pending=useRef<{before:string[];rects:Map<string,DOMRect>;hit:number|null;skipFly:string|null;ghost?:HTMLElement|null}|null>(null);
+ const dRef=useRef(d);dRef.current=d;
+ const later=(f:()=>void,ms:number)=>{const t=window.setTimeout(f,ms);timers.current.push(t);};
+ /* the layer: a fixed box on <body>, so no transformed ancestor (screen transitions) can shift the ghost off the finger */
+ useEffect(()=>{const el=document.createElement('div');el.className=c.dragLayer;el.setAttribute('aria-hidden','true');el.dataset.dragLayer='';document.body.appendChild(el);setLayer(el);
+  const tm=timers.current;return ()=>{tm.forEach(t=>clearTimeout(t));el.remove();};},[]);
+ const rectsNow=()=>{const m=new Map<string,DOMRect>();root.current?.querySelectorAll<HTMLElement>('[data-drop]').forEach(e=>{const k=e.dataset.drop!;const t=e.querySelector<HTMLElement>('[data-disc]')??e;m.set(k,t.getBoundingClientRect());});return m;};
+ const numOf=(id:string)=>{const p=byId.get(id);return p?String(p.num):'';};
+ const sayMove=(m:Move)=>{const n=(id:string)=>label(byId.get(id));const spot=d.form?.spots[m.to]?.label??'';
+  return m.kind==='swap'?w.lineupSwap(n(m.on),n(m.off)):m.kind==='in'?w.lineupIn(n(m.on),n(m.off)):w.lineupPlace(n(m.on),spot);};
+ /* every change of the lineup goes through here (drag, tap-tap, keyboard, Undo): snapshot where everything is, then commit */
+ const commit=(next:string[],hit:number|null,skipFly:string|null,msg:string|null)=>{
+  const before=[...dRef.current.spots];pending.current={before,rects:rectsNow(),hit,skipFly};
+  update(s=>({...s,spots:next}));setSel(null);
+  if(msg){buzz(12);onMoved(msg,()=>commit(before,null,null,null));}
  };
- const tap=(r:Ref)=>{if(!sel){setSel(r);return;}if(refKey(sel)!==refKey(r))swap(sel,r);setSel(null);};
- const handlers=(r:Ref,text:string)=>({
-  'data-drop':refKey(r),'data-sel':sel?refKey(sel)===refKey(r):false,
-  onPointerDown:(e:React.PointerEvent<HTMLElement>)=>{drag.current={ref:r,x0:e.clientX,y0:e.clientY,moved:false,text};try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* fine */}},
-  onPointerMove:(e:React.PointerEvent<HTMLElement>)=>{const g=drag.current;if(!g)return;if(!g.moved&&Math.hypot(e.clientX-g.x0,e.clientY-g.y0)>8)g.moved=true;
-   if(g.moved){setGhost({x:e.clientX,y:e.clientY,text:g.text});const el=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]');setOver(el?.getAttribute('data-drop')??null);}},
-  onPointerUp:(e:React.PointerEvent<HTMLElement>)=>{const g=drag.current;drag.current=null;setGhost(null);setOver(null);if(!g)return;
-   if(g.moved){const to=parseRef(document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]')?.getAttribute('data-drop')??null);if(to&&refKey(to)!==refKey(g.ref))swap(g.ref,to);setSel(null);}else tap(r);},
-  onPointerCancel:()=>{drag.current=null;setGhost(null);setOver(null);},
+ const apply=(a:Ref,b:Ref,viaDrag:boolean)=>{const m=moveSpots(d.spots,d.bench.map(p=>p.id),a,b);if(!m)return false;
+  commit(m.spots,m.to,viaDrag?m.on:null,sayMove(m));return true;};
+ /* after the commit renders: numbers that changed roll, the hit spot pops with a ripple, players sent to the bench fly there
+    and their chip pops in, a chip that left the bench shrinks out where it was */
+ useLayoutEffect(()=>{const p=pending.current;if(!p)return;pending.current=null;p.ghost?.remove();
+  const slots:Record<number,string>={},benchNow=new Set(d.bench.map(x=>x.id)),benchBefore=[...p.rects.keys()].filter(k=>k.startsWith('b:')).map(k=>k.slice(2));
+  d.spots.forEach((id,i)=>{if((p.before[i]??'')!==id)slots[i]=p.before[i]?numOf(p.before[i]):(d.form?.spots[i]?.label??'');});
+  const chipsIn=p.before.filter(id=>id&&benchNow.has(id));
+  const n=++fxN.current;setFx({n,slots,hit:p.hit,chipsIn});later(()=>setFx(f=>f&&f.n===n?null:f),720);
+  if(!layer||reduced())return;
+  const now=rectsNow();
+  for(const id of chipsIn){if(id===p.skipFly)continue;const from=p.rects.get(`s:${p.before.indexOf(id)}`),to=now.get(`b:${id}`);if(!from||!to)continue;
+   const el=document.createElement('div');el.className=c.flyer;el.textContent=numOf(id);
+   el.style.cssText=`width:${from.width}px;height:${from.height}px;left:${from.left}px;top:${from.top}px`;layer.appendChild(el);
+   const a=centre(from),b=centre(to),k=Math.min(1,to.height/from.height);
+   const an=el.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${(b.x-a.x)*.5}px,${(b.y-a.y)*.5-40}px) scale(1.05)`,offset:.45},{transform:`translate(${b.x-a.x}px,${b.y-a.y}px) scale(${k})`,opacity:.2}],{duration:380,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'});
+   const gone=()=>el.remove();an.onfinish=gone;later(gone,600);}
+  for(const id of benchBefore){if(benchNow.has(id))continue;const r=p.rects.get(`b:${id}`);if(!r)continue;
+   const el=document.createElement('div');el.className=c.shrink;el.textContent=numOf(id);el.style.cssText=`width:${r.width}px;height:${r.height}px;left:${r.left}px;top:${r.top}px`;layer.appendChild(el);
+   const an=el.animate([{transform:'scale(1)',opacity:.9},{transform:'scale(.2)',opacity:0}],{duration:220,easing:'cubic-bezier(.55,.06,.68,.19)',fill:'forwards'});
+   const gone=()=>el.remove();an.onfinish=gone;later(gone,450);}
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[d.spots]);
+ const tap=(r:Ref)=>{if(!sel){if(r.k==='s'&&!d.spots[r.i])return;setSel(r);return;}if(refKey(sel)===refKey(r)){setSel(null);return;}if(!apply(sel,r,false))setSel(r.k==='s'&&!d.spots[r.i]?null:r);};
+ /* ---- the drag ---- */
+ const removeGhost=(L:Lift)=>{L.ghost?.remove();L.ghost=null;};
+ const finish=(L:Lift)=>{if(L.done)return;L.done=true;removeGhost(L);if(lift.current===L)lift.current=null;setLifted(null);setOver(null);L.off();};
+ const nearest=(L:Lift,x:number,y:number)=>{let best:string|null=null,bd=Infinity;
+  for(const t of L.targets){const r=t.r,inside=x>=r.left-10&&x<=r.right+10&&y>=r.top-10&&y<=r.bottom+10,dd=Math.hypot(x-t.cx,y-t.cy),reach=Math.max(r.width,48)*0.95;
+   if((inside||dd<reach)&&dd<bd){bd=dd;best=t.key;}}return best;};
+ const moveGhost=(L:Lift,x:number,y:number)=>{L.cx=x;L.cy=y+L.offY;if(L.ghost)L.ghost.style.transform=`translate3d(${L.cx-L.gw/2}px,${L.cy-L.gh/2}px,0) scale(${reduced()?1:1.12})`;
+  const o=nearest(L,L.cx,L.cy);if(o!==L.over){L.over=o;setOver(o);}};
+ const startLift=(L:Lift)=>{L.moved=true;setSel(null);setLifted(L.key);
+  /* the ghost is always a pitch disc (a bench chip lifts into the disc it will become) */
+  const disc=L.src.querySelector<HTMLElement>('[data-disc]')??root.current?.querySelector<HTMLElement>('[data-disc]'),r=disc?.getBoundingClientRect();L.gw=L.gh=Math.max(r?Math.min(r.width,r.height):52,44);
+  if(layer){const g=document.createElement('div');g.className=c.ghost;g.textContent=L.src.dataset.num??'';g.style.width=`${L.gw}px`;g.style.height=`${L.gh}px`;layer.appendChild(g);L.ghost=g;}
+  L.targets=[];root.current?.querySelectorAll<HTMLElement>('[data-drop]').forEach(e=>{const k=e.dataset.drop!;if(k===L.key)return;const chip=k.startsWith('b:');if(chip&&L.ref.k==='b')return;
+   const t=(e.querySelector<HTMLElement>('[data-disc]')??e).getBoundingClientRect();const cc=centre(t);L.targets.push({key:k,cx:cc.x,cy:cc.y,r:t,chip});});
+  buzz(6);};
+ const fly=(L:Lift,to:{x:number;y:number},ms:number,easing:string,then:()=>void)=>{const g=L.ghost;let ran=false;const go=()=>{if(ran)return;ran=true;then();};
+  if(!g||reduced()){go();return;}
+  const an=g.animate([{transform:g.style.transform},{transform:`translate3d(${to.x-L.gw/2}px,${to.y-L.gh/2}px,0) scale(1)`}],{duration:ms,easing,fill:'forwards'});an.onfinish=go;later(go,ms+180);};
+ const drop=(L:Lift)=>{const to=parseRef(L.over),t=L.targets.find(x=>x.key===L.over);
+  if(to&&t&&moveSpots(d.spots,d.bench.map(p=>p.id),L.ref,to)){L.done=true;L.off();setOver(null);
+   /* the ghost stays over the spot until the new lineup has rendered under it (removed in the layout effect), so no frame
+      shows the old number; a timer removes it whatever happens */
+   fly(L,{x:t.cx,y:t.cy},150,'cubic-bezier(.22,1,.36,1)',()=>{const g=L.ghost;L.ghost=null;if(lift.current===L)lift.current=null;setLifted(null);
+    if(apply(L.ref,to,true)&&pending.current)pending.current.ghost=g;else g?.remove();later(()=>g?.remove(),400);});return;}
+  /* not on a spot or a chip (outside the pitch, between spots): it springs back to where it came from; nothing changes */
+  const home=centre((L.src.querySelector<HTMLElement>('[data-disc]')??L.src).getBoundingClientRect());L.done=true;L.off();setOver(null);
+  fly(L,home,320,'cubic-bezier(.34,1.56,.64,1)',()=>{removeGhost(L);if(lift.current===L)lift.current=null;setLifted(null);});};
+ const onMove=(e:PointerEvent)=>{const L=lift.current;if(!L||e.pointerId!==L.pid)return;
+  if(!L.moved){if(!L.canLift||Math.hypot(e.clientX-L.x0,e.clientY-L.y0)<7)return;startLift(L);}e.preventDefault();moveGhost(L,e.clientX,e.clientY);};
+ const onUp=(e:PointerEvent)=>{const L=lift.current;if(!L||e.pointerId!==L.pid)return;
+  if(!L.moved){finish(L);if(L.src.contains(e.target as Node)||document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]')===L.src)tap(L.ref);return;}
+  moveGhost(L,e.clientX,e.clientY);drop(L);};
+ const onCancel=()=>{const L=lift.current;if(L)finish(L);};
+ /* the window listeners call the latest render's logic (fresh lineup), and each press keeps its own remover */
+ const H=useRef({onMove,onUp,onCancel});H.current={onMove,onUp,onCancel};
+ const attach=(L:Lift)=>{const mv=(e:PointerEvent)=>H.current.onMove(e),up=(e:PointerEvent)=>H.current.onUp(e),cn=()=>H.current.onCancel();
+  const vis=()=>{if(document.visibilityState==='hidden')cn();};
+  window.addEventListener('pointermove',mv,{passive:false});window.addEventListener('pointerup',up);window.addEventListener('pointercancel',cn);
+  window.addEventListener('blur',cn);document.addEventListener('visibilitychange',vis);window.addEventListener('pagehide',cn);
+  L.off=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',cn);
+   window.removeEventListener('blur',cn);document.removeEventListener('visibilitychange',vis);window.removeEventListener('pagehide',cn);};};
+ useEffect(()=>()=>{const L=lift.current;if(L){L.done=true;L.ghost?.remove();L.off();}lift.current=null;},[]);
+ const handlers=(r:Ref,num:string)=>({
+  'data-drop':refKey(r),'data-num':num,'data-sel':sel?refKey(sel)===refKey(r):false,'data-lifted':lifted===refKey(r),'data-over':over===refKey(r),
+  onPointerDown:(e:React.PointerEvent<HTMLElement>)=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(lift.current){finish(lift.current);}
+   const has=r.k==='b'||!!d.spots[r.i];
+   /* an empty spot cannot be lifted: a press there is only a tap */
+   const L:Lift={ref:r,key:refKey(r),pid:e.pointerId,x0:e.clientX,y0:e.clientY,moved:false,src:e.currentTarget,ghost:null,gw:52,gh:52,offY:e.pointerType==='touch'?-28:0,targets:[],over:null,cx:0,cy:0,done:false,canLift:has,off:()=>{}};
+   lift.current=L;attach(L);
+   if(has){try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* the window listeners still see the release */}}},
   onClick:(e:React.MouseEvent)=>{if(e.detail===0)tap(r);/* keyboard: Enter or Space */},
+  onContextMenu:(e:React.MouseEvent)=>{if(lift.current?.moved)e.preventDefault();},
  });
  if(!d.here.length)return <><h1 className={c.srOnly}>{w.titleLineup}</h1><div className={c.empty}>{w.emptyTeam}</div></>;
- return <>
+ return <div ref={root} data-dragging={lifted?(lifted.startsWith('b:')?'bench':'spot'):undefined} className={c.lineupRoot}>
   <h1 className={c.srOnly}>{w.titleLineup}</h1>
   <p className={c.note}>{w.dragHint}</p>
   {d.forms.length>1&&<><h2 className={c.h2}>{w.formation}</h2><div className={`${c.seg} ${c.formSeg}`} role="group" aria-label={w.formation}>{d.forms.map(f=><button key={f.slug} type="button" className={c.chip} aria-pressed={d.form?.slug===f.slug} onClick={()=>update(s=>({...s,settings:{...s.settings,formation:f.slug}}))}>{f.label}</button>)}</div></>}
   <div className={c.pitchWrap}>
    <div className={c.pitch} role="group" aria-label={`${w.formation} ${d.form?.label??''}`}>
     <div className={c.pitchLines}/><div className={`${c.box} ${c.boxTop}`}/><div className={`${c.box} ${c.boxBottom}`}/>
-    {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0;
-     return <button key={i} type="button" className={`${c.spot} ${gk?c.spotGk:''} ${p?'':c.spotEmpty}`} style={{left:`${4+sp.x*0.92}%`,top:`${4+(100-sp.y)*0.92}%`}} data-over={over===refKey(r)}
-      aria-label={`${sp.label}: ${p?label(p):'—'}`} {...handlers(r,p?String(p.num):sp.label)}>
-      <span className={`${c.disc} ${p?'fi-pop':''}`} key={p?.id??'none'}>{p?p.num:sp.label}</span><span className={c.spotName}>{p?p.name||`#${p.num}`:sp.label}</span></button>;})}
+    {d.form?.spots.map((sp,i)=>{const p=byId.get(d.spots[i]),r:Ref={k:'s',i};const gk=keeper&&i===0,m=fx?fx.slots[i]:undefined,txt=p?String(p.num):sp.label;
+     return <button key={i} type="button" className={`${c.spot} ${gk?c.spotGk:''} ${p?'':c.spotEmpty}`} style={{left:`${4+sp.x*0.92}%`,top:`${4+(100-sp.y)*0.92}%`}}
+      aria-label={`${sp.label}: ${p?label(p):'—'}`} {...handlers(r,txt)}>
+      <span className={c.discWrap}>
+       <span data-disc="" className={`${c.disc} ${m!==undefined?(fx!.hit===i?c.discHit:c.discPop):''}`} key={m!==undefined?`${p?.id??'none'}-${fx!.n}`:(p?.id??'none')}>
+        {m!==undefined&&m!==txt?<><span className={c.numOut} aria-hidden="true">{m}</span><span className={c.numIn}>{txt}</span></>:txt}</span>
+       {m!==undefined&&fx!.hit===i&&<span className={c.ripple} key={'r'+fx!.n} aria-hidden="true"/>}
+      </span>
+      <span className={c.spotName}>{p?p.name||`#${p.num}`:sp.label}</span></button>;})}
    </div>
    <div><h2 className={`${c.h2} ${c.benchH}`}>{w.bench}</h2>
-    <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};return <button key={p.id} type="button" className={`${c.benchChip} fi-pop`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
+    <div className={c.benchRow}>{d.bench.map(p=>{const r:Ref={k:'b',id:p.id};const pop=fx?.chipsIn.includes(p.id);
+     return <button key={pop?`${p.id}-${fx!.n}`:p.id} type="button" className={`${c.benchChip} ${pop?c.chipIn:''}`} aria-label={`${w.bench}: ${label(p)}`} {...handlers(r,String(p.num))}>{p.num}{p.name&&<span>{p.name}</span>}</button>;})}</div></div>
   </div>
   <div className={`${c.btnRow} ${c.noPrint}`}>
-   <button type="button" className={c.btn} onClick={()=>{update(s=>({...s,spots:[]}));setSel(null);}}>{w.autoFill}</button>
+   <button type="button" className={c.btn} onClick={()=>commit([],null,null,null)}>{w.autoFill}</button>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onShare}>{w.share}</button>
   </div>
   <NextBtn label={w.nextTo(w.titleMinutes)} onClick={onNext}/>
-  {ghost&&<div className={c.ghost} style={{left:ghost.x,top:ghost.y}} aria-hidden="true"><span className={c.disc}>{ghost.text}</span></div>}
- </>;
+ </div>;
 }
 /* ------------------------------------------------------------------ Game (the plan) -------------------------------------- */
 function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'minutes'|'subs';w:Words;store:Store;d:D;onStart:()=>void;onResume:()=>void;onShare:()=>void;goTeam:()=>void;onNext:()=>void}){
@@ -747,7 +840,6 @@ function SharedView({w,x,onClose}:{w:Words;x:Shared;onClose:()=>void}){
    {/* the parents' link (UX audit C2): "Minutes played", the game's details and score, no verdict */}
    <h1 className={c.h1}>{x.info||x.done?w.sharedTitle:w.planned}</h1>
    <GameLine w={w} lang={w===WORDS.es?'es':'en'} info={x.info?{opp:x.info.opp,date:x.info.date,time:'',home:''}:undefined} score={x.info&&x.info.us!=null&&x.info.them!=null?{us:x.info.us,them:x.info.them}:null} team={x.team}/>
-   <p className={c.note}>{w.sharedNote}</p>
    <Fair w={w} seconds={shown} ids={ids} skip={new Set(fixed?[fixed]:[])} step={x.settings.subEvery} verdict={false}/>
    <TimelineRows w={w} rows={rows.filter(p=>ids.includes(p.id))} blocks={x.blocks} settings={x.settings} seconds={shown}/>
    <div className={c.btnRow}><button type="button" className={c.btn} onClick={onClose}>{w.openMine}</button><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>window.print()}>{w.print}</button></div>

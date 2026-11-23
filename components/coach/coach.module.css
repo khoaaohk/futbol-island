@@ -72,7 +72,7 @@
 .benchRow{display:flex;flex-wrap:wrap;gap:8px}
 .benchChip{min-height:var(--tap);min-width:var(--tap);padding:0 14px;border-radius:999px;border:0;background:var(--well);font-weight:800;font-size:17px;touch-action:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums}
 .benchChip span{font-weight:500;font-size:14px;margin-left:6px}
-.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) scale(1.1)}
+/* .ghost: round 4D block (the drag layer) */
 /* fairness + timeline */
 .fair{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--tint);border-radius:var(--r);padding:14px 16px;margin:12px 0}
 .fairBig{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -582,3 +582,52 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
  /* the toast stays in the left column, clear of the panel's buttons */
  .app[data-tool] .toast{right:calc(50% + 8px)}
 }
+/* ---- Round 4D (owner: "add animation when being dragged and once added ... numbers morphing ... a ripple ... popping"):
+   the lifted disc, glowing targets, the snap pop with a ripple, the rolling number, the chip that flies to the bench.
+   Transform/opacity only; the pulse runs only while a finger is down (data-dragging); reduced motion = plain fades. ---- */
+.lineupRoot{display:contents}
+.discWrap{position:relative;display:block}
+.disc{position:relative;overflow:hidden}
+.discWrap::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid #fff;opacity:0;transform:scale(.9);pointer-events:none;transition:opacity 160ms ease,transform 160ms ease}
+.lineupRoot[data-dragging] .spot:not([data-lifted=true]) .discWrap::after{animation:lu-glow 1.1s ease-in-out infinite}
+.lineupRoot[data-dragging=spot] .benchChip:not([data-lifted=true])::after{content:'';position:absolute;inset:-4px;border-radius:999px;border:3px solid var(--pitch);pointer-events:none;animation:lu-glow 1.1s ease-in-out infinite}
+.benchChip{position:relative}
+.spot[data-over=true] .disc{transform:scale(1.16);transition:transform 140ms cubic-bezier(.34,1.56,.64,1)}
+.lineupRoot[data-dragging] .spot[data-over=true] .discWrap::after{animation:none;opacity:1;transform:scale(1.08)}
+.benchChip[data-over=true]{transform:scale(1.08)}
+.lineupRoot[data-dragging=spot] .benchChip[data-over=true]::after{animation:none;opacity:1}
+.spot[data-lifted=true] .disc,.benchChip[data-lifted=true]{opacity:.3;transform:scale(.92);transition:opacity 120ms ease,transform 120ms ease}
+@keyframes lu-glow{0%,100%{opacity:.15;transform:scale(.96)}50%{opacity:.75;transform:scale(1.06)}}
+/* the drop: the hit spot overshoots and settles, a ring spreads from it; other changed spots pop a little */
+.discHit{animation:lu-hit 460ms cubic-bezier(.3,.7,.3,1) both}
+.discPop{animation:lu-pop 380ms cubic-bezier(.3,.7,.3,1) both}
+@keyframes lu-hit{0%{transform:scale(1.12)}35%{transform:scale(.86)}65%{transform:scale(1.1)}85%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes lu-pop{0%{transform:scale(.8)}55%{transform:scale(1.08)}100%{transform:scale(1)}}
+.ripple{position:absolute;inset:0;border-radius:50%;border:3px solid #fff;pointer-events:none;animation:lu-ripple 560ms cubic-bezier(.22,1,.36,1) forwards}
+.ripple::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--gold);animation:lu-ripple 640ms 90ms cubic-bezier(.22,1,.36,1) both}
+@keyframes lu-ripple{from{opacity:.95;transform:scale(.9)}to{opacity:0;transform:scale(2.3)}}
+/* the number rolls: the old one rolls up and out, the new one rolls in from below */
+.numOut,.numIn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.numOut{animation:lu-out 300ms cubic-bezier(.55,.06,.68,.19) forwards}
+.numIn{animation:lu-in 420ms 80ms cubic-bezier(.34,1.56,.64,1) both}
+@keyframes lu-out{to{opacity:0;transform:translateY(-70%) rotateX(70deg)}}
+@keyframes lu-in{from{opacity:0;transform:translateY(80%) rotateX(-70deg)}to{opacity:1;transform:none}}
+/* a player sent to the bench: the chip waits for the flying disc, then pops in */
+.chipIn{animation:lu-chip 360ms 300ms cubic-bezier(.34,1.56,.64,1) both}
+@keyframes lu-chip{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+/* the layer on <body> (outside .app, so plain values): the ghost, the flyers, the shrinking chip */
+.dragLayer{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.ghost,.flyer,.shrink{position:fixed;left:0;top:0;display:flex;align-items:center;justify-content:center;font:800 20px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-variant-numeric:tabular-nums;color:#14221d;will-change:transform}
+.ghost{border-radius:50%;background:#e9c16b;transform-origin:center;box-shadow:0 10px 22px rgb(20 34 29 / .28),0 2px 6px rgb(20 34 29 / .18);font-size:22px}
+.flyer{border-radius:50%;background:#e9c16b;transform-origin:center}
+.shrink{border-radius:999px;background:#efe8d7;font-size:17px;transform-origin:center}
+@media (prefers-reduced-motion:reduce){
+ .discHit,.discPop,.chipIn{animation:lu-fade 160ms ease-out both}
+ .numOut{animation:lu-fade-out 120ms ease-out forwards}.numIn{animation:lu-fade 160ms ease-out both}
+ .ripple,.ripple::after{animation:none;opacity:0}
+ .lineupRoot[data-dragging] .spot:not([data-lifted=true]) .discWrap::after,.lineupRoot[data-dragging=spot] .benchChip:not([data-lifted=true])::after{animation:none;opacity:.6;transform:none}
+ .spot[data-over=true] .disc,.benchChip[data-over=true],.spot[data-lifted=true] .disc,.benchChip[data-lifted=true]{transform:none;transition:none}
+ .ghost{box-shadow:none}
+}
+@keyframes lu-fade{from{opacity:0}}
+@keyframes lu-fade-out{to{opacity:0}}

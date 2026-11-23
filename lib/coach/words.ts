@@ -61,7 +61,7 @@ const en={
  onBoard:'Show on the tactics board',inScan:'Run in Scan trainer',fullPage:'Full plan page',loadingPlans:'Loading plans…',plansFail:'The plans did not load. Check your connection.',retry:'Try again',
  soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',comingN:(n:number,late=0)=>`${n} coming${late?` · ${late} late`:''}`,onFieldN:(n:number)=>`${n} on the field`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`,
  /* round 4C (Nov 22 2026) */
- sharedTitle:'Minutes played',changeEarly:'Change early?',changeEarlyNote:(t:string)=>`This change is planned in ${t}. Make it now?`,changeNowBtn:'Change now',notYet:'Not yet',
+ sharedTitle:'Minutes played',lineupSwap:(a:string,b:string)=>`${a} and ${b} swapped places`,lineupIn:(a:string,b:string)=>`${a} on, ${b} to the bench`,lineupPlace:(a:string,spot:string)=>`${a} to ${spot}`,changeEarly:'Change early?',changeEarlyNote:(t:string)=>`This change is planned in ${t}. Make it now?`,changeNowBtn:'Change now',notYet:'Not yet',
  replanNow:'Replan from now',overdueNote:(m:number)=>`Planned ${m} min ago. Make it now, or replan from the minutes played.`,otherTab:'Updated from another tab',
  attend:'Coming to the next game',noKeeper:'No one is marked “Can keep goal”, so everyone takes a turn in goal. Mark your keepers in the squad.',
  oneKeeper:(n:string)=>`${n} is the only player marked “Can keep goal” and stays in goal all game.`,maxSwaps:'Most changes at one stoppage',noLimit:'No limit',
@@ -124,7 +124,7 @@ const es:Words={
  startSession:'Empezar sesión',endSession:'Terminar sesión',nextPart:'Siguiente parte',prevPart:'Anterior',partOf:(a:number,b:number)=>`${a} de ${b}`,sessionDone:'Entrenamiento terminado. Buen trabajo.',upNext:'Después',
  onBoard:'Ver en la pizarra táctica',inScan:'Hacerlo en el Entrenador de escaneo',fullPage:'Página del plan',loadingPlans:'Cargando planes…',plansFail:'No se cargaron los planes. Revisa tu conexión.',retry:'Intentar de nuevo',
  soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',comingN:(n:number,late=0)=>`${n} vienen${late?` · ${late} tarde`:''}`,onFieldN:(n:number)=>`${n} en la cancha`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`,
- sharedTitle:'Minutos jugados',changeEarly:'¿Cambiar antes?',changeEarlyNote:(t:string)=>`Este cambio está planeado en ${t}. ¿Hacerlo ahora?`,changeNowBtn:'Cambiar ahora',notYet:'Todavía no',
+ sharedTitle:'Minutos jugados',lineupSwap:(a:string,b:string)=>`${a} y ${b} cambiaron de lugar`,lineupIn:(a:string,b:string)=>`Entra ${a}, ${b} a la banca`,lineupPlace:(a:string,spot:string)=>`${a} a ${spot}`,changeEarly:'¿Cambiar antes?',changeEarlyNote:(t:string)=>`Este cambio está planeado en ${t}. ¿Hacerlo ahora?`,changeNowBtn:'Cambiar ahora',notYet:'Todavía no',
  replanNow:'Replanear desde ahora',overdueNote:(m:number)=>`Planeado hace ${m} min. Hazlo ahora o replanea con los minutos jugados.`,otherTab:'Actualizado desde otra pestaña',
  attend:'Viene al próximo partido',noKeeper:'Nadie tiene marcado “Puede ser portero”, así que todos pasan por el arco. Marca a tus porteros en el plantel.',
  oneKeeper:(n:string)=>`${n} es el único marcado “Puede ser portero” y se queda en el arco todo el partido.`,maxSwaps:'Máximo de cambios en una pausa',noLimit:'Sin límite',

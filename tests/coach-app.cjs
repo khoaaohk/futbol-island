@@ -428,4 +428,32 @@ for(const arr of [300,605,720,900,1205]){
  ok(/data-score=/.test(app)&&/data-game-details/.test(app),'C17: score on Match day, game details sheet');
  for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(!/uneven|desigual/i.test(w.fairCheck)&&w.sharedTitle&&w.changeEarly&&w.replanNow,'neutral words, '+l);}
 }
+/* ---- 12. round 4D: lineup moves (lib/coach/lineup.ts) and the stranded-disc regression ---- */
+{
+ const L=load('lib/coach/lineup.ts');
+ const b=['h','i'],sp=['a','b','c','d',''];
+ let m=L.moveSpots(sp,b,{k:'b',id:'h'},{k:'s',i:1});ok(m&&m.spots[1]==='h'&&m.kind==='in'&&m.on==='h'&&m.off==='b'&&m.to===1,'bench onto a spot: replaces, the spot player goes to the bench');
+ m=L.moveSpots(sp,b,{k:'s',i:1},{k:'b',id:'h'});ok(m&&m.spots[1]==='h'&&m.off==='b','spot onto a bench chip: the same swap');
+ m=L.moveSpots(sp,b,{k:'s',i:0},{k:'s',i:2});ok(m&&m.spots[0]==='c'&&m.spots[2]==='a'&&m.kind==='swap','spot onto spot: swap');
+ m=L.moveSpots(sp,b,{k:'s',i:0},{k:'s',i:4});ok(m&&m.spots[4]==='a'&&m.spots[0]===''&&m.kind==='place','a player onto an empty spot moves there');
+ m=L.moveSpots(sp,b,{k:'b',id:'i'},{k:'s',i:4});ok(m&&m.spots[4]==='i'&&m.kind==='place'&&m.off==='','bench onto an empty spot: placed');
+ ok(L.moveSpots(sp,b,{k:'b',id:'h'},{k:'b',id:'i'})===null&&L.moveSpots(sp,b,{k:'s',i:2},{k:'s',i:2})===null&&L.moveSpots(sp,b,{k:'s',i:4},{k:'s',i:1})===null,'no-ops: bench onto bench, onto itself, from an empty spot');
+ ok(L.moveSpots(sp,b,{k:'b',id:'zz'},{k:'s',i:1})===null&&L.moveSpots(sp,b,{k:'s',i:9},{k:'s',i:1})===null&&L.moveSpots(sp,['a'],{k:'b',id:'a'},{k:'s',i:2})===null,'no-ops: unknown player, a spot out of range, a "bench" player already on the pitch');
+ ok(L.parseRef('s:3').i===3&&L.parseRef('b:p1').id==='p1'&&L.parseRef('s:x')===null&&L.parseRef('')===null&&L.refKey({k:'b',id:'q'})==='b:q','refs round trip, garbage is null');
+ /* property: 3000 random moves (drag, tap or keyboard all call moveSpots) never put a player in two places */
+ let seed=7;const rnd=n=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed%n;};
+ const all=['p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11'];let spots=all.slice(0,7);
+ for(let k=0;k<3000;k++){const bench=all.filter(x=>!spots.includes(x));const ref=()=>rnd(3)?{k:'s',i:rnd(spots.length)}:{k:'b',id:bench[rnd(bench.length)]||'p1'};
+  const r=L.moveSpots(spots,bench,ref(),ref());if(r)spots=r.spots;const bn=all.filter(x=>!spots.includes(x));
+  if(!L.onePlace(spots,bn)||spots.filter(Boolean).length+bn.length!==all.length){ok(false,'one place after move '+k);}}
+ ok(true,'3000 random moves: every player in exactly one place');ok(!L.onePlace(['a','a'],[])&&!L.onePlace(['a'],['a']),'onePlace catches a player twice');
+ /* the drag controller ends on every release path and draws on a <body> layer (the owner's stranded "8") */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(/addEventListener\('pointercancel'/.test(app)&&/addEventListener\('blur'/.test(app)&&/visibilitychange/.test(app)&&/addEventListener\('pagehide'/.test(app),'drag ends on cancel, blur, hidden page, pagehide');
+ ok(/addEventListener\('pointerup'/.test(app)&&/document\.body\.appendChild\(el\)/.test(app)&&/el\.remove\(\)/.test(app),'release is heard on the window; the ghost layer lives on <body> and is removed on unmount');
+ ok(/setSel\(null\);setLifted\(L\.key\)/.test(app),'lifting a player clears the tap selection');
+ ok(!/\.ghost\{position:fixed;z-index:50/.test(read('components/coach/coach.module.css'))&&/prefers-reduced-motion:reduce\)\{\n \.discHit/.test(read('components/coach/coach.module.css')),'old ghost gone; reduced motion = fades');
+ for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(w.lineupSwap('a','b')&&w.lineupIn('a','b')&&w.lineupPlace('a','LD'),'lineup toasts, '+l);}
+ ok(!/sharedNote\}/.test(app),'parents\' link: no "shared with you" line');
+}
 console.log(`coach-app: ${checks} checks passed`);
