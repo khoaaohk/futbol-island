@@ -10,7 +10,8 @@ import {STORE_KEY,cleanStore,emptyStore,loadStore,type Store} from './store';
 export const TEAMS_KEY='fi-coach-teams-v1';
 export const MAX_TEAMS=12;
 export type TeamRec=Store&{id:string};
-export type Teams={v:1;activeId:string;teams:TeamRec[]};
+/** rev (UX audit B5): a save counter, so two tabs never overwrite each other: the newer record wins and the other tab takes it */
+export type Teams={v:1;activeId:string;teams:TeamRec[];rev?:number};
 const ID_RE=/^t[a-z0-9]{1,12}$/;
 export const teamId=(taken:ReadonlySet<string>,seed:number)=>{let n=Math.abs(Math.round(seed))||1;let id='';do{id='t'+(n++).toString(36).slice(-10);}while(taken.has(id));return id;};
 /** A game on the clock (kicked off and not finished): it keeps running when the coach leaves the live screen. */
@@ -18,7 +19,7 @@ export const isRunning=(s:Pick<Store,'game'>)=>!!s.game&&s.game.clock.status!=='
 const single=(s:Store):Teams=>({v:1,activeId:'t1',teams:[{...s,id:'t1'}]});
 /** Make anything read from storage a valid teams record, or null when it is not one (then the caller migrates). */
 export function cleanTeams(raw:unknown):Teams|null{
- if(!raw||typeof raw!=='object')return null;const o=raw as {v?:unknown;activeId?:unknown;teams?:unknown};
+ if(!raw||typeof raw!=='object')return null;const o=raw as {v?:unknown;activeId?:unknown;teams?:unknown;rev?:unknown};
  if(o.v!==1||!Array.isArray(o.teams))return null;
  const ids=new Set<string>(),teams:TeamRec[]=[];
  for(const t of o.teams.slice(0,MAX_TEAMS*2)){
@@ -29,7 +30,8 @@ export function cleanTeams(raw:unknown):Teams|null{
  if(!teams.length)return null;
  const activeId=typeof o.activeId==='string'&&ids.has(o.activeId)?o.activeId:teams[0].id;
  const a=teams.find(t=>t.id===activeId)!;
- return {v:1,activeId,teams:teams.map(t=>({...t,lang:a.lang,sound:a.sound}))};
+ const rev=Math.round(Number(o.rev));
+ return {v:1,activeId,teams:teams.map(t=>({...t,lang:a.lang,sound:a.sound})),rev:Number.isFinite(rev)&&rev>0?rev:0};
 }
 /** Read the teams; migrate fi-coach-v1 (one team, or an empty first team) when the teams record is missing or unreadable. */
 export function loadTeams(storage:Pick<Storage,'getItem'>|null):Teams{
@@ -39,8 +41,19 @@ export function loadTeams(storage:Pick<Storage,'getItem'>|null):Teams{
 export const activeOf=(t:Teams):TeamRec=>t.teams.find(x=>x.id===t.activeId)??t.teams[0];
 const strip=({id:_id,...s}:TeamRec):Store=>{void _id;return s;};
 /** Save both: the teams and (for anything still reading the old key) the active team alone in fi-coach-v1. */
-export function saveTeams(storage:Pick<Storage,'setItem'>|null,t:Teams):boolean{
- try{if(!storage)return false;storage.setItem(TEAMS_KEY,JSON.stringify(t));storage.setItem(STORE_KEY,JSON.stringify(strip(activeOf(t))));return true;}catch{return false;}
+export function saveTeams(storage:(Pick<Storage,'setItem'>&Partial<Pick<Storage,'getItem'>>)|null,t:Teams):boolean{return saveTeamsRev(storage,t)>0;}
+/** The revision saved now in storage (0 = none or unreadable). */
+export function storedRev(storage:Partial<Pick<Storage,'getItem'>>|null):number{
+ try{const s=storage?.getItem?.(TEAMS_KEY);if(!s)return 0;const r=Math.round(Number((JSON.parse(s) as {rev?:unknown}).rev));return Number.isFinite(r)&&r>0?r:0;}catch{return 0;}
+}
+/** Save with the next revision (above both this record's and the stored one); returns the revision written, 0 on failure. */
+export function saveTeamsRev(storage:(Pick<Storage,'setItem'>&Partial<Pick<Storage,'getItem'>>)|null,t:Teams):number{
+ try{if(!storage)return 0;const rev=Math.max(t.rev??0,storedRev(storage))+1;
+  storage.setItem(TEAMS_KEY,JSON.stringify({...t,rev}));storage.setItem(STORE_KEY,JSON.stringify(strip(activeOf(t))));return rev;}catch{return 0;}
+}
+/** Another tab's save (a storage event's new value): the record when it is newer than `mine`, else null. */
+export function newerTeams(raw:string|null|undefined,mine:number):Teams|null{
+ if(!raw)return null;try{const t=cleanTeams(JSON.parse(raw));return t&&(t.rev??0)>mine?t:null;}catch{return null;}
 }
 /** Change one team; a change of language or sound is the coach's and goes to every team. */
 export function updateTeam(t:Teams,id:string,f:(s:Store)=>Store):Teams{

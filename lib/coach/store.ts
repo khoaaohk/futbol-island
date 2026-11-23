@@ -1,5 +1,5 @@
 import {base64url,cleanName} from '../site/tools/rotation';
-import {cleanSettings,presetOf,settingsFor,type Game,type PBlock,type Settings,type Status} from './engine';
+import {cleanSettings,presetOf,settingsFor,type Game,type MatchInfo,type PBlock,type Settings,type Status} from './engine';
 /**
  * The coach app's saved data (/coach; docs/coach-app/HANDOFF.md). One record in localStorage under STORE_KEY, on this device
  * only: no account, no server, nothing sent. Everything read back (storage, a shared link) is untrusted and goes through
@@ -23,7 +23,16 @@ export type Store={v:1;team:Team;settings:Settings;
  spots:string[];
  game:Game|null;lang:Lang|null;sound:boolean;
  /** the last finished game, for the Summary tab */
- last:Game|null};
+ last:Game|null;
+ /** the next game's details (UX audit C17): opponent, date, kick-off, home or away; copied into the game at the start */
+ match?:MatchInfo};
+/** Game details read back: short clean text, a YYYY-MM-DD date, an HH:MM time, home/away or ''. */
+export function cleanMatch(raw:unknown):MatchInfo{
+ const o=(raw&&typeof raw==='object'?raw:{}) as Partial<MatchInfo>;
+ return {opp:cleanName(o.opp),date:typeof o.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(o.date)?o.date:'',time:typeof o.time==='string'&&/^\d{2}:\d{2}$/.test(o.time)?o.time:'',
+  home:o.home==='home'||o.home==='away'?o.home:''};
+}
+export const hasMatch=(m:MatchInfo|undefined|null)=>!!m&&!!(m.opp||m.date||m.time||m.home);
 const ID_RE=/^[a-z0-9]{1,12}$/;
 export const newId=(taken:ReadonlySet<string>,seed:number)=>{let n=seed;let id='';do{id='p'+(n++).toString(36);}while(taken.has(id));return id;};
 export function cleanPlayers(raw:unknown):Player[]{
@@ -50,7 +59,9 @@ const cleanGame=(g:unknown,ids:ReadonlySet<string>):Game|null=>{
  return {v:1,started:num(o.started),settings:cleanSettings(o.settings),clock:{period:Math.max(0,Math.round(num(o.clock.period))),acc:Math.max(0,num(o.clock.acc)),since:o.clock.since==null?null:num(o.clock.since),added:Math.max(0,num(o.clock.added)),status:st},
   blocks:o.blocks.map(b=>({period:num(b.period),start:num(b.start),end:num(b.end),on:[...b.on],gk:okId(b.gk)?b.gk:null})),next:Math.max(0,Math.round(num(o.next))),delay:Math.max(0,num(o.delay)),
   on:[...o.on],gk:okId(o.gk)?o.gk:null,spots,stints:o.stints.filter(s=>s&&okId(s.p)).map(s=>({p:s.p,period:num(s.period),from:num(s.from),to:s.to==null?null:num(s.to),gk:!!s.gk})),status,subs:Math.max(0,Math.round(num(o.subs))),
-  ...(Array.isArray(o.joined)?{joined:[...new Set(o.joined.filter(okId))] as string[]}:{})};
+  ...(Array.isArray(o.joined)?{joined:[...new Set(o.joined.filter(okId))] as string[]}:{}),
+  ...(o.info?{info:cleanMatch(o.info)}:{}),
+  ...(o.score&&typeof o.score==='object'?{score:{goals:Array.isArray(o.score.goals)?o.score.goals.slice(0,99).map(x=>okId(x)?x as string:''):[],them:Math.max(0,Math.min(99,Math.round(num(o.score.them))))}}:{})};
 };
 /** Late players: only players who are coming; a whole minute 0-240 or null (not known). */
 export function cleanLate(raw:unknown,here:ReadonlySet<string>):Record<string,number|null>{
@@ -69,7 +80,8 @@ export function cleanStore(raw:unknown):Store{
   here:Array.isArray(o.here)?[...new Set(o.here.filter(p=>typeof p==='string'&&ids.has(p)))]:[],
   late:cleanLate(o.late,new Set(Array.isArray(o.here)?o.here.filter(p=>typeof p==='string'&&ids.has(p)):[])),
   spots:Array.isArray(o.spots)?o.spots.slice(0,11).map(p=>typeof p==='string'&&ids.has(p)?p:''):[],
-  game:cleanGame(o.game,ids),lang:o.lang==='es'||o.lang==='en'?o.lang:null,sound:o.sound!==false,last:cleanGame(o.last,ids)};
+  game:cleanGame(o.game,ids),lang:o.lang==='es'||o.lang==='en'?o.lang:null,sound:o.sound!==false,last:cleanGame(o.last,ids),
+  ...(o.match?{match:cleanMatch(o.match)}:{})};
 }
 export function loadStore(storage:Pick<Storage,'getItem'>|null):Store{
  try{const s=storage?.getItem(STORE_KEY);return s?cleanStore(JSON.parse(s)):emptyStore();}catch{return emptyStore();}
@@ -81,10 +93,15 @@ export const label=(p:Player|undefined)=>p?`#${p.num}${p.name?' '+p.name:''}`:''
 /* -------------------------------------------- share link: the plan and the minutes in the URL fragment ------------------- */
 /** What a shared link shows: the team, the game settings, every player, the blocks (as player positions in the list) and the
  *  minutes. In `#s=` (the fragment is never sent to a server). Names are left out unless the coach keeps them in. */
-export type Shared={team:string;settings:Settings;players:{num:number;name:string}[];blocks:PBlock[];seconds:number[];done:boolean};
+export type Shared={team:string;settings:Settings;players:{num:number;name:string}[];blocks:PBlock[];seconds:number[];done:boolean;
+ /** the game's details and score (UX audit C2), when the link is a game's */
+ info?:{opp:string;date:string;us:number|null;them:number|null}};
+/** A name as initials for a parents' link (UX audit C2): "Ana Lopez" -> "A.L.". */
+export const initialsOf=(name:string)=>name.trim().split(/\s+/).map(w=>/\p{L}/u.exec(w)?.[0]).filter((x):x is string=>!!x).slice(0,2).map(x=>x.toUpperCase()+'.').join('');
 export function encodeShare(x:Shared):string{
  return base64url.encode(JSON.stringify([1,cleanName(x.team),[x.settings.format,x.settings.onField,x.settings.periods,x.settings.periodMin,x.settings.subEvery,x.settings.keeper],
-  x.players.map(p=>[p.num,cleanName(p.name)]),x.blocks.map(b=>[b.period,b.start,b.end,b.on.map(Number),b.gk==null?-1:Number(b.gk)]),x.seconds.map(s=>Math.round(s)),x.done?1:0]));
+  x.players.map(p=>[p.num,cleanName(p.name)]),x.blocks.map(b=>[b.period,b.start,b.end,b.on.map(Number),b.gk==null?-1:Number(b.gk)]),x.seconds.map(s=>Math.round(s)),x.done?1:0,
+  ...(x.info?[[cleanName(x.info.opp),x.info.date,x.info.us??-1,x.info.them??-1]]:[])]));
 }
 /** Players in a shared plan are ids "0".."n-1" (their place in `players`). */
 export function decodeShare(code:string):Shared|null{
@@ -100,13 +117,16 @@ export function decodeShare(code:string):Shared|null{
    if(!Number.isFinite(start)||!Number.isFinite(end)||end<start||!Number.isInteger(period)||period<0||period>=settings.periods)return null;
    blocks.push({period,start,end:Math.min(end,settings.periodMin*60+30*60),on,gk:ok(b[4])?String(b[4]):null});}
   const seconds=Array.isArray(a[5])?players.map((_,i)=>Math.max(0,Math.round(Number(a[5][i])||0))):players.map(()=>0);
-  return {team:cleanName(a[1]),settings,players,blocks,seconds,done:a[6]===1};
+  const gi=Array.isArray(a[7])?a[7]:null,sc=(v:unknown)=>{const n=Math.round(Number(v));return Number.isFinite(n)&&n>=0&&n<=99?n:null;};
+  const info=gi?{opp:cleanName(gi[0]),date:typeof gi[1]==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(gi[1])?gi[1]:'',us:sc(gi[2]),them:sc(gi[3])}:undefined;
+  return {team:cleanName(a[1]),settings,players,blocks,seconds,done:a[6]===1,...(info?{info}:{})};
  }catch{return null;}
 }
 /** Turn a game (or a plan) into the share shape: ids become their place in the team list. */
-export function toShared(team:Team,settings:Settings,blocks:readonly PBlock[],seconds:Readonly<Record<string,number>>,done:boolean,names:boolean):Shared{
+/** names: full names; otherwise initials (a parents' link: UX audit C2). info: the game's details and score. */
+export function toShared(team:Team,settings:Settings,blocks:readonly PBlock[],seconds:Readonly<Record<string,number>>,done:boolean,names:boolean,info?:Shared['info']):Shared{
  const ids=team.players.map(p=>p.id),pos=new Map(ids.map((id,i)=>[id,String(i)]));
- return {team:team.name,settings,players:team.players.map(p=>({num:p.num,name:names?p.name:''})),done,
+ return {team:team.name,settings,players:team.players.map(p=>({num:p.num,name:names?p.name:initialsOf(p.name)})),done,...(info?{info}:{}),
   blocks:blocks.map(b=>({...b,on:b.on.map(p=>pos.get(p)).filter((x):x is string=>x!=null),gk:b.gk==null?null:pos.get(b.gk)??null})),seconds:ids.map(id=>seconds[id]??0)};
 }
 /* ----------------------------------------------- the minutes as CSV (Excel, Google Sheets, Numbers) ---------------------- */

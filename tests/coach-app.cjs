@@ -57,8 +57,17 @@ function checkPlan(plan,order,s,where){
  return fr;
 }
 for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pre.keeper?['fixed','rotate']:['none']){
- const s={...E.settingsFor(pre),keeper},order=ids(pre.onField+extra),plan=E.buildPlan(order,s);
+ /* the calculator's own plan (no swap cap); the capped default is checked just below */
+ const s={...E.settingsFor(pre),keeper,maxSwaps:0},order=ids(pre.onField+extra),plan=E.buildPlan(order,s);
  checkPlan(plan,order,s,`${pre.id}+${extra} ${keeper}`);
+ /* UX audit C14: at most 3 players come on at one stoppage (the default); same totals, starters start, spread within two blocks */
+ {const sc={...s,maxSwaps:E.MAX_SWAPS},pc=E.buildPlan(order,sc),F=Math.min(sc.onField,order.length);
+  for(const b of pc.blocks)ok(b.on.length===F&&new Set(b.on).size===F&&(sc.keeper==='none'||b.on.includes(b.gk)),`${pre.id}+${extra} capped: full field`);
+  ok(Object.values(E.planSeconds(pc.blocks)).reduce((a,x)=>a+x,0)===sc.periods*sc.periodMin*60*F,`${pre.id}+${extra} capped: totals`);
+  if(!sc.rolling)ok(pc.blocks.every((b,k)=>!k||!b.start||b.on.filter(p=>!pc.blocks[k-1].on.includes(p)).length<=3),`${pre.id}+${extra} ${keeper}: at most 3 swaps at a stoppage`);
+  ok(order.slice(0,F).every(p=>pc.blocks[0].on.includes(p))&&(sc.keeper==='none'||pc.blocks[0].gk===order[0]),`${pre.id}+${extra} capped: the coach's starters start`);
+  const mb=Math.max(...pc.blocks.map(b=>b.end-b.start)),fr=E.fairness(E.planSeconds(pc.blocks),order,new Set(sc.keeper==='fixed'?[order[0]]:[]));
+  ok(fr.spread<=2*mb+120,`${pre.id}+${extra} ${keeper} capped: spread ${fr.spread}`);}
  ok(new Set(plan.blocks[0].on).size===s.onField&&order.slice(0,s.onField).every(p=>plan.blocks[0].on.includes(p)),`${pre.id}+${extra}: the coach's starters start`);
  if(keeper!=='none')ok(plan.blocks[0].gk===order[0],'the coach keeper starts in goal');
 }
@@ -140,16 +149,16 @@ for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pr
  ok(/^[A-Za-z0-9_-]+$/.test(code),'link code is URL safe');
  ok(back&&back.players.length===10&&back.blocks.length===g.blocks.length&&back.done&&back.seconds[0]===Math.round(played.p0),'share round trip');
  ok(JSON.stringify(back.blocks[1].on)===JSON.stringify(sh.blocks[1].on),'share blocks round trip');
- ok(S.toShared(T,s,g.blocks,played,true,false).players.every(p=>p.name===''),'names left out when asked');
+ ok(S.toShared(T,s,g.blocks,played,true,false).players.every((p,i)=>p.name===(i===2?'C.':i===3?'Z.Z.':'')),'names as initials unless the coach includes them (UX audit C2)');
  for(const bad of ['','!!!','eyJ4IjoxfQ',S.encodeShare(sh).slice(0,20)])ok(S.decodeShare(bad)===null,'garbage link: '+bad);
 }
 /* ---- 5b. simulated live games with a keeper per half: the planner's look-ahead keeps everyone there all game within one change
    interval (the fairness meter's limit); property sweep over formats, squad sizes and keeper modes with injuries and arrivals ---- */
-function simGame(fmt,N,keeper,hurtAt,lateAt){
- const s={...E.settingsFor(E.presetOf(fmt)),keeper},team=ids(N),late=lateAt!=null?team[N-1]:null,order=team.filter(p=>p!==late);
+function simGame(fmt,N,keeper,hurtAt,lateAt,cap=Number(process.env.COACH_CAP??E.MAX_SWAPS)){
+ const s={...E.settingsFor(E.presetOf(fmt)),keeper,maxSwaps:cap},team=ids(N),late=lateAt!=null?team[N-1]:null,order=team.filter(p=>p!==late);
  const status=Object.fromEntries(team.map(p=>[p,p===late?'late':'ok'])),plan=E.buildPlan(order,s),ps=s.periodMin*60;
- let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0),now=1_000_000;const log=[];
- const due=()=>{for(let n=0;n<20;n++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))return;g=E.applyChange(g,now,nc.change,nc.index);log.push(`${g.clock.period}:${E.nowSec(g,now)} off ${nc.change.out} on ${nc.change.in}${nc.change.gkTo!==nc.change.gkFrom?' gk '+nc.change.gkTo:''}`);}};
+ let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0),now=1_000_000;const log=[];let maxIn=0;
+ const due=()=>{for(let n=0;n<20;n++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))return;if(nc.due!=null)maxIn=Math.max(maxIn,nc.change.in.length);g=E.applyChange(g,now,nc.change,nc.index);log.push(`${g.clock.period}:${E.nowSec(g,now)} off ${nc.change.out} on ${nc.change.in}${nc.change.gkTo!==nc.change.gkFrom?' gk '+nc.change.gkTo:''}`);}};
  for(let per=0;per<s.periods;per++){due();g=E.kickOff(g,now);
   for(let t=0;t<ps;t+=30){now+=30_000;const abs=per*ps+E.nowSec(g,now);
    if(hurtAt!=null&&abs===hurtAt){const v=g.on.find(p=>p!==g.gk);g=E.setStatus(g,now,v,'hurt');log.push('hurt '+v);}
@@ -158,7 +167,7 @@ function simGame(fmt,N,keeper,hurtAt,lateAt){
   g=E.endCurrentPeriod(g,now);now+=300_000;}
  const {played}=E.playedSeconds(g,0),hurt=Object.keys(g.status).find(p=>g.status[p]==='hurt'),fixed=keeper==='fixed'?plan.blocks[0].gk:null;
  const whole=team.filter(p=>p!==hurt&&p!==late&&p!==fixed&&!(g.joined??[]).includes(p));
- return {g,s,played,late,fr:E.fairness(played,whole),log,total:Object.values(played).reduce((a,b)=>a+b,0)};
+ return {g,s,played,late,maxIn,fr:E.fairness(played,whole),log,total:Object.values(played).reduce((a,b)=>a+b,0)};
 }
 {
  /* the owner's case: 7v7 2x25, 11 players, a keeper each half, an injury at 8:00 and a late arrival at 12:00 */
@@ -170,22 +179,27 @@ function simGame(fmt,N,keeper,hurtAt,lateAt){
  for(const pre of E.PRESETS)for(const extra of [1,2,3,4,5,6])for(const keeper of pre.keeper?['fixed','rotate']:['none']){
   const half=pre.periodMin*60;
   for(const [h,l] of [[null,null],[480,null],[null,720],[480,720],[900,300],[half+120,half-60]]){
-   const x=simGame(pre.id,pre.onField+extra,keeper,h,l),lim=x.s.subEvery*60;n++;worst=Math.max(worst,x.fr.spread/lim);
+   for(const cap of [0,E.MAX_SWAPS]){
+   const x=simGame(pre.id,pre.onField+extra,keeper,h,l,cap),lim=x.s.subEvery*60;n++;worst=Math.max(worst,x.fr.spread/lim);
    ok(x.total===x.s.periods*half*Math.min(pre.onField,pre.onField+extra-(h!=null?1:0))||h!=null||l!=null,`sim ${pre.id}: places filled`);
    /* with nothing happening: one interval; an injury or arrival mid-block can cost up to half a block more (blocks are whole) */
-   ok(x.fr.spread<=(h==null&&l==null?lim:lim*1.5),`sim ${pre.id} ${pre.onField+extra} ${keeper} hurt ${h} late ${l}: spread ${x.fr.spread/60} min`);
-  }}
- ok(n>=390,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
+   /* the calculator's promise without a swap cap; with the default cap of 3 at a stoppage (C14) the plan may need up to two */
+   ok(x.fr.spread<=(cap?lim*2+90:h==null&&l==null?lim:lim*1.5),`sim ${pre.id} ${pre.onField+extra} ${keeper} cap ${cap} hurt ${h} late ${l}: spread ${x.fr.spread/60} min`);
+   if(cap&&!x.s.rolling)ok(!x.maxIn||x.maxIn<=cap,`sim ${pre.id} cap: at most ${cap} on at a stoppage (${x.maxIn})`);
+  }}}
+ ok(n>=780,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
 }
 /* changes confirmed late (waiting for a stoppage): confirmChange re-levels, so a 40 s wait at every change stays within about one
    change interval for the owner's 7v7 with a late arrival at any time */
 for(const arr of [300,605,720,900,1205]){
- const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.slice(0,10),L='p10',ps=1500,K=['p0'];
- const plan=E.buildPlan(order,s);let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),[L]:'late'},0),now=0;
+ const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.slice(0,10),L='p10',ps=1500,K=['p0','p1'];
+ const plan=E.buildPlan(order,s,K);let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),[L]:'late'},0),now=0;
  const due=()=>{const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due+40>E.nowSec(g,now)))return;g=E.confirmChange(g,now,nc.change,nc.index,K);};
- for(let per=0;per<2;per++){due();g=E.kickOff(g,now);for(let t=0;t<ps;t+=5){now+=5000;if(per*ps+E.nowSec(g,now)===arr)g=E.setStatus(g,now,L,'ok',K);due();}g=E.endCurrentPeriod(g,now);}
+ for(let per=0;per<2;per++){due();g=E.kickOff(g,now);for(let t=0;t<ps;t+=5){now+=5000;if(per*ps+E.nowSec(g,now)===arr)g=E.setStatus(g,now,L,'ok',K);due();}g=E.endCurrentPeriod(g,now,K);}
  const {played}=E.playedSeconds(g,0),fr=E.fairness(played,order),tot=Object.values(played).reduce((a,b)=>a+b,0);
  ok(tot===3000*7,'lagged changes: every place filled');ok(fr.spread<=1.25*300,`lagged changes, arrival at ${arr}s: spread ${fr.spread/60} min`);
+ /* UX audit B2: p0 and p1 are the players marked "Can keep goal": one each half, nobody unmarked goes in */
+ ok(g.blocks.every(b=>K.includes(b.gk))&&new Set(g.blocks.map(b=>b.gk)).size===2,'lagged changes: only the marked keepers in goal, one each half');
 }
 /* ---- 5c. late players before the game: the plan brings them in at the expected minute, as the live game will ---- */
 {
@@ -317,5 +331,101 @@ for(const arr of [300,605,720,900,1205]){
  ok(/plans-data\/\$\{lang\}\?v=/.test(read('components/coach/PlansTool.tsx')),'practice plans are fetched on demand, versioned for the cache-first SW');
  ok(/#tool=plans&plan=\$\{p\.slug\}/.test(read('app/(site)/learn/soccer-practice-plans/[slug]/page.tsx'))&&/lang=es#tool=plans&plan=\$\{p\.slug\}/.test(read('components/es/pages/DrillsEs.tsx')),'plan pages open the plan in the coach app (EN + ES)');
  ok(/&format=\$\{p\.format\}/.test(read('app/(site)/tools/[slug]/page.tsx')),'tool pages keep their format in the app link');
+}
+/* ---- 11. Round 4C (Nov 22 2026): the game-day logic from the UX audit ---- */
+{
+ const T=load('lib/coach/teams.ts');
+ const mem=(o={})=>{const m={...o};return {m,getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v);}};};
+ const ps=1500,mkGame=(s,order,keepers=[])=>{const plan=E.buildPlan(order,s,keepers);return E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),Object.fromEntries(order.map(p=>[p,'ok'])),0);};
+ /* B2: only players marked "Can keep goal" go in goal: opening plan, half-time and every re-plan */
+ for(const fmt of ['5v5','7v7','9v9','11v11'])for(const extra of [1,3,5]){
+  const pre=E.presetOf(fmt),s=E.settingsFor(pre),order=ids(pre.onField+extra),K=['p0',order[order.length-1]];
+  const plan=E.buildPlan(order,s,K);ok(plan.blocks.every(b=>K.includes(b.gk)),`B2 ${fmt}+${extra}: only marked keepers in goal in the plan`);
+  ok(plan.blocks[0].gk==='p0'&&new Set(plan.blocks.map(b=>b.gk)).size===2,`B2 ${fmt}+${extra}: one marked keeper each half`);
+  let g=mkGame(s,order,K),now=0;g=E.kickOff(g,now);now+=480_000;
+  g=E.setStatus(g,now,g.on.find(p=>p!==g.gk),'hurt',K);now+=600_000;g=E.endCurrentPeriod(g,now,K);
+  ok(g.blocks.every(b=>K.includes(b.gk)),`B2 ${fmt}+${extra}: after an injury and half-time, still only marked keepers`);
+ }
+ {/* one marked keeper keeps goal all game; the coach's own starting keeper keeps the first period; none marked = everyone rotates */
+  const s=E.settingsFor(E.presetOf('7v7')),order=ids(11);
+  const one=E.buildPlan(order,s,['p0']);ok(one.blocks.every(b=>b.gk==='p0')&&E.soleKeeper(one.blocks)==='p0','B2: the one marked keeper keeps goal all game');
+  const other=E.buildPlan(order,s,['p5']);ok(other.blocks.filter(b=>b.period===0).every(b=>b.gk==='p0')&&other.blocks.filter(b=>b.period===1).every(b=>b.gk==='p5'),'B2: the coach\'s starting keeper, then the marked one');
+  ok(E.soleKeeper(E.buildPlan(order,s,[]).blocks)===null,'B2: nobody marked: the keeper rotates (the app warns)');
+  /* a re-plan at half-time never keeps an unmarked keeper on */
+  const r=E.replan({settings:s,period:1,sec:0,periodSec:ps,available:order,on:order.slice(0,7),gk:'p3',played:{},kept:{p3:1500},keepers:['p0','p1']});
+  ok(r.every(b=>b.gk==='p0'||b.gk==='p1'),'B2: half-time re-plan hands goal to a marked keeper');
+ }
+ /* B3: a change missed for 20 minutes: a gentle second alert at 2 min overdue, "Replan from now", re-levelled at half-time */
+ {
+  const s={...E.settingsFor(E.presetOf('7v7')),keeper:'fixed'},order=ids(11);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);
+  const nc=E.nextChange(g),at=nc.due;now=at*1000;ok(E.alertKey(g,now)===`c${nc.index}:0`,'B3: alert when the change is due');
+  now=(at+60)*1000;ok(E.alertKey(g,now)===`c${nc.index}:0`,'B3: no second alert before 2 min');
+  now=(at+E.OVERDUE_SEC)*1000;ok(E.alertKey(g,now)===`c${nc.index}:0:late`,'B3: one gentle re-alert at 2 min overdue');
+  now=(at+900)*1000;/* 15 min missed */
+  const before=E.playedSeconds(g,E.nowSec(g,now)).played;
+  g=E.replanNow(g,now);const n2=E.nextChange(g);
+  ok(n2&&n2.due===E.nowSec(g,now),'B3: Replan from now: a fresh change due now');
+  ok(n2.change.in.every(p=>(before[p]??0)===0||(before[p]??0)<Math.max(...Object.values(before))),'B3: the replan brings on players owed time');
+  g=E.confirmChange(g,now,n2.change,n2.index);
+  /* a whole first half with every change missed: half-time re-levels the second half from the minutes really played */
+  let h=mkGame(s,order);h=E.kickOff(h,0);const end=ps*1000;
+  const old={...h,clock:E.endPeriod(h.clock,end,2),stints:h.stints.map(x=>x.to==null?{...x,to:ps}:x),next:h.blocks.findIndex(b=>b.period===1),delay:0};
+  const half=E.endCurrentPeriod(h,end);ok(E.driftSec(old,0)>=30&&half.blocks!==h.blocks,'B3: drift found at half-time, plan re-levelled');
+  const finish=x=>{let y=x,t=end+300_000;const run=()=>{for(let j=0;j<8;j++){const c=E.nextChange(y);if(!c||(c.due!=null&&c.due>E.nowSec(y,t)))break;y=E.applyChange(y,t,c.change,c.index);}};
+   run();y=E.kickOff(y,t);for(let k=0;k<60;k++){t+=25_000;run();}return E.endCurrentPeriod(y,t);};
+  const sp=x=>E.fairness(E.playedSeconds(x,0).played,order.slice(1)).spread;
+  const a=sp(finish(old)),b=sp(finish(half));
+  ok(b<a&&b<=600,`B3: half-time re-levels missed changes (${a/60} -> ${b/60} min)`);
+ }
+ /* B4: the tap guard */
+ ok(E.tapOk(0,1500)&&!E.tapOk(1000,2000)&&E.TAP_GUARD_MS===1500,'B4: a second tap within 1.5 s is ignored');
+ {/* B4: one Done = one round even when tapped twice (the UI guard), and Done early changes only that change */
+  const s=E.settingsFor(E.presetOf('7v7')),order=ids(11);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);now=60_000;
+  const nc=E.nextChange(g);ok(nc.due-E.nowSec(g,now)>0,'B4: the change is not due yet (the app asks "Change early?")');
+  const g1=E.confirmChange(g,now,nc.change,nc.index);ok(g1.subs===1&&E.nextChange(g1).index>nc.index,'B4: early Done makes one change');
+ }
+ /* C4: Skip keeps the players on until the next planned change, never an instant "Change now" */
+ for(const fmt of ['7v7','9v9','5v5']){
+  const s=E.settingsFor(E.presetOf(fmt)),order=ids(E.presetOf(fmt).onField+3);let g=mkGame(s,order),now=0;g=E.kickOff(g,now);
+  const nc=E.nextChange(g),nextPlanned=g.blocks[nc.index+1];now=nc.due*1000;
+  const k=E.skipChange(g,now),n2=E.nextChange(k);
+  ok(JSON.stringify([...k.on].sort())===JSON.stringify([...g.on].sort()),`C4 ${fmt}: Skip keeps the players on`);
+  ok(!n2||n2.due==null||n2.due>E.nowSec(k,now)+30,`C4 ${fmt}: after Skip the next change is not due at once (${n2&&n2.due})`);
+  if(nextPlanned&&nextPlanned.period===0&&n2&&n2.due!=null)ok(n2.due===nextPlanned.start,`C4 ${fmt}: next change at its planned time ${nextPlanned.start}`);
+  ok(Object.values(E.planSeconds(k.blocks)).reduce((a,x)=>a+x,0)===s.periods*s.periodMin*60*s.onField,`C4 ${fmt}: totals still fill every place`);
+ }
+ /* C14: the cap is a setting (default 3, 0 = no limit), cleaned */
+ ok(E.cleanSettings({format:'9v9'}).maxSwaps===3&&E.cleanSettings({format:'9v9',maxSwaps:0}).maxSwaps===0&&E.cleanSettings({format:'9v9',maxSwaps:99}).maxSwaps===11,'C14: max swaps setting');
+ {const s={...E.settingsFor(E.presetOf('11v11')),maxSwaps:2},order=ids(18),p=E.buildPlan(order,s);
+  ok(p.blocks.every((b,k)=>!k||!b.start||b.on.filter(x=>!p.blocks[k-1].on.includes(x)).length<=2),'C14: a cap of 2 holds in the plan');}
+ /* C17: game details and the score, kept through a reload */
+ {const s=E.settingsFor(E.presetOf('7v7')),order=ids(9),plan=E.buildPlan(order,s);
+  let g=E.newGame(plan,s,{},Object.fromEntries(order.map(p=>[p,'ok'])),0,{opp:'Tigers',date:'2026-11-29',time:'10:30',home:'away'});
+  g=E.addGoal(g,'p3');g=E.addGoal(g);g=E.theirGoal(g,1);g=E.setScorer(g,1,'p4');g=E.addGoal(g,'p5');g=E.removeGoal(g);
+  ok(JSON.stringify(E.scoreOf(g))==='{"us":2,"them":1}'&&g.score.goals.join()==='p3,p4','C17: score with scorers');
+  const st=S.cleanStore({v:1,team:{players:order.map((id,i)=>({id,num:i+1}))},here:order,game:JSON.parse(JSON.stringify(g)),match:{opp:'  Tigers ',date:'2026-11-29',time:'10:30',home:'away'}});
+  ok(st.game.info.opp==='Tigers'&&st.game.score.goals.join()==='p3,p4'&&st.game.score.them===1,'C17: details + score survive a reload');
+  ok(st.match.opp==='Tigers'&&st.match.home==='away'&&S.cleanMatch({date:'tomorrow',time:'9',home:'x'}).date===''&&S.cleanMatch({time:'9'}).time===''&&S.cleanMatch(null).home==='','C17: next game cleaned');
+  ok(S.hasMatch(st.match)&&!S.hasMatch(S.cleanMatch({})),'C17: has details');
+  /* C2: the parents' link carries the date, opponent and score; names as initials by default */
+  const T2={name:'Sharks',players:order.map((id,i)=>({id,num:i+1,name:i===0?'Ana Lopez':'',gk:false}))};
+  const sh=S.toShared(T2,s,plan.blocks,E.planSeconds(plan.blocks),true,false,{opp:'Tigers',date:'2026-11-29',us:2,them:1}),back=S.decodeShare(S.encodeShare(sh));
+  ok(back.info.opp==='Tigers'&&back.info.date==='2026-11-29'&&back.info.us===2&&back.info.them===1&&back.players[0].name==='A.L.','C2: details, score and initials in the link');
+  ok(S.decodeShare(S.encodeShare({...sh,info:undefined})).info===undefined,'C2: a plan link without a game has no details');
+ }
+ /* B5: two tabs: the revision counter, newer wins */
+ {const st=mem(),t=T.loadTeams(st),r1=T.saveTeamsRev(st,t);ok(r1===1&&T.storedRev(st)===1,'B5: first save is revision 1');
+  const other={...t,teams:t.teams.map(x=>({...x,team:{...x.team,name:'Renamed'}}))};const r2=T.saveTeamsRev(st,{...other,rev:0});
+  ok(r2===2,'B5: a save goes above the stored revision even from a stale tab');
+  ok(T.newerTeams(st.m['fi-coach-teams-v1'],1).teams[0].team.name==='Renamed'&&T.newerTeams(st.m['fi-coach-teams-v1'],2)===null&&T.newerTeams('{bad',0)===null,'B5: the other tab takes only a newer record');
+  ok(T.loadTeams(st).rev===2,'B5: the revision is read back');}
+ /* UI wiring that has no browser here (the Playwright walkthrough covers the behaviour) */
+ const app=read('components/coach/CoachApp.tsx');
+ ok(!/window\.confirm\(w\.(changeEarly|earlyQ)/.test(app)&&/data-early-sheet/.test(app)&&/tapOk\(/.test(app),'B4: an in-app "Change early?" sheet and the tap guard');
+ ok(/addEventListener\('storage'/.test(app)&&/newerTeams\(/.test(app),'B5: the app listens for the other tab');
+ ok(/data-attend=/.test(app)&&!/one tap cycles Coming/.test(app),'C5: three visible attendance choices');
+ ok(/data-replan-now/.test(app)&&/alertKey\(/.test(app),'B3: Replan from now + the gentle re-alert');
+ ok(/data-score=/.test(app)&&/data-game-details/.test(app),'C17: score on Match day, game details sheet');
+ for(const l of ['en','es']){const w=load('lib/coach/words.ts').WORDS[l];ok(!/uneven|desigual/i.test(w.fairCheck)&&w.sharedTitle&&w.changeEarly&&w.replanNow,'neutral words, '+l);}
 }
 console.log(`coach-app: ${checks} checks passed`);

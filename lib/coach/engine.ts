@@ -25,40 +25,53 @@ export const PRESETS:readonly Preset[]=[
  {id:'futsal',ages:'',onField:5,keeper:true,periods:2,periodMin:20,subEvery:4,rolling:true},
 ];
 export const presetOf=(id:unknown)=>PRESETS.find(p=>p.id===id)??PRESETS[2];
-export type Settings={format:FormatId;onField:number;periods:number;periodMin:number;subEvery:number;keeper:KeeperMode;rolling:boolean;formation:string};
-export const settingsFor=(p:Preset,formation=''):Settings=>({format:p.id,onField:p.onField,periods:p.periods,periodMin:p.periodMin,subEvery:p.subEvery,keeper:p.keeper?'rotate':'none',rolling:p.rolling,formation});
+/** maxSwaps (UX audit C14): the most players changed at one stoppage (0 = no limit; rolling subs have none) */
+export type Settings={format:FormatId;onField:number;periods:number;periodMin:number;subEvery:number;keeper:KeeperMode;rolling:boolean;formation:string;maxSwaps:number};
+export const MAX_SWAPS=3;
+export const settingsFor=(p:Preset,formation=''):Settings=>({format:p.id,onField:p.onField,periods:p.periods,periodMin:p.periodMin,subEvery:p.subEvery,keeper:p.keeper?'rotate':'none',rolling:p.rolling,formation,maxSwaps:MAX_SWAPS});
 const int=(v:unknown,lo:number,hi:number,d:number)=>{const n=Math.round(Number(v));return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):d;};
 export function cleanSettings(s:Partial<Settings>|null|undefined):Settings{
  const p=presetOf(s?.format),o=s??{};
  const periodMin=int(o.periodMin,1,60,p.periodMin);
  const keeper:KeeperMode=!p.keeper?'none':o.keeper==='fixed'||o.keeper==='rotate'?o.keeper:'rotate';
  return {format:p.id,onField:int(o.onField,2,11,p.onField),periods:int(o.periods,1,4,p.periods),periodMin,subEvery:int(o.subEvery,1,periodMin,Math.min(p.subEvery,periodMin)),
-  keeper,rolling:typeof o.rolling==='boolean'?o.rolling:p.rolling,formation:typeof o.formation==='string'?o.formation.slice(0,40).replace(/[^a-z0-9-]/g,''):''};
+  keeper,rolling:typeof o.rolling==='boolean'?o.rolling:p.rolling,formation:typeof o.formation==='string'?o.formation.slice(0,40).replace(/[^a-z0-9-]/g,''):'',maxSwaps:int(o.maxSwaps,0,11,MAX_SWAPS)};
 }
 /* ---------------------------------------------------------------- the plan ---------------------------------------------- */
 /** One stretch of a period with the same players on. Times are seconds from the start of that period. */
 export type PBlock={period:number;start:number;end:number;on:string[];gk:string|null};
 export type Plan={blocks:PBlock[];periods:number;periodSec:number;onField:number};
 /** The opening plan. `order`: available player ids, the starting goalkeeper first, then the other starters, then the bench. */
-export function buildPlan(order:readonly string[],s:Settings):Plan{
+export function buildPlan(order:readonly string[],s:Settings,keepers:readonly string[]=[]):Plan{
  const P=order.length,F=Math.min(s.onField,P),periodSec=s.periodMin*60;
  if(!P)return {blocks:[],periods:s.periods,periodSec,onField:F};
  const r=planRotation({players:P,onField:F,periods:s.periods,periodMin:s.periodMin,subEvery:s.subEvery,keeperRotates:s.keeper!=='fixed'});
- const blocks=r.blocks.map(b=>({period:b.period,start:b.start*60,end:b.end*60,on:b.on.map(i=>order[i]),gk:s.keeper==='none'?null:order[b.keeper]}));
- return {blocks:relabelStarters(blocks,order.slice(0,F)),periods:s.periods,periodSec,onField:F};
+ const raw=r.blocks.map(b=>({period:b.period,start:b.start*60,end:b.end*60,on:b.on.map(i=>order[i]),gk:s.keeper==='none'?null:order[b.keeper]}));
+ const blocks=relabelStarters(raw,order.slice(0,F));
+ /* UX audit B2: with a rotating keeper, only players marked "Can keep goal" go in goal (the coach's own starting keeper keeps
+    the first period); C14: at a stoppage no more than maxSwaps players change. When the calculator's plan breaks either, the
+    plan is made by the levelling planner from kick-off instead (the coach's starters start, the same totals) */
+ const K=s.keeper==='rotate'?keepers.filter(p=>order.includes(p)):[];
+ const badGk=K.length>0&&blocks.some(b=>b.gk!=null&&!K.includes(b.gk)&&!(b.period===0&&b.gk===order[0]));
+ const cap=!s.rolling&&s.maxSwaps>0?s.maxSwaps:0;
+ const badSw=cap>0&&blocks.some((b,k)=>k>0&&b.start>0&&b.on.filter(p=>!blocks[k-1].on.includes(p)).length>cap);
+ if(badGk||badSw)return {blocks:replan({settings:s,period:0,sec:0,periodSec,available:order,on:order.slice(0,F),gk:s.keeper==='none'?null:order[0],played:{},kept:{},keepers:K,holdOn:true,keepGk:true}),periods:s.periods,periodSec,onField:F};
+ return {blocks,periods:s.periods,periodSec,onField:F};
 }
+/** The one keeper of a whole plan (a fixed keeper, or the only player marked "Can keep goal"): left out of the fairness spread. */
+export const soleKeeper=(blocks:readonly PBlock[]):string|null=>{const k=blocks[0]?.gk??null;return k&&blocks.every(b=>b.gk===k)?k:null;};
 /** The plan with players coming late: the players here at kick-off play the opening plan, and each late player with an expected
  *  minute joins then, exactly as the live game re-plans when the coach taps "Arrived" (so the plan shown before the game is the
  *  one the live game will follow). `late`: player id -> expected minute of the game, counted from kick-off across periods (null
  *  = not known: that player is left out until they come). `order` as in buildPlan, late players anywhere in it. */
 export function planWithLate(order:readonly string[],s:Settings,late:Readonly<Record<string,number|null>>,keepers:readonly string[]=[]):Plan{
  const periodSec=s.periodMin*60,game=s.periods*periodSec,isLate=(p:string)=>p in late&&!(late[p]===0);
- const start=order.filter(p=>!isLate(p));let plan=buildPlan(start,s);
+ const start=order.filter(p=>!isLate(p));let plan=buildPlan(start,s,keepers);
  const arr=order.filter(p=>isLate(p)&&late[p]!=null&&late[p]!*60<game).map(p=>({p,t:Math.round(late[p]!*60)})).sort((a,b)=>a.t-b.t);
  const avail=[...start];
  for(const {p,t} of arr){
   avail.push(p);
-  if(!plan.blocks.length){plan=buildPlan(avail,s);continue;}
+  if(!plan.blocks.length){plan=buildPlan(avail,s,keepers);continue;}
   const period=Math.min(s.periods-1,Math.floor(t/periodSec)),sec=t-period*periodSec;
   const past=plan.blocks.filter(b=>b.period<period||(b.period===period&&b.start<sec)).map(b=>b.period===period&&b.end>sec?{...b,end:sec}:b);
   /* who is on at that moment: a change due then is made first (as on the live screen, where it is confirmed at its time) */
@@ -122,6 +135,12 @@ export type ReplanInput={
  played:Readonly<Record<string,number>>;kept?:Readonly<Record<string,number>>;
  /** the player to prefer in goal when a new keeper is needed (the Team screen's GK mark) */
  keepers?:readonly string[];
+ /** hold the players on now for the first block (a skipped change keeps them to the next planned change: UX audit C4) */
+ holdOn?:boolean;holdTo?:number;
+ /** the keeper on now keeps this whole period even at its start (the opening plan: the coach's own keeper) */
+ keepGk?:boolean;
+ /** the block running now is planned afresh too ("Replan from now"), not kept as it is */
+ swapNow?:boolean;
 };
 /** Seconds left in the game from (period, sec), cut into blocks: the rest of this period into equal pieces of about the change
  *  interval, then each later period like the opening plan. */
@@ -139,7 +158,9 @@ function waterLevel(played:number[],cap:number,total:number):number{
  return hi;
 }
 export function replan(i:ReplanInput):PBlock[]{
- const s=i.settings,avail=[...i.available],segs=remainingBlocks(i.period,i.sec,s,i.periodSec);
+ const s=i.settings,avail=[...i.available];
+ const hT=i.holdOn&&i.holdTo!=null&&i.holdTo>i.sec?Math.min(i.holdTo,i.periodSec):null;
+ const segs=hT!=null?[{period:i.period,start:i.sec,end:hT},...remainingBlocks(i.period,hT,s,i.periodSec)]:remainingBlocks(i.period,i.sec,s,i.periodSec);
  if(!segs.length||!avail.length)return [];
  const F=Math.min(s.onField,avail.length),keeperOn=s.keeper!=='none';
  const availSet=new Set(avail),kept={...(i.kept??{})};
@@ -149,17 +170,21 @@ export function replan(i:ReplanInput):PBlock[]{
  if(keeperOn){
   const prefs=(i.keepers??[]).filter(p=>availSet.has(p)),prefSet=new Set(prefs);
   const rank=(p:string)=>prefSet.size&&!prefSet.has(p)?1:0;
-  const cur=i.gk&&availSet.has(i.gk)?i.gk:[...avail].sort((a,b)=>rank(a)-rank(b)||(kept[a]??0)-(kept[b]??0)||avail.indexOf(a)-avail.indexOf(b))[0]??null;
+  /* UX audit B2: a keeper who is not marked stays only mid-period (no sudden swap) or when the coach picked them to start */
+  const curOk=!!i.gk&&availSet.has(i.gk)&&(!prefSet.size||prefSet.has(i.gk)||i.sec>0||!!i.keepGk);
+  const cur=curOk?i.gk:[...avail].sort((a,b)=>rank(a)-rank(b)||(kept[a]??0)-(kept[b]??0)||avail.indexOf(a)-avail.indexOf(b))[0]??null;
   if(s.keeper==='fixed')segs.forEach((_,k)=>{gkOf[k]=cur;});
   else{/* later periods, one keeper each, chosen with a look ahead at the time each player is still owed: someone who has not
      kept yet; then whoever is owed at least the period in goal and whose field time left over fits whole changes best (a
      whole period in goal is a big block, and the rest of their time comes in blocks of about the change interval); then the
      most owed */
-   const rota=prefs.length>=2?prefs:avail,F0=Math.min(s.onField,avail.length),blk=Math.max(60,s.subEvery*60);
+   const rota=prefs.length>=1?prefs:avail,F0=Math.min(s.onField,avail.length),blk=Math.max(60,s.subEvery*60);
    const all=segs.reduce((a,g)=>a+(g.end-g.start),0),L0=waterLevel(avail.map(p=>i.played[p]??0),all,all*F0);
    const owed:Record<string,number>={};for(const p of avail)owed[p]=L0-(i.played[p]??0);
    const fit=(p:string,len:number)=>{const r=owed[p]-len;if(r<-blk/2)return 1e6-r;const m=((r%blk)+blk)%blk;return Math.min(m,blk-m);};
-   let p=-1,who=cur;
+   /* at the start of a period (half-time) a keeper who has kept already hands over, so the rotation goes on after a re-plan */
+   const fresh=i.sec===0&&!i.keepGk&&!!cur&&(kept[cur]??0)>0;
+   let p=fresh?-2:-1,who=cur;
    segs.forEach((g,k)=>{if(g.period!==p){if(p!==-1){const c=rota.filter(x=>x!==who),plen=segs.filter(x=>x.period===g.period).reduce((a,x)=>a+x.end-x.start,0);
      const sc=new Map(c.map(x=>[x,((kept[x]??0)>0?1e9:0)+fit(x,plen)-owed[x]*0.3]));
      who=[...c].sort((a,b)=>sc.get(a)!-sc.get(b)!||rota.indexOf(a)-rota.indexOf(b))[0]??who;}p=g.period;}
@@ -186,13 +211,17 @@ export function replan(i:ReplanInput):PBlock[]{
      bonus for staying on (fewer changes), and first of all anyone who must play now or end up short */
   /* mid-period, the block running now keeps whoever is still on and only fills the empty places (one change for the coach,
      not a reshuffle); later blocks are free */
-  const keepNow=k===0&&g.start===i.sec&&i.sec>0;
+  const keepNow=k===0&&g.start===i.sec&&i.sec>0&&!i.swapNow;
   /* among the players who must play now, the least slack first (field time owed beyond the field time this player has left after
      this block: a keeper-to-be has less, their blocks in goal are taken), so a keeper-to-be is not benched until it is too late */
   const key=(p:string)=>{const n=need[p]??-1e9,a=ahead[p]??0,over=n-(after-a);const stay=prev.has(p)?len*0.4:0;return over>(a>0?len/2:0.5)?1e7+over*10+stay:(keepNow&&prev.has(p)&&n>=len/2?5e6:0)+n+stay;};
   const score=new Map(cands.map(p=>[p,key(p)]));
   cands.sort((a,b)=>score.get(b)!-score.get(a)!||avail.indexOf(a)-avail.indexOf(b));
-  for(const p of cands){if(chosen.length>=F)break;chosen.push(p);}
+  if(k===0&&i.holdOn)for(const p of i.on)if(availSet.has(p)&&chosen.length<F&&!chosen.includes(p))chosen.push(p);
+  /* C14: at a stoppage, at most maxSwaps players come on at once (whoever is owed least stays on instead) */
+  const cap=!s.rolling&&s.maxSwaps>0&&g.start>0?s.maxSwaps:1e9;let ins=chosen.filter(p=>!prev.has(p)).length;
+  for(const p of cands){if(chosen.length>=F)break;if(chosen.includes(p))continue;if(!prev.has(p)){if(ins>=cap)continue;ins++;}chosen.push(p);}
+  for(const p of cands){if(chosen.length>=F)break;if(!chosen.includes(p))chosen.push(p);}
   for(const p of chosen)if(need[p]!=null){if(p===gk&&!fixedGk)ahead[p]-=len;else need[p]-=len;}
   left=after;prev=new Set(chosen);
   out.push({period:g.period,start:g.start,end:g.end,on:chosen,gk:keeperOn?gk:null});
@@ -225,10 +254,23 @@ export type Game={
  stints:Stint[];status:Record<string,Status>;
  subs:number;/* changes confirmed */
  joined?:string[];/* players who came late (marked late, then arrived): left out of the fairness spread, like the calculator */
+ info?:MatchInfo;/* the game's details (UX audit C17), copied from the team's next game at the start */
+ score?:Score;
 };
-export function newGame(plan:Plan,s:Settings,spots:Record<string,number>,status:Record<string,Status>,now:number):Game{
+/** The game's details: opponent, date (YYYY-MM-DD), kick-off (HH:MM), home or away ('' = not set). */
+export type MatchInfo={opp:string;date:string;time:string;home:''|'home'|'away'};
+export const emptyMatch=():MatchInfo=>({opp:'',date:'',time:'',home:''});
+/** The score: our goals, each with its scorer's id ('' = not recorded), and theirs. */
+export type Score={goals:string[];them:number};
+export const scoreOf=(g:Pick<Game,'score'>)=>({us:g.score?.goals.length??0,them:g.score?.them??0});
+export const addGoal=(g:Game,scorer=''):Game=>({...g,score:{goals:[...(g.score?.goals??[]),scorer].slice(0,99),them:g.score?.them??0}});
+export const setScorer=(g:Game,i:number,scorer:string):Game=>g.score&&i>=0&&i<g.score.goals.length?{...g,score:{...g.score,goals:g.score.goals.map((x,k)=>k===i?scorer:x)}}:g;
+export const removeGoal=(g:Game):Game=>({...g,score:{goals:(g.score?.goals??[]).slice(0,-1),them:g.score?.them??0}});
+export const theirGoal=(g:Game,d:1|-1):Game=>({...g,score:{goals:g.score?.goals??[],them:Math.max(0,Math.min(99,(g.score?.them??0)+d))}});
+export function newGame(plan:Plan,s:Settings,spots:Record<string,number>,status:Record<string,Status>,now:number,info?:MatchInfo):Game{
  const b=plan.blocks[0];
- return {v:1,started:now,settings:s,clock:newClock(),blocks:plan.blocks,next:1,delay:0,on:b?[...b.on]:[],gk:b?.gk??null,spots:{...spots},stints:[],status:{...status},subs:0};
+ return {v:1,started:now,settings:s,clock:newClock(),blocks:plan.blocks,next:1,delay:0,on:b?[...b.on]:[],gk:b?.gk??null,spots:{...spots},stints:[],status:{...status},subs:0,
+  ...(info?{info:{...info}}:{}),score:{goals:[],them:0}};
 }
 export const periodSecOf=(g:Game)=>g.settings.periodMin*60;
 export const nowSec=(g:Game,now:number)=>clockSec(g.clock,now);
@@ -245,12 +287,22 @@ export function kickOff(g:Game,now:number):Game{
  const clock=startPeriod(g.clock,now);
  return {...g,clock,stints:[...g.stints,...openStints({...g,clock},g.on,0,g.gk)]};
 }
-export function endCurrentPeriod(g:Game,now:number):Game{
+export function endCurrentPeriod(g:Game,now:number,keepers:readonly string[]=[]):Game{
  const sec=nowSec(g,now),stints=closeStints(g.stints,new Set(g.on),sec),clock=endPeriod(g.clock,now,g.settings.periods);
  /* the next change is the first block of the new period (made during the break) */
  let next=g.next;while(next<g.blocks.length&&g.blocks[next].period<clock.period)next++;
  if(clock.status==='done')next=g.blocks.length;
- return {...g,clock,stints,next,delay:0};
+ const x={...g,clock,stints,next,delay:0};
+ /* UX audit B3: at half-time, when the minutes played are off the plan by half a minute or more (a missed or late change, stoppage
+    time, an early whistle), the rest of the game is re-levelled from what was really played */
+ if(clock.status==='break'&&driftSec(x,g.clock.period)>=30)return withReplan(x,now,keepers);
+ return x;
+}
+/** The largest gap, in seconds, between the minutes played and the minutes planned up to the end of `period`. */
+export function driftSec(g:Game,period:number):number{
+ const plan=planSeconds(g.blocks.filter(b=>b.period<=period)),{played}=playedSeconds({...g,clock:{...g.clock,period:period+1}},0);
+ let worst=0;for(const p of new Set([...Object.keys(plan),...Object.keys(played)]))worst=Math.max(worst,Math.abs((plan[p]??0)-(played[p]??0)));
+ return worst;
 }
 /** The next planned change: the block it leads to, the change, and when it is due (seconds into the period; null = at kick-off). */
 export function nextChange(g:Game):{index:number;block:PBlock;change:Change;due:number|null}|null{
@@ -295,22 +347,41 @@ export function setStatus(g:Game,now:number,p:string,st:Status,keepers:readonly 
  }
  return withReplan(x,now,keepers);
 }
-/** Skip the next change and re-plan, so the minutes still come out level. */
+/** Skip the next change and re-plan, so the minutes still come out level. The players on now stay on until the next planned
+ *  change (UX audit C4: never an instant new "Change now"); then the re-levelled changes follow. */
 export function skipChange(g:Game,now:number,keepers:readonly string[]=[]):Game{
  const n=nextChange(g);if(!n)return g;
- return withReplan({...g,next:n.index+1,delay:0},now,keepers);
+ const inPlay=g.clock.status==='live'||g.clock.status==='paused',sec=inPlay?nowSec(g,now):0,ps=periodSecOf(g),nb=g.blocks[n.index+1];
+ const to=nb&&nb.period===g.clock.period?nb.start:ps,holdTo=to>sec+30?to:Math.min(ps,sec+g.settings.subEvery*60);
+ return withReplan({...g,next:n.index+1,delay:0},now,keepers,{holdTo});
 }
-function replanFrom(g:Game,now:number,keepers:readonly string[],secIn?:number):PBlock[]{
+/** "Replan from now" (UX audit B3): a change missed for a while is replaced by a fresh one from the minutes really played. */
+export const replanNow=(g:Game,now:number,keepers:readonly string[]=[]):Game=>withReplan({...g,delay:0},now,keepers,{swapNow:true});
+/** The live screen's alerts (UX audit B3): once when a change is due, once more (gently) when it is OVERDUE_SEC late, once when
+ *  the period's time is up. '' = nothing to alert. */
+export const OVERDUE_SEC=120;
+export function alertKey(g:Game,now:number):string{
+ const st=g.clock.status;if(st!=='live')return '';
+ const sec=nowSec(g,now),nc=nextChange(g),d=nc&&nc.due!=null?nc.due-sec:null;
+ if(sec>=g.settings.periodMin*60+g.clock.added)return `u${g.clock.period}:${g.clock.added}`;
+ if(d==null||d>0)return '';
+ return d<=-OVERDUE_SEC?`c${nc!.index}:${g.delay}:late`:`c${nc!.index}:${g.delay}`;
+}
+/** UX audit B4: one tap on Done makes one change; a second tap within this time is ignored. */
+export const TAP_GUARD_MS=1500;
+export const tapOk=(last:number,now:number)=>now-last>=TAP_GUARD_MS;
+type ReOpt={holdTo?:number;swapNow?:boolean};
+function replanFrom(g:Game,now:number,keepers:readonly string[],secIn?:number,o:ReOpt={}):PBlock[]{
  const s=g.settings,live=g.clock.status==='live'||g.clock.status==='paused';
  const sec=secIn??(live?nowSec(g,now):0);
  const {played,kept}=playedSeconds(g,sec);
  const available=Object.keys(g.status).filter(p=>(g.status[p]??'ok')==='ok');
  const period=g.clock.status==='done'?s.periods:g.clock.period;
- return replan({settings:s,period,sec,periodSec:periodSecOf(g),available,on:g.on.filter(p=>available.includes(p)),gk:g.gk,played,kept,keepers});
+ return replan({settings:s,period,sec,periodSec:periodSecOf(g),available,on:g.on.filter(p=>available.includes(p)),gk:g.gk,played,kept,keepers,...(o.holdTo!=null?{holdOn:true,holdTo:o.holdTo}:{}),...(o.swapNow?{swapNow:true}:{})});
 }
-export function withReplan(g:Game,now:number,keepers:readonly string[]=[]):Game{
+export function withReplan(g:Game,now:number,keepers:readonly string[]=[],o:ReOpt={}):Game{
  const sec=g.clock.status==='live'||g.clock.status==='paused'?nowSec(g,now):0;
- const rest=replanFrom(g,now,keepers,sec);
+ const rest=replanFrom(g,now,keepers,sec,o);
  /* past blocks stay as the record; the block running now is cut at `sec` */
  const past=g.blocks.filter(b=>b.period<g.clock.period||(b.period===g.clock.period&&b.start<sec)).map(b=>b.period===g.clock.period&&b.end>sec?{...b,end:sec}:b);
  /* the first re-planned block starts now with the players on now (it is the current block); later ones are the changes */
