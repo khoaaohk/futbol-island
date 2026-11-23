@@ -232,7 +232,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
       onNew={()=>{if(window.confirm(w.newGameConfirm)){update(s=>({...s,last:s.game??s.last,game:null}));go('minutes');}}}/>}
    </div>)}
   </main>
-  {live&&game&&<LiveGame w={w} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
+  {live&&game&&<LiveGame w={w} lang={lang} game={game} team={team} now={now} act={act} canUndo={undo.length>0} onUndo={doUndo} keepers={d.keepers} beep={beep}
    sound={store.sound} toggleSound={()=>update(s=>({...s,sound:!s.sound}))}
    onExit={()=>{/* Back leaves the live screen without stopping the game: the clock is time-stamped and Home's Continue card returns to it */
     setLive(false);setTab(game.clock.status==='done'?'summary':'home');}}
@@ -436,7 +436,7 @@ function GameTab({view,w,store,d,onStart,onResume,onShare,goTeam,onNext}:{view:'
 }
 /* ------------------------------------------------------------------ Live game -------------------------------------------- */
 type WakeLockNav=Navigator&{wakeLock?:{request(t:'screen'):Promise<{release():Promise<void>;addEventListener(t:'release',f:()=>void):void}>}};
-function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,keepers,beep,sound,toggleSound}:{w:Words;game:Game;team:Store['team'];now:number;act:(f:(g:Game)=>Game,msg?:string)=>void;
+function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,keepers,beep,sound,toggleSound}:{w:Words;lang:Lang;game:Game;team:Store['team'];now:number;act:(f:(g:Game)=>Game,msg?:string)=>void;
  canUndo:boolean;onUndo:()=>void;onExit:()=>void;onSummary:()=>void;onSub:()=>void;keepers:readonly string[];beep:()=>void;sound:boolean;toggleSound:()=>void}){
  const s=game.settings,st=game.clock.status,inPlay=st==='live'||st==='paused',sec=inPlay?clockSec(game.clock,now):0,len=s.periodMin*60+game.clock.added;
  const byId=new Map(team.players.map(p=>[p.id,p])),{played}=playedSeconds(game,sec),nc=nextChange(game);
@@ -465,7 +465,8 @@ function LiveGame({w,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSub,kee
   <b>{p.num}</b><span>{p.name}{game.gk===p.id?` · ${w.gk}`:''}{extra?` · ${extra}`:''}</span><em>{mins(played[p.id]??0)}′</em></button>;
  return <div className={c.live} role="dialog" aria-modal="true" aria-label={w.tabGame}>
   <div className={c.liveTop}>
-   <HeaderGoldBack lang={w.langCode==='es'?'es':'en'} onBack={onExit} data={{'data-live-back':''}}/>
+   {/* the app's language (w.langCode is the OTHER language, for the toggle: it made Back read "Volver" in English) */}
+   <HeaderGoldBack lang={lang} onBack={onExit} data={{'data-live-back':''}}/>
    <div className={c.period}>{st==='break'?w.breakName(s.periods):st==='done'?w.over:pName}<small>{team.name||w.appName}</small></div>
    <button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={onUndo} disabled={!canUndo} aria-disabled={!canUndo}>{w.undo}</button>
   </div>
