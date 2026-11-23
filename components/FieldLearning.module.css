@@ -149,5 +149,5 @@
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .transport button:not(:disabled,[aria-disabled=true]):hover,.bottom .endActions>button:not(:disabled,[aria-disabled=true]):hover,.bottom .endActions>button:nth-child(2):not(:disabled,[aria-disabled=true]):hover,.retry.retry:not(:disabled,[aria-disabled=true]):hover,.quizSecondary.quizSecondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .transport button:not(:disabled):not([aria-disabled=true]):hover,.bottom .endActions>button:not(:disabled):not([aria-disabled=true]):hover,.bottom .endActions>button:nth-child(2):not(:disabled):not([aria-disabled=true]):hover,.retry.retry:not(:disabled):not([aria-disabled=true]):hover,.quizSecondary.quizSecondary:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

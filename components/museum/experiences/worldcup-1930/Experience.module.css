@@ -277,5 +277,5 @@
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .chapterBtn.chapterBtn:not(:disabled,[aria-disabled=true]):hover,.againBtn.againBtn:not(:disabled,[aria-disabled=true]):hover,.swapBtn.swapBtn:not(:disabled,[aria-disabled=true]):hover,.playBtn.playBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .chapterBtn.chapterBtn:not(:disabled):not([aria-disabled=true]):hover,.againBtn.againBtn:not(:disabled):not([aria-disabled=true]):hover,.swapBtn.swapBtn:not(:disabled):not([aria-disabled=true]):hover,.playBtn.playBtn:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

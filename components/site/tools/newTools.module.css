@@ -108,5 +108,5 @@ a.coachBtn,a.coachBtn:visited{color:var(--paper);text-decoration:none}
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .bigBtn.bigBtn:not(:disabled,[aria-disabled=true]):hover,.btn.btn:not(:disabled,[aria-disabled=true]):hover,.x.x:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .bigBtn.bigBtn:not(:disabled):not([aria-disabled=true]):hover,.btn.btn:not(:disabled):not([aria-disabled=true]):hover,.x.x:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

@@ -69,5 +69,5 @@
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .dialog .suggestions>button:not(:disabled,[aria-disabled=true]):hover,.dialog .newsHeader button:not(:disabled,[aria-disabled=true]):hover,.dialog .matchStory button:not(:disabled,[aria-disabled=true]):hover,.dialog .rankTabs button:not(:disabled,[aria-disabled=true]):hover,.dialog .rankList button:not(:disabled,[aria-disabled=true]):hover,.dialog .clip button:not(:disabled,[aria-disabled=true]):hover,.goodbye.goodbye:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .dialog .suggestions>button:not(:disabled):not([aria-disabled=true]):hover,.dialog .newsHeader button:not(:disabled):not([aria-disabled=true]):hover,.dialog .matchStory button:not(:disabled):not([aria-disabled=true]):hover,.dialog .rankTabs button:not(:disabled):not([aria-disabled=true]):hover,.dialog .rankList button:not(:disabled):not([aria-disabled=true]):hover,.dialog .clip button:not(:disabled):not([aria-disabled=true]):hover,.goodbye.goodbye:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

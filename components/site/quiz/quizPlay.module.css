@@ -121,5 +121,5 @@
    gold ring outline on the raised faces (answer cards before they are marked, gold/mint/coral pills); the round close icon gets
    the global brightness only. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .card.card:not(:disabled,[aria-disabled=true],[data-state]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.wrongBtn.wrongBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .card.card:not(:disabled):not([aria-disabled=true]):not([data-state]):hover,.primary.primary:not(:disabled):not([aria-disabled=true]):hover,.secondary.secondary:not(:disabled):not([aria-disabled=true]):hover,.wrongBtn.wrongBtn:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

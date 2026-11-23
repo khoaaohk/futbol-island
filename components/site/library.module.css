@@ -166,7 +166,7 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .go.go:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .go.go:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }
 /* Shared button hover on the rail and chip-bar entries (owner, Nov 23 2026: Back, Overview and every section pill): brighten + the gold
    ring, drawn inside like this rail's focus ring (-3px) so the scrolling list never clips it. Hover only; the press stays as it is. */

@@ -96,5 +96,5 @@ button.savedIt.savedIt.savedIt.savedIt:not(:disabled):active{box-shadow:0 1px 0 
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){
- .primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.chip.chip:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .primary.primary:not(:disabled):not([aria-disabled=true]):hover,.secondary.secondary:not(:disabled):not([aria-disabled=true]):hover,.chip.chip:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

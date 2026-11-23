@@ -5,7 +5,7 @@
 // Browser half: the QA run in the doc (390x844, 430x932, 360x740, 820x1180, 1440x900; synthesized two-thumb touch).
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),vm=require('node:vm');
 const tsx=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8'),css=fs.readFileSync('components/games/ArcadeGame3D.module.css','utf8');
-const block=css.slice(css.indexOf('/* Futbol Pinball full-screen cabinet'));
+const block=css.slice(css.indexOf('/* Futbol Pinball full-screen cabinet')).split('/* Shared button hover')[0];/* Nov 23 2026: the shared hover block (hover-nov23) is appended after the pinball section */
 assert.ok(block.length>500,'pinball pad block present');
 
 // 1. Markup: labelled pads + launch pill with a charge element; the live flipper state paints the pads.

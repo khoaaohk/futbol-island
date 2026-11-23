@@ -8,7 +8,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),live=read('components/LiveArcadeMatch.tsx'),mode=read('lib/orientationMode.ts'),lock=read('components/RotateLock.module.css');
 // Card for phones only.
 assert.match(mode,/export const LANDSCAPE_ONLY_QUERY = '\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)';/);
-assert.doesNotMatch(lock,/pointer:fine/,'mouse windows never get the card');
+assert.doesNotMatch(lock.replace(/\/\* Shared button hover[\s\S]*$/,''),/pointer:fine/,'mouse windows never get the card');
 // Frame.
 const FRAME='@media(pointer:fine) and (orientation:portrait),(pointer:coarse) and (orientation:portrait) and (min-width:501px){';
 const i=css.indexOf(FRAME);assert.ok(i>0,'frame block for tall non-phone windows');const block=css.slice(i,css.indexOf('\n}',i));
