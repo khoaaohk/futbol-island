@@ -479,3 +479,31 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .toast{background:#fffaf0;color:var(--ink);box-shadow:0 8px 24px rgb(36 77 64 / .16)}
 /* team badges: the team colour as a light tint with dark-green initials (no dark surfaces) */
 .teamBadge{color:var(--ink);box-shadow:inset 0 0 0 99px rgb(255 255 255 / .62)}
+
+/* the FULL game button at every size (owner, Nov 22 2026): the darker gold lip, a soft drop shadow, hover (mouse only) lifts and
+   brightens, press sinks onto the lip. Primary = .btnGold and the sheets' .doneBtn; secondary = every other .btn (cream, cream lip). */
+.app .btnGold,.app .doneBtn{border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd)!important;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
+ box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d),0 7px 14px rgb(36 77 64 / .2)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
+.app .btnGold:active,.app .doneBtn:active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 var(--btn-gold-edge,#a8863d),0 2px 5px rgb(36 77 64 / .18)!important}
+.app .btn:not(.btnGold):not(.btnDanger){background:#fffaf0!important;color:var(--ink)!important;box-shadow:0 4px 0 #e0d2b0,0 6px 12px rgb(36 77 64 / .1)!important;transition:translate .14s,box-shadow .14s,filter .14s!important}
+.app .btn:not(.btnGold):not(.btnDanger):active{transform:none!important;translate:0 3px;box-shadow:0 1px 0 #e0d2b0,0 2px 4px rgb(36 77 64 / .1)!important}
+@media (hover:hover) and (pointer:fine){
+ .app .btnGold:not(:disabled):hover,.app .doneBtn:hover{translate:0 -1px;filter:brightness(1.06);box-shadow:0 5px 0 var(--btn-gold-edge,#a8863d),0 10px 20px rgb(36 77 64 / .24)!important}
+ .app .btn:not(.btnGold):not(.btnDanger):not(:disabled):hover{translate:0 -1px;filter:brightness(1.02);box-shadow:0 5px 0 #e0d2b0,0 9px 16px rgb(36 77 64 / .14)!important}
+}
+.app .btn:disabled{box-shadow:none!important;opacity:.5}
+/* the rest of the controls on the same system: attendance "Coming" is a selected chip (mint), "Late" gold tint, "Not coming" cream;
+   the keeper mark, bench chips, fold and player buttons are cream chips with a soft lip; the sound hint is the gold primary */
+.here{background:#cfeedb;color:#244d40;box-shadow:0 3px 0 #9fd1b2}
+.here[data-state=late]{background:#fdefc6;color:#244d40;box-shadow:0 3px 0 #e6cf8f}
+.here[data-state=away]{background:#fffaf0;color:var(--soft);box-shadow:inset 0 0 0 1.5px #efe5cc}
+.iconBtn,.benchChip,.foldBtn,.whoBtn{background:#fffaf0;box-shadow:0 2px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc}
+.iconBtn[aria-pressed=true]{background:#fdefc6;box-shadow:0 3px 0 #e6cf8f}
+.here:active,.iconBtn:active,.benchChip:active,.whoBtn:active,.foldBtn:active{transform:none;translate:0 2px}
+.soundBack{border:3px solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d),0 7px 14px rgb(36 77 64 / .2)}
+/* three sizes only (owner, Nov 22 2026): large 56 px (a screen's main action: sticky bars, full-width), medium 48 px (in cards and
+   sheets: the default), compact 40 px (header and sheet Done, small chips); 12 px between buttons in a row */
+.app .btn{min-height:48px;padding:0 20px;font-size:17px;border-radius:999px}
+.app .btnWide,.app .sticky .btn,.app .startBtn{min-height:56px;font-size:19px}
+.app .btnSmall,.app .doneBtn{min-height:40px;padding:0 16px;font-size:15px}
+.app .btnRow{gap:12px}

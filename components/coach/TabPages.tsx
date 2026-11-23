@@ -34,16 +34,17 @@ const INK='#14221d',GR='#5cb87f',GR2='#67c189',GOLD='#f2b630',CORAL='#ef6c4d',SK
 const LIFT={filter:'drop-shadow(0 2px 2.5px rgb(20 34 29 / .22))'};
 const PANEL={lineup:'#fdf3dc',minutes:'#fde9b8',subs:'#dbe9fb',match:'#fde3d8',summary:'#e4f3e8',plans:'#fde6cf',scan:'#dbe9fb',board:'#fff4dc',fields:'#e4f3e8'};
 /* the whole drawing always fits its tile (meet), on a field of its own colour */
-const Svg=({bg,children}:{bg:string;children:ReactNode})=><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" style={{background:bg}}><rect width="160" height="100" fill={bg}/>{children}</svg>;
-const Field=({x=14,y=10,w=132,h=80}:{x?:number;y?:number;w?:number;h?:number})=><g>
- <rect x={x} y={y} width={w} height={h} rx="6" fill={GR} style={LIFT}/>{[1,3,5].map(i=><rect key={i} x={x+w/6*i} y={y} width={w/6} height={h} fill={GR2}/>)}
- <g fill="none" stroke={WHITE} strokeWidth="1.8" strokeOpacity=".9"><rect x={x+4} y={y+4} width={w-8} height={h-8} rx="2"/><path d={`M${x+w/2} ${y+4}v${h-8}`}/><circle cx={x+w/2} cy={y+h/2} r={h/6}/><rect x={x+4} y={y+h*.3} width={w*.1} height={h*.4}/><rect x={x+w*.9-4} y={y+h*.3} width={w*.1} height={h*.4}/></g></g>;
+const Svg=({bg,children,bleed}:{bg:string;children:ReactNode;bleed?:boolean})=><svg viewBox="0 0 160 100" preserveAspectRatio={bleed?'xMidYMid slice':'xMidYMid meet'} style={{background:bleed?GR:bg}}><rect width="160" height="100" fill={bg}/>{children}</svg>;
+/* a scene fills its tile edge to edge (owner: "fill the entire space with the green"): Field() with no box is the whole image */
+const Field=({x=0,y=0,w=160,h=100}:{x?:number;y?:number;w?:number;h?:number})=><g>
+ <rect x={x} y={y} width={w} height={h} rx={x?6:0} fill={GR} style={x?LIFT:undefined}/>{[1,3,5].map(i=><rect key={i} x={x+w/6*i} y={y} width={w/6} height={h} fill={GR2}/>)}
+ <g fill="none" stroke={WHITE} strokeWidth="1.8" strokeOpacity=".9"><rect x={x+(x?4:10)} y={y+(x?4:18)} width={w-(x?8:20)} height={h-(x?8:36)} rx="2"/><path d={`M${x+w/2} ${y+4}v${h-8}`}/><circle cx={x+w/2} cy={y+h/2} r={h/6}/><rect x={x+(x?4:10)} y={y+h*.33} width={w*.1} height={h*.34}/><rect x={x+w*.9-(x?4:10)} y={y+h*.33} width={w*.1} height={h*.34}/></g></g>;
 const Disc=({x,y,n,fill=GOLD,r=7.5}:{x:number;y:number;n?:string|number;fill?:string;r?:number})=><g style={LIFT}><circle cx={x} cy={y} r={r} fill={fill}/>{n!=null&&n!==''&&<text x={x} y={y+r*.42} textAnchor="middle" fontSize={r*1.2} fontWeight="800" fill={INK} fontFamily="system-ui,sans-serif">{n}</text>}</g>;
 const Arrow=({d,dash,color=INK}:{d:string;dash?:boolean;color?:string})=><path d={d} fill="none" stroke={color} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={dash?'5 5':undefined}/>;
 const Cone=({x,y,c=CORAL}:{x:number;y:number;c?:string})=><path d={`M${x} ${y-8}l6.5 12h-13z`} fill={c} style={LIFT}/>;
 const Card=({x,y,w,h,r=10}:{x:number;y:number;w:number;h:number;r?:number})=><rect x={x} y={y} width={w} height={h} rx={r} fill={WHITE} style={LIFT}/>;
 export const ART={
- lineup:<Svg bg={PANEL.lineup}><Field/>{[[26,50,1],[50,30,2],[50,70,3],[76,50,6],[104,28,7],[104,72,8],[128,50,9]].map(([x,y,n])=><Disc key={n} x={x} y={y} n={n}/>)}</Svg>,
+ lineup:<Svg bg={PANEL.lineup} bleed><Field/>{[[26,50,1],[50,30,2],[50,70,3],[76,50,6],[104,28,7],[104,72,8],[128,50,9]].map(([x,y,n])=><Disc key={n} x={x} y={y} n={n}/>)}</Svg>,
  minutes:<Svg bg={PANEL.minutes}><Card x={22} y={12} w={116} h={76}/>
   {[0,1,2,3].map(i=><g key={i}><Disc x={38} y={27+i*16} r={6.2} n={[4,7,9,11][i]} fill={[GOLD,SKY,CORAL,GREEN][i]}/><rect x="50" y={23+i*16} width="76" height="8" rx="4" fill="#f1ead8"/><rect x="50" y={23+i*16} width={[60,56,62,54][i]} height="8" rx="4" fill={[GOLD,SKY,CORAL,GREEN][i]}/></g>)}</Svg>,
  subs:<Svg bg={PANEL.subs}><Card x={42} y={14} w={76} h={60}/><rect x="74" y="74" width="12" height="16" rx="2" fill={WHITE}/>
@@ -53,7 +54,7 @@ export const ART={
  match:<Svg bg={PANEL.match}><circle cx="80" cy="54" r="34" fill={WHITE} style={LIFT}/><rect x="72" y="11" width="16" height="9" rx="3" fill={CORAL}/>
   <path d="M80 54 L80 22 A32 32 0 0 1 107.7 38 Z" fill={GOLD}/><path d="M80 54V30M80 54l14 8" stroke={INK} strokeWidth={3.2} strokeLinecap="round"/><circle cx="80" cy="54" r="3.5" fill={INK}/>
   <circle cx="126" cy="24" r="7" fill={CORAL} style={LIFT}/></Svg>,
- summary:<Svg bg={PANEL.summary}><Card x={30} y={12} w={100} h={76}/>{[30,40,36,46,38].map((h,i)=><rect key={i} x={44+i*15} y={78-h} width="10" height={h} rx="3" fill={[SKY,GOLD,CORAL,GREEN,SKY][i]}/>)}<path d="M40 80h80" stroke="#e3dfd0" strokeWidth={2}/></Svg>,
+ summary:<Svg bg={PANEL.summary}><Card x={30} y={12} w={100} h={76}/>{[30,40,36,46,38].map((h,i)=><rect key={i} x={44+i*15} y={78-h} width="10" height={h} rx="3" fill={i===3?GREEN:i%2?GOLD:SKY}/>)}<path d="M40 80h80" stroke="#e3dfd0" strokeWidth={2}/></Svg>,
  plans:<Svg bg={PANEL.plans}><Card x={38} y={12} w={66} h={80} r={8}/><rect x="56" y="7" width="30" height="11" rx="4" fill={GOLD} style={LIFT}/>
   {[0,1,2].map(i=><g key={i}><circle cx="52" cy={34+i*16} r="4.5" fill={[GREEN,GOLD,SKY][i]}/><rect x="62" y={31+i*16} width={[30,24,32][i]} height="6" rx="3" fill="#cfc6ae"/></g>)}
   <circle cx="124" cy="40" r="15" fill={WHITE} style={LIFT}/><path d="M124 40v-8M124 40l6 4" stroke={INK} strokeWidth={2.6} strokeLinecap="round"/><Cone x={116} y={82}/><Cone x={134} y={82} c={GOLD}/></Svg>,
@@ -61,7 +62,7 @@ export const ART={
   <g style={LIFT}><circle cx="80" cy="62" r="15" fill={SKY}/><circle cx="80" cy="47" r="8" fill="#e9a77c"/></g><Arrow d="M69 37q-8-6-15-4"/><Arrow d="M91 37q8-6 15-4"/>
   <rect x="14" y="60" width="24" height="24" rx="6" fill={CORAL} style={LIFT}/><rect x="122" y="60" width="24" height="24" rx="6" fill={GREEN} style={LIFT}/>
   <text x="134" y="77" textAnchor="middle" fontSize="14" fontWeight="800" fill={INK} fontFamily="system-ui,sans-serif">3</text><Arrow d="M20 72h11m-4.5-4.5 4.5 4.5-4.5 4.5"/></Svg>,
- board:<Svg bg={PANEL.board}><Field/><Disc x={38} y={66} n={4}/><Disc x={78} y={30} n={8}/><Disc x={118} y={60} n={9}/><Disc x={98} y={76} fill={CORAL} n=""/><Disc x={60} y={46} fill={CORAL} n=""/>
+ board:<Svg bg={PANEL.board} bleed><Field/><Disc x={38} y={66} n={4}/><Disc x={78} y={30} n={8}/><Disc x={118} y={60} n={9}/><Disc x={98} y={76} fill={CORAL} n=""/><Disc x={60} y={46} fill={CORAL} n=""/>
   <Arrow d="M44 61 70 37" color={WHITE}/><path d="m63.5 36.5 7.5-.5-1 7.5" fill="none" stroke={WHITE} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/><Arrow d="M86 32q28 2 30 20" dash color={INK}/></Svg>,
  fields:<Svg bg={PANEL.fields}><Field x={22} y={10} w={116} h={68}/><path d="M22 88h116M22 84v8M138 84v8" stroke={GREEN} strokeWidth={2.4} strokeLinecap="round"/><rect x="64" y="82" width="32" height="12" rx="4" fill={WHITE} style={LIFT}/></Svg>,
 };

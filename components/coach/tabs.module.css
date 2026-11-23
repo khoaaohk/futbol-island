@@ -12,12 +12,12 @@ a.feature:active{transform:scale(.98)}
 a.feature{transition:transform .12s}
 .fKicker{margin:0;font-size:15px;font-weight:800;opacity:.78}
 .featureGame .fKicker{color:#85621f;opacity:1}
-.fTitle{margin:6px 0 0;font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.03em;overflow-wrap:anywhere}
+.fTitle{margin:6px 0 0;font-size:28px;line-height:1.05;font-weight:800;letter-spacing:-.03em;overflow-wrap:anywhere}
 .fMeta{margin:8px 0 0;font-size:16px;opacity:.85}
 .fLive{margin:10px 0 0;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .fLive b{font-variant-numeric:tabular-nums;font-size:24px}
 .liveDot{width:12px;height:12px;border-radius:50%;background:#e2725b;flex:0 0 auto}
-.fBtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.fBtns{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
 .fBtns .btnFill{flex:1}
 .fOutline{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px rgb(20 34 29 / .18)}
 .tonight{background:#fdf3dc;border-radius:22px;padding:16px 18px 18px;margin-bottom:12px}
@@ -117,7 +117,7 @@ li[data-wide] .art{aspect-ratio:16/7}
  .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
  .tiles>li[data-wide]{grid-column:span 2}
  .tilesGame>li:last-child,.tilesTrain>li:last-child{grid-column:span 1}
- .fTitle{font-size:44px}
+ .fTitle{font-size:32px}
  .fArt{height:220px}
  .rail li{flex-basis:240px}
 }
