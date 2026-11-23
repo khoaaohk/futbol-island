@@ -33,6 +33,16 @@ const exists=(rel:string)=>{try{return fs.statSync(path.join(PUB,rel)).isFile();
  * keeps, so a browser that had the old file went on showing it (the owner still saw the long HUD bar in the hero after the
  * compact-bar re-record). `?v=` + 10 hex of the file's content hash gives every re-capture a new URL; hashed once per file.
  */
+/**
+ * Phone-sized copy of a 1920 px poster (Nov 23 2026, seo-ai-speed): public/<dir>/sm/<name>.webp, 1080 px wide (cwebp -q 80 -resize
+ * 1080 0). A card shown 335-354 CSS px wide on a phone needs ~920-1010 device px, so the 1920 px still was 2-3x the bytes it needed.
+ * Returns a srcset (1080w + the original's width) when the copy exists, else undefined (the plain src stays as before).
+ */
+export function posterSrcSet(src:string,width:number):string|undefined{
+ const i=src.lastIndexOf('/');const small=`${src.slice(0,i)}/sm${src.slice(i)}`;
+ if(width<=1080||!exists(small.replace(/^\//,'')))return undefined;
+ return `${learnUrl(small)} 1080w, ${learnUrl(src)} ${width}w`;
+}
 const vCache=new Map<string,string>();
 /** Optional media origin (no trailing slash). '' = the site serves its own clips. Set to 'https://futbol-media.khoa0aohk.workers.dev' once
  *  scripts/upload-learn-media.cjs has put every clip in R2 (this file reads no env, tests/seo-pages.cjs). */

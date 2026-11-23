@@ -2,6 +2,7 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {allShots,gameById,GAME_NAMES,GAMES_NAMES,type GameId,type GamePage,type GameShot} from '@/lib/site/games';
 import {GAMES_HERO_PHONE,GAMES_LEAD_CLIP,gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
+import {posterSrcSet} from '@/lib/site/learnMedia';
 import {watchPathFor} from '@/lib/site/videos';
 import {PLAY_PATH,type Crumb} from '@/lib/site/seo';
 import {PLAY_NOW,PLAY_WORKS,cardShot,howToPlay,stageShots} from '@/lib/site/gamePlay';
@@ -102,6 +103,8 @@ export function GameFeature({game}:{game:GamePage}){
  * games?"): the Library's hero composition (library.module.css .hero, the same classes, so the two never drift): breadcrumb, H1,
  * lede and the gold Play button on the left; on the right the lead clip large (GAMES_LEAD_CLIP, the page's ONLY autoplaying video,
  * poster preloaded by the page) with a still phone screenshot of the island game (a 7v7 match, touch controls) overlapping its lower-left corner. */
+/** The hero picture's shown width (library.module.css .hero / .heroArt): about half the 1180 px shell from 1000 px, full width below. */
+export const HERO_SIZES='(min-width: 1000px) 620px, 92vw';
 export {GAMES_LEAD_CLIP as ISLAND_FEATURE_KEY} from '@/lib/site/gameMedia';
 export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:string;lead:string;play:string}){
  const c=islandClips().find(x=>x.key===GAMES_LEAD_CLIP),still=islandStills()[0],inset=GAMES_HERO_PHONE;/* the main game on a phone (owner: not an arcade still) */
@@ -113,7 +116,7 @@ export function GamesHero({crumbs,h1,lead,play}:{crumbs:readonly Crumb[];h1:stri
    <a className={site.cta} href={PLAY_PATH} data-play="island">{play}</a>
   </header>
   <div className={lib.heroArt}>
-   {c?<LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} mp4s={c.mp4s} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto priority className={`${lib.heroMain} ${g.heroClip}`}/>
+   {c?<LoopClip name={c.name} poster={c.poster} posterSet={posterSrcSet(c.poster,c.pw)} posterSizes={HERO_SIZES} mp4={c.mp4} webm={c.webm} mp4s={c.mp4s} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto priority className={`${lib.heroMain} ${g.heroClip}`}/>
     // eslint-disable-next-line @next/next/no-img-element
     :<img className={lib.heroMain} src={still.src} alt={still.alt} width={still.w} height={still.h} decoding="async"/>}
    {/* a still, never a second playing video (AGENTS.md: one player at a time) */}

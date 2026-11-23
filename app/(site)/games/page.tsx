@@ -1,6 +1,7 @@
 import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
-import {ClipFigure,GameFeature,GamesHero,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,QuickPlay,gamesCss} from '@/components/site/games/GameParts';
+import {posterSrcSet} from '@/lib/site/learnMedia';
+import {ClipFigure,GameFeature,GamesHero,HERO_SIZES,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,QuickPlay,gamesCss} from '@/components/site/games/GameParts';
 import {Section} from '@/lib/site/GuideParts';
 import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd,gamesHubLd} from '@/lib/site/games';
@@ -22,7 +23,9 @@ const MENU:readonly (readonly [string,string])[]=[['#quick','Play a game now'],.
 export default function GamesHub(){
  // The lead clip's poster (GAMES_LEAD_CLIP, in the hero) is the page's LCP: preload it at high priority.
  const top=islandClips().find(c=>c.key===ISLAND_FEATURE_KEY);
- if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high'});
+ // Nov 23 2026 (seo-ai-speed): the preload names the same srcset + sizes as the <img>, so a phone fetches the 1080 px copy once
+ const set=top&&posterSrcSet(top.poster,top.pw);
+ if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high',...(set?{imageSrcSet:set,imageSizes:HERO_SIZES}:{})});
  const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>

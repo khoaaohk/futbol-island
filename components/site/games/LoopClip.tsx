@@ -11,7 +11,7 @@ import g from './games.module.css';
  */
 const PLAYING=new Set<HTMLVideoElement>();
 const quiet=()=>typeof window!=='undefined'&&(matchMedia('(prefers-reduced-motion: reduce)').matches||(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData===true);
-export default function LoopClip({name,poster,mp4,webm,mp4s,w,h,pw,ph,alt,auto=false,priority=false,className,es=false}:{es?:boolean;name:string;poster:string;mp4:string;webm?:string;mp4s?:string;w:number;h:number;pw:number;ph:number;alt:string;auto?:boolean;priority?:boolean;className?:string}){
+export default function LoopClip({name,poster,posterSet,posterSizes,mp4,webm,mp4s,w,h,pw,ph,alt,auto=false,priority=false,className,es=false}:{es?:boolean;name:string;poster:string;/* Nov 23 2026: srcset + sizes for a 1920 px poster with a phone copy (lib/site/learnMedia.ts posterSrcSet) */posterSet?:string;posterSizes?:string;mp4:string;webm?:string;mp4s?:string;w:number;h:number;pw:number;ph:number;alt:string;auto?:boolean;priority?:boolean;className?:string}){
  const box=useRef<HTMLDivElement>(null),vid=useRef<HTMLVideoElement>(null);
  const [want,setWant]=useState(false),[on,setOn]=useState(false),[playing,setPlaying]=useState(false);
  const seen=useRef(false),userPaused=useRef(false);
@@ -35,7 +35,7 @@ export default function LoopClip({name,poster,mp4,webm,mp4s,w,h,pw,ph,alt,auto=f
  const hover=(enter:boolean)=>{if(auto||!matchMedia('(hover: hover) and (pointer: fine)').matches||quiet())return;if(enter){if(!on)setOn(true);else toggle();}else vid.current?.pause();};
  return <div ref={box} className={`${g.clip}${className?' '+className:''}`} onMouseEnter={()=>hover(true)} onMouseLeave={()=>hover(false)} data-playing={playing||undefined}>
   {/* eslint-disable-next-line @next/next/no-img-element */}
-  <img src={poster} alt={alt} width={pw} height={ph} loading={priority?'eager':'lazy'} decoding={priority?'sync':'async'}/>
+  <img src={poster} srcSet={posterSet} sizes={posterSet?posterSizes:undefined} alt={alt} width={pw} height={ph} loading={priority?'eager':'lazy'} decoding={priority?'sync':'async'} fetchPriority={priority?'high':undefined}/>
   {on&&<video ref={vid} muted playsInline loop preload="none" width={w} height={h} aria-hidden="true" tabIndex={-1}
    onPlay={e=>{PLAYING.add(e.currentTarget);setPlaying(true);}} onPause={e=>{PLAYING.delete(e.currentTarget);setPlaying(false);}}>
    {/* MP4 first: H.264 is hardware-decoded on phones (cooler) and these MP4s are the smaller files; WebM is the fallback */}

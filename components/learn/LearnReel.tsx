@@ -1,5 +1,5 @@
 import {LEARN_CAROUSEL,learnBoldParts,learnPlain} from '@/lib/site/learnFeatures';
-import {learnUrl,learnWideAsset} from '@/lib/site/learnMedia';
+import {learnUrl,learnWideAsset,posterSrcSet} from '@/lib/site/learnMedia';
 import ReelEnhance from './ReelEnhance';
 import s from './learn.module.css';
 
@@ -25,8 +25,10 @@ export default function LearnReel(){
   <div className={s.reelRow} role="region" aria-roledescription="carousel" aria-label="See it in action: clips from the game" tabIndex={0} data-reel-row="">
    {cards.map(({c,a},i)=><div key={c.key} className={s.card} role="group" aria-roledescription="slide" aria-label={`${i+1} of ${n}: ${c.title}`} data-reel-card="" data-active={i===0?'':undefined}>
     <div className={s.cardMedia} data-media="still">
-     <img className={s.still} src={learnUrl(a.image!.src)} width={a.image!.width} height={a.image!.height} alt={a.alt??learnPlain(c.caption)}
-      loading={i<2?'eager':'lazy'} decoding="async"/>
+     {/* Nov 23 2026 (seo-ai-speed): every poster lazy (the row sits below the fold on phones and desktops; the first two were
+         eager, 1920 px, ~180 KB), with a 1080 px copy that phones pick (public/learn/sm; sizes = learn.module.css --cw) */}
+     <img className={s.still} src={learnUrl(a.image!.src)} srcSet={posterSrcSet(a.image!.src,a.image!.width)} sizes="(min-width: 740px) min(1100px, 78vw), 86vw"
+      width={a.image!.width} height={a.image!.height} alt={a.alt??learnPlain(c.caption)} loading="lazy" decoding="async"/>
      {a.clip&&<>
       <video className={s.clip} data-rv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
        {a.clip.mp4m&&<source media="(max-width: 1280px)" src={learnUrl(a.clip.mp4m)} type="video/mp4"/>}
