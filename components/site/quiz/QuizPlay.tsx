@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import s from './quizPlay.module.css';
 import type {PlayQuestion} from '@/lib/site/quizzes';
+import {PITCH,type SpotPic} from '@/lib/site/quizPitch';
 /**
  * The quiz, played in place on its page (Nov 23 2026; owner: "make the quizzes easy to use and dynamic, interactive, have motion,
  * sounds" + "make it a fun experience"). One question at a time: tap a big answer card (or press 1-4), then Check (or Enter); a
@@ -14,6 +15,8 @@ import type {PlayQuestion} from '@/lib/site/quizzes';
  * score live in localStorage (try/catch); nothing is sent anywhere.
  * Nov 23 2026: also plays the lesson pages' quizzes (components/site/lessons/LessonQuiz), which add kind 'order': tap the steps
  * first to last (each card shows its number; tap a numbered card to take it and the ones after it back), then Check.
+ * Nov 23 2026 (owner: "build more interactive quizzes"): kind 'spot' draws a small pitch (lib/site/quizPitch.ts) with numbered
+ * targets; tapping a target or its numbered card below picks it (the cards are the keyboard and screen-reader way in).
  */
 type Lang='en'|'es';
 const W={
@@ -21,7 +24,7 @@ const W={
   soundOn:'Sound on',soundOff:'Sound off',row:(n:number)=>`${n} in a row`,goal:'GOAL!',saved:'Saved by the keeper!',fact:'Did you know?',more:'Learn more',answer:'The answer:',
   right:[['Nice!','Correct!','Good one!','Yes!'],['Great pass!','Two in a row!','Smart!','You got it!'],['On fire!','What a run!','Unstoppable!','Top corner!']],
   miss:['So close! Here’s the trick:','Good try! Here’s how it works:','Not this time. Remember:','Almost! Coach says:'],
-  tf:'True or false?',ord:'Tap the steps in order',ref:'Ref’s call',pic:'Look at the picture',score:'Your score',best:(a:number,b:number)=>`Your best: ${a}/${b}`,newBest:'New personal best!',beat:'Beat your best',again:'Try again',
+  tf:'True or false?',ord:'Tap the steps in order',spot:'Tap the spot on the pitch',ref:'Ref’s call',pic:'Look at the picture',score:'Your score',best:(a:number,b:number)=>`Your best: ${a}/${b}`,newBest:'New personal best!',beat:'Beat your best',again:'Try again',
   share:'Share my score',copied:'Copied! Paste it to share.',shareText:(n:string,a:number,b:number)=>`I scored ${a}/${b} on the ${n} at Futbol Island. Can you beat it?`,
   titles:['Rookie','Team player','Captain','Legend'],lines:['Every great player starts here. Have another go!','Good game! Read the ones you missed and try again.','Captain material! Just a few to go.','Perfect! Every answer right.'],
   missed:'Learn the ones you missed',stars:(n:number)=>`${n} of 3 stars`,done:'Quiz done!'},
@@ -29,7 +32,7 @@ const W={
   soundOn:'Sonido activado',soundOff:'Sonido apagado',row:(n:number)=>`${n} seguidas`,goal:'¡GOL!',saved:'¡Atajó el portero!',fact:'¿Sabías que…?',more:'Aprende más',answer:'La respuesta:',
   right:[['¡Bien!','¡Correcto!','¡Muy bien!','¡Sí!'],['¡Gran pase!','¡Dos seguidas!','¡Qué listo!','¡Lo tienes!'],['¡Estás que ardes!','¡Qué racha!','¡Imparable!','¡Al ángulo!']],
   miss:['¡Casi! Este es el truco:','¡Buen intento! Así funciona:','Esta vez no. Recuerda:','¡Por poco! El entrenador dice:'],
-  tf:'¿Verdadero o falso?',ord:'Toca los pasos en orden',ref:'Decide el árbitro',pic:'Mira el dibujo',score:'Tu puntuación',best:(a:number,b:number)=>`Tu mejor: ${a}/${b}`,newBest:'¡Nuevo récord personal!',beat:'Supera tu récord',again:'Intentar de nuevo',
+  tf:'¿Verdadero o falso?',ord:'Toca los pasos en orden',spot:'Toca el lugar en la cancha',ref:'Decide el árbitro',pic:'Mira el dibujo',score:'Tu puntuación',best:(a:number,b:number)=>`Tu mejor: ${a}/${b}`,newBest:'¡Nuevo récord personal!',beat:'Supera tu récord',again:'Intentar de nuevo',
   share:'Compartir mi puntuación',copied:'¡Copiado! Pégalo para compartir.',shareText:(n:string,a:number,b:number)=>`Saqué ${a}/${b} en el ${n.toLowerCase()} de Futbol Island. ¿Puedes superarlo?`,
   titles:['Novato','Buen compañero','Capitán','Leyenda'],lines:['Todos los grandes empezaron aquí. ¡Otra vez!','¡Buen partido! Lee las que fallaste y vuelve a intentarlo.','¡Madera de capitán! Te faltan muy pocas.','¡Perfecto! Todas bien.'],
   missed:'Aprende las que fallaste',stars:(n:number)=>`${n} de 3 estrellas`,done:'¡Quiz terminado!'}};
@@ -62,6 +65,31 @@ const Close=()=><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="tru
 const Speaker=({on}:{on:boolean})=><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>{on?<path d="M15.5 9a4.2 4.2 0 010 6M18 6.5a7.8 7.8 0 010 11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>:<path d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>}</svg>;
 const Star=({on}:{on:boolean})=><svg viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" fill={on?'#f9d665':'#e3e2d4'} stroke={on?'#aa8b3e':'#c9c8b8'} strokeWidth="1.6" strokeLinejoin="round"/></svg>;
 
+/* ---- the spot pitch: a static drawing, numbered targets (decorative for assistive tech: the cards below carry the choice) ---- */
+type TargetState='picked'|'right'|'wrong'|'off'|undefined;
+function SpotPitch({spot,states,onPick}:{spot:SpotPic;states:TargetState[];onPick:(j:number)=>void}){
+ const g=PITCH[spot.format],v=spot.view,u=v.w/30;
+ const box=(top:boolean)=>{const y=top?4:396,d=top?1:-1,x0=135-g.boxW/2,x1=135+g.boxW/2;
+  return g.round?`M${x0} ${y}Q${x0} ${y+d*g.boxD} ${135-g.goalW/2} ${y+d*g.boxD}H${135+g.goalW/2}Q${x1} ${y+d*g.boxD} ${x1} ${y}`:`M${x0} ${y}V${y+d*g.boxD}H${x1}V${y}`+(g.smallD?`M${135-g.smallW!/2} ${y}V${y+d*g.smallD}H${135+g.smallW!/2}V${y}`:'');};
+ const pen=g.round?60:g.boxD*.67;
+ return <svg className={s.pitch} viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} role="img" aria-label={spot.alt} data-spot-pitch="">
+  <rect x={v.x} y={v.y} width={v.w} height={v.h} fill="#a9d39b"/>
+  {[0,1,2,3,4,5,6,7].map(n=><rect key={n} x={-10} y={n*50} width={290} height={25} fill="#ffffff1f"/>)}
+  <g fill="none" stroke="#fffdf6" strokeWidth={u*.16}><rect x={4} y={4} width={262} height={392}/><path d="M4 200H266"/><circle cx={135} cy={200} r={g.circle}/><path d={box(true)+box(false)}/>
+   <path d={`M4 ${4+u*.9}A${u*.9} ${u*.9} 0 0 0 ${4+u*.9} 4M${266-u*.9} 4A${u*.9} ${u*.9} 0 0 0 266 ${4+u*.9}M4 ${396-u*.9}A${u*.9} ${u*.9} 0 0 1 ${4+u*.9} 396M${266-u*.9} 396A${u*.9} ${u*.9} 0 0 1 266 ${396-u*.9}`}/></g>
+  <g fill="#fffdf6"><circle cx={135} cy={200} r={u*.22}/><circle cx={135} cy={4+pen} r={u*.22}/><circle cx={135} cy={396-pen} r={u*.22}/>
+   <rect x={135-g.goalW/2} y={-2} width={g.goalW} height={6} rx={2}/><rect x={135-g.goalW/2} y={396} width={g.goalW} height={6} rx={2}/></g>
+  {spot.players.map((p,k)=><g key={k} transform={`translate(${p.x} ${p.y})`} aria-hidden="true">{p.focus&&<circle r={u*1.45} fill="none" stroke="#14221d" strokeWidth={u*.18} strokeDasharray={`${u*.4} ${u*.3}`}/>}
+   <circle r={u} fill={p.gold?'#f7cb69':'#86b7d3'} stroke={p.gold?'#8a6a1f':'#2f5a72'} strokeWidth={u*.14}/>{p.label&&<text textAnchor="middle" y={u*.36} fontSize={u*.9} fontWeight="800" fill="#14221d">{p.label}</text>}</g>)}
+  {spot.ball&&<circle cx={spot.ball.x} cy={spot.ball.y} r={u*.5} fill="#fff" stroke="#14221d" strokeWidth={u*.12} aria-hidden="true"/>}
+  <g aria-hidden="true">{spot.at.map((p,j)=>{const st=states[j];
+   return <g key={j} className={s.target} data-state={st} transform={`translate(${p.x} ${p.y})`} onClick={()=>onPick(j)} data-quiz-spot={j}>
+    <circle r={u*2.3} fill="transparent"/>
+    <circle className={s.ring} r={u*1.35} fill={st==='picked'?'#f9d665':st==='right'?'#cdebdc':st==='wrong'?'#fbd9cf':'#fffdf6d9'} stroke={st==='picked'?'#aa8b3e':st==='right'?'#2f7d5b':st==='wrong'?'#b4513d':'#14221d'}
+     strokeWidth={u*(st?.22:.16)} strokeDasharray={st?undefined:`${u*.5} ${u*.32}`}/>
+    <text textAnchor="middle" y={u*.42} fontSize={u*1.15} fontWeight="900" fill="#14221d">{j+1}</text></g>;})}</g>
+ </svg>;
+}
 /** The right answer as words: the option, or an order question's steps numbered first to last. */
 const answerText=(q:PlayQuestion)=>q.kind==='order'&&q.seq?q.seq.map((j,k)=>`${k+1}. ${q.options[j]}`).join('  '):q.options[q.correct];
 export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:string;name:string;lang?:Lang;questions:readonly PlayQuestion[];url:string}){
@@ -144,7 +172,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
   try{await navigator.clipboard.writeText(`${text} ${url}`);setCopied(w.copied);}catch{setCopied(`${text} ${url}`);}
  };
  const toggleSound=()=>{const v=!sound;setSound(v);write(SOUND_KEY,v?'1':'0');};
- const short=q.options.every(o=>o.length<=24),grid=q.kind==='truefalse'||q.kind==='ref'||(q.kind!=='order'&&short&&(q.options.length===4||q.options.length===2));
+ const short=q.options.every(o=>o.length<=24),grid=q.kind==='truefalse'||q.kind==='ref'||(q.kind!=='order'&&q.kind!=='spot'&&short&&(q.options.length===4||q.options.length===2));
  const level=streak>=3?2:streak===2?1:0,cheer=w.right[level][i%4],miss=w.miss[i%4];
  const fill=(results.length+(checked?1:0))/total;
  /* the bar's fill and the ball's place, set on the elements (the reading templates keep no inline styles, tests/seo-design.cjs) */
@@ -185,8 +213,9 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
    <p id={`${slug}-ask`} className={s.askText}>{w.quitAsk}</p>
    <div className={s.endActions}><button type="button" className={s.primary} onClick={()=>setAsking(false)} autoFocus>{w.keep}</button><button type="button" className={s.secondary} onClick={restart}>{w.quitYes}</button></div>
   </div>:<div className={s.stage} key={i}>
-   <p className={s.count}>{w.of(i+1,total)}{q.kind==='truefalse'?` · ${w.tf}`:q.kind==='order'?` · ${w.ord}`:q.kind==='ref'?` · ${w.ref}`:q.kind==='picture'?` · ${w.pic}`:''}</p>
+   <p className={s.count}>{w.of(i+1,total)}{q.kind==='truefalse'?` · ${w.tf}`:q.kind==='order'?` · ${w.ord}`:q.kind==='spot'?` · ${w.spot}`:q.kind==='ref'?` · ${w.ref}`:q.kind==='picture'?` · ${w.pic}`:''}</p>
    <h3 className={s.q} ref={qHead} tabIndex={-1} id={`${slug}-q`}>{q.q}</h3>
+   {q.spot&&<SpotPitch spot={q.spot} onPick={j=>{if(!checked)setPick(j);}} states={q.options.map((_,j)=>!checked?(pick===j?'picked':undefined):j===q.correct?'right':pick===j?'wrong':'off')}/>}
    {q.pic&&<img className={s.pic} src={q.pic.src} alt={q.pic.alt} width={1200} height={630} loading="lazy" decoding="async"/>}
    <div className={grid?s.grid:s.list} role="group" aria-labelledby={`${slug}-q`}>
     {seq?q.options.map((o,j)=>{const at=taps.indexOf(j),state=at<0?undefined:!checked?'picked':seq[at]===j?'right':'wrong';
@@ -194,7 +223,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
       onClick={()=>tap(j)}><span className={s.seqNo} aria-hidden="true">{at>=0?at+1:''}</span><span>{at>=0&&<span className={s.visuallyHidden}>{at+1}. </span>}{o}</span></button>;})
     :q.options.map((o,j)=>{const state=!checked?(pick===j?'picked':undefined):j===q.correct?'right':pick===j?'wrong':'off';
      return <button key={o} type="button" className={s.card} data-quiz-option="" data-state={state} aria-pressed={pick===j} disabled={checked&&state==='off'}
-      onClick={()=>{if(!checked){setPick(j);}}}><kbd className={s.key} aria-hidden="true">{j+1}</kbd><span>{o}</span></button>;})}
+      onClick={()=>{if(!checked){setPick(j);}}}>{q.spot?<span className={s.seqNo} aria-hidden="true">{j+1}</span>:<kbd className={s.key} aria-hidden="true">{j+1}</kbd>}<span>{o}</span></button>;})}
    </div>
   </div>}
   {!asking&&<div className={s.bar} data-state={!checked?undefined:right?'right':'wrong'}>

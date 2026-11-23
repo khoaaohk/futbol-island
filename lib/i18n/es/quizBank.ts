@@ -1,4 +1,5 @@
 import type {BankQuestion,BankQuiz} from '@/lib/site/quizBank';
+import {MORE_QUESTIONS_ES,NEW_QUIZZES_ES} from './quizBank2';
 /**
  * The Spanish quizzes (Nov 23 2026): the twin of lib/site/quizBank.ts, question by question, with the same right answers, the same
  * "learn more" pages (the Spanish page when there is one, lib/site/quizzes.ts) and the same diagrams. Words follow the Spanish
@@ -13,7 +14,7 @@ const tf=(q:string,yes:boolean,explain:string,more:string,fact?:string):BankQues
 const ref=(q:string,options:[string,string],correct:0|1,explain:string,more:string):BankQuestion=>({kind:'ref',q,options,correct,explain,more});
 const USS='https://www.ussoccer.com/stories/2017/08/five-things-to-know-how-smallsided-standards-will-change-youth-soccer';
 
-export const QUIZ_BANK_ES:readonly BankQuiz[]=[
+const BASE:readonly BankQuiz[]=[
  {slug:'soccer-rules-quiz',topic:'rules',name:'Quiz de reglas del fútbol',title:'Quiz de fútbol para niños: las reglas del juego',
   desc:'Un quiz de fútbol gratis para niños de 7 a 12 años: saques de banda, saques de meta, córneres, saque inicial y mano, con la respuesta y el porqué.',
   h1:'Quiz de reglas del fútbol para niños',intro:'Diez preguntas rápidas sobre las reglas básicas del fútbol: cuánto dura un partido, qué saque viene después y cuándo puede usar las manos el portero.',
@@ -209,3 +210,6 @@ export const QUIZ_BANK_ES:readonly BankQuiz[]=[
    c('¿Quién ganó el primer Campeonato Sudamericano, hoy Copa América, en 1916?',['Uruguay','Brasil','Argentina'],0,'Uruguay, con dos victorias y un empate.',X('copa-america-1916'),{fact:'Es el torneo continental de selecciones más antiguo que se sigue jugando.'}),
   ]},
 ];
+/** Nov 23 2026 (owner: "add more to history, terms and tactics, and positions quizzes too"): the grown quizzes take their extra
+ *  questions from quizBank2, and the new quizzes follow, in the hub's topic order. */
+export const QUIZ_BANK_ES:readonly BankQuiz[]=[...BASE.map(q=>({...q,questions:[...q.questions,...(MORE_QUESTIONS_ES[q.slug]??[])]})),...NEW_QUIZZES_ES];

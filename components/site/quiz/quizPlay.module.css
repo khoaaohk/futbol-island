@@ -125,3 +125,10 @@
 @media(hover:hover) and (pointer:fine){
  .card.card:not(:disabled):not([aria-disabled=true]):not([data-state]):hover,.primary.primary:not(:disabled):not([aria-disabled=true]):hover,.secondary.secondary:not(:disabled):not([aria-disabled=true]):hover,.wrongBtn.wrongBtn:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }
+/* Nov 23 2026: the spot pitch (tap the right place). Light grass, numbered targets; the pick is a one-shot scale, no loops. */
+.pitch{display:block;width:100%;max-height:min(52vh,420px);margin:0 auto 14px;border-radius:18px;background:#a9d39b;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.target{cursor:pointer}
+.ring{transform-box:fill-box;transform-origin:center;transition:transform .16s cubic-bezier(.34,1.56,.64,1)}
+.target[data-state=picked] .ring,.target[data-state=right] .ring{transform:scale(1.18)}
+.target[data-state=off]{opacity:.45;cursor:default}
+@media(prefers-reduced-motion:reduce){.ring{transition:none}.target[data-state] .ring{transform:none}}

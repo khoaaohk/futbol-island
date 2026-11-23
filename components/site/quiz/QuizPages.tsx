@@ -21,11 +21,11 @@ import q from './quizPages.module.css';
  * rule: Back + Overview + the page's own sections (lib/site/railNavMore.ts pageRail).
  */
 const T={
- en:{hub:QUIZ_HUB.en.crumb,play:'Play the quiz',key:'Answer key',keyOpen:(n:number)=>`Show all ${n} questions and answers`,right:'Right answer',why:'Why',more:'Learn more',faq:'Questions',
+ en:{hub:QUIZ_HUB.en.crumb,play:'Play the quiz',key:'Answer key',order:'Right order',keyOpen:(n:number)=>`Show all ${n} questions and answers`,right:'Right answer',why:'Why',more:'Learn more',faq:'Questions',
   others:'More quizzes',sources:'Sources',ages:'Ages',agesV:'7 to 12',qs:'Questions',qsV:(n:number)=>`${n} questions`,topic:'Topic',allQuizzes:'All soccer quizzes',
   test:'Test yourself',testLine:(n:number)=>`${n} quick questions with answers. Free, no account.`,takeQuiz:'Take the quiz',
   railQuiz:'Quiz',railKey:'Answers',railFaq:'Questions',railMore:'More quizzes',railSources:'Sources',onPage:'Quiz: on this page'},
- es:{hub:QUIZ_HUB.es.crumb,play:'Juega el quiz',key:'Respuestas',keyOpen:(n:number)=>`Ver las ${n} preguntas con sus respuestas`,right:'Respuesta correcta',why:'Por qué',more:'Aprende más',faq:'Preguntas',
+ es:{hub:QUIZ_HUB.es.crumb,play:'Juega el quiz',key:'Respuestas',order:'Orden correcto',keyOpen:(n:number)=>`Ver las ${n} preguntas con sus respuestas`,right:'Respuesta correcta',why:'Por qué',more:'Aprende más',faq:'Preguntas',
   others:'Más quizzes',sources:'Fuentes',ages:'Edades',agesV:'7 a 12 años',qs:'Preguntas',qsV:(n:number)=>`${n} preguntas`,topic:'Tema',allQuizzes:'Todos los quizzes de fútbol',
   test:'Ponte a prueba',testLine:(n:number)=>`${n} preguntas rápidas con respuestas. Gratis, sin cuenta.`,takeQuiz:'Haz el quiz',
   railQuiz:'Quiz',railKey:'Respuestas',railFaq:'Preguntas',railMore:'Más quizzes',railSources:'Fuentes',onPage:'Quiz: en esta página'}};
@@ -43,7 +43,7 @@ export function QuizPageView({quiz,lang}:{quiz:SiteQuiz;lang:Lang}){
  const more=[...others,...[...QUIZ_TOPICS].flatMap(g=>g.id===quiz.topic?[]:quizzesIn(g.id,lang).slice(0,1))].slice(0,5).map(x=>({path:x.path,name:x.h1,line:t.qsV(x.questions.length)}));
  const ld={...articleLd({headline:quiz.title,path:quiz.path,description:quiz.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:quiz.name}),
   learningResourceType:'Quiz',educationalUse:'assessment',typicalAgeRange:'7-12',
-  hasPart:quizPart({path:quiz.path,anchor:'answers',name:quiz.name,about:quiz.name.replace(/^Quiz (de|del) /,'').replace(/ quiz$/i,''),questions:quiz.questions})};
+  hasPart:quizPart({path:quiz.path,anchor:'answers',name:quiz.name,about:quiz.name.replace(/^Quiz (de|del) /,'').replace(/ quiz$/i,''),questions:quiz.questions.filter(x=>x.kind!=='order')/* multiple choice only: an order question has no one right option */})};
  const Intro=es?EsIntro:GuideIntro;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -60,7 +60,8 @@ export function QuizPageView({quiz,lang}:{quiz:SiteQuiz;lang:Lang}){
     <summary className={q.keySum}>{t.keyOpen(n)}</summary>
     <ol className={q.keyList}>{quiz.questions.map(x=><li key={x.q}>
      <h3 className={q.keyQ}>{x.q}</h3>
-     <ul className={q.keyOpts}>{x.options.map((o,j)=><li key={o} data-right={j===x.correct?'':undefined}>{o}{j===x.correct&&<b> ({t.right})</b>}</li>)}</ul>
+     {x.seq?<><p><b>{t.order}:</b></p><ol className={q.keyOpts} data-order="">{x.seq.map(j=><li key={j} data-right="">{x.options[j]}</li>)}</ol></>
+      :<ul className={q.keyOpts}>{x.options.map((o,j)=><li key={o} data-right={j===x.correct?'':undefined}>{o}{j===x.correct&&<b> ({t.right})</b>}</li>)}</ul>}
      <p>{x.explain}{x.fact?` ${x.fact}`:''} <a href={x.more.href}>{t.more}: {x.more.name}</a></p>
     </li>)}</ol>
    </details>

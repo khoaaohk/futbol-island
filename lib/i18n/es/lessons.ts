@@ -35,7 +35,7 @@ export function esLesson(id:string):EsLesson|null{
  const l=lessonById(id);if(!l)return null;const e=LESSONS_ES[id];if(!e)throw new Error(`Spanish lesson "${id}" is missing (lib/i18n/es/lessons)`);
  if(e.steps.length!==l.steps.length||e.questions.length!==l.questions.length)throw new Error(`Spanish lesson ${id}: steps/questions not 1:1 with English`);
  const x:EsLesson={...l,title:e.title,concept:e.concept,steps:[...e.steps],
-  questions:l.questions.map((q,i)=>{const y=e.questions[i];if(y.options.length!==q.options.length)throw new Error(`Spanish lesson ${id} question ${i}: options not 1:1`);return {...q,q:y.q,options:q.perm.map(k=>y.options[k]),explain:y.explain};}),
+  questions:l.questions.map((q,i)=>{const y=e.questions[i];if(y.options.length!==q.options.length)throw new Error(`Spanish lesson ${id} question ${i}: options not 1:1`);return {...q,q:q.kind==='spot'?y.q.replace(/\bArrastra a(l?)\b/,'Mueve a$1'):y.q,options:q.perm.map(k=>y.options[k]),explain:y.explain};/* a spot question is tapped on the page (lib/site/lessons.ts) */}),
   esPath:toEs(lessonPath(id)),chapterEs:tr(CHAPTER_ES,l.chapter,'chapter'),categoryEs:tr(CATEGORY_ES,l.category,'category'),difficultyEs:tr(DIFFICULTY_ES,l.difficulty,'difficulty')};
  cache.set(id,x);return x;
 }

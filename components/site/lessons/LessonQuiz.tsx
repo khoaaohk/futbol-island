@@ -15,7 +15,7 @@ const W={en:{key:'Answer key',open:(n:number)=>`Show all ${n} questions and answ
  es:{key:'Respuestas',open:(n:number)=>`Ver las ${n} preguntas con sus respuestas`,right:'Respuesta correcta',order:'Orden correcto'}};
 export default function LessonQuiz({lang,id,name,url,questions,more}:{lang:Lang;id:string;name:string;url:string;questions:readonly SiteQuestion[];more:{href:string;name:string}}){
  const w=W[lang],n=questions.length;
- const play:PlayQuestion[]=questions.map(x=>({kind:x.kind,q:x.q,options:x.options,correct:x.correct,...(x.seq?{seq:x.seq}:{}),explain:x.explain,more}));
+ const play:PlayQuestion[]=questions.map(x=>({kind:x.kind,q:x.q,options:x.options,correct:x.correct,...(x.seq?{seq:x.seq}:{}),...(x.spot?{spot:x.spot}:{}),explain:x.explain,more}));
  return <>
   <QuizPlay slug={`lesson-${id}`} name={name} lang={lang} questions={play} url={url}/>
   <details className={`${q.key} ${q.lessonKey}`} data-answer-key="" aria-label={w.key}>

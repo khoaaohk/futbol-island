@@ -9,10 +9,15 @@
  * The Spanish twin is lib/i18n/es/quizBank.ts: same slugs, same order, same right answers (tests/quizzes.cjs checks parity).
  * Pure data, no imports beyond the shared types.
  */
-export type QuizKind='choice'|'truefalse'|'ref'|'picture';
+import type {BankSpot} from './quizPitch';
+import {MORE_QUESTIONS,NEW_QUIZZES} from './quizBank2';
+/** Nov 23 2026 (owner: "build more interactive quizzes"): 'spot' = tap the right place on a pitch drawing (lib/site/quizPitch.ts;
+ *  the options list is the keyboard way in), 'order' = tap the steps first to last (options written in their right order). */
+export type QuizKind='choice'|'truefalse'|'ref'|'picture'|'spot'|'order';
 export type BankQuestion={kind:QuizKind;q:string;options:string[];correct:number;explain:string;/** the page that teaches it */more:string;
- /** a "Did you know?" line shown after the answer */fact?:string;/** a diagram the site already draws (/learn/diagrams/…) */pic?:{src:string;alt:string}};
-export type QuizTopic='rules'|'positions'|'terms'|'history';
+ /** a "Did you know?" line shown after the answer */fact?:string;/** a diagram the site already draws (/learn/diagrams/…) */pic?:{src:string;alt:string};
+ /** kind 'spot': one target per option, in the options' order */spot?:BankSpot};
+export type QuizTopic='rules'|'positions'|'tactics'|'terms'|'history';
 export type BankQuiz={slug:string;topic:QuizTopic;name:string;title:string;desc:string;h1:string;intro:string;
  sources:{name:string;url:string}[];faq:{q:string;a:string}[];questions:BankQuestion[]};
 
@@ -24,7 +29,7 @@ const c=(q:string,options:string[],correct:number,explain:string,more:string,o:{
 const tf=(q:string,yes:boolean,explain:string,more:string,fact?:string):BankQuestion=>({kind:'truefalse',q,options:['True','False'],correct:yes?0:1,explain,more,...(fact?{fact}:{})});
 const ref=(q:string,options:[string,string],correct:0|1,explain:string,more:string):BankQuestion=>({kind:'ref',q,options,correct,explain,more});
 
-export const QUIZ_BANK:readonly BankQuiz[]=[
+const BASE:readonly BankQuiz[]=[
  {slug:'soccer-rules-quiz',topic:'rules',name:'Soccer rules quiz',title:'Soccer Rules Quiz for Kids: Questions With Answers',
   desc:'A free soccer rules quiz for kids 7 to 12: throw-ins, goal kicks, corners, kick-offs and handball, with an answer and a short reason for every question.',
   h1:'Soccer rules quiz for kids',intro:'Ten quick questions on the basic rules of soccer (football): how long a game lasts, which restart comes next, and when the goalkeeper may use their hands.',
@@ -220,3 +225,6 @@ export const QUIZ_BANK:readonly BankQuiz[]=[
    c('Who won the first South American Championship, now called the Copa América, in 1916?',['Uruguay','Brazil','Argentina'],0,'Uruguay, with two wins and a draw.',X('copa-america-1916'),{fact:'It is the oldest continental tournament for national teams that is still played.'}),
   ]},
 ];
+/** Nov 23 2026 (owner: "add more to history, terms and tactics, and positions quizzes too"): the grown quizzes take their extra
+ *  questions from quizBank2, and the new quizzes follow, in the hub's topic order. */
+export const QUIZ_BANK:readonly BankQuiz[]=[...BASE.map(q=>({...q,questions:[...q.questions,...(MORE_QUESTIONS[q.slug]??[])]})),...NEW_QUIZZES];

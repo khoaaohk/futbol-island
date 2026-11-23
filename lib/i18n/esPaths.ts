@@ -38,7 +38,12 @@ export const ES_QUIZ_HUB='/learn/preguntas-de-futbol';
 export const ES_QUIZ_SLUGS:Readonly<Record<string,string>>={'soccer-rules-quiz':'quiz-de-reglas-del-futbol','offside-quiz':'quiz-del-fuera-de-juego',
  'fouls-and-cards-quiz':'quiz-de-faltas-y-tarjetas','soccer-positions-quiz':'quiz-de-posiciones-del-futbol','soccer-positions-by-number-quiz':'quiz-de-numeros-de-las-posiciones',
  'penalty-kick-quiz':'quiz-del-penal','soccer-terms-quiz':'quiz-de-terminos-del-futbol','futsal-rules-quiz':'quiz-de-reglas-del-futsal',
- '7v7-soccer-rules-quiz':'quiz-de-reglas-del-futbol-7','world-cup-quiz':'quiz-del-mundial'};
+ '7v7-soccer-rules-quiz':'quiz-de-reglas-del-futbol-7','world-cup-quiz':'quiz-del-mundial',
+ /* Nov 23 2026: more quizzes (lib/site/quizBank2.ts) */'goalkeeper-rules-quiz':'quiz-de-reglas-del-portero','throw-in-quiz':'quiz-del-saque-de-banda',
+ 'corner-kick-and-goal-kick-quiz':'quiz-del-corner-y-el-saque-de-meta','free-kick-quiz':'quiz-de-tiros-libres','9v9-soccer-rules-quiz':'quiz-de-reglas-del-futbol-9',
+ 'soccer-field-and-ball-size-quiz':'quiz-de-tamano-de-cancha-y-balon','soccer-formations-quiz':'quiz-de-formaciones-de-futbol','attacking-tactics-quiz':'quiz-de-tactica-de-ataque',
+ 'defending-tactics-quiz':'quiz-de-tactica-de-defensa','soccer-skills-terms-quiz':'quiz-de-habilidades-del-futbol','famous-soccer-players-quiz':'quiz-de-futbolistas-famosos',
+ 'womens-world-cup-quiz':'quiz-del-mundial-femenino'};
 const QZ='/learn/quizzes';
 export const ES_QUIZ_PAGES:readonly string[]=[QZ,...Object.keys(ES_QUIZ_SLUGS).map(s=>`${QZ}/${s}`)];
 /** English paths with a Spanish page. */
