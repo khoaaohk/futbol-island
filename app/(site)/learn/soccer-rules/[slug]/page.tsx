@@ -1,3 +1,4 @@
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -100,6 +101,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   </QA>
   <CoachNotesSection name={r.name} notes={RULE_NOTES[r.slug]}/>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
+  {/* Nov 23 2026: the matching quiz page (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={r.path}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related pages as one "Keep reading" row */}
   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(r.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(r.path)},{id:'related',links:related}],r.path)}/>
   <GuideEnd path={r.path} checked={FAMILY_CHECKED.rules} lesson={r.cta}/>

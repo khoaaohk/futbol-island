@@ -21,12 +21,12 @@ export function sitemapEntries():SitemapEntry[]{
 }
 /** The English families, in index order. `core`: the main pages (/, /play, /games, /library), the about and trust pages, every
  *  hub and index page and the one-level /learn guides (size charts, team-size guides, topic hubs). */
-export const EN_FAMILIES=['core','rules','terms','positions','formations','comparisons','drills','practice-plans','lessons','tools','games','books','cards','fish','exhibits','videos'] as const;
+export const EN_FAMILIES=['core','rules','terms','positions','formations','comparisons','drills','practice-plans','lessons','tools','games','books','cards','fish','exhibits','videos','quizzes'] as const;
 export type Family=typeof EN_FAMILIES[number]|`es-${typeof EN_FAMILIES[number]}`;
 const COMPARE=new Set(COMPARISONS.map(c=>c.path));
 const BY_PREFIX:readonly [string,Family][]=[['/learn/soccer-rules/','rules'],['/learn/soccer-terms/','terms'],['/learn/soccer-positions/','positions'],
  ['/learn/soccer-formations/','formations'],['/learn/soccer-drills/','drills'],['/learn/soccer-practice-plans/','practice-plans'],['/learn/lessons/','lessons'],
- ['/tools/','tools'],['/games/','games'],['/books/','books'],['/cards/','cards'],['/fish/','fish'],['/exhibits/','exhibits'],['/videos/','videos']];
+ ['/tools/','tools'],['/learn/quizzes/','quizzes'],['/games/','games'],['/books/','books'],['/cards/','cards'],['/fish/','fish'],['/exhibits/','exhibits'],['/videos/','videos']];
 /** The family of a site path (English or Spanish). Hubs (/learn/soccer-rules, /tools …) are core; their children are the family. */
 export function familyOf(path:string):Family{
  const es=path==='/es'||path.startsWith('/es/'),en=es?toEn(path)??path:path;

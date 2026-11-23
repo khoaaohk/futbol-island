@@ -43,6 +43,7 @@ const DEPS=[
  [/^\/learn\/soccer-formations\/./,[L+'formations.ts',L+'notesGuides.ts',L+'comparisons.ts',...SHARED]],
  [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],
  [/^\/learn\/soccer-practice-plans\/./,[L+'plans.ts',...SHARED]],
+ [/^\/learn\/quizzes/,[L+'quizzes.ts',L+'quizBank.ts','lib/i18n/es/quizBank.ts','components/site/quiz']],/* the quiz pages (Nov 23 2026) */
  [/^\/learn\//,[L+'hubs.ts',L+'guides.ts','components/site/LessonHub.tsx']],
  [/^\/library$/,[L+'library.ts',L+'footerHubs.ts','components/site/LibraryPage.tsx','components/site/library.module.css']],/* the Library (Nov 20 2026) */
  [/^\/tools/,[L+'tools']],[/^\/games/,[L+'games.ts']],[/^\/videos/,[L+'videos.ts',L+'gameMedia.ts',L+'gameMedia.json',L+'guideVideos.ts','components/site/videos/VideoThumbs.tsx']],

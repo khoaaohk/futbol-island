@@ -1,3 +1,4 @@
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -69,6 +70,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
+  {/* Nov 23 2026: the matching quiz page (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={t.path}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related terms as one "Keep reading" row */}
   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(t.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(t.path)},{id:'related',links:related}],t.path)}/>
   <GuideEnd path={t.path} checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
