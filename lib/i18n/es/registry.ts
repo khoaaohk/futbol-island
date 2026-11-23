@@ -45,7 +45,7 @@ export function esFormation(slug:string):EsFormation|null{
  const f=formationBySlug(slug);if(!f)return null;const e=need(FORMATIONS_ES,slug,'formation');
  same(slug,'roles',f.roles,e.roles);same(slug,'strengths',f.strengths,e.strengths);same(slug,'weak',f.weak,e.weak);
  const sh=shapeEs(f.shape,slug),fs=f.format==='futsal';
- return {...f,shapeEs:sh,name:fs?`${sh} (futsal)`:`${sh} (${f.format})`,title:fs?`Formación ${sh} de futsal: roles y diagrama`:`Formación ${sh} en fútbol ${f.format}: roles y diagrama`,
+ return {...f,shapeEs:sh,name:fs?`${sh} (futsal)`:`${sh} (${f.format})`,title:fs?`Formación ${sh} de futsal (fútbol sala): roles y diagrama`:`Formación ${sh} en fútbol ${f.format.replace(/v\d+$/,'')} (${f.format}): roles y diagrama`,/* Nov 23 2026: "fútbol 7" is how Spain/LatAm search */
   h1:fs?`Formación ${sh} de futsal`:`Formación ${sh} de fútbol (${f.format})`,best:e.best,watch:e.watch,desc:e.desc,answer:e.answer,
   roles:f.roles.map((r,i)=>({...r,title:e.roles[i].title,job:e.roles[i].job})),strengths:[...e.strengths],weak:f.weak.map((w,i)=>({...w,spot:e.weak[i].spot,cover:e.weak[i].cover})),
   attack:e.attack,defend:e.defend,suits:e.suits,faq:e.faq.map(q=>({...q})),esPath:toEs(f.path),notes:e.notes};
