@@ -210,3 +210,5 @@
 .btnGhost{background:var(--tint);color:var(--ink)}
 .btnLight{background:rgb(255 255 255 / .14);color:#fff}
 .doneBtn{background:var(--pitch);color:#fff}
+/* the coach app's mini live bar is shown (components/coach/LiveDock.tsx): the Start dock sits above it */
+:global(body.fi-dock-on) .dock{bottom:calc(76px + env(safe-area-inset-bottom))}

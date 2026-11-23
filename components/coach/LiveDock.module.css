@@ -1,0 +1,30 @@
+/* The mini live bar (LiveDock.tsx): a light surface docked at the bottom of every coach screen while a game is on the clock.
+   Own colours (it also sits on /board and /scan, outside the coach app's tokens). */
+.dock{position:fixed;z-index:30;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));max-width:560px;margin:0 auto;display:flex;align-items:center;gap:8px;
+ padding:6px 6px 6px 4px;border-radius:20px;background:#fff;color:#14221d;box-shadow:0 10px 30px rgb(20 34 29 / .18),0 0 0 1px rgb(20 34 29 / .08);
+ font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;animation:dockIn 300ms cubic-bezier(.22,1,.36,1) both}
+.main{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;gap:10px;border:0;background:transparent;color:inherit;text-align:left;padding:0 6px 0 10px;border-radius:16px;cursor:pointer}
+.dot{width:10px;height:10px;flex:0 0 auto;border-radius:999px;background:#c2410c;box-shadow:0 0 0 4px rgb(194 65 12 / .16)}
+.dot[data-paused]{background:#85621f;box-shadow:0 0 0 4px rgb(133 98 31 / .16);animation:none}
+.text{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.text b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.text small{font-size:13px;font-weight:600;color:#4f5b53;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.num{font-variant-numeric:tabular-nums}
+.toggle{flex:0 0 auto;min-height:44px;min-width:84px;padding:0 14px;border:0;border-radius:999px;background:#efeee2;color:#14221d;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s,background-color .15s}
+.toggle[data-paused]{background:#e9c16b}
+.toggle:active,.main:active{transform:scale(.97)}
+.main:focus-visible,.toggle:focus-visible{outline:3px solid #1d6b55;outline-offset:2px}
+/* a change is due: a gentle gold pulse (no layout change) */
+.dock[data-due]{animation:dockIn 300ms cubic-bezier(.22,1,.36,1) both,duePulse 1.4s ease-in-out infinite}
+.dock[data-due] .text small{color:#85621f;font-weight:800}
+@keyframes dockIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes duePulse{50%{box-shadow:0 10px 30px rgb(20 34 29 / .18),0 0 0 4px rgb(233 193 107 / .9)}}
+@media (hover:hover) and (pointer:fine){.main:hover{background:#f6f3ea}.toggle:hover{background:#e4e8d4}.toggle[data-paused]:hover{background:#efcd85}}
+@media (prefers-reduced-motion:reduce){.dock,.dock[data-due]{animation:none}.dock[data-due]{box-shadow:0 10px 30px rgb(20 34 29 / .18),0 0 0 4px #e9c16b}}
+@media print{.dock{display:none}}
+.bodyOn{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+/* /board is a full-height layout: the room goes inside it. The scan drill's full-screen cues are never covered. */
+.bodyOn :global([data-board-app]){padding-bottom:calc(76px + env(safe-area-inset-bottom));box-sizing:border-box}
+:global(body:has([data-scan-view=run])) .dock{display:none}
+/* on /board and /scan the page's own layers sit high (the board is a full-screen layer): the bar goes above them */
+.bodyOn .dock{z-index:70}

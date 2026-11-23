@@ -9,6 +9,7 @@ import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,minutesCsv,newId,t
 import {WORDS,type Words} from '@/lib/coach/words';
 import {activeOf,addTeam,deleteTeam,isRunning,liveTeam,loadTeams,saveTeams,switchTeam,updateActive,updateTeam,type Teams} from '@/lib/coach/teams';
 import {TeamButton,TeamSheet,presetSettings} from './TeamSheet';
+import {LiveBar,toggleClock} from './LiveDock';
 import c from './coach.module.css';
 import {AppHeader,HeaderGoldBack} from '@/components/motion/AppHeader';
 import TeamShare from '@/components/share/TeamShare';
@@ -199,11 +200,13 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  /* the team whose game is on the clock (maybe not the one shown): Home's Continue card and the mini live bar return to it */
  const liveRec=liveTeam(teams),liveOther=liveRec&&liveRec.id!==store.id?liveRec:null;
  const openLive=()=>{if(liveOther){setTeams(t=>switchTeam(t,liveOther.id));setUndo([]);}setLive(true);};
+ /* the clock: 4 ticks a second on the live screen; 1 a second for the mini live bar on the other screens; none without a game */
+ const ticking=live?250:liveRec?1000:0;
+ useEffect(()=>{if(!ticking)return;setNow(Date.now());const t=setInterval(()=>setNow(Date.now()),ticking);return ()=>clearInterval(t);},[ticking]);
  /* switch team: a quick crossfade; the undo list belongs to the team that was shown */
  const pickTeam=(id:string,then?:()=>void)=>{teamSheet.close();if(id===store.id){then?.();return;}
   screenChange('fade',()=>{setEnter('fade');setTeams(t=>switchTeam(t,id));setUndo([]);then?.();});};
  /* the live clock: a tick only while the live screen is open */
- useEffect(()=>{if(!live)return;const t=setInterval(()=>setNow(Date.now()),250);return ()=>clearInterval(t);},[live]);
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),6000);return ()=>clearTimeout(t);},[toast]);
  /* never lose a live game by accident */
  const anyLive=!!liveRec;
@@ -229,7 +232,7 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
  const shareBlock=<TeamShare surface="coach" lang={lang} format={store.settings.format} team={store.team.name} lessons={lessons} heading/>;
  if(shared)return <SharedView w={w} x={shared} onClose={()=>{history.replaceState(null,'',location.pathname+location.search);setShared(null);}}/>;
  const team=store.team;
- return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab}>
+ return <div className={c.app} data-reading-page="" data-coach-app="" data-tool={tab} data-dock={!live&&liveRec?'':undefined}>
   {/* the shared header (components/motion/AppHeader): the title centred, the language and then Exit on the right */}
   {/* the language button only on Home (owner, Nov 22 2026); the choice is saved (fi-coach-v1) and the tools follow it */}
   <AppHeader lang={lang} exit={tab==='home'} onLang={tab==='home'?()=>update(s=>({...s,lang:lang==='es'?'en':'es'})):undefined} exitAria={lang==='es'?'Salir de la app del entrenador y volver a Futbol Island':'Exit the coach app and go back to Futbol Island'} exitData={{'data-coach-back':'','data-coach-exit':''}}
@@ -253,6 +256,9 @@ export default function CoachApp({shapes,lessons}:{shapes:readonly Shape[];lesso
    onExit={()=>{/* Back leaves the live screen without stopping the game: the clock is time-stamped and Home's Continue card returns to it */
     setLive(false);setTab(game.clock.status==='done'?'summary':'home');}}
    onSummary={()=>{setLive(false);setTab('summary');}} onSub={()=>count('ca:sub')}/>}
+  {/* the mini live bar (Nov 22 2026): a game on the clock stays one tap away from every screen */}
+  {ready&&!live&&liveRec?.game&&<LiveBar w={w} game={liveRec.game} team={liveRec.team.name||w.teamN(teams.teams.indexOf(liveRec)+1)} now={now} sound={store.sound} onOpen={openLive}
+   onToggle={()=>setTeams(t=>updateTeam(t,liveRec.id,x=>x.game?{...x,game:toggleClock(x.game,Date.now())}:x))}/>}
   {teamSheet.value&&<TeamSheet w={w} teams={teams} closing={teamSheet.closing} onClose={teamSheet.close}
    onPick={id=>pickTeam(id)} onEdit={id=>pickTeam(id,()=>{setEnter('forward');setTab('team');})}
    onDelete={id=>{const wasActive=id===store.id;const apply=()=>{setTeams(t=>deleteTeam(t,id,Date.now()%100000));if(wasActive)setUndo([]);};if(wasActive)screenChange('fade',apply);else apply();}}
@@ -481,6 +487,12 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
  const mark=(p:Player,x:Status)=>{setSheet(null);act(g=>setStatus(g,Date.now(),p.id,x,keepers),w.replanned);};
  const pairs=nc?Array.from({length:Math.max(nc.change.out.length,nc.change.in.length)},(_,i)=>[nc.change.out[i],nc.change.in[i]] as const):[];
  const gkNew=nc&&nc.change.gkTo!==nc.change.gkFrom?nc.change.gkTo:null;
+ /* the panel folds while the change is far off: open on its own 30 s before (or when due), and on tap; a tap holds only for this
+    change and this phase (far / soon), so the 30 s mark always opens it again */
+ const foldable=!!nc&&inPlay&&!up&&due!=null,soon=due!=null&&due<=30,pinKey=`${nc?.index??-1}:${game.delay}:${soon?'s':'f'}`;
+ const [pin,setPin]=useState<{k:string;open:boolean}|null>(null);
+ const open=!foldable||(pin&&pin.k===pinKey?pin.open:soon);
+ const when=due!=null&&due>0?fmtClock(due):'';
  const Who=({p,cls,extra}:{p:Player;cls:string;extra?:string})=><button type="button" className={`${c.whoBtn} ${cls}`} onClick={()=>setSheet(p)} aria-label={`${label(p)}, ${mins(played[p.id]??0)} ${w.min}${extra?', '+extra:''}`}>
   <b>{p.num}</b><span>{p.name}{game.gk===p.id?` · ${w.gk}`:''}{extra?` · ${extra}`:''}</span><em>{mins(played[p.id]??0)}′</em></button>;
  return <div className={c.live} role="dialog" aria-modal="true" aria-label={w.tabGame}>
@@ -510,16 +522,29 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
    </div>
    {inPlay&&!up&&<div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>act(g=>endCurrentPeriod(g,Date.now()))}>{w.endPeriod(pName)}</button></div>}
   </div>
-  <section className={c.card} data-flash={now_||up} aria-live="assertive" aria-atomic="true">
+  {/* the Next change panel (owner, Nov 22 2026: "fix the green bottom to have a better design"): a light card; collapsed to one
+     line while the change is far off, open 30 s before it (or on tap); Off -> On in two columns of player chips; Done is the gold
+     primary, "1 min later" and Skip are light. It never covers the bench for long: after Done it folds back to one line. */}
+  <section className={c.card} data-flash={now_||up} data-open={open?'':undefined} aria-live="assertive" aria-atomic="true" data-next-panel="">
    {st==='done'?<><div className={c.cardHead}><span>{w.over}</span></div><p className={c.calm}>{w.summary}</p><div className={c.cardBtns}><button type="button" className={`${c.btn} ${c.done}`} onClick={onSummary}>{w.tabSummary}</button></div></>
    :up?<><div className={c.cardHead}><span>{w.timeUp}</span><strong>{fmtClock(sec)}</strong></div><div className={c.cardBtns} style={{marginTop:12}}>
      <button type="button" className={`${c.btn} ${c.done}`} onClick={()=>act(g=>endCurrentPeriod(g,Date.now()))}>{w.endPeriod(pName)}</button>
      <button type="button" className={`${c.btn} ${c.cardGhost}`} onClick={()=>act(g=>({...g,clock:addStoppage(g.clock)}))}>{w.stoppage}</button></div></>
+   :!open&&nc?<button type="button" className={c.cardFold} aria-expanded={false} onClick={()=>setPin({k:pinKey,open:true})} data-next-toggle="">
+     <span><b>{when?w.changeIn(when):w.nextSub}</b> · {w.swapsN(pairs.length)}</span>
+     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
    :<>
-    <div className={c.cardHead}><span>{nc?(now_?w.subNow:w.nextSub):w.noMoreSubs}</span>{nc&&<strong>{due==null?(st==='pre'?fmtClock(nc.block.start):w.subAtBreak):due<=0?(s.rolling?'':w.subStopped):w.subIn(fmtClock(due))}</strong>}</div>
-    {nc&&<div className={c.pairs} data-many={pairs.length>2}>{pairs.map(([o,i],k)=><div key={k} className={c.pair}>
-     <div className={c.pairSide}><small>{w.out}</small>{o?<><b>{nm(o)?.num}</b><span>{nm(o)?.name}</span></>:<b>—</b>}</div><span className={c.arrow} aria-hidden="true">→</span>
-     <div className={c.pairSide}><small>{w.in}</small>{i?<><b>{nm(i)?.num}</b><span>{nm(i)?.name}</span></>:<b>—</b>}</div></div>)}</div>}
+    <div className={c.cardHead}><span>{nc?(now_?w.subNow:w.nextSub):w.noMoreSubs}</span>
+     {nc&&<strong>{due==null?(st==='pre'?fmtClock(nc.block.start):w.subAtBreak):due<=0?(s.rolling?'':w.subStopped):w.subIn(fmtClock(due))}</strong>}
+     {nc&&foldable&&<button type="button" className={c.foldBtn} aria-expanded={true} aria-label={w.hideChange} onClick={()=>setPin({k:pinKey,open:false})} data-next-toggle="">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}</div>
+    {nc&&pairs.length>0&&<div className={c.swapList} role="table" aria-label={w.nextSub}>
+     <div className={c.swapHead} role="row"><span role="columnheader">{w.out}</span><span aria-hidden="true"/><span role="columnheader">{w.in}</span></div>
+     {pairs.map(([o,i],k)=><div key={k} className={c.swapRow} role="row">
+      <span role="cell" className={`${c.swapChip} ${c.swapOff}`}>{o?<><b>{nm(o)?.num}</b><span>{nm(o)?.name}</span></>:<b>—</b>}</span>
+      <span className={c.swapArrow} aria-hidden="true">→</span>
+      <span role="cell" className={`${c.swapChip} ${c.swapOn}`}>{i?<><b>{nm(i)?.num}</b><span>{nm(i)?.name}</span></>:<b>—</b>}</span></div>)}
+    </div>}
     {gkNew&&<p className={c.gkLine}>#{nm(gkNew)?.num} {nm(gkNew)?.name} {w.goesInGoal}</p>}
     <div className={c.cardBtns}>
      {nc&&(inPlay||st==='break')&&<button type="button" className={`${c.btn} ${c.done}`} onClick={()=>{onSub();act(g=>{const n=nextChange(g);return n?confirmChange(g,Date.now(),n.change,n.index,keepers):g;});}}>{w.done} ✓</button>}
