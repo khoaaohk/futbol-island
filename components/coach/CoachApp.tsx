@@ -112,7 +112,7 @@ function Legend({w,keeper}:{w:Words;keeper:boolean}){
 function Fair({w,seconds,ids,skip,fixedName,step,verdict=true}:{w:Words;seconds:Readonly<Record<string,number>>;ids:readonly string[];skip:ReadonlySet<string>;fixedName?:string;step:number;verdict?:boolean}){
  /* uneven = a spread of more than one change interval (the planner keeps everyone there all game within one; tests/coach-app.cjs) */
  const f=fairness(seconds,ids,skip),bad=f.spread>step*60+1,lo=useCountUp(mins(f.min)),hi=useCountUp(mins(f.max));
- return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(lo,hi).replace(/ (\S+)$/,'\u00a0$1')/* round 4G (P1): the unit never sits alone on a line */}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
+ return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(lo,hi).replace(/(\d+)–(\d+) (\S+)$/,'$1\u2060–\u2060$2\u00a0$3').replace(/ (\S+)$/,'\u00a0$1')/* round 4G (P1): the unit never sits alone on a line */}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
   {/* a parents' link never shows a verdict (UX audit B3/C2); the coach sees a neutral word */}
   {verdict&&<span className={`${c.fairTag} fi-pop`} key={String(bad)} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span>}</div>;
 }
@@ -775,7 +775,7 @@ function LiveGame({w,lang,game,team,now,act,canUndo,onUndo,onExit,onSummary,onSu
     {/* round 4G (audit P9): with no change left the panel is not an empty card: the score and the minutes so far */}
     {!nc&&st!=='pre'&&(()=>{const ok=okIds.map(p=>played[p]??0),lo=Math.min(...ok),hi=Math.max(...ok);
      return <div className={c.restCard} data-rest-card=""><p className={c.restScore}><span>{team.name||w.us}</span><b>{sc.us}–{sc.them}</b><span>{info?.opp||w.opponent}</span></p>
-      {ok.length>0&&<p className={c.note}>{w.fairEveryone(mins(lo),mins(hi)).replace(/ (\S+)$/,'\u00a0$1')}</p>}</div>;})()}
+      {ok.length>0&&<p className={c.note}>{w.fairEveryone(mins(lo),mins(hi)).replace(/(\d+)–(\d+) (\S+)$/,'$1\u2060–\u2060$2\u00a0$3').replace(/ (\S+)$/,'\u00a0$1')}</p>}</div>;})()}
     {gkNew&&<p className={c.gkLine}>#{nm(gkNew)?.num} {nm(gkNew)?.name} {w.goesInGoal}</p>}
     {nc&&overdue&&<p className={c.overdue} data-overdue="">{missed?w.missedBreak:w.overdueNote(Math.max(1,Math.round(-due!/60)))}</p>}
     <div className={c.cardBtns}>
@@ -829,7 +829,7 @@ function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;
   <Fair w={w} seconds={sec} ids={ids} skip={skip} fixedName={fixed?label(store.team.players.find(p=>p.id===fixed)):undefined} step={g.settings.subEvery}/>
   {/* round 4G (audit C7): minutes that ended well apart say why */}
   {(()=>{const un=unevenNotes(g,sec);if(!un.length)return null;const why={hurt:w.whyHurt,left:w.whyLeft,late:w.whyLate,skip:w.whySkip,other:w.whyOther};
-   return <div className={c.uneven} data-uneven=""><p className={c.lbl}>{w.unevenHead}</p><ul>{un.slice(0,8).map(u=><li key={u.p}>{w.missedMin(label(store.team.players.find(p=>p.id===u.p)),mins(u.short))} · {why[u.why]}</li>)}</ul></div>;})()}
+   return <div className={c.uneven} data-uneven=""><p className={c.lbl}>{w.unevenHead}</p><ul>{un.slice(0,5).map(u=><li key={u.p}>{w.missedMin(label(store.team.players.find(p=>p.id===u.p)),mins(u.short))} · {why[u.why]}</li>)}</ul></div>;})()}
   <table className={c.sumTable}><thead><tr><th>#</th><th>{w.nameOpt.split(' (')[0]}</th><th style={{width:'34%'}}><span className="sr-only"/></th><th className={c.r}>{w.inGoal}</th><th className={c.r}>{w.min}</th></tr></thead>
    <tbody>{rows.map(p=><tr key={p.id}><td><b>{p.num}</b></td><td>{p.name}{g.status[p.id]!=='ok'?` · ${g.status[p.id]==='hurt'?w.hurt:g.status[p.id]==='left'?w.left:w.late}`:''}</td>
     <td><span className={c.sumBar} style={{width:`${(sec[p.id]??0)/max*100}%`}}/></td><td className={c.r}>{kept[p.id]?mins(kept[p.id]):''}</td><td className={c.r}><b><Tick value={mins(sec[p.id]??0)}/></b></td></tr>)}</tbody></table>

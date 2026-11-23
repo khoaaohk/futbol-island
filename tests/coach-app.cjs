@@ -553,6 +553,7 @@ for(const arr of [300,605,720,900,1205]){
  ok(un.length===1&&un[0].p==='r2'&&un[0].why==='skip','C7: a player far behind after skipped changes is explained ("a change was skipped")');
  ok(E.unevenNotes({...u,skips:0,status:{...u.status,r2:'hurt'}},{r0:3000,r1:3000,r2:600,r3:3000,r4:3000,r5:3000,r6:3000,r7:3000,r8:3000,r9:3000})[0].why==='hurt','C7: hurt explained');
  ok(E.unevenNotes(u,Object.fromEntries(order.map(p=>[p,1800]))).length===0,'C7: level minutes: no note');
+ ok(E.unevenNotes(u,{r0:2700,r1:2400,r2:2100,r3:1800,r4:1800,r5:1800,r6:1800,r7:1800,r8:1800,r9:1800}).length===0,'C7: a keeper with more minutes does not make everyone else "missed"');
 }
 {
  /* B4/C5 words: every language has its own OUT/IN and every board word; the board stays English by default (the game) */
@@ -564,7 +565,7 @@ for(const arr of [300,605,720,900,1205]){
  ok(W.en.skipped!==W.en.replanned&&!/level/.test(W.en.skipped),'C7: the Skip toast does not promise level minutes');
  const tb=read('components/coaches-board/TacticsBoard.tsx');
  ok(/words\?:BoardWords/.test(tb)&&/const L=words\?\?BOARD_EN/.test(tb)&&!/>Save</.test(tb),'B4: the board takes words, English by default');
- ok(/words=\{BOARD_WORDS\[lang\]\}/.test(read('components/coaches-board/BoardApp.tsx')),'B4: /board passes the app language');
+ ok(/words=\{BOARD_WORDS\[langQ?\]\}/.test(read('components/coaches-board/BoardApp.tsx')),'B4: /board passes the app language');
  const mo=read('components/motion/motion.tsx');ok(/history\.back\(\)/.test(mo)&&/location\.replace\(/.test(mo)&&!/location\.assign\(miniBackHref/.test(read('components/scan/ScanApp.tsx')+read('components/coaches-board/BoardApp.tsx')),'B6: mini app Back steps back or replaces, never pushes');
 }
 console.log(`coach-app: ${checks} checks passed`);

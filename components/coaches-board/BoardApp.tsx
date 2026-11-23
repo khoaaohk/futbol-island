@@ -20,13 +20,13 @@ import '@/components/motion/motion.css';
 export default function BoardApp(){
  /* the coach app's language (round 4A, UX audit C9; round 4E: all ten): ?lang= from the coach app; the header follows it (round 4G:
     the board's own words too, passed in; the game passes none and keeps English) */
- const [lang,setLang]=useState<AppLang>('en');
- useEffect(()=>{noteAppEntry('board');try{const q=new URLSearchParams(location.search).get('lang');if(isAppLang(q)&&q!=='en'){setLang(q);document.documentElement.lang=LOCALE[q];}}catch{/* none */}},[]);
+ const [langQ,setLang]=useState<AppLang|null>(null),lang=langQ??'en';
+ useEffect(()=>{noteAppEntry('board');let l:AppLang='en';try{const q=new URLSearchParams(location.search).get('lang');if(isAppLang(q)&&q!=='en'){l=q;document.documentElement.lang=LOCALE[q];}}catch{/* none */}setLang(l);},[]);
  const title=BOARD_TITLE[lang],guide=siteLang(lang)==='es'?'/es/tools/soccer-tactics-board':'/tools/soccer-tactics-board';
  return <div className={web.web} data-board-app="" translate="no">
   <h1 className={web.srOnly}>{title}</h1>
   <AppHeader lang={lang} title={title} sub="Futbol Island" exitAria="" exit={false}
    left={<HeaderGoldBack lang={lang} onBack={()=>goMiniBack(lang,guide)} data={{'data-board-coach':''}}/>}/>
-  <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}><TacticsBoard words={BOARD_WORDS[lang]}/></div></div>
+  <div style={{position:'relative',flex:1,minHeight:0}}><div className={s.fullscreen} style={{position:'absolute'}}>{/* the board mounts once the language is known, so a new play is named in it ("Mi jugada", not "My play") */}{langQ&&<TacticsBoard words={BOARD_WORDS[langQ]}/>}</div></div>
  </div>;
 }

@@ -332,14 +332,15 @@ export function arrivalsDue(g:Game,now:number):string[]{
  const t=gameMinuteSec(g,now);
  return Object.keys(g.arrive).filter(p=>g.status[p]==='late'&&g.arrive![p]*60<=t).sort((a,b)=>g.arrive![a]-g.arrive![b]);
 }
-/** Round 4G (audit C7): why a player's minutes ended well under the most played (more than one change interval, at least 2 min).
+/** Round 4G (audit C7): why a player's minutes ended well under the team's middle (1.5 change intervals, at least 5 min).
  *  `why`: hurt, left early, came late (or never came), the coach skipped changes, or changes were made late / missed. */
 export type Uneven={p:string;short:number;why:'hurt'|'left'|'late'|'skip'|'other'};
 export function unevenNotes(g:Game,seconds:Readonly<Record<string,number>>):Uneven[]{
  const ids=Object.keys(g.status),joined=new Set(g.joined??[]),fixed=g.settings.keeper==='fixed'?soleKeeper(g.blocks):null;
  const base=ids.filter(p=>g.status[p]==='ok'&&!joined.has(p)&&p!==fixed);
  if(!base.length)return [];
- const top=Math.max(...base.map(p=>seconds[p]??0)),limit=Math.max(120,g.settings.subEvery*60);
+ /* measured from the middle of the players who were there all game (not the most played, often a keeper), so only real gaps show */
+ const v=base.map(p=>seconds[p]??0).sort((x,y)=>x-y),top=v[Math.floor((v.length-1)/2)],limit=Math.max(300,g.settings.subEvery*90);
  const out:Uneven[]=[];
  for(const p of ids){if(p===fixed)continue;const short=top-(seconds[p]??0);if(short<=limit)continue;
   const st=g.status[p];
