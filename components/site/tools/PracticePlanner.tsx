@@ -40,7 +40,7 @@ export default function PracticePlanner({catalog,lang}:{catalog:readonly Catalog
  useEffect(()=>{if(location.search.includes('age=')){setO(decodePlan(location.search));setTouched(true);}ready.current=true;},[]);
  useEffect(()=>{if(ready.current&&touched)history.replaceState(null,'',`${location.pathname}?${encodePlan(o)}${location.hash}`);},[o,touched]);
  const set=(p:Partial<PlanOptions>)=>{setO(x=>({...x,...p}));setTouched(true);setStatus('');};
- const plan=useMemo(()=>makePlan(catalog,o),[catalog,o]),g=groups(o.players),[lo,hi]=AGE_LENGTH[o.age];
+ const plan=useMemo(()=>makePlan(catalog,o),[catalog,o]),g=groups(o.players,o.age),[lo,hi]=AGE_LENGTH[o.age];
  const swapIdx=(i:number)=>plan.blocks.slice(0,i).filter(b=>b.swappable).length;
  const swap=(i:number)=>{const k=swapIdx(i),sw=[...(o.swaps??[0,0,0,0])];sw[k]=(sw[k]??0)+1;set({swaps:sw});};
  const link=()=>`${location.origin}${location.pathname}?${encodePlan(o)}`;

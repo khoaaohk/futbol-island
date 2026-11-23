@@ -60,7 +60,7 @@ export default function FieldSizeGuide({lang}:{lang?:'es'}){
  const plan=useMemo(()=>conePlan(f,Lx,Wx),[f,Lx,Wx]);
  // drawing: length along x. Goal width in the field's unit.
  const gw0=f.goalRec?.w??f.goal.w,gw=f.goal.u==='m'?gw0:f.unit==='yd'?gw0/3:gw0*FT;
- const VW=1000,pad=46,sc=(VW-pad*2)/Lx,VH=Math.round(Wx*sc+pad*2),X=(v:number)=>pad+v*sc,Y=(v:number)=>pad+v*sc,cy=Wx/2;
+ const VW=1000,pad=58,sc=(VW-pad*2)/Lx,VH=Math.round(Wx*sc+pad*2),X=(v:number)=>pad+v*sc,Y=(v:number)=>pad+v*sc,cy=Wx/2;
  const pts:[number,number][]=[];if(cones){pts.push([0,0],[Lx,0],[0,Wx],[Lx,Wx],[Lx/2,0],[Lx/2,Wx],[Lx/2,cy]);
   if(f.penaltyArea){const p=f.penaltyArea,b=(Wx-p.width)/2;for(const x of [0,Lx]){const d=x?Lx-p.depth:p.depth;pts.push([x,b],[x,Wx-b],[d,b],[d,Wx-b]);}}
   if(f.goalArea){const g=f.goalArea,b=(Wx-g.width)/2;pts.push([g.depth,b],[g.depth,Wx-b],[Lx-g.depth,b],[Lx-g.depth,Wx-b]);}
@@ -103,7 +103,7 @@ export default function FieldSizeGuide({lang}:{lang?:'es'}){
     {[0,Lx].map(x=><rect key={x} x={x?X(Lx):X(0)-Math.max(10,1.5*sc)} y={Y(cy-gw/2)} width={Math.max(10,1.5*sc)} height={gw*sc} fill="#fbf7ee" opacity=".9"/>)}
     {pts.map(([x,y],i)=><path key={i} d={`M${X(x)} ${Y(y)-9}l8 14h-16z`} fill="#ff7a1a" stroke="#14221d" strokeWidth="1.5"/>)}
     <text x={VW/2} y={VH-12} textAnchor="middle" fill="#fbf7ee" fontSize="26" fontWeight="800">{fmt(Lx)}</text>
-    <text x={VW-24} y={VH/2} textAnchor="middle" dominantBaseline="middle" fill="#fbf7ee" fontSize="24" fontWeight="800" transform={`rotate(90 ${VW-24} ${VH/2})`}>{fmt(Wx)}</text>
+    <text x={VW-18} y={VH/2} textAnchor="middle" dominantBaseline="middle" fill="#fbf7ee" fontSize="24" fontWeight="800" transform={`rotate(90 ${VW-18} ${VH/2})`}>{fmt(Wx)}</text>
    </svg>
    <label className={`${s.check} ${s.noPrint}`}><input type="checkbox" checked={cones} onChange={e=>setCones(e.target.checked)}/>{w.show}</label>
   </figure>

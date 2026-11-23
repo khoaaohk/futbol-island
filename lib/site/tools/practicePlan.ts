@@ -40,11 +40,13 @@ export function timings(total:number){
  const warm=Math.round(rest*.2),d1=Math.round(rest*.24),d2=Math.round(rest*.24),game=rest-warm-d1-d2;
  return {warm,d1,d2,game,cool,water,waterMin:2,total:t};
 }
-/** How to split the players into teams for the game, e.g. 10 players: "two teams of 5 (5v5), or two games of 3v2 on small fields". */
-export function groups(players:number){
- const n=Math.max(MIN_PLAYERS,Math.min(MAX_PLAYERS,Math.round(players)));
- const perSide=n<=10?Math.floor(n/2):n<=16?Math.floor(n/4):Math.floor(n/6);
- const games=n<=10?1:n<=16?2:3,spare=n-perSide*2*games;
+/** The largest side for a practice game at each age: 4v4 is the U6-U8 game format (U.S. Soccer), and practice games stay
+ * small at every age so each child is close to the ball (the Play-Practice-Play model's 2v2 to 4v4, a little bigger later). */
+export const MAX_SIDE:Record<PlanAge,number>={U6:3,U8:4,U10:5,U12:6};
+/** How to split the players into teams for the game: as few games as fit the age's largest side; extra players rotate in. */
+export function groups(players:number,age:PlanAge='U12'){
+ const n=Math.max(MIN_PLAYERS,Math.min(MAX_PLAYERS,Math.round(players))),cap=MAX_SIDE[age]??6;
+ const games=Math.max(1,Math.round(n/(2*cap))),perSide=Math.min(cap,Math.floor(n/(2*games))),spare=n-perSide*2*games;
  return {players:n,games,perSide,spare};
 }
 function candidates(cat:readonly CatalogDrill[],skills:readonly string[],age:PlanAge,used:Set<string>){
@@ -62,7 +64,7 @@ export function makePlan(cat:readonly CatalogDrill[],o:PlanOptions):Plan{
  const blocks:Block[]=[];let at=0;
  const add=(kind:BlockKind,minutes:number,d?:CatalogDrill)=>{blocks.push({kind,start:at,minutes,slug:d?.slug,name:d?.name,line:d?.line,swappable:!!d});at+=minutes;};
  add('warm',tm.warm,warm);add('drill',tm.d1,d1);if(tm.water===2)add('water',tm.waterMin);add('drill',tm.d2,d2);add('water',tm.waterMin);add('game',tm.game,game);add('cool',tm.cool);
- const [lo,hi]=AGE_LENGTH[age],g=groups(o.players);
+ const [lo,hi]=AGE_LENGTH[age],g=groups(o.players,age);
  return {blocks,total:at,ageNote:tm.total>hi?'long':tm.total<lo?'short':'ok',gkFallback,groups:`${g.games}x${g.perSide}v${g.perSide}+${g.spare}`};
 }
 /** URL state: ?age=U8&min=60&p=10&focus=passing&s=17&w=0.1.0.0 (unknown or broken values fall back to the defaults). */

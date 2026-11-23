@@ -55,7 +55,8 @@ const N=load('lib/site/tools/teamNames.ts'),P=load('lib/site/tools/practicePlan.
  assert.equal(P.makePlan(PLAN_CATALOG,{...base,age:'U6',minutes:90}).ageNote,'long');assert.equal(P.makePlan(PLAN_CATALOG,{...base,age:'U12',minutes:45}).ageNote,'short');assert.equal(a.ageNote,'ok');
  assert.deepEqual(P.decodePlan('?'+P.encodePlan({...base,swaps:[1,2,3,4]})),{...base,swaps:[1,2,3,4]},'URL round trip');
  assert.deepEqual(P.decodePlan('age=U99&min=13&p=x&focus=<b>&s=-1&w=a'),P.DEFAULT_PLAN,'broken URL falls back');
- const g=P.groups(10);assert.deepEqual([g.games,g.perSide,g.spare],[1,5,0]);const g2=P.groups(13);assert.deepEqual([g2.games,g2.perSide,g2.spare],[2,3,1]);
+ const g=P.groups(10,'U8');assert.deepEqual([g.games,g.perSide,g.spare],[1,4,2],'U8: 4v4 at most');const g2=P.groups(14,'U8');assert.deepEqual([g2.games,g2.perSide,g2.spare],[2,3,2]);
+ for(const a of P.PLAN_AGES)for(let n=4;n<=30;n++){const x=P.groups(n,a);assert(x.perSide<=P.MAX_SIDE[a]&&x.perSide>=2&&x.spare>=0&&x.perSide*2*x.games+x.spare===n,`${a} ${n}: groups`);}
  assert.equal(P.mmss(75),'1:15');}
 
 // ---- 3. field sizes -------------------------------------------------------------------------------------------------------------
