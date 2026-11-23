@@ -7,15 +7,18 @@ import type {Age} from '@/lib/coach/route';
 import {planOfDay,usePlans,boardHref,scanHref} from './PlansTool';
 import c from './coach.module.css';
 import t from './tabs.module.css';
+import {BoardIcon,BookIcon,ChartIcon,ClockIcon,EyeIcon,PitchIcon,RulerIcon,ShirtIcon,SwapIcon} from './GameIcons';
+/** a light tinted pill with a game-style icon and a bold figure (the game's top-bar pills) */
+const Pill=({icon,children,tone}:{icon:ReactNode;children:ReactNode;tone:string})=><span className={t.pill} data-tone={tone}>{icon}<b>{children}</b></span>;
 /**
  * The coach app's two tab pages (round 4A, Nov 22 2026; owner: "like the iPhone App Store"): a big feature card on top, then large
  * picture tiles (drawn here in the brand's flat colours, no icons in squares), and on Training a row of cards that scrolls sideways.
  * Game Day is the bold, match-focused one (ink and gold); Training is the bright, playful one (pitch green, sky, gold).
  * Pictures are inline SVG: no image requests, no animation loops (AGENTS.md, phone heat).
  */
-type Tile={key:string;name:string;line:string;art:ReactNode;on?:()=>void;href?:string;wide?:boolean};
+type Tile={key:string;name:string;line:string;art:ReactNode;icon:ReactNode;on?:()=>void;href?:string;wide?:boolean};
 function Tiles({tiles,cls,intro,from=0}:{tiles:Tile[];cls:string;intro:boolean;from?:number}){
- return <ul className={`${t.tiles} ${cls}`}>{tiles.map((x,i)=>{const body=<><span className={t.art} aria-hidden="true">{x.art}</span><span className={t.tText}><b>{x.name}</b><small>{x.line}</small></span></>;
+ return <ul className={`${t.tiles} ${cls}`}>{tiles.map((x,i)=>{const body=<><span className={t.art} aria-hidden="true">{x.art}</span><span className={t.tText}><span className={t.tHead}>{x.icon}<b>{x.name}</b></span><small>{x.line}</small></span></>;
   return <li key={x.key} data-wide={x.wide?'':undefined} className={intro?'fi-in':undefined} style={intro?{'--i':from+i} as React.CSSProperties:undefined}>
    {x.href?<a className={t.tile} data-tool={x.key} href={x.href} onClick={rememberY}>{body}</a>:<button type="button" className={t.tile} data-tool={x.key} onClick={x.on}>{body}</button>}</li>;})}</ul>;
 }
@@ -63,9 +66,9 @@ export const ART={
  fields:<Svg bg={PANEL.fields}><Field x={22} y={10} w={116} h={68}/><path d="M22 88h116M22 84v8M138 84v8" stroke={GREEN} strokeWidth={2.4} strokeLinecap="round"/><rect x="64" y="82" width="32" height="12" rx="4" fill={WHITE} style={LIFT}/></Svg>,
 };
 /* ------------------------------------------------------------ Game Day ------------------------------------------------------ */
-type GD={w:Words;store:Store;place:number;fmt:string;ready:string;intro:boolean;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
+type GD={w:Words;store:Store;place:number;fmt:string;coming:number;onField:number;intro:boolean;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
  onMatch:()=>void;onTool:(k:'team'|'lineup'|'minutes'|'subs'|'summary')=>void;onExample:()=>void};
-export function GameDayTab({w,store,place,fmt,ready,intro,live,gameDone,onMatch,onTool,onExample}:GD){
+export function GameDayTab({w,store,place,fmt,coming,onField,intro,live,gameDone,onMatch,onTool,onExample}:GD){
  const s=store.settings,team=store.team,has=team.players.length>0,name=team.name||w.teamN(place);
  return <div className={t.gameday} data-tab-page="gameday">
   <h1 className={c.srOnly}>{w.navGameDay}</h1>
@@ -75,7 +78,7 @@ export function GameDayTab({w,store,place,fmt,ready,intro,live,gameDone,onMatch,
    <p className={t.fKicker} id="gd-feature">{live?w.gameOn:`${w.matchDay} · ${w.nextGame}`}</p>
    <p className={t.fTitle}>{name}</p>
    {live?<p className={t.fLive}><span className={t.liveDot} aria-hidden="true"/>{live.period}{live.clock&&<> · <b>{live.clock}</b></>}{live.change&&<> · {live.change}</>}</p>
-    :<p className={t.fMeta}>{fmt} · {s.periods} × {s.periodMin} {w.min}{has?<> · {ready}</>:null}</p>}
+    :<p className={t.pills}><Pill tone="green" icon={<PitchIcon size={22}/>}>{fmt}</Pill><Pill tone="gold" icon={<ClockIcon size={22}/>}>{s.periods} × {s.periodMin} {w.min}</Pill>{has&&<><Pill tone="peach" icon={<ShirtIcon size={22}/>}>{w.comingN(coming)}</Pill><Pill tone="sky" icon={<PitchIcon size={22}/>}>{w.onFieldN(onField)}</Pill></>}</p>}
    {has||live?<div className={t.fBtns}>
      <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={onMatch} data-coach-match="">{live?w.backToGame:w.startMatch}</button>
      {!live&&<button type="button" className={`${c.btn} ${t.fOutline}`} onClick={()=>onTool('team')}>{w.editSquad}</button>}
@@ -87,10 +90,10 @@ export function GameDayTab({w,store,place,fmt,ready,intro,live,gameDone,onMatch,
   </section>
   <h2 className={t.h2}>{w.gdMore}</h2>
   <Tiles intro={intro} from={1} cls={t.tilesGame} tiles={[
-   {key:'lineup',name:w.titleLineup,line:w.lineLineup,art:ART.lineup,on:()=>onTool('lineup'),wide:true},
-   {key:'minutes',name:w.titleMinutes,line:w.lineMinutes,art:ART.minutes,on:()=>onTool('minutes')},
-   {key:'subs',name:w.titleSubs,line:w.lineSubs,art:ART.subs,on:()=>onTool('subs')},
-   {key:'summary',name:w.titleSummary,line:w.lineSummary,art:ART.summary,on:()=>onTool('summary'),wide:true}]}/>
+   {key:'lineup',name:w.titleLineup,line:w.lineLineup,art:ART.lineup,icon:<PitchIcon size={28}/>,on:()=>onTool('lineup'),wide:true},
+   {key:'minutes',name:w.titleMinutes,line:w.lineMinutes,art:ART.minutes,icon:<ClockIcon size={28}/>,on:()=>onTool('minutes')},
+   {key:'subs',name:w.titleSubs,line:w.lineSubs,art:ART.subs,icon:<SwapIcon size={28}/>,on:()=>onTool('subs')},
+   {key:'summary',name:w.titleSummary,line:w.lineSummary,art:ART.summary,icon:<ChartIcon size={28}/>,on:()=>onTool('summary'),wide:true}]}/>
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </div>;
 }
@@ -106,15 +109,15 @@ export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
   <h1 className={c.srOnly}>{w.navTraining}</h1>
   <a className={`${t.feature} ${t.featureTrain} ${intro?'fi-in':''}`} href={scanHref(lang)} onClick={rememberY} data-tool="scan">
    <span className={t.fArt} aria-hidden="true">{ART.scan}</span>
-   <span className={t.fBody}><span className={t.fTitle}>{w.scanName}</span><span className={t.fMeta}>{w.lineScan}</span>
+   <span className={t.fBody}><span className={t.tHead}><EyeIcon size={34}/><span className={t.fTitle}>{w.scanName}</span></span><span className={t.fMeta}>{w.lineScan}</span>
     <span className={t.fBtns}><span className={`${c.btn} ${c.btnGold}`}>{w.openTool}</span></span></span>
   </a>
   <div className={t.gap}/>
-  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[{key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,href:boardHref(lang),wide:true}]}/>
+  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[{key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,icon:<BoardIcon size={28}/>,href:boardHref(lang),wide:true}]}/>
   <h2 className={t.h2}>{w.tonight} · {age}</h2>
   <section className={t.tonight} aria-label={w.tonight}>
    <p className={t.tTitle}>{plan?plan.name:w.plansTitle}</p>
-   <p className={t.fMeta}>{plan?<>{w.minutesN(plan.minutes)} · {plan.goal}</>:data==='fail'?w.plansFail:w.loadingPlans}</p>
+   {plan?<><p className={t.fMeta}>{plan.goal}</p><p className={t.pills}><Pill tone="gold" icon={<ClockIcon size={22}/>}>{w.minutesN(plan.minutes)}</Pill><Pill tone="peach" icon={<ShirtIcon size={22}/>}>{plan.players}</Pill></p></>:<p className={t.fMeta}>{data==='fail'?w.plansFail:w.loadingPlans}</p>}
    <div className={t.fBtns}>
     <button type="button" className={`${c.btn} ${c.btnGold}`} disabled={!plan} onClick={()=>plan&&onPlans(plan.slug,true)}>{w.startSession}</button>
     <button type="button" className={`${c.btn} ${t.fOutline}`} disabled={!plan} onClick={()=>plan&&onPlans(plan.slug)} data-tonight-open="">{w.openPlan}</button>
@@ -124,8 +127,8 @@ export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
     <span className={t.railArt} aria-hidden="true"><GridDiagram id={`rail-${slug}`} scene={d.scene} small light/></span><b>{d.name}</b></button></li>:null;})}</ul>}
   <h2 className={t.h2}>{w.trMore}</h2>
   <Tiles intro={intro} from={2} cls={t.tilesTrain} tiles={[
-   {key:'plans',name:w.plansTitle,line:w.lineDrills,art:ART.plans,on:()=>onPlans()},
-   {key:'fields',name:w.fieldDiagrams,line:w.lineFieldDiagrams,art:ART.fields,href:fields}]}/>
+   {key:'plans',name:w.plansTitle,line:w.lineDrills,art:ART.plans,icon:<BookIcon size={28}/>,on:()=>onPlans()},
+   {key:'fields',name:w.fieldDiagrams,line:w.lineFieldDiagrams,art:ART.fields,icon:<RulerIcon size={28}/>,href:fields}]}/>
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </div>;
 }

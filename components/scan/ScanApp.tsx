@@ -5,6 +5,8 @@ import {AGES,applyPreset,better,COLOUR_IDS,COLOURS,cuesIn,DIR_ANGLE,DIRS,fmtTime
  seeded,SESSIONS,SOUNDS,startRun,tally,type Cue,type Dir,type Result,type Run,type Score,type Settings,type Sound} from '@/lib/scan/engine';
 import {emptyStore,loadStore,saveStore,type Lang,type Store} from '@/lib/scan/store';
 import {WORDS,type Words} from '@/lib/scan/words';
+import {activeOf,loadTeams} from '@/lib/coach/teams';
+import {ageFor} from '@/lib/coach/route';
 import c from './scan.module.css';
 import {AppHeader,HeaderBack,HeaderGoldBack} from '@/components/motion/AppHeader';
 import {miniBackHref,noteAppEntry,screenChange,useCountUp,useSheet,useSwipeDown} from '@/components/motion/motion';
@@ -81,6 +83,9 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
  useEffect(()=>{let ls:Storage|null=null;try{ls=window.localStorage;}catch{/* blocked */}
   const st=loadStore(ls),q=new URLSearchParams(window.location.search).get('lang');
   if(q==='es'||q==='en')st.lang=q;else if(initialLang)st.lang=initialLang;else if(!st.lang)st.lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';
+  /* no age chosen yet and opened from the coach app (round 4A, owner): the active team's age (lib/coach/route.ts ageFor) */
+  if(!embed&&!st.settings.age&&new URLSearchParams(window.location.search).get('from')==='coach')try{const tm=activeOf(loadTeams(ls));
+   if(tm.team.players.length||tm.team.name){const a=ageFor(tm.settings.format,tm.team.name);st.settings=applyPreset(st.settings,a==='U12'?'u12':a==='U10'?'u10':'u8');}}catch{/* no team */}
   setStore(st);setReady(true);
   if(embed)return;
   noteAppEntry('scan');
@@ -178,7 +183,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
    <div className={c.homeSide}>
     <div className={c.modes} role="group" aria-label={w.show}>{MODES.map(m=><button key={m} type="button" className={c.mode} aria-pressed={s.mode===m} onClick={()=>set({mode:m})}>{glyph(m)}<span>{w.modes[m]}</span></button>)}</div>
     <button type="button" className={c.summaryCard} onClick={()=>setSheet(true)} data-scan-settings="" aria-haspopup="dialog">
-     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:'–'}</b></span>
+     <span><small>{w.age}</small><b>{s.age?w.ages[s.age]:lang==='es'?'Todas':'Any'}</b></span>
      <span><small>{w.every}</small><b>{w.sec(s.interval)}</b></span>
      <span><small>{w.session}</small><b>{w.sessions[s.session]}</b></span>
      <span className={c.summaryGo}><span className={c.srOnly}>{w.settings}</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>

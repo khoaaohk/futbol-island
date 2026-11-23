@@ -59,7 +59,7 @@ const en={
  planClock:'The plan',equipment:'Equipment',coachNotes:'Coach notes',goingBadly:'If it is going badly',drillsInPlan:'Drills in this plan',howItWorks:'How it works',coachPoints:'Coaching points',
  startSession:'Start session',endSession:'End session',nextPart:'Next part',prevPart:'Previous',partOf:(a:number,b:number)=>`${a} of ${b}`,sessionDone:'Practice done. Great work.',upNext:'Up next',
  onBoard:'Show on the tactics board',inScan:'Run in Scan trainer',fullPage:'Full plan page',loadingPlans:'Loading plans…',plansFail:'The plans did not load. Check your connection.',retry:'Try again',
- soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`
+ soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',comingN:(n:number)=>`${n} coming`,onFieldN:(n:number)=>`${n} on the field`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`
 };
 export type Words=typeof en;
 const es:Words={
@@ -115,6 +115,6 @@ const es:Words={
  planClock:'El plan',equipment:'Material',coachNotes:'Notas para el entrenador',goingBadly:'Si no está funcionando',drillsInPlan:'Ejercicios de este plan',howItWorks:'Cómo se hace',coachPoints:'Puntos clave',
  startSession:'Empezar sesión',endSession:'Terminar sesión',nextPart:'Siguiente parte',prevPart:'Anterior',partOf:(a:number,b:number)=>`${a} de ${b}`,sessionDone:'Entrenamiento terminado. Buen trabajo.',upNext:'Después',
  onBoard:'Ver en la pizarra táctica',inScan:'Hacerlo en el Entrenador de escaneo',fullPage:'Página del plan',loadingPlans:'Cargando planes…',plansFail:'No se cargaron los planes. Revisa tu conexión.',retry:'Intentar de nuevo',
- soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`
+ soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',comingN:(n:number)=>`${n} vienen`,onFieldN:(n:number)=>`${n} en la cancha`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`
 };
 export const WORDS={en,es};

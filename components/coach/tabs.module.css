@@ -127,3 +127,15 @@ li[data-wide] .art{aspect-ratio:16/7}
 .navBtn:active{transform:scale(.95)}
 .tile,.railCard,.planCard,.langOpt,.age{-webkit-tap-highlight-color:transparent}
 .railCard:active,.planCard:active,.langOpt:active{transform:scale(.98)}
+/* the island game's look (owner, Nov 22 2026): tinted stat pills with a game icon and a bold figure, icons beside the tile names */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 6px;border-radius:999px;background:#e3f3e8;font-size:15px}
+.pill b{font-weight:800;color:var(--ink)}
+.pill[data-tone=gold]{background:#fdefc6}
+.pill[data-tone=peach]{background:#fde3d2}
+.pill[data-tone=sky]{background:#e1eefb}
+.tHead{display:flex;align-items:center;gap:8px}
+.tHead svg{flex:0 0 auto}
+.navIcon svg{width:26px;height:26px}
+.navBtn{color:#5d7268}
+.navBtn[aria-current=page] .navIcon{background:#fdefc6}

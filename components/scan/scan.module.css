@@ -212,3 +212,30 @@
 .doneBtn{background:var(--pitch);color:#fff}
 /* the coach app's mini live bar is shown (components/coach/LiveDock.tsx): the Start dock sits above it */
 :global(body.fi-dock-on) .dock{bottom:calc(76px + env(safe-area-inset-bottom))}
+
+/* the game's primary button (owner, Nov 22 2026: "like the primary button in the app"): gold on paper grain, a light rim, the darker
+   raised bottom edge, and it sinks on press (the tokens of app/globals.css, as components/DoneButton.module.css) */
+.btnGold{border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);
+ box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .16s,box-shadow .16s;margin-bottom:5px}
+.btnGold:active{transform:none;translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+.btnGold:disabled{translate:none}
+
+/* ONE button and chip system (owner, Nov 22 2026: "make sure the style matches with the rest of the game and app"), from the game's
+   buttons (components/DoneButton.module.css, app/globals.css tokens). PRIMARY: gold on paper grain, raised edge (.btnGold, .doneBtn).
+   SECONDARY: light cream, raised with a darker cream edge. SELECTED chip/segment: a warm mint tint with dark-green text and a raised
+   edge, never a dark fill. UNSELECTED: light cream with a soft edge. Press: sinks 2-3 px. Focus ring only for the keyboard. */
+.doneBtn{min-height:42px;padding:0 18px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ color:var(--btn-ink,#244d40);font-weight:800;box-shadow:0 4px 0 var(--btn-gold-edge,#a8863d);transition:translate .14s,box-shadow .14s}
+.doneBtn:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
+.btn:not(.btnGold):not(.btnDanger){background:#fffaf0;color:var(--ink);box-shadow:0 3px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc;transition:translate .14s,box-shadow .14s}
+.btn:not(.btnGold):not(.btnDanger):active{transform:none;translate:0 2px;box-shadow:0 1px 0 #e2d6b8,inset 0 0 0 1.5px #efe5cc}
+.chip,.segBtn,.fmtBtn,.mode,.swatch,.dirBtn,.stepBtn{transition:translate .12s,box-shadow .12s,background-color .12s}
+.chip:not([aria-pressed=true]),.segBtn:not([aria-pressed=true]),.fmtBtn:not([aria-pressed=true]),.mode:not([aria-pressed=true]),.dirBtn:not([aria-pressed=true]){background:#fffaf0;color:var(--ink);box-shadow:inset 0 0 0 1.5px #efe5cc}
+.chip[aria-pressed=true],.segBtn[aria-pressed=true],.fmtBtn[aria-pressed=true],.mode[aria-pressed=true],.dirBtn[aria-pressed=true],.choice[aria-checked=true]{background:#cfeedb;color:#244d40;border-color:transparent;box-shadow:0 3px 0 #9fd1b2}
+.swatch[aria-pressed=true]{box-shadow:0 3px 0 #9fd1b2,0 0 0 3px #cfeedb}
+.chip:active,.segBtn:active,.fmtBtn:active,.mode:active,.dirBtn:active,.stepBtn:active{transform:none;translate:0 2px}
+.stepBtn{background:#fffaf0;color:var(--ink);box-shadow:0 2px 0 #e2d6b8}
+.toast{background:#fffaf0;color:var(--ink);box-shadow:0 8px 24px rgb(36 77 64 / .16)}
+.range{accent-color:var(--btn-gold,#e9c16b)}
+.toggle[aria-checked=true] .knob{background:#7fc79a}
+.swatch[aria-pressed=true]{background:#cfeedb;color:#244d40}

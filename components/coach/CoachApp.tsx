@@ -19,6 +19,7 @@ import PlansTool from './PlansTool';
 import {GameDayTab,HOME_Y,TrainingTab} from './TabPages';
 import {liveLine} from './LiveDock';
 import t4 from './tabs.module.css';
+import {BallIcon,ConeIcon,GlobeIcon} from './GameIcons';
 /**
  * The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): Team · Lineup · Game · Summary, and the live game screen.
  * One client component on purpose (a coach opens it once and lives in it). The engine is pure (lib/coach/engine.ts) and the
@@ -295,7 +296,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
    title={TITLE(w,tab)} sub={root?team.name||w.teamN(place):tab==='plans'?`${team.name?team.name+' · ':''}${teamAge}`:<>{team.name?`${team.name} · `:''}{fmtName} · {store.settings.periods} × {store.settings.periodMin} {w.min}</>}/>
   <main className={c.main} id="coach-main">
    {ready&&SCREENS.filter(t=>t===tab).map(t=><div key={t} className="fi-screen" data-enter={enter??undefined}>
-    {t==='gameday'?<GameDayTab w={w} store={store} place={place} fmt={fmtName} ready={w.ready(d.here.length,d.F)} intro={false} live={liveCard} gameDone={game?.clock.status==='done'||!!store.last&&!game}
+    {t==='gameday'?<GameDayTab w={w} store={store} place={place} fmt={fmtName} coming={d.here.length} onField={d.F} intro={false} live={liveCard} gameDone={game?.clock.status==='done'||!!store.last&&!game}
       onMatch={()=>{if(liveRec&&liveRec.game?.clock.status!=='done')openLive();else if(d.here.length)startGame();else goTeam();}}
       onTool={k=>go(k)}
       onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:x.team.name||'Blue Sharks',players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
@@ -329,9 +330,9 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
   {ready&&!live&&liveRec?.game&&<LiveBar w={w} game={liveRec.game} team={liveRec.team.name||w.teamN(teams.teams.indexOf(liveRec)+1)} now={now} sound={store.sound} onOpen={openLive}
    onToggle={()=>setTeams(t=>updateTeam(t,liveRec.id,x=>x.game?{...x,game:toggleClock(x.game,Date.now())}:x))}/>}
   {ready&&root&&!live&&<nav className={t4.nav} aria-label={w.appName}>
-   {navItem('gameday',w.navGameDay,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m12 7 4 3-1.5 4.5h-5L8 10z"/></svg>)}
-   {navItem('training',w.navTraining,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 20 9.5 5h5L18 20M8 14h8M4 20h16"/></svg>)}
-   {navItem('lang',w.navLang,<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.5 5.7 3.5 9s-1 6.3-3.5 9c-2.5-2.7-3.5-5.7-3.5-9s1-6.3 3.5-9Z"/></svg>)}
+   {navItem('gameday',w.navGameDay,<BallIcon size={26}/>)}
+   {navItem('training',w.navTraining,<ConeIcon size={26}/>)}
+   {navItem('lang',w.navLang,<GlobeIcon size={26}/>)}
   </nav>}
   {langSheet.value&&<LangSheet w={w} lang={lang} closing={langSheet.closing} onClose={langSheet.close} onPick={l=>{update(s=>({...s,lang:l}));langSheet.close();}}/>}
   {teamSheet.value&&<TeamSheet w={w} teams={teams} closing={teamSheet.closing} onClose={teamSheet.close}
