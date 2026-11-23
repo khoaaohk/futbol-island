@@ -320,8 +320,8 @@ export const TERMS_ES:Readonly<Record<string,TermEs>>={
 
  'nutmeg':{name:'Caño',also:'túnel',
   short:'Pasar el balón entre las piernas de un rival y recogerlo del otro lado.',
-  title:'¿Qué es un caño en el fútbol? Para niños',h1:'¿Qué es un caño en el fútbol?',
-  desc:'El caño explicado para niños: pasar el balón entre las piernas de un defensa, cuándo funciona y cuándo es mejor algo más simple, con diagrama.',
+  title:'¿Qué es un caño en el fútbol? Significado, con diagrama',h1:'¿Qué es un caño en el fútbol?',
+  desc:'¿Qué es un caño? Pasar el balón entre las piernas de un rival y recogerlo detrás. Cuándo funciona y cuándo es mejor algo más simple, para niños.',
   answer:'Un caño en el fútbol es cuando un jugador pasa o conduce el balón entre las piernas de un rival y lo recupera del otro lado. Funciona cuando un defensa está de frente con los pies muy abiertos, y es un pase o un regate como cualquier otro, sin puntos extra.',
   scene:{title:'Un caño',caption:'El defensa número 3 está de frente al extremo número 7, con los pies abiertos. El número 7 empuja el balón entre las piernas del defensa y lo rodea por fuera para recogerlo detrás de él.'},
   howTitle:'Cuándo funciona un caño',how:['El defensa te mira de frente, con los dos pies uno al lado del otro y muy abiertos.','Estás tan cerca que no le da tiempo de cerrar las piernas.',
@@ -1219,9 +1219,9 @@ export const TERMS_ES:Readonly<Record<string,TermEs>>={
 
 export const TERMS_HUB_ES:TermsHubEs={crumb:'Términos de fútbol',
  blurb:'112 palabras de fútbol en español sencillo, de la ventaja a la tarjeta amarilla, 61 con diagrama',
- title:'Términos de fútbol de la A a la Z: glosario para niños',
- description:'Términos de fútbol de la A a la Z para niños y padres: 112 palabras en español sencillo, de posiciones y reglas a jugadas y jerga, con diagramas.',
- h1:'Términos de fútbol para niños: glosario de la A a la Z',
+ title:'Términos de fútbol de la A a la Z: vocabulario y glosario',
+ description:'Glosario de fútbol para niños y padres: 112 términos y palabras del vocabulario de fútbol en español sencillo, de reglas y posiciones a jugadas y jerga.',
+ h1:'Términos de fútbol: vocabulario y glosario de la A a la Z',
  lead:'Los términos de fútbol son las palabras que usan jugadores, entrenadores y árbitros para las reglas, las posiciones y las jugadas. Este glosario de la A a la Z explica 112 de ellas en español sencillo, de la ventaja a la tarjeta amarilla, para que un jugador nuevo o sus padres puedan seguir cualquier entrenamiento o partido desde la primera temporada.',
  more:'61 de los términos tienen su propia página, con un diagrama y los pasos para hacerlo en la cancha. Las palabras que son reglas llevan a la regla, y las posiciones llevan a la posición.',
  faq:[{q:'¿Qué términos básicos de fútbol debe saber un principiante?',a:'Empieza con las reanudaciones (saque inicial, saque de banda, saque de meta, saque de esquina), las zonas (área penal, área chica, línea de banda) y cuatro ideas: pase, regate, marca y apoyo.'},

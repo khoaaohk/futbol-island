@@ -7,8 +7,8 @@ import type {RuleEs,RulesHubEs} from './types';
 export const RULES_ES:Readonly<Record<string,RuleEs>>={
  // ---- offside ------------------------------------------------------------------------------------------------------------
  'offside':{name:'Fuera de juego',law:'Regla 11',
-  title:'Fuera de juego en el fútbol, explicado para niños',h1:'El fuera de juego en el fútbol, explicado para niños',
-  desc:'La regla del fuera de juego en palabras sencillas para niños y padres: diagramas, lo que mira el árbitro, confusiones comunes y preguntas.',
+  title:'Fuera de juego en el fútbol: la regla explicada para niños',h1:'El fuera de juego en el fútbol, explicado para niños',
+  desc:'La regla del fuera de juego en palabras sencillas: diagramas, lo que mira el árbitro, si el brazo cuenta (no cuenta) y las confusiones más comunes.',
   answer:'En el fútbol, un jugador está en posición de fuera de juego cuando está en el campo contrario y más cerca de la línea de meta que el balón y que el penúltimo rival en el momento en que un compañero juega el balón. Solo es una infracción si ese jugador luego participa en la jugada.',
   scenes:[
    {title:'Habilitado',lineWord:'línea del fuera de juego',
@@ -17,7 +17,7 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
     caption:'El mismo pase, pero el número 9 salió antes de tiempo. Cuando el número 8 juega el balón, el número 9 ya pasó la línea punteada, y solo el portero está entre él y la línea de meta. Si el número 9 juega el balón, el árbitro marca fuera de juego.'}],
   refs:['Dónde está el atacante en el momento en que el compañero juega el balón, no dónde está cuando lo recibe.',
    'El penúltimo rival. El portero suele ser el último, así que la línea suele ser el defensa más atrasado.',
-   'La cabeza, el cuerpo y los pies. Las manos y los brazos no cuentan, ni para atacantes ni para defensas.',
+   'La cabeza, el cuerpo y los pies. Las manos y los brazos no cuentan, ni para atacantes ni para defensas: el brazo empieza a la altura de la parte de abajo de la axila.',
    'Si el jugador participa: juega el balón, le tapa la vista a un rival, le disputa el balón a un rival o saca ventaja de estar ahí.',
    'Estar a la misma altura es estar habilitado. Un jugador en su propia mitad de la cancha siempre está habilitado.'],
   mixups:[
@@ -27,9 +27,9 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
    {said:'“Puedes estar en fuera de juego en un saque de banda.”',truth:'No. No hay fuera de juego si recibes el balón directamente de un saque de banda, un saque de meta o un saque de esquina.'}],
   formats:[['7v7','En las normas de U.S. Soccer, el fuera de juego cuenta en 7v7, pero no entre la línea media y la línea de salida (build-out line). Solo se puede marcar fuera de juego entre la línea de salida y la línea de meta.'],
    ['4v4 (U6 a U8)','No hay fuera de juego en las normas de U.S. Soccer.'],['9v9','Fuera de juego como en el partido completo: empieza en la línea media.'],['11v11','La Regla 11 completa.'],['Futsal','En el futsal no hay fuera de juego.']],
-  faq:[{q:'¿Puedes estar en fuera de juego en un saque de banda?',a:'No. La Regla 11 dice que no hay infracción de fuera de juego si un jugador recibe el balón directamente de un saque de banda. Lo mismo vale para un saque de meta y un saque de esquina.'},
+  faq:[{q:'¿El brazo cuenta en el fuera de juego?',a:'No. La Regla 11 de la IFAB dice que las manos y los brazos de todos los jugadores, porteros incluidos, no se tienen en cuenta para el fuera de juego. El límite de arriba del brazo está a la altura de la parte de abajo de la axila, así que el hombro sí cuenta. Un atacante con solo el brazo más adelantado que el penúltimo rival está habilitado.'},
+   {q:'¿Puedes estar en fuera de juego en un saque de banda?',a:'No. La Regla 11 dice que no hay infracción de fuera de juego si un jugador recibe el balón directamente de un saque de banda. Lo mismo vale para un saque de meta y un saque de esquina.'},
    {q:'¿Puedes estar en fuera de juego en tu propia mitad?',a:'No. Un jugador tiene que estar en el campo contrario para estar en posición de fuera de juego. La línea media cuenta como tu propia mitad.'},
-   {q:'¿Es fuera de juego si estás a la misma altura que el último defensa?',a:'No. Estar a la misma altura que el penúltimo rival es estar habilitado. Los brazos y las manos no cuentan cuando el árbitro compara las posiciones.'},
    {q:'¿Cómo se le explica el fuera de juego a un niño?',a:'Con una frase: cuando un compañero te pasa el balón hacia adelante, dos jugadores del otro equipo, casi siempre el portero y un defensa, tienen que estar a tu altura o más cerca de su propia línea de meta. En tu propia mitad, o detrás del balón, siempre estás habilitado. Si estás en fuera de juego, el otro equipo saca un tiro libre indirecto.'},
    {q:'¿Hay fuera de juego en el fútbol 7v7?',a:'En las normas de U.S. Soccer, sí, pero solo entre la línea de salida y la línea de meta. Tu liga puede ser distinta, así que revisa sus reglas.'}],
   notes:{
@@ -462,7 +462,7 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
 export const RULES_HUB_ES:RulesHubEs={
  crumb:'Reglas del fútbol',
  blurb:'16 reglas explicadas para niños, cada una con un diagrama: fuera de juego, mano, saques de banda y más',
- title:'Reglas del fútbol para niños: cada regla, con diagramas',
+ title:'Reglas del fútbol para niños: el reglamento, con diagramas',
  description:'16 reglas del fútbol explicadas para niños y padres, cada una con un diagrama de la cancha: fuera de juego, mano, saques de banda, tiros libres y más.',
  h1:'Reglas del fútbol para niños',
  lead:'El fútbol tiene 17 Reglas de Juego, y un jugador joven solo necesita unas pocas para disfrutar un partido. Esta guía explica en dos frases sencillas cada regla que los niños conocen primero, con un diagrama de dónde se para cada jugador.',
