@@ -227,7 +227,7 @@ export const DRILLS_A_ES:Readonly<Record<string,DrillEs>>={
   ages:['Haz los cuartos cortos para que cada patada llegue al otro lado, y acepta cualquier patada. Cuentan los balones juntos al final de cada ronda.',
    'Alarga los cuartos y pide patadas a ras de suelo con el empeine o el interior. Elogia al niño que corre directo al siguiente balón.']},
 
- 'throw-in-game':{name:'Juego de saque de banda',h1:'Saque de banda: ejercicio y juego de fútbol',
+ 'throw-in-game':{name:'Juego de saque de banda',h1:'Ejercicio de saque de banda: juego de fútbol para niños',
   title:'Ejercicio de saque de banda: aprende a sacar bien jugando',
   desc:'Un ejercicio de saque de banda para niños: aprende un saque válido en parejas y luego juega a mantener el balón empezando con un saque. Pasos y consejos.',
   answer:'El juego de saque de banda es un ejercicio en parejas seguido de un partido pequeño en el que todos los reinicios son saques de banda. Entrena un saque válido con las dos manos desde detrás de la cabeza, y un primer toque que controla un balón que llega por el aire.',

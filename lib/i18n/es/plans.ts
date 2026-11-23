@@ -27,7 +27,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Y si algunos niños nunca han jugado?',a:'Este plan supone que nadie ha jugado. Cada juego sirve para un niño que toca un balón de fútbol por primera vez.'}]},
 
  'u6-dribbling-practice-plan':{theme:'Regate',
-  title:'Plan de entrenamiento U6: juegos de regate (45 min)',
+  title:'Entrenamiento de regate U6: juegos de fútbol (45 min)',
   desc:'Un plan de entrenamiento U6 de 45 minutos de regate: atrapadas con balón, Tiburones y pececitos y puertas, con horario, descansos y un 3v3 final.',
   lead:'Un entrenamiento de regate de 45 minutos para niños de 5 y 6 años. Cada juego tiene un balón por niño, y cada uno pide un poco más: mantener el balón cerca, escapar del que persigue, encontrar un hueco.',
   goal:'Mantener el balón cerca e ir donde hay espacio',players:'6 a 12',
@@ -51,7 +51,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Por qué empezar con partidos 2v2?',a:'Es el primer “jugar” de la estructura Jugar-Practicar-Jugar de U.S. Soccer: los niños llegan y juegan enseguida, y nadie espera a que empiece el entrenamiento.'}]},
 
  'u6-shooting-practice-plan':{theme:'Patear y tirar',
-  title:'Plan de entrenamiento U6: patear y tirar (45 min)',
+  title:'Entrenamiento de tiro U6: patear y tirar (45 min)',
   desc:'Un plan de entrenamiento U6 de 45 minutos para patear y tirar: Limpia tu cuarto, conducir y tirar a arcos pequeños sin portero y un partido 3v3.',
   lead:'Un entrenamiento de 45 minutos que deja a los niños de 5 y 6 años hacer lo que más les gusta: patear el balón y meter goles. Arcos pequeños, sin porteros, muchos balones y sin filas.',
   goal:'Patear con el empeine y meter gol',players:'6 a 12',
@@ -100,7 +100,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Qué tamaño de balón usan los jugadores U8?',a:'Tamaño 3. Los jugadores pasan al tamaño 4 en U9.'}]},
 
  'u8-dribbling-practice-plan':{theme:'Regate y 1v1',
-  title:'Plan de entrenamiento U8: regate y 1v1 (60 min)',
+  title:'Entrenamiento de regate y 1v1 U8: plan de fútbol (60 min)',
   desc:'Un plan de entrenamiento U8 de 60 minutos de regate y 1v1: puertas, Gira y sal, 1v1 a las zonas finales y el juego de los números, con horario.',
   lead:'Un entrenamiento de 60 minutos para niños de 7 y 8 años sobre la habilidad más importante a esta edad: superar a un defensa con el balón. Avanza de un balón cada uno, a los giros, al 1v1 y a un partido.',
   goal:'Superar a un defensa con un cambio de ritmo o de dirección',players:'8 a 14',
@@ -124,7 +124,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Por qué terminamos con un partido?',a:'Es la última etapa de Jugar-Practicar-Jugar. Los jugadores prueban en un partido de verdad lo que practicaron, y el entrenador observa qué se les quedó.'}]},
 
  'u8-passing-practice-plan':{theme:'Pases',
-  title:'Plan de entrenamiento U8: primeros juegos de pases (60 min)',
+  title:'Entrenamiento de pases U8: primeros juegos (60 min)',
   desc:'Un plan de entrenamiento U8 de 60 minutos para empezar con los pases: puertas en pareja, 2v1 al arco y un primer rondo 3v1, con horario y descansos.',
   lead:'Un entrenamiento de 60 minutos que presenta los pases a niños de 7 y 8 años. Mantiene el balón entre dos jugadores casi toda la hora y le da una razón a cada pase: una puerta que atravesar, un defensa que superar, un gol que meter.',
   goal:'Pasar a un compañero y luego moverse',players:'8 a 14',
@@ -172,7 +172,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Cuánto dura un entrenamiento U10?',a:'De 60 a 75 minutos, según la guía para entrenadores de US Youth Soccer. Este plan usa 60.'}]},
 
  'u10-passing-practice-plan':{theme:'Pases y primer toque',
-  title:'Plan de entrenamiento U10: pases y primer toque (60 min)',
+  title:'Entrenamiento de pases U10: primer toque (60 min)',
   desc:'Un plan de entrenamiento U10 de 60 minutos de pases y primer toque: recibir con el pie lejano, un rondo 3v1 y el partido a cuatro arcos, con horario.',
   lead:'Un entrenamiento de 60 minutos para niños de 9 y 10 años con un solo tema de principio a fin: recibir el balón para poder jugar hacia adelante. Pasa de un primer toque con el pie lejano, a un rondo, a un partido que premia cambiar de lado.',
   goal:'Abrirse, recibir con el pie lejano y jugar hacia adelante',players:'10 a 14',
@@ -195,7 +195,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Por qué dos arcos en cada lado?',a:'Para que mover el balón al otro lado tenga un premio claro. Los jugadores empiezan a mirar al otro lado de la cancha antes de recibir.'}]},
 
  'u10-1v1-practice-plan':{theme:'Ataque y defensa 1v1',
-  title:'Plan de entrenamiento U10: ataque y defensa 1v1 (60 min)',
+  title:'Entrenamiento 1v1 U10: ataque y defensa (60 min)',
   desc:'Un plan de entrenamiento U10 de 60 minutos de 1v1: atacar dos arcos pequeños, defender de perfil, carreras de recuperación y el juego de los números.',
   lead:'Un entrenamiento de 60 minutos para niños de 9 y 10 años sobre los dos lados del 1v1. Los atacantes aprenden a mover a un defensa y salir hacia el otro lado, y los defensas aprenden a frenar, ponerse de perfil y quedarse del lado del arco.',
   goal:'Ganar tu 1v1, con balón y sin balón',players:'8 a 14',
@@ -243,7 +243,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Los equipos U12 juegan con fuera de juego?',a:'Sí. El partido 9v9 tiene fuera de juego, así que úsalo en los partidos del entrenamiento y explícalo una vez. Nuestra página de fuera de juego tiene un diagrama.'}]},
 
  'u12-possession-practice-plan':{theme:'Pases y posesión',
-  title:'Plan de entrenamiento U12: pases y posesión (75 min)',
+  title:'Entrenamiento de posesión U12: pases (75 min)',
   desc:'Un plan de entrenamiento U12 de 75 minutos de posesión: recibir y girar, un rondo 4v2 y mantener el balón con tres equipos, y un partido. Con horario.',
   lead:'Un entrenamiento de 75 minutos para niños de 11 y 12 años sobre mantener el balón con un propósito. Une tres ideas: mirar antes de recibir, encontrar el pase entre dos defensas y reaccionar en el momento en que se pierde el balón.',
   goal:'Mantener el balón para ir hacia adelante, y reaccionar cuando se pierde',players:'12 a 16',
@@ -267,7 +267,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
    {q:'¿Cuántos toques deben tener los jugadores?',a:'Dos es un reto útil en U12, pero no una ley. El objetivo son decisiones rápidas, y a veces la decisión correcta es regatear.'}]},
 
  'u12-finishing-practice-plan':{theme:'Tiro y definición',
-  title:'Plan de entrenamiento U12: tiro y definición (75 min)',
+  title:'Entrenamiento de definición U12: tiro a puerta (75 min)',
   desc:'Un plan de entrenamiento U12 de 75 minutos de definición: descarga y tiro, centros bajos, 3v2 al arco y un partido, con horario y descansos.',
   lead:'Un entrenamiento de 75 minutos para niños de 11 y 12 años sobre cómo terminar los ataques. Los tiros vienen de una descarga, de un centro bajo y de un 3v2, así los jugadores practican las ocasiones que da un partido de verdad.',
   goal:'Definir de primera y seguir cada tiro',players:'12 a 16, con porteros que se turnan',

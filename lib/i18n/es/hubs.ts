@@ -42,8 +42,8 @@ function words(h:Hub):HubEs{
  const one=(...faq:Faq[])=>[...faq,...common];
  switch(h.slug){
   case 'football-rules-for-kids':return {crumb:'Lecciones de reglas',blurb:`${n} lecciones sobre saques de meta, saques de banda, de esquina y tiros libres`,
-   title:'Reglas del fútbol para niños: lecciones y pruebas',
-   description:`Reglas del fútbol para niños: saques de meta, la línea de salida, saques de banda, de esquina y tiros libres, en ${n} lecciones gratis con prueba.`,
+   title:'Lecciones de reglas del fútbol: pruebas para niños'/* Nov 23 2026: the rules hub (/es/learn/soccer-rules) owns "Reglas del fútbol para niños"; this page is the lessons */,
+   description:`${n} lecciones gratis de reglas del fútbol para niños, con prueba: saques de meta, la línea de salida, saques de banda, de esquina y tiros libres.`,
    h1:'Lecciones de reglas del fútbol para niños',
    lead:`${DEFINITION_ES} Estas ${n} lecciones enseñan las reanudaciones del juego: los saques de meta y la línea de salida (build-out line), los saques de banda con la mano y con el pie, los saques de esquina y los tiros libres, en ${fmtsEs(ls)}.`,
    groups:RULES_GROUPS_ES,

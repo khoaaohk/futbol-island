@@ -76,7 +76,7 @@ export function RulesHubEsPage(){
    <CardGrid lang="es" ids="rule" cards={list.map(r=>({path:r.esPath,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
   </Band>;})}
   <QA id="faq" title="Preguntas sobre las reglas del fútbol" faq={H.faq}/>
-  <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
+  <KeepReading lang="es" groups={[{id:'related',links:[{path:'/es/learn/football-rules-for-kids',name:'Lecciones de reglas del fútbol para niños',line:'Lecciones cortas con prueba: saques de meta, de banda, de esquina y tiros libres'}/* Nov 23 2026: the lessons hub, no longer a title twin */,{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }

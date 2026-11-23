@@ -55,7 +55,7 @@ const RAW:RawPlan[]=[
    {q:'What if some children have never played?',a:'This plan assumes nobody has. Every game works for a child touching a soccer ball for the first time.'}],
   lessons:['learn7_carry','learn7_roles'],links:[G.ages,G.ball]},
 
- {slug:'u6-dribbling-practice-plan',age:'U6',theme:'Dribbling',title:'U6 Soccer Practice Plan: Dribbling Games (45 Minutes)',
+ {slug:'u6-dribbling-practice-plan',age:'U6',theme:'Dribbling',title:'U6 Dribbling Practice Plan: Soccer Games (45 Minutes)',
   desc:'A 45-minute U6 soccer practice plan built on dribbling: dribble tag, Sharks and Minnows and gates, with a clock table, water breaks and a 3v3 finish.',
   lead:'A 45-minute dribbling practice for 5 and 6 year olds. Every game has a ball for every child, and each one asks for a little more: keep it close, get away from a chaser, find a gap.',
   goal:'Keep the ball close and go where the space is',minutes:45,players:'6 to 12',field:FIELD.U6,
@@ -70,7 +70,7 @@ const RAW:RawPlan[]=[
    {q:'Why start with 2v2 games?',a:'It is the first “play” of U.S. Soccer’s Play-Practice-Play structure: children arrive and play at once, and nobody waits for practice to start.'}],
   lessons:['learn7_carry','next7_dribbleroom'],links:[G.ages,G.wg]},
 
- {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Soccer Practice Plan: Kicking and Shooting (45 Min)',
+ {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Shooting Practice Plan: Kicking Games (45 Minutes)',
   desc:'A 45-minute U6 soccer practice plan for kicking and shooting: Clean Your Room, dribble and shoot at small goals with no goalkeeper, and a 3v3 game.',
   lead:'A 45-minute practice that lets 5 and 6 year olds do what they like best: kick the ball and score. Small goals, no goalkeepers, lots of balls and no lines.',
   goal:'Kick with the laces and score',minutes:45,players:'6 to 12',field:FIELD.U6,
@@ -100,7 +100,7 @@ const RAW:RawPlan[]=[
    {q:'What size ball do U8 players use?',a:'A size 3. Players move to a size 4 at U9.'}],
   lessons:['learn7_carry','learn7_roles','prn_7_spread'],links:[G.ages,G.ball,G.field]},
 
- {slug:'u8-dribbling-practice-plan',age:'U8',theme:'Dribbling and 1v1',title:'U8 Soccer Practice Plan: Dribbling and 1v1 (60 Minutes)',
+ {slug:'u8-dribbling-practice-plan',age:'U8',theme:'Dribbling and 1v1',title:'U8 Dribbling Practice Plan: 1v1 Soccer Games (60 Min)',
   desc:'A 60-minute U8 soccer practice plan for dribbling and 1v1: gates, turn and go, 1v1 to end zones and the numbers game, with a clock table and breaks.',
   lead:'A 60-minute practice for 7 and 8 year olds on the skill that matters most at this age: taking the ball past a defender. It builds from a ball each, to turns, to 1v1, to a game.',
   goal:'Beat a defender with a change of speed or direction',minutes:60,players:'8 to 14',field:FIELD.U8,
@@ -115,7 +115,7 @@ const RAW:RawPlan[]=[
    {q:'Why do we finish with a game?',a:'It is the last stage of Play-Practice-Play. Players try what they practiced in a real game, and the coach watches to see what stuck.'}],
   lessons:['learn7_carry','next7_dribbleroom','def_7_goalside'],links:[G.wg,G.tackle,G.ages]},
 
- {slug:'u8-passing-practice-plan',age:'U8',theme:'Passing',title:'U8 Soccer Practice Plan: First Passing Games (60 Minutes)',
+ {slug:'u8-passing-practice-plan',age:'U8',theme:'Passing',title:'U8 Passing Practice Plan: First Soccer Passing Games',
   desc:'A 60-minute U8 soccer practice plan that introduces passing: partner gates, 2v1 to goal and a first 3v1 rondo, with a clock table and water breaks.',
   lead:'A 60-minute practice that introduces passing to 7 and 8 year olds. It keeps the ball between two players for most of the hour and gives every pass a reason: a gate to hit, a defender to beat, a goal to score.',
   goal:'Pass to a teammate, then move',minutes:60,players:'8 to 14',field:FIELD.U8,
@@ -145,7 +145,7 @@ const RAW:RawPlan[]=[
    {q:'How long is a U10 practice?',a:'60 to 75 minutes in US Youth Soccer’s coaching guidance. This plan uses 60.'}],
   lessons:['learn7_buildout','learn7_roles','prn_7_support'],links:[G.f7,G.buildOut,G.gk]},
 
- {slug:'u10-passing-practice-plan',age:'U10',theme:'Passing and first touch',title:'U10 Soccer Practice Plan: Passing and First Touch',
+ {slug:'u10-passing-practice-plan',age:'U10',theme:'Passing and first touch',title:'U10 Passing Practice Plan: First Touch Soccer Session',
   desc:'A 60-minute U10 soccer practice plan for passing and first touch: receive across the body, a 3v1 rondo and the four-goal game, with a clock table.',
   lead:'A 60-minute practice for 9 and 10 year olds with one theme from start to finish: receive the ball so you can play forward. It moves from a first touch on the back foot, to a rondo, to a game that rewards switching sides.',
   goal:'Open up, receive on the back foot and play forward',minutes:60,players:'10 to 14',field:FIELD.U10,
@@ -160,7 +160,7 @@ const RAW:RawPlan[]=[
    {q:'Why two goals at each end?',a:'So that moving the ball to the other side has an obvious reward. Players start to look across the field before they receive.'}],
   lessons:['learn7_receive','prn_7_support','learn9_switch'],links:[G.firstTouch,G.switching,G.cm]},
 
- {slug:'u10-1v1-practice-plan',age:'U10',theme:'1v1 attacking and defending',title:'U10 Soccer Practice Plan: 1v1 Attacking and Defending',
+ {slug:'u10-1v1-practice-plan',age:'U10',theme:'1v1 attacking and defending',title:'U10 1v1 Practice Plan: Soccer Attacking and Defending',
   desc:'A 60-minute U10 soccer practice plan for 1v1: attacking two small goals, defending side on, recovery runs and a numbers game, with a clock table.',
   lead:'A 60-minute practice for 9 and 10 year olds on both sides of the 1v1. Attackers learn to shift a defender and go the other way, and defenders learn to slow down, get side on and stay goal-side.',
   goal:'Win your 1v1, with and without the ball',minutes:60,players:'8 to 14',field:FIELD.U10,
@@ -190,7 +190,7 @@ const RAW:RawPlan[]=[
    {q:'Do U12 teams play offside?',a:'Yes. The 9v9 game has offside, so use it in practice games and explain it once. Our offside page has a diagram.'}],
   lessons:['learn9_shape','gap11_runoncue','bld_11_throughlines'],links:[G.f9,G.offside,G.heading]},
 
- {slug:'u12-possession-practice-plan',age:'U12',theme:'Passing and possession',title:'U12 Soccer Practice Plan: Passing and Possession',
+ {slug:'u12-possession-practice-plan',age:'U12',theme:'Passing and possession',title:'U12 Possession Practice Plan: Soccer Passing Session',
   desc:'A 75-minute U12 soccer practice plan for possession: receive and turn, a 4v2 rondo and three-team keep-away, then a game. Clock table and water breaks.',
   lead:'A 75-minute practice for 11 and 12 year olds on keeping the ball with a purpose. It links three ideas: look before you receive, find the pass through two defenders, and react the moment the ball is lost.',
   goal:'Keep the ball to go forward, and react when it is lost',minutes:75,players:'12 to 16',field:FIELD.U12,
@@ -205,7 +205,7 @@ const RAW:RawPlan[]=[
    {q:'How many touches should players be allowed?',a:'Two is a useful challenge at U12, but not a law. The aim is quick decisions, and sometimes the right decision is to dribble.'}],
   lessons:['learn9_receive','learn9_switch','bld_11_throughlines','gap7_lostball'],links:[G.switching,G.pressing,G.cm]},
 
- {slug:'u12-finishing-practice-plan',age:'U12',theme:'Shooting and finishing',title:'U12 Soccer Practice Plan: Shooting and Finishing',
+ {slug:'u12-finishing-practice-plan',age:'U12',theme:'Shooting and finishing',title:'U12 Finishing Practice Plan: Soccer Shooting Session',
   desc:'A 75-minute U12 soccer practice plan for finishing: lay-off and shoot, low crosses, 3v2 to goal and a game, with a clock table and water breaks.',
   lead:'A 75-minute practice for 11 and 12 year olds on finishing attacks. Shots come from a lay-off, from a low cross and from a 3v2, so players practice the chances a real game gives them.',
   goal:'Finish first time, and follow every shot',minutes:75,players:'12 to 16, with goalkeepers taking turns',field:FIELD.U12,
@@ -231,7 +231,9 @@ function build(r:RawPlan):Plan{
  if(stages[0]!=='Play'||stages[stages.length-1]!=='Play'||!stages.includes('Practice'))throw new Error(`${w}: the order must be play, practice, play`);
  if(rows.filter(x=>x.stage==='Break').length<2)throw new Error(`${w}: at least two water breaks`);
  const drills=[...new Set(rows.map(x=>x.drill).filter((d):d is Drill=>!!d))];
- return {...r,path:planPath(r.slug),name:`${r.age} ${r.theme[0].toLowerCase()+r.theme.slice(1)}`,h1:`${r.age} soccer practice plan: ${r.theme[0].toLowerCase()+r.theme.slice(1)}`,rows,drills,lessons:pickLessons(r.lessons,w),picture:drills[1]?.picture??drills[0].picture};
+ return {...r,path:planPath(r.slug),name:`${r.age} ${r.theme[0].toLowerCase()+r.theme.slice(1)}`,/* Nov 23 2026 (seo-books-games): only the first practice is "the" U8 soccer practice plan; a theme plan leads with its theme, so the
+  three plans of an age stop competing for one query (scripts/seo-title-clash.cjs). */
+  h1:r.slug.endsWith('-first-practice')?`${r.age} soccer practice plan: ${r.theme[0].toLowerCase()+r.theme.slice(1)}`:`${r.age} ${r.theme[0].toLowerCase()+r.theme.slice(1)} soccer practice plan`,rows,drills,lessons:pickLessons(r.lessons,w),picture:drills[1]?.picture??drills[0].picture};
 }
 export const PLANS:readonly Plan[]=RAW.map(build);
 export const planBySlug=(slug:string)=>PLANS.find(p=>p.slug===slug);

@@ -62,7 +62,7 @@ export type EsPlan=Omit<Plan,'drills'>&{esPath:string;drills:EsDrill[]};
 export function esPlan(slug:string):EsPlan|null{
  const p=planBySlug(slug);if(!p)return null;const e=need(PLANS_ES,slug,'plan');
  same(`plan ${slug} rows`,p.rows,e.rows);same(`plan ${slug} equipment`,p.equipment,e.equipment);same(`plan ${slug} notes`,p.notes,e.notes);same(`plan ${slug} faq`,p.faq,e.faq);
- return {...p,theme:e.theme,name:`${p.age}: ${lower(e.theme)}`,h1:`Plan de entrenamiento de fútbol ${p.age}: ${lower(e.theme)}`,title:e.title,desc:e.desc,lead:e.lead,goal:e.goal,players:e.players,
+ return {...p,theme:e.theme,name:`${p.age}: ${lower(e.theme)}`,h1:p.slug.endsWith('-first-practice')?`Plan de entrenamiento de fútbol ${p.age}: ${lower(e.theme)}`:`Entrenamiento de fútbol ${p.age}: ${lower(e.theme)}`/* Nov 23 2026: a theme plan no longer shares the first practice's head */,title:e.title,desc:e.desc,lead:e.lead,goal:e.goal,players:e.players,
   rows:p.rows.map((r,i)=>({...r,activity:e.rows[i][0],purpose:e.rows[i][1]})),equipment:[...e.equipment],notes:[...e.notes],swap:{...e.swap},faq:e.faq.map(f=>({...f})),
   drills:p.drills.map(d=>esDrill(d.slug)!),esPath:toEs(p.path)};
 }
