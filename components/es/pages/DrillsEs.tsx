@@ -172,7 +172,8 @@ export function PlansHubEsPage(){
   </Section>
   <QA id="faq" title="Preguntas sobre los planes de entrenamiento de fútbol" faq={h.faq}/>
   <KeepReading lang="es" groups={[{id:'drills',links:[...AGE_GUIDES.map(g=>guideLink(esDrillGuide(g.slug)!)),allDrills()]},{id:'related',links:[...esDrillLinks([{path:'/learn/soccer-field-size-by-age',name:''},{path:'/learn/soccer-ball-size-by-age',name:''}]),
-   {path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:'Sistemas para 7v7, 9v9 y 11v11'}]}]}/>
+   {path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:'Sistemas para 7v7, 9v9 y 11v11'},
+   /* Nov 23 2026 (seo-unindexed): tools a coach uses with a plan */{path:'/es/tools/soccer-playing-time-calculator',name:'Calculadora de minutos de juego',line:'Cambios justos para cada partido'},{path:'/es/tools/soccer-field-diagrams',name:'Diagramas de cancha en blanco para imprimir',line:'Dibuja los ejercicios del plan'}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }

@@ -12,7 +12,7 @@ import {withKeeper} from '@/lib/site/formations';
 import {lineupLinkFor} from '@/lib/site/tools/registry';
 import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
-import {toEs} from '@/lib/i18n/esPaths';
+import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
 import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,esLessonLinks,LinkList,QA,Section,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLesson} from '@/lib/i18n/es/lessons';
@@ -105,6 +105,12 @@ export function FormationEsPage({f}:{f:EsFormation}){
 }
 
 // ---- format guides ----
+const formatToolsEs=(f:'7v7'|'9v9'|'11v11')=>{const n=f.replace(/v\d+$/,'');return ([
+ [`/tools/${f}-lineup-builder`,`Alineación de fútbol ${n} (${f}): creador gratis`,'Arrastra a cada jugador a su lugar e imprime la hoja'],
+ [`/tools/${f}-substitution-rotation`,`Rotación de cambios en fútbol ${n} (${f})`,'Minutos iguales para todo el equipo'],
+ [`/tools/soccer-field-diagrams/blank-${f}-soccer-field`,`Cancha de fútbol ${n} (${f}) en blanco para imprimir`,'Para dibujar jugadas y ejercicios'],
+ [`/tools/soccer-field-diagrams/${f}-soccer-formations-cheat-sheet`,`Formaciones de fútbol ${n} (${f}) en una hoja`,'Todas las formaciones para imprimir']] as const)
+ .filter(([p])=>hasEs(p)).map(([p,name,line])=>({path:toEs(p),name,line}));};
 export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
  const H=ES_HUBS.formations,g=esFormatGuide(format),list=esFormationsIn(format),crumbs=esLibCrumbs({name:H.crumb,path:H.path},{name:g.crumb,path:g.esPath});
  const others=(['7v7','9v9','11v11'] as const).filter(x=>x!==format).map(esFormatGuide);
@@ -128,7 +134,8 @@ export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
   </Section>
   <Section id="basics" title={`El fútbol ${format} en breve`}><Bullets items={g.basics}/></Section>
   <QA id="faq" title={`Preguntas sobre las formaciones de ${format}`} faq={g.faq}/>
-  <KeepReading lang="es" groups={[{id:'related',links:[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),hubLink(),posHubLink()]}]}/>
+  {/* Nov 23 2026 (seo-unindexed): the format's Spanish tools (lineup builder, rotation, blank field, cheat sheet) had 2-5 inlinks */}
+  <KeepReading lang="es" groups={[{id:'related',links:[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),hubLink(),posHubLink(),...formatToolsEs(format)]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
