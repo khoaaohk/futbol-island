@@ -44,7 +44,9 @@ export const ES_LESSONS=():EsLesson[]=>LESSONS.map(l=>esLesson(l.id)!);
 export const formatPhraseEs=(f:string)=>f==='Futsal'||f==='futsal'?'futsal':`fútbol ${f}`;
 /** Page title (<= 60): the longest form that fits. */
 export const lessonTitleEs=(l:{title:string;formatLabel:string})=>{const f=formatPhraseEs(l.formatLabel);
- return [`${l.title}: lección de ${f} para niños`,`${l.title}: lección de ${f}`,`${l.title} (lección de ${l.formatLabel})`,l.title].find(t=>t.length<=60)??l.title.slice(0,60);};
+ /* Nov 23 2026 (seo-unindexed): a lesson name that already has a colon gets "·" instead of a second colon. */
+ const sep=l.title.includes(':')?' · ':': ';
+ return [`${l.title}${sep}lección de ${f} para niños`,`${l.title}${sep}lección de ${f}`,`${l.title} (lección de ${l.formatLabel})`,l.title].find(t=>t.length<=60)??l.title.slice(0,60);};
 /** Description (70-155): the concept's first sentence, then what the page is. Nov 20 2026 (SEO leftovers): one under 120
  *  characters gets a fuller tail from the lesson's own fields (steps, quiz questions, level, topic), as lib/site/lessons.ts. */
 export const lessonDescriptionEs=(l:{concept:string;formatLabel:string;steps?:readonly unknown[];questions?:readonly unknown[];difficultyEs?:string;categoryEs?:string})=>{const c=firstSentence(l.concept,120),f=formatPhraseEs(l.formatLabel);
