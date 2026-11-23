@@ -20,12 +20,14 @@ import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {esRuleCrossLinks,esTermCrossLinks} from '@/lib/i18n/es/crossLinks';
+import {positionTermSlugs} from '@/lib/site/crossLinks';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
 import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLibCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
+import {RuleExtraSection} from '@/lib/site/GuideParts';
 import {CardRulesGame,CardRulesPages,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import {cardDeckOf} from '@/lib/site/cardRules';
@@ -105,6 +107,7 @@ export function RuleEsPage({r}:{r:EsRule}){
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`pase: ${s.title.toLowerCase()}`:undefined}/></div>)}</div>
     :<EsSceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
+  {r.extra&&<RuleExtraSection x={r.extra}/>}
   {cards&&<CardRulesGame c={CARD_RULES_ES} lang="es"/>}
   {play&&<RulePlayGame c={play} lang="es"/>}
   <Section id="referee" title="Lo que mira el árbitro">
@@ -261,6 +264,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <KeepReading lang="es" groups={withMesh([{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
    {id:'formations',label:'Formación',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]:[]},
    {id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(p.path)},
+   {id:'terms',links:positionTermSlugs(p.slug).map(s=>ES_TERMS().find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:`${x.name} (término)`,line:x.short}))},/* Nov 22 2026, as in English */
    {id:'compare',label:'Comparar',icon:'swap',links:compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}],p.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>

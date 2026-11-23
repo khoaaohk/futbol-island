@@ -152,7 +152,7 @@ const RAW:Raw[]=[
    {q:'Should both forwards stay up the field?',a:'No. If both stay high, the pass to them is too long. One comes toward the ball and one keeps the height. They take turns.'}],
   lessonIds:['next7_outsideback','next7_reachableforward','learn7_shape','prn_7_support']},
  // ---- 9v9 ----------------------------------------------------------------------------------------------------------------
- {slug:'9v9-3-2-3',format:'9v9',shape:'3-2-3',best:'Most teams. Wide forwards and a clear back three.',watch:'Two midfielders can face three.',
+ {slug:'9v9-3-2-3',format:'9v9',shape:'3-2-3',title:'3-2-3 Soccer Formation (9v9): Diagram, Roles and Tips',best:'Most teams. Wide forwards and a clear back three.',watch:'Two midfielders can face three.',
   desc:'The 3-2-3 formation for 9v9 soccer, explained for kids, parents and coaches: diagram, the three units, strengths, weak spots and free lessons.',
   answer:'The 3-2-3 is a 9v9 soccer formation with three defenders, two midfielders and three forwards. It suits most teams aged 11 and 12, because it has width at the back and at the front, and it leads straight into the 4-3-3 used in 11v11.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Midfielders|6:LCM 8:RCM','Forwards|11:LW 9:ST 7:RW'],
@@ -488,7 +488,7 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'Should a 9v9 team play with two or three defenders?',a:'Three is simpler: one can go to the ball and two still cover. Two defenders work only if a midfielder drops in as the third protector when the other team attacks.'}],
   lessons:pick(['learn9_shape','nx9_twoblocks','nx9_twostrikers','next9_singleholder','nx9_twobackcover','bld_9_usekeeper'])},
  {format:'11v11',path:formatGuidePath('11v11'),crumb:'11v11 formations',blurb:'4-3-3, 4-4-2, 4-2-3-1 and 3-5-2 compared, with diagrams',
-  title:'11v11 Soccer Formations: 4-3-3, 4-4-2 and More, for Kids',
+  title:'11v11 Soccer Formations: 4-3-3, 4-4-2, 4-2-3-1 and 3-5-2',
   description:'The main 11v11 soccer formations (4-3-3, 4-4-2, 4-2-3-1, 3-5-2) compared in one table, with diagrams and a plain answer on which suits a youth team.',
   h1:'11v11 soccer formations',
   lead:'In 11v11 soccer each team has a goalkeeper and ten outfield players. Four formations cover most of what young players meet: the 4-3-3, the 4-4-2, the 4-2-3-1 and the 3-5-2. Teams moving up from 9v9 usually find the 4-3-3 the easiest step.',

@@ -10,7 +10,9 @@ export type Faq={q:string;a:string};
 export type SceneEs={title:string;caption:string;lineWord?:string};
 export type CoachNotesEs={coach:string;match:string;ages:readonly (readonly [string,string])[];mistakes?:readonly string[]};
 export type RuleEs={name:string;title:string;h1:string;desc:string;answer:string;law:string;scenes:readonly SceneEs[];refs:readonly string[];
- mixups:readonly {said:string;truth:string}[];formats:readonly (readonly [string,string])[];faq:readonly Faq[];notes:CoachNotesEs};
+ mixups:readonly {said:string;truth:string}[];formats:readonly (readonly [string,string])[];faq:readonly Faq[];notes:CoachNotesEs;
+ /** The English page's `extra` section in Spanish (same steps/rows, 1:1); the id comes from English. */
+ extra?:{title:string;intro?:string;steps?:readonly string[];head?:readonly string[];rows?:readonly (readonly string[])[];note?:string}};
 export type RulesHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;more:string;basics:readonly string[];
  groups:readonly {title:string;line:string}[];faq:readonly Faq[];leagueLine:string;sourceLine:string;
  futsalVsSoccer:{title:string;head:readonly string[];rows:readonly (readonly string[])[];note:string}};

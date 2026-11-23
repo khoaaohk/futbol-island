@@ -10,7 +10,7 @@ import {TERMS_ES,TERMS_HUB_ES} from './terms';
 import {POSITIONS_ES,POSITIONS_HUB_ES} from './positions';
 import {FORMATIONS_ES,FORMAT_GUIDES_ES,FORMATIONS_HUB_ES,shapeEs} from './formations';
 import {COMPARISONS_ES} from './comparisons';
-import type {CoachNotesEs,SceneEs} from './types';
+import type {CoachNotesEs,RuleEs,SceneEs} from './types';
 import {toEs} from '../esPaths';
 /**
  * Spanish records merged over the English ones (Spanish round 1). The English record gives the structure (diagram coordinates,
@@ -26,7 +26,13 @@ export function esRule(slug:string):EsRule|null{
  const r=ruleBySlug(slug);if(!r)return null;const e=need(RULES_ES,slug,'rule');
  if(e.scenes.length!==r.scenes.length)throw new Error(`Spanish rule ${slug}: ${e.scenes.length} scenes, English has ${r.scenes.length}`);
  return {...r,name:e.name,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,law:e.law,scenes:r.scenes.map((s,i)=>mergeScene(s,e.scenes[i])),
-  refs:[...e.refs],mixups:e.mixups.map(m=>({...m})),formats:e.formats.map(f=>[f[0],f[1]] as [string,string]),faq:e.faq.map(f=>({...f})),esPath:toEs(r.path),notes:e.notes};
+  refs:[...e.refs],mixups:e.mixups.map(m=>({...m})),formats:e.formats.map(f=>[f[0],f[1]] as [string,string]),faq:e.faq.map(f=>({...f})),esPath:toEs(r.path),notes:e.notes,extra:esRuleExtra(slug,r.extra,e.extra)};
+}
+/** Nov 23 2026 (SEO deep round): the Spanish words for a rule's extra section, 1:1 with English or the build fails. */
+function esRuleExtra(slug:string,en:Rule['extra'],es:RuleEs['extra']):Rule['extra']{
+ if(!en)return undefined;if(!es)throw new Error(`Spanish rule ${slug}: no extra section`);
+ if((es.steps?.length??0)!==(en.steps?.length??0)||(es.rows?.length??0)!==(en.rows?.length??0))throw new Error(`Spanish rule ${slug}: extra is not 1:1`);
+ return {id:en.id,title:es.title,intro:es.intro,steps:es.steps?[...es.steps]:undefined,head:es.head?[...es.head]:undefined,rows:es.rows?.map(r=>[...r]),note:es.note};
 }
 export function esTerm(slug:string):EsTerm|null{
  const t=termBySlug(slug);if(!t)return null;const e=need(TERMS_ES,slug,'term');

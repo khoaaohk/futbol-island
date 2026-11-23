@@ -13,7 +13,7 @@ import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {RuleExtraSection,Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {ruleQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -70,6 +70,7 @@ export default function RulePage({params}:{params:{slug:string}}){
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><SceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`${s.title.toLowerCase()} pass`:undefined}/></div>)}</div>
     :<SceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
+  {r.extra&&<RuleExtraSection x={r.extra}/>}
   {cards&&<CardRulesGame c={CARD_RULES}/>}
   {play&&<RulePlayGame c={play}/>}
   <Section id="referee" title="What the referee looks for">

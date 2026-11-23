@@ -136,3 +136,13 @@ export function CoachNotesSection({name,notes}:{name:string;notes:{coach?:string
   <ul>{notes.ages.map(([l,t])=><li key={l}><b>{l}:</b> {t}</li>)}</ul>
  </section>;
 }
+
+/** Nov 23 2026 (SEO deep round): a rule page's optional extra section (lib/site/rules.ts RuleExtra): numbered steps or a table. */
+export function RuleExtraSection({x}:{x:{id:string;title:string;intro?:string;steps?:readonly string[];head?:readonly string[];rows?:readonly (readonly string[])[];note?:string}}){
+ return <Section id={x.id} title={x.title}>
+  {x.intro&&<p>{x.intro}</p>}
+  {x.steps&&<ol>{x.steps.map(s=><li key={s}>{s}</li>)}</ol>}
+  {x.head&&x.rows&&<DataTable label={x.title} head={x.head} rows={x.rows}/>}
+  {x.note&&<p className={styles.caption}>{x.note}</p>}
+ </Section>;
+}
