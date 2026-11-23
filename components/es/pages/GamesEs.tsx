@@ -82,7 +82,7 @@ function videoGameLdEs(game:GamePage,es:GameEs){
   isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
   mainEntity:{'@type':'VideoGame','@id':abs(game.path)+'#game',name:game.name,alternateName:es.h1,url:abs(game.path),description:es.description,
    image:abs(game.og),screenshot:allShots(game).map(tr).map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
-   genre:game.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',isAccessibleForFree:true,
+   genre:game.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'GameApplication',playMode:'SinglePlayer',isAccessibleForFree:true,
    offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:es.skill,
    potentialAction:{'@type':'PlayAction',name:`Jugar a ${game.name}`,target:{'@type':'EntryPoint',urlTemplate:abs(game.play),actionPlatform:['https://schema.org/DesktopWebPlatform','https://schema.org/MobileWebPlatform']}},
    datePublished:GAMES_UPDATED,dateModified:pageModified(game.path,GAMES_UPDATED),publisher:PUBLISHER,author:PUBLISHER}};

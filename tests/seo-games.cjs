@@ -157,7 +157,7 @@ for(const g of PAGES){
  const p=ALL.find(x=>x.path===g.path),r=check(p,pageMod.generateMetadata({params:{slug:g.slug}}),pageMod.default({params:{slug:g.slug}}),g);
  const v=r.by('VideoGame');assert(v,`${g.path}: VideoGame`);
  assert.equal(v.name,g.name);assert.equal(v.url,seo.abs(g.path));assert.equal(v.description,g.description);assert.equal(v.image,seo.abs(g.og));
- assert(Array.isArray(v.genre)&&v.genre.length>=2&&v.gamePlatform==='Web browser'&&/web browser/i.test(v.operatingSystem)&&v.applicationCategory==='Game',`${g.path}: genre, platform, category`);
+ assert(Array.isArray(v.genre)&&v.genre.length>=2&&v.gamePlatform==='Web browser'&&/web browser/i.test(v.operatingSystem)&&v.applicationCategory==='GameApplication',`${g.path}: genre, platform, category`);
  assert(v.offers['@type']==='Offer'&&v.offers.price===0&&v.offers.priceCurrency==='USD'&&v.isAccessibleForFree===true,`${g.path}: free`);
  assert.deepEqual(v.audience,seo.KIDS_AUDIENCE,`${g.path}: audience`);assert.deepEqual(v.publisher,seo.PUBLISHER,`${g.path}: publisher`);assert.equal(v.isFamilyFriendly,true);
  {const all=games.allShots(g);assert(all.length>=g.shots.length&&all.length<=4&&v.screenshot.length===all.length&&v.screenshot.every((s,i)=>s.contentUrl===seo.abs(all[i].src)),`${g.path}: screenshots`);}

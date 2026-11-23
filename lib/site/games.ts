@@ -144,7 +144,7 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What age is Breakaway Run for?',a:'Futbol Island is made for children aged 7 to 12. The Warm-up route is the gentle start; Night Derby and above are for players who want a hard game.'},
    {q:'Is Breakaway Run really endless?',a:'Yes. A goal line clears the round and the road carries on with your score and hearts. Each round is a little harder than the last, and the run ends only when you run out of hearts.'}]},
  {id:'tennis',slug:'soccer-tennis-game',path:page('soccer-tennis-game'),name:'Futbol Tennis',play:play('tennis'),
-  title:'Soccer Tennis Game: Play Futbol Tennis Free Online',h1:'Soccer tennis game: Futbol Tennis',
+  title:'Soccer Tennis Game (Football Tennis): Play Free Online'/* Nov 23 2026: GSC queries "football tennis", "futbol tennis" */,h1:'Soccer tennis game: Futbol Tennis',
   description:'Futbol Tennis is a free soccer tennis game, also called football tennis, that you play in your browser. No download, no ads. Rally on nine beach courts.',
   lead:'Futbol Tennis is a free soccer tennis game, also called football tennis, that you play in your browser with no download: keep the ball up, control it with your first touch and play it over the net with your feet and head, against tougher opponents on nine beach-club courts.',
   blurb:'Football tennis: first touch and shot choice over a net',genre:['Sports','Arcade','Educational'],skill:'First touch and choosing the right shot',
@@ -520,7 +520,7 @@ const TARGET_LISTED=isGameListed('popup');
 const FLICK_LISTED=isGameListed('flickit'),GOLF_LISTED=isGameListed('footgolf');
 /** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns, four or more alone (the description stays 120-155 characters). */
 const NEW_KINDS=[JUGGLE_LISTED&&'juggling',TARGET_LISTED&&'pop-up targets',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
-export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Football Arcade, No Ads',h1:'Play free soccer games for kids online',/* Nov 22 2026 (play now): the H1 says what searchers ask for ("soccer games for kids to play online") */
+export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Online Soccer Games for Kids: Football Arcade, No Ads',h1:'Play free soccer games for kids online',/* Nov 22 2026 (play now): the H1 says what searchers ask for ("soccer games for kids to play online") */
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
@@ -548,7 +548,7 @@ export const GAME_LISTINGS:readonly GameListing[]=[
 /** One arcade game as a free browser VideoGame. No ratings or reviews: none exist, and none are invented. */
 export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type':'VideoGame','@id':abs(g.path)+'#game',name:g.name,alternateName:g.h1,url:abs(g.path),mainEntityOfPage:abs(g.path),description:g.description,
  image:abs(g.og),screenshot:allShots(g).map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
- genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
+ genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'GameApplication'/* Nov 23 2026: as siteLd (lib/site/seo.ts); schema.org/Google name GameApplication, 'Game' is no category */,playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
  // Nov 22 2026 (play now): the page's Play now button as a schema.org PlayAction (valid on any Thing via potentialAction; Google shows no
  // rich result for it, it only states where the game itself is played): the deep link that opens the game, on desktop and phone browsers.

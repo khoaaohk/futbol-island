@@ -68,7 +68,7 @@ const L=rel=>load(path.join(root,rel));
  for(const g of [play,site]){assert.equal(g.operatingSystem,'Web browser');assert.equal(g.isFamilyFriendly,true);assert.equal(g.offers.price,0);assert.equal(g.audience.suggestedMinAge,7);assert.equal(g.audience.suggestedMaxAge,12);
   assert.equal(g.inLanguage,'en');assert(!('aggregateRating' in g)&&!('review' in g),'no ratings');assert.equal(g['@id'],SITE+'/play#game');}
  const games=L('lib/site/games.ts');
- for(const g of games.GAME_PAGES){const v=games.videoGameLd(g);assert.equal(v.operatingSystem,'Web browser');assert.equal(v.isFamilyFriendly,true);assert.equal(v.applicationCategory,'Game');assert(!('aggregateRating' in v),'no ratings');}
+ for(const g of games.GAME_PAGES){const v=games.videoGameLd(g);assert.equal(v.operatingSystem,'Web browser');assert.equal(v.isFamilyFriendly,true);assert.equal(v.applicationCategory,'GameApplication');assert(!('aggregateRating' in v),'no ratings');}
  assert.equal(L('lib/site/tools/registry.ts').webAppLd({name:'x',path:'/tools/x',description:'d',features:[]}).operatingSystem,'Web browser');
  assert.equal(seo.PUBLISHER.logo.url,SITE+'/icon.png','publisher has a logo');
  {const a=seo.websiteLd().potentialAction;assert(a&&a['@type']==='SearchAction'&&a.target.urlTemplate==='https://futbolisland.app/learn?q={search_term_string}','SearchAction to the /learn search (seo-extras)');}

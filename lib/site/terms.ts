@@ -98,7 +98,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'What is the difference between a through ball and a long ball?',a:'A through ball goes through or behind the defense for a runner, and can be short. A long ball is any long pass, often in the air.'},
    {q:'How do you stay onside for a through ball?',a:'Stay level with or behind the second-last opponent until your teammate plays the ball. Then run.'},
    {q:'What is a through pass in football?',a:'The same thing as a through ball: football is the name most of the world uses for soccer, and through pass is another name for the move. Any player can play one, but attacking midfielders play many, because they face the goal with runners ahead.'}],
-  links:[{path:'/learn/soccer-positions/attacking-midfielder',name:'Attacking midfielder in soccer',line:'The number 10, who plays many through balls'},{path:'/learn/soccer-rules/offside',name:'The offside rule in soccer',line:'Why the runner waits until the pass is played'}],
+  links:[{path:'/learn/soccer-positions/attacking-midfielder',name:'Attacking midfielder in soccer',line:'The number 10, who plays many through balls'},{path:'/learn/soccer-rules/offside',name:'The offside rule in soccer',line:'Why the runner waits until the pass is played'},{path:'/games/soccer-passing-puzzle-game',name:'Pass Puzzles: a free soccer passing game',line:'Draw the through ball between defenders, then score'}/* Nov 23 2026 */],
   lessonIds:['gap11_runoncue','f_paralela','bld_11_throughlines'],related:['give-and-go','third-man-run','counterattack','first-touch','offside-trap','hat-trick']},
 
  {slug:'switching-play',name:'Switch of Play',also:'switching play, switch',short:'Moving the ball from the crowded side of the field to the open side.',
