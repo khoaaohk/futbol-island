@@ -99,7 +99,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'How do you stay onside for a through ball?',a:'Stay level with or behind the second-last opponent until your teammate plays the ball. Then run.'},
    {q:'What is a through pass in football?',a:'The same thing as a through ball: football is the name most of the world uses for soccer, and through pass is another name for the move. Any player can play one, but attacking midfielders play many, because they face the goal with runners ahead.'}],
   links:[{path:'/learn/soccer-positions/attacking-midfielder',name:'Attacking midfielder in soccer',line:'The number 10, who plays many through balls'},{path:'/learn/soccer-rules/offside',name:'The offside rule in soccer',line:'Why the runner waits until the pass is played'}],
-  lessonIds:['gap11_runoncue','f_paralela','bld_11_throughlines'],related:['give-and-go','third-man-run','counterattack','first-touch','offside-trap']},
+  lessonIds:['gap11_runoncue','f_paralela','bld_11_throughlines'],related:['give-and-go','third-man-run','counterattack','first-touch','offside-trap','hat-trick']},
 
  {slug:'switching-play',name:'Switch of Play',also:'switching play, switch',short:'Moving the ball from the crowded side of the field to the open side.',
   title:'Switching Play in Soccer: Explained for Kids',h1:'What is switching play in soccer?',
@@ -151,7 +151,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Why do cutbacks lead to goals?',a:'The defenders are facing their own goal and moving backward, and the shooter is facing the goal and moving forward.'},
    {q:'What does cut back mean in football?',a:'In football, which Americans call soccer, a cut back is a pass pulled backward from near the goal line to a teammate running in behind the defenders. Commentators also say a player cuts back when they turn sharply inside, away from a defender.'},
    {q:'Can you be offside from a cutback?',a:'Not if you are behind the ball when it is passed. A player level with or behind the ball is not in an offside position.'}],
-  lessonIds:['learn11_cutback','expf_cornercutback','learnf_farpost'],related:['cross','overlap','two-v-one','set-piece','assist']},
+  lessonIds:['learn11_cutback','expf_cornercutback','learnf_farpost'],related:['cross','overlap','two-v-one','set-piece','assist','hat-trick']},
 
  {slug:'cross',name:'Cross',also:'crossing',short:'A pass from a wide area into the space in front of the goal.',
   desc:'The cross in soccer explained for kids: a pass from the side of the field into the area in front of goal, with a diagram, where to run and lessons.',
