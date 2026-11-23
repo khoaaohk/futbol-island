@@ -40,7 +40,7 @@ export default function PlansHub(){
    <p>A small game gives every player the ball. <a href={game.path}>See how to set up 3v3</a>.</p>
   </Section>
   <QA id="faq" title="Questions about soccer practice plans" faq={HUB.faq}/>
-  <KeepReading groups={[{id:'drills',links:[...AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb}]},{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5'},
+  <KeepReading groups={[{id:'drills',links:[...AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:'/tools/soccer-practice-plan-generator',name:'Soccer practice plan generator',line:'Your own timed plan by age, length, players and focus'}]},{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5'},
    {path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-formations',name:'Soccer formations for kids',line:'Shapes for 7v7, 9v9 and 11v11'}]}]}/>
   <GuideEnd cta={false}/>
  </>;

@@ -34,8 +34,8 @@ const at=(es:boolean,path:string)=>es?toEs(path):path;
 const toolsBack=(es:boolean):RailItem=>({href:at(es,TOOLS_PATH),name:L(es,'All coach tools','Todas las herramientas')});
 const qa=(es:boolean):Sec=>['faq',L(es,'Questions','Preguntas')],more=(es:boolean,name?:string):Sec=>['keep-reading',name??L(es,'Keep reading','Sigue leyendo')];
 const onPage=(es:boolean)=>L(es,'On this page','En esta página');
-export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[['lineups',L(es,'Lineup builders','Alineaciones')],
- ['playing-time',L(es,'Playing time','Minutos de juego')],['practice',L(es,'Practice and match day','Entrenamiento y partido')],['printables',L(es,'Printables','Para imprimir')],
+export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','Herramientas en esta página'),[/* Nov 22 2026: two groups (owner) */
+ ['training',L(es,'Training tools','Herramientas de entrenamiento')],['game-day',L(es,'Game day tools','Herramientas para el día del partido')],
  qa(es),['guides',L(es,'Guides','Guías')]],es);
 export const lineupRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],
  format?['roles',L(es,'Who plays where','Quién juega dónde')]:['shapes',L(es,'Every formation','Todas las formaciones')],qa(es),more(es,L(es,'More tools','Más herramientas'))],es);
@@ -50,6 +50,8 @@ export const printableRail=(o:{versions:boolean;compare:boolean},es=false):Rail=
   ...(o.compare?[['compare',L(es,'The formations compared','Las formaciones comparadas')] as const]:[]),['use',L(es,'How coaches use it','Cómo la usan')],more(es,L(es,'Go further','Ve más allá'))],es);
 export const scanFrontRail=(es=false):Rail=>page(onPage(es),toolsBack(es),[['what',L(es,'What it is','Qué es')],['how',L(es,'How to use it','Cómo se usa')],['speed',L(es,'Speed by age','Velocidad por edad')],
  ['settings',L(es,'Settings','Ajustes')],['drills',L(es,'Drills','Ejercicios')],['tips',L(es,'Tips','Consejos')],qa(es),more(es)],es);
+/* the game-day and practice tools (Nov 22 2026; components/site/tools/NewToolPage.tsx): the tool, how to use it, the page's own sections, sources */
+export const newToolRail=(o:{tool:string;how:string;sections:readonly Sec[]},es=false):Rail=>page(onPage(es),toolsBack(es),[['tool',o.tool],['how',o.how],...o.sections,['sources',L(es,'Sources','Fuentes')],qa(es),more(es)],es);
 
 /* museum: /exhibits lists its 22 cases under their galleries (each case row is #ex-<id>); a case goes Back to the Museum */
 export const exhibitAnchor=(id:string)=>`ex-${id}`;

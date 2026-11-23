@@ -1,0 +1,105 @@
+/* The five second-batch tools of Nov 22 2026 (team names, practice plan, field size guide, juggling, stats). Built on
+   newTools.module.css (same tokens: --ink, --paper, --surface, --gold, --link). Tone steps instead of lines, no shadows at rest,
+   no gradients; button text is the UI sans at 800 (AGENTS.md). Nothing animates except the juggling best's one-off flash. */
+.field{display:grid;gap:8px;min-width:0}
+.seg4{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:var(--r-md)}
+@media(min-width:620px){.seg4{grid-auto-flow:column;grid-template-columns:none;border-radius:var(--r-pill)}}
+.full{width:100%}
+.onLight{background:var(--gold)}
+.chipSet{display:flex;flex-wrap:wrap;gap:8px}
+.chipSet button{min-height:48px;padding:0 16px;border:0;border-radius:var(--r-pill);background:var(--paper);color:var(--ink);font:800 16px/1.1 var(--sans);cursor:pointer;touch-action:manipulation}
+.chipSet button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chipSet button:focus-visible,.star:focus-visible,.round:focus-visible,.gameBtn:focus-visible,.drill:focus-visible,.range:focus-visible,.bigInput:focus-visible{outline:3px solid #ffd451;outline-offset:2px}
+.stepper{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border-radius:var(--r-pill);padding:4px;justify-self:start}
+.stepper output{min-width:44px;text-align:center;font:800 22px/1 var(--sans);font-variant-numeric:tabular-nums}
+.stepper button:disabled{opacity:.4;cursor:default}
+/* results lists */
+.results{display:grid;gap:12px;min-width:0}
+.resultsHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.resultsHead h3{margin:0;font-size:19px}
+.names{list-style:none;margin:0;padding:0!important;display:grid;gap:8px}
+.names li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface);border-radius:var(--r-md);padding:12px 8px 12px 16px;max-width:none!important}
+.names b{display:block;font-size:21px;line-height:1.2;letter-spacing:-.01em;overflow-wrap:anywhere}
+.names p{margin:4px 0 0;font-size:15px;line-height:1.45;color:var(--ink-soft)}
+@media(min-width:720px){.names{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.star{display:grid;place-items:center;width:48px;height:48px;border:0;border-radius:var(--r-pill);background:var(--paper);color:var(--ink);cursor:pointer}
+.star[aria-pressed="true"]{background:var(--gold)}
+.chips{list-style:none;margin:0;padding:0!important;display:flex;flex-wrap:wrap;gap:8px}
+.chips li{display:inline-flex;align-items:center;gap:4px;background:var(--paper);border-radius:var(--r-pill);padding:2px 2px 2px 14px;font-weight:700;max-width:none!important}
+/* practice plan */
+.planCard{display:grid;gap:12px;background:var(--surface);border-radius:var(--r-lg);padding:16px;min-width:0}
+@media(min-width:720px){.planCard{padding:24px}}
+.note{margin:0;padding:10px 14px;border-radius:var(--r-sm);background:#f5ecd4;font-size:15px;line-height:1.45;font-weight:600}
+.blocks{list-style:none;margin:0;padding:0!important;display:grid;gap:8px}
+.blocks li{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start;background:var(--paper);border-radius:var(--r-md);padding:12px 14px;max-width:none!important}
+.blocks li[data-kind="water"],.blocks li[data-kind="cool"]{background:rgb(251 247 238 / .55)}
+.blocks li[data-kind="game"]{background:#e1edf0}
+.time{display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.time b{font-size:20px;line-height:1.1}
+.time span{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.blockBody{display:grid;gap:4px;min-width:0}
+.blockBody p{margin:0;font-size:15px;line-height:1.45;color:var(--ink-soft)}
+.kind{font-size:14px;font-weight:800;color:var(--link)}
+.drill{font-size:18px;font-weight:800;color:var(--ink);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;overflow-wrap:anywhere}
+.drillPlain{font-size:16px;font-weight:600}
+.swap{grid-column:2;justify-self:start;min-height:44px;padding:0 16px;background:var(--surface)}
+@media(min-width:620px){.blocks li{grid-template-columns:72px minmax(0,1fr) auto}.swap{grid-column:auto;align-self:center}}
+/* field guide */
+.range{width:100%;min-height:44px;accent-color:var(--link)}
+.pitchWrap{position:relative;margin:0;display:grid;gap:10px}
+.pitch{display:block;width:100%;height:auto}
+.pitchTag{position:absolute;top:10px;left:10px}
+.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.specs div{background:var(--surface);border-radius:var(--r-sm);padding:10px 12px;min-width:0}
+.specs dt{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.specs dd{margin:2px 0 0;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media(min-width:720px){.specs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.steps{margin:0;padding-left:1.3em;display:grid;gap:8px;font-size:16px;line-height:1.5}
+/* juggling */
+.tip{margin:0;padding:12px 14px;border-radius:var(--r-md);background:rgb(251 247 238 / .1);font-size:16px;line-height:1.45}
+.counter{display:grid;grid-template-columns:64px minmax(0,1fr) 64px;gap:10px;align-items:center}
+.round{width:64px;height:64px;border:0;border-radius:var(--r-pill);background:var(--paper);color:var(--ink);font:800 30px/1 var(--sans);cursor:pointer;touch-action:manipulation}
+.bigInput{box-sizing:border-box;width:100%;min-width:0;min-height:72px;border:0;border-radius:var(--r-md);background:var(--paper);color:var(--ink);text-align:center;font:800 44px/1 var(--sans);font-variant-numeric:tabular-nums}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stats3>div{display:grid;gap:4px;align-content:start;background:var(--surface);border-radius:var(--r-md);padding:12px;min-width:0}
+.stats3 span{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.stats3 b{font-size:20px;line-height:1.15}
+.stats3 small{font-size:13px;color:var(--ink-soft)}
+@media(max-width:420px){.stats3{grid-template-columns:1fr 1fr}.stats3>div:last-child{grid-column:1/-1}}
+.confirm{display:grid;gap:8px;background:#f5ecd4;border-radius:var(--r-md);padding:12px 14px}
+.confirm p{margin:0;font-weight:700}
+/* stats */
+.counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:720px){.counts{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.countBox{display:grid;gap:6px;justify-items:start;background:var(--paper);border-radius:var(--r-md);padding:10px 12px}
+.countBox span{font-size:15px;font-weight:700}
+.countBox .stepper{background:var(--surface)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tiles div{display:grid;gap:2px;background:var(--paper);border-radius:var(--r-md);padding:12px;min-width:0}
+.tiles b{font-size:clamp(28px,8vw,40px);line-height:1;font-variant-numeric:tabular-nums}
+.tiles span{font-size:14px;font-weight:700;color:var(--ink-soft);overflow-wrap:anywhere}
+.tiles small{font-size:13px;color:var(--ink-soft)}
+@media(min-width:720px){.tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.badgeCounts{list-style:none;margin:0;padding:0!important;display:flex;flex-wrap:wrap;gap:8px}
+.badgeCounts li{flex:0 0 auto;width:auto;display:inline-flex;gap:8px;align-items:center;background:var(--paper);border-radius:var(--r-pill);padding:6px 14px;font-size:15px;font-weight:600;max-width:none!important}
+.chart{display:block;width:100%;height:auto;max-height:260px}
+.gameList{list-style:none;margin:0;padding:0!important;display:grid;gap:8px}
+.gameList li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;max-width:none!important}
+.gameList li>.confirm{grid-column:1/-1}
+.gameBtn{display:grid;gap:3px;text-align:left;min-height:56px;padding:10px 14px;border:0;border-radius:var(--r-md);background:var(--paper);color:var(--ink);font:500 15px/1.4 var(--sans);cursor:pointer;min-width:0}
+.gameBtn:disabled{cursor:default}
+.gameTop{display:flex;gap:8px;flex-wrap:wrap;font-size:16px}
+.gameNums{font-variant-numeric:tabular-nums}
+.gameBadges{color:var(--link);font-weight:700;font-size:14px}
+@media print{.planCard,.blocks li{background:#fff!important}.swap{display:none}}
+.party{animation:party 1.4s ease-out 1}
+@keyframes party{0%{background:var(--gold);color:var(--ink)}100%{background:var(--ink);color:var(--paper)}}
+.cheer{margin:0;text-align:center;font:800 clamp(24px,7vw,34px)/1.1 var(--sans);color:var(--gold)}
+@media(prefers-reduced-motion:reduce){.party{animation:none}}
+a.linkBtn,a.linkBtn:visited{color:var(--paper);text-decoration:none}
+.fieldLayout{display:grid;gap:16px;min-width:0}
+@media(min-width:1000px){.fieldLayout{grid-template-columns:minmax(300px,380px) minmax(0,1fr);align-items:start}.fieldLayout .seg button{font-size:15px}}
+.tiles div{align-content:start}
+.levelBar{display:block;width:100%;height:16px}
+.levelBar rect:first-child{fill:rgb(251 247 238 / .14)}
+.levelBar rect+rect{fill:var(--gold)}

@@ -28,12 +28,15 @@ const es=renderToStaticMarkup(L('components/es/pages/ToolsEs.tsx').toolsEsRoute(
 
 function check(h,lang,prefix){
  const lists=[...h.matchAll(/<ul[^>]*data-tool-cards=""[^>]*>([\s\S]*?)<\/ul>/g)];
- assert.equal(lists.length,4,`${lang}: four card groups`);
- assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['lineups','time','practice','print'],`${lang}: each group has its own tint`);
+ assert.equal(lists.length,2,`${lang}: two card groups (Nov 22 2026, owner: training tools and game day tools)`);
+ assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['practice','gameday'],`${lang}: each group has its own tint`);
  const cards=[...h.matchAll(/<a [^>]*data-tool-card="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
  const hrefs=cards.map(m=>/href="([^"]+)"/.exec(m[0])[1]);
- const want=[...reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path),prefix?'/coach?lang=es':'/coach'];/* + the coach app (Nov 17) */
- assert.deepEqual([...hrefs].sort(),[...want].sort(),`${lang}: one card per tool page, no more, no less`);
+ const subs=[...h.matchAll(/<div[^>]*data-tool-sublinks=""[^>]*>([\s\S]*?)<\/div>/g)].flatMap(m=>[...m[1].matchAll(/href="([^"]+)"/g)].map(x=>x[1]));
+ const groups=L('lib/site/tools/toolGroups.ts').TOOL_GROUPS;
+ assert.deepEqual(hrefs,[...groups.training,reg.LINEUP_PAGES[0].path,...groups.gameDay].map(p=>prefix+p),`${lang}: the cards of the two groups, in order`);
+ const want=reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path);
+ assert.deepEqual([...hrefs,...subs].sort(),[...want].sort(),`${lang}: every tool page is a card or a sub-link, once`);
  for(const [a,kind,inner] of cards){
   const where=`${lang} card ${/href="([^"]+)"/.exec(a)[1]}`;
   assert(/^<a [^>]*class="card"/.test(a),`${where}: the whole card is the link`);
@@ -45,12 +48,12 @@ function check(h,lang,prefix){
   assert(/class="line">[^<]{8,}</.test(inner),`${where}: its one line`);
   assert.equal(kind,icons.toolIconFor(/href="([^"]+)"/.exec(a)[1]).kind,`${where}: icon by path`);
  }
- for(const id of ['lineups','playing-time','practice','printables'])assert(new RegExp(`<h2[^>]*id="${id}"`).test(h),`${lang}: the ${id} heading is an h2`);
+ for(const id of ['training','game-day'])assert(new RegExp(`<h2[^>]*id="${id}"`).test(h),`${lang}: the ${id} heading is an h2`);
  return new Set(cards.map(m=>m[1]));
 }
 const kinds=check(en,'en','');check(es,'es','/es');
-for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan','whistle'])assert(kinds.has(k),`the hub shows the ${k} icon`);
-for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan','whistle'])
+for(const k of ['lineup','clock','rotation','diagram','cheat','scan','whistle','pennant','ball','chart','measure'])assert(kinds.has(k),`the hub shows the ${k} icon`);
+for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan','whistle','pennant','ball','chart','measure'])
  assert(/<path|<circle|<rect/.test(renderToStaticMarkup(React.createElement(icons.ToolIcon,{kind:k}))),`icon ${k} draws`);
 assert.equal(icons.toolIconFor('/tools/9v9-lineup-builder').badge,'9v9');assert.equal(icons.toolIconFor('/es/tools/futsal-lineup-builder').kind,'court');
 console.log(`tools-cards: OK (${kinds.size} icon kinds, every tool a card on /tools and /es/tools)`);

@@ -103,6 +103,10 @@ export const CHART_FIELDS_ES={title:'Una cancha de 7v7 junto a una cancha de tam
  {title:'Una cancha 11v11 de tamaño completo',caption:'Una cancha de tamaño completo vacía: de 100 a 130 yardas de largo, con el área penal, el área chica, el círculo central y los puntos penales.'}]} as const;
 /** Spanish names and lines of the English pages the charts and hubs link to (keyed by English path; shown only when hasEs). */
 export const LINKS_ES:Readonly<Record<string,LinkEs>>={
+ '/tools/soccer-match-timer':{name:'Reloj y marcador de fútbol',line:'Un reloj de partido con los tiempos o cuartos de cada categoría'},/* Nov 22 2026 */
+ '/tools/youth-soccer-field-size-guide':{name:'Guía de medidas de canchas de fútbol infantil',line:'Cada modalidad a escala, con un plan de conos para marcarla'},
+ '/tools/soccer-juggling-challenge':{name:'Reto de dominadas de fútbol',line:'Niveles de 5 a 100 toques y un registro de récords'},
+ '/tools/soccer-team-name-generator':{name:'Generador de nombres de equipos de fútbol',line:'Nombres para un equipo infantil nuevo'},
  '/learn/soccer-ball-size-by-age':{name:'Tamaño del balón de fútbol por edad',line:'Tamaño 3, 4 o 5 para cada categoría, con una tabla'},
  '/learn/soccer-field-size-by-age':{name:'Tamaño de la cancha de fútbol por edad',line:'Cancha, arco y duración del partido para cada categoría'},
  '/learn/soccer-age-groups':{name:'Las categorías de edad del fútbol explicadas',line:'De U6 a U19, fechas de nacimiento y el partido de cada una'},
