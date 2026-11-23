@@ -55,7 +55,7 @@
 .dialog .userMessage{background:#eeb0d5;color:#244d40;border-radius:26px 26px 8px 26px}
 .dialog .userMessage .speaker{color:#31574b}
 .dialog .suggestions{gap:14px}.dialog .replyLabel{color:#fff2cd;font-size:14px}
-.dialog .suggestions>button{width:100%;padding:14px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:var(--btn-gold-bright);color:var(--btn-ink);font-size:15px;font-weight:700;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:transform .16s,background-color .16s,box-shadow .16s}
+.dialog .suggestions>button{width:100%;padding:14px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:var(--btn-gold-bright);color:var(--btn-ink);font-size:15px;font-weight:700;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:transform .16s,background-color .16s,box-shadow .16s,filter .16s}
 .dialog .suggestions>button:hover{background:#efabc9;transform:translateY(-2px)}
 .dialog .suggestions>button:active{transform:translateY(var(--btn-press));box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
 .dialog .suggestions>.goodbye{background:var(--btn-mint);text-decoration:none;border-color:var(--btn-rim);box-shadow:0 4px 0 var(--btn-mint-edge)}
@@ -66,3 +66,8 @@
 @media(prefers-reduced-motion:reduce){.dialog .suggestions>button{transition:none}}
 
 .dialog .panel{background-blend-mode:soft-light,normal}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .dialog .suggestions>button:not(:disabled,[aria-disabled=true]):hover,.dialog .newsHeader button:not(:disabled,[aria-disabled=true]):hover,.dialog .matchStory button:not(:disabled,[aria-disabled=true]):hover,.dialog .rankTabs button:not(:disabled,[aria-disabled=true]):hover,.dialog .rankList button:not(:disabled,[aria-disabled=true]):hover,.dialog .clip button:not(:disabled,[aria-disabled=true]):hover,.goodbye.goodbye:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -28,3 +28,8 @@
 .optionText small{font-size:13px;font-weight:400;line-height:1.3;color:#4d6456}
 .check{flex:none;width:6px;height:12px;margin:-3px 4px 0 0;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg)}
 @media(prefers-reduced-motion:reduce){.trigger,.chevron{transition:none}.list{animation:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .trigger.trigger:not(:disabled,[aria-disabled=true]):hover{outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

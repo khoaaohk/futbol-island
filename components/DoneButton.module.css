@@ -1,7 +1,7 @@
 :is(button,a).button.button{
  position:relative;width:var(--navigation-width,76px)!important;min-width:0!important;height:44px;
  flex:0 0 auto!important;padding:0!important;border-radius:999px!important;
- overflow:hidden;transition:width 260ms cubic-bezier(.22,.7,.3,1);
+ overflow:hidden;transition:width 260ms cubic-bezier(.22,.7,.3,1),filter .16s;
 }
 :is(button,a).button.button[data-closing=true]{width:44px!important;pointer-events:none}
 .label,.icon{position:absolute;inset:0;display:grid;place-items:center;transition:opacity 160ms ease;white-space:nowrap}
@@ -14,12 +14,17 @@
 :is(button,a).button.button:focus{outline:none}
 :is(button,a).button.button[data-keyboard-focus=true]:focus{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 :is(button,a).button.button:disabled{opacity:.5}
-:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease}
+:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,filter .16s}
 :is(button,a).button.button[data-departing=true]{opacity:0;pointer-events:none}
 /* One press effect for every navigation button (Back, Done, Next, Skip, Flip, Choose plays, Previous step), not only
    the ones the global aria-label rules happen to match. */
-:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s}
+:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s,filter .16s}
 :is(button,a).button.button:not(:disabled):active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)!important}
 @media(prefers-reduced-motion:reduce){:is(button,a).button.button{transition:none}}
 /* the link form (NavigationButton with an href): same box as the button, no underline */
 a.button.button{display:inline-block;text-decoration:none;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .button.button:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

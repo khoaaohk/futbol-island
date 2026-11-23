@@ -84,7 +84,7 @@
 .stations [data-short]{display:none}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-height:48px}
 .say{margin:0;flex:1 1 260px;font:400 15px/1.45 var(--sans);color:var(--ink);max-width:68ch}
-.btn,.ghost,.choice,.round{min-height:48px;border-radius:999px;font:600 15px/1.2 var(--sans);cursor:pointer;transition:transform .14s,background-color .2s,opacity .2s}
+.btn,.ghost,.choice,.round{min-height:48px;border-radius:999px;font:600 15px/1.2 var(--sans);cursor:pointer;transition:transform .14s,background-color .2s,opacity .2s,filter .16s}
 .btn{padding:0 22px;border:1.5px solid var(--ink);background:var(--ink);color:#f7f7f3}
 .ghost{padding:0 18px;border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
 .round{width:48px;padding:0;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:20px}
@@ -140,3 +140,8 @@
 
 /* Paper halo (shared look, anatomy/paper-kit PAPER_CSS): one soft diffuse shadow under each base plate. */
 .root :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .choice.choice:not(:disabled,[aria-disabled=true]):hover,.btn.btn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

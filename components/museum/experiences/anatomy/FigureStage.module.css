@@ -8,7 +8,7 @@
 .row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;pointer-events:auto}
 .pill,.round,.swatch{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:999px;border:1.5px solid var(--fig-ink);
  background:var(--fig-paper);color:var(--fig-ink);font:600 14px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;cursor:pointer;
- transition:background-color .25s,color .25s,transform .12s}
+ transition:background-color .25s,color .25s,transform .12s,filter .16s}
 .pill,.swatch{padding:0 16px}
 .round{width:44px;padding:0;font-size:20px}
 .pill[aria-pressed=true],.swatch[aria-checked=true]{background:var(--fig-ink);color:#f7f7f3}
@@ -21,3 +21,8 @@
 @keyframes fig-hint{50%{transform:translate(calc(-50% + 6px),0)}}
 @media (max-width:560px){.pill,.swatch{padding:0 12px;font-size:13px}.row{gap:6px}}
 @media (prefers-reduced-motion:reduce){.hint{animation:none}.pill,.round,.swatch{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .round.round:not(:disabled,[aria-disabled=true]):hover,.pill.pill:not(:disabled,[aria-disabled=true]):hover,.swatch.swatch:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

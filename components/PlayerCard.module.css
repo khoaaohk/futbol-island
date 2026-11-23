@@ -337,7 +337,7 @@
 @media(prefers-reduced-motion:reduce){.card{transform:none}}
 /* Flip and Play press like the app's other paper pills: a 2 px lift on hover (real pointers only), a 3 px press. Translate and
    box-shadow only (hosts keep their own drop colours), .16 s; none with reduced motion. */
-.stage .controls .flipButton,.stage .controls .playButton{transition:translate .16s,box-shadow .16s}
+.stage .controls .flipButton,.stage .controls .playButton{transition:translate .16s,box-shadow .16s,filter .16s}
 @media(hover:hover){.stage .controls .flipButton:hover,.stage .controls .playButton:hover{translate:0 -2px}
  .flipButton:hover,.playButton:hover{box-shadow:0 7px 0 var(--btn-gold-bright-edge)}}
 .stage .controls .flipButton:active,.stage .controls .playButton:active{transform:none;translate:0 3px}
@@ -358,3 +358,8 @@
 .card[data-playing]:has(canvas.filmCanvas:not(.filmFading)) .holo{visibility:hidden;transition:visibility 0s linear .35s}
 .stage .card .back p.foilNote{flex:none;margin:0;font-size:clamp(10px,calc(var(--u) * 3),12.5px);line-height:1.35;color:var(--meta)}
 .stage .card .back p.foilNote b{color:var(--label);font-weight:800}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .flipButton.flipButton:not(:disabled,[aria-disabled=true]):hover,.playButton.playButton:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

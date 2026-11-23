@@ -45,7 +45,7 @@
 @keyframes dot{50%{opacity:1;transform:translateY(-4px)}}
 
 .roundSmall{display:grid;place-items:center;width:44px;height:44px;flex:none;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;
- background:var(--btn-cream) var(--btn-grain) center/128px;color:var(--ink);box-shadow:0 4px 0 #b9a77a,var(--btn-halo);transition:translate .14s,box-shadow .14s,opacity .2s}
+ background:var(--btn-cream) var(--btn-grain) center/128px;color:var(--ink);box-shadow:0 4px 0 #b9a77a,var(--btn-halo);transition:translate .14s,box-shadow .14s,opacity .2s,filter .16s}
 .roundSmall:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #b9a77a,var(--btn-halo)}
 
 .dragHint{position:absolute;z-index:3;left:50%;top:14px;translate:-50% 0;margin:0;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
@@ -83,7 +83,7 @@
 .tiles4{grid-template-columns:repeat(4,minmax(0,1fr))}.tiles5{grid-template-columns:repeat(5,minmax(0,1fr))}
 .tile,.patternTile,.preset,.sponsor{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:72px;padding:8px 4px 7px;
  border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:var(--tile);color:var(--ink);font-weight:800;font-size:12.5px;line-height:1.1;
- box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s ease,box-shadow .12s ease,background-color .18s}
+ box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s ease,box-shadow .12s ease,background-color .18s,filter .16s}
 .tile>span:last-child,.patternTile>span,.preset>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 @media(hover:hover){.tile:hover,.patternTile:hover,.preset:hover,.sponsor:hover{translate:0 -1px;box-shadow:0 5px 0 var(--tile-edge)}}
 .tile:active,.patternTile:active,.preset:active,.sponsor:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--tile-edge)}
@@ -108,7 +108,7 @@
 /* colours: one-tap kit palettes */
 .palettes{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
 .paletteTile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:76px;padding:9px 6px 8px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);
- background:var(--tile);color:var(--ink);font-weight:800;font-size:12.5px;box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s,box-shadow .12s,background-color .18s}
+ background:var(--tile);color:var(--ink);font-weight:800;font-size:12.5px;box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s,box-shadow .12s,background-color .18s,filter .16s}
 .paletteTile:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--tile-edge)}
 .paletteTile[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 .paletteDots{display:flex}
@@ -118,7 +118,7 @@
 /* colours */
 .roles{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}
 .role,.chip,.chipMint{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px 0 8px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;
- background:var(--btn-gold-bright);color:var(--ink);font-weight:800;font-size:13.5px;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .12s,box-shadow .12s,background-color .18s}
+ background:var(--btn-gold-bright);color:var(--ink);font-weight:800;font-size:13.5px;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .12s,box-shadow .12s,background-color .18s,filter .16s}
 .chip,.chipMint{padding:0 14px}
 .chipMint{background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge)}
 :is(.role,.chip):active,.chipMint:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
@@ -161,7 +161,7 @@
 .counter{position:absolute;right:14px;top:50%;translate:0 -50%;color:var(--ink-soft);font-weight:800;font-size:13px}
 .numberRow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .stepper{width:50px;height:50px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px;background-blend-mode:soft-light;
- color:var(--ink);font:900 26px/1 var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .12s,box-shadow .12s}
+ color:var(--ink);font:900 26px/1 var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .12s,box-shadow .12s,filter .16s}
 .stepper:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 .numberInput{width:84px;height:62px;border:3px solid #fff2cd;border-radius:18px;background:#fffdf6;color:var(--ink);text-align:center;font:900 36px/1 "Arial Black",Arial,sans-serif;box-shadow:inset 0 3px 0 #e8dcbc,0 0 0 1.5px var(--line)}
 .numberInput:focus{outline:var(--btn-focus);outline-offset:1px}
@@ -185,7 +185,7 @@
 .meter b[data-low=true]{background:linear-gradient(90deg,#ff9f1c,#ff6b5b)}
 .tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
 .toolTile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:70px;padding:7px 2px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);
- background:var(--tile);color:var(--ink);font-weight:800;font-size:12.5px;box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s,box-shadow .12s,background-color .18s}
+ background:var(--tile);color:var(--ink);font-weight:800;font-size:12.5px;box-shadow:0 4px 0 var(--tile-edge);transition:translate .12s,box-shadow .12s,background-color .18s,filter .16s}
 .toolTile:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--tile-edge)}
 .toolTile[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge);animation:pop .3s ease-out}
 .sizeRow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
@@ -242,13 +242,13 @@
 .prevBtn{flex:none;display:grid;place-items:center;width:var(--btn-height);min-height:var(--btn-height);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-cream);color:var(--ink);font-weight:900;font-size:18px;box-shadow:0 4px 0 var(--tile-edge)}
 .prevBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--tile-edge)}
 .nextBtn{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;width:100%;min-height:var(--btn-height);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;
- background:var(--btn-green);color:var(--btn-ink-on-dark);font-weight:800;font-size:14.5px;box-shadow:0 4px 0 var(--btn-green-edge);transition:translate .12s,box-shadow .12s}
+ background:var(--btn-green);color:var(--btn-ink-on-dark);font-weight:800;font-size:14.5px;box-shadow:0 4px 0 var(--btn-green-edge);transition:translate .12s,box-shadow .12s,filter .16s}
 .nextBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
 
 /* ---- always-visible actions ---- */
 .actions{flex:none;display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px var(--phone-gutter) calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #efe1bf;background:#fff6e2}
 .saveBtn,.buyBtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:var(--btn-height-lg);padding:0 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;
- font-weight:800;font-size:15.5px;color:var(--ink);transition:translate .12s,box-shadow .12s}
+ font-weight:800;font-size:15.5px;color:var(--ink);transition:translate .12s,box-shadow .12s,filter .16s}
 /* Save: the same cream pill as Ball's and Boot's (Oct 14 2026: one Save look across the Kit Shop studios) */
 .saveBtn{padding:0 16px;background:var(--btn-cream,#fff1d3);font-weight:900;font-size:15px;box-shadow:0 4px 0 #dccfae,var(--btn-halo,0 0 0 4px #fff2cd40)}
 .saveBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #dccfae}
@@ -346,4 +346,9 @@
  .studio,.stepBody,.toast,.confirm,.confirmWrap,.dragHint,.warn,.crestPreview canvas,.loadingDots i,.toolTile[aria-pressed=true],.chipWarn,.lookingGood span,.confetti b,
  :is(.tile,.patternTile,.preset,.sponsor)[aria-pressed=true],:is(.tile,.patternTile,.preset,.sponsor)[aria-pressed=true]::after{animation:none}
  .tile,.patternTile,.preset,.sponsor,.paletteTile,.toolTile,.meter b,.swatch,.swatchCheck,.roundSmall,.stepper,.saveBtn,.buyBtn,.chip,.chipMint,.role,.nextBtn,.placeholder{transition:none}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .quickNums button:not(:disabled,[aria-disabled=true]):hover,.preset.preset:not(:disabled,[aria-disabled=true]):hover,.tile.tile:not(:disabled,[aria-disabled=true]):hover,.paletteTile.paletteTile:not(:disabled,[aria-disabled=true]):hover,.roundSmall.roundSmall:not(:disabled,[aria-disabled=true]):hover,.role.role:not(:disabled,[aria-disabled=true]):hover,.patternTile.patternTile:not(:disabled,[aria-disabled=true]):hover,.toolTile.toolTile:not(:disabled,[aria-disabled=true]):hover,.sizeBtn.sizeBtn:not(:disabled,[aria-disabled=true]):hover,.chip.chip:not(:disabled,[aria-disabled=true]):hover,.chipWarn.chipWarn:not(:disabled,[aria-disabled=true]):hover,.sponsor.sponsor:not(:disabled,[aria-disabled=true]):hover,.stepper.stepper:not(:disabled,[aria-disabled=true]):hover,.chipMint.chipMint:not(:disabled,[aria-disabled=true]):hover,.prevBtn.prevBtn:not(:disabled,[aria-disabled=true]):hover,.nextBtn.nextBtn:not(:disabled,[aria-disabled=true]):hover,.slotCard.slotCard:not(:disabled,[aria-disabled=true]):hover,.buyBtn.buyBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

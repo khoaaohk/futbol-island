@@ -167,3 +167,8 @@
 .ballActions.ballActions.ballActions.ballActions :global(.touch-emote){transition:opacity .18s ease,visibility 0s}
 .ballActions.ballActions.ballActions.ballActions :global(.touch-emote)[data-emote-near="0"]{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility 0s .18s}
 @media(prefers-reduced-motion:reduce){.ballActions.ballActions.ballActions.ballActions :global(.touch-emote),.ballActions.ballActions.ballActions.ballActions :global(.touch-emote)[data-emote-near="0"]{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .error button:not(:disabled,[aria-disabled=true]):hover,.tabs button:not(:disabled,[aria-disabled=true]):hover,.check button:not(:disabled,[aria-disabled=true]):hover,.buy.buy:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.arrow.arrow:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

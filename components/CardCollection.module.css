@@ -282,3 +282,8 @@
 .tab::before{content:'';position:absolute;top:0;bottom:0}
 .tab[data-edge=right]::before{left:-12px;right:-18px}
 .tab[data-edge=left]::before{right:-12px;left:-18px}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .viewer .cardHost>div>div:last-child>button:not([aria-pressed]):not(:disabled,[aria-disabled=true]):hover,.turn.turn:not(:disabled,[aria-disabled=true]):hover,.searchButton.searchButton:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

@@ -19,7 +19,7 @@
 .steps li{margin:5px 0}
 .learn{border-left:3px solid #718656;padding:4px 10px;margin:10px 0;font-size:13px}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.go,.plain{min-height:46px;padding:10px 18px;border-radius:10px;font:700 15px var(--font-body,Arial),sans-serif;cursor:pointer;transition:translate .16s,box-shadow .16s}
+.go,.plain{min-height:46px;padding:10px 18px;border-radius:10px;font:700 15px var(--font-body,Arial),sans-serif;cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s}
 .go{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold)}
 .go:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 .plain{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
@@ -43,3 +43,8 @@
  .card h2{font-size:25px}
 }
 :global(.town-app):has(.board) :global(:is(.field-learn-card,nav[data-hud-triggers])){visibility:hidden;pointer-events:none}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .plain.plain:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

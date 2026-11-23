@@ -57,7 +57,7 @@
 .error{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fde2d8;color:#7a2a12;font-size:15px;line-height:1.4;font-weight:700}
 .spin{display:block;width:100%;min-height:52px;padding:10px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;
  background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);
- font:800 18px/1.1 var(--btn-font,Arial,sans-serif);cursor:pointer;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .08s,box-shadow .08s}
+ font:800 18px/1.1 var(--btn-font,Arial,sans-serif);cursor:pointer;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .08s,box-shadow .08s,filter .16s}
 .spin:active:not(:disabled){translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .spin:disabled{cursor:default;opacity:.75}
 @media(hover:hover){.spin:hover:not(:disabled){background-color:var(--btn-gold-bright,#f9d665)}.close:hover:not(:disabled){background:#e6d6b0}}
@@ -80,4 +80,9 @@
 @media(prefers-reduced-motion:reduce){
  .stage[data-phase] .crank,.stage[data-phase] .capsule,.stage[data-phase] .capsule b,.card{animation:none!important}
  .stage[data-phase=drop] .capsule{opacity:1;translate:0 66px}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.spin.spin:not(:disabled,[aria-disabled=true]):hover,.shelf.shelf:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

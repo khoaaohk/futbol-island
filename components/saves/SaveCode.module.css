@@ -31,7 +31,7 @@
    (188..292) on the first screen a new player sees. Below 350 px it takes its own centred row above Back / "I saved it". */
 @media(max-width:349px){.footer{flex-wrap:wrap;row-gap:10px}.footerCenter{position:static;order:-1;flex:1 0 100%}}
 
-.primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s;box-sizing:border-box}
+.primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s;box-sizing:border-box}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-green-edge)}
 .primary:disabled{opacity:.5;cursor:default;box-shadow:none}
 .primary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
@@ -93,3 +93,8 @@
 /* "I saved it" as a navigation button (shrinks to a check) in the dark green primary colours. */
 button.savedIt.savedIt.savedIt.savedIt{background:var(--btn-green)!important;color:var(--btn-ink-on-dark)!important;box-shadow:0 4px 0 var(--btn-green-edge)!important}
 button.savedIt.savedIt.savedIt.savedIt:not(:disabled):active{box-shadow:0 1px 0 var(--btn-green-edge)!important}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover,.chip.chip:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

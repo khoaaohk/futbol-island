@@ -19,3 +19,8 @@
 .secondary,.toolbar button,.back{background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
 .primary:not(:disabled):active,.secondary:active,.toolbar button:active,.back:active{translate:0 var(--btn-press);box-shadow:0 2px 0 var(--btn-green-edge)}
 .secondary:active,.toolbar button:active,.back:active{box-shadow:0 2px 0 var(--btn-mint-edge)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .toolbar button:not(:disabled,[aria-disabled=true]):hover,.primary.primary:not(:disabled,[aria-disabled=true]):hover,.secondary.secondary:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

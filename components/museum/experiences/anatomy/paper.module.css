@@ -89,7 +89,7 @@
 .say{margin:0;font:400 15px/1.4 var(--sans);color:#2a2a2a}
 .say b{font-weight:700}
 .btn,.ghost,.seg button{min-height:46px;padding:11px 20px;border-radius:999px;font:600 15px/1.2 var(--sans);letter-spacing:.01em;cursor:pointer;
- transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s;-webkit-tap-highlight-color:transparent}
+ transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s,filter .16s;-webkit-tap-highlight-color:transparent}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:#f7f7f3}
 .btn[data-tone="acc"]{border-color:var(--accent);background:var(--accent);color:#fff}
 .ghost{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
@@ -117,3 +117,8 @@
 .more{max-width:1120px;margin:0 auto;padding:clamp(40px,6vw,80px) 20px calc(64px + env(safe-area-inset-bottom,0px));display:grid;gap:clamp(40px,6vw,72px)}
 .srOnly{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 @media (prefers-reduced-motion:reduce){.banner,.cover,.beats li{animation:none}.btn,.ghost,.seg button{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

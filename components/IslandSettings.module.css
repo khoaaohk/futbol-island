@@ -228,13 +228,13 @@
 .settingsJourney .entryCopy small{font-size:12px}
 /* About → "For grown-ups" (DonationLinks) is the same mint Settings tile as the "For grown-ups" entry on Settings home
    (docs/ui/UI_SPEC.md tile family), not a transparent outlined field. */
-.fullModal button[data-donation-gate].secondaryButton{min-height:72px;padding:16px 20px;gap:14px;text-align:left;border:0!important;border-radius:28px 34px 25px 22px;background:var(--btn-mint) url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light!important;color:#203e38!important;box-shadow:0 6px 0 #173e3755!important;transition:transform .18s,box-shadow .18s}
+.fullModal button[data-donation-gate].secondaryButton{min-height:72px;padding:16px 20px;gap:14px;text-align:left;border:0!important;border-radius:28px 34px 25px 22px;background:var(--btn-mint) url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light!important;color:#203e38!important;box-shadow:0 6px 0 #173e3755!important;transition:transform .18s,box-shadow .18s,filter .16s}
 .fullModal button[data-donation-gate].secondaryButton:active{transform:translateY(var(--btn-press));box-shadow:0 2px 0 #173e3755!important}
 @media(prefers-reduced-motion:reduce){.fullModal button[data-donation-gate].secondaryButton{transition:none}}
 .preferenceCard{min-width:0;padding:24px;border-radius:30px 42px 28px 24px;background:#fff2d3 url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;box-shadow:0 7px 0 #173e3738}
 .settingsJourney .preferenceCard h3{font:400 28px/1.25 IslandBrush,sans-serif;margin:0 0 14px}
 .settingsJourney .times{gap:14px;margin:20px 0 6px}
-.settingsJourney .times button{min-height:104px;border:0;background:var(--btn-gold-bright);box-shadow:0 5px 0 var(--btn-gold-bright-edge);font-size:15px;transition:transform .18s,box-shadow .18s}
+.settingsJourney .times button{min-height:104px;border:0;background:var(--btn-gold-bright);box-shadow:0 5px 0 var(--btn-gold-bright-edge);font-size:15px;transition:transform .18s,box-shadow .18s,filter .16s}
 .settingsJourney .times button:nth-child(2){background:var(--btn-pink);box-shadow:0 5px 0 var(--btn-pink-edge)}
 .settingsJourney .times button:nth-child(3){background:var(--btn-mint);box-shadow:0 5px 0 var(--btn-mint-edge)}
 .settingsJourney .times button[aria-pressed=true]{background:var(--btn-green);color:var(--btn-ink-on-dark);outline:3px solid var(--btn-gold-bright);outline-offset:3px;box-shadow:0 5px 0 var(--btn-green-edge)}
@@ -373,3 +373,8 @@
 @media(max-width:359px){.fullModal .header h2.settingsTitle{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip;font-size:18px;line-height:22px}}
 /* Nov 8 2026 (owner): the friends button is not needed while fishing (FishingHost sets data-fishing on .town-app); Back keeps the top-left corner. */
 :global(.town-app[data-fishing]) .triggers .circle[data-party-open]{display:none}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .fullModal .settingsJourney .settingsEntries>button:nth-child(2):not(:disabled,[aria-disabled=true]):hover,.fullModal button[data-donation-gate].secondaryButton:not(:disabled,[aria-disabled=true]):hover,.settingsJourney .times button:not(:disabled,[aria-disabled=true]):hover,.settingsJourney .times button:nth-child(3):not(:disabled,[aria-disabled=true]):hover,.secondaryButton.secondaryButton:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

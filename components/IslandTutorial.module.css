@@ -16,7 +16,7 @@
 .close{grid-area:close;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;min-width:48px;padding:0;border:0;border-radius:50%;background:var(--ink);color:var(--paper);box-shadow:2px 2px 0 var(--flag);cursor:pointer;transition:transform .16s ease}
 .close:active{transform:scale(.94)}
 /* No hover transform: the island's close face has a solid drop shadow, and rotating/moving it skewed that shadow (user, Oct 13). */
-.mute{grid-area:mute;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;padding:0;border:3px solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-cream,#fff1d3);color:var(--ink);box-shadow:0 var(--btn-lift,4px) 0 var(--btn-cream-edge,#193f3733),var(--btn-halo,0 0 0 4px #fff2cd40);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.mute{grid-area:mute;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;padding:0;border:3px solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-cream,#fff1d3);color:var(--ink);box-shadow:0 var(--btn-lift,4px) 0 var(--btn-cream-edge,#193f3733),var(--btn-halo,0 0 0 4px #fff2cd40);cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s}
 .mute:active{translate:0 3px;box-shadow:0 1px 0 var(--btn-cream-edge,#193f3733)}
 .mute[aria-pressed=true]{background:#ffe0d3;border-color:var(--flag)}
 
@@ -128,4 +128,9 @@
  .tutorial *,.tutorial *::before,.tutorial *::after{animation:none!important;transition:none!important}
  /* The progress segment still shows where the scene is, without moving. */
  .progress button>span>i{transform:scaleX(.5)}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .mute.mute:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

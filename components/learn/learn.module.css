@@ -103,7 +103,7 @@
    reduced motion / calm; the current chapter is the same pink chip as the desktop nav; pressed icon sinks 3px, no hover colour */
 .menu{display:none}
 @media(max-width:640px){.menu{display:block;flex:none}}
-.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:var(--navigation-width,76px);height:44px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font:600 14px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);list-style:none;cursor:pointer;transition:translate .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent}
+.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:var(--navigation-width,76px);height:44px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font:600 14px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);list-style:none;cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s;-webkit-tap-highlight-color:transparent}
 .menuBtn::-webkit-details-marker{display:none}
 .menuIco{position:relative;display:block;width:20px;height:10px}
 .menuIco i{position:absolute;left:0;width:20px;height:2px;border-radius:1px;background:currentColor;transition:transform .22s var(--ease)}
@@ -164,7 +164,7 @@
 /* ---- buttons and links ---------------------------------------------------------------------------------------------------- */
 .cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;padding:0 30px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);
  border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
- box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;letter-spacing:0;text-align:center;text-decoration:none;position:relative;overflow:hidden;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+ box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;letter-spacing:0;text-align:center;text-decoration:none;position:relative;overflow:hidden;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1),filter .16s}
 /* audit Nov 3: 44px tap targets for the bar's logo (22px tall) and Play pill (36px); invisible, the look is unchanged */
 .root .logo{position:relative}
 .root .logo::after{content:"";position:absolute;inset:-11px -4px}
@@ -175,7 +175,7 @@
 /* states match the game and the other pages (docs/ui/BUTTONS.md): no hover colour change; pressed sinks and shortens the edge; the global focus ring */
 .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 /* secondary button (docs/ui/BUTTONS.md): mint face, 3px rim, mint edge, same height as the gold primary, sinks on press (owner, Nov 3) */
-.root .more{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:56px;padding:0 26px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font-size:19px;font-weight:800;line-height:1.15;text-decoration:none;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+.root .more{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:56px;padding:0 26px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font-size:19px;font-weight:800;line-height:1.15;text-decoration:none;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1),filter .16s}
 .root .more:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
 .chev{width:.8em;height:.8em;margin-top:2px}
 .ghostBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:500 15px/1.2 var(--sans);cursor:pointer}
@@ -257,7 +257,7 @@
 .reelCtl{display:none;justify-content:flex-end;gap:14px;padding:0 var(--rpad)}
 .reel[data-js] .reelCtl{display:flex}
 /* game style (owner, Nov 3): the round gold button with the cream rim and gold edge, like the Konbini arrows; sinks on press */
-.reelArrow{display:grid;place-items:center;box-sizing:border-box;width:48px;height:48px;border-radius:50%;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:opacity .2s,translate .16s,box-shadow .16s}
+.reelArrow{display:grid;place-items:center;box-sizing:border-box;width:48px;height:48px;border-radius:50%;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:opacity .2s,translate .16s,box-shadow .16s,filter .16s}
 .reelArrow:active:not(:disabled){translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .reelArrow svg{width:22px;height:22px}
 .reelArrow:disabled{opacity:.45;cursor:default;box-shadow:0 0 0 transparent;translate:0 var(--btn-press,3px)}
@@ -331,7 +331,7 @@
 .dot[aria-current] .dotFill{transform:none}
 .slides[data-js]:not([data-calm]) .dot[aria-current] .dotFill{animation:fill var(--dur) linear both;animation-play-state:paused}
 .slides[data-js][data-run]:not([data-calm]) .dot[aria-current] .dotFill{animation-play-state:running}
-.slidesToggle{display:grid;place-items:center;box-sizing:border-box;width:56px;height:56px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.slidesToggle{display:grid;place-items:center;box-sizing:border-box;width:56px;height:56px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:translate .16s,box-shadow .16s,filter .16s}
 .slidesToggle:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .slidesToggle svg{width:20px;height:20px;fill:currentColor}
 .slidesToggle .icoPause{display:block}
@@ -469,3 +469,8 @@
 @media(max-width:600px){.facts,.linkGrid{grid-template-columns:1fr}}
 .root .head .facts,.root .head .linkGrid{margin-top:clamp(32px,6vh,64px)}
 .root .head .facts+.ctaRow{margin-top:clamp(24px,4vh,40px)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .cta.cta:not(:disabled,[aria-disabled=true]):hover,.more.more:not(:disabled,[aria-disabled=true]):hover,.reelArrow.reelArrow:not(:disabled,[aria-disabled=true]):hover,.slidesToggle.slidesToggle:not(:disabled,[aria-disabled=true]):hover,.menuBtn.menuBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

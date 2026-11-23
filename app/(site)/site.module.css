@@ -179,7 +179,7 @@
 .page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;box-sizing:border-box;padding:0 30px;
  border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
  color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;letter-spacing:0;text-align:center;text-decoration:none;
- transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+ transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1),filter .16s}
 @media(hover:hover){.page .cta:hover{scale:1.03}}
 .page .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 @media(prefers-reduced-motion:reduce){.page .cta{transition:none}}
@@ -502,4 +502,9 @@ details[open]>summary .plus{transform:rotate(45deg)}
  .main:has(>[data-toc]) [data-keep-reading]{grid-column:1/-1}
  .main:has(>[data-toc]) .intro .quick{max-width:none;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;column-gap:var(--s4);padding:var(--s4)}
  .main:has(>[data-toc]) .quick .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .page:has([data-library-hero],[data-nav-section=library]) .menuList a[data-nav-cur=library]:not(:disabled,[aria-disabled=true]):hover,.page:has([data-games-page],[data-nav-section=games]) .menuList a[data-nav-cur=games]:not(:disabled,[aria-disabled=true]):hover,.cta.cta:not(:disabled,[aria-disabled=true]):hover,.menuBtn.menuBtn:not(:disabled,[aria-disabled=true]):hover,.quizAgain.quizAgain:not(:disabled,[aria-disabled=true]):hover,.animBtn.animBtn:not(:disabled,[aria-disabled=true]):hover,.playBarBtn.playBarBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }

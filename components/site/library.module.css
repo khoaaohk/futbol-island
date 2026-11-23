@@ -86,7 +86,7 @@ ul.examples{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 .examples a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:40px;padding:6px 14px;border-radius:var(--r-pill);background:var(--card);color:var(--ink);font-size:16px;line-height:1.25;font-weight:600;text-decoration:none;transition:background-color .16s}
 @media(hover:hover){.examples a:hover{background:color-mix(in srgb,var(--gold) 35%,var(--card))}}
 .examples a:focus-visible,.go:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
-.go{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap,48px);margin-top:4px;padding:0 22px 2px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d);font-size:17px;line-height:1.2;font-weight:800;text-decoration:none;transition:translate .12s,box-shadow .12s}
+.go{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap,48px);margin-top:4px;padding:0 22px 2px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d);font-size:17px;line-height:1.2;font-weight:800;text-decoration:none;transition:translate .12s,box-shadow .12s,filter .16s}
 .go:active{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 @media(hover:hover){.go:hover{background:color-mix(in srgb,var(--gold) 40%,var(--btn-mint,#beded1))}}
 @media(min-width:900px){.sec{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:var(--s5)}}
@@ -110,7 +110,7 @@ ul.examples{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 .shelfMain [id]{scroll-margin-top:84px}
 nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .menu li{margin:0;max-width:none}
-.menu ul a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap);padding:0 16px;border-radius:var(--r-pill);background:var(--surface);color:var(--ink);font-size:16px;line-height:1.2;font-weight:700;text-decoration:none;transition:background-color .16s}
+.menu ul a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:var(--tap);padding:0 16px;border-radius:var(--r-pill);background:var(--surface);color:var(--ink);font-size:16px;line-height:1.2;font-weight:700;text-decoration:none;transition:background-color .16s,filter .16s}
 @media(hover:hover){.menu ul a:hover{background:color-mix(in srgb,var(--gold) 45%,var(--surface))}}
 .menu ul a[data-on]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
 .menu a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px}
@@ -124,7 +124,7 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
  nav.menu li{scroll-snap-align:start}
  /* the sliding pill (LibraryMenuSpy.tsx): the site's button (rim, mint, a soft bottom edge); the chips go clear once it exists */
  nav.menu li[data-pill]{position:absolute;left:0;top:0;z-index:0;box-sizing:border-box;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d);pointer-events:none;opacity:0;transform-origin:0 50%;scroll-snap-align:none;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .2s}
- nav.menu ul[data-pill-on] a{position:relative;z-index:1;background:transparent;transition:translate .12s,color .2s}
+ nav.menu ul[data-pill-on] a{position:relative;z-index:1;background:transparent;transition:translate .12s,color .2s,filter .16s}
  nav.menu ul[data-pill-on] a[data-on]{background:transparent;color:var(--btn-ink,#244d40)}
  nav.menu ul a:active{translate:0 var(--btn-press,3px)}
  nav.menu ul::-webkit-scrollbar{display:none}
@@ -163,3 +163,11 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 .kicker{display:block;width:100%;font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);opacity:.75}
 .goRow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .goAlt{background:var(--paper)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .go.go:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}
+/* Shared button hover on the rail and chip-bar entries (owner, Nov 23 2026: Back, Overview and every section pill): brighten + the gold
+   ring, drawn inside like this rail's focus ring (-3px) so the scrolling list never clips it. Hover only; the press stays as it is. */
+@media(hover:hover) and (pointer:fine){.menu ul a:hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:-3px}}

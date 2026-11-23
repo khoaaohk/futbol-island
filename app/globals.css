@@ -607,7 +607,20 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
  --phone-gutter:18px;
  --btn-shadow-gold:0 var(--btn-lift) 0 var(--btn-gold-edge),var(--btn-halo);
  --btn-shadow-gold-pressed:0 2px 0 var(--btn-gold-edge),var(--btn-halo);
+ /* ONE button hover (owner, Nov 23 2026: the coach app's gold Open, components/coach/coach.module.css round 4B, plus the gold ring
+    he saw around the site menu button): a mouse hover only brightens a touch (filter .16s) and, on the raised game-style buttons
+    (gold, cream, mint pills, chips, rail pills), shows the gold ring as an outline, so the layout and the lip shadow never change.
+    Hover only: press/click effects, sizes and handlers stay each button's own. */
+ --btn-hover-filter:brightness(1.05);--btn-hover-ring:3px solid #ffd451;--btn-hover-ring-offset:3px;
 }
+/* Every button gets the brightness (zero specificity: any button with its own filter or transition keeps it; the raised families
+   add the ring and append filter to their own transition lists in their modules). Mouse only; never touch screens; never the
+   thumb controls (island action cluster, arcade/konbini action keys) or a button holding a canvas. */
+:where(button,summary,input[type=button],input[type=submit]){transition:filter .16s}
+@media(hover:hover) and (pointer:fine){
+ :where(button,summary,input[type=button],input[type=submit]):where(:not(:disabled,[aria-disabled=true],:has(canvas),[data-action],[data-arcade-action],[data-konbini-action],.touch-shoot,.touch-juggle,.touch-emote,.travel-actions *)):hover{filter:var(--btn-hover-filter)}
+}
+@media(prefers-reduced-motion:reduce){:where(button,summary,input[type=button],input[type=submit]){transition:none}}
 /* Island top HUD row (Paths · coins wallet · Settings): one 44px row, 20px down on desktop, 16px on phones, below the notch.
    The wallet (IslandJobs.module.css) sits in it; ride prompts (Hop off / Land on truck) hang a clear gap below it. */
 :root{--island-hud-row-top:calc(20px + env(safe-area-inset-top,0px));--island-hud-row-height:var(--btn-height);--island-hud-row-gap:14px;--island-hud-pair-gap:8px;--island-hud-edge:24px}

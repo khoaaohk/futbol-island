@@ -103,3 +103,8 @@
 .rollBtn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #1d1d1b;background:#fbfbf8;color:#1d1d1b;font:600 14px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;cursor:pointer}
 .rollBtn:active{transform:scale(.95)}
 @media (max-width:560px){.rollBtn{padding:0 12px;font-size:13px}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .rollBtn.rollBtn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

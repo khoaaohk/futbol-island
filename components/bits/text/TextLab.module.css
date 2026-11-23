@@ -13,3 +13,8 @@
 .accent{color:#2a5bd7}
 .noCard{color:#6b6a66}.yellow{color:#c99a12}.red{color:#e4322b}
 .mini{min-height:44px;padding:6px 12px;border:1px solid #d9d6cf;border-radius:999px;background:#fff;font:600 13px var(--btn-font);cursor:pointer}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .mini.mini:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

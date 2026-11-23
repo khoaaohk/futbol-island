@@ -68,7 +68,7 @@
 .chip[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 .chipDot{width:16px;height:16px;border-radius:50%;border:2px solid #fff8df;flex:none}
 .swatches{display:flex;flex-wrap:wrap;gap:10px}
-.colorSwatch{position:relative;width:40px;height:40px;padding:0;border:3px solid var(--btn-rim);border-radius:50%;box-shadow:0 3px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:transform .15s}
+.colorSwatch{position:relative;width:40px;height:40px;padding:0;border:3px solid var(--btn-rim);border-radius:50%;box-shadow:0 3px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:transform .15s,filter .16s}
 .colorSwatch:hover{transform:translateY(-2px)}.colorSwatch:active{transform:translateY(var(--btn-press))}
 .colorSwatch[aria-pressed=true]{box-shadow:0 0 0 3px var(--btn-ink),0 3px 0 3px var(--btn-ink)}
 .colorSwatch[aria-pressed=true]::after{content:'';position:absolute;inset:11px;border-radius:50%;background:#fff8df;box-shadow:0 0 0 2px #244d4055}
@@ -220,3 +220,9 @@
 
 /* Oct 23 2026: Shuffle sits under the preview, re-rolling the whole look. */
 .shuffle{margin-top:12px;width:100%}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .moveArrow.moveArrow:not(:disabled,[aria-disabled=true]):hover,.numberChip.numberChip:not(:disabled,[aria-disabled=true]):hover,.colorSwatch.colorSwatch:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+ .chip.chip:not(:disabled,[aria-disabled=true]):hover{outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

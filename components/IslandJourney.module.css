@@ -171,3 +171,8 @@
    (IslandTutorial.module.css) on one full-width row; it keeps its resting min-height, so the page below barely moves. */
 .arrival[data-tutorial]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;align-items:start;padding:22px 24px}
 @media(max-width:600px){.arrival.arrival[data-tutorial]{grid-template-rows:auto;padding:16px 14px 14px}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .sideQuests>button:last-child:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

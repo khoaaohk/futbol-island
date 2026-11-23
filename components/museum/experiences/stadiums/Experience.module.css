@@ -176,3 +176,8 @@
 .root :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
 
 @media (min-width:700px) and (max-height:1000px){.panel{gap:12px;padding-top:22px;padding-bottom:22px}.panelTitle{font-size:clamp(26px,2.8vw,36px)}.beats li{padding:7px 0}.beats p{font-size:14px;line-height:1.4}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .name.name:not(:disabled,[aria-disabled=true]):hover,.chip.chip:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

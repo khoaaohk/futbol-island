@@ -19,7 +19,7 @@
 .who{flex:1;min-width:0;display:flex;flex-direction:column}
 .who b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who small{font-size:11px;color:#687365}
-.sell,.yes,.keep{font:inherit;min-height:var(--btn-height,44px);border:0;border-radius:var(--btn-radius,999px);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;translate:0 0;transition:translate .08s}
+.sell,.yes,.keep{font:inherit;min-height:var(--btn-height,44px);border:0;border-radius:var(--btn-radius,999px);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;translate:0 0;transition:translate .08s,filter .16s}
 .sell,.yes{background:var(--btn-green,#244d40);color:var(--btn-ink-on-dark,#fff3d2);box-shadow:0 4px 0 var(--btn-green-edge,#17352b)}
 .sell{display:inline-flex;align-items:center;gap:8px;flex:none}
 .sell span{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);font-size:11px;font-weight:900;box-shadow:inset 0 0 0 2px #fff2cd}
@@ -40,3 +40,8 @@
 @keyframes coinUp{0%{opacity:0;transform:translate(0,14px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(calc((var(--i) - 2) * 14px),-54px) scale(1)}}
 @media(max-width:600px){.list{grid-template-columns:1fr}.confirm{flex-direction:column;text-align:center}.actions{justify-content:center}.keeper strong{font-size:20px}.confirm h3{font-size:21px}.big{--w:84px}.keeper p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.burst{display:none}.sell,.yes,.keep{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .sell.sell:not(:disabled,[aria-disabled=true]):hover,.keep.keep:not(:disabled,[aria-disabled=true]):hover,.yes.yes:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

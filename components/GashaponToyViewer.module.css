@@ -29,7 +29,7 @@
 .kind{padding:2px 10px;border-radius:999px;background:#244d4014}
 .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;pointer-events:auto}
 .act{min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#244d4016;color:var(--ink);font:800 15px/1 var(--font-body,Arial,sans-serif);cursor:pointer;
- transition:transform .12s ease,background-color .15s ease;-webkit-tap-highlight-color:transparent}
+ transition:transform .12s ease,background-color .15s ease,filter .16s;-webkit-tap-highlight-color:transparent}
 .act[data-primary]{background:var(--ink);color:#fff8e6}
 .act:hover{background:#244d4024}.act[data-primary]:hover{background:#1b3c32}
 .act:active{transform:scale(.96)}
@@ -38,3 +38,8 @@
 @media(max-width:600px),(pointer:coarse){.chip{top:calc(78px + env(safe-area-inset-top,0px))}}
 @media(max-height:560px){.actions{margin-top:2px}.status{display:none}.card{bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:3px}.name{font-size:22px}.line{display:none}}
 @media(prefers-reduced-motion:reduce){.root{animation:none}.hint,.chip,.act{transition:none}.chip{animation:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .act.act:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

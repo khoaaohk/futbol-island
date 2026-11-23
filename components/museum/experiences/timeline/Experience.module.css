@@ -35,7 +35,7 @@
 
 /* buttons */
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.btn,.ghost{min-height:48px;padding:0 22px;border-radius:999px;font:600 15px/1.2 var(--sans);cursor:pointer;transition:transform .14s,background-color .2s,opacity .2s}
+.btn,.ghost{min-height:48px;padding:0 22px;border-radius:999px;font:600 15px/1.2 var(--sans);cursor:pointer;transition:transform .14s,background-color .2s,opacity .2s,filter .16s}
 .btn{border:1.5px solid var(--ink);background:var(--ink);color:#f7f7f3}
 .ghost{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
 .btn:active,.ghost:active{transform:scale(.96)}
@@ -188,3 +188,8 @@
 
 /* Paper halo (shared look, anatomy/paper-kit PAPER_CSS): one soft diffuse shadow under each base plate. */
 .root :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .btn.btn:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

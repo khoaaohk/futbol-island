@@ -15,7 +15,7 @@
    page, not an overlay: it scrolls with the document, and its three links are buttons in the same sans (never IslandBrush). */
 .page{min-height:100svh;display:grid;place-items:center;box-sizing:border-box;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));background:#244d40;color:#244d40}
 .links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:100%}
-.link{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 26px;border:3px solid #fff2cd;border-radius:999px;background:#e9c16b;color:#244d40;font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 4px 0 #a8863d;transition:translate .12s,box-shadow .12s}
+.link{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 26px;border:3px solid #fff2cd;border-radius:999px;background:#e9c16b;color:#244d40;font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 4px 0 #a8863d;transition:translate .12s,box-shadow .12s,filter .16s}
 .link:hover{background:#efcd80}
 .link:active{translate:0 2px;box-shadow:0 2px 0 #a8863d}
 .link:focus-visible{outline:3px solid #244d40;outline-offset:3px}
@@ -23,3 +23,8 @@
 .linkQuiet:hover{background:#fffdf5}
 .linkQuiet:active{box-shadow:0 2px 0 #cbb68a}
 @media (prefers-reduced-motion:reduce){.link{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .button.button:not(:disabled,[aria-disabled=true]):hover,.link.link:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

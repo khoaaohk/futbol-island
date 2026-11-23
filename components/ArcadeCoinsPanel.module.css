@@ -49,8 +49,13 @@
 @media(max-width:600px),(pointer:coarse){.dialog header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 18px 18px}}
 
 /* Follow-up (Sep 28): "Visit store" goes somewhere new, so it is a primary action in the arcade neon palette, not a Done/Back nav pill that collapses to a checkmark. */
-.pack .storeLink{min-height:var(--btn-height,44px);padding:8px 18px;border:var(--btn-rim-width,3px) solid #ff85d9;border-radius:var(--btn-radius,999px);background:#35213f;color:#ffeafa;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #1b1027,0 0 14px #ff62c233;transition:translate .15s,box-shadow .15s}
+.pack .storeLink{min-height:var(--btn-height,44px);padding:8px 18px;border:var(--btn-rim-width,3px) solid #ff85d9;border-radius:var(--btn-radius,999px);background:#35213f;color:#ffeafa;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #1b1027,0 0 14px #ff62c233;transition:translate .15s,box-shadow .15s,filter .16s}
 .pack .storeLink:hover{background:#4b2853;box-shadow:0 4px 0 #1b1027,0 0 20px #ff62c24d}
 .pack .storeLink:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 #1b1027,0 0 18px #ff62c24d}
 .pack .storeLink:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(prefers-reduced-motion:reduce){.pack .storeLink{transition:none}}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .storeLink.storeLink:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}

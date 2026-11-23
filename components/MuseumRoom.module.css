@@ -20,7 +20,7 @@
 .root .prompt{border:1.5px solid var(--m-ink);background:var(--m-ink);background-image:none;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66;font-weight:600}
 .root .prompt:hover{background:#3a3a37;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66}
 .error{position:absolute;inset:32% 12%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;text-align:center;padding:16px}
-.error button,.gold,.mint{min-height:44px;min-width:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;letter-spacing:.01em;cursor:pointer;transition:background .16s,color .16s,transform .12s}
+.error button,.gold,.mint{min-height:44px;min-width:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;letter-spacing:.01em;cursor:pointer;transition:background .16s,color .16s,transform .12s,filter .16s}
 .mint{background:transparent;color:var(--m-ink)}.gold:hover{background:#3a3a37}.mint:hover{background:#1d1d1b0d}
 .error button:active,.gold:active,.mint:active{transform:scale(.97)}.gold:disabled,.mint:disabled{opacity:.4;cursor:default}
 /* Zoomed: section arrows either side of the case, the exhibit card under it (portrait) or beside it (landscape). */
@@ -81,7 +81,7 @@
 @media(prefers-reduced-motion:reduce){.yearPop{animation:none}}
 
 /* "Step inside": opens the case's full-screen experience (components/museum/experiences). */
-.stepInside{min-height:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:transform .16s,background .16s}
+.stepInside{min-height:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:transform .16s,background .16s,filter .16s}
 .stepInside:active{transform:scale(.96)}.stepInside:hover{background:#3a3a37}
 @media(prefers-reduced-motion:reduce){.stepInside{transition:none}}
 
@@ -98,3 +98,8 @@
  * `button.button.button{position:relative}` out-ranked the plain .close rule, so it fell to the panel's top left). */
 .panel button.close.close{position:absolute;top:14px;right:14px;left:auto}
 .panel>h2{min-height:44px;display:flex;align-items:center}
+
+/* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
+@media(hover:hover) and (pointer:fine){
+ .gold.gold:not(:disabled,[aria-disabled=true]):hover,.mint.mint:not(:disabled,[aria-disabled=true]):hover,.stepInside.stepInside:not(:disabled,[aria-disabled=true]):hover,.arrow.arrow:not(:disabled,[aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
+}
