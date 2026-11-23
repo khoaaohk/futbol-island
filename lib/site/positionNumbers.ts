@@ -50,7 +50,9 @@ export const NUMBERS_PAGE={path:NUMBERS_PATH,crumb:'Positions by number',
   {q:'What is a CDM in soccer?',a:'CDM stands for central defensive midfielder. It is the player who holds in front of the defenders, blocks passes through the middle and moves the ball on, often called the number 6.'},
   {q:'What does LCM mean in soccer?',a:'LCM means left central midfielder: the central midfielder on the left side when a team plays two or three in the middle. RCM is the one on the right.'},
   {q:'What does DF mean in soccer?',a:'DF, or sometimes D, simply means defender. A team sheet uses it for any defender, whether that player is a center back, a fullback or a wingback.'},
-  {q:'What are the 11 positions in soccer?',a:'In a 4-3-3: goalkeeper, right back, left back, two center backs, a defensive, a central and an attacking midfielder, a right winger, a striker and a left winger.'}] as Faq[],
+  {q:'What are the 11 positions in soccer?',a:'In a 4-3-3: goalkeeper, right back, left back, two center backs, a defensive, a central and an attacking midfielder, a right winger, a striker and a left winger.'},
+  {q:'What number is a striker in soccer?',a:'Usually 9. The 9 is the striker who plays highest up the field, nearest the other team’s goal. The wingers on either side are often 7 and 11.'},
+  {q:'What position is number 10 in soccer?',a:'The attacking midfielder: the playmaker who plays just behind the striker and makes the last pass. In a 4-4-2 the 10 is often a second striker.'}] as Faq[],
  lessons:pick(['learn11_shape','learn9_shape','learn7_roles']),
 };
 /** The 1-11 table with the letters each number usually carries in the site's 4-3-3 diagram. */
