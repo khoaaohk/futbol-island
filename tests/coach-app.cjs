@@ -461,4 +461,40 @@ for(const arr of [300,605,720,900,1205]){
  const R8=load('lib/coach/route.ts');ok(R8.parseHash('#tool=lineup&format=8v8').format==='8v8','#tool=lineup&format=8v8 is read');
  {const sh=load('lib/site/tools/shapes8.ts').SHAPES_8V8;ok(sh.map(x=>x.shape).join()==='3-3-1,3-2-2,2-3-2','8v8 shapes 3-3-1, 3-2-2, 2-3-2');}
 }
+/* ---- 14. Ten languages (round 4E, Nov 22 2026; lib/i18n/appLangs.ts, lib/coach/lang/*.ts, lib/scan/lang/*.ts) ---- */
+{
+ const A=load('lib/i18n/appLangs.ts'),W=load('lib/coach/words.ts').WORDS,SW=load('lib/scan/words.ts').WORDS;
+ ok(A.APP_LANGS.join()==='en,es,pt,fr,de,it,nl,pl,fi,ja','the ten: en es pt fr de it nl pl fi ja');
+ ok(A.LANG_NAMES.ja==='日本語'&&A.LANG_NAMES.pt==='Português'&&A.LANG_NAMES.fi==='Suomi'&&A.LOCALE.pt==='pt-BR','each in its own name; Portuguese is Brazilian');
+ ok(A.langFromNavigator(['ja-JP'])==='ja'&&A.langFromNavigator(['pt-PT','en'])==='pt'&&A.langFromNavigator(['zh-CN','de-AT'])==='de'&&A.langFromNavigator(['ar'])==='en'&&A.langFromNavigator([])==='en','the phone\'s language, else English');
+ ok(A.langParam('en')===''&&A.langParam('fi')==='?lang=fi'&&A.langParam('ja','&')==='&lang=ja'&&A.siteLang('de')==='en'&&A.siteLang('es')==='es','?lang= for all ten; the site stays English and Spanish');
+ const S=load('lib/coach/store.ts');ok(S.cleanStore({v:1,lang:'ja'}).lang==='ja'&&S.cleanStore({v:1,lang:'xx'}).lang===null,'the saved choice: any of the ten, nothing else');
+ ok(load('lib/scan/store.ts').cleanStore({v:1,lang:'fi'}).lang==='fi','Scan Trainer saves any of the ten');
+ /* every language has every key (deep), the same value types, functions that return text; and no value is the English one except
+    the intentional ones: numbers and units, the brand, ages, file names, cognates */
+ const SAME=new Set(['minCol','min','stoppage','csv','total','fmt','minutesN','partOf','fairEveryone','vs','sec','sessions.60','sessions.90','sessions.180','ages.u8','ages.u10','ages.u12','ages.u14','ofN','gk','print','pause','start','preview','show','formation','sounds.pop','sounds.tick','sounds.bell','modes.mix','numbers','modes.numbers','arrows','modes.arrows','score','tabSummary','summary','sharedTitle','teamAge','csvWords.total','csvWords.number','csvWords.name','name','squad','titleTeam','teammates','screen','session','training','navTraining','groupTraining','plansTitle','drillsName','lineDrills','status','soundOn','soundOff','sound','in','out','home','opponent','details','plan','planClock','cancel','editT','share','copyLink','retry','openTool','offline','nameOpt','number','fwd','mid','def','squadFrom','playersLbl','tabTeam','homeTeam','continueOn','csvWords.period','periodName','online','minuteN','resume','fairGood','end','tools','ok','info','team','format','teamName','lang','scorers','date','kickTime','kickOff','kickOffNext','endPeriod','time','colourNames.pink','colourNames.orange',/* cognates a native would write the same: fr Coach, Minutes; de in, Team; nl later, Open plan */'appShort','titleHome','tabMinutes','subIn','teamN','delay','openPlan']);
+ const walk=(en,x,where,out)=>{for(const k of Object.keys(en)){const a=en[k],b=x[k],p=where+k;out.keys++;
+  if(!(k in x)){out.bad.push('missing '+p);continue;}if(typeof a!==typeof b){out.bad.push('type '+p);continue;}
+  if(typeof a==='function'){for(const g of [[1,2],[3,7],[0,4],['Ana','Ben']]){let e;try{e=a(...g);}catch{continue;}if(typeof e!=='string')continue;const r=b(...g);if(typeof r!=='string'||!r&&e)out.bad.push('fn '+p);}
+   if(a(3,7)===b(3,7)&&a(1,2)===b(1,2))out.same.push(p);}
+  else if(a&&typeof a==='object')walk(a,b,p+'.',out);else if(a===b&&a!=='')out.same.push(p);}
+  for(const k of Object.keys(x))if(!(k in en))out.bad.push('extra '+where+k);};
+ let oddN=0;for(const [name,D] of [['coach',W],['scan',SW]])for(const l of A.APP_LANGS){if(l==='en')continue;const out={keys:0,bad:[],same:[]};walk(D.en,D[l],'',out);
+  ok(!out.bad.length,`${name} ${l}: every key (${out.keys}) ${out.bad.slice(0,5).join(', ')}`);
+  const odd=out.same.filter(k=>!SAME.has(k)&&!SAME.has(k.split('.').pop()));
+  if(odd.length)console.log(`ODD ${name} ${l}: ${odd.map(k=>k+'='+String(k.split('.').reduce((o,x)=>o[x],D[l])).slice(0,30)).join(', ')}`);oddN+=odd.length;}
+ ok(!oddN||process.env.SHOW_ODD,'nothing left in English but numbers, units, names and cognates');
+ ok(W.ja.fmt('7v7')==='7人制'&&W.ja.fmt('futsal')==='フットサル'&&W.de.fmt('7v7')==='7v7','formats: 7人制 in Japanese');
+ ok(W.ja.playersN(5).includes('5')&&W.pl.playersN(1)!==W.pl.playersN(5)&&W.fi.playersN(1)!==W.fi.playersN(5),'counts: Polish and Finnish plural forms');
+ ok(/goleiro/i.test(W.pt.keeper+W.pt.gkMark)&&/Torwart/.test(W.de.keeper)&&/gardien/i.test(W.fr.keeper)&&/portiere/i.test(W.it.keeper)&&/keeper/i.test(W.nl.keeper)&&/bramkarz/i.test(W.pl.keeper)&&/maalivahti/i.test(W.fi.keeper)&&/キーパー|GK/.test(W.ja.keeper),'the keeper in each country\'s word');
+ const app=read('components/coach/CoachApp.tsx'),pt=read('components/coach/PlansTool.tsx'),sc=read('components/scan/ScanApp.tsx'),bd=read('components/coaches-board/BoardApp.tsx');
+ ok(/APP_LANGS\.map\(l=>/.test(app)&&/LANG_NAMES\[l\]/.test(app)&&/isAppLang\(q\)\?q:l0\?\?phoneLang\(\)/.test(app)&&/documentElement\.lang=LOCALE\[lang\]/.test(app),'Language sheet: the ten in their own names; ?lang=, the saved choice, the phone; <html lang>');
+ ok(/langParam\(lang,'&'\)/.test(pt)&&/planLang/.test(pt)&&/plansEnNote/.test(pt),'?lang= to /scan and /board for all ten; plans in English with a note');
+ ok(/options=\{APP_LANGS\}/.test(sc)&&/isAppLang\(q\)/.test(sc)&&/isAppLang\(q\)/.test(bd)&&/BOARD_TITLE/.test(bd),'/scan and /board take all ten');
+ for(const l of A.APP_LANGS)ok(bd.includes(`${l}:'${W[l].boardName}'`),'/board title = the coach app\'s board name, '+l);
+ ok(/toLocaleDateString\(LOCALE\[lang\]/.test(read('components/coach/TabPages.tsx')),'dates via Intl in the chosen language');
+ ok(/inline:true/.test(app)&&/data-lineup-undo/.test(app)&&/toastInline\{position:static/.test(read('components/coach/coach.module.css')),'the lineup Undo sits under the bench, not over it (4D leftover), 6 s');
+ ok(/html:lang\(ja\)\{--btn-font:Arial,'Hiragino Sans'/.test(read('components/motion/motion.css')),'Japanese: the phone\'s own font, no webfont');
+ for(const f of ['app/coach/layout.tsx','app/scan/layout.tsx','app/board/layout.tsx'])ok(/index:false/.test(read(f)),f+' stays noindex');
+}
 console.log(`coach-app: ${checks} checks passed`);
