@@ -543,3 +543,40 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .nums b small{color:#3d4a42}
 .stepTag{font-size:14px;font-weight:700;letter-spacing:0;text-transform:none}
 .srOnly{font-size:20px}
+/* ---- Round 4C (Nov 22 2026): game-day logic UI on the shared pieces (segTrack/segBtn, .btn, sheets) ---- */
+/* C5: attendance, three visible choices under each squad row */
+.attend{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr));height:48px;margin:2px 0 2px 74px}
+.attend .segBtn{min-height:40px;font-size:15px}
+.attend .segBtn[data-att=late][aria-pressed=true]{background:#fdefc6;color:#244d40;box-shadow:0 3px 0 #e6cf8f}
+.attend .segBtn[data-att=away][aria-pressed=true]{background:#fffaf0;color:var(--ink);box-shadow:inset 0 0 0 1.5px #e6d6b0}
+@media (max-width:420px){.attend{margin-left:60px}}
+/* C17: game details sheet, the game line, the score row on Match day */
+.detailsPair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detailsPair .sec{margin-top:24px}
+.gameLine{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:4px 0 8px;font-size:18px}
+.gameLine b{font-weight:700;font-variant-numeric:tabular-nums}
+.gameLine span{font-size:15px;color:var(--soft)}
+.scoreRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 8px}
+.scoreSide{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;background:var(--tint);border-radius:16px;padding:10px 8px}
+.scoreName{font-size:15px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scoreCtl{display:flex;align-items:center;gap:12px}
+.btn.scoreBtn{min-height:44px;min-width:44px;padding:0;font-size:24px;line-height:1}
+.scoreNum{min-width:40px;text-align:center;font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.scorers{font-size:15px;color:var(--soft);margin:0 0 6px}
+/* C14: minutes played in each Off / On chip */
+.swapMin{margin-left:auto;font-style:normal;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--soft);flex:0 0 auto}
+/* B3: the overdue line above the buttons */
+.overdue{font-size:15px;font-weight:600;color:var(--ink);background:#fdefc6;border-radius:12px;padding:8px 12px;margin:0 0 12px}
+.checkNote{font-size:14px;color:var(--soft)}
+/* B8: phone landscape (844 x 390): the Next change panel is the right column at full height, its buttons fixed at its foot,
+   so Kick off / Done / the panel are always on screen */
+@media (orientation:landscape) and (max-height:520px){
+ .live{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+ .liveTop{padding-top:max(4px,env(safe-area-inset-top));padding-bottom:2px}
+ .liveTop .btn{min-height:44px}
+ .liveMid{grid-row:2;grid-column:1;min-height:0}
+ .card{grid-row:2;grid-column:2;max-height:none;min-height:0;border-radius:22px 0 0 0;display:flex;flex-direction:column;padding-bottom:0}
+ .card>.cardBtns,.card .cardBtns{position:sticky;bottom:0;margin-top:auto;background:#fff;padding:10px 0 max(10px,env(safe-area-inset-bottom));z-index:1}
+ .clock{font-size:52px}
+ .scoreNum{font-size:32px}
+}

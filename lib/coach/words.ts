@@ -17,12 +17,12 @@ const en={
  format:'Game',periods:'Periods',minutes:'Minutes each',subEvery:'Change about every',min:'min',
  keeper:'Goalkeeper',keeperRotate:'Changes each period',keeperFixed:'Same all game',keeperNone:'No goalkeeper',
  gameSettings:'Game settings',sheetDone:'Done', subStyle:'Changes',rolling:'On the fly (rolling)',stoppages:'At stoppages',
- ready:(n:number,f:number)=>`${n} coming · ${f} on the field`,notEnough:(f:number)=>`You need at least ${f} players for a full field. The plan uses everyone coming.`,
+ ready:(n:number,f:number,late=0)=>`${n} coming${late?` · ${late} late`:''} · ${f} on the field`,notEnough:(f:number)=>`You need at least ${f} players for a full field. The plan uses everyone coming.`,
  emptyTeam:'Add your squad first. Numbers are enough.',startHere:'Add your squad',squadHelp:'Numbers are enough. You can add names later.',playersLbl:'Players',gameOn:'Game in progress',tapReturn:'Tap to return',nextTo:(n:string)=>`Next: ${n}`,less:'Less',more:'More',addN:(n:number)=>`Add ${n} players`,
  formation:'Formation',autoFill:'Fair starting lineup',bench:'Bench',dragHint:'Drag a player, or tap two players to swap them.',
  print:'Print',share:'Share',copyLink:'Copy link',copied:'Link copied',
  plan:'Playing time plan',fairEveryone:(a:number,b:number)=>a===b?`Everyone ${a} min`:`Everyone ${a}–${b} min`,
- fairGood:'Fair',fairCheck:'Uneven, check the plan',keeperAll:(n:string)=>`${n} in goal all game`,
+ fairGood:'Fair',fairCheck:'Minutes vary',keeperAll:(n:string)=>`${n} in goal all game`,
  changes:'Changes',atKick:'At kick-off',startGame:'Start game',resumeGame:'Back to the game',
  gk:'GK',def:'Defence',mid:'Midfield',fwd:'Attack',onField:'On the field',
  periodName:(i:number,n:number)=>n===2?['1st half','2nd half'][i]:n===4?`Quarter ${i+1}`:n===1?'Game':`Period ${i+1}`,
@@ -59,7 +59,15 @@ const en={
  planClock:'The plan',equipment:'Equipment',coachNotes:'Coach notes',goingBadly:'If it is going badly',drillsInPlan:'Drills in this plan',howItWorks:'How it works',coachPoints:'Coaching points',
  startSession:'Start session',endSession:'End session',nextPart:'Next part',prevPart:'Previous',partOf:(a:number,b:number)=>`${a} of ${b}`,sessionDone:'Practice done. Great work.',upNext:'Up next',
  onBoard:'Show on the tactics board',inScan:'Run in Scan trainer',fullPage:'Full plan page',loadingPlans:'Loading plans…',plansFail:'The plans did not load. Check your connection.',retry:'Try again',
- soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',comingN:(n:number)=>`${n} coming`,onFieldN:(n:number)=>`${n} on the field`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`
+ soundBack:'Tap to turn sound back on',formatLink:(f:string,cur:string)=>`This link is for ${f}. Your team plays ${cur}.`,openTool:'Open',comingN:(n:number,late=0)=>`${n} coming${late?` · ${late} late`:''}`,onFieldN:(n:number)=>`${n} on the field`,useFormat:(f:string)=>`Use ${f}`,backTo:(t:string)=>`Back to ${t}`,
+ /* round 4C (Nov 22 2026) */
+ sharedTitle:'Minutes played',changeEarly:'Change early?',changeEarlyNote:(t:string)=>`This change is planned in ${t}. Make it now?`,changeNowBtn:'Change now',notYet:'Not yet',
+ replanNow:'Replan from now',overdueNote:(m:number)=>`Planned ${m} min ago. Make it now, or replan from the minutes played.`,otherTab:'Updated from another tab',
+ attend:'Coming to the next game',noKeeper:'No one is marked “Can keep goal”, so everyone takes a turn in goal. Mark your keepers in the squad.',
+ oneKeeper:(n:string)=>`${n} is the only player marked “Can keep goal” and stays in goal all game.`,maxSwaps:'Most changes at one stoppage',noLimit:'No limit',
+ details:'Game details',addDetails:'Add game details',editDetails:'Edit game details',opponent:'Opponent',opponentPh:'Who you play',date:'Date',kickTime:'Kick-off',homeAway:'Where',
+ home:'Home',awayGame:'Away',notSet:'Not set',vs:(o:string)=>`vs ${o}`,score:'Score',us:'Us',them:'Them',addGoalUs:'Goal for us',addGoalThem:'Goal for them',
+ lessUs:'Take away our last goal',lessThem:'Take away their last goal',whoScored:'Who scored?',notSure:'Not sure',scorers:'Scorers',namesNote:'Off: initials only',minCol:'Min'
 };
 export type Words=typeof en;
 const es:Words={
@@ -76,12 +84,12 @@ const es:Words={
  format:'Partido',periods:'Tiempos',minutes:'Minutos cada uno',subEvery:'Cambios cada',min:'min',
  keeper:'Portero',keeperRotate:'Cambia cada tiempo',keeperFixed:'El mismo todo el partido',keeperNone:'Sin portero',
  gameSettings:'Ajustes del partido',sheetDone:'Listo', subStyle:'Cambios',rolling:'Sobre la marcha',stoppages:'Con el juego detenido',
- ready:(n:number,f:number)=>`${n} vienen · ${f} en la cancha`,notEnough:(f:number)=>`Necesitas al menos ${f} jugadores para llenar la cancha. El plan usa a todos los que vienen.`,
+ ready:(n:number,f:number,late=0)=>`${n} vienen${late?` · ${late} tarde`:''} · ${f} en la cancha`,notEnough:(f:number)=>`Necesitas al menos ${f} jugadores para llenar la cancha. El plan usa a todos los que vienen.`,
  emptyTeam:'Primero agrega tu plantel. Con los números basta.',startHere:'Agrega tu plantel',squadHelp:'Con los números basta. Puedes agregar nombres después.',playersLbl:'Jugadores',gameOn:'Partido en curso',tapReturn:'Toca para volver',nextTo:(n:string)=>`Siguiente: ${n}`,less:'Menos',more:'Más',addN:(n:number)=>`Agregar ${n} jugadores`,
  formation:'Formación',autoFill:'Alineación inicial justa',bench:'Banca',dragHint:'Arrastra a un jugador, o toca dos jugadores para cambiarlos.',
  print:'Imprimir',share:'Compartir',copyLink:'Copiar enlace',copied:'Enlace copiado',
  plan:'Plan de minutos',fairEveryone:(a:number,b:number)=>a===b?`Todos ${a} min`:`Todos ${a}–${b} min`,
- fairGood:'Justo',fairCheck:'Desigual, revisa el plan',keeperAll:(n:string)=>`${n} de portero todo el partido`,
+ fairGood:'Justo',fairCheck:'Los minutos varían',keeperAll:(n:string)=>`${n} de portero todo el partido`,
  changes:'Cambios',atKick:'Al saque inicial',startGame:'Empezar partido',resumeGame:'Volver al partido',
  gk:'POR',def:'Defensa',mid:'Medio',fwd:'Ataque',onField:'En la cancha',
  periodName:(i:number,n:number)=>n===2?['1.er tiempo','2.º tiempo'][i]:n===4?`Cuarto ${i+1}`:n===1?'Partido':`Tiempo ${i+1}`,
@@ -115,6 +123,13 @@ const es:Words={
  planClock:'El plan',equipment:'Material',coachNotes:'Notas para el entrenador',goingBadly:'Si no está funcionando',drillsInPlan:'Ejercicios de este plan',howItWorks:'Cómo se hace',coachPoints:'Puntos clave',
  startSession:'Empezar sesión',endSession:'Terminar sesión',nextPart:'Siguiente parte',prevPart:'Anterior',partOf:(a:number,b:number)=>`${a} de ${b}`,sessionDone:'Entrenamiento terminado. Buen trabajo.',upNext:'Después',
  onBoard:'Ver en la pizarra táctica',inScan:'Hacerlo en el Entrenador de escaneo',fullPage:'Página del plan',loadingPlans:'Cargando planes…',plansFail:'No se cargaron los planes. Revisa tu conexión.',retry:'Intentar de nuevo',
- soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',comingN:(n:number)=>`${n} vienen`,onFieldN:(n:number)=>`${n} en la cancha`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`
+ soundBack:'Toca para volver a activar el sonido',formatLink:(f:string,cur:string)=>`Este enlace es para ${f}. Tu equipo juega ${cur}.`,openTool:'Abrir',comingN:(n:number,late=0)=>`${n} vienen${late?` · ${late} tarde`:''}`,onFieldN:(n:number)=>`${n} en la cancha`,useFormat:(f:string)=>`Usar ${f}`,backTo:(t:string)=>`Volver a ${t}`,
+ sharedTitle:'Minutos jugados',changeEarly:'¿Cambiar antes?',changeEarlyNote:(t:string)=>`Este cambio está planeado en ${t}. ¿Hacerlo ahora?`,changeNowBtn:'Cambiar ahora',notYet:'Todavía no',
+ replanNow:'Replanear desde ahora',overdueNote:(m:number)=>`Planeado hace ${m} min. Hazlo ahora o replanea con los minutos jugados.`,otherTab:'Actualizado desde otra pestaña',
+ attend:'Viene al próximo partido',noKeeper:'Nadie tiene marcado “Puede ser portero”, así que todos pasan por el arco. Marca a tus porteros en el plantel.',
+ oneKeeper:(n:string)=>`${n} es el único marcado “Puede ser portero” y se queda en el arco todo el partido.`,maxSwaps:'Máximo de cambios en una pausa',noLimit:'Sin límite',
+ details:'Datos del partido',addDetails:'Agregar datos del partido',editDetails:'Editar datos del partido',opponent:'Rival',opponentPh:'Contra quién juegan',date:'Fecha',kickTime:'Hora',homeAway:'Dónde',
+ home:'Local',awayGame:'Visitante',notSet:'Sin definir',vs:(o:string)=>`vs ${o}`,score:'Marcador',us:'Nosotros',them:'Ellos',addGoalUs:'Gol nuestro',addGoalThem:'Gol de ellos',
+ lessUs:'Quitar nuestro último gol',lessThem:'Quitar su último gol',whoScored:'¿Quién marcó?',notSure:'No sé',scorers:'Goleadores',namesNote:'Sin marcar: solo iniciales',minCol:'Min'
 };
 export const WORDS={en,es};

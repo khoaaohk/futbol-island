@@ -323,3 +323,12 @@
 .tipHome{margin-top:8px}
 .countNum{color:#244d40}
 .scoreBtn{display:flex;align-items:center;justify-content:center;gap:8px}
+/* Round 4C (Nov 22 2026): the interval slider drawn on-brand, no browser grey: a cream track with the game rim, the part up to the
+   thumb in mint (two flat colours split at --fill, set from the value), a gold thumb with the button lip */
+.range{-webkit-appearance:none;appearance:none;background:transparent;height:44px;cursor:pointer;--fill:50%}
+.range::-webkit-slider-runnable-track{height:12px;border-radius:999px;background:linear-gradient(to right,#9fd1b2 0 var(--fill),#fffaf0 var(--fill) 100%);box-shadow:inset 0 0 0 1.5px #e6d6b0}
+.range::-moz-range-track{height:12px;border-radius:999px;background:#fffaf0;box-shadow:inset 0 0 0 1.5px #e6d6b0}
+.range::-moz-range-progress{height:12px;border-radius:999px;background:#9fd1b2}
+.range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;margin-top:-8px;border-radius:50%;background:var(--btn-gold,#e9c16b);border:3px solid #fffaf0;box-shadow:0 3px 0 #b8913f}
+.range::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--btn-gold,#e9c16b);border:3px solid #fffaf0;box-shadow:0 3px 0 #b8913f}
+.range:focus-visible{outline:3px solid #1f5fd1;outline-offset:2px;border-radius:999px}

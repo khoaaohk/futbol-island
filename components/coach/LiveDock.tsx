@@ -22,7 +22,7 @@ export function liveLine(w:Words,g:Game,now:number){
  const st=g.clock.status,inPlay=st==='live'||st==='paused',sec=inPlay?clockSec(g.clock,now):0,s=g.settings;
  const nc=nextChange(g),due=nc&&nc.due!=null&&inPlay?nc.due-sec:null;
  const period=st==='break'?w.breakName(s.periods):w.periodName(Math.min(g.clock.period,s.periods-1),s.periods);
- return {st,inPlay,period,clock:inPlay?fmtClock(sec):'',due,change:due==null?'':due<=0?w.changeNow:w.changeIn(fmtClock(due)),key:due!=null&&due<=0&&st==='live'?`c${nc!.index}:${g.delay}`:''};
+ return {st,inPlay,period,clock:inPlay?fmtClock(sec):'',due,score:st!=='pre'&&g.score?`${g.score.goals.length}–${g.score.them}`:'',change:due==null?'':due<=0?w.changeNow:w.changeIn(fmtClock(due)),key:due!=null&&due<=0&&st==='live'?`c${nc!.index}:${g.delay}`:''};
 }
 export function LiveBar({w,game,team,now,sound,onOpen,onToggle}:{w:Words;game:Game;team:string;now:number;sound:boolean;onOpen:()=>void;onToggle:()=>void}){
  const l=liveLine(w,game,now),alerted=useRef('');
@@ -33,9 +33,9 @@ export function LiveBar({w,game,team,now,sound,onOpen,onToggle}:{w:Words;game:Ga
  useEffect(()=>{try{if((navigator as Navigator&{userActivation?:{hasBeenActive:boolean}}).userActivation?.hasBeenActive===false)setNeedTap(true);}catch{/* none */}
   const u=()=>{audio();setNeedTap(false);};window.addEventListener('pointerdown',u,{once:true});return ()=>window.removeEventListener('pointerdown',u);},[]);
  return <div className={s.dock} data-due={l.key?'':undefined} data-live-bar="" role="region" aria-label={w.gameOn}>
-  <button type="button" className={s.main} onClick={onOpen} aria-label={`${w.openMatch}: ${team} · ${l.period}${l.clock?' · '+l.clock:''}${l.change?' · '+l.change:''}`}>
+  <button type="button" className={s.main} onClick={onOpen} aria-label={`${w.openMatch}: ${team} · ${l.period}${l.clock?' · '+l.clock:''}${l.score?' · '+l.score:''}${l.change?' · '+l.change:''}`}>
    <span className={s.dot} data-paused={l.st!=='live'?'':undefined} aria-hidden="true"/>
-   <span className={s.text}><b>{l.period}{l.clock&&<> · <span className={s.num}>{l.clock}</span></>}</b><small data-sound-back={needTap&&sound?'':undefined}>{needTap&&sound?w.soundBack:l.change||team}</small></span>
+   <span className={s.text}><b>{l.period}{l.clock&&<> · <span className={s.num}>{l.clock}</span></>}{l.score&&<> · <span className={s.num} data-dock-score="">{l.score}</span></>}</b><small data-sound-back={needTap&&sound?'':undefined}>{needTap&&sound?w.soundBack:l.change||team}</small></span>
    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   </button>
   {l.inPlay&&<button type="button" className={s.toggle} data-paused={l.st==='paused'?'':undefined} onClick={onToggle}>{l.st==='paused'?w.resume:w.pause}</button>}

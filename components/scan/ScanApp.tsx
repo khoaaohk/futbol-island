@@ -222,7 +222,7 @@ export default function ScanApp({embed=false,initialLang}:{embed?:boolean;initia
    <div className={c.group} role="group" aria-labelledby="sg-every"><h2 className={`${c.h2} ${c.h2Val}`} id="sg-every"><span>{w.every}</span><span className={c.val}>{w.sec(s.interval)}</span></h2>
     <div className={c.stepper}>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.min(MAX_INTERVAL,s.interval+.5)})} disabled={s.interval>=MAX_INTERVAL} aria-label={w.slower}>−</button>
-     <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} step={0.5} value={MAX_INTERVAL+MIN_INTERVAL-s.interval} onChange={e=>set({interval:MAX_INTERVAL+MIN_INTERVAL-Number(e.target.value)})} aria-label={w.every} aria-valuetext={w.sec(s.interval)} className={c.range}/>
+     <input type="range" min={MIN_INTERVAL} max={MAX_INTERVAL} step={0.5} value={MAX_INTERVAL+MIN_INTERVAL-s.interval} onChange={e=>set({interval:MAX_INTERVAL+MIN_INTERVAL-Number(e.target.value)})} aria-label={w.every} aria-valuetext={w.sec(s.interval)} className={c.range} style={{'--fill':`${(MAX_INTERVAL-s.interval)/(MAX_INTERVAL-MIN_INTERVAL)*100}%`} as React.CSSProperties}/>
      <button type="button" className={c.stepBtn} onClick={()=>set({interval:Math.max(MIN_INTERVAL,s.interval-.5)})} disabled={s.interval<=MIN_INTERVAL} aria-label={w.faster}>+</button>
     </div>
     <p className={c.scale}><span>{w.slower}</span><span>{w.faster}</span></p>

@@ -158,3 +158,7 @@ li[data-wide] .art{aspect-ratio:16/7}
 /* wide screens: the three destinations sit over the content column (728 px), not spread across the whole window */
 @media (min-width:800px){.nav{padding-left:max(8px,calc(50vw - 372px));padding-right:max(8px,calc(50vw - 372px))}}
 .fBody .tHead,.tText .tHead{display:flex;align-items:center;gap:10px}
+
+/* round 4C (Nov 22 2026): the next game's opponent after the team name, and the game details link at full tap height */
+.fVs{font-weight:600;color:var(--soft,#3d4a42)}
+.fLinkTap{min-height:44px;display:inline-flex;align-items:center;margin-top:8px;margin-right:16px}

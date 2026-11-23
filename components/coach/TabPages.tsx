@@ -67,25 +67,32 @@ export const ART={
  fields:<Svg bg={PANEL.fields}><Field x={22} y={10} w={116} h={68}/><path d="M22 88h116M22 84v8M138 84v8" stroke={GREEN} strokeWidth={2.4} strokeLinecap="round"/><rect x="64" y="82" width="32" height="12" rx="4" fill={WHITE} style={LIFT}/></Svg>,
 };
 /* ------------------------------------------------------------ Game Day ------------------------------------------------------ */
-type GD={w:Words;store:Store;place:number;fmt:string;coming:number;onField:number;intro:boolean;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
+type GD={w:Words;store:Store;place:number;fmt:string;coming:number;late?:number;onField:number;intro:boolean;onDetails?:()=>void;live:{period:string;clock:string;change:string;team:string}|null;gameDone:boolean;
  onMatch:()=>void;onTool:(k:'team'|'lineup'|'minutes'|'subs'|'summary')=>void;onExample:()=>void};
-export function GameDayTab({w,store,place,fmt,coming,onField,intro,live,gameDone,onMatch,onTool,onExample}:GD){
- const s=store.settings,team=store.team,has=team.players.length>0,name=team.name||w.teamN(place);
+/** "Sat 29 Nov · 10:30" in the app's language, from the game details (UX audit C17). */
+export function whenLine(m:{date:string;time:string}|undefined,lang:Lang):string{
+ if(!m)return '';let d='';
+ if(m.date){const [y,mo,da]=m.date.split('-').map(Number);try{d=new Date(y,mo-1,da).toLocaleDateString(lang,{weekday:'short',day:'numeric',month:'short'});}catch{d=m.date;}}
+ return [d,m.time].filter(Boolean).join(' · ');
+}
+export function GameDayTab({w,store,place,fmt,coming,late=0,onField,intro,live,gameDone,onMatch,onTool,onExample,onDetails}:GD){
+ const s=store.settings,team=store.team,has=team.players.length>0,name=team.name||w.teamN(place),m=store.match,when=whenLine(m,store.lang??'en');
  return <div className={t.gameday} data-tab-page="gameday">
   <h1 className={c.srOnly}>{w.navGameDay}</h1>
   <section className={`${t.feature} ${t.featureGame} ${intro?'fi-in':''}`} aria-labelledby="gd-feature" data-live={live?'':undefined}>
    <div className={t.fArt} aria-hidden="true">{ART.match}</div>
    <div className={t.fBody}>
-   <p className={t.fKicker} id="gd-feature">{live?w.gameOn:`${w.matchDay} · ${w.nextGame}`}</p>
-   <p className={t.fTitle}>{name}</p>
+   <p className={t.fKicker} id="gd-feature">{live?w.gameOn:when?`${w.nextGame} · ${when}`:`${w.matchDay} · ${w.nextGame}`}</p>
+   <p className={t.fTitle}>{name}{m?.opp&&<span className={t.fVs}> {w.vs(m.opp)}</span>}</p>
    {live?<p className={t.fLive}><span className={t.liveDot} aria-hidden="true"/>{live.period}{live.clock&&<> · <b>{live.clock}</b></>}{live.change&&<> · {live.change}</>}</p>
-    :<p className={t.pills}><Pill tone="green" icon={<PitchIcon size={22}/>}>{fmt}</Pill><Pill tone="gold" icon={<ClockIcon size={22}/>}>{s.periods} × {s.periodMin} {w.min}</Pill>{has&&<><Pill tone="peach" icon={<ShirtIcon size={22}/>}>{w.comingN(coming)}</Pill><Pill tone="sky" icon={<PitchIcon size={22}/>}>{w.onFieldN(onField)}</Pill></>}</p>}
+    :<p className={t.pills}><Pill tone="green" icon={<PitchIcon size={22}/>}>{fmt}</Pill><Pill tone="gold" icon={<ClockIcon size={22}/>}>{s.periods} × {s.periodMin} {w.min}</Pill>{has&&<><Pill tone="peach" icon={<ShirtIcon size={22}/>}>{w.comingN(coming,late)}</Pill><Pill tone="sky" icon={<PitchIcon size={22}/>}>{w.onFieldN(onField)}</Pill></>}</p>}
    {has||live?<div className={t.fBtns}>
      <button type="button" className={`${c.btn} ${c.btnGold}`} onClick={onMatch} data-coach-match="">{live?w.backToGame:w.startMatch}</button>
      {!live&&<button type="button" className={`${c.btn} ${t.fOutline}`} onClick={()=>onTool('team')}>{w.editSquad}</button>}
     </div>
     :<><p className={t.fMeta}>{w.homeEmpty}</p><div className={t.fBtns}><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={()=>onTool('team')}>{w.setupTeam}</button>
      <button type="button" className={`${c.btn} ${t.fOutline}`} onClick={onExample}>{w.tryExample}</button></div></>}
+   {has&&!live&&onDetails&&<button type="button" className={`${t.fLink} ${t.fLinkTap}`} onClick={onDetails} data-game-details-open="">{m?.opp||when?w.editDetails:w.addDetails}</button>}
    {gameDone&&!live&&<button type="button" className={t.fLink} onClick={()=>onTool('summary')}>{w.gameDone} · {w.seeSummary}</button>}
    </div>
   </section>
