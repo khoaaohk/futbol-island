@@ -1,0 +1,23 @@
+import type {Words} from '../words';
+/** Italian (round 4E): informal "tu"; "guardarsi alle spalle" / scanning, compagno, mister, campo, cono */
+export const it:Words={app:'Allena lo scanning',tagline:'Guarda alle spalle. Dillo. Gioca.',age:'Fascia d’età',
+ ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Adulti'},show:'Mostra',
+ modes:{colours:'Colori',numbers:'Numeri',arrows:'Frecce',mix:'Misto',pass:'Passala'},
+ modeLines:{colours:'Di’ il colore, o corri a quel cono.',numbers:'Di’ il numero ad alta voce.',arrows:'Girati o gioca dove punta la freccia.',mix:'Colori, numeri e frecce, mischiati.',
+  pass:'Il numero di un compagno e dove si trova: passagli la palla.'},
+ every:'Cambia ogni',sec:n=>`${n.toFixed(1).replace(/\.0$/,'').replace('.',',')} s`,slower:'Più lento',faster:'Più veloce',session:'Sessione',sessions:{60:'60 s',90:'90 s',180:'3 min',0:'Senza fine'},
+ colours:'I tuoi coni',coloursNote:'Scegli i colori che hai. Almeno due.',
+ colourNames:{red:'Rosso',orange:'Arancione',yellow:'Giallo',green:'Verde',blue:'Blu',purple:'Viola',pink:'Rosa',white:'Bianco',black:'Nero'},
+ numbers:'Numeri',arrows:'Frecce',arrowsNote:'Tocca le direzioni da usare. Almeno due.',
+ dirNames:{up:'Avanti',upRight:'Avanti a destra',right:'Destra',downRight:'Indietro a destra',down:'Indietro',downLeft:'Indietro a sinistra',left:'Sinistra',upLeft:'Avanti a sinistra'},
+ teammates:'Compagni',teammatesNote:'Numera i giocatori di appoggio da 1 a',screen:'Schermo',bg:'Il colore riempie lo schermo',bgLine:'Spento: un cerchio colorato su nero.',
+ names:'Scrivi il nome del colore',namesLine:'Aiuta chi vede i colori in modo diverso.',sound:'Suono al cambio',sounds:{off:'Nessuno',tick:'Tic',pop:'Pop',bell:'Campanello'},
+ score:'Il mister tiene il punteggio',scoreLine:'Tocca ✓ o ✗ dopo ogni risposta. Resta solo su questo telefono.',on:'Sì',off:'No',start:'Inizia',
+ place:'Appoggia il telefono su un cono a 4–9 metri dietro il giocatore, con lo schermo luminoso, rivolto verso il campo.',
+ lastBest:(l,b)=>`Ultimo ${l} · Record ${b}`,ofN:(h,t)=>`${h} su ${t}`,getReady:'Preparati',tapPause:'Tocca per mettere in pausa',left:t=>`Mancano ${t}`,endless:'Senza fine',
+ paused:'In pausa',resume:'Riprendi',end:'Fine sessione',right:'Giusto',wrong:'Sbagliato',passTo:n=>`Passa al ${n}`,done:'Sessione finita',cuesShown:'Segnali mostrati',time:'Tempo',scoreHead:'Risposte giuste',
+ newBest:'Nuovo record su questo telefono',toBeat:s=>`Da battere la prossima volta: ${s}`,goAgain:'Ancora',change:'Cambia impostazioni',noScore:'Attiva «Il mister tiene il punteggio» per avere un risultato da battere.',
+ wake:'Tieni lo schermo acceso dalle impostazioni del telefono: questo browser non può farlo.',offline:'Funziona offline una volta aperto. Nulla esce da questo telefono.',guide:'Come usarlo, ed esercizi',
+ preview:'Anteprima',pausedHint:'Tocca il segnale in un punto qualsiasi per mettere in pausa.',settings:'Opzioni',doneBtn:'Fatto',
+ tipHead:'Il consiglio del mister',bestHead:'Record su questo telefono',any:'Tutte',langLabel:'Lingua',
+ tips:{colours:'Guarda alle spalle prima che arrivi la palla, non dopo. Due occhiate rapide valgono più di uno sguardo lungo.',numbers:'Di’ il numero ad alta voce. Dirlo dimostra che l’hai visto e crea l’abitudine di parlare con i compagni.',arrows:'Apri le anche verso la freccia mentre guardi, così il primo controllo può andare in quella direzione.',mix:'Guarda, poi decidi. Quando cambia il tipo di segnale, gli occhi devono essere già alzati.',pass:'Sappi dove si trova il compagno prima che arrivi la palla. Così il passaggio è di prima, non con tre tocchi.'}};

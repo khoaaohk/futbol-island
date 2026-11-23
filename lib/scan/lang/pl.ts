@@ -1,0 +1,23 @@
+import type {Words} from '../words';
+/** Polish (round 4E): informal "ty"; "patrzeć przez ramię" / skanowanie, kolega z drużyny, trener, boisko, pachołek */
+export const pl:Words={app:'Trener skanowania',tagline:'Spójrz przez ramię. Powiedz. Graj.',age:'Wiek',
+ ages:{u8:'U8',u10:'U10',u12:'U12',u14:'U14+',adult:'Dorośli'},show:'Pokaż',
+ modes:{colours:'Kolory',numbers:'Liczby',arrows:'Strzałki',mix:'Mieszane',pass:'Podaj'},
+ modeLines:{colours:'Powiedz kolor albo biegnij do tego pachołka.',numbers:'Powiedz liczbę na głos.',arrows:'Obróć się lub zagraj w stronę strzałki.',mix:'Kolory, liczby i strzałki na zmianę.',
+  pass:'Numer kolegi z drużyny i gdzie stoi: podaj do niego.'},
+ every:'Zmiana co',sec:n=>`${n.toFixed(1).replace(/\.0$/,'').replace('.',',')} s`,slower:'Wolniej',faster:'Szybciej',session:'Sesja',sessions:{60:'60 s',90:'90 s',180:'3 min',0:'Bez końca'},
+ colours:'Twoje pachołki',coloursNote:'Wybierz kolory, które masz. Co najmniej dwa.',
+ colourNames:{red:'Czerwony',orange:'Pomarańczowy',yellow:'Żółty',green:'Zielony',blue:'Niebieski',purple:'Fioletowy',pink:'Różowy',white:'Biały',black:'Czarny'},
+ numbers:'Liczby',arrows:'Strzałki',arrowsNote:'Dotknij kierunków, których chcesz użyć. Co najmniej dwa.',
+ dirNames:{up:'Do przodu',upRight:'Do przodu w prawo',right:'W prawo',downRight:'Do tyłu w prawo',down:'Do tyłu',downLeft:'Do tyłu w lewo',left:'W lewo',upLeft:'Do przodu w lewo'},
+ teammates:'Koledzy z drużyny',teammatesNote:'Ponumeruj zawodników wspierających od 1 do',screen:'Ekran',bg:'Kolor wypełnia ekran',bgLine:'Wyłączone: kolorowe koło na czarnym tle.',
+ names:'Pisz nazwę koloru',namesLine:'Pomaga zawodnikom, którzy inaczej widzą kolory.',sound:'Dźwięk przy zmianie',sounds:{off:'Brak',tick:'Tyk',pop:'Pyk',bell:'Dzwonek'},
+ score:'Trener liczy punkty',scoreLine:'Dotknij ✓ lub ✗ po każdej odpowiedzi. Zapisywane tylko na tym telefonie.',on:'Tak',off:'Nie',start:'Zacznij',
+ place:'Oprzyj telefon o pachołek 4–9 metrów za zawodnikiem, z jasnym ekranem, przodem do boiska.',
+ lastBest:(l,b)=>`Ostatnio ${l} · Rekord ${b}`,ofN:(h,t)=>`${h} z ${t}`,getReady:'Przygotuj się',tapPause:'Dotknij, by zatrzymać',left:t=>`Zostało ${t}`,endless:'Bez końca',
+ paused:'Pauza',resume:'Wznów',end:'Zakończ sesję',right:'Dobrze',wrong:'Błąd',passTo:n=>`Podaj do ${n}`,done:'Sesja zakończona',cuesShown:'Pokazane sygnały',time:'Czas',scoreHead:'Dobre odpowiedzi',
+ newBest:'Nowy rekord na tym telefonie',toBeat:s=>`Do pobicia następnym razem: ${s}`,goAgain:'Jeszcze raz',change:'Zmień ustawienia',noScore:'Włącz „Trener liczy punkty”, żeby mieć wynik do pobicia.',
+ wake:'Ustaw w telefonie, żeby ekran nie wygasał: ta przeglądarka tego nie potrafi.',offline:'Po otwarciu działa offline. Nic nie opuszcza tego telefonu.',guide:'Jak tego używać i ćwiczenia',
+ preview:'Podgląd',pausedHint:'Dotknij sygnału w dowolnym miejscu, by zatrzymać.',settings:'Ustawienia',doneBtn:'Gotowe',
+ tipHead:'Wskazówka trenera',bestHead:'Rekord na tym telefonie',any:'Dowolne',langLabel:'Język',
+ tips:{colours:'Spójrz przez ramię, zanim przyjdzie piłka, nie potem. Dwa szybkie spojrzenia są lepsze niż jedno długie.',numbers:'Powiedz liczbę na głos. To dowód, że ją widzisz, i buduje nawyk rozmawiania z kolegami.',arrows:'Otwórz biodra w stronę strzałki, kiedy patrzysz, żeby pierwszy kontakt poszedł w tę stronę.',mix:'Spójrz, potem zdecyduj. Kiedy zmienia się rodzaj sygnału, oczy powinny już być w górze.',pass:'Wiedz, gdzie jest kolega, zanim przyjdzie piłka. Wtedy podanie jest z pierwszej piłki, a nie po trzech kontaktach.'}};

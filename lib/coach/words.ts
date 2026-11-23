@@ -1,8 +1,9 @@
 /**
- * The coach app's words in English and Spanish (/coach; Spanish: US Latino, "tú", the glossary in lib/i18n/es-glossary.ts:
+ * The coach app's words (round 4E: ten languages, English the source, Spanish here, the other eight in lib/coach/lang/*.ts) in English and Spanish (/coach; Spanish: US Latino, "tú", the glossary in lib/i18n/es-glossary.ts:
  * cambio, portero, cancha, partido, tiempo, entrenador; "banca" for the bench). Keys are the same in both; tests/coach-app.cjs
  * checks that and the banned words.
  */
+import type {AppLang} from '../i18n/appLangs';
 const en={
  appName:'Coach app',appShort:'Coach',
  tabTeam:'Team',tabLineup:'Lineup',tabGame:'Game',tabSummary:'Summary',tabMinutes:'Minutes',tabSubs:'Subs',
@@ -39,8 +40,8 @@ const en={
  summary:'Minutes played',planned:'Planned minutes',noGame:'No game yet. Start one from the Game tab and the minutes show here.',
  csv:'Download CSV (Excel, Sheets)',showNames:'Include names',newGame:'New game',newGameConfirm:'Start a new game? The last one stays in the summary until then.',
  shared:'Shared plan',sharedNote:'This plan was shared with you. It is read-only and lives only in this link.',openMine:'Open my own team',
- inGoal:'in goal',total:'Total',share_:'Share of game',lang:'Español',langCode:'es',
- offline:'Works offline once opened',landscape:'',
+ inGoal:'in goal',total:'Total',share_:'Share of game',
+ offline:'Works offline once opened',
  csvWords:{number:'Number',name:'Name',total:'Minutes',share:'Share of game',period:(i:number)=>`Period ${i+1}`,gk:'Minutes in goal'},
  /* several teams (Nov 22 2026) */
  changeTeam:'Change team',yourTeams:'Your teams',addTeam:'Add a team',editT:'Edit',deleteT:'Delete',cancel:'Cancel',
@@ -67,7 +68,10 @@ const en={
  oneKeeper:(n:string)=>`${n} is the only player marked “Can keep goal” and stays in goal all game.`,maxSwaps:'Most changes at one stoppage',noLimit:'No limit',
  details:'Game details',addDetails:'Add game details',editDetails:'Edit game details',opponent:'Opponent',opponentPh:'Who you play',date:'Date',kickTime:'Kick-off',homeAway:'Where',
  home:'Home',awayGame:'Away',notSet:'Not set',vs:(o:string)=>`vs ${o}`,score:'Score',us:'Us',them:'Them',addGoalUs:'Goal for us',addGoalThem:'Goal for them',
- lessUs:'Take away our last goal',lessThem:'Take away their last goal',whoScored:'Who scored?',notSure:'Not sure',scorers:'Scorers',namesNote:'Off: initials only',minCol:'Min'
+ lessUs:'Take away our last goal',lessThem:'Take away their last goal',whoScored:'Who scored?',notSure:'Not sure',scorers:'Scorers',namesNote:'Off: initials only',minCol:'Min',
+ /* round 4E (Nov 22 2026): ten languages */
+ exitAria:'Exit the coach app and go back to Futbol Island',plansEnNote:'Plan text in English',diamond:'Diamond',
+ fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
 export type Words=typeof en;
 const es:Words={
@@ -106,8 +110,8 @@ const es:Words={
  summary:'Minutos jugados',planned:'Minutos planeados',noGame:'Todavía no hay partido. Empieza uno en la pestaña Partido y aquí verás los minutos.',
  csv:'Descargar CSV (Excel, Sheets)',showNames:'Incluir nombres',newGame:'Nuevo partido',newGameConfirm:'¿Empezar un partido nuevo? El último se queda en el resumen hasta entonces.',
  shared:'Plan compartido',sharedNote:'Te compartieron este plan. Es de solo lectura y vive solo en este enlace.',openMine:'Abrir mi equipo',
- inGoal:'de portero',total:'Total',share_:'Parte del partido',lang:'English',langCode:'en',
- offline:'Funciona sin conexión después de abrirla',landscape:'',
+ inGoal:'de portero',total:'Total',share_:'Parte del partido',
+ offline:'Funciona sin conexión después de abrirla',
  csvWords:{number:'Número',name:'Nombre',total:'Minutos',share:'Parte del partido',period:(i:number)=>`Tiempo ${i+1}`,gk:'Minutos de portero'},
  changeTeam:'Cambiar de equipo',yourTeams:'Tus equipos',addTeam:'Agregar un equipo',editT:'Editar',deleteT:'Borrar',cancel:'Cancelar',
  deleteQ:(n:string)=>`¿Borrar ${n}?`,deleteNote:'También se borran su plantel, su alineación y sus partidos en este teléfono. No se puede deshacer.',
@@ -130,6 +134,18 @@ const es:Words={
  oneKeeper:(n:string)=>`${n} es el único marcado “Puede ser portero” y se queda en el arco todo el partido.`,maxSwaps:'Máximo de cambios en una pausa',noLimit:'Sin límite',
  details:'Datos del partido',addDetails:'Agregar datos del partido',editDetails:'Editar datos del partido',opponent:'Rival',opponentPh:'Contra quién juegan',date:'Fecha',kickTime:'Hora',homeAway:'Dónde',
  home:'Local',awayGame:'Visitante',notSet:'Sin definir',vs:(o:string)=>`vs ${o}`,score:'Marcador',us:'Nosotros',them:'Ellos',addGoalUs:'Gol nuestro',addGoalThem:'Gol de ellos',
- lessUs:'Quitar nuestro último gol',lessThem:'Quitar su último gol',whoScored:'¿Quién marcó?',notSure:'No sé',scorers:'Goleadores',namesNote:'Sin marcar: solo iniciales',minCol:'Min'
+ lessUs:'Quitar nuestro último gol',lessThem:'Quitar su último gol',whoScored:'¿Quién marcó?',notSure:'No sé',scorers:'Goleadores',namesNote:'Sin marcar: solo iniciales',minCol:'Min',
+ exitAria:'Salir de la app del entrenador y volver a Futbol Island',plansEnNote:'Texto del plan en inglés',diamond:'Rombo',
+ fmt:(id:string)=>id==='futsal'?'Futsal':id
 };
-export const WORDS={en,es};
+import {pt} from './lang/pt';
+import {fr} from './lang/fr';
+import {de} from './lang/de';
+import {it} from './lang/it';
+import {nl} from './lang/nl';
+import {pl} from './lang/pl';
+import {fi} from './lang/fi';
+import {ja} from './lang/ja';
+/** every language has every key: `Words` is the English object's type, and each language file is typed `Words`, so a missing or
+ *  extra key is a tsc error (tests/coach-app.cjs checks the same at run time) */
+export const WORDS:Readonly<Record<AppLang,Words>>={en,es,pt,fr,de,it,nl,pl,fi,ja};

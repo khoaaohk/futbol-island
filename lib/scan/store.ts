@@ -1,3 +1,4 @@
+import {isAppLang,type AppLang} from '../i18n/appLangs';
 import {cleanSettings,cleanInterval,MODES,type Mode,type Result,type Settings} from './engine';
 /**
  * Scan Trainer's saved data (Nov 16 2026; docs/scan-trainer/HANDOFF.md): ONE localStorage record, `fi-scan-v1`, on this device
@@ -5,7 +6,7 @@ import {cleanSettings,cleanInterval,MODES,type Mode,type Result,type Settings} f
  * display mode, the last and the best coach-tap score. No names, nothing sent. Unknown versions are ignored, never half-read.
  */
 export const STORE_KEY='fi-scan-v1';
-export type Lang='en'|'es';
+export type Lang=AppLang;
 export type ModeResults={last?:Result;best?:Result};
 export type Store={v:1;settings:Settings;lang?:Lang;results:Partial<Record<Mode,ModeResults>>};
 export const emptyStore=():Store=>({v:1,settings:cleanSettings(null),results:{}});
@@ -22,7 +23,7 @@ export function cleanStore(raw:unknown):Store{
  const r=raw as Record<string,unknown>,res=(r.results&&typeof r.results==='object'?r.results:{}) as Record<string,unknown>;
  const results:Store['results']={};
  for(const m of MODES){const x=res[m] as Record<string,unknown>|undefined;if(!x||typeof x!=='object')continue;const last=cleanResult(x.last),best=cleanResult(x.best);if(last||best)results[m]={...(last?{last}:{}),...(best?{best}:{})};}
- return {v:1,settings:cleanSettings(r.settings),...(r.lang==='en'||r.lang==='es'?{lang:r.lang}:{}),results};
+ return {v:1,settings:cleanSettings(r.settings),...(isAppLang(r.lang)?{lang:r.lang}:{}),results};
 }
 export function loadStore(storage:Pick<Storage,'getItem'>|null):Store{
  try{const s=storage?.getItem(STORE_KEY);return s?cleanStore(JSON.parse(s)):emptyStore();}catch{return emptyStore();}

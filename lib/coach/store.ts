@@ -1,3 +1,4 @@
+import {isAppLang,type AppLang} from '../i18n/appLangs';
 import {base64url,cleanName} from '../site/tools/rotation';
 import {cleanSettings,presetOf,settingsFor,type Game,type MatchInfo,type PBlock,type Settings,type Status} from './engine';
 /**
@@ -12,7 +13,7 @@ export const STORE_VERSION=1;
 export const MAX_SQUAD=30;
 export type Player={id:string;num:number;name:string;gk:boolean};
 export type Team={name:string;players:Player[]};
-export type Lang='en'|'es';
+export type Lang=AppLang;
 export type Store={v:1;team:Team;settings:Settings;
  /** who is coming to the next game (ids); missing ids are not coming */
  here:string[];
@@ -80,7 +81,7 @@ export function cleanStore(raw:unknown):Store{
   here:Array.isArray(o.here)?[...new Set(o.here.filter(p=>typeof p==='string'&&ids.has(p)))]:[],
   late:cleanLate(o.late,new Set(Array.isArray(o.here)?o.here.filter(p=>typeof p==='string'&&ids.has(p)):[])),
   spots:Array.isArray(o.spots)?o.spots.slice(0,11).map(p=>typeof p==='string'&&ids.has(p)?p:''):[],
-  game:cleanGame(o.game,ids),lang:o.lang==='es'||o.lang==='en'?o.lang:null,sound:o.sound!==false,last:cleanGame(o.last,ids),
+  game:cleanGame(o.game,ids),lang:isAppLang(o.lang)?o.lang:null,sound:o.sound!==false,last:cleanGame(o.last,ids),
   ...(o.match?{match:cleanMatch(o.match)}:{})};
 }
 export function loadStore(storage:Pick<Storage,'getItem'>|null):Store{
