@@ -241,4 +241,44 @@ for(const arr of [300,605,720,900,1205]){
  ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href=\{`\/coach\?lang=es#tool=\$\{app\}`\}/.test(es),'front doors link to the app (English and Spanish), each to its own tool (Nov 22 2026)');
  ok(/COACH_APP_PATH\+'#tool=lineup'/.test(page)&&/'#tool=subs':'#tool=minutes'/.test(page),'lineup pages open the lineup builder; the calculator Playing time; the rotations Substitution rotation');
 }
+/* ---- 9. Several teams (Nov 22 2026; lib/coach/teams.ts): migration from fi-coach-v1, switching, deleting ---- */
+{
+ const T=load('lib/coach/teams.ts');
+ ok(!/Math\.random|Date\.now|new Date|window\.|document\./.test(read('lib/coach/teams.ts').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'teams.ts is pure');
+ const mem=(o={})=>{const m={...o};return {m,getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v);}};};
+ const one={v:1,team:{name:'Blue Sharks',players:[{id:'a',num:1,name:'Ava',gk:true},{id:'b',num:2,name:'Ben'}]},settings:{format:'7v7'},here:['a','b'],spots:[],game:null,lang:'es',sound:false,last:null};
+ // empty storage: one empty team
+ let t=T.loadTeams(mem());ok(t.teams.length===1&&t.teams[0].team.players.length===0&&t.activeId===t.teams[0].id,'empty storage: one empty team');
+ // one team in fi-coach-v1 migrates as the first team, then both keys are written
+ const st=mem({'fi-coach-v1':JSON.stringify(one)});t=T.loadTeams(st);
+ ok(t.teams.length===1&&t.teams[0].team.name==='Blue Sharks'&&t.teams[0].team.players.length===2&&t.teams[0].lang==='es'&&t.teams[0].sound===false,'fi-coach-v1 migrates as the first team');
+ ok(T.saveTeams(st,t)&&JSON.parse(st.m['fi-coach-teams-v1']).teams.length===1&&JSON.parse(st.m['fi-coach-v1']).team.name==='Blue Sharks'&&!('id' in JSON.parse(st.m['fi-coach-v1'])),'save writes the teams and the active team to fi-coach-v1');
+ // two teams: add (copy players), switch, data separate, fi-coach-v1 follows the active team
+ t=T.addTeam(t,{name:'Red Foxes',from:t.teams[0].id},7);
+ ok(t.teams.length===2&&t.activeId===t.teams[1].id&&t.teams[1].team.players.length===2&&t.teams[1].game===null,'add a team copying players: made active, no games copied');
+ t=T.updateActive(t,s=>({...s,team:{...s.team,players:s.team.players.slice(0,1)}}));
+ ok(t.teams[0].team.players.length===2&&t.teams[1].team.players.length===1,'editing one team leaves the other alone');
+ t=T.updateActive(t,s=>({...s,lang:'en'}));ok(t.teams.every(x=>x.lang==='en'),'the language is the coach\'s: every team follows');
+ T.saveTeams(st,t);ok(JSON.parse(st.m['fi-coach-v1']).team.name==='Red Foxes','fi-coach-v1 holds the active team');
+ const back=T.loadTeams(st);ok(back.teams.length===2&&back.activeId===t.activeId&&back.teams[1].team.players.length===1,'two teams round-trip');
+ t=T.switchTeam(t,t.teams[0].id);ok(T.activeOf(t).team.name==='Blue Sharks','switch team');
+ ok(T.switchTeam(t,'tnope')===t,'switching to an unknown team does nothing');
+ // corrupted JSON in the teams key: migrate from fi-coach-v1 again; garbage teams are cleaned
+ ok(T.loadTeams(mem({'fi-coach-teams-v1':'{bad json','fi-coach-v1':JSON.stringify(one)})).teams[0].team.name==='Blue Sharks','corrupted teams JSON: migrate from fi-coach-v1');
+ ok(T.loadTeams(mem({'fi-coach-teams-v1':JSON.stringify({v:1,activeId:'x',teams:[]})})).teams.length===1,'no teams: one empty team');
+ const g=T.cleanTeams({v:1,activeId:'tz',teams:[null,{id:'tA',v:1,team:{name:'X',players:[]}},{id:'tA',v:1,team:{name:'Y',players:[]}},'x']});
+ ok(g&&g.teams.length===2&&new Set(g.teams.map(x=>x.id)).size===2&&g.activeId===g.teams[0].id,'bad ids, duplicates and an unknown active id are fixed');
+ ok(T.cleanTeams({v:2,teams:[{}]})===null&&T.cleanTeams('x')===null,'unknown version or shape: not a teams record');
+ // deleting: the active team (next one becomes active), another team, the last team (one empty team)
+ const three=T.addTeam(T.addTeam(T.loadTeams(mem({'fi-coach-v1':JSON.stringify(one)})),{name:'B'},2),{name:'C'},3);
+ let d=T.deleteTeam(three,three.activeId);ok(d.teams.length===2&&d.activeId===d.teams[0].id&&!d.teams.some(x=>x.team.name==='C'),'delete the active team: the first other team becomes active');
+ d=T.deleteTeam(d,d.teams[1].id);ok(d.teams.length===1&&T.activeOf(d).team.name==='Blue Sharks','delete another team: the active one stays');
+ d=T.deleteTeam(d,d.activeId,5);ok(d.teams.length===1&&d.teams[0].team.players.length===0&&d.teams[0].lang==='es','delete the last team: one empty team, the language kept');
+ // a live game belongs to its team
+ const live={...one,game:null};const L=T.cleanTeams({v:1,activeId:'t1',teams:[{...live,id:'t1'},{...live,id:'t2',team:{name:'Other',players:[]}}]});
+ ok(T.liveTeam(L)===null,'no live game');
+ const fakeLive={...T.activeOf(L),game:{clock:{status:'live'}}};const L2={...L,teams:[fakeLive,L.teams[1]],activeId:'t2'};
+ ok(T.liveTeam(L2).id==='t1'&&T.activeOf(L2).game===null,'the live game stays with its team when another team is shown');
+ ok(T.initials('Blue Sharks',1)==='BS'&&T.initials('tigers',2)==='TI'&&T.initials('',3)==='T3','team badge initials');
+}
 console.log(`coach-app: ${checks} checks passed`);

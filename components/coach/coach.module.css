@@ -381,3 +381,48 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:40px;backgrou
 .sticky{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
 .toast{bottom:calc(16px + env(safe-area-inset-bottom))}
 .nextBtn{margin-top:24px;justify-content:space-between;padding:0 16px 0 20px}
+/* ---- several teams (Nov 22 2026): the dashboard's team button (top left) and the Change team sheet ---- */
+.teamBtn{height:44px;display:inline-flex;align-items:center;gap:4px;padding:0 8px 0 4px;border:0;border-radius:999px;background:var(--tint);color:var(--ink);transition:background-color .15s ease,transform .12s}
+.teamBtn:active{transform:scale(.96)}
+.teamBadge{display:inline-grid;place-items:center;width:36px;height:36px;flex:0 0 auto;border-radius:999px;color:#fff;font-size:14px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.teamBadgeSm{width:28px;height:28px;font-size:12px}
+.teamList{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px}
+.teamRow{display:grid;gap:8px;padding:8px;border-radius:18px;background:var(--tint)}
+.teamRow[data-current]{background:#fff;box-shadow:inset 0 0 0 2px var(--pitch)}
+.teamPick{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;border:0;background:transparent;color:var(--ink);text-align:left;padding:2px 4px}
+.teamText{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.teamText b{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teamText small{font-size:14px;color:var(--soft)}
+.teamCheck{color:var(--pitch);flex:0 0 auto}
+.liveTag{font-style:normal;font-weight:800;color:var(--warn)}
+.teamTools{display:flex;gap:8px;padding-left:52px}
+.teamTools .btn{min-height:40px;font-size:15px}
+.delBox{display:grid;gap:12px}
+.btn.btnDanger{background:var(--warn);color:#fff}
+.stepTag{margin:0 0 4px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--soft)}
+.choiceList{display:grid;gap:8px;margin:0 0 16px}
+.choice{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:0;border-radius:16px;background:var(--tint);color:var(--ink);font-size:16px;font-weight:700;text-align:left}
+.choice small{font-size:13px;font-weight:600;color:var(--soft)}
+.choice[aria-checked=true]{background:var(--pitch);color:#fff}
+.choice[aria-checked=true] small{color:rgb(255 255 255 / .8)}
+.sheetBody[data-view]{animation:fiViewIn 200ms ease-out both}
+@keyframes fiViewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sheetBody[data-view]{animation:none}.teamBtn:active{transform:none}}
+@media (hover:hover) and (pointer:fine){.teamBtn:hover{background:var(--well)}.choice:not([aria-checked=true]):hover{background:var(--well)}}
+/* ---- spacing rhythm (owner, Nov 22 2026: "spacing is too tight"): label -> control 8 px, section -> section 24 px, a control
+   never touching the next block. The formation chips are an even row (a grid on narrow screens) on the pitch's own edges. ---- */
+.h2{margin:24px 0 8px}
+.formSeg{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;max-width:440px;margin:0 0 20px}
+.formSeg .chip{justify-content:center;padding:0 8px}
+.pitch{margin:0}
+.pitchWrap{max-width:440px;gap:16px}
+.fair{margin:16px 0}
+.legend{margin:12px 0 8px}
+.continue{margin-top:12px}
+.btnRow{margin-top:16px}
+.empty{margin:16px 0}
+.sumTable{margin-bottom:8px}
+.whoHead{margin:16px 0 8px}
+.squad{margin-top:8px}
+.setCard{margin-top:16px}
+.teamTools .btn.btnGhost{background:var(--paper);box-shadow:inset 0 0 0 1px rgb(20 34 29 / .12)}
