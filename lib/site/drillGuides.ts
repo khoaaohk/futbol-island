@@ -212,8 +212,10 @@ const RAW:RawGuide[]=[
    {q:'Should one child always play in goal?',a:'No. Rotating gives every player a feel for the position, and keeps the regular goalkeeper’s outfield skills growing.'},
    {q:'Can a goalkeeper pick up a back pass?',a:'Not if a teammate kicked it to them on purpose. They must use their feet. Our back-pass rule page explains the details.'}],
   lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick],featured:'goalkeeper-catching-w-and-basket'},
- {slug:'defending',kind:'skill',name:'1v1 defending drills',title:'1v1 Defending Soccer Drills for Kids: Stop the Attacker',h1:'1v1 defending soccer drills for kids',
-  desc:'1v1 defending soccer drills for kids: close down, slow down, stay goal-side and win the ball without diving in. Ten drills from U8 to U12, with cues.',
+ {slug:'defending',kind:'skill',name:'1v1 defending drills',/* Nov 23 2026 (seo-unindexed): crawled, not indexed, with the same "1v1 Defending Soccer Drill" title as the one-v-one-defending drill page; the guide
+     now targets "defending soccer drills for kids" (the URL's own words) and leaves "1v1 defending drill" to the drill */
+  title:'Defending Soccer Drills for Kids: 10 Drills, U8 to U12',h1:'1v1 defending soccer drills for kids',
+  desc:'Defending soccer drills for kids, U8 to U12: ten games that teach closing down, staying goal-side, pressure and cover, and winning it without diving in.',
   blurb:'Close down, get side on, stay goal-side and win it back, from U8 to U12',
   lead:'1v1 defending soccer drills teach a player to stop one attacker on their own: close the space fast, slow down near the ball, stay between the attacker and the goal, and win the ball when the touch gets too big. These ten drills build that habit from U8 to U12.',
   more:'Most young defenders are beaten because they dive in, not because the attacker is better. So these drills reward patience: a defender who stays on their feet and keeps the attacker in front of them is doing the job, even before they win the ball.',
