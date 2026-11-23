@@ -6,6 +6,7 @@ import {AGES,type Age} from '@/lib/coach/route';
 import type {Words} from '@/lib/coach/words';
 import type {Lang} from '@/lib/coach/store';
 import {langParam,LOCALE} from '@/lib/i18n/appLangs';
+import {isFormat} from '@/lib/coaches/board/types';
 import c from './coach.module.css';
 import t from './tabs.module.css';
 /**
@@ -30,19 +31,20 @@ export function usePlans(lang:Lang,v:string){
 /** The plan of the day at an age (Training's feature card): the same one all day, the next one tomorrow. */
 export function planOfDay(plans:readonly CoachPlan[],age:Age,day:number){const list=plans.filter(p=>p.age===age);return list.length?list[day%list.length]:plans[0];}
 const SCAN=new Set(['scanning']),BOARD=new Set(['small-sided','passing','attacking-1v1','defending-1v1','first-touch','shooting']);
-export const boardHref=(lang:Lang)=>`/board?from=coach${langParam(lang,'&')}`;
+/** Nov 23 2026: with the team's format when the board has it (4v4 and 5v5 open the board as it is). */
+export const boardHref=(lang:Lang,format?:string)=>`/board?from=coach${isFormat(format)?`&format=${format}`:''}${langParam(lang,'&')}`;
 export const scanHref=(lang:Lang)=>`/scan?from=coach${langParam(lang,'&')}`;
 /** the plans' text in every app language (round 4F: one file per language, fetched on demand); a language without a translation
  *  file comes back as the English plans flagged `en` and shows a small "Plan text in English" note (lib/coach/plansData.ts) */
 export const planLang=(lang:Lang):Lang=>lang;
-type Props={w:Words;lang:Lang;version:string;teamAge:Age;age?:Age;plan?:string;run?:boolean;onAge:(a:Age)=>void;onPlan:(slug:string)=>void;onRun:(on:boolean)=>void};
+type Props={w:Words;lang:Lang;version:string;teamAge:Age;format?:string;age?:Age;plan?:string;run?:boolean;onAge:(a:Age)=>void;onPlan:(slug:string)=>void;onRun:(on:boolean)=>void};
 export default function PlansTool(p:Props){
  const {data,retry}=usePlans(planLang(p.lang),p.version),w=p.w;
  if(data==='fail')return <div className={c.empty}><p className={c.emptyLine}>{w.plansFail}</p><button type="button" className={`${c.btn} ${c.btnGold}`} onClick={retry}>{w.retry}</button></div>;
  if(!data)return <p className={c.note} aria-live="polite">{w.loadingPlans}</p>;
  const plan=p.plan?data.plans.find(x=>x.slug===p.plan):undefined;
  if(plan&&p.run)return <Session w={w} plan={plan} onEnd={()=>p.onRun(false)}/>;
- if(plan)return <PlanView w={w} lang={p.lang} en={!!data.en} onRun={p.onRun} plan={plan} drills={data.drills}/>;
+ if(plan)return <PlanView w={w} lang={p.lang} en={!!data.en} onRun={p.onRun} plan={plan} drills={data.drills} format={p.format}/>;
  const age=p.age??p.teamAge,list=data.plans.filter(x=>x.age===age);
  return <>
   <h1 className={c.srOnly}>{w.plansTitle}</h1>
@@ -55,7 +57,7 @@ export default function PlansTool(p:Props){
    </button></li>;})}</ul>
  </>;
 }
-function PlanView({w,lang,en,plan,drills,onRun}:{w:Words;lang:Lang;en:boolean;onRun:(on:boolean)=>void;plan:CoachPlan;drills:Record<string,CoachDrill>}){
+function PlanView({w,lang,en,plan,drills,onRun,format}:{w:Words;lang:Lang;en:boolean;format?:string;onRun:(on:boolean)=>void;plan:CoachPlan;drills:Record<string,CoachDrill>}){
  const [open,setOpen]=useState<string|null>(null);
  const clock=(m:number)=>`${m}′`;
  return <article className={t.plan}>
@@ -82,7 +84,7 @@ function PlanView({w,lang,en,plan,drills,onRun}:{w:Words;lang:Lang;en:boolean;on
      <button type="button" className={`${c.btn} ${c.btnGhost} ${c.btnSmall}`} aria-expanded={more} onClick={()=>setOpen(more?null:slug)}>{w.howItWorks}</button>
      {more&&<><ol className={t.steps}>{d.steps.map(s=><li key={s}>{s}</li>)}</ol><p className={t.cueH}>{w.coachPoints}</p><ul className={t.bullets}>{d.cues.map(s=><li key={s}>{s}</li>)}</ul></>}
      <div className={t.drillLinks}>
-      {BOARD.has(d.skill)&&<a className={`${c.btn} ${c.btnSmall}`} href={boardHref(lang)} data-drill-board="">{w.onBoard}</a>}
+      {BOARD.has(d.skill)&&<a className={`${c.btn} ${c.btnSmall}`} href={boardHref(lang,format)} data-drill-board="">{w.onBoard}</a>}
       {SCAN.has(d.skill)&&<a className={`${c.btn} ${c.btnSmall}`} href={scanHref(lang)} data-drill-scan="">{w.inScan}</a>}
      </div></div>
    </li>;})}</ul>

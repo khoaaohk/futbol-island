@@ -325,7 +325,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
       onMatch={()=>{if(liveRec&&liveRec.game?.clock.status!=='done')openLive();else if(d.here.length)startGame();else goTeam();}}
       onTool={k=>go(k)}
       onExample={()=>update(x=>{const ps=EXAMPLE.map((n,i)=>({id:'p'+(i+1).toString(36),num:i+1,name:n,gk:i===0}));return {...x,team:{name:!x.team.name||x.team.name===w.teamN(place)?'Blue Sharks':x.team.name,players:cleanPlayers(ps)},here:ps.map(p=>p.id),late:{},spots:[]};})}/>
-    :t==='training'?<TrainingTab w={w} lang={lang} version={plansVersion} age={teamAge} intro={false} onPlans={(plan,run)=>{
+    :t==='training'?<TrainingTab w={w} lang={lang} version={plansVersion} age={teamAge} format={store.settings.format} intro={false} onPlans={(plan,run)=>{
       if(!plan){nav({screen:'plans'},'push');return;}
       /* a plan from Training: the list under it, so Back goes plan -> list -> Training */
       const t0=Date.now();if(t0-busy.current<320)return;busy.current=t0;
@@ -337,7 +337,7 @@ export default function CoachApp({shapes,plansVersion=''}:{shapes:readonly Shape
       {returnTo&&!isRoot(returnTo)&&returnTo!=='team'&&d.here.length>0&&<NextBtn label={w.backTo(TITLE(w,returnTo))} onClick={()=>{const r=returnTo;setReturnTo(null);nav({screen:r},'replace','tab');}}/>}</>
     :t==='lineup'?<LineupTab w={w} store={store} update={update} d={d} onNext={()=>go('minutes','tab')} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} note={toast?.inline?toast:null} onMoved={(msg,undo)=>setToast({msg,undo:false,inline:true,action:{label:w.undo,run:()=>{setToast(null);undo();}}})}/>
     :t==='minutes'||t==='subs'?<GameTab view={t} w={w} store={store} d={d} onStart={startGame} onResume={()=>setLive(true)} onShare={()=>shareLink(toShared(team,store.settings,d.plan.blocks,planSeconds(d.plan.blocks),false,true))} goTeam={goTeam} onNext={()=>go('subs','tab')}/>
-    :t==='plans'?<PlansTool w={w} lang={lang} version={plansVersion} teamAge={teamAge} age={route.age} plan={route.plan} run={route.run}
+    :t==='plans'?<PlansTool w={w} lang={lang} version={plansVersion} teamAge={teamAge} format={store.settings.format} age={route.age} plan={route.plan} run={route.run}
       onAge={a=>{const r:Route={screen:'plans',age:a};window.history.replaceState({fiCoach:depth()},'',url(r));setRoute(r);}}
       onPlan={slug=>nav({screen:'plans',plan:slug,age:route.age},'push')}
       onRun={on=>{if(on)nav({...route,run:true},'push');else back();}}/>

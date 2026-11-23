@@ -5,3 +5,6 @@
  --btn-pink:#d9ebe1;--btn-pink-edge:#9cc7b0;--btn-cream:#efeee2;--btn-cream-edge:rgb(20 34 29 / .16);--btn-ink:#14221d;--btn-focus:3px solid #1d6b55}
 /* the screen title for screen readers and the page outline (the visible title is the shared header) */
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;font-size:20px;margin:0}
+/* Nov 23 2026 (owner): Save in the header's right slot, opposite the gold Back: the same height, pill radius, rim and gold lip as
+   Back, but a flat gold fill (no paper grain). The slot is as wide as its button, so the title stays centred (the header's grid). */
+.saveSlot{display:flex;align-items:center;justify-content:flex-end;min-width:0}

@@ -241,6 +241,37 @@ group('IDP link (docs/idp/BOARD-LINK.md)',()=>{
  handler({detail:{id:'excorner'}});assert.equal(opened,'excorner');assert.equal(LK.takePendingPlay(),'excorner');assert.equal(LK.takePendingPlay(),null,'taken once');off();
 });
 
+await agroup('8v8 (fútbol 8) and saved plays (Nov 23 2026)',async()=>{
+ assert.ok(T.FORMATS.includes('8v8'));assert.equal(T.PLAY_VERSION,1,'additive: no version bump');
+ const s=PI.PITCHES['8v8'];assert.equal(s.players,8);assert.ok(s.length>=50&&s.length<=65&&s.width>=30&&s.width<=45,'50–65 × 30–45 m');
+ assert.equal(s.goal,6);assert.equal(s.spot,9);deq(s.box,{depth:12,width:24});assert.equal(PI.FORMAT_LABEL['8v8'],'8v8');
+ deq(PI.formationsFor('8v8').map(f=>f.name),['3–3–1','3–2–2','2–3–2'],'3–3–1 first (the default)');
+ const p=PL.loadFormation(PL.newPlay('8v8','F8'),PI.formationsFor('8v8')[0].id,'both');
+ assert.equal(p.chips.filter(c=>c.team==='home').length,8);assert.equal(p.chips.filter(c=>c.team==='away').length,8);
+ assert.equal(p.chips.filter(c=>c.gk).length,2,'a keeper each side');
+ const g=PI.pitchMarkings(s).goals;assert.equal(g.length,2);for(const x of g)near(x.h,6,1e-9,'6 m goals');
+ // Saved plays: an 8v8 play round-trips; an old 7v7 play (saved before 8v8 existed) still loads unchanged.
+ deq(PL.sanitizePlay(JSON.parse(JSON.stringify(p))),p,'8v8 play reloads');
+ const old={v:1,id:'pold',name:'Old 7v7',format:'7v7',chips:[{id:'c1',team:'home',label:'9'}],steps:[{pos:{c1:[.4,.5]},arrows:[],ink:[]}],view:'full',created:1,updated:2};
+ deq(PL.sanitizePlay(old),old,'old 7v7 play loads');assert.equal(PL.sanitizePlay({...old,format:'6v6'}),null,'unknown formats still refused');
+ const back=await SH.decodePlay(await SH.encodePlay(p));assert.equal(back.format,'8v8');assert.equal(back.chips.length,p.chips.length);
+});
+group('deep link ?format= (boardForFormat)',()=>{
+ const seven=PL.loadFormation(PL.newPlay('7v7','A'),'7v7-231','both');
+ assert.equal(PL.boardForFormat(seven,false,'7v7','My play'),null,'same format: keep the board');
+ const d=PL.boardForFormat(seven,false,'8v8','My play');assert.equal(d.play.format,'8v8');assert.ok(d.undoable);assert.equal(d.play.id,seven.id,'a draft switches in place');
+ const n=PL.boardForFormat(seven,true,'8v8','My play');assert.equal(n.play.format,'8v8');assert.ok(!n.undoable);assert.notEqual(n.play.id,seven.id,'a saved play is never changed');
+ assert.equal(PL.boardForFormat(null,false,'8v8','X').play.chips.filter(c=>c.team!=='ball').length,16);
+ assert.ok(T.isFormat('8v8')&&!T.isFormat('5v5')&&!T.isFormat(null));
+ const bd=fs.readFileSync(path.join(ROOT,'components/coaches-board/BoardApp.tsx'),'utf8');assert.match(bd,/get\('format'\)/);assert.match(bd,/format=\{format\}/);
+});
+group('futsal court in the game grey',()=>{
+ const A=load('lib/coaches/board/art.ts'),vw=sp=>V.fitView(PI.viewRect(sp,'full'),600,400,'h');
+ assert.equal(A.COURT.surface,'#737c75');const venues=fs.readFileSync(path.join(ROOT,'lib/town/venues.ts'),'utf8');assert.match(venues,/id:'futsal'[^\n]*surface:'#737c75'/,'the game court is the same grey');
+ const fut=A.pitchMarkup(PI.PITCHES.futsal,vw(PI.PITCHES.futsal)),grass=A.pitchMarkup(PI.PITCHES['8v8'],vw(PI.PITCHES['8v8']));
+ assert.ok(fut.includes('#737c75')&&fut.includes(A.COURT.line)&&!fut.includes(A.GREEN.surface),'futsal: grey court, cream lines, no grass');
+ assert.ok(!grass.includes('#737c75')&&grass.includes(A.GREEN.surface),'grass formats keep the island greens');
+});
 group('heat: frames only while something moves',()=>{
  let pending=[];let id=0;
  const {load:loadS}=makeLoader({requestAnimationFrame:f=>{pending.push(f);return ++id;},cancelAnimationFrame:()=>{pending=[];},performance:{now:()=>0}});

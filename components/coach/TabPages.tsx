@@ -112,8 +112,8 @@ export function GameDayTab({w,store,place,fmt,coming,late=0,onField,intro,live,g
 /* ------------------------------------------------------------ Training ------------------------------------------------------ */
 /* owner, Nov 22 2026: Scanning trainer and Tactics board first (the hero and the next big tile), then tonight's plan, practice plans
    and the field diagrams */
-type TR={w:Words;lang:Lang;version:string;age:Age;intro:boolean;onPlans:(plan?:string,run?:boolean)=>void};
-export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
+type TR={w:Words;lang:Lang;version:string;age:Age;format?:string;intro:boolean;onPlans:(plan?:string,run?:boolean)=>void};
+export function TrainingTab({w,lang,version,age,format,intro,onPlans}:TR){
  const {data}=usePlans(planLang(lang),version);
  const plans=data&&data!=='fail'?data:null,day=Math.floor(Date.now()/864e5),plan=plans?planOfDay(plans.plans,age,day):null;
  const fields=siteLang(lang)==='es'?'/es/tools/soccer-field-diagrams':'/tools/soccer-field-diagrams';
@@ -125,7 +125,7 @@ export function TrainingTab({w,lang,version,age,intro,onPlans}:TR){
     <span className={t.fBtns}><span className={`${c.btn} ${c.btnGold}`}>{w.openTool}</span></span></span>
   </a>
   <div className={t.gap}/>
-  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[{key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,icon:<BoardIcon size={28}/>,href:boardHref(lang),wide:true}]}/>
+  <Tiles intro={intro} from={1} cls={t.tilesTrain} tiles={[{key:'board',name:w.boardName,line:w.lineBoard,art:ART.board,icon:<BoardIcon size={28}/>,href:boardHref(lang,format),wide:true}]}/>
   <h2 className={t.h2}>{w.tonight} · {age}</h2>
   <section className={t.tonight} aria-label={w.tonight}>
    <p className={t.tTitle}>{plan?plan.name:w.plansTitle}</p>

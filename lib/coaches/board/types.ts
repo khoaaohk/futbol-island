@@ -10,8 +10,10 @@
  * one step: a step's arrows say what happens next (the pass, the run, the dribble) before the following step.
  */
 export const PLAY_VERSION=1;
-export type Format='futsal'|'7v7'|'9v9'|'11v11';
-export const FORMATS:readonly Format[]=['futsal','7v7','9v9','11v11'];
+/** '8v8' (fútbol 8, Nov 23 2026) is additive: PLAY_VERSION stays 1, so every play saved before it still loads unchanged. */
+export type Format='futsal'|'7v7'|'8v8'|'9v9'|'11v11';
+export const FORMATS:readonly Format[]=['futsal','7v7','8v8','9v9','11v11'];
+export const isFormat=(x:unknown):x is Format=>typeof x==='string'&&(FORMATS as readonly string[]).includes(x);
 export type Team='home'|'away'|'ball';
 /** [u,v], normalised (see above). */
 export type Vec=[number,number];

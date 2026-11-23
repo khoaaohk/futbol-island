@@ -1,11 +1,12 @@
 'use client';
 import {BOARD_EN,type BoardWords} from '@/lib/coach/lang/board';
+import {createPortal} from 'react-dom';
 import {memo,useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties,type KeyboardEvent as RKE,type PointerEvent as RPE,type ReactNode} from 'react';
 import {pitchMarkup} from '@/lib/coaches/board/art';
 import {EXAMPLE_PLAYS} from '@/lib/coaches/board/examples';
 import {commit,redo as redoH,startHistory,undo as undoH,type History} from '@/lib/coaches/board/history';
 import {FORMAT_LABEL,PITCHES,formationSlots,formationsFor,mirror,viewRect,zoneName} from '@/lib/coaches/board/pitch';
-import {addArrow,addChip,addInk,addStep,clearMarks,fitBend,loadFormation,moveChips,movesBetween,newPlay,removeChips,removeMarks,moveStep,removeStep,
+import {addArrow,addChip,boardForFormat,addInk,addStep,clearMarks,fitBend,loadFormation,moveChips,movesBetween,newPlay,removeChips,removeMarks,moveStep,removeStep,
  setFormat,toM,toV,uid,updateArrow,updateChip,type M} from '@/lib/coaches/board/play';
 import {distToPolyline,pointInPolygon,sampleQuad,simplify,smoothPath,type P} from '@/lib/coaches/board/render';
 import {copyOf,deletePlay,duplicatePlay,emptyLibrary,loadLibrary,saveLibrary,upsertPlay,type Library} from '@/lib/coaches/board/storage';
@@ -61,7 +62,10 @@ const chipName=(c:Chip)=>c.team==='ball'?'Ball':`${c.team==='home'?'Home':'Away'
 const isTyping=(t:EventTarget|null)=>t instanceof HTMLElement&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='TEXTAREA'||t.isContentEditable);
 function storeOk(){try{const k='__cb';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch{return false;}}
 
-export default function TacticsBoard({onBack,words}:{onBack?:()=>void;onProgress?:()=>void;words?:BoardWords}){
+/** saveSlot (/board only, Nov 23 2026): the web shell's header slot; Save moves there (opposite the header's Back) and the top bar
+ *  becomes format | name (centred) | undo/redo. The game passes none and keeps its own top bar. */
+/*  format (/board only): a deep link's ?format= (BoardApp); the game passes none. */
+export default function TacticsBoard({onBack,words,saveSlot,format}:{onBack?:()=>void;onProgress?:()=>void;words?:BoardWords;saveSlot?:HTMLElement|null;format?:Format}){
  /* round 4G (audit B4): the board's words; the game passes none and keeps English */
  const L=words??BOARD_EN,KL:Record<ArrowKind,string>={pass:L.pass,run:L.run,dribble:L.dribble};
  const [lib,setLib]=useState<Library>(emptyLibrary);
@@ -103,11 +107,13 @@ export default function TacticsBoard({onBack,words}:{onBack?:()=>void;onProgress
   const l=loadLibrary();setLib(l);
   const open=l.plays.find(p=>p.id===l.open)??l.draft;if(open)setHist(startHistory(open));
   const code=readShareHash(location.hash);
+  if(format&&!code){const r=boardForFormat(open,!!open&&l.plays.some(p=>p.id===open.id),format,L.myPlay);
+   if(r)setHist(r.undoable&&open?commit(startHistory(open),r.play):startHistory(r.play));}
   if(code){history.replaceState(null,'',location.pathname+location.search);
    decodePlay(code).then(p=>{if(p){setMode({kind:'view',source:'shared',play:p});setStep(0);setAnnounce(`Shared play opened: ${p.name}`);}else setToast('That share link could not be opened.');});}
   setReady(true);
   return ()=>stage.destroy();
- },[stage]);
+ },[stage]);// eslint-disable-line react-hooks/exhaustive-deps -- mount only: the shell passes format and words before the board mounts
  // ── a development-plan goal asked for a play (docs/idp/BOARD-LINK.md): an example, a saved play, or the list ──
  useEffect(()=>{if(!ready)return;const take=()=>{const id=takePendingPlay();if(!id)return;const ex=EXAMPLE_PLAYS.find(p=>p.id===id),own=loadLibrary().plays.find(p=>p.id===id);
    if(ex)watchRef.current(ex,'example');else if(own)openRef.current(own);else{setSheet('plays');setToast('That play is on your coach’s board. Here are the plays on this one.');}};
@@ -539,6 +545,8 @@ export default function TacticsBoard({onBack,words}:{onBack?:()=>void;onProgress
    onBlur={e=>{const v=e.target.value.trim();if(v&&v!==play.name)edit(p=>({...p,name:v.slice(0,32)}));setRenaming(false);}} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();if(e.key==='Escape'){e.stopPropagation();e.preventDefault();setRenaming(false);}}}/>
   :<button type="button" className={s.tape} onClick={()=>!viewing&&setRenaming(true)} aria-label={viewing?play.name:`Play name: ${play.name}. Rename`} data-cb="name">{play.name}</button>;
  const saveEl=!viewing&&!saved&&!renaming&&<button type="button" className={s.sticker} onClick={saveCurrent} data-cb="save">{L.save}</button>;
+ const web=saveSlot!==undefined,barSave=web?null:saveEl;
+ const headerSave=saveSlot&&!viewing&&!saved&&createPortal(<button type="button" className={s.headerSave} onClick={saveCurrent} data-cb="save">{L.save}</button>,saveSlot);
  // Changing the format also lines up both teams in that format's first shape (user, Oct 10 2026); Undo brings the old ones back.
  const formatEl=<label className={`${s.tape} ${s.formatTape}`}><span className={s.sr}>Pitch format</span>
   <select value={play.format} disabled={viewing} onChange={e=>{const f=e.target.value as Format;edit(p=>{if(p.format===f)return p;const sh=formationsFor(f)[0];return sh?loadFormation(setFormat(p,f),sh.id,'both'):setFormat(p,f);});}} data-cb="format">{FORMATS.map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>;
@@ -550,7 +558,7 @@ export default function TacticsBoard({onBack,words}:{onBack?:()=>void;onProgress
 
  const pct=n>1?cur/(n-1)*100:0;
  const timeline=<div className={s.timeline} data-cb="timeline">
-  {thin&&<div className={s.nameRow}>{nameEl}{saveEl}{formatEl}</div>}
+  {thin&&<div className={s.nameRow}>{nameEl}{barSave}{formatEl}</div>}
   <button type="button" className={`${s.tool} ${s.playBtn}`} aria-label={playing?L.pause:L.playSteps} title={playing?'Pause (Space)':'Play the steps (Space)'} onClick={()=>playing?stopPlaying():startPlay()} data-cb="play"><BoardIcon name={playing?'pause':'play'}/></button>
   <div className={s.track} onPointerDown={scrub} role="group" aria-label={`Steps: step ${cur+1} of ${n}`} data-cb="track">
    <div className={s.trackLine}/>{n>1&&<div ref={knob} className={s.knobRail} style={{transform:`translateX(${pct}%)`}} aria-hidden="true"><i className={s.knob}/></div>}
@@ -604,10 +612,16 @@ export default function TacticsBoard({onBack,words}:{onBack?:()=>void;onProgress
  return <div ref={root} className={s.root} data-mode={lmode} data-viewing={viewing||undefined} data-sheet={sheet??undefined} data-cb="board-root" tabIndex={-1} onKeyDown={onRootKey}>
   <div ref={probe} className={s.safeProbe} aria-hidden="true"/>
   {canvas}
-  {!thin&&<header className={s.topBar}>
+  {headerSave}
+  {!thin&&(web?<header className={`${s.topBar} ${s.topWeb}`}>
+   {/* /board (owner, Nov 23 2026): the format on the left, the play's name centred, undo/redo on the right, all one height */}
+   <div className={`${s.group} ${s.webFormat}`}>{formatEl}</div>
+   <div className={`${s.group} ${s.webName}`}>{nameEl}</div>
+   {(full||undoRedo)?<div className={`${s.group} ${s.webRight}`}>{full&&zoomEl}{undoRedo}</div>:<span/>}
+  </header>:<header className={s.topBar}>
    <div className={s.group}>{backBtn}<div className={s.nameRow}>{nameEl}{saveEl}</div>{lmode!=='dock'&&formatEl}</div>
    <div className={s.group}>{full&&zoomEl}{undoRedo}</div>
-  </header>}
+  </header>)}
   {!dock&&<nav className={`${s.rail} ${s.railLeft}`} data-open={rails.left||undefined} aria-label="Tools">
    {thin&&backBtn}
    {!viewing&&<div className={s.railStack} role="toolbar" aria-orientation="vertical" aria-label="Board tools">{rails.left&&toolBtns}
