@@ -107,3 +107,9 @@
 /* layout batch 3 (Nov 20 2026): beside the rail the content column is wide; the head's quick answer stays left at the content edge
    like every rail page's head instead of centring */
 main:has(>nav[data-rail]) .head>[data-quick-answer]{margin-inline:0}
+/* Nov 23 2026 (owner: "on desktop, make these books bigger so the names don't wrap"): wider covers from 1024 px (about 6 a row
+   instead of 8), and the cover name sizes to the cover's width (container units) and never breaks inside a word. */
+.cover{container-type:inline-size}
+.coverName{overflow-wrap:normal;word-break:normal;hyphens:none}
+.cover:not([data-size=lg]) .coverName{font-size:clamp(18px,14cqi,34px)}
+@media(min-width:1024px){.shelf.shelf{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--s4) var(--s3)}}
