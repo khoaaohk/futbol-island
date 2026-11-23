@@ -27,20 +27,20 @@ const W={
    case 'marks':return `Penalty marks: a flat cone ${fmt(a)} out from the middle of each goal${st.b?`, and a second mark ${fmt(b)} out`:''}.`;
    case 'buildOut':return `Build-out lines: a cone on each touchline ${fmt(a)} from each goal line, in a different colour.`;
    default:return `Center circle: four flat cones ${fmt(a)} from the center: in front, behind and to each side.`;}}},
- es:{example:'Ejemplo',format:'Modalidad',unit:'Unidades',yd:'Yardas',m:'Metros',std:'Norma',us:'EE. UU.',fa:'Inglaterra',length:'Largo',width:'Ancho',range:'Rango permitido',goal:'Portería',goalMax:'máximo',goalRec:'recomendada',
-  ball:'Balón',size:(b:string)=>b==='futsal'?'Balón de futsal, de 62 a 64 cm':`Talla ${b}`,keepers:'Porteros',yes:'Sí',no:'No (el 4v4 no tiene porteros)',penalty:'Área penal',goalArea:'Área de meta',mark:'Punto penal',circle:'Radio del círculo central',buildOut:'Línea de salida',
-  fromGoal:'de cada línea de meta',deep:'de fondo',wide:'de ancho',noMarks:'Esta modalidad no tiene área penal ni de meta: se juega con porterías pequeñas o conos y sin penales.',faMarks:'La tabla de The FA no da marcas para esta medida; usa las de tu liga.',
-  cones:'Márcala con conos',total:(n:number)=>`${n} conos en total, más algunos de repuesto para las porterías y el banquillo.`,show:'Mostrar los conos en el dibujo',field:(l:string,w:string)=>`Cancha dibujada a escala, de ${l} de largo y ${w} de ancho`,
+ es:{example:'Ejemplo',format:'Modalidad',unit:'Unidades',yd:'Yardas',m:'Metros',std:'Norma',us:'EE. UU.',fa:'Inglaterra',length:'Largo',width:'Ancho',range:'Rango permitido',goal:'Arco',goalMax:'máximo',goalRec:'recomendado',
+  ball:'Balón',size:(b:string)=>b==='futsal'?'Balón de futsal, de 62 a 64 cm':`Talla ${b}`,keepers:'Porteros',yes:'Sí',no:'No (el 4v4 no tiene porteros)',penalty:'Área penal',goalArea:'Área chica',mark:'Punto penal',circle:'Radio del círculo central',buildOut:'Línea de salida',
+  fromGoal:'de cada línea de meta',deep:'de fondo',wide:'de ancho',noMarks:'Esta modalidad no tiene área penal ni de meta: se juega con arcos pequeños o conos y sin penales.',faMarks:'La tabla de The FA no da marcas para esta medida; usa las de tu liga.',
+  cones:'Márcala con conos',total:(n:number)=>`${n} conos en total, más algunos de repuesto para los arcos y el banco.`,show:'Mostrar los conos en el dibujo',field:(l:string,w:string)=>`Cancha dibujada a escala, de ${l} de largo y ${w} de ancho`,
   ft:'pies',
-  desc:(f:FieldFormat,fmt:(v:number)=>string,c:boolean)=>`Una cancha de ${f.id} vista desde arriba con la línea de medio campo${f.circle?' y el círculo central':''}${f.penaltyArea?`, áreas penales de ${fmt(f.penaltyArea.depth)} de fondo y ${fmt(f.penaltyArea.width)} de ancho`:''}${f.buildOut?' y líneas de salida discontinuas':''}, y una portería en cada extremo.${c?' Los triángulos naranjas marcan dónde van los conos.':''}`,
+  desc:(f:FieldFormat,fmt:(v:number)=>string,c:boolean)=>`Una cancha de ${f.id} vista desde arriba con la línea media${f.circle?' y el círculo central':''}${f.penaltyArea?`, áreas penales de ${fmt(f.penaltyArea.depth)} de fondo y ${fmt(f.penaltyArea.width)} de ancho`:''}${f.buildOut?' y líneas de salida discontinuas':''}, y un arco en cada extremo.${c?' Los triángulos naranjas marcan dónde van los conos.':''}`,
   step:(st:ConeStep,fmt:(v:number)=>string,goal:string):string=>{const a=st.a??0,b=st.b??0;switch(st.id){
    case 'corners':return `Pon un cono en la primera esquina. Camina ${fmt(a)} por la banda para el segundo; gira y camina ${fmt(b)} por la línea de meta para el tercero; y ${fmt(a)} de vuelta para el cuarto.`;
    case 'square':return `Comprueba que las esquinas son rectas: las dos diagonales deben medir ${fmt(diagonal(a,b))}. Si una es más larga, mueve una esquina hasta que coincidan.`;
-   case 'halfway':return `Línea de medio campo: un cono en cada banda a ${fmt(a)} de la línea de meta y otro en el centro para el saque.`;
-   case 'goals':return st.cones?`Porterías: pon porterías pequeñas en el centro de cada línea de meta, de ${goal} de ancho como máximo, o dos conos por portería.`:`Porterías: coloca una portería en el centro de cada línea de meta (${goal} de ancho).`;
+   case 'halfway':return `Línea media: un cono en cada banda a ${fmt(a)} de la línea de meta y otro en el centro para el saque.`;
+   case 'goals':return st.cones?`Arcos: pon arcos pequeños en el centro de cada línea de meta, de ${goal} de ancho como máximo, o dos conos por arco.`:`Arcos: coloca un arco en el centro de cada línea de meta (${goal} de ancho).`;
    case 'penalty':return `Áreas penales: en cada línea de meta pon un cono a ${fmt(b)} de cada esquina y otro a ${fmt(a)} hacia dentro desde cada uno.`;
-   case 'goalArea':return `Áreas de meta: un cono en cada esquina del área, a ${fmt(a)} de la línea de meta y a ${fmt(b)} de cada banda.`;
-   case 'marks':return `Puntos penales: un cono plano a ${fmt(a)} del centro de cada portería${st.b?`, y un segundo punto a ${fmt(b)}`:''}.`;
+   case 'goalArea':return `Áreas chicas: un cono en cada esquina del área, a ${fmt(a)} de la línea de meta y a ${fmt(b)} de cada banda.`;
+   case 'marks':return `Puntos penales: un cono plano a ${fmt(a)} del centro de cada arco${st.b?`, y un segundo punto a ${fmt(b)}`:''}.`;
    case 'buildOut':return `Líneas de salida: un cono en cada banda a ${fmt(a)} de cada línea de meta, de otro color.`;
    default:return `Círculo central: cuatro conos planos a ${fmt(a)} del centro: delante, detrás y a cada lado.`;}}},
 };

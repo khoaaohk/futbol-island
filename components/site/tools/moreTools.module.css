@@ -100,3 +100,6 @@ a.linkBtn,a.linkBtn:visited{color:var(--paper);text-decoration:none}
 .fieldLayout{display:grid;gap:16px;min-width:0}
 @media(min-width:1000px){.fieldLayout{grid-template-columns:minmax(300px,380px) minmax(0,1fr);align-items:start}.fieldLayout .seg button{font-size:15px}}
 .tiles div{align-content:start}
+.levelBar{display:block;width:100%;height:16px}
+.levelBar rect:first-child{fill:rgb(251 247 238 / .14)}
+.levelBar rect+rect{fill:var(--gold)}

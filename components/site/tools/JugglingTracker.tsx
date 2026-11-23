@@ -61,7 +61,7 @@ export default function JugglingTracker({lang,gamePath}:{lang?:'es';gamePath?:st
     <div><b>{b}</b><span>{w.best}</span></div>
     <div><b>{lv.next??'★'}</b><span>{lv.next?w.next:w.done}</span></div>
    </div>
-   <div className={s.bar} aria-hidden="true"><i style={{transform:`scaleX(${lv.done/lv.of})`}}/></div>
+   <svg className={m.levelBar} viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="4" rx="2"/><rect width={100*lv.done/lv.of} height="4" rx="2"/></svg>
    <p className={s.under}>{w.level(lv.done,lv.of)} · {LEVELS[cur].join(' · ')}</p>
    <p className={m.tip}><b>{w.tip}:</b> {tip}</p>
   </div>
