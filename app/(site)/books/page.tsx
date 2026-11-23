@@ -20,7 +20,7 @@ export const dynamic='force-static';
 const N=SITE_BOOKS.length;
 const POSITION_PLURAL:Record<string,string>={goalkeeper:'Goalkeepers',fullback:'Fullbacks',centerback:'Center backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers'};
 const LEAD=`Futbol Island has ${N} free pop-up books for kids, each a short true story about a real football player in six chapters. Every chapter ends with what it teaches, like keeping going after a no or being ready from the bench, and every fact is checked against its sources.`;
-/* Nov 23 2026 (seo-unindexed): US searches say "soccer books for kids"; the h1 keeps "Football pop-up books for kids" */
+/* Nov 23 2026 (seo-unindexed): US searches say "soccer books for kids"; the h1 now says "Soccer pop-up books for kids" too (owner OK, Nov 23) */
 export const metadata=pageMeta(`Soccer Books for Kids: ${N} Free Pop-Up Player Stories`,
  `${N} free soccer (football) books for kids: true pop-up stories about Messi, Marta, Salah, Kerr and more, six short chapters each, read aloud, with sources.`,BOOKS_PATH);
 const CRUMBS=libraryCrumbs({name:'Pop-up books',path:BOOKS_PATH});/* Nov 20 2026: through the Library */
@@ -33,14 +33,14 @@ const FACTS:Fact[]=[
 export default function BooksHub(){
  const featured=bookBySlug(BUILT_BOOKS[0]??'');let start=0;
  return <>
-  <JsonLd data={collectionLd({name:'Football pop-up books for kids',path:BOOKS_PATH,description:LEAD,published:SITE_PUBLISHED,modified:SITE_UPDATED.books,
+  <JsonLd data={collectionLd({name:'Soccer pop-up books for kids',path:BOOKS_PATH,description:LEAD,published:SITE_PUBLISHED,modified:SITE_UPDATED.books,
    items:BUILT_BOOKS.map(id=>bookBySlug(id)!).map(x=>({name:x.fullTitle,path:x.path!}))})}/>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
   <RailNav rail={booksHubRail(!!featured,shelf().map(g=>g.region))} current="#top"/>
   <header className={`${styles.intro} ${b.head}`} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
-   <h1 className={styles.title}>Football pop-up books for kids</h1>
+   <h1 className={styles.title}>Soccer pop-up books for kids</h1>
    <QuickAnswer lead={LEAD} facts={FACTS}/>
   </header>
   {featured&&<section className={`${b.feature} ${tgt.target}`} aria-labelledby="first" id="first-book">

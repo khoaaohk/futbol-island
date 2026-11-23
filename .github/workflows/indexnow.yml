@@ -29,7 +29,7 @@ jobs:
           SINCE: ${{ inputs.since }}
           SEND: ${{ inputs.send }}
         run: |
-          ARGS=""
+          ARGS="--with-es"
           if [ -n "$SINCE" ]; then ARGS="--since $SINCE"; fi
           if [ "$SEND" = "true" ]; then ARGS="$ARGS --send"; fi
           node scripts/indexnow-ping.mjs $ARGS

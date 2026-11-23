@@ -392,7 +392,7 @@ export type LearnHighlightId='top'|'learn'|'explore'|'fuel'|'together'|'safe';
 export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  // Nov 8 2026 (SEO): the home h1 and first line say what the page is for searchers ("learn football (soccer) for kids").
- {id:'top',title:'Learn football for kids, the fun and safe way.',line:'Lessons and quizzes on positions, tactics and soccer rules. Free, no tracking ads.',shot:'town_overview',chips:[],features:[]},
+ {id:'top',title:'Learn football for kids, the fun and safe way.',line:'Futbol Island is a free soccer game for kids 7 to 12: positions, tactics and rules.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'explore',

@@ -41,7 +41,7 @@ for(const b of B.SITE_BOOKS)for(const [i,c] of b.chapters.entries()){const raw=L
  ok(raw.text.split(/\n\n+/).join(' ').replace(cut,'').replace(/\s+/g,' ').trim()===joined.replace(/\s+/g,' ').trim(),`${b.id}/${c.id}: page text is the book's text minus the action sentence`);}
 // ---- 2. hub ----
 const hub=decode(render(React.createElement(L('app/(site)/books/page.tsx').default)));
-ok((hub.match(/<h1\b/g)||[]).length===1&&/Football pop-up books for kids<\/h1>/.test(hub),'hub: one h1');
+ok((hub.match(/<h1\b/g)||[]).length===1&&/Soccer pop-up books for kids<\/h1>/.test(hub),'hub: one h1');
 for(const b of B.SITE_BOOKS)ok(hub.includes(`${b.title}: ${b.subtitle}`),`hub lists ${b.id}`);
 const linked=[...hub.matchAll(/href="\/books\/([a-z]+)"/g)].map(m=>m[1]);
 ok(linked.every(x=>B.BUILT_BOOKS.includes(x))&&B.SITE_BOOKS.every(b=>linked.includes(b.id)),'hub links every book, and only built pages');
