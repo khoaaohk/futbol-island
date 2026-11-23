@@ -72,11 +72,19 @@ export const bookBySlug=(slug:string)=>SITE_BOOKS.find(b=>b.slug===slug&&!!b.pag
 export const shelf=()=>REGIONS.map(region=>({region,books:SITE_BOOKS.filter(b=>b.region===region)})).filter(g=>g.books.length>0);
 
 /** "Keep reading" for a book page: the player's card, the guide for their position, a museum case, the shelf. */
+/** Nov 23 2026 (seo-unindexed): a book page linked only from the shelf and one neighbour, so Google crawled /books/messi and left
+ *  it out. Every book now links three more stories: the next ones on its region's shelf (wrapping), then the next on the whole shelf. */
+export function relatedBooks(b:SiteBook,n=3):SiteBook[]{
+ const all=SITE_BOOKS.filter(x=>x.page),reg=all.filter(x=>x.region===b.region),out:SiteBook[]=[];
+ const take=(xs:SiteBook[])=>{const i=xs.findIndex(x=>x.id===b.id);for(let k=1;k<xs.length&&out.length<n;k++){const x=xs[(i+k)%xs.length];if(x.id!==b.id&&!out.includes(x))out.push(x);}};
+ take(reg);take(all);return out;
+}
 export function bookLinks(b:SiteBook):(SiteLink&{icon:'cards'|'shirt'|'law'|'deck'})[]{
  const out:(SiteLink&{icon:'cards'|'shirt'|'law'|'deck'})[]=[];
  if(b.card)out.push({path:cardPath(b.card.number),name:`${b.card.displayName}’s player card`,meta:`Card #${b.card.number} · ${b.card.roleLabel}`,icon:'cards'});
  const guide=b.card?roleGuide(b.card.role):undefined;if(guide)out.push({...guide,icon:'shirt'});
  for(const id of b.page?.exhibits??[]){const e=exhibitById(id);if(e)out.push({path:exhibitPath(e.id),name:e.title,meta:`Museum · ${e.year}`,icon:'law'});}
+ for(const x of relatedBooks(b))out.push({path:bookPath(x.slug),name:`${x.title}: ${x.subtitle}`,meta:`Pop-up book · ${x.country}`,icon:'deck'});
  out.push({path:BOOKS_PATH,name:'All the pop-up books',meta:`${SITE_BOOKS.length} true football stories`,icon:'deck'});
  return out;
 }
