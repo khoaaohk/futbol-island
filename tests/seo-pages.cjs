@@ -48,8 +48,9 @@ assert.equal(new Set(lessons.LESSONS.map(l=>l.id)).size,lessons.LESSONS.length);
 for(const l of lessons.LESSONS){
  assert(l.title&&l.concept&&l.steps.length>0,`${l.id} has a title, concept and teaching text`);
  for(const q of l.questions){
-  assert(!('correct' in q),`${l.id}: no correct index`);
-  assert.deepEqual(q.options,[...q.options].sort((a,b)=>a.localeCompare(b,'en')),`${l.id}: options A–Z, not in the data's order`);
+  /* Nov 23 2026: the page plays the quiz, so each question carries its right answer (owner overruled "never give it away") */
+  assert(Number.isInteger(q.correct)&&q.correct>=0&&q.correct<q.options.length,`${l.id}: a right answer`);
+  if(q.kind==='order')assert.deepEqual([...q.seq].sort(),q.options.map((_,j)=>j),`${l.id}: an order question orders every option`);
   assert(!lessons.VERDICT_OPENER.test(q.explain),`${l.id}: explanation opens without a verdict: ${q.explain.slice(0,40)}`);}}
 assert.equal(fish.SITE_FISH.length,L('lib/town/fishing/fishCatalog.ts').FISH.length,'every Fishbook species');
 for(const f of fish.SITE_FISH){assert(f.club.fact&&fish.fishCredit(f),`${f.id} has a fact and a plain credit`);assert(!/^https?:/.test(fish.fishCredit(f)),`${f.id}: credit is plain text`);}
@@ -192,13 +193,14 @@ for(const p of PATHS){
   if(p!=='/'&&p!=='/play'&&p!=='/marketing')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
  const t=text(h).split('jeremiah@whitesportventures.com').join('');/* the partnership's published business contact, shown on the main page About chapter (owner, Nov 4) */for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
 }
-// Lesson pages never reveal the answer: no markers, options A–Z as in the view, no verdict-led explanation.
-for(const l of lessons.LESSONS){const h=html(lessons.lessonPath(l.id));
- assert(!/data-correct|aria-checked|✓|✔|\(correct\)|Correct answer|Answer:/i.test(h),`${l.id}: no answer marker`);
- const lists=[...h.matchAll(/<ul class="[^"]*options[^"]*">([\s\S]*?)<\/ul>/g)].map(m=>[...m[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x=>text(x[1]).trim()));
- assert.equal(lists.length,l.questions.filter(q=>q.options.length).length,`${l.id}: every question's options are listed`);
- for(const o of lists)assert.deepEqual(o,[...o].sort((a,b)=>a.localeCompare(b,'en')),`${l.id}: options A–Z`);
- for(const m of h.matchAll(/data-explain="">([^<]*)/g))/* Nov 17 2026: explanations sit behind a disclosure (components/site/lessons/LessonParts.tsx) */assert(!lessons.VERDICT_OPENER.test(m[1]),`${l.id}: explanation opens with a verdict`);}
+// Lesson pages (Nov 23 2026): the quiz plays in place and the answer key is in the HTML: every question, its right answer marked,
+// explanations without a verdict opener (the widget gives its own).
+for(const l of lessons.LESSONS){const h=html(lessons.lessonPath(l.id));if(!l.questions.length)continue;
+ assert(/data-quiz-play=""/.test(h)&&/data-answer-key=""/.test(h),`${l.id}: played quiz and answer key`);
+ const key=h.slice(h.indexOf('data-answer-key=""'));
+ assert.equal((key.match(/<h4 class="[^"]*keyQ[^"]*">/g)||[]).length,l.questions.length,`${l.id}: every question in the answer key`);
+ for(const q of l.questions)assert(key.includes(q.seq?'data-order=""':`${q.options[q.correct].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;')}<b>`),`${l.id}: right answer marked for "${q.q.slice(0,40)}"`);
+ for(const m of h.matchAll(/data-explain="">([^<]*)/g))assert(!lessons.VERDICT_OPENER.test(m[1]),`${l.id}: explanation opens with a verdict`);}
 // robots.txt: the bots are allowed, the private routes are closed for each of them and for everyone.
 const robots=fs.readFileSync(path.join(app,'robots.txt.body'),'utf8');
 const groups=robots.split(/\n\s*\n/).map(g=>({ua:(g.match(/^User-Agent: (.+)$/mi)||[])[1],allow:[...g.matchAll(/^Allow: (.+)$/gm)].map(m=>m[1]),dis:[...g.matchAll(/^Disallow: (.+)$/gm)].map(m=>m[1])})).filter(g=>g.ua);

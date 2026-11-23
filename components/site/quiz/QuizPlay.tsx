@@ -12,6 +12,8 @@ import type {PlayQuestion} from '@/lib/site/quizzes';
  * AudioContext is opened on the first Check and closed on unmount) plus the stadium applause clip on a good finish, fetched only
  * then. Motion is transform/opacity only (CSS and one-shot WAAPI); prefers-reduced-motion keeps fades only. Sound and the best
  * score live in localStorage (try/catch); nothing is sent anywhere.
+ * Nov 23 2026: also plays the lesson pages' quizzes (components/site/lessons/LessonQuiz), which add kind 'order': tap the steps
+ * first to last (each card shows its number; tap a numbered card to take it and the ones after it back), then Check.
  */
 type Lang='en'|'es';
 const W={
@@ -19,7 +21,7 @@ const W={
   soundOn:'Sound on',soundOff:'Sound off',row:(n:number)=>`${n} in a row`,goal:'GOAL!',saved:'Saved by the keeper!',fact:'Did you know?',more:'Learn more',answer:'The answer:',
   right:[['Nice!','Correct!','Good one!','Yes!'],['Great pass!','Two in a row!','Smart!','You got it!'],['On fire!','What a run!','Unstoppable!','Top corner!']],
   miss:['So close! Here’s the trick:','Good try! Here’s how it works:','Not this time. Remember:','Almost! Coach says:'],
-  tf:'True or false?',ref:'Ref’s call',pic:'Look at the picture',score:'Your score',best:(a:number,b:number)=>`Your best: ${a}/${b}`,newBest:'New personal best!',beat:'Beat your best',again:'Try again',
+  tf:'True or false?',ord:'Tap the steps in order',ref:'Ref’s call',pic:'Look at the picture',score:'Your score',best:(a:number,b:number)=>`Your best: ${a}/${b}`,newBest:'New personal best!',beat:'Beat your best',again:'Try again',
   share:'Share my score',copied:'Copied! Paste it to share.',shareText:(n:string,a:number,b:number)=>`I scored ${a}/${b} on the ${n} at Futbol Island. Can you beat it?`,
   titles:['Rookie','Team player','Captain','Legend'],lines:['Every great player starts here. Have another go!','Good game! Read the ones you missed and try again.','Captain material! Just a few to go.','Perfect! Every answer right.'],
   missed:'Learn the ones you missed',stars:(n:number)=>`${n} of 3 stars`,done:'Quiz done!'},
@@ -27,7 +29,7 @@ const W={
   soundOn:'Sonido activado',soundOff:'Sonido apagado',row:(n:number)=>`${n} seguidas`,goal:'¡GOL!',saved:'¡Atajó el portero!',fact:'¿Sabías que…?',more:'Aprende más',answer:'La respuesta:',
   right:[['¡Bien!','¡Correcto!','¡Muy bien!','¡Sí!'],['¡Gran pase!','¡Dos seguidas!','¡Qué listo!','¡Lo tienes!'],['¡Estás que ardes!','¡Qué racha!','¡Imparable!','¡Al ángulo!']],
   miss:['¡Casi! Este es el truco:','¡Buen intento! Así funciona:','Esta vez no. Recuerda:','¡Por poco! El entrenador dice:'],
-  tf:'¿Verdadero o falso?',ref:'Decide el árbitro',pic:'Mira el dibujo',score:'Tu puntuación',best:(a:number,b:number)=>`Tu mejor: ${a}/${b}`,newBest:'¡Nuevo récord personal!',beat:'Supera tu récord',again:'Intentar de nuevo',
+  tf:'¿Verdadero o falso?',ord:'Toca los pasos en orden',ref:'Decide el árbitro',pic:'Mira el dibujo',score:'Tu puntuación',best:(a:number,b:number)=>`Tu mejor: ${a}/${b}`,newBest:'¡Nuevo récord personal!',beat:'Supera tu récord',again:'Intentar de nuevo',
   share:'Compartir mi puntuación',copied:'¡Copiado! Pégalo para compartir.',shareText:(n:string,a:number,b:number)=>`Saqué ${a}/${b} en el ${n.toLowerCase()} de Futbol Island. ¿Puedes superarlo?`,
   titles:['Novato','Buen compañero','Capitán','Leyenda'],lines:['Todos los grandes empezaron aquí. ¡Otra vez!','¡Buen partido! Lee las que fallaste y vuelve a intentarlo.','¡Madera de capitán! Te faltan muy pocas.','¡Perfecto! Todas bien.'],
   missed:'Aprende las que fallaste',stars:(n:number)=>`${n} de 3 estrellas`,done:'¡Quiz terminado!'}};
@@ -60,15 +62,20 @@ const Close=()=><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="tru
 const Speaker=({on}:{on:boolean})=><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>{on?<path d="M15.5 9a4.2 4.2 0 010 6M18 6.5a7.8 7.8 0 010 11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>:<path d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>}</svg>;
 const Star=({on}:{on:boolean})=><svg viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" fill={on?'#f9d665':'#e3e2d4'} stroke={on?'#aa8b3e':'#c9c8b8'} strokeWidth="1.6" strokeLinejoin="round"/></svg>;
 
+/** The right answer as words: the option, or an order question's steps numbered first to last. */
+const answerText=(q:PlayQuestion)=>q.kind==='order'&&q.seq?q.seq.map((j,k)=>`${k+1}. ${q.options[j]}`).join('  '):q.options[q.correct];
 export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:string;name:string;lang?:Lang;questions:readonly PlayQuestion[];url:string}){
  const w=W[lang],total=questions.length;
- const [i,setI]=useState(0),[pick,setPick]=useState<number|null>(null),[checked,setChecked]=useState(false);
+ const [i,setI]=useState(0),[pick,setPick]=useState<number|null>(null),[taps,setTaps]=useState<number[]>([]),[checked,setChecked]=useState(false);
  const [results,setResults]=useState<boolean[]>([]),[streak,setStreak]=useState(0),[asking,setAsking]=useState(false);
  const [sound,setSound]=useState(true),[best,setBest]=useState<number|null>(null),[shown,setShown]=useState(0),[copied,setCopied]=useState<string|null>(null);
  const root=useRef<HTMLDivElement>(null),track=useRef<HTMLDivElement>(null),ball=useRef<HTMLSpanElement>(null),glove=useRef<HTMLSpanElement>(null),
   goal=useRef<HTMLParagraphElement>(null),streakEl=useRef<HTMLSpanElement>(null),qHead=useRef<HTMLHeadingElement>(null),nextBtn=useRef<HTMLButtonElement>(null),
   endHead=useRef<HTMLHeadingElement>(null),burst=useRef<HTMLDivElement>(null),fillEl=useRef<HTMLSpanElement>(null),ctx=useRef<Ctx|null>(null),moved=useRef(false),prevBest=useRef<number|null>(null);
- const done=results.length===total,score=results.filter(Boolean).length,q=questions[Math.min(i,total-1)],right=checked&&pick===q.correct;
+ const done=results.length===total,score=results.filter(Boolean).length,q=questions[Math.min(i,total-1)],seq=q.kind==='order'?q.seq:undefined;
+ const ready=seq?taps.length===q.options.length:pick!==null,ok=seq?taps.every((x,k)=>x===seq[k])&&ready:pick===q.correct,right=checked&&ok;
+ /* an order card: tapped cards get their number; tapping a numbered card takes it and the ones after it back */
+ const tap=(j:number)=>{if(checked)return;const at=taps.indexOf(j);setTaps(at>=0?taps.slice(0,at):[...taps,j]);};
 
  useEffect(()=>{setSound(read(SOUND_KEY)!=='0');const b=Number(read(bestKey(slug)));if(Number.isFinite(b)&&b>0)setBest(b);},[slug]);
  useEffect(()=>()=>{try{void ctx.current?.close();}catch{/* closed */}},[]);
@@ -97,21 +104,21 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
    an.onfinish=()=>d.remove();}};
 
  const check=()=>{
-  if(pick===null||checked)return;
-  const ok=pick===q.correct,n=ok?streak+1:0;setChecked(true);setStreak(n);
+  if(!ready||checked)return;
+  const n=ok?streak+1:0;setChecked(true);setStreak(n);
   buzz(ok?15:[30,40,30]);play(ok?'right':'wrong');fly(ok);
   if(ok){pop(streakEl.current);if(n===3||n===5||n===10){goalPop();setTimeout(()=>play('goal'),160);}}
  };
  const next=()=>{
   if(!checked)return;moved.current=true;
-  const r=[...results,pick===q.correct];setResults(r);setChecked(false);setPick(null);
+  const r=[...results,ok];setResults(r);setChecked(false);setPick(null);setTaps([]);
   if(r.length<total){setI(i+1);return;}
   const sc=r.filter(Boolean).length;prevBest.current=best;
   if(best===null||sc>best){setBest(sc);write(bestKey(slug),String(sc));}
   if(sound){if(sc/total>=.7){try{const a=new Audio('/audio/stadium/applause.m4a');a.volume=.45;void a.play().catch(()=>{});}catch{/* no audio */}}play('finish');}
   if(sc===total)setTimeout(confetti,120);
  };
- const restart=()=>{setI(0);setPick(null);setChecked(false);setResults([]);setStreak(0);setAsking(false);setShown(0);setCopied(null);moved.current=true;};
+ const restart=()=>{setI(0);setPick(null);setTaps([]);setChecked(false);setResults([]);setStreak(0);setAsking(false);setShown(0);setCopied(null);moved.current=true;};
 
  /* the end screen's count-up (a few frames, then it stops) */
  useEffect(()=>{if(!done)return;endHead.current?.focus({preventScroll:true});
@@ -125,7 +132,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
    if(e.metaKey||e.ctrlKey||e.altKey||done||asking)return;const tg=e.target as HTMLElement|null;
    if(tg&&/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))return;const el=root.current;if(!el)return;
    const r=el.getBoundingClientRect();if(r.bottom<0||r.top>window.innerHeight)return;
-   const n=Number(e.key);if(n>=1&&n<=q.options.length&&!checked){setPick(n-1);e.preventDefault();return;}
+   const n=Number(e.key);if(n>=1&&n<=q.options.length&&!checked){if(seq)tap(n-1);else setPick(n-1);e.preventDefault();return;}
    if(e.key==='Enter'&&!(tg&&tg.tagName==='BUTTON'&&el.contains(tg))&&!(tg&&tg.tagName==='A')){if(checked)next();else check();e.preventDefault();}
   };
   window.addEventListener('keydown',on);return ()=>window.removeEventListener('keydown',on);
@@ -137,7 +144,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
   try{await navigator.clipboard.writeText(`${text} ${url}`);setCopied(w.copied);}catch{setCopied(`${text} ${url}`);}
  };
  const toggleSound=()=>{const v=!sound;setSound(v);write(SOUND_KEY,v?'1':'0');};
- const short=q.options.every(o=>o.length<=24),grid=q.kind==='truefalse'||q.kind==='ref'||(short&&(q.options.length===4||q.options.length===2));
+ const short=q.options.every(o=>o.length<=24),grid=q.kind==='truefalse'||q.kind==='ref'||(q.kind!=='order'&&short&&(q.options.length===4||q.options.length===2));
  const level=streak>=3?2:streak===2?1:0,cheer=w.right[level][i%4],miss=w.miss[i%4];
  const fill=(results.length+(checked?1:0))/total;
  /* the bar's fill and the ball's place, set on the elements (the reading templates keep no inline styles, tests/seo-design.cjs) */
@@ -158,7 +165,7 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
      <button type="button" className={s.secondary} onClick={()=>void share()} data-quiz-share="">{w.share}</button>
     </div>
     {copied&&<p className={s.copied} role="status">{copied}</p>}
-    {missed.length>0&&<div className={s.missed}><h4 className={s.missedTitle}>{w.missed}</h4><ul>{missed.map(m=><li key={m.q}><span>{m.q} {w.answer} {m.options[m.correct]}</span> <a href={m.more.href}>{w.more}: {m.more.name}</a></li>)}</ul></div>}
+    {missed.length>0&&<div className={s.missed}><h4 className={s.missedTitle}>{w.missed}</h4><ul>{missed.map(m=><li key={m.q}><span>{m.q} {w.answer} {answerText(m)}</span> <a href={m.more.href}>{w.more}: {m.more.name}</a></li>)}</ul></div>}
    </div>
   </div>;}
 
@@ -178,11 +185,14 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
    <p id={`${slug}-ask`} className={s.askText}>{w.quitAsk}</p>
    <div className={s.endActions}><button type="button" className={s.primary} onClick={()=>setAsking(false)} autoFocus>{w.keep}</button><button type="button" className={s.secondary} onClick={restart}>{w.quitYes}</button></div>
   </div>:<div className={s.stage} key={i}>
-   <p className={s.count}>{w.of(i+1,total)}{q.kind==='truefalse'?` · ${w.tf}`:q.kind==='ref'?` · ${w.ref}`:q.kind==='picture'?` · ${w.pic}`:''}</p>
+   <p className={s.count}>{w.of(i+1,total)}{q.kind==='truefalse'?` · ${w.tf}`:q.kind==='order'?` · ${w.ord}`:q.kind==='ref'?` · ${w.ref}`:q.kind==='picture'?` · ${w.pic}`:''}</p>
    <h3 className={s.q} ref={qHead} tabIndex={-1} id={`${slug}-q`}>{q.q}</h3>
    {q.pic&&<img className={s.pic} src={q.pic.src} alt={q.pic.alt} width={1200} height={630} loading="lazy" decoding="async"/>}
    <div className={grid?s.grid:s.list} role="group" aria-labelledby={`${slug}-q`}>
-    {q.options.map((o,j)=>{const state=!checked?(pick===j?'picked':undefined):j===q.correct?'right':pick===j?'wrong':'off';
+    {seq?q.options.map((o,j)=>{const at=taps.indexOf(j),state=at<0?undefined:!checked?'picked':seq[at]===j?'right':'wrong';
+     return <button key={o} type="button" className={s.card} data-quiz-option="" data-order="" data-state={state} aria-pressed={at>=0} disabled={checked}
+      onClick={()=>tap(j)}><span className={s.seqNo} aria-hidden="true">{at>=0?at+1:''}</span><span>{at>=0&&<span className={s.visuallyHidden}>{at+1}. </span>}{o}</span></button>;})
+    :q.options.map((o,j)=>{const state=!checked?(pick===j?'picked':undefined):j===q.correct?'right':pick===j?'wrong':'off';
      return <button key={o} type="button" className={s.card} data-quiz-option="" data-state={state} aria-pressed={pick===j} disabled={checked&&state==='off'}
       onClick={()=>{if(!checked){setPick(j);}}}><kbd className={s.key} aria-hidden="true">{j+1}</kbd><span>{o}</span></button>;})}
    </div>
@@ -192,13 +202,13 @@ export default function QuizPlay({slug,name,lang='en',questions,url}:{slug:strin
     <span className={s.sheetIcon}>{right?<Tick/>:<Cross/>}</span>
     <div className={s.sheetText}>
      <p className={s.cheer}>{right?cheer:<>{w.saved} {miss}</>}</p>
-     {!right&&<p className={s.answer}>{w.answer} <b>{q.options[q.correct]}</b></p>}
+     {!right&&<p className={s.answer}>{w.answer} <b>{answerText(q)}</b></p>}
      <p>{q.explain}</p>
      {q.fact&&<p className={s.fact}><b>{w.fact}</b> {q.fact}</p>}
      {!right&&<p><a className={s.moreLink} href={q.more.href}>{w.more}: {q.more.name}</a></p>}
     </div>
     <button type="button" ref={nextBtn} className={right?s.primary:s.wrongBtn} onClick={next} data-quiz-next="">{right?w.cont:w.got}</button>
-   </div>:<button type="button" className={s.primary} disabled={pick===null} onClick={check} data-quiz-check="">{w.check}</button>}
+   </div>:<button type="button" className={s.primary} disabled={!ready} onClick={check} data-quiz-check="">{w.check}</button>}
   </div>}
  </div>;
 }

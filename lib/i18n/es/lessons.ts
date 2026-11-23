@@ -11,7 +11,8 @@ import {LESSONS_ES_FUTSAL_B} from './lessons/futsal-b';
 /**
  * The Spanish lessons (Spanish round D, Nov 16 2026): the words of each lib/site/lessons.ts SiteLesson (title, concept, coach's
  * steps, quiz questions, options and explanations), keyed by lesson id, merged over the English record. Like the English page,
- * the Spanish one never marks the right answer: options are shown A-Z (in Spanish) and explanations carry no verdict opener.
+ * the Spanish one plays its quiz in place (Nov 23 2026): the Spanish options are written in the English A-Z order, so each
+ * question's `perm` (lib/site/lessons.ts siteQuestion) puts them in the shown order and the right answer stays the same.
  * The lesson data in public/lessons (the game) stays English; these are the reading pages only.
  */
 export const LESSONS_ES:Readonly<Record<string,LessonEs>>={...LESSONS_ES_7V7,...LESSONS_ES_9V9_A,...LESSONS_ES_9V9_B,...LESSONS_ES_11V11,...LESSONS_ES_FUTSAL_A,...LESSONS_ES_FUTSAL_B};
@@ -28,14 +29,13 @@ export const CATEGORY_ES:Readonly<Record<string,string>>={Attacking:'Ataque',Def
 export const DIFFICULTY_ES:Readonly<Record<string,string>>={Beginner:'Principiante',Intermediate:'Intermedio',Advanced:'Avanzado'};
 export type EsLesson=SiteLesson&{esPath:string;chapterEs?:string;categoryEs?:string;difficultyEs?:string};
 const tr=(m:Readonly<Record<string,string>>,k:string|undefined,what:string)=>{if(!k)return undefined;const v=m[k];if(!v)throw new Error(`Spanish ${what} "${k}" is missing (lib/i18n/es/lessons.ts)`);return v;};
-const sortEs=(xs:readonly string[])=>[...xs].sort((a,b)=>a.localeCompare(b,'es'));
 const cache=new Map<string,EsLesson>();
 export function esLesson(id:string):EsLesson|null{
  const hit=cache.get(id);if(hit)return hit;
  const l=lessonById(id);if(!l)return null;const e=LESSONS_ES[id];if(!e)throw new Error(`Spanish lesson "${id}" is missing (lib/i18n/es/lessons)`);
  if(e.steps.length!==l.steps.length||e.questions.length!==l.questions.length)throw new Error(`Spanish lesson ${id}: steps/questions not 1:1 with English`);
  const x:EsLesson={...l,title:e.title,concept:e.concept,steps:[...e.steps],
-  questions:l.questions.map((q,i)=>{const y=e.questions[i];if(y.options.length!==q.options.length)throw new Error(`Spanish lesson ${id} question ${i}: options not 1:1`);return {q:y.q,options:sortEs(y.options),explain:y.explain};}),
+  questions:l.questions.map((q,i)=>{const y=e.questions[i];if(y.options.length!==q.options.length)throw new Error(`Spanish lesson ${id} question ${i}: options not 1:1`);return {...q,q:y.q,options:q.perm.map(k=>y.options[k]),explain:y.explain};}),
   esPath:toEs(lessonPath(id)),chapterEs:tr(CHAPTER_ES,l.chapter,'chapter'),categoryEs:tr(CATEGORY_ES,l.category,'category'),difficultyEs:tr(DIFFICULTY_ES,l.difficulty,'difficulty')};
  cache.set(id,x);return x;
 }

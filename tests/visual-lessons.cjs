@@ -4,7 +4,9 @@
 //     no shadows or gradients, no animation; frames are read from the lesson's own data, never the quiz's answer fields.
 //  2. Every lesson page (EN + ES): the learn card with concept + key facts, 2-3 coach chapters with headings, every step's text
 //     exactly once and in order, and one pitch frame per chapter (role="img" + aria-label) or the format-shape fallback.
-//  3. The quiz never reveals the answer: no answer markers, no Quiz JSON-LD, options A-Z, explanations without a verdict.
+//  3. The quiz (Nov 23 2026, owner overruled the old "never give it away" rule): played in place (QuizPlay), and an answer key
+//     in a closed <details> lists every question, its options, the right answer (or right order) and an explanation without a
+//     verdict opener. Still no Quiz JSON-LD. The right answers match public/lessons/*.json in both languages.
 // usage: node tests/visual-lessons.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const root=path.join(__dirname,'..');process.chdir(root);
@@ -36,7 +38,7 @@ assert(/shapeRendering="crispEdges"/.test(parts)&&/#7a4e12/.test(parts)&&/#f2b63
 assert(!/border-radius:\d+px/.test(css)&&!/box-shadow|gradient|animation|transition|@keyframes/.test(css),'radii from tokens, flat fills, no shadows, nothing animates');
 assert(!/correct|choiceExplanations|visual/.test(frames.replace(/\/\*\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'frames never read quiz answer fields');
 for(const f of ['app/(site)/learn/lessons/[slug]/page.tsx','components/es/pages/LessonsEs.tsx']){const s=read(f);
- assert(/<LearnCard /.test(s)&&/<CoachChapters /.test(s)&&/<QuizCards /.test(s),`${f}: learn card, chapters and quiz cards`);}
+ assert(/<LearnCard /.test(s)&&/<CoachChapters /.test(s)&&/<LessonQuiz /.test(s)&&!/QuizCards/.test(s),`${f}: learn card, chapters and the played quiz`);}
 console.log('visual-lessons: source checks OK');
 
 // ---- 2 + 3. every lesson rendered, EN and ES --------------------------------------------------------------------------------
@@ -67,17 +69,32 @@ for(const l of lessons.LESSONS){
    assert(/<figcaption[^>]*>[^<]*\d+<\/figcaption>/.test(coach),`${id}: frame caption names its step`);
    if(lang==='en'){real++;framesDrawn+=svgs.length;}
   }else{assert(/data-fallback=""/.test(coach)&&/data-diagram=/.test(coach),`${id}: fallback format diagram`);if(lang==='en')fallback++;}
-  // the quiz never gives the answer away
-  assert(!/data-correct|aria-checked|✓|✔|\(correct\)|Correct answer|Answer:|Respuesta correcta|\(correcta\)/i.test(h),`${id}: no answer marker`);
+  // the quiz: played in place, answer key server-rendered with the right answer marked
   assert(!/"@type":"Quiz"|"Question"|acceptedAnswer"[^}]*Quiz/.test(h.replace(/"@type":"FAQPage"[\s\S]*?<\/script>/g,'')),`${id}: no Quiz markup`);
-  const opts=[...h.matchAll(/<ul class="options chips">([\s\S]*?)<\/ul>/g)].map(m=>[...m[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x=>text(x[1])));
-  assert.equal(opts.length,qs.filter(q=>q.options.length).length,`${id}: every question's options`);
-  for(const o of opts)assert.deepEqual(o,[...o].sort((a,b)=>a.localeCompare(b,lang)),`${id}: options A-Z`);
-  for(const m of h.matchAll(/data-explain="">([^<]*)/g))assert(!lessons.VERDICT_OPENER.test(unesc(m[1])),`${id}: explanation opens with a verdict`);
-  assert.equal((h.match(/<details class="explain">/g)||[]).length,qs.filter(q=>q.explain).length,`${id}: explanations behind a disclosure`);
+  if(qs.length){
+   assert.equal((h.match(/data-quiz-play=""/g)||[]).length,1,`${id}: one played quiz`);
+   const key=h.slice(h.indexOf('data-answer-key=""'));assert(key.length<h.length&&!/data-answer-key=""[^>]*open/.test(h),`${id}: closed answer key`);
+   const items=[...key.matchAll(/<h4 class="keyQ">([\s\S]*?)<\/h4>([\s\S]*?)<p data-explain="">([^<]*)<\/p>/g)];
+   assert.equal(items.length,qs.length,`${id}: every question in the answer key`);
+   items.forEach((m,k)=>{const q=qs[k];assert.equal(text(m[1]),q.q,`${id} q${k}: question text`);
+    const marked=[...m[2].matchAll(/<li[^>]*data-right=""[^>]*>([\s\S]*?)<\/li>/g)].map(x=>text(x[1]).replace(/ \((?:Right answer|Respuesta correcta)\)$/,''));
+    assert.deepEqual(marked,q.seq?q.seq.map(j=>q.options[j]):[q.options[q.correct]],`${id} q${k}: right answer marked`);
+    assert(!lessons.VERDICT_OPENER.test(unesc(m[3])),`${id} q${k}: explanation opens with a verdict`);});
+  }else assert(!/data-quiz-play/.test(h),`${id}: no quiz without questions`);
  }
 }
 assert.equal(real+fallback,lessons.LESSONS.length);
+{/* the shown right answer is the game's (public/lessons/*.json `correct`, or an order question's stored order); options are not
+    always in the data's order; Spanish true/false keeps Verdadero first like True */
+ const raw=new Map(['7v7','9v9','11v11','futsal'].flatMap(f=>JSON.parse(read(`public/lessons/${f}.json`))).map(x=>[x.id,x]));const cl=t=>t.replace(/\s+/g,' ').trim();let moved=0,orders=0;
+ for(const l of lessons.LESSONS){const rq=raw.get(l.id).questions.filter(q=>cl(q.q||'')),e=es.esLesson(l.id);
+  l.questions.forEach((q,k)=>{const r=rq[k];
+   if(q.kind==='order'){orders++;assert.deepEqual(q.seq.map(j=>q.options[j]),r.options.map(cl),`${l.id} q${k}: order`);assert(q.seq.some((j,n)=>j!==n),`${l.id} q${k}: not shown in order`);}
+   else assert.equal(q.options[q.correct],cl(r.options[r.correct]),`${l.id} q${k}: right answer`);
+   if(q.correct!==0)moved++;
+   assert.deepEqual([e.questions[k].correct,e.questions[k].seq],[q.correct,q.seq],`${l.id} q${k}: Spanish answer`);
+   if(q.kind==='truefalse')assert.deepEqual([q.options,e.questions[k].options.map(o=>o.toLowerCase())],[['True','False'],['verdadero','falso']],`${l.id} q${k}: true/false order`);});}
+ assert(orders>=40&&moved>100,`order questions ${orders}, right answer not first in ${moved}`);}
 {const {CoachChapters}=L('components/site/lessons/LessonParts.tsx');/* a lesson with no positions gets its format's shape */
  const h=renderToStaticMarkup(React.createElement(CoachChapters,{lang:'en',id:'no-such-lesson',format:'9v9',formatLabel:'9v9',steps:['a','b','c','d','e','f','g','h']}));
  assert(/data-frames="format"/.test(h)&&/data-fallback=""/.test(h)&&/data-diagram="9v9"/.test(h)&&(h.match(/data-chapter=""/g)||[]).length===3,'fallback: format shape, chapters kept');}

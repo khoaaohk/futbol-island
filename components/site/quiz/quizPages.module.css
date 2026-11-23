@@ -10,6 +10,7 @@
 .keyOpts{margin:0 0 6px;padding-left:18px;color:var(--ink-soft,#5b675f)}
 .keyOpts [data-right]{color:var(--ink,#14221d)}
 .keyList p{margin:0;line-height:1.5}
+.lessonKey{margin-top:20px}/* a lesson page's answer key, under its quiz (components/site/lessons/LessonQuiz.tsx) */
 .test{display:grid;gap:8px;justify-items:start;max-width:var(--col,736px);box-sizing:border-box;margin:32px 0;padding:20px 22px;border-radius:22px;background:#fdf0c4}
 .testTitle{margin:0;font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
 .testLine{margin:0;font-size:17px;line-height:1.4}

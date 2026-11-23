@@ -22,7 +22,8 @@ import {ES_UI} from '@/lib/i18n/es/ui';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,EsPrintSheet,EsReadNext,QA,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import type {EsRoute} from '../routes';
-import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
+import {CoachChapters,LearnCard} from '@/components/site/lessons/LessonParts';
+import LessonQuiz from '@/components/site/lessons/LessonQuiz';
 import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '@/app/(site)/site.module.css';
 import fx from '@/components/site/siteForms.module.css';
@@ -32,8 +33,8 @@ import rt from '@/components/site/railTarget.module.css';
 /**
  * The Spanish lessons (Spanish round D, Nov 16 2026): /es/learn/lessons (index), /es/learn/lessons/<id> (96 reading pages) and
  * the Spanish guide search /es/learn?q= (not a sitemap page; noindex, like /learn). Same sections and classes as
- * app/(site)/learn/lessons/*, Spanish words from lib/i18n/es/lessons.ts. A lesson page never marks the right answer: options are
- * listed A-Z and the explanations carry no verdict (as in English). The game itself is English for now; the page says so.
+ * app/(site)/learn/lessons/*, Spanish words from lib/i18n/es/lessons.ts. A lesson page plays its quiz in place with the answer key
+ * below (Nov 23 2026, components/site/lessons/LessonQuiz, as in English). The game itself is English for now; the page says so.
  */
 const INDEX='/learn/lessons',INDEX_ES=toEs(INDEX);
 const CHECKED=LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons;
@@ -120,8 +121,9 @@ export function LessonEsPage({l}:{l:EsLesson}){
    <CoachChapters lang="es" id={l.id} format={l.format} formatLabel={fmtWord(l.formatLabel)} steps={l.steps}/>
   </section>
   {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={`${styles.h2} ${rt.target}`} id="quiz">Preguntas de la prueba</h2>
-   <p className={styles.caption}>Intenta responder antes de abrir la explicación del entrenador. En la isla respondes cada una en la cancha.</p>
-   <QuizCards lang="es" questions={l.questions}/>
+   <p className={styles.caption}>Toca una respuesta y luego Comprobar. En la isla respondes cada una en la cancha.</p>
+   <LessonQuiz lang="es" id={l.id} name={`Quiz de “${l.title}”`} url={abs(l.esPath)} questions={l.questions}
+    more={guides[0]?{href:guides[0].path,name:guides[0].name}:{href:playLessonHref(l.id),name:'Juega esta lección en la isla'}}/>
   </section>}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">{group}</h2>
    <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}

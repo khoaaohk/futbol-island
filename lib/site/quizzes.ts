@@ -17,7 +17,8 @@ import {esPosition,esRule,esTerm,esFormation} from '@/lib/i18n/es/registry';
 export const QUIZZES_PATH='/learn/quizzes';
 export const quizPath=(slug:string)=>`${QUIZZES_PATH}/${slug}`;
 export type Lang='en'|'es';
-export type PlayQuestion={kind:BankQuestion['kind'];q:string;options:string[];correct:number;explain:string;fact?:string;pic?:{src:string;alt:string};more:{href:string;name:string}};
+/** kind 'order' (lesson pages only): `seq` lists the shown options' indices first to last; `correct` is the first step. */
+export type PlayQuestion={kind:BankQuestion['kind']|'order';q:string;options:string[];correct:number;seq?:number[];explain:string;fact?:string;pic?:{src:string;alt:string};more:{href:string;name:string}};
 export type SiteQuiz=Omit<BankQuiz,'questions'>&{path:string;enPath:string;questions:PlayQuestion[]};
 
 const hash=(s:string)=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};

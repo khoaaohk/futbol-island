@@ -12,9 +12,10 @@ import {meshLinks} from '@/lib/site/mesh';
 import {HUB_COMMON_FAQ,SAFE_TRUST_LINE} from '@/lib/site/safety';
 import {LESSON_DATA_UPDATED,SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {formatPhrase,LESSONS,lessonById,lessonDescription,lessonPath,lessonTitle} from '@/lib/site/lessons';
-import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {abs,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {lessonLd} from '@/lib/site/learningLd';
-import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
+import {CoachChapters,LearnCard} from '@/components/site/lessons/LessonParts';
+import LessonQuiz from '@/components/site/lessons/LessonQuiz';
 import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '../../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
@@ -22,7 +23,7 @@ import {lessonRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 
-/** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz shows its questions, options and explanations, never which option is correct. */
+/** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz plays in place (Nov 23 2026, LessonQuiz) with its answer key written out below. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>LESSONS.map(l=>({slug:l.id}));
@@ -53,8 +54,9 @@ export default function LessonPage({params}:{params:{slug:string}}){
    <CoachChapters lang="en" id={l.id} format={l.format} formatLabel={l.formatLabel} steps={l.steps}/>
   </section>
   {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={`${styles.h2} ${rt.target}`} id="quiz">Quiz questions</h2>
-   <p className={styles.caption}>Try to answer before you open the coach’s explanation. On the island you answer each one on the pitch.</p>
-   <QuizCards lang="en" questions={l.questions}/>
+   <p className={styles.caption}>Tap an answer, then Check. On the island you answer each one on the pitch.</p>
+   <LessonQuiz lang="en" id={l.id} name={`${l.title} quiz`} url={abs(lessonPath(l.id))} questions={l.questions}
+    more={guides[0]?{href:guides[0].path,name:guides[0].name[0].toUpperCase()+guides[0].name.slice(1)}:{href:playLessonHref(l.id),name:'Play this lesson on the island'}}/>
   </section>}
   {/* Nov 14 2026 (seo-boost): sibling lessons (lib/site/related.ts lessonSiblings), so every lesson links to its neighbours. */}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={`${styles.h2} ${rt.target}`} id="siblings">Keep going: {sib.groupName}</h2>

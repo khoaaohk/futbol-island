@@ -2,7 +2,6 @@ import {formationsIn} from '../../../lib/site/formations';
 import {place,describe,type GuideFormat} from '../../../lib/site/pitch';
 import PitchDiagram from '../../../lib/site/PitchDiagram';
 import {chapterRanges,lessonFrames,lessonMinutes,type LessonFrameData} from '../../../lib/site/lessonFrames';
-import type {SiteQuestion} from '../../../lib/site/lessons';
 import type {ReactNode} from 'react';
 import LessonFrame from './LessonFrame';
 import site from '../../../app/(site)/site.module.css';
@@ -15,8 +14,7 @@ import rt from '../railTarget.module.css';
  *    path) with 16px icons drawn like the fuel bolt (components/FuelCount.tsx: gold #f2b632, brown #7a4e12 outline 1.4).
  *  - CoachChapters: the coach's steps, word for word, split into 2-3 chapters, each beside a pitch frame from the lesson's own
  *    positions (lib/site/lessonFrames.ts); a lesson without positions gets its format's shape instead (never invented tactics).
- *  - QuizCards: questions with their options as chips (A-Z, as before) and the coach's explanation behind a disclosure. The page
- *    still NEVER marks which option is right and carries no Quiz markup.
+ *  (The quiz is components/site/lessons/LessonQuiz.tsx since Nov 23 2026: played in place, with an answer key.)
  * Server-only: no state, no effects, no client JavaScript.
  */
 export type Lang='en'|'es';
@@ -33,8 +31,7 @@ const W={
     opp.length?`The other team's ${list(opp)} ${opp.length>1?'move':'moves'}.`:'',
     f.holder&&f.receiver&&f.ballPath.length>1?`The ball goes from ${f.holder} to ${f.receiver} (solid arrows).`:f.ballPath.length>1?'The ball moves (solid arrows).':f.holder?`${f.holder} has the ball.`:'',
     focus.length?`The coach points at ${list(focus)} (white rings).`:''].filter(Boolean).join(' ');},
-  shape:(name:string)=>`Your team's shape: ${name}`,
-  explain:'Coach’s explanation'},
+  shape:(name:string)=>`Your team's shape: ${name}`},
  es:{learn:'En esta lección aprendes',facts:'Datos de la lección',format:'Formato',level:'Nivel',questions:'Preguntas',time:'Tiempo',path:'Parte de',
   mins:(m:number)=>`Unos ${m} min`,
   legend:'Los puntos dorados son tu equipo, que ataca hacia arriba; los puntos azules son el otro equipo. Las flechas discontinuas son carreras, las continuas son el balón, y un anillo blanco marca al jugador que señala el entrenador.',
@@ -47,8 +44,7 @@ const W={
     opp.length?`Del otro equipo ${opp.length>1?'se mueven':'se mueve'} ${list(opp)}.`:'',
     f.holder&&f.receiver&&f.ballPath.length>1?`El balón va de ${f.holder} a ${f.receiver} (flechas continuas).`:f.ballPath.length>1?'El balón se mueve (flechas continuas).':f.holder?`${f.holder} tiene el balón.`:'',
     focus.length?`El entrenador señala a ${list(focus)} (anillos blancos).`:''].filter(Boolean).join(' ');},
-  shape:(name:string)=>`La forma de tu equipo: ${name}`,
-  explain:'Explicación del entrenador'},
+  shape:(name:string)=>`La forma de tu equipo: ${name}`},
 } as const;
 
 // ---- icons: 16x16, pixel edges, fuel-bolt colours --------------------------------------------------------------------------
@@ -97,14 +93,4 @@ export function CoachChapters({lang,id,format,formatLabel,steps}:{lang:Lang;id:s
     <ol className={s.steps} start={a+1}>{steps.slice(a,b).map((t,j)=><li key={j}>{t}</li>)}</ol>
    </section>;})}
  </div>;
-}
-
-/** Quiz cards: question, options as chips (A-Z order from lib/site/lessons.ts), explanation behind a disclosure. No answer marks. */
-export function QuizCards({lang,questions}:{lang:Lang;questions:readonly SiteQuestion[]}){
- const w=W[lang];
- return <ol className={`${site.stack} ${s.quiz}`}>{questions.map((q,i)=><li key={i} className={s.q}>
-  <h3 className={s.qTitle}>{q.q}</h3>
-  {q.options.length>0&&<ul className={`${site.options} ${s.chips}`}>{q.options.map((o,j)=><li key={j}>{o}</li>)}</ul>}
-  {q.explain&&<details className={s.explain}><summary>{w.explain}</summary><p data-explain="">{q.explain}</p></details>}
- </li>)}</ol>;
 }
