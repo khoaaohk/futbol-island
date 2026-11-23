@@ -266,6 +266,7 @@ type D=ReturnType<typeof derive>;
 const EXAMPLE=['Ava','Ben','Carlos','Dani','Eli','Fatima','Gus','Hana','Isla','Jonah','Kai','Leo'];
 /* ------------------------------------------------------------------ Home -------------------------------------------------- */
 /** Home (Nov 22 2026, owner: "a simple dashboard"): the team at a glance, Continue, and one tile per tool with its icon and accent. */
+const GAME_DAY=['lineup','minutes','subs','match','summary'] as const,TRAINING=['drills','scan','board'] as const;
 function HomeTab({w,store,d,last,lang,go,running,liveName,onResume,onMatch,onExample}:{w:Words;store:Store;d:D;last:Tab|null;lang:Lang;go:(t:Tab)=>void;running:boolean;liveName:string|null;onResume:()=>void;onMatch:()=>void;onExample:()=>void}){
  /* motion: the tiles rise in once per browser session; the team card pops in when "Try an example team" fills it */
  const intro=useOncePerSession('fi-coach-intro'),[filled,setFilled]=useState(false);
@@ -294,11 +295,13 @@ function HomeTab({w,store,d,last,lang,go,running,liveName,onResume,onMatch,onExa
    <span className={c.tileIcon} aria-hidden="true"><Icon d={ICONS[running?'subs':last!]}/></span>
    <span className={c.tileText}><small>{running?w.gameOn:w.continueOn}{running&&liveName?` · ${liveName}`:''}</small><b>{running?w.tapReturn:TITLE(w,last!)}</b></span>
    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}
-  <h2 className={c.h2}>{w.tools}</h2>
-  <ul className={c.tiles}>{tiles.map((t,i)=>{const icon=<span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span>;
+  {/* two kinds of tools (owner, Nov 22 2026): Game day first (later: Training first on non-game days, once games are scheduled) */}
+  {([['game',w.groupGame,GAME_DAY],['training',w.groupTraining,TRAINING]] as const).map(([g,title,keys],gi)=><section key={g} aria-labelledby={`coach-g-${g}`} data-tool-group={g}>
+  <h2 className={c.h2} id={`coach-g-${g}`}>{title}</h2>
+  <ul className={c.tiles}>{keys.map(k=>tiles.find(t=>t.key===k)!).map((t,j)=>{const i=gi*GAME_DAY.length+j;const icon=<span className={c.tileIcon} aria-hidden="true"><Icon d={t.icon}/></span>;
    return <li key={t.key} className={intro?'fi-in':undefined} style={intro?{'--i':i+2} as React.CSSProperties:undefined}>{t.href?<a className={c.tile} data-tool={t.tool} href={t.href} onClick={()=>{try{window.sessionStorage.setItem(HOME_Y,String(window.scrollY));}catch{/* optional */}}}>
     {icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></a>
-   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}>{icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>;})}</ul>
+   :<button type="button" className={c.tile} data-tool={t.tool} onClick={t.on}>{icon}<span className={c.tileText}><b>{t.name}</b><small>{t.line}</small></span></button>}</li>;})}</ul></section>)}
   <p className={`${c.note} ${c.foot}`}>{w.privacy}</p>
  </>;
 }

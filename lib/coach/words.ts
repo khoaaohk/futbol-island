@@ -48,7 +48,8 @@ const en={
  teamN:(i:number)=>`Team ${i}`,newTeam:'New team',stepN:(a:number,b:number)=>`Step ${a} of ${b}`,nextStep:'Next',prevStep:'Back',createTeam:'Create team',
  squadFrom:'Players',startEmpty:'Start with an empty squad',copyFrom:(n:string)=>`Copy players from ${n}`,liveTag:'Game in progress',endFirst:'End its game first',maxTeams:'You can keep up to 12 teams.',
  /* the live game: the mini bar on every screen and the Next change panel */
- changeIn:(t:string)=>`Next change ${t}`,changeNow:'Change now',swapsN:(n:number)=>`${n} swap${n===1?'':'s'}`,offL:'Off',onL:'On',openMatch:'Open Match day',showChange:'Show the change',hideChange:'Hide the change'
+ groupGame:'Game day',groupTraining:'Training',
+ changeIn:(t:string)=>`Next change ${t}`,changeNow:'Change now',swapsN:(n:number)=>`${n} swap${n===1?'':'s'}`,openMatch:'Open Match day',showChange:'Show the change',hideChange:'Hide the change'
 
 };
 export type Words=typeof en;
@@ -95,7 +96,8 @@ const es:Words={
  deleteQ:(n:string)=>`¿Borrar ${n}?`,deleteNote:'También se borran su plantel, su alineación y sus partidos en este teléfono. No se puede deshacer.',
  teamN:(i:number)=>`Equipo ${i}`,newTeam:'Equipo nuevo',stepN:(a:number,b:number)=>`Paso ${a} de ${b}`,nextStep:'Siguiente',prevStep:'Atrás',createTeam:'Crear equipo',
  squadFrom:'Jugadores',startEmpty:'Empezar con el plantel vacío',copyFrom:(n:string)=>`Copiar jugadores de ${n}`,liveTag:'Partido en curso',endFirst:'Termina su partido primero',maxTeams:'Puedes tener hasta 12 equipos.',
- changeIn:(t:string)=>`Próximo cambio ${t}`,changeNow:'Cambio ahora',swapsN:(n:number)=>`${n} cambio${n===1?'':'s'}`,offL:'Sale',onL:'Entra',openMatch:'Abrir Día de partido',showChange:'Ver el cambio',hideChange:'Ocultar el cambio'
+ groupGame:'Día de partido',groupTraining:'Entrenamiento',
+ changeIn:(t:string)=>`Próximo cambio ${t}`,changeNow:'Cambio ahora',swapsN:(n:number)=>`${n} cambio${n===1?'':'s'}`,openMatch:'Abrir Día de partido',showChange:'Ver el cambio',hideChange:'Ocultar el cambio'
 
 };
 export const WORDS={en,es};
