@@ -1,3 +1,4 @@
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
@@ -73,6 +74,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   {f.sources&&<Section id="sources" title="Sources">
    <ul>{f.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener">{x.name}</a>: {x.says}.</li>)}</ul>
   </Section>}
+  {/* Nov 23 2026: the formations quiz (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={f.path}/>
   {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
   <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}],f.path)}/>
   <GuideEnd path={f.path} checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>

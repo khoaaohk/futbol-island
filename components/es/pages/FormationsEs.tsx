@@ -1,4 +1,5 @@
 import KeepReading from '@/components/site/KeepReading';
+import {TestYourself} from '@/components/site/quiz/QuizPages';
 import {withMesh} from '@/lib/site/mesh';
 import RailNav from '@/components/site/shell/RailNav';
 import {onwardFor} from '@/lib/site/railNav';
@@ -104,6 +105,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   {f.sources&&<Section id="sources" title="Fuentes">
    <ul>{f.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
   </Section>}
+  {/* Nov 23 2026: the formations quiz (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={f.path} lang="es"/>
   <KeepReading lang="es" groups={withMesh([{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}],f.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>

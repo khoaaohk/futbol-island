@@ -107,13 +107,21 @@ export const QUIZ_HUB_FAQ={
   {q:'¿Hay más preguntas en el juego?',a:'Sí. Cada lección de Futbol Island termina con su propia prueba en la cancha.'}]};
 
 /** "Test yourself" (owner brief): the guide pages that get one small card linking to their quiz. English paths. */
-const RQ=(s:string)=>`/learn/soccer-rules/${s}`,TQ=(s:string)=>`/learn/soccer-terms/${s}`;
+const RQ=(s:string)=>`/learn/soccer-rules/${s}`,TQ=(s:string)=>`/learn/soccer-terms/${s}`,P_=(s:string)=>`/learn/soccer-positions/${s}`;
 export const QUIZ_FOR:Readonly<Record<string,string>>={
- ...Object.fromEntries(['throw-in','goal-kick','corner-kick','kick-off','substitutions-and-game-length','drop-ball','advantage'].map(s=>[RQ(s),'soccer-rules-quiz'])),
- [RQ('offside')]:'offside-quiz',[RQ('fouls-and-free-kicks')]:'fouls-and-cards-quiz',[RQ('yellow-and-red-cards')]:'fouls-and-cards-quiz',[RQ('handball')]:'fouls-and-cards-quiz',[RQ('back-pass-rule')]:'fouls-and-cards-quiz',
- [RQ('penalty-kick')]:'penalty-kick-quiz',[RQ('futsal-rules')]:'futsal-rules-quiz',[RQ('build-out-line')]:'7v7-soccer-rules-quiz',[RQ('heading-rules-for-kids')]:'7v7-soccer-rules-quiz',
- ...Object.fromEntries(POSITIONS.map(p=>[p.path,'soccer-positions-quiz'])),
- ...Object.fromEntries(['nutmeg','hat-trick','brace','clean-sheet','two-v-one','through-ball','give-and-go','assist','own-goal','overlap','man-on'].map(s=>[TQ(s),'soccer-terms-quiz'])),
+ ...Object.fromEntries(['kick-off','substitutions-and-game-length'].map(s=>[RQ(s),'soccer-rules-quiz'])),
+ [RQ('offside')]:'offside-quiz',[RQ('fouls-and-free-kicks')]:'fouls-and-cards-quiz',[RQ('yellow-and-red-cards')]:'fouls-and-cards-quiz',[RQ('handball')]:'fouls-and-cards-quiz',
+ [RQ('penalty-kick')]:'penalty-kick-quiz',[RQ('futsal-rules')]:'futsal-rules-quiz',[RQ('build-out-line')]:'7v7-soccer-rules-quiz',[RQ('heading-rules-for-kids')]:'9v9-soccer-rules-quiz',
+ /* Nov 23 2026: the new quizzes take the pages they teach */[RQ('throw-in')]:'throw-in-quiz',[RQ('goal-kick')]:'corner-kick-and-goal-kick-quiz',[RQ('corner-kick')]:'corner-kick-and-goal-kick-quiz',
+ [RQ('back-pass-rule')]:'goalkeeper-rules-quiz',[RQ('advantage')]:'free-kick-quiz',[RQ('drop-ball')]:'free-kick-quiz',
+ ...Object.fromEntries(POSITIONS.map(p=>[p.path,'soccer-positions-quiz'])),[P_('goalkeeper')]:'goalkeeper-rules-quiz',
+ ...Object.fromEntries(FORMATIONS.map(f=>[f.path,'soccer-formations-quiz'])),
+ ...Object.fromEntries(['nutmeg','hat-trick','brace','clean-sheet','assist','own-goal','man-on','tap-in','header','volley','chip','stoppage-time','extra-time','near-post','far-post','penalty-area','possession'].map(s=>[TQ(s),'soccer-terms-quiz'])),
+ ...Object.fromEntries(['two-v-one','through-ball','give-and-go','overlap','underlap','cutback','switching-play','width','counterattack','third-man-run','overload','support','build-up'].map(s=>[TQ(s),'attacking-tactics-quiz'])),
+ ...Object.fromEntries(['pressing','cover','marking','goal-side','jockeying','clearance','low-block','high-line','offside-trap','tackle'].map(s=>[TQ(s),'defending-tactics-quiz'])),
+ ...Object.fromEntries(['false-nine','box-to-box','sweeper-keeper','pivot'].map(s=>[TQ(s),'soccer-formations-quiz'])),
+ ...Object.fromEntries(['step-over','dummy','shielding','first-touch','one-touch','half-volley','weak-foot','scanning','square-pass','cross','dribble'].map(s=>[TQ(s),'soccer-skills-terms-quiz'])),
+ [TQ('set-piece')]:'free-kick-quiz',[TQ('free-kick-wall')]:'free-kick-quiz',[TQ('goal-area')]:'corner-kick-and-goal-kick-quiz',
  [TQ('penalty-shoot-out')]:'penalty-kick-quiz',[TQ('yellow-card')]:'fouls-and-cards-quiz',[TQ('red-card')]:'fouls-and-cards-quiz'};
 /** The quiz for an English guide path, in a language (null when the page has none). */
 export const quizForPage=(enPath:string,lang:Lang='en')=>{const s=QUIZ_FOR[enPath];return s?quizBySlug(s,lang):null;};
