@@ -22,7 +22,7 @@ function load(file){
 }
 const L=rel=>load(path.join(root,rel));
 const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
-const reg=L('lib/site/tools/registry.ts'),icons=L('components/site/tools/ToolIcons.tsx');
+const reg=L('lib/site/tools/registry.ts'),esP=L('lib/i18n/esPaths.ts'),icons=L('components/site/tools/ToolIcons.tsx');
 const en=renderToStaticMarkup(React.createElement(L('app/(site)/tools/page.tsx').default,{}));
 const es=renderToStaticMarkup(L('components/es/pages/ToolsEs.tsx').toolsEsRoute('/tools').render());
 
@@ -32,7 +32,7 @@ function check(h,lang,prefix){
  assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['lineups','time','practice','print'],`${lang}: each group has its own tint`);
  const cards=[...h.matchAll(/<a [^>]*data-tool-card="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
  const hrefs=cards.map(m=>/href="([^"]+)"/.exec(m[0])[1]);
- const want=[...reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path),prefix?'/coach?lang=es':'/coach'];/* + the coach app (Nov 17) */
+ const want=[...reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix?esP.toEs(p.path):p.path),/* round 4D: a Spanish page may have its own slug */prefix?'/coach?lang=es':'/coach'];/* + the coach app (Nov 17) */
  assert.deepEqual([...hrefs].sort(),[...want].sort(),`${lang}: one card per tool page, no more, no less`);
  for(const [a,kind,inner] of cards){
   const where=`${lang} card ${/href="([^"]+)"/.exec(a)[1]}`;

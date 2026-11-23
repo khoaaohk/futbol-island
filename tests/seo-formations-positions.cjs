@@ -141,7 +141,7 @@ for(const g of formations.FORMAT_GUIDES)assert(/<table/.test(html.get(g.path))&&
 // ---- 3. pictures, lesson links, llms.txt, hub lists ---------------------------------------------------------------------------
 (async()=>{
  const img=L('lib/site/pitchImage.tsx'),{ImageResponse}=require('next/og');
- assert.equal(guides.DIAGRAM_FILES.length,25);
+ assert.equal(guides.DIAGRAM_FILES.length,28);/* round 4D: + the three fútbol 8 shapes (lib/site/tools/shapes8.ts) */
  for(const f of guides.DIAGRAM_FILES)assert(img.diagramFor(f),`${f} has a picture`);
  assert.equal(img.diagramFor('nope-formation.png'),null);
  for(const f of ['7v7-2-3-1-formation.png','futsal-3-1-formation.png','wingback-position.png']){

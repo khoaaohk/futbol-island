@@ -3,7 +3,6 @@ import {notFound} from 'next/navigation';
 import LineupBuilder from '@/components/site/tools/LineupBuilder';
 import RotationPlanner from '@/components/site/tools/RotationPlanner';
 import {PrintStyle} from '@/components/site/tools/ToolParts';
-import {formationBySlug} from '@/lib/site/formations';
 import {abs} from '@/lib/site/seo';
 import {DEFAULT_FORMATION} from '@/lib/site/tools/lineup';
 import {EMBED_TOOLS,embedPath,embedTool,plannerSetup} from '@/lib/site/tools/embed';
@@ -27,7 +26,7 @@ export default function EmbedPage({params}:{params:{tool:string}}){
  const t=embedTool(params.tool);if(!t)notFound();
  const name=t.h1[0].toUpperCase()+t.h1.slice(1);
  let tool:React.ReactNode;
- if(t.kind==='lineup'){const format=t.format??'7v7',f=formationBySlug(DEFAULT_FORMATION[format])!;tool=<LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={t.format}/>;}
+ if(t.kind==='lineup'){const format=t.format??'7v7';tool=<LineupBuilder shapes={SHAPES} initial={DEFAULT_FORMATION[format]} lockFormat={t.format}/>;}
  else{const {presets,initial}=plannerSetup(t);tool=<RotationPlanner presets={presets} initial={initial} lockKey={t.format}/>;}
  return <>
   <PrintStyle/>
