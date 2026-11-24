@@ -26,8 +26,13 @@ async function boot(b, vp, mobile) {
     try { if (!sessionStorage.getItem('__a_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); if (tier) localStorage.setItem('fi2-battery-saver', tier); if (noTrain) localStorage.setItem('fi-no-train', '1'); } sessionStorage.setItem('__a_boot', '1'); } catch { /* */ }
     const n = Date.now.bind(Date); window.__skew = 0; Date.now = () => n() + window.__skew;
   }, { tier, noTrain });
+  // Under a local `next start` next.config.mjs runs again at server start, so /api/build-id answers a new `local-<time>` id that
+  // differs from the page's: lib/buildUpdate.ts then reloads this untouched tab on the ride part's simulated tab return (the
+  // track part's old flake: a fresh /play?from=arcade arrival walk, clock skew lost). Vercel's id is the deployment's: not live.
+  await ctx.route('**/api/build-id', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
   const p = await ctx.newPage(), errs = [], warns = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
+  p.on('framenavigated', (fr) => { if (fr === p.mainFrame() && navs++ > 2) console.log(`  page navigated again: ${fr.url()}`); }); let navs = 0;
   p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') warns.push(m.text().slice(0, 160)); });
   await p.goto(url + '/play?from=arcade', { timeout: 240000 }); await p.waitForTimeout(3000);
   for (let i = 0; i < 90 && !(await p.evaluate(() => !!window.__fi2)); i++) {
@@ -90,7 +95,10 @@ async function partVending(c) {
       items = await p.locator('[data-vending-item]').count(); }
     check(`vending ${id}: prompt, zoom, drinks listed`, go && zoom && items > 0, `go ${go} zoom ${zoom} items ${items}`);
     if (zoom && shots && id === ids[0]) await p.screenshot({ path: path.join(shots, `vending-${id}.png`) });
-    await p.keyboard.press('Escape'); await p.getByRole('button', { name: /^(Done|Close|Back)$/ }).first().click({ timeout: 1500 }).catch(() => {});
+    // Escape closes the machine; the Done/Close button only if it is still open (clicking "Back" after Escape could hit an island
+    // control and leave a panel open: the travel map then paused the island and the ride/track parts failed after this part)
+    await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+    if (await p.locator('[data-vending-machine]').count()) await p.locator('[data-vending-machine]').getByRole('button', { name: /^(Done|Close|Back)$/ }).first().click({ timeout: 1500 }).catch(() => {});
     await p.waitForSelector('[data-vending-machine]', { state: 'detached', timeout: 6000 }).catch(() => {});
   }
 }
@@ -153,6 +161,7 @@ async function partRide(c) {
   check('fast travel from the map while riding: off the train, at North station', !after.active && Math.hypot(after.x - 170, after.z + 207) < 30, JSON.stringify(after));
   if (shots) await p.screenshot({ path: path.join(shots, 'travel-north.png') }); }
   if (await p.evaluate(() => window.__fi2.trainRide.active)) await p.evaluate(() => window.__fi2.trainRide.finish());
+  await p.waitForTimeout(1500); await closeMap(p);
   check('no Talk prompt and no thought bubbles while riding (checked during the ride above)', true);
   // board refused while jetpacking
   await standingTrainAt(p, 0);
@@ -162,11 +171,19 @@ async function partRide(c) {
     const e = document.querySelector('[data-train-board]'); const shown = !!e && !e.hidden; const ok = f.trainRide.board(); const r = { shown, boarded: ok, mode: f.rideRef?.current }; if (ok) f.trainRide.finish(); try { f.selectRide('walk'); } catch { /* */ } return r; });
   check('no Board offer while on the jetpack', typeof jp === 'object' && !jp.shown && !jp.boarded, JSON.stringify(jp));
 }
+// The travel map pauses the island (Town `paused`: the loop sleeps). After a slow run the ride part's M press can open it later than
+// its 8 s wait; left open it froze the jetpack landing and train 0, and the track part failed. Close it (Escape) and wait.
+async function closeMap(p) { for (let i = 0; i < 6; i++) { const open = await p.evaluate(() => [...document.querySelectorAll('[class*=IslandTravelMap_dialog]')].some((e) => e.tagName === 'DIALOG' ? e.open : e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden')); if (!open) return true; await p.keyboard.press('Escape'); await p.waitForTimeout(600); } return false; }
 async function partTrack(c) {
   const { p } = c;
   // stand on the rails in the north straight; a train comes: it horns, stops short, asks to step off, slides the player aside
   // (Nov 24 polish: the gap counts while the player is still on the line, within 2.4 m of the spot; once eased off the train may go on)
+  // on foot first: after the ride part's jetpack check, Walk while flying only queues a landing (pendingRide) that glides down to
+  // the nearest landing spot over a few seconds; teleporting before it lands left the player cruising along the line on the jetpack
+  check('travel map closed before the track part', await closeMap(p));
   try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
+  await p.waitForFunction(() => window.__fi2.rideRef?.current === 'walk', null, { timeout: 30000 }).catch(() => {});
+  check('on foot for the track part', await p.evaluate(() => window.__fi2.rideRef?.current === 'walk'));
   const spot = await p.evaluate(() => { const s = window.__fi2.trains.sched; let b = 0, bd = 1e9; for (let q = 0; q < 2700; q += 1) { const a = s.trackAt(q), d = Math.hypot(a.x + 150, a.z + 204); if (d < bd) { bd = d; b = q; } } const a = s.trackAt(b); return { x: a.x, z: a.z, s: b }; });
   // train 0 to 60 m before s 400: scan its lap for the time its front is there
   const Tlap = await p.evaluate((S0) => { const s = window.__fi2.trains.sched; let T = 0; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 70 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) { T = t; break; } } const P = s.trainPhase(0, s.clock()); window.__skew += (((T - P) % 360) + 360) % 360 * 1000;  return T; }, spot.s);

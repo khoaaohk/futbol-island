@@ -5,9 +5,11 @@
  position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;background:transparent;color:var(--cream);overflow:hidden;font-family:var(--font-body),Arial,Helvetica,sans-serif}
 .dialog::backdrop{background:rgba(10,22,19,.88)}
 .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom))}
-.bar{width:min(960px,100%);display:flex;align-items:center;gap:14px}
-.bar h2{margin:0;white-space:nowrap;font:400 28px/1 IslandBrush,sans-serif;color:var(--cream)}
-.tally{margin:0 0 0 auto;white-space:nowrap;font-weight:700;font-size:15px;color:#f2d79a}
+/* Header (owner, Nov 25 2026): the count on the left, the title in the middle, Done on the right. */
+.bar{width:min(960px,100%);display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px}
+.bar h2{margin:0;white-space:nowrap;text-align:center;font:400 28px/1 IslandBrush,sans-serif;color:var(--cream)}
+.tally{justify-self:start;margin:0;white-space:nowrap;font-weight:700;font-size:15px;color:#f2d79a}
+.done{justify-self:end}
 .stage{--h:calc(100dvh - 170px);width:min(960px,100%,var(--h)*1.5);aspect-ratio:1.5;perspective:2400px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .dialog[data-single] .stage{width:min(440px,100%,var(--h)*.74);aspect-ratio:.74}
 .book{position:relative;width:100%;height:100%;display:grid;grid-template-columns:1fr 1fr;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.42)}
@@ -45,11 +47,48 @@
 .coins{position:absolute;left:50%;bottom:-2.6cqh;transform:translateX(-50%);margin:0;padding:6px 12px;border-radius:999px;background:var(--green);color:var(--cream);font-weight:800;font-size:max(12px,3.2cqw);white-space:nowrap;animation:pop .35s ease-out}
 @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 /* The rubber stamp: a knob, a wooden block and the rubber face in the stamp's ink. */
-.stamper{position:absolute;inset:4%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;animation:press .9s cubic-bezier(.5,0,.4,1) forwards;pointer-events:none;z-index:2}
-.knob{width:30%;aspect-ratio:1.5;border-radius:50% 50% 30% 30%;background:#9a6a3e}
-.block{width:22%;height:16%;background:#7d5330}
-.rubber{width:100%;aspect-ratio:1;max-height:62%;border-radius:50%;background:#6b4426;border:10px solid currentColor;box-sizing:border-box}
-@keyframes press{0%{opacity:0;transform:translateY(-55%) scale(1.14)}25%{opacity:1;transform:translateY(-30%) scale(1.1)}46%{transform:translateY(0) scale(1)}58%{transform:translateY(1%) scale(.985)}100%{opacity:0;transform:translateY(-80%) scale(1.12)}}
+.stamper{position:absolute;inset:4%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transform-origin:50% 100%;animation:press 2.3s linear forwards;pointer-events:none;z-index:2}
+.knob{width:30%;aspect-ratio:1.5;border-radius:50% 50% 30% 30%;background:#a8774a;box-shadow:inset -6px -4px 0 rgba(60,34,12,.25)}
+.block{width:20%;height:16%;background:#7d5330;box-shadow:inset -5px 0 0 rgba(60,34,12,.25)}
+.rubber{width:100%;aspect-ratio:1;max-height:62%;border-radius:50%;background:#6b4426;border:9px solid #6b4426;box-shadow:inset 0 0 0 999px color-mix(in srgb,currentColor 82%,#1c120a);box-sizing:border-box}
+/* The beats (2.3 s; StampBook.tsx PRESS_MS, contact at 52 %, lifted at 86 %): slide in, hover with a wiggle, an inking dab, lift,
+   press hard (squash), rock the ink in, lift away with a bounce. */
+@keyframes press{
+ 0%{opacity:0;transform:translate(34%,-78%) rotate(14deg) scale(1.12);animation-timing-function:cubic-bezier(.2,.7,.3,1)}
+ 14%{opacity:1;transform:translate(0,-40%) rotate(-5deg) scale(1.1);animation-timing-function:ease-in-out}
+ 19%{transform:translate(0,-42%) rotate(4deg) scale(1.1)}
+ 24%{transform:translate(0,-40%) rotate(-3deg) scale(1.1)}
+ 28%{transform:translate(0,-40%) rotate(0) scale(1.1);animation-timing-function:ease-in}
+ 32%{transform:translate(0,-30%) rotate(0) scale(1.07) scaleY(.96);animation-timing-function:ease-out}
+ 37%{transform:translate(0,-42%) rotate(0) scale(1.1)}
+ 46%{transform:translate(0,-58%) rotate(-2deg) scale(1.13);animation-timing-function:cubic-bezier(.6,0,1,.6)}
+ 52%{transform:translate(0,1%) rotate(0) scale(1.02) scaleY(.88);animation-timing-function:ease-out}
+ 56%{transform:translate(0,0) rotate(0) scale(1) scaleY(.95)}
+ 62%{transform:translate(0,0) rotate(2.4deg) scale(1) scaleY(.95)}
+ 68%{transform:translate(0,0) rotate(-2.2deg) scale(1) scaleY(.95)}
+ 74%{transform:translate(0,0) rotate(1deg) scale(1) scaleY(.96)}
+ 80%{transform:translate(0,0) rotate(0) scale(1) scaleY(.97);animation-timing-function:cubic-bezier(.2,.8,.3,1)}
+ 86%{opacity:1;transform:translate(0,-52%) rotate(-3deg) scale(1.1)}
+ 91%{transform:translate(0,-46%) rotate(-1deg) scale(1.09);animation-timing-function:ease-in}
+ 100%{opacity:0;transform:translate(-18%,-96%) rotate(-10deg) scale(1.14)}}
+/* Contact: the page (and the stamp on it) shakes a few px for ~250 ms. */
+.page[data-pressing]{animation:thud .26s 1.196s ease-out}
+@keyframes thud{0%,100%{translate:0 0}20%{translate:-3px 2px}40%{translate:3px -1px}60%{translate:-2px 1px}80%{translate:1px 0}}
+/* The ink spreads from the centre (a little uneven), the stamp's tilt settles, and a few ink specks land round it. */
+.page[data-writing] .ink{animation:inkIn .7s cubic-bezier(.2,.7,.3,1) both}
+@keyframes inkIn{0%{clip-path:ellipse(4% 5% at 50% 50%);rotate:5deg;scale:1.04}45%{clip-path:ellipse(46% 40% at 49% 51%)}100%{clip-path:ellipse(76% 76% at 50% 50%);rotate:0deg;scale:1}}
+.specks{position:absolute;inset:0;pointer-events:none}
+.specks i{position:absolute;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:0;animation:speck .5s .12s ease-out forwards}
+.specks i:nth-child(1){left:6%;top:30%;width:5px;height:5px}.specks i:nth-child(2){left:88%;top:18%}.specks i:nth-child(3){left:92%;top:70%;width:4px;height:4px;animation-delay:.2s}
+.specks i:nth-child(4){left:14%;top:84%;width:6px;height:6px;animation-delay:.18s}.specks i:nth-child(5){left:58%;top:-1%;width:4px;height:4px;animation-delay:.26s}
+@keyframes speck{0%{opacity:0;scale:.2}60%{opacity:.85;scale:1.25}100%{opacity:.75;scale:1}}
+/* Then Location, Date, the fact and the coins write in, one after another (left to right, like a pen). */
+.page[data-writing] .fields dd,.page[data-writing] .fact{animation:write .55s ease-out both}
+.page[data-writing] .fields div:nth-child(1) dd{animation-delay:.6s}
+.page[data-writing] .fields div:nth-child(2) dd{animation-delay:1.05s}
+.page[data-writing] .fact{animation-delay:1.5s}
+@keyframes write{from{clip-path:inset(0 100% 0 0);opacity:.4}to{clip-path:inset(0 0 0 0);opacity:1}}
+.page[data-writing] .coins{animation:pop .4s 2.05s ease-out both}
 .fields{margin:0;display:grid;gap:1.2cqh}
 .fields div{display:flex;align-items:baseline;gap:8px;border-bottom:1.5px dotted var(--dash);padding-bottom:.6cqh;min-height:max(22px,5.4cqh)}
 .fields dt{flex:none;font-size:max(11px,3cqw);font-weight:700;color:var(--muted)}
@@ -91,6 +130,6 @@
 @media(hover:hover){.turn:not(:disabled):hover{filter:brightness(1.08)}}
 .turn:not(:disabled):active{transform:scale(.94)}
 .where{margin:0;min-width:9em;text-align:center;font-weight:800;font-size:15px}
-@media(max-width:600px){.bar{gap:10px}.bar h2{font-size:22px}.tally{font-size:14px}.tallyWord{display:none}.dialog[data-single] .slot{width:min(74cqw,40cqh);margin:1cqh auto 2cqh}.dialog[data-single] .page{padding-top:4cqh}}
+@media(max-width:600px){.bar{gap:8px}.bar h2{font-size:21px}.tally{font-size:14px}.tallyWord{display:none}.dialog[data-single] .slot{width:min(74cqw,40cqh);margin:1cqh auto 2cqh}.dialog[data-single] .page{padding-top:4cqh}}
 @media(max-height:520px){.bar h2{font-size:22px}.wrap{gap:6px}.stage{--h:calc(100dvh - 120px)}.turn{width:40px;height:40px}}
-@media(prefers-reduced-motion:reduce){.leaf,.stamper,.coins{animation:none}.ink{transition:none}}
+@media(prefers-reduced-motion:reduce){.leaf,.stamper,.coins,.page[data-pressing],.page[data-writing] .ink,.page[data-writing] .fields dd,.page[data-writing] .fact,.page[data-writing] .coins,.specks i{animation:none}.specks{display:none}.ink{transition:none}}

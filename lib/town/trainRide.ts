@@ -25,6 +25,11 @@ import {ZIP_LOOK,softLook,springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
 
 export const TRAIN_BOARD_KEY='train-board';
+/** Owner (Nov 25 2026): Board is offered on foot and from the scooter, bike and moped (never from the jetpack: it lands first).
+ *  Boarding from one of them switches to walking first (Ports.dismount: Town's R travel-mode switch) in the same press; Get off
+ *  leaves you on foot (as fast travel does: the vehicle is not restored). */
+export const TRAIN_BOARD_FROM=['walk','scooter','bike','moped'] as const;
+export const canBoardFrom=(mode:string)=>(TRAIN_BOARD_FROM as readonly string[]).includes(mode);
 /** One football fact per stop, read in the "Next stop" announcement (AGENTS.md: the ride teaches). */
 export const STOP_FACTS:Record<TrainStation['id'],string>={
  north:'match-day trains carry fans to games together, in Japan, the UK and all over the world.',
@@ -107,6 +112,8 @@ type Ports={
  pay:(id:string)=>void;
  /** Camera / shadow fit hold while riding (the zipline's). */
  hold?:(on:boolean)=>void;
+ /** Boarding from the scooter / bike / moped: switch to walking first (Town's travel-mode switch, the vehicle stowed as R does). */
+ dismount?:()=>void;
  /** Ground height (Town: fieldSurfaceHeight, Summit Isle's hill and cutting): the ride camera stays above it. */
  ground?:(x:number,z:number)=>number;
 };
@@ -128,6 +135,7 @@ export function createTrainRide(ports:Ports){
   const st=run.states[nearTrain];if(st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<BOARD_LEFT)return false;
   let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-me.x,probe.z-me.z);if(d<bd){bd=d;best=s;}}
   if(best<0){setNote('This train is full. The next one comes in 2 minutes.');return false;}
+  ports.dismount?.();// on a scooter / bike / moped: on foot first, boarded in the same press
   k=nearTrain;j=best;lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
   lookS.x=lookS.v=0;stickAim=dragAim=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;

@@ -47,12 +47,19 @@ for(let i=0;i<tt.TRAIN_STATIONS.length;i++){const st=tt.TRAIN_STATIONS[i];for(co
 for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.stopOf(st.id)).startsWith(`Next stop: ${st.name}. Did you know?`),`${st.id} announcement`);
 {// a fake run: train 1 at the North stop with its doors open
  const north=S.stopOf('north'),states=[0,1,2].map(i=>({s:0,at:-1,doors:0,dwellLeft:0,next:0}));const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>{const sp=R.platformSpot(0,tt.TRAIN_STATIONS[0].s+j,{x:0,y:0,z:0,yaw:0});o.x=sp.x;o.y=sp.y+1;o.z=sp.z;o.yaw=0;return o;}};
- let placed=null,seated=0,paid=[];const ride=R.createTrainRide({run:()=>run,place:(x,z,y)=>{placed={x,z,y};},seat:()=>{seated++;},taken:()=>false,cue:()=>{},loadQuiz:async()=>[{id:'q:1',q:'How long is a half?',options:['45 min','20 min'],correct:0,explain:'Two halves of 45.'}],pay:id=>paid.push(id)});
+ // Nov 25 2026 (owner): Board from the scooter, bike and moped as well as on foot, never from the jetpack; boarding from a vehicle
+ // switches to walking (the dismount port) in the same press; Get off leaves you on foot.
+ for(const m of ['walk','scooter','bike','moped'])assert(R.canBoardFrom(m),`Board offered from ${m}`);assert(!R.canBoardFrom('jetpack'),'no Board from the jetpack');
+ {const T=read('components/Town.tsx');assert(/trainRide\.want\([^;]*canBoardFrom\(rideRef\.current\)/.test(T),'Town gates Board with canBoardFrom');assert(/dismount:\(\)=>\{if\(rideRef\.current!=='walk'\)selectRide\('walk'\);\}/.test(T),'Town: the dismount is the travel-mode switch to walk');}
+ let mode='moped',dismounts=0;
+ let placed=null,seated=0,paid=[];const ride=R.createTrainRide({run:()=>run,dismount:()=>{dismounts++;mode='walk';},place:(x,z,y)=>{placed={x,z,y};},seat:()=>{seated++;},taken:()=>false,cue:()=>{},loadQuiz:async()=>[{id:'q:1',q:'How long is a half?',options:['45 min','20 min'],correct:0,explain:'Two halves of 45.'}],pay:id=>paid.push(id)});
  const sp=R.platformSpot(0,tt.TRAIN_STATIONS[0].s,{x:0,y:0,z:0,yaw:0});
+ assert.equal(ride.want(sp.x,sp.z,sp.y,R.canBoardFrom('jetpack')),null,'jetpack: no Board');
  assert.equal(ride.want(sp.x,sp.z,sp.y,true),null,'no train: no Board');
  Object.assign(states[1],{at:north,doors:1,dwellLeft:8});const w=ride.want(sp.x,sp.z,sp.y,true);assert(w&&w.key===R.TRAIN_BOARD_KEY,'a train at the platform, doors open: Board');
  assert.equal(ride.want(sp.x,sp.z,sp.y,false),null,'not on foot / busy: no Board');ride.want(sp.x,sp.z,sp.y,true);
- assert(ride.board()&&ride.active&&ride.train===1,'boarded train 1');assert.equal(R.trainRideStore.get().riding,true);
+ ride.want(sp.x,sp.z,sp.y,R.canBoardFrom(mode));
+ assert(ride.board()&&ride.active&&ride.train===1,'boarded train 1 (from the moped, one press)');assert(dismounts===1&&mode==='walk','the moped was stowed (on foot) as the ride began');assert.equal(R.trainRideStore.get().riding,true);
  ride.frame(1/30,false);assert(seated>0,'the seat drives the player');assert.equal(run.ridden[1],1,'the ridden train draws its open variant');assert(ride.wire()&&ride.wire().train===1,'presence: the train seat');
  assert(ride.trick(),'the bench pose');assert(ride.holdPlayer(.4),'input locked while riding');
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:0});ride.frame(1/30,false);assert(/^Next stop: West Beach\. Did you know\?/.test(R.trainRideStore.get().note),'leaving: the next-stop announcement');
@@ -61,6 +68,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
   ride.answer(1);assert.equal(paid.length,0,'a wrong answer pays nothing');assert.equal(R.trainRideStore.get().quiz.picked,1);
   Object.assign(states[1],{at:S.stopOf('west'),doors:1,dwellLeft:10});ride.frame(1/30,false);assert.equal(R.trainRideStore.get().quiz,null,'the quiz closes at the stop');assert(R.trainRideStore.get().canGetOff,'Get off at the stop');
   assert(ride.getOff(false)&&!ride.active&&placed&&R.platformAt(placed.x,placed.z,placed.y)===tt.TRAIN_STATIONS.findIndex(s=>s.id==='west'),'got off onto the West Beach platform');
+  assert(mode==='walk'&&dismounts===1,'Get off: still on foot (the vehicle is not restored)');
   ride.want(sp.x,sp.z,sp.y,true);states[1].at=-1;ride.dispose();
  })().catch(e=>{console.error(e);process.exit(1);});}
 // 5. wiring

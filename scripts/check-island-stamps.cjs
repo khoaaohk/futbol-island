@@ -32,7 +32,10 @@ async function boot(b,vp,mobile,stamps){
    check('desktop: Collect stamp shows at the West Beach station house',await btn.isVisible(),await btn.textContent());
    check('desktop: the button names the West stamp',(await btn.getAttribute('data-stamp-go'))==='west');
    await btn.click();await p.waitForSelector('[data-stamp-book]',{timeout:20000});
-   await p.waitForTimeout(1500);
+   // the slower stamping moment (Nov 25: ~2.3 s press, then the fields and the coins write in): wait for the coins
+   await p.locator('text=New stamp!').waitFor({state:'visible',timeout:8000}).catch(()=>{});await p.waitForTimeout(700);
+   const bar=await p.evaluate(()=>{const b=document.querySelector('[data-stamp-book] header'),x=s=>b.querySelector(s).getBoundingClientRect();const t=x('[data-stamp-count]'),h=x('h2'),d=x('[data-navigation="done"]');return {order:t.right<=h.left&&h.right<=d.left,done:b.querySelector('[data-navigation="done"]').textContent.trim(),mid:Math.abs((h.left+h.right)/2-(b.getBoundingClientRect().left+b.getBoundingClientRect().right)/2)<4};});
+   check('desktop: header reads count · title (centred) · Done',bar.order&&bar.mid&&/Done/.test(bar.done),JSON.stringify(bar));
    check('desktop: the book opens on the West + South spread',await p.evaluate(()=>!!document.querySelector('[data-stamp-page="west"][data-stamped]')&&!!document.querySelector('[data-stamp-page="south"][data-stamped]')));
    check('desktop: "New stamp" with coins in the moment',await p.locator('text=New stamp!').isVisible());
    check('desktop: the stamp is saved',await p.evaluate(k=>!!JSON.parse(localStorage.getItem(k)).stamps.west,KEY));

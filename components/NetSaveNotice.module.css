@@ -9,3 +9,5 @@
 .toast span{font-size:13px;font-weight:700;line-height:1.3;color:#61705b}
 @keyframes noticeIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.toast{animation:none}}
+/* The island stamp book is open (StampBook.tsx sets <html data-stamp-book-open>): the pill sat over the book's header; back on close. */
+:global(html[data-stamp-book-open]) .wrap{display:none}

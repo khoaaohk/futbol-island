@@ -6,9 +6,12 @@
  * that stamp; a stamped page shows the ink stamp (its tilt and offset fixed when stamped), "Location" and "Date" in the island's
  * brush hand, and its football fact (AGENTS.md: every stamp teaches).
  *
- * The stamping moment (`fresh`): the book opens on that page, a rubber stamp presses down, the thump plays (the Fishbook stamp cue,
- * lib/audio/islandSound.ts 'fish-stamp'), the ink fades in, then "+N coins" (paid by StampBookHost via islandStampsReward.ts).
- * Reduced motion: no press or page travel, the ink is simply there.
+ * The stamping moment (`fresh`, owner Nov 25 2026: slower, so the process shows, ~2.3 s): the rubber stamp slides in and hovers with a
+ * little wiggle, a short inking dab, lifts, presses down hard (squash + a ~250 ms shake of the page, the thump: the Fishbook stamp cue,
+ * lib/audio/islandSound.ts 'fish-stamp'), rocks to push the ink in, lifts away with a bounce (the soft 'pop'), then the ink spreads
+ * from the centre with a few specks and settles to its tilt, and Location, Date, the fact and "+N coins" write in one after another
+ * (paid by StampBookHost via islandStampsReward.ts). CSS animations only. Reduced motion: no press or page travel, the ink is there.
+ * While the book is open <html data-stamp-book-open> hides the "New update ready" pill (NetSaveNotice), which sat over the header.
  *
  * A modal <dialog> (top layer: opens above the Backpack, a room or a conversation). Heat: the SVGs exist only while the book is
  * open; two short timers for the stamping moment, cleared on close; no rAF.
@@ -18,12 +21,16 @@ import {STAMPS,STAMP_PAGES,STAMP_IDS,readStamps,stampById,stampCount,lineComplet
 import {stampSvg} from '@/lib/town/stampArt';
 import {STAMP_COINS} from '@/lib/town/islandStampsReward';
 import {playFishCue} from '@/lib/town/fishing/fishingDelightStore';
-import {BackButton} from './BackButton';
+import {DoneButton} from './DoneButton';
 import {Icon} from './Icon';
 import styles from './StampBook.module.css';
 
 const PAGES=STAMP_PAGES.length;
 const SINGLE_QUERY='(max-width: 759px)';
+/** The stamping beats (ms): the press starts, the rubber touches the page (thump + shake), it has lifted away (pop, the ink spreads). */
+const PRESS_AT=150,PRESS_MS=2300,CONTACT_AT=PRESS_AT+Math.round(PRESS_MS*.52),LIFT_AT=PRESS_AT+Math.round(PRESS_MS*.86);
+/** A spread's or page's label in the same numbers as the page corners (stamp pages 1-8; the cover and the rally page by name). */
+const pageName=(i:number)=>STAMP_PAGES[i]==='cover'?'Cover':STAMP_PAGES[i]==='back'?'Stamp rally':`Page ${STAMP_IDS.indexOf(STAMP_PAGES[i] as StampId)+1}`;
 type Turn={from:number;to:number;dir:1|-1};
 
 export default function StampBook({initialPage,fresh,onClose}:{initialPage:number;fresh:StampId|null;onClose:()=>void}){
@@ -39,8 +46,10 @@ export default function StampBook({initialPage,fresh,onClose}:{initialPage:numbe
  const [phase,setPhase]=useState<'wait'|'press'|'inked'|'done'>(fresh?(reduced?'inked':'wait'):'done');
  useEffect(()=>{if(!fresh)return;const timers:ReturnType<typeof setTimeout>[]=[];
   if(reduced){playFishCue('fish-stamp');timers.push(setTimeout(()=>setPhase('done'),2400));}
-  else{timers.push(setTimeout(()=>setPhase('press'),380));timers.push(setTimeout(()=>{setPhase('inked');playFishCue('fish-stamp');},380+410));timers.push(setTimeout(()=>setPhase('done'),3400));}
+  else{timers.push(setTimeout(()=>setPhase('press'),PRESS_AT));timers.push(setTimeout(()=>playFishCue('fish-stamp'),CONTACT_AT));
+   timers.push(setTimeout(()=>{setPhase('inked');playFishCue('pop');},LIFT_AT));timers.push(setTimeout(()=>setPhase('done'),LIFT_AT+2400));}
   return()=>timers.forEach(clearTimeout);},[fresh,reduced]);
+ useEffect(()=>{const root=document.documentElement;root.setAttribute('data-stamp-book-open','');return()=>root.removeAttribute('data-stamp-book-open');},[]);
  useEffect(()=>{const d=dialog.current;if(!d)return;try{if(!d.open)d.showModal();}catch{d.setAttribute('open','');}close.current?.focus({preventScroll:true});
   const mq=typeof matchMedia!=='undefined'?matchMedia(SINGLE_QUERY):null;
   const onMq=()=>{if(!mq)return;setTurn(null);setSingle(one=>{if(one===mq.matches)return one;setView(v=>one?Math.floor(v/2):Math.min(PAGES-1,v*2+1));return mq.matches;});};
@@ -57,14 +66,16 @@ export default function StampBook({initialPage,fresh,onClose}:{initialPage:numbe
  else if(!turn)base=[view*2,view*2+1];
  else if(turn.dir>0){base=[turn.from*2,turn.to*2+1];leaf={front:turn.from*2+1,back:turn.to*2,side:'right'};}
  else{base=[turn.to*2,turn.from*2+1];leaf={front:turn.from*2,back:turn.to*2+1,side:'left'};}
- const pageLabel=single?(view===0?'Cover':view===PAGES-1?'Stamp rally':stampById(STAMP_PAGES[view] as string)?.name):`Pages ${view*2+1}–${view*2+2}`;
+ const pageLabel=single?(view===0||view===PAGES-1?pageName(view):stampById(STAMP_PAGES[view] as string)?.name)
+  :STAMP_PAGES[view*2+1]&&STAMP_PAGES[view*2]!=='cover'&&STAMP_PAGES[view*2+1]!=='back'?`Pages ${STAMP_IDS.indexOf(STAMP_PAGES[view*2] as StampId)+1}–${STAMP_IDS.indexOf(STAMP_PAGES[view*2+1] as StampId)+1}`
+  :`${pageName(view*2)} · ${view*2+1<PAGES?pageName(view*2+1):''}`.replace(/ · $/,'');
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby="stamp-book-title" data-stamp-book data-single={single||undefined} data-view={view}
   onCancel={e=>{e.preventDefault();onClose();}} onKeyDown={onKey} onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>
   <div className={styles.wrap} onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>
    <header className={styles.bar}>
-    <BackButton ref={close} onBack={onClose}/>
-    <h2 id="stamp-book-title">Island stamp book</h2>
     <p className={styles.tally} data-stamp-count={count} aria-label={`${count} of ${STAMPS.length} stamps`}>{count} of {STAMPS.length}<span className={styles.tallyWord}> stamps</span></p>
+    <h2 id="stamp-book-title">Island stamp book</h2>
+    <DoneButton ref={close} onDone={onClose} className={styles.done}/>
    </header>
    <div className={styles.stage} onPointerDown={e=>{if(e.isPrimary)gesture.current={x:e.clientX,y:e.clientY,id:e.pointerId};}} onPointerCancel={()=>{gesture.current=null;}}
     onPointerUp={e=>{const g=gesture.current;gesture.current=null;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)go(view+(dx<0?1:-1));}}>
@@ -106,19 +117,21 @@ function Page({index,save,slot,fresh,phase,count,line,full,onJump}:{index:number
  </section>;
  const def=stampById(key)!,mark=save.stamps[def.id],isFresh=fresh===def.id,showInk=!!mark&&(!isFresh||phase==='inked'||phase==='done');
  const svg=mark?stampSvg(def.id,`${def.id}-${slot}`):'';
- return <section className={styles.page} data-stamp-page={def.id} data-stamped={mark?'1':undefined}>
+ const writing=isFresh&&(phase==='inked'||phase==='done'),hideText=isFresh&&!writing;
+ return <section className={styles.page} data-stamp-page={def.id} data-stamped={mark?'1':undefined} data-pressing={isFresh&&phase==='press'||undefined} data-writing={writing||undefined}>
   <p className={styles.pageNo}>{STAMP_IDS.indexOf(def.id)+1}</p>
   <div className={styles.slot} data-empty={!mark||undefined}>
    {!mark&&<p className={styles.how}>{def.how}</p>}
    {mark&&<div className={styles.ink} data-shown={showInk||undefined} style={{transform:`translate(${mark.dx}%,${mark.dy}%) rotate(${mark.tilt}deg)`}} dangerouslySetInnerHTML={{__html:svg}}/>}
    {isFresh&&phase==='press'&&<div className={styles.stamper} style={{color:def.ink}} aria-hidden="true"><span className={styles.knob}/><span className={styles.block}/><span className={styles.rubber}/></div>}
+   {writing&&<span className={styles.specks} style={{color:def.ink}} aria-hidden="true"><i/><i/><i/><i/><i/></span>}
    {isFresh&&(phase==='inked'||phase==='done')&&<p className={styles.coins} role="status">New stamp! +{STAMP_COINS} coins</p>}
   </div>
   <dl className={styles.fields}>
-   <div><dt>Location</dt><dd>{mark?def.place:''}</dd></div>
-   <div><dt>Date</dt><dd>{mark?stampDate(mark.at):''}</dd></div>
+   <div><dt>Location</dt><dd>{mark&&!hideText?def.place:''}</dd></div>
+   <div><dt>Date</dt><dd>{mark&&!hideText?stampDate(mark.at):''}</dd></div>
   </dl>
-  {mark?<div className={styles.fact} data-fresh={isFresh||undefined}><h4>Football fact</h4><p>{def.fact}</p><small>Source: {def.source}</small></div>
-   :<p className={styles.locked}>Collect this stamp to read its football fact.</p>}
+  {mark&&!hideText?<div className={styles.fact} data-fresh={isFresh||undefined}><h4>Football fact</h4><p>{def.fact}</p><small>Source: {def.source}</small></div>
+   :hideText?null:<p className={styles.locked}>Collect this stamp to read its football fact.</p>}
  </section>;
 }
