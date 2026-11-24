@@ -82,3 +82,4 @@
  .secondary.secondary:not(:disabled):not([aria-disabled=true]):hover,.tile.tile:not(:disabled):not([aria-disabled=true]):hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
  .chip.chip:not(:disabled):not([aria-disabled=true]):hover{outline:var(--btn-hover-ring);outline-offset:var(--btn-hover-ring-offset)}
 }
+.stamps{display:grid;gap:8px;justify-items:start}

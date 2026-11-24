@@ -32,6 +32,7 @@ import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
 import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>retryImport(()=>import('./party/RoomPartyChip')),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn,spreadMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
+import {OPEN_STAMP_BOOK} from '@/lib/town/islandStamps';// Nov 23 2026: Ada keeps the museum's Island stamp
 const GraduationCeremony=dynamic(()=>retryImport(()=>import('./GraduationCeremony')),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
 /**
@@ -234,7 +235,8 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
      <button type="button" className={styles.gold} data-museum-show-me onClick={()=>{setGuideOpen(false);room.current?.walkTo(nextCase.id);}}>Show me</button></>
      :<p>Every case is open. Tap See exhibit on any case to explore!</p>}
     <div className={styles.row}><button type="button" className={styles.mint} data-museum-guide-timeline onClick={()=>{setGuideOpen(false);room.current?.walkTo('timeline');}}>Walk me to the timeline</button>
-     <button type="button" className={styles.mint} data-museum-guide-wing onClick={()=>{setGuideOpen(false);room.current?.walkTo(WING_FIRST);}}>Walk me to the west wing</button></div>
+     <button type="button" className={styles.mint} data-museum-guide-wing onClick={()=>{setGuideOpen(false);room.current?.walkTo(WING_FIRST);}}>Walk me to the west wing</button>
+     <button type="button" className={styles.mint} data-museum-guide-stamp onClick={()=>{setGuideOpen(false);window.dispatchEvent(new CustomEvent(OPEN_STAMP_BOOK,{detail:{stamp:'museum'}}));}}>Can I get a stamp?</button></div>
    </GuidePanel></div>}
   {/* The timeline wall (Hairline line figures, components/museum/experiences/timeline): "Visit this case" closes it and walks the hall's camera to that case. */}
   {experience&&(()=>{const X=EXPERIENCES[experience],tl=experience==='timeline',e=tl?(EXHIBITS.find(x=>x.id===stage.tlAt)??timelineOrder()[0]):EXHIBITS.find(x=>x.id===experience);if(!X||!e)return null;

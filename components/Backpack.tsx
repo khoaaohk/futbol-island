@@ -1,4 +1,5 @@
 'use client';
+import {OPEN_STAMP_BOOK,STAMPS} from '@/lib/town/islandStamps';
 import {useEffect,useMemo,useState,type ReactNode} from 'react';
 import {bookReadable,type BackpackItem,type BackpackKind} from '@/lib/town/backpack';
 import {markBackpackSeen,useBackpack} from '@/lib/town/backpackStore';
@@ -100,7 +101,7 @@ export default function Backpack({active,...ctx}:BackpackActions&{active:boolean
     <div className={styles.groupHead}><h4 id={`backpack-${g.kind}`}>{g.label} <span className={styles.count}>{g.kind==='toy'?<ToyCount/>:g.items.length}</span></h4>
      {cards&&g.items.length>0&&<button type="button" className={styles.secondary} onClick={()=>ctx.onShowCard(g.items[0].ref)}>Open my binder</button>}</div>
     <p className={styles.lesson}>{g.items.length?g.lesson:g.emptyHint}</p>
-    {g.kind==='konbini'?<KonbiniCollection/>:g.kind==='toy'?<div className={styles.toys} data-backpack-toys><ToyShelfGrid heading="h5" idPrefix="backpack-toy"/>{active&&<GashaponToyLayer nested/>/* the 3D viewer opens inside Make it yours (a modal dialog) */}</div>:g.items.length?<ul className={styles.grid} role="list">{list.map(item=>{const action=r.action?.(item,ctx)??null;const isNew=fresh.has(item.id);
+    {g.kind==='stamp'?<div className={styles.stamps} data-backpack-stamps><button type="button" className={styles.secondary} data-backpack-stamp-book onClick={()=>window.dispatchEvent(new CustomEvent(OPEN_STAMP_BOOK,{detail:{}}))}>Open Island stamp book · {g.items.length} of {STAMPS.length}</button>{g.items.length>0&&<p className={styles.lesson}>{g.items.map(i=>i.label).join(' · ')}</p>}</div>:g.kind==='konbini'?<KonbiniCollection/>:g.kind==='toy'?<div className={styles.toys} data-backpack-toys><ToyShelfGrid heading="h5" idPrefix="backpack-toy"/>{active&&<GashaponToyLayer nested/>/* the 3D viewer opens inside Make it yours (a modal dialog) */}</div>:g.items.length?<ul className={styles.grid} role="list">{list.map(item=>{const action=r.action?.(item,ctx)??null;const isNew=fresh.has(item.id);
      const source=item.source==='starter'?'Starter':item.source==='bought'?'Bought':'Earned';
      return <li key={item.id}><button type="button" className={styles.tile} data-backpack-item={item.id} data-kind={item.kind} data-active={action?.active||undefined}
       aria-label={`${item.label}${item.detail?`, ${item.detail}`:''}. ${source}.${isNew?' New.':''}${action?` ${action.verb}.`:''}`}

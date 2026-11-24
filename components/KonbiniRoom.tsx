@@ -30,6 +30,7 @@ import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {parseKonbiniDoor,refreshKonbiniDeparture,KONBINI_RETURN_URL,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
 import {FOOD_PER_DAY,POUCH_SIZE,FUELLED_UP,SHOP_NAMES,foodItem,foodNote,type FoodPurchase} from '@/lib/konbini/food';
 import {buyFood,resolveFood,newPurchaseId,useKonbini,useKonbiniCollection,stampMagazine,foodBoughtToday} from '@/lib/konbini/foodStore';
+import {OPEN_STAMP_BOOK} from '@/lib/town/islandStamps';
 import {SHELF_LESSONS,MAGAZINES,STAMP_CARD_SIZE,DECOR_INFO,cashierNpc,type Magazine,type ShelfId} from '@/lib/konbini/konbiniContent';
 import {createPurchaseGate} from '@/lib/konbini/purchaseGate';
 import {creditConceptTick} from '@/lib/learning/reviewStore';
@@ -306,7 +307,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
   {packReveal&&<VendingCardReveal cards={packReveal} preview={false} origin={null} onClose={()=>{setPackReveal(null);release();}}/>}
   <KonbiniStampCard open={stampsOpen} onOpenChange={setStampsOpen} shop={shop} stamps={konbini.stamps} paid={konbini.stampPaid} clerk={npc.name} onShowMagazines={()=>{setStampsOpen(false);setSelected(null);room.current?.zoomToPoi('magazines');}}/>
   <NpcConversation npc={npc} open={talking} onOpenChange={setTalking} practice={false}
-   actions={[{label:'What’s good today? (browse the counter)',onClick:()=>{setTalking(false);room.current?.zoomToPoi('hot');}},{label:`My stamp card (${stamps}/${STAMP_CARD_SIZE})`,onClick:()=>{setTalking(false);setStampsOpen(true);}}]}/>
+   actions={[{label:'What’s good today? (browse the counter)',onClick:()=>{setTalking(false);room.current?.zoomToPoi('hot');}},{label:`My stamp card (${stamps}/${STAMP_CARD_SIZE})`,onClick:()=>{setTalking(false);setStampsOpen(true);}},{label:'Can I get a stamp? (Island stamp book)',onClick:()=>{setTalking(false);window.dispatchEvent(new CustomEvent(OPEN_STAMP_BOOK,{detail:{stamp:'konbini'}}));}}]}/>
   {toast&&<p className={styles.toast} role="status" data-konbini-toast>{toast}</p>}
   {greeting&&!zoom&&<p className={styles.greeting} data-konbini-greeting data-side={shop==='cay'?'left':'right'} role="status"><b>{npc.name}:</b> Irasshaimase! Welcome in! <span aria-hidden="true">{shop==='cay'?'← counter':'counter →'}</span></p>}
   {coins&&<div key={'coins-'+coins.key} className={styles.coins} aria-hidden="true" onAnimationEnd={e=>{if(e.currentTarget===e.target)setCoins(null);}}>{Array.from({length:coins.n},(_,i)=><i key={i} style={{animationDelay:`${i*60}ms`}}/>)}</div>}

@@ -51,6 +51,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-fishing-comeback-v1',// Fishing "come back tomorrow" (Nov 14 2026, docs/fishing.md): the last day / week the fish of the day / weekly visitor was caught, and how many; ~120 bytes
  'fi2-fishing-secrets-v1',// Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): two found-once secret stamps (message in a bottle, golden glint); ~50 bytes
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
+ 'fi2-island-stamps-v1',// The Island stamp book (Nov 23 2026, lib/town/islandStamps.ts): which of the 8 eki stamps, when, their tilt (≤ ~600 bytes)
  'fi2-bug-book-v1',// The Bug book (Oct 20 2026, lib/town/jobs/bugBook.ts): catch counts for the 8 Summit bugs + 8 fireflies and the reward flag (≤ ~130 bytes)
  'fi2-dive-finds-v1',
  'fi2-dive-reef-v1',// Explore v2 (Oct 21 2026, lib/town/water/diveJourney.ts): each zone's collected pickups and the restored zones (the reward pays once ever)// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)

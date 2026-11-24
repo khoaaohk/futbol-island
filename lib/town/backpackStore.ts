@@ -1,4 +1,5 @@
 'use client';
+import {readStamps,ISLAND_STAMPS_KEY} from './islandStamps';
 import {useMemo,useSyncExternalStore} from 'react';
 import {readArcadeWallet,useArcadeWallet} from '../arcade/arcadeWallet';
 import {CARD_STORAGE_KEY,addToCollection,cardNumber,readCollection} from './cardCollection';
@@ -33,7 +34,7 @@ const rawCards=()=>{try{return storage()?.getItem(CARD_STORAGE_KEY)??'[]';}catch
 
 function currentSources(state=readState()):BackpackSources{
  const v=readVending(),w=readArcadeWallet();
- return {owned:v.owned,history:v.history,cards:readCollection(),packs:w.packs,starter:state.starter,...konbiniSources(),...trophySources(),toys:readGashapon().owned};
+ return {owned:v.owned,history:v.history,cards:readCollection(),packs:w.packs,starter:state.starter,...konbiniSources(),...trophySources(),toys:readGashapon().owned,stamps:stampSources()};
 }
 /**
  * Grants the starter kit once per save: the island intro book, three player cards (into the real card collection) and the base
@@ -52,7 +53,10 @@ export function ensureStarterKit(now=Date.now()):boolean{
 /** Remember these items as seen (drops their New badge next time). */
 export function markBackpackSeen(ids:Iterable<string>){const state=readState(),next=markSeen(state,ids);if(next!==state)writeState(next);}
 
-const EVENTS=[CARD_ADDED,CARD_REMOVED,BACKPACK_CHANGED,GRADUATIONS_CHANGED,ARCADE_TODAY_CHANGED];
+const EVENTS=[CARD_ADDED,CARD_REMOVED,BACKPACK_CHANGED,GRADUATIONS_CHANGED,ARCADE_TODAY_CHANGED,'fi2-island-stamps-changed'];
+/** Island stamp book (Nov 23 2026): stamp id → when stamped. */
+const stampSources=()=>{const s=readStamps().stamps,out:Record<string,number>={};for(const [id,m] of Object.entries(s))if(m)out[id]=m.at;return out;};
+const rawStamps=()=>{try{return localStorage.getItem(ISLAND_STAMPS_KEY)??'';}catch{return '';}};
 // Nov 10 2026: arcade trophies (lib/arcade/arcadeTodayCore.ts ARCADE_TROPHIES) join the certificates on the Trophy shelf.
 const trophySources=()=>({trophies:[...trophiesFrom(readGraduations()),...arcadeTrophySources()]});
 const rawArcadeToday=()=>{try{return storage()?.getItem(ARCADE_TODAY_KEY)??'';}catch{return '';}};
@@ -69,12 +73,12 @@ export function useBackpack():{ready:boolean;groups:BackpackGroup[];seen:Readonl
  // Raw strings are stable snapshots: they only change when the stored value does.
  const cards=useSyncExternalStore(subscribeLocal,rawCards,()=>'[]');
  const raw=useSyncExternalStore(subscribeLocal,()=>rawState()??'',()=>'');
- const konbini=useSyncExternalStore(subscribeKonbini,konbiniRaw,()=>'');
+ const konbini=useSyncExternalStore(subscribeKonbini,konbiniRaw,()=>''),stampsRaw=useSyncExternalStore(subscribeLocal,rawStamps,()=>'');
  const arcadeTrophies=useSyncExternalStore(subscribeLocal,rawArcadeToday,()=>''),grads=useSyncExternalStore(subscribeLocal,rawGraduations,()=>''),toys=useGashapon().owned;// gashapon toys (Nov 9 2026)
  return useMemo(()=>{
   const state=readState();
-  const sources:BackpackSources={owned:vending.owned,history:vending.history,cards:readCollection(),packs:wallet.packs,starter:state.starter,...konbiniSources(),...trophySources(),toys};
+  const sources:BackpackSources={owned:vending.owned,history:vending.history,cards:readCollection(),packs:wallet.packs,starter:state.starter,...konbiniSources(),...trophySources(),toys,stamps:stampSources()};
   return {ready:vending.ready,groups:buildBackpack(sources),seen:new Set(state.seen)};
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[vending.owned,vending.history,vending.ready,wallet.packs,cards,raw,konbini,grads,arcadeTrophies,toys]);
+ },[vending.owned,vending.history,vending.ready,wallet.packs,cards,raw,konbini,grads,arcadeTrophies,toys,stampsRaw]);
 }
