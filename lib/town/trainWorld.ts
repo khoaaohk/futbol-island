@@ -312,9 +312,13 @@ export function buildTrainWorld(tools:TrainTools){
  for(const p of [TUNNEL.west,TUNNEL.east]){const west=p===TUNNEL.west,t=trackAt(p.s),o={x:west?-t.tx:t.tx,z:west?-t.tz:t.tz},a={x:o.z,z:-o.x};
   const R=TUNNEL_HALF_WIDTH,ringR=R+.85,depth=1.5,lean=PORTAL_LEAN,half=PORTAL_HALF;
   const groundAt=(v:number,u:number)=>summitGround(p.x+a.x*v+o.x*u,p.z+a.z*v+o.z*u)-TUNNEL_BED;
+  // Nov 24 2026 (owner: a wing slab stood proud of the hillside by the west portal, fins at the headwall ends): the drawn hill is a
+  // 2.5 m mesh, so in a crease it lies under the true ground at one point. The headwall top and the wing tops take the LOWEST ground
+  // round the spot (± 0.8 m across, out to 2.5 m in front): a little buried in the hill, never standing out of it.
+  const lowAt=(v:number,u:number)=>{let m=Infinity;for(const dv of [-.8,0,.8])for(const du of [-.6,0,.8,1.8])m=Math.min(m,groundAt(v+dv,u+du));return m;};
   const archTop=(v:number)=>Math.abs(v)<ringR?2.4+Math.sqrt(ringR*ringR-v*v):0;
   const shape=new T.Shape();shape.moveTo(-half,-.6);shape.lineTo(half,-.6);
-  for(let v=half;v>=-half-1e-6;v-=.7){const top=Math.max(archTop(v)+.25,groundAt(v,depth*.5)+.25,1.1);shape.lineTo(v,Math.min(top,2.4+ringR+.6));}
+  for(let v=half;v>=-half-1e-6;v-=.7){const top=Math.max(archTop(v)+.25,lowAt(v,depth*.5)+.25,Math.abs(v)<ringR+.6?1.1:-.35);/* past the ring the ends follow the ground down (no block where the bank falls away) */shape.lineTo(v,Math.min(top,2.4+ringR+.6));}
   shape.lineTo(-half,-.6);shape.holes.push(portalArch());
   const basis=new T.Matrix4().makeBasis(new T.Vector3(a.x,0,a.z),new T.Vector3(0,1,0),new T.Vector3(o.x,0,o.z));
   const wallG=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:10});
@@ -325,7 +329,7 @@ export function buildTrainWorld(tools:TrainTools){
   const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
   for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
   for(const sg of [-1,1]){const v0=sg*(R+.6),v1=sg*(R+1.4),inside=P(sg*(R+1),3,-2);let prev:number[][]|null=null;
-   for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.45,Math.min(groundAt(v1+sg*.3,u)+.05,1.5));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
+   for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.3,Math.min(lowAt(v1+sg*.3,u)-.05,1.5));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
