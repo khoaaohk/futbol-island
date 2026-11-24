@@ -170,5 +170,5 @@ export const TRAIN_CROSSINGS:readonly TrainCrossing[]=[
  {id:'north-beach-east',s:sNear(80,-207),width:3.4},
  {id:'west-beach',s:sNear(-305,-52),width:3},
  {id:'cay-beach',s:sNear(562,-76),width:3},
- {id:'causeway',s:sNear(494,-148),width:9},
+ {id:'causeway',s:sNear(492.4,-142.2),width:16},// Nov 23 2026: centred on the road and the full skewed width of its 14 m deck (was 9 m at 494,-148: ballast stood on the road edges)
 ];
