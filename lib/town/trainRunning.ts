@@ -15,8 +15,11 @@
  *    their pivot), the twin lamps its left / right indicators (they flash in turn). State is worked out at XING_HZ and on events;
  *    an arm only needs per-frame uniforms during its 3 s swing, and only while that crossing is drawn (within XING_SHOW m).
  *    The bell rings only within BELL_RANGE m, through the island sound kit (mute and volume apply).
- *  - People on the track (the local player and drawn remote players): a train looks LOOK_AHEAD m ahead (±LOOK_HALF m), sounds its
- *    horn, slows and stops STOP_SHORT m short; after 5 s it asks the local player to step off and slides them gently aside.
+ *  - People on the track (owner, Nov 24 2026: "trains won't wait since it's on the schedule and other players will be using it"):
+ *    walking on the line is allowed and a train NEVER changes speed for anyone. It looks WARN_AHEAD m ahead (±LOOK_HALF m): within
+ *    WARN_S s of reaching the local player it honks (louder the closer) and Conductor Kenji shouts a warning (once per approach,
+ *    WARN_COOLDOWN s apart); a remote player ahead hears the horn. A moving car that reaches the local player (or a stopped one hit at
+ *    speed on a ride) reports a knock (result.knock): Town throws them clear with the shared train bonk (trainBonk.ts).
  *  - Departure boards: "Next train: 1 min · to Coral Cay" and the following train, redrawn at BOARD_HZ (1 Hz) only for stations
  *    within BOARD_SHOW m, uploaded only when a line changes (Nov 24 polish: a 0.3 s split-flap flip of the changed line within
  *    FLIP_RANGE m, 6 uploads, none with reduced motion). Free-standing (own post and collider) on the platform.
@@ -26,7 +29,7 @@ import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
 import {trainLayout} from './trainLayout';
-import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_AHEAD,LOOK_HALF,STOP_SHORT,HELD_V,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
+import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_HALF,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,type TrainState} from './trainSchedule';
 import {createVehicleMaterial,PART,CUT_SILL_Y} from '../graphics/trafficVehicles';
 import {MACHINE_NIGHT} from '../graphics/machineNightGlow';
@@ -44,8 +47,9 @@ export const LOD_FAR_IN=.10,LOD_NEAR_OUT=.125;
 export const ANIMATE_RANGE=80,LOD_RANGE=150,HIDE_RANGE=400,SIM_RANGE=260,BELL_RANGE=60,HORN_RANGE=220,XING_SHOW=160,XING_SHOW_PED=110,XING_HZ=4,BOARD_SHOW=150,BOARD_HZ=1;
 /** Board flips (Nov 24 polish): within FLIP_RANGE m, FLIP_S s long, redrawn at FLIP_HZ while flipping. */
 export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
-/** Seconds held for a person before the local player is asked to step off and slid aside. */
-export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
+/** People on the line: warn within WARN_S s (looking WARN_AHEAD m ahead), at most once per approach and WARN_COOLDOWN s apart; a
+ *  car moving faster than KNOCK_V m/s (or any car hit by a ride faster than Town's FAST) knocks you clear instead of blocking. */
+export const WARN_S=4,WARN_AHEAD=52,WARN_COOLDOWN=8,KNOCK_V=.5;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
 import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,CAR_FLOOR_Y,BENCH_BACK,SEAT_SLOTS_Z,COL,VGeo,POSTERS,coveCorner,coveNormal,CHIME,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
@@ -75,7 +79,7 @@ export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
-import {KENJI,kenjiLine,KENJI_SEAT} from './trainConductor';
+import {KENJI,kenjiWarn,KENJI_SEAT} from './trainConductor';
 /** Gameplay 2: the player's radius against a car's box (block and slide); a car's box: ±HALF_W across, ±CAR_LENGTH/2 along. */
 export const PLAYER_R=.35;
 export {LIVERIES};
@@ -182,11 +186,17 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
  /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
  /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
+ /** Nov 24 2026: the local player stands on a train's roof (trainRoof.ts): not a person on the track, never pushed. */onRoof?:boolean;
+ /** Nov 24 2026: the local player is on a ride faster than Town's bonk speed: a stopped car bonks instead of blocking. */fast?:boolean;
  /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
   *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
 export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null;
  /** Gameplay 2: Conductor Kenji's new line this frame (trainConductor.ts), or null; the train he speaks from (-1: none) and its cab
-  *  top (where Town keeps the bubble while that train holds for the local player). */say:string|null;sayTrain:number;cabX:number;cabY:number;cabZ:number};
+  *  top (where Town keeps the bubble while that train holds for the local player). */say:string|null;sayTrain:number;cabX:number;cabY:number;cabZ:number;
+ /** Nov 24 2026: a car hit the local player this frame: 'track' (the lead car's front swept them) or 'side' (a moving car's side, or
+  *  a stopped one hit at speed), the way to throw them (knockX, knockZ: unit, away from the train, across it), the train's own
+  *  heading (dirX, dirZ) and speed (m/s). Null: no hit. Town runs the bonk; the train never changes speed. */
+ knock:null|'track'|'side';knockX:number;knockZ:number;dirX:number;dirZ:number;knockV:number;knockTrain:number};
 type Person={x:number;y:number;z:number};
 export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null){
  const L=trainLayout(),root=new T.Group();root.name='island-line-trains';scene.add(root);
@@ -241,9 +251,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const pa={x:0,z:0,tx:1,tz:0},pb={x:0,z:0,tx:1,tz:0},pc={x:0,z:0,tx:1,tz:0},xs={lamps:false,arm:0};
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
- const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null,say:null,sayTrain:-1,cabX:0,cabY:0,cabZ:0},hit={gap:0,side:0,d:0,s:0};
- // Conductor Kenji: seconds the local player has stood in front of train i while it stands (-1: not), his stage, the line counter
- const kenjiT=new Float32Array(TRAIN_COUNT).fill(-1),kenjiStage=new Uint8Array(TRAIN_COUNT);let kenjiN=0,kenjiQuiet=-1e9;
+ const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null,say:null,sayTrain:-1,cabX:0,cabY:0,cabZ:0,knock:null,knockX:0,knockZ:0,dirX:0,dirZ:0,knockV:0,knockTrain:-1},hit={gap:0,side:0,d:0,s:0};
+ // Conductor Kenji's warning: warned this approach (per train), the bubble's seconds left, the line counter, the last shout (clock s)
+ const warned=new Uint8Array(TRAIN_COUNT),sayLeft=new Float32Array(TRAIN_COUNT);let kenjiN=0,kenjiQuiet=-1e9;
+ /** Seconds until train i's front (local phase runner.t) reaches `gap` m ahead of where it is now, up to `most` s (Infinity: later). */
+ const eta=(i:number,front:number,gap:number,most:number)=>{for(let tau=.25;tau<=most+1e-6;tau+=.25){scheduleAt(runner.t[i]+tau,fresh);if(((fresh.s-front)%TRACK.length+TRACK.length)%TRACK.length>=gap)return tau;}return Infinity;};
  let primeLeft=0,clock=0,bellWait=0,boardWait=0,flipWait=0,xingWait=0,lastNow=0,warming=false;
  const onPlatformSide=(s:number,side:number)=>{for(const st of TRAIN_STATIONS)if(side===st.side&&Math.abs(((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2)<STATION_HALF+1)return true;return false;};
  /** Allocation-free: is person p on the line between front + from and front + to (m along)? Fills `hit` (gap along, side, distance). */
@@ -258,7 +270,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  /** The nearest person ahead of train front `s`: their track s (NaN: clear); `who` = their index. */
  let who=-1,bestGap=Infinity;const whoHit={side:0,d:0};
  function personAhead(s:number){let best=Infinity,bs=NaN;who=-1;
-  for(let k=0;k<nPeople;k++)if(onLine(people[k],s,0,LOOK_AHEAD+STOP_SHORT,LOOK_HALF)&&hit.gap<best){best=hit.gap;bs=hit.s;who=k;whoHit.side=hit.side;whoHit.d=hit.d;}
+  for(let k=0;k<nPeople;k++)if(onLine(people[k],s,0,WARN_AHEAD,LOOK_HALF)&&hit.gap<best){best=hit.gap;bs=hit.s;who=k;whoHit.side=hit.side;whoHit.d=hit.d;}
   bestGap=best;return bs;}
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
  const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,glass.mesh,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
@@ -314,23 +326,30 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   prime(){primeLeft=1;},
   warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;glass.warm(on);},
   update(f:TrainFrame):TrainFrameResult{
-   result.nudgeX=result.nudgeZ=0;result.note=null;result.say=null;result.sayTrain=-1;if(warming)return result;
+   result.nudgeX=result.nudgeZ=0;result.note=null;result.say=null;result.sayTrain=-1;result.knock=null;result.knockTrain=-1;if(warming)return result;
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
     for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
     doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;glass.prime(m4);return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
    const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
    pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
-   const riding=f.riding??-1;nPeople=0;bestGap=Infinity;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
+   const riding=f.riding??-1;nPeople=0;bestGap=Infinity;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0||f.onRoof?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
    const cluster=Number.isFinite(api.cluster),night=MACHINE_NIGHT.value as number;
    // ---- trains near the camera are simulated (people, catch-up); the rest are exactly where the timetable says
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];
     if(cluster){trainAt(0,now,st);st.s=wrapS(api.cluster+i*(TRAIN_LENGTH+14));st.v=0;st.at=-1;st.doors=0;runner.t[i]=trainPhase(i,now);continue;}
     scheduleAt(trainPhase(i,now)-runner.behind(i),st);trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);// where it is on THIS screen
-    if(d>SIM_RANGE&&!(runner.behind(i)>0&&d<HIDE_RANGE)){runner.reset(i);runner.t[i]=trainPhase(i,now);noted[i]=0;wasBlocked[i]=0;continue;}
-    const stopAt=personAhead(st.s);runner.step(i,now,dt,stopAt,st,f.boardHold===i);
-    const blocked=Number.isFinite(stopAt);
-    if(blocked&&!wasBlocked[i]&&st.v>1&&d<HORN_RANGE&&clock-hornAt[i]>6){hornAt[i]=clock;cue('train-horn',Math.max(.25,1-d/HORN_RANGE));}
-    wasBlocked[i]=blocked?1:0;
+    if(d>SIM_RANGE&&!(runner.behind(i)>0&&d<HIDE_RANGE)){runner.reset(i);runner.t[i]=trainPhase(i,now);noted[i]=0;wasBlocked[i]=0;warned[i]=0;continue;}
+    // Never held for people (owner, Nov 24 2026): the runner only keeps the local door hold for a boarder (paid back by its catch-up).
+    const personS=personAhead(st.s);runner.step(i,now,dt,NaN,st,f.boardHold===i);
+    const ahead=Number.isFinite(personS),gap=ahead?bestGap:Infinity,soon=ahead?eta(i,st.s,gap,WARN_S):Infinity;
+    // A remote player ahead: the horn as the train comes within WARN_S s of them (as before, once per approach).
+    if(ahead&&who>0&&soon<=WARN_S&&!wasBlocked[i]&&d<HORN_RANGE&&clock-hornAt[i]>6){hornAt[i]=clock;cue('train-horn',Math.max(.25,1-gap/WARN_AHEAD));}
+    wasBlocked[i]=ahead&&soon<=WARN_S?1:0;
+    // The local player: once per approach, within WARN_S s: the horn (louder the closer) and Kenji's shout from the cab.
+    if(ahead&&who===0){if(soon<=WARN_S&&!warned[i]){warned[i]=1;if(clock-hornAt[i]>2){hornAt[i]=clock;cue('train-horn',Math.max(.35,1-gap/WARN_AHEAD));}
+      if(clock-kenjiQuiet>WARN_COOLDOWN){kenjiQuiet=clock;sayLeft[i]=KENJI.bubbleS;result.say=kenjiWarn(kenjiN++);}}}
+    else warned[i]=0;
+    if(sayLeft[i]>0){sayLeft[i]-=dt;result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z).applyMatrix4(m4)/* over Kenji in the cab (lib/graphics/trainKenji.ts) */;result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}
     {const dp=riding===i?0:Math.hypot(pc.x-f.player.x,pc.z-f.player.z);// Phase 4 sounds, for the trains near the player (riding: the ridden one)
      if(st.v>.8&&dp<CLACK_RANGE){clackRun[i]+=st.v*dt;if(clackRun[i]>=CLACK_STEP){clackRun[i]-=CLACK_STEP;cue('train-clack',(riding===i?.55:1-dp/CLACK_RANGE)*Math.min(1.2,.4+st.v/12));}}
      if(st.at!==soundAt[i]){if(st.at>=0&&soundAt[i]!==-2&&(riding===i||dp<ARRIVE_SOUND))cue('train-arrive',riding===i?.8:Math.max(.25,1-dp/ARRIVE_SOUND));soundAt[i]=st.at;}
@@ -341,25 +360,18 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      if(riding<0){if(st.at>=0){annIn[i]=-1;const k=st.at;if(closing&&annOut[i]!==k&&onPlatform(k,f.player)){annOut[i]=k;result.note??=`The train for ${destOf(k)} is leaving.`;}}
       else{annOut[i]=-1;const k=st.next,w=((TRAIN_STOPS[k].arrive-st.t)%360+360)%360;
        if(w<=ANNOUNCE_S&&annIn[i]!==k&&onPlatform(k,f.player)){annIn[i]=k;cue('train-chime',.7);result.note??=`The train for ${destOf(k)} is arriving. Please stand behind the yellow line.`;}}}}
-    // Gameplay 2: Conductor Kenji, for the LOCAL player standing in front of this train while it stands (at a stop or held for
-    // them, within KENJI.near m): a soft toot and a line from the cab, a hurry line after KENJI.hurryAt s; quiet for KENJI.cooldown s
-    // after a hold ends. Then the step-off below (STEP_OFF_AFTER s). Remote players: the approach horn above only.
-    if(blocked&&who===0&&st.v<HELD_V&&bestGap<KENJI.near){if(kenjiT[i]<0){kenjiT[i]=0;kenjiStage[i]=0;}else kenjiT[i]+=dt;
-     const stage=kenjiT[i]>=KENJI.hurryAt?2:1;
-     if(stage>kenjiStage[i]&&(stage===2||clock-kenjiQuiet>KENJI.cooldown)){kenjiStage[i]=stage;cue('train-toot',.8);result.say=stage===2?kenjiLine(kenjiN,true):kenjiLine(kenjiN++);}
-     if(kenjiStage[i]>0){result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z).applyMatrix4(m4)/* over Kenji in the cab (lib/graphics/trainKenji.ts) */;result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}}
-    else if(kenjiT[i]>=0){kenjiT[i]=-1;if(kenjiStage[i]>0)kenjiQuiet=clock;kenjiStage[i]=0;}
-    // Held for the LOCAL player: after STEP_OFF_AFTER s, ask once and slide them gently off the track (never a knock).
-    if(blocked&&who===0&&runner.heldFor(i)>=STEP_OFF_AFTER){if(!noted[i]){noted[i]=1;result.note='Please step off the track';}
-     if(whoHit.d<LOOK_HALF+.4){const t=trackAt(stopAt,pa),k=SLIDE_SPEED*dt*(whoHit.side||1);result.nudgeX+=t.tz*k;result.nudgeZ+=-t.tx*k;}}
-    else if(!blocked)noted[i]=0;}
+   }
    // ---- Gameplay 2: solid trains. One oriented box per car (its timetable pose, ±HALF_W × ±CAR_LENGTH/2 grown by PLAYER_R): the
    // local player on foot or on a scooter / bike / moped is pushed out along the shallower axis every frame (block and slide: they
    // never pass through and never stand inside a car). Riders are not tested. A few dot products per car near the player.
-   if(riding<0){const P=f.player;for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-P.x)+Math.abs(pc.z-P.z)>TRAIN_LENGTH+4)continue;
+   // Nov 24 2026: a MOVING car (over KNOCK_V m/s), or any car hit by a fast ride (f.fast), knocks instead (result.knock: thrown
+   // across, away from the car; 'track' when it is the lead car's front). Walking into a stopped car's side still just blocks.
+   if(riding<0&&!f.onRoof){const P=f.player;for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-P.x)+Math.abs(pc.z-P.z)>TRAIN_LENGTH+4)continue;
     for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,m4,st.v);const e=m4.elements,dx=P.x+result.nudgeX-e[12],dy=P.y-e[13],dz=P.z+result.nudgeZ-e[14];if(dy< -1.2||dy>3.9)continue;
      const ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az,hx=HALF_W+PLAYER_R,hz=CAR_LENGTH/2+PLAYER_R;
      if(Math.abs(lx)>=hx||Math.abs(lz)>=hz)continue;const px=hx-Math.abs(lx),pz=hz-Math.abs(lz);
+     if((st.v>KNOCK_V||f.fast)&&!result.knock){const sg=Math.sign(lx||1)/ax,rev=c%2===1?-1:1;result.knock=c===0&&lz>CAR_LENGTH/2-1.4&&st.v>KNOCK_V?'track':'side';
+      result.knockX=e[0]*sg;result.knockZ=e[2]*sg;result.dirX=e[8]/az*rev;result.dirZ=e[10]/az*rev;result.knockV=st.v;result.knockTrain=i;}
      if(px<=pz){const k=Math.sign(lx||1)*px/ax;result.nudgeX+=e[0]*k;result.nudgeZ+=e[2]*k;}else{const k=Math.sign(lz||1)*pz/az;result.nudgeX+=e[8]*k;result.nudgeZ+=e[10]*k;}}}}
    // ---- crossings: state at XING_HZ (events), arm swing per frame only while moving and drawn; the bell within BELL_RANGE m
    xingWait-=dt;const tick=xingWait<=0;if(tick)xingWait=1/XING_HZ;let bellX=Infinity;

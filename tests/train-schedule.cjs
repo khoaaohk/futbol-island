@@ -103,12 +103,14 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  run.cluster=NaN;at(103,30,-20,103,-60);player.x=103;player.z=-20;for(let k=0;k<40;k++)run.update({dt:1/30,camera:cam,player});d=run.drawn;/* boards switch at 1 Hz */
  for(let i=0;i<3;i++){const q=tt.trackAt(run.states[i].s);if(Math.hypot(q.x-103,q.z+20)>R.HIDE_RANGE+20)assert(d.cars<6,'far trains hidden');}
  assert(d.boards===0,'no board work in town');
- // a person on the track in front of a running train (local player): it stops short and asks after 5 s
+ // Owner, Nov 24 2026: trains NEVER wait. A person on the track in front of a running train (local player): the train keeps its
+ // timetable exactly (no hold, no lag), honks + Kenji warns once within WARN_S s, and the car that reaches them reports a knock.
  const now=S.trainClockSec();let ti=-1;for(let i=0;i<3;i++){const x=S.trainAt(i,now),nx=S.TRAIN_STOPS[x.next];if(x.at<0&&x.v>6&&S.ahead(x.s,nx.s)>120&&S.ahead(x.s,nx.s)<2000)ti=i;}
  const st=S.trainAt(Math.max(0,ti),now);if(ti>=0){const q=tt.trackAt(st.s+24);player.x=q.x;player.z=q.z;player.y=tt.bedAt(LW('lib/town/trainLayout.ts').trainLayout().profile,st.s+24);/* standing on the bed (tunnel / Summit / trestle too) */at(q.x+20,20,q.z+20,q.x,q.z);
-  let note=null;for(let k=0;k<30*12;k++){const r=run.update({dt:1/30,camera:cam,player,nowSec:now+k/30});if(r.note)note=r.note;}
-  assert(S.ahead(run.states[ti].s,tt.trackNearest(player.x,player.z,3).s)>=S.STOP_SHORT-.3,'stopped short of the player');
-  assert.equal(note,'Please step off the track','asked to step off');}
+  let says=0,knock=null,maxLag=0;for(let k=0;k<30*4;k++){const r=run.update({dt:1/30,camera:cam,player,nowSec:now+k/30});if(r.say)says++;if(r.knock&&!knock)knock=r.knock;maxLag=Math.max(maxLag,run.runner.behind(ti));if(knock)break;}
+  assert(maxLag<1e-6,`no speed change for a person on the line (lag ${maxLag})`);
+  const want=S.trainAt(ti,now+0).s;assert(Number.isFinite(want));
+  assert.equal(says,1,'Kenji warns once per approach');assert.equal(knock,'track','the lead car\'s front knocks the player clear');}
  // Polish (Nov 24): the platform announcement: standing on North's platform, "arriving" (with the chime) before it pulls in, "leaving" as the doors close
  {const k=S.stopOf('north'),stp=S.TRAIN_STOPS[k],c=tt.trackAt(stp.station.s),nn=tt.leftNormal(c.tx,c.tz),px=c.x+nn.x*stp.station.side*4,pz=c.z+nn.z*stp.station.side*4;
   /* a train held by the step-off block above keeps its lag (catch-up) and would pull in late: one frame with the camera far off

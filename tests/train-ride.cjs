@@ -134,16 +134,17 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
   const along=r2.nudgeX*bz.x+r2.nudgeZ*bz.z,out=r2.nudgeX*bx.x+r2.nudgeZ*bx.z;assert(Math.abs(along)<1e-6&&out>0,'side contact: pushed out across only (slide along)');
   const rider=run.update({dt:1/30,camera:cam,player:inside,nowSec:now+.2,riding:0});assert(!rider.nudgeX&&!rider.nudgeZ,'riders are not pushed');
   const far={x:c.x+50,y:c.y,z:c.z+50};const r3=run.update({dt:1/30,camera:cam,player:far,nowSec:now+.25});assert(!r3.nudgeX&&!r3.nudgeZ,'clear of the cars: untouched');}
- {const K=L('lib/town/trainConductor.ts');assert(K.KENJI_LINES.length>=4&&K.KENJI_LINES.includes('Even Messi waits for the whistle. Off the track, please!'),'the owner lines');
-  assert.notEqual(K.kenjiLine(0),K.kenjiLine(1),'lines rotate');assert(/^Conductor Kenji: /.test(K.kenjiLine(5,true)));
-  const Rn=read('lib/town/trainRunning.ts');assert(/cue\('train-toot',\.8\)/.test(Rn)&&/clock-kenjiQuiet>KENJI\.cooldown/.test(Rn),'a soft toot, then quiet for the cooldown');
-  assert(/blocked&&who===0&&st\.v<HELD_V/.test(Rn),'Kenji only speaks to the local player (remote players: the horn)');
-  assert(/case 'train-toot'/.test(read('lib/audio/islandSound.ts')),'the toot goes through the island sound kit (mute applies)');
+ {const K=L('lib/town/trainConductor.ts');assert(K.KENJI_WARN.includes('Train coming! Hop off the track!')&&K.KENJI_WARN.includes('Beep beep! Coming through!'),'the owner warning lines');
+  assert.notEqual(K.kenjiWarn(0),K.kenjiWarn(1),'lines rotate');assert(/^Conductor Kenji: /.test(K.kenjiWarn(5)));
+  const Rn=read('lib/town/trainRunning.ts');assert(/clock-kenjiQuiet>WARN_COOLDOWN/.test(Rn),'a cooldown between warnings');
+  assert(/ahead&&who===0/.test(Rn),'Kenji only warns the local player (remote players: the horn)');
   assert(/kenjiBubble\.show\(0,tr\.say,KENJI\.bubbleS\)/.test(read('components/Town.tsx')),'Town shows the bubble at the cab');}
- // Kenji live: the local player on the line in front of a standing train (train 0 at North): a line at once, a hurry line after 3 s
- {const st0=run.states[0],ahead=tt.trackAt(st0.s+6),me={x:ahead.x,y:tt.bedAt(LW('lib/town/trainLayout.ts').trainLayout().profile,st0.s+6)+.4,z:ahead.z};const said=[];let tt0=now+.3;
-  for(let i=0;i<5*30;i++){tt0+=1/30;const r=run.update({dt:1/30,camera:cam,player:me,nowSec:tt0});if(r.say)said.push([i/30,r.say]);}
-  assert(said.length===2&&said[0][0]<.5&&said[1][0]>2.8&&said[1][0]<3.4,`a line, then the hurry line at ~3 s (${JSON.stringify(said)})`);}
+ // Owner, Nov 24 2026: a stopped train never waits either: standing in front of train 0 at North, Kenji warns once when it is due
+ // within WARN_S s, the train leaves on time (no lag) and its front knocks the player clear.
+ {const st0=run.states[0],ahead=tt.trackAt(st0.s+6),me={x:ahead.x,y:tt.bedAt(LW('lib/town/trainLayout.ts').trainLayout().profile,st0.s+6)+.4,z:ahead.z};const said=[];let tt0=now+.3,knock=null,lag=0;
+  for(let i=0;i<30*30&&!knock;i++){tt0+=1/30;const r=run.update({dt:1/30,camera:cam,player:me,nowSec:tt0});if(r.say)said.push([i/30,r.say]);if(r.knock)knock=r;lag=Math.max(lag,run.runner.behind(0));}
+  assert(said.length===1,`one warning per approach (${JSON.stringify(said)})`);assert(knock&&knock.knock==='track'&&knock.knockV>0,'knocked by the front, the train moving');assert(lag<1e-6,'left on time');
+  const m=new T.Matrix4();run.carMatrixOf(0,0,m);const e=m.elements;assert(Math.abs(knock.knockX*e[8]+knock.knockZ*e[10])<1e-6,'thrown across the line, not along it');}
  console.log('train-ride: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
 
@@ -177,7 +178,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  const css=read('components/TrainRideHud.module.css'),hud=read('components/TrainRideHud.tsx'),T=read('components/Town.tsx');
  assert(/\.board\{animation:boardPulse/.test(css)&&/prefers-reduced-motion:reduce\)\{\.board\{animation:none\}/.test(css)&&/styles\.board/.test(hud),'Board pulses, not with reduced motion');
  assert(/trainFrame\.boardHold=trainRide\.waiting/.test(T),'Town passes the door hold');
- assert(/runner\.step\(i,now,dt,stopAt,st,f\.boardHold===i\)/.test(read('lib/town/trainRunning.ts')),'trainRunning holds the boarder\'s train');}
+ assert(/runner\.step\(i,now,dt,NaN,st,f\.boardHold===i\)/.test(read('lib/town/trainRunning.ts')),'trainRunning holds the boarder\'s train');}
 console.log('train-ride gameplay2: ok');
 
 // Gameplay 2 (owner, Nov 24 2026): the green hover outline on a Board-eligible train (lib/graphics/trainHover.ts, buildingGlow 'train').

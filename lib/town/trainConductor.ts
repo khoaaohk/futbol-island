@@ -1,30 +1,23 @@
 /**
- * Conductor Kenji (Gameplay 2, owner Nov 24 2026): an original, friendly conductor who leans out of the cab when someone stands in
- * front of a train that is stopped or held for them. A short quiet toot and a speech bubble from the cab with a rotating playful line
- * (kid-friendly; the football ones double as a nudge about the game: waiting for the whistle, staying onside, keeping your line),
- * a second, more urgent line after KENJI.hurryAt s, and at KENJI.stepOffAt s the line's existing "Please step off the track" slide.
- * A cooldown keeps a player who hops on and off the track from hearing him every few seconds. Remote players only hear the horn.
+ * Conductor Kenji (Gameplay 2, owner Nov 24 2026): an original, friendly conductor in the cab. Owner, Nov 24 2026: the trains never
+ * wait for people on the track (the timetable is shared by every player), so Kenji no longer pleads with someone standing in front
+ * of a held train: when his train will reach the LOCAL player within trainRunning WARN_S s he shouts a quick warning (with the horn),
+ * once per approach and WARN_COOLDOWN s apart. Kid-friendly; the football ones double as a nudge (scan, keep your head up).
  * Pure data and timing (no DOM, no three.js): lib/town/trainRunning.ts runs it, Town draws the bubble (chatterBubbles).
  */
 import type {NpcDefinition} from './npcDialogues';
 export const CONDUCTOR='Conductor Kenji';
-/** Seconds into the hold: first toot + line, the hurry line, the step-off slide (trainRunning STEP_OFF_AFTER); quiet seconds after. */
-export const KENJI={hurryAt:3,stepOffAt:5,cooldown:15,near:14,bubbleS:3.2} as const;
-export const KENJI_LINES:readonly string[]=[
- 'Hey there! We\'ve got a schedule to keep!',
- 'Beep beep! The 3:10 to Coral Cay can\'t wait!',
- 'Even Messi waits for the whistle. Off the track, please!',
- 'Nice moves — now please step aside, superstar!',
- 'Stay behind the yellow line, like staying onside!',
- 'Great first touch! Now take it to the platform, please!',
+/** The bubble's seconds; `near` (m) is kept for the cab-talk range checks. */
+export const KENJI={near:14,bubbleS:3.2} as const;
+/** The warning shouts (owner lines first), rotating per approach. */
+export const KENJI_WARN:readonly string[]=[
+ 'Train coming! Hop off the track!',
+ 'Beep beep! Coming through!',
+ 'Heads up! Scan the line — train on its way!',
+ 'Clear the track, captain — we run on time!',
 ];
-export const KENJI_HURRY:readonly string[]=[
- 'Still there? Two quick steps to the side and we\'re off!',
- 'Ref\'s looking at his watch! Off the track, please!',
- 'Clear the track, captain — your team is waiting!',
-];
-/** Line n of the rotation (n counts up per hold, so every hold gets the next one). */
-export const kenjiLine=(n:number,hurry=false)=>{const a=hurry?KENJI_HURRY:KENJI_LINES;return `${CONDUCTOR}: ${a[((n%a.length)+a.length)%a.length]}`;};
+/** Warning n of the rotation (n counts up per warning). */
+export const kenjiWarn=(n:number)=>`${CONDUCTOR}: ${KENJI_WARN[((n%KENJI_WARN.length)+KENJI_WARN.length)%KENJI_WARN.length]}`;
 
 /** Gameplay 4 (owner, Nov 24 2026: "can we see the conductor and talk to him"): Kenji sits at the desk in the leading cab (car 0's
  *  cab, the +z end: the Island Line runs one way round the loop), on the driver's seat (trainCarModel: seat box at x −0.45, z 5.05,
