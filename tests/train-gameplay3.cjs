@@ -127,3 +127,12 @@ console.log('train-gameplay3 wiring: ok');
  assert(counts.every(n=>n>0),'the train never empties at a stop: '+counts.join(','));
  pax.dispose();assert.equal(scene.getObjectByName('train-passengers'),undefined,'disposed');}
 console.log('train-gameplay3 passengers: ok');
+// ---- 5. interior finishing: readable poster titles, the route map, door chime lamps lit only while the doors are open
+{const P=CM.POSTERS;assert.equal(P.length,8,'four posters a side');for(const k of [0,1,2,3])assert.equal(P.filter(p=>p.kind===k).length,2,`poster ${k} on both sides`);
+ for(const p of P)for(const [u,z] of [[.66,p.z0],[.84,p.z1]]){const c=CM.coveCorner(p.s,u,z,.02);assert(Math.abs(c[0])<CM.HALF_W&&c[1]>3.05&&c[1]<3.45,'title quads on the cove inside the car');}
+ const run=read('lib/town/trainRunning.ts'),RN2=RN;assert.deepEqual([...RN2.POSTER_TITLES].map(t=>t.split(' ')[0]),['ISLAND','HISTORY','KIT','ISLAND'],'titles: Island League, History Museum, Kit Shop, Island Line');
+ assert(/for\(let k=0;k<n;k\+\+\)\{const st=TRAIN_STOPS\[k\]\.station/.test(run)&&S.TRAIN_STOPS.length===5&&S.TRAIN_STOPS.some(s=>s.station.id==='north'),'the route map draws the 5 stops from the timetable (North at its new spot)');
+ assert(/writeInside\(i,c,m4,!!api\.ridden\[i\]\|\|d3<CLOSE_RANGE,open>0\?side\*rev:0\)/.test(run),'titles only on ridden / close-up trains; chime lamps only on the side whose doors are open');
+ assert(/if\(q\.chime&&q\.side!==openSide\)\{platePos\.fill\(0,o,o\+12\)/.test(run),'closed doors: the chime lamps collapse');
+ assert(/const plates=new T\.Mesh\(plateGeo,boards\.mat\)/.test(run),'the same plates mesh and canvas: no new draw call or program');}
+console.log('train-gameplay3 interior: ok');

@@ -47,7 +47,7 @@ export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
 /** Seconds held for a person before the local player is asked to step off and slid aside. */
 export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
-import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,CAR_FLOOR_Y,BENCH_BACK,SEAT_SLOTS_Z,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
+import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,CAR_FLOOR_Y,BENCH_BACK,SEAT_SLOTS_Z,COL,VGeo,POSTERS,coveCorner,coveNormal,CHIME,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
 /** THE seat table (Gameplay 2, owner Nov 24 2026; used by riding, presence, the walk aboard and, later, NPC passengers and changing
  *  seat), on the car model's benches (trainCarModel.ts SEAT_SLOTS_Z: 7 slots a side, 14 a car, the same z on both sides). Riders kneel
@@ -105,13 +105,41 @@ function buildCrossing(ci:number,obstacles:Obstacle[]|null){
 const BOARD_W=512,BOARD_ROW=160;
 /** Phase 3: the trains' destination plates are rows of the same canvas (one per stop name, under the board rows): no new texture,
  *  material or program; the plate quads take a row's UVs. */
-const PLATE_ROW=40,PLATE_TOP=BOARD_ROW*TRAIN_STATIONS.length+16,BOARD_H=PLATE_TOP+PLATE_ROW*TRAIN_STATIONS.length;
+const PLATE_ROW=40,PLATE_TOP=BOARD_ROW*TRAIN_STATIONS.length+16;
+/** Gameplay 3 (interior finishing): the four posters' readable titles, the route map's body (the line and its 5 stops, in lap
+ *  order, North at its North Beach spot) and one lit door-chime cell, as more rows of the same canvas (the plates' mesh draws them:
+ *  no new texture, material, program or draw call). */
+const POSTER_TOP=PLATE_TOP+PLATE_ROW*TRAIN_STATIONS.length,POSTER_ROW=48,ROUTE_TOP=POSTER_TOP+POSTER_ROW*4,ROUTE_ROW=160,CHIME_TOP=ROUTE_TOP+ROUTE_ROW,CHIME_ROW=24,BOARD_H=CHIME_TOP+CHIME_ROW;
+export const POSTER_TITLES=['ISLAND LEAGUE · FIXTURES','HISTORY MUSEUM · VISIT','KIT SHOP · NEW BOOTS','ISLAND LINE · ROUTE MAP'] as const;
+const POSTER_LOOK=[['#f6e9b8','#1f4d33'],['#7a4b2f','#f6e9b8'],['#fff3df','#c2441f'],['#1f5c9c','#ffffff']] as const;
+/** Gameplay 3: the interior quads of one car (car-local corners in reading order: bottom-left, bottom-right, top-right, top-left as
+ *  seen from the aisle; the normal; the canvas UVs): each poster's title over its header band, the route map posters' body (the
+ *  line and the 5 stops), and a lit chime lamp over every doorway (side: car-local x sign; drawn only while that side's doors open). */
+function insideQuads(){
+ const out:{p:number[];n:number[];uv:number[];chime:boolean;side:number}[]=[];const H=BOARD_H,row=(top:number,h:number)=>[1-(top+h-2)/H,1-(top+2)/H];
+ const add=(s:number,u0:number,u1:number,z0:number,z1:number,off:number,top:number,h:number)=>{const [vb,vt]=row(top,h),zl=s>0?z0:z1,zr=s>0?z1:z0;
+  out.push({p:[...coveCorner(s,u0,zl,off),...coveCorner(s,u0,zr,off),...coveCorner(s,u1,zr,off),...coveCorner(s,u1,zl,off)],n:[...coveNormal(s)],uv:[0,vb,1,vb,1,vt,0,vt],chime:false,side:s});};
+ for(const ps of POSTERS){const L=ps.z1-ps.z0,a=ps.z0+L*.05,b=ps.z1-L*.05;add(ps.s,.66,.84,a,b,.02,POSTER_TOP+ps.kind*POSTER_ROW,POSTER_ROW);
+  if(ps.kind===3)add(ps.s,.17,.6,ps.z0+L*.04,ps.z1-L*.04,.02,ROUTE_TOP,ROUTE_ROW);}
+ for(const s of [1,-1])for(const zc of DOORS){const x=s*CHIME.x,zl=s>0?zc-CHIME.hz:zc+CHIME.hz,zr=s>0?zc+CHIME.hz:zc-CHIME.hz,[vb,vt]=row(CHIME_TOP,CHIME_ROW);
+  out.push({p:[x,CHIME.y-CHIME.hy,zl,x,CHIME.y-CHIME.hy,zr,x,CHIME.y+CHIME.hy,zr,x,CHIME.y+CHIME.hy,zl],n:[-s,0,0],uv:[.3,vb,.7,vb,.7,vt,.3,vt],chime:true,side:s});}
+ return out;
+}
 function buildBoards(obstacles:Obstacle[]|null){
  const L=trainLayout(),cv=document.createElement('canvas');cv.width=BOARD_W;cv.height=BOARD_H;
  const g=cv.getContext('2d');if(g){g.fillStyle='#16191c';g.fillRect(0,0,cv.width,cv.height);g.fillStyle='#3a2c20';g.fillRect(0,PLATE_TOP-16,cv.width,16);
   // destination plates (amber on black, the plate's lit look), one row per stop in TRAIN_STOPS order
   g.textAlign='center';g.textBaseline='middle';for(let r=0;r<TRAIN_STOPS.length;r++){const y=PLATE_TOP+r*PLATE_ROW;g.fillStyle='#1b1712';g.fillRect(0,y,BOARD_W,PLATE_ROW);
-   g.fillStyle='#ffb43a';g.font='800 30px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';g.fillText(TRAIN_STOPS[r].station.name.toUpperCase(),BOARD_W/2,y+PLATE_ROW/2+1,BOARD_W-24);}}
+   g.fillStyle='#ffb43a';g.font='800 30px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';g.fillText(TRAIN_STOPS[r].station.name.toUpperCase(),BOARD_W/2,y+PLATE_ROW/2+1,BOARD_W-24);}
+  // Gameplay 3: poster titles (each on its poster's header colour), the route map body, the lit chime cell
+  for(let r=0;r<4;r++){const y=POSTER_TOP+r*POSTER_ROW;g.fillStyle=POSTER_LOOK[r][0];g.fillRect(0,y,BOARD_W,POSTER_ROW);g.fillStyle=POSTER_LOOK[r][1];
+   g.font='900 30px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';g.fillText(POSTER_TITLES[r],BOARD_W/2,y+POSTER_ROW/2+1,BOARD_W-20);}
+  {const y=ROUTE_TOP,n=TRAIN_STOPS.length,x0=44,x1=BOARD_W-44,ly=y+58;g.fillStyle='#f8f5ee';g.fillRect(0,y,BOARD_W,ROUTE_ROW);g.fillStyle='#1f5c9c';g.fillRect(x0,ly-5,x1-x0,10);
+   const cols=['#d6343a','#f5c21b','#3f9a5f','#e2683c','#5aa8de'];g.font='800 19px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+   for(let k=0;k<n;k++){const st=TRAIN_STOPS[k].station,x=x0+(x1-x0)*k/(n-1);g.fillStyle='#ffffff';g.beginPath();g.arc(x,ly,15,0,Math.PI*2);g.fill();g.fillStyle=cols[k%cols.length];g.beginPath();g.arc(x,ly,11,0,Math.PI*2);g.fill();
+    g.fillStyle='#1d2a3a';g.fillText(st.name.replace(/ station$/i,''),x,ly+32+(k%2)*24,96);}
+   g.font='700 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';g.fillStyle='#5a6470';g.fillText('Round the island in 6 minutes · a train every 2 minutes',BOARD_W/2,y+18,BOARD_W-20);}
+  {const y=CHIME_TOP,gr=g.createRadialGradient(BOARD_W/2,y+CHIME_ROW/2,1,BOARD_W/2,y+CHIME_ROW/2,BOARD_W/2);gr.addColorStop(0,'#fff6c8');gr.addColorStop(.5,'#ffc54a');gr.addColorStop(1,'#f39a1f');g.fillStyle=gr;g.fillRect(0,y,BOARD_W,CHIME_ROW);}}
  const tex=new T.CanvasTexture(cv);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;
  // The same settings as the station name boards (world.ts boardMaterial): the same shader program, night glow by emissiveIntensity.
  const mat=new T.MeshStandardMaterial({map:tex,emissiveMap:tex,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});
@@ -174,8 +202,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const boards=buildBoards(obstacles);for(const b of boards.meshes)root.add(b.mesh);
  // Destination plates (Phase 3): ONE mesh for every cab (2 per train) with the boards' material and canvas; its 4 corners per cab
  // are rewritten only for trains drawn in the near tier, the UVs only when a train's next stop changes.
- const CABS=TRAIN_COUNT*TRAIN_CARS,platePos=new Float32Array(CABS*4*3),plateUv=new Float32Array(CABS*4*2),plateNor=new Float32Array(CABS*4*3),plateIdx:number[]=[];
- for(let q=0;q<CABS;q++){const o=q*4;plateIdx.push(o,o+1,o+2,o,o+2,o+3);}
+ // Gameplay 3: after the cab plates, INSIDE_QUADS a car of interior quads (the poster titles, the route map bodies, the chime lamps),
+ // car-local corners and UVs built once; written in world space only for the ridden / close-up trains (the rest stay collapsed).
+ const CABS=TRAIN_COUNT*TRAIN_CARS,IQ=insideQuads(),INSIDE_QUADS=IQ.length,QUADS=CABS+CABS*INSIDE_QUADS;
+ const platePos=new Float32Array(QUADS*4*3),plateUv=new Float32Array(QUADS*4*2),plateNor=new Float32Array(QUADS*4*3),plateIdx:number[]=[];
+ for(let q=0;q<QUADS;q++){const o=q*4;plateIdx.push(o,o+1,o+2,o,o+2,o+3);}
+ for(let q=0;q<CABS;q++)for(let k=0;k<INSIDE_QUADS;k++)plateUv.set(IQ[k].uv,(CABS+q*INSIDE_QUADS+k)*8);
  const plateGeo=new T.BufferGeometry();plateGeo.setAttribute('position',new T.BufferAttribute(platePos,3).setUsage(T.DynamicDrawUsage));plateGeo.setAttribute('normal',new T.BufferAttribute(plateNor,3).setUsage(T.DynamicDrawUsage));
  plateGeo.setAttribute('uv',new T.BufferAttribute(plateUv,2).setUsage(T.DynamicDrawUsage));plateGeo.setIndex(plateIdx);
  const plates=new T.Mesh(plateGeo,boards.mat);plates.name='train-plates';plates.frustumCulled=false;plates.matrixAutoUpdate=false;plates.visible=false;plates.castShadow=false;plates.receiveShadow=false;root.add(plates);
@@ -184,6 +216,13 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   for(let c=0;c<TRAIN_CARS;c++){const o=(i*TRAIN_CARS+c)*8;plateUv.set([0,b,1,b,1,t,0,t],o);}};
  const plateCorner=(m:T.Matrix4,o:number,x:number,y:number)=>{pv3.set(x,y,PLATE_Z).applyMatrix4(m);platePos[o]=pv3.x;platePos[o+1]=pv3.y;platePos[o+2]=pv3.z;};
  /** Write cab c of train i's plate from its car matrix (allocation-free; the plate faces the car's +z). */
+ /** Gameplay 3: car c of train i's interior quads in world space (close: the posters' titles; doorsOpen: the chime lamps lit on
+  *  the open side `openSide`, car-local), or collapsed. Allocation-free. */
+ const writeInside=(i:number,c:number,m:T.Matrix4,close:boolean,openSide:number)=>{const base=(CABS+(i*TRAIN_CARS+c)*INSIDE_QUADS)*12;
+  if(!close){platePos.fill(0,base,base+INSIDE_QUADS*12);return;}const e=m.elements;
+  for(let k=0;k<INSIDE_QUADS;k++){const q=IQ[k],o=base+k*12;if(q.chime&&q.side!==openSide){platePos.fill(0,o,o+12);continue;}
+   for(let v=0;v<4;v++){pv3.set(q.p[v*3],q.p[v*3+1],q.p[v*3+2]).applyMatrix4(m);platePos[o+v*3]=pv3.x;platePos[o+v*3+1]=pv3.y;platePos[o+v*3+2]=pv3.z;
+    const nx=q.n[0],ny=q.n[1],nz=q.n[2];plateNor[o+v*3]=e[0]*nx+e[4]*ny+e[8]*nz;plateNor[o+v*3+1]=e[1]*nx+e[5]*ny+e[9]*nz;plateNor[o+v*3+2]=e[2]*nx+e[6]*ny+e[10]*nz;}}};
  const writePlate=(i:number,c:number,m:T.Matrix4)=>{const q=i*TRAIN_CARS+c,o=q*12;plateCorner(m,o,-PLATE_HW,PLATE_Y-PLATE_HH);plateCorner(m,o+3,PLATE_HW,PLATE_Y-PLATE_HH);plateCorner(m,o+6,PLATE_HW,PLATE_Y+PLATE_HH);plateCorner(m,o+9,-PLATE_HW,PLATE_Y+PLATE_HH);
   const e=m.elements;for(let k=0;k<4;k++){plateNor[o+k*3]=e[8];plateNor[o+k*3+1]=e[9];plateNor[o+k*3+2]=e[10];}};
  const runner=createTrainRunner(),states:TrainState[]=Array.from({length:TRAIN_COUNT},newTrainState);
@@ -344,13 +383,14 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
-     if(far)continue;glass.car(m4);writePlate(i,c,m4);np++;// doors: drawn only in the near tier; open on the platform side while standing
+     if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);np++;
+     writeInside(i,c,m4,!!api.ridden[i]||d3<CLOSE_RANGE,open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
       for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);glass.door(dm);}}}
     tr.mesh.instanceMatrix.needsUpdate=true;}
    // plates: the near-tier cabs only (the rest collapse to nothing); one upload a frame while any is drawn
    const pvis=np>0;if(plates.visible!==pvis)plates.visible=pvis;
-   if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far)platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);
+   if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far){platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);const b=(CABS+i*TRAIN_CARS*INSIDE_QUADS)*12;platePos.fill(0,b,b+TRAIN_CARS*INSIDE_QUADS*12);}
     (plateGeo.attributes.position as T.BufferAttribute).needsUpdate=true;(plateGeo.attributes.normal as T.BufferAttribute).needsUpdate=true;}
    if(doors.count!==nd)doors.count=nd;const dv=nd>0;if(doors.visible!==dv)doors.visible=dv;if(dv)doors.instanceMatrix.needsUpdate=true;
    doorLook.lamp.z=night*2.6;glass.end();

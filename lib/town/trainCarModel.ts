@@ -151,6 +151,18 @@ function poster(g:VGeo,s:number,z0:number,z1:number,kind:number){
   q(.22,.5,.3,.5,'#2c2a28',.012);q(.22,.34,.5,.78,'#2c2a28',.012);q(.38,.42,.32,.48,'#f5c21b',.016);q(.25,.29,.52,.74,'#f4f1e8',.016);}
  else{q(.14,.86,.03,.97,'#f8f5ee');q(.68,.82,.08,.92,'#1f5c9c',.012);// the Island Line route map: the line and its five stops
   q(.4,.44,.08,.92,'#1f5c9c',.012);['#d6343a','#f5c21b','#3f9a5f','#e2683c','#5aa8de'].forEach((c,k)=>{const a=.1+k*.19;q(.36,.48,a,a+.06,c,.016);});}}
+/** The four posters a side (z0 … z1 on the cove over the windows) and which design (0 Island League fixtures, 1 History Museum,
+ *  2 Kit Shop boots, 3 the Island Line route map). Gameplay 3: their readable titles (and the route map's stops) are quads of the
+ *  trains' plate mesh (trainRunning.ts, the boards canvas), placed with coveCorner. */
+export const POSTERS:readonly {s:number;z0:number;z1:number;kind:number}[]=[1,-1].flatMap(s=>[
+ {s,z0:WIN_RUNS[1][0],z1:WIN_RUNS[1][0]+.8,kind:s>0?0:2},{s,z0:WIN_RUNS[1][1]-.8,z1:WIN_RUNS[1][1],kind:s>0?3:1},
+ {s,z0:WIN_RUNS[2][0],z1:WIN_RUNS[2][0]+.8,kind:s>0?1:3},{s,z0:WIN_RUNS[2][1]-.75,z1:WIN_RUNS[2][1],kind:s>0?2:0}]);
+/** A point on the ceiling cove of side s (coveQuad's frame: u 0 the wall top … 1 the ceiling edge, z along the car), `off` m out
+ *  toward the aisle; and the cove's normal (toward the aisle and down). */
+export function coveCorner(s:number,u:number,z:number,off:number):V{const dx=(COVE_X-IW)*s,dy=CEIL_Y-SIDE_TOP,l=Math.hypot(dx,dy),nx=-s*dy/l,ny=-Math.abs(dx)/l;return [s*IW+dx*u+nx*off,SIDE_TOP+dy*u+ny*off,z];}
+export function coveNormal(s:number):V{const dx=(COVE_X-IW)*s,dy=CEIL_Y-SIDE_TOP,l=Math.hypot(dx,dy);return [-s*dy/l,-Math.abs(dx)/l,0];}
+/** The door chime lamp box (one over each doorway, both sides): its aisle face at |x| CHIME.x, centre y, half height / length. */
+export const CHIME={x:IW-.056,y:DOOR_Y1+.04,hy:.026,hz:.092} as const;
 /** Seat moquette per livery (A green, B / C blue). */
 const moquette=(lv:Livery)=>lv.emblem?'#3f7d5c':'#3f68ad';
 
@@ -281,7 +293,7 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1;
     g.beam([x,STRAP_RAIL_Y,z],[x,yb,z],.012,'#e9e4d6');g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6');g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
-   poster(g,s,WIN_RUNS[1][0],WIN_RUNS[1][0]+.8,s>0?0:2);poster(g,s,WIN_RUNS[1][1]-.8,WIN_RUNS[1][1],s>0?3:1);poster(g,s,WIN_RUNS[2][0],WIN_RUNS[2][0]+.8,s>0?1:3);poster(g,s,WIN_RUNS[2][1]-.75,WIN_RUNS[2][1],s>0?2:0);
+   for(const ps of POSTERS)if(ps.s===s)poster(g,s,ps.z0,ps.z1,ps.kind);
    for(const zc of DOORS){g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);
     g.quad([s*(IW-.16),F+.004,zc-DOOR_HALF],[s*IW,F+.004,zc-DOOR_HALF],[s*IW,F+.004,zc+DOOR_HALF],[s*(IW-.16),F+.004,zc+DOOR_HALF],K.yellow,[0,F-1,zc]);}
    for(const k of [0,3]){const w=WINDOWS[k];for(const d of [1,-1])g.panelX(s*(IW+.012),w.z0,w.z1,w.y1-.2,w.y1,d*s,K.blind);}}}
