@@ -132,7 +132,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
   assert(TRN.RIDER_ROOT_X+K.ankleZ>CM.BENCH_FRONT-.1,'feet on the seat front');assert(TRN.RIDER_ROOT_X+.42<CM.BENCH_BACK,'knees short of the backrest');
   const R4=read('lib/town/trainRide.ts'),RA=read('lib/graphics/remoteAvatars.ts');assert(/tricks\[\(pose\.lean\?\?1\)>0\?1:0\]/.test(R4),'local rider: the window pose by lean');
   assert(/\(pose\.train\?\?-1\)>=0\?TRAIN_POSES\[\(pose\.lean\?\?1\)>0\?1:0\]:SEAT_POSE/.test(RA)&&/q\.lean=pose\.lean/.test(RA),'friends riding: the same pose');}
- const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+1500,`close-up variant ${geo.triangles} tris (closed ${run.triangles})`);
+ const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+2000/* Looks 2: +~700 for the round flanged wheels (16 sides) */,`close-up variant ${geo.triangles} tris (closed ${run.triangles})`);
  run.ridden[0]=1;run.update({dt:1/30,camera:cam,player,nowSec:now+.05});const d=run.drawn;assert(d.plates,'destination plates drawn near');assert.equal(d.ridden,1);
  let n=0;scene.traverse(o=>{if(o.name==='train-plates'){n++;assert.equal(o.material,scene.getObjectByName('train-board-north').material,'plates use the board material (no new program)');}});assert.equal(n,1,'one plate mesh for every cab');
  const ci=tt.TRAIN_CROSSINGS.findIndex(c=>c.id==='causeway');assert(ci>=0&&typeof run.crossingClosed(ci)==='boolean');

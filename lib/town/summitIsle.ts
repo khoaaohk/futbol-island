@@ -163,6 +163,13 @@ export function summitGround(x:number,z:number){
  // The Island Line's cutting and embankment (trainTrack.ts, Nov 23 2026): the bed under the track, banks back to the slope.
  return trainCut(x,z,trailCarve(x,z,w<=0?naturalHeight(x,z):shapedHeight(x,z)));
 }
+/** The DRAWN ground (summitIsleWorld): summitGround, except just behind a tunnel portal's mouth plane, where the hill's full cover
+ *  is drawn at once over the walked ramp (Looks 2: trainTrack trainCut `drawn`; hidden behind the dark mouth and the headwall). */
+export function summitDrawnGround(x:number,z:number){
+ if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return 0;
+ const w=terraceWeight(x,z);if(w>=.999)return PITCH_HEIGHT;
+ return trainCut(x,z,trailCarve(x,z,w<=0?naturalHeight(x,z):shapedHeight(x,z)),true);
+}
 /** For colour: 0 deep in a gully … 1 on a crest, weighted by how much relief there is (0.5 = no relief). */
 export function ridgeShade(x:number,z:number){const p=peakPolar(x,z),u=climbU(p.a,p.rho,p.rc),amp=ridgeAmp(p.a,u)/9;return .5+(ridges(p.a,u)-.5)*amp;}
 /** Ground slope (m per m) at (x, z), from four nearby heights. */

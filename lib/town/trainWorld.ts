@@ -6,7 +6,8 @@
  *  - Track: rails, sleepers and ballast as ~100 m chunks of merged geometry along the line (one mesh per paint per chunk, each
  *    placed at its chunk's centre so it lands in, and is culled with, that chunk's batch). Over the sea the chunk also carries
  *    the trestle (deck girders, cap beams and the piers' columns) or the south sea wall; ~3 new sea cells, culled per chunk.
- *  - Catenary: wooden poles every ~30 m with a cantilever arm, one contact wire (thin 4-sided tube), merged into the same chunks.
+ *  - Catenary: wooden poles every ~30 m (in the chunks); the arms and ONE continuous contact wire are their own mesh with a
+ *    near-camera fade (buildCatenary, Looks 2).
  *  - Summit Isle tunnel: two stone portals (headwall with an arched mouth, dark inside, a hood over the carve behind it) and ONE
  *    tube mesh (walls, track and baked lamp light in vertex colours, unlit material) shown only while the camera is within
  *    TUBE_SHOW m of a portal or inside (update(), one distance test per frame).
@@ -45,6 +46,8 @@ const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 /** Summit portals: headwall half width, its batter (m back per m up) and the wing walls' run out along the banks. */
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
 export const TUBE_SHOW=60,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
+/** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
+export const WIRE_R=.018,CAT_FADE_NEAR=3,CAT_FADE_FAR=4.5;
 
 /** A tiny triangle soup builder (positions + flat normals, indexed later by the batching pass). */
 class Geo{
@@ -156,11 +159,21 @@ export function buildTrainWorld(tools:TrainTools){
    for(const sg of [-1,1]){put1(uFoot+.1,sg*(hw+.9));if(fa+.25>hw+.05)for(let v=hw+.9;v<=fa+.5;v+=.85)put1(.75,sg*v);}}
  }
 
+ // ------------------------------------------------------------------ catenary (Looks 2, Nov 24 2026; owner shots 43, 46)
+ // The contact wire is ONE continuous diamond tube round the whole loop (through the tunnel too, under the tube's crown): one ring
+ // of 4 corners per track row, shared by the two rows either side, so there is no gap or step at a chunk, pole, bridge head or
+ // station. With the poles' thin arms, braces and droppers it is one mesh with its own material that discards every fragment
+ // within CAT_FADE_NEAR m of the camera (dithered out to CAT_FADE_FAR m): seen from a roof or a close ride view the wire no
+ // longer fills the screen as a dark slab. One draw for the whole catenary (it was a paint per 50 m cell), no per-frame work.
+ const catArm=new Geo(),catWire=new Geo();
+ if(!lite){const r=WIRE_R,ring=(i:number)=>{const p=pt(i),y=p.bed+WIRE_Y,nx=p.tz,nz=-p.tx;return [[p.x+nx*r,y,p.z+nz*r],[p.x,y+r,p.z],[p.x-nx*r,y,p.z-nz*r],[p.x,y-r,p.z]];};
+  let A=ring(0);for(let i=0;i<n;i++){const B=ring(i+1),c=[(A[0][0]+A[2][0])/2,A[0][1],(A[0][2]+A[2][2])/2];for(let k=0;k<4;k++)catWire.quad(A[k],B[k],B[(k+1)%4],A[(k+1)%4],c);A=B;}}
+
  // ------------------------------------------------------------------ track chunks
  const perChunk=Math.round(CHUNK_LENGTH/TRACK_DS);
  for(let c0=0;c0<n;c0+=perChunk){
   const c1=Math.min(n,c0+perChunk),mid=pt((c0+c1)>>1),ox=Math.round(mid.x),oz=Math.round(mid.z);
-  const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),wire=new Geo(),xdeck=new Geo(),bedTop=new Geo();
+  const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),xdeck=new Geo(),bedTop=new Geo();
   const rocks=new Geo();G={wall,wallTop,girders,ballast,rocks};
   for(let i=c0;i<c1;i++){
    const a=pt(i),b=pt(i+1);if(isTunnel(i)||isTunnel(i+1))continue;
@@ -207,10 +220,11 @@ export function buildTrainWorld(tools:TrainTools){
     const sea=a.kind===TrackKind.Sea,base=sea?a.bed-.8:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
     if(sea){const q=off(a,-2.25,a.bed-.63);piers.box(q[0],q[1],q[2],a.tx,a.tz,.28,.7,.16,false);}// (top 5 cm under the cap's: never coplanar)
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
-    poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);if(!lite){poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
-    poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
+    // Looks 2 (Nov 24 2026): the thin arm, brace and dropper go in the catenary mesh (near-camera fade); lite keeps the arm here.
+    if(lite)poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);
+    else{catArm.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);catArm.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
+     catArm.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
-   if(!lite)wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022,true);
   }
   // Trestle piers in this chunk: a cap beam across and two columns down into the sea. Nov 24 2026 (South Bridge): a pier taller
   // than 2.6 m gets a tie beam and X braces between its columns (a trestle bent); the main span's two piers are heavier.
@@ -225,7 +239,7 @@ export function buildTrainWorld(tools:TrainTools){
   // merged into the rails' paint (same grey steel, no new paint or draw). Built once, in the chunk that holds the span's middle.
   {const mi=Math.round(SOUTH_BRIDGE.mid/TRACK_DS);if(mi>=c0&&mi<c1){const t=bridgeTruss(L.profile);rails.p.push(...t.p);rails.n.push(...t.n);}}
   emit(rails,C.rail,ox,oz);emit(railTops,C.railTop,ox,oz);emit(sleepers,C.sleeper,ox,oz);emit(ballast,C.ballast,ox,oz);emit(girders,C.girder,ox,oz);emit(piers,C.pier,ox,oz);
-  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);emit(rocks,C.wall,ox,oz);/* the abutments' own stone paint: same batch, no new draw */
+  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);emit(rocks,C.wall,ox,oz);/* the abutments' own stone paint: same batch, no new draw */
  }
 
  // Level crossings: the deck is in the row loop above; poles, crossbuck, lamps, arms, bell and colliders are Phase 2's crossing
@@ -337,15 +351,27 @@ export function buildTrainWorld(tools:TrainTools){
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3();
- const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
+ const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);
+ const cat=catArm.empty&&catWire.empty?null:buildCatenary();if(cat)tubeRoot.add(cat);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
  return {
   /** Added to the scene after the batching pass (its own mesh, never merged). */
   tubeRoot,
   movedProps:()=>moved,addMoved:(k:number)=>{moved+=k;},
   /** The tube shows only near a portal or inside (one distance test per frame). */
   update(camera:T.Camera){camera.getWorldPosition(cam);const near=Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW||insideTunnel(cam.x,cam.z);if(near!==tube.visible)tube.visible=near;},
-  dispose(){tube.geometry.dispose();(tube.material as T.Material).dispose();tubeRoot.removeFromParent();},
+  dispose(){tube.geometry.dispose();(tube.material as T.Material).dispose();if(cat){cat.geometry.dispose();(cat.material as T.Material).dispose();}tubeRoot.removeFromParent();},
  };
+ /** The catenary mesh (wire + thin arms) in vertex colours, with the near-camera fade (see the catenary section above). */
+ function buildCatenary(){
+  const pos:number[]=[],nor:number[]=[],col:number[]=[],tmp=new T.Color();
+  for(const [g,c] of [[catWire,C.wire],[catArm,C.pole]] as const){tmp.set(c);pos.push(...g.p);nor.push(...g.n);for(let k=0;k<g.p.length;k+=3)col.push(tmp.r,tmp.g,tmp.b);}
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new T.Float32BufferAttribute(nor,3));geo.setAttribute('color',new T.Float32BufferAttribute(col,3));geo.computeBoundingSphere();
+  const mat=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});
+  mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;').replace('#include <project_vertex>','#include <project_vertex>\nvCatW=(modelMatrix*vec4(transformed,1.0)).xyz;');
+   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;').replace('#include <clipping_planes_fragment>',
+    `#include <clipping_planes_fragment>\n{float cd=distance(vCatW,cameraPosition),ck=clamp((cd-${CAT_FADE_NEAR.toFixed(2)})/${(CAT_FADE_FAR-CAT_FADE_NEAR).toFixed(2)},0.,1.);if(ck<1.&&fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453)>=ck)discard;}`);};
+  mat.customProgramCacheKey=()=>'train-catenary-fade';
+  const m=new T.Mesh(geo,mat);m.name='train-catenary';m.matrixAutoUpdate=false;m.castShadow=false;m.receiveShadow=false;m.userData.train=true;m.userData.ownDraw=true;return m;}
  function insideTunnel(x:number,z:number){const t=trackAt(W.s),dx=E.x-W.x,dz=E.z-W.z,l2=dx*dx+dz*dz,f=((x-W.x)*dx+(z-W.z)*dz)/l2;void t;if(f<0||f>1)return false;return Math.abs((x-W.x)*dz-(z-W.z)*dx)/Math.sqrt(l2)<TUNNEL_HALF_WIDTH+2;}
  function buildTube(){
   const pos:number[]=[],col:number[]=[],idx:number[]=[],prof:[number,number][]=[[-TUNNEL_HALF_WIDTH,0],[-TUNNEL_HALF_WIDTH,2.4]];for(let k=1;k<10;k++){const a=Math.PI-Math.PI*k/10;prof.push([Math.cos(a)*TUNNEL_HALF_WIDTH,2.4+Math.sin(a)*TUNNEL_HALF_WIDTH]);}prof.push([TUNNEL_HALF_WIDTH,2.4],[TUNNEL_HALF_WIDTH,0]);
