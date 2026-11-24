@@ -36,6 +36,8 @@ export type TrainTools={
 const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',ballast:'#9a948a',girder:'#6d5640',pier:'#cbc4b5',wall:'#b8b0a1',wallTop:'#cfc8ba',pole:'#7a5c3e',wire:'#33393a',
  platform:'#d3cbbb',platformSide:'#a8a091',edge:'#f2c230',plaster:'#f0e6cc',timber:'#5e4630',deck:'#a57f57',roof:'#566270',ridge:'#3d4650',pane:'#a9c9d2',lantern:'#d9483a',cap:'#2c2a28',
  bench:'#b48a5e',yellow:'#f2c230',black:'#26231f',lampOff:'#7a2420',crossDeck:'#55524d',stone:'#aaa395',stoneDark:'#8d8679',mouth:'#121110'} as const;
+/** Spots a catenary pole must not stand on (it slides to the next row): the Starfish sandbar's hidden ball (coralCayBalls.ts cay-barefoot). */
+const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 export const TUBE_SHOW=60,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 
 /** A tiny triangle soup builder (positions + flat normals, indexed later by the batching pass). */
@@ -55,11 +57,12 @@ class Geo{
   if(ends){this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,-1,1),P(-1,-1,1),c);this.quad(P(-1,1,-1),P(1,1,-1),P(1,1,1),P(-1,1,1),c);}
   this.quad(P(-1,-1,-1),P(-1,1,-1),P(-1,1,1),P(-1,-1,1),c);this.quad(P(1,-1,-1),P(1,1,-1),P(1,1,1),P(1,-1,1),c);}
  /** Box between two points (a thin beam / post / wire piece), square section r. */
- beam(a:number[],b:number[],r:number){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
+ beam(a:number[],b:number[],r:number,diamond=false){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
   const up=Math.abs(d[1])>.9?[1,0,0]:[0,1,0],s1=[d[1]*up[2]-d[2]*up[1],d[2]*up[0]-d[0]*up[2],d[0]*up[1]-d[1]*up[0]],l1=Math.hypot(...s1);for(let i=0;i<3;i++)s1[i]/=l1;
   const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]],c=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2];
   const P=(e:number[],i:number,j:number)=>[e[0]+(s1[0]*i+s2[0]*j)*r,e[1]+(s1[1]*i+s2[1]*j)*r,e[2]+(s1[2]*i+s2[2]*j)*r];
-  for(const [i,j,k,m] of [[1,1,1,-1],[1,-1,-1,-1],[-1,-1,-1,1],[-1,1,1,1]])this.quad(P(a,i,j),P(b,i,j),P(b,k,m),P(a,k,m),c);}
+  // diamond: corners on the axes, so no face is level (wires, arms, ridges: nothing to land on from the air).
+  for(const [i,j,k,m] of diamond?[[1,0,0,-1],[0,-1,-1,0],[-1,0,0,1],[0,1,1,0]]:[[1,1,1,-1],[1,-1,-1,-1],[-1,-1,-1,1],[-1,1,1,1]])this.quad(P(a,i,j),P(b,i,j),P(b,k,m),P(a,k,m),c);}
  get empty(){return this.p.length===0;}
  build(ox:number,oz:number){const g=new T.BufferGeometry(),p=new Float32Array(this.p);for(let i=0;i<p.length;i+=3){p[i]-=ox;p[i+2]-=oz;}
   g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(this.n),3));return g;}
@@ -96,7 +99,7 @@ export function buildTrainWorld(tools:TrainTools){
     xdeck.box((a.x+b.x)/2,a.bed+RAIL_TOP-.08,(a.z+b.z)/2,a.tx,a.tz,TRACK_DS/2+.02,1.9,.08,true);}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
    for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing)sleepers.box(x,y+SLEEPER_TOP-.05,z,a.tx,a.tz,.13,1.15,.05,true,false);/* no end faces: 0.26 × 0.1 m, unseen (heat) */}
-   if(a.kind===TrackKind.Land||a.kind===TrackKind.Wall){// Ballast: a low trapezoid strip.
+   if((a.kind===TrackKind.Land||a.kind===TrackKind.Wall)&&!crossingAt(a.s,4)){// Ballast: a low trapezoid strip (not within 4 m of a crossing: it would sit just under the road, which meets the line on a skew).
     const t0=off(a,-1.45,a.bed+BALLAST_TOP),t1=off(a,1.45,a.bed+BALLAST_TOP),u0=off(b,-1.45,b.bed+BALLAST_TOP),u1=off(b,1.45,b.bed+BALLAST_TOP),
      f0=off(a,-1.9,a.bed-.06),f1=off(a,1.9,a.bed-.06),g0=off(b,-1.9,b.bed-.06),g1=off(b,1.9,b.bed-.06),inside=off(a,0,a.bed-1);
     ballast.quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
@@ -109,13 +112,13 @@ export function buildTrainWorld(tools:TrainTools){
      girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v-w,topB),off(a,v-w,top),inside);girders.quad(off(a,v+w,bot),off(b,v+w,botB),off(b,v+w,topB),off(a,v+w,top),inside);girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v+w,botB),off(a,v+w,bot),inside);}}
    // Catenary: a pole with its cantilever arm every ~POLE_STEP m (right side; platforms are all on the left), not at crossings.
    // (and never on a west-park trail: the pole slides along to the next row clear of it)
-   if(a.s>=poleNext&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))){poleNext=a.s+POLE_STEP;
+   if(a.s>=poleNext&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
     const base=a.kind===TrackKind.Sea?a.bed-.4:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
-    poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05);poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035);
-    poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025);
+    poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
+    poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
-   wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022);
+   wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022,true);
   }
   // Trestle piers in this chunk: a cap beam across and two columns down into the sea.
   for(const p of L.piers){const i=Math.round(p.s/TRACK_DS);if(i<c0||i>=c1)continue;
@@ -177,10 +180,10 @@ export function buildTrainWorld(tools:TrainTools){
   {const ew=4.8,ed=hd/2+1.25,rh=1.9,ry=y0+H+.14,ridgeL=ew-ed*.75,R=(u:number,v:number,y:number)=>P(u,hm+v,y),inside=R(0,0,ry);
    const e1=R(-ew,-ed,ry),e2=R(ew,-ed,ry),e3=R(ew,ed,ry),e4=R(-ew,ed,ry),r1=R(-ridgeL,0,ry+rh),r2=R(ridgeL,0,ry+rh);
    roof.quad(e1,e2,r2,r1,inside);roof.quad(e3,e4,r1,r2,inside);roof.tri(e2,e3,r2);roof.tri(e4,e1,r1);roof.quad(e1,e4,e3,e2,R(0,0,ry+1));
-   ridge.beam(R(-ridgeL-.1,0,ry+rh+.05),R(ridgeL+.1,0,ry+rh+.05),.12);
-   for(const s of [-1,1])for(const t of [-1,1])ridge.beam(R(s*ridgeL,0,ry+rh+.03),R(s*ew,t*ed,ry+.05),.06);
+   ridge.beam(R(-ridgeL-.1,0,ry+rh+.05),R(ridgeL+.1,0,ry+rh+.05),.12,true);
+   for(const s of [-1,1])for(const t of [-1,1])ridge.beam(R(s*ridgeL,0,ry+rh+.03),R(s*ew,t*ed,ry+.05),.06,true);
    // Tile courses: three thin darker bands across each long slope.
-   for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025);}
+   for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025,true);}
    // Four paper lanterns under the front eave.
    for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
   // A bench on the platform, by the house's down-line end.
@@ -213,13 +216,13 @@ export function buildTrainWorld(tools:TrainTools){
   const shape=new T.Shape();shape.moveTo(-half,-.6);shape.lineTo(half,-.6);shape.lineTo(half,Htop);shape.lineTo(-half,Htop);shape.lineTo(-half,-.6);shape.holes.push(portalArch());
   const basis=new T.Matrix4().makeBasis(new T.Vector3(a.x,0,a.z),new T.Vector3(0,1,0),new T.Vector3(o.x,0,o.z));
   const wallG=new T.ExtrudeGeometry(shape,{depth:1.2,bevelEnabled:false,curveSegments:10});wallG.applyMatrix4(basis);
-  skip(put(wallG,C.stone,p.x,TUNNEL_BED,p.z));
+  {const m=put(wallG,C.stone,p.x,TUNNEL_BED,p.z);m.userData.train=true;}// landable: the canopy pass makes its top a floor (no skip)
   // Coping on top, a darker arch ring and the dark mouth just inside; a hood over the carve behind the headwall.
   const g=new Geo(),gd=new Geo();g.box(p.x+o.x*.6,TUNNEL_BED+Htop+.12,p.z+o.z*.6,a.x,a.z,half+.2,.8,.12,false);
   for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(TUNNEL_HALF_WIDTH+.25),y0=2.4+Math.sin(ang)*(TUNNEL_HALF_WIDTH+.25);gd.box(p.x+a.x*x0+o.x*1.22,TUNNEL_BED+y0,p.z+a.z*x0+o.z*1.22,a.x,a.z,.32,.04,.32);}
   const hoodIn=(west?MOUTH_CARVE:MOUTH_CARVE_EAST)+.6,hoodY0=TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+.2;g.box(p.x-o.x*hoodIn/2,(hoodY0+TUNNEL_BED+Htop)/2,p.z-o.z*hoodIn/2,a.x,a.z,TUNNEL_HALF_WIDTH+2.2,hoodIn/2,(TUNNEL_BED+Htop-hoodY0)/2,false);
   for(const sgn of [-1,1])g.box(p.x-o.x*hoodIn/2+a.x*sgn*(TUNNEL_HALF_WIDTH+.25),TUNNEL_BED+1.6,p.z-o.z*hoodIn/2+a.z*sgn*(TUNNEL_HALF_WIDTH+.25),a.x,a.z,.25,hoodIn/2,2.4,false);
-  const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
+  const ox=Math.round(p.x),oz=Math.round(p.z);if(!g.empty)put(g.build(ox,oz),C.stoneDark,ox,0,oz).userData.train=true;/* coping + hood: landable */emit(gd,C.stoneDark,ox,oz);
   const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.35,TUNNEL_BED,p.z-o.z*.35));
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
