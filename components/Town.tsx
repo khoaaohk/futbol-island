@@ -243,7 +243,7 @@ import {UW_SURFACE} from '@/lib/town/fishing/underwater';
 import {uwDepthAt} from '@/lib/town/fishing/underwater';
 import {beanSkinOf,BEAN_WATER} from '@/lib/graphics/beanSkin';
 import {backNameTexture} from '@/lib/graphics/backNameTexture';
-import {onLand} from '@/lib/town/landmass';import {createTrainBonk,DIZZY_S,BUBBLE_S,type BonkKind} from '@/lib/town/trainBonk';
+import {onLand} from '@/lib/town/landmass';import {createTrainBonk,DIZZY_S,BUBBLE_S,type BonkKind} from '@/lib/town/trainBonk';import {ROOF_WALK,roofY,roofStep,roofSettle,roofHitsPortal} from '@/lib/town/trainRoof';
 import {createWaterState,pondDiveRoom,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,swimLessonDue,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,SWIM_EDGE_TITLE,SWIM_EDGE_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
@@ -902,7 +902,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {const lamps=streetTraffic.signals.lamps;if(lamps)world.signalHeads.forEach((h,i)=>propReactions.follow('signal',h.x,h.z,move=>lamps.sway(i,move)));}
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>Math.max(rampSurface(rideRamps,x,z),trainWalkHeight(x,z))/* Island Line: feet on the sleepers and crossing decks (trainLayout.ts) */,world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
-    const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);
+    // Roof riding (lib/town/trainRoof.ts, Nov 24 2026): a moving train's roof is a floor from the sky (falls, parachute, the landing ring).
+    const skyRoof={k:-1,x:0,u:0,y:0};
+    const skySurface=(x:number,z:number)=>{const g=rooftop.surface(x,z,Infinity);return world.trainRun?.roofAt(x,z,skyRoof)?Math.max(g,skyRoof.y):g;};
     // The floor under the rider's own height (the lighthouse gallery is a floor only from its own height: lighthouseGallery.ts),
     // for the ride's wheel pose; and the ball's floor, which sees the gallery at or just under the ball (plus one tick of a fast fall).
     const riderSurface=(x:number,z:number)=>rooftop.surface(x,z,rooftop.state.height);
@@ -1531,6 +1533,15 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(line){bonkBubble.show(0,line,BUBBLE_S);bonkShown=true;}knockWords.show('Bonk!',location.x,y0+2.7,location.z,reduced);
       velocity.x=velocity.z=0;walkBall.reset({x:spot.x,y:spot.y,z:spot.z,yaw:player.root.rotation.y});wakeLoop();return true;};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainBonk=trainBonk;
+    // Roof riding (lib/town/trainRoof.ts, owner Nov 24 2026): k = the train whose roof I stand on (-1: none), the train-frame spot (x, u),
+    // facing (train frame), seconds since touchdown (the wobbly surfer landing); hop: a jump off the roof in flight (own ballistic arc,
+    // keeping the train's speed: it lands on the ground, the sea, or another roof). One train-relative pose a frame, no allocation.
+    const roofRide={k:-1,x:0,u:0,yaw:0,age:9,hop:false,hx:0,hy:0,hz:0,vx:0,vy:0,vz:0,top:0,roll:0},roofO={k:-1,x:0,u:0,y:0},roofPt={x:0,y:0,z:0,yaw:0,lean:0},roofMat=new T.Matrix4(),roofPreview={x:0,z:0};
+    let roofLanding=-1;const roofLand={x:0,u:0};
+    const roofAttach=(o:{k:number;x:number;u:number;y:number})=>{roofRide.k=o.k;roofRide.x=o.x;roofRide.u=o.u;roofSettle(roofRide);roofRide.age=0;roofRide.hop=false;roofRide.yaw=0;velocity.x=velocity.z=0;rooftop.reset(location.x,location.z,o.y);sound.ball('bounce');recordExploreActivity('roofDrop');};
+    /** Pose the roof rider from this frame's train states (tick, and again right after the trains update: no lag behind the car). */
+    const roofPose=()=>{const run=world.trainRun;if(!run||roofRide.k<0)return;run.standAt(roofRide.k,roofRide.x,roofRide.u,roofRide.yaw,roofPt,undefined,roofY(roofRide.x));location.x=roofPt.x;location.z=roofPt.z;rooftop.reset(roofPt.x,roofPt.z,roofPt.y);};
+    (window as unknown as {__fi2:Record<string,unknown>}).__fi2.roofRide=roofRide;
     let meNearHid=false,kenjiNearHid=false;const kenjiBubble=createChatterBubbles(scene);disposers.add(()=>kenjiBubble.dispose());let kenjiShown=false;// Gameplay 2: Conductor Kenji's line from the cab (trainConductor.ts)// Gameplay 2: the green outline on a Board-eligible train
     trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.answer=i=>trainRide.answer(i);trainRideActions.view=v=>{if(trainRide.setView(v))wakeLoop();};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainRide=trainRide;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainPassengers=trainPassengers;
@@ -1593,7 +1604,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         streetTraffic.rider.index=-1;
         if(water.inWater){if(dive.diving)dive.dispose();/* water P2: a map trip from under the water: up at once */if(animalRides.riding){animalRides.letGo('gone');rideSound('ride-stop');}water.reset();rideBeforeWater=null;waterStore.set({inWater:false,swimming:false,riding:false});}// a map trip out of the sea straight into flight: dry again
         if(requestedTruck.current!==null){truckLanding=requestedTruck.current;requestedTruck.current=null;flight.landing=null;flight.landTime=-1;}
-        if(!pendingRide.current)truckLanding=null;
+        if(!pendingRide.current){truckLanding=null;roofLanding=-1;}
+        // Land over a moving train's roof (trainRoof.ts): ease down onto the roof spot under me, train-relative (it moves with the car).
+        if(pendingRide.current&&truckLanding===null&&roofLanding<0&&!flight.landing&&world.trainRun?.roofAt(location.x,location.z,roofO,.3)&&flight.height>roofO.y-.2){roofLanding=roofO.k;roofLand.x=roofO.x;roofLand.u=roofO.u;flight.landTime=0;flight.landHeight=flight.height;}
+        if(roofLanding>=0&&pendingRide.current&&world.trainRun){const t=flight.landTime=Math.min(1,flight.landTime+dt*1.25),ease=t*t*(3-2*t);world.trainRun.standAt(roofLanding,roofLand.x,roofLand.u,0,roofPt,undefined,roofY(roofLand.x));
+          flight.height=T.MathUtils.lerp(flight.landHeight,roofPt.y,ease);location.x=roofPt.x;location.z=roofPt.z;velocity.x=velocity.z=0;
+          if(t>=1){roofO.k=roofLanding;roofO.x=roofLand.x;roofO.u=roofLand.u;roofO.y=roofPt.y;roofLanding=-1;pendingRide.current=null;flight.landing=null;flight.landTime=-1;rideRef.current='walk';setRideMode('walk');roofAttach(roofO);}
+          orb.x=location.x+.7;orb.z=location.z;return;}
         if(pendingRide.current&&truckLanding===null&&!flight.landing)truckLanding=streetTraffic.landingTruckAt(location.x,location.z)?.index??null;
         if(truckLanding!==null&&pendingRide.current){
           truckExitRequested.current=false;const bed=streetTraffic.bedPoint(truckLanding);
@@ -1624,6 +1641,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
             // recovery lockout: the splash, the dip and the surface (lib/town/water/waterState.ts), then treading water on foot.
             pendingRide.current=null;rideRef.current='walk';setRideMode('walk');flight.landing=null;flight.landTime=-1;rooftop.reset(location.x,location.z,result.height);velocity.x=velocity.z=0;
             splashInto(splashSource,result.drop??flight.height,result.canopy);splashSource='fall';orb.x=location.x+.7;orb.z=location.z;return;}
+          if(result.landed&&world.trainRun?.roofAt(location.x,location.z,roofO,.1)&&Math.abs(result.height-roofO.y)<.9){pendingRide.current=null;rideRef.current='walk';setRideMode('walk');flight.landing=null;flight.landTime=-1;roofAttach(roofO);orb.x=location.x+.7;orb.z=location.z;return;}// onto a moving train's roof
           if(result.landed){
             // Validate every touchdown, including falls onto props, roof edges and stairs.
             if(!rooftop.canLand(location.x,location.z,Infinity)){const safe=rooftop.findLanding(location.x,location.z);if(!safe){flight.height=result.height+2;return;}location.x=safe.x;location.z=safe.z;result.height=rooftop.surface(safe.x,safe.z,Infinity);flight.height=result.height;}
@@ -1708,6 +1726,25 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // A held thumb or blocked exit stays attached instead of colliding with the truck.
         if(streetTraffic.rider.index>=0){location.x=bed.x;location.z=bed.z;rooftop.reset(bed.x,bed.z,bed.y);velocity.x=velocity.z=0;orb.x=bed.x;orb.z=bed.z;return;}
       }
+      // Roof riding (trainRoof.ts): walk the roof train-relative (clamped, round the roof units), jump off any time (Space / kick /
+      // juggle), and the tunnel portal bonks you off backwards onto the ground beside its mouth (trainBonk.ts).
+      if(roofRide.k>=0||roofRide.hop){const run=world.trainRun;
+        if(!run||rideRef.current!=='walk'||trainRide.active||water.inWater){roofRide.k=-1;roofRide.hop=false;}
+        else if(roofRide.k>=0){const k=roofRide.k,st=run.states[k];roofRide.age+=dt;run.carMatrixOf(k,0,roofMat);const e=roofMat.elements,ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1;roofRide.roll=e[1]/ax;
+          const len=Math.hypot(ix,iz),sp=ROOF_WALK*(len>1?1/len:1)*dt*(roofRide.age<.8?.35:1);/* the wobbly landing: barely moving for the first 0.8 s */
+          if(len>.05){const dx=(ix*e[0]+iz*e[2])/ax,du=(ix*e[8]+iz*e[10])/az;roofStep(roofRide,dx*sp,du*sp);roofRide.yaw=Math.atan2(dx,du);}
+          roofPose();velocity.x=velocity.z=0;orb.x=location.x+.7;orb.z=location.z;
+          const hx=e[8]/az,hz=e[10]/az;
+          if(roofHitsPortal(st.s,roofRide.u)){const side=roofRide.x>=0?1:-1,lx=e[0]/ax,lz=e[2]/ax;roofRide.k=-1;if(!startBonk('tunnel',lx*side,lz*side,-hx,-hz,false,9))startBonk('tunnel',-lx*side,-lz*side,-hx,-hz,false,9);return;}
+          if((input.current.kick||input.current.juggle||keys.has(' '))&&roofRide.age>.5){input.current.kick=input.current.juggle=false;const w=len>.05?2.2/Math.max(1,len):0;
+            Object.assign(roofRide,{k:-1,hop:true,hx:location.x,hy:roofPt.y,hz:location.z,vx:hx*st.v+ix*w,vz:hz*st.v+iz*w,vy:5.2,top:roofPt.y});sound.stair('walk','up');}
+          return;}
+        else{const h=roofRide;h.vy-=22*dt;const nx=h.hx+h.vx*dt,nz=h.hz+h.vz*dt,ny=h.hy+h.vy*dt;h.top=Math.max(h.top,ny);
+          if(h.vy<0&&run.roofAt(nx,nz,roofO)&&ny<=roofO.y+.05&&h.hy>=roofO.y-.4){location.x=nx;location.z=nz;roofAttach(roofO);roofPose();return;}// onto a roof (the next car, another train)
+          h.hx=nx;h.hz=nz;h.hy=ny;location.x=nx;location.z=nz;velocity.x=velocity.z=0;orb.x=nx+.7;orb.z=nz;
+          if(ny<=WATER_LEVEL+.05&&canSplashDown(nx,nz)){h.hop=false;rooftop.reset(nx,nz,WATER_LEVEL);splashInto('fall',h.top);return;}
+          const g=rooftop.surface(nx,nz,ny);if(ny<=g){h.hop=false;rooftop.reset(nx,nz,g);if(h.top-g>2.2){landingImpact(g);rooftop.state.recovery=.8;}return;}
+          rooftop.reset(nx,nz,ny);return;}}
       const wasFalling=rooftop.state.falling;
       const moveLength=Math.hypot(ix,iz);
       if(moveLength>.01&&!rooftop.state.falling&&rooftop.state.recovery===0){const bx=location.x+ix/moveLength*.65,bz=location.z+iz/moveLength*.65;if(groundBlocked(bx,bz,[],0)&&!(rideRef.current==='walk'&&waterProbe.allowed(bx,bz)))sound.boundary();}
@@ -1732,7 +1769,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(water.state.phase==='swim')swimStep(location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz},water.state.fast,dt,waterWalk.allow,onLand,waterProbe.d,reduced||water.pose.kind!=='crawl'?1:strokeSurge(water.pose.phase,water.pose.effort),water.state.under);/* Oct 27 2026 (swimMotion.ts): the stroke's surge, the glide under */else velocity.x=velocity.z=0;
         // QA Oct 25: pushing into the edge of the swimmable sea said nothing (the swimmer just stopped): after ~1 s of pushing, a note; again after 20 s.
         swimEdgeHold=water.state.phase==='swim'&&!holdStill&&swimEdgePush(location.x,location.z,{x:mx,z:mz},waterWalk.allow,onLand)?swimEdgeHold+dt:0;swimEdgeQuiet=Math.max(0,swimEdgeQuiet-dt);if(swimEdgeHold>1&&swimEdgeQuiet===0){swimEdgeQuiet=20;fuelStore.say(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE);}
-      }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);}
+      }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);
+        // A fall or jump (off a bridge, a rooftop, the zipline) that crosses a moving train's roof lands on it (trainRoof.ts).
+        if(rideRef.current==='walk'&&(wasFalling||rooftop.state.falling||rooftop.jump.active)&&stairBefore>rooftop.state.height+.05&&world.trainRun?.roofAt(location.x,location.z,roofO,.15)&&stairBefore>=roofO.y-.25&&rooftop.state.height<=roofO.y+.3){roofAttach(roofO);roofPose();}}
       // The boats' hulls are solid (Nov 11 2026, owner: "getting stuck here with the boat"; lib/town/fishing/boatHull.ts): from the water beside the open deck you climb aboard, off the deck's side you hop into the sea, the wheelhouse and bow push you back out, and a push that goes nowhere for 1.5 s beside a boat frees you. A box test when away from the boats; also frees a restored save inside a hull on the first frame.
       if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&nearBoat(location.x,location.z)){const hr=resolveBoatHull(location,rampBefore,onLandableDeck,performance.now()/1000);if(hr==='board'||hr==='hop'){velocity.x=velocity.z=0;}if(boatUnstick(dt,location,moveLength>.3&&!holdStill,onLandableDeck(location.x,location.z)))velocity.x=velocity.z=0;}
       // The ferry deck (live QA Nov 12 2026: stuck beside the cabin after a jetpack landing or a climb from the sea; ferryBoarding.ts): out of a cabin/rail collider at once, and a push that goes nowhere for 1.5 s is freed, like the boats.
@@ -2143,7 +2182,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(crash>0&&!reduced){player.root.rotation.z=Math.sin(elapsed*5)*.15*(1-squash);player.root.rotation.x+=Math.cos(elapsed*4)*.1*(1-squash);}
       if(Number.isFinite(spinCrashAge)&&crash>0){player.root.rotation.z+=squash*.8;if(rideRef.current!=='walk')player.root.position.x+=Math.cos(player.root.rotation.y)*squash*.65;}
       fieldBump.pose(player.root,active?dt:0,reduced);
-      zipline.pose(player.root,active?blend:1,active?dt:0,reduced);if(zipline.active||trainRide.active){ring.visible=false;ball.visible=false;}// on the zipline: the rider hangs from the cable
+      // Roof riding: the wobbly surfer landing (arms-out sways, a stumble back, ~1 s, stronger the faster the train), then a gentle sway
+      // with the car's roll on curves. None with reduced motion.
+      if(roofRide.k>=0)player.root.rotation.y=roofPt.yaw;
+      if(roofRide.k>=0&&!reduced){const a=roofRide.age,v=world.trainRun?world.trainRun.states[roofRide.k].v:0,kk=Math.min(1.5,.5+v/10);
+        if(a<1.2){player.root.rotation.z+=Math.sin(a*13)*.3*Math.exp(-a*3)*kk;player.root.rotation.x-=.25*Math.exp(-a*5)*kk*Math.cos(roofRide.yaw);}
+        player.root.rotation.z+=roofRide.roll*5+Math.sin(elapsed*2.1)*.025*Math.min(1,v/6);}
+      zipline.pose(player.root,active?blend:1,active?dt:0,reduced);if(zipline.active||trainRide.active||roofRide.k>=0||roofRide.hop){ring.visible=false;ball.visible=false;}// on the zipline: the rider hangs from the cable
       vehicle.setCrash(crash*collapse);
       splat.visible=crash>0&&!fieldMenu.current;
       if(splat.visible){const progress=1-crash;splat.position.set(location.x,groundY+.04,location.z);splat.scale.setScalar(1+progress*3);splatMaterial.opacity=(1-progress)*.65;}
@@ -2173,7 +2218,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const overPickup=streetTraffic.updateLandingIndicator(location.x,location.z,showLanding,elapsed,reduced,truckLanding);
       if(showLanding&&!overPickup){
         previewAge+=dt;
-        if(jetActions.state.phase==='parachute'&&jetActions.state.target)landingPreview=jetActions.state.target;
+        if(world.trainRun?.roofAt(location.x,location.z,roofO,.1)){roofPreview.x=location.x;roofPreview.z=location.z;landingPreview=roofPreview;}// over a moving train's roof: the ring on the roof under me
+        else if(jetActions.state.phase==='parachute'&&jetActions.state.target)landingPreview=jetActions.state.target;
         else if(flight.landing)landingPreview=flight.landing;
         else if(rooftop.canLand(location.x,location.z,Infinity)){landingPreview={x:location.x,z:location.z};previewX=location.x;previewZ=location.z;}
         else if(previewAge>=.12&&(!landingPreview||Math.hypot(location.x-previewX,location.z-previewZ)>PARACHUTE_REAIM_METRES||previewAge>=PARACHUTE_REAIM_SECONDS&&Math.hypot(location.x-previewX,location.z-previewZ)>.3)){// same re-aim budget as the parachute (findLanding scans far rings over open sea)
@@ -2475,7 +2521,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
          // A visibility floor: the deeper body keeps some of its own colour (beanUnder ≤ 1 − 0.5 × under; the depth absorption still tints it).
          const parts=beanSkinOf(player)?.meshes,cap=1-.5*Math.min(1,(water.pose.under??0)*SWIM_DIVE_CLEAR);if(parts)for(let i=0;i<parts.length;i++){const bu=(parts[i].material as {beanUniforms?:{beanUnder?:{value:number}}}).beanUniforms?.beanUnder;if(bu&&bu.value>cap)bu.value=cap;}}}// water: lib/graphics/waterSurface.ts (still = the cheap static path, no recompile)
       world.updateFerry(active&&!learning&&!backgroundFrozen?heldDt:0,reduced||heat.staticAmbience);
-      {trainFrame.dt=active&&!learning?dt:0;trainFrame.riding=trainRide.train;trainFrame.boardHold=trainRide.waiting;trainFrame.reduced=reduced;trainFrame.fast=rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&Math.hypot(velocity.x,velocity.z)>4.5;{const run=world.trainRun;if(run){const t=performance.now();for(let k=0;k<TRAIN_COUNT;k++){let on=trainRide.train===k?1:0;for(let j=0;j<TRAIN_SEATS&&!on;j++)if(t-trainSeatSeen[k*TRAIN_SEATS+j]<600)on=1;run.ridden[k]=on;}}}const tr=world.updateTrains(trainFrame);if(world.trainRun)stationLife.update(world.trainRun.states,performance.now()/1000,location,talkingIdRef.current??hoveredNpcId);trainRide.frame(trainFrame.dt,reduced);trainSeatGlow.update(trainRide.active?trainRide.glows:null);if(!learningFormat.current)trainRide.applyCamera(camera,dt,reduced);trainPassengers.update(world.trainRun??null,trainClockSec(),camera,trainRide.train,effectiveTier(),reduced);kenjiFig.update(world.trainRun??null,camera,trainRide.train,trainFrame.dt,trainClockSec(),reduced);if(tr.knock&&rideRef.current!=='jetpack'&&!trainBonk.active&&!trainRide.active&&!water.inWater&&startBonk(tr.knock,tr.knockX,tr.knockZ,tr.dirX,tr.dirZ,!onLand(location.x,location.z))){/* thrown clear (trainBonk) */}else if(tr.nudgeX||tr.nudgeZ){location.x+=tr.nudgeX;location.z+=tr.nudgeZ;}if(tr.note)showSeatNote(tr.note);
+      {trainFrame.dt=active&&!learning?dt:0;trainFrame.riding=trainRide.train;trainFrame.boardHold=trainRide.waiting;trainFrame.reduced=reduced;trainFrame.onRoof=roofRide.k>=0||roofRide.hop;trainFrame.fast=rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&Math.hypot(velocity.x,velocity.z)>4.5;{const run=world.trainRun;if(run){const t=performance.now();for(let k=0;k<TRAIN_COUNT;k++){let on=trainRide.train===k?1:0;for(let j=0;j<TRAIN_SEATS&&!on;j++)if(t-trainSeatSeen[k*TRAIN_SEATS+j]<600)on=1;run.ridden[k]=on;}}}const tr=world.updateTrains(trainFrame);if(roofRide.k>=0){roofPose();player.root.position.set(roofPt.x,roofPt.y,roofPt.z);}if(world.trainRun)stationLife.update(world.trainRun.states,performance.now()/1000,location,talkingIdRef.current??hoveredNpcId);trainRide.frame(trainFrame.dt,reduced);trainSeatGlow.update(trainRide.active?trainRide.glows:null);if(!learningFormat.current)trainRide.applyCamera(camera,dt,reduced);trainPassengers.update(world.trainRun??null,trainClockSec(),camera,trainRide.train,effectiveTier(),reduced);kenjiFig.update(world.trainRun??null,camera,trainRide.train,trainFrame.dt,trainClockSec(),reduced);if(tr.knock&&rideRef.current!=='jetpack'&&!trainBonk.active&&!trainRide.active&&!water.inWater&&startBonk(tr.knock,tr.knockX,tr.knockZ,tr.dirX,tr.dirZ,!onLand(location.x,location.z))){/* thrown clear (trainBonk) */}else if(tr.nudgeX||tr.nudgeZ){location.x+=tr.nudgeX;location.z+=tr.nudgeZ;}if(tr.note)showSeatNote(tr.note);
         if(bonkShown){const pr=player.root.position;bonkBubble.follow(0,pr.x,pr.y+3.1,pr.z);bonkBubble.update(dt,reduced);bonkShown=bonkBubble.active(0);}
         if(tr.say){kenjiBubble.show(0,tr.say,KENJI.bubbleS);kenjiShown=true;}if(kenjiShown){if(tr.sayTrain>=0)kenjiBubble.follow(0,tr.cabX,tr.cabY,tr.cabZ);else kenjiBubble.hide(0);kenjiBubble.update(dt,reduced);kenjiShown=kenjiBubble.active(0);}}// Conductor Kenji: only while a line shows// Island Line trains (trainRunning.ts): timetable positions, crossings, boards, people on the track
       world.updateSharks(active&&!learning?heldDt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen
