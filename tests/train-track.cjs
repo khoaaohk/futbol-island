@@ -45,7 +45,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  // 5. heat and wiring
  const scene=new T.Scene();const boards=new Set();let tube=null;
  const w2=L('lib/town/world.ts').buildTown(scene);scene.traverse(o=>{if(o.name==='train-tunnel-tube')tube=o;if(o.isMesh&&o.material&&o.material.map&&o.material.map.image&&o.material.map.image.width===1024&&o.material.map.image.height===1024)boards.add(o.material);});
- assert(tube&&tube.visible===false&&tube.parent&&tube.parent.name==='train-tunnel','the tunnel tube is its own mesh, hidden until near');
+ assert(tube&&tube.parent&&tube.parent.name==='train-tunnel','the tunnel tube is its own mesh (visible at build for the warm compile; update() gates it)');
  assert(boards.size<=1,`one station board material (${boards.size})`);
  const cam=new T.PerspectiveCamera();cam.position.set(tt.TUNNEL.west.x-20,12,tt.TUNNEL.west.z+20);cam.updateMatrixWorld(true);w2.train.update(cam);assert(tube.visible,'shown near the west portal');
  cam.position.set(100,20,0);cam.updateMatrixWorld(true);w2.train.update(cam);assert(!tube.visible,'hidden in town');

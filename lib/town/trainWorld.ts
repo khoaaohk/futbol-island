@@ -103,7 +103,7 @@ export function buildTrainWorld(tools:TrainTools){
     xdeck.quad(off(a,-1,a.bed+yt),off(b,-1,b.bed+yt),off(b,1,b.bed+yt),off(a,1,a.bed+yt),inside);
     for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*2.6,gy(b)+.01),off(a,side*2.6,gy(a)+.01),inside);}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
-   for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing)sleepers.box(x,y+SLEEPER_TOP-.05,z,a.tx,a.tz,.13,1.15,.05,true,false);/* no end faces: 0.26 × 0.1 m, unseen (heat) */}
+   for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
    if(a.kind!==TrackKind.Sea&&b.kind!==TrackKind.Sea&&!xing){// Ballast: one continuous trapezoid strip on every land row (Nov 23 2026: was broken into
     // slabs round the crossings); it stops only under a crossing deck. On the bridge-head embankment (bed above the ground, trackProfile
     // RAMP_LAND) its sides run on down to the ground, widening as they go.
@@ -256,7 +256,7 @@ export function buildTrainWorld(tools:TrainTools){
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3();
- const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);tube.visible=false;
+ const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
  return {
   /** Added to the scene after the batching pass (its own mesh, never merged). */
   tubeRoot,
