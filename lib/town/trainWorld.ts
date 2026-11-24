@@ -261,7 +261,7 @@ export function buildTrainWorld(tools:TrainTools){
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
-  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.35,TUNNEL_BED,p.z-o.z*.35));
+  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.05,TUNNEL_BED,p.z-o.z*.05));// just inside the face: the hill's rise (trainTrack MOUTH_IN..MOUTH_LIFT) is all behind it
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3();
@@ -280,7 +280,7 @@ export function buildTrainWorld(tools:TrainTools){
   const len=E.s-W.s,step=3,rings=Math.ceil(len/step)+1,wallC=new T.Color('#4a4642'),lampC=new T.Color('#ffd99a'),tmp=new T.Color();
   for(let r=0;r<rings;r++){const s=W.s-.3+Math.min(len+.6,r*step),q=trackAt(s),lamp=Math.exp(-((((s-W.s)%15)-7.5)**2)/5);
    for(const [v,y] of prof){pos.push(q.x+q.tz*v,TUNNEL_BED+y,q.z-q.tx*v);const up=y/(2.4+TUNNEL_HALF_WIDTH);tmp.copy(wallC).multiplyScalar(.35+.4*up).lerp(lampC,.75*lamp*Math.max(0,1-Math.abs(up-.55)*2.2));col.push(tmp.r,tmp.g,tmp.b);}}
-  const per=prof.length;for(let r=0;r<rings-1;r++)for(let k=0;k<per-1;k++){const a=r*per+k,b=a+1,c=a+per,d=c+1;idx.push(a,c,b,b,c,d);}
+  const per=prof.length;for(let r=0;r<rings-1;r++)for(let k=0;k<per-1;k++){const a=r*per+k,b=a+1,c=a+per,d=c+1;idx.push(a,b,c,b,d,c);}// wound to face the axis: single-sided, the tube's outside never draws (Nov 23 2026: it showed through the hill)
   // The track inside: ballast floor, sleepers and rails in dim baked colours.
   const add=(g:Geo,color:string,shade:number)=>{const base=pos.length/3;tmp.set(color).multiplyScalar(shade);for(let k=0;k<g.p.length;k+=3){pos.push(g.p[k],g.p[k+1],g.p[k+2]);col.push(tmp.r,tmp.g,tmp.b);}for(let k=0;k<g.p.length/3;k++)idx.push(base+k);};
   const floor=new Geo(),sl=new Geo(),rl=new Geo();
@@ -290,7 +290,7 @@ export function buildTrainWorld(tools:TrainTools){
    for(const v of [-RAIL_HALF_GAUGE,RAIL_HALF_GAUGE])rl.quad(A(a,v-.055,TUNNEL_BED+RAIL_TOP),A(b,v-.055,TUNNEL_BED+RAIL_TOP),A(b,v+.055,TUNNEL_BED+RAIL_TOP),A(a,v+.055,TUNNEL_BED+RAIL_TOP),A(a,v,0));}
   add(floor,C.ballast,.3);add(sl,C.sleeper,.35);add(rl,C.railTop,.55);
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeBoundingSphere();
-  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}));m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
+  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true}));m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
  }
  function portalColliders(x:number,z:number,o:{x:number;z:number},a:{x:number;z:number},half:number){const out:Obstacle[]=[];
   // The headwall either side of the arch (the arch itself stays open; the hill behind it is too steep to walk).
