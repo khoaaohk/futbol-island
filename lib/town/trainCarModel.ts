@@ -60,7 +60,9 @@ export class VGeo{
  /** cutY: every triangle lying wholly at or above it gets part id + 10 (the vehicle material's roof cutaway, uCut). */
  build(cutY=Infinity){if(cutY<Infinity)for(let t=0;t<this.p.length/9;t++){const o=t*9;if(Math.min(this.p[o+1],this.p[o+4],this.p[o+7])>=cutY)for(let v=0;v<3;v++){const i=(t*3+v)*4+3;if(this.a[i]<9.5)this.a[i]+=10;}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(this.p,3));g.setAttribute('normal',new T.Float32BufferAttribute(this.n,3));
-  g.setAttribute('color',new T.Float32BufferAttribute(this.c,3));g.setAttribute('aPart',new T.Float32BufferAttribute(this.a,4));g.computeBoundingSphere();return g;}
+  g.setAttribute('color',new T.Float32BufferAttribute(this.c,3));g.setAttribute('aPart',new T.Float32BufferAttribute(this.a,4));g.computeBoundingSphere();
+  for(let i=3;i<this.a.length;i+=4)if(this.a[i]===PART.strap){g.userData.straps=true;break;}// the vehicle material's strap pendulum runs only for these
+  return g;}
  get tris(){return this.p.length/9;}
 }
 /** 7-segment glyphs for the number plate (segments a…g), plus F and I. */
@@ -295,8 +297,10 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
   if(closeUp){
    // hangers and strap handles (a strap and a triangular grip), over the bench fronts
    for(const z of [-5.5,-2.5,0,2.5,4.4])g.beam([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.01,K.pole);
-   for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1;
-    g.beam([x,STRAP_RAIL_Y,z],[x,yb,z],.012,'#e9e4d6');g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6');g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');}}
+   // the straps swing about the rail in the vehicle shader (PART.strap, pivot in aPart): with the car's curve lean and a soft pendulum
+   // after starts / stops (trafficVehicles.ts uSway). No per-strap CPU work; rigid with prefers-reduced-motion.
+   for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1,P:V=[x,STRAP_RAIL_Y,z],S=PART.strap;
+    g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
    for(const ps of POSTERS)if(ps.s===s)poster(g,s,ps.z0,ps.z1,ps.kind);
    for(const zc of DOORS){g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);
