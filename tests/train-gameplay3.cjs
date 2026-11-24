@@ -136,13 +136,16 @@ console.log('train-gameplay3 wiring: ok');
  const group=scene.getObjectByName('train-passengers'),drawn=[];group.traverse(o=>{if(o.isMesh&&o.visible&&o.count>0)drawn.push(o);});
  assert(drawn.length>=4&&drawn.length<=5&&drawn.every(o=>o.isInstancedMesh),`the islanders' bean parts + props: at most 5 instanced draws for every passenger (${drawn.length})`);
  {const BS=L('lib/graphics/beanSkin.ts'),geos=BS.beanGeometries(),by=n=>group.getObjectByName('train-pax-'+n);
-  for(const k of ['body','limbs','hair','hat'])assert.equal(by(k).geometry,geos[k],`the shared islander bean ${k} geometry (no copy)`);
+  for(const k of ['body','limbs'])assert.equal(by(k).geometry,geos[k],`the shared islander bean ${k} geometry (no copy)`);
+  // cost trim (Nov 24): hair / hat index only the styles the cast wears, on the shared vertex buffers (no copy)
+  for(const k of ['hair','hat']){const g=by(k).geometry;assert(g.getAttribute('position')===geos[k].getAttribute('position')&&g.getAttribute('beanAnchor')===geos[k].getAttribute('beanAnchor'),`${k}: the shared islander vertex buffers`);
+   if(by(k).visible)assert(g.drawRange.count<geos[k].index.count,`${k}: only the shown riders' styles are drawn (${g.drawRange.count/3} of ${geos[k].index.count/3} tris)`);}
   assert(by('body').material.isBeanMaterial&&by('body').material.defines.BEAN_ROW_TEXTURE!==undefined,'the islanders\' bean material, batched rows (playerBatch\'s program)');
   assert(by('hair').instanceMatrix===by('body').instanceMatrix&&by('props').instanceMatrix===by('body').instanceMatrix,'one torso-frame matrix buffer for body, hair, hat, props');
   for(const o of drawn)assert(!o.castShadow,'no shadow pass');}
  cam.position.set(200,4,40);cam.lookAt(200,4,80);cam.updateMatrixWorld();pax.update(run,60,cam,-1,0,false);assert.equal(pax.shown,0,'behind the camera: nobody');
  pax.update(run,60,cam,0,0,false);assert(pax.shown>0,'the train I ride: always drawn');
- look(200,0);pax.update(run,60,cam,0,4,false);assert(pax.shown<=4,`lowest tier: 1 a car (${pax.shown})`);pax.update(run,60,cam,0,3,false);assert(pax.shown<=4,'tier 3: 2 a car');
+ look(200,0);pax.update(run,60,cam,0,4,false);assert(pax.shown<=4,`lowest tier: 1 a car (${pax.shown})`);assert(!group.getObjectByName('train-pax-hat').visible,'hot / low tiers: no hat draw');pax.update(run,60,cam,0,3,false);assert(pax.shown<=4,'tier 3: 2 a car');
  pax.update(run,60,cam,0,0,false);const r0=pax.roster(0);const s0=r0.slots.find(s=>s.on&&!s.standing);
  const sp0={x:0,z:0};const seat=RN.SEAT_TABLE[s0.seat];const w=new T.Vector3(seat.side*1.0,RN.CAR_FLOOR_Y,seat.z).applyMatrix4(carM(0,seat.car,new T.Matrix4()));
  const npc=pax.nearest(0,w.x,w.z);assert(npc&&npc.topics.length>=2,'riding next to a passenger: Talk to them');assert.equal(pax.nearest(1,w.x,w.z),null,'only on the train I ride');void sp0;

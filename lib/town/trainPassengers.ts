@@ -31,11 +31,13 @@ import {BENCH} from '../graphics/npcSeatPose';
 import {STATION_NPCS,STATION_BOARDERS} from './stationNpcs';
 import {TEAM_PALETTES,npcDress,type NpcLookOverride} from './beanLooks';
 import type {NpcDefinition,NpcTopic} from './npcDialogues';
-import {createPassengerMesh,paxPoseFor,propMask,PAX_GAZE_PITCH,PAX_KID_SCALE,PAX_POSES,PAX_STRAP_HAND,PAX_SEAT_BACK,type PaxLook,type PaxProp,type PassengerMesh} from '../graphics/trainPassengerMesh';
+import {bakeSteps,createPassengerMesh,paxPoseFor,propMask,PAX_GAZE_PITCH,PAX_KID_SCALE,PAX_POSES,PAX_STRAP_HAND,PAX_SEAT_BACK,type PaxBaked,type PaxLook,type PaxProp,type PassengerMesh} from '../graphics/trainPassengerMesh';
 
 export const SEATED_SLOTS=5,STANDING_SLOTS=2,SLOTS_PER_CAR=SEATED_SLOTS+STANDING_SLOTS;
 /** Draw ranges (m from the camera), talk reach (m), the per-car cap by heat tier (index: tier). */
 export const SHOW_RANGE=120,DETAIL_RANGE=45,TALK_RANGE=2.4,TIER_CAP=[99,99,99,2,1] as const;
+/** From this heat tier up (hot / low) the hat draw is skipped (cost trim Nov 24; hair still draws). */
+export const HAT_TIER=3;
 /** In the dwell (s after the train stops): the doors are open at DOORS_AT; leavers walk out OFF_FROM … +WALK_S, boarders on from
  *  ON_FROM … +WALK_S (the dwell is 14 s; the doors start closing at ~11 s). */
 export const DOORS_AT=DOOR_DELAY+DOOR_MOVE,OFF_FROM=DOORS_AT+.3,ON_FROM=DOORS_AT+3.2,WALK_S=3.4;
@@ -174,7 +176,15 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
  const gazeP=new Float32Array(TRAIN_COUNT*SLOT_COUNT),gazeY=new Float32Array(TRAIN_COUNT*SLOT_COUNT),near=new Uint8Array(TRAIN_COUNT),dist=new Float32Array(TRAIN_COUNT);
  // the talkable passengers this frame (world spot), filled by update; nearest() reads it
  const talk:{cast:number;x:number;y:number;z:number;k:number}[]=Array.from({length:MAX},()=>({cast:-1,x:0,y:0,z:0,k:-1}));let nTalk=0,shown=0,hornK=-1,hornAt=-99,lastNow=NaN;
- function build(){parts=createPassengerMesh(MAX,CAST.map(c=>c.pax));scene.add(parts.group);}
+ // the pose bake (~90 ms) runs in idle slices from load (cost trim Nov 24), long before a train is near; if a train is needed first
+ // the rest of it runs at once (the old first-sight path). No idle callback (Node tests): baked on first sight as before.
+ const looks=CAST.map(c=>c.pax),baker=bakeSteps(looks);let baked:PaxBaked|null=null,idleId=0;
+ const step=()=>{if(!baked){const r=baker.next();if(r.done)baked=r.value;}return baked!==null;};
+ type Idle={requestIdleCallback?:(cb:(d:{timeRemaining():number})=>void,o?:{timeout:number})=>number;cancelIdleCallback?:(id:number)=>void};
+ const g=globalThis as Idle;
+ const slice=(d:{timeRemaining():number})=>{idleId=0;if(parts)return;while(!step()&&d.timeRemaining()>6){/* one pose per step */}if(!baked)idleId=g.requestIdleCallback!(slice,{timeout:4000});};
+ if(typeof g.requestIdleCallback==='function')idleId=g.requestIdleCallback(slice,{timeout:6000});
+ function build(){while(!step()){/* finish the bake now */}if(idleId)g.cancelIdleCallback?.(idleId);idleId=0;parts=createPassengerMesh(MAX,looks,baked!);scene.add(parts.group);}
  /** Instance n: car matrix × the local spot (x, z on the floor, yaw), lean (roll), the rider's bake, scale (kid, fade), gaze. */
  function put(n:number,ci:number,carM:T.Matrix4,x:number,y:number,z:number,yaw:number,roll:number,bake:number,scale:number,gp:number,gy:number){
   e3.set(0,yaw,roll,'YXZ');q.setFromEuler(e3);p3.set(x,CAR_FLOOR_Y+y,z);s3.setScalar(scale);mi.compose(p3,q,s3);m2.multiplyMatrices(carM,mi);parts!.set(n,ci,bake,m2,gp,gy);
@@ -226,7 +236,7 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
       if(!parts)build();put(n,who.cast,cm,x,y,z,yaw,roll,bake,(kid?PAX_KID_SCALE:1)*fade,gazeP[gi],gazeY[gi]);
       if(phase<0&&n<talk.length){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const t=talk[nTalk++];t.cast=who.cast;t.x=p3.x;t.y=p3.y;t.z=p3.z;t.k=k;}
       n++;if(full)nNear=n;}}}
-   shown=n;parts?.commit(n,nNear);
+   shown=n;parts?.commit(n,nNear,tier<HAT_TIER);
    void RIDER_ROOT_X;void BENCH_FRONT;void SEATS_PER_CAR;void BENCH_X;
   },
   /** The horn sounded on train k (a glance toward the cab). */
@@ -237,7 +247,7 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
    if(best<0)return null;const t=talk[best],def=cast[t.cast];def.x=t.x;def.z=t.z;return def;},
   /** Tests / checks: passengers drawn this frame, the roster of train k (null until it was near), the mesh parts (null until built). */
   get shown(){return shown;},roster(k:number){return rosters[k];},get parts(){return parts;},
-  dispose(){parts?.dispose();parts=null;},
+  dispose(){if(idleId)g.cancelIdleCallback?.(idleId);idleId=0;if(!parts)baker.return(undefined as never);parts?.dispose();parts=null;},
  };
 }
 export type TrainPassengers=ReturnType<typeof createTrainPassengers>;

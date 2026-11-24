@@ -65,13 +65,20 @@ type Bake={dyn:Float32Array;torso:T.Matrix4;hands:[T.Vector3,T.Vector3];feet:[T.
 /** Arms relaxed by the sides (standing). */
 function relaxArms(o:TrickPose){for(const a of o.arms){a.sx=.08;a.sz=.1;a.el=-.32;a.w=1;}}
 function standPose(){const o=createTrickPose();o.w=1;o.pelvisY=.9;o.headPitch=0;for(const [i,l] of o.legs.entries()){l.x=i?.11:-.11;l.y=.075;l.z=0;l.toe=0;l.w=1;}relaxArms(o);return o;}
-/** Bakes every pose (adult and kid) and every cast member's static row from one hidden rig. Pure CPU, ~tens of ms, once. */
-export function bakePassengers(looks:readonly PaxLook[]){
+export type PaxBaked={statics:Float32Array;hats:Uint8Array;bakes:Bake[]};
+/** Bakes every pose (adult and kid) and every cast member's static row from one hidden rig. Pure CPU, ~90 ms in all, once.
+ *  A generator (cost trim Nov 24): it yields after the rig, the static rows and every pose, so the island can run it in idle slices
+ *  (trainPassengers: requestIdleCallback) long before the first train comes near; bakePassengers runs it in one go. */
+export function bakePassengers(looks:readonly PaxLook[]):PaxBaked{const it=bakeSteps(looks);for(;;){const r=it.next();if(r.done)return r.value;}}
+export function* bakeSteps(looks:readonly PaxLook[]):Generator<void,PaxBaked,void>{
  const was=characterStyle();setCharacterStyle('bean');
  let rig:ReturnType<typeof createPlayer>;try{rig=createPlayer('train-pax-bake','home',true,true);}finally{setCharacterStyle(was==='bean'?undefined:was);}
  const skin=beanSkinOf(rig);if(!skin){rig.dispose();throw new Error('train passengers: no bean skin');}
+ try{// the rig is disposed however the bake ends (done, thrown, or abandoned: return())
+ yield;
  const statics=new Float32Array(Math.max(1,looks.length)*STATIC_W*4),hats=new Uint8Array(looks.length);
  looks.forEach((d,i)=>{rig.setBeanLook(d.look,{...d.outfit,number:null});statics.set(skin.data.subarray(0,STATIC_W*4),i*STATIC_W*4);hats[i]=skin.data[BD.hat1*4+3]>.5?1:0;});
+ yield;
  const inv=new T.Matrix4(),bakes:Bake[]=[],v=new T.Vector3();
  const at=(f:number,lx:number,ly:number,lz:number,out:T.Vector3)=>{const d=skin.data,r=(k:number)=>d[(f+k)*4]*lx+d[(f+k)*4+1]*ly+d[(f+k)*4+2]*lz+d[(f+k)*4+3];return out.set(r(0),r(1),r(2));};
  const run=(o:TrickPose,gaze:number):Bake=>{
@@ -81,11 +88,11 @@ export function bakePassengers(looks:readonly PaxLook[]){
   // mitten centres (2 cm down the hand joint, beanSkin limbGeometry) and the soles, root frame
   return {dyn,torso,hands:[at(BD.frames,0,-.02,0,new T.Vector3()),at(BD.frames+3,0,-.02,0,new T.Vector3())],feet:[at(BD.frames+6,0,0,.05,new T.Vector3()),at(BD.frames+9,0,0,.05,new T.Vector3())]};
  };
- try{
+ {
   for(const kid of [false,true]){
    const scale=kid?PAX_KID_SCALE:1;if(kid)rig.setProfile(AGE_PROFILES.kid);
    const seat=()=>npcSeatPose('bench',scale);
-   const lap=run(seat(),PAX_GAZE_PITCH[0]);
+   const lap=run(seat(),PAX_GAZE_PITCH[0]);yield;
    // the top of the lap between the hands: where a box / ball rests
    const mid=v.copy(lap.hands[0]).add(lap.hands[1]).multiplyScalar(.5);const lapY=mid.y-.01,lapZ=mid.z+.03;
    const hold=seat();for(const [i,a] of hold.arms.entries())restHand(hold,i?1:-1,lapZ,lapY+.07,a);
@@ -94,11 +101,12 @@ export function bakePassengers(looks:readonly PaxLook[]){
    const strap=standPose(),H=PAX_STRAP_HAND;restHand(strap,1,H.z/scale,H.y/scale,strap.arms[1]);
    const strapPhone=standPose();restHand(strapPhone,1,H.z/scale,H.y/scale,strapPhone.arms[1]);restHand(strapPhone,-1,.3,strapPhone.pelvisY+.36,strapPhone.arms[0]);
    const standHold=standPose();for(const [i,a] of standHold.arms.entries())restHand(standHold,i?1:-1,.27,standHold.pelvisY+.12,a);
-   const poses=[lap,run(hold,PAX_GAZE_PITCH[1]),run(phone,PAX_GAZE_PITCH[2]),run(read,PAX_GAZE_PITCH[3]),run(strap,PAX_GAZE_PITCH[4]),run(strapPhone,PAX_GAZE_PITCH[5]),run(standPose(),PAX_GAZE_PITCH[6]),run(standHold,PAX_GAZE_PITCH[7])];
-   bakes.push(...poses);
+   bakes.push(lap);
+   for(const [o,i] of [[hold,1],[phone,2],[read,3],[strap,4],[strapPhone,5],[standPose(),6],[standHold,7]] as const){bakes.push(run(o,PAX_GAZE_PITCH[i]));yield;}
   }
- }finally{rig.dispose();}
+  }
  return {statics,hats,bakes};
+ }finally{rig.dispose();}
 }
 
 // ---------------------------------------------------------------- props (one geometry, every prop in every baked spot)
@@ -205,9 +213,31 @@ function propMaterial(){
 /** Per-build fit of the worn props (scarf / camera / backpack): width scale and height shift against the regular bean. */
 const WORN_FIT:Record<BeanBuild,[number,number]>=(()=>{const r=BEAN_SHAPES.regular,y=(s:typeof r,u:number)=>-.13+u*(s.H+.13);const o={} as Record<BeanBuild,[number,number]>;
  for(const k of Object.keys(BEAN_SHAPES) as BeanBuild[]){const s=BEAN_SHAPES[k];o[k]=[beanRadius(s,.6)/beanRadius(r,.6),y(s,.6)-y(r,.6)];}return o;})();
-/** Every passenger part: room for `max` instances; looks = the cast (static rows baked now). */
-export function createPassengerMesh(max:number,looks:readonly PaxLook[]){
- const baked=bakePassengers(looks),{statics,hats,bakes}=baked,geos=beanGeometries(),rows=Math.max(ROWS_MIN,1<<Math.ceil(Math.log2(Math.max(1,max))));
+/** Cost trim (Nov 24): a view of a shared geometry that indexes only the triangle groups in use (its own index; the vertex
+ *  attributes stay the shared ones). Hair / hat: a group = a style (beanAnchor.w); props: a group = prop bit × bake selector.
+ *  Still ONE draw per part, but the styles / props nobody on screen wears cost no vertex work and count no triangles (the full
+ *  hair + hat sets are 3676 + 1952 tris per instance). use(mask) rebuilds the index only when the set changes (a roster change). */
+export function subsetView(base:T.BufferGeometry,groupOf:(vertex:number)=>number){
+ const n=base.index?base.index.count:base.getAttribute('position').count,src=(i:number)=>base.index?base.index.getX(i):i;
+ const groups=new Map<number,number[]>();for(let t=0;t<n;t+=3){const k=groupOf(src(t));let l=groups.get(k);if(!l)groups.set(k,l=[]);l.push(src(t),src(t+1),src(t+2));}
+ const g=new T.BufferGeometry();for(const [name,attr] of Object.entries(base.attributes))g.setAttribute(name,attr);
+ const idx=new T.BufferAttribute(new Uint32Array(Math.max(3,n)),1);idx.setUsage(T.DynamicDrawUsage);g.setIndex(idx);g.setDrawRange(0,0);
+ g.boundingSphere=base.boundingSphere?.clone()??null;g.name=(base.name||'pax')+'-subset';
+ let key=-1;
+ return {geometry:g,groups:[...groups.keys()],
+  /** Keep the groups `keep` says yes to (key: any number naming that set; same key = no work). Returns the triangles kept. */
+  use(k:number,keep:(group:number)=>boolean){if(k===key)return g.drawRange.count/3;key=k;let c=0;const a=idx.array as Uint32Array;
+   for(const [gk,l] of groups)if(keep(gk)){a.set(l,c);c+=l.length;}g.setDrawRange(0,c);idx.needsUpdate=true;return c/3;},
+  /** Drops the view without releasing the shared attributes (only its own index leaves the GPU). */
+  dispose(){for(const k of Object.keys(g.attributes))g.deleteAttribute(k);g.dispose();}};
+}
+/** Every passenger part: room for `max` instances; looks = the cast (static rows baked now, or handed in from bakeSteps). */
+export function createPassengerMesh(max:number,looks:readonly PaxLook[],pre?:PaxBaked){
+ const baked=pre??bakePassengers(looks),{statics,hats,bakes}=baked,shared=beanGeometries(),rows=Math.max(ROWS_MIN,1<<Math.ceil(Math.log2(Math.max(1,max))));
+ const styleOf=(geo:T.BufferGeometry)=>{const an=geo.getAttribute('beanAnchor');return (v:number)=>Math.round(an.getW(v));};
+ const hairV=subsetView(shared.hair,styleOf(shared.hair)),hatV=subsetView(shared.hat,styleOf(shared.hat));
+ const castHair=looks.map((_,i)=>Math.round(statics[(i*STATIC_W+BD.hair)*4+3])),castHat=looks.map((_,i)=>Math.round(statics[(i*STATIC_W+BD.hat1)*4+3]));
+ const geos={body:shared.body,limbs:shared.limbs,hair:hairV.geometry,hat:hatV.geometry};
  const tex=(w:number)=>{const t=new T.DataTexture(new Float32Array(w*rows*4),w,rows,T.RGBAFormat,T.FloatType);t.minFilter=t.magFilter=T.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;t.name='train-pax-rows';return t;};
  const fixed=tex(STATIC_W),pose=tex(DYN_W),fixedA=fixed.image.data as unknown as Float32Array,poseA=pose.image.data as unknown as Float32Array;
  const group=new T.Group();group.name='train-passengers';
@@ -217,7 +247,8 @@ export function createPassengerMesh(max:number,looks:readonly PaxLook[]){
  hair.instanceMatrix=hat.instanceMatrix=body.instanceMatrix;// one torso-frame matrix buffer for body, hair and hat
  const pg=propGeometry(bakes),attr=(n:number)=>{const a=new T.InstancedBufferAttribute(new Float32Array(max*n),n);a.setUsage(T.DynamicDrawUsage);return a;};
  const iPose=attr(4),iColA=attr(3),iColB=attr(3);pg.setAttribute('iPose',iPose);pg.setAttribute('iColA',iColA);pg.setAttribute('iColB',iColB);
- const props=new T.InstancedMesh(pg,propMaterial(),max);props.name='train-pax-props';props.frustumCulled=false;props.count=0;props.castShadow=props.receiveShadow=false;props.instanceMatrix=body.instanceMatrix;group.add(props);
+ const pax=pg.getAttribute('aPax'),propV=subsetView(pg,v=>pax.getY(v)*32+pax.getZ(v));
+ const props=new T.InstancedMesh(propV.geometry,propMaterial(),max);props.name='train-pax-props';props.frustumCulled=false;props.count=0;props.castShadow=props.receiveShadow=false;props.instanceMatrix=body.instanceMatrix;group.add(props);
  // what each instance row holds now (rows are rewritten only when that changes: a texture upload only then)
  const rowCast=new Int32Array(max).fill(-1),rowBake=new Int32Array(max).fill(-1),rowGP=new Float32Array(max),rowGY=new Float32Array(max),rowHat=new Uint8Array(max);
  const tm=new T.Matrix4(),col=new T.Color();let fixedDirty=false,poseDirty=false;
@@ -234,15 +265,20 @@ export function createPassengerMesh(max:number,looks:readonly PaxLook[]){
    const L=looks[ci],f=fits[ci],a=iPose.array as Float32Array;a[n*4]=bi;a[n*4+1]=L.props;a[n*4+2]=f[0];a[n*4+3]=f[1];
    col.copy(colA[ci]).toArray(iColA.array as Float32Array,n*3);col.copy(colB[ci]).toArray(iColB.array as Float32Array,n*3);
   },
-  /** After the frame's set() calls: nAll instances (the first nNear with limbs and props). */
-  commit(nAll:number,nNear:number){
-   body.count=hair.count=hat.count=nAll;limbs.count=props.count=nNear;let anyHat=false;for(let i=0;i<nAll&&!anyHat;i++)anyHat=rowHat[i]===1;
-   body.visible=hair.visible=nAll>0;hat.visible=anyHat;limbs.visible=props.visible=nNear>0;group.visible=nAll>0;
+  /** After the frame's set() calls: nAll instances (the first nNear with limbs and props); withHats false = the hat draw is skipped
+   *  (hot / low heat tiers: trainPassengers HAT_TIER). */
+  commit(nAll:number,nNear:number,withHats=true){
+   body.count=hair.count=hat.count=nAll;limbs.count=props.count=nNear;
+   // the styles / props of the riders shown now (bitmasks; the subsets re-index only when these change)
+   let hm=0,tm2=0,pm=0,bm=0;for(let i=0;i<nAll;i++){const c=rowCast[i];if(c<0)continue;hm|=1<<castHair[c];if(withHats&&rowHat[i])tm2|=1<<castHat[c];if(i<nNear){pm|=looks[c].props;bm|=1<<rowBake[i];}}
+   const hairTris=hm?hairV.use(hm,k=>(hm>>k&1)===1):0,hatTris=tm2?hatV.use(tm2,k=>(tm2>>k&1)===1):0;
+   const propTris=pm?propV.use(pm*65536+bm,k=>{const bit=Math.floor(k/32),sel=k%32;return (pm>>bit&1)===1&&(sel>=ANY||(bm>>sel&1)===1);}):0;
+   body.visible=nAll>0;hair.visible=hairTris>0;hat.visible=hatTris>0;limbs.visible=nNear>0;props.visible=propTris>0&&nNear>0;group.visible=nAll>0;
    if(nAll>0){body.instanceMatrix.needsUpdate=true;limbs.instanceMatrix.needsUpdate=nNear>0;}
    if(nNear>0)iPose.needsUpdate=iColA.needsUpdate=iColB.needsUpdate=true;
    if(fixedDirty){fixed.needsUpdate=true;fixedDirty=false;}if(poseDirty){pose.needsUpdate=true;poseDirty=false;}
   },
-  dispose(){group.removeFromParent();for(const m of [body,limbs,hair,hat,props])(m.material as T.Material).dispose();pg.dispose();fixed.dispose();pose.dispose();},
+  dispose(){group.removeFromParent();for(const m of [body,limbs,hair,hat,props])(m.material as T.Material).dispose();pg.dispose();propV.dispose();hairV.dispose();hatV.dispose();fixed.dispose();pose.dispose();},
  };
 }
 export type PassengerMesh=ReturnType<typeof createPassengerMesh>;

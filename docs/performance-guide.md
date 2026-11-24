@@ -7066,3 +7066,5 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
   6-11 -> 10-15, 8.0k-15.5k -> 17.2k-25.4k; beach 6-11 -> 11-16, 3.4k-12.0k -> 11.6k-18.8k; stands 6-11 -> 10-15, 27.9k-36.9k ->
   21.0k-30.5k. Programs 9 -> 12, textures 4 -> 7 (the rig's). scripts/check-popup-browser.cjs still passes (plaza: 10-15 draws, 16k-24k).
   Not measured on a real phone; no iPhone temperature claim.
+
+- Train passengers (Nov 24): islanders' bean skin, ≤5 instanced draws, ~6k rastered tris per near passenger, bodies only beyond 28 m; rows uploaded on change only. Cost trim: hair / hat / props draw through a subset index of the shared buffers holding only the styles and props of the riders shown now (re-indexed only when that set changes), so unworn styles cost no vertex work; a 5-rider car counts ~38k tris (worst ~45k; was ~59k), the hat draw is skipped from heat tier 3 up, and the ~90 ms pose bake runs in idle slices from load (≤ ~37 ms in Node per slice) instead of on first sight.
