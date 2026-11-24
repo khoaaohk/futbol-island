@@ -45,7 +45,10 @@ assert(!names.has('CORNER DELI')&&!names.has('PRAÇA HOMES')&&names.has('MAKERS 
 // 3. Draw budget: everything west of x -100 is in the 50 m chunk batches (cx ≤ -3), all behind the one west region gate.
 const scene=world.dynamicScenery.parent;const chunks=scene.children.filter(o=>o.isMesh&&o.name.startsWith('island-chunk-')&&+o.name.slice('island-chunk-'.length).split(':')[0]<=-3);
 let tris=0;for(const m of chunks){const g=m.geometry;tris+=(g.index?g.index.count:g.getAttribute('position').count)/3;}
-assert.equal(chunks.length,world.westChunkCount,'every west chunk is gated');
+// Nov 23 2026: a chunk whose geometry reaches east of the gate's box (an Island Line track chunk keyed by its west origin cell) keeps per-object culling.
+const gated=chunks.filter(m=>{m.geometry.computeBoundingBox();const b=m.geometry.boundingBox;return b.min.x>=-421&&b.max.x<=-99&&b.min.z>=-331&&b.max.z<=301;});
+assert(chunks.length-gated.length<=3,'at most the line\'s few long chunks stay ungated: '+(chunks.length-gated.length));
+assert.equal(gated.length,world.westChunkCount,'every west chunk inside the region is gated');
 console.log(`west chunks (draw calls when all in view): ${chunks.length}; triangles: ${Math.round(tris)}; trees ${st.trees}, palms ${st.palms}, flags ${st.flags}, hedges ${st.hedges}, beds ${st.beds}`);
 assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<=150000,'west triangles bounded: '+Math.round(tris));
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
