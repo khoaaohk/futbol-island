@@ -70,7 +70,7 @@ export function sNear(x:number,z:number){let b=0,bd=Infinity;for(let i=0;i<TRACK
 // ---- The tunnel through Summit Isle's summit (owner ruling: straight through). Portals sit where the hill above clears the tube
 // roof by ≥ 1.5 m; the east one 6 m out from the Phase 0 spot so the climb trail (which crosses there) runs over the tunnel roof.
 export const TUNNEL_BED=2.2,TUNNEL_HALF_WIDTH=3.6,TUNNEL_HEIGHT=5.6;
-export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:668.5,z:45.5,s:sNear(668.5,45.5)}} as const;
+export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:670.5,z:43.1,s:sNear(670.5,43.1)}} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
 export const inTunnelS=(s:number)=>s>TUNNEL.west.s&&s<TUNNEL.east.s;
 
 // ---- Summit Isle's track bed: piecewise linear in s (beach → station flat → west portal; east portal → north beach).
@@ -85,26 +85,37 @@ export function summitBedAt(s:number){const K=SUMMIT_KEYS;if(s<=K[0][0]||s>=K[K.
 
 /** The Summit cutting / embankment: the ground within `flat` m of the centre line is the bed; beyond, banks of CUT_BANK (rise per
  *  metre) back to the natural slope. Not inside the tunnel (the hill stays over it). Station stretch: a wider flat (house, path). */
-export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26;
+export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26,STATION_BANK=.55;
 const SUMMIT_BOX=(()=>{let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(let i=0;i<TRACK.n;i++){const s=i*TRACK_DS;if(!onSummitTrackS(s))continue;a=Math.min(a,TRACK.x[i]);b=Math.max(b,TRACK.x[i]);c=Math.min(c,TRACK.z[i]);d=Math.max(d,TRACK.z[i]);}
  return {minX:a-CUT_REACH-CUT_STATION_FLAT,maxX:b+CUT_REACH+CUT_STATION_FLAT,minZ:c-CUT_REACH-CUT_STATION_FLAT,maxZ:d+CUT_REACH+CUT_STATION_FLAT};})();
 /** Into the hill past each portal plane the ground is still carved for MOUTH_CARVE m (flat, steep MOUTH_BANK sides) so the
  *  terrain's step back up to the slope lies behind the portal's dark mouth, under its hood (trainWorld.ts), never across the arch. */
 export const MOUTH_CARVE=3.2,MOUTH_BANK=4;
+/** The east portal's carve is shallower (1.4 m, just past its 1.2 m headwall): the climb trail crosses the hill 3 m behind it. */
+export const MOUTH_CARVE_EAST=1.4,MOUTH_RAMP=12;
+export const mouthCarveAt=(s:number)=>s-TUNNEL.west.s<TUNNEL.east.s-s?MOUTH_CARVE:MOUTH_CARVE_EAST;
 /** How far into the tunnel (m, along the line) a point lies past the nearer portal plane (negative outside). */
 function inward(x:number,z:number,s:number){const west=s-TUNNEL.west.s<TUNNEL.east.s-s,p=west?TUNNEL.west:TUNNEL.east,t=trackAt(p.s);return ((x-p.x)*t.tx+(z-p.z)*t.tz)*(west?1:-1);}
 /** Distance to the carved Summit corridor's centre line (1e3 outside it): summitIsleWorld draws the terrain finer there. */
 export function trainCutDistance(x:number,z:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return 1e3;
  const hit=trackNearest(x,z,CUT_REACH+CUT_STATION_FLAT,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit)return 1e3;
- if(inTunnelS(hit.s)&&inward(x,z,hit.s)>MOUTH_CARVE+2.5)return 1e3;return hit.d;}
+ if(inTunnelS(hit.s)&&inward(x,z,hit.s)>mouthCarveAt(hit.s)+MOUTH_RAMP)return 1e3;return hit.d;}
 /** Carve Summit Isle's ground `h` at (x, z) to the track bed (cut and fill). summitGround calls this last. */
 export function trainCut(x:number,z:number,h:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return h;
  const hit=trackNearest(x,z,CUT_REACH+CUT_STATION_FLAT,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit||!onSummitTrackS(hit.s))return h;
- if(inTunnelS(hit.s)){if(inward(x,z,hit.s)>MOUTH_CARVE)return h;const k=Math.max(0,hit.d-TUNNEL_HALF_WIDTH)*MOUTH_BANK;return Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);}
+ if(inTunnelS(hit.s)){// Past the carve the clamp opens at MOUTH_BANK per metre too, so the ground ramps back up to the hill (no cliff to step up).
+  const past=inward(x,z,hit.s)-mouthCarveAt(hit.s);if(past>MOUTH_RAMP)return h;
+  const k=(Math.max(0,hit.d-TUNNEL_HALF_WIDTH)+Math.max(0,past))*MOUTH_BANK;
+  return Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);}
  const st=Math.abs(hit.s-SUMMIT_TRACK.station),flat=st<STATION_HALF+6?CUT_STATION_FLAT:st<STATION_HALF+14?CUT_FLAT+(CUT_STATION_FLAT-CUT_FLAT)*(STATION_HALF+14-st)/8:CUT_FLAT;
- const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*CUT_BANK;
+ // Along the station stretch the banks are walkable (it stands on the beach): STATION_BANK, under the walk limit.
+ // Just east of the east portal the cut has steep wing-wall banks (MOUTH_BANK for 8 m, easing to CUT_BANK by 16 m): the climb
+ // trail runs out along the portal's line there and keeps its ground.
+ const pe=hit.s-TUNNEL.east.s,bank=st<STATION_HALF+14?STATION_BANK:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
+ const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*bank;
+ if(h<=0&&hit.d>flat)return h;// no bank fill out over the sea past the coast (the trestle carries the line there)
  return Math.min(Math.max(h,bed-k),bed+k);
 }
 

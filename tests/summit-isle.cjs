@@ -44,7 +44,9 @@ assert(walkSteep<=S.SUMMIT_WALK_SLOPE+1e-9,`every walkable spot is gentler than 
 // A trail's own cut and fill banks may be a little steeper (Oct 13 2026: never walled in; you can step or ride off it anywhere).
 assert(bankSteep<=S.SUMMIT_TRAIL_BANK_SLOPE+1e-9,`trail banks within their limit (${bankSteep.toFixed(3)})`);
 assert(steep>200&&steepBlocked===steep,'the steep upper slopes cannot be walked');
-for(let a=0;a<Math.PI*2;a+=.05){const r=S.coastRadius(a);assert(S.summitGround(C.x+Math.cos(a)*(r+.5),C.z+Math.sin(a)*(r+.5))===0,'sea level past the coast');
+// (Nov 23 2026: except where the Island Line comes ashore, its embankment meets the trestle: within 12 m of the line)
+const TT=load('lib/town/trainTrack.ts'),landfall=a=>{const r=S.coastRadius(a);return !!TT.trackNearest(C.x+Math.cos(a)*r,C.z+Math.sin(a)*r,12);};
+for(let a=0;a<Math.PI*2;a+=.05){const r=S.coastRadius(a);if(landfall(a))continue;assert(S.summitGround(C.x+Math.cos(a)*(r+.5),C.z+Math.sin(a)*(r+.5))===0,'sea level past the coast');
  assert(S.summitGround(C.x+Math.cos(a)*(r-3),C.z+Math.sin(a)*(r-3))<.1,'a beach at the water');}
 {const nearTrail=(x,z)=>S.SUMMIT_PATHS.some(path=>path.some(q=>Math.hypot(q.x-x,q.z-z)<7));
  for(let a=0;a<Math.PI*2;a+=.1){const p=S.heightPoint(a,3);if(S.onSummitIsle(p.x,p.z)||nearTrail(p.x,p.z))continue;assert(false,`walkable foothills at ${(a*180/Math.PI).toFixed(0)}°`);}}

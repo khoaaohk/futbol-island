@@ -21,7 +21,7 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
-import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,MOUTH_CARVE,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
+import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,MOUTH_CARVE,MOUTH_CARVE_EAST,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,SEA_WALL_HALF} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
 
@@ -217,7 +217,7 @@ export function buildTrainWorld(tools:TrainTools){
   // Coping on top, a darker arch ring and the dark mouth just inside; a hood over the carve behind the headwall.
   const g=new Geo(),gd=new Geo();g.box(p.x+o.x*.6,TUNNEL_BED+Htop+.12,p.z+o.z*.6,a.x,a.z,half+.2,.8,.12,false);
   for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(TUNNEL_HALF_WIDTH+.25),y0=2.4+Math.sin(ang)*(TUNNEL_HALF_WIDTH+.25);gd.box(p.x+a.x*x0+o.x*1.22,TUNNEL_BED+y0,p.z+a.z*x0+o.z*1.22,a.x,a.z,.32,.04,.32);}
-  const hoodIn=MOUTH_CARVE+.6,hoodY0=TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+.2;g.box(p.x-o.x*hoodIn/2,(hoodY0+TUNNEL_BED+Htop)/2,p.z-o.z*hoodIn/2,a.x,a.z,TUNNEL_HALF_WIDTH+2.2,hoodIn/2,(TUNNEL_BED+Htop-hoodY0)/2,false);
+  const hoodIn=(west?MOUTH_CARVE:MOUTH_CARVE_EAST)+.6,hoodY0=TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+.2;g.box(p.x-o.x*hoodIn/2,(hoodY0+TUNNEL_BED+Htop)/2,p.z-o.z*hoodIn/2,a.x,a.z,TUNNEL_HALF_WIDTH+2.2,hoodIn/2,(TUNNEL_BED+Htop-hoodY0)/2,false);
   for(const sgn of [-1,1])g.box(p.x-o.x*hoodIn/2+a.x*sgn*(TUNNEL_HALF_WIDTH+.25),TUNNEL_BED+1.6,p.z-o.z*hoodIn/2+a.z*sgn*(TUNNEL_HALF_WIDTH+.25),a.x,a.z,.25,hoodIn/2,2.4,false);
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
   const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.35,TUNNEL_BED,p.z-o.z*.35));
