@@ -70,6 +70,8 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
  },{x:VIEWS[0].x,z:VIEWS[0].z,time:TIME,seed:SEED,noTrain:NO_TRAIN,saver:SAVER});
  await page.goto(BASE+'/play?from=arcade',{timeout:240000});
  await page.waitForFunction(()=>window.__fi2&&window.__fi2.renderer&&window.__fi2.heat&&window.__fi2.water&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});
+ // GFX_NO_PASSENGERS=1 (Nov 24 2026, Gameplay 3 A/B): the train passengers never update, so their instanced mesh is never built (0 draws)
+ if(process.env.GFX_NO_PASSENGERS==='1')await page.evaluate(()=>{const p=window.__fi2.trainPassengers;if(p)p.update=()=>{};});
  // One wrapper for the whole run: every island-scene render records three's counters and its own JS time.
  await page.evaluate(tier=>{
   const f=window.__fi2,r=f.renderer,orig=r.render.bind(r),log=window.__gfx={on:false,rows:[]};
