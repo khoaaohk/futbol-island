@@ -95,15 +95,19 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     check('each draws the other in their seat (standing train)', m0.bSeesA < 1 && m0.aSeesB < 1, `B sees A ${m0.bSeesA.toFixed(2)} m, A sees B ${m0.aSeesB.toFixed(2)} m from the seat`);
     for (let i = 0; i < 40; i++) { const at = await A.p.evaluate((kk) => window.__fi2.trains.states[kk].at, k); if (at < 0) break; await A.p.waitForTimeout(500); }
     await A.p.waitForTimeout(5000);
+    // the announcement as the train leaves (read now: standing up below shows the strap note in the same spot)
+    const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     const m1 = await mutual(); await A.p.waitForTimeout(1500); const m2 = await mutual();
-    check('each draws the other in the MOVING seat', m2.bSeesA < 1.2 && m2.aSeesB < 1.2 && Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z) > 5, `B sees A ${m2.bSeesA.toFixed(2)} m, A sees B ${m2.aSeesB.toFixed(2)} m; seat moved ${Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z).toFixed(1)} m; on screen A ${m2.vb.ndc} B ${m2.va.ndc}`);
+    check('each draws the other in the MOVING seat', m2.bSeesA < 1.2 && m2.aSeesB < 1.2 && Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z) > 5, `B sees A ${m2.bSeesA.toFixed(2)} m (${m2.va.n} drawn), A sees B ${m2.aSeesB.toFixed(2)} m (${m2.vb.n} drawn); seat moved ${Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z).toFixed(1)} m; on screen A ${m2.vb.ndc} B ${m2.va.ndc}`);
     // Nov 24 2026 (every seat + standing on the wire): A stands up and walks the aisle; B draws A standing, train-relative, and walking
     const standView = async () => { const sp = await A.p.evaluate(() => ({ u: window.__fi2.trainRide.spot.u, x: window.__fi2.trainRide.spot.x }));
       return B.p.evaluate(({ k, sp }) => { const f = window.__fi2, o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.standAt(k, sp.x, sp.u, 0, o); const h = window.__fi2PublicDraw; let best = Infinity, at = null;
         if (h) for (const layer of h.layers) { if (typeof layer.tapSpots !== 'function') continue; for (const q of layer.tapSpots().spots) { const d = Math.hypot(q.x - o.x, q.z - o.z); if (d < best) { best = d; at = { x: q.x, z: q.z }; } } }
         return { best, at, u: sp.u }; }, { k, sp }); };
-    await A.p.evaluate(() => window.__fi2.trainRide.standUp()); await A.p.waitForTimeout(1200); await A.p.keyboard.down('KeyW');
-    const w0 = await standView(); await A.p.waitForTimeout(1500); const w1 = await standView(); await A.p.keyboard.up('KeyW'); await A.p.waitForTimeout(2500); const w2 = await standView();
+    // (the Inside view, Nov 24 2026: the camera stands off the side of the car, square to the aisle, so walking along the car is left /
+    // right on the stick: D)
+    await A.p.evaluate(() => window.__fi2.trainRide.standUp()); await A.p.waitForTimeout(1200); await A.p.keyboard.down('KeyD');
+    const w0 = await standView(); await A.p.waitForTimeout(1500); const w1 = await standView(); await A.p.keyboard.up('KeyD'); await A.p.waitForTimeout(2500); const w2 = await standView();
     check('B draws A standing and walking the aisle (train-relative)', w2.best < .8 && Math.abs(w1.u - w0.u) > 1 && w0.at && w1.at && Math.hypot(w1.at.x - w0.at.x, w1.at.z - w0.at.z) > .1, `stopped ${w2.best.toFixed(2)} m from A's spot; A walked ${Math.abs(w1.u - w0.u).toFixed(1)} m`);
     const hi = await A.p.evaluate(() => { const r = window.__fi2.trainRide; for (const j of [12, 13, 11, 10, 26]) if (r.sitDown(j)) return j; return -1; }); await A.p.waitForTimeout(3000);
     let mh = null; for (let i = 0; i < 10; i++) { mh = await view(B.p, k, hi); if (mh.best < 1) break; await A.p.waitForTimeout(500); }
@@ -116,7 +120,6 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
       dts.push(Math.abs(ds / v)); await A.p.waitForTimeout(700); }
     const worst = Math.max(...dts);
     check('the train is at the same place on both screens (within 1 s)', worst < 1, dts.map((d) => d.toFixed(2) + ' s').join(', '));
-    const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
     // owner Nov 25 2026: the between-stops quiz is off (trainRide.ts TRAIN_QUIZ): no card on the run
     await A.p.waitForTimeout(8000); const quiz = false;
@@ -131,7 +134,8 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     // Get off at the next stop (both)
     let off = false; for (let i = 0; i < 160 && !off; i++) { off = await A.p.evaluate(() => { const r = window.__fi2.trainRide; return r.active && window.__fi2.trains.states[r.train].at >= 0 && window.__fi2.trains.states[r.train].doors > .6; }); if (!off) await A.p.waitForTimeout(500); }
     for (const c of [A, B]) { await c.p.waitForTimeout(500); await c.p.keyboard.press('e'); }
-    await A.p.waitForTimeout(900);
+    // (Get off is a short step-out walk to the nearest open door, Nov 24 2026: under 1 s)
+    for (let i = 0; i < 12; i++) { if (!(await A.p.evaluate(() => window.__fi2.trainRide.active)) && !(await B.p.evaluate(() => window.__fi2.trainRide.active))) break; await A.p.waitForTimeout(250); }
     check('both get off at the next stop', !(await A.p.evaluate(() => window.__fi2.trainRide.active)) && !(await B.p.evaluate(() => window.__fi2.trainRide.active)));
     check('no page errors', !A.errs.length && !B.errs.length, [...A.errs, ...B.errs].slice(0, 3).join(' | '));
   } catch (e) { check('ran to the end', false, e.message.slice(0, 300)); }
