@@ -49,8 +49,8 @@ export const TRAIN_NOTES={board:'All aboard! Drag or use the stick to look aroun
  *  EXIT_WARN s before they shut the chime sounds with "Doors closing". The step-out walk goes from wherever you are (seat, aisle, the
  *  other car) to the nearest open door and on onto the platform, facing away from the train, in EXIT_MIN … WALK_MAX s. */
 export const EXIT_EARLY=4,EXIT_WARN=3,EXIT_MIN=.45,EXIT_IN=1.95,EXIT_OUT=1.4;
-/** Gameplay 3: the walk notes; a tap within SEAT_TAP_PX px of a glowing seat sits there. */
-export const WALK_NOTES={up:'Hold on to a strap! Walk the aisle, and tap a glowing seat (or Sit) to sit down.',sit:'Walk to a glowing seat to sit down.'} as const;
+/** Gameplay 3: the walk notes; a tap within SEAT_TAP_PX px of a free seat in reach sits there (RIDE 3: no seat glow, owner shot 48). */
+export const WALK_NOTES={up:'Hold on to a strap! Walk the aisle; by a free seat, tap Sit.',sit:'Walk up to a free seat, then tap Sit.'} as const;
 export const SEAT_TAP_PX=56;
 /** Board only while the doors are this open and the train waits at least this long (s) more. */
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
@@ -140,7 +140,7 @@ export function trainButtons(canGetOff:boolean,moved=false,standing=false,nearSe
  return [{slot:offFirst?'shoot':'ride',key:'E',id:'getoff',label:exitTo?`Get off at ${exitTo}`:canGetOff?'Get off here':'Get off at the next stop',icon:'trainoff',enabled:canGetOff||!!exitTo},
   {slot:offFirst?'ride':'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true},
   {slot:'juggle',key:'R',id:'recenter',label:'Recenter the camera',icon:'recenter',enabled:moved},
-  {slot:'extra',key:'Q',id:'walk',label:!standing?'Walk around inside (Inside view)':nearSeat?'Sit in this seat':'Walk to a glowing seat to sit',icon:standing?'sit':'walk',enabled:!standing||nearSeat}] as const;
+  {slot:'extra',key:'Q',id:'walk',label:!standing?'Walk around inside (Inside view)':nearSeat?'Sit in this seat':'Walk up to a free seat to sit',icon:standing?'sit':'walk',enabled:!standing||nearSeat}] as const;
 }
 export function trainKeyAction(code:string,key:string):TrainActionId|null{
  const k=key.toLowerCase();if(k==='e'||k==='enter'||code==='Digit1')return 'getoff';if(code==='Space'||k==='h'||code==='Digit2')return 'horn';if(k==='r'||code==='Digit3')return 'recenter';if(k==='q'||code==='Digit4')return 'walk';if(k==='c')return 'camera';return null;
@@ -210,7 +210,7 @@ export function createTrainRide(ports:Ports){
  const sp={x:0,u:0},twFrom={x:0,u:0},twTo={x:0,u:0},mv={x:0,z:0},carL:TrainLocal={car:0,x:0,z:0},carM=new T.Matrix4(),pv=new T.Vector3(),aisle={x:0,z:0},gp:SeatPose={x:0,y:0,z:0,yaw:0};
  const straps:[TrickPose,TrickPose]=[trainStrapPose(-1),trainStrapPose(1)];
  const gait={on:false,x:0,z:0,facing:NaN};
- /** Free player seats near the standing rider: world spot (on the cushion) and glow 0 … 1 (lib/graphics/trainSeatGlow.ts draws them). */
+ /** Free player seats near the standing rider: world spot (on the cushion) and reach 0 … 1 (a tap near one sits; nothing is drawn). */
  const glows=Array.from({length:TRAIN_SEATS},()=>({x:0,y:0,z:0,yaw:0,w:0}));
  // Easy exit (owner, Nov 24 2026): exitQ a press waiting for the doors; exitT the step-out walk (0 … 1, -1: none) along ex[0] (where
  // you are) → ex[1] (the aisle by the door) → ex[2] (the doorway, on the platform) → ex[3] (out on the platform), exL the legs (m).
@@ -351,7 +351,7 @@ export function createTrainRide(ports:Ports){
   const st=run.states[k],door=st.at>=0&&st.doors>=DOORS_OPEN&&tw<0&&nearDoor(sp.x,sp.u)>=0;
   if(view.nearSeat!==(nearSeatJ>=0)||view.nearDoor!==door)trainRideStore.set({nearSeat:nearSeatJ>=0,nearDoor:door});
  }
- /** A tap on a glowing seat while standing: walk over and sit (the nearest on screen within SEAT_TAP_PX). */
+ /** A tap on a free seat in reach while standing: walk over and sit (the nearest on screen within SEAT_TAP_PX). */
  function tapSeat(cx:number,cy:number,el:Element){
   if(!standing||tw>=0||!lastCam)return false;const r=el.getBoundingClientRect();let best=-1,bd=SEAT_TAP_PX;
   for(let s=0;s<TRAIN_SEATS;s++){const g=glows[s];if(g.w<=0||ports.taken(k,s))continue;v.set(g.x,g.y+.75,g.z).project(lastCam);if(v.z< -1||v.z>1)continue;
@@ -384,7 +384,7 @@ export function createTrainRide(ports:Ports){
   orb.yaw=wrapPi(orb.yaw-dx*ORBIT.drag);clampYaw();setPitch(orb.pitch+dy*ORBIT.drag*.6);
   orb.vy=orb.vy*.5+(-dx*ORBIT.drag/dts)*.5;dragX=e.clientX;dragY=e.clientY;dragT=now;}
  function onUp(e:PointerEvent){if(e.pointerId===pinchId){pinchId=-1;return;}if(dragging&&e.pointerId===dragId){
-   // Gameplay 3: standing, a quick tap (no drag) on a glowing seat sits there
+   // Gameplay 3: standing, a quick tap (no drag) on a free seat in reach sits there
    if(standing&&tapT>=0&&e.timeStamp/1000-tapT<.4&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<ORBIT.tapPx&&e.target instanceof Element&&tapSeat(e.clientX,e.clientY,e.target))tapT=-1;
    dragging=false;dragId=-1;if(pinchId>=0){pinchId=-1;orb.vy=0;}if(e.timeStamp/1000-dragT>.08)orb.vy=0;}}
  function onWheel(e:WheelEvent){const el=e.target as Element|null;if(!riding()||!el||el.tagName!=='CANVAS')return;setZoom(orb.zoom*Math.exp(e.deltaY*ORBIT.wheel));recentering=false;}
@@ -438,7 +438,7 @@ export function createTrainRide(ports:Ports){
   /** Gameplay 3: standing in the aisle; the rig's gait frame (Town poses the rig at gait.x, gait.z in the train frame, facing once
    *  gait.facing, then hands its yaw back through gaitYaw and puts the root back in the world). */
   get standing(){return standing;},get gait(){return gait;},set gaitYaw(y:number){if(standing&&tw<0)gaitYaw=y;},
-  /** Gameplay 3: the free seats' glow (lib/graphics/trainSeatGlow.ts), the seat Sit would take (-1), Stand up / Sit for checks. */
+  /** Gameplay 3: the free seats' reach weights, the seat Sit would take (-1), Stand up / Sit for checks. */
   get glows(){return glows;},get nearSeat(){return nearSeatJ;},standUp,sitDown,
   /** Gameplay 3 debug / checks: the standing spot in the train frame (x across, u along car 0). */
   get spot(){return sp;},

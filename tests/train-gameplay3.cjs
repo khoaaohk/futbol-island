@@ -83,7 +83,7 @@ console.log('train-gameplay3 stand / walk / sit / get off: ok');
  assert(/player\.update\(trainGait\.on\?trainGait\.x:trainStill\?0:visualLocation\.x,trainGait\.on\?trainGait\.z:trainStill\?0:visualLocation\.z/.test(town),'the rig walks in the train frame (seated: a fixed spot, RIDE 3)');
  assert(/if\(trainGait\.on\)\{trainGait\.facing=NaN;trainRide\.gaitYaw=player\.root\.rotation\.y;player\.root\.position\.set\(gWx,gWy,gWz\)/.test(town),'and goes back to its world spot');
  assert(/className="touch-juggle touch-walk"/.test(town)&&/\.touch-juggle\.touch-walk/.test(css),'the Walk button (round, the cluster style)');
- assert(/trainSeatGlow\.update\(trainRide\.active\?trainRide\.glows:null\)/.test(town),'the seat glow follows the ride');assert(/ sit:'M/.test(icon),'a sit icon');
+ assert(!/trainSeatGlow/.test(town),'RIDE 3: no seat glow (owner shot 48)');assert(/ sit:'M/.test(icon),'a sit icon');
  const s=pose.trainStrapPose(1);assert(s.arms[1].w===1&&s.arms[1].sx< -2&&s.legs[0].w===0,'strap pose: a hand up, the rig keeps its feet');
  pose.swayStrapPose(s,.05);assert(s.pelvisRoll!==0);pose.swayStrapPose(s,0);assert.equal(s.pelvisRoll,0,'no sway with reduced motion (lean 0)');
  const C=L('lib/town/trainCamClear.ts');assert.equal(C.interiorClearFraction(0,1.3,0,0,1.6,-2),1,'inside the room: the full arm');
