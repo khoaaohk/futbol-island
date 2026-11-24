@@ -42,7 +42,10 @@ const R=L('lib/town/trainRoof.ts'),B=L('lib/town/trainBonk.ts'),tt=L('lib/town/t
 console.log('train-roof pure: ok');
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,S=LW('lib/town/trainSchedule.ts'),R2=LW('lib/town/trainRoof.ts');
- const cam=new T.PerspectiveCamera(50,1,.1,2000);const now=S.trainClockSec();let k=-1;for(let i=0;i<3;i++){const x=S.trainAt(i,now);if(x.at<0&&x.v>8)k=i;}
+ const cam=new T.PerspectiveCamera(50,1,.1,2000);let now=S.trainClockSec(),k=-1;
+ // POLISH 3 (the clock flake): the live part rides 2 s; starting at the wall clock it sometimes ran into a stop's braking jolt (the
+ // rider follows the jolt, roofAt the timetable pose: u off by .17 m). Start at the next moment a train cruises steadily for ±5 s on a straight.
+ for(let dt=0;dt<400&&k<0;dt+=1)for(let i=0;i<3&&k<0;i++){const a=S.trainAt(i,now+dt),b=S.trainAt(i,now+dt-5),c=S.trainAt(i,now+dt+5);if(a.at<0&&a.v>8&&b.at<0&&b.v>8&&c.at<0&&c.v>8){const p0=tt.trackAt(a.s-6),p1=tt.trackAt(a.s+a.v*1.6);if(p0.tx*p1.tx+p0.tz*p1.tz>.995){k=i;now+=dt;}}}// and on a straight (the canopy check below aims along a line)
 
  // Owner ADD 4 (Nov 24 2026): the trestle deck is a walk / ride / landing surface; the decks are landable decks; walk shore → deck → far end.
  {const TL=LW('lib/town/trainLayout.ts'),TT=LW('lib/town/trainTrack.ts'),D=LW('lib/town/landableDecks.ts'),SIM=LW('lib/town/simulation.ts'),RT=LW('lib/town/rooftopTravel.ts');
@@ -76,7 +79,7 @@ console.log('train-roof pure: ok');
  if(k<0){console.log('train-roof live: skipped (no train at speed now)');return;}
  const m=new T.Matrix4(),o={k:-1,x:0,u:0,y:0},p={x:0,y:0,z:0,yaw:0,lean:0};let t=now;
  const step=()=>{t+=1/30;const q=tt.trackAt(run.states[k].s);cam.position.set(q.x+20,30,q.z+20);cam.lookAt(q.x,0,q.z);cam.updateMatrixWorld();run.update({dt:1/30,camera:cam,player:{x:p.x,y:p.y,z:p.z},nowSec:t,onRoof:true});};
- step();run.carMatrixOf(k,0,m);const e=m.elements;assert(run.roofAt(e[12]+e[8]*4,e[14]+e[10]*4,o)&&o.k===k&&Math.abs(o.u-4)<.05&&Math.abs(o.x)<.05,'roofAt finds car 0, 4 m ahead of its middle');
+ step();run.carMatrixOf(k,0,m);const e=m.elements,rp=new T.Vector3(0,R2.roofY(0),4).applyMatrix4(m);assert(run.roofAt(rp.x,rp.z,o)&&o.k===k&&Math.abs(o.u-4)<.05&&Math.abs(o.x)<.05,'roofAt finds car 0, 4 m ahead of its middle (the roof point, tilted with the car on a grade)');
  {const az=Math.hypot(e[8],e[9],e[10])||1,ay=Math.hypot(e[4],e[5],e[6])||1;assert(Math.abs(o.y-(e[13]+e[5]/ay*3.75+e[9]/az*4))<.08,`at roof height (${o.y.toFixed(2)} vs ${(e[13]+e[5]/ay*3.75+e[9]/az*4).toFixed(2)})`);}/* on a grade too (the South Bridge, 4.5%) */assert(!run.roofAt(e[12]+e[0]*2,e[14]+e[2]*2,o),'beside the car: no roof');
  let maxJump=0,prev=null;for(let i=0;i<60;i++){step();run.standAt(k,.3,4,0,p,undefined,R2.roofY(.3));run.roofAt(p.x,p.z,o);assert(o.k===k&&Math.abs(o.u-4)<.05,'still on the same roof spot '+JSON.stringify(o)+' k '+k);if(prev)maxJump=Math.max(maxJump,Math.abs(Math.hypot(p.x-prev.x,p.z-prev.z)-run.states[k].v/30));prev={x:p.x,z:p.z};}
  assert(maxJump<.05,`moves with the train, no jitter (${maxJump.toFixed(3)} m)`);

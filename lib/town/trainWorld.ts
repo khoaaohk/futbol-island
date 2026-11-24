@@ -47,7 +47,7 @@ const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
 export const TUBE_SHOW=60,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
-export const WIRE_R=.018,CAT_FADE_NEAR=3,CAT_FADE_FAR=4.5;
+export const WIRE_R=.014,CAT_FADE_NEAR=4.5,CAT_FADE_FAR=8;// POLISH 3 (owner: the wire read thick from a roof camera 3-6 m off): thinner (2.8 cm), faded out to 4.5 m and dithered in by 8 m
 
 /** A tiny triangle soup builder (positions + flat normals, indexed later by the batching pass). */
 class Geo{

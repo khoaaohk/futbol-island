@@ -334,7 +334,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    *  `ahead` s (the landing ring's prediction): where the trains will be that long from now at their present speeds. */
   roofAt(x:number,z:number,out:{k:number;x:number;u:number;y:number},pad=0,ahead=0):boolean{
    for(let k=0;k<TRAIN_COUNT;k++){const st=states[k],s=ahead?wrapS(st.s+st.v*ahead):st.s;trackAt(s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)>TRAIN_LENGTH+3)continue;
-    for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v,k);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
+    for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v,k);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1;
+     // POLISH 3 (the train-roof test's clock flake was real): the roof is ~4 m over the car's origin, and on a grade (the South Bridge,
+     // 4.5%) or leaning into a curve the car's up axis tilts, so the plain horizontal projection put the spot up to 0.18 m off along
+     // (and 0.1 m across) the car. Take the roof height's share of the tilted up axis out first.
+     const hy=roofY(0),lx=((dx*e[0]+dz*e[2])/ax-hy*(e[4]*e[0]+e[6]*e[2])/ax)/ax,lz=((dx*e[8]+dz*e[10])/az-hy*(e[4]*e[8]+e[6]*e[10])/az)/az;
      if(Math.abs(lx)>ROOF_HALF+pad||Math.abs(lz)>CAR_LENGTH/2-ROOF_END_PAD+pad)continue;
      const cx=Math.max(-ROOF_HALF,Math.min(ROOF_HALF,lx));if(c%2===0){out.x=cx;out.u=lz;}else{out.x=-cx;out.u=-(CAR_LENGTH+CAR_GAP)-lz;}
      seatV.set(cx,roofY(cx)+roofLift(out.x,out.u),lz).applyMatrix4(roofM);out.k=k;out.y=seatV.y;return true;}}
