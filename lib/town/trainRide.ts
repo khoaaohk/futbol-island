@@ -3,7 +3,8 @@
  *  - "Board" (the island's action-prompt style, through the HUD arbiter, like the zipline tower and the stadium seats) while a train
  *    stands at the platform the player is on with its doors open. The player takes the nearest free seat (friends' seats are taken)
  *    and sits in the island's bench pose (npcSeatPose 'bench', the stadium seat's pose), facing the aisle. Input is locked; the stick
- *    and a drag look around (the zipline's ZIP_LOOK spring and soft limit).
+ *    and a drag look around. Gameplay 2 (owner, Nov 24 2026): a FREE ride camera (orbit 360° round the rider, pitch, zoom; it stays
+ *    where it is left; Recenter / a double tap eases it back; the tunnel eases it to the default and restores it after).
  *  - "Get off" (the action cluster, E) works at any stop while the doors are open; fast travel while riding gets off first (Town).
  *    "Horn" (Space / H) sounds the train's horn (the island sound kit's train-horn cue).
  *  - Learning (AGENTS.md): on leaving each stop an announcement ("Next stop: … Did you know …") and, a few seconds later, ONE question
@@ -21,7 +22,7 @@ import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,LAP} from './trainSchedule'
 import {TRAIN_SEATS,type SeatPose} from './trainRunning';
 import {trainRiderPose} from '../graphics/trainSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
-import {ZIP_LOOK,softLook,springTo} from './zipline';
+import {springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
 
 export const TRAIN_BOARD_KEY='train-board';
@@ -69,11 +70,15 @@ export function boardIn(st:{at:number;next:number;t:number;doors:number;dwellLef
 // (portraitBack) and aims between me and the far bench (portraitIn, portraitAhead): me ≈5°, the far rider ≈9° off the axis (±15° fits).
 const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,portraitBack:3.5,portraitAhead:1.5,portraitIn:1.15,tunnelOut:2.4,tunnelBack:2,tunnelUp:1.6,ahead:4,eye:1.25} as const;
 const PORTRAIT_FOV=58;
+/** The free ride camera (Gameplay 2): elevation limits (rad: a little under the horizontal … ~60° down), zoom (× the default
+ *  distance: window close-up … wide), drag and key / stick rates, inertia decay (none with reduced motion), the Recenter ease. */
+export const ORBIT={pitchMin:-.09,pitchMax:1.05,zoomMin:.38,zoomMax:2.6,drag:5.2,keyYaw:1.9,keyPitch:1.1,wheel:.0016,decay:4.5,recenter:4,tap2:.32,tapPx:30,moved:.06} as const;
+const wrapPi=(a:number)=>((a%(Math.PI*2))+Math.PI*3)%(Math.PI*2)-Math.PI;
 
 export type TrainQuizQ={id:string;q:string;options:string[];correct:number;explain:string};
 export type TrainQuiz=TrainQuizQ&{picked:number};
-export type TrainRideView={riding:boolean;canGetOff:boolean;note:string;notes:number;quiz:TrainQuiz|null};
-const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,quiz:null};
+export type TrainRideView={riding:boolean;canGetOff:boolean;note:string;notes:number;quiz:TrainQuiz|null;/** the free camera is off its default (Recenter enabled) */moved:boolean};
+const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,quiz:null,moved:false};
 let view=IDLE;const listeners=new Set<()=>void>();
 /** The HUD bridge (components/TrainRideHud.tsx): written only when something shown changes, never per frame. */
 export const trainRideStore={
@@ -83,16 +88,17 @@ export const trainRideStore={
  reset(){if(view===IDLE)return;view=IDLE;listeners.forEach(fn=>fn());},
  subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn);};},
 };
-export type TrainActionId='getoff'|'horn';
+export type TrainActionId='getoff'|'horn'|'recenter';
 /** The prompt's tap, the cluster's buttons and the quiz answer; the island runtime installs the real ones. */
 export const trainRideActions={board:()=>{},press:(_id:TrainActionId,_phase:'tap'|'down'|'up')=>{},answer:(_i:number)=>{}};
 /** The action cluster while riding (the zipline's ZIP_BUTTONS pattern): Get off (only at a stop) and the horn. */
-export function trainButtons(canGetOff:boolean){
+export function trainButtons(canGetOff:boolean,moved=false){
  return [{slot:'ride',key:'E',id:'getoff',label:canGetOff?'Get off here':'Get off at the next stop',icon:'trainoff',enabled:canGetOff},
-  {slot:'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true}] as const;
+  {slot:'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true},
+  {slot:'juggle',key:'R',id:'recenter',label:'Recenter the camera',icon:'recenter',enabled:moved}] as const;
 }
 export function trainKeyAction(code:string,key:string):TrainActionId|null{
- const k=key.toLowerCase();if(k==='e'||code==='Digit1')return 'getoff';if(code==='Space'||k==='h'||code==='Digit2')return 'horn';return null;
+ const k=key.toLowerCase();if(k==='e'||code==='Digit1')return 'getoff';if(code==='Space'||k==='h'||code==='Digit2')return 'horn';if(k==='r'||code==='Digit3')return 'recenter';return null;
 }
 
 /** Where on the platforms (x, z, standing height) a station is (allocation-free): the station the point stands on, or -1. */
@@ -149,7 +155,9 @@ export function createTrainRide(ports:Ports){
  const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
  // Gameplay 2: riders kneel up on the bench facing out of their window, turned a little toward the way the train runs
  const tricks:[TrickPose,TrickPose]=[trainRiderPose(-1),trainRiderPose(1)];tricks[0].w=tricks[1].w=0;
- const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0,arm=-1;
+ const tight={x:0,v:0};let dragging=false,dragId=-1,dragX=0,dragY=0,dragT=0,fovSaved=0,arm=-1;
+ // the free camera: yaw round the rider (unlimited), added elevation, zoom; yaw inertia; key / stick input; pinch; double tap
+ const orb={yaw:0,pitch:0,zoom:1,vy:0};let keyYaw=0,keyPitch=0,recentering=false,pinchId=-1,pinchX=0,pinchY=0,pinchD=0,pinchZ=1,tapT=-1,tapX=0,tapY=0;
  const ceil={w:0,y:0},camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  const riding=()=>k>=0;
@@ -173,9 +181,9 @@ export function createTrainRide(ports:Ports){
   from.x=me.x;from.y=me.h;from.z=me.z;if(!ds){door.x=me.x;door.z=me.z;door.y=me.h;door.yaw=probe.yaw;}
   {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
-  lookS.x=lookS.v=0;stickAim=dragAim=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;
+  orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;
   trainRideStore.set({riding:true,canGetOff:false,quiz:null});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();ensureQuiz();
-  if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);}
+  if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
   return true;
  }
  /** Off the train. force: fast travel / a teleport (Town places the player); otherwise only while the doors are open at a stop. */
@@ -189,15 +197,29 @@ export function createTrainRide(ports:Ports){
  /** The track s level with my seat (the train's front minus how far back my car is). */
  function trainSeatS(run:Run){return wrapS(run.states[k].s-(j>>2)*12.4-6);}
  function press(id:TrainActionId,phase:'tap'|'down'|'up'){if(!riding()||phase==='up')return;
-  if(id==='getoff')getOff(false);else if(id==='horn')ports.cue('train-horn',.9);}
+  if(id==='getoff')getOff(false);else if(id==='horn')ports.cue('train-horn',.9);else if(id==='recenter')recenter();}
+ /** Ease the free camera back to the default framing (Recenter, a double tap). */
+ function recenter(){recentering=true;orb.vy=0;}
  function answer(i:number){const q=view.quiz;if(!q||q.picked>=0)return;trainRideStore.set({quiz:{...q,picked:i}});if(i===q.correct)ports.pay(q.id);}
  // ---- looking around: the stick (Town's shaped stick) and a drag on the canvas, through the zipline's soft limit and spring
  let listening=false;
- function onDown(e:PointerEvent){const el=e.target as Element|null;if(!riding()||dragging||e.button>0||!el||el.tagName!=='CANVAS')return;dragging=true;dragId=e.pointerId;dragX=e.clientX;}
- function onMove(e:PointerEvent){if(!dragging||e.pointerId!==dragId)return;const w=Math.max(320,Math.min(ZIP_LOOK.dragWidth,typeof window!=='undefined'?window.innerWidth:390));
-  dragAim=Math.max(-ZIP_LOOK.maxAim,Math.min(ZIP_LOOK.maxAim,dragAim+(e.clientX-dragX)*ZIP_LOOK.drag/(ZIP_LOOK.dragSpan*w)));dragX=e.clientX;}
- function onUp(e:PointerEvent){if(dragging&&e.pointerId===dragId){dragging=false;dragId=-1;}}
- function unlisten(){if(!listening||typeof window==='undefined')return;listening=false;window.removeEventListener('pointerdown',onDown,true);window.removeEventListener('pointermove',onMove,true);window.removeEventListener('pointerup',onUp,true);window.removeEventListener('pointercancel',onUp,true);}
+ // Only presses that start on the canvas (never a HUD button); a second finger pinches; two quick taps recenter.
+ const span=()=>Math.max(320,Math.min(1100,typeof window!=='undefined'?Math.min(window.innerWidth,window.innerHeight*1.4):390));
+ function onDown(e:PointerEvent){const el=e.target as Element|null;if(!riding()||e.button>0||!el||el.tagName!=='CANVAS')return;
+  if(dragging&&e.pointerId!==dragId&&pinchId<0){pinchId=e.pointerId;pinchX=e.clientX;pinchY=e.clientY;pinchD=Math.max(10,Math.hypot(pinchX-dragX,pinchY-dragY));pinchZ=orb.zoom;orb.vy=0;return;}
+  if(dragging)return;const now=e.timeStamp/1000;
+  if(tapT>=0&&now-tapT<ORBIT.tap2&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<ORBIT.tapPx){tapT=-1;recenter();return;}
+  tapT=now;tapX=e.clientX;tapY=e.clientY;dragging=true;dragId=e.pointerId;dragX=e.clientX;dragY=e.clientY;dragT=now;orb.vy=0;recentering=false;}
+ function onMove(e:PointerEvent){
+  if(e.pointerId===pinchId){pinchX=e.clientX;pinchY=e.clientY;orb.zoom=Math.max(ORBIT.zoomMin,Math.min(ORBIT.zoomMax,pinchZ*pinchD/Math.max(10,Math.hypot(pinchX-dragX,pinchY-dragY))));return;}
+  if(!dragging||e.pointerId!==dragId)return;if(pinchId>=0){dragX=e.clientX;dragY=e.clientY;orb.zoom=Math.max(ORBIT.zoomMin,Math.min(ORBIT.zoomMax,pinchZ*pinchD/Math.max(10,Math.hypot(pinchX-dragX,pinchY-dragY))));return;}
+  const w=span(),dx=(e.clientX-dragX)/w,dy=(e.clientY-dragY)/w,now=e.timeStamp/1000,dts=Math.max(.008,now-dragT);
+  if(Math.abs(e.clientX-tapX)+Math.abs(e.clientY-tapY)>ORBIT.tapPx)tapT=-1;// a drag is not a tap
+  orb.yaw=wrapPi(orb.yaw-dx*ORBIT.drag);orb.pitch=Math.max(ORBIT.pitchMin,Math.min(ORBIT.pitchMax,orb.pitch+dy*ORBIT.drag*.6));
+  orb.vy=orb.vy*.5+(-dx*ORBIT.drag/dts)*.5;dragX=e.clientX;dragY=e.clientY;dragT=now;}
+ function onUp(e:PointerEvent){if(e.pointerId===pinchId){pinchId=-1;return;}if(dragging&&e.pointerId===dragId){dragging=false;dragId=-1;if(pinchId>=0){pinchId=-1;orb.vy=0;}if(e.timeStamp/1000-dragT>.08)orb.vy=0;}}
+ function onWheel(e:WheelEvent){const el=e.target as Element|null;if(!riding()||!el||el.tagName!=='CANVAS')return;orb.zoom=Math.max(ORBIT.zoomMin,Math.min(ORBIT.zoomMax,orb.zoom*Math.exp(e.deltaY*ORBIT.wheel)));recentering=false;}
+ function unlisten(){if(!listening||typeof window==='undefined')return;listening=false;window.removeEventListener('pointerdown',onDown,true);window.removeEventListener('pointermove',onMove,true);window.removeEventListener('pointerup',onUp,true);window.removeEventListener('pointercancel',onUp,true);window.removeEventListener('wheel',onWheel,true);dragging=false;dragId=pinchId=-1;}
  let promptShown=false;const lastWant={x:0,z:0,y:0,can:false,n:0};
  /** E on the platform while the Board button shows (the zipline tower's key). */
  function onKey(e:KeyboardEvent){if(e.key.toLowerCase()!=='e'||e.repeat||!promptShown||riding())return;const el=e.target as HTMLElement|null;if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable))return;if(board())e.preventDefault();}
@@ -230,7 +252,9 @@ export function createTrainRide(ports:Ports){
    hide(el,hidden);promptShown=!hidden;
   },
   /** Town's movement tick: riding locks input (the stick looks around instead). */
-  holdPlayer(stickX:number){if(!riding())return false;stickAim=Math.max(-1,Math.min(1,stickX));return true;},
+  holdPlayer(stickX:number,stickZ=0,keys?:ReadonlySet<string>){if(!riding())return false;
+   const kx=keys?(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0):0,kz=keys?(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0):0;
+   keyYaw=Math.max(-1,Math.min(1,stickX+kx));keyPitch=Math.max(-1,Math.min(1,kz-stickZ));if(keyYaw||keyPitch)recentering=false;return true;},
   /** The seated pose for the rig (blended in and out). */
   trick():TrickPose|undefined{if(blend<=0)return undefined;const t=tricks[(pose.lean??1)>0?1:0];t.w=blend*blend*(3-2*blend);return t;},
   /** After Town's train update this frame: the seat, the stop events (announcement, quiz, Get off), the HUD. */
@@ -256,15 +280,26 @@ export function createTrainRide(ports:Ports){
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(!riding()&&blend<=0){if(camOn){camOn=false;lookS.x=lookS.v=0;arm=-1;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
+   if(!riding()&&blend<=0){if(camOn){camOn=false;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;arm=-1;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
    const run=ports.run();if(!run)return;camOn=true;const h=Math.max(0,Math.min(dt,.1));
-   if(!dragging)dragAim*=Math.exp(-ZIP_LOOK.back*h);
-   springTo(lookS,softLook(stickAim*ZIP_LOOK.stick+dragAim),(dragging?ZIP_LOOK.dragRate:stickAim!==0?ZIP_LOOK.stickRate:ZIP_LOOK.returnRate)*(reduced?ZIP_LOOK.reducedRate:1),h);
+   // the free camera: keys / stick turn it at a steady rate; a flick keeps turning and slows (no inertia with reduced motion); it
+   // stays where it is left; Recenter eases it home.
+   if(keyYaw||keyPitch){orb.yaw=wrapPi(orb.yaw-keyYaw*ORBIT.keyYaw*h);orb.pitch=Math.max(ORBIT.pitchMin,Math.min(ORBIT.pitchMax,orb.pitch+keyPitch*ORBIT.keyPitch*h));}
+   if(!dragging&&orb.vy!==0){if(reduced)orb.vy=0;else{orb.yaw=wrapPi(orb.yaw+orb.vy*h);orb.vy*=Math.exp(-ORBIT.decay*h);if(Math.abs(orb.vy)<.02)orb.vy=0;}}
+   if(recentering){const q=reduced?1:1-Math.exp(-ORBIT.recenter*h);orb.yaw-=wrapPi(orb.yaw)*q;orb.pitch-=orb.pitch*q;orb.zoom+=(1-orb.zoom)*q;
+    if(Math.abs(orb.yaw)<.005&&Math.abs(orb.pitch)<.005&&Math.abs(orb.zoom-1)<.005){orb.yaw=orb.pitch=0;orb.zoom=1;recentering=false;}}
+   {const moved=Math.abs(orb.yaw)>ORBIT.moved||Math.abs(orb.pitch)>ORBIT.moved||Math.abs(orb.zoom-1)>ORBIT.moved;if(moved!==view.moved)trainRideStore.set({moved});}
    const kk=k>=0?k:anchor.train,s=run.states[kk].s;springTo(tight,inTunnelS(wrapS(s-12))?1:0,3,h);
    const t=trackAt(s),fx=-Math.sin(pose.yaw),fz=-Math.cos(pose.yaw),portrait=camera.aspect<1,tk=tight.x;// f: toward the aisle (Gameplay 2: the rider faces OUT of the window, so the camera outside it sees their face)
    const out=(CAM.out+(portrait?CAM.portraitOut:0))*(1-tk)+CAM.tunnelOut*tk,back=(portrait?CAM.portraitBack:CAM.back)*(1-tk)+CAM.tunnelBack*tk,up=CAM.up*(1-tk)+CAM.tunnelUp*tk;
-   const ox=-fx*out-t.tx*back,oz=-fz*out-t.tz*back,a=-lookS.x,ca=Math.cos(a),sa=Math.sin(a);// the look orbits the camera round the rider
-   camPos.set(pose.x+ox*ca-oz*sa,pose.y+up,pose.z+ox*sa+oz*ca);{const ah=portrait?CAM.portraitAhead:CAM.ahead,inn=portrait?CAM.portraitIn*(1-tk):0;camLook.set(pose.x+t.tx*ah+fx*inn,pose.y+CAM.eye,pose.z+t.tz*ah+fz*inn);}
+   // the default framing (offset from the rider's head), then the free camera on top of it: in the tunnel (tk) it eases back to the
+   // default and comes out again after (the orbit is kept, only its weight fades)
+   const ox=-fx*out-t.tx*back,oz=-fz*out-t.tz*back,oy=up-CAM.eye,ow=1-tk,ya=orb.yaw*ow,ca=Math.cos(ya),sa=Math.sin(ya);
+   const rx=ox*ca-oz*sa,rz=ox*sa+oz*ca,hl=Math.hypot(rx,rz),len=Math.hypot(hl,oy)*Math.pow(orb.zoom,ow),el=Math.max(ORBIT.pitchMin,Math.min(ORBIT.pitchMax,Math.atan2(oy,hl)+orb.pitch*ow));
+   const hx0=pose.x,hy0=pose.y+CAM.eye,hz0=pose.z,ch=Math.cos(el)*len/Math.max(1e-3,hl);
+   camPos.set(hx0+rx*ch,hy0+Math.sin(el)*len,hz0+rz*ch);
+   {const ah=portrait?CAM.portraitAhead:CAM.ahead,inn=portrait?CAM.portraitIn*(1-tk):0,lx=t.tx*ah+fx*inn,lz=t.tz*ah+fz*inn,lk=Math.min(1,Math.pow(orb.zoom,ow));// the look turns with the orbit; close-ups centre on the rider
+    camLook.set(hx0+(lx*ca-lz*sa)*lk,hy0,hz0+(lx*sa+lz*ca)*lk);}
    // Polish (Nov 24 2026, AAA audit #8): never inside a station roof, the tunnel's rock, the hill or a bridge truss. A spring arm from
    // the rider's head (trainCamClear.ts): it comes in fast (~0.07 s) when something is in the way and eases back out slowly, so the
    // camera never pops; the station boxes reach 1.5 m past the eaves so it is already in before the roof arrives.

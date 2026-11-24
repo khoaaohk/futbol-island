@@ -187,3 +187,43 @@ console.log('train-ride gameplay2: ok');
  assert(/distance:hoverK===i\?-1:/.test(R3),'the hovered train makes Board the hovered target');
  assert(/trainHover\.pick\(characterRay,run,location\.x,location\.z\)[^;]*;if\(tk>=0\)\{[^}]*trainRide\.board\(\)/.test(T),'a tap on the train is Board');}
 console.log('train-ride hover: ok');
+
+// Gameplay 2 (owner, Nov 24 2026): the free ride camera. Default framing unchanged at rest; drag orbits 360° and stays (no spring
+// back); pitch is clamped (a little under horizontal … ~60° down); wheel zooms within limits; Recenter eases home; keys turn it;
+// the tunnel eases it to the default and restores it; reduced motion: no inertia; HUD presses never drag.
+{const THREE=require('three'),R6=L('lib/town/trainRide.ts'),O=R6.ORBIT,st0=tt.TRAIN_STATIONS[2],s0=st0.s+40;
+ const ev={};globalThis.window={innerWidth:1000,innerHeight:700,addEventListener:(t,f)=>{ev[t]=f;},removeEventListener:()=>{}};
+ const states=[{s:s0,at:-1,doors:0,dwellLeft:0,next:0,t:0},{s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0},{s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0}];
+ const pose0=tt.trackAt(s0-6);const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>{o.x=pose0.x;o.y=2;o.z=pose0.z;o.yaw=0;o.lean=1;return o;}};
+ const ride=R6.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});
+ // board without a platform: drive the internals through a fake platform-free path (riding state via board on a fake stop)
+ Object.assign(states[0],{at:S.stopOf(tt.TRAIN_STATIONS[0].id),doors:1,dwellLeft:10});const sp=R6.platformSpot(0,tt.TRAIN_STATIONS[0].s,{x:0,y:0,z:0,yaw:0});
+ const T0s=tt.TRAIN_STATIONS[0].s;Object.assign(states[0],{s:T0s+12});ride.want(sp.x,sp.z,sp.y,true);assert(ride.board(),'boarded');for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);
+ const cam=new THREE.PerspectiveCamera(50,1.6,.1,500);const step=(n=1,red=false)=>{for(let i=0;i<n;i++){ride.frame(1/30,red);ride.applyCamera(cam,1/30,red);}return cam.position.clone();};
+ states[0].s=T0s+40;states[0].at=-1;step(60);const home=step(1);
+ const canvas={tagName:'CANVAS'},btn={tagName:'BUTTON'};let ts=10000;const P=(t,x,y,target=canvas,id=1)=>{ts+=16;ev[t]({target,button:0,pointerId:id,clientX:x,clientY:y,timeStamp:ts});};
+ P('pointerdown',500,350,btn);P('pointermove',900,350,btn);P('pointerup',900,350,btn);assert(step(5).distanceTo(home)<.05,'a press on a HUD button never drags the camera');
+ P('pointerdown',500,350);for(let x=500;x<=980;x+=40)P('pointermove',x,350);ts+=500;P('pointerup',980,350);const moved=step(30);assert(moved.distanceTo(home)>2,'drag orbits the camera');
+ assert(R6.trainRideStore.get().moved,'Recenter enabled');const kept=step(90);assert(kept.distanceTo(moved)<.05,'it stays where it is left (no spring back)');
+ // drag all the way round: 360° allowed (keeps going, no soft limit)
+ let a0=Math.atan2(kept.x-pose0.x,kept.z-pose0.z);P('pointerdown',100,350);for(let x=100;x<=1000;x+=50)P('pointermove',x,350);for(let x=0;x<=1000;x+=50)P('pointermove',x+1000,350);ts+=500;P('pointerup',2000,350);step(5);
+ // pitch clamp: drag far down / up
+ P('pointerdown',500,0);for(let y=0;y<=3000;y+=100)P('pointermove',500,y);ts+=500;P('pointerup',500,3000);const top=step(5);const head=new THREE.Vector3(pose0.x,2+1.25,pose0.z),d=top.clone().sub(head);
+ assert(Math.atan2(d.y,Math.hypot(d.x,d.z))<=O.pitchMax+.02,'no steeper than ~60° down');
+ P('pointerdown',500,3000);for(let y=3000;y>=-3000;y-=100)P('pointermove',500,y);ts+=500;P('pointerup',500,-3000);const low=step(5).sub(head);assert(Math.atan2(low.y,Math.hypot(low.x,low.z))>=O.pitchMin-.02,'no lower than a little under horizontal');
+ // zoom (wheel) within limits
+ const dist=()=>step(3).distanceTo(head);for(let i=0;i<40;i++)ev.wheel({target:canvas,deltaY:-200});const near=dist();for(let i=0;i<40;i++)ev.wheel({target:canvas,deltaY:200});const far=dist();assert(far>near*3,`wheel zooms (${near.toFixed(1)} → ${far.toFixed(1)} m)`);
+ // Recenter eases home
+ ride.press('recenter','tap');step(1);const mid=step(2);assert(mid.distanceTo(home)>.3,'eases, not a snap');step(150);assert(step(1).distanceTo(home)<.2&&!R6.trainRideStore.get().moved,'Recenter: back to the default framing');
+ // double tap recenters too
+ P('pointerdown',500,350);for(let x=500;x<=900;x+=40)P('pointermove',x,350);ts+=500;P('pointerup',900,350);step(10);P('pointerdown',300,300);P('pointerup',300,300);P('pointerdown',305,302);P('pointerup',305,302);step(200);assert(step(1).distanceTo(home)<.2,'double tap recenters');
+ // keys turn it (held), reduced motion: no inertia after a flick
+ ride.holdPlayer(0,0,new Set(['arrowright']));step(30);ride.holdPlayer(0,0,new Set());const kk=step(1);assert(kk.distanceTo(home)>1,'arrows / WASD turn the camera');
+ P('pointerdown',500,350);P('pointermove',560,350);P('pointermove',620,350);P('pointerup',620,350);const r1=step(1,true),r2=step(20,true);assert(r1.distanceTo(r2)<.05,'reduced motion: no inertia');
+ // tunnel: the orbit eases to the default framing inside and comes back after
+ const mid2=(tt.TUNNEL.west.s+tt.TUNNEL.east.s)/2;const out1=step(1);states[0].s=mid2+12;step(150);const inT=cam.position.clone();ride.press('recenter','tap');step(200);const inHome=step(1);
+ assert(inT.distanceTo(inHome)<.3,'in the tunnel the camera is at the default framing');
+ const R7=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R7),'the free camera keeps the clearance spring arm');
+ assert(/el\.tagName!=='CANVAS'\)return/.test(R7),'only canvas presses drag');assert(/trainButtons\(trainCanGetOff,trainMoved\)/.test(read('components/Town.tsx'))&&/recenter:'M12/.test(read('components/TravelIcon.tsx')),'Recenter in the ride cluster');
+ ride.dispose();delete globalThis.window;}
+console.log('train-ride camera: ok');

@@ -468,8 +468,8 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // and travel actions are gone until the feet are on the roof deck (lib/town/zipline.ts ZIP_BUTTONS, written only on changes).
   const zipRiding=useSyncExternalStore(zipStore.subscribe,()=>zipStore.get().riding,()=>false);
   // Island Line (train Phase 3): riding, the cluster is Get off (only at a stop) and the horn (lib/town/trainRide.ts trainButtons).
-  const trainRiding=useSyncExternalStore(trainRideStore.subscribe,()=>trainRideStore.get().riding,()=>false),trainCanGetOff=useSyncExternalStore(trainRideStore.subscribe,()=>trainRideStore.get().canGetOff,()=>false);
-  const trainCluster=useMemo(()=>trainRiding?trainButtons(trainCanGetOff):null,[trainRiding,trainCanGetOff]);
+  const trainRiding=useSyncExternalStore(trainRideStore.subscribe,()=>trainRideStore.get().riding,()=>false),trainCanGetOff=useSyncExternalStore(trainRideStore.subscribe,()=>trainRideStore.get().canGetOff,()=>false),trainMoved=useSyncExternalStore(trainRideStore.subscribe,()=>trainRideStore.get().moved,()=>false);
+  const trainCluster=useMemo(()=>trainRiding?trainButtons(trainCanGetOff,trainMoved):null,[trainRiding,trainCanGetOff,trainMoved]);
   // In the sea (Oct 15 2026, lib/town/water/waterHud.ts): Swim fast · Float · Back to shore take the slots (wading: Back to shore
   // only); flying over splashable water the travel button reads "Drop in". Written only on changes, at the HUD tick.
   const waterView=useSyncExternalStore(waterStore.subscribe,waterStore.get,waterStore.server),waterCluster=waterButtonsFor(waterView);
@@ -1541,7 +1541,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(liveKnockout.frozen)return;
       if(summitFun.holdPlayer(input.current,keys,dt)){velocity.x=velocity.z=0;return;}
       if(zipline.holdPlayer(input.current,keys,dt)){velocity.x=velocity.z=0;return;}
-      if(trainRide.holdPlayer(input.current.x)){velocity.x=velocity.z=0;return;}// on the Island Line: seated, the stick looks around// riding the zipline: input locked, the stick looks around
+      if(trainRide.holdPlayer(input.current.x,input.current.z,keys)){velocity.x=velocity.z=0;return;}// on the Island Line: seated, the stick looks around// riding the zipline: input locked, the stick looks around
       if(stadiumSit.holdPlayer(dt,input.current,keys,{walk:rideRef.current==='walk',x:location.x,z:location.z,reduced})){velocity.x=velocity.z=0;return;}// seated in the stadium's stands
       if(easel.holdPlayer(input.current)){velocity.x=velocity.z=0;return;}// seated at the painting easel
       if(cannon.holdPlayer(input.current,keys,dt)){velocity.x=velocity.z=0;return;}// Ball Cannon seat: the stick and arrow keys aim
