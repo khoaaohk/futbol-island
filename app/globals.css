@@ -1067,3 +1067,9 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:1;grid-row:2;justify-self:start}
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
 }
+/* Island Line ride HUD (owner, Nov 24 2026): riding the train, no fuel readout (coins, fish and fruit stay), no settings gear and no
+   Paths button (the pink lightning: island paths / quests); the ride's camera-view button (TrainRideHud) takes the Paths spot. All
+   back on Get off (the attribute goes with trainRideStore.riding). */
+.town-app[data-train-riding] [data-job-wallet] [data-fuel]{display:none}
+.town-app[data-train-riding] nav[data-hud-triggers]>button[data-tour=quests]{visibility:hidden;pointer-events:none}
+.town-app[data-train-riding] nav[data-hud-triggers]>button[aria-label=Settings]{display:none}

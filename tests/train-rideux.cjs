@@ -49,3 +49,12 @@ ride.dispose();
  assert(/trainButtons\(trainCanGetOff,trainMoved,trainStanding,trainNearSeat,trainNearDoor,trainExitTo\)/.test(Tn),'Town passes the pill station');
  assert(/!trainRideStore\.get\(\)\.exitTo\)\{/.test(Tn),'E gets off (not Talk) while the pill shows');}
 console.log('train-rideux exit: ok');
+// 2. the HUD while riding: no fuel readout, no settings gear, no Paths button (its spot kept for the camera button); coins stay
+{const Tn=read('components/Town.tsx'),G=read('app/globals.css');
+ assert(/data-train-riding=\{trainRiding\?'':undefined\} className=\{'town-app'/.test(Tn),'the town-app carries data-train-riding while riding');
+ assert(/\.town-app\[data-train-riding\] \[data-job-wallet\] \[data-fuel\]\{display:none\}/.test(G),'no fuel readout');
+ assert(/\.town-app\[data-train-riding\] nav\[data-hud-triggers\]>button\[data-tour=quests\]\{visibility:hidden/.test(G),'no Paths button (spot kept)');
+ assert(/\.town-app\[data-train-riding\] nav\[data-hud-triggers\]>button\[aria-label=Settings\]\{display:none\}/.test(G),'no settings gear');
+ assert(!/data-train-riding\][^{]*\[data-job-wallet\]\{/.test(G),'the coins stay');
+ assert(/data-tour="quests" aria-label=\{`Paths/.test(read('components/IslandSettings.tsx')),'the pink lightning is the Paths button');}
+console.log('train-rideux hud: ok');
