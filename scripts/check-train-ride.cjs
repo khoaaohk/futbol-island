@@ -76,8 +76,9 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     const v1 = await seen(); await B.p.waitForTimeout(1500); const v2 = await seen();
     check('B draws A in the moving seat', v2.ridden === 1 && v2.best < 1.2 && Math.hypot(v2.x - v1.x, v2.z - v1.z) > 5, `${v2.best.toFixed(2)} m from the seat, the seat moved ${Math.hypot(v2.x - v1.x, v2.z - v1.z).toFixed(1)} m`);
     const g1 = await gfx(A.p); console.log(`riding (A, phone 390x844): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
-    const quiz = await A.p.waitForSelector('[data-train-quiz]', { timeout: 15000 }).then(() => true).catch(() => false);
-    check('A gets one quiz question on the run', quiz);
+    // owner Nov 25 2026: the between-stops quiz is off (trainRide.ts TRAIN_QUIZ): no card on the run
+    await A.p.waitForTimeout(8000); const quiz = false;
+    check('no quiz card while riding', !(await A.p.locator('[data-train-quiz]').count()));
     if (shots) { require('fs').mkdirSync(shots, { recursive: true }); await A.p.screenshot({ path: path.join(shots, 'train-ride-phone.png') }); }
     // B: the travel map with the line, the pins and the live dots
     await B.p.evaluate(() => window.__fi2.teleport(170, -150, 0)); await B.p.waitForTimeout(1500);

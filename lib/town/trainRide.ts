@@ -44,6 +44,9 @@ const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
 export const TRAIN_NOTES={board:'All aboard! Drag or use the stick to look around.',wait:'The doors open at the next stop.'} as const;
 /** The quiz comes this long (s) after the doors close, and only on a run at least QUIZ_MIN_RUN s long (every run is 45 s or more). */
 export const QUIZ_AFTER=6,QUIZ_MIN_RUN=30;
+/** Owner (Nov 25 2026): no between-stops quiz while riding (no card, no 2-coin reward, the quiz library is never loaded for the
+ *  train). Off by this constant rather than deleted tonight (the release is frozen); the "Next stop … Did you know?" facts stay. */
+export const TRAIN_QUIZ=false;
 const wallS=()=>(typeof performance!=='undefined'?performance.now():Date.now())/1000;
 /** Board only while the doors are this open and the train waits at least this long (s) more. */
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
@@ -127,7 +130,7 @@ export function createTrainRide(ports:Ports){
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
- function ensureQuiz(){if(quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
+ function ensureQuiz(){if(!TRAIN_QUIZ||quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
  function askQuiz(){if(!quizzes?.length){ensureQuiz();/* Phase 4: a failed load is asked again (ensureQuiz skips while one is loading) */if(riding()&&lastAt<0)quizIn=1;return;}/* still loading (first ride): try again in 1 s, until the next stop */const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
   trainRideStore.set({quiz:{...q,picked:-1}});}
  function board(){
@@ -199,7 +202,7 @@ export function createTrainRide(ports:Ports){
    const st=run.states[k];run.seatPose(k,j,pose);ports.seat(pose);
    if(st.at!==lastAt){
     if(st.at>=0){anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;quizIn=-1;setNote(arriveLine(st.at));if(view.quiz)trainRideStore.set({quiz:null});}
-    else if(lastAt>=0){setNote(nextStopLine(st.next));const stop=TRAIN_STOPS[st.next],from=TRAIN_STOPS[lastAt];const run2=((stop.arrive-from.depart)%360+360)%360;quizIn=run2>=QUIZ_MIN_RUN?QUIZ_AFTER:-1;ensureQuiz();}
+    else if(lastAt>=0){setNote(nextStopLine(st.next));const stop=TRAIN_STOPS[st.next],from=TRAIN_STOPS[lastAt];const run2=((stop.arrive-from.depart)%360+360)%360;quizIn=TRAIN_QUIZ&&run2>=QUIZ_MIN_RUN?QUIZ_AFTER:-1;ensureQuiz();}
     lastAt=st.at;}
    // Nov 24 2026: the quiz delay runs on the wall clock, not the summed frame dt. Town caps dt per frame, so on a slow device (or a
    // headless check at 2-4 fps) 6 s of dt took most of the run and the train reached the next stop first: the card never showed.

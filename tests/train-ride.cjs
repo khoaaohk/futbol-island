@@ -64,8 +64,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert(ride.trick(),'the bench pose');assert(ride.holdPlayer(.4),'input locked while riding');
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:0});ride.frame(1/30,false);assert(/^Next stop: West Beach\. Did you know\?/.test(R.trainRideStore.get().note),'leaving: the next-stop announcement');
  assert.equal(ride.getOff(false),false,'no getting off between stops');assert.equal(R.trainRideStore.get().canGetOff,false);
- (async()=>{await new Promise(r=>setTimeout(r,5));for(let k=0;k<7*30;k++)ride.frame(1/30,false);const q=R.trainRideStore.get().quiz;assert(q&&q.id==='q:1','one quiz question on the run');
-  ride.answer(1);assert.equal(paid.length,0,'a wrong answer pays nothing');assert.equal(R.trainRideStore.get().quiz.picked,1);
+ (async()=>{await new Promise(r=>setTimeout(r,5));for(let k=0;k<7*30;k++)ride.frame(1/30,false);assert.equal(R.TRAIN_QUIZ,false,'owner Nov 25: no quiz while riding');assert.equal(R.trainRideStore.get().quiz,null,'no quiz card on the run');assert.equal(paid.length,0,'no quiz coins');
   Object.assign(states[1],{at:S.stopOf('west'),doors:1,dwellLeft:10});ride.frame(1/30,false);assert.equal(R.trainRideStore.get().quiz,null,'the quiz closes at the stop');assert(R.trainRideStore.get().canGetOff,'Get off at the stop');
   assert(ride.getOff(false)&&!ride.active&&placed&&R.platformAt(placed.x,placed.z,placed.y)===tt.TRAIN_STATIONS.findIndex(s=>s.id==='west'),'got off onto the West Beach platform');
   assert(mode==='walk'&&dismounts===1,'Get off: still on foot (the vehicle is not restored)');

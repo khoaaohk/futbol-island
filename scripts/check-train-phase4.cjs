@@ -105,8 +105,9 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     check('the train is at the same place on both screens (within 1 s)', worst < 1, dts.map((d) => d.toFixed(2) + ' s').join(', '));
     const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
-    const quiz = await A.p.waitForSelector('[data-train-quiz]', { timeout: 45000 }).then(() => true).catch(() => false);
-    check('the between-stops quiz card shows', quiz);
+    // owner Nov 25 2026: the between-stops quiz is off (trainRide.ts TRAIN_QUIZ): no card on the run
+    await A.p.waitForTimeout(8000); const quiz = false;
+    check('no quiz card while riding', !(await A.p.locator('[data-train-quiz]').count()));
     const g1 = await gfx(A.p); console.log(`riding with a friend (A, phone): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
     if (shots) await A.p.screenshot({ path: path.join(shots, 'phase4-ride-quiz-phone.png') });
     if (quiz) { await A.p.setViewportSize({ width: 844, height: 390 }); await A.p.waitForTimeout(900);
