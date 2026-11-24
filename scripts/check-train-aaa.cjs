@@ -472,11 +472,12 @@ async function partInside(c) {
   await p.waitForTimeout(500); const a1 = await camYaw();
   check(`inside: a ${phone ? 'touch' : 'mouse'} drag of 90° turns the rendered view ~90° to a side window`, turned(a0, a1) > 1.2 && turned(a0, a1) < 1.95 && a1.side > .8, JSON.stringify({ a0, a1, turned: +turned(a0, a1).toFixed(2) }));
   if (shots) await p.screenshot({ path: path.join(shots, `inside-turned-${phone ? 'phone' : 'desktop'}.png`) });
+  // POLISH 3: the release stops the turn (no flick in first person): the picture holds still after the finger lifts
+  { await p.waitForTimeout(400); const a3 = await camYaw(); check('inside: the turn stops on release (no flick)', turned(a1, a3) < .03, JSON.stringify({ after: +turned(a1, a3).toFixed(3) })); }
   if (!phone) { await p.keyboard.down('ArrowLeft'); await p.waitForTimeout(700); await p.keyboard.up('ArrowLeft'); await p.waitForTimeout(300); const a2 = await camYaw();
     const sp = await p.evaluate(() => ({ x: window.__fi2.trainRide.spot.x, u: window.__fi2.trainRide.spot.u }));
     check('inside: ← turns the view (does not walk)', turned(a1, a2) > .8, JSON.stringify({ turned: +turned(a1, a2).toFixed(2), spot: sp })); }
   // POLISH 3: the release stops the turn (no flick in first person): the picture holds still after the finger lifts
-  { await p.waitForTimeout(400); const a3 = await camYaw(); check('inside: the turn stops on release (no flick)', turned(a1, a3) < .03, JSON.stringify({ after: +turned(a1, a3).toFixed(3) })); }
   // Inside pressed straight after Seat (the walk to the seat can take 1.4 s) keeps you standing (POLISH 3: it was refused, W sat still)
   await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(300); const reIn = await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(900);
   const st = await p.evaluate(() => ({ standing: window.__fi2.trainRide.standing, view: window.__fi2.trainRide.view }));
