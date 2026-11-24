@@ -209,6 +209,8 @@ export function createTrainRide(ports:Ports){
    if(!riding())return false;const id=trainKeyAction(e.code,e.key);if(!id)return false;e.preventDefault();if(down&&!e.repeat)press(id,'tap');return true;},
   /** A friend took my seat at the same moment (lower member id keeps it, as in the stadium): shuffle to a free one. */
   bump(){if(!riding())return;const run=ports.run();if(!run)return;for(let s=0;s<TRAIN_SEATS;s++)if(s!==j&&!ports.taken(k,s)){j=s;anchor.seat=s;run.seatPose(k,j,pose);anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;return;}},
+  /** Tests / headless checks: station i's step-off spot level with its platform centre + du m. */
+  stationSpot(i:number,du=0){return platformSpot(i,TRAIN_STATIONS[i].s+du,{x:0,y:0,z:0,yaw:0});},
   finish(){getOff(true);},
   dispose(){if(riding())getOff(true);unlisten();if(typeof window!=='undefined')window.removeEventListener('keydown',onKey);trainRideStore.reset();},
  };
