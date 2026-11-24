@@ -43,6 +43,8 @@ export function createKenjiFigure(scene:T.Scene){
    at.k=best;at.x=p.x;at.y=p.y;at.z=p.z;},
   /** Where Kenji is drawn this frame (k -1: nowhere). */
   get at(){return at;},get shown(){return shown;},
+  /** The drawn rig's root (null before the first build): Town's near-camera fade hides it for a frame. */
+  get root(){return rig?rig.root:null;},
   /** His talk definition at his spot (Town's Talk slide-out). */
   npc():NpcDefinition{KENJI_NPC.x=at.x;KENJI_NPC.z=at.z;return KENJI_NPC;},
   dispose(){if(rig){rig.root.removeFromParent();rig.dispose();}rig=null;},

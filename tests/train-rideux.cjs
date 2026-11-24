@@ -91,3 +91,11 @@ console.log('train-rideux hud: ok');
  const tv=read('lib/graphics/trafficVehicles.ts');assert(/transformed\.x\*fiS>\$\{CUT_WALL_X/.test(tv),'the low wall in the vehicle shader');
  const rn=read('lib/town/trainRunning.ts');assert(/glass\.car\(m4,cutS\)/.test(rn)&&/if\(low\)dm\.multiply\(lowLeaf\)/.test(rn),'panes and door leaves on the cut side');}
 console.log('train-rideux camera: ok');
+// 4. near-camera fade: a body the camera is within FADE_NEAR m of is hidden, shown again past FADE_FAR (hysteresis); Town applies it
+//    to me and Conductor Kenji while riding, after the camera, before the render
+{assert(R.FADE_NEAR>=.6&&R.FADE_FAR<=1.2&&R.FADE_NEAR<R.FADE_FAR,'0.6 … 1.2 m');
+ assert.equal(R.bodyDist(0,1,0,0,0,0),0,'inside the body');assert(Math.abs(R.bodyDist(0,3,0,0,0,0)-(3-1.35))<1e-9,'over the head');assert(Math.abs(R.bodyDist(.9,.8,0,0,0,0)-.9)<1e-9,'beside it');
+ assert(R.nearHide(false,.5)&&!R.nearHide(false,.9)&&R.nearHide(true,.9)&&!R.nearHide(true,1.3),'hysteresis');
+ const Tn=read('components/Town.tsx');const i=Tn.indexOf('meNearHid=nearHide(meNearHid'),j=Tn.indexOf('renderer.render(scene,camera)');
+ assert(i>0&&j>i&&/if\(meNearHid\)player\.root\.visible=false/.test(Tn)&&/if\(kenjiNearHid\)kr\.visible=false/.test(Tn),'Town hides me / Kenji near the camera before the render');}
+console.log('train-rideux fade: ok');
