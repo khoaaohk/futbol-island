@@ -309,12 +309,23 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;carMatrix(s,c,seatM,states[k].v);seatV.set(lx,y,lz).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(e[8],e[10])+yaw+(c?Math.PI:0);out.lean=1;return out;},
   /** Roof riding (trainRoof.ts, Nov 24 2026): the roof under world (x, z) of any train (a box test per car, only for trains within
-   *  reach): out.k, the train-frame spot (out.x across, out.u along car 0) and the roof's world height there (out.y). False: none. */
-  roofAt(x:number,z:number,out:{k:number;x:number;u:number;y:number},pad=0):boolean{
-   for(let k=0;k<TRAIN_COUNT;k++){const st=states[k];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)>TRAIN_LENGTH+3)continue;
-    for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,roofM,st.v);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
+   *  reach): out.k, the train-frame spot (out.x across, out.u along car 0) and the roof's world height there (out.y). False: none.
+   *  `ahead` s (the landing ring's prediction): where the trains will be that long from now at their present speeds. */
+  roofAt(x:number,z:number,out:{k:number;x:number;u:number;y:number},pad=0,ahead=0):boolean{
+   for(let k=0;k<TRAIN_COUNT;k++){const st=states[k],s=ahead?wrapS(st.s+st.v*ahead):st.s;trackAt(s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)>TRAIN_LENGTH+3)continue;
+    for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
      if(Math.abs(lx)>ROOF_HALF+pad||Math.abs(lz)>CAR_LENGTH/2-ROOF_END_PAD+pad)continue;
      const cx=Math.max(-ROOF_HALF,Math.min(ROOF_HALF,lx));seatV.set(cx,roofY(cx),lz).applyMatrix4(roofM);out.k=k;out.y=seatV.y;if(c%2===0){out.x=cx;out.u=lz;}else{out.x=-cx;out.u=-(CAR_LENGTH+CAR_GAP)-lz;}return true;}}
+   return false;},
+  /** The landing ring's prediction (Nov 24 2026): a body at (x, y, z) moving at (vx, vy, vz) m/s (a parachute's glide and sink, a fall),
+   *  stepped `step` s at a time up to `horizon` s: the first moment it meets a roof where the trains will be then (roofAt `ahead`), before
+   *  it reaches `floor` (the ground / sea under it). out as roofAt (the train-frame spot) plus out.t (s from now). False: no roof on the way. */
+  roofTouch(x:number,y:number,z:number,vx:number,vy:number,vz:number,floor:(x:number,z:number)=>number,out:{k:number;x:number;u:number;y:number;t:number},horizon=4,step=.1):boolean{
+   let near=false;for(let k=0;k<TRAIN_COUNT;k++){trackAt(states[k].s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)<TRAIN_LENGTH+3+horizon*(Math.abs(states[k].v)+Math.hypot(vx,vz))*1.5){near=true;break;}}
+   if(!near)return false;
+   for(let t=step;t<=horizon+1e-6;t+=step){const px=x+vx*t,pz=z+vz*t,py=y+vy*t;
+    if(api.roofAt(px,pz,out,0,t)&&py<=out.y+.05){out.t=t;return true;}
+    if(py<=floor(px,pz))return false;}
    return false;},
   /** Gameplay 2: car c of train k's matrix this frame (the hover outline, the car colliders). Allocation-free. */
   carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v);},

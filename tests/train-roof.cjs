@@ -26,6 +26,13 @@ const R=L('lib/town/trainRoof.ts'),B=L('lib/town/trainBonk.ts'),tt=L('lib/town/t
  assert(/roofHitsPortal\(st\.s,roofRide\.u\)/.test(Tn)&&/startBonk\('tunnel'/.test(Tn),'the tunnel bonk');
  assert(/roofAt\(location\.x,location\.z,roofO,\.15\)/.test(Tn),'falls land on roofs');assert(/roofLanding=roofO\.k/.test(Tn),'Land over a roof');
  assert(/landingPreview=roofPreview/.test(Tn),'the landing ring over a roof');}
+// the surfer stance (trainSeatPose): arms out, knees bent; the arms windmill through the landing, none with reduced motion
+{const SP=L('lib/graphics/trainSeatPose.ts'),o=SP.trainSurfPose();assert(o.arms.every(a=>a.sz>1.1&&a.w===1)&&o.pelvisY<.8&&o.legs.every(l=>l.w===1),'arms out, knees bent, feet set');
+ SP.surfPose(o,false,.15,false);assert(Math.abs(o.arms[0].sz-o.arms[1].sz)>.2,'the landing wobble moves the arms opposite ways');
+ SP.surfPose(o,false,.15,true);assert.equal(o.arms[0].sz,o.arms[1].sz,'reduced motion: no wobble');SP.surfPose(o,true,3,false);assert(o.legs.every(l=>l.w===0)&&o.arms[0].w===1,'walking the roof: the gait legs, the arms stay out');
+ const Tn=read('components/Town.tsx');assert(/trainRide\.trick\(\)\?\?stadiumSit\.trick\(\)\?\?roofSurf\(\)/.test(Tn),'the local roof rider wears it');
+ assert(/landingPreview=chuteRoof\(dt\)\?roofPreview:jetActions\.state\.target/.test(Tn)&&/roofLanding>=0&&world\.trainRun\)\{world\.trainRun\.standAt\(roofLanding,roofLand\.x,roofLand\.u/.test(Tn),'the ring: predicted under a canopy, on the roof spot while easing down');
+ assert(/pose\.roof&&!shield&&\(pose\.train\?\?-1\)>=0\)\{surfPose\(SURF_POSE/.test(read('lib/graphics/remoteAvatars.ts')),'friends on a roof wear it too');}
 console.log('train-roof pure: ok');
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,S=LW('lib/town/trainSchedule.ts'),R2=LW('lib/town/trainRoof.ts');
@@ -67,5 +74,11 @@ console.log('train-roof pure: ok');
  {const az=Math.hypot(e[8],e[9],e[10])||1,ay=Math.hypot(e[4],e[5],e[6])||1;assert(Math.abs(o.y-(e[13]+e[5]/ay*3.75+e[9]/az*4))<.08,`at roof height (${o.y.toFixed(2)} vs ${(e[13]+e[5]/ay*3.75+e[9]/az*4).toFixed(2)})`);}/* on a grade too (the South Bridge, 4.5%) */assert(!run.roofAt(e[12]+e[0]*2,e[14]+e[2]*2,o),'beside the car: no roof');
  let maxJump=0,prev=null;for(let i=0;i<60;i++){step();run.standAt(k,.3,4,0,p,undefined,R2.roofY(.3));run.roofAt(p.x,p.z,o);assert(o.k===k&&Math.abs(o.u-4)<.05,'still on the same roof spot');if(prev)maxJump=Math.max(maxJump,Math.abs(Math.hypot(p.x-prev.x,p.z-prev.z)-run.states[k].v/30));prev={x:p.x,z:p.z};}
  assert(maxJump<.05,`moves with the train, no jitter (${maxJump.toFixed(3)} m)`);
+ // the landing ring's prediction (roofTouch): a canopy sinking 3 m/s from 3 m over the roof meets it ~1 s on, where the train is THEN
+ {run.carMatrixOf(k,0,m);const e2=m.elements,v=run.states[k].v,fwd={x:e2[8],z:e2[10]},fl=Math.hypot(fwd.x,fwd.z);fwd.x/=fl;fwd.z/=fl;
+  const bx=e2[12]+fwd.x*(v*1+0),bz=e2[14]+fwd.z*(v*1),o2={k:-1,x:0,u:0,y:0,t:0},ry=e2[13]+3.75;
+  assert(run.roofTouch(bx,ry+3,bz,0,-3,0,()=>-50,o2)&&o2.k===k&&Math.abs(o2.t-1)<.25,`a canopy ahead of the train meets its roof when the train arrives (t ${o2.t})`);
+  assert(!run.roofTouch(bx+fwd.z*20,ry+3,bz-fwd.x*20,0,-3,0,()=>-50,o2),'20 m beside the line: no roof');
+  assert(!run.roofTouch(bx,ry+3,bz,0,-3,0,()=>ry+2,o2),'the ground comes first: no roof');}
  const r=run.update({dt:1/30,camera:cam,player:{x:p.x,y:p.y,z:p.z},nowSec:t+1/30,onRoof:true});assert(!r.knock&&!r.nudgeX,'a roof rider is never knocked or pushed');
  console.log('train-roof live: ok');})().catch(e=>{console.error(e);process.exit(1);});
