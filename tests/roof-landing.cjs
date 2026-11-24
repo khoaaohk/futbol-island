@@ -34,7 +34,11 @@ async function buildWorld(){
 (async()=>{
 const {T,load,world,meshes}=await buildWorld();
 const V=load('lib/town/venues.ts'),{createRooftopTravel,CANOPY_STEP}=load('lib/town/rooftopTravel.ts'),CS=load('lib/town/canopySurfaces.ts'),CC=load('lib/town/coralCay.ts'),Z=load('lib/town/zipline.ts');
-const travel=()=>createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,{x:0,z:0},world.roofObstacles,()=>0,world.landingExclusions,world.canopies);
+// The extra surface as Town passes it (Nov 24 2026): the Island Line's walk height (sleepers, crossing decks and, since the South Bridge,
+// the bed climbing to 2+ m over the south beach), so a landing on the raised line stands on it as in the game.
+const {trainWalkHeight}=load('lib/town/trainLayout.ts');
+assert(/createRooftopTravel\([^;]*trainWalkHeight\(x,z\)\)/.test(fs.readFileSync(path.join(__dirname,'../components/Town.tsx'),'utf8')),'Town gives rooftop travel the line\'s walk height');
+const travel=()=>createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,{x:0,z:0},world.roofObstacles,(x,z)=>trainWalkHeight(x,z),world.landingExclusions,world.canopies);
 const rt=travel();
 // Foliage and sheets are not roofs (tree and palm crowns, signs' planes, cables): the documented exclusions; so is a cone taller
 // than 1.3 × its radius (a pine).
