@@ -42,3 +42,23 @@ export function trainStrapPose(side:-1|1):TrickPose{
 export function swayStrapPose(o:TrickPose,lean:number){
  const r=Math.max(-STRAP.swayMax,Math.min(STRAP.swayMax,lean*STRAP.sway));o.pelvisRoll=r*.5;o.torsoRoll=-r*.3;o.pelvisZ=0;
 }
+
+/** Riding a train ROOF (owner, Nov 24 2026: the wobbly surfer landing): knees bent, feet apart and a little staggered, the body turned a
+ *  touch side-on, both arms held out to the sides for balance. Shared by the local roof rider (components/Town.tsx roofRide) and drawn
+ *  friends (remoteAvatars, seat.ts riderRoof). surfPose writes the per-frame part (no allocation). */
+export const SURF={pelvisY:.74,pitch:.2,yaw:.32,armSz:1.32,armSx:-.18,armEl:-.32,legX:.2,legZ:.14,wobble:.5} as const;
+export function trainSurfPose():TrickPose{
+ const o=createTrickPose(),ctx=createTrickCtx();stancePose('stand',ctx,o);
+ o.w=1;o.pelvisY=SURF.pelvisY;o.pelvisZ=0;o.pelvisPitch=.06;o.pelvisRoll=0;o.pelvisYaw=SURF.yaw;o.torsoPitch=SURF.pitch;o.torsoRoll=0;o.torsoYaw=-SURF.yaw*.6;
+ o.headYaw=-SURF.yaw*.5;o.headPitch=-.1;
+ for(const [i,l] of o.legs.entries()){l.x=i?SURF.legX:-SURF.legX;l.y=.075;l.z=i?-SURF.legZ:SURF.legZ;l.toe=0;l.w=1;}
+ for(const a of o.arms){a.sx=SURF.armSx;a.sz=SURF.armSz;a.el=SURF.armEl;a.w=1;}
+ return o;
+}
+/** This frame's surfer stance: `walking` hands the legs and most of the body back to the rig's gait (the arms stay out); `age` s since
+ *  touchdown: for the first 1.2 s the arms windmill for balance (opposite ways), none with reduced motion. */
+export function surfPose(o:TrickPose,walking:boolean,age:number,reduced:boolean){
+ o.w=walking?.35:1;for(const l of o.legs)l.w=walking?0:1;
+ const wob=!reduced&&age<1.2?Math.sin(age*13)*SURF.wobble*Math.exp(-age*3):0;
+ o.arms[0].sz=SURF.armSz+wob;o.arms[1].sz=SURF.armSz-wob;o.arms[0].sx=SURF.armSx-wob*.6;o.arms[1].sx=SURF.armSx+wob*.6;
+}

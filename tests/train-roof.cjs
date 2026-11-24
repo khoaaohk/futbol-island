@@ -50,7 +50,7 @@ console.log('train-roof pure: ok');
  const m=new T.Matrix4(),o={k:-1,x:0,u:0,y:0},p={x:0,y:0,z:0,yaw:0,lean:0};let t=now;
  const step=()=>{t+=1/30;const q=tt.trackAt(run.states[k].s);cam.position.set(q.x+20,30,q.z+20);cam.lookAt(q.x,0,q.z);cam.updateMatrixWorld();run.update({dt:1/30,camera:cam,player:{x:p.x,y:p.y,z:p.z},nowSec:t,onRoof:true});};
  step();run.carMatrixOf(k,0,m);const e=m.elements;assert(run.roofAt(e[12]+e[8]*4,e[14]+e[10]*4,o)&&o.k===k&&Math.abs(o.u-4)<.05&&Math.abs(o.x)<.05,'roofAt finds car 0, 4 m ahead of its middle');
- assert(Math.abs(o.y-(e[13]+3.75))<.08,'at roof height');assert(!run.roofAt(e[12]+e[0]*2,e[14]+e[2]*2,o),'beside the car: no roof');
+ {const az=Math.hypot(e[8],e[9],e[10])||1,ay=Math.hypot(e[4],e[5],e[6])||1;assert(Math.abs(o.y-(e[13]+e[5]/ay*3.75+e[9]/az*4))<.08,`at roof height (${o.y.toFixed(2)} vs ${(e[13]+e[5]/ay*3.75+e[9]/az*4).toFixed(2)})`);}/* on a grade too (the South Bridge, 4.5%) */assert(!run.roofAt(e[12]+e[0]*2,e[14]+e[2]*2,o),'beside the car: no roof');
  let maxJump=0,prev=null;for(let i=0;i<60;i++){step();run.standAt(k,.3,4,0,p,undefined,R2.roofY(.3));run.roofAt(p.x,p.z,o);assert(o.k===k&&Math.abs(o.u-4)<.05,'still on the same roof spot');if(prev)maxJump=Math.max(maxJump,Math.abs(Math.hypot(p.x-prev.x,p.z-prev.z)-run.states[k].v/30));prev={x:p.x,z:p.z};}
  assert(maxJump<.05,`moves with the train, no jitter (${maxJump.toFixed(3)} m)`);
  const r=run.update({dt:1/30,camera:cam,player:{x:p.x,y:p.y,z:p.z},nowSec:t+1/30,onRoof:true});assert(!r.knock&&!r.nudgeX,'a roof rider is never knocked or pushed');

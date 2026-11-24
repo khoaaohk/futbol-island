@@ -35,7 +35,7 @@ import {CLASSIC_BALL,createClassicBallGeometry,createClassicBallMaterial} from '
 import {kitBall,kitBallKey,kitKey,kitOutfit} from '../multiplayer/kit';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
-import {npcSeatPose} from './npcSeatPose';import {trainRiderPose} from './trainSeatPose';
+import {npcSeatPose} from './npcSeatPose';import {trainRiderPose,trainSurfPose,surfPose} from './trainSeatPose';
 import {BallState,Emote,Mode,PoseFlag,Zone,PARTY_MAX,WORLD_HARD,WORLD_SEE_M,presenceOf,shielded,type Kit,type Look,type MemberId} from '../../multiplayer/protocol';
 import {presenceIconAt,presenceTextAt} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
@@ -310,7 +310,7 @@ const onFoot=(mode:number)=>mode===Mode.Walk||mode===Mode.Run||mode===Mode.Idle;
  *  sits SEATED_LABEL_DROP m lower, over the seated head. Inside a force field (busy / away) they stand as before. */
 const SEAT_POSE=npcSeatPose('bench');SEAT_POSE.w=1;
 /** Gameplay 2 (Nov 24 2026): a friend riding the Island Line kneels at their window like the local rider (trainSeatPose.ts), turned toward travel. */
-const TRAIN_POSES=[trainRiderPose(-1),trainRiderPose(1)];
+const TRAIN_POSES=[trainRiderPose(-1),trainRiderPose(1)],SURF_POSE=trainSurfPose();
 export const SEATED_LABEL_DROP=.42;
 export const drawnSeated=(pose:{seated?:boolean},shield:boolean)=>!!pose.seated&&!shield;
 /** Where a friend's ball is drawn (writes out.x/y/z; false = not drawn): Free at its own spot, Feet in front of their feet, Juggle bobbing over them. Exported for tests. */
@@ -640,7 +640,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(e.hidden||!e.sel){hideEntry(e);continue;} // Hide (and a stranger over the room cap): no avatar, ring, label or emote bubble
     const pose=e.leaving?e.lp:poses.get(e.id);
     if(!pose||saverFade<=0){hideEntry(e);continue;}
-    if(e.st&&!e.leaving){const q=e.lp;q.x=pose.x;q.y=pose.y;q.z=pose.z;q.yaw=pose.yaw;q.speed=0;q.mode=pose.mode;q.zone=pose.zone;q.fade=pose.fade;q.flags=pose.flags??0;q.activity=pose.activity??0;q.seated=pose.seated;q.train=pose.train;q.lean=pose.lean;}
+    if(e.st&&!e.leaving){const q=e.lp;q.x=pose.x;q.y=pose.y;q.z=pose.z;q.yaw=pose.yaw;q.speed=0;q.mode=pose.mode;q.zone=pose.zone;q.fade=pose.fade;q.flags=pose.flags??0;q.activity=pose.activity??0;q.seated=pose.seated;q.train=pose.train;q.roof=pose.roof;q.lean=pose.lean;}
     // Presence: indoors = fade out at the door; busy / away = inside the green force field, still, with a status line.
     const pr=presenceOf(pose.mode,pose.zone,pose.flags??0),shield=shielded(pr);
     if(pose.zone===Zone.Indoors){e.door=reduced?0:Math.max(0,e.door-dt/DOOR_FADE);if(e.door<=0){e.field=0;hideEntry(e);continue;}}else e.door=1;
@@ -683,6 +683,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
       e.wet=dr.wet;e.jet=dr.jet;e.lift=land&&g>pose.y?g-pose.y:0;}
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack||mode===Mode.Jetpack&&!e.jet?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
      motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);motion.trick=sat?((pose.train??-1)>=0?TRAIN_POSES[(pose.lean??1)>0?1:0]:SEAT_POSE):undefined;if(sat)motion.travelMode=undefined;/* seated in the stands: the bench pose, on the seat */
+     else if(pose.roof&&!shield&&(pose.train??-1)>=0){surfPose(SURF_POSE,moving,9,reduced);motion.trick=SURF_POSE;}/* on a train roof: the arms-out surfer stance (the gait shows while they walk it) */
      motion.dribbling=!shield&&!sat&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
      if(e.wet){

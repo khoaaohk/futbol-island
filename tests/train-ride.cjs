@@ -41,14 +41,26 @@ const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts')
   const key=b.q*256+b.yaw;assert(!seen.has(key)||true);}
  assert.equal(P.trainWire(P.Mode.Idle,0,0),-1);assert.equal(P.trainWire(P.Mode.Idle,1,5),-1,'the stadium seat marker is not a train');assert.equal(P.trainWire(P.Mode.Walk,10,3),-1,'walking at 2.5 m/s is not riding');
  assert.equal(P.trainWire(P.Mode.Idle,2,28),-1,'a seated byte past seat 27 is nothing');assert.equal(P.trainWire(P.Mode.Idle,32,0),-1,'past the last standing code');
+ // the roof lane (Nov 24 2026): the 144 spare standing states; it round-trips, never collides with the aisle, and an OLD client's
+ // trainWire (aisle states < 2160 only) rejects it: they draw a plain Idle pose (a walker moving with the train)
+ const ro={u:0,yaw:0},roofKeys=new Set();assert.equal(P.TRAIN_ROOF_ST0+P.TRAIN_ROOF_UN*4,P.TRAIN_STAND_CODES*256,'the roof lane fills the spare states exactly');
+ for(let k=0;k<3;k++)for(let u=-18.2;u<=P.TRAIN_ROOF_U0+(P.TRAIN_ROOF_UN-1)*P.TRAIN_ROOF_DU+1e-9;u+=.29)for(const yaw of [0,Math.PI/2,Math.PI,-Math.PI/2,.3]){const c=P.riderRoofCode(k,u,yaw);P.riderBytes(c,b);assert(b.q>=5&&b.q<=31&&b.q/4<8,`roof speed byte ${b.q}`);
+  const w=P.trainWire(P.Mode.Idle,b.q,b.yaw);assert.equal(w,c,'roof round trip');assert.equal(P.riderTrain(w),k);assert.equal(P.riderSeat(w),-1);assert(!P.riderStand(w,o),'a roof code is not an aisle spot');
+  assert(P.riderRoof(w,ro)&&Math.abs(ro.u-u)<=P.TRAIN_ROOF_DU/2+1e-9,`roof spot ${u} -> ${ro.u}`);const want=Math.round(yaw/(Math.PI/2))*Math.PI/2;assert(Math.abs(Math.atan2(Math.sin(ro.yaw-want),Math.cos(ro.yaw-want)))<1e-6,'roof facing');
+  const st=((b.q-5)%9)*256+b.yaw;assert(st>=2160&&st<2304,'an old client (aisle states only) reads a plain pose');roofKeys.add(b.q*256+b.yaw);}
+ assert.equal(roofKeys.size,3*144,'every roof state used, none shared');
+ for(let k=0;k<3;k++)for(let st=0;st<2160;st+=13){const c=k*P.TRAIN_RIDER_SPAN+28+st;assert(!P.riderRoof(c,ro),'an aisle code is not on the roof');}
  // old relay / old clients: the pose stays a valid v1 Idle pose (clampPose) with a speed under the fast-mover brake
- for(const c of [P.riderSeatCode(2,27),P.riderStandCode(2,4.4,.98,3)]){P.riderBytes(c,b);assert(P.clampPose([1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0]),'the relay accepts it');}}
+ for(const c of [P.riderSeatCode(2,27),P.riderStandCode(2,4.4,.98,3),P.riderRoofCode(2,5.8,3)]){P.riderBytes(c,b);assert(P.clampPose([1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0]),'the relay accepts it');}}
 // 2. presence
 {const st=pres.localPoseState(),body=[0,0,0,0,0,0,0,0],b={q:0,yaw:0};
  pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:2,seat:12,x:168.5,y:1.9,z:-204.2,yaw:1}},body);
  assert.equal(body[5],P.Mode.Idle);assert.equal(P.trainWire(body[5],body[4],body[3]),P.riderSeatCode(2,12),'a high seat (12) goes out');assert.equal(body[0],1685);assert.equal(body[2],-2042);
  pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:1,seat:3,x:168.5,y:1.9,z:-204.2,yaw:1,standing:true,u:-3.1,sx:.4,face:Math.PI}},body);
  const w=P.trainWire(body[5],body[4],body[3]),o={u:0,x:0,yaw:0};assert(P.riderStand(w,o)&&P.riderTrain(w)===1&&Math.abs(o.u+3.1)<.11&&Math.abs(o.x-.4)<.01,'standing goes out');
+ pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:2,seat:0,x:171.2,y:6.1,z:-199.4,yaw:.5,standing:false,u:-9.4,sx:0,face:Math.PI/2,roof:true}},body);
+ {const w=P.trainWire(body[5],body[4],body[3]),r={u:0,yaw:0};assert(P.riderRoof(w,r)&&P.riderTrain(w)===2&&Math.abs(r.u+9.4)<=.35&&Math.abs(r.yaw-Math.PI/2)<1e-6,'a roof rider goes out');
+  assert.equal(body[0],1712,'sent where I really am (on the moving roof)');assert.equal(body[1],61);assert.equal(body[2],-1994);assert(P.clampPose(body.slice()),'the relay accepts it');}
  pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:.1,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false},body);assert.equal(P.trainWire(body[5],body[4],body[3]),-1,'off the train: a plain pose');
  const I=L('lib/multiplayer/interp.ts'),ip=I.createInterp?I.createInterp():null;
  if(ip){P.riderBytes(P.riderSeatCode(1,12),b);ip.push(7,[1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0],1000);const out={x:0,y:0,z:0,yaw:0,speed:9,mode:0,zone:0,fade:0};ip.sample(7,1400,out);assert.equal(out.train,P.riderSeatCode(1,12),'the rider code reaches the island runtime');assert.equal(out.speed,0,'a rider is drawn still by the interpolator');

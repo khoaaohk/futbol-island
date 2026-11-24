@@ -36,6 +36,12 @@ export const TRAIN_STAND_U0 = -17, TRAIN_STAND_DU = .2, TRAIN_STAND_UN = 108, TR
 /** A rider code (what trainWire returns): train × TRAIN_RIDER_SPAN + place; place < TRAIN_WIRE_SEATS = a seat, else standing state + TRAIN_WIRE_SEATS. */
 export const TRAIN_RIDER_SPAN = 4096;
 const TAU = Math.PI * 2;
+// Riding a ROOF (Nov 24 2026, lib/town/trainRoof.ts): the 144 standing states after the aisle's 2160 (TRAIN_ROOF_ST0 … 2303, the same
+//  speed bytes): u in TRAIN_ROOF_DU m steps from TRAIN_ROOF_U0 (car 1's far end; trainRoof ROOF_U_MIN −18.2 … ROOF_U_MAX 5.8), on the
+//  centre line, 4 facings. The pose x, y, z is where the rider really is (on the moving roof; Idle's relay speed check, 6 m/s × 1.5 × dt
+//  + 2 m, passes at the 10 Hz send rate). An old client's trainWire rejects these states: it draws a plain Idle pose moving with the
+//  train (a walker on the roof), as before this lane.
+export const TRAIN_ROOF_ST0 = TRAIN_STAND_UN * TRAIN_STAND_XN * 4, TRAIN_ROOF_UN = 36, TRAIN_ROOF_U0 = -18.2, TRAIN_ROOF_DU = .7;
 /** Rider code for seat `seat` (0 … 27) of train `train`. */
 export const riderSeatCode = (train: number, seat: number): number => train * TRAIN_RIDER_SPAN + Math.max(0, Math.min(TRAIN_WIRE_SEATS - 1, Math.round(seat)));
 /** Rider code for standing at train-frame (x across, u along) facing `yaw` (rad, train frame: 0 = toward +u). */
@@ -45,12 +51,23 @@ export function riderStandCode(train: number, u: number, x: number, yaw: number)
   const face = ((Math.round(yaw / (TAU / 4)) % 4) + 4) % 4;
   return train * TRAIN_RIDER_SPAN + TRAIN_WIRE_SEATS + (uq * TRAIN_STAND_XN + xq) * 4 + face;
 }
+/** Rider code for standing on train `train`'s roof at train-frame u (along car 0), facing `yaw` (rad, train frame). */
+export function riderRoofCode(train: number, u: number, yaw: number): number {
+  const uq = Math.max(0, Math.min(TRAIN_ROOF_UN - 1, Math.round((u - TRAIN_ROOF_U0) / TRAIN_ROOF_DU)));
+  const face = ((Math.round(yaw / (TAU / 4)) % 4) + 4) % 4;
+  return train * TRAIN_RIDER_SPAN + TRAIN_WIRE_SEATS + TRAIN_ROOF_ST0 + uq * 4 + face;
+}
+/** A roof rider code's spot (out.u m along, out.yaw rad, train frame; x is the centre line); false when not on the roof. */
+export function riderRoof(code: number, out: { u: number; yaw: number }): boolean {
+  const p = code % TRAIN_RIDER_SPAN - TRAIN_WIRE_SEATS - TRAIN_ROOF_ST0; if (p < 0 || p >= TRAIN_ROOF_UN * 4) return false;
+  out.u = TRAIN_ROOF_U0 + (p >> 2) * TRAIN_ROOF_DU; out.yaw = (p & 3) * TAU / 4; return true;
+}
 export const riderTrain = (code: number): number => Math.floor(code / TRAIN_RIDER_SPAN);
 /** The seat of a rider code, -1 when standing. */
 export const riderSeat = (code: number): number => { const p = code % TRAIN_RIDER_SPAN; return p < TRAIN_WIRE_SEATS ? p : -1; };
 /** A standing rider code's spot (out.u, out.x m, out.yaw rad, train frame); false when seated. */
 export function riderStand(code: number, out: { u: number; x: number; yaw: number }): boolean {
-  const p = code % TRAIN_RIDER_SPAN - TRAIN_WIRE_SEATS; if (p < 0) return false;
+  const p = code % TRAIN_RIDER_SPAN - TRAIN_WIRE_SEATS; if (p < 0 || p >= TRAIN_ROOF_ST0) return false;
   const face = p & 3, r = p >> 2, xq = r % TRAIN_STAND_XN, uq = (r - xq) / TRAIN_STAND_XN;
   out.u = TRAIN_STAND_U0 + uq * TRAIN_STAND_DU; out.x = (xq - (TRAIN_STAND_XN >> 1)) * TRAIN_STAND_DX; out.yaw = face * TAU / 4; return true;
 }
@@ -68,5 +85,5 @@ export function trainWire(mode: number, speedQ: number, yawByte: number): number
   const s = q - TRAIN_STAND_Q0;
   if (s < 0 || s >= TRAIN_WIRE_TRAINS * TRAIN_STAND_CODES) return -1;
   const k = Math.floor(s / TRAIN_STAND_CODES), st = (s % TRAIN_STAND_CODES) * 256 + y;
-  return st < TRAIN_STAND_UN * TRAIN_STAND_XN * 4 ? k * TRAIN_RIDER_SPAN + TRAIN_WIRE_SEATS + st : -1;
+  return st < TRAIN_ROOF_ST0 + TRAIN_ROOF_UN * 4 ? k * TRAIN_RIDER_SPAN + TRAIN_WIRE_SEATS + st : -1; // the aisle, then the roof lane
 }
