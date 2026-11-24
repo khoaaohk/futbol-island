@@ -85,9 +85,14 @@ for(const [island,caps] of Object.entries(D.DECAL_CAPS)){const p=plan1[island],t
 assert.ok(Math.max(D.DECAL_TRIS.stone,D.DECAL_TRIS.tuft,D.DECAL_TRIS.flower)<10);
 const idx=new D.RectIndex(world.obstacles.concat(world.buildings,world.roads,world.surfaceAreas),0);
 for(const s of [...plan1.main.stones,...plan1.main.tufts,...plan1.main.flowers])assert.ok(!idx.blocked(s.x,s.z),'a main-island decal sits in a blocked rect at '+s.x+','+s.z);
-// decals cover the whole main sand band (inner part too): some stones sit deeper than 60 % of the local band width
-{const {ISLAND_SHORE,shoreSandWidth}=load('lib/town/shoreline.ts');let inner=0,all=0;for(const st of plan1.main.stones){let best=1e9,bw=1;for(const p of ISLAND_SHORE){const d=Math.hypot(p.x-st.x,p.z-st.z);if(d<best){best=d;bw=shoreSandWidth(p);}}all++;if(best>.6*bw)inner++;}
- assert.ok(inner/all>.25,'main stones reach the inner beach band ('+inner+'/'+all+')');}
+// decals cover the whole main sand band (inner part too): some stones sit deeper than 60 % of the local band width. Since the Island Line
+// (Nov 23 2026) no decal lies within LINE_CLEAR m of the rails, and the line runs through the inner band on much of the coast, so the
+// ratio is taken where the shore point is clear of the line (band + LINE_CLEAR); beside the line the inner band still gets some.
+{const {ISLAND_SHORE,shoreSandWidth}=load('lib/town/shoreline.ts'),tt=load('lib/town/trainTrack.ts');const c={free:[0,0],line:[0,0]};
+ for(const st of plan1.main.stones){let best=1e9,bw=1,bp=null;for(const p of ISLAND_SHORE){const d=Math.hypot(p.x-st.x,p.z-st.z);if(d<best){best=d;bw=shoreSandWidth(p);bp=p;}}
+  const k=tt.trackNearest(bp.x,bp.z,Math.min(32,bw+sites.LINE_CLEAR))?'line':'free';c[k][1]++;if(best>.6*bw)c[k][0]++;}
+ assert.ok(c.free[1]>=100&&c.free[0]/c.free[1]>.25,'main stones reach the inner beach band away from the line ('+c.free+')');
+ assert.ok(c.line[0]/Math.max(1,c.line[1])>.05,'beside the line the inner band still has stones ('+c.line+')');}
 const stats=n=>n+' '+plan1[n].stones.length+'/'+plan1[n].tufts.length+'/'+plan1[n].flowers.length;
 // the builder makes at most one InstancedMesh per kind, opaque, with no shadows, and disposes
 const parent=new T.Group(),built=sites.buildIslandDecals(parent,world);

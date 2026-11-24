@@ -118,9 +118,10 @@ t('seat snap and occupied seats',()=>{
 // the bench pose with a lower tag; rooms never do.
 t('wiring',()=>{
  const tb=read('lib/multiplayer/townBridge.ts'),ra=read('lib/graphics/remoteAvatars.ts'),sit=read('lib/town/stadiumSit.ts'),town=read('components/Town.tsx');
- assert.match(tb,/beginSeatFrame\(nowMs, core\.you\); core\.sample\(nowMs, seatFriend\)/);
+ // (Nov 23 2026 Island Line: the sampler is adaptFriend, which runs seatFriend first and then the moving train seat)
+ assert.match(tb,/beginSeatFrame\(nowMs, core\.you\); core\.sample\(nowMs, adaptFriend\)/);assert.match(tb,/const adaptFriend = \(id: MemberId, p: RemotePose\) => \{ seatFriend\(id, p\);/);
  assert.match(sit,/nearestSeat\(x,z,height,remoteSeatsTaken\(\)\)/);
- assert.match(town,/partyPitch,stadiumSit\.seated\?stadiumSit\.seat:null\)/);
+ assert.match(town,/partyPitch,stadiumSit\.seated\?stadiumSit\.seat:null(,trainRide\.wire\(\))?\)/);
  assert.match(ra,/motion\.trick=sat\?SEAT_POSE:undefined/);assert.match(ra,/SEAT_POSE=npcSeatPose\('bench'\)/);
  assert.ok(!/seatFriend/.test(read('lib/multiplayer/roomParty.ts')),'rooms keep their own sample');
  const RA=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},emotePose:{},customization:{},look:{}});
