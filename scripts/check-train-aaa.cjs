@@ -94,13 +94,18 @@ async function partVending(c) {
   const ids = await p.evaluate(() => window.__fi2.vending.entries.filter((e) => /^drinkst(north|west|south|summit|cay)$/.test(e.machine.id)).map((e) => e.machine.id));
   check('a drink machine at each of the 5 stations', ids.length === 5, ids.join(' '));
   for (const id of ids) {
-    await p.evaluate((id) => { const f = window.__fi2, e = f.vending.entries.find((e) => e.machine.id === id); f.teleport(e.front.x + e.dir.x * 1.5, e.front.z + e.dir.z * 1.5, Math.atan2(-e.dir.x, -e.dir.z)); }, id);
+    await p.evaluate((id) => { const f = window.__fi2, e = f.vending.entries.find((e) => e.machine.id === id); f.teleport(e.front.x + e.dir.x * .9, e.front.z + e.dir.z * .9, Math.atan2(-e.dir.x, -e.dir.z)); }, id);// where a buyer stands (1.5 m out was at the platform edge: an arriving train side-bonked the check at Coral Cay)
     let go = false; for (let i = 0; i < 20 && !go; i++) { await p.waitForTimeout(300); go = await p.locator('[data-vending-go]').isVisible().catch(() => false); }
     let zoom = false, items = 0;
     if (go) { await p.locator('[data-vending-go]').click().catch(() => {}); zoom = await p.waitForSelector('[data-vending-machine]', { timeout: 8000 }).then(() => true).catch(() => false);
       items = await p.locator('[data-vending-item]').count(); }
     check(`vending ${id}: prompt, zoom, drinks listed`, go && zoom && items > 0, `go ${go} zoom ${zoom} items ${items}`);
     if (zoom && shots && id === ids[0]) await p.screenshot({ path: path.join(shots, `vending-${id}.png`) });
+    // RIDE 3: at the first machine really buy a drink (tap a drink's button twice, take it from the tray), then leave and board below
+    if (zoom && id === ids[0]) { const c0 = await p.evaluate(() => window.__fi2.coins ?? null);
+      const btn = p.locator('[data-vending-machine] [data-vending-item]').first(); await btn.click().catch(() => {}); await p.waitForTimeout(300); await btn.click().catch(() => {}); await p.waitForTimeout(2500);
+      await p.locator('[data-vending-machine] [data-vending-tray], [data-vending-machine] [data-drink-tray]').first().click({ timeout: 1500 }).catch(() => {}); await p.waitForTimeout(800);
+      console.log(`  bought a drink at ${id}: coins ${c0} -> ${await p.evaluate(() => window.__fi2.coins ?? null)}`); }
     // Escape closes the machine; the Done/Close button only if it is still open (clicking "Back" after Escape could hit an island
     // control and leave a panel open: the travel map then paused the island and the ride/track parts failed after this part)
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
@@ -122,10 +127,14 @@ async function partRide(c) {
   // board refused while jetpacking / flying; fine on foot
   const si = 2;// South: the next run crosses the raised South Bridge
   await standingTrainAt(p, si);
+  if (process.env.TPDIAG) console.log('  tp: ' + JSON.stringify(await p.evaluate(async (si) => { const f = window.__fi2, sp = f.trainRide.stationSpot(si, 0), out = [[f.location.x, f.location.z].map((x) => +x.toFixed(1))]; let X = f.location.x, armed = false; const stacks = []; Object.defineProperty(f.location, 'x', { configurable: true, get: () => X, set: (v) => { if (armed && v > 400 && stacks.length < 3) stacks.push(new Error().stack.split('\n').slice(1, 6).join(' | ')); X = v; } });
+    f.teleport(sp.x, sp.z, sp.yaw + Math.PI); armed = true; const t0 = performance.now(); out.push(stacks); out.push({ bonk: f.trainBonk ? [f.trainBonk.active, JSON.stringify(f.trainBonk.state).slice(0, 200)] : null, knock: f.liveKnockout ? f.liveKnockout.joined : null, lj: f.liveJoin ? f.liveJoin.joined : null, dLine: (() => { const s = f.trains.sched; let b = 1e9; for (let q = 0; q < 2700; q += .5) { const a = s.trackAt(q); b = Math.min(b, Math.hypot(a.x - 583.6, a.z + 78.3)); } return +b.toFixed(2); })() });
+    for (let i = 0; i < 12; i++) { await new Promise((r) => setTimeout(r, 120)); out.push([+(performance.now() - t0).toFixed(0), +f.location.x.toFixed(1), +f.location.z.toFixed(1)]); } return out; }, si)));
   await p.evaluate((si) => { const sp = window.__fi2.trainRide.stationSpot(si, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); }, si);
   await p.waitForTimeout(1500);
   const offer = await p.evaluate(() => { const e = document.querySelector('[data-train-board]'); return !!e && !e.hidden; });
   check('Board prompt on the South platform with a train in', offer);
+  if (!offer) console.log('  diag: ' + JSON.stringify(await p.evaluate((si) => { const f = window.__fi2, sp = f.trainRide.stationSpot(si, 0); return { want: f.trainRide.lastWant, loc: [f.location.x, f.location.z].map((x) => +x.toFixed(1)), spot: [sp.x, sp.z].map((x) => +x.toFixed(1)), vending: { z: f.vending.zooming, h: f.vending.hidesPlayer, f: f.vending.focused }, dialogs: [...document.querySelectorAll('[role=dialog]')].map((d) => (d.getAttribute('aria-label') || d.className || '').slice(0, 40)), rendered: f.renderStats ? f.renderStats.rendered : -1 }; }, si)));
   await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
   await p.waitForTimeout(800);
   const k = await p.evaluate(() => window.__fi2.trainRide.train);

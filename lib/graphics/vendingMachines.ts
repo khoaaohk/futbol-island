@@ -321,6 +321,8 @@ export type VendingUpdate={now:number;dt:number;reduced:boolean;hoverRay:T.Rayca
 /** `coins`: the player's coin balance for the coin displays (read on build and on each zoom in/out, never per frame). */
 /** The printed face's texels (everything but the plain cabinet texel in the atlas corner). */
 const PRINTED_FACE='vMapUv.y < .99 || vMapUv.x > .01';
+/** The zoom out takes 0.8 s; past this many ms after release it is finished regardless (the `zooming` safety net). */
+export const ZOOM_OUT_CAP=2500;
 export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null;viewport?:()=>{width:number;height:number;dpr:number}}={}){
  const atlas=drawAtlas(VENDING_MACHINES,opts.coins??(()=>null));
  // No emissive map (Sep 30 2026): the printed face texels are shown unlit by the shader patch below and the cabinet texel has no
@@ -352,7 +354,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  let target:VendingMachineId|null=null,glowUntil=0,hovered:VendingMachineId|null=null;const hit=new T.Vector3(),projected=new T.Vector3();
  const pick=(ray:T.Raycaster)=>{let best:VendingMachineId|null=null,bestD=Infinity;for(const e of entries)if(ray.ray.intersectBox(e.box,hit)){const dd=hit.distanceToSquared(ray.ray.origin);if(dd<bestD){bestD=dd;best=e.machine.id;}}return best;};
  // Camera zoom toward the glass front.
- let zoom:{id:VendingMachineId;t:number;dir:1|-1;onArrive?:()=>void;onDone?:()=>void;
+ let zoom:{id:VendingMachineId;t:number;dir:1|-1;onArrive?:()=>void;onDone?:()=>void;/** release time + ZOOM_OUT_CAP (ms) */until?:number;
   /** Camera lift (machine-local metres) that sees over a large occluder; undefined until the zoom's one-off occluder pass ran. */
   lift?:number}|null=null;
  const zoomPos=new T.Vector3(),zoomLook=new T.Vector3(),followLook=new T.Vector3(),mixLook=new T.Vector3(),viewDir=new T.Vector3(-16,-23,-33).normalize();
@@ -573,7 +575,11 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   get hovered(){return hovered;},
   /** The close-up would look through the player: hide them (and their ride) once the zoom is under way. */
   get hidesPlayer(){return zoom!==null&&zoom.t>.5;},
-  get zooming(){return zoom!==null&&zoom.t<1&&zoom.dir===1||zoom!==null&&zoom.dir===-1;},
+  // RIDE 3 safety net (Nov 24 2026): Town pauses the island while `zooming`, and only applyCamera (on an awake frame that reaches the
+  // camera step) ends the zoom out. If no such frame comes (a frame path that returns before the camera step), the island must not
+  // stay paused: past ZOOM_OUT_CAP ms after release the zoom out is finished here (drop the close-up, run onDone).
+  get zooming(){if(zoom!==null&&zoom.dir===-1&&zoom.until!==undefined&&typeof performance!=='undefined'&&performance.now()>zoom.until){const fn=zoom.onDone;zoom=null;dropCloseUp();fn?.();return false;}
+   return zoom!==null&&zoom.t<1&&zoom.dir===1||zoom!==null&&zoom.dir===-1;},
   get focused(){return zoom?.id??null;},
   /** Metres to the targeted machine at the last update (-1 = hovered, explicit intent): the HUD stack arbiter's distance. */
   get targetDistance(){return targetDistance;},
@@ -597,7 +603,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   /** Start the zoom in; `onArrive` runs once the camera reaches the glass (immediately with reduced motion). */
   focus(id:VendingMachineId,onArrive:()=>void){zoom={id,t:zoom?.id===id?zoom.t:0,dir:1,onArrive};atlas.refreshCoins();if(closeUp?.id!==id){dropCloseUp();buildCloseUp(id);}else closeUp.parts.forEach(p=>{p.products.visible=true;});},
   /** Zoom back out to the follow camera. */
-  release(onDone?:()=>void){atlas.refreshCoins();restoreOccluders();closeUp?.parts.forEach(p=>{p.products.visible=true;});if(!zoom){dropCloseUp();onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;},
+  release(onDone?:()=>void){atlas.refreshCoins();restoreOccluders();closeUp?.parts.forEach(p=>{p.products.visible=true;});if(!zoom){dropCloseUp();onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;zoom.until=(typeof performance!=='undefined'?performance.now():0)+ZOOM_OUT_CAP;},
   cancel(){zoom=null;restoreOccluders();dropCloseUp();},
   /** Checks: the meshes between the close-up camera for machine `id` (this camera's fov/aspect) and its face, by name path. */
   occluders(id:VendingMachineId,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0){const e=entries.find(x=>x.machine.id===id);if(!e)return [];return occludersOf(e,camera,viewportHeight,lift).map(o=>{const n:string[]=[];for(let p:T.Object3D|null=o;p&&p!==scene;p=p.parent)n.push(p.name||p.type);return n.join('<');});},
