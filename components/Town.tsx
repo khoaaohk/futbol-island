@@ -1515,9 +1515,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const trainHover=createTrainHover(scene);disposers.add(()=>trainHover.dispose());
     const trainSeatGlow=createTrainSeatGlow(scene);disposers.add(()=>trainSeatGlow.dispose());// Gameplay 3: free seats glow as you walk the aisle
     const kenjiBubble=createChatterBubbles(scene);disposers.add(()=>kenjiBubble.dispose());let kenjiShown=false;// Gameplay 2: Conductor Kenji's line from the cab (trainConductor.ts)// Gameplay 2: the green outline on a Board-eligible train
-    trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.answer=i=>trainRide.answer(i);
+    trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.answer=i=>trainRide.answer(i);trainRideActions.view=v=>{if(trainRide.setView(v))wakeLoop();};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainRide=trainRide;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainPassengers=trainPassengers;
-    disposers.add(()=>{trainRide.dispose();trainRideActions.board=()=>{};trainRideActions.press=()=>{};trainRideActions.answer=()=>{};});
+    disposers.add(()=>{trainRide.dispose();trainRideActions.board=()=>{};trainRideActions.press=()=>{};trainRideActions.answer=()=>{};trainRideActions.view=()=>{};});
     // Beachcombing (lib/graphics/beachFinds.ts, docs/beachcombing.md): shells and sea creatures on every island's beaches.
     const beach=createBeachFinds(scene,{obstacles:[...world.obstacles,...world.buildings],paved:[...world.surfaceAreas,...world.roads],busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run,dismount:()=>{if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';},gather:id=>beachMarket.gather(id),
       reward:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},cue:propCue,haptic:tapHaptic,pose:(kind,at)=>{jobMoves.start(kind,jobPlayer(),at,jobFloor,reduced,jobBallNow());wakeLoop();}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.beach=beach;

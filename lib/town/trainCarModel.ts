@@ -363,7 +363,8 @@ export function createTrainGlass(cars:number,doorLeaves:number){
  return {mesh,look,
   begin(){n=0;},
   shadow(m:T.Matrix4){put(m,SHADOW_M);},
-  car(m:T.Matrix4){for(const l of CAR_PANES)put(m,l);},
+  /** skip: −1 / +1 leaves out that side's window panes (the Inside view's lowered wall), 0 none. */
+  car(m:T.Matrix4,skip=0){const nw=WINDOWS.length;for(let i=0;i<CAR_PANES.length;i++){if(skip&&i<2*nw&&(i<nw?-1:1)===skip)continue;put(m,CAR_PANES[i]);}},
   door(m:T.Matrix4){put(m,DOOR_PANE_M);},
   end(){if(mesh.count!==n)mesh.count=n;const v=n>0;if(mesh.visible!==v)mesh.visible=v;if(v)mesh.instanceMatrix.needsUpdate=true;},
   warm(on:boolean){mesh.visible=on;mesh.count=on?1:0;},

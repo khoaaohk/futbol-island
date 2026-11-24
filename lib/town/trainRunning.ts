@@ -28,7 +28,7 @@ import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATF
 import {trainLayout} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_AHEAD,LOOK_HALF,STOP_SHORT,HELD_V,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,type TrainState} from './trainSchedule';
-import {createVehicleMaterial,PART} from '../graphics/trafficVehicles';
+import {createVehicleMaterial,PART,CUT_SILL_Y} from '../graphics/trafficVehicles';
 import {MACHINE_NIGHT} from '../graphics/machineNightGlow';
 /** The front from 20 m short of the west portal until the rear has left the east one (trains run west → east through the hill). */
 const tunnelLamps=(s:number)=>{const a=wrapS(s-TUNNEL.west.s+20);return a<TUNNEL.east.s-TUNNEL.west.s+20+TRAIN_LENGTH;};
@@ -237,7 +237,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const PLAT=TRAIN_STOPS.map(sp=>{const c=trackAt(sp.station.s),n=leftNormal(c.tx,c.tz);return {x:c.x+n.x*sp.station.side*3.5,z:c.z+n.z*sp.station.side*3.5};});
  const onPlatform=(k:number,p:{x:number;z:number})=>Math.hypot(PLAT[k].x-p.x,PLAT[k].z-p.z)<ON_PLATFORM;
  const destOf=(k:number)=>TRAIN_STOPS[(k+1)%TRAIN_STOPS.length].station.name;
- const cam=new T.Vector3(),frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(),m4=new T.Matrix4(),dm=new T.Matrix4(),flip=new T.Matrix4().makeRotationY(Math.PI),bx=new T.Vector3(),by=new T.Vector3(),bz=new T.Vector3();
+ const cam=new T.Vector3(),frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(),m4=new T.Matrix4(),dm=new T.Matrix4(),flip=new T.Matrix4().makeRotationY(Math.PI),lowLeaf=new T.Matrix4().makeScale(1,(CUT_SILL_Y-DOOR_Y0)/(DOOR_Y1-DOOR_Y0),1),bx=new T.Vector3(),by=new T.Vector3(),bz=new T.Vector3();
  const pa={x:0,z:0,tx:1,tz:0},pb={x:0,z:0,tx:1,tz:0},pc={x:0,z:0,tx:1,tz:0},xs={lamps:false,arm:0};
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
@@ -278,6 +278,9 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   /** The cutaway (Nov 24 2026): 1 while I walk inside train i (trainRide writes it): its roofs are not drawn (vehicle material uCut)
    *  and its cove posters are left out, so the overhead camera looks down into the cars. No extra draw. */
   roofCut:new Uint8Array(TRAIN_COUNT),
+  /** The Inside view (owner, Nov 24 2026): the horizontal direction toward the camera (x, z; trainRide writes it while it cuts a train):
+   *  that train's wall on this side is lowered to the sill (vehicle material uCutDir), its panes and door leaves on that side too. */
+  cutDir:new Float32Array(2),
   /** Phase 3: where seat j of train k is (root on the car floor, facing the aisle). `now`: worked out for that clock from the
    *  timetable and the runner's lag (friends are posed before this frame's update); without it, from this frame's states. */
   seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{return api.seatAt(k,PLAYER_SEATS[Math.max(0,Math.min(TRAIN_SEATS-1,j))],out,now);},
@@ -389,15 +392,17 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
-    tr.look.lamp.z=night*INTERIOR_GLOW;tr.look.cut.value=api.roofCut[i];// the window band: the indicator channel, lit by the shared night factor
+    tr.look.lamp.z=night*INTERIOR_GLOW;tr.look.cut.value=api.roofCut[i];tr.look.cutDir.value.set(api.roofCut[i]?api.cutDir[0]:0,api.roofCut[i]?api.cutDir[1]:0);// the window band: the indicator channel, lit by the shared night factor
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
-     if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);if(api.roofCut[i])platePos.fill(0,(i*TRAIN_CARS+c)*12,(i*TRAIN_CARS+c)*12+12);/* the cutaway: no destination plate floating over the open cab */np++;
+     // the Inside view: this car's side facing the camera (car-local −1 / +1, 0: no cut) loses its panes; its door leaves stop at the sill
+     const ce=m4.elements,cutS=api.roofCut[i]&&(api.cutDir[0]||api.cutDir[1])?(ce[0]*api.cutDir[0]+ce[2]*api.cutDir[1]>0?1:-1):0;
+     if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4,cutS);writePlate(i,c,m4);if(api.roofCut[i])platePos.fill(0,(i*TRAIN_CARS+c)*12,(i*TRAIN_CARS+c)*12+12);/* the cutaway: no destination plate floating over the open cab */np++;
      writeInside(i,c,m4,!api.roofCut[i]&&(!!api.ridden[i]||d3<CLOSE_RANGE),open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
-      for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);glass.door(dm);}}}
+      for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){const low=s===cutS;dm.makeTranslation(s*(HALF_W+.02),low?(DOOR_Y0+CUT_SILL_Y)/2:(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(low)dm.multiply(lowLeaf);if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);if(!low)glass.door(dm);}}}
     tr.mesh.instanceMatrix.needsUpdate=true;}
    // plates: the near-tier cabs only (the rest collapse to nothing); one upload a frame while any is drawn
    const pvis=np>0;if(plates.visible!==pvis)plates.visible=pvis;

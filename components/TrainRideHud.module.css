@@ -38,3 +38,18 @@
 @media (max-width:700px) and (orientation:portrait){.exit{bottom:calc(196px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}}
 @media (orientation:landscape) and (max-height:520px){.exit{bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.exit,.exit[data-closing]{animation:none}}
+
+/* The ride's camera button (owner, Nov 24 2026): the live-join camera button's look (LiveJoinHud.module.css .cam), in the Paths button's
+   spot (hidden while riding); the long-press menu drops under it; the toast names the view for ~1.4 s (CSS only). */
+.cam{position:absolute;z-index:35;top:var(--island-hud-row-top,16px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));box-sizing:border-box;display:grid;place-items:center;width:var(--btn-icon,44px);height:var(--btn-icon,44px);padding:0;border:3px solid #fff2cd;border-radius:50%;background:var(--island-control-face,#f4cc7c);background-blend-mode:soft-light;color:#244d40;box-shadow:var(--island-control-shadow,0 3px 0 #a8863d);cursor:pointer;touch-action:manipulation;-webkit-touch-callout:none;user-select:none;transition:translate .16s,box-shadow .16s}
+.cam:active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
+.cam:focus-visible{outline:3px solid #244d40;outline-offset:3px}
+.camMenu{position:absolute;z-index:36;top:calc(var(--island-hud-row-top,16px) + var(--btn-icon,44px) + 10px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));display:grid;gap:4px;min-width:150px;padding:6px;border:2px solid #fff2cd;border-radius:16px;background:#fff8e5;box-shadow:0 5px 0 #a8863d;animation:camMenuIn .16s ease-out both}
+.camItem{min-height:40px;padding:8px 12px;border:0;border-radius:10px;background:transparent;color:#244d40;text-align:left;font:800 14px/1.2 var(--font-body,Arial),sans-serif;cursor:pointer;touch-action:manipulation}
+.camItem[aria-checked=true]{background:#f4cc7c}
+.camItem:hover{background:#f39c8255}
+.camItem:focus-visible{outline:3px solid #244d40;outline-offset:-3px}
+@keyframes camMenuIn{from{opacity:0;translate:0 -4px}to{opacity:1;translate:0 0}}
+.camToast{position:absolute;z-index:31;top:calc(var(--island-hud-row-top,16px) + var(--btn-icon,44px) + 12px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));margin:0;padding:6px 12px;border:2px solid #fff2cd;border-radius:999px;background:#244d40;color:#fff2cd;font:800 13px/1.2 var(--font-body,Arial),sans-serif;white-space:nowrap;pointer-events:none;animation:camToast 1.6s ease-out forwards}
+@keyframes camToast{0%{opacity:0;translate:0 -6px}12%{opacity:1;translate:0 0}80%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}.camMenu{animation:none}.camToast{animation-name:camToastStill}@keyframes camToastStill{0%,85%{opacity:1}100%{opacity:0;visibility:hidden}}}
