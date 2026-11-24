@@ -242,6 +242,10 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       case 'animal-squish':tone(300,180,.12,.035,'sine',.5);hiss(700,.1,.025,.52);return;
       case 'animal-tink':tone(2093,2093,.18,.022,'sine',.5);tone(2637,2637,.18,.016,'sine',.58);return;
       case 'animal-whale':whaleSong();return;
+      // The Island Line (Nov 23 2026, lib/town/trainRunning.ts): the level crossing's bell (a bright two-partial "kan", rung every
+      // ~0.55 s while the lamps flash, only within 60 m, quieter further off) and the train's two-note horn for someone on the track.
+      case 'train-bell':tone(1320,1300,.2,.045*gain,'triangle',0,.003);tone(2640,2600,.12,.014*gain,'sine',0,.003);return;
+      case 'train-horn':tone(392,388,.75,.05*gain,'triangle',0,.05);tone(494,490,.75,.035*gain,'triangle',0,.05);tone(392,388,.4,.012*gain,'square',0,.05);return;
     }};
   document.addEventListener('fi2-job-cue',jobCue);
   function ride(mode:TravelMode){

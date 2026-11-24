@@ -148,7 +148,7 @@ export type TrainRunner={
  readonly t:Float64Array;
 };
 export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
- const lag=new Float64Array(count),v=new Float64Array(count),held=new Float64Array(count),t=new Float64Array(count),slow=new Uint8Array(count);
+ const lag=new Float64Array(count),v=new Float64Array(count),held=new Float64Array(count),t=new Float64Array(count),slow=new Uint8Array(count),fresh=new Uint8Array(count).fill(1);
  for(let i=0;i<count;i++)t[i]=trainPhase(i,0);
  const tmp=newTrainState();
  return {
@@ -156,6 +156,7 @@ export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
   step(i,nowSec,dt,stopAt,out){
    const sched=trainPhase(i,nowSec);dt=Math.max(0,Math.min(dt,.25));
    let tau=wrapT(sched-lag[i]);scheduleAt(tau,tmp);
+   if(fresh[i]){fresh[i]=0;v[i]=tmp.at>=0?0:lapV(tau);}// first step after a reset: at timetable speed
    const gap=Number.isFinite(stopAt)?ahead(tmp.s,stopAt)-STOP_SHORT:Infinity,blocked=gap<LOOK_AHEAD;
    let adv:number;// how far local time moves this step
    if(tmp.at>=0){adv=dt*(lag[i]>0?DWELL_TRIM:1);v[i]=0;// at a stop: doors, then off on time (or early when behind)
@@ -166,12 +167,12 @@ export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
     // Held back: pull away again at ACCEL (× the catch-up rate) until back at timetable speed; otherwise just the timetable.
     if(slow[i]){v[i]=Math.max(0,Math.min(want,v[i]+ACCEL*(1+CATCH_UP)*dt));if(!blocked&&v[i]>=vs-.01)slow[i]=0;}else v[i]=want;
     if(vs>.3)adv=v[i]/vs*dt;else adv=blocked&&gap<=.5?0:dt*rate;// pulling away / drawing in: time steps at the rate
-    if(blocked&&adv>0){const nx=ahead(tmp.s,wrapS(S0+lapX(tau+adv)));if(nx>Math.max(0,gap))adv=0;}}// never past the stopping point
+    if(blocked&&adv>0){const nx=ahead(tmp.s,wrapS(S0+lapX(tau+adv)));if(nx>Math.max(0,gap)){adv=0;v[i]=0;}}}// never past the stopping point
    lag[i]=Math.max(0,lag[i]+dt-adv);tau=wrapT(sched-lag[i]);
    held[i]=blocked&&(tmp.at>=0?tmp.dwellLeft<.2:v[i]<.05)?held[i]+dt:0;
    scheduleAt(tau,out);if(out.at<0)out.v=v[i];t[i]=tau;return out;
   },
-  reset(i){lag[i]=0;v[i]=0;held[i]=0;slow[i]=0;},
+  reset(i){lag[i]=0;v[i]=0;held[i]=0;slow[i]=0;fresh[i]=1;},
   behind:i=>lag[i],
   heldFor:i=>held[i],
  };
