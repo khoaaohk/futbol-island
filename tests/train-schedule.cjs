@@ -81,7 +81,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  const cam=new T.PerspectiveCamera(50,1,1,500),player={x:0,y:0,z:0};const at=(x,y,z,lx,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,0,lz);cam.updateMatrixWorld(true);};
  // all three trains pinned at the North station (the gfx view): 6 cars in one draw
  const north=tt.TRAIN_STATIONS[0],p=tt.trackAt(north.s);run.cluster=north.s+20;at(p.x+40,25,p.z+60,p.x,p.z);player.x=p.x;player.z=p.z+30;
- run.update({dt:1/30,camera:cam,player});let d=run.drawn;assert.equal(d.cars,6,'six cars drawn');assert(d.crossings>=1,'crossings shown near North Beach');assert(d.doors>0&&d.far<6,'near tier with doors');
+ run.update({dt:1/30,camera:cam,player});let d=run.drawn;assert.equal(d.cars,6,'six cars drawn');{const xe=tt.trackAt(tt.TRAIN_CROSSINGS[1].s);at(xe.x+30,20,xe.z+40,xe.x,xe.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.crossings>=1,'crossings shown near North Beach (Phase 4: a footpath crossing within 110 m)');at(p.x+40,25,p.z+60,p.x,p.z);run.update({dt:1/30,camera:cam,player});d=run.drawn;}assert(d.doors>0&&d.far<6,'near tier with doors');
  at(p.x+40,25,p.z+200,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.far>0,'box tier past 150 m');at(p.x+40,25,p.z+60,p.x,p.z);assert(d.boards>=1,'the North board shown');
  // looking away: nothing drawn; far away (town square, 400 m+ from every train): nothing drawn
  at(p.x+40,25,p.z+60,p.x+80,p.z+200);run.update({dt:1/30,camera:cam,player});assert.equal(run.drawn.cars,0,'off-screen: no draw');

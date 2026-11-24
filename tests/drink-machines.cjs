@@ -18,7 +18,8 @@ const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,
 // 1. Four machines (Oct 12 2026: Summit Isle joined Island Square and Coral Cay; Nov 13 2026: the DRIP FC Stadium), six drinks each, unique ids that
 // never clash with the Konbini menu.
 {
- same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay','drinksummit','drinkstadium']);
+ same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay','drinksummit','drinkstadium','drinkstnorth','drinkstwest','drinkstsouth','drinkstsummit','drinkstcay']);// Nov 23 2026: + the five Island Line station machines (each sells an existing menu)
+ for(const id of D.STATION_DRINK_IDS){assert(D.DRINK_MACHINE_INFO[id].station&&!D.DRINK_MACHINE_INFO[id].beside,id+' stands on a station platform');assert(['drinksplaza','drinkscay','drinksummit'].includes(D.drinkStockOf(id)),id+' sells an existing menu');assert(D.DRINKS.every(d=>d.machine!==id),'no drink belongs to '+id);}
  // Nov 13 2026: the DRIP FC Stadium's drink machine (lib/town/stadiumShops.ts) sells the Island Square six: the same items, prices
  // and daily bucket, so no new drink, art or collection entry.
  same(D.drinksAt('drinkstadium').map(d=>d.id),D.drinksAt('drinksplaza').map(d=>d.id),'the stadium machine stocks the Island Square drinks');

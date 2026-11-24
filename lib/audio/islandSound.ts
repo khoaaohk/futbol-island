@@ -246,6 +246,11 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       // ~0.55 s while the lamps flash, only within 60 m, quieter further off) and the train's two-note horn for someone on the track.
       case 'train-bell':tone(1320,1300,.2,.045*gain,'triangle',0,.003);tone(2640,2600,.12,.014*gain,'sine',0,.003);return;
       case 'train-horn':tone(392,388,.75,.05*gain,'triangle',0,.05);tone(494,490,.75,.035*gain,'triangle',0,.05);tone(392,388,.4,.012*gain,'square',0,.05);return;
+      // Phase 4 (Nov 23 2026): the wheels' "ka-tan" over a rail joint (two soft knocks, front and rear bogie; trainRunning sends one per
+      // car length, so the pace follows the speed), the door chime (a falling two-note "ding-dong"), and a short four-note arrival melody.
+      case 'train-clack':tone(190,120,.045,.05*gain,'square',0,.002);hiss(700,.04,.04*gain);tone(180,115,.045,.045*gain,'square',.12,.002);hiss(650,.04,.035*gain,.12);return;
+      case 'train-chime':tone(784,784,.4,.035*gain,'sine',0,.01);tone(622,622,.55,.035*gain,'sine',.34,.01);return;
+      case 'train-arrive':tone(659,659,.16,.03*gain,'triangle');tone(784,784,.16,.03*gain,'triangle',.17);tone(988,988,.16,.03*gain,'triangle',.34);tone(1319,1319,.4,.028*gain,'triangle',.51);return;
     }};
   document.addEventListener('fi2-job-cue',jobCue);
   function ride(mode:TravelMode){

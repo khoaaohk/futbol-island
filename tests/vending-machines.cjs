@@ -44,6 +44,8 @@ const REGULAR_ONLY=['caykonbini','summit','stadium'];
 /** Sep 29 2026: exactly two drink machines (lib/town/drinkMachines.ts), each side by side with its Konbini's machine.
  *  Oct 12 2026: a third, beside Summit Isle's kiosk. */
 const DRINK_MACHINES={drinksplaza:'plaza',drinkscay:'caykonbini',drinksummit:'summit',drinkstadium:'stadium'};
+/** Nov 23 2026 (Island Line Phase 4): one drink machine on each station platform (no store beside it). */
+const STATION_DRINKS=['drinkstnorth','drinkstwest','drinkstsouth','drinkstsummit','drinkstcay'];
 const {MYSTERY_PACK_OPTIONS}=load(path.join(root,'lib/arcade/legendPacks.ts'));
 const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customization.ts'));
 
@@ -51,8 +53,8 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
 // Isle's kiosk and its drink machine + the DRIP FC Stadium's pair, Nov 13 2026), the same regular rows
 // in every shop machine, exclusive specials.
 {
- const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,19);assert.equal(new Set(ALL.map(m=>m.id)).size,19);assert.equal(new Set(ALL.map(m=>m.color)).size,19,'each machine has its own colour');
- same(ALL.filter(m=>m.drinks).map(m=>m.id),Object.keys(DRINK_MACHINES),'exactly four drink machines');
+ const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,24);assert.equal(new Set(ALL.map(m=>m.id)).size,24);assert.equal(new Set(ALL.map(m=>m.color)).size,24,'each machine has its own colour');
+ same(ALL.filter(m=>m.drinks).map(m=>m.id),[...Object.keys(DRINK_MACHINES),...STATION_DRINKS],'four store drink machines + five station ones');
  const M=ALL.filter(m=>!m.drinks);
  const rows=['special','books','packs','ball','scooter','bike','moped','jetpack','costume'];
  const regular=new Set(C.VENDING_ITEMS.map(i=>i.id)),seen=new Map();
@@ -93,6 +95,10 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const M=C.VENDING_MACHINES;
  for(const m of M){
   if(DRINK_MACHINES[m.id])continue;// checked in 2b
+  if(STATION_DRINKS.includes(m.id)){// Nov 23 2026: placed from its station (trainLayout.ts stationVendingSpot): the platform top, or the ground behind the house
+   const TL=load(path.join(root,'lib/town/trainLayout.ts')),sp=TL.stationVendingSpot(load(path.join(root,'lib/town/drinkMachines.ts')).DRINK_MACHINE_INFO[m.id].station);
+   same([m.x,m.z,m.yaw,m.y],[sp.x,sp.z,sp.yaw,sp.y],m.id+' placed from its station');assert(m.station,'flagged as a station machine (no shadow caster)');
+   assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
   // Nov 13 2026: the DRIP FC Stadium's machine, against the south stand's back wall under the big screen (tests/gashapon-data.cjs
   // checks the whole row: flush, 12 cm gaps, clear of the posts, stairs, lights and viewers).
   if(m.id==='stadium'){const SS=load(path.join(root,'lib/town/stadiumShops.ts'));same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(SS.stadiumVendingSpot()),'stadium placed from its wall anchor');
@@ -148,10 +154,10 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const {createVendingMachines,VENDING_SCALE}=load(path.join(root,'lib/graphics/vendingMachines.ts'));
  const scene=new T.Scene(),v=createVendingMachines(scene);
  const meshes=[];v.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
- assert.equal(meshes.length,19,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all nineteen share one material');
+ assert.equal(meshes.length,24,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all twenty-four share one material');
  const atlasMaps=new Set(meshes.map(m=>m.material.map));assert.equal(atlasMaps.size,1,'one shared atlas texture, no new textures for the book machines');
  assert(meshes.every(m=>m.frustumCulled&&m.geometry.boundingSphere),'frustum-culled with bounds');assert(meshes.every(m=>m.geometry.getAttribute('position').count<800),'low-poly');
- assert.equal(v.obstacles.length,19);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines, Summit Isle or the stadium pair');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
+ assert.equal(v.obstacles.length,24);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines, Summit Isle or the stadium pair');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
  // Nov 13 2026 (owner: "the vending machines look dark at night"): the shared material's printed face brightens and the cabinet
  // self-lights with the shared night factor (lib/graphics/machineNightGlow.ts); 0 by day, so the day look is unchanged.
  {const SN=load(path.join(root,'lib/town/stadiumNight.ts')),mat=meshes[0].material,sh={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};mat.onBeforeCompile(sh,null);
@@ -307,7 +313,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  // i.e. under the HTML tap areas), and goes back to the flat printed front at distance.
  {const {VENDING_BAY,VENDING_FACE_LAYOUT:FL}=load(path.join(root,'lib/graphics/vendingFaceLayout.ts'));
   const w=load(path.join(root,'lib/graphics/vendingMachines.ts')).createVendingMachines(new T.Scene(),{viewport:()=>({width:1280,height:800,dpr:2}),coins:()=>123});
-  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,19);
+  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,24);
   const yaws=new Set();
   for(const e of w.entries){const id=e.machine.id,pos=e.geometry.getAttribute('position'),before=Array.from(pos.array);yaws.add(+e.machine.yaw.toFixed(3));
    assert(!w.hasCloseUp(id),id+' shows its flat front at distance');
@@ -425,7 +431,7 @@ function sourceChecks(){
  assert(!/data-machines-found=|>No real money</.test(ui),'requested footer labels removed');assert(!/className=\{styles.only\}/.test(face),'no badges over the product artwork');
  for(const f of ['components/RideUnlockToast.tsx','components/BallHuntLesson.tsx','components/CoinQuest.tsx','lib/town/npcDialogues.ts','lib/town/questModel.ts','lib/town/exploreChecklist.ts','components/IslandTravelMap.tsx'])assert(!/\bthe (Island )?Store\b|Visit the Store|in the Store/.test(read(f)),f+' no longer sends players to the Store');
  lockHintChecks(controller);
- console.log('PASS vending machines: 19 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, Summit Isle\'s kiosk, the DRIP FC Stadium\'s, 4 drink machines beside the Konbini/kiosk/stadium machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
+ console.log('PASS vending machines: 24 placed machines (5 station drink machines, 8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, Summit Isle\'s kiosk, the DRIP FC Stadium\'s, 4 drink machines beside the Konbini/kiosk/stadium machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
 }
 
 // 6. Locked hints on the LED (Sep 30 2026, E2E audit: a page where every item said LOCKED gave no hint). The copy comes from the

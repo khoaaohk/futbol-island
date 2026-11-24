@@ -1,6 +1,7 @@
 import {COURT_FREESTYLERS} from './courtFreestylers';
 import {CORAL_CAY_NPCS} from './coralCayNpcs';
 import {EAST_PIER_NPCS} from './eastPierNpcs';
+import {STATION_NPCS} from './stationNpcs';
 import {VIDEO_NEIGHBORS} from './videoNeighbors';
 import {npcEncounter} from './npcInterests';
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
@@ -199,6 +200,8 @@ NPC_DIALOGUES.push(...EAST_PIER_NPCS);
 
 // Summit Isle: hikers and its park ranger (Oct 12 2026). Sources in summitIsleNpcs.ts.
 NPC_DIALOGUES.push(...SUMMIT_ISLE_NPCS);
+// The Island Line's stations (train Phase 4, Nov 23 2026): two islanders per platform, train-and-football facts (sources in stationNpcs.ts).
+NPC_DIALOGUES.push(...STATION_NPCS);
 // The deep-sea boats' captain and skipper (Oct 15 2026, lib/town/fishing/boatCaptains.ts): how the boat works, then fish-and-football facts.
 NPC_DIALOGUES.push(...BOAT_CAPTAINS);
 // DRIP FC Stadium (Nov 13 2026): greeters, guides, fans, coaches, score fans, the broadcast crew and photographers (stadiumNpcs.ts).

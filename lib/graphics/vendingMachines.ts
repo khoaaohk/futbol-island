@@ -341,7 +341,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  const root=new T.Group();root.name='vending-machines';scene.add(root);
  const S=VENDING_SCALE,w=VENDING_SIZE.w*S,d=VENDING_SIZE.d*S,h=VENDING_SIZE.h*S;
  const entries=VENDING_MACHINES.map((m,i)=>{
-  const geometry=buildMachineGeometry(m,i),mesh=new T.Mesh(geometry,material);mesh.name=`vending-${m.id}`;mesh.castShadow=true;mesh.receiveShadow=true;
+  const geometry=buildMachineGeometry(m,i),mesh=new T.Mesh(geometry,material);mesh.name=`vending-${m.id}`;mesh.castShadow=!m.station;mesh.receiveShadow=true;
   mesh.position.set(m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.scale.setScalar(S);mesh.updateMatrix();mesh.matrixAutoUpdate=false;root.add(mesh);mesh.updateMatrixWorld(true);
   const box=new T.Box3().setFromObject(mesh);const fx=Math.sin(m.yaw),fz=Math.cos(m.yaw);
   return {machine:m,mesh,geometry,box,front:{x:m.x+fx*1.5,z:m.z+fz*1.5},dir:new T.Vector3(fx,0,fz)};

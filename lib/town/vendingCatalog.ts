@@ -8,6 +8,7 @@ import {SPECIAL_BALL_IDS,type VendingSpecialBall} from './specialBalls';
 import {cayVendingSpots,konbiniMachineSpot,ISLAND_SQUARE_KONBINI,summitSnackSpot} from './vendingPlaces';
 import {DRINK_MACHINE_IDS,DRINK_MACHINE_INFO,drinkSpotBeside,type DrinkMachineId} from './drinkMachines';
 import {summitGround} from './summitIsle';
+import {stationVendingSpot} from './trainLayout';
 import {stadiumVendingSpot} from './stadiumShops';
 
 /**
@@ -21,7 +22,9 @@ export type VendingMachine={id:VendingMachineId;name:string;place:string;x:numbe
  /** Cabinet colour, lighter sign colour and a readable ink for the UI. */
  color:string;light:string;ink:string;specials:string[];lesson:string;
  /** Sep 29 2026: one of the two outdoor drink machines (lib/town/drinkMachines.ts): sells drinks, not the vending catalogue. */
- drinks?:true};
+ drinks?:true;
+ /** Nov 23 2026: on an Island Line platform (no shadow caster: the station adds no shadow work). */
+ station?:true};
 /** Default facing: toward the island camera (which looks along -16,-23,-33), so the glass front reads from the default view.
  * Machines set against a wall or tucked into a corner face their walk-up side instead (their own `yaw`). */
 import {PLAYER_BOOKS,BOOK_PRICE,booksForMachine,type PlayerBookId} from '../books/catalog';
@@ -65,7 +68,10 @@ export const VENDING_MACHINES:VendingMachine[]=[
  {id:'stadium',name:'DRIP FC Stadium',place:'against the south stand, under the big screen where the fans watch',...stadiumVendingSpot(),y:0,color:'#c2185b',light:'#ffd9e8',ink:'#4a0722',specials:[],lesson:'Matchday fuel: a banana or a rice ball an hour or two before you play gives your legs energy.'},
 ];
 // Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
-for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id],next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
+// Nov 23 2026 (Island Line Phase 4): plus one on each station platform, placed from the station (trainLayout.ts stationVendingSpot).
+for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id];
+ if(info.station){const p=stationVendingSpot(info.station);VENDING_MACHINES.push({id,name:info.name,place:info.place,x:p.x,z:p.z,y:p.y,yaw:p.yaw,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true,station:true});continue;}
+ const next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
  VENDING_MACHINES.push({id,name:info.name,place:info.place,...drinkSpotBeside(next),y:next.y,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true});}
 const displayThemes:Record<VendingMachineId,[string,string,string]>={
  plaza:['Messi','Close control','#76bad4'],rooftop:['Falcão','Quick feet','#30a7ad'],oldtown:['Marta','Find space','#64a355'],
@@ -73,6 +79,7 @@ const displayThemes:Record<VendingMachineId,[string,string,string]>={
  pier:['Pelé','Finishing','#b7a477'],market:['Cruyff','Move into space','#9a77bf'],
  northbeach:['Cafu','Overlap','#e0b33f'],causeway:['Nadim','Penalties','#7c93b3'],cayplaza:['Kanté','Win it back','#8dba55'],sharks:['Oshoala','Time your run','#4f98d8'],caykonbini:['Konbini','Fuel up','#5fa98a'],drinksplaza:['Drinks','Hydrate','#5d93d6'],drinkscay:['Drinks','Hydrate','#4fb0dc'],
  summit:['Nadim','Keep climbing','#8a7fd0'],drinksummit:['Drinks','Hydrate','#6aab74'],
+ drinkstnorth:['Drinks','Hydrate','#4f9a78'],drinkstwest:['Drinks','Hydrate','#d0558a'],drinkstsouth:['Drinks','Hydrate','#a87a4d'],drinkstsummit:['Drinks','Hydrate','#6f88c4'],drinkstcay:['Drinks','Hydrate','#4fb0dc'],
  stadium:['Konbini','Matchday','#d0558a'],drinkstadium:['Drinks','Hydrate','#3fa79c'],
 };
 /** Four pop-up books join each machine's exclusive ball and pack: six specials total. A book that isn't written yet

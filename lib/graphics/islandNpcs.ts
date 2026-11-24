@@ -156,7 +156,8 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const thinnedAmbient=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
  // DRIP FC Stadium islanders (lib/town/stadiumNpcs.ts): only the first stadiumNpcBudget(phone, tier) by heatRank show, plus the first
  // viewingCrowd(phone, tier) of the public-viewing crowd; the rest are thinned (not drawn, routined or talkable). Read once per update.
- let stadiumCap=Infinity,viewCap=Infinity;const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&!stadiumNpcShown(entry.definition.heatRank,stadiumCap,viewCap))||thinnedAmbient(entry);
+ let stadiumCap=Infinity,viewCap=Infinity;const away=new Set<string>();// Island Line Phase 4: a station islander riding a train (Town setAway) is not drawn, routined or talkable
+ const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&!stadiumNpcShown(entry.definition.heatRank,stadiumCap,viewCap))||thinnedAmbient(entry)||(away.size>0&&away.has(entry.definition.id));
  // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
  const floored=entries.filter(e=>!!e.definition.floor);
  // DRIP FC Stadium assistant referees (stadiumNpcs AR_TRACKS): side-step along their touchline with the stadium ball's z (clamped to
@@ -275,5 +276,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
 
  /** The swimmers (npcSwim.ts) for Town's swim ripples: their loop state, distance to the player and visibility. */
  const swimmers=entries.filter(e=>e.swim);
- return {swimmers,react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {swimmers,react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,setAway(id:string,on:boolean){if(on)away.add(id);else away.delete(id);},isAway:(id:string)=>away.has(id),stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

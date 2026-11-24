@@ -21,11 +21,17 @@ import {registerConsumables,registerCollectionGroup,type Consumable,type Source}
 // itself when it loads (lazy-load pass, Oct 7 2026): this data module stays free of the canvas painters, so the island's boot bundle
 // (which needs isDrinkMachine and the machine info) does not carry the Konbini food art.
 
-export type DrinkMachineId='drinksplaza'|'drinkscay'|'drinksummit'|'drinkstadium';
-export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay','drinksummit','drinkstadium'];
+export type DrinkMachineId='drinksplaza'|'drinkscay'|'drinksummit'|'drinkstadium'|StationDrinkId;
+/** Island Line Phase 4 (Nov 23 2026, owner: "vending machines at every station"): one drink machine per station platform, against
+ *  the station house (lib/town/trainLayout.ts stationVendingSpot). Each sells one of the three existing menus (DRINK_STOCK): no new
+ *  drink, art or glass (its glass is that menu's, vendingMachines.ts glassRect). */
+export type StationDrinkId='drinkstnorth'|'drinkstwest'|'drinkstsouth'|'drinkstsummit'|'drinkstcay';
+export const STATION_DRINK_IDS:readonly StationDrinkId[]=['drinkstnorth','drinkstwest','drinkstsouth','drinkstsummit','drinkstcay'];
+export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay','drinksummit','drinkstadium',...STATION_DRINK_IDS];
 /** Nov 13 2026 (owner: the machines under the DRIP FC Stadium's big screen, lib/town/stadiumShops.ts): the stadium's drink machine
  *  sells the Island Square machine's six drinks (the same items, prices and daily limit), so no new drink and no new art. */
-export const DRINK_STOCK:Readonly<Partial<Record<DrinkMachineId,DrinkMachineId>>>={drinkstadium:'drinksplaza'};
+export const DRINK_STOCK:Readonly<Partial<Record<DrinkMachineId,DrinkMachineId>>>={drinkstadium:'drinksplaza',
+ drinkstnorth:'drinksplaza',drinkstwest:'drinkscay',drinkstsouth:'drinksplaza',drinkstsummit:'drinksummit',drinkstcay:'drinkscay'};
 export const drinkStockOf=(machine:DrinkMachineId):DrinkMachineId=>DRINK_STOCK[machine]??machine;
 export const isDrinkMachine=(id:string):id is DrinkMachineId=>(DRINK_MACHINE_IDS as readonly string[]).includes(id);
 
@@ -132,7 +138,7 @@ export const drinkSources=(x:Drink)=>x.sources.map(s=>DRINK_SOURCES[s]);
 
 // ---- Machines ---------------------------------------------------------------------------------------------------------------
 /** The machine sheet, merged into VENDING_MACHINES by lib/town/vendingCatalog.ts. `beside` is the id of the store's machine. */
-export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbini'|'summit'|'stadium';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
+export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{/** the store machine it stands beside, or (Phase 4) the station whose platform it is on */beside?:'plaza'|'caykonbini'|'summit'|'stadium';station?:'north'|'west'|'south'|'summit'|'cay';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
  drinksplaza:{beside:'plaza',name:'Drinks · Island Square',shop:'Island Square Konbini',place:'beside the Konbini’s vending machine, under the east end of the canopy',
   color:'#2d6fc7',light:'#eef6ff',ink:'#0b2a52',lesson:'Hydration helps you play: drink before, during and after the game.'},
  drinkscay:{beside:'caykonbini',name:'Drinks · Coral Cay',shop:'Coral Cay Konbini',place:'beside the Coral Cay Konbini’s vending machine, by the roundabout',
@@ -144,6 +150,18 @@ export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbin
  // Nov 13 2026: beside the stadium's vending machine, under the big screen (lib/town/stadiumShops.ts); Island Square's drinks.
  drinkstadium:{beside:'stadium',name:'Drinks · DRIP FC Stadium',shop:'DRIP FC Stadium',place:'beside the stadium’s vending machine, against the south stand under the big screen',
   color:'#2a8f86',light:'#e3f7f4',ink:'#08332f',lesson:'Matchday tip: sip water before kick-off and again at half-time, even if you are only cheering.'},
+ // Phase 4 (Nov 23 2026): the five Island Line stations. Lessons stay inside the sources above (drink before, during and after
+ // playing; more in the heat; water is the everyday drink), with a travel angle.
+ drinkstnorth:{station:'north',name:'Drinks · North station',shop:'North station',place:'against the back of the North station house, on the Kit Shop side',
+  color:'#2f7d5b',light:'#e4f4ec',ink:'#0d3322',lesson:'Off to play? Fill a water bottle before the trip, so you can drink before, during and after the game.'},
+ drinkstwest:{station:'west',name:'Drinks · West Beach station',shop:'West Beach station',place:'against the back of the West Beach station house, on the stadium side',
+  color:'#b3364f',light:'#ffe3ea',ink:'#470d1b',lesson:'Travelling fans cheer for 90 minutes: bring water, and sip it at half-time too.'},
+ drinkstsouth:{station:'south',name:'Drinks · South station',shop:'South station',place:'on the South station platform, against the station house by the boardwalk',
+  color:'#8a5a2b',light:'#f6eadb',ink:'#36210b',lesson:'A sunny walk along the boardwalk is thirsty work: water first, little and often.'},
+ drinkstsummit:{station:'summit',name:'Drinks · Summit Isle station',shop:'Summit Isle station',place:'on the Summit Isle station platform, beside the tunnel portal',
+  color:'#4f6bb0',light:'#e6ecfa',ink:'#15234a',lesson:'Going up the mountain? Drink before you start the climb, and keep sipping on the way.'},
+ drinkstcay:{station:'cay',name:'Drinks · Coral Cay station',shop:'Coral Cay station',place:'on the Coral Cay station platform, against the station house',
+  color:'#178a9e',light:'#e2f6f8',ink:'#06333b',lesson:'Beach soccer in the sun means more sweat: drink water before, during and after you play.'},
 };
 /** Cabinet width on the ground (VENDING_SIZE.w × VENDING_SCALE = 1.3 × 1.3) and the gap between the two cabinets. */
 export const CABINET_WIDTH=1.69,DRINK_GAP=.12;

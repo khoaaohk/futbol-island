@@ -93,4 +93,4 @@ function groundComponents(a,minArea=2){const g=new Map();for(let c=0;c<a.N;c++){
  ground.sort((p,q)=>q.area-p.area);roofs.sort((p,q)=>q.area-p.area);return {ground,roofs};}
 async function runChecks(opts={}){const a=await analyse(opts);
  return {a,landmarks:checkLandmarks(a),routes:checkRoutes(a),paths:checkPaths(a),roads:checkRoads(a),traps:checkTraps(a),components:groundComponents(a)};}
-module.exports={runChecks};
+module.exports={runChecks,landmarks};// landmarks: also tests/train-station-npcs.cjs (nothing on the Island Line)

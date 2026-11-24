@@ -4,7 +4,7 @@
  * trestle's piers or the south sea wall). No three.js, no DOM, nothing per frame.
  */
 import {onLand} from './landmass';
-import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,trackProfile,trackNearest,trackAt,inTunnelS,onSummitTrackS,wrapS,type TrackProfile} from './trainTrack';
+import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,trackProfile,trackNearest,trackAt,leftNormal,inTunnelS,onSummitTrackS,wrapS,type TrackProfile,type TrainStation} from './trainTrack';
 
 /** Trestle piers: one every PIER_STEP m of sea; each stands on two columns PIER_COLUMN_OFFSET m either side of the centre line. */
 export const PIER_STEP=8,PIER_COLUMN_OFFSET=1.1,PIER_COLUMN_HALF=.24;
@@ -66,4 +66,30 @@ export function trainWalkHeight(x:number,z:number):number{
  if(xing){const top=bed+XING_TOP;return d<=1?top:d>=2.6?0:top+(ground+.01-top)*(d-1)/1.6;}
  const top=bed+TRAIN_WALK_TOP,foot=1.9+(bed-ground)*1.4;
  return d<=1.45?top:d>=foot?0:top+(ground-top)*(d-1.45)/(foot-1.45);
+}
+
+// ---- Station spots (train Phase 4, Nov 23 2026): the vending machines and the station NPCs stand in each station's own frame.
+/** The station house's platform-side wall, as trainWorld.ts buildStation lays it out (v: metres out from the line's centre toward
+ *  the house; the platform runs from STATION_PLATFORM_V0 to the house, the South one with its house on the platform). */
+export const STATION_PLATFORM_V0=1.45;
+export const stationHouseFront=(st:Pick<TrainStation,'id'>)=>st.id==='south'?8.1-3.8:5.45;
+/** A spot in station st's frame (u along the line, v out toward its house) on the platform top, and the yaw that faces the line. */
+export function stationSpot(st:TrainStation,u:number,v:number){
+ const c=trackAt(st.s),n=leftNormal(c.tx,c.tz),bed=trainLayout().profile.bed[Math.round(wrapS(st.s)/TRACK_DS)%TRACK.n];
+ return {x:c.x+c.tx*u+n.x*st.side*v,z:c.z+c.tz*u+n.z*st.side*v,y:bed+STATION_PLATFORM_Y,yaw:Math.atan2(-n.x*st.side,-n.z*st.side),
+  /** the yaw along the line toward +u */along:Math.atan2(c.tx,c.tz)};
+}
+/** The station drink machine: against the house front in the bay between the doorway post (u 2.4) and the corner post (u 4), over
+ *  that bay's small pane, its back 3 cm off the pane (cabinet half depth 0.559 + 0.06). Never near the platform edge or the track. */
+export const STATION_VENDING_U=3.25,STATION_VENDING_BACK=.62;
+/** The island's follow camera is fixed (it looks along −(16, 23, 33)), so a glass front must face toward (16, 33) to be seen (the
+ *  vending rule, tests/vending-machines.cjs). North and West Beach face their line AWAY from the camera: there the machine stands
+ *  against the house's back (town-side) wall instead, centred, on the ground the station's visitors walk up from. */
+export const STATION_HOUSE_DEPTH=(st:Pick<TrainStation,'id'>)=>st.id==='south'?3.8:4.6;
+export const readsFromCamera=(yaw:number)=>(Math.sin(yaw)*16+Math.cos(yaw)*33)/Math.hypot(16,33)>.3;
+export function stationVendingSpot(id:TrainStation['id']){
+ const st=TRAIN_STATIONS.find(s=>s.id===id)!,r=(v:number)=>Math.round(v*100)/100,front=stationSpot(st,STATION_VENDING_U,stationHouseFront(st)-STATION_VENDING_BACK);
+ if(readsFromCamera(front.yaw))return {x:r(front.x),z:r(front.z),y:r(front.y),yaw:front.yaw,wall:'front' as const};
+ const back=stationSpot(st,0,stationHouseFront(st)+STATION_HOUSE_DEPTH(st)+STATION_VENDING_BACK),bed=back.y-STATION_PLATFORM_Y;
+ return {x:r(back.x),z:r(back.z),y:r(bed),yaw:back.yaw+Math.PI,wall:'back' as const};
 }

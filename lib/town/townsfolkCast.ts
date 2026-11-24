@@ -263,7 +263,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'A rest day can still be a football day: I watch matches and notice what players do without the ball.'],
   ['Why do I need rest days?','Training makes your muscles a little tired. Rest, food and sleep let your body repair them, so you come back stronger.',
    'What can I do on a rest day?','Easy things: a walk, a swim, a gentle stretch, or watching a match and noticing what players do without the ball.']),
- folk('beach','ximena','Ximena','Beach football regular','LOOKING FOR A BEACH GAME',20,125,{ch:'female',skin:4,clothing:'coast',age:'adult',body:'slim',look:{hair:'curls',headwear:'headband'}},{},
+ folk('beach','ximena','Ximena','Beach football regular','LOOKING FOR A BEACH GAME',24,121/* Nov 23 2026: was 20,125, on the Island Line's SW curve */,{ch:'female',skin:4,clothing:'coast',age:'adult',body:'slim',look:{hair:'curls',headwear:'headband'}},{},
   'A beach football player who learned the game on Copacabana and plays wherever there is sand.',
   'On Copacabana beach in Rio, games go on from morning till night.',
   ['Beach football teaches balance. The sand moves, so your body has to stay ready.',

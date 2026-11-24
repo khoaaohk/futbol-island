@@ -98,7 +98,7 @@ export const CORAL_CAY_SPOTS:CoinSpot[]=[
   teaching:'Defend a corner with zones and markers. Buoys mark spaces in the sea; zonal defenders guard spaces in the box, and markers follow one opponent. Most teams mix both, so every space and every runner is covered.',lesson:'support'},
 
  // ── The sandbars (four): Starfish is the barefoot stop, Turtle the restarts stop. ──
- {id:'cay-barefoot',name:'Starfish Sandbar · training bag',...at(onBar(starfish,-2,starfish.side*-9,2.2)),y:0,kind:'hidden',
+ {id:'cay-barefoot',name:'Starfish Sandbar · training bag',...at(onBar(starfish,-2,starfish.side*-6/* Nov 23 2026: was -9, 2.4 m from the Island Line's rail centre (tests/train-station-npcs.cjs) */,2.2)),y:0,kind:'hidden',
   clue:'Take the boardwalk to Starfish Sandbar, where the sign says to play barefoot.',
   detail:'Walk out along the Starfish Sandbar boardwalk and look on the sand away from the road for a small training bag.',
   teaching:'Play barefoot on sand. Beach soccer players go barefoot. Strike with the top of your foot, toes pointed, and bend your knees so you keep your balance on the soft sand.',lesson:'movement'},

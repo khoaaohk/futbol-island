@@ -205,10 +205,12 @@ export function buildTrainWorld(tools:TrainTools){
    // Four paper lanterns under the front eave.
    if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
   // A bench on the platform, by the house's down-line end.
-  if(!lite){const a=P(-9,v0+2.2,0);bench.box(a[0],top+.45,a[2],c.tx,c.tz,1,.24,.04);const b=P(-9,v0+2.42,0);bench.box(b[0],top+.75,b[2],c.tx,c.tz,1,.03,.18);
-   for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.22,l[2],c.tx,c.tz,.04,.2,.22);}}
+  // Phase 4 (Nov 23 2026): the island bench's own sizes (lib/graphics/npcSeatPose.ts BENCH: seat top .64, half depth .325, back face
+  // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.
+  {/* every tier (a station islander sits here; 3 boxes in the existing bench batch) */const a=P(-9,v0+2.2,0);bench.box(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04);const b=P(-9,v0+2.2+.25,0);bench.box(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225);
+   for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.28,l[2],c.tx,c.tz,.04,.26,.28);}}
   emit(plat,C.platform,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
-  emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,C.bench,ox,oz);
+  emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,lite?C.timber:C.bench,ox,oz);/* lite: in the timber batch (no new paint on the lowest tier) */
   {const m=emit(pane,C.pane,ox,oz);if(m)lit(m,.9,true);}{const m=emit(lantern,C.lantern,ox,oz);if(m)lit(m,1);}
   // Colliders: the house (axis-aligned stations one box; the diagonal Summit one a ring of 1.2 m tiles round its walls).
   // Within ~12° of the axes the house's own bounding box (a few cm larger than the house).

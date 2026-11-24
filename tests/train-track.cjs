@@ -1,6 +1,6 @@
 // The Island Line, Phase 1 (Nov 23 2026; plan .claude/worktrees/_recovery-nov20/train/PLAN.md): track and scenery. Run: node tests/train-track.cjs
 //  1. the line (lib/town/trainTrack.ts, pure): a closed ~2.54 km loop, evenly tabled, smallest curve ≥ 20 m, trackAt / trackNearest
-//  2. stops in order (North → West Beach → South → Summit Isle → Coral Cay), each with its football line; five crossings on land
+//  2. stops in order (North → West Beach → South → Summit Isle → Coral Cay), each with its football line; nine crossings on land
 //  3. heights: trestle ramps ≤ 5.5 %, the tunnel straight and level, Summit Isle's ground carved to the bed (and the hill kept over the tunnel)
 //  4. the built world: it builds, props are off the line, stations have colliders and one-step platforms, swimmers meet the piers
 //  5. heat and wiring: one board material for all five stations, the tube is its own gated mesh, Town and world wired
@@ -23,7 +23,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  for(const [id,want] of [['west',586],['south',1243],['summit',1601],['cay',2056],['north',2522]])assert(Math.abs(S[id].s-want)<8,`${id} stop at ~${want} m (plan §5): ${S[id].s}`);
  for(const s of tt.TRAIN_STATIONS)assert(/No\. \d/.test(s.shirt)&&s.shirt.length<48,`${s.id}: a short shirt-number line`);
  const prof=tl.trainLayout().profile,kindAt=s=>prof.kind[Math.round(tt.wrapS(s)/tt.TRACK_DS)%TR.n];
- assert.equal(tt.TRAIN_CROSSINGS.length,5,'five level crossings');for(const c of tt.TRAIN_CROSSINGS)assert.equal(kindAt(c.s),K.Land,`${c.id} crossing on land`);
+ assert.equal(tt.TRAIN_CROSSINGS.length,9,'nine level crossings (Phase 4: + the west park trails and the Beach Kitchen square)');assert.equal(tt.TRAIN_CROSSINGS.filter(c=>!c.ped).map(c=>c.id).join(),'causeway','every crossing but the causeway road is a footpath one');for(const c of tt.TRAIN_CROSSINGS)assert.equal(kindAt(c.s),K.Land,`${c.id} crossing on land`);
  for(const s of tt.TRAIN_STATIONS)assert.equal(kindAt(s.s),K.Land,`${s.id} station on land`);
  // 3. heights
  for(let i=0;i<TR.n;i++){const k=(i+1)%TR.n,g=Math.abs(prof.bed[k]-prof.bed[i])/tt.TRACK_DS;assert(g<=.055,`grade ${g.toFixed(3)} at s ${i*tt.TRACK_DS|0}`);assert(prof.bed[i]>=-1e-6&&prof.bed[i]<=tt.TUNNEL_BED+1e-6);}
@@ -35,7 +35,8 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  {const st=tt.trackAt(S.summit.s);assert(Math.abs(su.summitGround(st.x,st.z)-tt.SUMMIT_STATION_BED)<.02,'Summit station on its flat');}
  // 4. the built world
  assert(world.train,'the Island Line builds');assert(world.train.movedProps()>=30,`small props stepped off the line (${world.train.movedProps()})`);
- const near=obstacles.filter(o=>!o.train&&Math.max(o.w,o.d)<=3&&tl.trackPushOut(o.x,o.z,Math.max(o.w,o.d)/2));assert.equal(near.length,0,`colliders on the line: ${near.slice(0,4).map(o=>`${o.x|0},${o.z|0}`).join(' ')}`);
+ const stationVending=L('lib/town/vendingCatalog.ts').VENDING_MACHINES.filter(m=>m.station);assert.equal(stationVending.length,5,'Phase 4: a drink machine on every platform');// they stand on the platform by design (tests/train-station-npcs.cjs places them)
+ const near=obstacles.filter(o=>!o.train&&!stationVending.some(m=>Math.hypot(m.x-o.x,m.z-o.z)<.05)&&Math.max(o.w,o.d)<=3&&tl.trackPushOut(o.x,o.z,Math.max(o.w,o.d)/2));assert.equal(near.length,0,`colliders on the line: ${near.slice(0,4).map(o=>`${o.x|0},${o.z|0}`).join(' ')}`);
  for(const s of tt.TRAIN_STATIONS){const c=tt.trackAt(s.s),n=tt.leftNormal(c.tx,c.tz),hx=c.x+n.x*s.side*(s.id==='south'?4.4:5.6),hz=c.z+n.z*s.side*(s.id==='south'?4.4:5.6);
   assert(obstacles.some(o=>o.train&&Math.abs(o.x-hx)<o.w/2+.8&&Math.abs(o.z-hz)<o.d/2+.8),`${s.id}: the house is solid`);
   const px=c.x+n.x*s.side*3.4,pz=c.z+n.z*s.side*3.4;assert(world.walkSurfaces.some(w=>w.stepUp===.6&&Math.abs(px-w.x)<=w.w/2&&Math.abs(pz-w.z)<=w.d/2&&Math.abs(w.height-(prof.bed[Math.round(s.s/tt.TRACK_DS)%TR.n]+tt.STATION_PLATFORM_Y))<.01),`${s.id}: platform walkable, one step up`);}
