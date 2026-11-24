@@ -47,11 +47,13 @@ const tp = (p, x, z, yaw = 0) => p.evaluate(({ x, z, yaw }) => window.__fi2.tele
 async function partXings(c) {
   const { p } = c;
   const n = await p.evaluate(() => window.__fi2.trains.sched.crossings.length);
+  const only = arg('only', '');
   for (let ci = 0; ci < n; ci++) {
     // the lap time train 0's lamps switch on at this crossing, and where to stand (12 m off the line, beside the deck)
     const info = await p.evaluate((ci) => { const s = window.__fi2.trains.sched, c = s.crossings[ci], o = { lamps: false, arm: 0 }; let on = -1, prev = true;
       for (let t = 0; t < 360; t += .25) { s.crossingFor(ci, t, o); if (o.lamps && !prev) { on = t; break; } prev = o.lamps; }
       const a = s.trackAt(c.s); return { id: c.id, s: c.s, w: c.width, on, x: a.x + a.tz * 12, z: a.z - a.tx * 12, cx: a.x, cz: a.z }; }, ci);
+    if (only && !only.split(',').includes(info.id)) continue;
     await tp(p, info.x, info.z); await p.waitForTimeout(600);
     await setLap(p, 0, info.on - 2.5); await p.waitForTimeout(300);
     // sample in the page every frame for ~24 s: the crossing's live state and train 0's front gap to the deck centre
@@ -71,7 +73,7 @@ async function partXings(c) {
       // stand 7 m off the deck on the camera's side, so the machine and the passing train are in frame above the player
       await p.evaluate(({ s0 }) => { const f = window.__fi2, a = f.trains.sched.trackAt(s0), c = f.camera.position, l = f.location; const nx = a.tz, nz = -a.tx;
         const side = ((c.x - l.x) * nx + (c.z - l.z) * nz) > 0 ? 1 : -1; f.teleport(a.x + nx * side * 7 + a.tx * 4, a.z + nz * side * 7 + a.tz * 4, 0); }, { s0: info.s });
-      await setLap(p, 0, info.on + 6.6); await p.waitForTimeout(1500);
+      await setLap(p, 0, info.on - 1); await p.waitForTimeout(9300);// real time from before the lamps: the arms swing down as they would (a clock jump would catch them mid-swing)
       await p.screenshot({ path: path.join(shots, `xing-${info.id}.png`) });
     }
   }
