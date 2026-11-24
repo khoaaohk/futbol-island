@@ -124,10 +124,29 @@ export const mouthCarveAt=(s:number)=>s-TUNNEL.west.s<TUNNEL.east.s-s?MOUTH_CARV
  *  the hood went). The flat strip in front of that (inside the arch) is just long enough that the terrain's step up (one FINE
  *  2.5 m grid cell, summitIsleWorld.ts) lies behind the portal's dark mouth plane. Outside, the cutting's flat floor widens to
  *  PORTAL_FLAT either side near each portal so no bank rises inside the arch. */
-export const MOUTH_LIFT=2.9,MOUTH_IN=.45,TUBE_COVER=.7,PORTAL_FLAT=TUNNEL_HALF_WIDTH+.9;
+/** Looks 2 (Nov 24 2026, owner shot 37: behind the east portal the hill rose over 2.5 m from the bed, so the arch ring stood proud of
+ *  it and a train's roof and pantograph showed over the hill there): the DRAWN hill (tunnelDrawnCover, summitIsleWorld) has its full
+ *  cover from the mouth plane on (the fine and grid vertices either side of the plane snap onto it, so it rises as a cliff hidden
+ *  behind the dark mouth and inside the leaning headwall), and for HOOD_RUN m behind the plane it is also never lower than the
+ *  headwall's own top (the arch ring + HOOD_OVER, out to the ring's edge): the headwall sits IN the hill, no gap over or beside the
+ *  arch. The WALKED ground keeps its ramp from MOUTH_IN to MOUTH_LIFT behind the dark mouth (a walker never steps up through the
+ *  ground; past MOUTH_LIFT walked and drawn agree, where the climb trail crosses the east tube). Cover over the pantograph band: rail top + 4.8 + 0.5 m all along the tube
+ *  (scripts/train-clearance.cjs). TUBE_COVER 1.2 (was 0.7): the 2.5 m drawn grid still clears the crown by 0.5 m between its points. */
+export const MOUTH_LIFT=2.9,MOUTH_IN=.45,TUBE_COVER=1.2,PORTAL_FLAT=TUNNEL_HALF_WIDTH+.9,HOOD_RUN=3.5,HOOD_OVER=.15;
+/** trainWorld.ts portal: the arch ring's outer radius, its springing over the bed and the headwall's top cap (over the bed). */
+export const PORTAL_RING_R=TUNNEL_HALF_WIDTH+.85,PORTAL_SPRING=2.4,PORTAL_TOP_CAP=PORTAL_SPRING+PORTAL_RING_R+.6;
 const tubeCover=(d:number)=>d<TUNNEL_HALF_WIDTH?2.4+Math.sqrt(TUNNEL_HALF_WIDTH*TUNNEL_HALF_WIDTH-d*d)+TUBE_COVER:2.4+TUBE_COVER-Math.max(0,d-TUNNEL_HALF_WIDTH-.6)*MOUTH_BANK;
+/** The headwall's top over the arch at lateral d (trainWorld portal: ring + 0.25, capped), banked down past the ring's edge. */
+const hoodCover=(d:number)=>{const r=PORTAL_RING_R;return HOOD_OVER+(d<r?Math.min(PORTAL_TOP_CAP,PORTAL_SPRING+.25+Math.sqrt(r*r-d*d)):PORTAL_SPRING+.25-(d-r)*MOUTH_BANK);};
 /** How far into the tunnel (m, along the line) a point lies past the nearer portal plane (negative outside). */
 function inward(x:number,z:number,s:number){const west=s-TUNNEL.west.s<TUNNEL.east.s-s,p=west?TUNNEL.west:TUNNEL.east,t=trackAt(p.s);return ((x-p.x)*t.tx+(z-p.z)*t.tz)*(west?1:-1);}
+/** The drawn hill's cover over the tube at (x, z) (absolute height), from the mouth plane in: the full cover with no walked ramp;
+ *  -Infinity where it does not apply (summitIsleWorld draws max(summitGround, this)). */
+export function tunnelDrawnCover(x:number,z:number){
+ if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return -Infinity;
+ const hit=trackNearest(x,z,PORTAL_RING_R+4,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit||!inTunnelS(hit.s))return -Infinity;
+ const inw=inward(x,z,hit.s);if(inw<MOUTH_IN||inw>Math.max(MOUTH_LIFT,HOOD_RUN)+1)return -Infinity;const tc=tubeCover(hit.d);
+ return TUNNEL_BED+tc+(inw<HOOD_RUN?Math.max(0,hoodCover(hit.d)-tc)*Math.min(1,HOOD_RUN-inw):0);}
 /** Distance to the carved Summit corridor's centre line (1e3 outside it): summitIsleWorld draws the terrain finer there. */
 export function trainCutDistance(x:number,z:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return 1e3;
@@ -140,7 +159,8 @@ export function trainCut(x:number,z:number,h:number){
  if(inTunnelS(hit.s)){// Past the carve the clamp opens at MOUTH_BANK per metre too, so the ground ramps back up to the hill (no cliff to step up).
   // The hill always covers the tube past MOUTH_LIFT; from the mouth plane (MOUTH_IN) to there it rises smoothly (behind the dark
   // mouth, so never seen through the arch; a walker meets a slope, not a step).
-  const inw=inward(x,z,hit.s),lifted=Math.max(h,TUNNEL_BED+tubeCover(hit.d));if(inw>=MOUTH_LIFT)return lifted;
+  const inw=inward(x,z,hit.s),tc=tubeCover(hit.d),hood=inw<HOOD_RUN?Math.max(0,hoodCover(hit.d)-tc)*Math.min(1,HOOD_RUN-inw):0;// the hood eases out over its last metre
+  const lifted=Math.max(h,TUNNEL_BED+tc+hood);if(inw>=MOUTH_LIFT)return lifted;
   const k=Math.max(0,hit.d-PORTAL_FLAT)*MOUTH_BANK,carved=Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);
   return inw<=MOUTH_IN?carved:carved+(lifted-carved)*(inw-MOUTH_IN)/(MOUTH_LIFT-MOUTH_IN);}
  const st=Math.abs(hit.s-SUMMIT_TRACK.station),pd=Math.min(Math.abs(hit.s-TUNNEL.west.s),Math.abs(hit.s-TUNNEL.east.s)),

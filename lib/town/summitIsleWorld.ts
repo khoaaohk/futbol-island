@@ -6,7 +6,7 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
-import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,MOUTH_IN} from './trainTrack';
+import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,MOUTH_IN,tunnelDrawnCover} from './trainTrack';
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
@@ -140,6 +140,24 @@ export function buildSummitIsle(t:SummitTools){
    if(onTerrace>=1)c.copy(GRASS);
    push(r,h-DROP,c);}
   P.push(pr);Y.push(yr);CL.push(cr);}
+ // Nov 24 2026 (portal dip): a fine vertex within half a cell of a tunnel portal's mouth plane (trainTrack MOUTH_IN) and across the
+ // arch is moved onto that plane (just outside it, so it stays carved to the bed). The terrain's rise into the hill then starts AT
+ // the plane, behind the dark mouth, instead of a cell's triangle sloping through the arch (the hill dipped into the first 1-1.5 m
+ // of the east mouth). Local: only the few vertices in that band; heights are still summitGround's at the moved spot.
+ const SNAP_U=FINE*.5,SNAP_IN=FINE,SNAP_V=TUNNEL_HALF_WIDTH+1.6,snapT=[TUNNEL.west,TUNNEL.east].map(p=>({p,t:trackAt(p.s),w:p===TUNNEL.west?1:-1}));
+ /** Looks 2: every grid quad round a portal's mouth is drawn fine (its edges too: no coarse edge sloping across the plane). */
+ const nearPortal=(x:number,z:number)=>{for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;if(Math.abs(v)<SNAP_V+2&&u>-5&&u<MOUTH_IN+SNAP_IN+4)return true;}return false;};
+ /** The drawn height: the walked ground, or over the tube just inside a portal the hill's full cover (trainTrack tunnelDrawnCover). */
+ const drawnY=(x:number,z:number)=>Math.max(summitGround(x,z),tunnelDrawnCover(x,z))-DROP;
+ function portalSnap(x:number,z:number):[number,number]{
+  for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;
+   // Looks 2: either side of the plane (outside: carved; inside: the drawn full cover, trainTrack tunnelDrawnCover): a cliff AT it
+   // (the inside band is a whole cell deep, so no drawn triangle can slope from the carved floor across the plane into the hill)
+   if(Math.abs(v)<SNAP_V&&u>MOUTH_IN-SNAP_U&&u<MOUTH_IN+SNAP_IN){const du=(u<MOUTH_IN?MOUTH_IN-.03-u:MOUTH_IN+.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
+  return [x,z];}
+ // Looks 2: the coarse grid's own points in those bands snap too (they are the corners of the fine quads there, shared with their
+ // neighbours, so the mesh stays crack-free): no corner left on the slope across the plane.
+ for(let i=0;i<BEARINGS;i++)for(let k=0;k<Y[i].length;k++){const x=P[i][k*2],z=P[i][k*2+1],q=portalSnap(x,z);if(q[0]===x&&q[1]===z&&tunnelDrawnCover(x,z)===-Infinity)continue;P[i][k*2]=q[0];P[i][k*2+1]=q[1];Y[i][k]=drawnY(q[0],q[1]);}
  const pos=(i:number,k:number)=>{const ii=(i+BEARINGS)%BEARINGS;return [P[ii][k*2],Y[ii][k],P[ii][k*2+1]] as const;};
  // Smooth normals from the grid's neighbours (wrapping round the bearings), so sector seams never show a lighting line. (ring
  // direction × bearing direction): up on flat ground, outward on the walls; a zero vector (a landing's merged points) falls back.
@@ -160,28 +178,19 @@ export function buildSummitIsle(t:SummitTools){
    if(summitTrailDistance(x,z)>=SUMMIT_TRAIL_CARVE+.5&&trainCutDistance(x,z)>=TRAIN_CUT_DRAW)continue;
    // The drawn height there: triangle (a, c, b) when fu + fv ≤ 1, else (b, c, d).
    const y=fu+fv<=1?a[1]+(b[1]-a[1])*fu+(c[1]-a[1])*fv:d[1]+(c[1]-d[1])*(1-fu)+(b[1]-d[1])*(1-fv);
-   if(Math.abs(y-(summitGround(x,z)-DROP))>FINE_ERR)return true;}
+   if(Math.abs(y-drawnY(x,z))>FINE_ERR||nearPortal(x,z))return true;}
   return false;}));
  // Subdivisions: across bearings one count for all (the widest gap), along each ring band its own (so shared edges match).
  let fineU=1;const fineV:number[]=[];
  for(let k=0;k<R-1;k++){let gap=0;for(let i=0;i<BEARINGS;i++){if(!fine[i][k])continue;const a=pos(i,k),b=pos(i+1,k),c=pos(i,k+1);fineU=Math.max(fineU,Math.ceil(Math.hypot(b[0]-a[0],b[2]-a[2])/FINE));gap=Math.max(gap,Math.hypot(c[0]-a[0],c[2]-a[2]));}fineV.push(Math.max(1,Math.ceil(gap/FINE)));}
  const isFine=(i:number,k:number)=>k>=0&&k<R-1&&fine[(i+BEARINGS)%BEARINGS][k];
  const groundNormal=(x:number,z:number):[number,number,number]=>{const e=.7,gx=(summitGround(x+e,z)-summitGround(x-e,z))/(2*e),gz=(summitGround(x,z+e)-summitGround(x,z-e))/(2*e),l=Math.hypot(gx,1,gz);return [-gx/l,1/l,-gz/l];};
- // Nov 24 2026 (portal dip): a fine vertex within half a cell of a tunnel portal's mouth plane (trainTrack MOUTH_IN) and across the
- // arch is moved onto that plane (just outside it, so it stays carved to the bed). The terrain's rise into the hill then starts AT
- // the plane, behind the dark mouth, instead of a cell's triangle sloping through the arch (the hill dipped into the first 1-1.5 m
- // of the east mouth). Local: only the few vertices in that band; heights are still summitGround's at the moved spot.
- const SNAP_U=FINE*.5,SNAP_V=TUNNEL_HALF_WIDTH+1.6,snapT=[TUNNEL.west,TUNNEL.east].map(p=>({p,t:trackAt(p.s),w:p===TUNNEL.west?1:-1}));
- function portalSnap(x:number,z:number):[number,number]{
-  for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;
-   if(Math.abs(v)<SNAP_V&&Math.abs(u-MOUTH_IN)<SNAP_U){const du=(MOUTH_IN-.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
-  return [x,z];}
  function fineQuad(piece:Piece,i:number,k:number){const mu=fineU,mv=fineV[k],ii=i%BEARINGS;
   const a=pos(i,k),b=pos(i+1,k),c=pos(i,k+1),d=pos(i+1,k+1),ca=CL[ii][k],cb=CL[(ii+1)%BEARINGS][k],cc=CL[ii][k+1],cd=CL[(ii+1)%BEARINGS][k+1];
   const na=normal(i,k),nb=normal(i+1,k),nc=normal(i,k+1),nd=normal(i+1,k+1);
   // Edges shared with an unsplit neighbour (or the grid's end) follow the coarse straight edge.
   const coarseU0=!isFine(i-1,k),coarseU1=!isFine(i+1,k),coarseV0=!isFine(i,k-1),coarseV1=!isFine(i,k+1);
-  const ids:number[][]=[];const C2=new T.Color();
+  const ids:number[][]=[],hy:number[]=[];const C2=new T.Color();
   for(let u=0;u<=mu;u++){const row:number[]=[],fu=u/mu;
    for(let v=0;v<=mv;v++){const fv=v/mv,w00=(1-fu)*(1-fv),w10=fu*(1-fv),w01=(1-fu)*fv,w11=fu*fv;
     let x=a[0]*w00+b[0]*w10+c[0]*w01+d[0]*w11,z=a[2]*w00+b[2]*w10+c[2]*w01+d[2]*w11;
@@ -190,10 +199,13 @@ export function buildSummitIsle(t:SummitTools){
     let y:number,n:[number,number,number];
     if(corner||edge){y=a[1]*w00+b[1]*w10+c[1]*w01+d[1]*w11;const nx=na[0]*w00+nb[0]*w10+nc[0]*w01+nd[0]*w11,ny=na[1]*w00+nb[1]*w10+nc[1]*w01+nd[1]*w11,nz=na[2]*w00+nb[2]*w10+nc[2]*w01+nd[2]*w11,l=Math.hypot(nx,ny,nz)||1;n=[nx/l,ny/l,nz/l];
 }
-    else{[x,z]=portalSnap(x,z);y=summitGround(x,z)-DROP;n=groundNormal(x,z);}
-    row.push(piece.vertex(x,y,z,C2,n));}
+    else{[x,z]=portalSnap(x,z);y=drawnY(x,z);n=groundNormal(x,z);}
+    row.push(piece.vertex(x,y,z,C2,n));hy.push(y);}
    ids.push(row);}
-  for(let u=0;u<mu;u++)for(let v=0;v<mv;v++){const p0=ids[u][v],p1=ids[u+1][v],p2=ids[u][v+1],p3=ids[u+1][v+1];piece.idx.push(p0,p2,p1,p1,p2,p3);}
+  // Looks 2: each cell splits along the diagonal whose ends are closer in height (at a portal's snapped cliff the other diagonal
+  // would lay one long triangle from the carved floor up into the hill, a dip over the tube)
+  for(let u=0;u<mu;u++)for(let v=0;v<mv;v++){const p0=ids[u][v],p1=ids[u+1][v],p2=ids[u][v+1],p3=ids[u+1][v+1],y0=hy[u*(mv+1)+v],y1=hy[(u+1)*(mv+1)+v],y2=hy[u*(mv+1)+v+1],y3=hy[(u+1)*(mv+1)+v+1];
+   if(Math.abs(y0-y3)+.05<Math.abs(y1-y2))piece.idx.push(p0,p2,p3,p0,p3,p1);else piece.idx.push(p0,p2,p1,p1,p2,p3);}
  }
  const per=BEARINGS/SECTORS;
  const sectors:Piece[]=[];

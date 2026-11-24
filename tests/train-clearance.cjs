@@ -1,5 +1,6 @@
 // Island Line clearance (Nov 24 2026, owner shot 34: "palm trees are in the way of the train. Audit and make sure there are no trees
 // or obstacles on the track that can hit it"). Run: node tests/train-clearance.cjs
+//  0. the hill's cover over the Summit tube (scripts/train-clearance.cjs scanCover, Looks 2)
 //  1. the 3D envelope (scripts/train-clearance.cjs): every island mesh (trunks as built, leaning or not, fronds, canopies, eaves,
 //     signs, poles, cables, decks) tested vertex by vertex and every 0.4 m along every edge against the car's swept volume along the
 //     whole loop (|lateral| <= 2.0 m, bed + 0.45 ... 4.95 m; the catenary zone |lateral| <= 1.2 m to bed + 5.8 m): no hit
@@ -8,7 +9,11 @@
 const assert=require('node:assert/strict'),path=require('node:path');
 const {scanClearance}=require('../scripts/train-clearance.cjs');
 (async()=>{
- const {hits,L,world}=await scanClearance(path.join(__dirname,'..'));
+ const {hits,cover,L,world}=await scanClearance(path.join(__dirname,'..'));
+ // 0. Looks 2 (owner shot 37): the drawn hill over the Summit tube, every 2 m from each portal: over rail top + 4.8 + 0.5 m above the
+ //    pantograph band and over the tube's crown + 0.5 m across it (no train roof or pantograph showing over the hill)
+ assert(cover.meshes>0&&cover.n>500,'the tunnel cover was sampled');
+ assert.equal(cover.fails.length,0,`the hill over the tube is too low: ${cover.fails.slice(0,5).map(f=>JSON.stringify(f)).join('; ')}`);
  assert.equal(hits.length,0,`inside the train's envelope: ${hits.slice(0,6).map(h=>`${h.colour} ${h.name||h.geo} at ${h.at.join(',')} (s ${h.s}, ${h.d} m off, ${h.dy} m up)`).join('; ')}`);
  const tt=L('lib/town/trainTrack.ts'),tl=L('lib/town/trainLayout.ts');
  // 2. the palm rule
