@@ -19,7 +19,7 @@ import {TRAIN_STATIONS,STATION_HALF,STATION_PLATFORM_Y,TRACK,trackAt,trackNeares
 import {trainLayout} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,LAP} from './trainSchedule';
 import {TRAIN_SEATS,type SeatPose} from './trainRunning';
-import {npcSeatPose} from '../graphics/npcSeatPose';
+import {trainRiderPose} from '../graphics/trainSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
 import {ZIP_LOOK,softLook,springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
@@ -147,7 +147,8 @@ export function createTrainRide(ports:Ports){
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
- const trick:TrickPose=npcSeatPose('bench');trick.w=0;
+ // Gameplay 2: riders kneel up on the bench facing out of their window, turned a little toward the way the train runs
+ const tricks:[TrickPose,TrickPose]=[trainRiderPose(-1),trainRiderPose(1)];tricks[0].w=tricks[1].w=0;
  const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0,arm=-1;
  const ceil={w:0,y:0},camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
@@ -231,7 +232,7 @@ export function createTrainRide(ports:Ports){
   /** Town's movement tick: riding locks input (the stick looks around instead). */
   holdPlayer(stickX:number){if(!riding())return false;stickAim=Math.max(-1,Math.min(1,stickX));return true;},
   /** The seated pose for the rig (blended in and out). */
-  trick():TrickPose|undefined{if(blend<=0)return undefined;trick.w=blend*blend*(3-2*blend);return trick;},
+  trick():TrickPose|undefined{if(blend<=0)return undefined;const t=tricks[(pose.lean??1)>0?1:0];t.w=blend*blend*(3-2*blend);return t;},
   /** After Town's train update this frame: the seat, the stop events (announcement, quiz, Get off), the HUD. */
   frame(dt:number,reduced:boolean){
    if(!riding()){if(blend>0)blend=Math.max(0,blend-dt*(reduced?6:2.5));if(blend<=0)unlisten();return;}
@@ -260,7 +261,7 @@ export function createTrainRide(ports:Ports){
    if(!dragging)dragAim*=Math.exp(-ZIP_LOOK.back*h);
    springTo(lookS,softLook(stickAim*ZIP_LOOK.stick+dragAim),(dragging?ZIP_LOOK.dragRate:stickAim!==0?ZIP_LOOK.stickRate:ZIP_LOOK.returnRate)*(reduced?ZIP_LOOK.reducedRate:1),h);
    const kk=k>=0?k:anchor.train,s=run.states[kk].s;springTo(tight,inTunnelS(wrapS(s-12))?1:0,3,h);
-   const t=trackAt(s),fx=Math.sin(pose.yaw),fz=Math.cos(pose.yaw),portrait=camera.aspect<1,tk=tight.x;// f: the rider faces the aisle; the window is behind them
+   const t=trackAt(s),fx=-Math.sin(pose.yaw),fz=-Math.cos(pose.yaw),portrait=camera.aspect<1,tk=tight.x;// f: toward the aisle (Gameplay 2: the rider faces OUT of the window, so the camera outside it sees their face)
    const out=(CAM.out+(portrait?CAM.portraitOut:0))*(1-tk)+CAM.tunnelOut*tk,back=(portrait?CAM.portraitBack:CAM.back)*(1-tk)+CAM.tunnelBack*tk,up=CAM.up*(1-tk)+CAM.tunnelUp*tk;
    const ox=-fx*out-t.tx*back,oz=-fz*out-t.tz*back,a=-lookS.x,ca=Math.cos(a),sa=Math.sin(a);// the look orbits the camera round the rider
    camPos.set(pose.x+ox*ca-oz*sa,pose.y+up,pose.z+ox*sa+oz*ca);{const ah=portrait?CAM.portraitAhead:CAM.ahead,inn=portrait?CAM.portraitIn*(1-tk):0;camLook.set(pose.x+t.tx*ah+fx*inn,pose.y+CAM.eye,pose.z+t.tz*ah+fz*inn);}

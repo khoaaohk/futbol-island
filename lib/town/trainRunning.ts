@@ -49,14 +49,25 @@ export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
 import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,WIN_RUNS,CAR_FLOOR_Y,BENCH_X,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
-/** Seats (Phase 3): long benches along the walls (a Japanese local train), one rider per bench run, facing the aisle; 4 per car.
- *  Seat j of a train: car j>>2, side (j&1 ? +x : -x), bench run 1 + ((j>>1)&1). The rider's root stands on the floor, BENCH.rootZ
- *  in front of the bench centre (npcSeatPose 'bench': seat top .64 above the root), so the island's bench pose fits as it is. */
-export const SEATS_PER_CAR=4,TRAIN_SEATS=TRAIN_CARS*SEATS_PER_CAR;
+/** THE seat table (Gameplay 2, owner Nov 24 2026; used by riding, presence, the walk aboard and, later, NPC passengers and changing
+ *  seat): long benches along the walls (a Japanese local train), SEATS_PER_CAR per car, 4 per side on bench runs 1 and 2 (two each, at
+ *  the run's quarter points). Riders kneel up on the bench facing OUT of their window (lib/graphics/trainSeatPose.ts): the root
+ *  stands on the floor RIDER_ROOT_X from the centre line (BENCH_X from trainCarModel), yaw out of the window, `lean` the side the
+ *  train runs toward (the head and torso turn a little that way).
+ *  Seat t of a car: side (t&1 ? +x : -x), slot t>>1 (0, 1 on run 1; 2, 3 on run 2). Table index of a train = car·SEATS_PER_CAR + t.
+ *  Players (and the wire: multiplayer/protocol/seat.ts, 8 seats a train, no relay change) take the PLAYER_SEATS (slots 1 and 2, the
+ *  ones nearest the middle door); NPC_SEATS are the rest. */
+export const SEATS_PER_CAR=8,SEAT_TABLE_SIZE=TRAIN_CARS*SEATS_PER_CAR;
 export {CAR_FLOOR_Y};
-const SEAT_ROOT_X=BENCH_X-.05;
-const seatZ=(j:number)=>{const [a,b]=WIN_RUNS[1+((j>>1)&1)];return (a+b)/2;};
-export type SeatPose={x:number;y:number;z:number;yaw:number};
+export const RIDER_ROOT_X=BENCH_X-.055;
+export type SeatSpot={car:number;side:-1|1;x:number;z:number;/** +1 / -1: the rider's rig +x / −x is the way the train runs */lean:number};
+export const SEAT_TABLE:readonly SeatSpot[]=Array.from({length:SEAT_TABLE_SIZE},(_,i)=>{const car=Math.floor(i/SEATS_PER_CAR),t=i%SEATS_PER_CAR,side=(t&1?1:-1) as -1|1,slot=t>>1;
+ const [a,b]=WIN_RUNS[1+(slot>>1)],z=a+(b-a)*(slot&1?.75:.25),rev=car%2===1?-1:1;return {car,side,x:side*RIDER_ROOT_X,z,lean:-side*rev};});
+/** Player seat j (0 … TRAIN_SEATS−1) → its SEAT_TABLE index; the NPC passengers' indices. */
+export const PLAYER_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i).filter(i=>{const slot=(i%SEATS_PER_CAR)>>1;return slot===1||slot===2;});
+export const NPC_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i).filter(i=>!PLAYER_SEATS.includes(i));
+export const TRAIN_SEATS=PLAYER_SEATS.length;
+export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
 export {LIVERIES};
@@ -214,10 +225,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   ridden:new Uint8Array(TRAIN_COUNT),
   /** Phase 3: where seat j of train k is (root on the car floor, facing the aisle). `now`: worked out for that clock from the
    *  timetable and the runner's lag (friends are posed before this frame's update); without it, from this frame's states. */
-  seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{
+  seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{return api.seatAt(k,PLAYER_SEATS[Math.max(0,Math.min(TRAIN_SEATS-1,j))],out,now);},
+  /** Gameplay 2: SEAT_TABLE index i of train k (players: seatPose; NPC passengers and seat changes use this). Facing out of the window. */
+  seatAt(k:number,i:number,out:SeatPose,now?:number):SeatPose{
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
-   const c=Math.min(TRAIN_CARS-1,j>>2),side=(j&1)?1:-1;carMatrix(s,c,seatM,states[k].v);seatV.set(side*SEAT_ROOT_X,CAR_FLOOR_Y,seatZ(j)).applyMatrix4(seatM);
-   const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(-side*e[0],-side*e[2]);return out;},
+   const st=SEAT_TABLE[i];carMatrix(s,st.car,seatM,states[k].v);seatV.set(st.x,CAR_FLOOR_Y,st.z).applyMatrix4(seatM);
+   const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(st.side*e[0],st.side*e[2]);out.lean=st.lean;return out;},
   /** Gameplay 2: car c of train k's matrix this frame (the hover outline, the car colliders). Allocation-free. */
   carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v);},
   /** Gameplay 2: the open door of train k (standing at a stop) nearest x, z: a spot on the platform just outside it, facing in

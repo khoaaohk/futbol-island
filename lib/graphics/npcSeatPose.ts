@@ -48,7 +48,7 @@ export function benchSeatFit(scale=1,shape?:BeanShape):BenchSeatFit{
 }
 /** Arm angles that put a hand at root-frame (±.15, y, z): a grid search over the shoulder pitch / spread and elbow, with the
  *  rig's own arm lengths (player.ts: shoulder at (±.235, .385) in the torso frame, upper arm .28, forearm + hand .265). */
-function restHand(o:TrickPose,side:-1|1,z:number,y:number,arm:{sx:number;sz:number;el:number;w:number}){
+export function restHand(o:TrickPose,side:-1|1,z:number,y:number,arm:{sx:number;sz:number;el:number;w:number}){
  const f=o.pelvisPitch+o.torsoPitch,cf=Math.cos(f),sf=Math.sin(f),tx=side*.15;let best=Infinity;
  for(let sz=0;sz<=.3;sz+=.03)for(let sx=-1.6;sx<=.2;sx+=.04)for(let el=-1.8;el<=0;el+=.04){
   const wy=-.28-.265*Math.cos(el),wz=-.265*Math.sin(el),ax=-wy*Math.sin(sz)*side,ay=wy*Math.cos(sz);

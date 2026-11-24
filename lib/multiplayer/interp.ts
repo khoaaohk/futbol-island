@@ -14,7 +14,9 @@ export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: 
   seated?: boolean;
   /** Riding the Island Line (multiplayer/protocol/seat.ts trainWire): the seat code (train = code >> 3, seat = code & 7), -1 when not. The
    *  island runtime draws the friend in that moving seat from the shared timetable. */
-  train?: number };
+  train?: number;
+  /** Gameplay 2: the train seat's lean (lib/town/trainRunning.ts SEAT_TABLE: ±1, the way the train runs), written with the seat. */
+  lean?: number };
 export interface Interp {
   push(id: MemberId, body: PoseBody, recvMs: number): void;
   /** renderMs is the current clock (same base as recvMs); the delay is subtracted inside. */
