@@ -55,7 +55,10 @@ export function buildMuseumExterior(k:MuseumExteriorKit){
  const door=MUSEUM_DOOR.x,pw=5.2,ph=4,pd=.6;
  k.box(pw,.4,pd,C.frame,door,ph-.2,front+pd/2);
  for(const side of [-1,1]){k.box(.4,ph,pd,C.frame,door+side*(pw/2-.2),ph/2,front+pd/2);k.obstacles.push({x:door+side*(pw/2-.2),z:front+pd/2,w:.4,d:pd});}
- k.box(pw-.8,3.6,.08,C.glass,door,1.8,front+.06);
+ // POLISH 3 (owner shot 57, the entrance flicker): the glass's front face sat at front + .1, exactly on the plinth's front face (the
+ // shared shell's plinth is .1 m proud of the wall): the two z-fought across the door's bottom .35 m ("///" stripes). The glass now
+ // stands 4 cm further in (front face front + .06), behind the plinth face, the mullions and the pull bars.
+ k.box(pw-.8,3.6,.08,C.glass,door,1.8,front+.02);
  for(const dx of [-1.1,1.1])k.box(.06,3.6,.1,C.frame,door+dx,1.8,front+.1);   // mullions either side of the doors
  k.box(2.14,.06,.1,C.frame,door,2.4,front+.1);                                // door head
  for(const dx of [-.22,.22])k.box(.05,.9,.06,C.steel,door+dx,1.15,front+.16);  // pull bars
