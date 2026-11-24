@@ -7,7 +7,7 @@ import {onSummitLand,onSummitGround,SUMMIT_FLIGHT_BOX} from './summitIsle';
 import {onLandableDeck} from './landableDecks';
 import './eastPier'; // Registers the East Pier's walkway and head as landable decks (static; eastPier.ts).
 import { TRAVEL_MODES, type TravelMode } from './travelModes';
-export const ISLAND_BOUNDS={minX:-336,maxX:250,minZ:-253,maxZ:252} as const;// Nov 23 2026: maxZ 226 → 252, the south beach outside the Island Line (shoreline.ts) is walkable
+export const ISLAND_BOUNDS={minX:-336,maxX:250,minZ:-253,maxZ:250} as const;// Nov 23 2026: maxZ 226 → 250 (250 keeps the flight bounds and the analytics grid at z 300), the south beach outside the Island Line (shoreline.ts) is walkable
 /** Offshore room round the main island (50 m since Sep 29 2026); it sets the world rectangle's west and north edges. Since Oct 12
  *  2026 the whole rectangle is flyable (flightBlocked). */
 export const FLIGHT_WATER_MARGIN=50;
