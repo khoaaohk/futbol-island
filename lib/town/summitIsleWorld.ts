@@ -6,7 +6,7 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
-import {trainCutDistance} from './trainTrack';
+import {trainCutDistance,trackNearest,inTunnelS} from './trainTrack';
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
@@ -271,6 +271,9 @@ export function buildSummitIsle(t:SummitTools){
  /** A round rod from a to b (open ends: thin cords never show them). */
  const bakeRod=(piece:Piece,a:T.Vector3,b:T.Vector3,r:number,hex:string,seg=6)=>{const l=a.distanceTo(b);Q.setFromUnitVectors(UP,VS.copy(b).sub(a).normalize());M.compose(VP.copy(a).add(b).multiplyScalar(.5),Q,VS.set(1,1,1));bake(piece,new T.CylinderGeometry(r,r,l,seg,1,seg>4),hex,M);};
  const propsAt=(x:number,z:number)=>sectorProps[sectors.indexOf(sectorOf(x,z))];
+ // AAA audit (Nov 24 2026): trees, palms and bushes keep off the Island Line (a tree's crown hung into the cars' path by the east portal at
+ // (682, 31) and (688, 21)); over the tunnel they may stand (the hill is metres above the tube).
+ const nearLine=(x:number,z:number,r:number)=>{const h=trackNearest(x,z,r);return !!h&&!inTunnelS(h.s);};
  const props=(piece:Piece,name:string)=>{if(!piece.idx.length)return;const m=new T.Mesh(piece.geometry(),propMat);m.name=name;m.position.set(piece.ox,0,piece.oz);m.castShadow=true;m.receiveShadow=true;town.add(m);};
 
  // ---- The sandbar: sand top with a slight crown and a wet skirt sloping into the sea either side. 4 cm under the beaches it runs
@@ -318,16 +321,16 @@ export function buildSummitIsle(t:SummitTools){
  // Palms along the dune line on every side but the sandbar landing.
  let n=0;
  for(let k=0;k<28;k++){const a=k/28*Math.PI*2+jitter(k,1)*.12,rc=coastRadius(a),bw=beachWidth(a),r=rc-bw*(.55+jitter(k,2)*.3),x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r;
-  if(k%2&&k%5)continue;if(pathNear(x,z,5)||Math.hypot(x-SUMMIT_LANDMARKS.sandbarLanding.x,z-SUMMIT_LANDMARKS.sandbarLanding.z)<16||!onSummitIsle(x,z))continue;palm(x,z,5.2+jitter(k,3)*1.6,n++);}
+  if(k%2&&k%5)continue;if(pathNear(x,z,5)||nearLine(x,z,4.5)||Math.hypot(x-SUMMIT_LANDMARKS.sandbarLanding.x,z-SUMMIT_LANDMARKS.sandbarLanding.z)<16||!onSummitIsle(x,z))continue;palm(x,z,5.2+jitter(k,3)*1.6,n++);}
  // Trees: groves thickest in the gullies (low ridge shade) and on the lower slopes, thinning out higher up, clear of the paths,
  // the terrace and anything too steep to root on. Palms stay on the dune line (above).
  for(let k=0;k<150;k++){const a=jitter(k,11)*Math.PI*2,h=1.2+jitter(k,12)*30,p=heightPoint(a,h),x=p.x+(jitter(k,14)-.5)*6,z=p.z+(jitter(k,15)-.5)*6;
-  if(pathNear(x,z,4.5)||terraceWeight(x,z)>0||!onSummitIsle(x,z))continue;const shade=ridgeShade(x,z),gully=1-shade;
+  if(pathNear(x,z,4.5)||nearLine(x,z,5)||terraceWeight(x,z)>0||!onSummitIsle(x,z))continue;const shade=ridgeShade(x,z),gully=1-shade;
   // Keep about a third on open slopes, nearly all in the gullies and low down.
   if(jitter(k,16)>.25+gully*1.1+(1-h/32)*.35)continue;if(summitSlope(x,z)>.55)continue;tree(x,z,(.75+jitter(k,13)*.5)*(h>18?.8:1),k);}
  // Bushes (small, low) along the gullies higher up, where trees thin out.
  for(let k=0;k<90;k++){const a=jitter(k,41)*Math.PI*2,h=16+jitter(k,42)*26,p=heightPoint(a,h),x=p.x,z=p.z;
-  if(pathNear(x,z,3.5)||terraceWeight(x,z)>0||ridgeShade(x,z)>.48||summitSlope(x,z)>1.1)continue;const y=yAt(x,z),pc=propsAt(x,z),r=.7+jitter(k,43)*.5;
+  if(pathNear(x,z,3.5)||nearLine(x,z,3.5)||terraceWeight(x,z)>0||ridgeShade(x,z)>.48||summitSlope(x,z)>1.1)continue;const y=yAt(x,z),pc=propsAt(x,z),r=.7+jitter(k,43)*.5;
   bake(pc,new T.IcosahedronGeometry(r,0),k%2?'#4c7550':'#5b895e',at(x,y+.35,z,0,k,0,1,.62,1));
   // Solid too (user: "don't allow going into trees and bushes"): a round collider at 70% of the bush, fair to brush past.
   obstacles.push(bushCollider(x,z,r));}

@@ -1075,7 +1075,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(let j=0;j<3;j++){const rock=put(new T.IcosahedronGeometry(.22+j*.1,0),'#d2bc94',x-2+j*.65,.1,z-3);rock.scale.y=.5;}
   }
   for(const x of [-30,45,125,182]){const z=x>160?-199:x>100?-206:-210;tintGroundMesh(box(5,.04,2,'#d6c394',x,-.045,z),'sand');for(let i=0;i<7;i++){const grass=put(new T.ConeGeometry(.09,.5+(i%3)*.1,4),'#8b9e6b',x-2+i*.55,.22,z+Math.sin(i)*.4);grass.rotation.z=Math.sin(i)*.25;}}
-  bench(-42,-208);bench(83,-215);districtSign('NORTH BEACH',80,-207);
+  bench(-40,-211.5);bench(83,-215);districtSign('NORTH BEACH',80,-201);// AAA audit (Nov 24 2026): the sign's arch stood ON the Island Line (z -207 is the rail centre, the north-beach-east crossing) and the bench 2.7 m from it; now the arch spans the path 6 m on the town side, the bench 6 m on the sand
   // Southern boardwalk sits on the extended shoreline, with open ocean beyond.
 
   // Southeast ferry dock: a broad deck follows the inside of the curved coast.
