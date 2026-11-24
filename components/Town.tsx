@@ -802,6 +802,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Ride splash in the shallows (lib/graphics/rideSplash.ts): one pooled InstancedMesh for me + the 2 nearest riding friends; idle = no work, no draw.
     const rideSplash=createRideSplash(()=>world.islandShore.field),splashNear=new Int32Array(RIDE_SPLASH.friends),splashDist=new Float32Array(RIDE_SPLASH.friends),SPLASH_SOUND={cue:'splash-soft',gain:.22};scene.add(rideSplash.mesh);
     // Nov 17 2026: compile the splash pool's program once, off the action (it used to compile on the first ride splash or the first swim stroke: a hitch). compileAsync uses the parallel-compile extension where the browser has it; the mesh is shown only for the synchronous traversal.
+    // Island Line trains (trainRunning.ts): compile their programs once, off the action, so a train's first appearance never hitches.
+    {const tr=world.trainRun;if(tr){const warm=window.setTimeout(()=>{tr.warm(true);try{void renderer.compileAsync(tr.root,camera,scene).catch(()=>{});}catch{}tr.warm(false);},5000);disposers.add(()=>window.clearTimeout(warm));}}
     {const warm=window.setTimeout(()=>{const m=rideSplash.mesh;if(m.visible)return;m.visible=true;try{void renderer.compileAsync(m,camera,scene).catch(()=>{});}catch{}m.visible=false;},6000);disposers.add(()=>window.clearTimeout(warm));}
     disposers.add(()=>rideSplash.dispose());
     // Shore foam interactions (lib/graphics/shoreFoamFx.ts, Oct 26 2026): the swash foam parts round my ankles, steps and the ball leave foam rings. Uniforms only: no mesh, no draw.

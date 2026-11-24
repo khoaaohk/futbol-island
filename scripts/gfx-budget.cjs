@@ -54,7 +54,9 @@ const NO_TRAIN=process.env.GFX_NO_TRAIN==='1';
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0;};
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
- const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
+ // GFX_VIEWPORT=desktop (Nov 23 2026, Island Line): a 1440x900 desktop window instead of the phone.
+ const DESKTOP=process.env.GFX_VIEWPORT==='desktop';
+ const ctx=await browser.newContext(DESKTOP?{viewport:{width:1440,height:900},deviceScaleFactor:1}:{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  const page=await ctx.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('pageerror: '+e.message.slice(0,300)));
  await page.addInitScript(({x,z,time,seed,noTrain})=>{
@@ -99,7 +101,7 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,`gfx-${v.id}.png`)});}
  }
  await browser.close();
- console.log(`gfx-budget${NO_TRAIN?' (no train)':''}  ${BASE}  390x844 DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
+ console.log(`gfx-budget${NO_TRAIN?' (no train)':''}  ${BASE}  ${DESKTOP?'1440x900 desktop':'390x844'} DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
  console.log('| view | draw calls (min-max) | triangles | programs | textures | geometries | render ms (CPU) | water phase | ocean blended | frames |');
  console.log('|---|---|---|---|---|---|---|---|---|---|');
  for(const o of out)console.log(`| ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.programs} | ${o.textures} | ${o.geometries} | ${o.renderMs} | ${o.phase}${o.reached?'':' (swim NOT reached)'} | ${o.oceanBlended?'yes':'no'} | ${o.frames} |`);

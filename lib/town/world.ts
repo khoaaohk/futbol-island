@@ -1828,7 +1828,7 @@ export function* buildTownSteps(scene: T.Scene) {
    for(const o of [...town.children])if(o.type==='Group'&&!o.name&&empty(o)){o.removeFromParent();pruned++;}town.userData.prunedEmptyGroups=pruned;}
   if(train)scene.add(train.tubeRoot);// Island Line tunnel tube: its own mesh, shown only near the portals (trainWorld.ts)
   // Island Line Phase 2 (trainRunning.ts): the three running trains, the crossings' arms and lamps and the departure boards.
-  let trainRun:TrainRunning|null=null;if(train)try{trainRun=createTrainRunning(scene);}catch(error){console.error('Island Line trains failed to build',error);}
+  let trainRun:TrainRunning|null=null;if(train)try{trainRun=createTrainRunning(scene,obstacles);}catch(error){console.error('Island Line trains failed to build',error);}
   // Coral Cay sharks: added after the static batching pass so their instanced meshes stay separate (caySharks.ts).
   const sharks=createCaySharks(scene);
   // Manta rays round Coral Cay and both sandbars (cayMantas.ts): same frame hook and sleep rules as the sharks.

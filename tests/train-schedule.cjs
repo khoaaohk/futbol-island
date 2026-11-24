@@ -63,27 +63,31 @@ for(let ci=0;ci<S.CROSSING_TIMES.length;ci++){const c=S.CROSSING_TIMES[ci];
 if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.exit(0);}
 // 5. wiring and heat (source checks; the built world is checked in tests/train-track.cjs)
 {const run=read('lib/town/trainRunning.ts'),world=read('lib/town/world.ts'),town=read('components/Town.tsx'),snd=read('lib/audio/islandSound.ts');
- assert((run.match(/new T\.InstancedMesh\(/g)||[]).length===1,'one InstancedMesh for every car of every train');
- assert(/castShadow=false/.test(run),'no shadow pass for the trains');
+ assert((run.match(/new T\.InstancedMesh\(/g)||[]).length===2,'an InstancedMesh per train + one for all door leaves (≤ 4 draws)');
+ assert(/castShadow=false/.test(run)&&!/PointLight|SpotLight|castShadow=true/.test(run),'no lights, no shadow pass for the trains');
+ assert(!/onBeforeCompile|ShaderMaterial|customProgramCacheKey/.test(run)&&/createVehicleMaterial/.test(run),'no new shader code: the road traffic vehicle material');
+ assert(/LOD_RANGE=150\b/.test(run)&&/buildCarBox/.test(run),'one box per car past 150 m');assert(/XING_HZ=4\b/.test(run),'crossings on a 4 Hz / event clock');
+ assert(/compileAsync\(tr\.root/.test(read('components/Town.tsx')),'train programs warmed at load');
  assert(/BOARD_HZ=1\b/.test(run),'boards on a 1 Hz clock');assert(/BELL_RANGE=60\b/.test(run)&&/ANIMATE_RANGE=80\b/.test(run)&&/HIDE_RANGE=400\b/.test(run),'bell 60 m, animate 80 m, hide 400 m');
  assert(/MACHINE_NIGHT/.test(run),'night: the shared night uniform');
  assert(/createTrainRunning/.test(world)&&/updateTrains/.test(town),'world and Town wired');
  assert(/case 'train-bell'/.test(snd)&&/case 'train-horn'/.test(snd),'bell and horn cues in the island sound kit (mute respected)');
- assert(!/FI 01/.test(run)||/ball/.test(run),'headmark: our own ball emblem');}
+ assert(/plate:'FI01'/.test(run)&&/emblem:true/.test(run),'headmark: our own ball emblem and FI 01 plate');}
 // 6. the built trains (the real world in Node, no WebGL): one draw for every car, LOD, crossings, boards
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,R=LW('lib/town/trainRunning.ts');assert(run,'trains built');
  assert(run.triangles<=1300,`one car is ${run.triangles} triangles (≤ ~1.2k)`);
- let im=0;scene.traverse(o=>{if(o.isInstancedMesh&&o.name==='train-cars'){im++;assert(!o.castShadow,'no shadow');}});assert.equal(im,1,'one InstancedMesh');
+ let im=0;scene.traverse(o=>{if(o.isInstancedMesh&&/^train-/.test(o.name)){im++;assert(!o.castShadow,'no shadow');}});assert.equal(im,4,'3 trains + doors');
  const cam=new T.PerspectiveCamera(50,1,1,500),player={x:0,y:0,z:0};const at=(x,y,z,lx,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,0,lz);cam.updateMatrixWorld(true);};
  // all three trains pinned at the North station (the gfx view): 6 cars in one draw
  const north=tt.TRAIN_STATIONS[0],p=tt.trackAt(north.s);run.cluster=north.s+20;at(p.x+40,25,p.z+60,p.x,p.z);player.x=p.x;player.z=p.z+30;
- run.update({dt:1/30,camera:cam,player});let d=run.drawn;assert.equal(d.cars,6,'six cars drawn');assert(d.crossings,'crossings shown near North Beach');assert(d.boards>=1,'the North board shown');
+ run.update({dt:1/30,camera:cam,player});let d=run.drawn;assert.equal(d.cars,6,'six cars drawn');assert(d.crossings>=1,'crossings shown near North Beach');assert(d.doors>0&&d.far<6,'near tier with doors');
+ at(p.x+40,25,p.z+200,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.far>0,'box tier past 150 m');at(p.x+40,25,p.z+60,p.x,p.z);assert(d.boards>=1,'the North board shown');
  // looking away: nothing drawn; far away (town square, 400 m+ from every train): nothing drawn
  at(p.x+40,25,p.z+60,p.x+80,p.z+200);run.update({dt:1/30,camera:cam,player});assert.equal(run.drawn.cars,0,'off-screen: no draw');
  run.cluster=NaN;at(103,30,-20,103,-60);player.x=103;player.z=-20;for(let k=0;k<40;k++)run.update({dt:1/30,camera:cam,player});d=run.drawn;/* boards switch at 1 Hz */
  for(let i=0;i<3;i++){const q=tt.trackAt(run.states[i].s);if(Math.hypot(q.x-103,q.z+20)>R.HIDE_RANGE+20)assert(d.cars<6,'far trains hidden');}
- assert(!d.crossings||true);assert(d.boards===0,'no board work in town');
+ assert(d.boards===0,'no board work in town');
  // a person on the track in front of a running train (local player): it stops short and asks after 5 s
  const now=S.trainClockSec();let ti=-1;for(let i=0;i<3;i++){const x=S.trainAt(i,now),nx=S.TRAIN_STOPS[x.next];if(x.at<0&&x.v>6&&S.ahead(x.s,nx.s)>120&&S.ahead(x.s,nx.s)<2000)ti=i;}
  const st=S.trainAt(Math.max(0,ti),now);if(ti>=0){const q=tt.trackAt(st.s+24);player.x=q.x;player.z=q.z;player.y=tt.bedAt?0:0;at(q.x+20,20,q.z+20,q.x,q.z);
