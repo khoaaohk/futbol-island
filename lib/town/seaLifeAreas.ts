@@ -65,7 +65,7 @@ export const OPEN_SEA_WHALE_LOOPS:readonly OpenSeaWhaleLoop[]=[
  whale('whale-main-north','main-north',[120,-280,32,12,0],.75,.6),
  whale('whale-main-west','main-west',[-372,-62,45,12,1.57],.8,.3),
  // Oct 20 2026: South Bay's whale is the humpback (a slow surface cruiser with a tail lift), on the whale shark's old loop.
- whale('humpback-main-south','main-south',[135,260,45,16,0],.7,.8,'humpback'),
+ whale('humpback-main-south','main-south',[140,276,45,16,0]/* Nov 23 2026: (135,260) → (140,276), the south beach moved out (clear of Lifebuoy Point's float too) */,.7,.8,'humpback'),
  whale('whale-jetty-south','jetty-south',[275,165,40,9,1.57],.8,.45),
  whale('whale-cay-east','cay-east',[775,-195,38,6,1.2],.7,.2),
  // Summit Isle's south-east (Oct 20 2026): room made by trimming the south-east shark patrol (summitSeaLife.ts, 34–58° → 42–62°);
@@ -103,7 +103,7 @@ export const OPEN_SEA_RAY_LOOPS:readonly OpenSeaRayLoop[]=[
  ray('ray-west-eagle','main-west','eagle',[-230,162,22,10,.4]),
  ray('ray-north-eagle','main-north','eagle',[-110,-260,22,10,3]),
  ray('ray-north-manta','main-north','manta',[-30,-265,22,10,2.4]),
- ray('ray-south-manta','main-south','manta',[15,240,22,10,.8]),
+ ray('ray-south-manta','main-south','manta',[6,247,22,10,.8]),// Nov 23 2026: was (15,240); the south beach moved out
  ray('ray-south-sting','main-south','sting',[-5,190,22,10,1.57]),
  ray('ray-jetty-eagle','jetty-south','eagle',[320,130,22,10,0]),
  ray('ray-jetty-eagle-2','jetty-south','eagle',[370,130,22,10,2.4]),

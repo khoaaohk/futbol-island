@@ -106,7 +106,9 @@ const isleMeshes=()=>rt.root.children.filter(c=>c.isMesh&&!c.isInstancedMesh&&c.
 assert(isleMeshes().length===3,'one merged mesh per island');
 const mats=new Set(isleMeshes().map(m=>m.material));assert.equal(mats.size,1,'one shared material');
 for(const m of rt.root.children)assert(!m.castShadow,'no shadows');
-const spots=v.islands.flatMap(i=>i.spots),sellSpot=spots.find(s=>B.beachFindById(s.find).care==='sell'&&s.key.startsWith('summit'))??spots.find(s=>B.beachFindById(s.find).care==='sell');
+// Nov 23 2026 (Island Line): a Summit find on its west half: the east beach (x > 640) is within the draw range of Coral Cay's box, so
+// two islands' meshes are rightly drawn there (the line's colliders changed which candidates are valid, so today's pick moved east).
+const spots=v.islands.flatMap(i=>i.spots),sells=spots.filter(s=>B.beachFindById(s.find).care==='sell'),sellSpot=sells.filter(s=>s.key.startsWith('summit')).sort((a,b)=>a.x-b.x)[0]??sells[0];
 // Walk up to a shell: the prompt names it, the arbiter key is 'beach', within reach.
 let want;for(let i=0;i<10;i++)want=frame(sellSpot.x+1,sellSpot.z);
 assert(want&&want.key==='beach'&&want.distance<=B.BEACHCOMB.reach,'a find in reach asks for the focus slot');
