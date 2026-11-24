@@ -47,7 +47,9 @@ if(process.env.GFX_VIEWS==='train')VIEWS.splice(0,VIEWS.length,
  {id:'west-beach',note:'West Beach station, from the stadium side',x:-282,z:-30,yaw:Math.atan2(-1,0)},
  {id:'south',note:'South station, from the Museum door',x:160,z:200,yaw:0},
  {id:'summit-portal',note:'Summit Isle platform, facing the west portal',x:506,z:204,yaw:Math.atan2(32.5,-34.5)},
- {id:'coral-cay',note:'Coral Cay station, from the plaza path',x:590,z:-94,yaw:0});
+ {id:'coral-cay',note:'Coral Cay station, from the plaza path',x:590,z:-94,yaw:0},
+ // Phase 2 (Nov 23 2026): the worst case, all three trains pinned at the North station (window.__fi2.trains.cluster), looking down the line.
+ {id:'trains-near',note:'North station platform, all 3 trains pinned in view',x:186,z:-203.5,yaw:-Math.PI/2,cluster:2534});
 const NO_TRAIN=process.env.GFX_NO_TRAIN==='1';
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0;};
 (async()=>{
@@ -75,6 +77,7 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
  await page.waitForTimeout(3000);
  const out=[];
  for(const v of VIEWS){
+  await page.evaluate(c=>{const t=window.__fi2.trains;if(t)t.cluster=c==null?NaN:c;},v.cluster??null);// Island Line: the trains-near view pins all three
   await page.evaluate(({x,z,yaw})=>window.__fi2.teleport(x,z,yaw),v);
   let reached=true;
   if(v.swim)reached=await page.waitForFunction(()=>window.__fi2.water.state.phase==='swim',null,{timeout:20000}).then(()=>true,()=>false);
