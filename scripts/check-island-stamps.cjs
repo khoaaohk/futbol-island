@@ -13,6 +13,8 @@ const check=(name,ok,extra='')=>{results.push(!!ok);console.log(`${ok?'ok  ':'FA
 const seed=ids=>JSON.stringify({version:1,reward:false,stamps:Object.fromEntries(ids.map((id,i)=>[id,{at:Date.now()-86400000*(i+2),tilt:i?2.5:-3,dx:.6,dy:-.8}]))});
 async function boot(b,vp,mobile,stamps){
  const ctx=await b.newContext({viewport:vp,isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?2:1});
+ // under a local `next start` /api/build-id answers a new id (next.config runs again): no "new release" reloads mid-check
+ await ctx.route('**/api/build-id',r=>r.fulfill({status:200,contentType:'application/json',body:'{}'}));
  await ctx.addInitScript(([k,v])=>{try{if(!sessionStorage.getItem('__s_boot')){localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem(k,v);}sessionStorage.setItem('__s_boot','1');}catch{}},[KEY,seed(stamps)]);
  const p=await ctx.newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message.slice(0,200)));
  await p.goto(url+'/play?from=arcade',{timeout:240000});
