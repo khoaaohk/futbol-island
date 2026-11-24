@@ -32,7 +32,10 @@ export const cayJitter=(i:number,k=1)=>{const s=Math.sin(i*12.9898+k*78.233)*437
 export const CAY_CENTER={x:612,z:-160};
 export const CAY_NAME='Coral Cay';
 /** Anchors relative to CAY_CENTER, scaled by 0.955: area ≈ 34,950 m² = 25.0% of the main island. */
-const CAY_ANCHORS=[[-107,-8],[-104,-30],[-118,-55],[-108,-72],[-86,-80],[-62,-104],[-30,-110],[-5,-96],[22,-112],[52,-104],[66,-86],[56,-64],[80,-48],[106,-40],[124,-12],[112,14],[96,40],[110,70],[88,86],[60,80],[38,104],[4,98],[-26,110],[-58,92],[-74,64],[-100,52],[-96,28],[-110,10]];
+/** Nov 23 2026 (Island Line, owner: a real beach outside the rails, never the line at the waterline): the south-east landfall
+ *  [60,80] → [60,90], the south cove [4,98] → [3,106] and the south-west headland [-58,92],[-74,64],[-100,52],[-96,28] → the four points below, laid ~16 m
+ *  seaward of the line (trainTrack.ts) so it runs on sand from the station round to the causeway. Same anchor count (indices). */
+const CAY_ANCHORS=[[-107,-8],[-104,-30],[-118,-55],[-108,-72],[-86,-80],[-62,-104],[-30,-110],[-5,-96],[22,-112],[52,-104],[66,-86],[56,-64],[80,-48],[106,-40],[124,-12],[112,14],[96,40],[110,70],[88,86],[60,90],[38,104],[3,106],[-26,110],[-61,98],[-89,84],[-103,62],[-122,40],[-110,10]];
 export const CAY_SHORE:CayPoint[]=spline(CAY_ANCHORS.map(([x,z])=>[CAY_CENTER.x+x*.955,CAY_CENTER.z+z*.955]),true,8);
 const shoreBox=box(CAY_SHORE);
 export const CAY_BOX=shoreBox;

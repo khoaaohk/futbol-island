@@ -21,7 +21,7 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
-import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,MOUTH_CARVE,MOUTH_CARVE_EAST,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
+import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,SEA_WALL_HALF} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
 
@@ -38,6 +38,8 @@ const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',ballast:'#9a948a',gi
  bench:'#b48a5e',yellow:'#f2c230',black:'#26231f',lampOff:'#7a2420',crossDeck:'#55524d',stone:'#aaa395',stoneDark:'#8d8679',mouth:'#121110'} as const;
 /** Spots a catenary pole must not stand on (it slides to the next row): the Starfish sandbar's hidden ball (coralCayBalls.ts cay-barefoot). */
 const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
+/** Summit portals: headwall half width, its batter (m back per m up) and the wing walls' run out along the banks. */
+export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=5;
 export const TUBE_SHOW=60,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 
 /** A tiny triangle soup builder (positions + flat normals, indexed later by the batching pass). */
@@ -95,14 +97,29 @@ export function buildTrainWorld(tools:TrainTools){
     const a0=off(a,v-w,a.bed+SLEEPER_TOP),a1=off(a,v+w,a.bed+SLEEPER_TOP),b0=off(b,v-w,b.bed+SLEEPER_TOP),b1=off(b,v+w,b.bed+SLEEPER_TOP),mid=off(a,v,a.bed+.27);
     rails.quad(a0,b0,B0,A0,mid);rails.quad(a1,b1,B1,A1,mid);}
    const xing=crossingAt(a.s);
-   if(xing){// The crossing deck: dark panels level with the rail heads, the full width of the path.
-    xdeck.box((a.x+b.x)/2,a.bed+RAIL_TOP-.08,(a.z+b.z)/2,a.tx,a.tz,TRACK_DS/2+.02,1.9,.08,true);}
+   if(xing){// The crossing deck (Nov 23 2026, owner: flush): a dark top just under the rail heads between and beside the rails, then
+    // sloping down to the ground on both sides, so it reads as part of the road, not a slab standing on the sand.
+    const yt=RAIL_TOP-.03,inside=off(a,0,a.bed-1),gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0;
+    xdeck.quad(off(a,-1,a.bed+yt),off(b,-1,b.bed+yt),off(b,1,b.bed+yt),off(a,1,a.bed+yt),inside);
+    for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*2.6,gy(b)+.01),off(a,side*2.6,gy(a)+.01),inside);}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
    for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing)sleepers.box(x,y+SLEEPER_TOP-.05,z,a.tx,a.tz,.13,1.15,.05,true,false);/* no end faces: 0.26 × 0.1 m, unseen (heat) */}
-   if((a.kind===TrackKind.Land||a.kind===TrackKind.Wall)&&!crossingAt(a.s,4)){// Ballast: a low trapezoid strip (not within 4 m of a crossing: it would sit just under the road, which meets the line on a skew).
+   if(a.kind!==TrackKind.Sea&&b.kind!==TrackKind.Sea&&!xing){// Ballast: one continuous trapezoid strip on every land row (Nov 23 2026: was broken into
+    // slabs round the crossings); it stops only under a crossing deck. On the bridge-head embankment (bed above the ground, trackProfile
+    // RAMP_LAND) its sides run on down to the ground, widening as they go.
+    const gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0,fa=1.9+(a.bed-gy(a))*1.4,fb=1.9+(b.bed-gy(b))*1.4;
     const t0=off(a,-1.45,a.bed+BALLAST_TOP),t1=off(a,1.45,a.bed+BALLAST_TOP),u0=off(b,-1.45,b.bed+BALLAST_TOP),u1=off(b,1.45,b.bed+BALLAST_TOP),
-     f0=off(a,-1.9,a.bed-.06),f1=off(a,1.9,a.bed-.06),g0=off(b,-1.9,b.bed-.06),g1=off(b,1.9,b.bed-.06),inside=off(a,0,a.bed-1);
+     f0=off(a,-fa,gy(a)-.06),f1=off(a,fa,gy(a)-.06),g0=off(b,-fb,gy(b)-.06),g1=off(b,fb,gy(b)-.06),inside=off(a,0,a.bed-1);
     ballast.quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
+   if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea){// Bridge head at every shore
+    // (Nov 23 2026, owner: the first span floated): a stone abutment under the deck's end, its face down into the water, with low
+    // wing walls back along the embankment; the ballast runs up onto it and the first pier stands just past it (trainLayout).
+    const land=a.kind!==TrackKind.Sea?a:b,dir=land===a?1:-1,top=land.bed-.02,foot=-1.6,c=off(land,0,0),hl=1.6,inside=off(land,0,top-1);
+    const P=(u:number,v:number,y:number)=>[c[0]+land.tx*u*dir+land.tz*v,y,c[2]+land.tz*u*dir-land.tx*v];
+    for(const [u0,u1,v0,v1] of [[-.4,hl,-2.2,2.2]] as const){wallTop.quad(P(u0,v0,top),P(u1,v0,top),P(u1,v1,top),P(u0,v1,top),inside);
+     wall.quad(P(u1,v0,foot),P(u1,v1,foot),P(u1,v1,top),P(u1,v0,top),inside);wall.quad(P(u0,v0,foot),P(u1,v0,foot),P(u1,v0,top),P(u0,v0,top),inside);wall.quad(P(u0,v1,foot),P(u1,v1,foot),P(u1,v1,top),P(u0,v1,top),inside);}
+    for(const v of [-2.2,2.2]){const w=Math.sign(v)*.3;wall.quad(P(-4,v,foot),P(hl,v,foot),P(hl,v,top+.25),P(-4,v,Math.max(0,top-.2)+.05),inside);
+     wallTop.quad(P(-4,v,Math.max(0,top-.2)+.05),P(hl,v,top+.25),P(hl,v+w,top+.25),P(-4,v+w,Math.max(0,top-.2)+.05),inside);wall.quad(P(-4,v+w,foot),P(hl,v+w,foot),P(hl,v+w,top+.25),P(-4,v+w,Math.max(0,top-.2)+.05),inside);}}
    if(a.kind===TrackKind.Wall){// The sea wall: a stone top and two faces down into the water (Enoden-style).
     const h=SEA_WALL_HALF,top=-.02,foot=-2.6,inside=off(a,0,-1);
     wallTop.quad(off(a,-h,top),off(b,-h,top),off(b,h,top),off(a,h,top),inside);
@@ -211,18 +228,30 @@ export function buildTrainWorld(tools:TrainTools){
 
  // ------------------------------------------------------------------ Summit tunnel: portals (paint) and the tube (own mesh)
  const portalArch=()=>{const s=new T.Shape(),r=TUNNEL_HALF_WIDTH,spring=2.4;s.moveTo(-r,-.3);s.lineTo(-r,spring);s.absarc(0,spring,r,Math.PI,0,true);s.lineTo(r,-.3);s.lineTo(-r,-.3);return s;};
+ // Nov 23 2026 (owner: the portals were upright 21 m slabs poking out of the hill, with a stray block on top): each portal is now a
+ // battered stone headwall PORTAL_HALF m either side, leaning back into the slope (PORTAL_LEAN per metre up), its top edge laid
+ // along the carved ground at its face (never above the hill), an arch ring round the mouth, and two wing walls running out along
+ // the cutting's banks with their tops on the bank. No coping slab, no hood box. Same two paints as before (stone, stoneDark).
  for(const p of [TUNNEL.west,TUNNEL.east]){const west=p===TUNNEL.west,t=trackAt(p.s),o={x:west?-t.tx:t.tx,z:west?-t.tz:t.tz},a={x:o.z,z:-o.x};
-  const ground=summitGround(p.x-o.x*1.5,p.z-o.z*1.5),Htop=Math.max(TUNNEL_BED+7.2,summitGround(p.x+o.x*-4,p.z+o.z*-4)+.8)-TUNNEL_BED,half=10.5;void ground;
-  const shape=new T.Shape();shape.moveTo(-half,-.6);shape.lineTo(half,-.6);shape.lineTo(half,Htop);shape.lineTo(-half,Htop);shape.lineTo(-half,-.6);shape.holes.push(portalArch());
+  const R=TUNNEL_HALF_WIDTH,ringR=R+.85,depth=1.5,lean=PORTAL_LEAN,half=PORTAL_HALF;
+  const groundAt=(v:number,u:number)=>summitGround(p.x+a.x*v+o.x*u,p.z+a.z*v+o.z*u)-TUNNEL_BED;
+  const archTop=(v:number)=>Math.abs(v)<ringR?2.4+Math.sqrt(ringR*ringR-v*v):0;
+  const shape=new T.Shape();shape.moveTo(-half,-.6);shape.lineTo(half,-.6);
+  for(let v=half;v>=-half-1e-6;v-=.7){const top=Math.max(archTop(v)+.25,groundAt(v,depth*.5)+.25,1.1);shape.lineTo(v,Math.min(top,2.4+ringR+.6));}
+  shape.lineTo(-half,-.6);shape.holes.push(portalArch());
   const basis=new T.Matrix4().makeBasis(new T.Vector3(a.x,0,a.z),new T.Vector3(0,1,0),new T.Vector3(o.x,0,o.z));
-  const wallG=new T.ExtrudeGeometry(shape,{depth:1.2,bevelEnabled:false,curveSegments:10});wallG.applyMatrix4(basis);
-  {const m=put(wallG,C.stone,p.x,TUNNEL_BED,p.z);m.userData.train=true;}// landable: the canopy pass makes its top a floor (no skip)
-  // Coping on top, a darker arch ring and the dark mouth just inside; a hood over the carve behind the headwall.
-  const g=new Geo(),gd=new Geo();g.box(p.x+o.x*.6,TUNNEL_BED+Htop+.12,p.z+o.z*.6,a.x,a.z,half+.2,.8,.12,false);
-  for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(TUNNEL_HALF_WIDTH+.25),y0=2.4+Math.sin(ang)*(TUNNEL_HALF_WIDTH+.25);gd.box(p.x+a.x*x0+o.x*1.22,TUNNEL_BED+y0,p.z+a.z*x0+o.z*1.22,a.x,a.z,.32,.04,.32);}
-  const hoodIn=(west?MOUTH_CARVE:MOUTH_CARVE_EAST)+.6,hoodY0=TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+.2;g.box(p.x-o.x*hoodIn/2,(hoodY0+TUNNEL_BED+Htop)/2,p.z-o.z*hoodIn/2,a.x,a.z,TUNNEL_HALF_WIDTH+2.2,hoodIn/2,(TUNNEL_BED+Htop-hoodY0)/2,false);
-  for(const sgn of [-1,1])g.box(p.x-o.x*hoodIn/2+a.x*sgn*(TUNNEL_HALF_WIDTH+.25),TUNNEL_BED+1.6,p.z-o.z*hoodIn/2+a.z*sgn*(TUNNEL_HALF_WIDTH+.25),a.x,a.z,.25,hoodIn/2,2.4,false);
-  const ox=Math.round(p.x),oz=Math.round(p.z);if(!g.empty)put(g.build(ox,oz),C.stoneDark,ox,0,oz).userData.train=true;/* coping + hood: landable */emit(gd,C.stoneDark,ox,oz);
+  const wallG=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:10});
+  {const q=wallG.getAttribute('position') as T.BufferAttribute;for(let k=0;k<q.count;k++)q.setZ(k,q.getZ(k)-Math.max(0,q.getY(k))*lean);q.needsUpdate=true;wallG.computeVertexNormals();}
+  wallG.applyMatrix4(basis);
+  skip(put(wallG,C.stone,p.x,TUNNEL_BED,p.z));// its top lies on the hill now, so no roof floor (a diagonal wall's bounding-box roof blocked rides)
+  // Arch ring (voussoirs) on the leaning face, and the wing walls along the banks.
+  const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
+  for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
+  for(const sg of [-1,1]){const v0=sg*(R+.6),v1=sg*(R+1.4),inside=P(sg*(R+1),3,-2);let prev:number[][]|null=null;
+   for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.45,Math.min(groundAt(v1+sg*.3,u)+.05,3.2));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
+    if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
+   if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
+  const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
   const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.35,TUNNEL_BED,p.z-o.z*.35));
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
@@ -256,7 +285,9 @@ export function buildTrainWorld(tools:TrainTools){
  }
  function portalColliders(x:number,z:number,o:{x:number;z:number},a:{x:number;z:number},half:number){const out:Obstacle[]=[];
   // The headwall either side of the arch (the arch itself stays open; the hill behind it is too steep to walk).
-  for(let v=TUNNEL_HALF_WIDTH+.6;v<=half;v+=1.2)for(const sgn of [-1,1])out.push({x:x+a.x*v*sgn+o.x*.6,z:z+a.z*v*sgn+o.z*.6,w:1.3,d:1.3});return out;}
+  for(let v=TUNNEL_HALF_WIDTH+.6;v<=half;v+=1.2)for(const sgn of [-1,1])out.push({x:x+a.x*v*sgn+o.x*.75,z:z+a.z*v*sgn+o.z*.75,w:1.3,d:1.3});
+  // The wing walls along the banks (their outer, bank side is ground level near the top; the inner face is the cutting's wall).
+  for(let u=2;u<=1.5+WING_LENGTH;u+=1.2)for(const sgn of [-1,1]){const v=(TUNNEL_HALF_WIDTH+1)*sgn;out.push({x:x+a.x*v+o.x*u,z:z+a.z*v+o.z*u,w:1.1,d:1.1});}return out;}
 }
 
 // ---- The board atlas: 1024 × 1024. Rows 0-4: one station each, its name board's two faces (x 0-512 front, 512-1024 back, the

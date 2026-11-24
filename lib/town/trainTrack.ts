@@ -120,7 +120,7 @@ export function trainCut(x:number,z:number,h:number){
 }
 
 // ---- Kinds and heights along the loop.
-export const TRESTLE_BED=1.05,RAMP_GRADE=.05;
+export const TRESTLE_BED=1.05,RAMP_GRADE=.05,SHORT_LAND=10,RAMP_LAND=6;
 export const TrackKind={Land:0,Sea:1,Wall:2,Tunnel:3} as const;
 /** The south coast sea wall: round the SW corner and along the museum boardwalk (Enoden-style, on the waterline). */
 const isWallPoint=(x:number,z:number)=>x>24&&x<238&&z>174&&z<232;
@@ -131,11 +131,21 @@ export function trackProfile(onLand:(x:number,z:number)=>boolean):TrackProfile{
  const n=TRACK.n,kind=new Uint8Array(n),bed=new Float32Array(n);
  for(let i=0;i<n;i++){const s=i*TRACK_DS,x=TRACK.x[i],z=TRACK.z[i];
   kind[i]=inTunnelS(s)?TrackKind.Tunnel:onSummitTrackS(s)?TrackKind.Land:onLand(x,z)?TrackKind.Land:isWallPoint(x,z)?TrackKind.Wall:TrackKind.Sea;}
+ // Nov 23 2026: a land run shorter than SHORT_LAND m between two sea stretches (the Starfish Sandbar's tip) stays trestle: the
+ // deck runs over it instead of dipping to the sand and climbing straight back up.
+ for(let i=0;i<n;i++){if(kind[i]!==TrackKind.Land||kind[(i-1+n)%n]!==TrackKind.Sea)continue;let j=i;while(kind[j%n]===TrackKind.Land&&j-i<n)j++;
+  if(kind[j%n]===TrackKind.Sea&&(j-i)*TRACK_DS<SHORT_LAND)for(let k=i;k<j;k++)kind[k%n]=TrackKind.Sea;}
  // Distance along the line to the nearest non-sea row, both ways (the trestle's ramps).
- const near=new Float32Array(n).fill(1e9);
- for(let pass=0;pass<2;pass++)for(let k=0;k<2*n;k++){const i=k%n,p=(i-1+n)%n;near[i]=kind[i]!==TrackKind.Sea?0:Math.min(near[i],near[p]+TRACK_DS);}
- for(let pass=0;pass<2;pass++)for(let k=2*n-1;k>=0;k--){const i=k%n,p=(i+1)%n;near[i]=kind[i]!==TrackKind.Sea?0:Math.min(near[i],near[p]+TRACK_DS);}
- for(let i=0;i<n;i++){const s=i*TRACK_DS;bed[i]=kind[i]===TrackKind.Sea?Math.max(Math.min(TRESTLE_BED,RAMP_GRADE*near[i]),summitBedAt(s)):onSummitTrackS(s)?summitBedAt(s):0;}
+ // Nov 23 2026: off Summit Isle the ramp starts RAMP_LAND m inland on a low embankment (a bridge head at the shore, the deck already
+ // clear of the water at the first pier) instead of at the waterline. `toSummit`: distance to Summit Isle's land rows (its own bed);
+ // `toMain`: to the main island's / Coral Cay's; `toSea`: from a land row to the nearest sea row.
+ const spread=(arr:Float32Array,src:(i:number)=>boolean,through:(i:number)=>boolean)=>{arr.fill(1e9);for(const dir of [1,-1])for(let pass=0;pass<2;pass++)for(let k=0;k<2*n;k++){const i=dir>0?k%n:(2*n-1-k)%n,p=(i-dir+n)%n;arr[i]=src(i)?0:through(i)?Math.min(arr[i],arr[p]+TRACK_DS):1e9;}};
+ const isSea=(i:number)=>kind[i]===TrackKind.Sea,summitLand=(i:number)=>kind[i]===TrackKind.Land&&onSummitTrackS(i*TRACK_DS),mainLand=(i:number)=>kind[i]===TrackKind.Land&&!onSummitTrackS(i*TRACK_DS);
+ const toSummit=new Float32Array(n),toMain=new Float32Array(n),toSea=new Float32Array(n);
+ spread(toSummit,summitLand,isSea);spread(toMain,mainLand,isSea);spread(toSea,isSea,mainLand);
+ for(let i=0;i<n;i++){const s=i*TRACK_DS;
+  bed[i]=isSea(i)?Math.max(Math.min(TRESTLE_BED,RAMP_GRADE*toSummit[i],RAMP_GRADE*(toMain[i]-TRACK_DS/2+RAMP_LAND)),summitBedAt(s))
+   :onSummitTrackS(s)?summitBedAt(s):kind[i]===TrackKind.Land?Math.max(0,RAMP_GRADE*(RAMP_LAND-(toSea[i]-TRACK_DS/2))):0;}
  return {kind,bed};
 }
 /** Bed height at s from a profile (lerp between rows). */

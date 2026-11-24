@@ -100,9 +100,9 @@ export const DEEP_BITE_DELAY=8;
 export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  // Nov 23 2026 (Island Line): the south coast moved ~20 m out for the beach outside the rails, so the two south spots stand on that
  // beach at the water's edge now (were on the boardwalk edge at z 212.6, buoys z 241.5 / 239.3, now sand).
- {id:'south-pier',name:'South Pier Fishing Station',x:217,z:245.2,buoy:{x:217,z:270},
+ {id:'south-pier',name:'South Pier Fishing Station',x:217,z:241.5,buoy:{x:217,z:266},
   reef:'barnacle-pilings',weights:{},story:'The old fishing station on the beach below the South Pier. Mackerel shoals pass here.'},
- {id:'west-pier',name:'Lifebuoy Point',x:63,z:238.2,buoy:{x:63,z:262},
+ {id:'west-pier',name:'Lifebuoy Point',x:63,z:234.5,buoy:{x:63,z:258.5},
   reef:'lifebuoy-lagoon',weights:{},story:'On the beach below the western boardwalk. Shrimp love the warm shallows.'},
  {id:'harbour-wall',name:'Harbour Wall',x:237.2,z:66,buoy:{x:264.8,z:66},
   reef:'harbour-fan-wall',weights:{},story:'The stone harbour wall behind the farmers market. Deep, cold water for cod and haddock.',camera:{lift:1.6,out:0,look:0}},
