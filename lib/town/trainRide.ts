@@ -79,7 +79,9 @@ const PORTRAIT_FOV=58;
  *  cutaway (roof and both walls stay). Drag (or the right side) turns it all the way round and `pitch` rad up / down; the stick /
  *  WASD walk the way you look (the aisle, door bays and gangway: trainWalk.ts). Your body is not drawn (the near-camera fade). Wider
  *  `fov` (portrait `portraitFov`) inside a 2.4 m car; it eases in and out with the view change. */
-export const FP={eye:1.36,pitch:1.05,fov:68,portraitFov:76,look:4} as const;
+export const FP={eye:1.36,pitch:1.05,fov:68,portraitFov:76,look:4,near:.16} as const;
+/** (The island camera's near plane is 1 m: in first person the cab partition, a bench end or a door post 0.3-1 m away was cut open,
+ *  so while the Inside view is on the near plane is FP.near m; it is put back the moment the view changes or you get off.) */
 /** The ride's camera views (owner, Nov 24 2026), in the order the camera button cycles them. */
 export const TRAIN_VIEWS=['seat','front','back','left','right','above','inside'] as const;
 export type TrainView=typeof TRAIN_VIEWS[number];
@@ -220,7 +222,7 @@ export function createTrainRide(ports:Ports){
  // Camera views (owner, Nov 24 2026): the view, the ease from the last frame's camera (snap: train-relative position, its rotation;
  // viewT 0 … 1), the last applied pose and the train nose it was relative to; the Inside view's follow point (train frame) and side
  // (+1: the camera on the train frame's +x side); the outside / inside views' spring arms.
- let tubeW=0,camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,refTx=1,refTz=0,armO=-1,havePose=false,lastFov=0,fovFrom=0,outT=1,outFov=0,swingLift=0;
+ let tubeW=0,camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,refTx=1,refTz=0,armO=-1,havePose=false,lastFov=0,fovFrom=0,outT=1,outFov=0,swingLift=0,nearSaved=0;
  const snapP=new T.Vector3(),snapL=new T.Vector3(),lastP=new T.Vector3(),lastL=new T.Vector3(),lastQ=new T.Quaternion(),outP=new T.Vector3(),outQ=new T.Quaternion(),fromP=new T.Vector3(),fromL=new T.Vector3(),o1=new T.Vector3(),o2=new T.Vector3(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},tpc={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
@@ -483,7 +485,7 @@ export function createTrainRide(ports:Ports){
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(!riding()&&blend<=0){if(camOn){camOn=false;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;arm=-1;}
+   if(!riding()&&blend<=0){if(camOn){camOn=false;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;arm=-1;}if(nearSaved){camera.near=nearSaved;nearSaved=0;camera.updateProjectionMatrix();}
     // RIDE 3: off the train, the camera eases from its last ride pose back to the follow camera (and the fov back to normal)
     if(outT<1&&fovSaved){outT=reduced?Math.min(1,outT+Math.max(0,Math.min(dt,.1))/VIEW_EASE_REDUCED):Math.min(1,outT+Math.max(0,Math.min(dt,.1))/EXIT_EASE);const ev=smoother(outT);
      const f=outFov+(fovSaved-outFov)*ev;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}
@@ -567,6 +569,7 @@ export function createTrainRide(ports:Ports){
    // the ride camera's weight: the seat blend (boarding), or 1 while standing / walking to a seat / stepping out (then the exit ease)
    const wc=Math.max(blend,standing||exitT>=0?1:0),e=wc*wc*(3-2*wc);
    if(!fovSaved)fovSaved=camera.fov;{const f=fovSaved+(rideFov-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
+   {const fp=camView==='inside'&&e>.5;if(fp&&!nearSaved){nearSaved=camera.near;camera.near=FP.near;camera.updateProjectionMatrix();}else if(!fp&&nearSaved){camera.near=nearSaved;nearSaved=0;camera.updateProjectionMatrix();}}
    normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
    camera.position.lerpVectors(normalPos,camPos,e);camera.quaternion.slerpQuaternions(normalQ,camQ,e);camera.updateMatrixWorld();
   },

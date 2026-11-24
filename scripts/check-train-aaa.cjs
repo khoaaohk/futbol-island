@@ -19,7 +19,7 @@
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,track,deck,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
+const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,views,framing,hud,inside,track,deck,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
 const phone = arg('phone', '1') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
@@ -431,6 +431,12 @@ async function partInside(c) {
     return { view: f.trainRide.view, standing: f.trainRide.standing, eyeY: +(q.y - 1.15).toFixed(2), x: +q.x.toFixed(2), meShown: f.player ? f.player.root.visible : null, cut: f.trains.roofCut[k], fov: +cam.fov.toFixed(1) }; }, k);
   check('inside: first person (eye 1.3-1.4 m over the floor in the aisle, roof on, my body hidden)', fp.view === 'inside' && fp.standing && fp.eyeY > 1.25 && fp.eyeY < 1.45 && Math.abs(fp.x) < 1.3 && fp.cut === 0 && fp.meShown !== true, JSON.stringify(fp));
   if (shots) await p.screenshot({ path: path.join(shots, `inside-fp-${phone ? 'phone' : 'desktop'}.png`) });
+  // Kenji through the partition (owner shot 45: smaller, seated back at the desk): stand at car 0's cab partition looking ahead
+  await p.evaluate(() => { const r = window.__fi2.trainRide; r.spot.x = .2; r.spot.u = 4.2; }); await p.waitForTimeout(700);
+  const kj = await p.evaluate((k) => { const f = window.__fi2, K = f.kenji; if (!K || !K.root) return null; const M = f.camera.matrixWorld.constructor, m = new M(); f.trains.carMatrixOf(k, 0, m); const q = K.root.position.clone().applyMatrix4(m.clone().invert());
+    return { shown: K.root.visible, k: K.at.k, scale: +K.root.scale.y.toFixed(2), z: +q.z.toFixed(2), y: +(q.y - 1.15).toFixed(2) }; }, k);
+  check('Kenji at the desk, drawn smaller (owner shot 45)', kj && kj.k === k && kj.scale < 1 && kj.z > 4.9 && kj.z < 5.3, JSON.stringify(kj));
+  if (shots) await p.screenshot({ path: path.join(shots, `kenji-partition-${phone ? 'phone' : 'desktop'}.png`) });
   // look round: a drag on the canvas turns the view; W walks the way you look
   const box = await p.locator('canvas').first().boundingBox(); const y0 = box.y + box.height * .45, x0 = box.x + box.width * .6;
   const f0 = await p.evaluate(() => window.__fi2.trainRide.camForward);

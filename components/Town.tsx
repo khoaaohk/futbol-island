@@ -1510,7 +1510,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // the stop announcements ("Next stop … Did you know?").
     const stationLife=createStationLife(islandNpcs);// Island Line Phase 4: station islanders turn to an arriving train; boarders ride off and back
     // Gameplay 3: NPC passengers on the trains (lib/town/trainPassengers.ts: seeded by the timetable lap, one instanced draw, talkable while riding)
-    const trainPassengers=createTrainPassengers(scene,{away:id=>islandNpcs.isAway(id)});disposers.add(()=>trainPassengers.dispose());const kenjiFig=createKenjiFigure(scene);disposers.add(()=>kenjiFig.dispose());/* Conductor Kenji in the leading cab (lib/graphics/trainKenji.ts) */
+    const trainPassengers=createTrainPassengers(scene,{away:id=>islandNpcs.isAway(id)});disposers.add(()=>trainPassengers.dispose());const kenjiFig=createKenjiFigure(scene);disposers.add(()=>kenjiFig.dispose());{const dbg=(window as unknown as {__fi2?:Record<string,unknown>}).__fi2;if(dbg)dbg.kenji=kenjiFig;}/* checks: Kenji's drawn rig (only where the debug hooks are on) *//* Conductor Kenji in the leading cab (lib/graphics/trainKenji.ts) */
     const trainRide=createTrainRide({run:()=>world.trainRun,
       place:(x,z,y,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
       seat:p=>{location.x=p.x;location.z=p.z;visualLocation.x=p.x;visualLocation.z=p.z;velocity.x=velocity.z=0;rooftop.state.height=p.y;player.root.position.set(p.x,p.y,p.z);player.root.rotation.y=p.yaw;},
