@@ -2544,7 +2544,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         else if(jobView.stand)cands.push({kind:'job-offer',key:'farm-stand',distance:Math.hypot(FARM_STAND_SELL.x-location.x,FARM_STAND_SELL.z-location.z)});// the farm stand's Sell button shares the job-sign slot
         const npc=nearbyNpcRef.current;if(npc)cands.push({kind:'talk',key:npc.id,distance:Math.hypot(npc.x-location.x,npc.z-location.z)});
         if(closestEntry)cands.push({kind:'enter',key:closestEntry,distance:closestEntryDistance<0?-1:Math.sqrt(closestEntryDistance)});
-        if(vendingTarget)cands.push({kind:'vending',key:vendingTarget,distance:vending.targetDistance});
+        if(vendingTarget)cands.push({kind:'vending',key:vendingTarget,distance:vending.targetDistance,pri:PRI_STAMP});/* final verify Nov 24 2026: the station drink machines sit on the back of the station house, so the machine and Collect stamp are peers (the nearer wins); at pri 0 the stamp always won and the machine could not be used */
         if(fishingHover.wants)cands.push({kind:fishingHover.wants,distance:fishingHover.wantsDistance});
         if(summitWant)cands.push({kind:'enter',key:summitWant.key,distance:summitWant.distance});if(cannonWant)cands.push({kind:'enter',key:cannonWant.key,distance:cannonWant.distance});// Summit Kick post / Ball Cannon
         if(easelWant)cands.push({kind:'enter',key:easelWant.key,distance:easelWant.distance});if(gashaWant)cands.push({kind:'enter',key:gashaWant.key,distance:gashaWant.distance});/* gashapon */// Summit Isle painting easel
