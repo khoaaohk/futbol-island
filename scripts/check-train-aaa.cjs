@@ -374,6 +374,28 @@ async function partFraming(c) {
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
   await p.evaluate(() => window.__fi2.trainRide.finish());
 }
+// RIDE 3 HUD (owner shots 42, 47, 50): riding, the camera button is tap only (no list), a view change's toast and the announcement
+// sit right under the coins pill, and on phones the map toggle is the outer column's top cell (right of Recenter), 44 px targets.
+async function partHud(c) {
+  const { p } = c;
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
+  await p.waitForTimeout(1200);
+  await p.locator('[data-train-cam]').click(); await p.waitForTimeout(350);
+  const r = await p.evaluate(() => { const b = (q) => { const e = document.querySelector(q); if (!e) return null; const r = e.getBoundingClientRect(); return r.width ? { l: Math.round(r.left), r: Math.round(r.right), t: Math.round(r.top), b: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height) } : null; };
+    return { pill: b('[data-job-wallet]'), toast: b('[data-train-cam-toast]'), note: b('[data-train-note]'), menu: !!document.querySelector('[data-train-cam-menu],[role=menu]'), map: b('.travel-actions .minimap-toggle'), off: b('.travel-actions .travel-mode'), rec: b('.travel-actions .touch-juggle:not(.touch-walk)'), walk: b('.travel-actions .touch-walk'), horn: b('.travel-actions .touch-shoot'), view: window.__fi2.trainRide.view, vw: innerWidth }; });
+  check('hud: a camera tap changes the view, no view list', r.view !== 'seat' && !r.menu, JSON.stringify({ view: r.view, menu: r.menu }));
+  const under = (t) => t && r.pill && t.t >= r.pill.b && t.t - r.pill.b <= 40;
+  check('hud: the view toast sits right under the coins pill', under(r.toast) || (r.note && r.toast && r.toast.b <= r.note.t + 2 && under(r.toast)), JSON.stringify({ pill: r.pill, toast: r.toast, note: r.note }));
+  if (phone) check('hud (phone): the map toggle is the outer column top cell, right of Recenter, 44 px targets', r.map && r.rec && r.map.l >= r.rec.r - 2 && Math.abs(r.map.t - r.rec.t) < 12 && [r.map, r.off, r.rec, r.walk, r.horn].every((x) => x && x.w >= 44 && x.h >= 44), JSON.stringify({ map: r.map, rec: r.rec, off: r.off, walk: r.walk, horn: r.horn }));
+  if (shots) await p.screenshot({ path: path.join(shots, `hud-${phone ? 'phone' : 'desktop'}.png`) });
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
+  await p.evaluate(() => window.__fi2.trainRide.finish()); await p.waitForTimeout(600);
+  if (phone) { const m = await p.evaluate(() => { const a = document.querySelector('.travel-actions .minimap-toggle')?.getBoundingClientRect(), t = document.querySelector('.travel-actions')?.hasAttribute('data-train-actions'); return { t, l: a ? Math.round(a.left) : -1 }; });
+    check('hud: off the train the normal layout is back', !m.t, JSON.stringify(m)); }
+}
 async function partRoof(c) {
   const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
   const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
@@ -513,7 +535,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));

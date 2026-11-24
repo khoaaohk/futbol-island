@@ -718,8 +718,13 @@ html[data-bug-bar-on] .hud-stack{top:calc(var(--island-hud-row-top) + var(--isla
  html[data-bug-bar-on] .town-app:has(nav[data-hud-triggers]>[data-party-open]) .hud-stack{top:calc(var(--island-hud-row-top) + 2 * var(--island-hud-row-height) + 8px + var(--island-hud-row-gap) + var(--bug-bar-h,48px) + 8px)}}
 /* Each piece keeps its own look; the column owns where it sits. (0,4,0) so the pieces' old absolute placements cannot win. */
 .town-app .hud-stack.hud-stack.hud-stack>*{position:relative;inset:auto;z-index:auto;transform:none;translate:none;margin:0;max-width:100%;box-sizing:border-box;pointer-events:auto}
-.town-app .hud-stack.hud-stack.hud-stack>:is([data-coin-hint],[data-knockout-status]){pointer-events:none}
+.town-app .hud-stack.hud-stack.hud-stack>:is([data-coin-hint],[data-knockout-status],[data-hud-slot=ride]){pointer-events:none}
 .hud-stack>[data-hud-slot=task]{order:1}.hud-stack>[data-hud-slot=focus]{order:2}.hud-stack>[data-hud-slot=toast]{order:3}.hud-stack>[data-hud-slot=guide]{order:4}
+/* RIDE 3 (owner shot 47, Nov 24 2026): the Island Line's own toasts (TrainRideHud: the camera view's name, then the announcement)
+   lead the column, right under the coins pill; island notes (Kenji, the bonk, the seat note) follow under them. */
+.hud-stack>[data-hud-slot=ride]{order:0}.hud-stack>[data-hud-slot=ride][data-ride-order="1"]{order:-1}
+/* "New update ready" (NetSaveNotice, fixed under the coins pill): the column starts under it instead of behind it. */
+html:has([data-update-ready]) .hud-stack{top:calc(env(safe-area-inset-top,0px) + 82px + 74px)}
 /* Cards and panels take the column's width; pills and notes size to their text. */
 .town-app .hud-stack.hud-stack.hud-stack>:is(.field-learn-card,[data-coin-hint],[data-job-active],[data-welcome-back]){width:min(360px,100%)}
 .town-app .hud-stack.hud-stack.hud-stack>:is([data-job-intro],[data-job-done]){width:100%;max-height:calc(100dvh - var(--island-hud-row-top) - var(--island-hud-row-height) - var(--island-hud-row-gap) - 24px - env(safe-area-inset-bottom,0px))}
@@ -1054,17 +1059,20 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
 .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{position:static;grid-column:1;grid-row:2;justify-self:center}
 .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:absolute;right:calc(100% + 12px);bottom:0;grid-column:auto;grid-row:auto}
 @media(max-width:600px),(pointer:coarse){
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:static;grid-column:1;grid-row:2}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:1;grid-row:1;justify-self:center}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:2;grid-row:1;justify-self:center}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:3;grid-row:1;justify-self:end}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:2;grid-row:2;justify-self:center}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:3;grid-row:2;justify-self:end}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-emote{grid-column:3;grid-row:2}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:3;grid-row:1;justify-self:center}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:1;grid-row:1;justify-self:start}
+ /* RIDE 3 (owner shot 50, Nov 24 2026: "move the map button to the far right side"): the map toggle takes the OUTER column's top
+    cell (the screen edge, in line with Get off | Recenter), Emote under it; the 2 x 2 cluster moves one column in. Flipped: mirrored
+    (the map at the left edge). The minimap bubble stays above at that edge, clear of the cluster. Off the train: the normal grid. */
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:static;grid-column:3;grid-row:2;justify-self:end}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:3;grid-row:1;justify-self:end}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:1;grid-row:1;justify-self:start}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:2;grid-row:1;justify-self:center}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:1;grid-row:2;justify-self:start}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-emote{grid-column:1;grid-row:2;justify-self:start}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:1;grid-row:1;justify-self:start}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:3;grid-row:1;justify-self:end}
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:2;grid-row:1;justify-self:center}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:1;grid-row:2;justify-self:start}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:3;grid-row:2;justify-self:end}
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
 }
 /* Island Line ride HUD (owner, Nov 24 2026): riding the train, no fuel readout (coins, fish and fruit stay), no settings gear and no

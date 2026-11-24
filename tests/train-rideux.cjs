@@ -85,7 +85,7 @@ console.log('train-rideux hud: ok');
  for(let i=0;i<200;i++)ride2.holdPlayer(1,0);step(120);ride2.holdPlayer(0,0);
  ride2.press('recenter','tap');step(90);assert.equal(R.trainRideStore.get().moved,false,'Recenter: back to the view default');
  ride2.dispose();}
-{const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-cam\b/.test(H)&&/role="menu"/.test(H)&&/HOLD_MS/.test(H)&&/data-train-cam-toast/.test(H),'the camera button, its hold menu and toast');
+{const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-cam\b/.test(H)&&!/role="menu"/.test(H)&&!/HOLD_MS|onContextMenu/.test(H)&&/data-train-cam-toast/.test(H)&&/<HudSlot>/.test(H)&&/data-hud-slot="ride"/.test(H),'the camera button: tap only (RIDE 3, owner shot 42), its toast in the HUD stack under the pill (shot 47)');
  assert(/trainRideActions\.view=v=>\{if\(trainRide\.setView\(v\)\)wakeLoop\(\);\}/.test(Tn),'Town: the menu picks a view');
  const C=read('components/TrainRideHud.module.css'),J=read('components/LiveJoinHud.module.css');const face=/border:3px solid #fff2cd;border-radius:50%;background:var\(--island-control-face,#f4cc7c\)/;assert(face.test(C)&&face.test(J),'the live-join camera button look');
  const tv=read('lib/graphics/trafficVehicles.ts');assert(/transformed\.x\*fiS>\$\{CUT_WALL_X/.test(tv),'the low wall in the vehicle shader');

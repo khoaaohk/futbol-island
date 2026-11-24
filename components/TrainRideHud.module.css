@@ -1,13 +1,9 @@
 /* Island Line ride HUD (components/TrainRideHud.tsx, train Phase 3): the on-board announcement (the between-stops quiz is gone, Nov 25 2026).
-   The island's note palette (ForagePrompt.module.css); no timers: the announcement fades by CSS alone. */
-.note{position:absolute;z-index:31;top:calc(146px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(440px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none;animation:note 7s ease-out forwards}
-@keyframes note{0%{opacity:0;translate:-50% 6px}5%{opacity:1;translate:-50% 0}88%{opacity:1}100%{opacity:0;visibility:hidden}}
-@media(prefers-reduced-motion:reduce){.note{animation-name:noteStill}@keyframes noteStill{0%,92%{opacity:1}100%{opacity:0;visibility:hidden}}}
-/* Phase 4 (Nov 23 2026): landscape phones (short and wide): the note moves to the top centre, clear of the stick (bottom left) and
-   the action cluster (bottom right), inside the notch / home-bar safe areas. */
-@media (orientation:landscape) and (max-height:520px){
- .note{top:calc(10px + env(safe-area-inset-top,0px));max-width:min(520px,calc(100% - 40px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)))}
-}
+   The island's note palette (ForagePrompt.module.css). RIDE 3 (owner shot 47): the notes sit in the island HUD stack under the coins
+   pill (TrainRideHud.tsx RideToasts, data-hud-slot=ride; globals.css orders them); they fade by CSS and are removed after. */
+.note{width:max-content;max-width:min(440px,100%);margin:0;padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none;animation:note 7s ease-out forwards}
+@keyframes note{0%{opacity:0;transform:translateY(-6px)}5%{opacity:1;transform:none}88%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.note{animation-name:noteStill}@keyframes noteStill{0%,92%{opacity:1}100%{opacity:0}}}
 
 /* Gameplay 2 (owner, Nov 24 2026): the Board button pulses gently (compositor-only scale; none with reduced motion; a hidden button
    is display:none, so it costs nothing off the platform). */
@@ -31,12 +27,6 @@
 .cam{position:absolute;z-index:35;top:var(--island-hud-row-top,16px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));box-sizing:border-box;display:grid;place-items:center;width:var(--btn-icon,44px);height:var(--btn-icon,44px);padding:0;border:3px solid #fff2cd;border-radius:50%;background:var(--island-control-face,#f4cc7c);background-blend-mode:soft-light;color:#244d40;box-shadow:var(--island-control-shadow,0 3px 0 #a8863d);cursor:pointer;touch-action:manipulation;-webkit-touch-callout:none;user-select:none;transition:translate .16s,box-shadow .16s}
 .cam:active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
 .cam:focus-visible{outline:3px solid #244d40;outline-offset:3px}
-.camMenu{position:absolute;z-index:36;top:calc(var(--island-hud-row-top,16px) + var(--btn-icon,44px) + 10px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));display:grid;gap:4px;min-width:150px;padding:6px;border:2px solid #fff2cd;border-radius:16px;background:#fff8e5;box-shadow:0 5px 0 #a8863d;animation:camMenuIn .16s ease-out both}
-.camItem{min-height:40px;padding:8px 12px;border:0;border-radius:10px;background:transparent;color:#244d40;text-align:left;font:800 14px/1.2 var(--font-body,Arial),sans-serif;cursor:pointer;touch-action:manipulation}
-.camItem[aria-checked=true]{background:#f4cc7c}
-.camItem:hover{background:#f39c8255}
-.camItem:focus-visible{outline:3px solid #244d40;outline-offset:-3px}
-@keyframes camMenuIn{from{opacity:0;translate:0 -4px}to{opacity:1;translate:0 0}}
-.camToast{position:absolute;z-index:31;top:calc(var(--island-hud-row-top,16px) + var(--btn-icon,44px) + 12px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));margin:0;padding:6px 12px;border:2px solid #fff2cd;border-radius:999px;background:#244d40;color:#fff2cd;font:800 13px/1.2 var(--font-body,Arial),sans-serif;white-space:nowrap;pointer-events:none;animation:camToast 1.6s ease-out forwards}
-@keyframes camToast{0%{opacity:0;translate:0 -6px}12%{opacity:1;translate:0 0}80%{opacity:1}100%{opacity:0;visibility:hidden}}
-@media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}.camMenu{animation:none}.camToast{animation-name:camToastStill}@keyframes camToastStill{0%,85%{opacity:1}100%{opacity:0;visibility:hidden}}}
+.camToast{width:max-content;margin:0;padding:6px 12px;border:2px solid #fff2cd;border-radius:999px;background:#244d40;color:#fff2cd;font:800 13px/1.2 var(--font-body,Arial),sans-serif;white-space:nowrap;pointer-events:none;animation:camToast 1.6s ease-out forwards}
+@keyframes camToast{0%{opacity:0;transform:translateY(-6px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}.camToast{animation-name:camToastStill}@keyframes camToastStill{0%,85%{opacity:1}100%{opacity:0}}}
