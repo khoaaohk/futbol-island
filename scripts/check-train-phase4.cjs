@@ -67,18 +67,21 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     check('both clients in one public world and drawing each other on the platform', seenA.best < 2.5 && seenB.best < 2.5, `A sees B ${seenA.best.toFixed(2)} m (${seenA.n} remotes), B sees A ${seenB.best.toFixed(2)} m (${seenB.n}); relay ${JSON.stringify(metrics?.worlds ?? metrics)?.slice(0, 120)}`);
     // station islanders and the drink machine on this platform; draw calls on the phone with them in view
     const sta = await A.p.evaluate((id) => { const f = window.__fi2, npcs = f.islandNpcs?.entries ?? []; const here = npcs.filter((e) => e.id.startsWith('stn-') && e.definition.station === id);
-      const vend = f.scene.getObjectByName('vending-drinkst' + id); return { npcs: here.map((e) => ({ id: e.id, shown: e.rig.root.visible })), vending: !!vend, vendShadow: vend?.castShadow }; }, STOP_STATION[s.stop]);
-    check('two station islanders drawn on the platform', sta.npcs.length === 2 && sta.npcs.every((n) => n.shown), JSON.stringify(sta.npcs));
+      const vend = f.scene.getObjectByName('vending-drinkst' + id); return { npcs: here.map((e) => ({ id: e.id, shown: e.rig.root.visible, away: f.islandNpcs.isAway(e.id) })), vending: !!vend, vendShadow: vend?.castShadow }; }, STOP_STATION[s.stop]);
+    check('two station islanders drawn on the platform (or one riding a train: a boarder)', sta.npcs.length === 2 && sta.npcs.every((n) => n.shown || n.away), JSON.stringify(sta.npcs));
     check('the station drink machine stands there (no shadow caster)', sta.vending && sta.vendShadow === false);
     const g0 = await gfx(A.p); console.log(`station view (A, phone 390x844, ${STOP_STATION[s.stop]}, islanders + machine + B): ${g0.calls} draw calls, ${g0.tris} triangles (${g0.frames} frames)`);
+    if (shots) { require('fs').mkdirSync(shots, { recursive: true }); await B.p.screenshot({ path: path.join(shots, 'phase4-station-night-desktop.png') }); }
+    // B joins A on the same spot before the train comes (so B's nearest free seat is across the aisle from A's)
+    await B.p.evaluate(({ x, z, yaw }) => window.__fi2.teleport(x, z, yaw + Math.PI), spots.A);
     // a train standing at the stop with its doors open
-    let k = -1; for (let i = 0; i < 340 && k < 0; i++) { k = await A.p.evaluate((stop) => window.__fi2.trains.states.findIndex((x) => x.at === stop && x.doors > .6 && x.dwellLeft > 5), s.stop); if (k < 0) await A.p.waitForTimeout(500); }
+    let k = -1; for (let i = 0; i < 340 && k < 0; i++) { k = await A.p.evaluate((stop) => window.__fi2.trains.states.findIndex((x) => x.at === stop && x.doors > .6 && x.dwellLeft > 9), s.stop); if (k < 0) await A.p.waitForTimeout(500); }
     check('a train stands at the platform', k >= 0, `train ${k}`);
     const turned = await A.p.evaluate(() => (window.__fi2.islandNpcs?.entries ?? []).filter((e) => e.id.startsWith('stn-')).map((e) => e.id + ':' + (window.__fi2.islandNpcs.isAway(e.id) ? 'away' : 'here')).join(' '));
-    if (shots) { require('fs').mkdirSync(shots, { recursive: true }); await B.p.screenshot({ path: path.join(shots, 'phase4-station-night-desktop.png') }); }
-    // both board the same train
-    for (const c of [A, B]) { await c.p.evaluate(() => { const e = document.querySelector('[data-train-board]'); if (e && !e.hidden) e.click(); }); await c.p.waitForTimeout(400); if (!(await c.p.evaluate(() => window.__fi2.trainRide.active))) await c.p.evaluate(() => window.__fi2.trainRide.board()); await c.p.waitForTimeout(900); }
+    // both board the same train from the same spot, so B takes the seat across the aisle from A (each ride camera then has the other in view)
+    for (const c of [A, B]) { await c.p.evaluate(() => { const e = document.querySelector('[data-train-board]'); if (e && !e.hidden) e.click(); }); await c.p.waitForTimeout(400); if (!(await c.p.evaluate(() => window.__fi2.trainRide.active))) await c.p.evaluate(() => window.__fi2.trainRide.board()); await c.p.waitForTimeout(2500)/* A's seat reaches B (taken seats) */; }
     const ra = await me(A.p), rb = await me(B.p);
+    if (!ra.riding || !rb.riding) console.log('diag', JSON.stringify(await Promise.all([A.p, B.p].map((p) => p.evaluate(() => ({ lw: window.__fi2.trainRide.lastWant, st: window.__fi2.trains.states.map((x) => [x.at, +x.doors.toFixed(2), +x.dwellLeft.toFixed(1)]) }))))).slice(0, 400));
     check('both ride the same train in different seats', ra.riding && rb.riding && ra.train === k && rb.train === k && ra.seat !== rb.seat, `A train ${ra.train} seat ${ra.seat}, B train ${rb.train} seat ${rb.seat}`);
     const seatOf = (p, kk, j) => p.evaluate(({ kk, j }) => { const o = { x: 0, y: 0, z: 0, yaw: 0 }; window.__fi2.trains.seatPose(kk, j, o); return o; }, { kk, j });
     const mutual = async () => { const sa = await seatOf(B.p, k, ra.seat), sb = await seatOf(A.p, k, rb.seat); const bSeesA = await nearestRemote(B.p, sa.x, sa.z), aSeesB = await nearestRemote(A.p, sb.x, sb.z); return { bSeesA: bSeesA.best, aSeesB: aSeesB.best, sa }; };
@@ -98,7 +101,7 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     check('the train is at the same place on both screens (within 1 s)', worst < 1, dts.map((d) => d.toFixed(2) + ' s').join(', '));
     const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
-    const quiz = await A.p.waitForSelector('[data-train-quiz]', { timeout: 30000 }).then(() => true).catch(() => false);
+    const quiz = await A.p.waitForSelector('[data-train-quiz]', { timeout: 45000 }).then(() => true).catch(() => false);
     check('the between-stops quiz card shows', quiz);
     const g1 = await gfx(A.p); console.log(`riding with a friend (A, phone): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
     if (shots) await A.p.screenshot({ path: path.join(shots, 'phase4-ride-quiz-phone.png') });

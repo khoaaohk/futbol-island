@@ -112,7 +112,7 @@ export function createTrainRide(ports:Ports){
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
  function ensureQuiz(){if(quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
- function askQuiz(){if(!quizzes?.length){if(riding()&&lastAt<0)quizIn=1;return;}/* still loading (first ride): try again in 1 s, until the next stop */const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
+ function askQuiz(){if(!quizzes?.length){ensureQuiz();/* Phase 4: a failed load is asked again (ensureQuiz skips while one is loading) */if(riding()&&lastAt<0)quizIn=1;return;}/* still loading (first ride): try again in 1 s, until the next stop */const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
   trainRideStore.set({quiz:{...q,picked:-1}});}
  function board(){
   const run=ports.run();if(riding()||!run||near<0||nearTrain<0)return false;
