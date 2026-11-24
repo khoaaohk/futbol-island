@@ -15,6 +15,7 @@
  */
 import {STADIUM_PLAZA,PARK_SIGNS,PARK_LAWNS,BOWL_RING,inStadiumFootprint,inPond,onParkPaving,onGrass,grassEdgeDistance,POND_RIM} from './westParkLayout';
 import {onIsland,distanceToShore} from './shoreline';
+import {trackNearest} from './trainTrack';
 import {FORAGE,localForageDay,sanitizeForage,emptyForage,type ForageSave,type FruitKind} from './summitForage';
 import type {OrchardForm,OrchardPlan} from './summitOrchard';
 
@@ -66,6 +67,8 @@ export function orchardSpotClear(x:number,z:number,r:number=ORCHARD_RULES.canopy
  if(onParkPaving(x,z,r+1.2)||inStadiumFootprint(x,z,BOWL_RING.width+6))return false;
  const P=STADIUM_PLAZA;if(x>P.minX-10&&x<P.maxX+10&&z>P.minZ-11&&z<P.maxZ+11)return false;// the beds, benches and planters round the plaza
  if(inPond(x,z,POND_RIM+4+r))return false;
+ // Nov 23 2026: clear of the Island Line (4 m), and of the West Beach station's platform and house strip (12 m; station at -305,-30)
+ if(trackNearest(x,z,(x<-280&&Math.abs(z+30)<22?12:4)+r))return false;
  for(const [sx,sz] of PARK_SIGNS)if(Math.hypot(x-sx,z-sz)<6+r||(x>sx-4&&x<sx+14&&z>sz-3&&z<sz+18))return false;
  if(PARK_LAWNS.some(l=>Math.hypot((x-l.x)/(l.rx+2),(z-l.z)/(l.rz+2))<1))return false;
  return true;

@@ -40,19 +40,29 @@ const VIEWS=[
  {id:'swim',note:'swimming 22 m off that beach',x:shore.x+shore.ux*23,z:shore.z+shore.uz*23,yaw:shore.yaw,swim:true},
  {id:'stadium',note:'Stadium Plaza arrival, facing the gate',x:W.STADIUM_ARRIVAL.x,z:W.STADIUM_ARRIVAL.z,yaw:W.STADIUM_ARRIVAL.yaw},
 ];
+// Island Line (Nov 23 2026): GFX_VIEWS=train swaps in the train's five check views; GFX_NO_TRAIN=1 builds the island without the
+// line (world.ts's 'fi-no-train' A/B switch) for the before column.
+if(process.env.GFX_VIEWS==='train')VIEWS.splice(0,VIEWS.length,
+ {id:'shore',note:'Palm Coast Beach waterline, facing the sea',x:shore.x,z:shore.z,yaw:shore.yaw},
+ {id:'west-beach',note:'West Beach station, from the stadium side',x:-282,z:-30,yaw:Math.atan2(-1,0)},
+ {id:'south',note:'South station, from the Museum door',x:160,z:200,yaw:0},
+ {id:'summit-portal',note:'Summit Isle platform, facing the west portal',x:506,z:204,yaw:Math.atan2(32.5,-34.5)},
+ {id:'coral-cay',note:'Coral Cay station, from the plaza path',x:590,z:-94,yaw:0});
+const NO_TRAIN=process.env.GFX_NO_TRAIN==='1';
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0;};
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  const page=await ctx.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('pageerror: '+e.message.slice(0,300)));
- await page.addInitScript(({x,z,time,seed})=>{
+ await page.addInitScript(({x,z,time,seed,noTrain})=>{
   localStorage.setItem('fi-staff','1');// staff device: the analytics tracker sends nothing
   sessionStorage.setItem('fi2-in-game','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-save-deleted-v1','device-specs');
   localStorage.setItem('fi2-time-of-day',time);
+  if(noTrain)localStorage.setItem('fi-no-train','1');else localStorage.removeItem('fi-no-train');
   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x,z,yaw:0,ride:'walk',flightHeight:0}));
   if(seed){let s=20261117;Math.random=()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
- },{x:VIEWS[0].x,z:VIEWS[0].z,time:TIME,seed:SEED});
+ },{x:VIEWS[0].x,z:VIEWS[0].z,time:TIME,seed:SEED,noTrain:NO_TRAIN});
  await page.goto(BASE+'/play?from=arcade',{timeout:240000});
  await page.waitForFunction(()=>window.__fi2&&window.__fi2.renderer&&window.__fi2.heat&&window.__fi2.water&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});
  // One wrapper for the whole run: every island-scene render records three's counters and its own JS time.
@@ -86,7 +96,7 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,`gfx-${v.id}.png`)});}
  }
  await browser.close();
- console.log(`gfx-budget  ${BASE}  390x844 DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
+ console.log(`gfx-budget${NO_TRAIN?' (no train)':''}  ${BASE}  390x844 DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
  console.log('| view | draw calls (min-max) | triangles | programs | textures | geometries | render ms (CPU) | water phase | ocean blended | frames |');
  console.log('|---|---|---|---|---|---|---|---|---|---|');
  for(const o of out)console.log(`| ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.programs} | ${o.textures} | ${o.geometries} | ${o.renderMs} | ${o.phase}${o.reached?'':' (swim NOT reached)'} | ${o.oceanBlended?'yes':'no'} | ${o.frames} |`);

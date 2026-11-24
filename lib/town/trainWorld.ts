@@ -23,6 +23,7 @@ import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
 import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,MOUTH_CARVE,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,SEA_WALL_HALF} from './trainLayout';
+import {onWalkPath} from './westParkLayout';
 
 type Surface=Obstacle&{height:number};
 export type TrainTools={
@@ -48,10 +49,10 @@ class Geo{
    if(nx*mx+ny*my+nz*mz<0){this.tri(a,c,b);this.tri(a,d,c);return;}}
   this.tri(a,b,c);this.tri(a,c,d);}
  /** Box round centre c with half sizes hl along (tx,tz), hw across, hh up. */
- box(cx:number,cy:number,cz:number,tx:number,tz:number,hl:number,hw:number,hh:number,skipBottom=true){
+ box(cx:number,cy:number,cz:number,tx:number,tz:number,hl:number,hw:number,hh:number,skipBottom=true,ends=true){
   const nx=tz,nz=-tx,P=(a:number,b:number,h:number)=>[cx+tx*hl*a+nx*hw*b,cy+hh*h,cz+tz*hl*a+nz*hw*b],c=[cx,cy,cz];
   this.quad(P(-1,-1,1),P(1,-1,1),P(1,1,1),P(-1,1,1),c);if(!skipBottom)this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,1,-1),P(-1,1,-1),c);
-  this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,-1,1),P(-1,-1,1),c);this.quad(P(-1,1,-1),P(1,1,-1),P(1,1,1),P(-1,1,1),c);
+  if(ends){this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,-1,1),P(-1,-1,1),c);this.quad(P(-1,1,-1),P(1,1,-1),P(1,1,1),P(-1,1,1),c);}
   this.quad(P(-1,-1,-1),P(-1,1,-1),P(-1,1,1),P(-1,-1,1),c);this.quad(P(1,-1,-1),P(1,1,-1),P(1,1,1),P(1,-1,1),c);}
  /** Box between two points (a thin beam / post / wire piece), square section r. */
  beam(a:number[],b:number[],r:number){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
@@ -94,7 +95,7 @@ export function buildTrainWorld(tools:TrainTools){
    if(xing){// The crossing deck: dark panels level with the rail heads, the full width of the path.
     xdeck.box((a.x+b.x)/2,a.bed+RAIL_TOP-.08,(a.z+b.z)/2,a.tx,a.tz,TRACK_DS/2+.02,1.9,.08,true);}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
-   for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing)sleepers.box(x,y+SLEEPER_TOP-.05,z,a.tx,a.tz,.13,1.15,.05);}
+   for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing)sleepers.box(x,y+SLEEPER_TOP-.05,z,a.tx,a.tz,.13,1.15,.05,true,false);/* no end faces: 0.26 × 0.1 m, unseen (heat) */}
    if(a.kind===TrackKind.Land||a.kind===TrackKind.Wall){// Ballast: a low trapezoid strip.
     const t0=off(a,-1.45,a.bed+BALLAST_TOP),t1=off(a,1.45,a.bed+BALLAST_TOP),u0=off(b,-1.45,b.bed+BALLAST_TOP),u1=off(b,1.45,b.bed+BALLAST_TOP),
      f0=off(a,-1.9,a.bed-.06),f1=off(a,1.9,a.bed-.06),g0=off(b,-1.9,b.bed-.06),g1=off(b,1.9,b.bed-.06),inside=off(a,0,a.bed-1);
@@ -107,7 +108,8 @@ export function buildTrainWorld(tools:TrainTools){
     for(const side of [-1,1]){const v=side*RAIL_HALF_GAUGE,w=.2,top=a.bed+SLEEPER_TOP-.1,bot=a.bed-.4,topB=b.bed+SLEEPER_TOP-.1,botB=b.bed-.4,inside=off(a,v,a.bed-.15);
      girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v-w,topB),off(a,v-w,top),inside);girders.quad(off(a,v+w,bot),off(b,v+w,botB),off(b,v+w,topB),off(a,v+w,top),inside);girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v+w,botB),off(a,v+w,bot),inside);}}
    // Catenary: a pole with its cantilever arm every ~POLE_STEP m (right side; platforms are all on the left), not at crossings.
-   if(a.s>=poleNext&&!crossingAt(a.s,2)){poleNext=a.s+POLE_STEP;
+   // (and never on a west-park trail: the pole slides along to the next row clear of it)
+   if(a.s>=poleNext&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))){poleNext=a.s+POLE_STEP;
     const base=a.kind===TrackKind.Sea?a.bed-.4:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
     poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05);poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035);

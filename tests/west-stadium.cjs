@@ -53,7 +53,9 @@ console.log('stadium build:',JSON.stringify(world.stadium));// Nov 13 2026 (owne
 // gashapons' shared island model, lib/graphics/gashaponMesh.ts; no new chunk or draw call): 95k → 98k.
 // Nov 13 2026 (release3, measured): main 57 chunks / 81,902 tris; + the bigger pond, jetty, reeds, rocks and orchard (pond-swim) 63 / 85,352;
 // + the machine row (screen-shops) 59 / 96,338; both together 65 / 99,788. Budget 98k → 102k (~2% margin).
-assert(chunks.length<=75&&tris<=102000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k)');
+// Nov 23 2026 (Island Line, measured): the line's west leg, its trestle and the West Beach station add 1 chunk and ~13k triangles
+// to the west batches (99,790 → 112,782; PLAN.md §7 allows +40k near a station). Budget 102k → 115k.
+assert(chunks.length<=75&&tris<=115000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
