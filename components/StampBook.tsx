@@ -60,7 +60,7 @@ export default function StampBook({initialPage,fresh,onClose}:{initialPage:numbe
  const pageLabel=single?(view===0?'Cover':view===PAGES-1?'Stamp rally':stampById(STAMP_PAGES[view] as string)?.name):`Pages ${view*2+1}–${view*2+2}`;
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby="stamp-book-title" data-stamp-book data-single={single||undefined} data-view={view}
   onCancel={e=>{e.preventDefault();onClose();}} onKeyDown={onKey} onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>
-  <div className={styles.wrap}>
+  <div className={styles.wrap} onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>
    <header className={styles.bar}>
     <BackButton ref={close} onBack={onClose}/>
     <h2 id="stamp-book-title">Island stamp book</h2>
