@@ -134,8 +134,9 @@ export function atRoomDoor(m: { room: number; presence: string; activity: number
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
   /** Island Line riders (train Phase 3): put friend `id` riding seat code `code` into that moving seat (x, y, z, yaw); false = not drawn
-   *  there (left seated = false). Called for every sampled riding friend, allocation-free. */
-  trainSeat?: (id: MemberId, code: number, p: RemotePose) => boolean;
+   *  there (left seated = false). Returns 1 seated, 2 standing in the aisle (p.speed = their walking speed), 0 not drawn there.
+   *  Called for every sampled riding friend, allocation-free. */
+  trainSeat?: (id: MemberId, code: number, p: RemotePose) => number;
   /** The ground height under x, z (flying friends' plumes settle on it). */
   groundAt?: (x: number, z: number) => number;
   /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
@@ -264,7 +265,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   let drawnCb: ((id: MemberId, p: RemotePose) => void) | null = null, drawnHid: ReadonlySet<number> = hiddenFriends();
   let drawnWorld = false;
   // One sample adapter (no closure per frame): stadium seats first, then Island Line riders (drawn seated in their moving seat).
-  const adaptFriend = (id: MemberId, p: RemotePose) => { seatFriend(id, p); const code = p.train ?? -1; if (code >= 0) { if (ctx.trainSeat?.(id, code, p)) { p.seated = true; p.fade = 1; } else p.train = -1; } };
+  const adaptFriend = (id: MemberId, p: RemotePose) => { seatFriend(id, p); const code = p.train ?? -1; if (code >= 0) { const r = ctx.trainSeat?.(id, code, p) ?? 0; if (r === 1) { p.seated = true; p.fade = 1; } else if (r === 2) { p.seated = false; p.fade = 1; } else p.train = -1; } };
   const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id) && !(drawnWorld && isHiddenStranger(id))) drawnCb(id, p); };
 
   return {

@@ -6,7 +6,7 @@
  *    u ≈ −6.2; one u runs from car 0's cab partition through the gangway to car 1's.
  *  - The walkable floor: the aisle between the benches (|x| ≤ AISLE_X), the door bays (|x| ≤ BAY_X: you can stand at a door), the
  *    gangway (|x| ≤ GANG_X), never past a cab partition (CAB_Z). Moves are axis-separated, so you slide along a bench front.
- *  - Seats: only the PLAYER_SEATS (the 8 the wire can carry: 4 a car by the middle door); a seat is "near" within NEAR_SEAT m of
+ *  - Seats: every seat (PLAYER_SEATS: 14 a car, all on the wire since Nov 24 2026); a seat is "near" within NEAR_SEAT m of
  *    its aisle spot. Occupied seats (friends riding, passed in as a test) are skipped.
  * No allocation per call (out objects).
  */

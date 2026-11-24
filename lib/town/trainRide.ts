@@ -165,7 +165,7 @@ type Ports={
 export function createTrainRide(ports:Ports){
  let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,hoverK=-1,ready=false,walkT=-1,walkDur=0,walkA=0,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
- const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
+ const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0,standing:false,u:0,sx:0,face:0}/* presence (seat.ts): standing → the train-frame spot and facing */,tp={x:0,z:0,tx:1,tz:0};
  const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
  // Gameplay 2: riders kneel up on the bench facing out of their window, turned a little toward the way the train runs
  const tricks:[TrickPose,TrickPose]=[trainRiderPose(-1),trainRiderPose(1)];tricks[0].w=tricks[1].w=0;
@@ -199,7 +199,7 @@ export function createTrainRide(ports:Ports){
   let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-ax,probe.z-az);if(d<bd){bd=d;best=s;}}
   if(best<0){queued=-1;setNote('This train is full. The next one comes in 2 minutes.');return false;}
   ports.dismount?.();// on a scooter / bike / moped: on foot first, boarded in the same press
-  queued=-1;k=nearTrain;j=best;run.seatPose(k,j,probe);standing=false;tw=-1;gait.on=false;standCam=0;
+  queued=-1;k=nearTrain;j=best;anchor.standing=false;run.seatPose(k,j,probe);standing=false;tw=-1;gait.on=false;standCam=0;
   // the walk: me → the door → the seat, WALK_SPEED m/s, WALK_MIN … WALK_MAX s in all (eased, so it starts and ends soft)
   from.x=me.x;from.y=me.h;from.z=me.z;if(!ds){door.x=me.x;door.z=me.z;door.y=me.h;door.yaw=probe.yaw;}
   {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
@@ -239,7 +239,7 @@ export function createTrainRide(ports:Ports){
   twSit=jj;tw=0;twDur=Math.max(.35,Math.min(1.4,Math.hypot(twTo.x-twFrom.x,twTo.u-twFrom.u)/WALK_IN));ports.haptic?.();return true;
  }
  function finishSit(run:Run){
-  standing=false;gait.on=false;j=twSit;twSit=-1;tw=-1;strapW=0;for(const g of glows)g.w=0;
+  standing=false;gait.on=false;j=twSit;twSit=-1;tw=-1;strapW=0;for(const g of glows)g.w=0;anchor.standing=false;
   run.seatPose(k,j,pose);anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;// presence: the new seat code
   trainRideStore.set({standing:false,nearSeat:false,nearDoor:false});
  }
@@ -256,7 +256,7 @@ export function createTrainRide(ports:Ports){
   toCar(sp.x,sp.u,carL);meCar=carL.car;run.carMatrixOf!(k,carL.car,carM);pv.set(carL.x,CAR_FLOOR_Y,carL.z).applyMatrix4(carM);const e=carM.elements;
   pose.x=pv.x;pose.y=pv.y;pose.z=pv.z;pose.yaw=Math.atan2(e[8],e[10])+gaitYaw+(carL.car%2?Math.PI:0);pose.lean=1;
   lean=reduced?0:e[1];swayStrapPose(straps[0],lean);swayStrapPose(straps[1],lean);
-  gait.on=true;gait.x=sp.x;gait.z=sp.u;ports.seat(pose);
+  gait.on=true;gait.x=sp.x;gait.z=sp.u;ports.seat(pose);anchor.standing=true;anchor.u=sp.u;anchor.sx=sp.x;anchor.face=gaitYaw;
   // the free seats you pass glow (the nearest within reach the brightest: Sit); friends' seats are skipped
   nearSeatJ=tw<0?nearestFreeSeat(sp.x,sp.u,NEAR_SEAT,s=>ports.taken(k,s)):-1;
   for(let s=0;s<TRAIN_SEATS;s++){const g=glows[s];let w=0;if(tw<0&&!ports.taken(k,s)){seatAisle(s,aisle);const d=Math.hypot(aisle.x-sp.x,aisle.z-sp.u);if(d<GLOW_SEAT)w=s===nearSeatJ?1:.35*(1-d/GLOW_SEAT);}
@@ -429,7 +429,7 @@ export function createTrainRide(ports:Ports){
   key(e:{code:string;key:string;repeat:boolean;preventDefault():void},down:boolean){
    if(!riding())return false;const id=trainKeyAction(e.code,e.key);if(!id)return false;e.preventDefault();if(down&&!e.repeat)press(id,'tap');return true;},
   /** A friend took my seat at the same moment (lower member id keeps it, as in the stadium): shuffle to a free one. */
-  bump(){if(!riding())return;const run=ports.run();if(!run)return;for(let s=0;s<TRAIN_SEATS;s++)if(s!==j&&!ports.taken(k,s)){j=s;anchor.seat=s;run.seatPose(k,j,pose);anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;return;}},
+  bump(){if(!riding()||standing)return;const run=ports.run();if(!run)return;for(let s=0;s<TRAIN_SEATS;s++)if(s!==j&&!ports.taken(k,s)){j=s;anchor.seat=s;run.seatPose(k,j,pose);anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;return;}},
   /** Tests / headless checks: station i's step-off spot level with its platform centre + du m. */
   stationSpot(i:number,du=0){return platformSpot(i,TRAIN_STATIONS[i].s+du,{x:0,y:0,z:0,yaw:0});},
   /** Debug / checks: the camera's spring-arm fraction (1: the full ride framing, less: pulled in clear of a roof / the rock). */

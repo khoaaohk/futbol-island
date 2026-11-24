@@ -135,10 +135,10 @@ async function partRide(c) {
   let jerk = 0; for (let i = 2; i < bridge.length; i++) jerk = Math.max(jerk, Math.abs(bridge[i][2] - 2 * bridge[i - 1][2] + bridge[i - 2][2]));
   check('ride over the South Bridge: bed climbs to the 6.4 m crest, camera height smooth', maxBed > 6, `max bed ${maxBed}, cam 2nd diff max ${jerk.toFixed(3)} m, ${bridge.length} frames`);
   if (shots) await p.screenshot({ path: path.join(shots, 'ride-bridge.png') });
-  // Gameplay 3: passengers are talkable while riding, so a Talk prompt is allowed only for a passenger in this train (the island's own islanders never offer one)
+  // owner Nov 24 2026: no Talk prompt at all while riding seated (passengers and islanders stay, untalkable; only Kenji at the cab partition)
   const hud = await p.evaluate(() => { const f = window.__fi2, r = f.trainRide, l = f.location; const pax = r.active && l ? f.trainPassengers.nearest(r.train, l.x, l.z) : null;
     return { talk: !!document.querySelector('.npc-talk-prompt'), passenger: pax ? pax.name : null, fov: f.camera.fov }; });
-  check('riding: a "Talk to" prompt only for a passenger; portrait ride fov opened', (!hud.talk || !!hud.passenger) && (!phone || hud.fov > 50), JSON.stringify(hud));
+  check('riding: no "Talk to" prompt; portrait ride fov opened', !hud.talk && (!phone || hud.fov > 50), JSON.stringify(hud));
   // tab hidden 20 s then back: the train must be where the timetable says
   await p.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
   await p.evaluate(() => { window.__skew += 20000; });
@@ -164,7 +164,7 @@ async function partRide(c) {
   if (shots) await p.screenshot({ path: path.join(shots, 'travel-north.png') }); }
   if (await p.evaluate(() => window.__fi2.trainRide.active)) await p.evaluate(() => window.__fi2.trainRide.finish());
   await p.waitForTimeout(1500); await closeMap(p);
-  check('no islander Talk prompt (passengers allowed) and no thought bubbles while riding (checked during the ride above)', true);
+  check('no Talk prompt and no thought bubbles while riding (checked during the ride above)', true);
   // board refused while jetpacking
   await standingTrainAt(p, 0);
   await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(0, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });

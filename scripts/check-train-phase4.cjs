@@ -97,6 +97,17 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     await A.p.waitForTimeout(5000);
     const m1 = await mutual(); await A.p.waitForTimeout(1500); const m2 = await mutual();
     check('each draws the other in the MOVING seat', m2.bSeesA < 1.2 && m2.aSeesB < 1.2 && Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z) > 5, `B sees A ${m2.bSeesA.toFixed(2)} m, A sees B ${m2.aSeesB.toFixed(2)} m; seat moved ${Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z).toFixed(1)} m; on screen A ${m2.vb.ndc} B ${m2.va.ndc}`);
+    // Nov 24 2026 (every seat + standing on the wire): A stands up and walks the aisle; B draws A standing, train-relative, and walking
+    const standView = async () => { const sp = await A.p.evaluate(() => ({ u: window.__fi2.trainRide.spot.u, x: window.__fi2.trainRide.spot.x }));
+      return B.p.evaluate(({ k, sp }) => { const f = window.__fi2, o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.standAt(k, sp.x, sp.u, 0, o); const h = window.__fi2PublicDraw; let best = Infinity, at = null;
+        if (h) for (const layer of h.layers) { if (typeof layer.tapSpots !== 'function') continue; for (const q of layer.tapSpots().spots) { const d = Math.hypot(q.x - o.x, q.z - o.z); if (d < best) { best = d; at = { x: q.x, z: q.z }; } } }
+        return { best, at, u: sp.u }; }, { k, sp }); };
+    await A.p.evaluate(() => window.__fi2.trainRide.standUp()); await A.p.waitForTimeout(1200); await A.p.keyboard.down('KeyW');
+    const w0 = await standView(); await A.p.waitForTimeout(1500); const w1 = await standView(); await A.p.keyboard.up('KeyW'); await A.p.waitForTimeout(2500); const w2 = await standView();
+    check('B draws A standing and walking the aisle (train-relative)', w2.best < .8 && Math.abs(w1.u - w0.u) > 1 && w0.at && w1.at && Math.hypot(w1.at.x - w0.at.x, w1.at.z - w0.at.z) > .1, `stopped ${w2.best.toFixed(2)} m from A's spot; A walked ${Math.abs(w1.u - w0.u).toFixed(1)} m`);
+    const hi = await A.p.evaluate(() => { const r = window.__fi2.trainRide; for (const j of [12, 13, 11, 10, 26]) if (r.sitDown(j)) return j; return -1; }); await A.p.waitForTimeout(3000);
+    let mh = null; for (let i = 0; i < 10; i++) { mh = await view(B.p, k, hi); if (mh.best < 1) break; await A.p.waitForTimeout(500); }
+    check('B draws A in a high seat (12)', hi >= 10 && mh.best < 1.2, `A sat in seat ${hi}: B draws A ${mh.best.toFixed(2)} m from it`);
     // timing: the train's place on both screens at the same moment (3 samples), as seconds of running
     const dts = [];
     for (let i = 0; i < 3; i++) { const [a, bb] = await Promise.all([A.p, B.p].map((p) => p.evaluate((kk) => { const t = window.__fi2.trains; return { s: t.states[kk].s, v: t.states[kk].v, now: t.drawn.now, wall: Date.now() }; }, k)));

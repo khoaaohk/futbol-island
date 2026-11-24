@@ -96,7 +96,7 @@ console.log('train-gameplay3 wiring: ok');
  let seated=[],changes=[],standing=0;
  for(let k=0;k<3;k++)for(let seg=100;seg<160;seg++){const r=PX.rosterFor(k,seg,away);const seats=new Set();
   for(let c=0;c<2;c++){let n=0;for(let p=0;p<PX.SLOTS_PER_CAR;p++){const s=r.slots[c*PX.SLOTS_PER_CAR+p];if(!s.on)continue;
-    if(s.standing){standing++;continue;}n++;assert(RN.NPC_SEATS.includes(s.seat)&&!RN.PLAYER_SEATS.includes(s.seat),'passengers sit in NPC seats only (players keep theirs)');assert.equal(RN.SEAT_TABLE[s.seat].car,c,'in their own car');assert(!seats.has(s.seat),'one passenger a seat');seats.add(s.seat);
+    if(s.standing){standing++;continue;}n++;assert(RN.NPC_SEATS.includes(s.seat),'passengers sit in NPC seats only (the 8 by the middle doors stay free for players)');assert.equal(RN.SEAT_TABLE[s.seat].car,c,'in their own car');assert(!seats.has(s.seat),'one passenger a seat');seats.add(s.seat);
     assert(PX.seatTaken(r,s.seat),'the seat table knows it is taken');}seated.push(n);}
   const casts=r.slots.filter(s=>s.on).map(s=>s.cast);assert.equal(new Set(casts).size,casts.length,'nobody rides twice in one train');
   let ch=0;for(let i=0;i<r.slots.length;i++){const a=r.slots[i],b=r.prev[i];if(a.on!==b.on||(a.on&&a.cast!==b.cast))ch++;}changes.push(ch);}
@@ -157,3 +157,14 @@ console.log('train cutaway ok');
  const town=read('components/Town.tsx');assert(/trainRide\.spot\.u>KENJI_TALK_U\?kenjiFig\.npc\(\)/.test(town)&&/KENJI_TALK_U=U_MAX-KENJI_SEAT\.talkU/.test(town),'Talk to Kenji at the partition');
  assert(read('lib/town/trainRunning.ts').includes('pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z)'),'his bubble rises over him');}
 console.log('train kenji ok');
+
+// Nov 24 2026: players may sit in any free seat: NPC passengers' seats count as taken (Town trainSeatTaken), friends standing are drawn.
+{const town=read('components/Town.tsx');assert(/const r=trainPassengers\.roster\(k\);return !!r&&seatTaken\(r,j\)/.test(town),'an NPC passenger\'s seat is taken');
+ assert(/run\.standAt\(k,x,u,yw,p,trainClockSec\(\)\);p\.speed=sp;return 2;/.test(town),'a standing friend is drawn train-relative, walking');
+ const R=L('lib/town/trainRunning.ts');assert.equal(R.PLAYER_SEATS.length,28);}
+console.log('train all-seats ok');
+
+// owner Nov 24 2026: while riding, no Talk to passengers or islanders and no islander tags (only Kenji at the partition)
+{const town=read('components/Town.tsx');assert(/trainRide\.active\?\(trainRide\.standing&&kenjiFig\.at\.k===trainRide\.train&&trainRide\.spot\.u>KENJI_TALK_U\?kenjiFig\.npc\(\):null\)/.test(town),'no passenger Talk while riding');
+ assert(/stadiumSit\.seated\|\|trainRide\.active/.test(town),'no islander tags while riding');}
+console.log('train no-talk ok');

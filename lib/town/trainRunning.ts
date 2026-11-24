@@ -55,8 +55,8 @@ const LEAN=.012,LEAN_MAX=.035;
  *  the sill: the root stands on the floor RIDER_ROOT_X from the centre line, yaw out of the window, `lean` the side the train runs
  *  toward (the head and torso turn a little that way).
  *  Seat t of a car (0 … SEATS_PER_CAR−1): side (t&1 ? +x : −x), slot t>>1. Table index of a train = car·SEATS_PER_CAR + t.
- *  Players (and the wire: multiplayer/protocol/seat.ts, 8 seats a train, no relay change) take the PLAYER_SEATS (the two slots
- *  either side of the middle door, both sides: 4 a car); NPC_SEATS are the rest. */
+ *  Players take any seat (PLAYER_SEATS: all 28; the wire carries them all, multiplayer/protocol/seat.ts); NPC passengers use
+ *  NPC_SEATS (all but the slots either side of the middle door). */
 export const SEATS_PER_CAR=SEAT_SLOTS_Z.length*2,SEAT_TABLE_SIZE=TRAIN_CARS*SEATS_PER_CAR;
 export {CAR_FLOOR_Y};
 /** The rider's root |x|: the kneeling pose's knees fold ~.4 m out from the root, so they rest on the cushion just short of the backrest. */
@@ -67,8 +67,10 @@ export const SEAT_TABLE:readonly SeatSpot[]=Array.from({length:SEAT_TABLE_SIZE},
 /** The slots either side of the middle door (DOORS[1]): the players' seats. */
 const MID_SLOTS=(()=>{const below=SEAT_SLOTS_Z.filter(z=>z<DOORS[1]),above=SEAT_SLOTS_Z.filter(z=>z>DOORS[1]);return [SEAT_SLOTS_Z.indexOf(below[below.length-1]),SEAT_SLOTS_Z.indexOf(above[0])];})();
 /** Player seat j (0 … TRAIN_SEATS−1) → its SEAT_TABLE index; the NPC passengers' indices. */
-export const PLAYER_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i).filter(i=>MID_SLOTS.includes(SEAT_TABLE[i].slot));
-export const NPC_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i).filter(i=>!PLAYER_SEATS.includes(i));
+/** Nov 24 2026: players may take ANY of the 28 seats a train (the wire carries all of them: multiplayer/protocol/seat.ts); a seat an
+ *  NPC passenger or a friend sits in is skipped. NPC passengers keep to NPC_SEATS, so the 8 by the middle doors are always left for players. */
+export const PLAYER_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i);
+export const NPC_SEATS:readonly number[]=SEAT_TABLE.map((s,i)=>i).filter(i=>!MID_SLOTS.includes(SEAT_TABLE[i].slot));
 export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
@@ -284,6 +286,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
    const st=SEAT_TABLE[i];carMatrix(s,st.car,seatM,states[k].v);seatV.set(st.x,CAR_FLOOR_Y,st.z).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(st.side*e[0],st.side*e[2]);out.lean=st.lean;return out;},
+  /** Nov 24 2026: a standing rider at train-frame (x across, u along car 0; trainWalk.ts) of train k, facing `yaw` (train frame): the
+   *  world spot on the floor and yaw. `now` as seatPose (friends are posed before this frame's update). Allocation-free. */
+  standAt(k:number,x:number,u:number,yaw:number,out:SeatPose,now?:number):SeatPose{
+   let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
+   const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;carMatrix(s,c,seatM,states[k].v);seatV.set(lx,CAR_FLOOR_Y,lz).applyMatrix4(seatM);
+   const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(e[8],e[10])+yaw+(c?Math.PI:0);out.lean=1;return out;},
   /** Gameplay 2: car c of train k's matrix this frame (the hover outline, the car colliders). Allocation-free. */
   carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v);},
   /** Gameplay 2: the open door of train k (standing at a stop) nearest x, z: a spot on the platform just outside it, facing in

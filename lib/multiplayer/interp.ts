@@ -12,7 +12,7 @@ export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: 
   /** Seated in the stadium's stands (multiplayer/protocol/seat.ts): drawn on the seat, never moving. The island runtime also checks the
    *  spot is a real seat (lib/town/stadiumSeatShare.ts) and clears this when it is not. */
   seated?: boolean;
-  /** Riding the Island Line (multiplayer/protocol/seat.ts trainWire): the seat code (train = code >> 3, seat = code & 7), -1 when not. The
+  /** Riding the Island Line (multiplayer/protocol/seat.ts trainWire): the rider code (riderTrain / riderSeat / riderStand), -1 when not. The
    *  island runtime draws the friend in that moving seat from the shared timetable. */
   train?: number;
   /** Gameplay 2: the train seat's lean (lib/town/trainRunning.ts SEAT_TABLE: ±1, the way the train runs), written with the seat. */
@@ -75,7 +75,7 @@ const BRAKE_MPS = 8, BRAKE_E_MS = 120, BRAKE_FLOOR = 0.15, LIN_MS = 300, BRAKE_R
 // one arrives, so the member fades in already on the right (beacon) delay, interpolated between real snapshots.
 /** May a roster pose (S.Welcome / S.Joined, no timestamp) seed the interpolator? Only a member standing still (Busy: the speed byte is
  *  the activity; a room pose: it is the room code). */
-export const seedable = (body: PoseBody): boolean => body[4] === 0 || body[5] === M.Busy || body[6] === Z.Indoors || seatedWire(body[5], body[4], body[6]) || trainWire(body[5], body[4]) >= 0; // riding a train: still too; seated in the stands (speed byte = seat marker) is still
+export const seedable = (body: PoseBody): boolean => body[4] === 0 || body[5] === M.Busy || body[6] === Z.Indoors || seatedWire(body[5], body[4], body[6]) || trainWire(body[5], body[4], body[3]) >= 0; // riding a train: still too; seated in the stands (speed byte = seat marker) is still
 
 type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean; ex: number; exv: number; lt: number };
 
@@ -130,7 +130,7 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
     out.x = x; out.y = y; out.z = z; out.yaw = yaw; out.speed = r.d[s + 5];
     out.mode = r.d[s + 6] as Mode; out.zone = r.d[s + 7] as Zone; out.flags = r.d[s + 8]; out.activity = activityOf(r.d[s + 6], r.d[s + 5] * 4);
     out.seated = isSeated(r, s); if (out.seated) out.speed = 0;
-    out.train = trainWire(r.d[s + 6], r.d[s + 5] * 4); if (out.train >= 0) out.speed = 0;
+    out.train = trainWire(r.d[s + 6], r.d[s + 5] * 4, Math.round(r.d[s + 4] * 256 / TAU)); if (out.train >= 0) out.speed = 0;
   }
   const isSeated = (r: Ring, s: number): boolean => seatedWire(r.d[s + 6], r.d[s + 5] * 4, r.d[s + 7]);
 

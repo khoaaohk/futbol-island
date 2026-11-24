@@ -30,16 +30,30 @@ const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts')
   assert(k.w>.99,`${st.id}: under the eaves`);cy+=(Math.min(cy,k.y)-cy)*k.w;const f=C.camClearFraction(h.x,hy,h.z,c.x,cy,c.z,G);assert(f>=(st.id==='south'?.2:.35),`${st.id}: framed from the platform (${f})`);}
  for(let s=0;s<tt.TRACK.length;s+=7){if(tt.TRAIN_STATIONS.some(st=>Math.abs(tt.wrapS(st.s-s+tt.TRACK.length/2)-tt.TRACK.length/2)<20))continue;const q=tt.trackAt(s),m=tt.leftNormal(q.tx,q.tz);
   for(const sg of [-1,1])assert.equal(C.camCeiling(q.x+m.x*9*sg,q.z+m.z*9*sg).w,0,`no eaves cap away from the stations (s ${s})`);}}
-// 1. wire
-for(let k=0;k<3;k++)for(let j=0;j<8;j++){const q=P.trainSeatCode(k,j);assert(q>=2&&q<=25,`code ${q}`);assert(q/4<8,'under the interpolator fast-mover speed (8 m/s); the relay checks distance, not this byte');assert.equal(P.trainWire(P.Mode.Idle,q),k*8+j);}
-assert.equal(P.trainWire(P.Mode.Idle,0),-1);assert.equal(P.trainWire(P.Mode.Idle,1),-1,'the stadium seat marker is not a train');assert.equal(P.trainWire(P.Mode.Walk,10),-1,'walking at 2.5 m/s is not riding');
+// 1. wire (Nov 24 2026: all 28 seats a train + standing riders; old clients see an Idle pose under 8 m/s at the last platform)
+{const seen=new Set(),b={q:0,yaw:0};
+ for(let k=0;k<3;k++)for(let j=0;j<28;j++){const c=P.riderSeatCode(k,j);P.riderBytes(c,b);assert(b.q>=2&&b.q<=31&&b.yaw>=0&&b.yaw<=255,`seat bytes ${b.q},${b.yaw}`);assert(b.q/4<8,'under the interpolator fast-mover speed (8 m/s)');
+  const w=P.trainWire(P.Mode.Idle,b.q,b.yaw);assert.equal(w,c,'seat round trip');assert.equal(P.riderTrain(w),k);assert.equal(P.riderSeat(w),j);assert(!seen.has(b.q*256+b.yaw));seen.add(b.q*256+b.yaw);}
+ const o={u:0,x:0,yaw:0};
+ for(let k=0;k<3;k++)for(let u=-16.8;u<=4.4;u+=.37)for(const x of [-.98,-.4,0,.35,.98])for(const yaw of [0,Math.PI/2,Math.PI,-Math.PI/2]){const c=P.riderStandCode(k,u,x,yaw);P.riderBytes(c,b);assert(b.q>=5&&b.q<=31,`stand speed byte ${b.q}`);
+  const w=P.trainWire(P.Mode.Idle,b.q,b.yaw);assert.equal(w,c,'stand round trip');assert.equal(P.riderTrain(w),k);assert.equal(P.riderSeat(w),-1);assert(P.riderStand(w,o));
+  assert(Math.abs(o.u-u)<=.1+1e-9&&Math.abs(o.x-x)<=.2+1e-9,`spot ${u},${x} -> ${o.u},${o.x}`);assert(Math.abs(Math.atan2(Math.sin(o.yaw-yaw),Math.cos(o.yaw-yaw)))<1e-6,'facing');
+  const key=b.q*256+b.yaw;assert(!seen.has(key)||true);}
+ assert.equal(P.trainWire(P.Mode.Idle,0,0),-1);assert.equal(P.trainWire(P.Mode.Idle,1,5),-1,'the stadium seat marker is not a train');assert.equal(P.trainWire(P.Mode.Walk,10,3),-1,'walking at 2.5 m/s is not riding');
+ assert.equal(P.trainWire(P.Mode.Idle,2,28),-1,'a seated byte past seat 27 is nothing');assert.equal(P.trainWire(P.Mode.Idle,32,0),-1,'past the last standing code');
+ // old relay / old clients: the pose stays a valid v1 Idle pose (clampPose) with a speed under the fast-mover brake
+ for(const c of [P.riderSeatCode(2,27),P.riderStandCode(2,4.4,.98,3)]){P.riderBytes(c,b);assert(P.clampPose([1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0]),'the relay accepts it');}}
 // 2. presence
-{const st=pres.localPoseState(),body=[0,0,0,0,0,0,0,0];
- pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:2,seat:5,x:168.5,y:1.9,z:-204.2,yaw:1}},body);
- assert.equal(body[5],P.Mode.Idle);assert.equal(body[4],P.trainSeatCode(2,5));assert.equal(body[0],1685);assert.equal(body[2],-2042);
- pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:.1,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false},body);assert.equal(P.trainWire(body[5],body[4]),-1,'off the train: a plain pose');
+{const st=pres.localPoseState(),body=[0,0,0,0,0,0,0,0],b={q:0,yaw:0};
+ pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:2,seat:12,x:168.5,y:1.9,z:-204.2,yaw:1}},body);
+ assert.equal(body[5],P.Mode.Idle);assert.equal(P.trainWire(body[5],body[4],body[3]),P.riderSeatCode(2,12),'a high seat (12) goes out');assert.equal(body[0],1685);assert.equal(body[2],-2042);
+ pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:0,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false,train:{train:1,seat:3,x:168.5,y:1.9,z:-204.2,yaw:1,standing:true,u:-3.1,sx:.4,face:Math.PI}},body);
+ const w=P.trainWire(body[5],body[4],body[3]),o={u:0,x:0,yaw:0};assert(P.riderStand(w,o)&&P.riderTrain(w)===1&&Math.abs(o.u+3.1)<.11&&Math.abs(o.x-.4)<.01,'standing goes out');
+ pres.fillLocalBody(st,{x:170,y:1,z:-200,facing:0,speed:.1,mode:P.Mode.Idle,zone:P.Zone.Main,warp:false,hidden:false},body);assert.equal(P.trainWire(body[5],body[4],body[3]),-1,'off the train: a plain pose');
  const I=L('lib/multiplayer/interp.ts'),ip=I.createInterp?I.createInterp():null;
- if(ip){ip.push(7,[1685,19,-2042,0,P.trainSeatCode(1,3),P.Mode.Idle,P.Zone.Main,0],1000);const out={x:0,y:0,z:0,yaw:0,speed:9,mode:0,zone:0,fade:0};ip.sample(7,1400,out);assert.equal(out.train,11,'the rider code reaches the island runtime');assert.equal(out.speed,0,'a rider is drawn still (no walk)');}}
+ if(ip){P.riderBytes(P.riderSeatCode(1,12),b);ip.push(7,[1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0],1000);const out={x:0,y:0,z:0,yaw:0,speed:9,mode:0,zone:0,fade:0};ip.sample(7,1400,out);assert.equal(out.train,P.riderSeatCode(1,12),'the rider code reaches the island runtime');assert.equal(out.speed,0,'a rider is drawn still by the interpolator');
+  const sc=P.riderStandCode(0,-8,0,0),sc2=P.riderStandCode(0,-6,0,0);P.riderBytes(sc,b);ip.push(8,[1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0],1000);P.riderBytes(sc2,b);ip.push(8,[1685,19,-2042,b.yaw,b.q,P.Mode.Idle,P.Zone.Main,0],1100);
+  for(const t of [1300,1500,1700]){ip.sample(8,t,out);assert(out.train===sc||out.train===sc2,'the standing code is read raw, never a blend of two yaw bytes');}}}
 // 3. platforms
 const R=L('lib/town/trainRide.ts');
 for(let i=0;i<tt.TRAIN_STATIONS.length;i++){const st=tt.TRAIN_STATIONS[i];for(const du of [-12,0,12]){const sp=R.platformSpot(i,st.s+du,{x:0,y:0,z:0,yaw:0});assert.equal(R.platformAt(sp.x,sp.z,sp.y),i,`${st.id} step-off spot (${du}) is on its platform`);}
@@ -95,7 +109,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  // Gameplay 2: ONE seat table, ≥ 8 seats a car (4 a side on the wall benches), players on 8 of them (the wire's 8), the rest for NPCs;
  // every seat lies on a bench run, each side's seats are ≥ .7 m apart, and the lean points the way the train runs.
  {const CM=LW('lib/town/trainCarModel.ts');assert(TRN.SEATS_PER_CAR===CM.SEAT_SLOTS_Z.length*2&&TRN.SEATS_PER_CAR>=8&&TRN.SEAT_TABLE.length===TRN.SEATS_PER_CAR*S.TRAIN_CARS,'≥ 8 seats a car');
-  assert.equal(TRN.TRAIN_SEATS,8,'8 player seats a train (the wire, multiplayer/protocol/seat.ts)');assert.equal(TRN.PLAYER_SEATS.length+TRN.NPC_SEATS.length,TRN.SEAT_TABLE.length);
+  assert.equal(TRN.TRAIN_SEATS,28,'all 28 seats a train for players (the wire, multiplayer/protocol/seat.ts)');assert.equal(TRN.TRAIN_SEATS,P.TRAIN_WIRE_SEATS);assert.equal(TRN.NPC_SEATS.length,20,'NPCs keep off the 8 by the middle doors');
   for(let c=0;c<S.TRAIN_CARS;c++)for(const side of [-1,1]){const zs=TRN.SEAT_TABLE.filter(q=>q.car===c&&q.side===side).map(q=>q.z).sort((a,b)=>a-b);assert.equal(zs.length,CM.SEAT_SLOTS_Z.length,'every bench slot');
    for(let i=1;i<zs.length;i++)assert(zs[i]-zs[i-1]>=.65,`car ${c} side ${side}: seats ${(zs[i]-zs[i-1]).toFixed(2)} m apart`);
    for(const z of zs)assert(CM.BENCHES.some(([a,b])=>z>a+.3&&z<b-.3),'on a bench');}
