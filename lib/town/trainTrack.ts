@@ -1,12 +1,12 @@
 /**
  * The Island Line (train Phase 1, Nov 23 2026; plan: .claude/worktrees/_recovery-nov20/train/PLAN.md). One closed loop of track,
- * one way round: North (Kit Shop) → West Beach (Drip FC) → South (Museum) → Summit Isle → Coral Cay → North.
+ * one way round: North (North Beach) → West Beach (Drip FC) → South (Museum) → Summit Isle → Coral Cay → North.
  *
  * Pure: no three.js, no DOM and NO imports (summitIsle.ts imports this for the cutting carve, landmass imports summitIsle, so this
  * file must stand alone). The route is the Phase 0 waypoint list (phase0/route.cjs; its CAUSEWAY_NORTH samples resolved from
  * coralCay.ts CAUSEWAY_PATH, offset 24 m north), smoothed the same way as phase0/check.cjs (closed Catmull-Rom, 25 passes of an
  * 11-point mean) and then resampled every TRACK_STEP m by arc length, so `s` (metres along the line from the start, by the
- * North station) is exact and cheap: trackAt(s) is one table lookup and a lerp.
+ * Kit Shop corner; the North station stands ~137 m along since Nov 24 2026) is exact and cheap: trackAt(s) is one table lookup and a lerp.
  *
  * Heights (the track bed: the top of the ground the ballast sits on):
  *  - main island and Coral Cay land: 0 (the ground there is flat at 0);
@@ -195,7 +195,9 @@ export type TrainStation={id:'north'|'west'|'south'|'summit'|'cay';number:number
 const station=(id:TrainStation['id'],number:number,name:string,sub:string,cx:number,cz:number,towardX:number,towardZ:number,shirt:string):TrainStation=>{
  const s=sNear(cx,cz),t=trackAt(s),n=leftNormal(t.tx,t.tz),side=(towardX-t.x)*n.x+(towardZ-t.z)*n.z>0?1:-1;return {id,number,name,sub,s,side,shirt};};
 export const TRAIN_STATIONS:readonly TrainStation[]=[
- station('north',1,'North','Kit Shop',170,-207,170,-170,"No. 1 is the goalkeeper's shirt"),
+ // Nov 24 2026 (owner: "move the train station on the north beach side more to the center of the main island and not near the kit
+ // shop"): the middle of North Beach, above the 7v7 pitch, on the straight between the two beach crossings (was 170,-207 by the Kit Shop).
+ station('north',1,'North','North Beach',15,-206,15,-170,"No. 1 is the goalkeeper's shirt"),
  station('west',2,'West Beach','Drip FC Stadium',-305,-30,-260,-30,'No. 2 is the right-back'),
  station('south',3,'South','Museum',160,223,160,185,'No. 3 is the left-back'),
  station('summit',4,'Summit Isle','Summit 5s',512,202,498,188,'No. 4: a centre-back or holding midfielder'),

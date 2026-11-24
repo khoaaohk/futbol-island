@@ -104,7 +104,7 @@ const PART_WIN:Hole={z0:-.55,z1:-.05,y0:2.15,y1:2.85};// the partition window in
 /** Light palette (owner: nothing reads as a void in warm evening light). */
 const K={frame:'#d5d2ca',rubber:'#5b5853',step:'#b4b6b6',yellow:'#f2c230',under:'#605b55',under2:'#76716a',bogie:'#5a554f',wheel:'#6c6760',
  hub:'#8f8a83',spring:'#4e4943',roofUnit:'#cfd0cc',roofTop:'#bfc1bd',grille:'#7b7e80',panto:'#8f969c',insul:'#e3dccb',surround:'#45423f',
- wall:'#efe6d2',ceil:'#f8f3e7',light:'#fff4d6',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
+ wall:'#ecd9b2',ceil:'#f0ddb6',light:'#fff1cc',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
  bellows:'#5f5a54',bellowsIn:'#77716a',chime:'#f3a73a',blind:'#ebe1c8',rack:'#c8cbcd',vent:'#dcd8ce',slot:'#b9b4a8'} as const;
 const _c=new T.Color();
 const col=(hex:string,k=1)=>new T.Color(hex).multiplyScalar(k);
@@ -243,7 +243,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
 const CAR_GAP_HALF=.2,INNER_BEND=.65;
 /** Night: the interior glows by this × the night factor (the train's indicator channel: lamp.z), so a lit car reads warm from outside;
  *  the ceiling light strips are on the head-lamp channel (always on, brighter at night and in the tunnel, like a real car's lights). */
-export const INTERIOR_GLOW=.42;
+export const INTERIOR_GLOW=.48;
 /** The cream interior (all trains) and, closeUp, its detail. Faces face the aisle: they are seen through the glass and doorways. */
 function interior(g:VGeo,lv:Livery,closeUp:boolean){
  const F=CAR_FLOOR_Y,seat=moquette(lv),seatDark=col(seat,.78).getStyle(),seatLite=col(seat,1.12).getStyle();

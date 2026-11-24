@@ -41,7 +41,7 @@ async function standAt(p, si) {
       const mobile = vpName === 'phone', c = await boot(b, mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 }, mobile), { p } = c;
       await p.keyboard.press('Escape').catch(() => {});
       if (views.includes('near')) {
-        await p.evaluate(() => { window.__fi2.trains.cluster = 2534; }); await tp(p, 186, -203.5, -Math.PI / 2); await p.waitForTimeout(2500); await shot(p, 'near', vpName);
+        await p.evaluate(() => { window.__fi2.trains.cluster = 150; }); await tp(p, 31, -203.5, -Math.PI / 2);/* North moved to mid North Beach (s 138) Nov 24 2026 */ await p.waitForTimeout(2500); await shot(p, 'near', vpName);
         await p.evaluate(() => { window.__fi2.trains.cluster = NaN; });
       }
       if (views.includes('trestle')) {

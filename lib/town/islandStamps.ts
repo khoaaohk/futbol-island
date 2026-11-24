@@ -34,7 +34,7 @@ export type StampDef={id:StampId;
 
 export const STAMPS:readonly StampDef[]=[
  // "Squad number (association football)" (Wikipedia): first worn in England in 1928; the Football League made 1–11 numbers compulsory from 1939.
- {id:'north',where:'station',name:'North',place:'North Station · Kit Shop',ink:'#8a3f7a',
+ {id:'north',where:'station',name:'North',place:'North Station · North Beach',ink:'#8a3f7a',
   fact:'Old football shirts had no numbers. Numbers 1 to 11 came in so fans could tell players apart by position: 1 for the goalkeeper, 9 for the centre-forward.',
   source:'"Squad number (association football)" (Wikipedia): first worn in England in 1928, compulsory in the Football League from 1939',how:'Hover or tap the North station house on the beach, then Collect stamp.'},
  // IFAB Laws of the Game 2025/26, Law 7 (The Duration of the Match): two equal halves of 45 minutes, half-time ≤ 15 minutes, time added for lost time.
