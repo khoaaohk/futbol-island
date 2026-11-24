@@ -24,7 +24,12 @@ const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts')
  near(C.trussLift(b.x+bn.x*C.TRUSS_OFFSET,bb+1.5,b.z+bn.z*C.TRUSS_OFFSET),C.TRUSS_H+.35-1.5,.01,'in the truss: lifted over the top chord');assert.equal(C.trussLift(b.x+bn.x*5,bb+1.5,b.z+bn.z*5),0,'clear of it: no lift');
  const W=read('lib/town/trainWorld.ts');assert(new RegExp(`TRUSS_OFFSET=${C.TRUSS_OFFSET},TRUSS_H=${C.TRUSS_H}\\b`).test(W)&&/const ew=4\.8,ed=hd\/2\+1\.25,rh=1\.9,ry=y0\+H\+\.14/.test(W)&&/H=2\.9,y0=top/.test(W),'clearance volumes match trainWorld.ts (roof, truss)');
  const R=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R)&&/f<arm\?14:2\.5/.test(R),'ride camera: spring arm, in fast, out slow');
- assert(/ground:fieldSurfaceHeight\}\)/.test(read('components/Town.tsx')),'Town passes the ground');}
+ assert(/ground:fieldSurfaceHeight\}\)/.test(read('components/Town.tsx')),'Town passes the ground');
+ // beside a house the camera first comes down under the eaves (a person on the platform at the window): pulled in less, never far off
+ for(const st of tt.TRAIN_STATIONS){const h=TL.stationSpot(st,0,1.1),c=TL.stationSpot(st,-3.5,10.2),hy=h.y+1.8;let cy=hy+2.35;const k=C.camCeiling(c.x,c.z);
+  assert(k.w>.99,`${st.id}: under the eaves`);cy+=(Math.min(cy,k.y)-cy)*k.w;const f=C.camClearFraction(h.x,hy,h.z,c.x,cy,c.z,G);assert(f>=(st.id==='south'?.2:.35),`${st.id}: framed from the platform (${f})`);}
+ for(let s=0;s<tt.TRACK.length;s+=7){if(tt.TRAIN_STATIONS.some(st=>Math.abs(tt.wrapS(st.s-s+tt.TRACK.length/2)-tt.TRACK.length/2)<20))continue;const q=tt.trackAt(s),m=tt.leftNormal(q.tx,q.tz);
+  for(const sg of [-1,1])assert.equal(C.camCeiling(q.x+m.x*9*sg,q.z+m.z*9*sg).w,0,`no eaves cap away from the stations (s ${s})`);}}
 // 1. wire
 for(let k=0;k<3;k++)for(let j=0;j<8;j++){const q=P.trainSeatCode(k,j);assert(q>=2&&q<=25,`code ${q}`);assert(q/4<8,'under the interpolator fast-mover speed (8 m/s); the relay checks distance, not this byte');assert.equal(P.trainWire(P.Mode.Idle,q),k*8+j);}
 assert.equal(P.trainWire(P.Mode.Idle,0),-1);assert.equal(P.trainWire(P.Mode.Idle,1),-1,'the stadium seat marker is not a train');assert.equal(P.trainWire(P.Mode.Walk,10),-1,'walking at 2.5 m/s is not riding');

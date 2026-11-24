@@ -172,6 +172,7 @@ async function partTrack(c) {
   await p.evaluate((S0) => { const s = window.__fi2.trains.sched; let T = 0; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 70 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) { T = t; break; } } const P = s.trainPhase(0, s.clock()); window.__skew += (((T - P) % 360) + 360) % 360 * 1000; }, spot.s);
   // (after moving the clock: a train standing where it was would have pushed the player off the line)
   await tp(p, spot.x, spot.z); await p.waitForTimeout(300);
+  if (process.env.XDBG) console.log('  dbg', JSON.stringify(await p.evaluate(() => { const t = window.__fi2.trains; return { s: t.states[0].s, behind: t.runner.behind(0), lap: t.runner.t[0], cluster: t.cluster, skew: window.__skew }; })));
   console.log('  on the rails at', JSON.stringify(spot), '→ player', JSON.stringify(await p.evaluate(() => ({ x: +window.__fi2.location.x.toFixed(1), z: +window.__fi2.location.z.toFixed(1) }))));
   const r = await p.evaluate(async (S0) => { const f = window.__fi2, t = f.trains, t0 = performance.now(); let note = '', minGap = 1e9, moved = 0; const x0 = f.location.x, z0 = f.location.z;
     while (performance.now() - t0 < 22000) { await new Promise((r) => requestAnimationFrame(r)); const n = document.querySelector('[data-island-toast], [data-train-note], [role="status"]')?.textContent || ''; if (/step off/i.test(n)) note = n;

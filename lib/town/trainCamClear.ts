@@ -38,6 +38,17 @@ export function camBlocked(x:number,y:number,z:number,ground?:Ground){
  return !!ground&&y<ground(x,z)+CLEAR_M;
 }
 
+/** Beside a station house (its side of the line, along its length plus a CEIL_RAMP m run-in) the ride camera comes down under the
+ *  eaves before the arm is worked out: a person on the platform looking in through the window, not a close-up from inside the car.
+ *  Returns the weight (0 … 1, smooth in x, z: no pop) and the height to come down to; `out.w` 0 almost everywhere. */
+export const CEIL_RAMP=6;
+export function camCeiling(x:number,z:number,out={w:0,y:0}){out.w=0;
+ for(const h of HOUSES){const dx=x-h.x,dz=z-h.z,u=Math.abs(dx*h.tx+dz*h.tz),e=ROOF_EW+CLEAR_M+CLEAR_U;if(u>e+CEIL_RAMP)continue;
+  const v=dx*h.nx+dz*h.nz;if(v<1||v>h.hm+h.ed+8)continue;const a=u<=e?1:1-(u-e)/CEIL_RAMP,b=Math.min(1,(v-1)/2),k=a*b,w=k*k*(3-2*k);
+  if(w>out.w){out.w=w;out.y=h.top+ROOF_Y0-CLEAR_M-.15;}}
+ return out;
+}
+
 /** How far (0.15 … 1) along head → camera the camera may stand: the last clear sample before the first blocked one. */
 export function camClearFraction(px:number,py:number,pz:number,cx:number,cy:number,cz:number,ground?:Ground){
  const ex=cx-px,ey=cy-py,ez=cz-pz;

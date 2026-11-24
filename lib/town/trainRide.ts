@@ -22,7 +22,7 @@ import {TRAIN_SEATS,type SeatPose} from './trainRunning';
 import {npcSeatPose} from '../graphics/npcSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
 import {ZIP_LOOK,softLook,springTo} from './zipline';
-import {camClearFraction,trussLift} from './trainCamClear';
+import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
 
 export const TRAIN_BOARD_KEY='train-board';
 /** One football fact per stop, read in the "Next stop" announcement (AGENTS.md: the ride teaches). */
@@ -116,7 +116,7 @@ export function createTrainRide(ports:Ports){
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const trick:TrickPose=npcSeatPose('bench');trick.w=0;
  const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0,arm=-1;
- const camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
+ const ceil={w:0,y:0},camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
@@ -213,6 +213,7 @@ export function createTrainRide(ports:Ports){
    // Polish (Nov 24 2026, AAA audit #8): never inside a station roof, the tunnel's rock, the hill or a bridge truss. A spring arm from
    // the rider's head (trainCamClear.ts): it comes in fast (~0.07 s) when something is in the way and eases back out slowly, so the
    // camera never pops; the station boxes reach 1.5 m past the eaves so it is already in before the roof arrives.
+   camCeiling(camPos.x,camPos.z,ceil);if(ceil.w>0&&camPos.y>ceil.y)camPos.y+=(ceil.y-camPos.y)*ceil.w;// beside a station house: down under the eaves first
    {const hx=pose.x,hy=pose.y+CAM.eye,hz=pose.z,f=camClearFraction(hx,hy,hz,camPos.x,camPos.y,camPos.z,ports.ground);
     arm=arm<0?f:arm+(f-arm)*(1-Math.exp(-(f<arm?14:2.5)*h));
     camPos.set(hx+(camPos.x-hx)*arm,hy+(camPos.y-hy)*arm,hz+(camPos.z-hz)*arm);camPos.y+=trussLift(camPos.x,camPos.y,camPos.z);}
