@@ -141,10 +141,10 @@ const endQuad=(g:VGeo,z:number,dir:number,x0:number,x1:number,y0:number,y1:numbe
  *  tread of WHEEL_SIDES (WHEEL_SIDES_FAR in the far tier), a flange lip on the inner (gauge) side that reaches just under the rail
  *  top, a light wheel disc, a dark hub and an axle boss, all PART.rearWheel about the wheel's centre (so they turn together). The
  *  polygon's flats sit ON the rail top (the radius is grown by 1 / cos(π / N)). Full: 7N + 2 tris with the flange; far: 3N + 2. */
-export const WHEEL_SIDES=18,WHEEL_SIDES_FAR=10,FLANGE_R=.035,FLANGE_W=.028;
+export const WHEEL_SIDES=16,WHEEL_SIDES_FAR=9,FLANGE_R=.035,FLANGE_W=.028;
 function wheel(g:VGeo,x:number,az:number,full:boolean){const N=full?WHEEL_SIDES:WHEEL_SIDES_FAR,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],k0=1/Math.cos(Math.PI/N);
  const R=(k:number,px:number,r=WHEEL_R):V=>{const t=k/N*Math.PI*2;return [px,WHEEL_R-Math.cos(t)*r*k0,az+Math.sin(t)*r*k0];};// k = 0: straight down
- const rot=(k:number,px:number,r:number)=>R(k+.5,px,r);// a flat (not a corner) at the bottom
+ const rot=(k:number,px:number,r=WHEEL_R)=>R(k+.5,px,r);// a flat (not a corner) at the bottom
  for(let k=0;k<N;k++){g.quad(rot(k,xi),rot(k+1,xi),rot(k+1,xo),rot(k,xo),K.wheel,ctr,PART.rearWheel,ctr);
   if(k>0&&k<N-1)g.tri(rot(0,xo),rot(k,xo),rot(k+1,xo),K.hub,[xi,WHEEL_R,az],PART.rearWheel,ctr);}
  if(full){const xf=xi-s*FLANGE_W,rf=WHEEL_R+FLANGE_R;// the flange: its rim and the step out to it (seen as a thin dark lip round the tread)
