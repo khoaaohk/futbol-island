@@ -23,9 +23,10 @@ async function start(p) {
   await p.waitForFunction(() => !!window.__fi2.renderer && !document.querySelector('[data-island-return-loading]'), null, { timeout: 240000 });
   await p.waitForTimeout(4000);
 }
-async function boot(b, vp, mobile) {
+async function boot(b, vp, mobile, seed) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
-  await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__t_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); } sessionStorage.setItem('__t_boot', '1'); } catch { /* */ } });
+  // as check-train-phase4: a holdout seed in the "on" arm (lib/multiplayer/holdout.ts), never the 10 % Just-me holdout
+  await ctx.addInitScript((seed) => { try { if (!sessionStorage.getItem('__t_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); localStorage.setItem('fi2-holdout-v1', seed); } sessionStorage.setItem('__t_boot', '1'); } catch { /* */ } }, seed);
   const p = await ctx.newPage(), errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
   await p.goto(url + '/play?from=arcade', { timeout: 240000 }); await p.waitForTimeout(3000);
@@ -39,6 +40,9 @@ async function boot(b, vp, mobile) {
 const gfx = async (p, ms = 2500) => { await p.evaluate(() => { window.__gfx.rows.length = 0; window.__gfx.on = true; }); await p.waitForTimeout(ms);
   const rows = await p.evaluate(() => { window.__gfx.on = false; return window.__gfx.rows; }); const med = (i) => { const s = rows.map((r) => r[i]).sort((a, b) => a - b); return s[s.length >> 1] ?? 0; };
   return { calls: med(0), tris: med(1), frames: rows.length }; };
+// Remotes this page draws (the public draw layers' tap spots): the distance from (x, z) to the nearest one (check-train-phase4's probe).
+const nearestRemote = (p, x, z) => p.evaluate(({ x, z }) => { const h = window.__fi2PublicDraw; let best = Infinity;
+  if (h) for (const layer of h.layers) { if (typeof layer.tapSpots !== 'function') continue; for (const sp of layer.tapSpots().spots) best = Math.min(best, Math.hypot(sp.x - x, sp.z - z)); } return best; }, { x, z });
 // The next stop a train will stand at with its doors open, and how long until then (s).
 const nextStanding = (p) => p.evaluate(() => { const t = window.__fi2.trains; const st = t.states;
   for (let i = 0; i < st.length; i++) if (st[i].at < 0) return { train: i, stop: st[i].next };// running: meet it at its next stop
@@ -47,13 +51,16 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
 (async () => {
   const b = await chromium.launch({ channel: 'chrome', headless: true, args: ['--mute-audio', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   try {
-    const A = await boot(b, { width: 390, height: 844 }, true), B = await boot(b, { width: 1440, height: 900 }, false);
+    const A = await boot(b, { width: 390, height: 844 }, true, '0'.repeat(32)), B = await boot(b, { width: 1440, height: 900 }, false, '1'.repeat(32));
     // wait for a train standing at a platform (one comes every ~24 s somewhere on the loop)
     let s = null; for (let i = 0; i < 80 && !s; i++) { s = await nextStanding(A.p); if (!s) await A.p.waitForTimeout(1000); }
     check('a train is on its way to a platform', !!s, s ? `train ${s.train} to ${STOP_STATION[s.stop]}` : '');
     if (!s) throw new Error('no train');
     const si = STATION_INDEX[STOP_STATION[s.stop]];
-    for (const [c, du] of [[A, 0], [B, 10]]) await c.p.evaluate(({ si, du }) => { const sp = window.__fi2.trainRide.stationSpot(si, du); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); }, { si, du });
+    const spots = {};
+    for (const [k, c, du] of [['A', A, 0], ['B', B, 10]]) spots[k] = await c.p.evaluate(({ si, du }) => { const sp = window.__fi2.trainRide.stationSpot(si, du); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); return sp; }, { si, du });
+    // as check-train-phase4: both in one public world first, each drawing the other on the platform (a Shift now and then keeps them active)
+    for (let i = 0; i < 60; i++) { const a = await nearestRemote(A.p, spots.B.x, spots.B.z), bb = await nearestRemote(B.p, spots.A.x, spots.A.z); if (a < 2.5 && bb < 2.5) break; await A.p.waitForTimeout(1000); if (i % 10 === 9) for (const c of [A, B]) await c.p.keyboard.press('Shift'); }
     // any train standing at that stop (a train comes every 2:00; the relay clock may shift the timetable once on connect)
     for (let i = 0; i < 340; i++) { const k = await A.p.evaluate((stop) => window.__fi2.trains.states.findIndex((x) => x.at === stop && x.doors > .6 && x.dwellLeft > 4), s.stop); if (k >= 0) { s.train = k; break; } await A.p.waitForTimeout(500); }
     let shown = false; for (let i = 0; i < 24 && !shown; i++) { await A.p.waitForTimeout(250); shown = await A.p.evaluate(() => { const e = document.querySelector('[data-train-board]'); return !!e && !e.hidden; }); }
