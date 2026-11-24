@@ -101,12 +101,15 @@ function car(style:Exclude<VehicleStyle,'pickup'>,paint:string){
  *  box centre (lower for bean riders, who also get the cooler seat); `variant` 0 has a roof light bar, 1 a bull bar. */
 function pickup(paint:string,bedY:number,coolerSeat:boolean,variant:number){
  const b=builder(),floor=bedY+.06;
- b.hull(0,.38,0,2,4.4,.48,paint,{w1:1.96,d1:4.36});
+ // POLISH 3 (owner shot 61, bed z-fighting): the lower body's top (y .86) was the bean bed floor's height exactly (bedY .8 + .06), so
+ // the two fought across the bed. The body's top is now only drawn ahead of the bed (under the cab and bonnet); the bed floor, walls,
+ // tailgate and cab back close the box above it. The landing ring stands 2 cm over the floor (was 1.2 cm: it shimmered far off).
+ b.hull(0,.38,0,2,4.4,.48,paint,{w1:1.96,d1:4.36,faces:'fblr'});b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,2.18],[-.98,.86,2.18],paint,[0,0,1.2]);
  b.quad([-.95,floor,-2.05],[.95,floor,-2.05],[.95,floor,.17],[-.95,floor,.17],CREAM,[0,0,-.95]);
  for(const side of [-1,1])b.hull(side*.94,.84,-.95,.14,2.4,.54,paint,{faces:'tfblr'});
  b.hull(0,.84,-2.12,2,.14,.54,paint,{faces:'tfb'});
  // Landing ring on the bed floor (it was a 200-triangle torus): a flat twelve-sided band.
- for(let k=0;k<12;k++){const t0=k/12*Math.PI*2,t1=(k+1)/12*Math.PI*2,y=floor+.012,p=(t:number,r:number):V=>[Math.cos(t)*r,y,-.95+Math.sin(t)*r];b.quad(p(t0,.43),p(t1,.43),p(t1,.53),p(t0,.53),paint,[0,0,-.95]);}
+ for(let k=0;k<12;k++){const t0=k/12*Math.PI*2,t1=(k+1)/12*Math.PI*2,y=floor+.02,p=(t:number,r:number):V=>[Math.cos(t)*r,y,-.95+Math.sin(t)*r];b.quad(p(t0,.43),p(t1,.43),p(t1,.53),p(t0,.53),paint,[0,0,-.95]);}
  if(coolerSeat){b.hull(0,.86,-1.25,.7,.46,.43,'#5f8f9c',{faces:'fblr'});b.hull(0,1.27,-1.25,.72,.48,.04,CREAM);}
  // Cab: painted doors, tapered glass, a roof with a small overhang.
  b.hull(0,.86,.8,1.9,1.3,.36,paint);b.hull(0,1.22,.8,1.82,1.3,.46,GLASS,{w1:1.66,d1:1.05,shift:-.04,faces:'fblr'});
