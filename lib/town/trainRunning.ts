@@ -73,7 +73,7 @@ export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
-import {KENJI,kenjiLine} from './trainConductor';
+import {KENJI,kenjiLine,KENJI_SEAT} from './trainConductor';
 /** Gameplay 2: the player's radius against a car's box (block and slide); a car's box: ±HALF_W across, ±CAR_LENGTH/2 along. */
 export const PLAYER_R=.35;
 export {LIVERIES};
@@ -336,7 +336,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(blocked&&who===0&&st.v<HELD_V&&bestGap<KENJI.near){if(kenjiT[i]<0){kenjiT[i]=0;kenjiStage[i]=0;}else kenjiT[i]+=dt;
      const stage=kenjiT[i]>=KENJI.hurryAt?2:1;
      if(stage>kenjiStage[i]&&(stage===2||clock-kenjiQuiet>KENJI.cooldown)){kenjiStage[i]=stage;cue('train-toot',.8);result.say=stage===2?kenjiLine(kenjiN,true):kenjiLine(kenjiN++);}
-     if(kenjiStage[i]>0){result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(0,3.75+.5,CAR_LENGTH/2-.6).applyMatrix4(m4);result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}}
+     if(kenjiStage[i]>0){result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z).applyMatrix4(m4)/* over Kenji in the cab (lib/graphics/trainKenji.ts) */;result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}}
     else if(kenjiT[i]>=0){kenjiT[i]=-1;if(kenjiStage[i]>0)kenjiQuiet=clock;kenjiStage[i]=0;}
     // Held for the LOCAL player: after STEP_OFF_AFTER s, ask once and slide them gently off the track (never a knock).
     if(blocked&&who===0&&runner.heldFor(i)>=STEP_OFF_AFTER){if(!noted[i]){noted[i]=1;result.note='Please step off the track';}
@@ -386,7 +386,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
-     if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);np++;
+     if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);if(api.roofCut[i])platePos.fill(0,(i*TRAIN_CARS+c)*12,(i*TRAIN_CARS+c)*12+12);/* the cutaway: no destination plate floating over the open cab */np++;
      writeInside(i,c,m4,!api.roofCut[i]&&(!!api.ridden[i]||d3<CLOSE_RANGE),open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
       for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);glass.door(dm);}}}

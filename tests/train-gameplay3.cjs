@@ -148,3 +148,12 @@ console.log('train-gameplay3 interior: ok');
  const town=read('components/Town.tsx');assert(/const walkingBall=[^;]*&&!trainRide\.active;/.test(town),'no ball effects in a train');
  assert(/landImpact>0&&!trainRide\.active/.test(town),'no landing dust in a train');assert(/rampMotion\.state\.phase!=='air'&&!trainRide\.active,reduced,groundVariant/.test(town),'no ride trail in a train');}
 console.log('train cutaway ok');
+
+// Gameplay 4: Conductor Kenji in the leading cab (island NPC rig, never the passenger mesh), talkable at the partition.
+{const C=L('lib/town/trainConductor.ts'),CM=L('lib/town/trainCarModel.ts'),W=L('lib/town/trainWalk.ts');
+ assert(C.KENJI_SEAT.z>CM.CAB_Z&&C.KENJI_SEAT.z<6,'Kenji sits in the cab, past the partition');assert.equal(C.KENJI_NPC.name,C.CONDUCTOR);
+ assert(C.KENJI_NPC.topics.length>=3&&C.KENJI_NPC.topics.every(t=>t.question&&t.answer&&t.followUp.answer),'his talk pool');
+ const src=read('lib/graphics/trainKenji.ts');assert(/createPlayer\(/.test(src)&&!/trainPassengerMesh/.test(src),'the island NPC rig');
+ const town=read('components/Town.tsx');assert(/trainRide\.spot\.u>KENJI_TALK_U\?kenjiFig\.npc\(\)/.test(town)&&/KENJI_TALK_U=U_MAX-KENJI_SEAT\.talkU/.test(town),'Talk to Kenji at the partition');
+ assert(read('lib/town/trainRunning.ts').includes('pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z)'),'his bubble rises over him');}
+console.log('train kenji ok');
