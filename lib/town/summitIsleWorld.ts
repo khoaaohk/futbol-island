@@ -398,7 +398,7 @@ export function buildSummitIsle(t:SummitTools){
  // telescope, the kiosk, the fishing spots and the hikers. Baked into the same sector pieces as the trees above (no new draw call)
  // with their own trunk colliders (rides and balls bounce off them like any trunk).
  {const isle=obstacles.filter(o=>o.x>C.x-260&&o.x<C.x+260&&o.z>C.z-260&&o.z<C.z+260);
-  const blockedNear=(x:number,z:number,r:number)=>isle.some(o=>Math.abs(o.x-x)<o.w/2+r&&Math.abs(o.z-z)<o.d/2+r);
+  const blockedNear=(x:number,z:number,r:number)=>nearLine(x,z,r+3.5)||isle.some(o=>Math.abs(o.x-x)<o.w/2+r&&Math.abs(o.z-z)<o.d/2+r);// AAA audit: orchard trees keep off the line too (one stood at (690.3, 21.5), its crown over the rails)
   for(const o of ORCHARD_OFF?[]:planOrchard(blockedNear,SUMMIT_TREE_SITES.map(t=>({x:t.x,z:t.z})))){const piece=propsAt(o.x,o.z),tid=SUMMIT_TREE_SITES.length+1,rig=orchardRig(o);piece.tid=tid;
    for(const part of orchardParts(o))bake(piece,part.geo(),part.color,part.matrix);piece.tid=0;
    const plant=o.form==='banana'||o.form==='papaya',top=rig.sway.h;
