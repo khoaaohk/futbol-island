@@ -30,6 +30,22 @@ console.log('train-roof pure: ok');
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,S=LW('lib/town/trainSchedule.ts'),R2=LW('lib/town/trainRoof.ts');
  const cam=new T.PerspectiveCamera(50,1,.1,2000);const now=S.trainClockSec();let k=-1;for(let i=0;i<3;i++){const x=S.trainAt(i,now);if(x.at<0&&x.v>8)k=i;}
+
+ // Owner ADD 4 (Nov 24 2026): the trestle deck is a walk / ride / landing surface; the decks are landable decks; walk shore → deck → far end.
+ {const TL=LW('lib/town/trainLayout.ts'),TT=LW('lib/town/trainTrack.ts'),D=LW('lib/town/landableDecks.ts'),SIM=LW('lib/town/simulation.ts'),RT=LW('lib/town/rooftopTravel.ts');
+  const P=TL.trainLayout().profile,K=TT.TrackKind;const decks=TL.trestleDecks();assert(decks.length>=3,'a deck per trestle ('+decks.length+')');const off=decks.map(d=>D.registerLandableDeck(d));
+  let a0=-1;for(let i=1;i<TT.TRACK.n;i++)if(P.kind[i]===K.Sea&&P.kind[i-1]===K.Land){a0=i;break;}let a1=a0;while(P.kind[(a1+1)%TT.TRACK.n]===K.Sea)a1++;
+  const sMid=(a0+a1)/2*TT.TRACK_DS,pm=TT.trackAt(sMid),nm=TT.leftNormal(pm.tx,pm.tz),bed=TT.bedAt(P,sMid);
+  assert(Math.abs(TL.trainWalkHeight(pm.x,pm.z)-(bed+TL.TRAIN_WALK_TOP))<.02&&TL.trainWalkHeight(pm.x+nm.x*2,pm.z+nm.z*2)===0,'the deck top over the sea, nothing past its edge');
+  assert(!SIM.blocked(pm.x,pm.z,[],.32)&&SIM.blocked(pm.x+nm.x*2.5,pm.z+nm.z*2.5,[],.32),'walkable deck, the sea beside it is not');
+  const rt=RT.createRooftopTravel([...w.buildings,...w.walkSurfaces],w.obstacles,{x:0,z:0},w.roofObstacles,(x,z)=>TL.trainWalkHeight(x,z),w.landingExclusions,w.canopies);
+  assert(rt.canLand(pm.x,pm.z,Infinity)&&Math.abs(rt.surface(pm.x,pm.z,Infinity)-(bed+TL.TRAIN_WALK_TOP))<.02,'a jetpack landing on the deck');
+  for(const mode of ['walk','scooter']){const st=TT.trackAt((a0-12)*TT.TRACK_DS),p={x:st.x,z:st.z},v={x:0,z:0};rt.reset(p.x,p.z);let maxOff=0;
+   for(let f=0;f<60*90;f++){const h=TT.trackNearest(p.x,p.z,4);const q=TT.trackAt(h?h.s:0),lat=h?h.d:0;maxOff=Math.max(maxOff,lat);
+    rt.update(1/60,p,v,{x:q.tx-(h?((p.x-q.x)*0):0),z:q.tz,sprint:false},mode);if(h&&h.s>(a1+6)*TT.TRACK_DS)break;}
+   const h=TT.trackNearest(p.x,p.z,4);assert(h&&h.s>(a1+4)*TT.TRACK_DS,`${mode}: from the shore over the trestle to its far end (s ${h&&h.s.toFixed(0)} of ${(a1*TT.TRACK_DS).toFixed(0)})`);}
+  off.forEach(f=>f());}
+ console.log('train-roof trestle: ok');
  if(k<0){console.log('train-roof live: skipped (no train at speed now)');return;}
  const m=new T.Matrix4(),o={k:-1,x:0,u:0,y:0},p={x:0,y:0,z:0,yaw:0,lean:0};let t=now;
  const step=()=>{t+=1/30;const q=tt.trackAt(run.states[k].s);cam.position.set(q.x+20,30,q.z+20);cam.lookAt(q.x,0,q.z);cam.updateMatrixWorld();run.update({dt:1/30,camera:cam,player:{x:p.x,y:p.y,z:p.z},nowSec:t,onRoof:true});};

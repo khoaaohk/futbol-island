@@ -116,7 +116,7 @@ import {captainSellActions} from '@/lib/town/fishing/boatCaptains';
 import {SET_TIME_EVENT} from '@/lib/town/fishing/timeOfDay';
 import {nearBoat,resolveBoatHull,boatUnstick} from '@/lib/town/fishing/boatHull';
 import {nearFerryDeck,ferryUnstick} from '@/lib/town/ferryBoarding';
-import {onLandableDeck} from '@/lib/town/landableDecks';
+import {onLandableDeck,registerLandableDeck} from '@/lib/town/landableDecks';
 import {createStaticShadowBatches} from '@/lib/graphics/staticShadowBatches';
 import {createNpcShadowBatch} from '@/lib/graphics/npcShadowBatch';
 import {createStaticShadowCache} from '@/lib/graphics/staticShadowCache';
@@ -229,7 +229,7 @@ import {summitGoalCrossed,createSummitCameraPull,createSummitFlightLift,summitCr
 import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlope';
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
-import {trainSwimBlocked,trainWalkHeight} from '@/lib/town/trainLayout';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
+import {trainSwimBlocked,trainWalkHeight,trainDeckAt,trestleDecks,DECK_HALF,trainLayout} from '@/lib/town/trainLayout';import {trackNearest,trackAt as trainTrackAt,leftNormal as trainLeftNormal,TRACK as TRAIN_TRACK,TRACK_DS as TRAIN_DS,TrackKind as TrainKind} from '@/lib/town/trainTrack';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';import TrainRideHud from './TrainRideHud';import {createTrainRide,trainRideStore,trainRideActions,trainButtons,platformSpot,TRAIN_BOARD_KEY,type TrainActionId,type TrainQuizQ,canBoardFrom,nearHide,bodyDist} from '@/lib/town/trainRide';import {TRAIN_STATIONS,TRAIN_CROSSINGS,trackAt} from '@/lib/town/trainTrack';import {TRAIN_COUNT} from '@/lib/town/trainSchedule';import {trainClockSec} from '@/lib/town/trainSchedule';import {TRAIN_SEATS} from '@/lib/town/trainRunning';import {createStationLife} from '@/lib/town/stationLife';// Island Line riding (train Phase 3, Nov 23 2026)// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createStadiumMedia} from '@/lib/graphics/stadiumMedia';import {STADIUM_GESTURERS,STADIUM_GESTURES,STADIUM_MASCOT_ID,STADIUM_VIEWERS} from '@/lib/town/stadiumNpcs';// DRIP FC Stadium media + public viewing (Nov 13 2026)
 import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY,sitYieldsToTalk} from '@/lib/town/stadiumSit';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
@@ -904,6 +904,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     // Roof riding (lib/town/trainRoof.ts, Nov 24 2026): a moving train's roof is a floor from the sky (falls, parachute, the landing ring).
     const skyRoof={k:-1,x:0,u:0,y:0};
+    // The trestle / bridge decks are walk + ride + landing surfaces (owner, Nov 24 2026; trainLayout.ts trestleDecks): registered once.
+    for(const d of trestleDecks())disposers.add(registerLandableDeck(d));
     const skySurface=(x:number,z:number)=>{const g=rooftop.surface(x,z,Infinity);return world.trainRun?.roofAt(x,z,skyRoof)?Math.max(g,skyRoof.y):g;};
     // The floor under the rider's own height (the lighthouse gallery is a floor only from its own height: lighthouseGallery.ts),
     // for the ride's wheel pose; and the ball's floor, which sees the gallery at or just under the ball (plus one tick of a fast fall).
@@ -1537,7 +1539,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // facing (train frame), seconds since touchdown (the wobbly surfer landing); hop: a jump off the roof in flight (own ballistic arc,
     // keeping the train's speed: it lands on the ground, the sea, or another roof). One train-relative pose a frame, no allocation.
     const roofRide={k:-1,x:0,u:0,yaw:0,age:9,hop:false,hx:0,hy:0,hz:0,vx:0,vy:0,vz:0,top:0,roll:0},roofO={k:-1,x:0,u:0,y:0},roofPt={x:0,y:0,z:0,yaw:0,lean:0},roofMat=new T.Matrix4(),roofPreview={x:0,z:0};
-    let roofLanding=-1;const roofLand={x:0,u:0};
+    let roofLanding=-1,deckPush=0;const roofLand={x:0,u:0};const trainLayoutKind=(i:number)=>trainLayout().profile.kind[i];
     const roofAttach=(o:{k:number;x:number;u:number;y:number})=>{roofRide.k=o.k;roofRide.x=o.x;roofRide.u=o.u;roofSettle(roofRide);roofRide.age=0;roofRide.hop=false;roofRide.yaw=0;velocity.x=velocity.z=0;rooftop.reset(location.x,location.z,o.y);sound.ball('bounce');recordExploreActivity('roofDrop');};
     /** Pose the roof rider from this frame's train states (tick, and again right after the trains update: no lag behind the car). */
     const roofPose=()=>{const run=world.trainRun;if(!run||roofRide.k<0)return;run.standAt(roofRide.k,roofRide.x,roofRide.u,roofRide.yaw,roofPt,undefined,roofY(roofRide.x));location.x=roofPt.x;location.z=roofPt.z;rooftop.reset(roofPt.x,roofPt.z,roofPt.y);};
@@ -1714,7 +1716,17 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
       // Screen-relative controls follow the fixed camera heading.
       // Bug squad (Oct 20 2026): Net down slows the walk to careful steps; the release cinematic holds the player still.
-      const jw=rideRef.current==='walk'?jobs.walkScale:1,ix=(sx*.857+sy*.515)*jw,iz=(-sx*.515+sy*.857)*jw;
+      const jw=rideRef.current==='walk'?jobs.walkScale:1;let ix=(sx*.857+sy*.515)*jw,iz=(-sx*.515+sy*.857)*jw;
+      // Track assist (owner, Nov 24 2026: "make it easier to go on the track, but still have the option to fall off"): moving along the
+      // line within ~2 m of the rails toward / on a trestle, a soft pull to the deck's centre (never forced: steering away (< ~45° off
+      // the line) cancels it). Pushing off a deck's edge for DECK_PUSH s on foot (at once at ride speed) drops you into the sea.
+      {const il=Math.hypot(ix,iz);deckPush=il>.1?deckPush:0;if(il>.1&&!rooftop.state.falling&&!water.inWater){const h=trackNearest(location.x,location.z,2.2);
+        if(h){const p=trainTrackAt(h.s),n=trainLeftNormal(p.tx,p.tz),along=(ix*p.tx+iz*p.tz)/il,dir=along>=0?1:-1,ahead=Math.floor(((h.s+dir*8)%TRAIN_TRACK.length+TRAIN_TRACK.length)%TRAIN_TRACK.length/TRAIN_DS)%TRAIN_TRACK.n;
+          const onDeck=trainDeckAt(location.x,location.z),toward=onDeck||trainLayoutKind(ahead)===TrainKind.Sea;
+          const lat=(location.x-p.x)*n.x+(location.z-p.z)*n.z;// + left of the line
+          if(toward&&Math.abs(along)>.7){const pull=-Math.max(-1,Math.min(1,lat/1.2))*.35*il;ix+=n.x*pull;iz+=n.z*pull;}
+          if(onDeck&&Math.abs(lat)>DECK_HALF-.25){const out=Math.sign(lat)||1,push=(ix*n.x+iz*n.z)*out/il;deckPush=push>.6?deckPush+dt:0;
+            if(deckPush>(rideRef.current==='walk'&&Math.hypot(velocity.x,velocity.z)<5?.35:0)){deckPush=0;const y=rooftop.state.height;location.x+=n.x*out*(DECK_HALF-Math.abs(lat)+.9);location.z+=n.z*out*(DECK_HALF-Math.abs(lat)+.9);rooftop.reset(location.x,location.z,WATER_LEVEL);velocity.x=velocity.z=0;splashInto('fall',y);return;}}}}}
       if(streetTraffic.rider.index>=0){
         const index=streetTraffic.rider.index,bed=streetTraffic.bedPoint(index);
         if(truckExitRequested.current){
@@ -2521,7 +2533,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
          // A visibility floor: the deeper body keeps some of its own colour (beanUnder ≤ 1 − 0.5 × under; the depth absorption still tints it).
          const parts=beanSkinOf(player)?.meshes,cap=1-.5*Math.min(1,(water.pose.under??0)*SWIM_DIVE_CLEAR);if(parts)for(let i=0;i<parts.length;i++){const bu=(parts[i].material as {beanUniforms?:{beanUnder?:{value:number}}}).beanUniforms?.beanUnder;if(bu&&bu.value>cap)bu.value=cap;}}}// water: lib/graphics/waterSurface.ts (still = the cheap static path, no recompile)
       world.updateFerry(active&&!learning&&!backgroundFrozen?heldDt:0,reduced||heat.staticAmbience);
-      {trainFrame.dt=active&&!learning?dt:0;trainFrame.riding=trainRide.train;trainFrame.boardHold=trainRide.waiting;trainFrame.reduced=reduced;trainFrame.onRoof=roofRide.k>=0||roofRide.hop;trainFrame.fast=rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&Math.hypot(velocity.x,velocity.z)>4.5;{const run=world.trainRun;if(run){const t=performance.now();for(let k=0;k<TRAIN_COUNT;k++){let on=trainRide.train===k?1:0;for(let j=0;j<TRAIN_SEATS&&!on;j++)if(t-trainSeatSeen[k*TRAIN_SEATS+j]<600)on=1;run.ridden[k]=on;}}}const tr=world.updateTrains(trainFrame);if(roofRide.k>=0){roofPose();player.root.position.set(roofPt.x,roofPt.y,roofPt.z);}if(world.trainRun)stationLife.update(world.trainRun.states,performance.now()/1000,location,talkingIdRef.current??hoveredNpcId);trainRide.frame(trainFrame.dt,reduced);trainSeatGlow.update(trainRide.active?trainRide.glows:null);if(!learningFormat.current)trainRide.applyCamera(camera,dt,reduced);trainPassengers.update(world.trainRun??null,trainClockSec(),camera,trainRide.train,effectiveTier(),reduced);kenjiFig.update(world.trainRun??null,camera,trainRide.train,trainFrame.dt,trainClockSec(),reduced);if(tr.knock&&rideRef.current!=='jetpack'&&!trainBonk.active&&!trainRide.active&&!water.inWater&&startBonk(tr.knock,tr.knockX,tr.knockZ,tr.dirX,tr.dirZ,!onLand(location.x,location.z))){/* thrown clear (trainBonk) */}else if(tr.nudgeX||tr.nudgeZ){location.x+=tr.nudgeX;location.z+=tr.nudgeZ;}if(tr.note)showSeatNote(tr.note);
+      {trainFrame.dt=active&&!learning?dt:0;trainFrame.riding=trainRide.train;trainFrame.boardHold=trainRide.waiting;trainFrame.reduced=reduced;trainFrame.onRoof=roofRide.k>=0||roofRide.hop;trainFrame.fast=rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&Math.hypot(velocity.x,velocity.z)>4.5;{const run=world.trainRun;if(run){const t=performance.now();for(let k=0;k<TRAIN_COUNT;k++){let on=trainRide.train===k?1:0;for(let j=0;j<TRAIN_SEATS&&!on;j++)if(t-trainSeatSeen[k*TRAIN_SEATS+j]<600)on=1;run.ridden[k]=on;}}}const tr=world.updateTrains(trainFrame);if(roofRide.k>=0){roofPose();player.root.position.set(roofPt.x,roofPt.y,roofPt.z);}if(world.trainRun)stationLife.update(world.trainRun.states,performance.now()/1000,location,talkingIdRef.current??hoveredNpcId);trainRide.frame(trainFrame.dt,reduced);trainSeatGlow.update(trainRide.active?trainRide.glows:null);if(!learningFormat.current)trainRide.applyCamera(camera,dt,reduced);trainPassengers.update(world.trainRun??null,trainClockSec(),camera,trainRide.train,effectiveTier(),reduced);kenjiFig.update(world.trainRun??null,camera,trainRide.train,trainFrame.dt,trainClockSec(),reduced);if(tr.knock&&rideRef.current!=='jetpack'&&!trainBonk.active&&!trainRide.active&&!water.inWater&&startBonk(tr.knock,tr.knockX,tr.knockZ,tr.dirX,tr.dirZ,trainDeckAt(location.x,location.z))){/* thrown clear (trainBonk) */}else if(tr.nudgeX||tr.nudgeZ){location.x+=tr.nudgeX;location.z+=tr.nudgeZ;}if(tr.note)showSeatNote(tr.note);
         if(bonkShown){const pr=player.root.position;bonkBubble.follow(0,pr.x,pr.y+3.1,pr.z);bonkBubble.update(dt,reduced);bonkShown=bonkBubble.active(0);}
         if(tr.say){kenjiBubble.show(0,tr.say,KENJI.bubbleS);kenjiShown=true;}if(kenjiShown){if(tr.sayTrain>=0)kenjiBubble.follow(0,tr.cabX,tr.cabY,tr.cabZ);else kenjiBubble.hide(0);kenjiBubble.update(dt,reduced);kenjiShown=kenjiBubble.active(0);}}// Conductor Kenji: only while a line shows// Island Line trains (trainRunning.ts): timetable positions, crossings, boards, people on the track
       world.updateSharks(active&&!learning?heldDt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen

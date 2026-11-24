@@ -4,6 +4,7 @@
  * trestle's piers or the south sea wall). No three.js, no DOM, nothing per frame.
  */
 import {onLand} from './landmass';
+import type {LandableDeck} from './landableDecks';
 import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,SOUTH_BRIDGE,trackProfile,trackNearest,trackAt,leftNormal,inTunnelS,onSummitTrackS,wrapS,type TrackProfile,type TrainStation} from './trainTrack';
 
 /** Trestle piers: one every PIER_STEP m of sea; each stands on two columns PIER_COLUMN_OFFSET m either side of the centre line. */
@@ -76,22 +77,44 @@ export function lineClearSpot(x:number,z:number,reach=PALM_LINE_CLEAR):{x:number
 /** Walk height on the line (Nov 23 2026, owner: "going through the tracks"; a player on the line stood in the ballast). Feet rest
  *  on the sleepers (bed + TRAIN_WALK_TOP) across the ballast top, the ballast's sides slope down to the ground, and the crossing
  *  decks are at deck height across the rails, sloping to the ground XING_FOOT m out (trainWorld.ts builds the same shapes: BALLAST
- *  half-width 1.45, foot 1.9 m + 1.4 per metre of embankment, deck top RAIL_TOP - .03). Land rows only (the trestle is not a walk).
+ *  half-width 1.45, foot 1.9 m + 1.4 per metre of embankment, deck top RAIL_TOP - .03). Owner, Nov 24 2026 ("allow riding on the
+ *  tracks on the water"): the trestle / bridge deck is a walk too, its whole length incl. the raised South Bridge: the sleeper top
+ *  within DECK_HALF m of the centre line on every sea row (and the bridge-head joint rows), nothing beyond it (the sea).
  *  One hash lookup (trackNearest within 3.6 m): rooftopTravel's surface() takes the max with the ground, so 0 means "no line here". */
 export const TRAIN_WALK_TOP=.22;
 const XING_TOP=.31;
 /** Where a crossing deck's side ramps meet the ground (m from the centre line). Nov 24 2026: 2.0, just past the ballast's foot (was
  *  2.6: the long dark ramps lying on the grass read as a skewed slab at West Beach, owner 13.png). */
 export const XING_FOOT=2;
+export const DECK_HALF=1.3;
 export function trainWalkHeight(x:number,z:number):number{
  const hit=trackNearest(x,z,3.6);if(!hit)return 0;
  const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;
  const t=hit.s/TRACK_DS-Math.floor(hit.s/TRACK_DS),bed=P.bed[i]+(P.bed[k]-P.bed[i])*t,ground=onSummitTrackS(hit.s)?bed:0,d=hit.d;
  const xing=TRAIN_CROSSINGS.some(c=>Math.abs(wrapS(hit.s-c.s+TRACK.length/2)-TRACK.length/2)<c.width/2+.6);
+ if(!xing&&(P.kind[i]===TrackKind.Sea||P.kind[k]===TrackKind.Sea))return d<=DECK_HALF?bed+TRAIN_WALK_TOP:0;// the trestle / bridge deck
  if(!xing&&(P.kind[i]!==TrackKind.Land||P.kind[k]!==TrackKind.Land))return 0;
  if(xing){const top=bed+XING_TOP;return d<=1?top:d>=XING_FOOT?0:top+(ground+.01-top)*(d-1)/(XING_FOOT-1);}
  const top=bed+TRAIN_WALK_TOP,foot=1.9+(bed-ground)*1.4;
  return d<=1.45?top:d>=foot?0:top+(ground-top)*(d-1.45)/(foot-1.45);
+}
+
+/** Is (x, z) on a trestle / bridge deck (a sea row, within DECK_HALF m of the centre line)? One hash lookup. */
+export function trainDeckAt(x:number,z:number){
+ const hit=trackNearest(x,z,DECK_HALF+.05);if(!hit||hit.d>DECK_HALF)return false;
+ const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;return P.kind[i]===TrackKind.Sea||P.kind[k]===TrackKind.Sea;}
+/** Nov 24 2026: the trestle / bridge decks as landable decks (landableDecks.ts: walkable ground for simulation.blocked, land for the
+ *  landing search and the water system), one per sea run: its bounding box (the cheap first test) and trainDeckAt (the real shape).
+ *  `floating`: no wading shelf beside them (the sea beside a trestle is deep). Height 0: the floor itself is trainWalkHeight. */
+export function trestleDecks():LandableDeck[]{
+ const P=trainLayout().profile,out:LandableDeck[]=[];let a=-1;
+ const flush=(b:number)=>{let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let j=a;j<=b;j++){const i=j%TRACK.n;x0=Math.min(x0,TRACK.x[i]);x1=Math.max(x1,TRACK.x[i]);z0=Math.min(z0,TRACK.z[i]);z1=Math.max(z1,TRACK.z[i]);}
+  const pad=DECK_HALF+1;out.push({id:'trestle-'+out.length,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0+pad*2,d:z1-z0+pad*2,yaw:0,height:0,floating:true,contains:trainDeckAt,
+   distance:(x:number,z:number)=>{const h=trackNearest(x,z,12);return h&&(P.kind[h.i]===TrackKind.Sea)?Math.max(0,h.d-DECK_HALF):12;}});};
+ // walk the loop from a non-sea row so a run never wraps unseen
+ let start=0;while(start<TRACK.n&&P.kind[start]===TrackKind.Sea)start++;
+ for(let j=start;j<start+TRACK.n;j++){const sea=P.kind[j%TRACK.n]===TrackKind.Sea;if(sea&&a<0)a=j-1;else if(!sea&&a>=0){flush(j);a=-1;}}
+ return out;
 }
 
 // ---- Station spots (train Phase 4, Nov 23 2026): the vending machines and the station NPCs stand in each station's own frame.
