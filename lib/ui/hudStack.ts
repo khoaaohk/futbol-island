@@ -11,7 +11,14 @@
 
 /** Everything that can hold the focus slot, strongest first within each tier. */
 export type HudFocus='hop-off'|'land-truck'|'talk'|'enter'|'fish'|'sell'|'vending'|'job-offer'|'spot'|'hint'|'learn';
-export type HudCandidate={kind:HudFocus;/** metres from the player; hover (explicit desktop intent) uses -1 */distance:number;key?:string};
+export type HudCandidate={kind:HudFocus;/** metres from the player; hover (explicit desktop intent) uses -1 */distance:number;key?:string;
+ /** Priority inside a tier (higher first, default 0), after hover and before distance. Owner (Nov 24 2026), the station rule:
+  *  Board (PRI_BOARD) > Collect stamp (PRI_STAMP) > Talk to an islander (0); a hovered / tapped target (distance -1) still wins. */pri?:number};
+/** Station prompt priorities (owner, Nov 24 2026): one rule for the primary prompt slot. */
+export const PRI_BOARD=2,PRI_STAMP=1;
+/** Is a better than b inside one tier? Hover first (explicit intent), then priority, then the nearer. */
+const hov=(c:HudCandidate)=>c.distance<0;
+function beats(a:HudCandidate,b:HudCandidate,margin=0){if(hov(a)!==hov(b))return hov(a);const pa=a.pri??0,pb=b.pri??0;if(pa!==pb)return pa>pb;return a.distance+margin<b.distance;}
 export type HudContext={
  /** riding in a truck bed */ridingTruck:boolean;
  /** jetpack/flying (ground prompts sleep; building doors and vending machines are fly-in destinations by design) */flying:boolean;
@@ -40,7 +47,7 @@ export function eligible(kind:HudFocus,ctx:HudContext):boolean{
 /**
  * One focus at a time, with hysteresis so walking between two targets does not flicker:
  *  - a lower tier always wins at once (Hop off beats Talk, Talk beats Learn Plays);
- *  - inside a tier, hover (distance -1) wins at once; otherwise a challenger replaces the current choice only when it is
+ *  - inside a tier, hover (distance -1) wins at once, then the higher `pri` (Board > Collect stamp > Talk); otherwise a challenger replaces the current choice only when it is
  *    `margin` metres closer, or once the current one has been gone for `holdMs` (a candidate that blinks out for one tick
  *    — a door projecting behind the camera for a frame — keeps its place).
  */
@@ -50,7 +57,7 @@ export function createFocusArbiter({margin=1.5,holdMs=300}:{margin?:number;holdM
  function choose(candidates:readonly HudCandidate[],ctx:HudContext,now:number):HudCandidate|null{
   let best:HudCandidate|null=null;
   for(const c of candidates){if(!eligible(c.kind,ctx))continue;
-   if(!best||FOCUS_TIER[c.kind]<FOCUS_TIER[best.kind]||FOCUS_TIER[c.kind]===FOCUS_TIER[best.kind]&&c.distance<best.distance)best=c;}
+   if(!best||FOCUS_TIER[c.kind]<FOCUS_TIER[best.kind]||FOCUS_TIER[c.kind]===FOCUS_TIER[best.kind]&&beats(c,best))best=c;}
   const kept=current?candidates.find(c=>same(c,current!)&&eligible(c.kind,ctx)):undefined;
   if(current&&!kept){
    // Briefly keep a vanished choice only if nothing stronger arrived.
@@ -61,7 +68,7 @@ export function createFocusArbiter({margin=1.5,holdMs=300}:{margin?:number;holdM
   if(!best){current=null;return null;}
   if(kept){
    const tb=FOCUS_TIER[best.kind],tk=FOCUS_TIER[kept.kind];
-   const switchNow=tb<tk||tb===tk&&!same(best,kept)&&(best.distance<0||best.distance+margin<kept.distance);
+   const switchNow=tb<tk||tb===tk&&!same(best,kept)&&(hov(best)||beats(best,kept,margin));
    current=switchNow?best:kept;return current;
   }
   current=best;return current;

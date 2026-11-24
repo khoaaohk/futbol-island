@@ -165,4 +165,14 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.match(g,/@media\(max-width:600px\),\(pointer:coarse\)\{:root\{--island-hud-row-top:calc\(16px \+ env\(safe-area-inset-top,0px\)\)/,'phone row top is 16px + safe area');
  assert.match(shellCss,/\.shell>\.header\{padding:calc\(16px \+ env\(safe-area-inset-top,0px\)\) calc\(var\(--phone-gutter\) \+ env\(safe-area-inset-right,0px\)\)/,'phone drawer header starts at the row top, Done inside the right inset');
  assert.match(town,/hud-stack" data-hud-stack ref=\{setHudStackEl\} hidden=\{stackCovered\}/,'the column itself still hides under the pocket');}
+// ---- Station prompt priority (owner, Nov 24 2026): Board > Collect stamp > Talk; a hovered target beats proximity ----
+{const {PRI_BOARD,PRI_STAMP}=mod.exports;assert(PRI_BOARD>PRI_STAMP&&PRI_STAMP>0);
+ const talk={kind:'talk',key:'ines',distance:1.2},stamp={kind:'enter',key:'station-stamp',distance:4,pri:PRI_STAMP},board={kind:'enter',key:'train-board',distance:5,pri:PRI_BOARD};
+ const a=createFocusArbiter();assert.equal(a.choose([talk],walk,0).key,'ines');
+ assert.equal(a.choose([talk,stamp],walk,150).key,'station-stamp','at the station house: Collect stamp beats a nearer islander at once');
+ assert.equal(a.choose([talk,stamp,board],walk,300).key,'train-board','a train in: Board beats both');
+ assert.equal(a.choose([talk,stamp],walk,450).key,'train-board','doors close: held for holdMs');assert.equal(a.choose([talk,stamp],walk,800).key,'station-stamp','then Collect stamp returns');
+ assert.equal(a.choose([talk,{...stamp,distance:-1},board],walk,950).key,'station-stamp','a hovered station house beats Board by proximity');
+ assert.equal(a.choose([talk,{...stamp,distance:-1},{...board,distance:-1}],walk,1100).key,'train-board','both hovered: Board');
+ const b=createFocusArbiter();assert.equal(b.choose([{kind:'enter',key:'arcade',distance:2},{kind:'enter',key:'x',distance:3}],walk,0).key,'arcade','no pri: the nearer, as before');}
 console.log('HUD_STACK_PASS');

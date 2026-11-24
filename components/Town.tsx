@@ -129,7 +129,7 @@ import FishingHost from './FishingHostLazy';// Nov 10 2026 load-time pass: the h
 import {createFishingWorld,fishingKioskObstacles} from '@/lib/town/fishing/fishingWorld';
 import {inGarden} from '@/lib/town/jobs/garden';
 import {jobById} from '@/lib/town/jobs/jobCatalog';
-import {createFocusArbiter,type HudCandidate,type HudFocus} from '@/lib/ui/hudStack';
+import {createFocusArbiter,PRI_BOARD,PRI_STAMP,type HudCandidate,type HudFocus} from '@/lib/ui/hudStack';
 import {HudStackContext} from './HudStack';
 import {fishingSession} from '@/lib/town/fishing/fishingStore';
 import {FISHING_CHEER_EVENT} from '@/lib/town/fishing/fishingDelightStore';
@@ -2534,7 +2534,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(summitWant)cands.push({kind:'enter',key:summitWant.key,distance:summitWant.distance});if(cannonWant)cands.push({kind:'enter',key:cannonWant.key,distance:cannonWant.distance});// Summit Kick post / Ball Cannon
         if(easelWant)cands.push({kind:'enter',key:easelWant.key,distance:easelWant.distance});if(gashaWant)cands.push({kind:'enter',key:gashaWant.key,distance:gashaWant.distance});/* gashapon */// Summit Isle painting easel
         if(zipWant)cands.push({kind:'enter',key:zipWant.key,distance:zipWant.distance});// the zipline tower
-        if(trainWant)cands.push({kind:'enter',key:trainWant.key,distance:trainWant.distance});if(stampWant)cands.push({kind:'enter',key:stampWant.key,distance:stampWant.distance});// a station house: Collect stamp// a train at the platform: Board
+        if(trainWant)cands.push({kind:'enter',key:trainWant.key,distance:trainWant.distance,pri:PRI_BOARD});if(stampWant)cands.push({kind:'enter',key:stampWant.key,distance:stampWant.distance,pri:PRI_STAMP});/* owner (Nov 24 2026): Board > Collect stamp > Talk; a hovered target wins */// a station house: Collect stamp// a train at the platform: Board
         if(forageWant)cands.push({kind:'enter',key:forageWant.key,distance:forageWant.distance});// Summit Isle fruit tree
         if(beachWant)cands.push({kind:'enter',key:beachWant.key,distance:beachWant.distance});// Beachcombing find
         if(ladderWant)cands.push({kind:'enter',key:ladderWant.key,distance:ladderWant.distance});// the lighthouse ladder
