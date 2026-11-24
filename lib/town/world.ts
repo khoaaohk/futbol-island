@@ -19,7 +19,7 @@ import {buildSummitIsle} from './summitIsleWorld';
 import {buildSummitActivityProps} from './summitActivitiesWorld';
 import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';
 import {buildTrainWorld} from './trainWorld';import {createTrainRunning,type TrainRunning,type TrainFrame,type TrainFrameResult} from './trainRunning';// The Island Line (train Phase 1, Nov 23 2026): track, trestles, tunnel, stations, crossings
-import {trackPushOut} from './trainLayout';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
+import {trackPushOut,lineClearSpot} from './trainLayout';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {buildPaintEasel} from './paintEaselWorld';
 import {buildGashaponProps} from './gashaponWorld';
 import {createCanopyCollector} from './canopySurfaces';// landable canopies (Oct 14 2026)
@@ -192,6 +192,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // 56 thin frond midrib cylinders (~2.2k of a palm's ~2.4k triangles) for the West Beach's many palms. Defaults: as before.
   function palm(x:number,z:number,height=6,yaw=0,ribs=true){prop('palm',()=>palmParts(x,z,height,yaw,ribs));}
   function palmParts(x:number,z:number,height=6,yaw=0,ribs=true){
+    // Island Line clearance (Nov 24 2026, owner shot 34: palms through a moving car): every palm keeps its crown out of the train's
+    // envelope; one within PALM_LINE_CLEAR m of the line steps straight back from it and its trunk leans away (lineClearSpot).
+    {const c=lineClearSpot(x,z);if(c){x=c.x;z=c.z;yaw=Math.atan2(-c.uz,c.ux);}}
     assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:6.5,visualD:6.5,canopyHeight:height});
     const group=new T.Group();group.position.set(x,0,z);group.rotation.y=yaw;town.add(group);
     const trunk=put(new T.CylinderGeometry(.11,.22,height,9),'#9d805b',0,height/2,0,group);trunk.rotation.z=-.07;
