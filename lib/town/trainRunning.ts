@@ -273,6 +273,9 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   root,triangles:detail[0].triangles,runner,states,
   /** Phase 3: 1 while someone (me or a drawn friend) rides train i: it draws its open variant (window holes, seats). Town writes it. */
   ridden:new Uint8Array(TRAIN_COUNT),
+  /** The cutaway (Nov 24 2026): 1 while I walk inside train i (trainRide writes it): its roofs are not drawn (vehicle material uCut)
+   *  and its cove posters are left out, so the overhead camera looks down into the cars. No extra draw. */
+  roofCut:new Uint8Array(TRAIN_COUNT),
   /** Phase 3: where seat j of train k is (root on the car floor, facing the aisle). `now`: worked out for that clock from the
    *  timetable and the runner's lag (friends are posed before this frame's update); without it, from this frame's states. */
   seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{return api.seatAt(k,PLAYER_SEATS[Math.max(0,Math.min(TRAIN_SEATS-1,j))],out,now);},
@@ -378,13 +381,13 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
-    tr.look.lamp.z=night*INTERIOR_GLOW;// the window band: the indicator channel, lit by the shared night factor
+    tr.look.lamp.z=night*INTERIOR_GLOW;tr.look.cut.value=api.roofCut[i];// the window band: the indicator channel, lit by the shared night factor
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
      if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);np++;
-     writeInside(i,c,m4,!!api.ridden[i]||d3<CLOSE_RANGE,open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
+     writeInside(i,c,m4,!api.roofCut[i]&&(!!api.ridden[i]||d3<CLOSE_RANGE),open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
       for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);glass.door(dm);}}}
     tr.mesh.instanceMatrix.needsUpdate=true;}

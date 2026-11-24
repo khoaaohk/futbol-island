@@ -120,23 +120,28 @@ export function buildVehicleGeometry(style:VehicleStyle,paint:string,options:{be
  *  The body pitches and rolls on its suspension (the group's rotation); the wheel vertices take those two small angles back out
  *  (y += z*pitch - x*roll about the wheel centre), so the tyres stay on the road. Pass 0, 0 when the tilt is the ground's (a ramp). */
 export function createVehicleMaterial(){
- const wheel=new T.Vector4(1,0,0,0),lamp=new T.Vector4(0,0,0,0);
+ const wheel=new T.Vector4(1,0,0,0),lamp=new T.Vector4(0,0,0,0),cut={value:0};
  const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.7});
+ // Island Line cutaway (Nov 24 2026): a part id of 10+ marks a train car's roof (trainCarModel ROOF_CUT_Y: the outer roof, the
+ // ceiling, its cove and light strips, the roof units). With uCut 1 those vertices collapse to one point (degenerate triangles: no
+ // raster work), so the ridden train is seen from above like a dollhouse. Same program for every vehicle (uCut stays 0 elsewhere).
  material.onBeforeCompile=shader=>{
-  shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};
-  shader.vertexShader='attribute vec4 aPart;\nuniform vec4 uWheel;\nuniform vec4 uLamp;\nvarying float vGlow;\n'+shader.vertexShader
+  shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};shader.uniforms.uCut=cut;
+  shader.vertexShader='attribute vec4 aPart;\nuniform vec4 uWheel;\nuniform vec4 uLamp;\nuniform float uCut;\nvarying float vGlow;\n'+shader.vertexShader
    .replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
-bool fiWheel=aPart.w>.5&&aPart.w<2.5;bool fiSteer=aPart.w>1.5&&aPart.w<2.5;
+bool fiRoof=aPart.w>9.5;float fiW=fiRoof?aPart.w-10.:aPart.w;
+bool fiWheel=fiW>.5&&fiW<2.5;bool fiSteer=fiW>1.5&&fiW<2.5;
 if(fiWheel){objectNormal.yz=vec2(objectNormal.y*uWheel.x-objectNormal.z*uWheel.y,objectNormal.y*uWheel.y+objectNormal.z*uWheel.x);
  if(fiSteer)objectNormal.xz=vec2(objectNormal.x+objectNormal.z*uWheel.w,objectNormal.z-objectNormal.x*uWheel.w);}`)
    .replace('#include <begin_vertex>',`#include <begin_vertex>
 if(fiWheel){vec3 fiQ=transformed-aPart.xyz;fiQ.yz=vec2(fiQ.y*uWheel.x-fiQ.z*uWheel.y,fiQ.y*uWheel.y+fiQ.z*uWheel.x);
  if(fiSteer){float fiC=1.-.5*uWheel.w*uWheel.w;fiQ.xz=vec2(fiQ.x*fiC+fiQ.z*uWheel.w,fiQ.z*fiC-fiQ.x*uWheel.w);}
  transformed=aPart.xyz+fiQ;transformed.y+=aPart.z*uWheel.z-aPart.x*uLamp.w;}
-vGlow=aPart.w<2.5?0.:aPart.w<3.5?uLamp.x:aPart.w<4.5?uLamp.y:aPart.w<5.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
+if(fiRoof&&uCut>.5)transformed=vec3(0.);
+vGlow=fiW<2.5?0.:fiW<3.5?uLamp.x:fiW<4.5?uLamp.y:fiW<5.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
   shader.fragmentShader='varying float vGlow;\n'+shader.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;','vec3 totalEmissiveRadiance = vColor.rgb * vGlow;');
  };
- material.customProgramCacheKey=()=>'street-vehicle-v2';
- return {material,wheel,lamp};
+ material.customProgramCacheKey=()=>'street-vehicle-v3';
+ return {material,wheel,lamp,cut};
 }
 export const triangleCount=(g:T.BufferGeometry)=>g.getAttribute('position').count/3;

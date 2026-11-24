@@ -132,7 +132,19 @@ console.log('train-gameplay3 passengers: ok');
  for(const p of P)for(const [u,z] of [[.66,p.z0],[.84,p.z1]]){const c=CM.coveCorner(p.s,u,z,.02);assert(Math.abs(c[0])<CM.HALF_W&&c[1]>3.05&&c[1]<3.45,'title quads on the cove inside the car');}
  const run=read('lib/town/trainRunning.ts'),RN2=RN;assert.deepEqual([...RN2.POSTER_TITLES].map(t=>t.split(' ')[0]),['ISLAND','HISTORY','KIT','ISLAND'],'titles: Island League, History Museum, Kit Shop, Island Line');
  assert(/for\(let k=0;k<n;k\+\+\)\{const st=TRAIN_STOPS\[k\]\.station/.test(run)&&S.TRAIN_STOPS.length===5&&S.TRAIN_STOPS.some(s=>s.station.id==='north'),'the route map draws the 5 stops from the timetable (North at its new spot)');
- assert(/writeInside\(i,c,m4,!!api\.ridden\[i\]\|\|d3<CLOSE_RANGE,open>0\?side\*rev:0\)/.test(run),'titles only on ridden / close-up trains; chime lamps only on the side whose doors are open');
+ assert(/writeInside\(i,c,m4,!api\.roofCut\[i\]&&\(!!api\.ridden\[i\]\|\|d3<CLOSE_RANGE\),open>0\?side\*rev:0\)/.test(run),'titles only on ridden / close-up trains (not on a cut-away roof); chime lamps only on the side whose doors are open');
  assert(/if\(q\.chime&&q\.side!==openSide\)\{platePos\.fill\(0,o,o\+12\)/.test(run),'closed doors: the chime lamps collapse');
  assert(/const plates=new T\.Mesh\(plateGeo,boards\.mat\)/.test(run),'the same plates mesh and canvas: no new draw call or program');}
 console.log('train-gameplay3 interior: ok');
+
+// The cutaway while standing (Nov 24 2026): roof triangles carry part id + 10; the vehicle material collapses them with uCut; the
+// standing camera is the overhead OVER framing; no ball effects, landing dust or ride trail inside a train.
+{const CM=L('lib/town/trainCarModel.ts'),g=CM.buildCarGeometry({...L('lib/town/trainLiveries.ts').LIVERIES[0]},true).geometry,p=g.getAttribute('position').array,a=g.getAttribute('aPart').array;
+ let roof=0,low=0;for(let v=0;v<p.length/3;v++){if(a[v*4+3]>9.5){roof++;if(p[v*3+1]<CM.ROOF_CUT_Y)low++;}}
+ assert(roof>300,'the roof is marked');assert.equal(low,0,'nothing under the wall top is cut');
+ const tv=read('lib/graphics/trafficVehicles.ts');assert(/if\(fiRoof&&uCut>\.5\)transformed=vec3\(0\.\);/.test(tv),'roof vertices collapse with uCut');
+ const R=L('lib/town/trainRide.ts');assert(R.OVER.pitch>.95&&R.OVER.pitch<1.25&&R.OVER.distMin>=5&&R.OVER.distMax<=12,'overhead framing');
+ const ride=read('lib/town/trainRide.ts');assert(/run\.roofCut\[kk\]=standCam>\.02\?1:0/.test(ride),'the ridden train is cut while standing');
+ const town=read('components/Town.tsx');assert(/const walkingBall=[^;]*&&!trainRide\.active;/.test(town),'no ball effects in a train');
+ assert(/landImpact>0&&!trainRide\.active/.test(town),'no landing dust in a train');assert(/rampMotion\.state\.phase!=='air'&&!trainRide\.active,reduced,groundVariant/.test(town),'no ride trail in a train');}
+console.log('train cutaway ok');
