@@ -18,7 +18,8 @@
  *  - People on the track (the local player and drawn remote players): a train looks LOOK_AHEAD m ahead (±LOOK_HALF m), sounds its
  *    horn, slows and stops STOP_SHORT m short; after 5 s it asks the local player to step off and slides them gently aside.
  *  - Departure boards: "Next train: 1 min · to Coral Cay" and the following train, redrawn at BOARD_HZ (1 Hz) only for stations
- *    within BOARD_SHOW m, uploaded only when a line changes. Free-standing (own post and collider) on the platform.
+ *    within BOARD_SHOW m, uploaded only when a line changes (Nov 24 polish: a 0.3 s split-flap flip of the changed line within
+ *    FLIP_RANGE m, 6 uploads, none with reduced motion). Free-standing (own post and collider) on the platform.
  *  - No allocation per frame; every mesh is built at load and warm() lets Town compile the programs before a train is seen.
  */
 import * as T from 'three';
@@ -35,6 +36,8 @@ const tunnelLamps=(s:number)=>{const a=wrapS(s-TUNNEL.west.s+20);return a<TUNNEL
 /** Phase 4: wheel clack within CLACK_RANGE m (one per CLACK_STEP m run), door chime within DOOR_SOUND m, arrival melody within ARRIVE_SOUND m. */
 export const CLACK_RANGE=45,CLACK_STEP=CAR_LENGTH+CAR_GAP,DOOR_SOUND=35,ARRIVE_SOUND=70;
 export const ANIMATE_RANGE=80,LOD_RANGE=150,HIDE_RANGE=400,SIM_RANGE=260,BELL_RANGE=60,HORN_RANGE=220,XING_SHOW=160,XING_SHOW_PED=110,XING_HZ=4,BOARD_SHOW=150,BOARD_HZ=1;
+/** Board flips (Nov 24 polish): within FLIP_RANGE m, FLIP_S s long, redrawn at FLIP_HZ while flipping. */
+export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
 /** Seconds held for a person before the local player is asked to step off and slid aside. */
 export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** Track geometry the cars sit on (trainWorld.ts values: rail top above the bed, ballast top). */
@@ -225,13 +228,18 @@ function buildBoards(obstacles:Obstacle[]|null){
   const g2=new T.BufferGeometry();g2.setAttribute('position',new T.Float32BufferAttribute(pos,3));g2.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g2.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g2.computeBoundingSphere();
   const m=new T.Mesh(g2,mat);m.name='train-board-'+st.id;m.matrixAutoUpdate=false;m.visible=false;
   {const pp=P(U,Vv,0);obstacles?.push({x:pp.x,z:pp.z,w:.3,d:.3,train:true} as Obstacle);}
-  return {mesh:m,x:c.x,z:c.z,text:'',stop:TRAIN_STOPS.findIndex(s=>s.station===st),to:''};});
+  return {mesh:m,x:c.x,z:c.z,text:'',stop:TRAIN_STOPS.findIndex(s=>s.station===st),to:'',l1:'',l2:'',o1:'',o2:'',flip:-1};});
  for(const b of meshes)b.to=TRAIN_STOPS[(b.stop+1)%TRAIN_STOPS.length].station.name;
  const sans='system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
- const draw=(r:number,l1:string,l2:string)=>{if(!g)return;const y=r*BOARD_ROW;
+ // Polish (Nov 24 2026): a split-flap flip when a line changes. `p` 0 … 1: a changed line's old text folds shut about its middle
+ // (the hinge) over the first half and the new one opens over the second; unchanged lines are drawn still. p = 1: the plain board.
+ const line=(text:string,o:string,cy:number,font:string,fill:string,p:number)=>{if(!g)return;g.font=font;g.fillStyle=fill;
+  if(p>=1||text===o){g.fillText(text,16,cy,BOARD_W-28);return;}
+  const sc=p<.5?1-2*p:2*p-1;g.save();g.translate(0,cy);g.scale(1,Math.max(.02,sc));g.fillText(p<.5?o:text,16,0,BOARD_W-28);g.restore();
+  g.fillStyle='#000';g.fillRect(10,cy-1,BOARD_W-20,2);};
+ const draw=(r:number,l1:string,l2:string,o1=l1,o2=l2,p=1)=>{if(!g)return;const y=r*BOARD_ROW;
   g.fillStyle='#16191c';g.fillRect(0,y,BOARD_W,BOARD_ROW);g.fillStyle='#2f7d5b';g.fillRect(0,y,BOARD_W,8);g.fillStyle='#000';g.fillRect(0,y+BOARD_ROW-6,BOARD_W,6);
-  g.textAlign='left';g.textBaseline='middle';g.fillStyle='#ffb43a';g.font=`800 38px ${sans}`;g.fillText(l1,16,y+58,BOARD_W-28);
-  g.fillStyle='#e9eef0';g.font=`700 30px ${sans}`;g.fillText(l2,16,y+116,BOARD_W-28);};
+  g.textAlign='left';g.textBaseline='middle';line(l1,o1,y+58,`800 38px ${sans}`,'#ffb43a',p);line(l2,o2,y+116,`700 30px ${sans}`,'#e9eef0',p);};
  return {meshes,mat,tex,draw};
 }
 
@@ -239,7 +247,8 @@ function buildBoards(obstacles:Obstacle[]|null){
 export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:number};
  /** Remote players drawn on this screen (x, y, z). */eachRemote?:(cb:(x:number,y:number,z:number)=>void)=>void;
  /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
- /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number};
+ /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
+ /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean};
 export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null};
 type Person={x:number;y:number;z:number};
 export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null){
@@ -279,7 +288,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
  const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null},hit={gap:0,side:0,d:0,s:0};
- let primeLeft=0,clock=0,bellWait=0,boardWait=0,xingWait=0,lastNow=0,warming=false;
+ let primeLeft=0,clock=0,bellWait=0,boardWait=0,flipWait=0,xingWait=0,lastNow=0,warming=false;
  const onPlatformSide=(s:number,side:number)=>{for(const st of TRAIN_STATIONS)if(side===st.side&&Math.abs(((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2)<STATION_HALF+1)return true;return false;};
  /** Allocation-free: is person p on the line between front + from and front + to (m along)? Fills `hit` (gap along, side, distance). */
  function onLine(p:Person,front:number,from:number,to:number,reach:number){
@@ -365,7 +374,13 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    boardWait-=dt;if(boardWait<=0){boardWait=1/BOARD_HZ;let dirty=false;boards.mat.emissiveIntensity=night*.75;
     for(let r=0;r<boards.meshes.length;r++){const b=boards.meshes[r],near=Math.hypot(b.x-cam.x,b.z-cam.z)<BOARD_SHOW;if(b.mesh.visible!==near)b.mesh.visible=near;if(!near)continue;
      const n=nextTrains(b.stop,runner.t,2),l1=`Next train: ${waitText(n[0])} · to ${b.to}`,l2=`Then: ${waitText(n[1])}`,text=l1+'|'+l2;
-     if(text!==b.text){b.text=text;boards.draw(r,l1,l2);dirty=true;}}
+     if(text!==b.text){const doFlip=b.text!==''&&!f.reduced&&Math.hypot(b.x-cam.x,b.z-cam.z)<FLIP_RANGE;b.o1=b.l1;b.o2=b.l2;b.text=text;b.l1=l1;b.l2=l2;
+      if(doFlip)b.flip=0;else{b.flip=-1;boards.draw(r,l1,l2);dirty=true;}}}
+    if(dirty)boards.tex.needsUpdate=true;}
+   // the flips: ~FLIP_S s, redrawn at FLIP_HZ (one upload per step, only while a near board is flipping; off with reduced motion)
+   flipWait-=dt;if(flipWait<=0){flipWait=1/FLIP_HZ;let dirty=false;
+    for(let r=0;r<boards.meshes.length;r++){const b=boards.meshes[r];if(b.flip<0)continue;b.flip+=1/FLIP_HZ;const p=Math.min(1,b.flip/FLIP_S);
+     boards.draw(r,b.l1,b.l2,b.o1,b.o2,p);dirty=true;if(p>=1)b.flip=-1;}
     if(dirty)boards.tex.needsUpdate=true;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
    let nd=0,np=0;

@@ -78,6 +78,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  assert(!/onBeforeCompile|ShaderMaterial|customProgramCacheKey/.test(run)&&/createVehicleMaterial/.test(run),'no new shader code: the road traffic vehicle material');
  assert(/LOD_RANGE=150\b/.test(run)&&/buildCarBox/.test(run),'one box per car past 150 m');assert(/XING_HZ=4\b/.test(run),'crossings on a 4 Hz / event clock');
  assert(/compileAsync\(tr\.root/.test(read('components/Town.tsx')),'train programs warmed at load');
+ assert(/FLIP_RANGE=45,FLIP_S=\.3,FLIP_HZ=20\b/.test(run)&&/!f\.reduced/.test(run)&&/trainFrame\.reduced=reduced/.test(town),'board flip: 0.3 s at 20 Hz on a change, near boards only, off with reduced motion');
  assert(/BOARD_HZ=1\b/.test(run),'boards on a 1 Hz clock');assert(/BELL_RANGE=60\b/.test(run)&&/ANIMATE_RANGE=80\b/.test(run)&&/HIDE_RANGE=400\b/.test(run),'bell 60 m, animate 80 m, hide 400 m');
  assert(/MACHINE_NIGHT/.test(run),'night: the shared night uniform');
  // Polish (Nov 24): headlamps brighter at night and in the tunnel through the head / tail lamp channels (no light, no shader)
