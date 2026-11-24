@@ -85,7 +85,14 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
     if (!/^Next stop/.test(note)) console.log('diag A', JSON.stringify(await A.p.evaluate((k) => { const r = window.__fi2.trainRide, st = window.__fi2.trains.states[k]; return { walking: r.walking, exiting: r.exiting, standing: r.standing, view: r.view, seat: r.seat, at: st.at, next: st.next, v: +st.v.toFixed(1), hidden: document.hidden, fps: window.__fi2.renderer?.info?.render?.frame }; }, ride.train)));
-    const v1 = await seen(); await B.p.waitForTimeout(3000); const v2 = await seen();// 3 s: on a loaded 1-5 fps headless frame the train may still be pulling out (0.8 m/s²)
+    // AAA 2: B really is teleported along (the old comment said so, the code did not: B was 340 m away, the seat behind its camera):
+    // 9 m out from A's moving seat, facing it, re-placed each second for 3 s so the train stays in B's view
+    const follow = () => B.p.evaluate(({ k, j }) => { const f = window.__fi2, seat = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.seatPose(k, j, seat); const dx = Math.sin(seat.yaw), dz = Math.cos(seat.yaw);
+      f.teleport(seat.x - dx * 9, seat.z - dz * 9, Math.atan2(dx, dz)); }, { k: ride.train, j: ride.seat });
+    await follow(); await B.p.waitForTimeout(1200);
+    const v1 = await seen(); for (let i = 0; i < 3; i++) { await follow(); await B.p.waitForTimeout(1000); } const v2 = await seen();// 3 s: on a loaded 1-5 fps headless frame the train may still be pulling out (0.8 m/s²)
+    if (!(v2.ridden === 1 && v2.best < 1.2)) console.log('  diag B: ' + JSON.stringify(await B.p.evaluate(({ k, j }) => { const f = window.__fi2, t = f.trains, seat = { x: 0, y: 0, z: 0, yaw: 0 }; t.seatPose(k, j, seat); const c = f.camera, V = c.position.constructor, q = new V(seat.x, seat.y + 1, seat.z).project(c);
+      return { me: [f.location.x, f.location.z].map((x) => +x.toFixed(1)), seat: [seat.x, seat.z].map((x) => +x.toFixed(1)), dMe: +Math.hypot(seat.x - f.location.x, seat.z - f.location.z).toFixed(1), ndc: [q.x, q.y, q.z].map((x) => +x.toFixed(2)), fps: f.renderStats?.fps, ridden: t.ridden[k] }; }, { k: ride.train, j: ride.seat })));
     check('B draws A in the moving seat', v2.ridden === 1 && v2.best < 1.2 && Math.hypot(v2.x - v1.x, v2.z - v1.z) > 2, `${v2.best.toFixed(2)} m from the seat, the seat moved ${Math.hypot(v2.x - v1.x, v2.z - v1.z).toFixed(1)} m`);
     const g1 = await gfx(A.p); console.log(`riding (A, phone 390x844): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
     if (shots) { require('fs').mkdirSync(shots, { recursive: true }); await A.p.screenshot({ path: path.join(shots, 'train-ride-phone.png') }); }

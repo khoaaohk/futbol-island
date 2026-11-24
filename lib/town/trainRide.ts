@@ -24,6 +24,7 @@ import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK
 import type {TrickPose} from '../graphics/trickPose';
 import {springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
+import {PHONE_STICK_QUERY} from './floatingStick';
 
 export const TRAIN_BOARD_KEY='train-board';
 /** Owner (Nov 25 2026): Board is offered on foot and from the scooter, bike and moped (never from the jetpack: it lands first).
@@ -79,13 +80,21 @@ const PORTRAIT_FOV=58;
  *  cutaway (roof and both walls stay). Drag (or the right side) turns it all the way round and `pitch` rad up / down; the stick /
  *  WASD walk the way you look (the aisle, door bays and gangway: trainWalk.ts). Your body is not drawn (the near-camera fade). Wider
  *  `fov` (portrait `portraitFov`) inside a 2.4 m car; it eases in and out with the view change. */
+/** AAA 2: first person turn rate on ← / → (rad/s). */
+export const FP_KEY_TURN=2.2;
 export const FP={eye:1.36,pitch:1.05,fov:68,portraitFov:76,look:4,near:.16} as const;
 /** (The island camera's near plane is 1 m: in first person the cab partition, a bench end or a door post 0.3-1 m away was cut open,
  *  so while the Inside view is on the near plane is FP.near m; it is put back the moment the view changes or you get off.) */
 /** The ride's camera views (owner, Nov 24 2026), in the order the camera button cycles them. */
-export const TRAIN_VIEWS=['seat','front','back','left','right','above','inside'] as const;
+export const TRAIN_VIEWS=['seat','driver','front','back','left','right','above','inside'] as const;
+/** AAA 2 (owner, Nov 24 2026: "a camera view in front of the train, facing forward, from the conductor's point of view, with no
+ *  conductor"): the Driver's view. The eye in the leading cab (car 0's +z end: the line runs one way round, so it always faces where
+ *  the train is going), driver's height, a little back from the windscreen so its frame, the wipers and the desk's top edge show;
+ *  locked to this frame's car matrix (no smoothing, no bob); a small look round (±35° / ±15°) that eases back when let go. Kenji is
+ *  hidden in it (his warnings come as the ride's note). */
+export const DRIVER={x:0,eye:1.5,z:5.5,look:20,down:.05,yaw:.61,pitch:.26,fov:62,portraitFov:78,back:2.5} as const;
 export type TrainView=typeof TRAIN_VIEWS[number];
-export const TRAIN_VIEW_LABEL:Record<TrainView,string>={seat:'Seat view',front:'Front view',back:'Back view',left:'Left side',right:'Right side',above:'From above',inside:'Inside view'};
+export const TRAIN_VIEW_LABEL:Record<TrainView,string>={seat:'Seat view',front:'Front view',back:'Back view',left:'Left side',right:'Right side',above:'From above',inside:'Inside view',driver:"Driver's view"};
 /** The outside views: the look point (m behind the train's nose, height over the rail bed), the camera's bearing from it (rad: 0 ahead
  *  of the train, π behind, +π/2 on its left), elevation (rad), distance (m; portrait × `portrait`), how far the orbit turns either way
  *  (rad) and the zoom range. The side shots fit the whole train (24.4 m) with scenery round it. */
@@ -139,9 +148,10 @@ export const trainRideActions={board:()=>{},press:(_id:TrainActionId,_phase:'tap
 /** The action cluster while riding (the zipline's ZIP_BUTTONS pattern): Get off (only at a stop), the horn, Recenter and (Gameplay 3)
  *  Walk / Sit (the 'extra' slot, key Q). Standing by a door bay at a stop with the doors open, Get off becomes the primary button. */
 export function trainButtons(canGetOff:boolean,moved=false,standing=false,nearSeat=false,nearDoor=false,exitTo=''){
- const offFirst=standing&&nearDoor&&canGetOff;
- return [{slot:offFirst?'shoot':'ride',key:'E',id:'getoff',label:exitTo?`Get off at ${exitTo}`:canGetOff?'Get off here':'Get off at the next stop',icon:'trainoff',enabled:canGetOff||!!exitTo},
-  {slot:offFirst?'ride':'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true},
+ // AAA 2 (owner shot 52, Nov 24 2026): no Get off button in the cluster: the "Get off at <station>" pill (TrainRideHud), E / Enter
+ // and walking out of an open door in first person get you off. The cluster: Recenter | Map over Walk-or-Sit | Horn (globals.css).
+ void canGetOff;void nearDoor;void exitTo;
+ return [{slot:'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true},
   {slot:'juggle',key:'R',id:'recenter',label:'Recenter the camera',icon:'recenter',enabled:moved},
   {slot:'extra',key:'Q',id:'walk',label:!standing?'Walk around inside (Inside view)':nearSeat?'Sit in this seat':'Walk up to a free seat to sit',icon:standing?'sit':'walk',enabled:!standing||nearSeat}] as const;
 }
@@ -307,9 +317,9 @@ export function createTrainRide(ports:Ports){
  }
  function cycleView(){const i=TRAIN_VIEWS.indexOf(camView);for(let n=1;n<TRAIN_VIEWS.length;n++)if(setView(TRAIN_VIEWS[(i+n)%TRAIN_VIEWS.length]))return true;return false;}
  /** The orbit's elevation range (added to the view's default), zoom range and turn limit (rad either way; ≥ π: free) for this view. */
- function pitchRange(){if(camView==='inside'){pr[0]=-FP.pitch;pr[1]=FP.pitch;}else if(camView==='seat'){pr[0]=ORBIT.pitchMin;pr[1]=ORBIT.pitchMax;}else{const o=OUTSIDE[camView];pr[0]=.06-o.el;pr[1]=1.45-o.el;}return pr;}
- function zoomRange(){if(camView==='inside'){pr[0]=pr[1]=1;}else if(camView==='seat'){pr[0]=ORBIT.zoomMin;pr[1]=ORBIT.zoomMax;}else{const o=OUTSIDE[camView];pr[0]=o.zMin;pr[1]=o.zMax;}return pr;}
- const yawLimit=()=>camView==='inside'||camView==='seat'?Math.PI:OUTSIDE[camView].yaw;
+ function pitchRange(){if(camView==='driver'){pr[0]=-DRIVER.pitch;pr[1]=DRIVER.pitch;}else if(camView==='inside'){pr[0]=-FP.pitch;pr[1]=FP.pitch;}else if(camView==='seat'){pr[0]=ORBIT.pitchMin;pr[1]=ORBIT.pitchMax;}else{const o=OUTSIDE[camView];pr[0]=.06-o.el;pr[1]=1.45-o.el;}return pr;}
+ function zoomRange(){if(camView==='inside'||camView==='driver'){pr[0]=pr[1]=1;}else if(camView==='seat'){pr[0]=ORBIT.zoomMin;pr[1]=ORBIT.zoomMax;}else{const o=OUTSIDE[camView];pr[0]=o.zMin;pr[1]=o.zMax;}return pr;}
+ const yawLimit=()=>camView==='inside'||camView==='seat'?Math.PI:camView==='driver'?DRIVER.yaw:OUTSIDE[camView].yaw;
  function clampYaw(){const l=yawLimit();if(l<Math.PI&&Math.abs(orb.yaw)>l){orb.yaw=Math.sign(orb.yaw)*l;orb.vy=0;}}
  function setPitch(p:number){const r=pitchRange();orb.pitch=Math.max(r[0],Math.min(r[1],p));}
  function setZoom(z:number){const r=zoomRange();orb.zoom=Math.max(r[0],Math.min(r[1],z));}
@@ -383,6 +393,8 @@ export function createTrainRide(ports:Ports){
  // Only presses that start on the canvas (never a HUD button); a second finger pinches; two quick taps recenter.
  const span=()=>Math.max(320,Math.min(1100,typeof window!=='undefined'?Math.min(window.innerWidth,window.innerHeight*1.4):390));
  function onDown(e:PointerEvent){const el=e.target as Element|null;if(!riding()||e.button>0||!el||el.tagName!=='CANVAS')return;
+  // AAA 2 (owner shot 51): first person on a phone, a touch on the left half is the floating stick's (it walks), the right half looks
+  if(standing&&e.pointerType==='touch'&&e.clientX<window.innerWidth*.5&&window.matchMedia?.(PHONE_STICK_QUERY).matches)return;
   if(dragging&&e.pointerId!==dragId&&pinchId<0){pinchId=e.pointerId;pinchX=e.clientX;pinchY=e.clientY;pinchD=Math.max(10,Math.hypot(pinchX-dragX,pinchY-dragY));pinchZ=orb.zoom;orb.vy=0;return;}
   if(dragging)return;const now=e.timeStamp/1000;
   if(tapT>=0&&now-tapT<ORBIT.tap2&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<ORBIT.tapPx){tapT=-1;recenter();return;}
@@ -439,7 +451,10 @@ export function createTrainRide(ports:Ports){
   holdPlayer(stickX:number,stickZ=0,keys?:ReadonlySet<string>){if(!riding())return false;
    const kx=keys?(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0):0,kz=keys?(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0):0;
    // Gameplay 3: standing, the stick and WASD / arrows walk (relative to the camera); a drag still turns the camera
-   if(standing){mv.x=Math.max(-1,Math.min(1,stickX+kx));mv.z=Math.max(-1,Math.min(1,kz-stickZ));keyYaw=keyPitch=0;if(mv.x||mv.z)recentering=false;return true;}
+   // AAA 2 (owner shot 51, "unable to turn while inside"): first person keys: W / S (and ↑ / ↓) walk, A / D step sideways, ← / → turn
+   // (FP_KEY_TURN rad/s, the drag turns too); the stick walks (as on the island: stick moves, a drag looks)
+   if(standing){const sx=keys?(keys.has('d')?1:0)-(keys.has('a')?1:0):0,turn=keys?(keys.has('arrowright')?1:0)-(keys.has('arrowleft')?1:0):0;
+    mv.x=Math.max(-1,Math.min(1,stickX+sx));mv.z=Math.max(-1,Math.min(1,kz-stickZ));keyYaw=turn*FP_KEY_TURN/ORBIT.keyYaw;keyPitch=0;if(mv.x||mv.z||turn)recentering=false;return true;}
    keyYaw=Math.max(-1,Math.min(1,stickX+kx));keyPitch=Math.max(-1,Math.min(1,kz-stickZ));if(keyYaw||keyPitch)recentering=false;return true;},
   /** The seated pose for the rig (blended in and out). */
   trick():TrickPose|undefined{
@@ -496,6 +511,7 @@ export function createTrainRide(ports:Ports){
    if(keyYaw||keyPitch){orb.yaw=wrapPi(orb.yaw-keyYaw*ORBIT.keyYaw*h);setPitch(orb.pitch+keyPitch*ORBIT.keyPitch*h);}
    if(!dragging&&orb.vy!==0){if(reduced)orb.vy=0;else{orb.yaw=wrapPi(orb.yaw+orb.vy*h);orb.vy*=Math.exp(-ORBIT.decay*h);if(Math.abs(orb.vy)<.02)orb.vy=0;}}
    clampYaw();
+   if(camView==='driver'&&!dragging&&!keyYaw&&!keyPitch){const q=reduced?1:1-Math.exp(-DRIVER.back*h);orb.yaw-=orb.yaw*q;orb.pitch-=orb.pitch*q;orb.vy=0;}
    if(recentering){const q=reduced?1:1-Math.exp(-ORBIT.recenter*h);orb.yaw-=wrapPi(orb.yaw)*q;orb.pitch-=orb.pitch*q;orb.zoom+=(1-orb.zoom)*q;
     if(Math.abs(orb.yaw)<.005&&Math.abs(orb.pitch)<.005&&Math.abs(orb.zoom-1)<.005){orb.yaw=orb.pitch=0;orb.zoom=1;recentering=false;}}
    {const moved=Math.abs(orb.yaw)>ORBIT.moved||Math.abs(orb.pitch)>ORBIT.moved||Math.abs(orb.zoom-1)>ORBIT.moved;if(moved!==view.moved)trainRideStore.set({moved});}
@@ -531,7 +547,10 @@ export function createTrainRide(ports:Ports){
     camPos.copy(pv2);camLook.set(pv2.x+Math.sin(W)*cp*FP.look,pv2.y-Math.sin(pt)*FP.look,pv2.z+Math.cos(W)*cp*FP.look);}
    // The outside views (OUTSIDE): a look point on the train (from its nose back along the track), the camera on a bearing from it,
    // the orbit on top, kept clear of roofs, rock, the hill and the truss by its own spring arm.
-   if(camView!=='seat'&&camView!=='inside'){
+   if(camView==='driver'&&run.carMatrixOf){
+    run.carMatrixOf(kk,0,carM2);pv2.set(DRIVER.x,CAR_FLOOR_Y+DRIVER.eye,DRIVER.z).applyMatrix4(carM2);const e=carM2.elements,W=Math.atan2(e[8],e[10])+orb.yaw,pt=orb.pitch-DRIVER.down,cp=Math.cos(pt);
+    camPos.copy(pv2);camLook.set(pv2.x+Math.sin(W)*cp*DRIVER.look,pv2.y+Math.sin(pt)*DRIVER.look,pv2.z+Math.cos(W)*cp*DRIVER.look);}
+   if(camView!=='seat'&&camView!=='inside'&&camView!=='driver'){
     const o=OUTSIDE[camView],sl=wrapS(s-o.at),c=trackAt(sl,tpo),hy=bedAt(L.profile,sl)+o.lh,az=(portrait&&o.pAz!==undefined?o.pAz:o.az)+orb.yaw,ca=Math.cos(az),sa=Math.sin(az);
     const el0=Math.max(.06,Math.min(1.45,o.el+orb.pitch)),len=o.dist*(portrait?o.portrait:1)*orb.zoom,hx=ca*c.tx+sa*c.tz,hz=ca*c.tz-sa*c.tx;
     // a station house between a platform-side camera and the train: rather than pull in against the cars, the camera rises over its
@@ -551,7 +570,7 @@ export function createTrainRide(ports:Ports){
    // RIDE 3: a view change eases round an eased look point, in the train's frame (its nose and heading now), so it keeps up with the
    // train and its curves: bearing (the shortest way), elevation and log distance; lifted over a station roof / the hill on the way
    {const n=trackAt(s,tpn);refX=n.x;refZ=n.z;refTx=n.tx;refTz=n.tz;}
-   const vFov=camView==='inside'?(portrait?FP.portraitFov:FP.fov):portrait?PORTRAIT_FOV:(fovSaved||camera.fov);let rideFov=vFov;
+   const vFov=camView==='inside'?(portrait?FP.portraitFov:FP.fov):camView==='driver'?(portrait?DRIVER.portraitFov:DRIVER.fov):portrait?PORTRAIT_FOV:(fovSaved||camera.fov);let rideFov=vFov;
    if(viewT<1){viewT=Math.min(1,viewT+h/(reduced?VIEW_EASE_REDUCED:VIEW_EASE));const ev=smoother(viewT);
     fromTrain(snapP,fromP);fromTrain(snapL,fromL);o1.subVectors(fromP,fromL);o2.subVectors(camPos,camLook);
     const r1=Math.max(.05,o1.length()),r2=Math.max(.05,o2.length()),a1=Math.atan2(o1.x,o1.z),a2=Math.atan2(o2.x,o2.z),e1=Math.asin(Math.max(-1,Math.min(1,o1.y/r1))),e2=Math.asin(Math.max(-1,Math.min(1,o2.y/r2)));
@@ -568,7 +587,7 @@ export function createTrainRide(ports:Ports){
    // the ride camera's weight: the seat blend (boarding), or 1 while standing / walking to a seat / stepping out (then the exit ease)
    const wc=Math.max(blend,standing||exitT>=0?1:0),e=wc*wc*(3-2*wc);
    if(!fovSaved)fovSaved=camera.fov;{const f=fovSaved+(rideFov-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
-   {const fp=camView==='inside'&&e>.5;if(fp&&!nearSaved){nearSaved=camera.near;camera.near=FP.near;camera.updateProjectionMatrix();}else if(!fp&&nearSaved){camera.near=nearSaved;nearSaved=0;camera.updateProjectionMatrix();}}
+   {const fp=(camView==='inside'||camView==='driver')&&e>.5;if(fp&&!nearSaved){nearSaved=camera.near;camera.near=FP.near;camera.updateProjectionMatrix();}else if(!fp&&nearSaved){camera.near=nearSaved;nearSaved=0;camera.updateProjectionMatrix();}}
    normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
    camera.position.lerpVectors(normalPos,camPos,e);camera.quaternion.slerpQuaternions(normalQ,camQ,e);camera.updateMatrixWorld();
   },

@@ -105,7 +105,10 @@ const WINDOWS:readonly Hole[]=(()=>{const w:Hole[]=[],run=(a:number,b:number,n:n
  w.push({z0:4.86,z1:5.44,y0:2.25,y1:2.98});return w;})();
 const DOOR_HOLES:readonly Hole[]=DOORS.map(zc=>({z0:zc-DOOR_HALF,z1:zc+DOOR_HALF,y0:CAR_FLOOR_Y,y1:DOOR_Y1}));
 const SCREEN:readonly Hole[]=[{z0:-1.0,z1:-.07,y0:2.3,y1:3.04},{z0:.07,z1:1.0,y0:2.3,y1:3.04}];// windscreen panes (x as z)
-const PART_WIN:Hole={z0:-.55,z1:-.05,y0:2.15,y1:2.85};// the partition window into the cab (x as z)
+/** AAA 2 (owner shot 53, Nov 24 2026: "make the space where the conductor is see-through so you can see what's ahead"): the cab
+ *  partition is mostly glass, like a Japanese commuter car: two big panes from waist height (desk top) to just under the wall top,
+ *  nearly the full width, a slim frame and a narrow centre pillar (x as z). Through them, past Kenji at his desk, the windscreen. */
+const PART_WINS:readonly Hole[]=[{z0:-1.22,z1:-.05,y0:2.12,y1:3.02},{z0:.05,z1:1.22,y0:2.12,y1:3.02}];
 /** Light palette (owner: nothing reads as a void in warm evening light). */
 const K={frame:'#d5d2ca',rubber:'#5b5853',step:'#b4b6b6',yellow:'#f2c230',under:'#605b55',under2:'#76716a',bogie:'#5a554f',wheel:'#6c6760',
  hub:'#8f8a83',spring:'#4e4943',roofUnit:'#cfd0cc',roofTop:'#bfc1bd',grille:'#7b7e80',panto:'#8f969c',insul:'#e3dccb',surround:'#45423f',
@@ -288,9 +291,9 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
  for(const s of [-1,1]){
   g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
  // the cab partition (cream on the passenger side, grey in the cab) with its window, the cab desk
- {const hs=[PART_WIN];wallCells(-IW,IW,[F,SIDE_TOP],hs,(a,b,y0,y1)=>{endQuad(g,CAB_Z,-1,a,b,y0,y1,ramp(K.wall,F,F+1.1,.74));endQuad(g,CAB_Z+.05,1,a,b,y0,y1,K.cab);});
+ {const hs=PART_WINS;wallCells(-IW,IW,[F,SIDE_TOP],hs,(a,b,y0,y1)=>{endQuad(g,CAB_Z,-1,a,b,y0,y1,ramp(K.wall,F,F+1.1,.74));endQuad(g,CAB_Z+.05,1,a,b,y0,y1,K.cab);});
   for(const s of [-1,1]){g.quad([s*IW,SIDE_TOP,CAB_Z],[s*COVE_X,CEIL_Y,CAB_Z],[0,CEIL_Y,CAB_Z],[0,SIDE_TOP,CAB_Z],K.wall,[0,3.2,CAB_Z+1]);}
-  reveal(g,PART_WIN,CAB_Z,CAB_Z+.05,K.frame,false);
+  for(const h of PART_WINS)reveal(g,h,CAB_Z,CAB_Z+.05,K.frame,false);
   g.box(0,F+.42,5.62,1.02,.42,.3,K.desk);g.quad([-1.02,F+.84,5.32],[1.02,F+.84,5.32],[1.02,F+1.0,5.9],[-1.02,F+1.0,5.9],col(K.desk,1.15).getStyle(),[0,0,6]);}
  for(const s of [-1,1]){
   // benches: stainless kick panel, a moquette cushion (lighter top, darker sides) and a two-tone backrest
@@ -337,7 +340,7 @@ export function buildDoorLeaf(){const g=new VGeo(),h=(DOOR_Y1-DOOR_Y0)/2,w=DOOR_
  return g.build();}
 
 // ---------------------------------------------------------------- glass + the soft contact shadow: ONE transparent instanced mesh
-/** Every pane of every near car (the side windows, the windscreen, the partition window), every door leaf's pane and each car's
+/** Every pane of every near car (the side windows, the windscreen, the partition glass), every door leaf's pane and each car's
  *  contact shadow are instances of ONE small geometry in ONE draw: a unit pane (x = 0 plane, both faces, a blue-grey sheen in
  *  vertex colour + alpha) and a unit feathered shadow (y = −0.5 plane, alpha fading to 0 at its edges). A pane instance squashes x
  *  (the shadow part collapses to an invisible sliver on the pane's bottom edge), a shadow instance squashes y (the pane collapses
@@ -364,7 +367,7 @@ const paneM=(x:number,yc:number,zc:number,h:number,w:number,faceZ=false,faceNX=f
 const CAR_PANES:readonly T.Matrix4[]=[
  ...[-1,1].flatMap(s=>WINDOWS.map(w=>paneM(s*(HALF_W-.025),(w.y0+w.y1)/2,(w.z0+w.z1)/2,w.y1-w.y0,w.z1-w.z0,false,s<0))),
  ...SCREEN.map(h=>paneM((h.z0+h.z1)/2,(h.y0+h.y1)/2,5.985,h.y1-h.y0,h.z1-h.z0,true)),
- paneM((PART_WIN.z0+PART_WIN.z1)/2,(PART_WIN.y0+PART_WIN.y1)/2,CAB_Z+.025,PART_WIN.y1-PART_WIN.y0,PART_WIN.z1-PART_WIN.z0,true)];
+ ...PART_WINS.map(h=>paneM((h.z0+h.z1)/2,(h.y0+h.y1)/2,CAB_Z+.025,h.y1-h.y0,h.z1-h.z0,true))];
 const SHADOW_M=new T.Matrix4().compose(new T.Vector3(0,SHADOW_Y,0),new T.Quaternion(),new T.Vector3(SHADOW_HALF*2,SQUASH,SHADOW_LEN));
 const DOOR_PANE_M=(()=>{const yc=(DOOR_Y0+DOOR_Y1)/2;return paneM(0,(DOOR_PANE[0]+DOOR_PANE[1])/2-yc,0,DOOR_PANE[1]-DOOR_PANE[0],DOOR_HALF-2*DOOR_EDGE);})();
 /** The shared glass + shadow mesh. Per frame: begin(); shadow(car matrix) for every drawn car; car(car matrix) for the near tier;

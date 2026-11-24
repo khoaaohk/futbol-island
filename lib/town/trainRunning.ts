@@ -201,7 +201,7 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
   *  follow camera's matrices (the walk camera behind the seat): culling with it hid every train the ride view looked at. One frame
   *  old (≤ 0.5 m of train travel; the cull sphere is 23 m). */viewProj?:T.Matrix4;camPos?:T.Vector3;
  /** Remote players drawn on this screen (x, y, z). */eachRemote?:(cb:(x:number,y:number,z:number)=>void)=>void;
- /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
+ /** The shared clock (s) for this frame (AAA 2: Town passes trainFrameClock at the rAF timestamp; tests pass their own); else trainClockSec(). */nowSec?:number;
  /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
  /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
  /** Nov 24 2026: the local player stands on a train's roof (trainRoof.ts): not a person on the track, never pushed. */onRoof?:boolean;

@@ -161,6 +161,20 @@ export function trainClockSec(perfNow?:number,dateNow?:number){
  const p=perfNow??(typeof performance!=='undefined'?performance.now():0),srv=liveClock.serverNow(p);
  return (Number.isFinite(srv)?srv:(dateNow??Date.now()))/1000;
 }
+/** AAA 2 (owner: "buggy and jittery", Nov 24 2026): ONE train clock per frame. Every train-attached thing (the cars, riders, Kenji,
+ *  passengers, friends in their seats, the ride camera) reads this frame's value, taken at the frame's vsync timestamp (the rAF
+ *  `now`), not performance.now() / Date.now() at whatever moment each caller ran (a few ms of script time apart: 12.7 m/s × 3 ms =
+ *  4 cm of shake between the train and what rides it, and between the train and the world). The shared clock's small corrections
+ *  (the relay's offset finding a faster packet: a step of a few ms) are slewed in at ≤ 10 % of real time instead of stepping the
+ *  train; a big jump (> 2 s: first connect, a long hidden tab, the checks' clock skew) snaps at once. Allocation-free. */
+let fcShown=NaN,fcAt=NaN;
+export function trainFrameClock(perfNow:number){
+ const pn=typeof performance!=='undefined'?performance.now():perfNow;
+ const raw=trainClockSec(perfNow,Date.now()-(pn-perfNow));// solo: Date.now() moved back to the frame's timestamp
+ if(perfNow===fcAt)return fcShown;
+ if(!(fcShown===fcShown)||!(perfNow>fcAt)||Math.abs(raw-fcShown)>2){fcShown=raw;fcAt=perfNow;return raw;}
+ const dp=(perfNow-fcAt)/1000,lim=.1*dp;let s=fcShown+dp;const e=raw-s;s+=e>lim?lim:e<-lim?-lim:e;fcShown=s;fcAt=perfNow;return s;
+}
 
 // ---- Local running: a train held for a person on the track, then catching up.
 export type TrainRunner={

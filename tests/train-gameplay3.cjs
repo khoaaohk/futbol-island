@@ -43,7 +43,7 @@ console.log('train-gameplay3 walk frame: ok');
  // the fake train is not at North's coordinates: Board through want() needs the platform; use it and then drive the frames
  ride.want(sp.x,sp.z,sp.y,true);assert(ride.board()&&ride.active,'boarded');for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);
  const j0=ride.seat;assert(j0>=0&&!ride.standing,'seated');
- let b=R.trainButtons(true,false,false,false,false);assert.equal(b.length,4,'four ride buttons: Get off, horn, Recenter, Walk');
+ let b=R.trainButtons(true,false,false,false,false);assert.equal(b.length,3,'three ride buttons: horn, Recenter, Walk (AAA 2: Get off is the pill)');
  const walk=b.find(x=>x.id==='walk');assert(walk.slot==='extra'&&walk.icon==='walk'&&walk.enabled&&walk.key==='Q','Walk: the extra slot, person-walking icon, Q');
  assert.equal(R.trainKeyAction('KeyQ','q'),'walk');
  // Walk: stand up into the aisle (train-relative)
@@ -72,8 +72,7 @@ console.log('train-gameplay3 walk frame: ok');
  assert.equal(ride.getOff(false),false,'between stops: no getting off while standing');
  Object.assign(ride.spot,{x:0,u:CM.DOORS[1]});const west=S.stopOf('west');Object.assign(states[1],{at:west,doors:1,dwellLeft:10});for(let i=0;i<3;i++)ride.frame(1/30,false);
  assert(R.trainRideStore.get().nearDoor&&R.trainRideStore.get().canGetOff,'by an open door at a stop');
- b=R.trainButtons(true,false,true,false,true);assert.equal(b.find(x=>x.id==='getoff').slot,'shoot','Get off is the primary by the door');assert.equal(b.find(x=>x.id==='horn').slot,'ride');
- assert.equal(R.trainButtons(true,false,false,false,false).find(x=>x.id==='getoff').slot,'ride','seated: Get off keeps its place');
+ b=R.trainButtons(true,false,true,false,true);assert.equal(b.find(x=>x.id==='horn').slot,'shoot','the horn keeps its cell by the door');
  assert(ride.getOff(false)&&!ride.active&&placed,'got off from standing');assert(!R.trainRideStore.get().standing&&!ride.gait.on,'off: not standing');
  assert(R.platformAt(placed.x,placed.z,placed.y)>=0,'stepped onto the platform');
  ride.dispose();}
@@ -192,7 +191,7 @@ console.log('train kenji ok');
 
 // Nov 24 2026: players may sit in any free seat: NPC passengers' seats count as taken (Town trainSeatTaken), friends standing are drawn.
 {const town=read('components/Town.tsx');assert(/const r=trainPassengers\.roster\(k\);return !!r&&seatTaken\(r,j\)/.test(town),'an NPC passenger\'s seat is taken');
- assert(/run\.standAt\(k,x,u,yw,p,trainClockSec\(\),onRoof\?roofY\(x\):undefined\);p\.speed=sp;return onRoof\?3:2;/.test(town),'a standing friend (aisle or roof) is drawn train-relative, walking');
+ assert(/run\.standAt\(k,x,u,yw,p,trainNowSec===trainNowSec\?trainNowSec:trainClockSec\(\),onRoof\?roofY\(x\):undefined\);p\.speed=sp;return onRoof\?3:2;/.test(town),'a standing friend (aisle or roof) is drawn train-relative, walking, on this frame\'s train clock (AAA 2)');
  const R=L('lib/town/trainRunning.ts');assert.equal(R.PLAYER_SEATS.length,28);}
 console.log('train all-seats ok');
 

@@ -30,3 +30,6 @@
 .camToast{width:max-content;margin:0;padding:6px 12px;border:2px solid #fff2cd;border-radius:999px;background:#244d40;color:#fff2cd;font:800 13px/1.2 var(--font-body,Arial),sans-serif;white-space:nowrap;pointer-events:none;animation:camToast 1.6s ease-out forwards}
 @keyframes camToast{0%{opacity:0;transform:translateY(-6px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}.camToast{animation-name:camToastStill}@keyframes camToastStill{0%,85%{opacity:1}100%{opacity:0}}}
+
+/* AAA 2: the view name for screen readers only (the owner removed the visible pill) */
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}

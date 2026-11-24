@@ -25,8 +25,12 @@ assert.equal(R.trainRideStore.get().exitTo,'','no pill between stops');assert.eq
 // braking in, ~4 s before the doors open: the pill names the station; a press queues
 states[1].t=arriveT-(R.EXIT_EARLY-S.DOOR_DELAY-S.DOOR_MOVE*.5)+.2;ride.frame(1/30,false);
 assert.equal(R.trainRideStore.get().exitTo,tt.TRAIN_STATIONS.find(s=>s.id==='west').name,'the pill shows braking in');
-assert(R.trainButtons(false,false,false,false,false,'West Beach').find(b=>b.id==='getoff').enabled,'the cluster Get off is active too');
-assert(R.trainButtons(false,false,false,false,false,'West Beach').find(b=>b.id==='getoff').label==='Get off at West Beach');
+assert(!R.trainButtons(false,false,false,false,false,'West Beach').some(b=>b.id==='getoff'),'AAA 2 (owner shot 52): no Get off in the cluster (the pill does it)');
+{const css=read('app/globals.css');const at=css.indexOf('owner shot 52');assert(at>0,'the owner shot 52 cluster block');const blk=css.slice(at,css.indexOf('/* Island Line ride HUD',at));
+ const cell=(sel,flip)=>{const m=blk.match(new RegExp('\\n '+(flip?'\\.controls-flipped':'\\.town-app')+' \\.travel-actions\\[data-emote-grid\\]\\[data-train-actions\\] '+sel.replace(/[.()]/g,'\\$&')+'\\{grid-column:(\\d);grid-row:(\\d)'));return m?m[1]+','+m[2]:null;};
+ assert.deepEqual(['.minimap-toggle','.touch-actions .touch-juggle:not(.touch-walk)','.touch-actions .touch-juggle.touch-walk','.touch-actions .touch-shoot'].map(s=>cell(s,false)),['3,1','2,1','2,2','3,2'],'phones: Recenter | Map over Walk | Horn at the right edge');
+ assert.deepEqual(['.minimap-toggle','.touch-actions .touch-juggle:not(.touch-walk)','.touch-actions .touch-juggle.touch-walk','.touch-actions .touch-shoot'].map(s=>cell(s,true)),['1,1','2,1','2,2','1,2'],'flipped: mirrored');
+ assert(/\{trainCluster\?null:actionCluster\?/.test(read('components/Town.tsx')),'riding: no travel-mode / Get off cell');}
 assert.equal(R.trainKeyAction('Enter','Enter'),'getoff','Enter gets off');
 ride.press('getoff','tap');assert(ride.exitQueued&&R.trainRideStore.get().exitQueued,'queued: Doors opening…');assert(ride.active,'still on board');
 // at the stop, doors still opening: still queued; the rider holds the doors
@@ -69,7 +73,7 @@ console.log('train-rideux hud: ok');
  for(let i=0;i<R.TRAIN_VIEWS.length-1;i++){ride2.press('camera','tap');assert(ride2.viewEase<1||ride2.view==='inside','the change eases');step(Math.ceil(R.VIEW_EASE*30)+40);seen.push(ride2.view);
   assert(R.trainRideStore.get().viewNo>n0,'a toast for each change');n0=R.trainRideStore.get().viewNo;
   if(ride2.view!=='inside'&&ride2.view!=='seat'){const look=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion);assert(Number.isFinite(cam.position.x)&&Math.abs(look.length()-1)<1e-6,`${ride2.view}: a camera`);}}
- assert.deepEqual(seen,['front','back','left','right','above','inside'],'the cycle order');
+ assert.deepEqual(seen,['driver','front','back','left','right','above','inside'],'the cycle order (AAA 2: the Driver\'s view after Seat)');
  assert(ride2.standing,'Inside: standing in the aisle');
  // RIDE 3 (owner, Nov 24 2026): the Inside view is FIRST PERSON: the eye FP.eye m over the floor where you stand, level, looking along the car
  {const d=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),pitch=Math.asin(-d.y);assert(Math.abs(pitch)<.15,`Inside: looking level (${pitch.toFixed(2)})`);
@@ -88,7 +92,7 @@ console.log('train-rideux hud: ok');
  for(let i=0;i<200;i++)ride2.holdPlayer(1,0);step(120);ride2.holdPlayer(0,0);
  ride2.press('recenter','tap');step(90);assert.equal(R.trainRideStore.get().moved,false,'Recenter: back to the view default');
  ride2.dispose();}
-{const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-cam\b/.test(H)&&!/role="menu"/.test(H)&&!/HOLD_MS|onContextMenu/.test(H)&&/data-train-cam-toast/.test(H)&&/<HudSlot>/.test(H)&&/data-hud-slot="ride"/.test(H),'the camera button: tap only (RIDE 3, owner shot 42), its toast in the HUD stack under the pill (shot 47)');
+{const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-cam\b/.test(H)&&!/role="menu"/.test(H)&&!/HOLD_MS|onContextMenu/.test(H)&&!/data-train-cam-toast/.test(H)&&/data-train-cam-say/.test(H)&&/aria-live="polite" data-train-cam-say/.test(H)&&/<HudSlot>/.test(H)&&/data-hud-slot="ride"/.test(H),'the camera button: tap only (RIDE 3, owner shot 42); AAA 2 (image 55): no visible view-name pill, the name only for screen readers; the notes stay in the HUD stack (shot 47)');
  assert(/trainRideActions\.view=v=>\{if\(trainRide\.setView\(v\)\)wakeLoop\(\);\}/.test(Tn),'Town: the menu picks a view');
  const C=read('components/TrainRideHud.module.css'),J=read('components/LiveJoinHud.module.css');const face=/border:3px solid #fff2cd;border-radius:50%;background:var\(--island-control-face,#f4cc7c\)/;assert(face.test(C)&&face.test(J),'the live-join camera button look');
  const tv=read('lib/graphics/trafficVehicles.ts');assert(!/CUT_WALL_X|uCutDir/.test(tv),'AAA 2: no low wall / cutaway left in the vehicle shader');

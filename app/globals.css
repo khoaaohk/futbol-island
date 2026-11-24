@@ -1053,27 +1053,27 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
  .town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle.touch-walk{position:static;grid-column:1;grid-row:1;justify-self:center}
  .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-juggle.touch-walk{grid-column:3;grid-row:1}
 }
-/* Owner, Nov 24 2026 (shot 32): the ride buttons are ONE tight 2 x 2 cluster: Get off | Recenter over Walk | Horn (Walk under Get off,
- * beside Horn). Desktop: the Emote button moves out to the left of the bottom row. Phones (3 x 2): the cluster takes the two outer
- * columns, the map toggle and Emote the inner one (flipped: mirrored). Same cells, same 44 px+ targets, same gaps. */
+/* Island Line ride cluster. AAA 2 (owner shot 52, Nov 24 2026: "shift the bottom two over to the right to align with the top row;
+ * remove the exit button"): no Get off button (the "Get off at <station>" pill, E / Enter and walking out of a door do that). ONE
+ * tight 2 x 2 at the right edge: Recenter | Map over Walk-or-Sit | Horn (Walk under Recenter, Horn under Map). Desktop: the map
+ * toggle lives by the minimap, so the top row is Recenter alone at the right (over Horn), Walk left of Horn; Emote out to the left of
+ * the bottom row. Phones (3 x 2): the cluster takes the two outer columns, Emote the inner bottom cell. Flipped: mirrored. Same 44 px+
+ * targets and gaps; off the train the attribute goes and the island grid is back. */
+.town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:2;grid-row:1;justify-self:center}
 .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{position:static;grid-column:1;grid-row:2;justify-self:center}
+.town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
 .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:absolute;right:calc(100% + 12px);bottom:0;grid-column:auto;grid-row:auto}
 @media(max-width:600px),(pointer:coarse){
- /* RIDE 3 (owner shot 50, Nov 24 2026: "move the map button to the far right side"): the map toggle takes the OUTER column's top
-    cell (the screen edge, in line with Get off | Recenter), Emote under it; the 2 x 2 cluster moves one column in. Flipped: mirrored
-    (the map at the left edge). The minimap bubble stays above at that edge, clear of the cluster. Off the train: the normal grid. */
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:static;grid-column:3;grid-row:2;justify-self:end}
  .town-app .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:3;grid-row:1;justify-self:end}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:1;grid-row:1;justify-self:start}
  .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:2;grid-row:1;justify-self:center}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:1;grid-row:2;justify-self:start}
- .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-emote{grid-column:1;grid-row:2;justify-self:start}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:2;grid-row:2;justify-self:center}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:3;grid-row:2;justify-self:end}
+ .town-app .travel-actions[data-emote-grid][data-train-actions] .touch-emote{position:static;grid-column:1;grid-row:2;justify-self:start}
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .minimap-toggle{grid-column:1;grid-row:1;justify-self:start}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .travel-mode{grid-column:3;grid-row:1;justify-self:end}
  .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle:not(.touch-walk){grid-column:2;grid-row:1;justify-self:center}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:3;grid-row:2;justify-self:end}
- .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-juggle.touch-walk{grid-column:2;grid-row:2;justify-self:center}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-actions .touch-shoot{grid-column:1;grid-row:2;justify-self:start}
+ .controls-flipped .travel-actions[data-emote-grid][data-train-actions] .touch-emote{grid-column:3;grid-row:2;justify-self:end}
 }
 /* Island Line ride HUD (owner, Nov 24 2026): riding the train, no fuel readout (coins, fish and fruit stay), no settings gear and no
    Paths button (the pink lightning: island paths / quests); the ride's camera-view button (TrainRideHud) takes the Paths spot. All

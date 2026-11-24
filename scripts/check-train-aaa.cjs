@@ -23,7 +23,7 @@ const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,
 const phone = arg('phone', '1') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
-const results = [];
+const results = []; let vpW = 1440, vpH = 900;
 const check = (name, ok, extra = '') => { results.push({ name, ok: !!ok }); console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${extra ? ' (' + extra + ')' : ''}`); };
 if (shots) fs.mkdirSync(shots, { recursive: true });
 async function boot(b, vp, mobile) {
@@ -403,9 +403,13 @@ async function partHud(c) {
   const r = await p.evaluate(() => { const b = (q) => { const e = document.querySelector(q); if (!e) return null; const r = e.getBoundingClientRect(); return r.width ? { l: Math.round(r.left), r: Math.round(r.right), t: Math.round(r.top), b: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height) } : null; };
     return { pill: b('[data-job-wallet]'), toast: b('[data-train-cam-toast]'), note: b('[data-train-note]'), menu: !!document.querySelector('[data-train-cam-menu],[role=menu]'), map: b('.travel-actions .minimap-toggle'), off: b('.travel-actions .travel-mode'), rec: b('.travel-actions .touch-juggle:not(.touch-walk)'), walk: b('.travel-actions .touch-walk'), horn: b('.travel-actions .touch-shoot'), view: window.__fi2.trainRide.view, vw: innerWidth }; });
   check('hud: a camera tap changes the view, no view list', r.view !== 'seat' && !r.menu, JSON.stringify({ view: r.view, menu: r.menu }));
-  const under = (t) => t && r.pill && t.t >= r.pill.b && t.t - r.pill.b <= 40;
-  check('hud: the view toast sits right under the coins pill', under(r.toast) || (r.note && r.toast && r.toast.b <= r.note.t + 2 && under(r.toast)), JSON.stringify({ pill: r.pill, toast: r.toast, note: r.note }));
-  if (phone) check('hud (phone): the map toggle is the outer column top cell, right of Recenter, 44 px targets', r.map && r.rec && r.map.l >= r.rec.r - 2 && Math.abs(r.map.t - r.rec.t) < 12 && [r.map, r.off, r.rec, r.walk, r.horn].every((x) => x && x.w >= 44 && x.h >= 44), JSON.stringify({ map: r.map, rec: r.rec, off: r.off, walk: r.walk, horn: r.horn }));
+  const say = await p.evaluate(() => document.querySelector('[data-train-cam-say]')?.textContent || '');
+  check('hud: no visible view-name pill (owner image 55), the name only for screen readers', !r.toast && say.length > 2, JSON.stringify({ toast: r.toast, say }));
+  // owner shot 52: no Get off button; Recenter | Map over Walk | Horn at the right edge (desktop: Recenter over Horn, Walk left of Horn)
+  const al = (a, b) => a && b && Math.abs(a.l - b.l) < 6, row = (a, b) => a && b && Math.abs(a.t - b.t) < 8;
+  const okPhone = r.map && al(r.rec, r.walk) && al(r.map, r.horn) && row(r.rec, r.map) && row(r.walk, r.horn) && r.map.l > r.rec.l;
+  const okDesk = al(r.rec, r.horn) && row(r.walk, r.horn) && r.walk.l < r.horn.l && r.rec.t < r.horn.t;
+  check(`hud (${phone ? 'phone' : 'desktop'}): no Get off in the cluster; ${phone ? 'Recenter | Map over Walk | Horn' : 'Recenter over Horn, Walk left of Horn'}, 44 px targets`, !r.off && (phone ? okPhone : okDesk) && [r.rec, r.walk, r.horn].every((x) => x && x.w >= 44 && x.h >= 44), JSON.stringify({ map: r.map, rec: r.rec, off: r.off, walk: r.walk, horn: r.horn }));
   if (shots) await p.screenshot({ path: path.join(shots, `hud-${phone ? 'phone' : 'desktop'}.png`) });
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
   await leaveRide(p);
@@ -448,12 +452,22 @@ async function partInside(c) {
     return { shown: K.root.visible, k: K.at.k, scale: +K.root.scale.y.toFixed(2), z: +q.z.toFixed(2), y: +(q.y - 1.15).toFixed(2) }; }, k);
   check('Kenji at the desk, drawn smaller (owner shot 45)', kj && kj.k === k && kj.scale < 1 && kj.z > 4.9 && kj.z < 5.3, JSON.stringify(kj));
   if (shots) await p.screenshot({ path: path.join(shots, `kenji-partition-${phone ? 'phone' : 'desktop'}.png`) });
-  // look round: a drag on the canvas turns the view; W walks the way you look
-  const box = await p.locator('canvas').first().boundingBox(); const y0 = box.y + box.height * .45, x0 = box.x + box.width * .6;
-  const f0 = await p.evaluate(() => window.__fi2.trainRide.camForward);
-  await p.mouse.move(x0, y0); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(x0 - i * 25, y0); await p.mouse.up(); await p.waitForTimeout(200);
-  const f1 = await p.evaluate(() => window.__fi2.trainRide.camForward);
-  check('inside: a drag turns the view', Math.abs(f1 - f0) > .15, `${f0.toFixed(2)} -> ${f1.toFixed(2)}`);
+  // look round (owner shot 51, "unable to turn while inside"): the RENDERED camera's heading in the car frame (not the logical
+  // camForward): a 90° drag (mouse on desktop, a touch on phones, right half), then ← held: each must turn the picture itself
+  const camYaw = () => p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(), sp = f.trainRide.spot, car = sp.u >= -6.2 ? 0 : 1; f.trains.carMatrixOf(k, car, m);
+    const d = cam.getWorldDirection(cam.position.clone()).transformDirection(m.clone().invert()); return { yaw: Math.atan2(d.x, d.z), side: Math.abs(d.x) / Math.max(1e-6, Math.hypot(d.x, d.z)) }; }, k);
+  const turned = (a, b) => Math.abs(((b.yaw - a.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+  const box = await p.locator('canvas').first().boundingBox(), y0 = box.y + box.height * .4, x0 = box.x + box.width * .78, w = Math.max(320, Math.min(1100, Math.min(vpW, vpH * 1.4))), dpx = Math.PI / 2 / 5.2 * w;
+  const a0 = await camYaw();
+  if (phone) { const cdp = await p.context().newCDPSession(p), T = (type, x) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y: y0, id: 7 }] });
+    await T('touchStart', x0); for (let i = 1; i <= 12; i++) { await T('touchMove', x0 - dpx * i / 12); await p.waitForTimeout(16); } await T('touchEnd'); await cdp.detach(); }
+  else { await p.mouse.move(x0, y0); await p.mouse.down(); for (let i = 1; i <= 12; i++) { await p.mouse.move(x0 - dpx * i / 12, y0); await p.waitForTimeout(16); } await p.mouse.up(); }
+  await p.waitForTimeout(500); const a1 = await camYaw();
+  check(`inside: a ${phone ? 'touch' : 'mouse'} drag of 90° turns the rendered view ~90° to a side window`, turned(a0, a1) > 1.2 && turned(a0, a1) < 1.95 && a1.side > .8, JSON.stringify({ a0, a1, turned: +turned(a0, a1).toFixed(2) }));
+  if (shots) await p.screenshot({ path: path.join(shots, `inside-turned-${phone ? 'phone' : 'desktop'}.png`) });
+  if (!phone) { await p.keyboard.down('ArrowLeft'); await p.waitForTimeout(700); await p.keyboard.up('ArrowLeft'); await p.waitForTimeout(300); const a2 = await camYaw();
+    const sp = await p.evaluate(() => ({ x: window.__fi2.trainRide.spot.x, u: window.__fi2.trainRide.spot.u }));
+    check('inside: ← turns the view (does not walk)', turned(a1, a2) > .8, JSON.stringify({ turned: +turned(a1, a2).toFixed(2), spot: sp })); }
   await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(1400); await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(1400);
   const u0 = await p.evaluate(() => window.__fi2.trainRide.spot.u); await p.keyboard.down('w'); await p.waitForTimeout(700); await p.keyboard.up('w');
   const u1 = await p.evaluate(() => window.__fi2.trainRide.spot.u);
@@ -614,7 +628,7 @@ async function partPerf(c) {
   if (gpu === 'swiftshader') args.push('--use-angle=swiftshader', '--enable-unsafe-swiftshader'); else args.push('--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist');
   const b = await chromium.launch({ channel: 'chrome', headless: true, args });
   try {
-    const vp = phone ? { width: 390, height: 844 } : { width: 1440, height: 900 };
+    const vp = phone ? { width: 390, height: 844 } : { width: 1440, height: 900 }; vpW = vp.width; vpH = vp.height;
     const c = await boot(b, vp, phone);
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);

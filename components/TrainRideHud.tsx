@@ -12,7 +12,7 @@ import styles from './TrainRideHud.module.css';
 
 const CamIcon=()=><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><rect x="2.5" y="7" width="13" height="10" rx="2.5"/><path d="m15.5 11 6-3.2v8.4l-6-3.2"/></svg>;
 /** The ride's camera button (owner, Nov 24 2026): top left in the Paths button's place, the live-join camera button's look. RIDE 3
- *  (owner shot 42): tap only: a tap (or C) cycles the views, no hold / right-click list; a toast under the coins pill names the view. */
+ *  (owner shot 42): tap only: a tap (or C) cycles the views, no hold / right-click list; the view's name is only announced to screen readers (AAA 2). */
 function TrainCamera({view}:{view:TrainView}){
  return <button type="button" className={styles.cam} data-train-cam data-view={view} title="Change camera · C" aria-label={`Camera: ${TRAIN_VIEW_LABEL[view]}. Tap for the next view`}
   onClick={()=>trainRideActions.press('camera','tap')}><CamIcon/></button>;
@@ -27,7 +27,9 @@ function RideToasts({view,viewNo,note,notes}:{view:TrainView;viewNo:number;note:
  useEffect(()=>{if(viewNo===first.current)return;setShownView({label:TRAIN_VIEW_LABEL[view],n:viewNo});const t=setTimeout(()=>setShownView(null),RIDE_VIEW_MS);return()=>clearTimeout(t);},[view,viewNo]);
  useEffect(()=>{if(!note||notes===firstNote.current)return;firstNote.current=notes;setShownNote({text:note,n:notes});const t=setTimeout(()=>setShownNote(null),RIDE_NOTE_MS);return()=>clearTimeout(t);},[note,notes]);
  return <>
-  {shownView&&<HudSlot><p key={shownView.n} className={styles.camToast} data-hud-slot="ride" data-ride-order="1" role="status" aria-live="polite" data-train-cam-toast>{shownView.label}</p></HudSlot>}
+  {/* AAA 2 (owner, session image 55: "remove these, the camera angles should be enough"): no visible view-name pill; the name is
+      still announced to screen readers (a visually hidden live region, outside the HUD stack: it takes no space) */}
+  <p className={styles.srOnly} role="status" aria-live="polite" data-train-cam-say>{shownView?shownView.label:''}</p>
   {shownNote&&<HudSlot><p key={shownNote.n} className={styles.note} data-hud-slot="ride" data-ride-order="2" data-train-note role="status" aria-live="polite">{shownNote.text}</p></HudSlot>}
  </>;
 }
