@@ -115,5 +115,5 @@ console.log('train-rideux fade: ok');
 console.log('train-rideux station side: ok');
 // RIDE 3: the ridden train's passengers use the same near-camera fade as me and Kenji (first person walks right past them)
 {const P=require('fs').readFileSync(require('path').join(__dirname,'..','lib/town/trainPassengers.ts'),'utf8'),R=require('fs').readFileSync(require('path').join(__dirname,'..','lib/town/trainRide.ts'),'utf8');
- const a=/const FADE_NEAR=([.\d]+),FADE_FAR=([.\d]+);/.exec(P),b=/export const FADE_NEAR=([.\d]+),FADE_FAR=([.\d]+);/.exec(R);
- require('assert')(a&&b&&a[1]===b[1]&&a[2]===b[2]&&/if\(k===ridingK\)\{[^}]*hid\)continue;\}/.test(P),'passengers: the near-camera fade (same distances)');console.log('train-rideux passenger fade: ok');}
+ const a=/export const PAX_FADE_NEAR=([.\d]+),PAX_FADE_FAR=([.\d]+);/.exec(P),b=/export const FADE_NEAR=([.\d]+),FADE_FAR=([.\d]+);/.exec(R);
+ require('assert')(a&&b&&+a[1]>=+b[1]&&+a[2]>=+b[2]&&/if\(k===ridingK\)\{[^}]*hid\)continue;\}/.test(P),'passengers: the near-camera fade (AAA 2: at least as wide as mine / Kenji\'s)');console.log('train-rideux passenger fade: ok');}
