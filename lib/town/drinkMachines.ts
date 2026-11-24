@@ -152,7 +152,7 @@ export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{/** the store machine it 
   color:'#2a8f86',light:'#e3f7f4',ink:'#08332f',lesson:'Matchday tip: sip water before kick-off and again at half-time, even if you are only cheering.'},
  // Phase 4 (Nov 23 2026): the five Island Line stations. Lessons stay inside the sources above (drink before, during and after
  // playing; more in the heat; water is the everyday drink), with a travel angle.
- drinkstnorth:{station:'north',name:'Drinks · North station',shop:'North station',place:'against the back of the North station house, on the Kit Shop side',
+ drinkstnorth:{station:'north',name:'Drinks · North station',shop:'North station',place:'against the back of the North station house, on the town side facing the 7v7 pitch',
   color:'#2f7d5b',light:'#e4f4ec',ink:'#0d3322',lesson:'Off to play? Fill a water bottle before the trip, so you can drink before, during and after the game.'},
  drinkstwest:{station:'west',name:'Drinks · West Beach station',shop:'West Beach station',place:'against the back of the West Beach station house, on the stadium side',
   color:'#b3364f',light:'#ffe3ea',ink:'#470d1b',lesson:'Travelling fans cheer for 90 minutes: bring water, and sip it at half-time too.'},

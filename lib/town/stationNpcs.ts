@@ -46,8 +46,8 @@ import type {NpcDefinition} from './npcDialogues';
  */
 type Spot={x:number;z:number;yaw:number};
 const PLATFORM_Y={north:.55,west:.55,south:.55,summit:1.45,cay:.55} as const;
-const STAND:Record<keyof typeof PLATFORM_Y,Spot>={north:{x:176.34,z:-201.85,yaw:6.2},west:{x:-302.03,z:-36.68,yaw:1.58},south:{x:154.29,z:219.9,yaw:3.14},summit:{x:501.53,z:199.56,yaw:3.8},cay:{x:594.34,z:-76.67,yaw:3.03}};
-const BENCH:Record<keyof typeof PLATFORM_Y,Spot>={north:{x:179.11,z:-201.32,yaw:3.06},west:{x:-301.75,z:-39.48,yaw:-1.56},south:{x:151.49,z:219.59,yaw:0},summit:{x:499.12,z:201.03,yaw:.65},cay:{x:597.15,z:-76.66,yaw:-.11}};
+const STAND:Record<keyof typeof PLATFORM_Y,Spot>={north:{x:20.73,z:-203.09,yaw:.02},west:{x:-302.03,z:-36.68,yaw:1.58},south:{x:154.29,z:219.9,yaw:3.14},summit:{x:501.53,z:199.56,yaw:3.8},cay:{x:594.34,z:-76.67,yaw:3.03}};
+const BENCH:Record<keyof typeof PLATFORM_Y,Spot>={north:{x:23.54,z:-202.84,yaw:3.15},west:{x:-301.75,z:-39.48,yaw:-1.56},south:{x:151.49,z:219.59,yaw:0},summit:{x:499.12,z:201.03,yaw:.65},cay:{x:597.15,z:-76.66,yaw:-.11}};
 export const STATION_NPC_SPOTS={stand:STAND,bench:BENCH,platformY:PLATFORM_Y};
 type St=keyof typeof PLATFORM_Y;
 type Talk=[question:string,answer:string,followQuestion:string,followAnswer:string];
@@ -56,7 +56,7 @@ const at=(st:St,kind:'stand'|'bench')=>{const p=(kind==='stand'?STAND:BENCH)[st]
 const topics=(...t:Talk[])=>t.map((x,i)=>({id:'t'+i,question:x[0],answer:x[1],followUp:{question:x[2],answer:x[3]}}));
 
 export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
- // ---- 1 North (Kit Shop)
+ // ---- 1 North (North Beach; moved from the Kit Shop corner Nov 24 2026)
  {id:'stn-hana',station:'north',name:'Haruka',role:'Station attendant',pursuit:'KEEPING THE NORTH STATION RUNNING',...at('north','stand'),character:'female',face:'light',clothing:'classic',
   look:{skin:1,hair:'bun',headwear:'cap',headwearColor:'#2f4a7a'},persona:'A cheerful station attendant who checks every train in and out.',boards:false,
   greeting:'Welcome to North station! I check every train in and out. Trains and football have more in common than you think. Ask me anything!',

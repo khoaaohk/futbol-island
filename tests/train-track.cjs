@@ -18,9 +18,9 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
   const n=tt.leftNormal(p.tx,p.tz),hit=tt.trackNearest(p.x+n.x*2,p.z+n.z*2);assert(hit&&Math.abs(hit.d-2)<.05&&hit.side===1&&Math.abs(hit.s-500)<.5,'nearest: 2 m left of s 500');
   assert.equal(tt.trackNearest(0,0),null,'island square is nowhere near the line');}
  // 2. stops and crossings
- const order=['west','south','summit','cay','north'],S=Object.fromEntries(tt.TRAIN_STATIONS.map(s=>[s.id,s]));
+ const order=['north','west','south','summit','cay']/* Nov 24 2026: North moved to mid North Beach (s ~138; it was the loop's last, by the Kit Shop) */,S=Object.fromEntries(tt.TRAIN_STATIONS.map(s=>[s.id,s]));
  for(let i=1;i<order.length;i++)assert(S[order[i]].s>S[order[i-1]].s,`${order[i]} after ${order[i-1]}`);
- for(const [id,want] of [['west',586],['south',1243],['summit',1601],['cay',2056],['north',2522]])assert(Math.abs(S[id].s-want)<8,`${id} stop at ~${want} m (plan §5): ${S[id].s}`);
+ for(const [id,want] of [['west',586],['south',1243],['summit',1601],['cay',2056],['north',138]])assert(Math.abs(S[id].s-want)<8,`${id} stop at ~${want} m (plan §5): ${S[id].s}`);
  for(const s of tt.TRAIN_STATIONS)assert(/No\. \d/.test(s.shirt)&&s.shirt.length<48,`${s.id}: a short shirt-number line`);
  const prof=tl.trainLayout().profile,kindAt=s=>prof.kind[Math.round(tt.wrapS(s)/tt.TRACK_DS)%TR.n];
  assert.equal(tt.TRAIN_CROSSINGS.length,9,'nine level crossings (Phase 4: + the west park trails and the Beach Kitchen square)');assert.equal(tt.TRAIN_CROSSINGS.filter(c=>!c.ped).map(c=>c.id).join(),'causeway','every crossing but the causeway road is a footpath one');for(const c of tt.TRAIN_CROSSINGS)assert.equal(kindAt(c.s),K.Land,`${c.id} crossing on land`);

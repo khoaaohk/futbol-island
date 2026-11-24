@@ -158,7 +158,7 @@ async function partRide(c) {
   await p.evaluate(() => { const g = document.querySelector('[data-train-station="north"][role="button"]'); g?.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
   await p.waitForTimeout(4000);
   const after = await p.evaluate(() => ({ active: window.__fi2.trainRide.active, x: Math.round(window.__fi2.location?.x), z: Math.round(window.__fi2.location?.z), note: !!document.querySelector('[data-train-note]:not([hidden])') }));
-  check('fast travel from the map while riding: off the train, at North station', !after.active && Math.hypot(after.x - 170, after.z + 207) < 30, JSON.stringify(after));
+  check('fast travel from the map while riding: off the train, at North station', !after.active && Math.hypot(after.x - 15, after.z + 206) < 30/* North: mid North Beach since Nov 24 2026 */, JSON.stringify(after));
   if (shots) await p.screenshot({ path: path.join(shots, 'travel-north.png') }); }
   if (await p.evaluate(() => window.__fi2.trainRide.active)) await p.evaluate(() => window.__fi2.trainRide.finish());
   await p.waitForTimeout(1500); await closeMap(p);
