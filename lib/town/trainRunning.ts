@@ -218,7 +218,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
  const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null},hit={gap:0,side:0,d:0,s:0};
- let clock=0,bellWait=0,boardWait=0,xingWait=0,lastNow=0,warming=false;
+ let primeLeft=0,clock=0,bellWait=0,boardWait=0,xingWait=0,lastNow=0,warming=false;
  const onPlatformSide=(s:number,side:number)=>{for(const st of TRAIN_STATIONS)if(side===st.side&&Math.abs(((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2)<STATION_HALF+1)return true;return false;};
  /** Allocation-free: is person p on the line between front + from and front + to (m along)? Fills `hit` (gap along, side, distance). */
  function onLine(p:Person,front:number,from:number,to:number,reach:number){
@@ -240,10 +240,17 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   root,triangles:detail[0].triangles,runner,states,
   /** Debug / gfx views only (window.__fi2.trains.cluster = s): all three trains pinned close together at track s; NaN = the timetable. */
   cluster:NaN,
+  /** When the priming frame was drawn (performance.now(); NaN until then). */
+  primedAt:NaN,
   /** Town's warm-up: show everything for one compileAsync (programs ready before a train is first seen), then hide again. */
+  /** Draw every train part for one frame in the real pass, 600 m under the island (never seen): pipeline set-up at load, not on first sight. */
+  prime(){primeLeft=1;},
   warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;},
   update(f:TrainFrame):TrainFrameResult{
-   result.nudgeX=result.nudgeZ=0;result.note=null;if(warming)return result;const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
+   result.nudgeX=result.nudgeZ=0;result.note=null;if(warming)return result;
+   if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
+    for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
+    doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
    const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
    pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
    nPeople=0;{const p=people[nPeople++];p.x=f.player.x;p.y=f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);
