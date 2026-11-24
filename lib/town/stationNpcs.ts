@@ -36,7 +36,8 @@ import type {NpcDefinition} from './npcDialogues';
  *  - Many teams travel the day before an away game to rest, sleep and recover from the journey; long trips can cause "travel
  *    fatigue" (Fowler, Duffield, Vaile 2015, "Effects of domestic air travel on technical and tactical performance and recovery in
  *    soccer", IJSPP; Reilly et al. 2007 travel fatigue review).
- *  - The Gotthard Base Tunnel (Switzerland, opened 2016) is the world's longest railway tunnel, about 57 km (SBB; alptransit.ch).
+ *  - Nov 24 2026 (owner: every line relates to football): outfield players often run roughly 10 km in a 90-minute match, with many
+ *    short sprints (Stølen et al. 2005, "Physiology of soccer", Sports Med 35); the Island Line lap is LAP = 360 s (trainSchedule.ts).
  *  - Lokomotiv Moscow was founded as a railway workers' club and is owned by the national railway company (fclm.ru club history).
  *  - PSV Eindhoven was founded in 1913 by workers of the Philips company (psv.nl "History"): a works team, like the railway teams.
  *  - Tactile paving (the yellow bumpy tiles) was invented in Japan by Seiichi Miyake in 1965; first laid in Okayama in 1967
@@ -60,7 +61,7 @@ export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
  {id:'stn-hana',station:'north',name:'Haruka',role:'Station attendant',pursuit:'KEEPING THE NORTH STATION RUNNING',...at('north','stand'),character:'female',face:'light',clothing:'classic',
   look:{skin:1,hair:'bun',headwear:'cap',headwearColor:'#2f4a7a'},persona:'A cheerful station attendant who checks every train in and out.',boards:false,
   greeting:'Welcome to North station! I check every train in and out. Trains and football have more in common than you think. Ask me anything!',
-  lines:['Mind the gap, and stay behind the yellow line!','The next train is on the board. Want a train fact while you wait?'],
+  lines:['Mind the gap, and stay behind the yellow line!','The next train is on the board. Want a football tip while you wait?'],
   topics:topics(
    ['Is there a station just for football?','Yes! In Japan, Kashima Soccer Stadium Station on the Kashima Line only has trains stopping on match days. On other days, the trains go straight past.','Why only on match days?','Thousands of fans arrive at once for a game, so the extra stop helps them get there together. The rest of the week, hardly anyone needs it.'],
    ['Why do you point at the signals?','Japanese rail staff point and call out what they check. A study found it cuts mistakes by up to about 85 %, because your eyes, arm and voice all agree.','Do footballers do that?','Goalkeepers do something similar: they point and shout to set up the wall, so every defender knows the plan.'])},
@@ -96,7 +97,7 @@ export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
    ['How did teams travel long ago?','At the first World Cup in 1930, teams from Europe sailed to Uruguay by ship. France, Belgium and Romania spent about two weeks at sea, with the trophy on board!','Did they train on the ship?','They did exercises on deck to stay fit. Today a flight takes about a day, but back then the journey was part of the adventure.'])},
  {id:'stn-mo',station:'south',name:'Mo',role:'Trainspotter',pursuit:'NOTING DOWN EVERY TRAIN',...at('south','stand'),character:'female',face:'deep',clothing:'coast',age:'teen',
   look:{skin:5,hair:'puffs',headwear:'visor'},persona:'A trainspotter with a notebook full of times and train names.',boards:true,
-  greeting:'Shh, I am timing the next train! I write down every train that comes in. Want to hear my favourite train facts?',
+  greeting:'Shh, I am timing the next train! I write down every train that comes in. Want to hear my favourite football numbers?',
   lines:['That one was 0 minutes late. Nice!','Notebook, pencil, timetable. Ready.'],
   topics:topics(
    ['What is the most famous train?','Maybe Japan\'s Shinkansen, the bullet train. The first line opened on 1 October 1964, just before the Tokyo Olympics, where football was one of the sports.','Who won the football at those Olympics?','Hungary won the gold medal at Tokyo 1964.'],
@@ -108,7 +109,7 @@ export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
   lines:['Everyone has their boots? Good.','We always arrive the day before.'],
   topics:topics(
    ['Why travel the day before?','Long journeys can make you tired and stiff, which scientists call travel fatigue. Arriving early means time to sleep well, eat properly and stretch before the game.','What do players do after a trip?','A short walk or light training helps the legs wake up after sitting still for a long time.'],
-   ['What is the longest train tunnel?','The Gotthard Base Tunnel in Switzerland: about 57 km under the mountains. Our tunnel here is a lot shorter!','Why build tunnels through mountains?','A tunnel keeps the line flat and straight, so trains go faster than climbing over the top.'])},
+   ['Could a player keep up with our train?','No way! Our train goes round the whole island in about 6 minutes. But in a 90-minute match an outfield player often runs roughly 10 km, in jogs, walks and sprints.','Why all the short bursts?','Football is stop and start: sprint, slow down, turn, jog. So we train with short sprints and rests, just like a real match.'])},
  {id:'stn-pip',station:'summit',name:'Pip',role:'Young trainspotter',pursuit:'WATCHING THE TUNNEL',...at('summit','bench'),character:'female',face:'warm',clothing:'coast',age:'kid',
   look:{skin:4,hair:'curls'},persona:'A kid who loves trains coming out of tunnels.',boards:false,
   greeting:'Watch the tunnel! The train comes out with a whoosh. Did you know some clubs belong to railways?',

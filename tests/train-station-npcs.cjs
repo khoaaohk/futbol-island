@@ -28,7 +28,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
    assert(ND.NPC_DIALOGUES.some(d=>d.id===n.id),n.id+' is in the NPC runtime');}
   assert.equal(here.filter(n=>n.pose==='bench').length,1,st.id+': one on the bench');}
  assert(SN.STATION_BOARDERS.length>=3,'some islanders ride the trains');
- {const src=read('lib/town/stationNpcs.ts');for(const k of ['Newton Heath','Kashima Soccer Stadium','SS Conte Verde','Gotthard','Miyake','JR Central'])assert(src.includes(k),'source noted: '+k);}
+ {const src=read('lib/town/stationNpcs.ts');for(const k of ['Newton Heath','Kashima Soccer Stadium','SS Conte Verde','Stølen','Miyake','JR Central'])assert(src.includes(k),'source noted: '+k);}
  {const w=read('lib/town/trainWorld.ts');assert(/bench\.box\(a\[0\],top\+\.6,a\[2\],c\.tx,c\.tz,1,\.325,\.04\)/.test(w),'station bench seat: the island bench (seat top .64, half depth .325)');
   const B=L('lib/graphics/npcSeatPose.ts').BENCH;assert.equal(B.seatTop,.64);}
  // 2. station life
