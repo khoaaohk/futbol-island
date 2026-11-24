@@ -1,6 +1,7 @@
 // The Island Line, Phase 2 (Nov 23 2026; plan .claude/worktrees/_recovery-nov20/train/PLAN.md §5, §9.2): the timetable and the
 // running trains. Run: node tests/train-schedule.cjs
-//  1. timetable (lib/town/trainSchedule.ts, pure): 360 s lap, 14 s dwells, a train every 2:00 at every stop, ≤ 0.8 m/s², curves ≤ 8 m/s
+//  1. timetable (lib/town/trainSchedule.ts, pure): 360 s lap, 14 s dwells, a train every 2:00 at every stop, ≤ 0.8 m/s² away / ≤ 1 m/s²
+//     braking, jerk-limited (eased, Nov 24 polish), curves ≤ 8 m/s
 //  2. trainAt / trainNearStop / nextTrains / the board text, the shared clock (relay offset when live, Date.now() solo)
 //  3. people on the track: the train stops 4 m short (never closer), waits, then catches up (≤ 15 % faster, trimmed dwells)
 //  4. crossings: lamps 8 s before the front, arms down before it arrives, up after the rear clears
@@ -14,9 +15,15 @@ assert.equal(S.LAP,360);assert.equal(S.HEADWAY,120);assert.equal(S.TRAIN_STOPS.l
 assert.deepEqual(S.TRAIN_STOPS.map(s=>s.station.id),['west','south','summit','cay','north'],'lap order from North');
 assert(S.TIMETABLE.dwell>=S.DWELL-1e-6,`dwell ${S.TIMETABLE.dwell} ≥ 14 s`);assert(S.TIMETABLE.dwell<S.DWELL+6,`dwell ${S.TIMETABLE.dwell} not padded much`);
 assert(S.TIMETABLE.cruise>=S.CRUISE&&S.TIMETABLE.cruise<14,`cruise ${S.TIMETABLE.cruise}`);
-{let maxA=0,maxV=0,prevX=S.lapX(0),prevV=S.lapV(0);const step=.2;
- for(let t=step;t<S.LAP;t+=step){const x=S.lapX(t),v=S.lapV(t);assert(x>=prevX-1e-3,`moves one way at ${t}`);if(Math.max(v,prevV)>1.2)maxA=Math.max(maxA,Math.abs(v-prevV)/step);/* (the last half metre into a stop is one table step) */maxV=Math.max(maxV,v);prevX=x;prevV=v;}
- assert(maxA<=S.ACCEL*1.15,`acceleration ${maxA.toFixed(2)} ≤ 0.8 m/s²`);assert(maxV<=S.TIMETABLE.cruise+.05,`top speed ${maxV}`);
+{let maxA=0,maxB=0,maxJ=0,maxV=0,prevX=S.lapX(0),prevV=S.lapV(0),prevA=NaN;const step=.1;
+ for(let t=step;t<S.LAP;t+=step){const x=S.lapX(t),v=S.lapV(t),a=(v-prevV)/step;assert(x>=prevX-1e-3,`moves one way at ${t}`);
+  if(a>0)maxA=Math.max(maxA,a);else maxB=Math.max(maxB,-a);if(Number.isFinite(prevA))maxJ=Math.max(maxJ,Math.abs(a-prevA)/step);maxV=Math.max(maxV,v);prevX=x;prevV=v;prevA=a;}
+ assert(maxA<=S.ACCEL*1.05,`acceleration ${maxA.toFixed(2)} ≤ 0.8 m/s²`);assert(maxB<=S.DECEL*1.05,`braking ${maxB.toFixed(2)} ≤ 1 m/s²`);assert(maxV<=S.TIMETABLE.cruise+.05,`top speed ${maxV}`);
+ // Polish (Nov 24): jerk-limited, no step in the acceleration anywhere (starts, stops, curve slow-downs) — was a 0.8 m/s² jump
+ // (≤ ~0.48 m/s³ from rest / into a stop; 0.86 where a short run swings straight from +0.8 to −1 m/s², still a smooth S)
+ assert(maxJ<=(S.ACCEL+S.DECEL)/((2*S.EASE_H+1)*.1)*1.05,`jerk ${maxJ.toFixed(2)} ≤ 0.9 m/s³`);
+ for(const st of S.TRAIN_STOPS){const a0=(S.lapV(st.depart+.4)-S.lapV(st.depart+.2))/.2,a1=(S.lapV(st.arrive-.2)-S.lapV(st.arrive-.4))/.2;
+  assert(a0>=0&&a0<.25,`${st.station.id}: pulls away gently (${a0.toFixed(2)} m/s² in the first 0.4 s)`);assert(a1<=0&&a1>-.25,`${st.station.id}: settles gently (${a1.toFixed(2)})`);}
  // the tight curves (south-west corner ~22 m, Coral Cay ~27 m): the front within them runs ≤ 8 m/s
  for(let t=0;t<S.LAP;t+=.5){const st=S.scheduleAt(t);if(st.s>1112&&st.s<1130)assert(st.v<=S.CURVE_SPEED+.05,`curve speed ${st.v} at s ${st.s}`);}
  near(S.lapX(S.LAP-1e-6),TR.length,.6,'one lap is the whole loop');}

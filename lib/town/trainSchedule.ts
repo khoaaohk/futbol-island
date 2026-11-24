@@ -4,7 +4,8 @@
  * Pure (no three.js, no DOM): three trains run one way round the loop, evenly spaced, on ONE shared timetable, so every player
  * sees the same trains at the same places with no network traffic. `trainAt(i, nowSec)` turns the clock into a position along
  * the track through a time table worked out once:
- *  - cruise CRUISE m/s, starts and stops at ACCEL m/s², CURVE_SPEED on curves tighter than CURVE_RADIUS (the whole train), a
+ *  - cruise CRUISE m/s, starts at up to ACCEL and stops at up to DECEL m/s² (a local train's service brake), the acceleration eased in and out
+ *    (jerk-limited, ≤ ~0.48 m/s³), CURVE_SPEED on curves tighter than CURVE_RADIUS (the whole train), a
  *    DWELL s stop at each station, one lap = LAP s (the dwells take any spare time), a train every HEADWAY s at each station;
  *  - the clock (trainClockSec): the relay's clock when connected (lib/multiplayer/liveClock.ts offset), Date.now() solo.
  *
@@ -18,7 +19,7 @@ import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,wrapS,type TrainStation} f
 import {liveClock} from '../multiplayer/liveClock';
 
 export const TRAIN_COUNT=3,TRAIN_CARS=2,CAR_LENGTH=12,CAR_GAP=.4,TRAIN_LENGTH=TRAIN_CARS*CAR_LENGTH+(TRAIN_CARS-1)*CAR_GAP;
-export const LAP=360,HEADWAY=LAP/TRAIN_COUNT,DWELL=14,ACCEL=.8,CRUISE=12,CURVE_SPEED=8,CURVE_RADIUS=30;
+export const LAP=360,HEADWAY=LAP/TRAIN_COUNT,DWELL=14,ACCEL=.8,DECEL=1,CRUISE=12,CURVE_SPEED=8,CURVE_RADIUS=30;
 /** Catch-up: up to 15 % faster while behind; dwells run at most twice as fast (never shorter than half). */
 export const CATCH_UP=.15,DWELL_TRIM=2;
 /** People on the track: look LOOK_AHEAD m ahead, ±LOOK_HALF m either side; stop STOP_SHORT m short at up to BRAKE m/s². */
@@ -30,6 +31,8 @@ export const DOOR_DELAY=1.5,DOOR_MOVE=1.2;
 
 /** Time table resolution (s) and lap-distance grid (m). */
 const DT=.1,DX=.5;
+/** Easing half-width in table steps: starts and stops ramp the acceleration over (2·EASE_H+1)·DT = 2.1 s. */
+export const EASE_H=10;
 const L=TRACK.length;
 /** Forward lap distance from a to b (m, 0 ≤ … < L). */
 export const ahead=(a:number,b:number)=>((b-a)%L+L)%L;
@@ -53,26 +56,45 @@ function build():Table{
  const M=Math.ceil(L/DX),dx=L/M;
  const order=TRAIN_STATIONS.map(st=>({st,x:ahead(S0,wrapS(st.s+TRAIN_LENGTH/2))})).map(o=>({...o,x:o.x<1?L:o.x})).sort((a,b)=>a.x-b.x);
  const stopK=new Set(order.map(o=>Math.round(o.x/dx)));stopK.add(0);
- const lim=new Float32Array(M+1);for(let k=0;k<=M;k++)lim[k]=limitAt(S0+k*dx);
+ const raw=new Float32Array(M+1);for(let k=0;k<=M;k++)raw[k]=limitAt(S0+k*dx);
+ // the easing averages ±EASE_H·DT of motion, so a curve's limit starts / ends that far (at curve speed) beyond the curve itself
+ const lim=new Float32Array(M+1),pad=Math.ceil(CURVE_SPEED*(EASE_H+1)*DT/dx);for(let k=0;k<=M;k++){let v=Infinity;for(let d=-pad;d<=pad;d++){const q=raw[((k+d)%(M+1)+M+1)%(M+1)];if(q<v)v=q;}lim[k]=v;}
  const profile=(cruise:number)=>{const v=new Float32Array(M+1);for(let k=0;k<=M;k++)v[k]=stopK.has(k)?0:Math.min(cruise,lim[k]);
   for(let k=1;k<=M;k++)v[k]=Math.min(v[k],Math.sqrt(v[k-1]*v[k-1]+2*ACCEL*dx));
-  for(let k=M-1;k>=0;k--)v[k]=Math.min(v[k],Math.sqrt(v[k+1]*v[k+1]+2*ACCEL*dx));
+  for(let k=M-1;k>=0;k--)v[k]=Math.min(v[k],Math.sqrt(v[k+1]*v[k+1]+2*DECEL*dx));
   let t=0;const tk=new Float64Array(M+1);for(let k=1;k<=M;k++){t+=2*dx/Math.max(.05,v[k-1]+v[k]);tk[k]=t;}return {v,tk,run:t};};
  // Cruise: CRUISE unless the lap (running + full dwells) would not fit, then a little faster (bisection, capped at 16 m/s).
+ // (The easing below spends EASE_H·DT of every dwell's start and end moving, so the raw dwell must be 2·EASE_H·DT longer.)
+ const need=DWELL+2*EASE_H*DT;
  let cruise=CRUISE,p=profile(cruise);
- if(p.run+order.length*DWELL>LAP){let lo=CRUISE,hi=16;for(let it=0;it<30;it++){const mid=(lo+hi)/2;if(profile(mid).run+order.length*DWELL>LAP)lo=mid;else hi=mid;}cruise=hi;p=profile(cruise);}
- const dwell=(LAP-p.run)/order.length;
+ if(p.run+order.length*need>LAP){let lo=CRUISE,hi=16;for(let it=0;it<30;it++){const mid=(lo+hi)/2;if(profile(mid).run+order.length*need>LAP)lo=mid;else hi=mid;}cruise=hi;p=profile(cruise);}
+ const rawDwell=(LAP-p.run)/order.length,dwell=rawDwell-2*EASE_H*DT;
  // Knots (t, x): the running grid, each stop holding still for `dwell` (North's dwell closes the lap).
- const kt:number[]=[],kx:number[]=[],kv:number[]=[];let shift=0;const stops:TrainStop[]=[];
+ const kt:number[]=[],kx:number[]=[],kv:number[]=[],lapAt:number[]=[];let shift=0;const stops:TrainStop[]=[];
  for(let k=0;k<=M;k++){kt.push(p.tk[k]+shift);kx.push(k*dx);kv.push(p.v[k]);
   const o=order.find(q=>Math.round(q.x/dx)===k);
-  if(o){const arrive=p.tk[k]+shift;shift+=dwell;kt.push(arrive+dwell);kx.push(k*dx);kv.push(0);stops.push({index:0,station:o.st,s:wrapS(S0+o.x),x:o.x%L,arrive,depart:(arrive+dwell)%LAP});}}
+  if(o){const arrive=p.tk[k]+shift;shift+=rawDwell;kt.push(arrive+rawDwell);kx.push(k*dx);kv.push(0);
+   // eased: standing still from EASE_H·DT after the raw arrival to EASE_H·DT before the raw departure
+   stops.push({index:0,station:o.st,s:wrapS(S0+o.x),x:o.x%L,arrive:arrive+EASE_H*DT,depart:wrapT(arrive+rawDwell-EASE_H*DT)});lapAt.push(k*dx);}}
  stops.forEach((s,i)=>{s.index=i;});
  const N=Math.round(LAP/DT),pos=new Float32Array(N+1),vel=new Float32Array(N+1);let j=0;
  // Each grid step is constant acceleration (v0 → v1 over its time D): x = x0 + v0 τ + (v1 − v0) τ² / 2D, v = v0 + (v1 − v0) τ / D.
  for(let i=0;i<=N;i++){const t=i*DT;while(j<kt.length-2&&kt[j+1]<t)j++;const D=kt[j+1]-kt[j]||1,tau=Math.max(0,Math.min(D,t-kt[j])),v0=kv[j],v1=kv[j+1];
   pos[i]=Math.min(kx[j+1],kx[j]+v0*tau+(v1-v0)*tau*tau/(2*D));vel[i]=Math.max(0,v0+(v1-v0)*tau/D);}
- return {pos,vel,stops,cruise,dwell,run:p.run};
+ // Polish (Nov 24 2026): jerk-limited starts and stops. The grid above is constant ACCEL (the acceleration jumps 0 → 0.8 m/s² at
+ // once); a moving average over 2·EASE_H+1 table steps (2.1 s) ramps it in and out instead (jerk ≤ DECEL / 2.1 s ≈ 0.48 m/s³). The
+ // average of a one-way motion stays one-way and never exceeds ACCEL / DECEL; it starts moving EASE_H steps before the raw departure and
+ // settles EASE_H steps after the raw arrival, which is why the raw dwells are 2·EASE_H·DT longer and the stops' times are moved in.
+ // Crossing times below are read from this eased table, so every crossing stays timed to the real front / rear.
+ {const n=N,X=(k:number)=>{const w=Math.floor(k/n);return pos[k-w*n]+w*L;},V=(k:number)=>vel[((k%n)+n)%n],ps=new Float32Array(n+1),vs=new Float32Array(n+1),w=2*EASE_H+1;
+  let sx=0,sv=0;for(let k=-EASE_H;k<=EASE_H;k++){sx+=X(k);sv+=V(k);}
+  for(let i=0;i<n;i++){ps[i]=sx/w;vs[i]=sv/w;sx+=X(i+EASE_H+1)-X(i-EASE_H);sv+=V(i+EASE_H+1)-V(i-EASE_H);}
+  ps[n]=ps[0]+L;vs[n]=vs[0];
+  // exactly still at the platform while standing (float sums would leave a hair of drift)
+  stops.forEach((st,si)=>{const a=Math.ceil(st.arrive/DT),b=Math.floor((st.depart<st.arrive?st.depart+LAP:st.depart)/DT);
+   for(let i=a;i<=b;i++){const ii=i%n;ps[ii]=lapAt[si]-(i>=n?L:0);vs[ii]=0;if(ii===0){ps[n]=ps[0]+L;vs[n]=0;}}});
+  pos.set(ps);vel.set(vs);}
+ return {pos,vel,stops,cruise,dwell,run:p.run+order.length*2*EASE_H*DT};
 }
 const TABLE=build();
 /** The five stops in lap order (West Beach … North), each with its arrive / depart lap time. */
