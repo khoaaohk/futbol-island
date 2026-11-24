@@ -30,7 +30,7 @@ import type {Obstacle} from './simulation';
 import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
 import {trainLayout,trainWalkHeight,trainDeckAt,swimDeckBlocked} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_HALF,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
- scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,type TrainState} from './trainSchedule';
+ scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,LAP,type TrainState} from './trainSchedule';
 import {createVehicleMaterial,PART,CUT_SILL_Y} from '../graphics/trafficVehicles';
 import {MACHINE_NIGHT} from '../graphics/machineNightGlow';
 /** The front from 20 m short of the west portal until the rear has left the east one (trains run west → east through the hill). */
@@ -53,6 +53,17 @@ export const WARN_S=4,WARN_AHEAD=52,WARN_COOLDOWN=8,KNOCK_V=.5;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
 import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,CAR_FLOOR_Y,BENCH_BACK,SEAT_SLOTS_Z,COL,VGeo,POSTERS,coveCorner,coveNormal,CHIME,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
+/** Looks 2 (Nov 24 2026): the departure / arrival feel, visual and sound only (the timetable is untouched; every client works it out
+ *  from the shared lap time, so all see the same jolt). Pulling out: the couplers' slack takes up, car 0 nudged AMP0 m forward and
+ *  settling (a damped wobble of PERIOD s, DECAY 1/s), car 1 AMP1 m LAG s later, the bodies pitching back up to PITCH rad, and the
+ *  wheels slip through one extra turn in SLIP s (spin + 2π: no jump after). Pulling in: the mirror (a forward settle, nose down).
+ *  Riders, standing passengers and Kenji (seatAt / standAt / carMatrixOf) follow only RIDE of the nudge, so they sway back a little
+ *  in the car and the ride camera kicks ≤ 2 cm. None with reduced motion. Per train: a few scalars once a frame, no allocation. */
+export const JOLT={amp0:.04,amp1:.05,lag:.15,period:.55,decay:3.5,pitch:.0087,len:1.4,slip:.4,ride:.4,sound:45} as const;
+/** The nudge (m, + along the travel) and pitch (rad, + nose up) of a car `tau` s after its slack takes up; arrive: the mirror. */
+export function joltAt(tau:number,amp:number,arrive:boolean,out={z:0,p:0}){out.z=out.p=0;if(tau<0||tau>=JOLT.len)return out;
+ const e=Math.exp(-JOLT.decay*tau),w=Math.sin(2*Math.PI*tau/JOLT.period),rise=Math.min(1,tau/.1);// the pitch: up in 0.1 s, then easing back
+ out.z=(arrive?.8:1)*amp*e*w;out.p=(arrive?-.7:1)*JOLT.pitch*Math.exp(-4*Math.max(0,tau-.1))*rise;return out;}
 /** A standAt height over this (m over the rail top) is a roof spot (Town passes roofY(x)); the floor is CAR_FLOOR_Y. */
 const ROOF_WALK_Y=CAR_FLOOR_Y+1.5;
 /** THE seat table (Gameplay 2, owner Nov 24 2026; used by riding, presence, the walk aboard and, later, NPC passengers and changing
@@ -249,6 +260,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  // Phase 4 sounds (the island sound kit's synth cues, so mute and volume apply): the wheels' "ka-tan" over each rail joint (one per
  // car length, so its pace follows the speed), the door chime as the doors start to open or close, and the arrival melody.
  const clackRun=new Float32Array(TRAIN_COUNT),soundAt=new Int8Array(TRAIN_COUNT).fill(-2),doorWas=new Float32Array(TRAIN_COUNT).fill(-1);
+ // Looks 2 (JOLT): per car the nudge and pitch, per train the wheel slip and the time since it last pulled out (sound edge)
+ const joltZ=new Float32Array(TRAIN_COUNT*TRAIN_CARS),joltP=new Float32Array(TRAIN_COUNT*TRAIN_CARS),slip=new Float32Array(TRAIN_COUNT),depWas=new Float32Array(TRAIN_COUNT).fill(1e9),jo={z:0,p:0},jv=new T.Vector3();
  // platform announcements: the stop index last announced per train (arriving / leaving), the platforms' middles (3.5 m in from the line)
  const annIn=new Int8Array(TRAIN_COUNT).fill(-1),annOut=new Int8Array(TRAIN_COUNT).fill(-1);
  const PLAT=TRAIN_STOPS.map(sp=>{const c=trackAt(sp.station.s),n=leftNormal(c.tx,c.tz);return {x:c.x+n.x*sp.station.side*3.5,z:c.z+n.z*sp.station.side*3.5};});
@@ -282,13 +295,17 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
  const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,glass.mesh,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
  /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
- function carMatrix(s:number,c:number,out:T.Matrix4,v=0,_k=-1){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
+ function carMatrix(s:number,c:number,out:T.Matrix4,v=0,ti=-1,w=1){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
   const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
   // AAA audit (Nov 24 2026): the body leans into a curve with the speed (the cant a real line gives its curves): v² × curvature,
   // at most LEAN_MAX rad (≈1.5° at 8 m/s on the tightest 30 m curve). Seats use the same matrix, so riders lean with the car.
   const lx=pb.tz,lz=-pb.tx,k=((pa.tx-pb.tx)*lx+(pa.tz-pb.tz)*lz)/(2*BOGIE_HALF),th=Math.max(-LEAN_MAX,Math.min(LEAN_MAX,v*v*k*LEAN));
   bz.set((pa.x-pb.x)*rev,(ya-yb)*rev,(pa.z-pb.z)*rev).normalize();by.set(lx*th,1,lz*th);bx.crossVectors(by,bz).normalize();by.crossVectors(bz,bx);
-  out.makeBasis(bx,by,bz);out.setPosition((pa.x+pb.x)/2,(ya+yb)/2,(pa.z+pb.z)/2);return out;}
+  let px=(pa.x+pb.x)/2,py=(ya+yb)/2,pz=(pa.z+pb.z)/2;
+  // Looks 2: the departure / arrival jolt (JOLT): a nudge along the travel and a pitch about the car's cross axis (w: RIDE for riders)
+  if(ti>=0){const o=ti*TRAIN_CARS+c,j=joltZ[o]*w*rev,p=joltP[o]*w*rev;if(j!==0){px+=bz.x*j;py+=bz.y*j;pz+=bz.z*j;}
+   if(p!==0){const cs=Math.cos(p),sn=Math.sin(p);jv.copy(bz).multiplyScalar(cs).addScaledVector(by,sn);by.multiplyScalar(cs).addScaledVector(bz,-sn);bz.copy(jv);}}
+  out.makeBasis(bx,by,bz);out.setPosition(px,py,pz);return out;}
  const seatM=new T.Matrix4(),roofM=new T.Matrix4(),seatV=new T.Vector3(),fresh=newTrainState();
  const api={
   root,triangles:detail[0].triangles,runner,states,
@@ -306,21 +323,21 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   /** Gameplay 2: SEAT_TABLE index i of train k (players: seatPose; NPC passengers and seat changes use this). Facing out of the window. */
   seatAt(k:number,i:number,out:SeatPose,now?:number):SeatPose{
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
-   const st=SEAT_TABLE[i];carMatrix(s,st.car,seatM,states[k].v);seatV.set(st.x,CAR_FLOOR_Y,st.z).applyMatrix4(seatM);
+   const st=SEAT_TABLE[i];carMatrix(s,st.car,seatM,states[k].v,k,JOLT.ride);seatV.set(st.x,CAR_FLOOR_Y,st.z).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(st.side*e[0],st.side*e[2]);out.lean=st.lean;return out;},
   /** Nov 24 2026: a standing rider at train-frame (x across, u along car 0; trainWalk.ts) of train k, facing `yaw` (train frame): the
    *  world spot on the floor and yaw. `now` as seatPose (friends are posed before this frame's update). Allocation-free. */
   standAt(k:number,x:number,u:number,yaw:number,out:SeatPose,now?:number,y=CAR_FLOOR_Y):SeatPose{
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
    // Looks 2 (Nov 24 2026): on the roof (y over the car's sides: Town passes roofY(x)) the AC lids and the pantograph base are step-ups
-   const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;if(y>ROOF_WALK_Y)y+=roofLift(x,u);carMatrix(s,c,seatM,states[k].v,k);seatV.set(lx,y,lz).applyMatrix4(seatM);
+   const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;if(y>ROOF_WALK_Y)y+=roofLift(x,u);carMatrix(s,c,seatM,states[k].v,k,JOLT.ride);seatV.set(lx,y,lz).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(e[8],e[10])+yaw+(c?Math.PI:0);out.lean=1;return out;},
   /** Roof riding (trainRoof.ts, Nov 24 2026): the roof under world (x, z) of any train (a box test per car, only for trains within
    *  reach): out.k, the train-frame spot (out.x across, out.u along car 0) and the roof's world height there (out.y). False: none.
    *  `ahead` s (the landing ring's prediction): where the trains will be that long from now at their present speeds. */
   roofAt(x:number,z:number,out:{k:number;x:number;u:number;y:number},pad=0,ahead=0):boolean{
    for(let k=0;k<TRAIN_COUNT;k++){const st=states[k],s=ahead?wrapS(st.s+st.v*ahead):st.s;trackAt(s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)>TRAIN_LENGTH+3)continue;
-    for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
+    for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v,k);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
      if(Math.abs(lx)>ROOF_HALF+pad||Math.abs(lz)>CAR_LENGTH/2-ROOF_END_PAD+pad)continue;
      const cx=Math.max(-ROOF_HALF,Math.min(ROOF_HALF,lx));if(c%2===0){out.x=cx;out.u=lz;}else{out.x=-cx;out.u=-(CAR_LENGTH+CAR_GAP)-lz;}
      seatV.set(cx,roofY(cx)+roofLift(out.x,out.u),lz).applyMatrix4(roofM);out.k=k;out.y=seatV.y;return true;}}
@@ -336,12 +353,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(py<=floor(px,pz))return false;}
    return false;},
   /** Gameplay 2: car c of train k's matrix this frame (the hover outline, the car colliders). Allocation-free. */
-  carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v);},
+  carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v,k,JOLT.ride);},
   /** Gameplay 2: the open door of train k (standing at a stop) nearest x, z: a spot on the platform just outside it, facing in
    *  (out.yaw), and which car / door it is. Null while the train runs. Allocation-free. */
   doorSpot(k:number,x:number,z:number,out:{x:number;y:number;z:number;yaw:number;car:number;door:number}){
    const st=states[k];if(st.at<0)return null;const side=TRAIN_STOPS[st.at].station.side,top=bedAt(L.profile,TRAIN_STOPS[st.at].station.s)+STATION_PLATFORM_Y;let best=Infinity;
-   for(let c=0;c<TRAIN_CARS;c++){const sx=side*(c%2===1?-1:1);carMatrix(st.s,c,seatM,0);const e=seatM.elements;
+   for(let c=0;c<TRAIN_CARS;c++){const sx=side*(c%2===1?-1:1);carMatrix(st.s,c,seatM,0,k);const e=seatM.elements;
     for(let d=0;d<DOORS.length;d++){seatV.set(sx*(HALF_W+.55),0,DOORS[d]).applyMatrix4(seatM);const dd=Math.hypot(seatV.x-x,seatV.z-z);
      if(dd<best){best=dd;out.x=seatV.x;out.z=seatV.z;out.y=top;out.yaw=Math.atan2(-sx*e[0],-sx*e[2]);out.car=c;out.door=d;}}}
    return out;},
@@ -377,10 +394,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(ahead&&who===0){if(soon<=WARN_S&&!warned[i]){warned[i]=1;if(clock-hornAt[i]>2){hornAt[i]=clock;cue('train-horn',Math.max(.35,1-gap/WARN_AHEAD));}
       if(clock-kenjiQuiet>WARN_COOLDOWN){kenjiQuiet=clock;sayLeft[i]=KENJI.bubbleS;result.say=kenjiWarn(kenjiN++);}}}
     else warned[i]=0;
-    if(sayLeft[i]>0){sayLeft[i]-=dt;result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z).applyMatrix4(m4)/* over Kenji in the cab (lib/graphics/trainKenji.ts) */;result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}
+    if(sayLeft[i]>0){sayLeft[i]-=dt;result.sayTrain=i;carMatrix(st.s,0,m4,0,i,JOLT.ride);pv3.set(KENJI_SEAT.x,3.75+.5,KENJI_SEAT.z).applyMatrix4(m4)/* over Kenji in the cab (lib/graphics/trainKenji.ts) */;result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}
     {const dp=riding===i?0:Math.hypot(pc.x-f.player.x,pc.z-f.player.z);// Phase 4 sounds, for the trains near the player (riding: the ridden one)
      if(st.v>.8&&dp<CLACK_RANGE){clackRun[i]+=st.v*dt;if(clackRun[i]>=CLACK_STEP){clackRun[i]-=CLACK_STEP;cue('train-clack',(riding===i?.55:1-dp/CLACK_RANGE)*Math.min(1.2,.4+st.v/12));}}
-     if(st.at!==soundAt[i]){if(st.at>=0&&soundAt[i]!==-2&&(riding===i||dp<ARRIVE_SOUND))cue('train-arrive',riding===i?.8:Math.max(.25,1-dp/ARRIVE_SOUND));soundAt[i]=st.at;}
+     if(st.at!==soundAt[i]){if(st.at>=0&&soundAt[i]!==-2&&(riding===i||dp<ARRIVE_SOUND))cue('train-arrive',riding===i?.8:Math.max(.25,1-dp/ARRIVE_SOUND));
+      if(st.at>=0&&soundAt[i]!==-2&&(riding===i||dp<JOLT.sound))cue('train-halt',riding===i?.7:Math.max(.25,1-dp/JOLT.sound));soundAt[i]=st.at;}// Looks 2: the brake sigh + a soft clunk as it settles
      const closing=st.doors<1&&doorWas[i]===1;
      if((st.doors>0&&doorWas[i]===0||closing)&&(riding===i||dp<DOOR_SOUND))cue('train-chime',riding===i?.8:Math.max(.25,1-dp/DOOR_SOUND));doorWas[i]=st.doors;
      // Polish (Nov 24 2026): the platform announcement, as a caption (no voice files) for someone standing on that platform (not
@@ -422,6 +440,14 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     for(let r=0;r<boards.meshes.length;r++){const b=boards.meshes[r];if(b.flip<0)continue;b.flip+=1/FLIP_HZ;const p=Math.min(1,b.flip/FLIP_S);
      boards.draw(r,b.l1,b.l2,b.o1,b.o2,p);dirty=true;if(p>=1)b.flip=-1;}
     if(dirty)boards.tex.needsUpdate=true;}
+   // ---- Looks 2: the departure / arrival feel (JOLT), from the lap time; the pull-out sound (air release + couplers) in earshot
+   for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];let dep=Infinity;for(const sp of TRAIN_STOPS){const a=((st.t-sp.depart)%LAP+LAP)%LAP;if(a<dep)dep=a;}
+    const arr=st.at>=0?((st.t-TRAIN_STOPS[st.at].arrive)%LAP+LAP)%LAP:Infinity,still=cluster||f.reduced;
+    for(let c=0;c<TRAIN_CARS;c++){const o=i*TRAIN_CARS+c,amp=c===0?JOLT.amp0:JOLT.amp1,lag=c*JOLT.lag;
+     if(still){joltZ[o]=joltP[o]=0;continue;}joltAt(dep-lag,amp,false,jo);let z=jo.z,p=jo.p;joltAt(arr-lag,amp,true,jo);joltZ[o]=z+jo.z;joltP[o]=p+jo.p;}
+    {const k=Math.max(0,Math.min(1,(dep-.05)/JOLT.slip));slip[i]=still||dep>=JOLT.slip+.05?0:Math.PI*2*k*k*(3-2*k);}
+    if(!cluster&&dep<.5&&depWas[i]>=.5){trackAt(st.s-TRAIN_LENGTH/2,pc);const dp=riding===i?0:Math.hypot(pc.x-f.player.x,pc.z-f.player.z);if(dp<JOLT.sound)cue('train-depart',riding===i?.75:Math.max(.25,1-dp/JOLT.sound));}
+    depWas[i]=dep;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
    let nd=0,np=0;glass.begin();
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
@@ -431,12 +457,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]||d3<CLOSE_RANGE?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
-    if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
+    if(animate){tr.spin=(st.s/WHEEL_R+slip[i])%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
     tr.look.lamp.z=night*INTERIOR_GLOW;tr.look.cut.value=api.roofCut[i];tr.look.cutDir.value.set(api.roofCut[i]?api.cutDir[0]:0,api.roofCut[i]?api.cutDir[1]:0);// the window band: the indicator channel, lit by the shared night factor
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
-    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
+    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v,i);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
      // the Inside view: this car's side facing the camera (car-local −1 / +1, 0: no cut) loses its panes; its door leaves stop at the sill
      const ce=m4.elements,cutS=api.roofCut[i]&&(api.cutDir[0]||api.cutDir[1])?(ce[0]*api.cutDir[0]+ce[2]*api.cutDir[1]>0?1:-1):0;
      if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4,cutS);writePlate(i,c,m4);if(api.roofCut[i])platePos.fill(0,(i*TRAIN_CARS+c)*12,(i*TRAIN_CARS+c)*12+12);/* the cutaway: no destination plate floating over the open cab */np++;
