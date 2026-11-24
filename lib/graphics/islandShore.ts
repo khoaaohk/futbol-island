@@ -1,6 +1,9 @@
 import * as T from 'three';
 import {SHORE_FOAM_GLSL,SHORE_FOAM_UNIFORMS} from './shoreFoamFx';
 import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
+import {onLand} from '../town/landmass';
+import {TRACK,TrackKind} from '../town/trainTrack';
+import {trainLayout} from '../town/trainLayout';
 
 // Self-contained (the fishing shoreline in lib/town/fishing/shoreWater.ts has its own copies and its own owner).
 const WATER_Y=-.42,STRIP_Y=-.403;
@@ -98,7 +101,23 @@ function sampleIslandHeights(renderer:T.WebGLRenderer,scene:T.Scene){
  const lift=new Float32Array(NX*NZ),high=new Uint8Array(NX*NZ),drawn=new Uint8Array(NX*NZ);
  for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const p=(j*NX+i)*4,k=(NZ-1-j)*NX+i;lift[k]=(pixels[p]+pixels[p+1]/255)/255*2-.5;high[k]=pixels[p+2]>127?1:0;drawn[k]=pixels[p+3]>127?1:0;}
  dropOverheadLines(lift,high,drawn,NX,NZ);
+ clearTrainLine(lift);
  return lift;
+}
+/**
+ * The Island Line over the sea is not shore (Nov 24 2026, owner shot 36: square foam / shallow patches round a bridge head). The
+ * trestle deck, its pier caps and the abutments are merged into the island chunks, so the top-down bake read the deck (~1.5 m over
+ * the water) as a 3–4 m wide strip of land: a ribbon of 1 m foam squares along every trestle and blocky ones round each abutment.
+ * Every water cell (landmass onLand false) under the line's sea rows and bridge heads goes back to open sea, then each pier
+ * column's cell is a small island again: a soft foam ring at every pier foot instead of a stripe. Land cells are untouched.
+ */
+function clearTrainLine(lift:Float32Array){
+ let L:ReturnType<typeof trainLayout>;try{L=trainLayout();}catch{return;}
+ const K=L.profile.kind,n=TRACK.n,cell=(x:number,z:number)=>{const i=Math.floor(x-MIN_X),k=Math.floor(z-MIN_Z);return i>=0&&k>=0&&i<NX&&k<NZ?k*NX+i:-1;};
+ for(let i=0;i<n;i++){const j=(i+1)%n,sea=K[i]===TrackKind.Sea||K[j]===TrackKind.Sea;if(!sea)continue;
+  for(let f=0;f<1;f+=.25){const x=TRACK.x[i]+(TRACK.x[j]-TRACK.x[i])*f,z=TRACK.z[i]+(TRACK.z[j]-TRACK.z[i])*f,tx=TRACK.tx[i],tz=TRACK.tz[i];
+   for(let v=-3.2;v<=3.2;v+=.5){const px=x+tz*v,pz=z-tx*v;if(onLand(px,pz))continue;const c=cell(px,pz);if(c>=0)lift[c]=-.5;}}}
+ for(let k=0;k<L.columns.length;k+=2){const c=cell(L.columns[k],L.columns[k+1]);if(c>=0&&!onLand(L.columns[k],L.columns[k+1]))lift[c]=Math.max(lift[c],.05);}
 }
 /**
  * Thin overhead lines out of a w×h height grid (in place): `high` cells (OVERHEAD or more over the water) not covered by any 3×3

@@ -46,6 +46,6 @@ function grid(x0,z0,w,h){
 {const src=fs.readFileSync('lib/graphics/islandShore.ts','utf8');
  assert(/const OVERHEAD=3;/.test(src)&&/vY-uWater>\$\{OVERHEAD\.toFixed\(1\)\}\?1\.:0\.,1\.\)/.test(src),'the height render flags overhead surfaces');
  assert(/setClearColor\(0x000000,0\)/.test(src),'cleared to alpha 0 so "nothing drawn" (open sea) reads as such');
- assert(/dropOverheadLines\(lift,high,drawn,NX,NZ\);\n return lift;/.test(src),'applied to the bake');
+ assert(/dropOverheadLines\(lift,high,drawn,NX,NZ\);\n clearTrainLine\(lift\);\n return lift;/.test(src),'applied to the bake (then the Island Line cleared, Nov 24 2026)');
  assert(!/below\.position|readRenderTargetPixels\([^)]*under/.test(src),'one render: no second pass');}
 console.log('shore-overhead: ok');
