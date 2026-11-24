@@ -229,7 +229,7 @@ import {summitGoalCrossed,createSummitCameraPull,createSummitFlightLift,summitCr
 import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlope';
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
-import {trainSwimBlocked} from '@/lib/town/trainLayout';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
+import {trainSwimBlocked,trainWalkHeight} from '@/lib/town/trainLayout';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createStadiumMedia} from '@/lib/graphics/stadiumMedia';import {STADIUM_GESTURERS,STADIUM_GESTURES,STADIUM_MASCOT_ID,STADIUM_VIEWERS} from '@/lib/town/stadiumNpcs';// DRIP FC Stadium media + public viewing (Nov 13 2026)
 import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY,sitYieldsToTalk} from '@/lib/town/stadiumSit';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
@@ -887,7 +887,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>streetTraffic.dispose());
     // A kicked signal sways (propReactions): its lamps, drawn by the traffic's one instanced mesh, follow the head.
     {const lamps=streetTraffic.signals.lamps;if(lamps)world.signalHeads.forEach((h,i)=>propReactions.follow('signal',h.x,h.z,move=>lamps.sway(i,move)));}
-    const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
+    const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>Math.max(rampSurface(rideRamps,x,z),trainWalkHeight(x,z))/* Island Line: feet on the sleepers and crossing decks (trainLayout.ts) */,world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);
     // The floor under the rider's own height (the lighthouse gallery is a floor only from its own height: lighthouseGallery.ts),
