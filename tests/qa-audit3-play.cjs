@@ -22,7 +22,7 @@ const town=fs.readFileSync('components/Town.tsx','utf8');
  assert.equal(W.swimEdgePush(59,0,{x:.2,z:0},allowed,land),false,'a light touch of the stick does not count');
  assert.equal(W.swimEdgePush(1,0,{x:-1,z:0},allowed,land),false,'land ahead is a climb-out, not the edge');
  assert.match(H.SWIM_EDGE_NOTE,/Swim back to the island/);
- assert.match(town,/swimEdgePush\(location\.x,location\.z,\{x:mx,z:mz\},waterWalk\.allow,onLand\)/,'Town checks the push every swim frame');
+ assert.match(town,/swimEdgePush\(location\.x,location\.z,\{x:mx,z:mz\},waterWalk\.allow,swimLand\)/,'Town checks the push every swim frame');
  assert.match(town,/fuelStore\.say\(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE\)/,'Town shows the note');
 }
 console.log('qa-audit3-play: ok');

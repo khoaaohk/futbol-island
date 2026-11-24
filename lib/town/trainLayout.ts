@@ -103,6 +103,16 @@ export function trainWalkHeight(x:number,z:number):number{
 export function trainDeckAt(x:number,z:number){
  const hit=trackNearest(x,z,DECK_HALF+.05);if(!hit||hit.d>DECK_HALF)return false;
  const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;return P.kind[i]===TrackKind.Sea||P.kind[k]===TrackKind.Sea;}
+/** Swimmers vs decks (Nov 24 2026, coordinator default while the owner tests): the decks are land for walking, riding and landing, but a
+ *  SWIMMER may climb out onto one only where its top is within DECK_CLIMB_H m of the water, or within DECK_HEAD_S m (along the line)
+ *  of a bridge head (where the deck meets the land); elsewhere the deck is overhead and the swimmer stays in the water under or beside
+ *  it (no 3-6 m pop up onto the trestle). True at (x, z) when that point is deck a swimmer may NOT climb onto. One hash lookup. */
+export const DECK_CLIMB_H=.8,DECK_HEAD_S=4;
+export function swimDeckBlocked(x:number,z:number,waterY:number){
+ const hit=trackNearest(x,z,DECK_HALF+.05);if(!hit||hit.d>DECK_HALF)return false;
+ const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;if(P.kind[i]!==TrackKind.Sea&&P.kind[k]!==TrackKind.Sea)return false;
+ const r=Math.round(DECK_HEAD_S/TRACK_DS),c=Math.round(hit.s/TRACK_DS);for(let j=-r;j<=r;j++)if(P.kind[(c+j+TRACK.n)%TRACK.n]!==TrackKind.Sea)return false;// a bridge head
+ return trainWalkHeight(x,z)-waterY>DECK_CLIMB_H;}
 /** Nov 24 2026: the trestle / bridge decks as landable decks (landableDecks.ts: walkable ground for simulation.blocked, land for the
  *  landing search and the water system), one per sea run: its bounding box (the cheap first test) and trainDeckAt (the real shape).
  *  `floating`: no wading shelf beside them (the sea beside a trestle is deep). Height 0: the floor itself is trainWalkHeight. */

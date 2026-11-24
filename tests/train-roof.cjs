@@ -44,6 +44,20 @@ console.log('train-roof pure: ok');
    for(let f=0;f<60*90;f++){const h=TT.trackNearest(p.x,p.z,4);const q=TT.trackAt(h?h.s:0),lat=h?h.d:0;maxOff=Math.max(maxOff,lat);
     rt.update(1/60,p,v,{x:q.tx-(h?((p.x-q.x)*0):0),z:q.tz,sprint:false},mode);if(h&&h.s>(a1+6)*TT.TRACK_DS)break;}
    const h=TT.trackNearest(p.x,p.z,4);assert(h&&h.s>(a1+4)*TT.TRACK_DS,`${mode}: from the shore over the trestle to its far end (s ${h&&h.s.toFixed(0)} of ${(a1*TT.TRACK_DS).toFixed(0)})`);}
+  // swimmers vs decks (Nov 24 2026): a swimmer never pops up onto a high deck; only where it is within 0.8 m of the water, or at a head
+  {const WL=-.43,LM=LW('lib/town/landmass.ts'),WD=LW('lib/town/water/waterDepth.ts');let high=0,low=0,heads=0;
+   for(let i=0;i<TT.TRACK.n;i++){if(P.kind[i]!==K.Sea)continue;const x=TT.TRACK.x[i],z=TT.TRACK.z[i],hh=TL.trainWalkHeight(x,z)-WL;const landNear=r=>{for(let j=-r;j<=r;j++)if(P.kind[(i+j+TT.TRACK.n)%TT.TRACK.n]!==K.Sea)return true;return false;},head=landNear(2);if(!head&&landNear(3))continue;/* the edge of the head zone: either is fine */
+    const b=TL.swimDeckBlocked(x,z,WL);if(head){heads++;assert(!b,`row ${i}: a bridge head can be climbed`);}else if(hh<=TL.DECK_CLIMB_H){low++;assert(!b,`row ${i}: a low deck (${hh.toFixed(2)} m) can be climbed`);}else{high++;assert(b,`row ${i}: a ${hh.toFixed(2)} m deck is not climbed from the water`);}}
+   assert(high>100&&heads>=6,`high deck rows ${high}, low ${low}, head rows ${heads}`);assert(!TL.swimDeckBlocked(pm.x+nm.x*2.5,pm.z+nm.z*2.5,WL),'beside the deck: plain sea');
+   assert(LM.onLand(pm.x,pm.z),'the deck is still land (walking, riding, landing)');
+   // the probe with the swimmer's land rule: under the mid deck it is water (swimmable, deep: no shelf), not a climb-out
+   const swimming={on:true},land=(x,z)=>LM.onLand(x,z)&&!(swimming.on&&TL.swimDeckBlocked(x,z,WL)),pr=WD.createWaterProbe(LM.distanceToLand,land);
+   const side={x:pm.x+nm.x*3,z:pm.z+nm.z*3};pr.sample(side.x,side.z,1,true);assert(!pr.land&&pr.allowed(pm.x,pm.z),'a swimmer beside the deck may swim under it');
+   pr.sample(pm.x,pm.z,1,true);assert(!pr.land&&pr.depth>1.5,`under the deck: still swimming in deep water (${pr.depth.toFixed(2)} m)`);
+   const v={x:0,z:0},pos={x:side.x,z:side.z};for(let f=0;f<120;f++)WD.swimStep(pos,v,{x:-nm.x,z:-nm.z},false,1/30,(x,z)=>pr.allowed(x,z),land);
+   assert(Math.hypot(pos.x-side.x,pos.z-side.z)>4,'swims on under the deck and out the other side');
+   swimming.on=false;pr.sample(pm.x,pm.z,1,true);assert(pr.land,'on foot the deck is land again');
+   assert(/swimLand=\(x:number,z:number\)=>onLand\(x,z\)&&!\(swimmingNow\(\)&&swimDeckBlocked/.test(read('components/Town.tsx'))&&/createWaterProbe\(distanceToLand,swimLand\)/.test(read('components/Town.tsx')),'Town: the probe and the swim step use the swimmer rule');}
   off.forEach(f=>f());}
  console.log('train-roof trestle: ok');
  if(k<0){console.log('train-roof live: skipped (no train at speed now)');return;}
