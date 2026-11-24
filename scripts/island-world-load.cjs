@@ -2,7 +2,9 @@
 // colliders Town.tsx adds at runtime (vending machines, fishing kiosks) and the rooftop/stair surface model (rooftopTravel.ts).
 // Used by scripts/audit-island-connectivity.cjs and tests/island-connectivity.cjs. No browser, no WebGL.
 const fs=require('fs'),vm=require('vm'),path=require('path'),ts=require('typescript');
-async function loadIslandWorld(base=process.cwd()){
+/** opts.onStep(scene, i): called at each buildTownSteps pause (i = 0, 1, ...) with the scene as built so far (the clearance check
+ *  reads the meshes before the batching pass merges them). */
+async function loadIslandWorld(base=process.cwd(),opts={}){
  const T=require(path.join(base,'node_modules/three'));
  const utils=await import(path.join(base,'node_modules/three/examples/jsm/utils/BufferGeometryUtils.js'));
  const cache=new Map(),gradient={addColorStop(){}};
@@ -19,11 +21,12 @@ async function loadIslandWorld(base=process.cwd()){
   return m.exports;}
  const L=rel=>load(path.join(base,rel));
  const worldMod=L('lib/town/world.ts'),sim=L('lib/town/simulation.ts'),venues=L('lib/town/venues.ts');
- const world=worldMod.buildTown(new T.Scene());
+ const scene=new T.Scene();let world;
+ if(opts.onStep){const it=worldMod.buildTownSteps(scene);for(let i=0;;i++){const r=it.next();if(r.done){world=r.value;break;}opts.onStep(scene,i,L);}}else world=worldMod.buildTown(scene);
  const extra=[];
  try{const v=L('lib/graphics/vendingMachines.ts').createVendingMachines(new T.Scene(),{coins:()=>0});extra.push(...v.obstacles);}catch(e){console.error('vending colliders not loaded:',e.message);}
  try{extra.push(...L('lib/town/fishing/fishingWorld.ts').fishingKioskObstacles());}catch(e){console.error('fishing kiosk colliders not loaded:',e.message);}
  const obstacles=[...world.obstacles,...extra];
- return {T,L,world,sim,venues,obstacles,extraObstacles:extra};
+ return {T,L,world,sim,venues,obstacles,extraObstacles:extra,scene};
 }
 module.exports={loadIslandWorld};

@@ -24,6 +24,7 @@ import {summitGround} from './summitIsle';
 import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,SOUTH_BRIDGE,bedAt,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,MAIN_COLUMN_HALF,SEA_WALL_HALF,XING_FOOT} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
+import {onLand} from './landmass';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
 
 type Surface=Obstacle&{height:number};
@@ -109,11 +110,58 @@ export function buildTrainWorld(tools:TrainTools){
  let poleNext=POLE_STEP/2,moved=0;
  const pierRows=new Set(L.piers.map(p=>Math.round(p.s/TRACK_DS)%n));
 
+ // ------------------------------------------------------------------ bridge heads
+ // Nov 24 2026 rebuild (owner shot 36: "not blending in nicely, there are gaps"): one continuous head at every land/trestle joint.
+ // A stone abutment with a slight batter (faces lean out 8 cm per metre down), its back wall at the ballast's level with a coping
+ // curb each side, and a bearing seat 0.42 m under the bed that the deck's two girders sit ON (they start at the seat, so the
+ // sleepers over the joint rest on girders, never in mid-air). Where the line comes off a raised embankment, return wing walls
+ // close the embankment's end along its own slope (top following the ballast slope, foot sunk into the sand / sea: no open end, no
+ // floating slab). Rip-rap stones (the island's low-poly rock, merged into the chunk's paint batch) round the foot in the water.
+ // Same paints, same batches: no new draw or program. Geometry goes into the head row's chunk Geos (set per chunk below).
+ let G:{wall:Geo;wallTop:Geo;girders:Geo;ballast:Geo;rocks:Geo}|null=null;
+ const ROCK=new T.IcosahedronGeometry(1,0),rockP=ROCK.getAttribute('position');
+ function bridgeHead(a:ReturnType<typeof pt>,b:ReturnType<typeof pt>){
+  if(!G)return;const {wall,wallTop,girders,ballast,rocks}=G;
+  const land=a.kind!==TrackKind.Sea?a:b,sea=land===a?b:a,dir=land===a?1:-1,b0=land.bed,g=onSummitTrackS(land.s)?land.bed:0;
+  const P=(u:number,v:number,y:number)=>[land.x+land.tx*u*dir+land.tz*v,y,land.z+land.tz*u*dir-land.tx*v];
+  const foot=Math.min(g,0)-1.7,back=-1.1,seat=.35,front=1.25,bat=.08,hw=2.3,yTop=b0+.09,ySeat=b0-.42,inside=P((back+front)/2,0,ySeat-.6);
+  const vAt=(y:number)=>hw+(yTop-y)*bat,uFoot=front+(ySeat-foot)*bat;
+  // seat, back wall riser and top, front face, sides, back
+  wallTop.quad(P(seat,-vAt(ySeat),ySeat),P(front,-vAt(ySeat),ySeat),P(front,vAt(ySeat),ySeat),P(seat,vAt(ySeat),ySeat),inside);
+  wall.quad(P(seat,-hw,yTop),P(seat,hw,yTop),P(seat,vAt(ySeat),ySeat),P(seat,-vAt(ySeat),ySeat),P(seat-1,0,ySeat));
+  wallTop.quad(P(back,-hw,yTop),P(seat,-hw,yTop),P(seat,hw,yTop),P(back,hw,yTop),inside);
+  wall.quad(P(front,-vAt(ySeat),ySeat),P(front,vAt(ySeat),ySeat),P(uFoot,vAt(foot),foot),P(uFoot,-vAt(foot),foot),inside);
+  for(const sg of [-1,1]){wall.quad(P(back,sg*hw,yTop),P(seat,sg*hw,yTop),P(seat,sg*vAt(foot),foot),P(back,sg*vAt(foot),foot),inside);
+   wall.quad(P(seat,sg*vAt(ySeat),ySeat),P(front,sg*vAt(ySeat),ySeat),P(uFoot,sg*vAt(foot),foot),P(seat,sg*vAt(foot),foot),inside);
+   // coping curb on the back wall, outside the ballast
+   if(!crossingAt(land.s,4)){const c=P((back+seat)/2,sg*(1.5+hw+.12)/2,yTop+.04);wallTop.box(c[0],c[1],c[2],land.tx,land.tz,(seat-back)/2+.05,(hw+.12-1.5)/2,.04);}}
+  wall.quad(P(back,-hw,yTop),P(back,hw,yTop),P(back,hw,foot),P(back,-hw,foot),inside);
+  // ballast over the back wall up to the seat (the land rows' ballast top ends at the land point)
+  if(land.kind===TrackKind.Land){const t=b0+(lite?SLEEPER_TOP:BALLAST_TOP);ballast.quad(P(-.02,-1.45,t),P(seat,-1.45,t),P(seat,1.45,t),P(-.02,1.45,t),inside);
+   ballast.quad(P(seat,-1.45,t),P(seat,1.45,t),P(seat,1.45,yTop-.01),P(seat,-1.45,yTop-.01),P(seat-1,0,yTop));}
+  // the joint's girders: from the seat out to the first sea row
+  for(const side of [-1,1]){const v=side*RAIL_HALF_GAUGE,w=.2,A=(vv:number,y:number)=>P(seat+.05,vv,y),B=(vv:number,y:number)=>off(sea,vv,y),top=b0+SLEEPER_TOP-.1,bot=b0-.4,topB=sea.bed+SLEEPER_TOP-.1,botB=sea.bed-.4,ins=P(1,v,b0-.15);
+   girders.quad(A(v-w,bot),B(v-w,botB),B(v-w,topB),A(v-w,top),ins);girders.quad(A(v+w,bot),B(v+w,botB),B(v+w,topB),A(v+w,top),ins);girders.quad(A(v-w,bot),B(v-w,botB),B(v+w,botB),A(v+w,bot),ins);
+   girders.quad(A(v-w,bot),A(v+w,bot),A(v+w,top),A(v-w,top),P(2,v,b0-.15));}
+  // return wing walls: close the embankment's end (its side slope runs from the ballast shoulder at 1.45 m to fa at the ground)
+  const fa=land.kind===TrackKind.Land?1.9+(b0-g)*1.4:0,yS=(v:number)=>Math.max(g+.04,b0+.12-(v-1.45)/Math.max(.1,fa-1.45)*(b0+.12-(g-.06)))+.08;
+  if(fa+.25>hw+.05)for(const sg of [-1,1]){const v0=hw-.15,v1=fa+.3,u0=-.05,u1=.3,y0=yS(v0),y1=yS(v1);
+   wall.quad(P(u1,sg*v0,y0),P(u1,sg*v1,y1),P(u1,sg*v1,foot),P(u1,sg*v0,foot),P(u0-1,sg*(v0+v1)/2,foot));
+   wallTop.quad(P(u0,sg*v0,y0),P(u1,sg*v0,y0),P(u1,sg*v1,y1),P(u0,sg*v1,y1),P((u0+u1)/2,sg*(v0+v1)/2,foot));
+   wall.quad(P(u0,sg*v1,y1),P(u1,sg*v1,y1),P(u1,sg*v1,foot),P(u0,sg*v1,foot),P((u0+u1)/2,sg*v0,foot));}
+  // rip-rap: stones round the foot where it stands in the sea
+  if(!lite){let k=0;const put1=(u0:number,v:number)=>{const j=Math.sin(land.s*12.9898+v*78.233)*43758.5453,f=j-Math.floor(j),u=u0+(f-.5)*.6,q=P(u,v+(f-.5)*.3,0);if(onLand(q[0],q[2]))return;k++;const r=.26+f*.36,yaw=k*2.17+f*3,cy=Math.cos(yaw),sy=Math.sin(yaw);
+    for(let t=0;t<rockP.count;t+=3){const tri:number[][]=[];for(let j=0;j<3;j++){const x=rockP.getX(t+j)*r,y=rockP.getY(t+j)*r*.55,z=rockP.getZ(t+j)*r;tri.push([q[0]+x*cy-z*sy,-.3-f*.12+y,q[2]+x*sy+z*cy]);}rocks.tri(tri[0],tri[1],tri[2]);}};
+   for(let v=-hw-.5;v<=hw+.5;v+=.7){put1(uFoot+.3,v);if(Math.round(v*10)%3===0)put1(uFoot+.95,v+.35);}
+   for(const sg of [-1,1]){put1(uFoot+.1,sg*(hw+.9));if(fa+.25>hw+.05)for(let v=hw+.9;v<=fa+.5;v+=.85)put1(.75,sg*v);}}
+ }
+
  // ------------------------------------------------------------------ track chunks
  const perChunk=Math.round(CHUNK_LENGTH/TRACK_DS);
  for(let c0=0;c0<n;c0+=perChunk){
   const c1=Math.min(n,c0+perChunk),mid=pt((c0+c1)>>1),ox=Math.round(mid.x),oz=Math.round(mid.z);
   const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),wire=new Geo(),xdeck=new Geo(),bedTop=new Geo();
+  const rocks=new Geo();G={wall,wallTop,girders,ballast,rocks};
   for(let i=c0;i<c1;i++){
    const a=pt(i),b=pt(i+1);if(isTunnel(i)||isTunnel(i+1))continue;
    // Rails: a top and two sides per rail per row (no ends, no bottom).
@@ -144,20 +192,12 @@ export function buildTrainWorld(tools:TrainTools){
     const bt=lite?SLEEPER_TOP:BALLAST_TOP,t0=off(a,-1.45,a.bed+bt),t1=off(a,1.45,a.bed+bt),u0=off(b,-1.45,b.bed+bt),u1=off(b,1.45,b.bed+bt),
      f0=off(a,-fa,gy(a)-.06),f1=off(a,fa,gy(a)-.06),g0=off(b,-fb,gy(b)-.06),g1=off(b,fb,gy(b)-.06),inside=off(a,0,a.bed-1);
     (lite?bedTop:ballast).quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
-   if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea){// Bridge head at every shore
-    // (Nov 23 2026, owner: the first span floated): a stone abutment under the deck's end, its face down into the water, with low
-    // wing walls back along the embankment; the ballast runs up onto it and the first pier stands just past it (trainLayout).
-    const land=a.kind!==TrackKind.Sea?a:b,dir=land===a?1:-1,top=land.bed-.02,foot=-1.6,c=off(land,0,0),hl=1.6,inside=off(land,0,top-1);
-    const P=(u:number,v:number,y:number)=>[c[0]+land.tx*u*dir+land.tz*v,y,c[2]+land.tz*u*dir-land.tx*v];
-    for(const [u0,u1,v0,v1] of [[-.4,hl,-2.2,2.2]] as const){wallTop.quad(P(u0,v0,top),P(u1,v0,top),P(u1,v1,top),P(u0,v1,top),inside);
-     wall.quad(P(u1,v0,foot),P(u1,v1,foot),P(u1,v1,top),P(u1,v0,top),inside);wall.quad(P(u0,v0,foot),P(u1,v0,foot),P(u1,v0,top),P(u0,v0,top),inside);wall.quad(P(u0,v1,foot),P(u1,v1,foot),P(u1,v1,top),P(u0,v1,top),inside);}
-    for(const v of [-2.2,2.2]){const w=Math.sign(v)*.3;wall.quad(P(-4,v,foot),P(hl,v,foot),P(hl,v,top+.25),P(-4,v,Math.max(0,top-.2)+.05),inside);
-     wallTop.quad(P(-4,v,Math.max(0,top-.2)+.05),P(hl,v,top+.25),P(hl,v+w,top+.25),P(-4,v+w,Math.max(0,top-.2)+.05),inside);wall.quad(P(-4,v+w,foot),P(hl,v+w,foot),P(hl,v+w,top+.25),P(-4,v+w,Math.max(0,top-.2)+.05),inside);}}
+   if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea)bridgeHead(a,b);
    if(a.kind===TrackKind.Wall){// The sea wall: a stone top and two faces down into the water (Enoden-style).
     const h=SEA_WALL_HALF,top=-.02,foot=-2.6,inside=off(a,0,-1);
     wallTop.quad(off(a,-h,top),off(b,-h,top),off(b,h,top),off(a,h,top),inside);
     wall.quad(off(a,-h,foot),off(b,-h,foot),off(b,-h,top),off(a,-h,top),inside);wall.quad(off(a,h,foot),off(b,h,foot),off(b,h,top),off(a,h,top),inside);}
-   if(a.kind===TrackKind.Sea){// Trestle deck: two girders under the rails.
+   if(a.kind===TrackKind.Sea&&b.kind===TrackKind.Sea){// Trestle deck: two girders under the rails (a bridge-head row: bridgeHead).
     for(const side of [-1,1]){const v=side*RAIL_HALF_GAUGE,w=.2,top=a.bed+SLEEPER_TOP-.1,bot=a.bed-.4,topB=b.bed+SLEEPER_TOP-.1,botB=b.bed-.4,inside=off(a,v,a.bed-.15);
      girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v-w,topB),off(a,v-w,top),inside);girders.quad(off(a,v+w,bot),off(b,v+w,botB),off(b,v+w,topB),off(a,v+w,top),inside);girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v+w,botB),off(a,v+w,bot),inside);}}
    // Catenary: a pole with its cantilever arm every ~POLE_STEP m (right side; platforms are all on the left), not at crossings.
@@ -185,7 +225,7 @@ export function buildTrainWorld(tools:TrainTools){
   // merged into the rails' paint (same grey steel, no new paint or draw). Built once, in the chunk that holds the span's middle.
   {const mi=Math.round(SOUTH_BRIDGE.mid/TRACK_DS);if(mi>=c0&&mi<c1){const t=bridgeTruss(L.profile);rails.p.push(...t.p);rails.n.push(...t.n);}}
   emit(rails,C.rail,ox,oz);emit(railTops,C.railTop,ox,oz);emit(sleepers,C.sleeper,ox,oz);emit(ballast,C.ballast,ox,oz);emit(girders,C.girder,ox,oz);emit(piers,C.pier,ox,oz);
-  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);
+  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);emit(rocks,C.wall,ox,oz);/* the abutments' own stone paint: same batch, no new draw */
  }
 
  // Level crossings: the deck is in the row loop above; poles, crossbuck, lamps, arms, bell and colliders are Phase 2's crossing
@@ -272,9 +312,13 @@ export function buildTrainWorld(tools:TrainTools){
  for(const p of [TUNNEL.west,TUNNEL.east]){const west=p===TUNNEL.west,t=trackAt(p.s),o={x:west?-t.tx:t.tx,z:west?-t.tz:t.tz},a={x:o.z,z:-o.x};
   const R=TUNNEL_HALF_WIDTH,ringR=R+.85,depth=1.5,lean=PORTAL_LEAN,half=PORTAL_HALF;
   const groundAt=(v:number,u:number)=>summitGround(p.x+a.x*v+o.x*u,p.z+a.z*v+o.z*u)-TUNNEL_BED;
+  // Nov 24 2026 (owner: a wing slab stood proud of the hillside by the west portal, fins at the headwall ends): the drawn hill is a
+  // 2.5 m mesh, so in a crease it lies under the true ground at one point. The headwall top and the wing tops take the LOWEST ground
+  // round the spot (± 0.8 m across, out to 2.5 m in front): a little buried in the hill, never standing out of it.
+  const lowAt=(v:number,u:number)=>{let m=Infinity;for(const dv of [-.8,0,.8])for(const du of [-.6,0,.8,1.8])m=Math.min(m,groundAt(v+dv,u+du));return m;};
   const archTop=(v:number)=>Math.abs(v)<ringR?2.4+Math.sqrt(ringR*ringR-v*v):0;
   const shape=new T.Shape();shape.moveTo(-half,-.6);shape.lineTo(half,-.6);
-  for(let v=half;v>=-half-1e-6;v-=.7){const top=Math.max(archTop(v)+.25,groundAt(v,depth*.5)+.25,1.1);shape.lineTo(v,Math.min(top,2.4+ringR+.6));}
+  for(let v=half;v>=-half-1e-6;v-=.7){const top=Math.max(archTop(v)+.25,lowAt(v,depth*.5)+.25,Math.abs(v)<ringR+.6?1.1:-.35);/* past the ring the ends follow the ground down (no block where the bank falls away) */shape.lineTo(v,Math.min(top,2.4+ringR+.6));}
   shape.lineTo(-half,-.6);shape.holes.push(portalArch());
   const basis=new T.Matrix4().makeBasis(new T.Vector3(a.x,0,a.z),new T.Vector3(0,1,0),new T.Vector3(o.x,0,o.z));
   const wallG=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:10});
@@ -285,7 +329,7 @@ export function buildTrainWorld(tools:TrainTools){
   const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
   for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
   for(const sg of [-1,1]){const v0=sg*(R+.6),v1=sg*(R+1.4),inside=P(sg*(R+1),3,-2);let prev:number[][]|null=null;
-   for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.45,Math.min(groundAt(v1+sg*.3,u)+.05,1.5));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
+   for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.3,Math.min(lowAt(v1+sg*.3,u)-.05,1.5));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);

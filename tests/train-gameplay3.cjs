@@ -92,6 +92,25 @@ console.log('train-gameplay3 wiring: ok');
 // ---- 4. NPC passengers (lib/town/trainPassengers.ts)
 {const PX=L('lib/town/trainPassengers.ts'),away=()=>true,NST=S.TRAIN_STOPS.length;
  assert(PX.CAST.length>=14&&PX.CAST.some(c=>c.prop==='ball'&&c.kid)&&PX.CAST.some(c=>c.prop==='scarf')&&PX.CAST.some(c=>c.prop==='bento')&&PX.CAST.some(c=>/Trainspotter/.test(c.role))&&PX.CAST.some(c=>c.boarder),'the cast: commuters, a kid with a ball, a scarf, a bento, a trainspotter, the station boarders');
+ {// the look pass (Nov 24 2026): the islanders' bean looks with real variety, props that suit the role
+  const M=L('lib/graphics/trainPassengerMesh.ts'),has=(c,p)=>c.props.includes(p),looks=PX.CAST.map(c=>c.pax.look);
+  assert(new Set(looks.map(l=>l.hair?.style)).size>=5&&new Set(looks.map(l=>l.hair?.color)).size>=5,'hair styles and colours vary');
+  assert(new Set(looks.map(l=>l.headwear)).size>=4,'caps, beanies, bucket hats... and bare heads');
+  assert(new Set(looks.map(l=>l.skin)).size>=6&&new Set(looks.map(l=>l.build)).size>=3,'skin tones and builds vary');
+  assert(PX.CAST.some(c=>c.kid&&has(c,'ball'))&&PX.CAST.some(c=>/Grandparent/.test(c.role)&&has(c,'bento'))&&PX.CAST.some(c=>has(c,'notebook')&&has(c,'camera'))&&PX.CAST.some(c=>has(c,'bag'))&&PX.CAST.some(c=>has(c,'phone'))&&PX.CAST.some(c=>has(c,'paper')),'a kid with a ball, a grandparent with a bento, a trainspotter with notebook + camera, backpacks, phones, a newspaper');
+  const TP=L('lib/town/beanLooks.ts').TEAM_PALETTES.map(t=>t.kit.shirt);assert(PX.CAST.filter(c=>c.role==='Fan in a scarf').every(c=>TP.includes(c.pax.propA)),'scarves in island team colours');
+  for(const c of PX.CAST.filter(c=>/Grandparent/.test(c.role)&&!c.boarder))assert(['#cfcac2','#e8e4dc','#a8a39a','#bdb6aa'].includes(c.pax.look.hair?.color),'grandparents are grey');
+  const sn=L('lib/town/stationNpcs.ts'),bd=L('lib/town/beanLooks.ts');for(const c of PX.CAST.filter(c=>c.boarder)){const n=sn.STATION_NPCS.find(x=>x.id===c.boarder);assert.deepEqual(c.pax.look,bd.npcDress(n).look,'a station islander rides with their platform look');}
+  // poses: props pick the pose (a phone → phone, a page → read, a box / ball on the lap → hold; standing: the strap, kids hold their ball)
+  const P=M.PAX_POSE,pp=(l,s,k)=>M.paxPoseFor(M.propMask(l),s,k)%M.PAX_POSES;
+  assert.equal(pp(['phone'],true,false),P.phone);assert.equal(pp(['paper'],true,false),P.read);assert.equal(pp(['bento'],true,false),P.hold);assert.equal(pp([],true,false),P.lap);
+  assert.equal(pp(['phone'],false,false),P.strapPhone);assert.equal(pp([],false,false),P.strap);assert.equal(pp(['ball'],false,true),P.standHold);assert(M.paxPoseFor(0,true,true)>=M.PAX_POSES,'kids: their own bakes');
+  // the bake: the seated pose sits on the bench (thighs forward, hands on the lap), the strap hand reaches the handle
+  const pm=M.createPassengerMesh(8,PX.CAST.slice(0,4).map(c=>c.pax)),lap=pm.bakes[P.lap],strapB=pm.bakes[P.strap];
+  assert(Math.abs(lap.torso.elements[13]-.77)<.08,'seated: the bean bottom on the seat (torso '+lap.torso.elements[13].toFixed(2)+')');
+  assert(lap.hands.every(h=>h.z>.15&&h.y<1),'seated: hands on the lap');assert(lap.feet.every(f=>f.z>.4&&f.y<.4),'seated: lower legs down over the edge');
+  const H=M.PAX_STRAP_HAND,hand=strapB.hands[1];assert(Math.hypot(hand.y-H.y,hand.z-H.z)<.08&&Math.abs(hand.x-H.x)<.03,'standing: the hand on the strap handle');
+  pm.dispose();}
  for(const c of PX.CAST)assert(c.topics.length>=2&&c.greeting&&c.name,'talkable: '+c.name);
  let seated=[],changes=[],standing=0;
  for(let k=0;k<3;k++)for(let seg=100;seg<160;seg++){const r=PX.rosterFor(k,seg,away);const seats=new Set();
@@ -114,10 +133,19 @@ console.log('train-gameplay3 wiring: ok');
  const look=(x,z)=>{cam.position.set(x,4,z+12);cam.lookAt(x,1,z-6);cam.updateMatrixWorld();};
  look(1000,0);pax.update(run,60,cam,-1,0,false);assert.equal(pax.shown,0,'no train near: nobody drawn');assert.equal(scene.getObjectByName('train-passengers'),undefined,'built only on first sight');
  look(200,0);pax.update(run,60,cam,-1,0,false);const near=pax.shown;assert(near>0,'a train in view nearby: its passengers');
- const mesh=scene.getObjectByName('train-passengers');assert(mesh&&mesh.isInstancedMesh&&scene.children.filter(o=>o.isMesh&&o.visible).length===1,'ONE instanced draw for all passengers');
+ const group=scene.getObjectByName('train-passengers'),drawn=[];group.traverse(o=>{if(o.isMesh&&o.visible&&o.count>0)drawn.push(o);});
+ assert(drawn.length>=4&&drawn.length<=5&&drawn.every(o=>o.isInstancedMesh),`the islanders' bean parts + props: at most 5 instanced draws for every passenger (${drawn.length})`);
+ {const BS=L('lib/graphics/beanSkin.ts'),geos=BS.beanGeometries(),by=n=>group.getObjectByName('train-pax-'+n);
+  for(const k of ['body','limbs'])assert.equal(by(k).geometry,geos[k],`the shared islander bean ${k} geometry (no copy)`);
+  // cost trim (Nov 24): hair / hat index only the styles the cast wears, on the shared vertex buffers (no copy)
+  for(const k of ['hair','hat']){const g=by(k).geometry;assert(g.getAttribute('position')===geos[k].getAttribute('position')&&g.getAttribute('beanAnchor')===geos[k].getAttribute('beanAnchor'),`${k}: the shared islander vertex buffers`);
+   if(by(k).visible)assert(g.drawRange.count<geos[k].index.count,`${k}: only the shown riders' styles are drawn (${g.drawRange.count/3} of ${geos[k].index.count/3} tris)`);}
+  assert(by('body').material.isBeanMaterial&&by('body').material.defines.BEAN_ROW_TEXTURE!==undefined,'the islanders\' bean material, batched rows (playerBatch\'s program)');
+  assert(by('hair').instanceMatrix===by('body').instanceMatrix&&by('props').instanceMatrix===by('body').instanceMatrix,'one torso-frame matrix buffer for body, hair, hat, props');
+  for(const o of drawn)assert(!o.castShadow,'no shadow pass');}
  cam.position.set(200,4,40);cam.lookAt(200,4,80);cam.updateMatrixWorld();pax.update(run,60,cam,-1,0,false);assert.equal(pax.shown,0,'behind the camera: nobody');
  pax.update(run,60,cam,0,0,false);assert(pax.shown>0,'the train I ride: always drawn');
- look(200,0);pax.update(run,60,cam,0,4,false);assert(pax.shown<=4,`lowest tier: 1 a car (${pax.shown})`);pax.update(run,60,cam,0,3,false);assert(pax.shown<=4,'tier 3: 2 a car');
+ look(200,0);pax.update(run,60,cam,0,4,false);assert(pax.shown<=4,`lowest tier: 1 a car (${pax.shown})`);assert(!group.getObjectByName('train-pax-hat').visible,'hot / low tiers: no hat draw');pax.update(run,60,cam,0,3,false);assert(pax.shown<=4,'tier 3: 2 a car');
  pax.update(run,60,cam,0,0,false);const r0=pax.roster(0);const s0=r0.slots.find(s=>s.on&&!s.standing);
  const sp0={x:0,z:0};const seat=RN.SEAT_TABLE[s0.seat];const w=new T.Vector3(seat.side*1.0,RN.CAR_FLOOR_Y,seat.z).applyMatrix4(carM(0,seat.car,new T.Matrix4()));
  const npc=pax.nearest(0,w.x,w.z);assert(npc&&npc.topics.length>=2,'riding next to a passenger: Talk to them');assert.equal(pax.nearest(1,w.x,w.z),null,'only on the train I ride');void sp0;
@@ -125,6 +153,11 @@ console.log('train-gameplay3 wiring: ok');
  const stop=1;Object.assign(states[0],{at:stop,next:2,t:S.TRAIN_STOPS[stop].arrive+1});const dwell=S.TRAIN_STOPS[stop].depart-S.TRAIN_STOPS[stop].arrive;
  const counts=[];for(const dw of [1,PX.OFF_FROM+1,PX.ON_FROM-.1,PX.ON_FROM+1,PX.ON_FROM+PX.WALK_S+.2]){states[0].dwellLeft=dwell-dw;states[0].t=S.TRAIN_STOPS[stop].arrive+dw;pax.update(run,S.TRAIN_STOPS[stop].arrive+dw,cam,0,0,false);counts.push(pax.shown);}
  assert(counts.every(n=>n>0),'the train never empties at a stop: '+counts.join(','));
+ // far trains: body + head only (no limbs / props) beyond NEAR_RANGE; near ones first
+ {const far=(x,z)=>{cam.position.set(x,4,z+PX.NEAR_RANGE+4);cam.lookAt(x,1,z-6);cam.updateMatrixWorld();};far(200,0);pax.update(run,60,cam,-1,0,false);
+  const P=pax.parts,body=P.group.getObjectByName('train-pax-body'),limbs=P.group.getObjectByName('train-pax-limbs');
+  assert(pax.shown>0&&body.count===pax.shown&&(limbs.count===0||!limbs.visible),`a train ${PX.NEAR_RANGE}+ m off: bodies only (${body.count} bodies, ${limbs.count} limbs)`);
+  look(200,0);pax.update(run,60,cam,-1,0,false);assert(limbs.visible&&limbs.count===body.count,'near: full detail');}
  pax.dispose();assert.equal(scene.getObjectByName('train-passengers'),undefined,'disposed');}
 console.log('train-gameplay3 passengers: ok');
 // ---- 5. interior finishing: readable poster titles, the route map, door chime lamps lit only while the doors are open

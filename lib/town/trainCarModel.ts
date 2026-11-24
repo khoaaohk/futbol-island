@@ -60,7 +60,9 @@ export class VGeo{
  /** cutY: every triangle lying wholly at or above it gets part id + 10 (the vehicle material's roof cutaway, uCut). */
  build(cutY=Infinity){if(cutY<Infinity)for(let t=0;t<this.p.length/9;t++){const o=t*9;if(Math.min(this.p[o+1],this.p[o+4],this.p[o+7])>=cutY)for(let v=0;v<3;v++){const i=(t*3+v)*4+3;if(this.a[i]<9.5)this.a[i]+=10;}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(this.p,3));g.setAttribute('normal',new T.Float32BufferAttribute(this.n,3));
-  g.setAttribute('color',new T.Float32BufferAttribute(this.c,3));g.setAttribute('aPart',new T.Float32BufferAttribute(this.a,4));g.computeBoundingSphere();return g;}
+  g.setAttribute('color',new T.Float32BufferAttribute(this.c,3));g.setAttribute('aPart',new T.Float32BufferAttribute(this.a,4));g.computeBoundingSphere();
+  for(let i=3;i<this.a.length;i+=4)if(this.a[i]===PART.strap){g.userData.straps=true;break;}// the vehicle material's strap pendulum runs only for these
+  return g;}
  get tris(){return this.p.length/9;}
 }
 /** 7-segment glyphs for the number plate (segments a…g), plus F and I. */
@@ -109,7 +111,7 @@ const PART_WIN:Hole={z0:-.55,z1:-.05,y0:2.15,y1:2.85};// the partition window in
 /** Light palette (owner: nothing reads as a void in warm evening light). */
 const K={frame:'#d5d2ca',rubber:'#5b5853',step:'#b4b6b6',yellow:'#f2c230',under:'#605b55',under2:'#76716a',bogie:'#5a554f',wheel:'#6c6760',
  hub:'#8f8a83',spring:'#4e4943',roofUnit:'#cfd0cc',roofTop:'#bfc1bd',grille:'#7b7e80',panto:'#8f969c',insul:'#e3dccb',surround:'#45423f',
- wall:'#ecd9b2',ceil:'#f0ddb6',light:'#fff1cc',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
+ wall:'#ecd9b2',ceil:'#f0ddb6',ceilMid:'#f7d8a3',light:'#fff1cc',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
  bellows:'#5f5a54',bellowsIn:'#77716a',chime:'#f3a73a',blind:'#ebe1c8',rack:'#c8cbcd',vent:'#dcd8ce',slot:'#b9b4a8'} as const;
 const _c=new T.Color();
 const col=(hex:string,k=1)=>new T.Color(hex).multiplyScalar(k);
@@ -270,7 +272,10 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
   const A=(x:number)=>Math.abs(x)>.6?x*ka:x,B=(x:number)=>Math.abs(x)>.6?x*kb:x;g.quad([A(x0),F,za],[A(x1),F,za],[B(x1),F,zb],[B(x0),F,zb],c,[0,F-1,0]);}
  for(const s of [-1,1])for(const [a,b] of BENCHES)g.quad([s*.7,F+.003,a],[s*IW,F+.003,a],[s*IW,F+.003,b],[s*.7,F+.003,b],col(K.floor,.66).getStyle(),[0,F-1,0]);
  // ceiling and cove, two light strips (the indicator channel: lit by the night factor, like the old window band)
- for(const [za,zb,ka,kb] of SEGS){g.quad([-COVE_X*ka,CEIL_Y,za],[COVE_X*ka,CEIL_Y,za],[COVE_X*kb,CEIL_Y,zb],[-COVE_X*kb,CEIL_Y,zb],K.ceil,[0,CEIL_Y+1,0]);
+ // Nov 24 2026 (night ceiling): the flat between the light strips is a warmer cream (K.ceilMid), so under the blue night light plus
+ // the interior glow it reads warm instead of light grey; the outer flats and the cove keep K.ceil.
+ for(const [za,zb,ka,kb] of SEGS){for(const [x0,x1,c] of [[-COVE_X,-.46,K.ceil],[-.46,.46,K.ceilMid],[.46,COVE_X,K.ceil]] as const){const A=(x:number)=>Math.abs(x)>.6?x*ka:x,B=(x:number)=>Math.abs(x)>.6?x*kb:x;
+   g.quad([A(x0),CEIL_Y,za],[A(x1),CEIL_Y,za],[B(x1),CEIL_Y,zb],[B(x0),CEIL_Y,zb],c,[0,CEIL_Y+1,0]);}
   for(const s of [-1,1])g.quad([s*IW*ka,SIDE_TOP,za],[s*COVE_X*ka,CEIL_Y,za],[s*COVE_X*kb,CEIL_Y,zb],[s*IW*kb,SIDE_TOP,zb],ramp(K.ceil,SIDE_TOP,CEIL_Y,.9),[s*3,5,(za+zb)/2]);}
  for(const s of [-1,1]){
   g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
@@ -295,8 +300,10 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
   if(closeUp){
    // hangers and strap handles (a strap and a triangular grip), over the bench fronts
    for(const z of [-5.5,-2.5,0,2.5,4.4])g.beam([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.01,K.pole);
-   for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1;
-    g.beam([x,STRAP_RAIL_Y,z],[x,yb,z],.012,'#e9e4d6');g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6');g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6');}}
+   // the straps swing about the rail in the vehicle shader (PART.strap, pivot in aPart): with the car's curve lean and a soft pendulum
+   // after starts / stops (trafficVehicles.ts uSway). No per-strap CPU work; rigid with prefers-reduced-motion.
+   for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1,P:V=[x,STRAP_RAIL_Y,z],S=PART.strap;
+    g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
    for(const ps of POSTERS)if(ps.s===s)poster(g,s,ps.z0,ps.z1,ps.kind);
    for(const zc of DOORS){g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);

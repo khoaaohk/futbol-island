@@ -57,6 +57,22 @@ export function trackPushOut(x:number,z:number,r:number):{dx:number;dz:number}|n
  const k=(clear+r+.05-hit.d)/l;return {dx:ux*k,dz:uz*k};
 }
 
+/** Clearance envelope (Nov 24 2026, owner shot 34: a palm through a moving car's roof): a car is 2.8 m wide, + 0.6 m each side;
+ *  from the rail top to the pantograph (bed + 4.95 m), the catenary zone above the middle to bed + 5.8 m. The 3D check of every
+ *  island mesh against it: scripts/train-clearance.cjs (tests/train-clearance.cjs). */
+export const ENVELOPE_HALF=2,ENVELOPE_LOW=.45,ENVELOPE_ROOF=4.95,ENVELOPE_WIRE_HALF=1.2,ENVELOPE_WIRE_TOP=5.8;
+/** A palm's fronds reach 3.25 m from the trunk top and droop to ~1 m under it (world.ts palmParts): its base keeps this far off
+ *  the centre line (the envelope + the crown + 0.35 m), and its trunk leans away from the line. */
+export const PALM_LINE_CLEAR=ENVELOPE_HALF+3.25+.35;
+/** Where a crowned plant at (x, z) must stand to keep its crown (`reach` m from the trunk) out of the envelope: null when it
+ *  already does (or the line is in the tunnel there); else the spot pushed straight away from the line on its own side, and the
+ *  outward direction (ux, uz) so the caller can lean it away. Build-time only. */
+export function lineClearSpot(x:number,z:number,reach=PALM_LINE_CLEAR):{x:number;z:number;ux:number;uz:number}|null{
+ const hit=trackNearest(x,z,reach);if(!hit||inTunnelS(hit.s))return null;
+ const p=trackAt(hit.s),n=leftNormal(p.tx,p.tz),ux=n.x*hit.side,uz=n.z*hit.side;
+ return {x:p.x+ux*(reach+.05),z:p.z+uz*(reach+.05),ux,uz};
+}
+
 /** Walk height on the line (Nov 23 2026, owner: "going through the tracks"; a player on the line stood in the ballast). Feet rest
  *  on the sleepers (bed + TRAIN_WALK_TOP) across the ballast top, the ballast's sides slope down to the ground, and the crossing
  *  decks are at deck height across the rails, sloping to the ground XING_FOOT m out (trainWorld.ts builds the same shapes: BALLAST

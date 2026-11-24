@@ -9,7 +9,13 @@ export type VehicleStyle='sedan'|'hatch'|'van'|'wagon'|'jeep'|'taxi'|'pickup';
 /** Ordinary cars by traffic index (the two pickups are indices 7 and 8). */
 export const CAR_STYLES:readonly VehicleStyle[]=['sedan','hatch','taxi','wagon','van','hatch','jeep','pickup','pickup','van','wagon'];
 /** aPart.w: what a vertex belongs to. xyz is the wheel centre for wheels. */
-export const PART={body:0,rearWheel:1,frontWheel:2,head:3,brake:4,left:5,right:6} as const;
+export const PART={body:0,rearWheel:1,frontWheel:2,head:3,brake:4,left:5,right:6,strap:7} as const;
+/** PART.strap (Island Line hand straps, Nov 24 2026): swings about its pivot (aPart.xyz, the strap rail) and glows like the interior
+ *  (the left / night channel). Lateral: the car's curve lean, read from the instance matrix (4x the roll, outward). Fore-aft: one
+ *  pendulum per train (uSway, from car 0's motion in onBeforeRender: O(1) per draw, no per-strap CPU work). Off with reduced motion. */
+const STRAP_ROLL=4,STRAP_W=4.4,STRAP_DAMP=1.6,STRAP_GAIN=.75,STRAP_MAX=.12;
+let reducedMotion:MediaQueryList|null|undefined;
+const motionOk=()=>{if(reducedMotion===undefined)reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;return !reducedMotion?.matches;};
 /** Triangles of the box vehicles these replace (Nov 17 2026 build): the budget a style must not exceed. */
 export const OLD_TRIANGLES={car:276,pickup:524} as const;
 export const WHEEL_RADIUS=.32;
@@ -125,14 +131,27 @@ export function buildVehicleGeometry(style:VehicleStyle,paint:string,options:{be
  *  cut walls, so the camera looks down into the car. The far wall is untouched. Instanced meshes only (the trains). */
 export const CUT_WALL_X=1.24,CUT_SILL_Y=2.12;
 export function createVehicleMaterial(){
- const wheel=new T.Vector4(1,0,0,0),lamp=new T.Vector4(0,0,0,0),cut={value:0},cutDir={value:new T.Vector2(0,0)};
+ const wheel=new T.Vector4(1,0,0,0),lamp=new T.Vector4(0,0,0,0),cut={value:0},cutDir={value:new T.Vector2(0,0)},sway=new T.Vector4(0,0,0,0);
  const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.7});
+ // the strap pendulum (only for a geometry that has straps: trainCarModel sets userData.straps): car 0's speed from its instance
+ // position, a smoothed acceleration, a damped spring toward the swing that acceleration gives (braking: straps swing forward)
+ let pt=-1,px=0,pz=0,ps=0,acc=0,th=0,om=0,dx=0,dz=1;
+ material.onBeforeRender=(_r,_s,_c,geo,obj)=>{
+  if(!geo.userData.straps||!(obj as T.InstancedMesh).isInstancedMesh)return;
+  if(!motionOk()){sway.set(0,0,0,0);pt=-1;return;}
+  const now=performance.now()/1000,dt=now-pt;if(dt<.004&&pt>=0)return;// a second pass in the same frame
+  const e=(obj as T.InstancedMesh).instanceMatrix.array,x=e[12],z=e[14];
+  if(pt<0||dt>.3||Math.hypot(x-px,z-pz)>8){pt=now;px=x;pz=z;ps=acc=th=om=0;sway.set(0,0,0,1);return;}
+  const mx=x-px,mz=z-pz,d=Math.hypot(mx,mz),sp=d/dt;if(d>1e-4){dx=mx/d;dz=mz/d;}
+  acc+=((sp-ps)/dt-acc)*(1-Math.exp(-5*dt));ps=sp;pt=now;px=x;pz=z;
+  const want=Math.max(-STRAP_MAX,Math.min(STRAP_MAX,-acc*STRAP_GAIN/9.8));
+  om+=(-STRAP_W*STRAP_W*(th-want)-STRAP_DAMP*om)*dt;th=Math.max(-.18,Math.min(.18,th+om*dt));sway.set(dx*th,0,dz*th,1);};
  // Island Line cutaway (Nov 24 2026): a part id of 10+ marks a train car's roof (trainCarModel ROOF_CUT_Y: the outer roof, the
  // ceiling, its cove and light strips, the roof units). With uCut 1 those vertices collapse to one point (degenerate triangles: no
  // raster work), so the ridden train is seen from above like a dollhouse. Same program for every vehicle (uCut stays 0 elsewhere).
  material.onBeforeCompile=shader=>{
-  shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};shader.uniforms.uCut=cut;shader.uniforms.uCutDir=cutDir;
-  shader.vertexShader='attribute vec4 aPart;\nuniform vec4 uWheel;\nuniform vec4 uLamp;\nuniform float uCut;\nuniform vec2 uCutDir;\nvarying float vGlow;\n'+shader.vertexShader
+  shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};shader.uniforms.uCut=cut;shader.uniforms.uCutDir=cutDir;shader.uniforms.uSway={value:sway};
+  shader.vertexShader='attribute vec4 aPart;\nuniform vec4 uWheel;\nuniform vec4 uLamp;\nuniform float uCut;\nuniform vec2 uCutDir;\nuniform vec4 uSway;\nvarying float vGlow;\n'+shader.vertexShader
    .replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
 bool fiRoof=aPart.w>9.5;float fiW=fiRoof?aPart.w-10.:aPart.w;
 bool fiWheel=fiW>.5&&fiW<2.5;bool fiSteer=fiW>1.5&&fiW<2.5;
@@ -142,14 +161,18 @@ if(fiWheel){objectNormal.yz=vec2(objectNormal.y*uWheel.x-objectNormal.z*uWheel.y
 if(fiWheel){vec3 fiQ=transformed-aPart.xyz;fiQ.yz=vec2(fiQ.y*uWheel.x-fiQ.z*uWheel.y,fiQ.y*uWheel.y+fiQ.z*uWheel.x);
  if(fiSteer){float fiC=1.-.5*uWheel.w*uWheel.w;fiQ.xz=vec2(fiQ.x*fiC+fiQ.z*uWheel.w,fiQ.z*fiC-fiQ.x*uWheel.w);}
  transformed=aPart.xyz+fiQ;transformed.y+=aPart.z*uWheel.z-aPart.x*uLamp.w;}
+#ifdef USE_INSTANCING
+if(fiW>6.5&&uSway.w>.5){vec3 fiQ=transformed-aPart.xyz;float fiR=${STRAP_ROLL.toFixed(2)}*instanceMatrix[0].y,fiF=dot(instanceMatrix[2].xyz,uSway.xyz),fiCr=cos(fiR),fiSr=sin(fiR),fiCf=cos(fiF),fiSf=sin(fiF);
+ fiQ.xy=vec2(fiQ.x*fiCr-fiQ.y*fiSr,fiQ.x*fiSr+fiQ.y*fiCr);fiQ.zy=vec2(fiQ.z*fiCf-fiQ.y*fiSf,fiQ.z*fiSf+fiQ.y*fiCf);transformed=aPart.xyz+fiQ;}
+#endif
 if(fiRoof&&uCut>.5)transformed=vec3(0.);
 #ifdef USE_INSTANCING
 if(uCut>.5&&!fiRoof&&dot(uCutDir,uCutDir)>.5){float fiS=dot(instanceMatrix[0].xz,uCutDir)>0.?1.:-1.;if(transformed.x*fiS>${CUT_WALL_X.toFixed(3)}&&transformed.y>${CUT_SILL_Y.toFixed(3)})transformed.y=${CUT_SILL_Y.toFixed(3)};}
 #endif
-vGlow=fiW<2.5?0.:fiW<3.5?uLamp.x:fiW<4.5?uLamp.y:fiW<5.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
+vGlow=fiW<2.5?0.:fiW<3.5?uLamp.x:fiW<4.5?uLamp.y:fiW<5.5||fiW>6.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
   shader.fragmentShader='varying float vGlow;\n'+shader.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;','vec3 totalEmissiveRadiance = vColor.rgb * vGlow;');
  };
- material.customProgramCacheKey=()=>'street-vehicle-v4';
+ material.customProgramCacheKey=()=>'street-vehicle-v5';
  return {material,wheel,lamp,cut,cutDir};
 }
 export const triangleCount=(g:T.BufferGeometry)=>g.getAttribute('position').count/3;
