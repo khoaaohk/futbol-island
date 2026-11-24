@@ -18,7 +18,7 @@
 import * as T from 'three';
 import {TRAIN_STATIONS,STATION_HALF,STATION_PLATFORM_Y,TRACK,trackAt,trackNearest,wrapS,bedAt,inTunnelS,type TrainStation} from './trainTrack';
 import {trainLayout} from './trainLayout';
-import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,LAP} from './trainSchedule';
+import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,DOOR_HOLD,LAP} from './trainSchedule';
 import {TRAIN_SEATS,CAR_FLOOR_Y,SEAT_TABLE,PLAYER_SEATS,type SeatPose} from './trainRunning';
 import {trainRiderPose,trainStrapPose,swayStrapPose} from '../graphics/trainSeatPose';
 import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK_IN,NEAR_SEAT,GLOW_SEAT,type TrainLocal} from './trainWalk';
@@ -43,7 +43,13 @@ export const STOP_FACTS:Record<TrainStation['id'],string>={
 export const nextStopLine=(stop:number)=>{const st=TRAIN_STOPS[stop].station;return `Next stop: ${st.name}. Did you know? ${cap(STOP_FACTS[st.id])}`;};
 export const arriveLine=(stop:number)=>{const st=TRAIN_STOPS[stop].station;return `${st.name} · ${st.sub}. Tap Get off to step out, or stay on board.`;};
 const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
-export const TRAIN_NOTES={board:'All aboard! Drag or use the stick to look around.',wait:'The doors open at the next stop.'} as const;
+export const TRAIN_NOTES={board:'All aboard! Drag or use the stick to look around.',wait:'The doors open at the next stop.',closing:'Doors closing. Please stand clear.'} as const;
+/** Easy exit (owner, Nov 24 2026: "it's hard to exit the train at a stop"): the big "Get off at <Station>" pill shows EXIT_EARLY s
+ *  before the doors open (braking in) until they start to close; a press before they open is queued ("Doors opening…") and you step
+ *  out as they open. The doors are held (the boarders' DOOR_HOLD, paid back by the runner's catch-up) for a rider at a stop, and
+ *  EXIT_WARN s before they shut the chime sounds with "Doors closing". The step-out walk goes from wherever you are (seat, aisle, the
+ *  other car) to the nearest open door and on onto the platform, facing away from the train, in EXIT_MIN … WALK_MAX s. */
+export const EXIT_EARLY=4,EXIT_WARN=3,EXIT_MIN=.45,EXIT_IN=1.95,EXIT_OUT=1.4;
 /** Gameplay 3: the walk notes; a tap within SEAT_TAP_PX px of a glowing seat sits there. */
 export const WALK_NOTES={up:'Hold on to a strap! Walk the aisle, and tap a glowing seat (or Sit) to sit down.',sit:'Walk to a glowing seat to sit down.'} as const;
 export const SEAT_TAP_PX=56;
@@ -87,8 +93,9 @@ const wrapPi=(a:number)=>((a%(Math.PI*2))+Math.PI*3)%(Math.PI*2)-Math.PI;
 export type TrainQuizQ={id:string;q:string;options:string[];correct:number;explain:string};
 export type TrainQuiz=TrainQuizQ&{picked:number};
 export type TrainRideView={riding:boolean;canGetOff:boolean;note:string;notes:number;quiz:TrainQuiz|null;/** the free camera is off its default (Recenter enabled) */moved:boolean;
+ /** Easy exit: the station the Get off pill names ('' : no pill), a press waiting for the doors, the doors-closing warning */exitTo:string;exitQueued:boolean;closing:boolean;
  /** Gameplay 3: standing in the aisle; a free seat within reach (Sit); by a door bay (Get off becomes the primary at a stop) */standing:boolean;nearSeat:boolean;nearDoor:boolean};
-const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,quiz:null,moved:false,standing:false,nearSeat:false,nearDoor:false};
+const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,quiz:null,moved:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false};
 let view=IDLE;const listeners=new Set<()=>void>();
 /** The HUD bridge (components/TrainRideHud.tsx): written only when something shown changes, never per frame. */
 export const trainRideStore={
@@ -103,15 +110,15 @@ export type TrainActionId='getoff'|'horn'|'recenter'|'walk';
 export const trainRideActions={board:()=>{},press:(_id:TrainActionId,_phase:'tap'|'down'|'up')=>{},answer:(_i:number)=>{}};
 /** The action cluster while riding (the zipline's ZIP_BUTTONS pattern): Get off (only at a stop), the horn, Recenter and (Gameplay 3)
  *  Walk / Sit (the 'extra' slot, key Q). Standing by a door bay at a stop with the doors open, Get off becomes the primary button. */
-export function trainButtons(canGetOff:boolean,moved=false,standing=false,nearSeat=false,nearDoor=false){
+export function trainButtons(canGetOff:boolean,moved=false,standing=false,nearSeat=false,nearDoor=false,exitTo=''){
  const offFirst=standing&&nearDoor&&canGetOff;
- return [{slot:offFirst?'shoot':'ride',key:'E',id:'getoff',label:canGetOff?'Get off here':'Get off at the next stop',icon:'trainoff',enabled:canGetOff},
+ return [{slot:offFirst?'shoot':'ride',key:'E',id:'getoff',label:exitTo?`Get off at ${exitTo}`:canGetOff?'Get off here':'Get off at the next stop',icon:'trainoff',enabled:canGetOff||!!exitTo},
   {slot:offFirst?'ride':'shoot',key:'Space',id:'horn',label:'Sound the horn',icon:'horn',enabled:true},
   {slot:'juggle',key:'R',id:'recenter',label:'Recenter the camera',icon:'recenter',enabled:moved},
   {slot:'extra',key:'Q',id:'walk',label:!standing?'Stand up and walk around the train':nearSeat?'Sit in this seat':'Walk to a glowing seat to sit',icon:standing?'sit':'walk',enabled:!standing||nearSeat}] as const;
 }
 export function trainKeyAction(code:string,key:string):TrainActionId|null{
- const k=key.toLowerCase();if(k==='e'||code==='Digit1')return 'getoff';if(code==='Space'||k==='h'||code==='Digit2')return 'horn';if(k==='r'||code==='Digit3')return 'recenter';if(k==='q'||code==='Digit4')return 'walk';return null;
+ const k=key.toLowerCase();if(k==='e'||k==='enter'||code==='Digit1')return 'getoff';if(code==='Space'||k==='h'||code==='Digit2')return 'horn';if(k==='r'||code==='Digit3')return 'recenter';if(k==='q'||code==='Digit4')return 'walk';return null;
 }
 
 /** Where on the platforms (x, z, standing height) a station is (allocation-free): the station the point stands on, or -1. */
@@ -140,6 +147,7 @@ export function platformSpot(i:number,s:number,out:{x:number;y:number;z:number;y
 
 type DoorSpot={x:number;y:number;z:number;yaw:number;car:number;door:number};
 type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;roofCut?:Uint8Array;
+ /** The local runner (door hold for a rider: how long train i's doors have been held at this stop). */runner?:{doorHeldFor(i:number):number};
  /** Car c of train k's matrix this frame (Gameplay 3: the standing rider's train-relative spot). */carMatrixOf?(k:number,c:number,out:T.Matrix4):T.Matrix4;
  /** The open door nearest x, z (trainRunning.doorSpot); null while the train runs. */doorSpot?(k:number,x:number,z:number,out:DoorSpot):DoorSpot|null};
 type Ports={
@@ -183,6 +191,10 @@ export function createTrainRide(ports:Ports){
  const gait={on:false,x:0,z:0,facing:NaN};
  /** Free player seats near the standing rider: world spot (on the cushion) and glow 0 … 1 (lib/graphics/trainSeatGlow.ts draws them). */
  const glows=Array.from({length:TRAIN_SEATS},()=>({x:0,y:0,z:0,yaw:0,w:0}));
+ // Easy exit (owner, Nov 24 2026): exitQ a press waiting for the doors; exitT the step-out walk (0 … 1, -1: none) along ex[0] (where
+ // you are) → ex[1] (the aisle by the door) → ex[2] (the doorway, on the platform) → ex[3] (out on the platform), exL the legs (m).
+ let exitQ=false,exitT=-1,exitDur=0,exitYaw=0,warnedAt=-2;
+ const ex=[{x:0,y:0,z:0},{x:0,y:0,z:0},{x:0,y:0,z:0},{x:0,y:0,z:0}],exL=[0,0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
  function ensureQuiz(){if(!TRAIN_QUIZ||quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
@@ -212,16 +224,48 @@ export function createTrainRide(ports:Ports){
  /** Off the train. force: fast travel / a teleport (Town places the player); otherwise only while the doors are open at a stop. */
  function getOff(force=false){
   if(!riding())return false;const run=ports.run();const st=run?.states[k];
-  if(!force){if(!run||!st||st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<GET_OFF_LEFT){setNote(TRAIN_NOTES.wait);return false;}
+  if(!force){if(!run||!st||!doorsOpen(st)){setNote(TRAIN_NOTES.wait);return false;}
    const si=TRAIN_STATIONS.indexOf(TRAIN_STOPS[st.at].station);platformSpot(si,standing?wrapS(trackSOfU(st.s,sp.u)):trainSeatS(run),spot);ports.place(spot.x,spot.z,spot.y,spot.yaw);ports.haptic?.();}
-  if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;quizIn=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;
-  trainRideStore.set({riding:false,canGetOff:false,quiz:null,standing:false,nearSeat:false,nearDoor:false});
-  if(force)blend=0;return true;
+  leave(run);if(force)blend=0;return true;
+ }
+ function leave(run:Run|null){
+  if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;quizIn=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
+  trainRideStore.set({riding:false,canGetOff:false,quiz:null,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false});
+ }
+ const doorsOpen=(st:Run['states'][number])=>st.at>=0&&st.doors>=DOORS_OPEN&&st.dwellLeft>=GET_OFF_LEFT;
+ /** Easy exit: the Get off pill shows from EXIT_EARLY s before the doors open (braking in) until they start to close. */
+ const exitOffer=(st:Run['states'][number])=>st.at>=0?st.dwellLeft>=DOOR_DELAY+DOOR_MOVE*DOORS_OPEN:boardIn(st,st.next)<=EXIT_EARLY;
+ /** Get off (the pill, the cluster, E / Enter): at once when the doors are open, queued while the train brakes in. */
+ function requestExit(){
+  if(!riding()||walkT>=0)return false;if(exitT>=0)return true;const run=ports.run(),st=run?.states[k];if(!run||!st)return false;
+  if(doorsOpen(st))return startExit(run);
+  if(exitOffer(st)){if(!exitQ){exitQ=true;trainRideStore.set({exitQueued:true});ports.haptic?.();}return true;}
+  setNote(TRAIN_NOTES.wait);return false;
+ }
+ /** The step-out walk: from wherever you are to the nearest open door (in its aisle bay), through it and onto the platform. */
+ function startExit(run:Run){
+  const ds=run.doorSpot?.(k,pose.x,pose.z,door)??null;if(!ds)return getOff(false);// no door data (tests): straight onto the platform
+  const ix=Math.sin(door.yaw),iz=Math.cos(door.yaw);// door.yaw faces into the car
+  ex[0].x=pose.x;ex[0].y=pose.y;ex[0].z=pose.z;ex[1].x=door.x+ix*EXIT_IN;ex[1].y=pose.y;ex[1].z=door.z+iz*EXIT_IN;
+  ex[2].x=door.x;ex[2].y=door.y;ex[2].z=door.z;ex[3].x=door.x-ix*EXIT_OUT;ex[3].y=door.y;ex[3].z=door.z-iz*EXIT_OUT;
+  let len=0;for(let i=0;i<3;i++){exL[i]=Math.hypot(ex[i+1].x-ex[i].x,ex[i+1].z-ex[i].z);len+=exL[i];}
+  exitDur=Math.max(EXIT_MIN,Math.min(WALK_MAX,len/WALK_SPEED));exitT=0;exitQ=false;exitYaw=door.yaw+Math.PI;
+  if(standing){standing=false;tw=-1;twSit=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;}
+  trainRideStore.set({exitTo:'',exitQueued:false,standing:false,nearSeat:false,nearDoor:false});ports.haptic?.();return true;
+ }
+ /** One step-out frame (eased; the kneel fades at once); on the platform at the end, or at once if the train is leaving. */
+ function exitFrame(run:Run,dt:number){
+  exitT=Math.min(1,exitT+dt/exitDur);const u=exitT*exitT*(3-2*exitT);let d=u*(exL[0]+exL[1]+exL[2]),i=0;while(i<2&&d>exL[i]){d-=exL[i];i++;}
+  const a=ex[i],b=ex[i+1],q=exL[i]>1e-4?Math.min(1,d/exL[i]):1,dx=b.x-a.x,dz=b.z-a.z;
+  walkPose.x=a.x+dx*q;walkPose.y=a.y+(b.y-a.y)*q;walkPose.z=a.z+dz*q;walkPose.yaw=i<2&&Math.hypot(dx,dz)>.05?Math.atan2(dx,dz):exitYaw;
+  blend=Math.max(0,blend-dt*8);
+  if(exitT>=1||run.states[k].at<0){ports.place(ex[3].x,ex[3].z,ex[3].y,exitYaw);leave(run);return;}
+  ports.seat(walkPose);
  }
  /** The track s level with my seat (the train's front minus how far back my car is). */
  function trainSeatS(run:Run){return wrapS(run.states[k].s-(j>>2)*12.4-6);}
  function press(id:TrainActionId,phase:'tap'|'down'|'up'){if(!riding()||phase==='up')return;
-  if(id==='getoff')getOff(false);else if(id==='horn')ports.cue('train-horn',.9);else if(id==='recenter')recenter();
+  if(id==='getoff')requestExit();else if(id==='horn')ports.cue('train-horn',.9);else if(id==='recenter')recenter();
   else if(id==='walk'){if(!standing)standUp();else if(nearSeatJ>=0)sitDown(nearSeatJ);else setNote(WALK_NOTES.sit);}}
  /** Gameplay 3: up from the seat into the aisle in front of it (a short ease; the kneel fades out). */
  function standUp(){
@@ -303,7 +347,9 @@ export function createTrainRide(ports:Ports){
  return {
   get active(){return riding();},get train(){return k;},get seat(){return j;},get blend(){return blend;},
   /** Gameplay 2: the train whose doors this client holds open (walking aboard it, or waiting for it on its platform), else -1. */
-  get waiting(){return riding()?(walkT>=0?k:-1):near>=0?nearTrain:-1;},
+  get waiting(){return riding()?(walkT>=0||exitT>=0||ports.run()?.states[k].at!==-1?k:-1):near>=0?nearTrain:-1;},
+  /** Easy exit: the step-out walk (0 … 1, -1 when not) and a Get off press waiting for the doors. */
+  get exiting(){return exitT;},get exitQueued(){return exitQ;},requestExit,
   /** Gameplay 2: walking to the door (0 … 1), -1 when not; and a Board press waiting for the doors (train index, -1). */
   get walking(){return walkT;},get queued(){return queued;},
   /** Gameplay 2: the train under the pointer (lib/graphics/trainHover.ts; Town writes it), -1: none. Board then wins as a hover. */
@@ -357,6 +403,14 @@ export function createTrainRide(ports:Ports){
     else{const q=(u-walkA)/Math.max(1e-3,1-walkA),dy=((pose.yaw-door.yaw)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI;walkPose.x=door.x+(pose.x-door.x)*q;walkPose.y=door.y+(pose.y-door.y)*q;walkPose.z=door.z+(pose.z-door.z)*q;walkPose.yaw=door.yaw+dy*q;}
     blend=Math.max(blend,Math.min(1,(u-.6)/.4));ports.seat(walkPose);if(walkT>=1)walkT=-1;return;}
    run.ridden[k]=1;const st=run.states[k];
+   if(exitT>=0){exitFrame(run,dt);return;}
+   if(exitQ&&doorsOpen(st)&&startExit(run)){if(exitT>=0)exitFrame(run,0);return;}
+   {const offer=exitOffer(st),to=offer?TRAIN_STOPS[st.at>=0?st.at:st.next].station.name:'';if(!offer)exitQ=false;
+    // the doors-closing warning: EXIT_WARN s before they start to shut (the hold for a rider included)
+    let closing=false;if(st.at>=0&&offer){const left=Math.max(0,st.dwellLeft-(DOOR_DELAY+DOOR_MOVE+.1))+Math.max(0,DOOR_HOLD-(run.runner?.doorHeldFor(k)??DOOR_HOLD));
+     closing=left<=EXIT_WARN;if(closing&&warnedAt!==st.at){warnedAt=st.at;ports.cue('train-chime',.8);setNote(TRAIN_NOTES.closing);}}
+    if(st.at<0)warnedAt=-2;
+    if(view.exitTo!==to||view.exitQueued!==exitQ||view.closing!==closing)trainRideStore.set({exitTo:to,exitQueued:exitQ,closing});}
    if(standing&&run.carMatrixOf)standFrame(run,dt,reduced);
    if(!riding())return;
    if(!standing){blend=Math.min(1,blend+dt*(reduced?6:2.5));run.seatPose(k,j,pose);ports.seat(pose);}

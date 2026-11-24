@@ -27,3 +27,14 @@
 .board{animation:boardPulse 1.8s ease-in-out infinite}
 @keyframes boardPulse{0%,100%{scale:1}50%{scale:1.07}}
 @media(prefers-reduced-motion:reduce){.board{animation:none}}
+
+/* Easy exit (owner, Nov 24 2026): the Get off pill. A fixed spot bottom centre (the Board pill's look, the primary coral face), above
+   the stick and the 2 x 2 cluster on phones; it pops in once (compositor-only), pulses softly while the doors close. */
+.exit{position:absolute;z-index:33;left:50%;bottom:calc(36px + env(safe-area-inset-bottom,0px));transform:none;translate:-50% 0;gap:8px;min-height:52px;padding:10px 22px;background-color:#f39c82;background-image:none;color:#244d40;box-shadow:0 5px 0 #b96e55,0 0 0 4px #fff2cd40;font:800 17px/1.1 var(--font-body,Arial),sans-serif;cursor:pointer;touch-action:manipulation;animation:exitIn .28s cubic-bezier(.2,.9,.3,1.3) both}
+.exit:active{translate:-50% 3px;box-shadow:0 2px 0 #b96e55}
+.exit[data-closing]{animation:exitIn .28s cubic-bezier(.2,.9,.3,1.3) both,exitPulse .9s ease-in-out .28s infinite}
+@keyframes exitIn{from{opacity:0;scale:.85}to{opacity:1;scale:1}}
+@keyframes exitPulse{0%,100%{scale:1}50%{scale:1.06}}
+@media (max-width:700px) and (orientation:portrait){.exit{bottom:calc(196px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}}
+@media (orientation:landscape) and (max-height:520px){.exit{bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
+@media(prefers-reduced-motion:reduce){.exit,.exit[data-closing]{animation:none}}
