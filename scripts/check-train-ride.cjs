@@ -84,6 +84,7 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     await A.p.waitForTimeout(6000);
     const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
+    if (!/^Next stop/.test(note)) console.log('diag A', JSON.stringify(await A.p.evaluate((k) => { const r = window.__fi2.trainRide, st = window.__fi2.trains.states[k]; return { walking: r.walking, exiting: r.exiting, standing: r.standing, view: r.view, seat: r.seat, at: st.at, next: st.next, v: +st.v.toFixed(1), hidden: document.hidden, fps: window.__fi2.renderer?.info?.render?.frame }; }, ride.train)));
     const v1 = await seen(); await B.p.waitForTimeout(3000); const v2 = await seen();// 3 s: on a loaded 1-5 fps headless frame the train may still be pulling out (0.8 m/s²)
     check('B draws A in the moving seat', v2.ridden === 1 && v2.best < 1.2 && Math.hypot(v2.x - v1.x, v2.z - v1.z) > 2, `${v2.best.toFixed(2)} m from the seat, the seat moved ${Math.hypot(v2.x - v1.x, v2.z - v1.z).toFixed(1)} m`);
     const g1 = await gfx(A.p); console.log(`riding (A, phone 390x844): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
@@ -103,8 +104,10 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     if (shots) await B.p.screenshot({ path: path.join(shots, 'train-map-desktop.png') });
     // A: Get off at the next stop
     let off = false; for (let i = 0; i < 160 && !off; i++) { off = await A.p.evaluate(() => { const r = window.__fi2.trainRide; return r.active && !!document.querySelector('[data-job-buttons]') && window.__fi2.trains.states[r.train].at >= 0 && window.__fi2.trains.states[r.train].doors > .6; }); if (!off) await A.p.waitForTimeout(500); }
-    await A.p.waitForTimeout(600); await A.p.keyboard.press('e'); await A.p.waitForTimeout(800);
+    // (Get off is a short step-out walk to the nearest open door, Nov 24 2026: under 1 s)
+    await A.p.waitForTimeout(600); await A.p.keyboard.press('e'); for (let i = 0; i < 12 && (await A.p.evaluate(() => window.__fi2.trainRide.active)); i++) await A.p.waitForTimeout(250);
     check('A gets off at the next stop', await A.p.evaluate(() => !window.__fi2.trainRide.active));
+    if (await A.p.evaluate(() => window.__fi2.trainRide.active)) console.log('diag off', JSON.stringify(await A.p.evaluate(() => { const r = window.__fi2.trainRide, st = window.__fi2.trains.states[r.train]; return { off: true, walking: r.walking, exiting: r.exiting, queued: r.exitQueued, at: st.at, doors: +st.doors.toFixed(2), left: +st.dwellLeft.toFixed(1), note: document.querySelector('[data-train-note]')?.textContent?.slice(0, 50), pill: document.querySelector('[data-train-exit]')?.textContent, focus: document.activeElement?.tagName + ':' + (document.activeElement?.getAttribute('aria-label') || '') }; })), 'offLoop', off);
     check('no page errors', !A.errs.length && !B.errs.length, [...A.errs, ...B.errs].slice(0, 3).join(' | '));
   } catch (e) { check('ran to the end', false, e.message.slice(0, 200)); }
   finally { await b.close(); }
