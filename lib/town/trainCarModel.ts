@@ -243,7 +243,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
    g.panelZ(x*1.18,1.45,z+.003,.1,.065,1,K.surround);g.panelZ(x*1.18-.045,1.45,z+.006,.04,.045,1,COL.tail,PART.brake);g.panelZ(x*1.18+.045,1.45,z+.006,.04,.045,1,'#fff3d2',PART.head);}
   if(lv.emblem){g.discZ(0,1.66,z+.004,.24,COL.gold);g.discZ(0,1.66,z+.007,.2,COL.white);g.discZ(0,1.66,z+.01,.075,'#2c2a28',0,5);}
   else{g.discZ(0,1.66,z+.004,.22,COL.gold);g.discZ(0,1.66,z+.007,.18,lv.upper);g.discZ(0,1.66,z+.01,.07,COL.white,0,5);}
-  g.panelZ(0,1.3,z+.004,.3,.085,1,COL.white);plateText(g,lv.plate,0,1.3,z+.008,.11);
+  g.panelZ(0,1.3,z+.004,.3,.085,1,COL.white,PART.left);/* POLISH 3: the number plate glows at night (the night channel) */plateText(g,lv.plate,0,1.3,z+.008,.11);
   for(const x0 of [-.95,.12])g.beam([x0,2.34,z+.02],[x0+.42,2.62,z+.02],.012,'#3b3a38');// wipers resting on each pane
   g.beam([-.5,2.12,6.06],[.5,2.12,6.06],.025,K.frame);
   g.quad([-1.15,BODY_Y0,6.0],[1.15,BODY_Y0,6.0],[1.0,.42,6.2],[-1.0,.42,6.2],K.under,[0,.7,5]);

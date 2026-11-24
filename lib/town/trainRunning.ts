@@ -27,7 +27,7 @@
  */
 import * as T from 'three';
 import type {Obstacle} from './simulation';
-import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
+import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,TUNNEL_HALF_WIDTH,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
 import {trainLayout,trainWalkHeight,trainDeckAt,swimDeckBlocked} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_HALF,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,LAP,type TrainState} from './trainSchedule';
@@ -94,6 +94,7 @@ export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (r
 import {LIVERIES} from './trainLiveries';
 import {ROOF_HALF,ROOF_END_PAD,roofY,roofLift} from './trainRoof';
 import {KENJI,kenjiWarn,KENJI_SEAT} from './trainConductor';
+import {createTrainNightGlow} from './trainNightGlow';
 /** Gameplay 2: the player's radius against a car's box (block and slide); a car's box: ±HALF_W across, ±CAR_LENGTH/2 along. */
 export const PLAYER_R=.35;
 export {LIVERIES};
@@ -228,6 +229,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const doorLook=createVehicleMaterial(),DOOR_LEAVES=TRAIN_CARS*DOORS.length*4,doors=new T.InstancedMesh(leaf,doorLook.material,TRAIN_COUNT*DOOR_LEAVES);
  doors.name='train-doors';doors.instanceMatrix.setUsage(T.DynamicDrawUsage);doors.castShadow=false;doors.receiveShadow=false;doors.frustumCulled=false;doors.visible=false;doors.count=0;root.add(doors);
  const glass=createTrainGlass(TRAIN_COUNT*TRAIN_CARS,TRAIN_COUNT*DOOR_LEAVES);root.add(glass.mesh);// train visuals (Nov 24): every pane + the soft shadows, one draw
+ const nightGlow=createTrainNightGlow(TRAIN_COUNT);root.add(nightGlow.mesh);// POLISH 3: the night lights, one additive draw (trainNightGlow.ts)
+ const gp={x:0,z:0,tx:1,tz:0};
  const crossings=TRAIN_CROSSINGS.map((_,ci)=>buildCrossing(ci,obstacles));for(const x of crossings)root.add(x.mesh);
  const boards=buildBoards(obstacles);for(const b of boards.meshes)root.add(b.mesh);
  // Destination plates (Phase 3): ONE mesh for every cab (2 per train) with the boards' material and canvas; its 4 corners per cab
@@ -363,7 +366,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   /** Town's warm-up: show everything for one compileAsync (programs ready before a train is first seen), then hide again. */
   /** Draw every train part for one frame in the real pass, 600 m under the island (never seen): pipeline set-up at load, not on first sight. */
   prime(){primeLeft=1;},
-  warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;glass.warm(on);},
+  /** Debug / checks only: true hides the night glow (the draw-count A/B in check-train-aaa night). */
+  glowOff:false,
+  /** POLISH 3: the street lamps' light-pool material (world.ts), shared by the trains' night glow. */
+  useNightPool(mat:T.Material){nightGlow.use(mat);},
+  warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;glass.warm(on);nightGlow.warm(on);},
   update(f:TrainFrame):TrainFrameResult{
    result.nudgeX=result.nudgeZ=0;result.note=null;result.say=null;result.sayTrain=-1;result.knock=null;result.knockTrain=-1;if(warming)return result;
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
@@ -443,7 +450,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(!cluster&&dep<.5&&depWas[i]>=.5){trackAt(st.s-TRAIN_LENGTH/2,pc);const dp=riding===i?0:Math.hypot(pc.x-f.player.x,pc.z-f.player.z);if(dp<JOLT.sound)cue('train-depart',riding===i?.75:Math.max(.25,1-dp/JOLT.sound));}
     depWas[i]=dep;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
-   let nd=0,np=0;glass.begin();
+   let nd=0,np=0;glass.begin();const glow=nightGlow.begin(night,cam)&&!api.glowOff;
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
     const show=i===riding||d<HIDE_RANGE&&frustum.intersectsSphere(sphere);/* the train I ride: always drawn */if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
@@ -456,7 +463,13 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
+    if(glow){// POLISH 3: the headlamp beam on the track ahead of the leading cab (on the curve's own tangent) and on the tunnel walls
+     for(let b=0;b<3;b++){const sb=st.s+9+b*5;trackAt(sb,gp);const y=bedAt(L.profile,sb)+RAIL_TOP,w=(.85-b*.2)*(1+.4*tr.tun);nightGlow.beam(gp.x,y,gp.z,gp.tx,gp.tz,w);
+      if(sb>TUNNEL.west.s&&sb<TUNNEL.east.s){nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,TUNNEL_HALF_WIDTH-.06,w);nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,-(TUNNEL_HALF_WIDTH-.06),w);}}}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v,i);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
+     if(glow){const sc=st.s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,kind=L.profile.kind[Math.round(wrapS(sc)/TRACK_DS)%TRACK.n];let ps=0;
+      for(const ts of TRAIN_STATIONS){const ds=Math.abs(((sc-ts.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2);if(ds<STATION_HALF){ps=ts.side*rev;break;}}
+      nightGlow.car(m4,-RAIL_TOP,ps,STATION_PLATFORM_Y-RAIL_TOP,c===0,c===TRAIN_CARS-1,kind!==TrackKind.Sea);}
      if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);np++;
      writeInside(i,c,m4,!!api.ridden[i]||d3<CLOSE_RANGE,open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
@@ -467,7 +480,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far){platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);const b=(CABS+i*TRAIN_CARS*INSIDE_QUADS)*12;platePos.fill(0,b,b+TRAIN_CARS*INSIDE_QUADS*12);}
     (plateGeo.attributes.position as T.BufferAttribute).needsUpdate=true;(plateGeo.attributes.normal as T.BufferAttribute).needsUpdate=true;}
    if(doors.count!==nd)doors.count=nd;const dv=nd>0;if(doors.visible!==dv)doors.visible=dv;if(dv)doors.instanceMatrix.needsUpdate=true;
-   doorLook.lamp.z=night*2.6;glass.end();
+   doorLook.lamp.z=night*2.6;glass.end();nightGlow.end();
    return result;
   },
   /** Phase 3: crossing ci's lamps are flashing or its arms are not up (road traffic stops at it: the causeway's cayTraffic). */
@@ -475,11 +488,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   /** Headless checks only (read, never per frame): every crossing's live state, and the pure timetable functions. */
   get xings(){return crossings.map((x,ci)=>({id:TRAIN_CROSSINGS[ci].id,lamps:x.lamps,arm:+x.arm.toFixed(3),target:x.target,x:x.x,z:x.z,shown:x.mesh.visible}));},
   sched:{trainAt,crossingFor,trainPhase,clock:()=>trainClockSec(),stops:TRAIN_STOPS,crossings:TRAIN_CROSSINGS,trackAt:(s:number)=>trackAt(s,{x:0,z:0,tx:1,tz:0}),bed:(s:number)=>bedAt(L.profile,s),
-   /** headless checks (check-train-aaa track / roof parts): the row kind at s (TrackKind), the walk top, deck tests */kind:(s:number)=>L.profile.kind[Math.round(wrapS(s)/TRACK_DS)%TRACK.n],walkTop:trainWalkHeight,deckAt:trainDeckAt,swimDeckBlocked},
+   /** headless checks (check-train-aaa track / roof parts): the row kind at s (TrackKind), the walk top, deck tests */kind:(s:number)=>L.profile.kind[Math.round(wrapS(s)/TRACK_DS)%TRACK.n],tunnelS:[TUNNEL.west.s,TUNNEL.east.s],walkTop:trainWalkHeight,deckAt:trainDeckAt,swimDeckBlocked},
   /** For tests and the gfx probe: what is drawn right now. */
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
    return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
-  dispose(){for(const d of detail)d.geometry.dispose();for(const g of openGeo)g?.dispose();plateGeo.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
+  dispose(){nightGlow.dispose();for(const d of detail)d.geometry.dispose();for(const g of openGeo)g?.dispose();plateGeo.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
    doorLook.material.dispose();doors.dispose();glass.dispose();for(const x of crossings){x.mesh.geometry.dispose();x.look.material.dispose();}
    for(const b of boards.meshes)b.mesh.geometry.dispose();boards.mat.dispose();boards.tex.dispose();root.removeFromParent();},
  };

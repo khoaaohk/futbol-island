@@ -1855,6 +1855,7 @@ export function* buildTownSteps(scene: T.Scene) {
   gradient.addColorStop(0,'rgba(255,213,140,.72)');gradient.addColorStop(.3,'rgba(255,197,110,.46)');gradient.addColorStop(.7,'rgba(255,183,92,.13)');gradient.addColorStop(1,'rgba(255,196,112,0)');poolCtx.fillStyle=gradient;poolCtx.fillRect(0,0,32,32);
   const poolTexture=new T.CanvasTexture(poolCanvas);poolTexture.colorSpace=T.SRGBColorSpace;textures.push(poolTexture);
   const poolMaterial=new T.MeshBasicMaterial({map:poolTexture,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});materials.push(poolMaterial);
+  trainRun?.useNightPool(poolMaterial);// POLISH 3: the trains' night glow shares this material (trainNightGlow.ts)
   const poolGeometry=new T.PlaneGeometry(1,1);poolGeometry.rotateX(-Math.PI/2);
   const poolChunks=new Map<string,typeof lampSites>();
   for(const x of [81.5,90.5])for(const z of [-61.4,-56.6])lampSites.push({x,z,ground:.085,poolWidth:13,poolDepth:10});

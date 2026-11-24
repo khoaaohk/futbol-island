@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,views,framing,hud,inside,track,deck,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
-const phone = arg('phone', '1') === '1', landscape = arg('landscape', '') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
+const timeOfDay = arg('time', ''), phone = arg('phone', '1') === '1', landscape = arg('landscape', '') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
 const results = []; let vpW = 1440, vpH = 900;
@@ -28,10 +28,10 @@ const check = (name, ok, extra = '') => { results.push({ name, ok: !!ok }); cons
 if (shots) fs.mkdirSync(shots, { recursive: true });
 async function boot(b, vp, mobile) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
-  await ctx.addInitScript(({ tier, noTrain }) => {
-    try { if (!sessionStorage.getItem('__a_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); if (tier) localStorage.setItem('fi2-battery-saver', tier); if (noTrain) localStorage.setItem('fi-no-train', '1'); } sessionStorage.setItem('__a_boot', '1'); } catch { /* */ }
+  await ctx.addInitScript(({ tier, noTrain, timeOfDay }) => {
+    try { if (!sessionStorage.getItem('__a_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); if (tier) localStorage.setItem('fi2-battery-saver', tier); if (timeOfDay) localStorage.setItem('fi2-time-of-day', timeOfDay); if (noTrain) localStorage.setItem('fi-no-train', '1'); } sessionStorage.setItem('__a_boot', '1'); } catch { /* */ }
     const n = Date.now.bind(Date); window.__skew = 0; Date.now = () => n() + window.__skew;
-  }, { tier, noTrain });
+  }, { tier, noTrain, timeOfDay });
   // Under a local `next start` next.config.mjs runs again at server start, so /api/build-id answers a new `local-<time>` id that
   // differs from the page's: lib/buildUpdate.ts then reloads this untouched tab on the ride part's simulated tab return (the
   // track part's old flake: a fresh /play?from=arcade arrival walk, clock skew lost). Vercel's id is the deployment's: not live.
@@ -665,6 +665,46 @@ const OWNER_SPOTS = [
   ['6-west-portal', 538.5, 169.5], ['8-ferry-beach', 236, 242], ['10-palm-umbrellas', -5, 115], ['11-ballast', 300, 242], ['12-xing-deck', 80, -207],
   ['13-west-beach-xing', -305, -52], ['14-station-house', -305, -30], ['bridge-crest', 348, 243],
 ];
+// POLISH 3 (owner shot 59): the trains' night lights. Run with --time=night. Shots at a station, the beach line, the tunnel mouth and
+// the Seat view; the glow's draw cost (calls with it on minus off, same frame set) must stay within +8 per view.
+async function nightView(p, name) {
+  await p.waitForTimeout(1200);
+  const r = await p.evaluate(async () => { const f = window.__fi2, info = f.renderer.info.render, g = f.scene.getObjectByName('train-night-glow');
+    const calls = async (off) => { f.trains.glowOff = off; let a = 0; for (let i = 0; i < 12; i++) { await new Promise((r) => requestAnimationFrame(r)); if (i >= 4) a += info.calls; } return a / 8; };
+    const on = await calls(false), shown = !!g && g.visible, n = g ? g.count : 0, off = await calls(true); f.trains.glowOff = false; await new Promise((r) => requestAnimationFrame(r));
+    return { on: +on.toFixed(1), off: +off.toFixed(1), shown, n }; });
+  check(`night ${name}: the glow is drawn, within +8 draws`, r.shown && r.n > 0 && r.on - r.off <= 8, JSON.stringify(r));
+  if (shots) { await p.waitForTimeout(300); await p.screenshot({ path: path.join(shots, `night-${name}-${phone ? 'phone' : 'desktop'}.png`) }); }
+}
+async function partNight(c) {
+  const { p } = c;
+  await settle(p);
+  const night = await p.evaluate(() => window.__fi2.trains && (localStorage.getItem('fi2-time-of-day') || ''));
+  if (night !== 'night') { check('night: run with --time=night', false, night); return; }
+  // a station: train 0 standing at South, me on the platform looking at it
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 6); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await nightView(p, 'station');
+  // the beach line (owner shot 59) and the tunnel mouth: the three trains pinned (cluster) on the line, me beside it
+  const spot = (s, off, back, look = 0) => p.evaluate(({ s, off, back, look }) => { const f = window.__fi2, sc = f.trains.sched, a = sc.trackAt(s + look), b = sc.trackAt(s - back), nx = b.tz, nz = -b.tx;
+    const x = b.x + nx * off, z = b.z + nz * off; f.teleport(x, z, Math.atan2(-(a.x - x), -(a.z - z))); }, { s, off, back, look });
+  const beach = await p.evaluate(() => { const sc = window.__fi2.trains.sched, x = sc.crossings.find((c) => /beach/i.test(c.id)) || sc.crossings[0]; return x.s; });
+  await p.evaluate((s) => { window.__fi2.trains.cluster = s; }, beach + 40); await spot(beach + 32, 9, 0);
+  await nightView(p, 'beach');
+  const mouth = await p.evaluate(() => window.__fi2.trains.sched.tunnelS[0]);
+  await p.evaluate((s) => { window.__fi2.trains.cluster = s; }, mouth - 8); await spot(mouth, 5, 2, 14);
+  await nightView(p, 'tunnel');
+  await p.evaluate(() => { window.__fi2.trains.cluster = NaN; });
+  // the Seat view, riding from South at night
+  await settle(p); await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); }); await p.waitForTimeout(1500);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); }); await p.waitForTimeout(800);
+  const k = await p.evaluate(() => window.__fi2.trainRide.train); if (k < 0) { check('night: riding', false); return; }
+  for (let i = 0; i < 40; i++) { if ((await p.evaluate((k) => window.__fi2.trains.states[k].at, k)) < 0) break; await p.waitForTimeout(500); }
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(2500);
+  await nightView(p, 'seat');
+  await leaveRide(p);
+}
 async function partShots(c) {
   const { p } = c;
   if (!shots) { console.log('shots: no --shots dir'); return; }
@@ -764,7 +804,7 @@ async function partPerf(c) {
     if (phone && landscape && !vpArg) { const lock = await c.p.evaluate(() => { const e = document.querySelector('[class*="RotateLock_lock"]'); return !!e && getComputedStyle(e).display !== 'none' && document.elementFromPoint(innerWidth / 2, innerHeight / 2) === e.closest('[class*="RotateLock_lock"]') || !!document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest('[class*="RotateLock_lock"]'); });
       check('phone landscape: the island asks to turn upright (portrait only), touches never reach the canvas', lock); parts.length = 0; }
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, jitter: partJitter, roofjitter: partRoofJitter, landing: partLanding, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, jitter: partJitter, roofjitter: partRoofJitter, landing: partLanding, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf, night: partNight })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));
