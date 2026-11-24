@@ -53,7 +53,7 @@ const GASHA_MARKERS=placeGashaponMarkers(islandGashaponMachines(),[...VENDING_MA
 function GashaponMark({x,z,localMap}:{x:number;z:number;localMap:boolean}){const r=localMap?5.4:9.5,c=capsuleGlyph(x,z,r*.58);
  return <><circle cx={x} cy={z} r={r} fill="#ffe1ef" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/><path d={c.top} fill="#e94b3c"/><path d={c.bottom} fill="#ffffff"/>
   <circle cx={x} cy={z} r={r*.58} fill="none" stroke="#294f43" strokeWidth={localMap?.9:1.3}/><path d={c.seam} stroke="#294f43" strokeWidth={localMap?.9:1.3}/></>;}
-const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS,...GASHA_MARKERS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z-28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z-26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
+const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS,...GASHA_MARKERS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z-28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z+26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
 /** The jetpack glyph (TravelIcon's jetpack strokes), for the far-reef badge and the map key. */
 export const JETPACK_GLYPH='M6 5h4v12H6z M14 5h4v12h-4z M10 9h4 M7 20v2 M17 20v2 M12 3v3';
 /** Reef zones to explore (Oct 20 2026; the user renamed Dive to Explore, so the mark reads E): one per zone at its buoy, the same
@@ -97,7 +97,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
  const shorePoints=ISLAND_SHORE.map(p=>svgPoint(p)).join(' ');
  const view=position?`${-radius} ${-radius} ${radius*2} ${radius*2}`:`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`;
  const localMap=!!position;
- const placeLabels=([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?-18:-28,width:localMap?48:74}/* owner Nov 24: above the door so it clears the South station label */,{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78},{id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL,dx:0,dy:localMap?19:30,width:localMap?78:122}] as const);
+ const placeLabels=([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?-18:-28,width:localMap?48:74}/* owner Nov 24: above the door so it clears the South station label */,{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?17:26,width:localMap?52:78}/* owner Nov 24: below the door so it clears the North station label */,{id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL,dx:0,dy:localMap?19:30,width:localMap?78:122}] as const);
  const terrain=useMemo(()=> <>
   {/* The whole map is playable sea (Oct 12 2026, user: "the border is the edge of the map"): no inner border line; the frame is
       the edge (flightBlocked is the map's rectangle with soft corners). */}
