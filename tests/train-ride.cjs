@@ -92,7 +92,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  for(let j=0;j<TRN.TRAIN_SEATS;j++){run.seatPose(0,j,sp);const h=tt.trackNearest(sp.x,sp.z,4);assert(h&&h.d<1.2,`seat ${j} inside the car (${h&&h.d.toFixed(2)} m off the centre line)`);
   const fx=Math.sin(sp.yaw),fz=Math.cos(sp.yaw),cx=tt.trackAt(h.s);const toward=(cx.x-sp.x)*fx+(cx.z-sp.z)*fz;assert(toward>0,`seat ${j} faces the aisle`);
   const sp2={x:0,y:0,z:0,yaw:0};run.seatPose(0,j,sp2,now);assert(Math.hypot(sp2.x-sp.x,sp2.z-sp.z)<.6,`seat ${j}: the clock pose matches the drawn one`);}
- const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+400,`open variant ${geo.triangles} tris (closed ${run.triangles})`);
+ const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+1500,`close-up variant ${geo.triangles} tris (closed ${run.triangles})`);
  run.ridden[0]=1;run.update({dt:1/30,camera:cam,player,nowSec:now+.05});const d=run.drawn;assert(d.plates,'destination plates drawn near');assert.equal(d.ridden,1);
  let n=0;scene.traverse(o=>{if(o.name==='train-plates'){n++;assert.equal(o.material,scene.getObjectByName('train-board-north').material,'plates use the board material (no new program)');}});assert.equal(n,1,'one plate mesh for every cab');
  const ci=tt.TRAIN_CROSSINGS.findIndex(c=>c.id==='causeway');assert(ci>=0&&typeof run.crossingClosed(ci)==='boolean');

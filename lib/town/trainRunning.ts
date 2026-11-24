@@ -47,7 +47,7 @@ export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
 /** Seconds held for a person before the local player is asked to step off and slid aside. */
 export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
-import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,WIN_RUNS,CAR_FLOOR_Y,BENCH_X,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf} from './trainCarModel';
+import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,WIN_RUNS,CAR_FLOOR_Y,BENCH_X,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
 /** Seats (Phase 3): long benches along the walls (a Japanese local train), one rider per bench run, facing the aisle; 4 per car.
  *  Seat j of a train: car j>>2, side (j&1 ? +x : -x), bench run 1 + ((j>>1)&1). The rider's root stands on the floor, BENCH.rootZ
@@ -148,6 +148,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   look.lamp.set(1,.9,0,0);root.add(mesh);return {mesh,look,lv,far:false,spin:0,tun:0};});
  const doorLook=createVehicleMaterial(),DOOR_LEAVES=TRAIN_CARS*DOORS.length*4,doors=new T.InstancedMesh(leaf,doorLook.material,TRAIN_COUNT*DOOR_LEAVES);
  doors.name='train-doors';doors.instanceMatrix.setUsage(T.DynamicDrawUsage);doors.castShadow=false;doors.receiveShadow=false;doors.frustumCulled=false;doors.visible=false;doors.count=0;root.add(doors);
+ const glass=createTrainGlass(TRAIN_COUNT*TRAIN_CARS,TRAIN_COUNT*DOOR_LEAVES);root.add(glass.mesh);// train visuals (Nov 24): every pane + the soft shadows, one draw
  const crossings=TRAIN_CROSSINGS.map((_,ci)=>buildCrossing(ci,obstacles));for(const x of crossings)root.add(x.mesh);
  const boards=buildBoards(obstacles);for(const b of boards.meshes)root.add(b.mesh);
  // Destination plates (Phase 3): ONE mesh for every cab (2 per train) with the boards' material and canvas; its 4 corners per cab
@@ -196,7 +197,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   for(let k=0;k<nPeople;k++)if(onLine(people[k],s,0,LOOK_AHEAD+STOP_SHORT,LOOK_HALF)&&hit.gap<best){best=hit.gap;bs=hit.s;who=k;whoHit.side=hit.side;whoHit.d=hit.d;}
   return bs;}
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
- const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
+ const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,glass.mesh,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
  /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
  function carMatrix(s:number,c:number,out:T.Matrix4,v=0){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
   const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
@@ -223,12 +224,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   /** Town's warm-up: show everything for one compileAsync (programs ready before a train is first seen), then hide again. */
   /** Draw every train part for one frame in the real pass, 600 m under the island (never seen): pipeline set-up at load, not on first sight. */
   prime(){primeLeft=1;},
-  warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;},
+  warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;glass.warm(on);},
   update(f:TrainFrame):TrainFrameResult{
    result.nudgeX=result.nudgeZ=0;result.note=null;if(warming)return result;
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
     for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
-    doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
+    doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;glass.prime(m4);return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
    const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
    pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
    const riding=f.riding??-1;nPeople=0;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
@@ -280,30 +281,30 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      boards.draw(r,b.l1,b.l2,b.o1,b.o2,p);dirty=true;if(p>=1)b.flip=-1;}
     if(dirty)boards.tex.needsUpdate=true;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
-   let nd=0,np=0;
+   let nd=0,np=0;glass.begin();
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
     const show=d<HIDE_RANGE&&frustum.intersectsSphere(sphere);if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
     const d3=Math.hypot(d,sphere.center.y-cam.y),size=12.4*f.camera.projectionMatrix.elements[5]/Math.max(1,d3);
-    const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
+    const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]||d3<CLOSE_RANGE?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
-    tr.look.lamp.z=night*2.6;// the window band: the indicator channel, lit by the shared night factor
+    tr.look.lamp.z=night*INTERIOR_GLOW;// the window band: the indicator channel, lit by the shared night factor
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
-    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);
-     if(far)continue;writePlate(i,c,m4);np++;// doors: drawn only in the near tier; open on the platform side while standing
+    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
+     if(far)continue;glass.car(m4);writePlate(i,c,m4);np++;// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
-      for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);}}}
+      for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);glass.door(dm);}}}
     tr.mesh.instanceMatrix.needsUpdate=true;}
    // plates: the near-tier cabs only (the rest collapse to nothing); one upload a frame while any is drawn
    const pvis=np>0;if(plates.visible!==pvis)plates.visible=pvis;
    if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far)platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);
     (plateGeo.attributes.position as T.BufferAttribute).needsUpdate=true;(plateGeo.attributes.normal as T.BufferAttribute).needsUpdate=true;}
    if(doors.count!==nd)doors.count=nd;const dv=nd>0;if(doors.visible!==dv)doors.visible=dv;if(dv)doors.instanceMatrix.needsUpdate=true;
-   doorLook.lamp.z=night*2.6;
+   doorLook.lamp.z=night*2.6;glass.end();
    return result;
   },
   /** Phase 3: crossing ci's lamps are flashing or its arms are not up (road traffic stops at it: the causeway's cayTraffic). */
@@ -315,7 +316,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
    return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
   dispose(){for(const d of detail)d.geometry.dispose();for(const g of openGeo)g?.dispose();plateGeo.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
-   doorLook.material.dispose();doors.dispose();for(const x of crossings){x.mesh.geometry.dispose();x.look.material.dispose();}
+   doorLook.material.dispose();doors.dispose();glass.dispose();for(const x of crossings){x.mesh.geometry.dispose();x.look.material.dispose();}
    for(const b of boards.meshes)b.mesh.geometry.dispose();boards.mat.dispose();boards.tex.dispose();root.removeFromParent();},
  };
  return api;
