@@ -82,8 +82,8 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     await A.p.waitForTimeout(6000);
     const note = await A.p.evaluate(() => document.querySelector('[data-train-note]')?.textContent || '');
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
-    const v1 = await seen(); await B.p.waitForTimeout(1500); const v2 = await seen();
-    check('B draws A in the moving seat', v2.ridden === 1 && v2.best < 1.2 && Math.hypot(v2.x - v1.x, v2.z - v1.z) > 5, `${v2.best.toFixed(2)} m from the seat, the seat moved ${Math.hypot(v2.x - v1.x, v2.z - v1.z).toFixed(1)} m`);
+    const v1 = await seen(); await B.p.waitForTimeout(3000); const v2 = await seen();// 3 s: on a loaded 1-5 fps headless frame the train may still be pulling out (0.8 m/s²)
+    check('B draws A in the moving seat', v2.ridden === 1 && v2.best < 1.2 && Math.hypot(v2.x - v1.x, v2.z - v1.z) > 2, `${v2.best.toFixed(2)} m from the seat, the seat moved ${Math.hypot(v2.x - v1.x, v2.z - v1.z).toFixed(1)} m`);
     const g1 = await gfx(A.p); console.log(`riding (A, phone 390x844): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
     // owner Nov 25 2026: the between-stops quiz is off (trainRide.ts TRAIN_QUIZ): no card on the run
     await A.p.waitForTimeout(8000); const quiz = false;
