@@ -22,7 +22,7 @@ import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,
 import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
-import {TrainLineMarks,TrainMapDots} from './TrainMapMarks';
+import {TrainLineMarks,TrainMapDots,TrainLabelsTop} from './TrainMapMarks';
 import type {TrainStation} from '@/lib/town/trainTrack';
 import FriendMapDots from './FriendMapDots';
 import PlayerMapDots from './PlayerMapDots';
@@ -209,7 +209,8 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    {placeLabels.map(({id,label,point,dx,dy,width})=><g key={'pt'+id}><rect x={point.x+dx-width/2} y={point.z+dy-11} width={width} height={22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/><text x={point.x+dx} y={point.z+dy+4} textAnchor="middle" fill="#294f43" fontSize={12} fontWeight="700">{label}</text></g>)}
    <text x={BEACH_COURT.x} y={BEACH_COURT.z-BEACH_COURT.width/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">BEACH SOCCER</text>
    <text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">HOSTEL</text>
-  </g>}
+  
+   <TrainLabelsTop/></g>}
  </>,[localMap]);
  // Friends on the map (Oct 23 2026): the party's dots sit above every mark and below "You" (drawn after them; only the name layer above goes over it).
  // Other players (Nov 13 2026, PlayerMapDots): soft unnamed dots from the relay's S.Map, under the friend dots; public world only.

@@ -30,6 +30,13 @@ export const TrainLineMarks=memo(function TrainLineMarks({localMap,destination}:
  </g>;
 });
 
+/** Station names drawn again in the map's top label layer (owner Nov 24: "SOUTH" sat under a building and the V marks), above every
+ * building, marker and dot; pointer-transparent and aria-hidden like the other top labels (the tappable originals stay in the line layer). */
+export const TrainLabelsTop=memo(function TrainLabelsTop(){
+ return <g data-train-labels-top="">{PINS.map(p=><g key={p.st.id}><rect x={p.lx-36} y={p.lz-9} width="72" height="18" rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/>
+  <text x={p.lx} y={p.lz+3.5} textAnchor="middle" fill="#294f43" fontSize="10" fontWeight="700">{p.st.name.toUpperCase()}</text></g>)}</g>;
+});
+
 /** The three trains, live while `live` (the travel map is open). */
 export const TrainMapDots=memo(function TrainMapDots({live}:{live:boolean}){
  const refs=useRef<(SVGGElement|null)[]>([]);
