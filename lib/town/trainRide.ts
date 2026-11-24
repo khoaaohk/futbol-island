@@ -112,7 +112,7 @@ export function createTrainRide(ports:Ports){
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
  function ensureQuiz(){if(quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
- function askQuiz(){if(!quizzes?.length)return;const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
+ function askQuiz(){if(!quizzes?.length){if(riding()&&lastAt<0)quizIn=1;return;}/* still loading (first ride): try again in 1 s, until the next stop */const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
   trainRideStore.set({quiz:{...q,picked:-1}});}
  function board(){
   const run=ports.run();if(riding()||!run||near<0||nearTrain<0)return false;
@@ -146,7 +146,7 @@ export function createTrainRide(ports:Ports){
   dragAim=Math.max(-ZIP_LOOK.maxAim,Math.min(ZIP_LOOK.maxAim,dragAim+(e.clientX-dragX)*ZIP_LOOK.drag/(ZIP_LOOK.dragSpan*w)));dragX=e.clientX;}
  function onUp(e:PointerEvent){if(dragging&&e.pointerId===dragId){dragging=false;dragId=-1;}}
  function unlisten(){if(!listening||typeof window==='undefined')return;listening=false;window.removeEventListener('pointerdown',onDown,true);window.removeEventListener('pointermove',onMove,true);window.removeEventListener('pointerup',onUp,true);window.removeEventListener('pointercancel',onUp,true);}
- let promptShown=false;
+ let promptShown=false;const lastWant={x:0,z:0,y:0,can:false,n:0};
  /** E on the platform while the Board button shows (the zipline tower's key). */
  function onKey(e:KeyboardEvent){if(e.key.toLowerCase()!=='e'||e.repeat||!promptShown||riding())return;const el=e.target as HTMLElement|null;if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable))return;if(board())e.preventDefault();}
  if(typeof window!=='undefined')window.addEventListener('keydown',onKey);
@@ -155,7 +155,7 @@ export function createTrainRide(ports:Ports){
   board,getOff,press,answer,
   /** The Board offer (Town's HUD tick): standing on a platform where a train waits with its doors open. One bounded track test. */
   want(x:number,z:number,y:number,canBoard:boolean):{key:string;distance:number}|null{
-   me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;if(riding()||!canBoard)return null;
+   me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;lastWant.x=x;lastWant.z=z;lastWant.y=y;lastWant.can=canBoard;lastWant.n++;if(riding()||!canBoard)return null;
    const run=ports.run();if(!run)return null;
    let quick=false;for(const st of TRAIN_STATIONS){const c=trackAt(st.s,tp);if(Math.abs(c.x-x)<STATION_HALF+8&&Math.abs(c.z-z)<STATION_HALF+8){quick=true;break;}}
    if(!quick)return null;
@@ -211,6 +211,8 @@ export function createTrainRide(ports:Ports){
   bump(){if(!riding())return;const run=ports.run();if(!run)return;for(let s=0;s<TRAIN_SEATS;s++)if(s!==j&&!ports.taken(k,s)){j=s;anchor.seat=s;run.seatPose(k,j,pose);anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;return;}},
   /** Tests / headless checks: station i's step-off spot level with its platform centre + du m. */
   stationSpot(i:number,du=0){return platformSpot(i,TRAIN_STATIONS[i].s+du,{x:0,y:0,z:0,yaw:0});},
+  /** Debug: the last Board offer's inputs. */
+  get lastWant(){return lastWant;},
   finish(){getOff(true);},
   dispose(){if(riding())getOff(true);unlisten();if(typeof window!=='undefined')window.removeEventListener('keydown',onKey);trainRideStore.reset();},
  };

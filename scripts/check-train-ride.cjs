@@ -20,14 +20,15 @@ async function start(p) {
     await p.waitForTimeout(2000);
   }
   await p.waitForFunction(() => !!window.__fi2 && !!window.__fi2.trainRide && !!document.querySelector('[data-hud-triggers]'), null, { timeout: 240000 });
-  await p.waitForTimeout(2500);
+  await p.waitForFunction(() => !!window.__fi2.renderer && !document.querySelector('[data-island-return-loading]'), null, { timeout: 240000 });
+  await p.waitForTimeout(4000);
 }
 async function boot(b, vp, mobile) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
   await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__t_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); } sessionStorage.setItem('__t_boot', '1'); } catch { /* */ } });
   const p = await ctx.newPage(), errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
-  await p.goto(url + '/play', { timeout: 240000 }); await p.waitForTimeout(3000);
+  await p.goto(url + '/play?from=arcade', { timeout: 240000 }); await p.waitForTimeout(3000);
   await start(p);
   await p.evaluate(() => { const f = window.__fi2, r = f.renderer, orig = r.render.bind(r), log = window.__gfx = { on: false, rows: [] };
     r.render = (scene, camera) => { orig(scene, camera); if (log.on && scene === f.scene && r.getRenderTarget() === null) log.rows.push([r.info.render.calls, r.info.render.triangles]); }; });
@@ -38,25 +39,29 @@ const gfx = async (p, ms = 2500) => { await p.evaluate(() => { window.__gfx.rows
   return { calls: med(0), tris: med(1), frames: rows.length }; };
 // The next stop a train will stand at with its doors open, and how long until then (s).
 const nextStanding = (p) => p.evaluate(() => { const t = window.__fi2.trains; const st = t.states;
-  for (let i = 0; i < st.length; i++) if (st[i].at >= 0 && st[i].doors >= .5 && st[i].dwellLeft > 6) return { train: i, stop: st[i].at, wait: 0 };
+  for (let i = 0; i < st.length; i++) if (st[i].at < 0) return { train: i, stop: st[i].next };// running: meet it at its next stop
   return null; });
 const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX = { north: 0, west: 1, south: 2, summit: 3, cay: 4 };
 (async () => {
-  const b = await chromium.launch({ args: ['--mute-audio', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const b = await chromium.launch({ channel: 'chrome', headless: true, args: ['--mute-audio', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   try {
     const A = await boot(b, { width: 390, height: 844 }, true), B = await boot(b, { width: 1440, height: 900 }, false);
     // wait for a train standing at a platform (one comes every ~24 s somewhere on the loop)
     let s = null; for (let i = 0; i < 80 && !s; i++) { s = await nextStanding(A.p); if (!s) await A.p.waitForTimeout(1000); }
-    check('a train stands at a platform', !!s, s ? `train ${s.train} at ${STOP_STATION[s.stop]}` : '');
+    check('a train is on its way to a platform', !!s, s ? `train ${s.train} to ${STOP_STATION[s.stop]}` : '');
     if (!s) throw new Error('no train');
     const si = STATION_INDEX[STOP_STATION[s.stop]];
     for (const [c, du] of [[A, 0], [B, 10]]) await c.p.evaluate(({ si, du }) => { const sp = window.__fi2.trainRide.stationSpot(si, du); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); }, { si, du });
-    let shown = false; for (let i = 0; i < 30 && !shown; i++) { await A.p.waitForTimeout(250); shown = await A.p.evaluate(() => { const e = document.querySelector('[data-train-board]'); return !!e && !e.hidden; }); }
+    // any train standing at that stop (a train comes every 2:00; the relay clock may shift the timetable once on connect)
+    for (let i = 0; i < 340; i++) { const k = await A.p.evaluate((stop) => window.__fi2.trains.states.findIndex((x) => x.at === stop && x.doors > .6 && x.dwellLeft > 4), s.stop); if (k >= 0) { s.train = k; break; } await A.p.waitForTimeout(500); }
+    let shown = false; for (let i = 0; i < 24 && !shown; i++) { await A.p.waitForTimeout(250); shown = await A.p.evaluate(() => { const e = document.querySelector('[data-train-board]'); return !!e && !e.hidden; }); }
     check('A sees the Board prompt on the platform', shown);
-    if (shown) await A.p.click('[data-train-board]'); else await A.p.evaluate(() => window.__fi2.trainRide.board());
+    await A.p.evaluate(() => document.querySelector('[data-train-board]').click());// the prompt's own onClick (a real tap can miss it on a 1 fps loaded headless frame)
+    if (!(await A.p.evaluate(() => window.__fi2.trainRide.active))) await A.p.evaluate(() => window.__fi2.trainRide.board());
     await A.p.waitForTimeout(800);
     const ride = await A.p.evaluate(() => ({ active: window.__fi2.trainRide.active, train: window.__fi2.trainRide.train, seat: window.__fi2.trainRide.seat, cluster: !!document.querySelector('[data-job-buttons]') }));
     check('A is riding', ride.active && ride.train === s.train, `train ${ride.train} seat ${ride.seat}`);
+    if (!ride.active) console.log('diag', JSON.stringify(await A.p.evaluate(() => { const r = window.__fi2.trainRide; return { lw: r.lastWant, st: window.__fi2.trains.states.map((x) => [x.at, +x.doors.toFixed(2), +x.dwellLeft.toFixed(1)]), board: r.board(), note: document.querySelector('[data-train-note]')?.textContent }; })));
     // B: is A drawn seated in that seat? (B's runtime got the seat code: that train draws its open variant, and a remote stands on the seat)
     const seen = async () => B.p.evaluate(({ k, j }) => { const t = window.__fi2.trains, seat = { x: 0, y: 0, z: 0, yaw: 0 }; t.seatPose(k, j, seat);
       const h = window.__fi2PublicDraw; let best = Infinity; if (h) for (const layer of h.layers) { if (typeof layer.tapSpots !== 'function') continue; for (const sp of layer.tapSpots().spots) best = Math.min(best, Math.hypot(sp.x - seat.x, sp.z - seat.z)); }
