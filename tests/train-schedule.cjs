@@ -109,7 +109,10 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
   assert.equal(note,'Please step off the track','asked to step off');}
  // Polish (Nov 24): the platform announcement: standing on North's platform, "arriving" (with the chime) before it pulls in, "leaving" as the doors close
  {const k=S.stopOf('north'),stp=S.TRAIN_STOPS[k],c=tt.trackAt(stp.station.s),nn=tt.leftNormal(c.tx,c.tz),px=c.x+nn.x*stp.station.side*4,pz=c.z+nn.z*stp.station.side*4;
-  player.x=px;player.z=pz;player.y=1;at(px+6,4,pz+6,c.x,c.z);run.cluster=NaN;const t0=360*5000+stp.arrive-14,notes=[];let tArr=NaN;
+  /* a train held by the step-off block above keeps its lag (catch-up) and would pull in late: one frame with the camera far off
+     the island resets every runner first (was a real-clock flake: it failed whenever the held train was the one due at North) */
+  run.cluster=NaN;const t0=360*5000+stp.arrive-14,notes=[];let tArr=NaN;at(5000,30,5000,5000,4900);player.x=5000;player.z=5000;run.update({dt:1/30,camera:cam,player,nowSec:t0-1});
+  player.x=px;player.z=pz;player.y=1;at(px+6,4,pz+6,c.x,c.z);
   for(let q=0;q<30*32;q++){const r=run.update({dt:1/30,camera:cam,player,nowSec:t0+q/30});if(r.note){notes.push(r.note);if(/arriving/.test(r.note))tArr=q/30;}}
   const want=`The train for ${S.TRAIN_STOPS[(k+1)%5].station.name}`;assert(notes.some(n=>n===want+' is arriving. Please stand behind the yellow line.'),`arriving caption (${notes})`);
   assert(tArr>=14-R.ANNOUNCE_S-.2&&tArr<=14-R.ANNOUNCE_S+.2,`announced ${R.ANNOUNCE_S} s before it pulls in (${tArr})`);
