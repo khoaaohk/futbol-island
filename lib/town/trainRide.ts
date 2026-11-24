@@ -43,7 +43,12 @@ const wallS=()=>(typeof performance!=='undefined'?performance.now():Date.now())/
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
 /** The ride camera: on the rider's window side, back along the train and up (m); portrait phones a step further out. In the tunnel
  *  it comes in close (inside the tube). */
-const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,tunnelOut:2.4,tunnelBack:2,tunnelUp:1.6,ahead:4,eye:1.25} as const;
+// Portrait phones (AAA audit, Nov 24 2026): the narrow view (±11° across at fov 40) looked 4 m up the line from 5 m back, so a rider
+// across the aisle sat ~21° off the view axis (NDC x ≈ 2.2, off screen) and my own rider hid behind the car side. Portrait now opens
+// the fov to PORTRAIT_FOV with the blend (the stadium seat's precedent; restored exactly), stands squarer to the window
+// (portraitBack) and aims between me and the far bench (portraitIn, portraitAhead): me ≈5°, the far rider ≈9° off the axis (±15° fits).
+const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,portraitBack:3.5,portraitAhead:1.5,portraitIn:1.15,tunnelOut:2.4,tunnelBack:2,tunnelUp:1.6,ahead:4,eye:1.25} as const;
+const PORTRAIT_FOV=58;
 
 export type TrainQuizQ={id:string;q:string;options:string[];correct:number;explain:string};
 export type TrainQuiz=TrainQuizQ&{picked:number};
@@ -107,7 +112,7 @@ export function createTrainRide(ports:Ports){
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const trick:TrickPose=npcSeatPose('bench');trick.w=0;
- const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0;
+ const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0;
  const camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  const riding=()=>k>=0;
@@ -193,17 +198,20 @@ export function createTrainRide(ports:Ports){
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(!riding()&&blend<=0){if(camOn){camOn=false;lookS.x=lookS.v=0;}return;}
+   if(!riding()&&blend<=0){if(camOn){camOn=false;lookS.x=lookS.v=0;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
    const run=ports.run();if(!run)return;camOn=true;const h=Math.max(0,Math.min(dt,.1));
    if(!dragging)dragAim*=Math.exp(-ZIP_LOOK.back*h);
    springTo(lookS,softLook(stickAim*ZIP_LOOK.stick+dragAim),(dragging?ZIP_LOOK.dragRate:stickAim!==0?ZIP_LOOK.stickRate:ZIP_LOOK.returnRate)*(reduced?ZIP_LOOK.reducedRate:1),h);
    const kk=k>=0?k:anchor.train,s=run.states[kk].s;springTo(tight,inTunnelS(wrapS(s-12))?1:0,3,h);
    const t=trackAt(s),fx=Math.sin(pose.yaw),fz=Math.cos(pose.yaw),portrait=camera.aspect<1,tk=tight.x;// f: the rider faces the aisle; the window is behind them
-   const out=(CAM.out+(portrait?CAM.portraitOut:0))*(1-tk)+CAM.tunnelOut*tk,back=CAM.back*(1-tk)+CAM.tunnelBack*tk,up=CAM.up*(1-tk)+CAM.tunnelUp*tk;
+   const out=(CAM.out+(portrait?CAM.portraitOut:0))*(1-tk)+CAM.tunnelOut*tk,back=(portrait?CAM.portraitBack:CAM.back)*(1-tk)+CAM.tunnelBack*tk,up=CAM.up*(1-tk)+CAM.tunnelUp*tk;
    const ox=-fx*out-t.tx*back,oz=-fz*out-t.tz*back,a=-lookS.x,ca=Math.cos(a),sa=Math.sin(a);// the look orbits the camera round the rider
-   camPos.set(pose.x+ox*ca-oz*sa,pose.y+up,pose.z+ox*sa+oz*ca);camLook.set(pose.x+t.tx*CAM.ahead,pose.y+CAM.eye,pose.z+t.tz*CAM.ahead);
+   camPos.set(pose.x+ox*ca-oz*sa,pose.y+up,pose.z+ox*sa+oz*ca);{const ah=portrait?CAM.portraitAhead:CAM.ahead,inn=portrait?CAM.portraitIn*(1-tk):0;camLook.set(pose.x+t.tx*ah+fx*inn,pose.y+CAM.eye,pose.z+t.tz*ah+fz*inn);}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
-   const e=blend*blend*(3-2*blend);normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
+   const e=blend*blend*(3-2*blend);
+   if(portrait){if(!fovSaved)fovSaved=camera.fov;const f=fovSaved+(PORTRAIT_FOV-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
+   else if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}
+   normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
    camera.position.lerpVectors(normalPos,camPos,e);camera.quaternion.slerpQuaternions(normalQ,camQ,e);camera.updateMatrixWorld();
   },
   /** Presence (multiplayer/protocol/seat.ts trainWire): the seat and where I sat at the last stop, or null when not riding. */
