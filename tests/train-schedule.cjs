@@ -58,8 +58,11 @@ for(let ci=0;ci<S.CROSSING_TIMES.length;ci++){const c=S.CROSSING_TIMES[ci];
  assert(!S.crossingFor(ci,c.reach-S.CROSSING_WARN-.5).lamps,'quiet before');assert(S.crossingFor(ci,c.reach-S.CROSSING_WARN+.2).lamps,'lamps 8 s before');
  near(S.crossingFor(ci,c.reach-.5).arm,1,1e-6,'arms down before the front arrives');near(S.crossingFor(ci,(c.reach+c.clear)/2).arm,1,1e-6,'down while it passes');
  near(S.crossingFor(ci,c.clear+S.CROSSING_ARM+.5).arm,0,1e-6,'up after the rear clears');
- // the front reaches the crossing at `reach`
- {const d=S.ahead(S.scheduleAt(c.reach).s,c.s);near(Math.min(d,TR.length-d),0,1.4,'reach time (one 0.1 s table step)');}}
+ // AAA audit: the arms stay down until the rear has left the whole deck (not just its centre line), and are down before the front touches it
+ const x0=S.ahead(S.TIMETABLE.startS,c.s);assert(S.lapX(c.clear)>=x0+c.width/2+S.TRAIN_LENGTH+.9,`${c.id}: rear still on the deck when the arms start up`);
+ assert(S.lapX(c.reach-.3)<=x0-c.width/2+.05,`${c.id}: front on the deck before the arms are down`);
+ // the front reaches the deck's near edge at `reach`
+ {const d=S.ahead(S.scheduleAt(c.reach).s,tt.wrapS(c.s-c.width/2));near(Math.min(d,TR.length-d),0,1.4,'reach time (one 0.1 s table step)');}}
 if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.exit(0);}
 // 5. wiring and heat (source checks; the built world is checked in tests/train-track.cjs)
 {const run=read('lib/town/trainRunning.ts'),world=read('lib/town/world.ts'),town=read('components/Town.tsx'),snd=read('lib/audio/islandSound.ts');

@@ -117,7 +117,10 @@ export function waitText(n:NextTrain){return n.here?'Now at the platform':n.wait
 
 // ---- Level crossings: lap times the front reaches each crossing and the rear clears it (+1 m).
 const lapTimeAt=(x:number)=>{let lo=0,hi=TABLE.pos.length-1;while(lo<hi){const m=(lo+hi)>>1;if(TABLE.pos[m]<x)lo=m+1;else hi=m;}return lo*DT;};
-export const CROSSING_TIMES=TRAIN_CROSSINGS.map(c=>{const x=ahead(S0,c.s);return {id:c.id,s:c.s,reach:lapTimeAt(x),clear:lapTimeAt(Math.min(L,x+TRAIN_LENGTH+1))};});
+// AAA audit (Nov 24 2026): timed from the deck's EDGES, not its centre line. On the 16 m causeway and the 9.6 m skewed park trail the
+// rear was still on the deck (up to 7 m of it) when the lamps went out and the arms began to rise; a slow train leaving West Beach
+// showed it at the park trail. Now: lamps CROSSING_WARN s before the front reaches the near edge, up once the rear is 1 m past the far one.
+export const CROSSING_TIMES=TRAIN_CROSSINGS.map(c=>{const x=ahead(S0,c.s),h=c.width/2;return {id:c.id,s:c.s,width:c.width,reach:lapTimeAt(Math.max(0,x-h)),clear:lapTimeAt(Math.min(L,x+h+TRAIN_LENGTH+1))};});
 /** How closed crossing ci is for one train at lap time t: lamps on, and the arms 0 up … 1 down. */
 export function crossingFor(ci:number,t:number,out={lamps:false,arm:0}){
  const c=CROSSING_TIMES[ci],before=wrapT(c.reach-t),after=wrapT(t-c.reach),span=wrapT(c.clear-c.reach);
