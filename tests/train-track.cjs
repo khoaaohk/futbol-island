@@ -1,7 +1,7 @@
 // The Island Line, Phase 1 (Nov 23 2026; plan .claude/worktrees/_recovery-nov20/train/PLAN.md): track and scenery. Run: node tests/train-track.cjs
 //  1. the line (lib/town/trainTrack.ts, pure): a closed ~2.54 km loop, evenly tabled, smallest curve ≥ 20 m, trackAt / trackNearest
 //  2. stops in order (North → West Beach → South → Summit Isle → Coral Cay), each with its football line; five crossings on land
-//  3. heights: trestle ramps ≤ 5.5 %, the tunnel straight and level, Summit Isle's ground carved to the bed (and the hill kept over the tunnel)
+//  3. heights: trestle ramps ≤ 5.5 %, the South Bridge (6 m boat channel, 4.5 % grades), the tunnel straight and level, Summit Isle's ground carved to the bed (and the hill kept over the tunnel)
 //  4. the built world: it builds, props are off the line, stations have colliders and one-step platforms, swimmers meet the piers
 //  5. heat and wiring: one board material for all five stations, the tube is its own gated mesh, Town and world wired
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
@@ -26,7 +26,20 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  assert.equal(tt.TRAIN_CROSSINGS.length,5,'five level crossings');for(const c of tt.TRAIN_CROSSINGS)assert.equal(kindAt(c.s),K.Land,`${c.id} crossing on land`);
  for(const s of tt.TRAIN_STATIONS)assert.equal(kindAt(s.s),K.Land,`${s.id} station on land`);
  // 3. heights
- for(let i=0;i<TR.n;i++){const k=(i+1)%TR.n,g=Math.abs(prof.bed[k]-prof.bed[i])/tt.TRACK_DS;assert(g<=.055,`grade ${g.toFixed(3)} at s ${i*tt.TRACK_DS|0}`);assert(prof.bed[i]>=-1e-6&&prof.bed[i]<=tt.TUNNEL_BED+1e-6);}
+ for(let i=0;i<TR.n;i++){const k=(i+1)%TR.n,g=Math.abs(prof.bed[k]-prof.bed[i])/tt.TRACK_DS;assert(g<=.055,`grade ${g.toFixed(3)} at s ${i*tt.TRACK_DS|0}`);assert(prof.bed[i]>=-1e-6&&prof.bed[i]<=Math.max(tt.TUNNEL_BED,tt.BRIDGE_TOP)+1e-6);}
+ // Nov 24 2026 South Bridge (owner: boats could not get out of the south lagoon): >= 20 m channel with >= 6 m from the water to the
+ // deck's underside (cross girders, bed - .55), no pier in it, 4.5 % grades with smooth vertical curves, both stations unchanged.
+ {const B=tt.SOUTH_BRIDGE,WL=L('lib/town/water/waterDepth.ts').WATER_LEVEL,lay=tl.trainLayout(),DS=tt.TRACK_DS;
+  assert(B.spanB-B.spanA-2*tl.MAIN_COLUMN_HALF>=20,`channel ${(B.spanB-B.spanA).toFixed(1)} m`);
+  for(let s=B.spanA;s<=B.spanB;s+=.5){const c=tt.bedAt(prof,s)-.55-WL;assert(c>=6,`clearance ${c.toFixed(2)} m at s ${s|0}`);}
+  assert(!lay.piers.some(p=>p.s>B.spanA+1&&p.s<B.spanB-1),'nothing stands in the channel');assert.equal(lay.piers.filter(p=>p.main).length,2,'two main-span piers');
+  const m=tt.trackAt(B.mid);assert.equal(kindAt(B.mid),K.Sea,'the channel is over the sea');assert(!tl.trainSwimBlocked(m.x,m.z),'boats and swimmers pass under the main span');
+  const mp=lay.piers.find(p=>p.main);assert(tl.trainSwimBlocked(mp.x+mp.tz*(1.1+.85),mp.z-mp.tx*(1.1+.85)),'a swimmer meets a main pier column');
+  let prev=null;for(let s=B.from-10;s<=B.to+10;s+=DS){const g=(tt.bedAt(prof,s+DS)-tt.bedAt(prof,s))/DS;assert(Math.abs(g)<=tt.BRIDGE_GRADE+1e-3,`bridge grade ${g.toFixed(4)} at ${s|0}`);
+   if(prev!==null)assert(Math.abs(g-prev)<=tt.BRIDGE_GRADE*DS/tt.BRIDGE_CURVE*1.05+1e-4,`vertical curve at ${s|0}: ${prev.toFixed(4)} -> ${g.toFixed(4)}`);prev=g;}
+  for(let s=S.south.s-tt.STATION_HALF;s<=S.south.s+tt.STATION_HALF;s+=1)assert(tt.bedAt(prof,s)<1e-6,`South station flat at ${s|0}`);
+  for(let s=S.summit.s-tt.STATION_HALF;s<=S.summit.s+tt.STATION_HALF;s+=1)assert(Math.abs(tt.bedAt(prof,s)-tt.SUMMIT_STATION_BED)<1e-6,`Summit station flat at ${s|0}`);
+  assert(/pierRows\.has\(i%n\)/.test(read('lib/town/trainWorld.ts')),'over the sea a catenary pole stands on a pier');}
  {const W=tt.TUNNEL.west,E=tt.TUNNEL.east,len=E.s-W.s;assert(len>160&&len<195,`tunnel ${len} m`);
   // (≤ 1 m off the portal-to-portal chord: the east portal sits 2.5 m out on the start of the curve since Nov 23, measured 0.92)
   for(let s=W.s+4;s<=E.s-4;s+=4){const p=tt.trackAt(s),dev=Math.abs((p.x-W.x)*(E.z-W.z)-(p.z-W.z)*(E.x-W.x))/Math.hypot(E.x-W.x,E.z-W.z);assert(dev<1,`tunnel straight (${dev.toFixed(2)} m off at ${s|0})`);

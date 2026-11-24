@@ -21,8 +21,8 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
-import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
-import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,SEA_WALL_HALF} from './trainLayout';
+import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,SOUTH_BRIDGE,bedAt,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
+import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,MAIN_COLUMN_HALF,SEA_WALL_HALF,XING_FOOT} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
 
@@ -73,6 +73,23 @@ class Geo{
   g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(this.n),3));return g;}
 }
 
+/** The South Bridge's main-span trusses (Nov 24 2026): two Pratt pony trusses (bottom chord at the cross girders, top chord
+ *  TRUSS_H above the bed, verticals, diagonals falling to mid-span, inclined end posts) outside the cars (half width 1.4) and
+ *  inside the catenary poles (2.7 m out), plus a cross girder under the deck at every panel point. ~400 tris. */
+export const TRUSS_OFFSET=2.05,TRUSS_H=2.5,TRUSS_PANELS=6;
+function bridgeTruss(profile:ReturnType<typeof trainLayout>['profile']):Geo{
+ const g=new Geo(),A=SOUTH_BRIDGE.spanA,B=SOUTH_BRIDGE.spanB,N=TRUSS_PANELS;
+ const at=(k:number,v:number,dy:number)=>{const s=A+(B-A)*k/N,t=trackAt(s);return [t.x+t.tz*v,bedAt(profile,s)+dy,t.z-t.tx*v];};
+ const BOT=-.32,TOP=TRUSS_H;
+ for(let k=0;k<=N;k++)g.beam(at(k,-TRUSS_OFFSET,BOT-.08),at(k,TRUSS_OFFSET,BOT-.08),.13);// cross girders (under the sleepers and girders)
+ for(const side of [-1,1]){const v=side*TRUSS_OFFSET,b=(k:number)=>at(k,v,BOT),t=(k:number)=>at(k,v,TOP);
+  for(let k=0;k<N;k++)g.beam(b(k),b(k+1),.14);
+  for(let k=1;k<N-1;k++)g.beam(t(k),t(k+1),.14);
+  g.beam(b(0),t(1),.14);g.beam(b(N),t(N-1),.14);
+  for(let k=1;k<N;k++)g.beam(b(k),t(k),.08);
+  for(let k=1;k<N-1;k++)k<N/2?g.beam(t(k),b(k+1),.08):g.beam(b(k),t(k+1),.08);}
+ return g;}
+
 export function buildTrainWorld(tools:TrainTools){
  const {put,lit,town,obstacles,walkSurfaces}=tools;
  // Lowest heat tier at build (the world builds once; Battery saver forces tier 4 from the first frame): no contact wire (poles keep
@@ -90,6 +107,7 @@ export function buildTrainWorld(tools:TrainTools){
  const pt=(i:number)=>({x:TRACK.x[i%n],z:TRACK.z[i%n],tx:TRACK.tx[i%n],tz:TRACK.tz[i%n],bed:BED[i%n],kind:K[i%n],s:(i%n)*TRACK_DS});
  const off=(p:{x:number;z:number;tx:number;tz:number},v:number,y:number)=>[p.x+p.tz*v,y,p.z-p.tx*v];
  let poleNext=POLE_STEP/2,moved=0;
+ const pierRows=new Set(L.piers.map(p=>Math.round(p.s/TRACK_DS)%n));
 
  // ------------------------------------------------------------------ track chunks
  const perChunk=Math.round(CHUNK_LENGTH/TRACK_DS);
@@ -106,10 +124,16 @@ export function buildTrainWorld(tools:TrainTools){
     rails.quad(a0,b0,B0,A0,mid);rails.quad(a1,b1,B1,A1,mid);}
    const xing=crossingAt(a.s);
    if(xing){// The crossing deck (Nov 23 2026, owner: flush): a dark top just under the rail heads between and beside the rails, then
-    // sloping down to the ground on both sides, so it reads as part of the road, not a slab standing on the sand.
+    // sloping down to the ground on both sides (to XING_FOOT, just past the ballast), so it reads as part of the road, not a slab.
     const yt=RAIL_TOP-.03,inside=off(a,0,a.bed-1),gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0;
     xdeck.quad(off(a,-1,a.bed+yt),off(b,-1,b.bed+yt),off(b,1,b.bed+yt),off(a,1,a.bed+yt),inside);
-    for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*2.6,gy(b)+.01),off(a,side*2.6,gy(a)+.01),inside);}
+    for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*XING_FOOT,gy(b)+.01),off(a,side*XING_FOOT,gy(a)+.01),inside);
+    // Nov 24 2026 (owner 13.png, "skewed slab" at West Beach): the deck's two ends are closed down to the ground (it was a thin
+    // sheet with open ends over the cut ballast, reading as a plank lying askew); the end faces also cap the ballast's section.
+    for(const [p,q,first] of [[a,b,!crossingAt(pt(i-1).s)],[b,a,!crossingAt(b.s)]] as const){if(!first)continue;
+     const g=gy(p)-.06,inn=[p.x+(q.x-p.x)*.5,p.bed,p.z+(q.z-p.z)*.5];
+     xdeck.quad(off(p,-1,p.bed+yt),off(p,1,p.bed+yt),off(p,1,g),off(p,-1,g),inn);
+     for(const side of [-1,1])xdeck.quad(off(p,side,p.bed+yt),off(p,side*XING_FOOT,gy(p)+.01),off(p,side*XING_FOOT,g),off(p,side,g),inn);}}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
    if(lite&&!xing){if(a.kind===TrackKind.Sea||b.kind===TrackKind.Sea)sleepers.quad(off(a,-1.15,a.bed+SLEEPER_TOP),off(b,-1.15,b.bed+SLEEPER_TOP),off(b,1.15,b.bed+SLEEPER_TOP),off(a,1.15,a.bed+SLEEPER_TOP),off(a,0,a.bed-1));}
    else for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
@@ -138,18 +162,28 @@ export function buildTrainWorld(tools:TrainTools){
      girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v-w,topB),off(a,v-w,top),inside);girders.quad(off(a,v+w,bot),off(b,v+w,botB),off(b,v+w,topB),off(a,v+w,top),inside);girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v+w,botB),off(a,v+w,bot),inside);}}
    // Catenary: a pole with its cantilever arm every ~POLE_STEP m (right side; platforms are all on the left), not at crossings.
    // (and never on a west-park trail: the pole slides along to the next row clear of it)
-   if(a.s>=poleNext&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
-    const base=a.kind===TrackKind.Sea?a.bed-.4:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
+   if(a.s>=poleNext&&(a.kind!==TrackKind.Sea||pierRows.has(i%n))&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
+    // (Nov 24 2026: over the sea a pole stands only on a pier, on a bracket off the cap beam's end: it floated beside the deck)
+    const sea=a.kind===TrackKind.Sea,base=sea?a.bed-.8:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
+    if(sea){const q=off(a,-2.25,a.bed-.63);piers.box(q[0],q[1],q[2],a.tx,a.tz,.28,.7,.16,false);}// (top 5 cm under the cap's: never coplanar)
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
     poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);if(!lite){poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
     poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
    if(!lite)wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022,true);
   }
-  // Trestle piers in this chunk: a cap beam across and two columns down into the sea.
+  // Trestle piers in this chunk: a cap beam across and two columns down into the sea. Nov 24 2026 (South Bridge): a pier taller
+  // than 2.6 m gets a tie beam and X braces between its columns (a trestle bent); the main span's two piers are heavier.
   for(const p of L.piers){const i=Math.round(p.s/TRACK_DS);if(i<c0||i>=c1)continue;
-   const capY=p.bed-.6;piers.box(p.x,capY,p.z,p.tx,p.tz,.35,1.55,.2,false);
-   for(const side of [-1,1]){const x=p.x+p.tz*PIER_COLUMN_OFFSET*side,z=p.z-p.tx*PIER_COLUMN_OFFSET*side,top=capY-.2,foot=-3.2;piers.box(x,(top+foot)/2,z,p.tx,p.tz,PIER_COLUMN_HALF,PIER_COLUMN_HALF,(top-foot)/2);}}
+   const capY=p.bed-.6,half=p.main?MAIN_COLUMN_HALF:PIER_COLUMN_HALF,top=capY-.2,foot=-3.2;piers.box(p.x,capY,p.z,p.tx,p.tz,p.main?.6:.35,p.main?1.75:1.55,.2,false);
+   const col=(side:number,y:number)=>[p.x+p.tz*PIER_COLUMN_OFFSET*side,y,p.z-p.tx*PIER_COLUMN_OFFSET*side];
+   for(const side of [-1,1]){const c=col(side,0);piers.box(c[0],(top+foot)/2,c[2],p.tx,p.tz,half,half,(top-foot)/2);}
+   if(top>2.6){const lo=.6,mid=(lo+top)/2,r=.07;// braces stop short of the water (the bents' own feet stand in it)
+    for(const y of [lo,mid])piers.beam(col(-1,y),col(1,y),r+.02);
+    for(const [y0,y1] of [[lo,mid],[mid,top-.05]] as const){piers.beam(col(-1,y0),col(1,y1),r,true);piers.beam(col(1,y0),col(-1,y1),r,true);}}}
+  // The main span over the channel: a steel pony truss each side (Pratt panels, inclined end posts) on cross girders under the deck,
+  // merged into the rails' paint (same grey steel, no new paint or draw). Built once, in the chunk that holds the span's middle.
+  {const mi=Math.round(SOUTH_BRIDGE.mid/TRACK_DS);if(mi>=c0&&mi<c1){const t=bridgeTruss(L.profile);rails.p.push(...t.p);rails.n.push(...t.n);}}
   emit(rails,C.rail,ox,oz);emit(railTops,C.railTop,ox,oz);emit(sleepers,C.sleeper,ox,oz);emit(ballast,C.ballast,ox,oz);emit(girders,C.girder,ox,oz);emit(piers,C.pier,ox,oz);
   emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);
  }

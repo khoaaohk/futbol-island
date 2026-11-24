@@ -10,7 +10,8 @@
  *
  * Heights (the track bed: the top of the ground the ballast sits on):
  *  - main island and Coral Cay land: 0 (the ground there is flat at 0);
- *  - over the sea: a trestle deck at TRESTLE_BED, reached on 5 % ramps from the nearest land (trackProfile);
+ *  - over the sea: a trestle deck at TRESTLE_BED, reached on 5 % ramps from the nearest land (trackProfile); the south sea run is the
+ *    South Bridge instead (southBridgeBed: up to a 6 m boat channel and down again on 4.5 % grades);
  *  - the south coast stretch in front of the boardwalk: a sea wall at 0 (Enoden-style, on the waterline);
  *  - Summit Isle: a ramp from the beach up to the station's flat, then on up to the straight tunnel at TUNNEL_BED; the ground is
  *    carved to the bed in a cutting (trainCut, called by summitGround) so the walked height, the drawn terrain and the track agree.
@@ -77,15 +78,39 @@ export const inTunnelS=(s:number)=>s>TUNNEL.west.s&&s<TUNNEL.east.s;
 /** Where the line steps onto / off Summit Isle's sand (the trestles' ends) and the Summit station's middle. */
 export const SUMMIT_TRACK={landWest:sNear(489,213.5),station:sNear(512,202),landEast:sNear(698,-6)} as const;
 export const STATION_HALF=15,STATION_PLATFORM_Y=.55,SUMMIT_STATION_BED=.9;
-const SUMMIT_KEYS:[number,number][]=[[SUMMIT_TRACK.landWest-24,0],[SUMMIT_TRACK.station-STATION_HALF-1,SUMMIT_STATION_BED],[SUMMIT_TRACK.station+STATION_HALF+1,SUMMIT_STATION_BED],[TUNNEL.west.s,TUNNEL_BED],[TUNNEL.east.s,TUNNEL_BED],[SUMMIT_TRACK.landEast-12,0]];
+// ---- The South Bridge (Nov 24 2026, owner: "where the tracks go across the water on the south there's no way for a boat to get out —
+// make the tracks go higher to make room for boats"). The sea run from the Ferry Dock shore (242,231) to Summit Isle's landfall
+// (487,212) climbs from the South station's flat to a girder-and-truss bridge whose main span leaves a navigation channel of
+// SOUTH_BRIDGE.span m with the deck underside >= 6 m over the water (WATER_LEVEL -0.43), then falls to the Summit station's flat.
+// Two tangents at BRIDGE_GRADE (4.5 %, under the line's 5 % ramps) meeting over the channel, joined by parabolic vertical curves of
+// one radius (~670 m: BRIDGE_CURVE m at the sags, twice that at the crest, which tops out at BRIDGE_TOP ~6.4); the stations' flats
+// are untouched (the sag curves end where they start). The bed is the one source: trains, riders, catenary, piers and walk height
+// all read it from the profile. (Steeper or longer was not available: the two stations fix the ends, 326 m apart.)
+export const BRIDGE_GRADE=.045,BRIDGE_CURVE=30,BRIDGE_SPAN=24;
+const BRIDGE_FROM=sNear(160,223)+STATION_HALF+1/* the South station's flat ends (TRAIN_STATIONS 'south' stands at sNear(160,223)) */,
+ BRIDGE_TO=SUMMIT_TRACK.station-STATION_HALF-1/* the Summit station's flat starts, at SUMMIT_STATION_BED */;
+const BK0=BRIDGE_FROM+BRIDGE_CURVE/2,BK3=BRIDGE_TO-BRIDGE_CURVE/2,BPV=((BK3-BK0)*BRIDGE_GRADE+SUMMIT_STATION_BED)/2/* tangents' meeting height */,BK1=BK0+BPV/BRIDGE_GRADE;
+export const BRIDGE_TOP=BPV-BRIDGE_GRADE*BRIDGE_CURVE/2;// the crest: 2 x grade over a 2 x BRIDGE_CURVE parabola drops G*L/4 below the meeting point
+/** The channel's middle (the crest) and the main span's two piers (on table rows), plus the run the profile covers. */
+export const SOUTH_BRIDGE=(()=>{const mid=BK1,a=Math.round((mid-BRIDGE_SPAN/2)/TRACK_DS)*TRACK_DS,b=Math.round((mid+BRIDGE_SPAN/2)/TRACK_DS)*TRACK_DS;
+ return {from:BRIDGE_FROM,to:BRIDGE_TO,mid,spanA:a,spanB:b};})();
+export const inSouthBridgeS=(s:number)=>s>SOUTH_BRIDGE.from&&s<SOUTH_BRIDGE.to;
+/** The South Bridge's bed at s (0 before the run, the Summit station bed after it). */
+export function southBridgeBed(s:number){
+ if(s<=BRIDGE_FROM)return 0;if(s>=BRIDGE_TO)return SUMMIT_STATION_BED;const G=BRIDGE_GRADE,L=BRIDGE_CURVE;
+ const line=s<=BK0?0:s<=BK1?(s-BK0)*G:s<=BK3?BPV-(s-BK1)*G:SUMMIT_STATION_BED;
+ // each kink rounded by a parabola of length l centred on it (C1: the grade changes linearly through it)
+ const c=(x:number,l:number)=>Math.abs(x)>=l/2?0:(x+l/2)**2/(2*l)-Math.max(0,x);
+ return line+G*(c(s-BK0,L)-2*c(s-BK1,2*L)+c(s-BK3,L));}
+const SUMMIT_KEYS:[number,number][]=[[SUMMIT_TRACK.station-STATION_HALF-1,SUMMIT_STATION_BED],[SUMMIT_TRACK.station+STATION_HALF+1,SUMMIT_STATION_BED],[TUNNEL.west.s,TUNNEL_BED],[TUNNEL.east.s,TUNNEL_BED],[SUMMIT_TRACK.landEast-12,0]];
 export const onSummitTrackS=(s:number)=>s>=SUMMIT_TRACK.landWest&&s<=SUMMIT_TRACK.landEast;
-/** Summit Isle's bed at s (0 outside its stretch). It starts rising 24 m out on the west trestle, so no grade passes ~5 %. */
-export function summitBedAt(s:number){const K=SUMMIT_KEYS;if(s<=K[0][0]||s>=K[K.length-1][0])return 0;// (east: flat on the last 12 m of sand)
+/** Summit Isle's bed at s (0 outside its stretch). West of the station it is the South Bridge's fall (southBridgeBed). */
+export function summitBedAt(s:number){const K=SUMMIT_KEYS;if(inSouthBridgeS(s))return southBridgeBed(s);if(s<=K[0][0]||s>=K[K.length-1][0])return 0;// (east: flat on the last 12 m of sand)
  for(let i=0;i<K.length-1;i++)if(s<=K[i+1][0]){const t=(s-K[i][0])/(K[i+1][0]-K[i][0]||1);return K[i][1]+(K[i+1][1]-K[i][1])*t;}return 0;}
 
 /** The Summit cutting / embankment: the ground within `flat` m of the centre line is the bed; beyond, banks of CUT_BANK (rise per
  *  metre) back to the natural slope. Not inside the tunnel (the hill stays over it). Station stretch: a wider flat (house, path). */
-export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26,STATION_BANK=.55;
+export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26,STATION_BANK=.55,LANDFALL_BANK=.4,LANDFALL_REACH=10;
 const SUMMIT_BOX=(()=>{let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(let i=0;i<TRACK.n;i++){const s=i*TRACK_DS;if(!onSummitTrackS(s))continue;a=Math.min(a,TRACK.x[i]);b=Math.max(b,TRACK.x[i]);c=Math.min(c,TRACK.z[i]);d=Math.max(d,TRACK.z[i]);}
  return {minX:a-CUT_REACH-CUT_STATION_FLAT,maxX:b+CUT_REACH+CUT_STATION_FLAT,minZ:c-CUT_REACH-CUT_STATION_FLAT,maxZ:d+CUT_REACH+CUT_STATION_FLAT};})();
 /** Into the hill past each portal plane the ground is still carved for MOUTH_CARVE m (flat, steep MOUTH_BANK sides) so the
@@ -123,7 +148,8 @@ export function trainCut(x:number,z:number,h:number){
  // Along the station stretch the banks are walkable (it stands on the beach): STATION_BANK, under the walk limit.
  // Just east of the east portal the cut has steep wing-wall banks (MOUTH_BANK for 8 m, easing to CUT_BANK by 16 m): the climb
  // trail runs out along the portal's line there and keeps its ground.
- const pe=hit.s-TUNNEL.east.s,bank=st<STATION_HALF+14?STATION_BANK:pd<6?MOUTH_BANK/* behind the headwall and wing walls: meets the hill's carve at the face with no step */:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
+ // (Nov 24 2026: at the west landfall the South Bridge comes down onto a low fill over the beach's own fall: LANDFALL_BANK there.)
+ const pe=hit.s-TUNNEL.east.s,bank=hit.s<SUMMIT_TRACK.landWest+LANDFALL_REACH?LANDFALL_BANK:st<STATION_HALF+14?STATION_BANK:pd<6?MOUTH_BANK/* behind the headwall and wing walls: meets the hill's carve at the face with no step */:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
  const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*bank;
  if(h<=0&&hit.d>flat)return h;// no bank fill out over the sea past the coast (the trestle carries the line there)
  return Math.min(Math.max(h,bed-k),bed+k);
@@ -155,7 +181,8 @@ export function trackProfile(onLand:(x:number,z:number)=>boolean):TrackProfile{
  spread(toSummit,summitLand,isSea);spread(toMain,mainLand,isSea);spread(toSea,isSea,mainLand);
  for(let i=0;i<n;i++){const s=i*TRACK_DS;
   bed[i]=isSea(i)?Math.max(Math.min(TRESTLE_BED,RAMP_GRADE*toSummit[i],RAMP_GRADE*(toMain[i]-TRACK_DS/2+RAMP_LAND)),summitBedAt(s))
-   :onSummitTrackS(s)?summitBedAt(s):kind[i]===TrackKind.Land?Math.max(0,RAMP_GRADE*(RAMP_LAND-(toSea[i]-TRACK_DS/2))):0;}
+   :onSummitTrackS(s)?summitBedAt(s):kind[i]===TrackKind.Land?Math.max(0,RAMP_GRADE*(RAMP_LAND-(toSea[i]-TRACK_DS/2))):0;
+  if(inSouthBridgeS(s)&&kind[i]!==TrackKind.Wall)bed[i]=southBridgeBed(s);}// Nov 24 2026: the South Bridge (land approach on an embankment, then the bridge)
  return {kind,bed};
 }
 /** Bed height at s from a profile (lerp between rows). */

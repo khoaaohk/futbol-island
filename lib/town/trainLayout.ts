@@ -4,7 +4,7 @@
  * trestle's piers or the south sea wall). No three.js, no DOM, nothing per frame.
  */
 import {onLand} from './landmass';
-import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,trackProfile,trackNearest,trackAt,inTunnelS,onSummitTrackS,wrapS,type TrackProfile} from './trainTrack';
+import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,SOUTH_BRIDGE,trackProfile,trackNearest,trackAt,inTunnelS,onSummitTrackS,wrapS,type TrackProfile} from './trainTrack';
 
 /** Trestle piers: one every PIER_STEP m of sea; each stands on two columns PIER_COLUMN_OFFSET m either side of the centre line. */
 export const PIER_STEP=8,PIER_COLUMN_OFFSET=1.1,PIER_COLUMN_HALF=.24;
@@ -12,7 +12,10 @@ export const PIER_STEP=8,PIER_COLUMN_OFFSET=1.1,PIER_COLUMN_HALF=.24;
 export const FIRST_PIER=2;
 /** A swimmer's reach round a column (its half width plus the body), and the sea wall's half width. */
 export const SWIM_PIER_REACH=.75,SEA_WALL_HALF=2.3;
-export type TrainPier={s:number;x:number;z:number;tx:number;tz:number;bed:number};
+/** South Bridge (Nov 24 2026): the main span's two piers have thicker columns (half MAIN_COLUMN_HALF, swim reach MAIN_PIER_REACH)
+ *  and nothing stands between them: the boat channel. */
+export const MAIN_COLUMN_HALF=.42,MAIN_PIER_REACH=.95;
+export type TrainPier={s:number;x:number;z:number;tx:number;tz:number;bed:number;main?:boolean};
 export type TrainLayout={profile:TrackProfile;piers:TrainPier[];columns:Float64Array};
 let layout:TrainLayout|null=null;
 export function trainLayout():TrainLayout{
@@ -20,7 +23,11 @@ export function trainLayout():TrainLayout{
  const profile=trackProfile(onLand),piers:TrainPier[]=[];
  let next=-1;
  for(let i=0;i<TRACK.n;i++){const s=i*TRACK_DS;if(profile.kind[i]!==TrackKind.Sea){next=-1;continue;}
-  if(next<0)next=s+FIRST_PIER;if(s<next)continue;next=s+PIER_STEP;piers.push({s,x:TRACK.x[i],z:TRACK.z[i],tx:TRACK.tx[i],tz:TRACK.tz[i],bed:profile.bed[i]});}
+  // South Bridge: a pier exactly at each end of the main span, none over the channel between them; the 8 m rhythm restarts after it.
+  const main=Math.abs(s-SOUTH_BRIDGE.spanA)<TRACK_DS/2||Math.abs(s-SOUTH_BRIDGE.spanB)<TRACK_DS/2;
+  if(!main&&s>SOUTH_BRIDGE.spanA&&s<SOUTH_BRIDGE.spanB)continue;
+  if(next<0)next=s+FIRST_PIER;if(!main&&(s<next||(s<SOUTH_BRIDGE.spanA&&SOUTH_BRIDGE.spanA-s<PIER_STEP*.6)))continue;next=s+PIER_STEP;
+  piers.push({s,x:TRACK.x[i],z:TRACK.z[i],tx:TRACK.tx[i],tz:TRACK.tz[i],bed:profile.bed[i],...(main?{main:true}:{})});}
  const columns=new Float64Array(piers.length*4);
  piers.forEach((p,k)=>{for(const [j,side] of [[0,1],[1,-1]] as const){columns[k*4+j*2]=p.x+p.tz*PIER_COLUMN_OFFSET*side;columns[k*4+j*2+1]=p.z-p.tx*PIER_COLUMN_OFFSET*side;}});
  layout={profile,piers,columns};return layout;
@@ -33,7 +40,7 @@ export function trainSwimBlocked(x:number,z:number){
  const L=trainLayout();
  if(!colGrid){colGrid=new Map();for(let k=0;k<L.columns.length/2;k++){const a=Math.floor(L.columns[k*2]/CG),b=Math.floor(L.columns[k*2+1]/CG),key=ck(a,b);const l=colGrid.get(key);if(l)l.push(k);else colGrid.set(key,[k]);}}
  const a=Math.floor(x/CG),b=Math.floor(z/CG);
- for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=colGrid.get(ck(a+i,b+j));if(!l)continue;for(const k of l)if(Math.abs(L.columns[k*2]-x)<SWIM_PIER_REACH&&Math.abs(L.columns[k*2+1]-z)<SWIM_PIER_REACH)return true;}
+ for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=colGrid.get(ck(a+i,b+j));if(!l)continue;for(const k of l){const r=L.piers[k>>1].main?MAIN_PIER_REACH:SWIM_PIER_REACH;if(Math.abs(L.columns[k*2]-x)<r&&Math.abs(L.columns[k*2+1]-z)<r)return true;}}
  const hit=trackNearest(x,z,SEA_WALL_HALF+.6);if(!hit)return false;return L.profile.kind[hit.i]===TrackKind.Wall&&hit.d<SEA_WALL_HALF+.4;
 }
 
@@ -52,18 +59,21 @@ export function trackPushOut(x:number,z:number,r:number):{dx:number;dz:number}|n
 
 /** Walk height on the line (Nov 23 2026, owner: "going through the tracks"; a player on the line stood in the ballast). Feet rest
  *  on the sleepers (bed + TRAIN_WALK_TOP) across the ballast top, the ballast's sides slope down to the ground, and the crossing
- *  decks are at deck height across the rails, sloping to the ground 2.6 m out (trainWorld.ts builds the same shapes: BALLAST
+ *  decks are at deck height across the rails, sloping to the ground XING_FOOT m out (trainWorld.ts builds the same shapes: BALLAST
  *  half-width 1.45, foot 1.9 m + 1.4 per metre of embankment, deck top RAIL_TOP - .03). Land rows only (the trestle is not a walk).
  *  One hash lookup (trackNearest within 3.6 m): rooftopTravel's surface() takes the max with the ground, so 0 means "no line here". */
 export const TRAIN_WALK_TOP=.22;
 const XING_TOP=.31;
+/** Where a crossing deck's side ramps meet the ground (m from the centre line). Nov 24 2026: 2.0, just past the ballast's foot (was
+ *  2.6: the long dark ramps lying on the grass read as a skewed slab at West Beach, owner 13.png). */
+export const XING_FOOT=2;
 export function trainWalkHeight(x:number,z:number):number{
  const hit=trackNearest(x,z,3.6);if(!hit)return 0;
  const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;
  const t=hit.s/TRACK_DS-Math.floor(hit.s/TRACK_DS),bed=P.bed[i]+(P.bed[k]-P.bed[i])*t,ground=onSummitTrackS(hit.s)?bed:0,d=hit.d;
  const xing=TRAIN_CROSSINGS.some(c=>Math.abs(wrapS(hit.s-c.s+TRACK.length/2)-TRACK.length/2)<c.width/2+.6);
  if(!xing&&(P.kind[i]!==TrackKind.Land||P.kind[k]!==TrackKind.Land))return 0;
- if(xing){const top=bed+XING_TOP;return d<=1?top:d>=2.6?0:top+(ground+.01-top)*(d-1)/1.6;}
+ if(xing){const top=bed+XING_TOP;return d<=1?top:d>=XING_FOOT?0:top+(ground+.01-top)*(d-1)/(XING_FOOT-1);}
  const top=bed+TRAIN_WALK_TOP,foot=1.9+(bed-ground)*1.4;
  return d<=1.45?top:d>=foot?0:top+(ground-top)*(d-1.45)/(foot-1.45);
 }
