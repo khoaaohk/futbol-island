@@ -12,7 +12,7 @@ fs.mkdirSync(out, { recursive: true });
 // [name, where (track s or a portal), cluster front offset (m past `where`), camera [u along, v lateral, y over the bed], target [u, v, y]]
 const VIEWS = [
   ['portal-west-above', 'west', 10, [-9, 13, 17], [3, 0, 3]], ['portal-east-above', 'east', 12, [9, -13, 17], [-3, 0, 3]],
-  ['portal-west-front', 'west', 10, [-22, 4, 7], [2, 0, 4]],
+  ['portal-west-front', 'west', 10, [-22, 4, 7], [2, 0, 4]], ['portal-east-side', 'east', 12, [-9, 22, 13], [2, 0, 4]], ['portal-east-back', 'east', 12, [16, 3, 13], [0, 0, 5]],
   ['wire-roof', 'land', 0, [-4, .25, 5.0], [12, 0, 5.3]], ['wire-above', 'land', 0, [-9, .4, 5.5], [10, 0, 4.6]],
   ['wire-joint', 'joint', 40, [-6, 14, 7.5], [18, 0, 5]], ['wheels', 'land', 0, [-8.6, 2.7, .75], [-10.5, 0, .45]],
 ];

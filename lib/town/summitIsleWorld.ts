@@ -6,7 +6,7 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
-import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,MOUTH_IN,tunnelDrawnCover} from './trainTrack';
+import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,MOUTH_IN,drawnPlane} from './trainTrack';
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
@@ -17,7 +17,7 @@ import {ORCHARD_OFF,planOrchard,orchardParts,orchardRig,roundTreeRig,palmRig,typ
 import type {FruitKind} from './summitForage';
 import {SUMMIT_HUTS,SUMMIT_HUT_RADIUS,SUMMIT_CAVES,CAVE_SIDE,CAVE_BACK,RIDDLE_BOARD,HUT_WALL,HUT_CONE,HUT_CONE_LIFT,HUT_DRUM_W,hutGroundTop} from './summitBalls';
 import {SUMMIT_CENTER,SUMMIT_HEIGHT,SUMMIT_VISUAL_DROP,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_OBSTACLES,SUMMIT_PATHS,SUMMIT_PATH_WIDTH,SUMMIT_LANDMARKS,SANDBAR_PATH,SANDBAR_SKIRT,
- SUMMIT_PEAK,TERRACE,PITCH_HEIGHT,coastRadius,peakCoastRadius,beachWidth,summitGround,summitSlope,ridgeShade,terraceWeight,heightPoint,profileU,peakPoint,sandbarHalfWidth,onSummitIsle,summitTrailDistance,SUMMIT_TRAIL_CARVE,
+ SUMMIT_PEAK,TERRACE,PITCH_HEIGHT,coastRadius,peakCoastRadius,beachWidth,summitGround,summitDrawnGround,summitSlope,ridgeShade,terraceWeight,heightPoint,profileU,peakPoint,sandbarHalfWidth,onSummitIsle,summitTrailDistance,SUMMIT_TRAIL_CARVE,
  isleJitter as jitter,type IslePoint} from './summitIsle';
 
 type Mesh=T.Mesh;
@@ -147,17 +147,17 @@ export function buildSummitIsle(t:SummitTools){
  const SNAP_U=FINE*.5,SNAP_IN=FINE,SNAP_V=TUNNEL_HALF_WIDTH+1.6,snapT=[TUNNEL.west,TUNNEL.east].map(p=>({p,t:trackAt(p.s),w:p===TUNNEL.west?1:-1}));
  /** Looks 2: every grid quad round a portal's mouth is drawn fine (its edges too: no coarse edge sloping across the plane). */
  const nearPortal=(x:number,z:number)=>{for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;if(Math.abs(v)<SNAP_V+2&&u>-5&&u<MOUTH_IN+SNAP_IN+4)return true;}return false;};
- /** The drawn height: the walked ground, or over the tube just inside a portal the hill's full cover (trainTrack tunnelDrawnCover). */
- const drawnY=(x:number,z:number)=>Math.max(summitGround(x,z),tunnelDrawnCover(x,z))-DROP;
+ /** The drawn height: the walked ground, or just inside a portal the hill's full cover (summitIsle summitDrawnGround). */
+ const drawnY=(x:number,z:number)=>summitDrawnGround(x,z)-DROP;
  function portalSnap(x:number,z:number):[number,number]{
   for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;
-   // Looks 2: either side of the plane (outside: carved; inside: the drawn full cover, trainTrack tunnelDrawnCover): a cliff AT it
+   // Looks 2: either side of the plane (outside: carved; inside: the drawn full cover, summitDrawnGround): a cliff AT it
    // (the inside band is a whole cell deep, so no drawn triangle can slope from the carved floor across the plane into the hill)
-   if(Math.abs(v)<SNAP_V&&u>MOUTH_IN-SNAP_U&&u<MOUTH_IN+SNAP_IN){const du=(u<MOUTH_IN?MOUTH_IN-.03-u:MOUTH_IN+.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
+   const pl=drawnPlane(Math.abs(v));if(Math.abs(v)<SNAP_V&&u>pl-SNAP_U&&u<pl+SNAP_IN){const du=(u<pl?pl-.03-u:pl+.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
   return [x,z];}
  // Looks 2: the coarse grid's own points in those bands snap too (they are the corners of the fine quads there, shared with their
  // neighbours, so the mesh stays crack-free): no corner left on the slope across the plane.
- for(let i=0;i<BEARINGS;i++)for(let k=0;k<Y[i].length;k++){const x=P[i][k*2],z=P[i][k*2+1],q=portalSnap(x,z);if(q[0]===x&&q[1]===z&&tunnelDrawnCover(x,z)===-Infinity)continue;P[i][k*2]=q[0];P[i][k*2+1]=q[1];Y[i][k]=drawnY(q[0],q[1]);}
+ for(let i=0;i<BEARINGS;i++)for(let k=0;k<Y[i].length;k++){const x=P[i][k*2],z=P[i][k*2+1],q=portalSnap(x,z);if(q[0]===x&&q[1]===z&&summitDrawnGround(x,z)===summitGround(x,z))continue;P[i][k*2]=q[0];P[i][k*2+1]=q[1];Y[i][k]=drawnY(q[0],q[1]);}
  const pos=(i:number,k:number)=>{const ii=(i+BEARINGS)%BEARINGS;return [P[ii][k*2],Y[ii][k],P[ii][k*2+1]] as const;};
  // Smooth normals from the grid's neighbours (wrapping round the bearings), so sector seams never show a lighting line. (ring
  // direction × bearing direction): up on flat ground, outward on the walls; a zero vector (a landing's merged points) falls back.
