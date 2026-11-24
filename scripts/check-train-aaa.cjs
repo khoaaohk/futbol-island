@@ -169,16 +169,18 @@ async function partTrack(c) {
   try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
   const spot = await p.evaluate(() => { const s = window.__fi2.trains.sched; let b = 0, bd = 1e9; for (let q = 0; q < 2700; q += 1) { const a = s.trackAt(q), d = Math.hypot(a.x + 150, a.z + 204); if (d < bd) { bd = d; b = q; } } const a = s.trackAt(b); return { x: a.x, z: a.z, s: b }; });
   // train 0 to 60 m before s 400: scan its lap for the time its front is there
-  await p.evaluate((S0) => { const s = window.__fi2.trains.sched; let T = 0; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 70 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) { T = t; break; } } const P = s.trainPhase(0, s.clock()); window.__skew += (((T - P) % 360) + 360) % 360 * 1000; }, spot.s);
+  const Tlap = await p.evaluate((S0) => { const s = window.__fi2.trains.sched; let T = 0; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 70 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) { T = t; break; } } const P = s.trainPhase(0, s.clock()); window.__skew += (((T - P) % 360) + 360) % 360 * 1000;  return T; }, spot.s);
+  // (after the ride part's clock jumps the page clock and the trains' can differ: nudge until train 0 really is at that lap time)
+  for (let q = 0; q < 3; q++) { await p.waitForTimeout(250); await p.evaluate((T) => { const d = ((((T - window.__fi2.trains.runner.t[0] + 180) % 360) + 360) % 360) - 180; if (Math.abs(d) > 2) window.__skew += d * 1000; }, Tlap); }
   // (after moving the clock: a train standing where it was would have pushed the player off the line)
-  await tp(p, spot.x, spot.z); await p.waitForTimeout(300);
+  await tp(p, spot.x, spot.z); await p.waitForTimeout(800);
   if (process.env.XDBG) console.log('  dbg', JSON.stringify(await p.evaluate(() => { const t = window.__fi2.trains; return { s: t.states[0].s, behind: t.runner.behind(0), lap: t.runner.t[0], cluster: t.cluster, skew: window.__skew }; })));
   console.log('  on the rails at', JSON.stringify(spot), '→ player', JSON.stringify(await p.evaluate(() => ({ x: +window.__fi2.location.x.toFixed(1), z: +window.__fi2.location.z.toFixed(1) }))));
   const r = await p.evaluate(async (S0) => { const f = window.__fi2, t = f.trains, t0 = performance.now(); let note = '', minGap = 1e9, moved = 0; const x0 = f.location.x, z0 = f.location.z;
     while (performance.now() - t0 < 22000) { await new Promise((r) => requestAnimationFrame(r)); const n = document.querySelector('[data-island-toast], [data-train-note], [role="status"]')?.textContent || ''; if (/step off/i.test(n)) note = n;
       const fs = t.states[0].s; moved = Math.hypot(f.location.x - x0, f.location.z - z0); if (moved < 2.4) minGap = Math.min(minGap, ((S0 - fs) % 2700 + 2700) % 2700); if (moved > 3) break; }
     return { note, minGap: +minGap.toFixed(1), moved: +moved.toFixed(1), held: +t.runner.heldFor(0).toFixed(1) }; }, spot.s);
-  check('standing on the rails: the train stops short of you and you are eased off the track', r.minGap > 2 && r.moved > 1.5, JSON.stringify(r));
+  check('standing on the rails: the train stops short of you and you are eased off the track', r.minGap > 2 && r.minGap < 8 && r.moved > 1.5, JSON.stringify(r)); // (< 8: the train really came up to you)
 }
 const OWNER_SPOTS = [
   ['1-south-coast', 125, 226], ['2-palm-trestle', -10, 101], ['3-shore-wall', 30, 140], ['4-south-station', 160, 223], ['5-east-hill', 664, 51],
