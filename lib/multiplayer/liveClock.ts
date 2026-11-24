@@ -24,6 +24,8 @@ export interface LiveClock {
   readonly live: boolean;
   /** The jitter estimate (ms). */
   readonly jitter: number;
+  /** The relay's clock (epoch ms) estimated at localNow, NaN before an S.Live arrived (the Island Line timetable, trainSchedule.ts). */
+  serverNow(localNow: number): number;
   reset(): void;
 }
 
@@ -52,6 +54,7 @@ export function createLiveClock(): LiveClock {
     },
     get live() { return live; },
     get jitter() { return jit; },
+    serverNow(localNow) { return live ? localNow - off : NaN; },
     reset() { live = false; off = 0; jit = 0; cur = LEGACY_DELAY_MS; curAt = -1; lastAt = 0; },
   };
 }
