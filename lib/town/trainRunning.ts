@@ -173,10 +173,12 @@ function buildDoorLeaf(){const g=new VGeo(),h=(DOOR_Y1-DOOR_Y0)/2,w=DOOR_HALF/2,
 function buildCrossing(ci:number,obstacles:Obstacle[]|null){
  const L=trainLayout(),c=TRAIN_CROSSINGS[ci],a=trackAt(c.s),i=Math.round(wrapS(c.s)/TRACK_DS)%TRACK.n,bed=L.profile.bed[i],g=new VGeo();
  // local frame: +z along the line (the arms lie along it, across the path), +x left of travel, y up from the bed
- const u0=-(c.width/2+.5),len=c.width+.6;
+ const uBase=-(c.width/2+.5),len=c.width+.6;
  // Phase 4: a footpath crossing's machine is smaller (5 post bands, lamps at 1.5 m, the arm at 0.85 m: hip height for walkers).
  const bands=c.ped?5:7,lampY=c.ped?1.5:2.05,barY=c.ped?1.74:2.32,armY=c.ped?.85:1;
- for(const v of [-3.1,3.1]){
+ // A skewed footpath (c.skew: metres along the line per metre across it) shifts each side's post and arm with the path, so the
+ // post stands beside the path on both sides and the arm spans it.
+ for(const v of [-3.1,3.1]){const u0=uBase+(c.skew??0)*v;
   for(let k=0;k<bands;k++)g.box(v,.2+k*.32,u0,.075,.16,.075,k%2?COL.post:COL.yellow);// the machine's striped post
   g.box(v,lampY,u0-.12,.13,.13,.06,COL.lamp,PART.left);g.box(v,lampY,u0+.12,.13,.13,.06,COL.lamp,PART.right);// twin lamps, flashing in turn
   g.box(v,barY,u0,.05,.04,.3,COL.post);

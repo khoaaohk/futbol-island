@@ -57,7 +57,7 @@ const topics=(...t:Talk[])=>t.map((x,i)=>({id:'t'+i,question:x[0],answer:x[1],fo
 
 export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
  // ---- 1 North (Kit Shop)
- {id:'stn-hana',station:'north',name:'Hana',role:'Station attendant',pursuit:'KEEPING THE NORTH STATION RUNNING',...at('north','stand'),character:'female',face:'light',clothing:'classic',
+ {id:'stn-hana',station:'north',name:'Haruka',role:'Station attendant',pursuit:'KEEPING THE NORTH STATION RUNNING',...at('north','stand'),character:'female',face:'light',clothing:'classic',
   look:{skin:1,hair:'bun',headwear:'cap',headwearColor:'#2f4a7a'},persona:'A cheerful station attendant who checks every train in and out.',boards:false,
   greeting:'Welcome to North station! I check every train in and out. Trains and football have more in common than you think. Ask me anything!',
   lines:['Mind the gap, and stay behind the yellow line!','The next train is on the board. Want a train fact while you wait?'],
@@ -79,7 +79,7 @@ export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
   topics:topics(
    ['What is an away day?','An away day is the trip to watch your team play at the other team\'s ground. Away fans sit together in their own part of the stadium, called the away end.','Is it hard to cheer when you are away?','You are fewer, so you sing louder! Players often say they can hear their away fans and it gives them a lift.'],
    ['Do fans really share trains?','Yes. In Germany, clubs and fan groups sometimes book a whole special train for an away game, so hundreds of fans ride together.','Is that just in Germany?','No: fans in Japan, England and many other countries travel to games together by train too.'])},
- {id:'stn-kofi',station:'west',name:'Kofi',role:'Kid with a ball',pursuit:'WAITING WITH HIS BALL',...at('west','bench'),character:'male',face:'deep',clothing:'sunset',age:'kid',
+ {id:'stn-kofi',station:'west',name:'Kojo',role:'Kid with a ball',pursuit:'WAITING WITH HIS BALL',...at('west','bench'),character:'male',face:'deep',clothing:'sunset',age:'kid',
   look:{skin:6,hair:'crop'},persona:'A young fan who knows the history of railway clubs.',boards:false,
   greeting:'I am not kicking my ball on the platform, promise! Did you know some big clubs were started by railway workers?',
   lines:['I keep my ball in my hands near the trains.','Railway clubs are the best clubs!'],
@@ -117,14 +117,14 @@ export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[
    ['Do railways own football clubs?','Some do! Lokomotiv Moscow was started as a club for railway workers, and it still belongs to the country\'s railway company.','Why "Lokomotiv"?','It means locomotive, the engine that pulls the train. Lots of railway clubs have names like that.'],
    ['Did other workers start clubs too?','Yes. PSV Eindhoven in the Netherlands was started in 1913 by people who worked for the Philips company. It was a works team, like the railway teams.','Are works teams still around?','Many big clubs today began as a team for workers at a factory, a railway or a shipyard.'])},
  // ---- 5 Coral Cay
- {id:'stn-kai',station:'cay',name:'Kai',role:'Station attendant',pursuit:'WATCHING THE PLATFORM',...at('cay','stand'),character:'male',face:'warm',clothing:'coast',
+ {id:'stn-kai',station:'cay',name:'Daichi',role:'Station attendant',pursuit:'WATCHING THE PLATFORM',...at('cay','stand'),character:'male',face:'warm',clothing:'coast',
   look:{skin:4,hair:'crop',headwear:'cap',headwearColor:'#2f4a7a'},persona:'The Coral Cay station attendant, keen on platform safety.',boards:false,
   greeting:'Welcome to Coral Cay! Please wait behind the yellow line. Do you know what those bumpy yellow tiles are for?',
   lines:['Behind the yellow line, please!','Beach soccer players get off here.'],
   topics:topics(
    ['What are the bumpy yellow tiles?','Tactile paving. They help blind and partially sighted people feel where the platform edge is. A Japanese inventor, Seiichi Miyake, made them in 1965.','Can blind people play football?','Yes! In blind football the ball has bells inside, so players hear where it is. It has been a Paralympic sport since 2004.'],
    ['Why stay back from the edge?','A train is very heavy, so it needs a long way to stop. Staying behind the line keeps you safe while it pulls in.','Is that like football?','A bit: defenders keep a safe distance at a free kick too. At least 9.15 metres, the rules say.'])},
- {id:'stn-bea',station:'cay',name:'Bea',role:'Beach soccer fan',pursuit:'GOING TO THE BEACH SOCCER',...at('cay','bench'),character:'female',face:'deep',clothing:'sunset',
+ {id:'stn-bea',station:'cay',name:'Bianca',role:'Beach soccer fan',pursuit:'GOING TO THE BEACH SOCCER',...at('cay','bench'),character:'female',face:'deep',clothing:'sunset',
   look:{skin:6,hair:'long',headwear:'headband'},persona:'A fan who takes the train to Coral Cay every week for beach soccer.',boards:true,
   greeting:'I take the train here every week to watch beach soccer. Want to know how a beach game works?',
   lines:['Sand, sun and bicycle kicks!','The train gets me here right on time.'],

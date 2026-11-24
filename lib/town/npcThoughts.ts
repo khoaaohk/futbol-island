@@ -466,7 +466,30 @@ const CAST:Record<string,Record<string,NpcThoughts>>={
    ['Rehearsing my advantage signal.','Running the line nice and level.','Saving notes for my referee course.','Smiling at a fair tackle.']),
   'stadium-photo-rafael':t(['My bib shows I may work pitch-side.','Photos go out while the match is on.','An editor picks the best picture.','Fans at home see photos in minutes.','Shoot, choose, send, then shoot again.','Many photographers start at youth games.'],
    ['Sending a photo to the newsroom.','Picking the sharpest shot.','Laptop charged, camera ready.','Adjusting my bib straps.'])
- }
+ },
+ // The Island Line's station islanders (Nov 23 2026, train Phase 4; lib/town/stationNpcs.ts): trains, travel and football.
+ station:{
+  'stn-hana':t(['Behind the yellow line, please!','Every train checked in and out.','Point, call, then wave it off.','Kashima has a match-day station.','The board says the next train is close.','Mind the gap as you step on.'],
+   ['Doors clear, signal green.','Polishing the platform clock.','Counting passengers off the train.','Whistle ready for the next one.']),
+  'stn-ted':t(['Fifty years of away trips by train.','Scarf on, flask full, ready to go.','Football specials were packed with fans.','Wembley has three stations nearby.','Away days start on a platform.','I still have my first match ticket.'],
+   ['Sipping tea from my old flask.','Whistling an old terrace tune.','Reading last week\'s programme again.','The train hum is my favourite song.']),
+  'stn-ines':t(['Is this the stop for the stadium?','Away day! The trip is half the fun.','Some fans hire whole trains to travel.','Away fans sing the loudest.','Ticket safe, water packed, voice ready.','Clap good play, even from rivals.'],
+   ['Checking the board one more time.','Practising the chorus under my breath.','Texting home: arrived safely.','My scarf has been to ten grounds.']),
+  'stn-kofi':t(['Ball in my hands near the trains!','Manchester United began on the railway.','Newton Heath played in green and gold.','Crewe are called the Railwaymen.','Lots of big clubs were works teams.','Arsenal started as Dial Square.'],
+   ['Spinning my ball on one finger.','Reading my club history book.','Waiting for the train to the stadium.','I want to start my own club one day.']),
+  'stn-ren':t(['Rice before a match gives steady energy.','Ekiben: lunch made for the train.','In 1930 teams sailed to the World Cup.','Share your lunch, share the ball.','Uruguay hosted and won in 1930.','A good trip starts with a good meal.'],
+   ['Unwrapping my bento slowly.','Rice, fish and a pickled plum.','Watching the waves from the bench.','The museum is just along the boardwalk.']),
+  'stn-mo':t(['That train was right on time!','The bullet train opened in 1964.','A maglev once went 603 km/h.','Players run about 10 km a match.','Notebook, pencil, timetable: ready.','Shh, I am timing the next one.'],
+   ['Writing down the last arrival.','Two cars again. Noted.','Underlining my favourite train.','Two minutes between trains here.']),
+  'stn-lena':t(['We travel the day before every away game.','Sleep well, play well.','Shin pads in every bag, please.','Warm up before you kick a ball.','The longest rail tunnel is 57 km.','Thin air up high tires legs faster.'],
+   ['Counting kit bags: all here.','Planning tomorrow\'s warm-up.','Checking the team\'s train times.','Water bottles for everyone.']),
+  'stn-pip':t(['Watch the tunnel, here it comes!','Some clubs belong to railways.','Lokomotiv means locomotive.','PSV began as a works team.','Whoosh! Out of the mountain.','Trains echo inside the tunnel.'],
+   ['Counting cars as they pass.','Listening for the tunnel rumble.','Swinging my legs on the bench.','Drawing a train in my sketchbook.']),
+  'stn-kai':t(['Welcome to Coral Cay station!','Bumpy yellow tiles guide the way.','Blind football uses a ball with bells.','Wait for the crossing lamps to stop.','Beach soccer fans, this way!','Stand well back as the train comes in.'],
+   ['Sweeping sand off the platform.','Checking the crossing barriers.','The sea breeze keeps us cool.','Another busy beach day ahead.']),
+  'stn-bea':t(['Three periods of 12 minutes each!','Bare feet grip the soft sand best.','J.League began in 1993 with 10 clubs.','Sand makes every step harder.','Bicycle kicks are best on soft sand.','The train gets me to the sand on time.'],
+   ['Shaking sand out of my shoes.','Watching the sea from the platform.','Humming a samba beat.','Saving a seat on the next train.']),
+ },
 };
 
 /** Fallback pools by area: what is around each place. */
@@ -497,6 +520,8 @@ const BY_AREA:Record<string,NpcThoughts>={
   ['Hangers clicking, shoppers chatting.','Shelves full of fresh kit.','A shiny new ball on display.']),
  konbini:t(['The konbini shelves are fully stocked.','Snacks, drinks and football magazines.','Rice balls on the shelf, lovely.','The magazine rack has new issues.','Quick snack before practice?'],
   ['The fridge is humming softly.','A bell rings as the door opens.','Shelves neat and tidy.']),
+ station:t(['Trains every two minutes round the island.','Mind the gap as you board.','Next stop: somewhere new to play.','Hear the bell? The barriers are coming down.','Stations bring fans together.'],
+  ['A train hums along the line.','The departure board flips to a new time.','Lanterns sway under the station roof.']),
  stadium:t(['The stadium is buzzing before kick-off.','Can you hear the crowd warming up?','Floodlights, stands and a perfect pitch.','Match day at DRIP FC Stadium!','Fans streaming in from every gate.'],
   ['Flags flutter on the stadium roof.','The groundstaff watered the pitch.','A buzz of chatter round the stands.'])
 };
@@ -506,6 +531,12 @@ export const NPC_THOUGHT_AREA:Record<string,string>=Object.fromEntries(Object.en
 
 const b=(id:string,a:string,bId:string,lines:string[]):NpcBanter=>({id,a,b:bId,lines});
 const BANTER:NpcBanter[]=[
+ // Island Line station pairs (Nov 23 2026): the two islanders on each platform.
+ b('hana-ted','stn-hana','stn-ted',['Ted, your train is next on the board.','Thank you! Fifty years, never missed one.','Then do not start today!']),
+ b('ines-kofi','stn-ines','stn-kofi',['Is this the stadium stop?','Yes! Hold your ball, the train is coming.','Good tip. I will hold my scarf too!']),
+ b('ren-mo','stn-ren','stn-mo',['Mo, would you like some rice?','After I note this train, yes please!','Steady energy for a steady pencil.']),
+ b('lena-pip','stn-lena','stn-pip',['Pip, do you know the longest tunnel?','The Gotthard! About 57 km long.','You would make a great team captain.']),
+ b('kai-bea','stn-kai','stn-bea',['Bianca, beach games today?','All afternoon! Three periods of twelve.','Sun cream and water, then. Enjoy!']),
  // square
  b('okafor-elena','okafor','elena',['Elena, did that match change your mind?','Yes! The second half was a new game.','That is why we watch until the end.']),
  b('vera-imani','vera','imani',['Imani, any confirmed signings today?','No idea, I only do scores!','Then I will keep my rumours to myself.']),

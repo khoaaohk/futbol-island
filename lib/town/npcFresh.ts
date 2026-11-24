@@ -13,11 +13,12 @@ import {PART_6} from './npcFresh/part6';
 import {PART_7} from './npcFresh/part7';
 import {PART_8} from './npcFresh/part8';
 import {PART_9} from './npcFresh/part9';
+import {PART_10} from './npcFresh/part10';// Nov 23 2026: the Island Line's station islanders
 import {FRESH_AREA_POOLS} from './npcFresh/areas';
 
 /** World area ids with a fallback pool: the five town areas (TownArea), Summit Isle, and the deep-sea boats. */
 export const FRESH_AREAS=['square','beach','pier','cay','residential','summit','sea'] as const;
 export type FreshAreaId=typeof FRESH_AREAS[number];
 
-const byNpc:Record<string,NpcFresh>={...PART_1,...PART_2,...PART_3,...PART_4,...PART_5,...PART_6,...PART_7,...PART_8,...PART_9};
+const byNpc:Record<string,NpcFresh>={...PART_1,...PART_2,...PART_3,...PART_4,...PART_5,...PART_6,...PART_7,...PART_8,...PART_9,...PART_10};
 export const FRESH:NpcFreshBook={byNpc,byArea:FRESH_AREA_POOLS};

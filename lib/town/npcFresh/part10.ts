@@ -1,0 +1,213 @@
+import type {NpcFresh,FreshTopic,NpcChallenge} from '../npcFreshTypes';
+// Fresh chat content, shard 10 (Nov 23 2026, Island Line Phase 4): the ten station islanders (lib/town/stationNpcs.ts).
+// Trains, travel and football, kid level. Facts checked Nov 23 2026: club origins (arsenal.com, whufc.com, juventus.com,
+// evertonfc.com, avfc.co.uk histories), 1930 final Uruguay 4-2 Argentina and 2002 Japan/Korea (FIFA.com), "Mind the gap" (TfL,
+// 1968), SCMaglev 603 km/h (JR Central, 2015), 500 Series kingfisher nose (JR West / Eiji Nakatsu), outfield players run about
+// 10-12 km (FIFA physical reports), added time (IFAB Law 7), shin pads compulsory and team colours (IFAB Law 4), FIFA 11+
+// warm-up, sleep 9-12 h for ages 6-12 (AASM), La Paz about 3,600 m, Liverpool and Manchester Railway 1830 and Rocket 1829
+// (Science Museum), beach soccer pitch 35-37 x 26-28 m, goals 5.5 x 2.2 m, no draws (BSWW / FIFA Beach Soccer Laws), first FIFA
+// Beach Soccer World Cup 2005 in Rio, won by France (FIFA.com).
+const t=(id:string,question:string,answer:string,fq?:string,fa?:string):FreshTopic=>fq&&fa?{id,question,answer,followUp:{question:fq,answer:fa}}:{id,question,answer};
+const c=(id:string,prompt:string,options:[string,string,string],correct:0|1|2,right:string,wrong:string):NpcChallenge=>({id,prompt,options,correct,right,wrong});
+export const PART_10:Record<string,NpcFresh>={
+"stn-hana":{
+ topics:[
+  t('whistle-depart','Why do station staff blow a whistle?','A short whistle tells everyone the doors are about to close. Referees use a whistle too, to start and stop play.','Does a referee use different whistles?','One whistle, many sounds: a short peep for a small foul, a long blast for a goal or the end of the half.'),
+  t('platform-numbers','Why do platforms have numbers?','So you find your train quickly. Shirt numbers do the same job on a pitch: you spot a teammate in a flash.','Does number 1 always go in goal?','Usually! Number 1 is usually the goalkeeper, but players can pick other numbers in many leagues.'),
+  t('timetable-plan','How is a train timetable made?','Planners choose when each train leaves every station so two trains never need the same track at once. A league fixture list is planned in a similar way.','What is a fixture list?','The plan of every match in a season: who plays whom, where and when.'),
+  t('signal-colours','What do the signal colours mean?','Green means go, yellow means be ready to slow down and red means stop. Football has colours too: a yellow card is a warning and a red card sends a player off.'),
+  t('staff-uniform','Why do you wear a uniform?','So passengers can spot staff quickly in a crowd. Football teams wear kits for the same reason, and the referee wears a different colour from both teams.','Is that a rule?','Yes. The Laws of the Game say the two teams and the referee must wear colours that are easy to tell apart.'),
+  t('mind-the-gap','Why do stations say mind the gap?','There can be a gap between the train and the platform edge. London started saying mind the gap in 1968, and now people around the world know it.','How do I stay safe?','Look down as you step on and off, hold a rail and never run for the doors.'),
+  t('match-rush','Do stations get busy after matches?','Very! When the final whistle blows, thousands of fans head for the trains at once. Staff add extra trains and guide people in calm lines.','How can fans help?','Walk, do not push, and let people off the train before you get on.'),
+  t('lost-boots','What is left behind on trains most?','Umbrellas, bags and sometimes football boots! Many stations keep a lost property office for things people forget.','How do I not forget my kit?','Pack the night before and check your bag when you leave: boots, pads, water.'),
+ ],
+ challenges:[
+  c('c-red-signal','The signal ahead turns red. What does the train driver do?',['Speeds up to get past it','Stops and waits for it to change','Sounds the horn and keeps going'],1,'Right. Red means stop, for trains and for road traffic.','Not quite. A red signal means stop and wait until it changes.'),
+  c('c-yellow-card','In football, what does a yellow card mean?',['A warning to the player','A goal has been scored','The match is at half-time'],0,'Yes! A yellow card is a caution. Two in one match make a red.','Not quite. A yellow card is a warning to a player.'),
+  c('c-kit-colours','Why must the two teams wear different colours?',['So shirts match the stadium seats','So fans can buy new shirts each week','So players and the referee can tell the teams apart'],2,'Exactly. Clear colours make quick passes possible.','Not quite. Different colours help everyone tell the teams apart.'),
+  c('c-wait-where','Where should you wait for a train?',['Right at the platform edge','Behind the yellow line','Down on the track'],1,'Right. Behind the line you stay safe while the train pulls in.','Not quite. Wait behind the yellow line, well back from the edge.'),
+ ],
+ openers:['Good day! Every train is on time so far, and I like to keep it that way. What can I tell you?','Hello! I have checked the doors, the signals and the board. Now I have time for a question.','Welcome to the North platform! The next train is on the board. Ask me something while you wait.','Hi there! Did you see the last train glide in? Smooth as a perfect pass. What would you like to know?'],
+ returning:['Back on my platform! Last time we talked about "{topic}". Ready for another train fact?','Hello again! I remember "{topic}". The next train is a little way off, so ask away.','Nice to see you! After "{topic}", I have saved a new question for you.'],
+},
+"stn-ted":{
+ topics:[
+  t('why-scarves','What is your scarf for?','To show their club colours, and to keep warm! Many leagues play right through the cold winter months.','Do players wear scarves?','Not on the pitch, but some wear gloves and long sleeves on very cold nights.'),
+  t('away-tickets','How do away fans get tickets?','The home club keeps one part of the stadium for visiting fans. The away club usually sells those tickets to its own supporters.','Can I sit with the home fans?','At big matches it is safer to sit in your own team\'s section, so everyone can cheer freely.'),
+  t('sing-on-board','Do fans sing on the train?','Lots do! The best travelling fans keep it friendly, so other passengers enjoy the trip too.','What makes a good song?','Simple words, a tune everyone knows and a chorus about the team, never about hurting anyone.'),
+  t('match-programme','What is that booklet fans buy?','A booklet sold on match day with the teams, player stories and pictures. Some fans keep every one they buy.','Why collect them?','Each one remembers a day out: who played, who scored and who you went with.'),
+  t('groundhopping','What is groundhopping?','It means visiting as many different football grounds as you can. Some fans have watched games at hundreds of stadiums.','Do you groundhop?','I have ticked off quite a few, always by train. The journey is half the fun.'),
+  t('first-match','What was your first match?','I was seven and went with my grandad by train. I still remember how green the pitch looked under the lights.','Did your team win?','We lost, but I did not mind. I was hooked from the first kick.'),
+  t('kick-off-times','Why do kick-off times change?','Television, travel and weather all play a part. Clubs announce times weeks ahead so fans can plan their journey.'),
+  t('early-arrival','Why arrive at the ground early?','To find your seat calmly, watch the warm-up and soak up the atmosphere. Rushing in late means missing the start.','What happens in the warm-up?','Players jog, stretch, pass and shoot, so their bodies are ready for kick-off.'),
+ ],
+ challenges:[
+  c('c-away-section','You travel to an away game. Where do away fans usually sit?',['In their own away section','In the home end','On the team bench'],0,'Yes. The away section keeps visiting fans together.','Not quite. Away fans usually sit together in their own section.'),
+  c('c-friendly-fan','A fan of the other team sits near you on the train. What is the best thing to do?',['Ignore everyone','Say hello and be friendly','Sing loudly at them'],1,'Right. Football is more fun when rivals are friendly.','Not quite. A friendly hello makes the trip nicer for everyone.'),
+  c('c-programme','What would you find in a match programme?',['A train ticket','A map of the sea','The teams and player stories'],2,'Exactly. Programmes are full of the day\'s teams and stories.','Not quite. A programme has the teams, stories and pictures.'),
+  c('c-winter-scarf','Why are scarves popular at winter matches?',['They keep you warm and show your colours','They are needed to get in','They help the team score'],0,'Yes! Warm and proud at the same time.','Not quite. Scarves keep fans warm and show the club colours.'),
+ ],
+ openers:['Ah, a fellow traveller! I have followed my team by train for fifty years. What would you like to hear?','Hello! My flask is full and my scarf is on. Plenty of time for a chat before the train.','Morning! Every away trip starts on a bench like this one. Sit down and ask me anything.','Hello there! I have seen a lot of matches from a lot of trains. What can an old fan tell you?'],
+ returning:['There you are! We chatted about "{topic}" last time. Got another question for an old fan?','Hello again! I was thinking about "{topic}" on the last train. Ask me something new?','Good to see you! After "{topic}", I have another story ready.'],
+},
+"stn-ines":{
+ topics:[
+  t('why-chant','Why do fans chant?','To cheer the team on together. A loud, happy crowd can give tired players a lift near the end of a game.','Does it really help?','Many players say they hear their fans and it makes them run that extra metre.'),
+  t('travel-bag','What do you pack for an away day?','Ticket, water bottle, a snack, a jacket and my scarf. And a charged phone so my family knows I am safe.','Why a jacket on a sunny day?','Weather can change, and evening games get chilly once the sun goes down.'),
+  t('home-advantage','Is it easier to play at home?','On average, home teams win a little more often. Players know their pitch, sleep in their own beds and hear their own fans.','So away wins are special?','Yes! An away win feels extra sweet because it is harder.'),
+  t('good-guest','How should away fans behave?','Like good guests. Cheer your team, clap good play from anyone and look after the stadium you are visiting.'),
+  t('what-tifo','What is a tifo?','A giant picture made by fans holding up cards or flags before kick-off. From far away the whole stand becomes one big image.','How long does a tifo take to make?','Fan groups can spend weeks planning, painting and placing every card.'),
+  t('what-derby','What is a derby?','A match between two rival teams from the same city or area. Derby days are some of the loudest matches of the year.','Are derbies friendly?','The best ones are: big rivals on the pitch, neighbours again after the final whistle.'),
+  t('trip-length','How long was your journey here?','Most of the morning, with two changes of train! I played a guessing game: which station has the most fans getting on.','Who won the guessing game?','The last station before the stadium, every time. It turned into a sea of colours.'),
+  t('new-friends','Do away fans make friends?','All the time. You share trains, snacks and nerves with people you just met. By the final whistle, you know their names.'),
+ ],
+ challenges:[
+  c('c-derby','Two rival teams from the same city meet. What is that match called?',['A friendly cup','A derby','A replay'],1,'Right! Two teams from the same city or area.','Not quite. A derby is a match between local rivals.'),
+  c('c-home-wins','On average, who wins a little more often?',['The team playing at home','The team in white','The team that arrived last'],0,'Yes. Home advantage is real, though away wins happen too.','Not quite. Home teams win a bit more often, on average.'),
+  c('c-guest','You are an away fan and the home keeper makes a brilliant save. What could you do?',['Boo the keeper','Go and buy a snack','Applaud the keeper'],2,'Exactly. Good football deserves a clap, whoever plays it.','Not quite. Clapping a great save shows good sportsmanship.'),
+  c('c-tifo','Fans hold up cards that make one giant picture. What is it called?',['A tifo','A booklet','A penalty'],0,'Yes! Cards or flags that turn a stand into one picture.','Not quite. A tifo is a giant display made by the fans.'),
+ ],
+ openers:['Olá! I changed trains three times to get to this match. Is this the right platform? Ask me anything!','Hello! I love the away day buzz: trains, scarves and songs. What would you like to know?','Hi! My ticket is safe in my pocket and my voice is ready. Want to chat while we wait?','Good to meet you! I always talk to other fans on the platform. What is your question?'],
+ returning:['Hello again! We talked about "{topic}" before. Ready for another away day story?','You found me! I still remember "{topic}". Let us talk about something new.','Back again! After "{topic}", I have another fan fact for you.'],
+},
+"stn-kofi":{
+ topics:[
+  t('ball-hands','Why are you holding your ball?','Near trains a ball should stay in your hands or your bag. If it rolls off the platform, never go after it: tell the staff.','Where can I practise?','At the park, on a pitch or in a quiet yard, never near roads or railways.'),
+  t('dial-square','How did Arsenal begin?','In 1886, workers at the Royal Arsenal in Woolwich started a team called Dial Square. That is why the club badge has a cannon.','Why a cannon?','The Royal Arsenal made weapons and cannons, so the cannon remembers where the club began.'),
+  t('irons','Why are West Ham called the Hammers?','The club began in 1895 as Thames Ironworks, a shipbuilding company team. Their workers used riveting hammers, and the nickname stuck.','Do they have another nickname?','Yes, fans also call them the Irons, after the ironworks.'),
+  t('juventus-name','What does Juventus mean?','It means youth in Latin. School students in Turin started the club in 1897.','Who chose the black and white?','The club first wore pink! The black and white stripes came a few years later.'),
+  t('church-clubs','Did any clubs start at a church?','Yes. Everton began as a church team called St Domingo\'s, and Aston Villa grew from a church cricket club.','Why church teams?','Churches had groups for young people, and football was a fun way to keep everyone active.'),
+  t('badge-stories','Do club badges tell stories?','Often! A badge can show a cannon, a ship, a castle or an animal from the club\'s town and history.','What would my badge show?','Something about where you live and what you love. Design one!'),
+  t('railway-towns','What is a railway town?','A town that grew up around a big station or railway works. Lots of workers lived there, and many started football teams.','Is our island a railway town now?','A little bit! We have five stations and a train every couple of minutes.'),
+  t('team-start','Can anyone start a team?','Yes! Most famous clubs began as a group of friends who wanted to play. All you need is a ball and some teammates.'),
+ ],
+ challenges:[
+  c('c-dial-square','What was Arsenal\'s very first name?',['Cannon United','Dial Square','Woolwich Rovers'],1,'Right! Workers at the Royal Arsenal named it Dial Square.','Not quite. The first name was Dial Square.'),
+  c('c-hammers','Where does West Ham\'s nickname, the Hammers, come from?',['Hammers used at the Thames Ironworks','A famous carpenter','The sound of fans stamping'],0,'Yes! Riveting hammers from the ironworks.','Not quite. It comes from the hammers used at the Thames Ironworks.'),
+  c('c-ball-track','Your ball rolls off the platform onto the track. What do you do?',['Jump down quickly','Kick another ball after it','Stay back and tell the station staff'],2,'Exactly. Never go on the track. The staff can help.','Not quite. Stay on the platform and tell the staff.'),
+  c('c-juventus','What does the club name Juventus mean in Latin?',['Youth','Lightning','Champions'],0,'Yes! Juventus means youth.','Not quite. Juventus means youth.'),
+ ],
+ openers:['Hi! I know loads about clubs that started with workers and trains. Want to hear one?','Hello! My ball stays in my hands near the trains. Ask me a football history question!','Hey! I am waiting for the train to the stadium. Do you like club history?','Hi there! Did you know lots of big clubs started as works teams? Ask me!'],
+ returning:['You came back! Last time it was "{topic}". I have another club story ready.','Hi again! I remember "{topic}". Want another history fact?','Hello! After "{topic}", I found a new one in my book.'],
+},
+"stn-ren":{
+ topics:[
+  t('orange-slices','What did teams eat at half-time long ago?','In many countries, orange slices! They are juicy and quick to eat. Today players often have water, a sports drink or a small snack.','Is fruit good for footballers?','Yes. Fruit gives energy and water, and it is easy to carry.'),
+  t('onigiri-fillings','What goes inside a rice ball?','Salmon, tuna or a pickled plum are favourites. The rice gives your legs steady energy for a game.','When should I eat it?','About an hour or two before you play, so your tummy has time to settle.'),
+  t('first-final','Who won the first World Cup final?','Uruguay, at home in Montevideo in 1930. They beat Argentina 4-2.','Was it a big stadium?','The Estadio Centenario was built for that World Cup, and it is still used today.'),
+  t('asia-cup-2002','When did the World Cup come to Asia?','In 2002, when Japan and South Korea shared it. That was the first time Asia hosted the tournament.','Who won in 2002?','Brazil, beating Germany 2-0 in the final in Yokohama.'),
+  t('leather-ball','What were footballs like when you were small?','Heavier, with laces on the outside. On a wet day the leather soaked up water.','Did that hurt when heading?','It could, so we headed less and passed along the ground more.'),
+  t('museum-nearby','What is in the museum here?','The History Museum is just along the boardwalk. You can see how the game, the ball and the boots have changed.','Should I go?','Yes! History helps you understand why the game is played the way it is.'),
+  t('rest-on-train','Should players nap on the train?','A short rest on a long trip can help. Moving about, stretching and drinking water matter too.'),
+  t('share-bento','Do you share your lunch?','Always! Sharing food on the train is a happy tradition. Teams share too: passing is just sharing the ball.','Who taught you that?','My first coach. He said a team that shares the ball shares the win.'),
+ ],
+ challenges:[
+  c('c-1930-final','Who won the very first World Cup in 1930?',['Brazil','Italy','Uruguay'],2,'Yes! Uruguay won at home in Montevideo.','Not quite. Uruguay won the first World Cup.'),
+  c('c-2002-hosts','Which two countries hosted the 2002 World Cup?',['Japan and South Korea','China and India','Australia and Japan'],0,'Right! The first World Cup in Asia.','Not quite. Japan and South Korea hosted together.'),
+  c('c-pre-match','Which snack is best an hour or two before you play?',['A huge fizzy drink','A rice ball or a banana','Nothing all day'],1,'Yes. Steady energy without a heavy tummy.','Not quite. A rice ball or a banana gives steady energy.'),
+  c('c-half-time','What is half-time for?',['Rest, a drink and a team talk','Catching an early train home','Swapping shirts with the referee'],0,'Exactly. Players rest, drink and plan the second half.','Not quite. Half-time is for rest, a drink and a team talk.'),
+ ],
+ openers:['Hello, young one! Sit with me. I have a bento and a lifetime of football stories.','Ah, a visitor! My lunch box is open and so is my memory. What would you like to know?','Good day! The train will come soon, so there is just time for a story. Ask me anything.','Hello! I always eat before a long journey, just like a player before a match. What is your question?'],
+ returning:['Welcome back! We spoke about "{topic}" last time. I have another story with my lunch.','Ah, you again! I remember "{topic}". Shall we try a new question?','Hello! After "{topic}", I thought of something else to tell you.'],
+},
+"stn-mo":{
+ topics:[
+  t('my-notebook','What are all those notes about?','The time each train arrives, which train it is and how many people get off. Patterns appear when you write things down.','Does football use notebooks too?','Analysts note passes, shots and runs, then coaches use the patterns to plan training.'),
+  t('maglev-record','What is the fastest train ever?','A Japanese maglev test train reached 603 km/h in 2015. Maglev trains float above the track using magnets.','Does it carry passengers yet?','Not yet in regular service. A new maglev line is being built in Japan.'),
+  t('kingfisher-nose','Why do bullet trains have long noses?','A long nose helps stop a loud boom when the train rushes into a tunnel. One design copied the beak of a kingfisher, a bird that dives into water with barely a splash.','Do footballers copy nature?','Coaches sometimes compare quick dribblers to hares: low, fast and quick to change direction.'),
+  t('how-far-run','How many kilometres does a player run?','An outfield player often covers about 10 to 12 kilometres. Midfielders usually run the most.','Do goalkeepers run much?','Much less, but they make lots of quick sprints, jumps and dives.'),
+  t('added-time','Why does the referee add time?','To make up for time lost to injuries, substitutions and goal celebrations. The fourth official shows how many minutes on a board.','Can added time be long?','Sometimes several minutes, if there were lots of stoppages.'),
+  t('count-cars','How many cars does our train have?','Two cars, and I count every one. Counting helps me notice when something changes.','What else do you count?','The minutes between trains. Here it is about two minutes each time.'),
+  t('shot-speed','Is a shot faster than a train?','A really powerful shot can go well over 100 km/h. A bullet train is about three times faster than that.','Can I shoot harder?','Practise clean contact with your laces first. Power comes from good technique, not just a big swing.'),
+  t('spotting-safely','How do you spot trains safely?','Stay behind the yellow line, never go on the tracks and tell staff if something looks wrong. A good spotter is a careful spotter.'),
+ ],
+ challenges:[
+  c('c-maglev','How fast did the Japanese maglev test train go in 2015?',['150 km/h','603 km/h','1,000 km/h'],1,'Right! Faster than any other train so far.','Not quite. It reached 603 km/h.'),
+  c('c-kingfisher','Which bird inspired a bullet train\'s nose?',['A kingfisher','A penguin','An owl'],0,'Yes! Its beak slips into water with barely a splash.','Not quite. It was the kingfisher.'),
+  c('c-distance','About how far does an outfield player run in a match?',['1 kilometre','50 kilometres','About 10 to 12 kilometres'],2,'Exactly. That is a lot of running!','Not quite. It is usually about 10 to 12 kilometres.'),
+  c('c-added','The referee adds three minutes at the end. Why?',['To let fans buy snacks','To make up for stoppages','Because the clock is slow'],1,'Right. Injuries and substitutions take time.','Not quite. Added time makes up for stoppages.'),
+ ],
+ openers:['Shh, I am timing the next train! Okay, go ahead, what do you want to know?','Hi! My notebook is nearly full of train times. Want to hear what I have spotted?','Hello! I love numbers: train speeds, timings and football stats. Ask me something!','Hey! A train is due any second now. Quick, ask me a question!'],
+ returning:['Back again! I wrote down that we talked about "{topic}". New question?','Hi! My notes say "{topic}" last time. I have another fact for you.','Hello! After "{topic}", I spotted something new to share.'],
+},
+"stn-lena":{
+ topics:[
+  t('sleep-hours','How much sleep do young players need?','Children aged 6 to 12 should sleep 9 to 12 hours each night. Sleep is when your body recovers and grows.','What helps me sleep before a match?','A calm evening, no screens just before bed and the same bedtime as usual.'),
+  t('kit-list','What should every player pack?','Boots, shin pads, socks, water and a warm top. I check every bag before we leave.','Why pack two pairs of socks?','Wet socks give you blisters. Dry socks keep your feet happy.'),
+  t('shin-pads-rule','Do I have to wear shin pads?','Yes. The Laws of the Game say every player must wear shin pads in a match. They protect your legs from kicks.'),
+  t('warm-up-plan','How should a team warm up?','Gentle jogging, moving stretches, then quick sprints and touches of the ball. Programmes like FIFA 11+ help prevent injuries.','How long should it last?','About 15 to 20 minutes is plenty before most games.'),
+  t('altitude-games','Why is playing high up hard?','The air is thinner, so each breath has less oxygen. In La Paz, about 3,600 metres up, visiting teams often tire quickly.','How do teams get ready?','Some arrive days early to get used to it, others arrive just before kick-off.'),
+  t('cool-down','What do we do after a game?','Cool down with a slow jog and some stretches, then drink water and eat a proper meal.','Why not just sit down?','Moving gently helps your legs feel less stiff the next day.'),
+  t('time-zones','What if a team crosses time zones?','Their body clocks get mixed up, which is called jet lag. Teams often fly in days early for big tournaments to adjust.'),
+  t('team-journey','How do you keep a team happy on a trip?','Games, songs and snacks! A happy journey helps players arrive relaxed and ready.','Do you play games on the train?','Yes, our favourite is guessing the next station\'s first letter.'),
+ ],
+ challenges:[
+  c('c-pads','Are shin pads needed in a football match?',['Only for goalkeepers','Yes, every player must wear them','No, they are just for training'],1,'Right. The Laws of the Game say every player wears them.','Not quite. Every player must wear shin pads in a match.'),
+  c('c-sleep','About how much sleep do 6 to 12 year olds need each night?',['9 to 12 hours','4 hours','16 hours'],0,'Yes! Plenty of sleep helps you recover and grow.','Not quite. About 9 to 12 hours is right for your age.'),
+  c('c-thin-air','Why do players tire faster high up a mountain?',['The ball is heavier','The grass is longer','The air has less oxygen'],2,'Exactly. Thinner air means less oxygen in each breath.','Not quite. The air is thinner, so there is less oxygen.'),
+  c('c-cool','What is a good thing to do right after a match?',['Cool down and drink water','Sprint home as fast as you can','Skip food until tomorrow'],0,'Yes. A gentle cool down and water help you recover.','Not quite. Cool down, drink water and eat a proper meal.'),
+ ],
+ openers:['Hello! My team plays an away match tomorrow, so I am planning our trip. What would you like to know?','Hi there! Coaches think about sleep, food and travel as much as tactics. Ask me anything.','Good to see you! I am counting kit bags. Got a question while I count?','Hello! Arriving rested wins games. Want some travel tips from a coach?'],
+ returning:['Welcome back! We talked about "{topic}". Ready for another coaching tip?','Hello again! I remember "{topic}". What shall we cover next?','Nice to see you! After "{topic}", I have one more tip for you.'],
+},
+"stn-pip":{
+ topics:[
+  t('tunnel-loud','Why is the train louder in the tunnel?','The walls are close, so the sound bounces back at you instead of spreading out. That is called an echo.','Do stadiums echo too?','A stadium with a roof keeps the crowd noise in, so it feels extra loud.'),
+  t('first-railway','When did passenger trains start?','The Liverpool and Manchester Railway opened in 1830. It was the first line between two big cities with steam trains carrying passengers.','What train was famous then?','Rocket, a steam engine built by George and Robert Stephenson in 1829.'),
+  t('what-loco','What is a locomotive?','The engine that pulls or pushes a train. Our island trains have motors in the cars instead, so there is no separate engine.'),
+  t('old-boots','What were football boots like long ago?','Heavy leather with hard toes, laced up above the ankle. Modern boots are much lighter.','Are light boots better?','They help you move quickly. The most important thing is that they fit well.'),
+  t('count-whoosh','What is your train-spotting record?','I once saw two trains pass each other right by the tunnel! The trains here run about every two minutes, so you never wait long.'),
+  t('tunnel-dig','How do people dig a tunnel?','Big machines called tunnel boring machines slowly grind through the rock, and the walls are lined as they go.','How long does a long tunnel take?','Long tunnels can take many years to finish.'),
+  t('team-bus','Do teams take trains or buses?','Both! Teams often use trains for long trips between big cities and a coach bus for the last part to the stadium.','Which do players like more?','On a train players can stand up, stretch and walk about, which is nice on a long trip.'),
+  t('mountain-view','Why build a station up here?','So everyone can reach the mountain and its pitch without a long climb. Trains bring people together.'),
+ ],
+ challenges:[
+  c('c-echo','Why does a train sound louder inside a tunnel?',['The driver turns it up','The sound bounces off the walls','Tunnels are full of birds'],1,'Right! The close walls make an echo.','Not quite. The sound bounces back off the walls.'),
+  c('c-rocket','Who built the steam engine called Rocket?',['George and Robert Stephenson','A football club','A ship builder in Japan'],0,'Yes! Rocket was built in 1829.','Not quite. George and Robert Stephenson built it.'),
+  c('c-boots-fit','What matters most when choosing football boots?',['The brightest colour','The most expensive price','That they fit your feet well'],2,'Exactly. A good fit keeps your feet comfy and safe.','Not quite. A good fit matters most.'),
+  c('c-tunnel-machine','What digs most long railway tunnels today?',['People with spoons','Tunnel boring machines','Very big dogs'],1,'Right. Huge machines grind slowly through the rock.','Not quite. Tunnel boring machines do the digging.'),
+ ],
+ openers:['Hi! Watch the tunnel, a train is coming soon! Want to hear a train fact?','Hello! I count every car that comes out of the tunnel. Ask me something!','Hey! The tunnel goes right under the mountain. Do you like trains?','Hi there! I am on the lookout for the next whoosh. What is your question?'],
+ returning:['You are back! Last time it was "{topic}". Want another whoosh fact?','Hi again! I remember "{topic}". The next train is nearly here, quick!','Hello! After "{topic}", I counted three more trains. Ask me another?'],
+},
+"stn-kai":{
+ topics:[
+  t('beach-pitch','Is a beach pitch smaller than grass?','Much smaller than a normal pitch: about 35 to 37 metres long and 26 to 28 metres wide, all on sand.','How big are the goals?','The goals are 5.5 m wide and 2.2 m tall, a little smaller than full-size goals.'),
+  t('no-draws','Can a beach soccer game end in a draw?','No. If it is level, there is extra time, and then penalties until someone wins.','How long is the extra time?','Three minutes. If it is still level, the penalties begin.'),
+  t('kick-ins','How does play restart from the side?','In beach soccer you can kick the ball back in from the touchline, or throw it in with your hands.'),
+  t('sun-safety','What do you do on very sunny days?','Wear sun cream and a hat, find shade between games and drink water often.','Do players wear hats?','Not in a match, so they use sun cream and rest in the shade between games.'),
+  t('platform-patrol','What does an attendant do all day?','I check the platform is clear, help passengers and make sure the doors close safely before each train leaves.','Is it a busy job?','When a beach tournament is on, very busy! Hundreds of fans arrive at once.'),
+  t('point-ball','Do footballers point like station staff?','Yes. A pointing arm tells teammates where to pass or which runner to mark. It is quick and needs no words.','Should I point in matches?','Point and call a name at the same time, so the message is twice as clear.'),
+  t('beach-train','Why take a train to the beach?','No traffic jams, no parking and you can carry your ball and towel easily. Trains are great for big events.'),
+  t('safe-crossing','How do I cross the tracks safely?','Only at a crossing. When the lamps flash and the bell rings, stop and wait for the barriers to go up.','Why wait after the train passes?','Another train could be coming the other way, so wait until the lamps stop.'),
+ ],
+ challenges:[
+  c('c-no-draw','In beach soccer, what happens if the score is level at the end?',['Everyone goes home','Extra time, then penalties','The referee picks a winner'],1,'Right! Beach soccer always finds a winner.','Not quite. There is extra time, then penalties.'),
+  c('c-crossing','The crossing lamps flash and the bell rings. What do you do?',['Stop and wait for the barriers to go up','Run across quickly','Duck under the barrier'],0,'Yes. Wait until the train has passed and the lamps stop.','Not quite. Always stop and wait at a flashing crossing.'),
+  c('c-kick-in','In beach soccer, how can you restart from the touchline?',['Only with a header','With a bicycle kick','Kick it in or throw it in'],2,'Exactly. Both are allowed in beach soccer.','Not quite. You can kick it in or throw it in.'),
+  c('c-sun','What helps you stay safe playing in strong sun?',['Sun cream, shade and water','Running faster','A thicker shirt and no water'],0,'Yes! Protect your skin and drink often.','Not quite. Sun cream, shade and water keep you safe.'),
+ ],
+ openers:['Welcome to Coral Cay station! Please wait behind the yellow line. How can I help?','Hello! Beach soccer fans get off here. Got a question before you head to the sand?','Hi there! I keep this platform safe and tidy. Ask me anything about trains or beach football.','Good day! The sea breeze is lovely and the trains are on time. What would you like to know?'],
+ returning:['Welcome back to Coral Cay! Last time we covered "{topic}". Another question?','Hello again! I remember "{topic}". What would you like to know today?','Nice to see you! After "{topic}", I have a new safety tip.'],
+},
+"stn-bea":{
+ topics:[
+  t('brazil-beaches','Where did beach soccer grow up?','On the beaches of Brazil, especially in Rio de Janeiro. Lots of famous players learned their tricks on the sand.','Is it popular now?','Yes, it is played all over the world, with a FIFA World Cup.'),
+  t('beach-world-cup','When was the first FIFA Beach Soccer World Cup?','In 2005, on Copacabana beach in Rio. France won that first one.','Who has won it most?','Brazil, many times. They love the beach game.'),
+  t('keeper-throws','Why do beach keepers throw so far?','A long throw can start an attack in a second, because the pitch is small. Many beach goals come straight from a keeper\'s throw.','Can keepers score?','Yes, a long throw or kick can go all the way in.'),
+  t('sand-running','Is running on sand harder?','Yes. Your feet sink in, so your legs work harder with every step. Beach players get very strong legs.','Should I train on sand?','A little sand running is fun and good for balance. Start slowly.'),
+  t('weekly-trip','Why do you come every week?','The train brings me right to the sand. I watch the games, cheer and then ride home as the sun sets.','Do you ever play?','Sometimes! The players let fans join a kickabout after the matches.'),
+  t('overhead-safe','Are overhead kicks safe to try?','Only on soft sand, with space around you and a coach watching. Learn to land on your back and hands first.'),
+  t('league-trains','How do fans travel in Japan?','Mostly by rail. Lots of Japanese grounds sit close to a station, so a match day begins on the platform.','Is that why you love trains?','Yes! A train trip makes a match day feel like an adventure.'),
+  t('beach-ball-touch','Is the beach ball different?','The rules use a size 5 ball, but players keep it off the sand with lots of little flicks and volleys.','Why not dribble on the ground?','The sand is bumpy, so the ball does not roll smoothly. Flicks work better.'),
+ ],
+ challenges:[
+  c('c-brazil','Where did beach soccer grow popular first?',['The beaches of Brazil','Snowy mountains','Indoor sports halls'],0,'Yes! Rio\'s beaches are famous for it.','Not quite. It grew up on the beaches of Brazil.'),
+  c('c-first-wc','Which team won the first FIFA Beach Soccer World Cup in 2005?',['Japan','Portugal','France'],2,'Right! France won that first one in Rio.','Not quite. France won the first FIFA Beach Soccer World Cup.'),
+  c('c-sand-legs','Why does running on sand make legs strong?',['Sand is warm','Your feet sink, so legs work harder','The ball is lighter'],1,'Exactly. Every step takes extra effort.','Not quite. Your feet sink in, so your legs work harder.'),
+  c('c-flicks','Why do beach players flick the ball up so much?',['The bumpy sand stops smooth rolling','The rules ban passing','The ball is too hot to touch'],0,'Yes! Flicks and volleys beat the bumpy sand.','Not quite. The sand is bumpy, so flicks work better.'),
+ ],
+ openers:['Hello! Every Saturday I ride out here for the beach games. Want to know about them?','Hi! The sand, the sea and the fastest football you will see. Ask me anything!','Hey there! I am waiting for the matches to start. Got a beach soccer question?','Hello! Trains and beach football are my two favourite things. What would you like to know?'],
+ returning:['You came back! We talked about "{topic}". Another beach soccer question?','Hello again! I remember "{topic}". Shall we talk sand and goals?','Hi! After "{topic}", I have another beach fact for you.'],
+},
+};

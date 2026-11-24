@@ -175,7 +175,7 @@ export const TRAIN_STATIONS:readonly TrainStation[]=[
  station('cay',5,'Coral Cay','Hostel · Farm',588,-72,591,-100,'No. 5 is a centre-back'),
 ];
 /** `ped`: a footpath crossing (train Phase 4): the same machine, smaller (shorter posts, arms at hip height). `width`: the deck along the line. */
-export type TrainCrossing={id:string;s:number;width:number;ped?:boolean};
+export type TrainCrossing={id:string;s:number;width:number;ped?:boolean;/** a footpath meeting the line at an angle: its centre moves `skew` m along the line per m across (the machine's posts follow it) */skew?:number};
 export const TRAIN_CROSSINGS:readonly TrainCrossing[]=[
  {id:'north-beach-west',s:sNear(-45,-205),width:3.4,ped:true},
  {id:'north-beach-east',s:sNear(80,-207),width:3.4,ped:true},
@@ -185,8 +185,8 @@ export const TRAIN_CROSSINGS:readonly TrainCrossing[]=[
  // Phase 4 (Nov 23 2026, owner: "every path that meets the line gets a way across"): the west park's three beach trails and the
  // Beach Kitchen square's walk down to the sand (westParkLayout PARK_TRAILS 'west' / 'south-west' / 'south-east', TRAIL_WIDTH 4.5,
  // and beachKitchenSquare.ts). Width = the trail's footprint along the line (4.5 m / sin of the crossing angle) + a little.
- {id:'park-west-trail',s:sNear(-304.6,5.5),width:9.6,ped:true},// meets the line at 34° (8.1 m along it; its paving boxes reach 9.6 m)
- {id:'park-south-west-trail',s:sNear(-248.7,107.2),width:5.4,ped:true},
- {id:'park-south-east-trail',s:sNear(-99.1,114.8),width:5,ped:true},
+ {id:'park-west-trail',s:sNear(-304.6,5.5),width:9.6,ped:true,skew:-1.43},// meets the line at 34° (8.1 m along it; its paving boxes reach 9.6 m)
+ {id:'park-south-west-trail',s:sNear(-248.7,107.2),width:5.4,ped:true,skew:.4},
+ {id:'park-south-east-trail',s:sNear(-99.1,114.8),width:5,ped:true,skew:.24},
  {id:'beach-kitchen-square',s:sNear(-59.5,104.4),width:6.6,ped:true},// the square's middle 6.6 m column, in line with its vending machine
 ];
