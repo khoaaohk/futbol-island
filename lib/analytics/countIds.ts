@@ -400,6 +400,10 @@ export const GASHAPON_COUNT_IDS:readonly string[]=[...GASHAPON_COUNT_EVENTS.map(
 export const COACH_COUNT_EVENTS=[['open','Coach app opened'],['game','Coach app games started'],['sub','Coach app changes confirmed']] as const;
 /** Scan Trainer (/scan, Nov 16 2026; components/scan/ScanApp.tsx): totals only, never a setting, a score or a time. */
 export const SCAN_COUNT_EVENTS=[['start','Scan Trainer sessions started'],['finish','Scan Trainer sessions finished']] as const;
+/** The Island stamp book (Nov 23 2026; lib/town/islandStamps.ts, lib/analytics/stampEvents.ts): totals only, never a time or a route. */
+export const STAMP_COUNT_EVENTS=[['open','Island stamp book opened'],['stamp','Island stamps collected (any, first time)'],['complete','Island stamp book completed (all 8)'],
+ ['stamp_north','Stamp: North station'],['stamp_west','Stamp: West Beach station'],['stamp_south','Stamp: South station'],['stamp_summit','Stamp: Summit Isle station'],['stamp_cay','Stamp: Coral Cay station'],
+ ['stamp_konbini','Stamp: Konbini cashier'],['stamp_museum','Stamp: History Museum front desk'],['stamp_shop','Stamp: Kit Shop till']] as const;
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -422,6 +426,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...SCAN_COUNT_EVENTS.map(([e])=>'sn:'+e),// sn: Scan Trainer (components/scan/ScanApp.tsx, Nov 16 2026)
  ...SITE_FUNNEL_COUNT_IDS,// sf: site pages to Play, per section (siteFunnelIds.ts, Nov 20 2026)
  ...GAME_PLAY_COUNT_IDS,// gp: game pages to Play, per game (gamePlayIds.ts, Nov 22 2026)
+ ...STAMP_COUNT_EVENTS.map(([e])=>'is:'+e),// is: the Island stamp book (stampEvents.ts, Nov 23 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

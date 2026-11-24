@@ -21,6 +21,7 @@ import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import type {ShopScene} from '@/lib/shop/shopScene';
 import type {ShopPoi,ShopStation} from '@/lib/shop/shopLayout';
+import {OPEN_STAMP_BOOK} from '@/lib/town/islandStamps';
 import {SHOP_CLERK,SHOW_ME,shopNpcDefs} from '@/lib/shop/shopCast';
 import {createShopAmbience,shopClickCue,shopSfx,unlockShopAudio,type ShopAmbience} from '@/lib/shop/shopSound';
 import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shopEvents';
@@ -160,7 +161,7 @@ export default function ShopRoom(){
  const takeOff=(kind:ShopKind)=>{const wearing={...owned.wearing};delete wearing[kind];const next={...owned,wearing};writeOwned(next);setOwned(next);};
 
  const Studio=studio?STUDIO[studio]:null,kind=studio?STATIONS.find(s=>s.id===studio)!.kind:null;
- const clerkActions=talking?.id===SHOP_CLERK.def.id?STATIONS.map(s=>({label:SHOW_ME[s.id],onClick:()=>{setTalking(null);room.current?.walkTo(s.id);}})):undefined;
+ const clerkActions=talking?.id===SHOP_CLERK.def.id?[...STATIONS.map(s=>({label:SHOW_ME[s.id],onClick:()=>{setTalking(null);room.current?.walkTo(s.id);}})),{label:'Can I get a stamp? (Island stamp book)',onClick:()=>{setTalking(null);window.dispatchEvent(new CustomEvent(OPEN_STAMP_BOOK,{detail:{stamp:'shop'}}));}}]:undefined;// Nov 23 2026: Femi keeps the Kit Shop's Island stamp
  // Any tap or key in the room wakes resting shoppers (the scene rests them after 60 s with no input) and, on the very first one,
  // unlocks and starts the store ambience (iOS autoplay rules: only a real gesture may start audio).
  const wake=()=>{room.current?.poke();unlockShopAudio();ambience.current?.input();};

@@ -7,6 +7,7 @@ import {VENDING_SPECIALS} from './vendingCatalog';
 import {VENDING_STARTERS} from './vendingLedger';
 import {consumable} from '../konbini/food';
 import {gashaponToy,GASHAPON_TOYS} from '../gashapon/toys';
+import {stampById} from './islandStamps';
 
 /**
  * Backpack (user, Sep 28 2026: "Make it yours → Backpack shows everything you own"). Pure model; browser wiring in
@@ -51,6 +52,8 @@ export type BackpackSources={
  trophies?:readonly {id:string;label:string;detail:string;at:number}[];
  /** Gashapon toys found (Nov 9 2026; lib/gashapon/store.ts `owned`: count + first-found time per toy). */
  toys?:Readonly<Record<string,{n:number;first:number}>>;
+ /** Island stamp book (Nov 23 2026; lib/town/islandStamps.ts): stamp id → when it was stamped. */
+ stamps?:Readonly<Record<string,number>>;
 };
 export type BackpackCategory={kind:BackpackKind;label:string;order:number;
  /** Where to get more (shown when the category is empty, and under its heading). */
@@ -172,6 +175,11 @@ registerBackpackCategory({kind:'konbini',label:'Konbini Collection',order:70,
  collect:s=>Object.entries(s.konbini?.items??{}).map(([id,at])=>({id:`konbini:${id}`,kind:'konbini',ref:id,label:consumable(id)?.label??id,detail:consumable(id)?.jp,source:'bought' as const,acquiredAt:at})).sort(newestFirst)});
 // Gashapon toys (Nov 9 2026, owner: "the gashapon toys should live in the backpack"): one item per toy found, newest first. The
 // section renders the whole toy grid inline (components/GashaponToyShelf.tsx ToyShelfGrid: per machine, "?" for toys not found).
+// Island stamp book (Nov 23 2026): one item per stamp; the backpack shows the book's own shelf (components/Backpack.tsx).
+registerBackpackCategory({kind:'stamp',label:'Island stamps',order:77,
+ emptyHint:'Collect a round ink stamp at each Island Line station house, the Konbini, the History Museum and the Kit Shop.',
+ lesson:'Every stamp in your Island stamp book comes with a football fact.',
+ collect:s=>Object.entries(s.stamps??{}).map(([id,at])=>({id:`stamp:${id}`,kind:'stamp',ref:id,label:stampById(id)?.name??id,detail:'Island stamp',source:'reward' as const,acquiredAt:at})).sort(newestFirst)});
 registerBackpackCategory({kind:'toy',label:'Toys',order:75,
  lesson:`Capsule toys from the gashapon machines: ${GASHAPON_TOYS.length} to find, six in every machine. Tap a toy to play with it.`,
  emptyHint:'Spin a gashapon machine at a Konbini, the Arcade or around the island to find your first toy.',
