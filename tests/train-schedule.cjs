@@ -107,4 +107,11 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
   let note=null;for(let k=0;k<30*12;k++){const r=run.update({dt:1/30,camera:cam,player,nowSec:now+k/30});if(r.note)note=r.note;}
   assert(S.ahead(run.states[ti].s,tt.trackNearest(player.x,player.z,3).s)>=S.STOP_SHORT-.3,'stopped short of the player');
   assert.equal(note,'Please step off the track','asked to step off');}
+ // Polish (Nov 24): the platform announcement: standing on North's platform, "arriving" (with the chime) before it pulls in, "leaving" as the doors close
+ {const k=S.stopOf('north'),stp=S.TRAIN_STOPS[k],c=tt.trackAt(stp.station.s),nn=tt.leftNormal(c.tx,c.tz),px=c.x+nn.x*stp.station.side*4,pz=c.z+nn.z*stp.station.side*4;
+  player.x=px;player.z=pz;player.y=1;at(px+6,4,pz+6,c.x,c.z);run.cluster=NaN;const t0=360*5000+stp.arrive-14,notes=[];let tArr=NaN;
+  for(let q=0;q<30*32;q++){const r=run.update({dt:1/30,camera:cam,player,nowSec:t0+q/30});if(r.note){notes.push(r.note);if(/arriving/.test(r.note))tArr=q/30;}}
+  const want=`The train for ${S.TRAIN_STOPS[(k+1)%5].station.name}`;assert(notes.some(n=>n===want+' is arriving. Please stand behind the yellow line.'),`arriving caption (${notes})`);
+  assert(tArr>=14-R.ANNOUNCE_S-.2&&tArr<=14-R.ANNOUNCE_S+.2,`announced ${R.ANNOUNCE_S} s before it pulls in (${tArr})`);
+  assert(notes.includes(want+' is leaving.'),`leaving caption (${notes})`);assert.equal(notes.length,2,'once each');}
  w.dispose&&w.dispose();console.log('train-schedule: ok');})().catch(e=>{console.error(e);process.exit(1);});
