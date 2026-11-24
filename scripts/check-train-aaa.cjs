@@ -338,6 +338,16 @@ async function partRoof(c) {
     return { maxErr: +maxErr.toFixed(2), speed: +speed.toFixed(1), n, still: f.roofRide.k >= 0 }; });
   check('riding the roof at speed: stays on the car (train-relative)', ride.still && ride.maxErr < .3 && ride.speed > 5, JSON.stringify(ride));
   if (shots) await p.screenshot({ path: path.join(shots, `roof-ride-${phone ? 'phone' : 'desktop'}.png`) });
+  // Looks 2 (owner shot 38): the whole roof is walkable end to end at speed, straight down the middle over the AC lids and the
+  // pantograph base (step-ups, never walls): from car 0's front end to car 1's far end, the feet rising onto each unit
+  {const dir = await p.evaluate(() => { const f = window.__fi2, t = f.trains, a = { x: 0, y: 0, z: 0, yaw: 0 }, b = { x: 0, y: 0, z: 0, yaw: 0 }; f.roofRide.u = 5.75; f.roofRide.x = 0; t.standAt(f.roofRide.k, 0, 0, 0, a); t.standAt(f.roofRide.k, 0, -1, 0, b); return { x: b.x - a.x, z: b.z - a.z }; });
+   const kw = keysToward(dir.x, dir.z);
+   await p.evaluate(() => { const f = window.__fi2; window.__look2Probe = () => { const t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }; t.standAt(f.roofRide.k, f.roofRide.x, f.roofRide.u, 0, o, undefined, 2.6); return f.rooftop.state.height - o.y - (3.75 - 2.6); }; });
+   for (const k of kw.keys) await p.keyboard.down(k);
+   let res = null; try { res = await p.evaluate(async () => { const f = window.__fi2, t0 = performance.now(); let minU = 9, maxLift = -1, minV = 99, off = false;
+     while (performance.now() - t0 < 16000) { await new Promise((r) => requestAnimationFrame(r)); if (f.roofRide.k < 0) { off = true; break; } minU = Math.min(minU, f.roofRide.u); maxLift = Math.max(maxLift, window.__look2Probe()); minV = Math.min(minV, f.trains.states[f.roofRide.k].v); if (f.roofRide.u < -17.9) break; }
+     return { off, minU: +minU.toFixed(2), maxLift: +maxLift.toFixed(2), minV: +minV.toFixed(1), s: +((performance.now() - t0) / 1000).toFixed(1) }; }); } finally { for (const k of kw.keys) await p.keyboard.up(k); }
+   check('walking the whole roof end to end at speed, down the middle (AC lids and pantograph base are step-ups, never walls)', res && !res.off && res.minU < -17.8 && res.maxLift > .2 && res.maxLift < .35 && res.minV > 3, JSON.stringify({ ...res, keys: kw.keys.join('+') }));}
   const bonk = await p.evaluate(async () => { const f = window.__fi2, t0 = performance.now(); let bonked = false, line = '';
     while (performance.now() - t0 < 80000) { await new Promise((r) => requestAnimationFrame(r)); if (f.trainBonk.active) { bonked = true; } if (bonked && !f.trainBonk.active) break; }
     await new Promise((r) => setTimeout(r, 300)); const s = window.__fi2.trains.sched; let best = 1e9; for (let q = 0; q < 2700; q += .5) { const a = s.trackAt(q); best = Math.min(best, Math.hypot(a.x - f.location.x, a.z - f.location.z)); }

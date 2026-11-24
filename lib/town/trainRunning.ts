@@ -53,6 +53,8 @@ export const WARN_S=4,WARN_AHEAD=52,WARN_COOLDOWN=8,KNOCK_V=.5;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
 import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,CAR_FLOOR_Y,BENCH_BACK,SEAT_SLOTS_Z,COL,VGeo,POSTERS,coveCorner,coveNormal,CHIME,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
+/** A standAt height over this (m over the rail top) is a roof spot (Town passes roofY(x)); the floor is CAR_FLOOR_Y. */
+const ROOF_WALK_Y=CAR_FLOOR_Y+1.5;
 /** THE seat table (Gameplay 2, owner Nov 24 2026; used by riding, presence, the walk aboard and, later, NPC passengers and changing
  *  seat), on the car model's benches (trainCarModel.ts SEAT_SLOTS_Z: 7 slots a side, 14 a car, the same z on both sides). Riders kneel
  *  up on the bench facing OUT of their window (lib/graphics/trainSeatPose.ts), knees short of the backrest (BENCH_BACK), chest over
@@ -79,7 +81,7 @@ export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
-import {ROOF_HALF,ROOF_END_PAD,roofY} from './trainRoof';
+import {ROOF_HALF,ROOF_END_PAD,roofY,roofLift} from './trainRoof';
 import {KENJI,kenjiWarn,KENJI_SEAT} from './trainConductor';
 /** Gameplay 2: the player's radius against a car's box (block and slide); a car's box: ±HALF_W across, ±CAR_LENGTH/2 along. */
 export const PLAYER_R=.35;
@@ -280,7 +282,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
  const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,glass.mesh,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
  /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
- function carMatrix(s:number,c:number,out:T.Matrix4,v=0){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
+ function carMatrix(s:number,c:number,out:T.Matrix4,v=0,_k=-1){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
   const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
   // AAA audit (Nov 24 2026): the body leans into a curve with the speed (the cant a real line gives its curves): v² × curvature,
   // at most LEAN_MAX rad (≈1.5° at 8 m/s on the tightest 30 m curve). Seats use the same matrix, so riders lean with the car.
@@ -310,7 +312,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    *  world spot on the floor and yaw. `now` as seatPose (friends are posed before this frame's update). Allocation-free. */
   standAt(k:number,x:number,u:number,yaw:number,out:SeatPose,now?:number,y=CAR_FLOOR_Y):SeatPose{
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
-   const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;carMatrix(s,c,seatM,states[k].v);seatV.set(lx,y,lz).applyMatrix4(seatM);
+   // Looks 2 (Nov 24 2026): on the roof (y over the car's sides: Town passes roofY(x)) the AC lids and the pantograph base are step-ups
+   const pitch=CAR_LENGTH+CAR_GAP,c=u>=-pitch/2||TRAIN_CARS<2?0:1,lx=c?-x:x,lz=c?-pitch-u:u;if(y>ROOF_WALK_Y)y+=roofLift(x,u);carMatrix(s,c,seatM,states[k].v,k);seatV.set(lx,y,lz).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(e[8],e[10])+yaw+(c?Math.PI:0);out.lean=1;return out;},
   /** Roof riding (trainRoof.ts, Nov 24 2026): the roof under world (x, z) of any train (a box test per car, only for trains within
    *  reach): out.k, the train-frame spot (out.x across, out.u along car 0) and the roof's world height there (out.y). False: none.
@@ -319,7 +322,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    for(let k=0;k<TRAIN_COUNT;k++){const st=states[k],s=ahead?wrapS(st.s+st.v*ahead):st.s;trackAt(s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-x)+Math.abs(pc.z-z)>TRAIN_LENGTH+3)continue;
     for(let c=0;c<TRAIN_CARS;c++){carMatrix(s,c,roofM,st.v);const e=roofM.elements,dx=x-e[12],dz=z-e[14],ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az;
      if(Math.abs(lx)>ROOF_HALF+pad||Math.abs(lz)>CAR_LENGTH/2-ROOF_END_PAD+pad)continue;
-     const cx=Math.max(-ROOF_HALF,Math.min(ROOF_HALF,lx));seatV.set(cx,roofY(cx),lz).applyMatrix4(roofM);out.k=k;out.y=seatV.y;if(c%2===0){out.x=cx;out.u=lz;}else{out.x=-cx;out.u=-(CAR_LENGTH+CAR_GAP)-lz;}return true;}}
+     const cx=Math.max(-ROOF_HALF,Math.min(ROOF_HALF,lx));if(c%2===0){out.x=cx;out.u=lz;}else{out.x=-cx;out.u=-(CAR_LENGTH+CAR_GAP)-lz;}
+     seatV.set(cx,roofY(cx)+roofLift(out.x,out.u),lz).applyMatrix4(roofM);out.k=k;out.y=seatV.y;return true;}}
    return false;},
   /** The landing ring's prediction (Nov 24 2026): a body at (x, y, z) moving at (vx, vy, vz) m/s (a parachute's glide and sink, a fall),
    *  stepped `step` s at a time up to `horizon` s: the first moment it meets a roof where the trains will be then (roofAt `ahead`), before

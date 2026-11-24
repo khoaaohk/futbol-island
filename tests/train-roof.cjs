@@ -1,5 +1,5 @@
 // Island Line roof riding + the train bonk (owner, Nov 24 2026). Run: node tests/train-roof.cjs
-//  1. trainRoof (pure): the roof profile, the walk clamped to the roof, the roof units solid, the gap stepped over, the portal bump
+//  1. trainRoof (pure): the roof profile, the walk clamped to the roof, the roof units as step-ups (whole roof walkable), the gap stepped over, the portal bump
 //  2. trainRunning.roofAt: a point over a moving car's roof is found, train-relative; the pose moves with the train at speed
 //  3. trainBonk: the throw lands on its spot, lines rotate without repeats (scanning lines in every pool), the line cooldown, the tip once
 //  4. wiring: Town attaches from falls / the jetpack / Land, the tunnel bonk, the landing ring over roofs, never waits (no hold)
@@ -7,12 +7,18 @@ const assert=require('node:assert/strict');
 const {L,read}=require('./lib/tsLoad.cjs');
 const R=L('lib/town/trainRoof.ts'),B=L('lib/town/trainBonk.ts'),tt=L('lib/town/trainTrack.ts');
 {assert(Math.abs(R.roofY(0)-3.75)<1e-9&&R.roofY(.9)<3.75&&R.roofY(.9)>3.6,'roof profile');
- assert(R.roofStandable(0,4.5)&&!R.roofStandable(0,-2.7)&&!R.roofStandable(0,1.7)&&!R.roofStandable(0,-.5),'AC units and the pantograph are solid');
+ // Looks 2 (owner shot 38): the AC lids and the pantograph base are step-ups, never walls
+ assert(R.roofStandable(0,4.5)&&R.roofStandable(0,-2.7)&&R.roofStandable(0,1.7)&&R.roofStandable(0,-.5),'AC units and the pantograph are step-ups');
+ assert(Math.abs(R.roofLift(0,-2.7)-R.ROOF_LID_H)<1e-9&&Math.abs(R.roofLift(0,1.7)-R.ROOF_LID_H)<1e-9&&Math.abs(R.roofLift(0,-.5)-R.ROOF_PANTO_H)<1e-9&&R.roofLift(0,4.5)===0,'step heights');
+ assert(R.ROOF_LID_H>.25&&R.ROOF_LID_H<.32&&R.ROOF_PANTO_H>.12&&R.ROOF_PANTO_H<.2,'lid ~0.28 m, pantograph base ~0.17 m');
+ assert(Math.abs(R.roofLift(0,-R.CAR_PITCH-1.7)-R.ROOF_LID_H)<1e-9,'car 1 (turned round) has its units too');
+ {let prev=R.roofHeight(0,5),jump=0;for(let u=5;u>-18;u-=.02){const h=R.roofHeight(0,u);jump=Math.max(jump,Math.abs(h-prev));prev=h;}assert(jump<.06,'eased onto each unit (no pop): '+jump.toFixed(3));}
  assert(!R.roofStandable(1.2,3),'not past the roof edge');assert(R.roofStandable(0,-6.2),'the gap between the cars is stepped over');
- const p={x:0,u:5};for(let i=0;i<200;i++)R.roofStep(p,0,-.05);assert(p.u>2.52,'walking back stops at the AC lid');
+ for(const x0 of [0,.3,.6,.85]){const p={x:x0,u:R.ROOF_U_MAX};for(let i=0;i<800;i++)R.roofStep(p,0,-.05);assert(Math.abs(p.u-R.ROOF_U_MIN)<1e-6,`the whole roof walkable end to end at |x| ${x0}`);
+  for(let i=0;i<800;i++)R.roofStep(p,0,.05);assert(Math.abs(p.u-R.ROOF_U_MAX)<1e-6,`and back at |x| ${x0}`);}
  const q={x:.85,u:5};for(let i=0;i<600;i++)R.roofStep(q,0,-.05);assert(q.u<-17,'beside the units (|x| .85) the whole train is walkable');
  for(let i=0;i<100;i++)R.roofStep(q,.05,0);assert(Math.abs(q.x-R.ROOF_HALF)<1e-9,'clamped to the roof edge');
- const s={x:0,u:-2.6};R.roofSettle(s);assert(R.roofStandable(s.x,s.u),'a landing on a roof unit slides off it');
+ const s={x:0,u:-2.6};R.roofSettle(s);assert(R.roofStandable(s.x,s.u)&&Math.abs(s.u+2.6)<1e-9,'a landing on a roof unit stays on it');
  const w=tt.TUNNEL.west.s;assert(R.roofHitsPortal(w+6-.5,0)&&!R.roofHitsPortal(w-10,0),'bonked just short of the west portal');}
 {const b=B.createTrainBonk(7),o={x:0,y:0,z:0};const line=b.start('tunnel',0,5,0,4,0,-1,0,false);assert(line&&B.bonkPool('tunnel').includes(line),'a tunnel line');
  let ph,n=0;do{ph=b.step(1/60,o);n++;}while(ph==='flying'&&n<500);assert.equal(ph,'landed');assert(Math.abs(o.x-4)<1e-6&&Math.abs(o.y)<1e-6&&Math.abs(o.z+1)<1e-6,'lands on the spot');
