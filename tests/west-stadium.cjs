@@ -318,7 +318,7 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  assert(f0.angleTo(f2)>.2,'it follows the ball');assert(f0.angleTo(f1)<f0.angleTo(f2)*.1,'one frame: a small part of the turn (smooth)');
  const pc=new T.PerspectiveCamera(40,.5,1,500);sit.applyCamera(pc,1/60);assert(pc.position.y>c.position.y-1e-6,'portrait: from the raised view');}
 // The map and travel: a Stadium destination like the other places.
-assert(/id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL/.test(map)&&!/STADIUM GATE/.test(map)&&/id==='stadium'\?'DRIP FC Stadium'/.test(map)&&/\|'summit'\|'stadium';/.test(map),'the map has a Stadium destination');
+assert(/id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL/.test(map)&&!/STADIUM GATE/.test(map)&&/id==='stadium'\?'DRIP FC Stadium'/.test(map)&&/\|'summit'\|'stadium'(;|\|`station-)/.test(map),'the map has a Stadium destination');
 {const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');assert(/travel\.current==='stadium'\?STADIUM_ARRIVAL/.test(town)&&/destination==='stadium'\)go\(destination\)/.test(town),'travel lands at the stadium gate');
  assert(L.STADIUM_ARRIVAL.x>L.STADIUM_GATE.x&&onIsland(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z)&&!blocked(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z),'the arrival is open plaza outside the gate');}
 console.log('west stadium phase 3a: ok');

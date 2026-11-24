@@ -110,7 +110,7 @@ mantas.update(1/30,false,frustum,nearTurtle);assert(ver(turtle)>placed&&mantas.t
 {const world=fs.readFileSync(path.join(base,'lib/town/world.ts'),'utf8'),town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
  assert(/const mantas=createCayMantas\(scene\)/.test(world),'world creates the mantas');
  assert(/sharks\.update\(dt,reduced,camera,player\);mantas\.update\(dt,reduced,sharks\.frustum,player\)/.test(world),'mantas share the sharks\' frame hook and frustum');
- assert(/mantas\.dispose\(\)/.test(world)&&/return \{(signalHeads,)?sharks,mantas,/.test(world),'disposed with the world and exposed for checks');
+ assert(/mantas\.dispose\(\)/.test(world)&&/return \{(train,trainRun,updateTrains:[^,]+,)?(signalHeads,)?sharks,mantas,/.test(world),'disposed with the world and exposed for checks');
  assert(/world\.updateSharks\(active&&!learning\?heldDt:0,reduced\|\|heat\.staticAmbience,camera,location\)/.test(town),'Town freezes the hook (dt 0; heldDt = 0 under match focus too) and passes reduced motion / static ambience');}
 
 // ---- Football tie-in: Nia (Starfish Sandbar lifeguard) explains the mantas and links them to a soft first touch.

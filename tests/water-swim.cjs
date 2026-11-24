@@ -158,7 +158,7 @@ ok('time buckets and the reset',()=>{
 
 ok('Town wiring: the cluster swap, the parked ball, no kicks in the sea, the splash paths, the keys',()=>{
  const town=fs.readFileSync('components/Town.tsx','utf8');
- assert.match(town,/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:waterCluster\?\?jobButtons;/,'the water cluster takes the slots');
+ assert.match(town,/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:(trainCluster\?\?)?waterCluster\?\?jobButtons;/,'the water cluster takes the slots');
  assert.match(town,/else if\(waterCluster\)waterActions\.press\(b\.id as WaterActionId,phase\)/);
  assert.match(town,/data-water-actions=\{waterCluster\?'':undefined\}/);
  assert.match(town,/const ballPlayer=water\.inWater&&BALL_STAYS_ON_SAND&&water\.state\.park\?water\.state\.park:/,'decision 3: the ball follows the parked spot');
