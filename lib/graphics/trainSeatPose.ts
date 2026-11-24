@@ -25,3 +25,20 @@ export function trainRiderPose(lean:number):TrickPose{
  for(const [i,a] of o.arms.entries())restHand(o,i?1:-1,.48,KNEEL.sill+.06,a);
  return o;
 }
+
+/** Standing in the aisle (Gameplay 3, "walk inside the carriage"): upright, feet a little apart, one hand up on a strap handle
+ *  (trainCarModel STRAP_GRIP_Y, 1.49 m over the floor), the other loose. side −1 / +1: which hand is up (the strap rail on that
+ *  side). Weight `w` is set by the host (0 while walking: the rig's own gait shows). The sway is written per frame by
+ *  swayStrapPose (a couple of adds, no allocation). */
+export const STRAP={pelvisY:.86,armSx:-2.72,armSz:.2,armEl:-.3,sway:.9,swayMax:.09} as const;
+export function trainStrapPose(side:-1|1):TrickPose{
+ const o=createTrickPose(),ctx=createTrickCtx();stancePose('stand',ctx,o);
+ o.w=0;o.pelvisY=STRAP.pelvisY;o.pelvisPitch=0;o.torsoPitch=0;o.headPitch=0;
+ for(const l of o.legs)l.w=0;// the rig keeps its own feet (it may shuffle a step); only the body and the strap arm are posed
+ const up=o.arms[side>0?1:0],down=o.arms[side>0?0:1];up.sx=STRAP.armSx;up.sz=STRAP.armSz;up.el=STRAP.armEl;up.w=1;down.w=0;
+ return o;
+}
+/** Curve sway (reduced motion: pass 0): the body rolls a little against the car's lean, the head stays level. */
+export function swayStrapPose(o:TrickPose,lean:number){
+ const r=Math.max(-STRAP.swayMax,Math.min(STRAP.swayMax,lean*STRAP.sway));o.pelvisRoll=r*.5;o.torsoRoll=-r*.3;o.pelvisZ=0;
+}

@@ -224,7 +224,7 @@ console.log('train-ride hover: ok');
  const mid2=(tt.TUNNEL.west.s+tt.TUNNEL.east.s)/2;const out1=step(1);states[0].s=mid2+12;step(150);const inT=cam.position.clone();ride.press('recenter','tap');step(200);const inHome=step(1);
  assert(inT.distanceTo(inHome)<.3,'in the tunnel the camera is at the default framing');
  const R7=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R7),'the free camera keeps the clearance spring arm');
- assert(/el\.tagName!=='CANVAS'\)return/.test(R7),'only canvas presses drag');assert(/trainButtons\(trainCanGetOff,trainMoved\)/.test(read('components/Town.tsx'))&&/recenter:'M12/.test(read('components/TravelIcon.tsx')),'Recenter in the ride cluster');
+ assert(/el\.tagName!=='CANVAS'\)return/.test(R7),'only canvas presses drag');assert(/trainButtons\(trainCanGetOff,trainMoved[,)]/.test(read('components/Town.tsx'))&&/recenter:'M12/.test(read('components/TravelIcon.tsx')),'Recenter in the ride cluster');
  ride.dispose();delete globalThis.window;}
 console.log('train-ride camera: ok');
 // Gameplay 2 + visuals merge: the kneeling legs solve onto the cushion (knee over the seat top, short of the backrest)

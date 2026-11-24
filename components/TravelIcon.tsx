@@ -62,6 +62,8 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  horn:'M3 10v4h3l7 4V6L6 10z M16.5 9a4 4 0 0 1 0 6 M19 6.5a7.5 7.5 0 0 1 0 11',
  // Gameplay 2 (Nov 24 2026): recenter the free ride camera (a target with its four ticks)
  recenter:'M12 2.5v4 M12 17.5v4 M2.5 12h4 M17.5 12h4 M12 7.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9 M12 11.6v.8',
+ // Gameplay 3 (Nov 24 2026): sit down on the train (a figure on a bench seat)
+ sit:'M10 3.5a1.8 1.8 0 1 0 0 .01 M10 7.5v5.5h5l1.5 6.5 M10 9.5l4 2 M4 14.5h4 M5 14.5v6 M4 20.5h14',
  // Water actions (Oct 15 2026, lib/town/water/waterHud.ts WATER_BUTTONS). Redrawn Oct 15 2026 (user: "icons need to be larger and
  // simplified to match with main actions"): the walk / shoot / juggle weight, 2–3 bold strokes over one wave. swim (the ride
  // switcher's ride: head, body, one arm reaching over), swimfast (sprint: the arm stretched forward, speed lines behind), float (on

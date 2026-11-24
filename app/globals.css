@@ -1039,3 +1039,12 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
  .town-app.controls-flipped .touch-controls{left:auto;right:calc(12px + env(safe-area-inset-right,0px))}
  .town-app .touch-controls .joystick span{width:42px;height:42px}
 }
+
+/* Island Line Gameplay 3 (Nov 24 2026): Walk / Sit on the train, a fourth round button beside the ride cluster. Phones: the free
+ * top-left cell of the 3 x 2 grid (flipped: top-right); desktop: to the left of the bottom row (the 2 x 2 grid is full). */
+.town-app .travel-actions .touch-actions .touch-juggle.touch-walk{background:#b8d9b5 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;box-shadow:0 5px 0 #75966f,0 0 0 4px #fff2cd40!important}
+.town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle.touch-walk{position:absolute;right:calc(100% + 12px);bottom:0;grid-column:auto;grid-row:auto}
+@media(max-width:600px),(pointer:coarse){
+ .town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle.touch-walk{position:static;grid-column:1;grid-row:1;justify-self:center}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-juggle.touch-walk{grid-column:3;grid-row:1}
+}

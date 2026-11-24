@@ -63,3 +63,13 @@ export function trussLift(x:number,y:number,z:number){
  const off=Math.abs(hit.d-TRUSS_OFFSET),wv=off<.3?1:off>.9?0:1-(off-.3)/.6,ws=Math.min(1,Math.max(0,Math.min(hit.s-(a-1),b+1-hit.s)));
  const want=bedAt(trainLayout().profile,hit.s)+TRUSS_H+.35;if(y>=want)return 0;const e=wv*ws;return (want-y)*e*e*(3-2*e);
 }
+
+/** Gameplay 3 (walking inside the carriage): the room a camera may use inside a car (car-local: across, over the floor, along the
+ *  car), a little in from the walls, the ceiling and the cab partition. */
+export const ROOM={x:1.22,y0:.3,y1:2.08,z0:-6.05,z1:4.62} as const;
+/** How far (0 … 1) along the line from the head (car-local hx, hy over the floor, hz; inside the room) to the camera spot (cx, cy,
+ *  cz) the camera may go before it would leave the room: a slab test, exact and allocation-free. */
+export function interiorClearFraction(hx:number,hy:number,hz:number,cx:number,cy:number,cz:number){
+ let f=1;const lim=(h:number,c:number,lo:number,hi:number)=>{const d=c-h;if(d>1e-6&&c>hi)f=Math.min(f,(hi-h)/d);else if(d< -1e-6&&c<lo)f=Math.min(f,(lo-h)/d);};
+ lim(hx,cx,-ROOM.x,ROOM.x);lim(hy,cy,ROOM.y0,ROOM.y1);lim(hz,cz,ROOM.z0,ROOM.z1);return Math.max(0,f);
+}
