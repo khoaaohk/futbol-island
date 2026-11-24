@@ -89,3 +89,41 @@ console.log('train-gameplay3 stand / walk / sit / get off: ok');
  const C=L('lib/town/trainCamClear.ts');assert.equal(C.interiorClearFraction(0,1.3,0,0,1.6,-2),1,'inside the room: the full arm');
  const f=C.interiorClearFraction(0,1.3,0,2.4,1.3,0);assert(Math.abs(f-C.ROOM.x/2.4)<1e-9,'through the wall: pulled in to the room');}
 console.log('train-gameplay3 wiring: ok');
+// ---- 4. NPC passengers (lib/town/trainPassengers.ts)
+{const PX=L('lib/town/trainPassengers.ts'),away=()=>true,NST=S.TRAIN_STOPS.length;
+ assert(PX.CAST.length>=14&&PX.CAST.some(c=>c.prop==='ball'&&c.kid)&&PX.CAST.some(c=>c.prop==='scarf')&&PX.CAST.some(c=>c.prop==='bento')&&PX.CAST.some(c=>/Trainspotter/.test(c.role))&&PX.CAST.some(c=>c.boarder),'the cast: commuters, a kid with a ball, a scarf, a bento, a trainspotter, the station boarders');
+ for(const c of PX.CAST)assert(c.topics.length>=2&&c.greeting&&c.name,'talkable: '+c.name);
+ let seated=[],changes=[],standing=0;
+ for(let k=0;k<3;k++)for(let seg=100;seg<160;seg++){const r=PX.rosterFor(k,seg,away);const seats=new Set();
+  for(let c=0;c<2;c++){let n=0;for(let p=0;p<PX.SLOTS_PER_CAR;p++){const s=r.slots[c*PX.SLOTS_PER_CAR+p];if(!s.on)continue;
+    if(s.standing){standing++;continue;}n++;assert(RN.NPC_SEATS.includes(s.seat)&&!RN.PLAYER_SEATS.includes(s.seat),'passengers sit in NPC seats only (players keep theirs)');assert.equal(RN.SEAT_TABLE[s.seat].car,c,'in their own car');assert(!seats.has(s.seat),'one passenger a seat');seats.add(s.seat);
+    assert(PX.seatTaken(r,s.seat),'the seat table knows it is taken');}seated.push(n);}
+  const casts=r.slots.filter(s=>s.on).map(s=>s.cast);assert.equal(new Set(casts).size,casts.length,'nobody rides twice in one train');
+  let ch=0;for(let i=0;i<r.slots.length;i++){const a=r.slots[i],b=r.prev[i];if(a.on!==b.on||(a.on&&a.cast!==b.cast))ch++;}changes.push(ch);}
+ const avg=seated.reduce((a,b)=>a+b,0)/seated.length;assert(avg>=3&&avg<=5,`3-5 seated a car on average (${avg.toFixed(2)})`);
+ const cavg=changes.reduce((a,b)=>a+b,0)/changes.length;assert(cavg>=.9&&cavg<=2.3,`1-2 get on / off a stop on average (${cavg.toFixed(2)} a train)`);
+ assert(standing>0,'busier runs: some stand at the straps');
+ assert.deepEqual(PX.rosterFor(1,123,away).slots,PX.rosterFor(1,123,away).slots,'seeded: every client gets the same roster');
+ const notAway=PX.rosterFor(0,120,()=>false);assert(notAway.slots.every(s=>!s.on||!PX.CAST[s.cast].boarder),'a station islander rides only while away from their platform');
+ // the segment: standing at stop i already counts the roster riding on; leaving changes nothing
+ const st={at:2,next:3,t:S.TRAIN_STOPS[2].arrive+3},run2={at:-1,next:3,t:S.TRAIN_STOPS[2].depart+3};assert.equal(PX.segOf(0,st.t,st),PX.segOf(0,run2.t,run2),'leaving a stop keeps the roster');
+ // runtime: the heat gate and the draw
+ const scene=new T.Scene(),cam=new T.PerspectiveCamera(60,1,.1,500);const pax=PX.createTrainPassengers(scene,{away});
+ const states=[0,1,2].map(i=>({s:200+i*300,at:-1,next:1,t:60,doors:0,dwellLeft:0,v:10}));
+ const carM=(k,c,out)=>{out.identity();if(c%2)out.makeRotationY(Math.PI);out.setPosition(states[k].s,1,-c*12.4);return out;};const run={states,carMatrixOf:carM};
+ const look=(x,z)=>{cam.position.set(x,4,z+12);cam.lookAt(x,1,z-6);cam.updateMatrixWorld();};
+ look(1000,0);pax.update(run,60,cam,-1,0,false);assert.equal(pax.shown,0,'no train near: nobody drawn');assert.equal(scene.getObjectByName('train-passengers'),undefined,'built only on first sight');
+ look(200,0);pax.update(run,60,cam,-1,0,false);const near=pax.shown;assert(near>0,'a train in view nearby: its passengers');
+ const mesh=scene.getObjectByName('train-passengers');assert(mesh&&mesh.isInstancedMesh&&scene.children.filter(o=>o.isMesh&&o.visible).length===1,'ONE instanced draw for all passengers');
+ cam.position.set(200,4,40);cam.lookAt(200,4,80);cam.updateMatrixWorld();pax.update(run,60,cam,-1,0,false);assert.equal(pax.shown,0,'behind the camera: nobody');
+ pax.update(run,60,cam,0,0,false);assert(pax.shown>0,'the train I ride: always drawn');
+ look(200,0);pax.update(run,60,cam,0,4,false);assert(pax.shown<=4,`lowest tier: 1 a car (${pax.shown})`);pax.update(run,60,cam,0,3,false);assert(pax.shown<=4,'tier 3: 2 a car');
+ pax.update(run,60,cam,0,0,false);const r0=pax.roster(0);const s0=r0.slots.find(s=>s.on&&!s.standing);
+ const sp0={x:0,z:0};const seat=RN.SEAT_TABLE[s0.seat];const w=new T.Vector3(seat.side*1.0,RN.CAR_FLOOR_Y,seat.z).applyMatrix4(carM(0,seat.car,new T.Matrix4()));
+ const npc=pax.nearest(0,w.x,w.z);assert(npc&&npc.topics.length>=2,'riding next to a passenger: Talk to them');assert.equal(pax.nearest(1,w.x,w.z),null,'only on the train I ride');void sp0;
+ // a stop: the old riders walk out, then the new ones walk in, during the doors' open time
+ const stop=1;Object.assign(states[0],{at:stop,next:2,t:S.TRAIN_STOPS[stop].arrive+1});const dwell=S.TRAIN_STOPS[stop].depart-S.TRAIN_STOPS[stop].arrive;
+ const counts=[];for(const dw of [1,PX.OFF_FROM+1,PX.ON_FROM-.1,PX.ON_FROM+1,PX.ON_FROM+PX.WALK_S+.2]){states[0].dwellLeft=dwell-dw;states[0].t=S.TRAIN_STOPS[stop].arrive+dw;pax.update(run,S.TRAIN_STOPS[stop].arrive+dw,cam,0,0,false);counts.push(pax.shown);}
+ assert(counts.every(n=>n>0),'the train never empties at a stop: '+counts.join(','));
+ pax.dispose();assert.equal(scene.getObjectByName('train-passengers'),undefined,'disposed');}
+console.log('train-gameplay3 passengers: ok');
