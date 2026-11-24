@@ -8,6 +8,23 @@
 const assert=require('node:assert/strict');
 const {L,read}=require('./lib/tsLoad.cjs');
 const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts'),tt=L('lib/town/trainTrack.ts'),S=L('lib/town/trainSchedule.ts');
+// 0. Polish (Nov 24 2026, AAA audit #8): the ride camera's clearance (lib/town/trainCamClear.ts, pure). The portrait ride spot on the
+// platform side (9.1 m out, 3.5 m back, ~2.7 m over the rider's head) is inside each station house's roof volume; the spring arm stops
+// short of it; nowhere else on the open line pulls in; the tube keeps the camera inside; a camera in a truss is lifted over its chord.
+{const near=(a,b,e,m)=>assert(Math.abs(a-b)<=e,`${m}: ${a} vs ${b}`);const C=L('lib/town/trainCamClear.ts'),TL=L('lib/town/trainLayout.ts'),V=L('lib/town/venues.ts'),lay=TL.trainLayout().profile,G=V.fieldSurfaceHeight;
+ for(const st of tt.TRAIN_STATIONS){const h=TL.stationSpot(st,0,1),c=TL.stationSpot(st,-3.5,9.1),hy=h.y+1.6,cy=h.y+4.3,f=C.camClearFraction(h.x,hy,h.z,c.x,cy,c.z,G);
+  if(st.id!=='south')assert(C.camBlocked(c.x,cy,c.z,G),`${st.id}: the old portrait spot is in the roof`);
+  assert(f<1&&f>=.15,`${st.id}: pulled in (${f})`);for(let i=0;i<=40;i++){const k=f*i/40;assert(!C.camBlocked(h.x+(c.x-h.x)*k,hy+(cy-hy)*k,h.z+(c.z-h.z)*k,G),`${st.id}: clear all the way to the camera`);}}
+ let pulled=0;for(let s=0;s<tt.TRACK.length;s+=5){if(tt.inTunnelS(s-12)||tt.inTunnelS(s+12)||tt.TRAIN_STATIONS.some(st=>Math.abs(tt.wrapS(st.s-s+tt.TRACK.length/2)-tt.TRACK.length/2)<14))continue;
+  const q=tt.trackAt(s),m=tt.leftNormal(q.tx,q.tz),bed=tt.bedAt(lay,s);for(const sg of [-1,1])if(C.camClearFraction(q.x,bed+2.5,q.z,q.x+m.x*9*sg,bed+5,q.z+m.z*9*sg,G)<1)pulled++;}
+ assert.equal(pulled,0,'the open line keeps the full framing');
+ const mid=(tt.TUNNEL.west.s+tt.TUNNEL.east.s)/2,t=tt.trackAt(mid),n=tt.leftNormal(t.tx,t.tz),f=C.camClearFraction(t.x,tt.TUNNEL_BED+2.5,t.z,t.x+n.x*9,tt.TUNNEL_BED+5,t.z+n.z*9);
+ const x=t.x+n.x*9*f,z=t.z+n.z*9*f,y=tt.TUNNEL_BED+2.5+2.5*f;assert(Math.hypot(x-t.x,z-t.z)<tt.TUNNEL_HALF_WIDTH-.4&&y<tt.TUNNEL_BED+5.6,`tunnel: inside the tube (f ${f})`);
+ const ms=(tt.SOUTH_BRIDGE.spanA+tt.SOUTH_BRIDGE.spanB)/2,b=tt.trackAt(ms),bn=tt.leftNormal(b.tx,b.tz),bb=tt.bedAt(lay,ms);
+ near(C.trussLift(b.x+bn.x*C.TRUSS_OFFSET,bb+1.5,b.z+bn.z*C.TRUSS_OFFSET),C.TRUSS_H+.35-1.5,.01,'in the truss: lifted over the top chord');assert.equal(C.trussLift(b.x+bn.x*5,bb+1.5,b.z+bn.z*5),0,'clear of it: no lift');
+ const W=read('lib/town/trainWorld.ts');assert(new RegExp(`TRUSS_OFFSET=${C.TRUSS_OFFSET},TRUSS_H=${C.TRUSS_H}\\b`).test(W)&&/const ew=4\.8,ed=hd\/2\+1\.25,rh=1\.9,ry=y0\+H\+\.14/.test(W)&&/H=2\.9,y0=top/.test(W),'clearance volumes match trainWorld.ts (roof, truss)');
+ const R=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R)&&/f<arm\?14:2\.5/.test(R),'ride camera: spring arm, in fast, out slow');
+ assert(/ground:fieldSurfaceHeight\}\)/.test(read('components/Town.tsx')),'Town passes the ground');}
 // 1. wire
 for(let k=0;k<3;k++)for(let j=0;j<8;j++){const q=P.trainSeatCode(k,j);assert(q>=2&&q<=25,`code ${q}`);assert(q/4<8,'under the interpolator fast-mover speed (8 m/s); the relay checks distance, not this byte');assert.equal(P.trainWire(P.Mode.Idle,q),k*8+j);}
 assert.equal(P.trainWire(P.Mode.Idle,0),-1);assert.equal(P.trainWire(P.Mode.Idle,1),-1,'the stadium seat marker is not a train');assert.equal(P.trainWire(P.Mode.Walk,10),-1,'walking at 2.5 m/s is not riding');

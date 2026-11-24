@@ -1499,7 +1499,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       taken:trainSeatTaken,cue:(name,gain)=>document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}})),haptic:tapHaptic,
       loadQuiz:()=>import('@/lib/site/quizBank').then(m=>{const out:TrainQuizQ[]=[];for(const qz of m.QUIZ_BANK)qz.questions.forEach((q,i)=>{if((q.kind==='choice'||q.kind==='truefalse'||q.kind==='ref')&&q.options.length>=2&&q.options.length<=4&&q.q.length<=140)out.push({id:`${qz.slug}:${i}`,q:q.q,options:q.options,correct:q.correct,explain:q.explain});});
         for(let i=out.length-1;i>0;i--){const r=(i*7919+13)%(i+1);[out[i],out[r]]=[out[r],out[i]];}return out;}),// a fixed shuffle: topics mixed, the same order on every device
-      pay:id=>earnForTrainQuiz(id),hold:on=>{heat.hold(on);islandShadowFit.hold(on);}});
+      pay:id=>earnForTrainQuiz(id),hold:on=>{heat.hold(on);islandShadowFit.hold(on);},ground:fieldSurfaceHeight});
     trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.answer=i=>trainRide.answer(i);
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainRide=trainRide;
     disposers.add(()=>{trainRide.dispose();trainRideActions.board=()=>{};trainRideActions.press=()=>{};trainRideActions.answer=()=>{};});

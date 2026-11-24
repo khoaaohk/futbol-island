@@ -22,6 +22,7 @@ import {TRAIN_SEATS,type SeatPose} from './trainRunning';
 import {npcSeatPose} from '../graphics/npcSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
 import {ZIP_LOOK,softLook,springTo} from './zipline';
+import {camClearFraction,trussLift} from './trainCamClear';
 
 export const TRAIN_BOARD_KEY='train-board';
 /** One football fact per stop, read in the "Next stop" announcement (AGENTS.md: the ride teaches). */
@@ -106,13 +107,15 @@ type Ports={
  pay:(id:string)=>void;
  /** Camera / shadow fit hold while riding (the zipline's). */
  hold?:(on:boolean)=>void;
+ /** Ground height (Town: fieldSurfaceHeight, Summit Isle's hill and cutting): the ride camera stays above it. */
+ ground?:(x:number,z:number)=>number;
 };
 export function createTrainRide(ports:Ports){
  let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const trick:TrickPose=npcSeatPose('bench');trick.w=0;
- const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0;
+ const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0,arm=-1;
  const camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
  try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  const riding=()=>k>=0;
@@ -198,7 +201,7 @@ export function createTrainRide(ports:Ports){
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(!riding()&&blend<=0){if(camOn){camOn=false;lookS.x=lookS.v=0;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
+   if(!riding()&&blend<=0){if(camOn){camOn=false;lookS.x=lookS.v=0;arm=-1;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
    const run=ports.run();if(!run)return;camOn=true;const h=Math.max(0,Math.min(dt,.1));
    if(!dragging)dragAim*=Math.exp(-ZIP_LOOK.back*h);
    springTo(lookS,softLook(stickAim*ZIP_LOOK.stick+dragAim),(dragging?ZIP_LOOK.dragRate:stickAim!==0?ZIP_LOOK.stickRate:ZIP_LOOK.returnRate)*(reduced?ZIP_LOOK.reducedRate:1),h);
@@ -207,6 +210,12 @@ export function createTrainRide(ports:Ports){
    const out=(CAM.out+(portrait?CAM.portraitOut:0))*(1-tk)+CAM.tunnelOut*tk,back=(portrait?CAM.portraitBack:CAM.back)*(1-tk)+CAM.tunnelBack*tk,up=CAM.up*(1-tk)+CAM.tunnelUp*tk;
    const ox=-fx*out-t.tx*back,oz=-fz*out-t.tz*back,a=-lookS.x,ca=Math.cos(a),sa=Math.sin(a);// the look orbits the camera round the rider
    camPos.set(pose.x+ox*ca-oz*sa,pose.y+up,pose.z+ox*sa+oz*ca);{const ah=portrait?CAM.portraitAhead:CAM.ahead,inn=portrait?CAM.portraitIn*(1-tk):0;camLook.set(pose.x+t.tx*ah+fx*inn,pose.y+CAM.eye,pose.z+t.tz*ah+fz*inn);}
+   // Polish (Nov 24 2026, AAA audit #8): never inside a station roof, the tunnel's rock, the hill or a bridge truss. A spring arm from
+   // the rider's head (trainCamClear.ts): it comes in fast (~0.07 s) when something is in the way and eases back out slowly, so the
+   // camera never pops; the station boxes reach 1.5 m past the eaves so it is already in before the roof arrives.
+   {const hx=pose.x,hy=pose.y+CAM.eye,hz=pose.z,f=camClearFraction(hx,hy,hz,camPos.x,camPos.y,camPos.z,ports.ground);
+    arm=arm<0?f:arm+(f-arm)*(1-Math.exp(-(f<arm?14:2.5)*h));
+    camPos.set(hx+(camPos.x-hx)*arm,hy+(camPos.y-hy)*arm,hz+(camPos.z-hz)*arm);camPos.y+=trussLift(camPos.x,camPos.y,camPos.z);}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
    const e=blend*blend*(3-2*blend);
    if(portrait){if(!fovSaved)fovSaved=camera.fov;const f=fovSaved+(PORTRAIT_FOV-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
@@ -223,6 +232,8 @@ export function createTrainRide(ports:Ports){
   bump(){if(!riding())return;const run=ports.run();if(!run)return;for(let s=0;s<TRAIN_SEATS;s++)if(s!==j&&!ports.taken(k,s)){j=s;anchor.seat=s;run.seatPose(k,j,pose);anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;return;}},
   /** Tests / headless checks: station i's step-off spot level with its platform centre + du m. */
   stationSpot(i:number,du=0){return platformSpot(i,TRAIN_STATIONS[i].s+du,{x:0,y:0,z:0,yaw:0});},
+  /** Debug / checks: the camera's spring-arm fraction (1: the full ride framing, less: pulled in clear of a roof / the rock). */
+  get arm(){return arm;},
   /** Debug: the last Board offer's inputs. */
   get lastWant(){return lastWant;},
   finish(){getOff(true);},
