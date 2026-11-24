@@ -310,6 +310,9 @@ export function createTrainRide(ports:Ports){
  /** Pick a camera view: Inside stands you up in the aisle (the cutaway); any other view sits you back down (your seat if it is still
   *  free, else the nearest free one). False while that cannot happen (walking aboard, stepping off, no free seat). */
  function setView(v:TrainView){
+  // POLISH 3 (phone first person): Inside while still walking over to sit (a long aisle walk is up to 1.4 s) stays on your feet
+  // instead of being refused (the press did nothing and the next W / stick walk sat still in the seat view)
+  if(riding()&&walkT<0&&exitT<0&&tw>=0&&twSit>=0&&v==='inside'){twSit=-1;tw=-1;viewChanged('inside');trainRideStore.set({standing:true});return true;}
   if(!riding()||walkT>=0||exitT>=0||tw>=0)return false;if(v===camView&&(v==='inside')===standing)return true;
   if(v==='inside'){if(!standing&&!standUp())return false;viewChanged('inside');return true;}
   if(standing){const jj=!ports.taken(k,j)?j:nearestFreeSeat(sp.x,sp.u,99,s=>ports.taken(k,s));if(jj<0||!sitDown(jj))return false;}
@@ -409,7 +412,8 @@ export function createTrainRide(ports:Ports){
  function onUp(e:PointerEvent){if(e.pointerId===pinchId){pinchId=-1;return;}if(dragging&&e.pointerId===dragId){
    // Gameplay 3: standing, a quick tap (no drag) on a free seat in reach sits there
    if(standing&&tapT>=0&&e.timeStamp/1000-tapT<.4&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<ORBIT.tapPx&&e.target instanceof Element&&tapSeat(e.clientX,e.clientY,e.target))tapT=-1;
-   dragging=false;dragId=-1;if(pinchId>=0){pinchId=-1;orb.vy=0;}if(e.timeStamp/1000-dragT>.08)orb.vy=0;}}
+   // POLISH 3 (owner, phone first person: a 90° drag turned 134°): first person (Inside, Driver's view) stops on release, no flick
+   dragging=false;dragId=-1;if(pinchId>=0){pinchId=-1;orb.vy=0;}if(e.timeStamp/1000-dragT>.08||standing||camView==='inside'||camView==='driver')orb.vy=0;}}
  function onWheel(e:WheelEvent){const el=e.target as Element|null;if(!riding()||!el||el.tagName!=='CANVAS')return;setZoom(orb.zoom*Math.exp(e.deltaY*ORBIT.wheel));recentering=false;}
  function unlisten(){if(!listening||typeof window==='undefined')return;listening=false;window.removeEventListener('pointerdown',onDown,true);window.removeEventListener('pointermove',onMove,true);window.removeEventListener('pointerup',onUp,true);window.removeEventListener('pointercancel',onUp,true);window.removeEventListener('wheel',onWheel,true);dragging=false;dragId=pinchId=-1;}
  let promptShown=false;const lastWant={x:0,z:0,y:0,can:false,n:0};

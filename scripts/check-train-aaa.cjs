@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,views,framing,hud,inside,track,deck,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
-const phone = arg('phone', '1') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
+const phone = arg('phone', '1') === '1', landscape = arg('landscape', '') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
 const results = []; let vpW = 1440, vpH = 900;
@@ -475,10 +475,22 @@ async function partInside(c) {
   if (!phone) { await p.keyboard.down('ArrowLeft'); await p.waitForTimeout(700); await p.keyboard.up('ArrowLeft'); await p.waitForTimeout(300); const a2 = await camYaw();
     const sp = await p.evaluate(() => ({ x: window.__fi2.trainRide.spot.x, u: window.__fi2.trainRide.spot.u }));
     check('inside: ← turns the view (does not walk)', turned(a1, a2) > .8, JSON.stringify({ turned: +turned(a1, a2).toFixed(2), spot: sp })); }
-  await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(1400); await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(1400);
-  const u0 = await p.evaluate(() => window.__fi2.trainRide.spot.u); await p.keyboard.down('w'); await p.waitForTimeout(700); await p.keyboard.up('w');
-  const u1 = await p.evaluate(() => window.__fi2.trainRide.spot.u);
-  check('inside: W walks the way you look (along the car)', Math.abs(u1 - u0) > .3, `${u0.toFixed(2)} -> ${u1.toFixed(2)}`);
+  // POLISH 3: the release stops the turn (no flick in first person): the picture holds still after the finger lifts
+  { await p.waitForTimeout(400); const a3 = await camYaw(); check('inside: the turn stops on release (no flick)', turned(a1, a3) < .03, JSON.stringify({ after: +turned(a1, a3).toFixed(3) })); }
+  // Inside pressed straight after Seat (the walk to the seat can take 1.4 s) keeps you standing (POLISH 3: it was refused, W sat still)
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(300); const reIn = await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(900);
+  const st = await p.evaluate(() => ({ standing: window.__fi2.trainRide.standing, view: window.__fi2.trainRide.view }));
+  check('inside: Inside during the walk to a seat stays standing', reIn && st.standing && st.view === 'inside', JSON.stringify(st));
+  const sp0 = await p.evaluate(() => ({ ...window.__fi2.trainRide.spot })); await p.keyboard.down('w'); await p.waitForTimeout(700); await p.keyboard.up('w');
+  const sp1 = await p.evaluate(() => ({ ...window.__fi2.trainRide.spot }));
+  check('inside: W walks the way you look (along the car)', Math.abs(sp1.u - sp0.u) > .3, `${sp0.u.toFixed(2)} -> ${sp1.u.toFixed(2)}`);
+  if (phone && await p.evaluate(() => matchMedia('(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px)').matches)) { // the left half is the walking stick (a touch there never turns the view)
+    const cdp = await p.context().newCDPSession(p), T = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 9 }] });
+    const sx = box.x + box.width * .22, sy = box.y + box.height * .7, b0 = await camYaw(), q0 = await p.evaluate(() => ({ ...window.__fi2.trainRide.spot }));
+    await T('touchStart', sx, sy); for (let i = 1; i <= 6; i++) { await T('touchMove', sx, sy - 12 * i); await p.waitForTimeout(16); } await p.waitForTimeout(800); await T('touchEnd'); await cdp.detach(); await p.waitForTimeout(300);
+    const q1 = await p.evaluate(() => ({ ...window.__fi2.trainRide.spot })), b1 = await camYaw(), d = Math.hypot(q1.u - q0.u, q1.x - q0.x);
+    check('inside: the left-half stick walks (and does not turn)', d > .3 && turned(b0, b1) < .05, JSON.stringify({ moved: +d.toFixed(2), turned: +turned(b0, b1).toFixed(3) }));
+  }
   // walk out: the train brought into its next stop (doors open), stand in the open door's bay, walk toward the platform
   { const T = await p.evaluate((k) => { const f = window.__fi2, s = f.trains.sched, st = f.trains.states[k]; const stop = s.stops[st.at >= 0 ? st.at : st.next]; return stop.arrive + 3.5; }, k); await setLap(p, k, T); await p.waitForTimeout(900); }
   const door = await p.evaluate((k) => { const f = window.__fi2, M = f.camera.matrixWorld.constructor, m = new M(), o = { x: 0, y: 0, z: 0, yaw: 0, car: 0, door: 0 }, L = f.location; const ds = f.trains.doorSpot(k, L.x, L.z, o); if (!ds) return null;
@@ -743,10 +755,13 @@ async function partPerf(c) {
   if (gpu === 'swiftshader') args.push('--use-angle=swiftshader', '--enable-unsafe-swiftshader'); else args.push('--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist');
   const b = await chromium.launch({ channel: 'chrome', headless: true, args });
   try {
-    const vp = phone ? { width: 390, height: 844 } : { width: 1440, height: 900 }; vpW = vp.width; vpH = vp.height;
+    const vpArg = arg('vp', ''), vp = vpArg ? { width: +vpArg.split('x')[0], height: +vpArg.split('x')[1] } : phone ? (landscape ? { width: 844, height: 390 } : { width: 390, height: 844 }) : { width: 1440, height: 900 }; vpW = vp.width; vpH = vp.height;
     const c = await boot(b, vp, phone);
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
+    // phones are portrait only on the island (owner, Oct 24 2026: components/RotateLock.tsx): landscape shows the turn-upright card
+    if (phone && landscape && !vpArg) { const lock = await c.p.evaluate(() => { const e = document.querySelector('[class*="RotateLock_lock"]'); return !!e && getComputedStyle(e).display !== 'none' && document.elementFromPoint(innerWidth / 2, innerHeight / 2) === e.closest('[class*="RotateLock_lock"]') || !!document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest('[class*="RotateLock_lock"]'); });
+      check('phone landscape: the island asks to turn upright (portrait only), touches never reach the canvas', lock); parts.length = 0; }
     for (const part of parts) {
       try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, jitter: partJitter, roofjitter: partRoofJitter, landing: partLanding, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
