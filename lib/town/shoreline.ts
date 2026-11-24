@@ -2,7 +2,10 @@
 // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): the west coast is pushed about 230 m out for Stadium Park and the stadium
 // (centre -205,-30); every anchor east of x -72 is unchanged. Nov 13 2026 (owner, the bigger pond): the south coast below Stadium
 // Park's pond moved out ~20 m ([-150,130] → [-155,150], [-262,120] → [-262,126]) for a wider beach between the pond and the sea. Old west anchors: [-85,-160] … [-45,112],[-85,112],[-96,70],[-99,-40].
-const anchors=[[-190,-222],[-72,-228],[80,-243],[209,-218],[239,-150],[246,-30],[240,110],[242,190],[227,219],[145,224],[65,220],[40,211],[33,177],[25,155],[12,133],[-5,120],[-45,112],[-155,150],[-262,126],[-322,50],[-330,-80],[-300,-190]];
+// Nov 23 2026 (owner, Island Line: "extend the beach for the entire south area"): the south and south-west coast from the Ferry Dock
+// round to the west curve now runs ~16 m outside the train line (a wide beach outside the rails, never the line at the waterline).
+// Old anchors: [227,219],[145,224],[65,220],[40,211],[33,177],[25,155],[12,133],[-5,120]. Points are trainTrack.ts's line offset seaward.
+const anchors=[[-190,-222],[-72,-228],[80,-243],[209,-218],[239,-150],[246,-30],[240,110],[242,190],[233,246],[176,239],[116,240],[54,240],[26,226],[17,197],[17,158],[6,134],[-16,121],[-45,112],[-155,150],[-262,126],[-322,50],[-330,-80],[-300,-190]];
 export const ISLAND_SHORE: {x:number;z:number}[]=[];
 for(let i=0;i<anchors.length;i++)for(let j=0;j<8;j++){
  const t=j/8,p0=anchors[(i+anchors.length-1)%anchors.length],p1=anchors[i],p2=anchors[(i+1)%anchors.length],p3=anchors[(i+2)%anchors.length];
@@ -25,7 +28,7 @@ export const WEST_BEACH_X=-110;
  *  line stays one smooth curve. */
 export const POND_BEACH_EXTRA=5;
 const easeBand=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/(b-a)));return k*k*(3-2*k);};
-export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9+(p.z>100?POND_BEACH_EXTRA*easeBand(-112,-140,p.x)*easeBand(-225,-195,p.x):0):p.z>110&&p.x<55?8:5;
+export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9+(p.z>100?POND_BEACH_EXTRA*easeBand(-112,-140,p.x)*easeBand(-225,-195,p.x):0):p.z>95&&p.x>-30&&p.x<245?22/* Nov 23 2026: the south beach the Island Line runs along (sand from the water past the rails) */:5;
 export const SHORE_SAND=ISLAND_SHORE.map((p,i)=>{const previous=ISLAND_SHORE[(i+ISLAND_SHORE.length-1)%ISLAND_SHORE.length],next=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length],dx=next.x-previous.x,dz=next.z-previous.z,length=Math.hypot(dx,dz),width=shoreSandWidth(p);return {outer:p,inner:{x:p.x-dz/length*width,z:p.z+dx/length*width}};});
 export const NORTH_BEACH_UMBRELLAS=[{x:-48,z:-218},{x:-15,z:-224},{x:22,z:-229},{x:62,z:-229},{x:105,z:-227},{x:145,z:-220},{x:181,z:-218}];// Nov 23 2026: the last one 7 m seaward, off the Island Line (was 178,-211)
 export const NORTH_BEACH_PATHS=[{x:-45,z:-185,w:3,d:52},{x:80,z:-189,w:3,d:60}];
