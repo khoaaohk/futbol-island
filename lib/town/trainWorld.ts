@@ -39,7 +39,7 @@ export type TrainTools={
  lite?:boolean;
 };
 const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',sleeperBed:'#897c6e',ballast:'#9a948a',girder:'#6d5640',pier:'#cbc4b5',wall:'#b8b0a1',wallTop:'#cfc8ba',pole:'#7a5c3e',wire:'#33393a',
- platform:'#d3cbbb',platformSide:'#a8a091',edge:'#f2c230',plaster:'#f0e6cc',timber:'#5e4630',deck:'#a57f57',roof:'#566270',ridge:'#3d4650',pane:'#a9c9d2',lantern:'#d9483a',cap:'#2c2a28',
+ platform:'#d3cbbb',platformSide:'#a8a091',footing:'#6f675b',edge:'#f2c230',plaster:'#f0e6cc',timber:'#5e4630',deck:'#a57f57',roof:'#566270',ridge:'#3d4650',pane:'#a9c9d2',lantern:'#d9483a',cap:'#2c2a28',
  bench:'#b48a5e',crossDeck:'#55524d',stone:'#aaa395',stoneDark:'#8d8679',mouth:'#121110'} as const;
 /** Spots a catenary pole must not stand on (it slides to the next row): the Starfish sandbar's hidden ball (coralCayBalls.ts cay-barefoot). */
 const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
@@ -252,12 +252,19 @@ export function buildTrainWorld(tools:TrainTools){
   const c=trackAt(st.s),i0=Math.round(st.s/TRACK_DS)%n,bed=BED[i0],south=st.id==='south',top=bed+STATION_PLATFORM_Y,sg=st.side;
   const nrm=leftNormal(c.tx,c.tz),P=(u:number,v:number,y:number)=>[c.x+c.tx*u+nrm.x*sg*v,y,c.z+c.tz*u+nrm.z*sg*v];
   const ox=Math.round(c.x),oz=Math.round(c.z);
-  const plat=new Geo(),platSide=new Geo(),edge=new Geo(),plaster=new Geo(),timber=new Geo(),deck=new Geo(),roof=new Geo(),ridge=new Geo(),pane=new Geo(),lantern=new Geo(),cap=new Geo(),bench=new Geo();
+  const plat=new Geo(),footing=new Geo(),platSide=new Geo(),edge=new Geo(),plaster=new Geo(),timber=new Geo(),deck=new Geo(),roof=new Geo(),ridge=new Geo(),pane=new Geo(),lantern=new Geo(),cap=new Geo(),bench=new Geo();
   const v0=1.45,v1=south?8.1:5.45,depth=v1-v0;
   // Platform in 5 m pieces along the curve (each on its own frame), with the yellow edge strip.
   for(let u=-STATION_HALF;u<STATION_HALF;u+=5){const f=trackAt(st.s+u+2.5),fn=leftNormal(f.tx,f.tz),Q=(v:number,y:number)=>[f.x+fn.x*sg*v,y,f.z+fn.z*sg*v];
    const m=Q(v0+depth/2,0),foot=bed-.05;
    plat.box(m[0],top-.04,m[2],f.tx,f.tz,2.53,depth/2,.04);platSide.box(m[0],(top-.08+foot)/2,m[2],f.tx,f.tz,2.5,depth/2-.02,(top-.08-foot)/2);
+   // AAA 2 (owner image 58: "it shouldn't be light near the platform"): the island's shadow map keeps a 2-texel normal offset (no
+   // acne on parapets), which leaves a light strip between a wall's foot and its shadow on the sand. A dark concrete footing slopes
+   // from the platform's back wall 0.4 m out and into the ground (and round the two ends): the base reads grounded, in the same
+   // vertex-colour batch (no new draw), no global bias change.
+   {const a=Q(v1-.02,bed+.12),b=Q(v1+.42,bed-.45),wl=2.5;footing.quad([a[0]-f.tx*wl,a[1],a[2]-f.tz*wl],[a[0]+f.tx*wl,a[1],a[2]+f.tz*wl],[b[0]+f.tx*wl,b[1],b[2]+f.tz*wl],[b[0]-f.tx*wl,b[1],b[2]-f.tz*wl],[m[0],bed-3,m[2]]);
+    for(const end of [-1,1])if(end<0?u===-STATION_HALF:u+5>=STATION_HALF){const ea=Q(v0,bed+.12),eb=Q(v1,bed+.12),d=end*2.5,o=end*2.92;
+     footing.quad([ea[0]+f.tx*d,ea[1],ea[2]+f.tz*d],[eb[0]+f.tx*d,eb[1],eb[2]+f.tz*d],[eb[0]+f.tx*o,bed-.45,eb[2]+f.tz*o],[ea[0]+f.tx*o,bed-.45,ea[2]+f.tz*o],[m[0],bed-3,m[2]]);}}
    const e=Q(v0+.28,0);edge.box(e[0],top+.012,e[2],f.tx,f.tz,2.53,.18,.008);// 2 cm proud of the platform top (was 1 cm: flickered at range)
    // Walk surfaces: one box when the piece is near square to the axes, else overlapping 2.3 m tiles (no gaps at any yaw).
    const square=Math.min(Math.abs(f.tx),Math.abs(f.tz))<.2;
@@ -297,7 +304,7 @@ export function buildTrainWorld(tools:TrainTools){
   // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.
   {/* every tier (a station islander sits here; 3 boxes in the existing bench batch) */const a=P(-9,v0+2.2,0);bench.box(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04);const b=P(-9,v0+2.2+.25,0);bench.box(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225);
    for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.28,l[2],c.tx,c.tz,.04,.26,.28);}}
-  emit(plat,C.platform,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
+  emit(plat,C.platform,ox,oz);emit(footing,C.footing,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
   emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,lite?C.timber:C.bench,ox,oz);/* lite: in the timber batch (no new paint on the lowest tier) */
   {const m=emit(pane,C.pane,ox,oz);if(m)lit(m,.9,true);}{const m=emit(lantern,C.lantern,ox,oz);if(m)lit(m,1);}
   // Colliders: the house (axis-aligned stations one box; the diagonal Summit one a ring of 1.2 m tiles round its walls).

@@ -204,7 +204,7 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** The shared clock (s) for this frame (AAA 2: Town passes trainFrameClock at the rAF timestamp; tests pass their own); else trainClockSec(). */nowSec?:number;
  /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
  /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
- /** Nov 24 2026: the local player stands on a train's roof (trainRoof.ts): not a person on the track, never pushed. */onRoof?:boolean;
+ /** Nov 24 2026: the local player stands on a train's roof (trainRoof.ts): not a person on the track, never pushed. */onRoof?:boolean;/** AAA 2: the local player is in the air (jetpack, a fall, a jump, easing down to land): not blocked or knocked by the cars. */air?:boolean;
  /** Nov 24 2026: the local player is on a ride faster than Town's bonk speed: a stopped car bonks instead of blocking. */fast?:boolean;
  /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
   *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
@@ -406,8 +406,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    // never pass through and never stand inside a car). Riders are not tested. A few dot products per car near the player.
    // Nov 24 2026: a MOVING car (over KNOCK_V m/s), or any car hit by a fast ride (f.fast), knocks instead (result.knock: thrown
    // across, away from the car; 'track' when it is the lead car's front). Walking into a stopped car's side still just blocks.
-   if(riding<0&&!f.onRoof){const P=f.player;for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-P.x)+Math.abs(pc.z-P.z)>TRAIN_LENGTH+4)continue;
-    for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,m4,st.v);const e=m4.elements,dx=P.x+result.nudgeX-e[12],dy=P.y-e[13],dz=P.z+result.nudgeZ-e[14];if(dy< -1.2||dy>3.9)continue;
+   if(riding<0&&!f.onRoof&&!f.air){const P=f.player;for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-P.x)+Math.abs(pc.z-P.z)>TRAIN_LENGTH+4)continue;
+    for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,m4,st.v);const e=m4.elements,dx=P.x+result.nudgeX-e[12],dy=P.y-e[13],dz=P.z+result.nudgeZ-e[14];if(dy< -1.2||dy>3.2)continue;/* AAA 2: feet above the body side (3.1 m: on / over the roof) are not blocked (was 3.9: a roof lander was pushed sideways each frame) */
      const ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az,hx=HALF_W+PLAYER_R,hz=CAR_LENGTH/2+PLAYER_R;
      if(Math.abs(lx)>=hx||Math.abs(lz)>=hz)continue;const px=hx-Math.abs(lx),pz=hz-Math.abs(lz);
      if((st.v>KNOCK_V||f.fast)&&!result.knock){const sg=Math.sign(lx||1)/ax,rev=c%2===1?-1:1;result.knock=c===0&&lz>CAR_LENGTH/2-1.4&&st.v>KNOCK_V?'track':'side';

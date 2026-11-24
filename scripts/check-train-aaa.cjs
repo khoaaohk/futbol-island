@@ -343,7 +343,7 @@ async function partViews(c) {
   if (k < 0) { check('views: riding', false, JSON.stringify(await p.evaluate(() => { const f = window.__fi2; return { want: f.trainRide.lastWant, ride: f.rideRef?.current, map: !!document.querySelector('[data-train-station]'), dialogs: [...document.querySelectorAll('[role=dialog]')].map((d) => (d.getAttribute('aria-label') || d.className || '').slice(0, 30)), loc: [f.location.x, f.location.z].map(Math.round), h: f.rooftop?.state?.height }; }))); return; }
   for (let i = 0; i < 40; i++) { if ((await p.evaluate((k) => window.__fi2.trains.states[k].at, k)) < 0) break; await p.waitForTimeout(500); }
   await p.waitForTimeout(2000);
-  for (const v of ['seat', 'front', 'back', 'left', 'right', 'above', 'inside', 'seat']) {
+  for (const v of ['seat', 'driver', 'front', 'back', 'left', 'right', 'above', 'inside', 'seat']) {
     await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(1600);
     const r = await p.evaluate((k) => { const f = window.__fi2, cars = []; f.trains.root.traverse((o) => { if (o.isInstancedMesh && o.geometry?.getAttribute?.('aPart') && o.geometry.userData?.straps && o.visible) cars.push(o); });
       const m = cars[0], e = m ? m.instanceMatrix.array : null; let sx = Infinity; if (e) for (let i = 0; i < m.count; i++) sx = Math.min(sx, Math.hypot(e[i * 16], e[i * 16 + 1], e[i * 16 + 2]), Math.hypot(e[i * 16 + 8], e[i * 16 + 9], e[i * 16 + 10]));
@@ -385,6 +385,13 @@ async function partFraming(c) {
       check(`framing ${name} ${v}: camera outside the cars, the train on screen`, r.riding && r.view === v && !r.inside && r.on >= 14, JSON.stringify(r));
       if (shots && (name === 'tunnel' || name === 'bridge')) await p.screenshot({ path: path.join(shots, `framing-${name}-${v}-${phone ? 'phone' : 'desktop'}.png`) });
     }
+    // AAA 2: the Driver's view: the eye in car 0's cab, looking ahead along the track (the line 30 m ahead on screen), Kenji hidden
+    { await p.evaluate(() => window.__fi2.trainRide.setView('driver')); await p.waitForTimeout(1500);
+      const d = await p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(), q = cam.position.clone(); cam.updateMatrixWorld(); f.trains.carMatrixOf(k, 0, m); q.applyMatrix4(m.clone().invert());
+        const st = f.trains.states[k], a = f.trains.sched.trackAt((st.s + 30) % 2700), b = cam.position.clone().set(a.x, f.trains.sched.bed((st.s + 30) % 2700) + .5, a.z).project(cam);
+        return { view: f.trainRide.view, x: +q.x.toFixed(2), y: +q.y.toFixed(2), z: +q.z.toFixed(2), ahead: [+b.x.toFixed(2), +b.y.toFixed(2), +b.z.toFixed(2)], kenji: !!(f.kenji && f.kenji.root && f.kenji.root.visible) }; }, k);
+      check(`framing ${name} driver: in the leading cab, the line ahead on screen, no Kenji`, d.view === 'driver' && d.z > 4.75 && d.z < 6 && Math.abs(d.x) < 1.1 && Math.abs(d.ahead[0]) < .9 && Math.abs(d.ahead[1]) < .95 && d.ahead[2] < 1 && !d.kenji, JSON.stringify(d));
+      if (shots) await p.screenshot({ path: path.join(shots, `framing-${name}-driver-${phone ? 'phone' : 'desktop'}.png`) }); }
   }
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
   await leaveRide(p);
@@ -483,6 +490,114 @@ async function partInside(c) {
   const out = await p.evaluate(() => { const f = window.__fi2, c = f.camera.position, r = f.player.root.position; return { active: f.trainRide.active, camDist: +c.distanceTo(r).toFixed(1), meShown: f.player.root.visible, fov: +f.camera.fov.toFixed(1) }; });
   check('inside: walking out through the open door gets you off (camera back out, body shown)', off && !out.active && out.camDist > 4 && out.meShown, JSON.stringify({ door, out }));
   if (shots) await p.screenshot({ path: path.join(shots, `inside-walkout-${phone ? 'phone' : 'desktop'}.png`) });
+}
+// AAA 2 (owner: "buggy and jittery"): the screen position of what rides the train, sampled at every render of the island camera:
+// the ridden car's middle, Kenji's head, a passenger, my rider (seat views) / the roof rider. Noise = how far a frame's point lies off
+// the straight line between its neighbours (time-weighted by the frame timestamps, so a varying dt is not counted), px.
+// fixed = every frame advances exactly 1/60 s (rAF timestamps, performance.now and Date.now on a virtual clock); else the real frames.
+async function jitterRun(p, k, ms, fixed, roof) {
+  return p.evaluate(async ({ k, ms, fixed, roof }) => {
+    const f = window.__fi2, r = f.renderer, cam = f.camera, V = cam.position.constructor, M = cam.matrixWorld.constructor, m = new M(), q = new V();
+    let scene = f.trains.root; while (scene.parent) scene = scene.parent;
+    const W = r.domElement.clientWidth, H = r.domElement.clientHeight, rec = { car: [], kenji: [], pax: [], me: [] }, ts = [];
+    // a passenger in the ridden train: the first pax instance within its middle's 13 m
+    let paxMesh = null, paxN = -1; f.trains.carMatrixOf(k, 0, m); const c0 = new V().setFromMatrixPosition(m);
+    scene.traverse((o) => { if (!paxMesh && o.isInstancedMesh && /^train-pax-/.test(o.name) && o.count > 0) { for (let n = 0; n < o.count; n++) { o.getMatrixAt(n, m); if (q.setFromMatrixPosition(m).distanceTo(c0) < 13) { paxMesh = o; paxN = n; break; } } } });
+    const realRaf = window.requestAnimationFrame.bind(window), realPerf = performance.now.bind(performance), realDate = Date.now;
+    let V0 = realPerf(), Vt = V0, lastTs = -1; const dBase = realDate() - V0;
+    if (fixed) { window.requestAnimationFrame = (cb) => realRaf((t) => { if (t !== lastTs) { lastTs = t; Vt += 1000 / 60; } cb(Vt); }); performance.now = () => Vt; Date.now = () => dBase + Vt + (window.__skew || 0); }
+    let rafTs = 0; const tap = (t) => { rafTs = t; if (live) realRaf2(tap); }; let live = true; const realRaf2 = window.requestAnimationFrame.bind(window); realRaf2(tap);
+    const put = (arr, x, y, z) => { q.set(x, y, z).project(cam); arr.push(q.z < 1 && Math.abs(q.x) < 1.5 && Math.abs(q.y) < 1.5 ? [(q.x + 1) / 2 * W, (1 - q.y) / 2 * H] : null); };
+    const orig = r.render; r.render = function (s, c) { if (c === cam) { cam.updateMatrixWorld(); ts.push(fixed ? Vt : rafTs);
+        f.trains.carMatrixOf(k, 0, m); put(rec.car, m.elements[12] + m.elements[4] * 2.4, m.elements[13] + m.elements[5] * 2.4, m.elements[14] + m.elements[6] * 2.4);
+        const K = f.kenji && f.kenji.root; if (K && K.visible) { K.updateWorldMatrix(true, false); put(rec.kenji, K.matrixWorld.elements[12], K.matrixWorld.elements[13] + 1.1, K.matrixWorld.elements[14]); } else rec.kenji.push(null);
+        if (paxMesh && paxN < paxMesh.count) { paxMesh.getMatrixAt(paxN, m); m.premultiply(paxMesh.matrixWorld); put(rec.pax, m.elements[12], m.elements[13] + 1, m.elements[14]); } else rec.pax.push(null);
+        const pr = f.player.root.position; put(rec.me, pr.x, pr.y + 1, pr.z); }
+      return orig.apply(this, arguments); };
+    const t0 = realPerf(); while (realPerf() - t0 < ms) await new Promise((res) => setTimeout(res, 100));
+    r.render = orig; live = false; if (fixed) { window.requestAnimationFrame = realRaf; performance.now = realPerf; Date.now = realDate; }
+    const out = { frames: ts.length, view: f.trainRide.view, v: +f.trains.states[k].s.toFixed(0) };
+    for (const key in rec) { const a = rec[key], e = []; for (let i = 1; i < a.length - 1; i++) { const A = a[i - 1], B = a[i], C = a[i + 1]; if (!A || !B || !C) continue; const dt = ts[i + 1] - ts[i - 1]; if (!(dt > 0)) continue; const w = (ts[i] - ts[i - 1]) / dt;
+        e.push(Math.hypot(B[0] - (A[0] + (C[0] - A[0]) * w), B[1] - (A[1] + (C[1] - A[1]) * w))); }
+      e.sort((x, y) => x - y); out[key] = e.length > 10 ? { n: e.length, p50: +e[e.length >> 1].toFixed(2), p95: +e[Math.floor(e.length * .95)].toFixed(2), max: +e[e.length - 1].toFixed(2) } : null; }
+    return out; }, { k, ms, fixed, roof });
+}
+async function partJitter(c) {
+  const { p } = c;
+  await settle(p);
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
+  await p.waitForTimeout(1300);
+  const k = await p.evaluate(() => window.__fi2.trainRide.train);
+  if (k < 0) { check('jitter: riding', false); return; }
+  // full speed: put the ridden train 30 s past its South departure (cruise)
+  const T = await p.evaluate((k) => { const s = window.__fi2.trains.sched, st = s.stops.find((x) => x.station.id === 'south'); return st.depart + 30; }, k);
+  const results = [];
+  for (const v of ['seat', 'driver', 'left', 'inside']) for (const fixed of [false, true]) {
+    await setLap(p, k, T); await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(1800);
+    const r = await jitterRun(p, k, 5000, fixed, false); results.push({ v, fixed, ...r });
+    console.log(`  jitter ${v} ${fixed ? 'fixed dt' : 'real dt'}: ${r.frames} frames, car ${JSON.stringify(r.car)} kenji ${JSON.stringify(r.kenji)} pax ${JSON.stringify(r.pax)} me ${JSON.stringify(r.me)}`);
+  }
+  const worst = (r, key) => r[key] ? r[key].p95 : 0;
+  for (const r of results) check(`jitter ${r.v} (${r.fixed ? 'fixed' : 'real'} dt): car / Kenji / passenger / me p95 < 0.5 px frame-to-frame noise`, r.frames > 30 && ['car', 'kenji', 'pax', 'me'].every((key) => worst(r, key) < .5), JSON.stringify({ car: r.car, kenji: r.kenji, pax: r.pax, me: r.me }));
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
+  await leaveRide(p);
+}
+// AAA 2 (owner shot 54, "riding the train from the top shakes the view"): on the roof at full speed on the South Bridge, a curve and
+// before the tunnel: the roof rider and the car on screen, real and fixed dt.
+async function partRoofJitter(c) {
+  const { p } = c; await settle(p);
+  const spots = await p.evaluate(() => { const s = window.__fi2.trains.sched, L = 2700; let br = 0, bb = -1e9; for (let q = 0; q < L; q += 2) { const y = s.bed(q); if (y > bb && y < 20) { bb = y; br = q; } }
+    let cv = 0, ck = -1; for (let q = 0; q < L; q += 4) { const a = s.trackAt(q), b = s.trackAt((q + 8) % L), k = Math.abs(Math.atan2(a.tx * b.tz - a.tz * b.tx, a.tx * b.tx + a.tz * b.tz)); if (k > ck && Math.abs(q - br) > 200) { ck = k; cv = q; } }
+    let w = 0, d = 1e9; for (let q = 0; q < L; q++) { const a = s.trackAt(q), e = Math.hypot(a.x - 538.5, a.z - 169.5); if (e < d) { d = e; w = q; } }
+    return { bridge: br, curve: cv, tunnel: w - 40 }; });
+  for (const [name, sAt] of Object.entries(spots)) {
+    // the lap time train 0 is ~90 m before that spot, moving
+    const T = await p.evaluate((sAt) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); const d = ((sAt - 90 - st.s) % 2700 + 2700) % 2700; if (d < 4 && st.at < 0 && st.v > 8) return t; } return -1; }, sAt);
+    if (T < 0) { check(`roof jitter ${name}: a moving train there`, false); continue; }
+    const land = await landRoof(p, T); if (!land.ok) { check(`roof jitter ${name}: landed`, false, JSON.stringify(land)); await settle(p); continue; }
+    await p.waitForTimeout(1200);
+    for (const fixed of [false, true]) { const r = await jitterRun(p, 0, 3000, fixed, true);
+      console.log(`  roof jitter ${name} ${fixed ? 'fixed' : 'real'} dt: ${r.frames} frames, car ${JSON.stringify(r.car)} me ${JSON.stringify(r.me)} roof ${await p.evaluate(() => window.__fi2.roofRide.k)}`);
+      check(`roof jitter ${name} (${fixed ? 'fixed' : 'real'} dt): the roof rider and the car p95 < 0.5 px`, r.frames > 30 && r.car && r.me && r.car.p95 < .5 && r.me.p95 < .5, JSON.stringify({ car: r.car, me: r.me })); }
+    if (shots) await p.screenshot({ path: path.join(shots, `roof-${name}-${phone ? 'phone' : 'desktop'}.png`) });
+    await settle(p);
+  }
+}
+// AAA 2 (owner: "landing on or near the train causes the view to shake"): a per-render recorder from the moment Land is pressed:
+// my rider and car 0 on screen, the camera's offset from me, the surface (roof / ground), the shake sources (bonk). After the landing
+// settles (0.4 s after I am on foot) the noise (as jitterRun) must stay < 0.5 px.
+const recStart = (p, k) => p.evaluate((k) => { const f = window.__fi2, r = f.renderer, cam = f.camera, V = cam.position.constructor, M = cam.matrixWorld.constructor, m = new M(), q = new V(), W = r.domElement.clientWidth, H = r.domElement.clientHeight;
+  const rec = window.__rec = []; let ts = 0; const tap = (t) => { ts = t; if (window.__rec === rec) requestAnimationFrame(tap); }; requestAnimationFrame(tap);
+  const px = (x, y, z) => { q.set(x, y, z).project(cam); return [(q.x + 1) / 2 * W, (1 - q.y) / 2 * H]; };
+  const orig = window.__recOrig = r.render; r.render = function (s, c) { if (c === cam) { cam.updateMatrixWorld(); const pr = f.player.root.position; f.trains.carMatrixOf(k, 0, m);
+      rec.push({ t: ts, me: px(pr.x, pr.y + 1, pr.z), car: px(m.elements[12], m.elements[13] + 2.4, m.elements[14]), off: [cam.position.x - pr.x, cam.position.y - pr.y, cam.position.z - pr.z].map((x) => +x.toFixed(2)), ride: f.rideRef.current, roof: f.roofRide.k, bonk: !!(f.trainBonk && f.trainBonk.active) }); }
+    return orig.apply(this, arguments); }; }, k);
+const recStop = (p) => p.evaluate(() => { const f = window.__fi2, rec = window.__rec; window.__rec = null; f.renderer.render = window.__recOrig;
+  const on = rec.findIndex((x) => x.ride === 'walk'), t0 = on >= 0 ? rec[on].t + 400 : Infinity, out = { frames: rec.length, landedAt: on, bonk: rec.some((x) => x.bonk), roof: Math.max(...rec.map((x) => x.roof)) };
+  for (const key of ['me', 'car']) { const e = []; for (let i = 1; i < rec.length - 1; i++) { if (rec[i - 1].t < t0) continue; const A = rec[i - 1][key], B = rec[i][key], C = rec[i + 1][key], dt = rec[i + 1].t - rec[i - 1].t; if (!(dt > 0)) continue; const w = (rec[i].t - rec[i - 1].t) / dt;
+      e.push(Math.hypot(B[0] - (A[0] + (C[0] - A[0]) * w), B[1] - (A[1] + (C[1] - A[1]) * w))); }
+    e.sort((a, b) => a - b); out[key] = e.length > 10 ? { n: e.length, p95: +e[Math.floor(e.length * .95)].toFixed(2), max: +e[e.length - 1].toFixed(2) } : null; }
+  // the first 3 s after landing, every 6th frame: what the camera did (for the audit)
+  out.trace = rec.slice(Math.max(0, on), Math.max(0, on) + 180).filter((_, i) => i % 30 === 0).map((x) => ({ off: x.off, ride: x.ride, roof: x.roof, bonk: x.bonk }));
+  return out; });
+async function partLanding(c) {
+  const { p } = c; await settle(p);
+  const report = (name, r) => { console.log(`  landing ${name}: ${JSON.stringify({ frames: r.frames, landedAt: r.landedAt, bonk: r.bonk, roof: r.roof, me: r.me, car: r.car })}\n    trace ${JSON.stringify(r.trace)}`);
+    check(`landing ${name}: no shake after it settles (me / car p95 < 0.5 px from 0.4 s on foot)`, r.landedAt >= 0 && r.me && r.me.p95 < .5 && (!r.car || r.car.p95 < .5), JSON.stringify({ me: r.me, car: r.car, bonk: r.bonk })); };
+  // 1. onto a moving roof (jetpack Land)
+  { const T = await p.evaluate(() => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (st.at < 0 && st.v > 12) return t; } return 0; });
+    await recStart(p, 0); const land = await landRoof(p, T); await p.waitForTimeout(3000); const r = await recStop(p); report('on a moving roof', r); if (!land.ok) check('landing: on the roof', false, JSON.stringify(land)); await settle(p); }
+  // 2. on the ground 4 m beside a moving train, 3. beside a train standing at South (on its platform)
+  for (const [name, moving] of [['beside a moving train', true], ['beside a stopped train', false]]) {
+    if (moving) { const T = await p.evaluate(() => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (st.at < 0 && st.v > 12) return t; } return 0; }); await setLap(p, 0, T); await p.waitForTimeout(300);
+      await p.evaluate(() => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }; t.standAt(0, 0, -30, 0, o, undefined, 3.75); const m = new f.camera.matrixWorld.constructor(); t.carMatrixOf(0, 0, m); const e = m.elements, l = Math.hypot(e[0], e[2]); f.teleport(o.x + e[0] / l * 4.2, o.z + e[2] / l * 4.2, 0); }); }
+    else { await standingTrainAt(p, 2); await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw); }); }
+    await p.evaluate(() => window.__fi2.selectRide('jetpack')); await p.waitForTimeout(2200);
+    const k = 0; await recStart(p, moving ? 0 : await p.evaluate(() => { const f = window.__fi2, L = f.location; let b = 0, bd = 1e9; for (let i = 0; i < 3; i++) { const m = new f.camera.matrixWorld.constructor(); f.trains.carMatrixOf(i, 0, m); const d = Math.hypot(m.elements[12] - L.x, m.elements[14] - L.z); if (d < bd) { bd = d; b = i; } } return b; }));
+    await p.evaluate(() => window.__fi2.selectRide('walk')); await p.waitForTimeout(4500); const r = await recStop(p); report(name, r); await settle(p); }
 }
 async function partRoof(c) {
   const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
@@ -633,7 +748,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, jitter: partJitter, roofjitter: partRoofJitter, landing: partLanding, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));

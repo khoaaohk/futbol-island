@@ -26,8 +26,11 @@
 import * as T from 'three';
 import {TRAIN_COUNT,TRAIN_CARS,TRAIN_STOPS,HEADWAY,LAP,DOOR_DELAY,DOOR_MOVE,type TrainState} from './trainSchedule';
 import {SEAT_TABLE,NPC_SEATS,SEATS_PER_CAR,RIDER_ROOT_X,CAR_FLOOR_Y} from './trainRunning';
-/** Near-camera fade (m), as lib/town/trainRide.ts FADE_NEAR / FADE_FAR (not imported: trainRide imports the running module too). */
-const FADE_NEAR=.75,FADE_FAR=1.1;
+/** Near-camera fade (m): a passenger whose body column is this close to the camera is not drawn (hysteresis). AAA 2 (RIDE 3's
+ *  open note: a strap hanger 0.8-1 m in front of the first-person eye filled the screen): wider than lib/town/trainRide.ts FADE_NEAR /
+ *  FADE_FAR (0.75 / 1.1, me and Kenji), so a passenger right in front of you in the aisle steps out of the picture. */
+export const PAX_FADE_NEAR=1.05,PAX_FADE_FAR=1.4;
+const FADE_NEAR=PAX_FADE_NEAR,FADE_FAR=PAX_FADE_FAR;
 import {DOORS,BENCH_X,BENCH_FRONT,BENCH_BACK,BENCHES,HALF_W,STRAP_X} from './trainCarModel';
 import {BENCH} from '../graphics/npcSeatPose';
 import {STATION_NPCS,STATION_BOARDERS} from './stationNpcs';
