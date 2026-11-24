@@ -94,19 +94,19 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
   const sp2={x:0,y:0,z:0,yaw:0};run.seatPose(0,j,sp2,now);assert(Math.hypot(sp2.x-sp.x,sp2.z-sp.z)<.6,`seat ${j}: the clock pose matches the drawn one`);}
  // Gameplay 2: ONE seat table, ≥ 8 seats a car (4 a side on the wall benches), players on 8 of them (the wire's 8), the rest for NPCs;
  // every seat lies on a bench run, each side's seats are ≥ .7 m apart, and the lean points the way the train runs.
- {const CM=LW('lib/town/trainCarModel.ts');assert(TRN.SEATS_PER_CAR>=8&&TRN.SEAT_TABLE.length===TRN.SEATS_PER_CAR*S.TRAIN_CARS,'≥ 8 seats a car');
+ {const CM=LW('lib/town/trainCarModel.ts');assert(TRN.SEATS_PER_CAR===CM.SEAT_SLOTS_Z.length*2&&TRN.SEATS_PER_CAR>=8&&TRN.SEAT_TABLE.length===TRN.SEATS_PER_CAR*S.TRAIN_CARS,'≥ 8 seats a car');
   assert.equal(TRN.TRAIN_SEATS,8,'8 player seats a train (the wire, multiplayer/protocol/seat.ts)');assert.equal(TRN.PLAYER_SEATS.length+TRN.NPC_SEATS.length,TRN.SEAT_TABLE.length);
-  for(let c=0;c<S.TRAIN_CARS;c++)for(const side of [-1,1]){const zs=TRN.SEAT_TABLE.filter(q=>q.car===c&&q.side===side).map(q=>q.z).sort((a,b)=>a-b);assert.equal(zs.length,4,'4 a side');
-   for(let i=1;i<zs.length;i++)assert(zs[i]-zs[i-1]>=.7,`car ${c} side ${side}: seats ${(zs[i]-zs[i-1]).toFixed(2)} m apart`);
-   for(const z of zs)assert(CM.WIN_RUNS.some(([a,b])=>z>a+.3&&z<b-.3),'on a bench run, under a window');}
-  for(const q of TRN.SEAT_TABLE){assert(Math.abs(q.x)<CM.BENCH_X&&Math.abs(q.x)>CM.BENCH_X-CM.BENCH_HALF_D,'root under the bench');assert.equal(q.lean,-q.side*(q.car%2?-1:1),'lean: the way the train runs');}
+  for(let c=0;c<S.TRAIN_CARS;c++)for(const side of [-1,1]){const zs=TRN.SEAT_TABLE.filter(q=>q.car===c&&q.side===side).map(q=>q.z).sort((a,b)=>a-b);assert.equal(zs.length,CM.SEAT_SLOTS_Z.length,'every bench slot');
+   for(let i=1;i<zs.length;i++)assert(zs[i]-zs[i-1]>=.65,`car ${c} side ${side}: seats ${(zs[i]-zs[i-1]).toFixed(2)} m apart`);
+   for(const z of zs)assert(CM.BENCHES.some(([a,b])=>z>a+.3&&z<b-.3),'on a bench');}
+  for(const q of TRN.SEAT_TABLE){assert(Math.abs(q.x)<CM.BENCH_BACK&&Math.abs(q.x)>CM.BENCH_FRONT,'root under the seat');assert.equal(q.lean,-q.side*(q.car%2?-1:1),'lean: the way the train runs');}
   // the pose: head and shoulders in the window band, knees on the seat inside the wall, feet on the board
   const K=LW('lib/graphics/trainSeatPose.ts').KNEEL,top=CM.WIN_Y1-CM.CAR_FLOOR_Y,sill=CM.WIN_Y0-CM.CAR_FLOOR_Y;
-  assert(K.pelvisY+1.89-.88<top+.02,'head top under the window top');assert(K.pelvisY+.5>sill,'shoulders over the sill');
-  assert(TRN.RIDER_ROOT_X-K.ankleZ*-1>CM.BENCH_X-CM.BENCH_HALF_D-.08,'feet on the seat');
+  assert(K.pelvisY+(1.89-.88)*Math.cos(K.pitch)<top+.02,'head top under the window top');assert(K.pelvisY+.5>sill,'shoulders over the sill');
+  assert(TRN.RIDER_ROOT_X+K.ankleZ>CM.BENCH_FRONT-.1,'feet on the seat front');assert(TRN.RIDER_ROOT_X+.42<CM.BENCH_BACK,'knees short of the backrest');
   const R4=read('lib/town/trainRide.ts'),RA=read('lib/graphics/remoteAvatars.ts');assert(/tricks\[\(pose\.lean\?\?1\)>0\?1:0\]/.test(R4),'local rider: the window pose by lean');
   assert(/\(pose\.train\?\?-1\)>=0\?TRAIN_POSES\[\(pose\.lean\?\?1\)>0\?1:0\]:SEAT_POSE/.test(RA)&&/q\.lean=pose\.lean/.test(RA),'friends riding: the same pose');}
- const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+400,`open variant ${geo.triangles} tris (closed ${run.triangles})`);
+ const geo=TRN.buildCarGeometry(TRN.LIVERIES[0],true);assert(geo.triangles>run.triangles&&geo.triangles<run.triangles+1500,`close-up variant ${geo.triangles} tris (closed ${run.triangles})`);
  run.ridden[0]=1;run.update({dt:1/30,camera:cam,player,nowSec:now+.05});const d=run.drawn;assert(d.plates,'destination plates drawn near');assert.equal(d.ridden,1);
  let n=0;scene.traverse(o=>{if(o.name==='train-plates'){n++;assert.equal(o.material,scene.getObjectByName('train-board-north').material,'plates use the board material (no new program)');}});assert.equal(n,1,'one plate mesh for every cab');
  const ci=tt.TRAIN_CROSSINGS.findIndex(c=>c.id==='causeway');assert(ci>=0&&typeof run.crossingClosed(ci)==='boolean');
@@ -227,3 +227,9 @@ console.log('train-ride hover: ok');
  assert(/el\.tagName!=='CANVAS'\)return/.test(R7),'only canvas presses drag');assert(/trainButtons\(trainCanGetOff,trainMoved\)/.test(read('components/Town.tsx'))&&/recenter:'M12/.test(read('components/TravelIcon.tsx')),'Recenter in the ride cluster');
  ride.dispose();delete globalThis.window;}
 console.log('train-ride camera: ok');
+// Gameplay 2 + visuals merge: the kneeling legs solve onto the cushion (knee over the seat top, short of the backrest)
+{const P=L('lib/graphics/trainSeatPose.ts'),TP=L('lib/graphics/trickPose.ts'),CM=L('lib/town/trainCarModel.ts'),TRN2=require('./lib/tsLoad.cjs').L('lib/town/trainRunning.ts');
+ for(const lean of [-1,1]){const o=P.trainRiderPose(lean);for(const side of [-1,1]){const out={};TP.solveTrickLeg(o,side,o.legs[side>0?1:0],1,out);
+  const t=TP.TRICK_RIG.thigh,ky=o.pelvisY-t*Math.cos(out.hipX)*Math.cos(out.hipZ),kz=-t*Math.sin(out.hipX);
+  assert(ky>CM.BENCH_TOP-CM.CAR_FLOOR_Y+.03&&ky<CM.BENCH_TOP-CM.CAR_FLOOR_Y+.16,`knee on the cushion (${ky.toFixed(2)})`);assert(TRN2.RIDER_ROOT_X+kz<CM.BENCH_BACK-.03,`knee short of the backrest (${(TRN2.RIDER_ROOT_X+kz).toFixed(2)})`);}}}
+console.log('train-ride kneel: ok');

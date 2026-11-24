@@ -12,16 +12,16 @@ import {createTrickCtx,stancePose} from './freestyleTricks';
 import {restHand} from './npcSeatPose';
 
 /** Seat top over the floor (trainCarModel: bench box at CAR_FLOOR_Y + .32 ± .32), the window sill over the floor (WIN_Y0 − CAR_FLOOR_Y). */
-export const KNEEL={seatTop:.64,sill:1.03,pelvisY:.82,pitch:.2,ankleZ:-.32,legX:.13,turn:.14,look:.34} as const;
+export const KNEEL={seatTop:.64,sill:1.03,pelvisY:.88,pitch:.28,ankleZ:0,legX:.13,turn:.14,look:.34} as const;
 
 /** The kneeling-at-the-window pose; lean +1 turns toward the rig's +x (the travel side, trainRunning SeatPose.lean). */
 export function trainRiderPose(lean:number):TrickPose{
  const o=createTrickPose(),ctx=createTrickCtx();stancePose('sit',ctx,o);
  o.w=1;o.pelvisY=KNEEL.pelvisY;o.pelvisZ=0;o.pelvisPitch=-.04;o.pelvisRoll=0;o.pelvisYaw=0;o.torsoPitch=KNEEL.pitch;o.torsoRoll=0;
  o.torsoYaw=KNEEL.turn*lean;o.headYaw=KNEEL.look*lean;o.headPitch=-.06;
- // shins along the seat behind the knees, feet on the board (toes pointed back)
+ // sitting back on the heels: the ankles under the hips, so the knees fold forward onto the cushion (~.4 m out)
  for(const [i,l] of o.legs.entries()){l.x=i?KNEEL.legX:-KNEEL.legX;l.y=KNEEL.seatTop+.07;l.z=KNEEL.ankleZ;l.toe=.9;l.w=1;}
  // hands on the window sill in front of the chest
- for(const [i,a] of o.arms.entries())restHand(o,i?1:-1,.34,KNEEL.sill+.06,a);
+ for(const [i,a] of o.arms.entries())restHand(o,i?1:-1,.48,KNEEL.sill+.06,a);
  return o;
 }
