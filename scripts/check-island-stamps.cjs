@@ -21,7 +21,7 @@ async function boot(b,vp,mobile,stamps){
  await p.waitForTimeout(4000);return {ctx,p,errs};
 }
 (async()=>{
- const b=await chromium.launch({args:['--mute-audio','--use-angle=metal']});
+ const b=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio','--use-angle=metal']});
  try{
   // ---- Desktop: the station house's real button ----
   {const {ctx,p,errs}=await boot(b,{width:1280,height:800},false,['south']);

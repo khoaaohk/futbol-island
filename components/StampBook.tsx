@@ -64,7 +64,7 @@ export default function StampBook({initialPage,fresh,onClose}:{initialPage:numbe
    <header className={styles.bar}>
     <BackButton ref={close} onBack={onClose}/>
     <h2 id="stamp-book-title">Island stamp book</h2>
-    <p className={styles.tally} data-stamp-count={count}>{count} of {STAMPS.length} stamps</p>
+    <p className={styles.tally} data-stamp-count={count} aria-label={`${count} of ${STAMPS.length} stamps`}>{count} of {STAMPS.length}<span className={styles.tallyWord}> stamps</span></p>
    </header>
    <div className={styles.stage} onPointerDown={e=>{if(e.isPrimary)gesture.current={x:e.clientX,y:e.clientY,id:e.pointerId};}} onPointerCancel={()=>{gesture.current=null;}}
     onPointerUp={e=>{const g=gesture.current;gesture.current=null;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)go(view+(dx<0?1:-1));}}>
