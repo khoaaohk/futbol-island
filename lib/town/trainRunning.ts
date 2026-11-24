@@ -227,7 +227,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    const along=(p.x-rx)*tx+(p.z-rz)*tz;if(along<-TRACK_DS*.55||along>TRACK_DS*.55)continue;const lat=(p.x-rx)*tz-(p.z-rz)*tx,side=lat>=0?1:-1,ad=Math.abs(lat);
    const limit=reach<LOOK_HALF+.01&&onPlatformSide(s,side)?1.4:reach;if(ad>limit)continue;
    const bed=bedAt(L.profile,s);if(p.y>bed+4.2||p.y<bed-1.2)continue;
-   hit.gap=d+along;hit.side=side;hit.d=ad;hit.s=wrapS(front+d+along);return true;}
+   hit.s=wrapS(k*TRACK_DS+along);const g=((hit.s-front)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2;hit.gap=g;hit.side=side;hit.d=ad;return true;}
   return false;}
  /** The nearest person ahead of train front `s`: their track s (NaN: clear); `who` = their index. */
  let who=-1;const whoHit={side:0,d:0};

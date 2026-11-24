@@ -90,7 +90,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  assert(d.boards===0,'no board work in town');
  // a person on the track in front of a running train (local player): it stops short and asks after 5 s
  const now=S.trainClockSec();let ti=-1;for(let i=0;i<3;i++){const x=S.trainAt(i,now),nx=S.TRAIN_STOPS[x.next];if(x.at<0&&x.v>6&&S.ahead(x.s,nx.s)>120&&S.ahead(x.s,nx.s)<2000)ti=i;}
- const st=S.trainAt(Math.max(0,ti),now);if(ti>=0){const q=tt.trackAt(st.s+24);player.x=q.x;player.z=q.z;player.y=tt.bedAt?0:0;at(q.x+20,20,q.z+20,q.x,q.z);
+ const st=S.trainAt(Math.max(0,ti),now);if(ti>=0){const q=tt.trackAt(st.s+24);player.x=q.x;player.z=q.z;player.y=tt.bedAt(LW('lib/town/trainLayout.ts').trainLayout().profile,st.s+24);/* standing on the bed (tunnel / Summit / trestle too) */at(q.x+20,20,q.z+20,q.x,q.z);
   let note=null;for(let k=0;k<30*12;k++){const r=run.update({dt:1/30,camera:cam,player,nowSec:now+k/30});if(r.note)note=r.note;}
   assert(S.ahead(run.states[ti].s,tt.trackNearest(player.x,player.z,3).s)>=S.STOP_SHORT-.3,'stopped short of the player');
   assert.equal(note,'Please step off the track','asked to step off');}
