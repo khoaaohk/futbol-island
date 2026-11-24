@@ -47,7 +47,7 @@ export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
 /** Seconds held for a person before the local player is asked to step off and slid aside. */
 export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** The car model and its dimensions live in trainCarModel.ts (Nov 24 2026 split). */
-import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,WIN_RUNS,CAR_FLOOR_Y,BENCH_X,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE} from './trainCarModel';
+import {RAIL_TOP,WHEEL_R,BOGIE_HALF,HALF_W,DOORS,DOOR_HALF,DOOR_Y0,DOOR_Y1,WIN_RUNS,CAR_FLOOR_Y,BENCH_X,COL,VGeo,type V,buildCarGeometry,buildCarBox,buildDoorLeaf,createTrainGlass,CLOSE_RANGE,INTERIOR_GLOW} from './trainCarModel';
 const LEAN=.012,LEAN_MAX=.035;
 /** Seats (Phase 3): long benches along the walls (a Japanese local train), one rider per bench run, facing the aisle; 4 per car.
  *  Seat j of a train: car j>>2, side (j&1 ? +x : -x), bench run 1 + ((j>>1)&1). The rider's root stands on the floor, BENCH.rootZ
@@ -290,7 +290,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
-    tr.look.lamp.z=night*2.6;// the window band: the indicator channel, lit by the shared night factor
+    tr.look.lamp.z=night*INTERIOR_GLOW;// the window band: the indicator channel, lit by the shared night factor
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
     {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}

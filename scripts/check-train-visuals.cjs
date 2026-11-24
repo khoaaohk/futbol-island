@@ -5,16 +5,16 @@
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const port = arg('port'), out = arg('out', ''), tag = arg('tag', 'after'), views = arg('views', 'platform,ride,near,trestle').split(','), vps = arg('vps', 'desktop,phone').split(',');
+const port = arg('port'), out = arg('out', ''), tag = arg('tag', 'after'), views = arg('views', 'platform,ride,near,trestle,sea').split(','), vps = arg('vps', 'desktop,phone').split(','), time = arg('time', '');
 if (!port || port === '8092' || !out) { console.error('give --port=<n> (never 8092) and --out=<dir>'); process.exit(2); }
 fs.mkdirSync(out, { recursive: true });
 const url = `http://localhost:${port}`;
 async function boot(b, vp, mobile) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
-  await ctx.addInitScript(() => {
-    try { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); } catch {}
+  await ctx.addInitScript((time) => {
+    try { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); if (time) localStorage.setItem('fi2-time-of-day', time); } catch {}
     const n = Date.now.bind(Date); window.__skew = 0; Date.now = () => n() + window.__skew;
-  });
+  }, time);
   await ctx.route('**/api/build-id', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
   await p.goto(url + '/play?from=arcade', { timeout: 300000 }); await p.waitForTimeout(3000);
@@ -49,6 +49,11 @@ async function standAt(p, si) {
         const at = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bs = 0; for (let x = 0; x < 2700; x += 4) { const b = s.bed(x); if (b > best) { best = b; bs = x; } }
           const a = s.trackAt(bs); return { s: bs, x: a.x + a.tz * 16, z: a.z - a.tx * 16, yaw: Math.atan2(-a.tz, a.tx) }; });
         await p.evaluate((s) => { window.__fi2.trains.cluster = s - 30; }, at.s); await tp(p, at.x, at.z, at.yaw); await p.waitForTimeout(3000); await shot(p, 'trestle', vpName);
+        await p.evaluate(() => { window.__fi2.trains.cluster = NaN; });
+      }
+      if (views.includes('sea')) {// the long low sea trestle (owner shot 23: the contact shadow read as a black plank)
+        const at = await p.evaluate(() => { const s = window.__fi2.trains.sched, a = s.trackAt(2310); return { x: a.x + a.tz * 14, z: a.z - a.tx * 14, yaw: Math.atan2(-a.tz, a.tx) }; });
+        await p.evaluate(() => { window.__fi2.trains.cluster = 2330; }); await tp(p, at.x, at.z, at.yaw); await p.waitForTimeout(3000); await shot(p, 'sea', vpName);
         await p.evaluate(() => { window.__fi2.trains.cluster = NaN; });
       }
       if (views.includes('platform') || views.includes('ride')) {
