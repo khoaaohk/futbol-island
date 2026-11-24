@@ -74,8 +74,9 @@ export function boardIn(st:{at:number;next:number;t:number;doors:number;dwellLef
 // (portraitBack) and aims between me and the far bench (portraitIn, portraitAhead): me ≈5°, the far rider ≈9° off the axis (±15° fits).
 const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,portraitBack:3.5,portraitAhead:1.5,portraitIn:1.15,tunnelOut:2.4,tunnelBack:2,tunnelUp:1.6,ahead:4,eye:1.25} as const;
 const PORTRAIT_FOV=58;
-/** Gameplay 3: the standing camera inside the car: distance (× zoom), eye over the floor, how far ahead of you it looks (m). */
-const STAND_CAM={dist:2.7,eye:1.25,ahead:1.4,pitch:.22} as const;
+/** Gameplay 3: the standing camera inside the car: distance (× zoom), eye over the floor, how far ahead of you it looks (m).
+ *  Portrait phones (final verify Nov 24 2026: the kid filled the lower half) sit a step further back and higher, looking a little further on. */
+const STAND_CAM={dist:2.7,eye:1.25,ahead:1.4,pitch:.22,portraitDist:3.4,portraitPitch:.2,portraitEye:1.32,portraitAhead:1.9}/* portrait: 1.32+sin(.2)·3.4 ≈ 2.0 m, under ROOM.y1 2.08, so the ceiling never pulls the arm in */ as const;
 /** The free ride camera (Gameplay 2): elevation limits (rad: a little under the horizontal … ~60° down), zoom (× the default
  *  distance: window close-up … wide), drag and key / stick rates, inertia decay (none with reduced motion), the Recenter ease. */
 export const ORBIT={pitchMin:-.09,pitchMax:1.05,zoomMin:.38,zoomMax:2.6,drag:5.2,keyYaw:1.9,keyPitch:1.1,wheel:.0016,decay:4.5,recenter:4,tap2:.32,tapPx:30,moved:.06} as const;
@@ -402,15 +403,15 @@ export function createTrainRide(ports:Ports){
    lastCam=camera;standCam+=((standing?1:0)-standCam)*(reduced?1:1-Math.exp(-3.5*h));if(standCam<.002)standCam=0;
    if(standing&&run.carMatrixOf){if(gaitMove>.05&&!dragging){const cg=Math.cos(gaitYaw);if(Math.abs(cg)>.35&&mv.z>=-.2)camAxis=cg>0?0:Math.PI;/* walking toward the camera never swings it round (no ping-pong) */const q=1-Math.exp(-1.6*h*gaitMove);camBase+=wrapPi(camAxis-camBase)*q;}camFwd=wrapPi(camBase+orb.yaw);}// it looks along the car (the way you head), never at a wall: the room is long, not wide
    if(standCam>0&&run.carMatrixOf){
-    run.carMatrixOf(kk,meCar,carM);const e=carM.elements,W=Math.atan2(e[8],e[10])+camFwd+(meCar%2?Math.PI:0),el=Math.max(.05,Math.min(1.05,STAND_CAM.pitch+orb.pitch)),len=STAND_CAM.dist*orb.zoom;
-    const hx=pose.x,hy=pose.y+STAND_CAM.eye,hz=pose.z,sw=Math.sin(W),cw=Math.cos(W),ce=Math.cos(el)*len;
+    run.carMatrixOf(kk,meCar,carM);const e=carM.elements,W=Math.atan2(e[8],e[10])+camFwd+(meCar%2?Math.PI:0),el=Math.max(.05,Math.min(1.05,(portrait?STAND_CAM.portraitPitch:STAND_CAM.pitch)+orb.pitch)),len=(portrait?STAND_CAM.portraitDist:STAND_CAM.dist)*orb.zoom,ahd=portrait?STAND_CAM.portraitAhead:STAND_CAM.ahead;
+    const hx=pose.x,hy=pose.y+(portrait?STAND_CAM.portraitEye:STAND_CAM.eye),hz=pose.z,sw=Math.sin(W),cw=Math.cos(W),ce=Math.cos(el)*len;
     let cx=hx-sw*ce,cy=hy+Math.sin(el)*len,cz=hz-cw*ce;
     // into car-local space (the basis is orthonormal: dot with its axes), the room's slab test, then back along the same line
     const tx=e[12],ty=e[13],tz=e[14],lx=(a:number,b:number,c:number,i:number)=>(a-tx)*e[i]+(b-ty)*e[i+1]+(c-tz)*e[i+2];
     const f=interiorClearFraction(lx(hx,hy,hz,0),lx(hx,hy,hz,4)-CAR_FLOOR_Y,lx(hx,hy,hz,8),lx(cx,cy,cz,0),lx(cx,cy,cz,4)-CAR_FLOOR_Y,lx(cx,cy,cz,8))*.94;
     cx=hx+(cx-hx)*f;cy=hy+(cy-hy)*f;cz=hz+(cz-hz)*f;const b=standCam*standCam*(3-2*standCam);
     camPos.set(camPos.x+(cx-camPos.x)*b,camPos.y+(cy-camPos.y)*b,camPos.z+(cz-camPos.z)*b);
-    camLook.set(camLook.x+(hx+sw*STAND_CAM.ahead-camLook.x)*b,camLook.y+(hy-.15-camLook.y)*b,camLook.z+(hz+cw*STAND_CAM.ahead-camLook.z)*b);}
+    camLook.set(camLook.x+(hx+sw*ahd-camLook.x)*b,camLook.y+(hy-.15-camLook.y)*b,camLook.z+(hz+cw*ahd-camLook.z)*b);}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
    // the ride camera's weight: the seat blend, or (Gameplay 3) standing in the aisle, where the kneel blend is out
    const wc=Math.max(blend,standCam>0?1:0),e=wc*wc*(3-2*wc);
