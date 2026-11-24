@@ -347,10 +347,10 @@ async function partViews(c) {
     await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(1600);
     const r = await p.evaluate((k) => { const f = window.__fi2, cars = []; f.trains.root.traverse((o) => { if (o.isInstancedMesh && o.geometry?.getAttribute?.('aPart') && o.geometry.userData?.straps && o.visible) cars.push(o); });
       const m = cars[0], e = m ? m.instanceMatrix.array : null; let sx = Infinity; if (e) for (let i = 0; i < m.count; i++) sx = Math.min(sx, Math.hypot(e[i * 16], e[i * 16 + 1], e[i * 16 + 2]), Math.hypot(e[i * 16 + 8], e[i * 16 + 9], e[i * 16 + 10]));
-      const sh = m && m.material.userData?.shader; return { n: cars.length, count: m ? m.count : 0, sx: +sx.toFixed(3), cut: f.trains.roofCut[k], view: f.trainRide.view, tri: m ? (m.geometry.getAttribute('position').count / 3) | 0 : 0 }; }, k);
+      const sh = m && m.material.userData?.shader; return { n: cars.length, count: m ? m.count : 0, sx: +sx.toFixed(3), view: f.trainRide.view, tri: m ? (m.geometry.getAttribute('position').count / 3) | 0 : 0 }; }, k);
     if (process.env.VDIAG) console.log('VD', v, JSON.stringify(await p.evaluate((k) => { const f = window.__fi2, c = f.camera, T = c.constructor; const st = f.trains.states[k]; const m = f.trains.root.children.filter((o) => o.isInstancedMesh && o.name.startsWith('train-'));
       return { cam: c.position.toArray().map((x) => +x.toFixed(1)), auto: c.matrixAutoUpdate, near: c.near, far: c.far, fov: c.fov, aspect: c.aspect, s: +st.s.toFixed(1), vis: m.map((o) => o.name + ':' + o.visible), pm: Array.from(c.projectionMatrix.elements).slice(0, 12).map((x) => +x.toFixed(3)), mwi: Array.from(c.matrixWorldInverse.elements).map((x) => +x.toFixed(2)), mw: Array.from(c.matrixWorld.elements).slice(12, 15).map((x) => +x.toFixed(1)) }; }, k)));
-    check(`views ${v}: the ridden train is drawn (open car mesh, non-degenerate), never cut (RIDE 3: Inside is first person)`, r.n >= 1 && r.count >= 2 && r.sx > .9 && r.tri > 2000 && r.cut === 0, JSON.stringify(r));
+    check(`views ${v}: the ridden train is drawn (open car mesh, non-degenerate), never cut (RIDE 3: Inside is first person)`, r.n >= 1 && r.count >= 2 && r.sx > .9 && r.tri > 2000, JSON.stringify(r));
     if (shots) await p.screenshot({ path: path.join(shots, `view-${v}-${phone ? 'phone' : 'desktop'}.png`) });
   }
   await leaveRide(p);
@@ -439,8 +439,8 @@ async function partInside(c) {
   check('views ease smoothly (no frame jump; never through the car)', ease.n > 20 && !ease.spikes.length && !ease.inside, JSON.stringify(ease));
   await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(1500);
   const fp = await p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(); const sp = f.trainRide.spot, car = sp.u >= -6.2 ? 0 : 1; f.trains.carMatrixOf(k, car, m); const q = cam.position.clone().applyMatrix4(m.clone().invert());
-    return { view: f.trainRide.view, standing: f.trainRide.standing, eyeY: +(q.y - 1.15).toFixed(2), x: +q.x.toFixed(2), meShown: f.player ? f.player.root.visible : null, cut: f.trains.roofCut[k], fov: +cam.fov.toFixed(1) }; }, k);
-  check('inside: first person (eye 1.3-1.4 m over the floor in the aisle, roof on, my body hidden)', fp.view === 'inside' && fp.standing && fp.eyeY > 1.25 && fp.eyeY < 1.45 && Math.abs(fp.x) < 1.3 && fp.cut === 0 && fp.meShown !== true, JSON.stringify(fp));
+    return { view: f.trainRide.view, standing: f.trainRide.standing, eyeY: +(q.y - 1.15).toFixed(2), x: +q.x.toFixed(2), meShown: f.player ? f.player.root.visible : null, fov: +cam.fov.toFixed(1) }; }, k);
+  check('inside: first person (eye 1.3-1.4 m over the floor in the aisle, roof on, my body hidden)', fp.view === 'inside' && fp.standing && fp.eyeY > 1.25 && fp.eyeY < 1.45 && Math.abs(fp.x) < 1.3 && fp.meShown !== true, JSON.stringify(fp));
   if (shots) await p.screenshot({ path: path.join(shots, `inside-fp-${phone ? 'phone' : 'desktop'}.png`) });
   // Kenji through the partition (owner shot 45: smaller, seated back at the desk): stand at car 0's cab partition looking ahead
   await p.evaluate(() => { const r = window.__fi2.trainRide; r.spot.x = .2; r.spot.u = 4.2; }); await p.waitForTimeout(700);

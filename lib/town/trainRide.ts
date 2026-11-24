@@ -174,9 +174,8 @@ export function platformSpot(i:number,s:number,out:{x:number;y:number;z:number;y
 }
 
 type DoorSpot={x:number;y:number;z:number;yaw:number;car:number;door:number};
-type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;roofCut?:Uint8Array;
+type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;
  /** The local runner (door hold for a rider: how long train i's doors have been held at this stop). */runner?:{doorHeldFor(i:number):number};
- /** The Inside view: the horizontal direction toward the camera (x, z); the ridden train's wall on that side is lowered (uCutDir). */cutDir?:Float32Array;
  /** Car c of train k's matrix this frame (Gameplay 3: the standing rider's train-relative spot). */carMatrixOf?(k:number,c:number,out:T.Matrix4):T.Matrix4;
  /** The open door nearest x, z (trainRunning.doorSpot); null while the train runs. */doorSpot?(k:number,x:number,z:number,out:DoorSpot):DoorSpot|null};
 type Ports={
@@ -255,7 +254,7 @@ export function createTrainRide(ports:Ports){
   leave(run);if(force){blend=0;outT=1;}return true;
  }
  function leave(run:Run|null){
-  if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
+  if(run){run.ridden[k]=0;}k=-1;j=-1;walkT=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
   trainRideStore.set({riding:false,canGetOff:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false});
   // RIDE 3: the camera eases from where it was back to the follow camera (applyCamera), the seat blend is done
   if(havePose){outT=0;outP.copy(lastP);outQ.copy(lastQ);outFov=lastFov;}blend=0;
@@ -523,7 +522,7 @@ export function createTrainRide(ports:Ports){
    lastCam=camera;if(standing)camFwd=wrapPi(camBase+orb.yaw);
    // The Inside view, RIDE 3 (owner, Nov 24 2026): FIRST PERSON. The eye FP.eye m over the floor at your standing spot (no lag: the
    // camera is you), from this frame's car matrix, looking camFwd (train frame) and the orbit's pitch. No cutaway: roof and walls
-   // stay (the vehicle material's uCut stays 0). Your body is hidden by Town's near-camera fade; walls and poles: the walkable floor.
+   // stay (no cutaway). Your body is hidden by Town's near-camera fade; walls and poles: the walkable floor.
    if(camView==='inside'&&exitT>=0){// stepping out through the door: your eyes go with you (then the camera eases back out)
     camPos.set(walkPose.x,walkPose.y+FP.eye,walkPose.z);camLook.set(camPos.x+Math.sin(walkPose.yaw)*FP.look,camPos.y-.4,camPos.z+Math.cos(walkPose.yaw)*FP.look);}
    else if(camView==='inside'&&run.carMatrixOf){

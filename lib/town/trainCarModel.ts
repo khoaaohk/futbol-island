@@ -12,7 +12,6 @@ export const RAIL_TOP=.34,BALLAST_TOP=.12;
 export const WHEEL_R=.43,BOGIE_HALF=4.5,HALF_W=1.4,BODY_Y0=1.05,SPLIT_Y=2.05,SIDE_TOP=3.1,ROOF_TOP=3.75;
 /** The cutaway (standing inside, Nov 24 2026): triangles wholly at or above this height are the roof (outer skin, ceiling, cove, light
  *  strips, roof units): hidden on the ridden train while you walk the aisle and the camera looks down from above. */
-export const ROOF_CUT_Y=SIDE_TOP-.001;
 export const DOORS=[-3.7,-.2,3.1],DOOR_HALF=.65,DOOR_Y0=1.12,DOOR_Y1=3.02,WIN_Y0=2.18,WIN_Y1=3.0;
 /** Phase 3 (riding): the window runs between the doors (car-local z), shared by the panes, the open variant's holes and the seats. */
 export const WIN_RUNS:readonly [number,number][]=[[-5.75,DOORS[0]-DOOR_HALF-.25],[DOORS[0]+DOOR_HALF+.25,DOORS[1]-DOOR_HALF-.25],[DOORS[1]+DOOR_HALF+.25,DOORS[2]-DOOR_HALF-.25]];
@@ -57,8 +56,7 @@ export class VGeo{
   const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]],c:V=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2];
   const P=(e:V,i:number,j:number):V=>[e[0]+(s1[0]*i+s2[0]*j)*r,e[1]+(s1[1]*i+s2[1]*j)*r,e[2]+(s1[2]*i+s2[2]*j)*r];
   for(const [i,j,k,m] of [[1,1,1,-1],[1,-1,-1,-1],[-1,-1,-1,1],[-1,1,1,1]])this.quad(P(a,i,j),P(b,i,j),P(b,k,m),P(a,k,m),color,c,part,ctr);}
- /** cutY: every triangle lying wholly at or above it gets part id + 10 (the vehicle material's roof cutaway, uCut). */
- build(cutY=Infinity){if(cutY<Infinity)for(let t=0;t<this.p.length/9;t++){const o=t*9;if(Math.min(this.p[o+1],this.p[o+4],this.p[o+7])>=cutY)for(let v=0;v<3;v++){const i=(t*3+v)*4+3;if(this.a[i]<9.5)this.a[i]+=10;}}
+ build(){
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(this.p,3));g.setAttribute('normal',new T.Float32BufferAttribute(this.n,3));
   g.setAttribute('color',new T.Float32BufferAttribute(this.c,3));g.setAttribute('aPart',new T.Float32BufferAttribute(this.a,4));g.computeBoundingSphere();
   for(let i=3;i<this.a.length;i+=4)if(this.a[i]===PART.strap){g.userData.straps=true;break;}// the vehicle material's strap pendulum runs only for these
@@ -267,7 +265,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
   for(const x of [-.14,.14])g.beam([x,y+.17,pz-.3],[x*.4,knee[1],knee[2]],.03,K.panto);g.beam([0,y+.17,pz-.1],[0,y+.5,pz+.4],.02,K.panto);
   g.beam(knee,head,.022,K.panto);for(const dz of [-.07,.07])g.beam([-.62,4.77,head[2]+dz],[.62,4.77,head[2]+dz],.022,K.panto);
   for(const s of [-1,1])g.beam([s*.62,4.77,head[2]],[s*.86,4.66,head[2]],.018,K.panto);}
- return {geometry:g.build(ROOF_CUT_Y),triangles:g.tris};
+ return {geometry:g.build(),triangles:g.tris};
 }
 const CAR_GAP_HALF=.2,INNER_BEND=.65;
 /** Night: the interior glows by this × the night factor (the train's indicator channel: lamp.z), so a lit car reads warm from outside;
@@ -381,7 +379,7 @@ export function createTrainGlass(cars:number,doorLeaves:number){
   begin(){n=0;},
   shadow(m:T.Matrix4){put(m,SHADOW_M);},
   /** skip: −1 / +1 leaves out that side's window panes (the Inside view's lowered wall), 0 none. */
-  car(m:T.Matrix4,skip=0){const nw=WINDOWS.length;for(let i=0;i<CAR_PANES.length;i++){if(skip&&i<2*nw&&(i<nw?-1:1)===skip)continue;put(m,CAR_PANES[i]);}},
+  car(m:T.Matrix4){for(let i=0;i<CAR_PANES.length;i++)put(m,CAR_PANES[i]);},
   door(m:T.Matrix4){put(m,DOOR_PANE_M);},
   end(){if(mesh.count!==n)mesh.count=n;const v=n>0;if(mesh.visible!==v)mesh.visible=v;if(v)mesh.instanceMatrix.needsUpdate=true;},
   warm(on:boolean){mesh.visible=on;mesh.count=on?1:0;},

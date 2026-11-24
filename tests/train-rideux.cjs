@@ -61,7 +61,6 @@ console.log('train-rideux hud: ok');
 // 3. camera views: the button / C cycles Seat → Front → Back → Left → Right → Above → Inside; Inside stands you up (the cutaway,
 //    RIDE 3: first person, no cutaway), any other view sits you back down; each change eases (VIEW_EASE) and toasts; per-view limits
 {Object.assign(states[1],{at:north,doors:1,dwellLeft:10,s:100});const ride2=R.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{}});
- run.roofCut=new Uint8Array(3);run.cutDir=new Float32Array(2);
  ride2.want(sp.x,sp.z,sp.y,true);assert(ride2.board());for(let i=0;i<40&&ride2.walking>=0;i++)ride2.frame(1/30,false);
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:west,t:S.TRAIN_STOPS[west].arrive-40});
  const cam=new T.PerspectiveCamera(50,16/9,.1,2000);const step=(n=1)=>{for(let i=0;i<n;i++){ride2.frame(1/30,false);ride2.applyCamera(cam,1/30,false);}};step(20);
@@ -71,7 +70,7 @@ console.log('train-rideux hud: ok');
   assert(R.trainRideStore.get().viewNo>n0,'a toast for each change');n0=R.trainRideStore.get().viewNo;
   if(ride2.view!=='inside'&&ride2.view!=='seat'){const look=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion);assert(Number.isFinite(cam.position.x)&&Math.abs(look.length()-1)<1e-6,`${ride2.view}: a camera`);}}
  assert.deepEqual(seen,['front','back','left','right','above','inside'],'the cycle order');
- assert(ride2.standing,'Inside: standing in the aisle');assert.equal(run.roofCut[1],0,'RIDE 3: no cutaway (first person)');
+ assert(ride2.standing,'Inside: standing in the aisle');
  // RIDE 3 (owner, Nov 24 2026): the Inside view is FIRST PERSON: the eye FP.eye m over the floor where you stand, level, looking along the car
  {const d=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),pitch=Math.asin(-d.y);assert(Math.abs(pitch)<.15,`Inside: looking level (${pitch.toFixed(2)})`);
   const me=new T.Vector3();ride2.trick();const P={x:0,y:0,z:0};
@@ -81,7 +80,7 @@ console.log('train-rideux hud: ok');
   // a drag turns it all the way round (no turn limit), pitch limited to ±FP.pitch
   }
  ride2.press('camera','tap');step(60);assert.equal(ride2.view,'seat','back round to the seat view');assert(!ride2.standing,'any other view sits you down');
- step(60);assert.equal(run.roofCut[1],0,'seated: no cutaway');assert(Math.abs(cam.fov-50)<.5,'seated (landscape): the fov is back');
+ step(60);assert(Math.abs(cam.fov-50)<.5,'seated (landscape): the fov is back');
  // Walk (the cluster's 'extra' slot) is the Inside view
  ride2.press('walk','tap');step(20);assert(ride2.standing&&ride2.view==='inside','Walk → the Inside view');
  assert(ride2.setView('left'),'pick Left from the menu');step(60);assert(!ride2.standing&&ride2.view==='left','picking Left sits you down');
@@ -92,8 +91,8 @@ console.log('train-rideux hud: ok');
 {const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-cam\b/.test(H)&&!/role="menu"/.test(H)&&!/HOLD_MS|onContextMenu/.test(H)&&/data-train-cam-toast/.test(H)&&/<HudSlot>/.test(H)&&/data-hud-slot="ride"/.test(H),'the camera button: tap only (RIDE 3, owner shot 42), its toast in the HUD stack under the pill (shot 47)');
  assert(/trainRideActions\.view=v=>\{if\(trainRide\.setView\(v\)\)wakeLoop\(\);\}/.test(Tn),'Town: the menu picks a view');
  const C=read('components/TrainRideHud.module.css'),J=read('components/LiveJoinHud.module.css');const face=/border:3px solid #fff2cd;border-radius:50%;background:var\(--island-control-face,#f4cc7c\)/;assert(face.test(C)&&face.test(J),'the live-join camera button look');
- const tv=read('lib/graphics/trafficVehicles.ts');assert(/transformed\.x\*fiS>\$\{CUT_WALL_X/.test(tv),'the low wall in the vehicle shader');
- const rn=read('lib/town/trainRunning.ts');assert(/glass\.car\(m4,cutS\)/.test(rn)&&/if\(low\)dm\.multiply\(lowLeaf\)/.test(rn),'panes and door leaves on the cut side');}
+ const tv=read('lib/graphics/trafficVehicles.ts');assert(!/CUT_WALL_X|uCutDir/.test(tv),'AAA 2: no low wall / cutaway left in the vehicle shader');
+ const rn=read('lib/town/trainRunning.ts');assert(/glass\.car\(m4\)/.test(rn)&&!/lowLeaf|roofCut/.test(rn),'AAA 2: every pane and door leaf drawn (no cut side)');}
 console.log('train-rideux camera: ok');
 // 4. near-camera fade: a body the camera is within FADE_NEAR m of is hidden, shown again past FADE_FAR (hysteresis); Town applies it
 //    to me and Conductor Kenji while riding, after the camera, before the render
