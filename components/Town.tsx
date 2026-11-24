@@ -230,7 +230,7 @@ import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlo
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
 import {trainSwimBlocked,swimDeckBlocked,trainWalkHeight,trainDeckAt,trestleDecks,DECK_HALF,trainLayout} from '@/lib/town/trainLayout';import {trackNearest,trackAt as trainTrackAt,leftNormal as trainLeftNormal,TRACK as TRAIN_TRACK,TRACK_DS as TRAIN_DS,TrackKind as TrainKind} from '@/lib/town/trainTrack';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
-import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';import TrainRideHud from './TrainRideHud';import {createTrainRide,trainRideStore,trainRideActions,trainButtons,platformSpot,TRAIN_BOARD_KEY,type TrainActionId,type TrainQuizQ,canBoardFrom,nearHide,bodyDist} from '@/lib/town/trainRide';import {TRAIN_STATIONS,TRAIN_CROSSINGS,trackAt} from '@/lib/town/trainTrack';import {TRAIN_COUNT} from '@/lib/town/trainSchedule';import {trainClockSec} from '@/lib/town/trainSchedule';import {TRAIN_SEATS} from '@/lib/town/trainRunning';import {createStationLife} from '@/lib/town/stationLife';// Island Line riding (train Phase 3, Nov 23 2026)// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
+import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';import TrainRideHud from './TrainRideHud';import {createTrainRide,trainRideStore,trainRideActions,trainButtons,platformSpot,TRAIN_BOARD_KEY,type TrainActionId,canBoardFrom,nearHide,bodyDist} from '@/lib/town/trainRide';import {TRAIN_STATIONS,TRAIN_CROSSINGS,trackAt} from '@/lib/town/trainTrack';import {TRAIN_COUNT} from '@/lib/town/trainSchedule';import {trainClockSec} from '@/lib/town/trainSchedule';import {TRAIN_SEATS} from '@/lib/town/trainRunning';import {createStationLife} from '@/lib/town/stationLife';// Island Line riding (train Phase 3, Nov 23 2026)// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createStadiumMedia} from '@/lib/graphics/stadiumMedia';import {STADIUM_GESTURERS,STADIUM_GESTURES,STADIUM_MASCOT_ID,STADIUM_VIEWERS} from '@/lib/town/stadiumNpcs';// DRIP FC Stadium media + public viewing (Nov 13 2026)
 import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY,sitYieldsToTalk} from '@/lib/town/stadiumSit';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
@@ -275,7 +275,7 @@ import RideUnlockToast from './RideUnlockToast';
 import FuelToast from './FuelToast';
 import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
-import {earnForBall,earnForDiveBall,earnForTrainQuiz} from '@/lib/town/cardRewardTriggers';
+import {earnForBall,earnForDiveBall} from '@/lib/town/cardRewardTriggers';
 import {enterActivity,islandFrame,setPlayModeSource,startCountProbe} from '@/lib/analytics/tracker';
 import {hasPendingParty} from '@/lib/multiplayer/invite';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
@@ -1507,7 +1507,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',hold:on=>{heat.hold(on);islandShadowFit.hold(on);}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.zipline=zipline;
     disposers.add(()=>zipline.dispose());
     // The Island Line ride (lib/town/trainRide.ts, train Phase 3): Board on a platform, the seat, the ride camera, Get off, the horn,
-    // the stop announcements and one quiz question per run (lib/site/quizBank.ts, loaded on the first ride only).
+    // the stop announcements ("Next stop … Did you know?").
     const stationLife=createStationLife(islandNpcs);// Island Line Phase 4: station islanders turn to an arriving train; boarders ride off and back
     // Gameplay 3: NPC passengers on the trains (lib/town/trainPassengers.ts: seeded by the timetable lap, one instanced draw, talkable while riding)
     const trainPassengers=createTrainPassengers(scene,{away:id=>islandNpcs.isAway(id)});disposers.add(()=>trainPassengers.dispose());const kenjiFig=createKenjiFigure(scene);disposers.add(()=>kenjiFig.dispose());/* Conductor Kenji in the leading cab (lib/graphics/trainKenji.ts) */
@@ -1515,9 +1515,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       place:(x,z,y,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
       seat:p=>{location.x=p.x;location.z=p.z;visualLocation.x=p.x;visualLocation.z=p.z;velocity.x=velocity.z=0;rooftop.state.height=p.y;player.root.position.set(p.x,p.y,p.z);player.root.rotation.y=p.yaw;},
       taken:trainSeatTaken,dismount:()=>{if(rideRef.current!=='walk')selectRide('walk');},cue:(name,gain)=>{document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));if(name==='train-horn')trainPassengers.horn(trainRide.train,trainClockSec());},haptic:tapHaptic,
-      loadQuiz:()=>import('@/lib/site/quizBank').then(m=>{const out:TrainQuizQ[]=[];for(const qz of m.QUIZ_BANK)qz.questions.forEach((q,i)=>{if((q.kind==='choice'||q.kind==='truefalse'||q.kind==='ref')&&q.options.length>=2&&q.options.length<=4&&q.q.length<=140)out.push({id:`${qz.slug}:${i}`,q:q.q,options:q.options,correct:q.correct,explain:q.explain});});
-        for(let i=out.length-1;i>0;i--){const r=(i*7919+13)%(i+1);[out[i],out[r]]=[out[r],out[i]];}return out;}),// a fixed shuffle: topics mixed, the same order on every device
-      pay:id=>earnForTrainQuiz(id),hold:on=>{heat.hold(on);islandShadowFit.hold(on);},ground:fieldSurfaceHeight});
+      hold:on=>{heat.hold(on);islandShadowFit.hold(on);},ground:fieldSurfaceHeight});
     const trainHover=createTrainHover(scene);disposers.add(()=>trainHover.dispose());
     const trainSeatGlow=createTrainSeatGlow(scene);disposers.add(()=>trainSeatGlow.dispose());// Gameplay 3: free seats glow as you walk the aisle
     // The train bonk (lib/town/trainBonk.ts, owner Nov 24 2026): every train hit throws the local player clear (the trains never wait),
@@ -1561,9 +1559,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     function roofWire(){if(roofRide.k<0)return null;const w=roofWireOut;w.train=roofRide.k;w.x=location.x;w.y=roofPt.y;w.z=location.z;w.yaw=roofPt.yaw;w.u=roofRide.u;w.face=roofRide.yaw;return w;}
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.roofRide=roofRide;
     let meNearHid=false,kenjiNearHid=false;const kenjiBubble=createChatterBubbles(scene);disposers.add(()=>kenjiBubble.dispose());let kenjiShown=false;// Gameplay 2: Conductor Kenji's line from the cab (trainConductor.ts)// Gameplay 2: the green outline on a Board-eligible train
-    trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.answer=i=>trainRide.answer(i);trainRideActions.view=v=>{if(trainRide.setView(v))wakeLoop();};
+    trainRideActions.board=()=>{if(trainRide.board())wakeLoop();};trainRideActions.press=(id,phase)=>trainRide.press(id,phase);trainRideActions.view=v=>{if(trainRide.setView(v))wakeLoop();};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainRide=trainRide;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainPassengers=trainPassengers;
-    disposers.add(()=>{trainRide.dispose();trainRideActions.board=()=>{};trainRideActions.press=()=>{};trainRideActions.answer=()=>{};trainRideActions.view=()=>{};});
+    disposers.add(()=>{trainRide.dispose();trainRideActions.board=()=>{};trainRideActions.press=()=>{};trainRideActions.view=()=>{};});
     // Beachcombing (lib/graphics/beachFinds.ts, docs/beachcombing.md): shells and sea creatures on every island's beaches.
     const beach=createBeachFinds(scene,{obstacles:[...world.obstacles,...world.buildings],paved:[...world.surfaceAreas,...world.roads],busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run,dismount:()=>{if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';},gather:id=>beachMarket.gather(id),
       reward:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},cue:propCue,haptic:tapHaptic,pose:(kind,at)=>{jobMoves.start(kind,jobPlayer(),at,jobFloor,reduced,jobBallNow());wakeLoop();}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.beach=beach;

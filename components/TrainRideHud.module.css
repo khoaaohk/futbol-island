@@ -1,25 +1,12 @@
-/* Island Line ride HUD (components/TrainRideHud.tsx, train Phase 3): the on-board announcement and one quiz question per run.
+/* Island Line ride HUD (components/TrainRideHud.tsx, train Phase 3): the on-board announcement (the between-stops quiz is gone, Nov 25 2026).
    The island's note palette (ForagePrompt.module.css); no timers: the announcement fades by CSS alone. */
 .note{position:absolute;z-index:31;top:calc(146px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(440px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none;animation:note 7s ease-out forwards}
 @keyframes note{0%{opacity:0;translate:-50% 6px}5%{opacity:1;translate:-50% 0}88%{opacity:1}100%{opacity:0;visibility:hidden}}
-.quiz{position:absolute;z-index:32;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));translate:-50% 0;width:min(380px,calc(100% - 32px));padding:12px 14px 14px;border:2px solid #fff2cd;border-radius:18px;background:#fff8e5;color:#244d40;box-shadow:0 5px 0 #a8863d;font:600 14px/1.4 var(--font-body,Arial),sans-serif}
-.kicker{margin:0 0 4px;font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9c633d}
-.q{margin:0 0 10px;font-weight:700}
-.options{display:grid;gap:6px}
-.option{min-height:40px;padding:8px 12px;border:2px solid #73886b;border-radius:12px;background:#fff;color:#244d40;text-align:left;font:800 14px/1.25 var(--font-body,Arial),sans-serif;cursor:pointer;touch-action:manipulation}
-.option:disabled{cursor:default}
-.option[data-state='right']{border-color:#2f7d5b;background:#d9f0dc}
-.option[data-state='wrong']{border-color:#c0563a;background:#f8ddd3}
-.explain{margin:10px 0 0;font-size:13px}
 @media(prefers-reduced-motion:reduce){.note{animation-name:noteStill}@keyframes noteStill{0%,92%{opacity:1}100%{opacity:0;visibility:hidden}}}
-/* Phase 4 (Nov 23 2026): landscape phones (short and wide). The portrait spots (note 146 px down, quiz 150 px up) would put the quiz
-   card off the top of a 390 px tall screen, so both move to the top centre, clear of the stick (bottom left) and the action cluster
-   (bottom right), inside the notch / home-bar safe areas; the options go two to a row. */
+/* Phase 4 (Nov 23 2026): landscape phones (short and wide): the note moves to the top centre, clear of the stick (bottom left) and
+   the action cluster (bottom right), inside the notch / home-bar safe areas. */
 @media (orientation:landscape) and (max-height:520px){
  .note{top:calc(10px + env(safe-area-inset-top,0px));max-width:min(520px,calc(100% - 40px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)))}
- .quiz{top:calc(58px + env(safe-area-inset-top,0px));bottom:auto;width:min(540px,calc(100% - 220px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));max-height:calc(100% - 70px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;padding:10px 12px 12px}
- .options{grid-template-columns:1fr 1fr}
- .q{margin-bottom:8px}
 }
 
 /* Gameplay 2 (owner, Nov 24 2026): the Board button pulses gently (compositor-only scale; none with reduced motion; a hidden button

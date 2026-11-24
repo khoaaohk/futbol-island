@@ -2,7 +2,7 @@
 // (each its own holdout-free device seed and a real first input: publicWorld.ts only connects after one), stand on the same
 // platform, see each other, BOTH board the same train and must each draw the other seated in the moving train, with the train
 // at the same place on both screens (within 1 s). Also: the station islanders and drink machine on the platform (draws with
-// them), the between-stops quiz card, the quiz card on a landscape phone, Get off. One phone (A riding, quiz) + one desktop (B on
+// them), Get off. One phone (A riding) + one desktop (B on
 // the platform at night: lanterns, panes, board, machine, islanders) screenshot. Never port 8092.
 // Needs:  relay  MP_PORT=8797 MP_DEV=1 MP_WORLD_OPEN=1 node multiplayer/dev-relay/server.mjs
 //         app    NEXT_DIST_DIR=.next-train4 NEXT_PUBLIC_MULTIPLAYER=1 NEXT_PUBLIC_PUBLIC_WORLD=1 NEXT_PUBLIC_MULTIPLAYER_URL=http://127.0.0.1:8797 npx next dev -p 9157
@@ -121,15 +121,8 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     const worst = Math.max(...dts);
     check('the train is at the same place on both screens (within 1 s)', worst < 1, dts.map((d) => d.toFixed(2) + ' s').join(', '));
     check('A hears the next-stop announcement', /^Next stop: .+ Did you know\?/.test(note), note.slice(0, 70));
-    // owner Nov 25 2026: the between-stops quiz is off (trainRide.ts TRAIN_QUIZ): no card on the run
-    await A.p.waitForTimeout(8000); const quiz = false;
-    check('no quiz card while riding', !(await A.p.locator('[data-train-quiz]').count()));
     const g1 = await gfx(A.p); console.log(`riding with a friend (A, phone): ${g1.calls} draw calls, ${g1.tris} triangles (${g1.frames} frames)`);
-    if (shots) await A.p.screenshot({ path: path.join(shots, 'phase4-ride-quiz-phone.png') });
-    if (quiz) { await A.p.setViewportSize({ width: 844, height: 390 }); await A.p.waitForTimeout(900);
-      const box = await A.p.evaluate(() => { const r = document.querySelector('[data-train-quiz]')?.getBoundingClientRect(); return r ? { t: r.top, b: r.bottom, l: r.left, r: r.right, W: innerWidth, H: innerHeight } : null; });
-      check('landscape phone: the quiz card fits the screen', box && box.t >= 0 && box.b <= box.H + 1 && box.l >= 0 && box.r <= box.W, JSON.stringify(box));
-      await A.p.setViewportSize({ width: 390, height: 844 }); }
+    if (shots) await A.p.screenshot({ path: path.join(shots, 'phase4-ride-phone.png') });
     console.log('station islanders when the train stood there: ' + turned);
     // Get off at the next stop (both)
     let off = false; for (let i = 0; i < 160 && !off; i++) { off = await A.p.evaluate(() => { const r = window.__fi2.trainRide; return r.active && window.__fi2.trains.states[r.train].at >= 0 && window.__fi2.trains.states[r.train].doors > .6; }); if (!off) await A.p.waitForTimeout(500); }

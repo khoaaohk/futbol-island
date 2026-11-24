@@ -37,7 +37,7 @@ console.log('train-gameplay3 walk frame: ok');
  const seatAt=(k,i,o)=>{const st=RN.SEAT_TABLE[i];carM(k,st.car,m);v.set(st.x,RN.CAR_FLOOR_Y,st.z).applyMatrix4(m);const e=m.elements;o.x=v.x;o.y=v.y;o.z=v.z;o.yaw=Math.atan2(st.side*e[0],st.side*e[2]);o.lean=st.lean;return o;};
  const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>seatAt(k,RN.PLAYER_SEATS[j],o),carMatrixOf:carM};
  const north=S.stopOf('north');Object.assign(states[1],{at:north,doors:1,dwellLeft:10});
- let seat=null,placed=null,friend=-1;const ride=R.createTrainRide({run:()=>run,place:(x,z,y)=>{placed={x,z,y};},seat:p=>{seat={...p};},taken:(k,j)=>j===friend,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});
+ let seat=null,placed=null,friend=-1;const ride=R.createTrainRide({run:()=>run,place:(x,z,y)=>{placed={x,z,y};},seat:p=>{seat={...p};},taken:(k,j)=>j===friend,cue:()=>{}});
  // board on North's platform
  const st0=tt.TRAIN_STATIONS[0],sp=R.platformSpot(0,st0.s,{x:0,y:0,z:0,yaw:0});
  // the fake train is not at North's coordinates: Board through want() needs the platform; use it and then drive the frames
@@ -193,7 +193,7 @@ console.log('train kenji ok');
 
 // Nov 24 2026: players may sit in any free seat: NPC passengers' seats count as taken (Town trainSeatTaken), friends standing are drawn.
 {const town=read('components/Town.tsx');assert(/const r=trainPassengers\.roster\(k\);return !!r&&seatTaken\(r,j\)/.test(town),'an NPC passenger\'s seat is taken');
- assert(/run\.standAt\(k,x,u,yw,p,trainClockSec\(\)\);p\.speed=sp;return 2;/.test(town),'a standing friend is drawn train-relative, walking');
+ assert(/run\.standAt\(k,x,u,yw,p,trainClockSec\(\),onRoof\?roofY\(x\):undefined\);p\.speed=sp;return onRoof\?3:2;/.test(town),'a standing friend (aisle or roof) is drawn train-relative, walking');
  const R=L('lib/town/trainRunning.ts');assert.equal(R.PLAYER_SEATS.length,28);}
 console.log('train all-seats ok');
 

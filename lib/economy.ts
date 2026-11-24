@@ -35,7 +35,7 @@
  * them is the daily Pass Puzzle) pays 2 the first time it is done that day, ids `learn:arcade:<day>:<cabinet>`, like the Daily
  * warm-up's review coins: at most 10 a day, still less than one new lesson quiz, so new learning keeps paying best.
  */
-export const LEARN_COINS={quiz:15,quizPerfect:6,ball:12,story:10,journey:8,explore:5,path:75,review:2,book:5,arcade:2,train:2} as const;// train: a right answer to the Island Line's between-stops question, once ever per question (train Phase 3)
+export const LEARN_COINS={quiz:15,quizPerfect:6,ball:12,story:10,journey:8,explore:5,path:75,review:2,book:5,arcade:2} as const;
 /** The daily arcade challenges (and the daily Pass Puzzle among them): at most this many paid a day. */
 export const ARCADE_TODAY_PER_DAY=5;
 /** The wallet's per-run cap for learning runs (also its save clamp: never lower it). */

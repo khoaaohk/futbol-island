@@ -15,7 +15,7 @@ let held=0;
 const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>seatAt(k,RN.PLAYER_SEATS[j],o),carMatrixOf:carM,runner:{doorHeldFor:()=>held},
  doorSpot:(k,x,z,out)=>{if(states[k].at<0)return null;out.x=1.95;out.z=Math.round((z-states[k].s)/3)*3+states[k].s;out.y=1;out.yaw=-Math.PI/2;out.car=0;out.door=0;return out;}};
 const north=S.stopOf('north'),west=S.stopOf('west');
-let placed=null,cues=[];const ride=R.createTrainRide({run:()=>run,place:(x,z,y,yaw)=>{placed={x,z,y,yaw};},seat:()=>{},taken:()=>false,cue:n=>cues.push(n),loadQuiz:async()=>[],pay:()=>{}});
+let placed=null,cues=[];const ride=R.createTrainRide({run:()=>run,place:(x,z,y,yaw)=>{placed={x,z,y,yaw};},seat:()=>{},taken:()=>false,cue:n=>cues.push(n)});
 Object.assign(states[1],{at:north,doors:1,dwellLeft:10});const sp=R.platformSpot(0,tt.TRAIN_STATIONS[0].s,{x:0,y:0,z:0,yaw:0});
 ride.want(sp.x,sp.z,sp.y,true);assert(ride.board(),'boarded');for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);
 // between stops: no pill, a press only notes
@@ -60,7 +60,7 @@ console.log('train-rideux exit: ok');
 console.log('train-rideux hud: ok');
 // 3. camera views: the button / C cycles Seat → Front → Back → Left → Right → Above → Inside; Inside stands you up (the cutaway,
 //    the wall facing the camera lowered), any other view sits you back down; each change eases (VIEW_EASE) and toasts; per-view limits
-{Object.assign(states[1],{at:north,doors:1,dwellLeft:10,s:100});const ride2=R.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});
+{Object.assign(states[1],{at:north,doors:1,dwellLeft:10,s:100});const ride2=R.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{}});
  run.roofCut=new Uint8Array(3);run.cutDir=new Float32Array(2);
  ride2.want(sp.x,sp.z,sp.y,true);assert(ride2.board());for(let i=0;i<40&&ride2.walking>=0;i++)ride2.frame(1/30,false);
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:west,t:S.TRAIN_STOPS[west].arrive-40});

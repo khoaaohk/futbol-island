@@ -20,8 +20,6 @@ const tipTitle=(teaching:string)=>teaching.slice(0,Math.max(0,teaching.indexOf('
  *  rewards are off, never capped. The island HUD shows the toast (IslandJobs listens for LEARN_COINS_EARNED). */
 const learnCoins=createLearnCoins({creditOnce:(id,game,amount,reason)=>creditOnce(id,game,amount,reason),notify:detail=>{if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent(LEARN_COINS_EARNED,{detail}));}});
 const payLearning=(kind:LearnKind,id:string,reason:string,perfect=false)=>{void learnCoins.pay(kind,id,reason,perfect);};
-/** Island Line (train Phase 3): a right answer to the question between stops pays LEARN_COINS.train, once ever per question. */
-export function earnForTrainQuiz(id:string){payLearning('train',id,'You got the train quiz right');}
 /** A Ball hunt ball was collected for the first time (Town's coin-hunt handoff, before the ball lesson shows). */
 export function earnForBall(spot:{id:string;teaching:string}):EarnResult{
  payLearning('ball',spot.id,'You found a hidden ball');

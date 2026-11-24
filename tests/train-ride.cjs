@@ -4,7 +4,7 @@
 //  2. presence: fillLocalBody sends the seat code and the last stop's seat; the interpolator marks riders still
 //  3. platforms: every station's step-off spot is on its platform; the Board offer only with a train at the platform, doors open
 //  4. the built trains: seat poses inside the car, on the floor, facing the aisle; the open variant; plates; the causeway barrier
-//  5. wiring: Town (prompt, cluster, camera, fast travel off first, station travel), map (line, pins, dots only while open), quiz coins
+//  5. wiring: Town (prompt, cluster, camera, fast travel off first, station travel), map (line, pins, dots only while open), no ride quiz
 const assert=require('node:assert/strict');
 const {L,read}=require('./lib/tsLoad.cjs');
 const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts'),tt=L('lib/town/trainTrack.ts'),S=L('lib/town/trainSchedule.ts');
@@ -78,7 +78,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  for(const m of ['walk','scooter','bike','moped'])assert(R.canBoardFrom(m),`Board offered from ${m}`);assert(!R.canBoardFrom('jetpack'),'no Board from the jetpack');
  {const T=read('components/Town.tsx');assert(/trainRide\.want\([^;]*canBoardFrom\(rideRef\.current\)/.test(T),'Town gates Board with canBoardFrom');assert(/dismount:\(\)=>\{if\(rideRef\.current!=='walk'\)selectRide\('walk'\);\}/.test(T),'Town: the dismount is the travel-mode switch to walk');}
  let mode='moped',dismounts=0;
- let placed=null,seated=0,paid=[];const ride=R.createTrainRide({run:()=>run,dismount:()=>{dismounts++;mode='walk';},place:(x,z,y)=>{placed={x,z,y};},seat:()=>{seated++;},taken:()=>false,cue:()=>{},loadQuiz:async()=>[{id:'q:1',q:'How long is a half?',options:['45 min','20 min'],correct:0,explain:'Two halves of 45.'}],pay:id=>paid.push(id)});
+ let placed=null,seated=0;const ride=R.createTrainRide({run:()=>run,dismount:()=>{dismounts++;mode='walk';},place:(x,z,y)=>{placed={x,z,y};},seat:()=>{seated++;},taken:()=>false,cue:()=>{}});
  const sp=R.platformSpot(0,tt.TRAIN_STATIONS[0].s,{x:0,y:0,z:0,yaw:0});
  assert.equal(ride.want(sp.x,sp.z,sp.y,R.canBoardFrom('jetpack')),null,'jetpack: no Board');
  assert.equal(ride.want(sp.x,sp.z,sp.y,true),null,'no train: no Board');
@@ -90,8 +90,8 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert(ride.trick(),'the bench pose');assert(ride.holdPlayer(.4),'input locked while riding');
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:0});ride.frame(1/30,false);assert(/^Next stop: West Beach\. Did you know\?/.test(R.trainRideStore.get().note),'leaving: the next-stop announcement');
  assert.equal(ride.getOff(false),false,'no getting off between stops');assert.equal(R.trainRideStore.get().canGetOff,false);
- (async()=>{await new Promise(r=>setTimeout(r,5));for(let k=0;k<7*30;k++)ride.frame(1/30,false);assert.equal(R.TRAIN_QUIZ,false,'owner Nov 25: no quiz while riding');assert.equal(R.trainRideStore.get().quiz,null,'no quiz card on the run');assert.equal(paid.length,0,'no quiz coins');
-  Object.assign(states[1],{at:S.stopOf('west'),doors:1,dwellLeft:10});ride.frame(1/30,false);assert.equal(R.trainRideStore.get().quiz,null,'the quiz closes at the stop');assert(R.trainRideStore.get().canGetOff,'Get off at the stop');
+ (async()=>{await new Promise(r=>setTimeout(r,5));for(let k=0;k<7*30;k++)ride.frame(1/30,false);assert(!('TRAIN_QUIZ' in R)&&!('quiz' in R.trainRideStore.get())&&!('answer' in R.trainRideActions),'owner Nov 25: the ride quiz is deleted (no card, no state)');
+  Object.assign(states[1],{at:S.stopOf('west'),doors:1,dwellLeft:10});ride.frame(1/30,false);assert(R.trainRideStore.get().canGetOff,'Get off at the stop');
   assert(ride.getOff(false)&&!ride.active&&placed&&R.platformAt(placed.x,placed.z,placed.y)===tt.TRAIN_STATIONS.findIndex(s=>s.id==='west'),'got off onto the West Beach platform');
   assert(mode==='walk'&&dismounts===1,'Get off: still on foot (the vehicle is not restored)');
   ride.want(sp.x,sp.z,sp.y,true);states[1].at=-1;ride.dispose();
@@ -105,8 +105,8 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert(/trainRide\.applyCamera\(camera/.test(town)&&/trainRide\.trick\(\)\?\?stadiumSit\.trick\(\)/.test(town),'ride camera + the bench pose');
  assert(/causewayBarrier\.closed=world\.trainRun\.crossingClosed/.test(town),'causeway traffic stops at the barrier');
  assert(!/new T\.(PointLight|SpotLight|DirectionalLight)/.test(run+read('lib/town/trainRide.ts')),'no new lights');
- {const tr=read('lib/town/trainRide.ts');assert(/if\(quizIn>=0&&dt>0\)\{quizIn-=Math\.max\(dt,wd\)/.test(tr)&&/const wallS=\(\)=>/.test(tr),'Nov 24: the quiz delay runs on the wall clock (a capped frame dt at 2-4 fps let the train reach the stop first), paused frames hold it');}
- assert(/train:2\b/.test(read('lib/economy.ts'))&&/earnForTrainQuiz/.test(town),'quiz coins (learning, once per question)');}
+ {const tr=read('lib/town/trainRide.ts'),hud=read('components/TrainRideHud.tsx');assert(!/quizBank|loadQuiz|quizIn|askQuiz/.test(tr)&&!/loadQuiz|earnForTrainQuiz|trainRideActions\.answer/.test(town)&&!/data-train-quiz/.test(hud),'no quiz library loaded for the train, no quiz card');}
+ assert(!/train:2\b/.test(read('lib/economy.ts'))&&!/earnForTrainQuiz/.test(town+read('lib/town/cardRewardTriggers.ts')),'no quiz coins');}
 // 4. the built trains (the real world in Node, no WebGL)
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,TRN=LW('lib/town/trainRunning.ts');assert(run,'trains built');
@@ -175,7 +175,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  // queued press: the doors open → on board at the next want()
  const states=[0,1,2].map(()=>({s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0}));const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>{o.x=c0.x;o.y=top+1;o.z=c0.z;o.yaw=0;return o;},
   doorSpot:(k,x,z,o)=>{const p=at(0,1.95);o.x=p.x;o.z=p.z;o.y=top;o.yaw=0;o.car=0;o.door=1;return o;}};
- const ride=R2.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});const me=at(-8,3);
+ const ride=R2.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{}});const me=at(-8,3);
  Object.assign(states[2],{at:-1,next:stop,t:T0.arrive-1.5});assert(ride.want(me.x,me.z,top,true),'braking in: Board shows');
  assert(ride.board()&&!ride.active&&ride.queued===2,'a press while it brakes in is queued');assert.equal(ride.waiting,2,'waiting on the platform: this client holds its doors');
  Object.assign(states[2],{at:stop,doors:.3,dwellLeft:12.5,t:T0.arrive+2});ride.want(me.x,me.z,top,true);assert(!ride.active,'doors still opening: waiting');
@@ -222,7 +222,7 @@ console.log('train-ride hover: ok');
  const ev={};globalThis.window={innerWidth:1000,innerHeight:700,addEventListener:(t,f)=>{ev[t]=f;},removeEventListener:()=>{}};
  const states=[{s:s0,at:-1,doors:0,dwellLeft:0,next:0,t:0},{s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0},{s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0}];
  const pose0=tt.trackAt(s0-6);const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>{o.x=pose0.x;o.y=2;o.z=pose0.z;o.yaw=0;o.lean=1;return o;}};
- const ride=R6.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});
+ const ride=R6.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{}});
  // board without a platform: drive the internals through a fake platform-free path (riding state via board on a fake stop)
  Object.assign(states[0],{at:S.stopOf(tt.TRAIN_STATIONS[0].id),doors:1,dwellLeft:10});const sp=R6.platformSpot(0,tt.TRAIN_STATIONS[0].s,{x:0,y:0,z:0,yaw:0});
  const T0s=tt.TRAIN_STATIONS[0].s;Object.assign(states[0],{s:T0s+12});ride.want(sp.x,sp.z,sp.y,true);assert(ride.board(),'boarded');for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);

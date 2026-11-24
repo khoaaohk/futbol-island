@@ -7,9 +7,8 @@
  *    where it is left; Recenter / a double tap eases it back; the tunnel eases it to the default and restores it after).
  *  - "Get off" (the action cluster, E) works at any stop while the doors are open; fast travel while riding gets off first (Town).
  *    "Horn" (Space / H) sounds the train's horn (the island sound kit's train-horn cue).
- *  - Learning (AGENTS.md): on leaving each stop an announcement ("Next stop: … Did you know …") and, a few seconds later, ONE question
- *    from the site's quiz library (lib/site/quizBank.ts, loaded on the first ride only) with a small coin reward (learnCoins 'train',
- *    paid once ever per question).
+ *  - Learning (AGENTS.md): on leaving each stop an announcement ("Next stop: … Did you know …"). The between-stops quiz is gone
+ *    (owner, Nov 25 2026: no quiz card, no quiz coins, the quiz library is never loaded for the train).
  *  - Multiplayer: wire() is what presence sends (multiplayer/protocol/seat.ts trainWire): the train, the seat and where I sat at the
  *    last stop. It changes once per stop; friends draw me in the moving seat from the shared clock.
  * Heat: off a platform the whole thing is one nearest-track test per HUD tick (trackNearest, bounded), nothing per frame; riding, one
@@ -53,12 +52,6 @@ export const EXIT_EARLY=4,EXIT_WARN=3,EXIT_MIN=.45,EXIT_IN=1.95,EXIT_OUT=1.4;
 /** Gameplay 3: the walk notes; a tap within SEAT_TAP_PX px of a glowing seat sits there. */
 export const WALK_NOTES={up:'Hold on to a strap! Walk the aisle, and tap a glowing seat (or Sit) to sit down.',sit:'Walk to a glowing seat to sit down.'} as const;
 export const SEAT_TAP_PX=56;
-/** The quiz comes this long (s) after the doors close, and only on a run at least QUIZ_MIN_RUN s long (every run is 45 s or more). */
-export const QUIZ_AFTER=6,QUIZ_MIN_RUN=30;
-/** Owner (Nov 25 2026): no between-stops quiz while riding (no card, no 2-coin reward, the quiz library is never loaded for the
- *  train). Off by this constant rather than deleted tonight (the release is frozen); the "Next stop … Did you know?" facts stay. */
-export const TRAIN_QUIZ=false;
-const wallS=()=>(typeof performance!=='undefined'?performance.now():Date.now())/1000;
 /** Board only while the doors are this open and the train waits at least this long (s) more. */
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
 /** Easier boarding (owner, Nov 24 2026): the Board zone is the whole platform ± BOARD_ENDS m and up to BOARD_DEPTH m back from its
@@ -116,13 +109,11 @@ export const nearHide=(was:boolean,d:number)=>was?d<FADE_FAR:d<FADE_NEAR;
 export const ORBIT={pitchMin:-.09,pitchMax:1.05,zoomMin:.38,zoomMax:2.6,drag:5.2,keyYaw:1.9,keyPitch:1.1,wheel:.0016,decay:4.5,recenter:4,tap2:.32,tapPx:30,moved:.06} as const;
 const wrapPi=(a:number)=>((a%(Math.PI*2))+Math.PI*3)%(Math.PI*2)-Math.PI;
 
-export type TrainQuizQ={id:string;q:string;options:string[];correct:number;explain:string};
-export type TrainQuiz=TrainQuizQ&{picked:number};
-export type TrainRideView={riding:boolean;canGetOff:boolean;note:string;notes:number;quiz:TrainQuiz|null;/** the free camera is off its default (Recenter enabled) */moved:boolean;
+export type TrainRideView={riding:boolean;canGetOff:boolean;note:string;notes:number;/** the free camera is off its default (Recenter enabled) */moved:boolean;
  /** Easy exit: the station the Get off pill names ('' : no pill), a press waiting for the doors, the doors-closing warning */exitTo:string;exitQueued:boolean;closing:boolean;
  /** The camera view and a counter bumped on every change (the HUD's "Front view" toast) */camView:TrainView;viewNo:number;
  /** Gameplay 3: standing in the aisle; a free seat within reach (Sit); by a door bay (Get off becomes the primary at a stop) */standing:boolean;nearSeat:boolean;nearDoor:boolean};
-const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,quiz:null,moved:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false,camView:'seat',viewNo:0};
+const IDLE:TrainRideView={riding:false,canGetOff:false,note:'',notes:0,moved:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false,camView:'seat',viewNo:0};
 let view=IDLE;const listeners=new Set<()=>void>();
 /** The HUD bridge (components/TrainRideHud.tsx): written only when something shown changes, never per frame. */
 export const trainRideStore={
@@ -133,8 +124,8 @@ export const trainRideStore={
  subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn);};},
 };
 export type TrainActionId='getoff'|'horn'|'recenter'|'walk'|'camera';
-/** The prompt's tap, the cluster's buttons, the quiz answer and the camera view menu; the island runtime installs the real ones. */
-export const trainRideActions={board:()=>{},press:(_id:TrainActionId,_phase:'tap'|'down'|'up')=>{},answer:(_i:number)=>{},view:(_v:TrainView)=>{}};
+/** The prompt's tap, the cluster's buttons and the camera view menu; the island runtime installs the real ones. */
+export const trainRideActions={board:()=>{},press:(_id:TrainActionId,_phase:'tap'|'down'|'up')=>{},view:(_v:TrainView)=>{}};
 /** The action cluster while riding (the zipline's ZIP_BUTTONS pattern): Get off (only at a stop), the horn, Recenter and (Gameplay 3)
  *  Walk / Sit (the 'extra' slot, key Q). Standing by a door bay at a stop with the doors open, Get off becomes the primary button. */
 export function trainButtons(canGetOff:boolean,moved=false,standing=false,nearSeat=false,nearDoor=false,exitTo=''){
@@ -187,10 +178,6 @@ type Ports={
  /** Is seat j of train k taken by a friend drawn there (townBridge trainSeat)? */
  taken:(k:number,j:number)=>boolean;
  cue:(name:string,gain:number)=>void;haptic?:()=>void;
- /** The quiz library (dynamic import, first ride only). */
- loadQuiz:()=>Promise<TrainQuizQ[]>;
- /** A right answer: learning coins once ever for this question. */
- pay:(id:string)=>void;
  /** Camera / shadow fit hold while riding (the zipline's). */
  hold?:(on:boolean)=>void;
  /** Boarding from the scooter / bike / moped: switch to walking first (Town's travel-mode switch, the vehicle stowed as R does). */
@@ -199,7 +186,7 @@ type Ports={
  ground?:(x:number,z:number)=>number;
 };
 export function createTrainRide(ports:Ports){
- let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,hoverK=-1,ready=false,walkT=-1,walkDur=0,walkA=0,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
+ let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,hoverK=-1,ready=false,walkT=-1,walkDur=0,walkA=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0,standing:false,u:0,sx:0,face:0}/* presence (seat.ts): standing → the train-frame spot and facing */,tp={x:0,z:0,tx:1,tz:0};
  const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
@@ -209,7 +196,6 @@ export function createTrainRide(ports:Ports){
  // the free camera: yaw round the rider (unlimited), added elevation, zoom; yaw inertia; key / stick input; pinch; double tap
  const orb={yaw:0,pitch:0,zoom:1,vy:0};let keyYaw=0,keyPitch=0,recentering=false,pinchId=-1,pinchX=0,pinchY=0,pinchD=0,pinchZ=1,tapT=-1,tapX=0,tapY=0;
  const ceil={w:0,y:0},camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
- try{quizNo=Number(localStorage.getItem('fi-train-quiz'))||0;}catch{quizNo=0;}
  // Gameplay 3: standing in the aisle. sp = the train-frame spot (trainWalk.ts: x across, u along car 0), moved by the stick / WASD
  // relative to the camera; tw = the stand-up / sit-down ease (twSit: the seat being sat in, -1 standing up); the strap pose fades in
  // when you stop; gait = the frame Town poses the rig in (the rig walks in the train, then is put back in the world).
@@ -230,9 +216,6 @@ export function createTrainRide(ports:Ports){
  const snapP=new T.Vector3(),snapQ=new T.Quaternion(),lastP=new T.Vector3(),lastQ=new T.Quaternion(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
- function ensureQuiz(){if(!TRAIN_QUIZ||quizzes||quizLoading)return;quizLoading=true;ports.loadQuiz().then(q=>{quizzes=q;}).catch(()=>{quizLoading=false;});}
- function askQuiz(){if(!quizzes?.length){ensureQuiz();/* Phase 4: a failed load is asked again (ensureQuiz skips while one is loading) */if(riding()&&lastAt<0)quizIn=1;return;}/* still loading (first ride): try again in 1 s, until the next stop */const q=quizzes[quizNo%quizzes.length];quizNo++;try{localStorage.setItem('fi-train-quiz',String(quizNo));}catch{/* private mode */}
-  trainRideStore.set({quiz:{...q,picked:-1}});}
  function board(){
   const run=ports.run();if(riding()||!run||near<0||nearTrain<0)return false;
   const st=run.states[nearTrain];
@@ -247,10 +230,10 @@ export function createTrainRide(ports:Ports){
   queued=-1;k=nearTrain;j=best;anchor.standing=false;run.seatPose(k,j,probe);standing=false;tw=-1;gait.on=false;standCam=0;
   // the walk: me → the door → the seat, WALK_SPEED m/s, WALK_MIN … WALK_MAX s in all (eased, so it starts and ends soft)
   from.x=me.x;from.y=me.h;from.z=me.z;if(!ds){door.x=me.x;door.z=me.z;door.y=me.h;door.yaw=probe.yaw;}
-  {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
+  {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
   orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;camView='seat';viewT=1;havePose=false;armO=armI=-1;
-  trainRideStore.set({riding:true,canGetOff:false,quiz:null,camView:'seat'});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();ensureQuiz();
+  trainRideStore.set({riding:true,canGetOff:false,camView:'seat'});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();
   if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
   return true;
  }
@@ -262,8 +245,8 @@ export function createTrainRide(ports:Ports){
   leave(run);if(force)blend=0;return true;
  }
  function leave(run:Run|null){
-  if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;quizIn=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
-  trainRideStore.set({riding:false,canGetOff:false,quiz:null,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false});
+  if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
+  trainRideStore.set({riding:false,canGetOff:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false});
  }
  const doorsOpen=(st:Run['states'][number])=>st.at>=0&&st.doors>=DOORS_OPEN&&st.dwellLeft>=GET_OFF_LEFT;
  /** Easy exit: the Get off pill shows from EXIT_EARLY s before the doors open (braking in) until they start to close. */
@@ -377,7 +360,6 @@ export function createTrainRide(ports:Ports){
  }
  /** Ease the free camera back to the default framing (Recenter, a double tap). */
  function recenter(){recentering=true;orb.vy=0;}
- function answer(i:number){const q=view.quiz;if(!q||q.picked>=0)return;trainRideStore.set({quiz:{...q,picked:i}});if(i===q.correct)ports.pay(q.id);}
  // ---- looking around: the stick (Town's shaped stick) and a drag on the canvas, through the zipline's soft limit and spring
  let listening=false;
  // Only presses that start on the canvas (never a HUD button); a second finger pinches; two quick taps recenter.
@@ -416,7 +398,7 @@ export function createTrainRide(ports:Ports){
   get walking(){return walkT;},get queued(){return queued;},
   /** Gameplay 2: the train under the pointer (lib/graphics/trainHover.ts; Town writes it), -1: none. Board then wins as a hover. */
   get hoverTrain(){return hoverK;},set hoverTrain(v:number){hoverK=v;},
-  board,getOff,press,answer,
+  board,getOff,press,
   /** The Board offer (Town's HUD tick): standing on a platform where a train waits with its doors open. One bounded track test. */
   want(x:number,z:number,y:number,canBoard:boolean):{key:string;distance:number}|null{
    me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;ready=false;lastWant.x=x;lastWant.z=z;lastWant.y=y;lastWant.can=canBoard;lastWant.n++;if(riding())return null;if(!canBoard){queued=-1;return null;}
@@ -455,7 +437,7 @@ export function createTrainRide(ports:Ports){
   get spot(){return sp;},
   /** Gameplay 3 debug: the walk input (x right, z forward, camera-relative) and the camera's forward in the train frame. */
   get walkInput(){return mv;},get camForward(){return camFwd;},
-  /** After Town's train update this frame: the seat, the stop events (announcement, quiz, Get off), the HUD. */
+  /** After Town's train update this frame: the seat, the stop events (announcement, Get off), the HUD. */
   frame(dt:number,reduced:boolean){
    if(!riding()){if(blend>0)blend=Math.max(0,blend-dt*(reduced?6:2.5));if(blend<=0)unlisten();return;}
    const run=ports.run();if(!run){getOff(true);return;}
@@ -477,13 +459,9 @@ export function createTrainRide(ports:Ports){
    if(!riding())return;
    if(!standing){blend=Math.min(1,blend+dt*(reduced?6:2.5));run.seatPose(k,j,pose);ports.seat(pose);}
    if(st.at!==lastAt){
-    if(st.at>=0){run.seatPose(k,j,probe);anchor.x=probe.x;anchor.y=probe.y;anchor.z=probe.z;anchor.yaw=probe.yaw;quizIn=-1;setNote(arriveLine(st.at));if(view.quiz)trainRideStore.set({quiz:null});}
-    else if(lastAt>=0){setNote(nextStopLine(st.next));const stop=TRAIN_STOPS[st.next],from=TRAIN_STOPS[lastAt];const run2=((stop.arrive-from.depart)%360+360)%360;quizIn=TRAIN_QUIZ&&run2>=QUIZ_MIN_RUN?QUIZ_AFTER:-1;ensureQuiz();}
+    if(st.at>=0){run.seatPose(k,j,probe);anchor.x=probe.x;anchor.y=probe.y;anchor.z=probe.z;anchor.yaw=probe.yaw;setNote(arriveLine(st.at));}
+    else if(lastAt>=0){setNote(nextStopLine(st.next));}
     lastAt=st.at;}
-   // Nov 24 2026: the quiz delay runs on the wall clock, not the summed frame dt. Town caps dt per frame, so on a slow device (or a
-   // headless check at 2-4 fps) 6 s of dt took most of the run and the train reached the next stop first: the card never showed.
-   // Paused frames (dt 0: map, settings, a zoomed machine) still hold it.
-   {const w=wallS(),wd=lastWall<0?dt:Math.min(1,Math.max(0,w-lastWall));lastWall=w;if(quizIn>=0&&dt>0){quizIn-=Math.max(dt,wd);if(quizIn<0)askQuiz();}}
    const can=st.at>=0&&st.doors>=DOORS_OPEN&&st.dwellLeft>=GET_OFF_LEFT;if(can!==view.canGetOff)trainRideStore.set({canGetOff:can});
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
