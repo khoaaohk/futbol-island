@@ -1528,16 +1528,19 @@ export function* buildTownSteps(scene: T.Scene) {
   // drives through red, yellow and green (lib/graphics/trafficSignalLamps.ts); `signalHeads` tells it where each head hangs.
   const signalHeads:SignalHead[]=[];
   const signalPoints:{x:number;z:number}[]=[];
+  // A street leaves the junction this way (the same 8 m test as an approach below).
+  const armAt=(junction:{x:number;z:number},axis:'x'|'z',face:number)=>{const approach=axis==='x'?junction.x+face*8:junction.z+face*8;
+    return roads.some(r=>r.vertical===(axis==='z')&&Math.abs((axis==='z'?r.x:r.z)-(axis==='z'?junction.x:junction.z))<.001&&approach>(axis==='z'?r.z-r.d/2:r.x-r.w/2)&&approach<(axis==='z'?r.z+r.d/2:r.x+r.w/2));};
   for(const junction of roadJunctions)for(const [dx,dz] of [[-5.3,-5.3],[5.3,5.3]]){
     const x=junction.x+dx,z=junction.z+dz;
+    // Nov 24 2026 (owner: a light "just blinking yellow" reads as broken): corners and dead ends (fewer than three streets) have
+    // nothing to cross and the traffic never runs a cycle there (lib/town/trafficSignals.ts signalledNodes), so they get no
+    // signal at all instead of a head flashing amber.
+    if((armAt(junction,'x',1)?1:0)+(armAt(junction,'x',-1)?1:0)+(armAt(junction,'z',1)?1:0)+(armAt(junction,'z',-1)?1:0)<3)continue;
     if(!onIsland(x,z)||signalPoints.some(p=>Math.hypot(p.x-x,p.z-z)<5)||obstacles.some(o=>Math.abs(x-o.x)<o.w/2+.55&&Math.abs(z-o.z)<o.d/2+.55))continue;
     // A dead-end corner can have no incoming approach. Only create its support
     // (and collision footprint) when at least one signal head will use it.
-    const axes=(['x','z'] as const).filter(axis=>{
-      const face=axis==='x'?-Math.sign(dx):-Math.sign(dz);
-      const approach=axis==='x'?junction.x+face*8:junction.z+face*8;
-      return roads.some(r=>r.vertical===(axis==='z')&&Math.abs((axis==='z'?r.x:r.z)-(axis==='z'?junction.x:junction.z))<.001&&approach>(axis==='z'?r.z-r.d/2:r.x-r.w/2)&&approach<(axis==='z'?r.z+r.d/2:r.x+r.w/2));
-    });
+    const axes=(['x','z'] as const).filter(axis=>armAt(junction,axis,axis==='x'?-Math.sign(dx):-Math.sign(dz)));
     if(!axes.length)continue;
     signalPoints.push({x,z});assets.push({kind:'traffic-signal',x,z,w:.45,d:.45,visualW:8.5,visualD:8.5});
     prop('signal',()=>{cylinder(.24,.25,'#384443',x,.125,z);cylinder(.11,7,'#384443',x,3.5,z);
