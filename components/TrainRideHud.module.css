@@ -21,3 +21,9 @@
  .options{grid-template-columns:1fr 1fr}
  .q{margin-bottom:8px}
 }
+
+/* Gameplay 2 (owner, Nov 24 2026): the Board button pulses gently (compositor-only scale; none with reduced motion; a hidden button
+   is display:none, so it costs nothing off the platform). */
+.board{animation:boardPulse 1.8s ease-in-out infinite}
+@keyframes boardPulse{0%,100%{scale:1}50%{scale:1.07}}
+@media(prefers-reduced-motion:reduce){.board{animation:none}}

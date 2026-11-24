@@ -39,7 +39,7 @@ for(const st of S.TRAIN_STOPS){const a=S.scheduleAt(st.arrive+.5),b=S.scheduleAt
  const a=S.trainAt(0,now+S.HEADWAY),b=S.trainAt(1,now);near(a.s,b.s,1e-6,'train 1 runs 2:00 ahead');
  // every train passes every stop: standing somewhere for 5 × dwell per lap
  let standing=0;for(let t=0;t<S.LAP;t+=1)if(S.trainNearStop(0,t)>=0)standing++;near(standing,5*S.TIMETABLE.dwell,6,'5 dwells a lap');
- assert.equal(S.waitText({wait:0,here:true}),'Now at the platform');assert.equal(S.waitText({wait:12,here:false}),'Arriving');
+ assert.equal(S.waitText({wait:0,here:true}),'Boarding now');assert.equal(S.waitText({wait:12,here:false}),'Arriving');
  assert.equal(S.waitText({wait:70,here:false}),'1 min');assert.equal(S.waitText({wait:200,here:false}),'3 min');
  near(S.trainClockSec(5000,1764000000000),1764000000,1e-6,'solo: Date.now()');
  lc.liveClock.map(1764000000000,0,5000);near(S.trainClockSec(5000,0),1764000000,1e-6,'live: the relay clock');

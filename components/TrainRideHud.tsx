@@ -13,7 +13,7 @@ export default function TrainRideHud(){
  const v=useSyncExternalStore(trainRideStore.subscribe,trainRideStore.get,trainRideStore.server);
  const q=v.quiz,done=!!q&&q.picked>=0,right=done&&q!.picked===q!.correct;
  return <>
-  <button type="button" className="store-enter-prompt" data-train-board aria-label="Board the train" hidden onClick={()=>trainRideActions.board()}>Board</button>
+  <button type="button" className={`store-enter-prompt ${styles.board}`} data-train-board aria-label="Board the train" hidden onClick={()=>trainRideActions.board()}>Board</button>
   {v.riding&&v.note&&<p key={v.notes} className={styles.note} data-train-note role="status" aria-live="polite">{v.note}</p>}
   {v.riding&&q&&<section className={styles.quiz} data-train-quiz aria-label="Train quiz">
    <p className={styles.kicker}>Quiz between stops</p>

@@ -17,7 +17,7 @@
 import * as T from 'three';
 import {TRAIN_STATIONS,STATION_HALF,STATION_PLATFORM_Y,TRACK,trackAt,trackNearest,wrapS,bedAt,inTunnelS,type TrainStation} from './trainTrack';
 import {trainLayout} from './trainLayout';
-import {TRAIN_COUNT,TRAIN_STOPS} from './trainSchedule';
+import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,LAP} from './trainSchedule';
 import {TRAIN_SEATS,type SeatPose} from './trainRunning';
 import {npcSeatPose} from '../graphics/npcSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
@@ -50,6 +50,17 @@ export const TRAIN_QUIZ=false;
 const wallS=()=>(typeof performance!=='undefined'?performance.now():Date.now())/1000;
 /** Board only while the doors are this open and the train waits at least this long (s) more. */
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
+/** Easier boarding (owner, Nov 24 2026): the Board zone is the whole platform ± BOARD_ENDS m and up to BOARD_DEPTH m back from its
+ *  edge (PLATFORM_EDGE m from the line); Board shows BOARD_EARLY s before the doors open (a train braking in) and a press then
+ *  waits for them; Board walks you to the nearest open door in WALK_MAX s at most (WALK_SPEED m/s, smooth) and on into the seat. */
+export const BOARD_ENDS=2,BOARD_DEPTH=4,PLATFORM_EDGE=1.45,BOARD_EARLY=4,WALK_SPEED=7,WALK_MIN=.35,WALK_MAX=.95;
+/** Seconds until train state st's doors are open enough to board at stop `stop` (0: open now; Infinity: not coming within a lap). */
+export function boardIn(st:{at:number;next:number;t:number;doors:number;dwellLeft:number},stop:number){
+ const usable=DOOR_DELAY+DOOR_MOVE*DOORS_OPEN;
+ if(st.at===stop){if(st.doors>=DOORS_OPEN)return st.dwellLeft>=BOARD_LEFT?0:Infinity;return st.dwellLeft>DOOR_DELAY+DOOR_MOVE?Math.max(0,usable-(TRAIN_STOPS[stop].depart-TRAIN_STOPS[stop].arrive-st.dwellLeft)):Infinity;}
+ if(st.at>=0||st.next!==stop)return Infinity;
+ return ((TRAIN_STOPS[stop].arrive-st.t)%LAP+LAP)%LAP+usable;
+}
 /** The ride camera: on the rider's window side, back along the train and up (m); portrait phones a step further out. In the tunnel
  *  it comes in close (inside the tube). */
 // Portrait phones (AAA audit, Nov 24 2026): the narrow view (±11° across at fov 40) looked 4 m up the line from 5 m back, so a rider
@@ -93,13 +104,24 @@ export function platformAt(x:number,z:number,y:number){
   const top=bedAt(L.profile,st.s)+STATION_PLATFORM_Y;if(Math.abs(y-top)>1.2)continue;return i;}
  return -1;
 }
+/** The Board zone (owner, Nov 24 2026): station i whose platform (± BOARD_ENDS m past its ends, up to BOARD_DEPTH m back from the
+ *  edge; the South deck to its back) the point stands on, or -1. Allocation-free. */
+export function boardZoneAt(x:number,z:number,y:number){
+ const hit=trackNearest(x,z,PLATFORM_EDGE+BOARD_DEPTH+3);if(!hit)return -1;
+ for(let i=0;i<TRAIN_STATIONS.length;i++){const st=TRAIN_STATIONS[i],du=((hit.s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2;
+  if(Math.abs(du)>STATION_HALF+BOARD_ENDS||hit.side!==st.side||hit.d<1.1||hit.d>Math.max(PLATFORM_EDGE+BOARD_DEPTH,st.id==='south'?8.1:0))continue;
+  const top=bedAt(L.profile,st.s)+STATION_PLATFORM_Y;if(Math.abs(y-top)>1.2)continue;return i;}
+ return -1;
+}
 /** The spot on station i's platform level with track s (2.6 m from the line): where a rider steps off. */
 export function platformSpot(i:number,s:number,out:{x:number;y:number;z:number;yaw:number}){
  const st=TRAIN_STATIONS[i],du=((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2,u=Math.max(-STATION_HALF+1.5,Math.min(STATION_HALF-1.5,du));
  const c=trackAt(st.s+u),nx=c.tz*st.side,nz=-c.tx*st.side;out.x=c.x+nx*2.6;out.z=c.z+nz*2.6;out.y=bedAt(L.profile,st.s)+STATION_PLATFORM_Y;out.yaw=Math.atan2(nx,nz);return out;
 }
 
-type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array};
+type DoorSpot={x:number;y:number;z:number;yaw:number;car:number;door:number};
+type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;
+ /** The open door nearest x, z (trainRunning.doorSpot); null while the train runs. */doorSpot?(k:number,x:number,z:number,out:DoorSpot):DoorSpot|null};
 type Ports={
  run:()=>Run|null;
  /** Put the player at x, z on height y (boarding, getting off): Town's location, rooftop and facing. */
@@ -121,9 +143,10 @@ type Ports={
  ground?:(x:number,z:number)=>number;
 };
 export function createTrainRide(ports:Ports){
- let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
+ let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,ready=false,walkT=-1,walkDur=0,walkA=0,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
+ const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
  const trick:TrickPose=npcSeatPose('bench');trick.w=0;
  const lookS={x:0,v:0},tight={x:0,v:0};let stickAim=0,dragAim=0,dragging=false,dragId=-1,dragX=0,fovSaved=0,arm=-1;
  const ceil={w:0,y:0},camPos=new T.Vector3(),camLook=new T.Vector3(),aimer=new T.PerspectiveCamera(),camQ=new T.Quaternion(),normalPos=new T.Vector3(),normalQ=new T.Quaternion(),v=new T.Vector3();
@@ -135,11 +158,19 @@ export function createTrainRide(ports:Ports){
   trainRideStore.set({quiz:{...q,picked:-1}});}
  function board(){
   const run=ports.run();if(riding()||!run||near<0||nearTrain<0)return false;
-  const st=run.states[nearTrain];if(st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<BOARD_LEFT)return false;
-  let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-me.x,probe.z-me.z);if(d<bd){bd=d;best=s;}}
-  if(best<0){setNote('This train is full. The next one comes in 2 minutes.');return false;}
+  const st=run.states[nearTrain];
+  // braking in / doors still opening: the press waits for them (want() boards on the HUD tick the doors are open)
+  if(!ready){queued=nearTrain;return true;}
+  if(st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<BOARD_LEFT)return false;
+  // the nearest open door, then the free seat nearest that door (both cars' doors open onto this platform)
+  const ds=run.doorSpot?.(nearTrain,me.x,me.z,door)??null;const ax=ds?ds.x:me.x,az=ds?ds.z:me.z;
+  let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-ax,probe.z-az);if(d<bd){bd=d;best=s;}}
+  if(best<0){queued=-1;setNote('This train is full. The next one comes in 2 minutes.');return false;}
   ports.dismount?.();// on a scooter / bike / moped: on foot first, boarded in the same press
-  k=nearTrain;j=best;lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
+  queued=-1;k=nearTrain;j=best;run.seatPose(k,j,probe);
+  // the walk: me → the door → the seat, WALK_SPEED m/s, WALK_MIN … WALK_MAX s in all (eased, so it starts and ends soft)
+  from.x=me.x;from.y=me.h;from.z=me.z;if(!ds){door.x=me.x;door.z=me.z;door.y=me.h;door.yaw=probe.yaw;}
+  {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
   lookS.x=lookS.v=0;stickAim=dragAim=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;
   trainRideStore.set({riding:true,canGetOff:false,quiz:null});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();ensureQuiz();
@@ -151,7 +182,7 @@ export function createTrainRide(ports:Ports){
   if(!riding())return false;const run=ports.run();const st=run?.states[k];
   if(!force){if(!run||!st||st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<GET_OFF_LEFT){setNote(TRAIN_NOTES.wait);return false;}
    const si=TRAIN_STATIONS.indexOf(TRAIN_STOPS[st.at].station);platformSpot(si,trainSeatS(run),spot);ports.place(spot.x,spot.z,spot.y,spot.yaw);ports.haptic?.();}
-  if(run)run.ridden[k]=0;k=-1;j=-1;quizIn=-1;ports.hold?.(false);trainRideStore.set({riding:false,canGetOff:false,quiz:null});
+  if(run)run.ridden[k]=0;k=-1;j=-1;walkT=-1;quizIn=-1;ports.hold?.(false);trainRideStore.set({riding:false,canGetOff:false,quiz:null});
   if(force)blend=0;return true;
  }
  /** The track s level with my seat (the train's front minus how far back my car is). */
@@ -172,22 +203,27 @@ export function createTrainRide(ports:Ports){
  if(typeof window!=='undefined')window.addEventListener('keydown',onKey);
  return {
   get active(){return riding();},get train(){return k;},get seat(){return j;},get blend(){return blend;},
+  /** Gameplay 2: the train whose doors this client holds open (walking aboard it, or waiting for it on its platform), else -1. */
+  get waiting(){return riding()?(walkT>=0?k:-1):near>=0?nearTrain:-1;},
+  /** Gameplay 2: walking to the door (0 … 1), -1 when not; and a Board press waiting for the doors (train index, -1). */
+  get walking(){return walkT;},get queued(){return queued;},
   board,getOff,press,answer,
   /** The Board offer (Town's HUD tick): standing on a platform where a train waits with its doors open. One bounded track test. */
   want(x:number,z:number,y:number,canBoard:boolean):{key:string;distance:number}|null{
-   me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;lastWant.x=x;lastWant.z=z;lastWant.y=y;lastWant.can=canBoard;lastWant.n++;if(riding()||!canBoard)return null;
+   me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;ready=false;lastWant.x=x;lastWant.z=z;lastWant.y=y;lastWant.can=canBoard;lastWant.n++;if(riding())return null;if(!canBoard){queued=-1;return null;}
    const run=ports.run();if(!run)return null;
    let quick=false;for(const st of TRAIN_STATIONS){const c=trackAt(st.s,tp);if(Math.abs(c.x-x)<STATION_HALF+8&&Math.abs(c.z-z)<STATION_HALF+8){quick=true;break;}}
    if(!quick)return null;
-   const si=platformAt(x,z,y);if(si<0)return null;const stop=TRAIN_STOPS.findIndex(s=>s.station===TRAIN_STATIONS[si]);
-   for(let i=0;i<TRAIN_COUNT;i++){const st=run.states[i];if(st.at===stop&&st.doors>=DOORS_OPEN&&st.dwellLeft>=BOARD_LEFT){near=si;nearTrain=i;
-     const c=trackAt(TRAIN_STATIONS[si].s,tp);return {key:TRAIN_BOARD_KEY,distance:Math.max(0,Math.hypot(c.x-x,c.z-z)-3)};}}
-   return null;
+   const si=boardZoneAt(x,z,y);if(si<0){queued=-1;return null;}const stop=TRAIN_STOPS.findIndex(s=>s.station===TRAIN_STATIONS[si]);
+   for(let i=0;i<TRAIN_COUNT;i++){const w=boardIn(run.states[i],stop);if(!(w<=BOARD_EARLY))continue;near=si;nearTrain=i;ready=w<=0;
+     if(queued===i&&ready&&board())return null;// a press while it braked in: on board as the doors open
+     const c=trackAt(TRAIN_STATIONS[si].s,tp);return {key:TRAIN_BOARD_KEY,distance:Math.max(0,Math.hypot(c.x-x,c.z-z)-3)};}
+   queued=-1;return null;
   },
   /** The Board button over the player's head (the stadium Sit prompt's placement). */
   prompt(el:HTMLButtonElement|null|undefined,show:boolean,camera:T.Camera,width:number,height:number,place:(el:HTMLElement,x:number,y:number)=>void,hide:(el:HTMLElement,hidden:boolean)=>void){
    if(!el)return;let hidden=!show||riding()||near<0;
-   if(!hidden){v.set(me.x,me.h+2.1,me.z).project(camera);hidden=v.z< -1||v.z>1;if(!hidden)place(el,T.MathUtils.clamp((v.x+1)*width/2,90,width-90),T.MathUtils.clamp((1-v.y)*height/2-14,90,height-160));}
+   if(!hidden){const q=queued>=0?'1':'';if((el.dataset.queued??'')!==q){el.dataset.queued=q;el.textContent=q?'Doors opening…':'Board';}v.set(me.x,me.h+2.1,me.z).project(camera);hidden=v.z< -1||v.z>1;if(!hidden)place(el,T.MathUtils.clamp((v.x+1)*width/2,90,width-90),T.MathUtils.clamp((1-v.y)*height/2-14,90,height-160));}
    hide(el,hidden);promptShown=!hidden;
   },
   /** Town's movement tick: riding locks input (the stick looks around instead). */
@@ -198,6 +234,11 @@ export function createTrainRide(ports:Ports){
   frame(dt:number,reduced:boolean){
    if(!riding()){if(blend>0)blend=Math.max(0,blend-dt*(reduced?6:2.5));if(blend<=0)unlisten();return;}
    const run=ports.run();if(!run){getOff(true);return;}
+   // Gameplay 2: the walk from the platform to the door and on into the seat (the sitting pose blends in over its last 40 %)
+   if(walkT>=0){walkT=Math.min(1,walkT+dt/walkDur);const u=walkT*walkT*(3-2*walkT);run.ridden[k]=1;run.seatPose(k,j,pose);
+    if(u<walkA){const q=u/walkA,dx=door.x-from.x,dz=door.z-from.z;walkPose.x=from.x+dx*q;walkPose.y=from.y+(door.y-from.y)*q;walkPose.z=from.z+dz*q;walkPose.yaw=Math.hypot(dx,dz)>.05?Math.atan2(dx,dz):door.yaw;}
+    else{const q=(u-walkA)/Math.max(1e-3,1-walkA),dy=((pose.yaw-door.yaw)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI;walkPose.x=door.x+(pose.x-door.x)*q;walkPose.y=door.y+(pose.y-door.y)*q;walkPose.z=door.z+(pose.z-door.z)*q;walkPose.yaw=door.yaw+dy*q;}
+    blend=Math.max(blend,Math.min(1,(u-.6)/.4));ports.seat(walkPose);if(walkT>=1)walkT=-1;return;}
    blend=Math.min(1,blend+dt*(reduced?6:2.5));run.ridden[k]=1;
    const st=run.states[k];run.seatPose(k,j,pose);ports.seat(pose);
    if(st.at!==lastAt){

@@ -22,6 +22,9 @@ export const TRAIN_COUNT=3,TRAIN_CARS=2,CAR_LENGTH=12,CAR_GAP=.4,TRAIN_LENGTH=TR
 export const LAP=360,HEADWAY=LAP/TRAIN_COUNT,DWELL=14,ACCEL=.8,DECEL=1,CRUISE=12,CURVE_SPEED=8,CURVE_RADIUS=30;
 /** Catch-up: up to 15 % faster while behind; dwells run at most twice as fast (never shorter than half). */
 export const CATCH_UP=.15,DWELL_TRIM=2;
+/** Door hold (owner, Nov 24 2026): someone on the platform as the doors are about to close keeps them open up to DOOR_HOLD s (local
+ *  time stands still, so the lag it leaves is paid back by the catch-up above: the lap stays LAP s and every client converges). */
+export const DOOR_HOLD=3;
 /** People on the track: look LOOK_AHEAD m ahead, ±LOOK_HALF m either side; stop STOP_SHORT m short at up to BRAKE m/s². */
 export const LOOK_AHEAD=40,LOOK_HALF=2.5,STOP_SHORT=4,BRAKE=2,HELD_V=.6;
 /** Barriers: lamps from CROSSING_WARN s before the front reaches the crossing; the arms lower over CROSSING_ARM s. */
@@ -134,8 +137,8 @@ export function nextTrains(stop:number,t:ArrayLike<number>,k=2):NextTrain[]{
  for(let i=0;i<t.length;i++){const here=inDwell(st,t[i]);out.push({train:i,wait:here?0:wrapT(st.arrive-t[i]),here});}
  out.sort((a,b)=>a.wait-b.wait);return out.slice(0,k);
 }
-/** The board line for one train: "Now at the platform", "Arriving", "1 min", "3 min". */
-export function waitText(n:NextTrain){return n.here?'Now at the platform':n.wait<25?'Arriving':`${Math.max(1,Math.round(n.wait/60))} min`;}
+/** The board line for one train: "Boarding now" (owner, Nov 24 2026: the train at the platform), "Arriving", "1 min", "3 min". */
+export function waitText(n:NextTrain){return n.here?'Boarding now':n.wait<25?'Arriving':`${Math.max(1,Math.round(n.wait/60))} min`;}
 
 // ---- Level crossings: lap times the front reaches each crossing and the rear clears it (+1 m).
 const lapTimeAt=(x:number)=>{let lo=0,hi=TABLE.pos.length-1;while(lo<hi){const m=(lo+hi)>>1;if(TABLE.pos[m]<x)lo=m+1;else hi=m;}return lo*DT;};
@@ -162,23 +165,25 @@ export function trainClockSec(perfNow?:number,dateNow?:number){
 // ---- Local running: a train held for a person on the track, then catching up.
 export type TrainRunner={
  /** Advance train i to clock nowSec by dt s; `stopAt` is the track s of the nearest person ahead (NaN: clear). */
- step(i:number,nowSec:number,dt:number,stopAt:number,out:TrainState):TrainState;
+ step(i:number,nowSec:number,dt:number,stopAt:number,out:TrainState,/** someone boarding at its platform (doors held up to DOOR_HOLD s) */hold?:boolean):TrainState;
  /** Back on the timetable at once (a train far away or off-screen: nobody sees the jump). */
  reset(i:number):void;
  /** Seconds train i is behind the timetable. */
  behind(i:number):number;
  /** Seconds train i has been standing for a person on the track (0 when not). */
  heldFor(i:number):number;
+ /** Seconds train i's doors have been held open for a boarder at this stop. */
+ doorHeldFor(i:number):number;
  /** The lap times the runner last gave (for boards and crossings). */
  readonly t:Float64Array;
 };
 export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
- const lag=new Float64Array(count),v=new Float64Array(count),held=new Float64Array(count),t=new Float64Array(count),slow=new Uint8Array(count),fresh=new Uint8Array(count).fill(1);
+ const lag=new Float64Array(count),v=new Float64Array(count),held=new Float64Array(count),doorHeld=new Float64Array(count),t=new Float64Array(count),slow=new Uint8Array(count),fresh=new Uint8Array(count).fill(1);
  for(let i=0;i<count;i++)t[i]=trainPhase(i,0);
  const tmp=newTrainState();
  return {
   t,
-  step(i,nowSec,dt,stopAt,out){
+  step(i,nowSec,dt,stopAt,out,hold=false){
    const sched=trainPhase(i,nowSec);dt=Math.max(0,Math.min(dt,.25));
    let tau=wrapT(sched-lag[i]);scheduleAt(tau,tmp);
    if(fresh[i]){fresh[i]=0;v[i]=tmp.at>=0?0:lapV(tau);}// first step after a reset: at timetable speed
@@ -186,21 +191,24 @@ export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
    let adv:number;// how far local time moves this step
    if(tmp.at>=0){adv=dt*(lag[i]>0?DWELL_TRIM:1);v[i]=0;// at a stop: doors, then off on time (or early when behind)
     // A person in front of a waiting train: it does not leave (time holds at the last second of the dwell).
-    if(blocked&&gap<=.5&&tmp.dwellLeft<=adv+.05)adv=Math.max(0,tmp.dwellLeft-.05);}
+    if(blocked&&gap<=.5&&tmp.dwellLeft<=adv+.05)adv=Math.max(0,tmp.dwellLeft-.05);
+    // Someone boarding as the doors are about to close: time stands still just before they start to shut, up to DOOR_HOLD s.
+    const shut=DOOR_DELAY+DOOR_MOVE+.1;if(hold&&doorHeld[i]<DOOR_HOLD&&tmp.dwellLeft-adv<=shut){const keep=Math.max(0,tmp.dwellLeft-shut);doorHeld[i]+=dt-keep;adv=keep;}}
    else{const vs=lapV(tau),rate=lag[i]>.02?1+CATCH_UP:1;let want=vs*rate;
     if(blocked){const cap=gap<=.05?0:Math.sqrt(2*BRAKE*gap);if(cap<want){want=cap;slow[i]=1;}}
     // Held back: pull away again at ACCEL (× the catch-up rate) until back at timetable speed; otherwise just the timetable.
     if(slow[i]){v[i]=Math.max(0,Math.min(want,v[i]+ACCEL*(1+CATCH_UP)*dt));if(!blocked&&v[i]>=vs-.01)slow[i]=0;}else v[i]=want;
     if(vs>.3)adv=v[i]/vs*dt;else adv=blocked&&gap<=.5?0:dt*rate;// pulling away / drawing in: time steps at the rate
     if(blocked&&adv>0){const nx=ahead(tmp.s,wrapS(S0+lapX(tau+adv)));if(nx>Math.max(0,gap)){adv=0;v[i]=0;}}}// never past the stopping point
-   lag[i]=Math.max(0,lag[i]+dt-adv);tau=wrapT(sched-lag[i]);
+   if(tmp.at<0)doorHeld[i]=0;lag[i]=Math.max(0,lag[i]+dt-adv);tau=wrapT(sched-lag[i]);
    // (standing = under HELD_V: a train inching up to a person who shifts their weight is still standing for them; the count
    // used to restart on every centimetre of creep, so "Please step off the track" could wait forever)
    held[i]=blocked&&(tmp.at>=0?tmp.dwellLeft<.2:v[i]<HELD_V)?held[i]+dt:0;
    scheduleAt(tau,out);if(out.at<0)out.v=v[i];t[i]=tau;return out;
   },
-  reset(i){lag[i]=0;v[i]=0;held[i]=0;slow[i]=0;fresh[i]=1;},
+  reset(i){lag[i]=0;v[i]=0;held[i]=0;doorHeld[i]=0;slow[i]=0;fresh[i]=1;},
   behind:i=>lag[i],
   heldFor:i=>held[i],
+  doorHeldFor:i=>doorHeld[i],
  };
 }

@@ -134,7 +134,9 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** Remote players drawn on this screen (x, y, z). */eachRemote?:(cb:(x:number,y:number,z:number)=>void)=>void;
  /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
  /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
- /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean};
+ /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
+ /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
+  *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
 export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null};
 type Person={x:number;y:number;z:number};
 export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null){
@@ -216,6 +218,14 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
    const c=Math.min(TRAIN_CARS-1,j>>2),side=(j&1)?1:-1;carMatrix(s,c,seatM,states[k].v);seatV.set(side*SEAT_ROOT_X,CAR_FLOOR_Y,seatZ(j)).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(-side*e[0],-side*e[2]);return out;},
+  /** Gameplay 2: the open door of train k (standing at a stop) nearest x, z: a spot on the platform just outside it, facing in
+   *  (out.yaw), and which car / door it is. Null while the train runs. Allocation-free. */
+  doorSpot(k:number,x:number,z:number,out:{x:number;y:number;z:number;yaw:number;car:number;door:number}){
+   const st=states[k];if(st.at<0)return null;const side=TRAIN_STOPS[st.at].station.side,top=bedAt(L.profile,TRAIN_STOPS[st.at].station.s)+STATION_PLATFORM_Y;let best=Infinity;
+   for(let c=0;c<TRAIN_CARS;c++){const sx=side*(c%2===1?-1:1);carMatrix(st.s,c,seatM,0);const e=seatM.elements;
+    for(let d=0;d<DOORS.length;d++){seatV.set(sx*(HALF_W+.55),0,DOORS[d]).applyMatrix4(seatM);const dd=Math.hypot(seatV.x-x,seatV.z-z);
+     if(dd<best){best=dd;out.x=seatV.x;out.z=seatV.z;out.y=top;out.yaw=Math.atan2(-sx*e[0],-sx*e[2]);out.car=c;out.door=d;}}}
+   return out;},
   /** Debug / gfx views only (window.__fi2.trains.cluster = s): all three trains pinned close together at track s; NaN = the timetable. */
   cluster:NaN,
   /** When the priming frame was drawn (performance.now(); NaN until then). */
@@ -238,7 +248,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     if(cluster){trainAt(0,now,st);st.s=wrapS(api.cluster+i*(TRAIN_LENGTH+14));st.v=0;st.at=-1;st.doors=0;runner.t[i]=trainPhase(i,now);continue;}
     scheduleAt(trainPhase(i,now)-runner.behind(i),st);trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);// where it is on THIS screen
     if(d>SIM_RANGE&&!(runner.behind(i)>0&&d<HIDE_RANGE)){runner.reset(i);runner.t[i]=trainPhase(i,now);noted[i]=0;wasBlocked[i]=0;continue;}
-    const stopAt=personAhead(st.s);runner.step(i,now,dt,stopAt,st);
+    const stopAt=personAhead(st.s);runner.step(i,now,dt,stopAt,st,f.boardHold===i);
     const blocked=Number.isFinite(stopAt);
     if(blocked&&!wasBlocked[i]&&st.v>1&&d<HORN_RANGE&&clock-hornAt[i]>6){hornAt[i]=clock;cue('train-horn',Math.max(.25,1-d/HORN_RANGE));}
     wasBlocked[i]=blocked?1:0;

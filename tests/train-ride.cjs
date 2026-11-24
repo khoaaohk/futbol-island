@@ -60,7 +60,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert.equal(ride.want(sp.x,sp.z,sp.y,false),null,'not on foot / busy: no Board');ride.want(sp.x,sp.z,sp.y,true);
  ride.want(sp.x,sp.z,sp.y,R.canBoardFrom(mode));
  assert(ride.board()&&ride.active&&ride.train===1,'boarded train 1 (from the moped, one press)');assert(dismounts===1&&mode==='walk','the moped was stowed (on foot) as the ride began');assert.equal(R.trainRideStore.get().riding,true);
- ride.frame(1/30,false);assert(seated>0,'the seat drives the player');assert.equal(run.ridden[1],1,'the ridden train draws its open variant');assert(ride.wire()&&ride.wire().train===1,'presence: the train seat');
+ ride.frame(1/30,false);assert(ride.walking>=0,'Board walks you to the door first');for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);assert.equal(ride.walking,-1,'the walk takes under 1 s');assert(seated>0,'the seat drives the player');assert.equal(run.ridden[1],1,'the ridden train draws its open variant');assert(ride.wire()&&ride.wire().train===1,'presence: the train seat');
  assert(ride.trick(),'the bench pose');assert(ride.holdPlayer(.4),'input locked while riding');
  Object.assign(states[1],{at:-1,doors:0,dwellLeft:0,next:0});ride.frame(1/30,false);assert(/^Next stop: West Beach\. Did you know\?/.test(R.trainRideStore.get().note),'leaving: the next-stop announcement');
  assert.equal(ride.getOff(false),false,'no getting off between stops');assert.equal(R.trainRideStore.get().canGetOff,false);
@@ -98,3 +98,36 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  const ci=tt.TRAIN_CROSSINGS.findIndex(c=>c.id==='causeway');assert(ci>=0&&typeof run.crossingClosed(ci)==='boolean');
  console.log('train-ride: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
+
+// Gameplay 2 (owner, Nov 24 2026): easier boarding. The zone (platform ± 2 m, ≤ 4 m back from the edge), Board ~4 s before the doors
+// open with the press queued, the door hold (runner), "Boarding now" on the board, the pulse (not with reduced motion), Town wiring.
+{const R2=L('lib/town/trainRide.ts'),S2=L('lib/town/trainSchedule.ts'),st0=tt.TRAIN_STATIONS[0],c0=tt.trackAt(st0.s),n0=tt.leftNormal(c0.tx,c0.tz),top=tt.bedAt(require('./lib/tsLoad.cjs').L('lib/town/trainLayout.ts').trainLayout().profile,st0.s)+tt.STATION_PLATFORM_Y;
+ const at=(du,v)=>{const c=tt.trackAt(st0.s+du);const n=tt.leftNormal(c.tx,c.tz);return {x:c.x+n.x*st0.side*v,z:c.z+n.z*st0.side*v};};
+ {const p=at(tt.STATION_HALF+1.5,3);assert.equal(R2.boardZoneAt(p.x,p.z,top),0,'1.5 m past the platform end: in the Board zone');}
+ {const p=at(tt.STATION_HALF+3,3);assert.equal(R2.boardZoneAt(p.x,p.z,top),-1,'3 m past it: not');}
+ {const p=at(0,R2.PLATFORM_EDGE+3.8);if(st0.id!=='south')assert.equal(R2.boardZoneAt(p.x,p.z,top),0,'3.8 m back from the edge: in');}
+ const stop=S2.stopOf(st0.id),T0=S2.TRAIN_STOPS[stop];
+ assert.equal(R2.boardIn({at:-1,next:stop,t:T0.arrive-1,doors:0,dwellLeft:0},stop),1+S2.DOOR_DELAY+S2.DOOR_MOVE*.5,'braking in: seconds until the doors are open');
+ assert(R2.boardIn({at:-1,next:stop,t:T0.arrive-1,doors:0,dwellLeft:0},stop)<=R2.BOARD_EARLY,'Board shows ~4 s before the doors open');
+ assert.equal(R2.boardIn({at:stop,next:stop+1,t:T0.arrive+3,doors:1,dwellLeft:8},stop),0,'open: now');
+ assert.equal(R2.boardIn({at:stop,next:stop+1,t:T0.depart-1,doors:0,dwellLeft:1},stop),Infinity,'closing: no');
+ // queued press: the doors open → on board at the next want()
+ const states=[0,1,2].map(()=>({s:0,at:-1,doors:0,dwellLeft:0,next:0,t:0}));const run={states,ridden:new Uint8Array(3),seatPose:(k,j,o)=>{o.x=c0.x;o.y=top+1;o.z=c0.z;o.yaw=0;return o;},
+  doorSpot:(k,x,z,o)=>{const p=at(0,1.95);o.x=p.x;o.z=p.z;o.y=top;o.yaw=0;o.car=0;o.door=1;return o;}};
+ const ride=R2.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{},loadQuiz:async()=>[],pay:()=>{}});const me=at(-8,3);
+ Object.assign(states[2],{at:-1,next:stop,t:T0.arrive-1.5});assert(ride.want(me.x,me.z,top,true),'braking in: Board shows');
+ assert(ride.board()&&!ride.active&&ride.queued===2,'a press while it brakes in is queued');assert.equal(ride.waiting,2,'waiting on the platform: this client holds its doors');
+ Object.assign(states[2],{at:stop,doors:.3,dwellLeft:12.5,t:T0.arrive+2});ride.want(me.x,me.z,top,true);assert(!ride.active,'doors still opening: waiting');
+ Object.assign(states[2],{doors:1,dwellLeft:11});assert.equal(ride.want(me.x,me.z,top,true),null);assert(ride.active&&ride.train===2&&ride.walking>=0,'doors open: boarded, walking to the door');
+ assert.equal(ride.waiting,2,'walking aboard: doors held');ride.dispose();
+ // the runner's door hold: time stands still before the doors shut, at most DOOR_HOLD s, then it leaves; the lag is caught up
+ const r=S2.createTrainRunner(),o=S2.newTrainState();let now=T0.depart-4,closeAt=-1;r.step(0,now,0,NaN,o,true);
+ for(let i=0;i<300;i++){now+=1/30;r.step(0,now,1/30,NaN,o,true);if(closeAt<0&&o.doors<1)closeAt=now;}
+ assert(closeAt-(T0.depart-S2.DOOR_DELAY-S2.DOOR_MOVE)>S2.DOOR_HOLD-.3&&closeAt-(T0.depart-S2.DOOR_DELAY-S2.DOOR_MOVE)<S2.DOOR_HOLD+.3,`doors held ~${S2.DOOR_HOLD} s (${(closeAt-(T0.depart-S2.DOOR_DELAY-S2.DOOR_MOVE)).toFixed(2)})`);
+ assert(r.behind(0)>0&&r.behind(0)<=S2.DOOR_HOLD+.1,'the hold leaves a small lag');for(let i=0;i<120*30;i++){now+=1/30;r.step(0,now,1/30,NaN,o,false);}assert(r.behind(0)<.05,'caught up within the next lap part');
+ assert.equal(S2.waitText({wait:0,here:true}),'Boarding now');
+ const css=read('components/TrainRideHud.module.css'),hud=read('components/TrainRideHud.tsx'),T=read('components/Town.tsx');
+ assert(/\.board\{animation:boardPulse/.test(css)&&/prefers-reduced-motion:reduce\)\{\.board\{animation:none\}/.test(css)&&/styles\.board/.test(hud),'Board pulses, not with reduced motion');
+ assert(/trainFrame\.boardHold=trainRide\.waiting/.test(T),'Town passes the door hold');
+ assert(/runner\.step\(i,now,dt,stopAt,st,f\.boardHold===i\)/.test(read('lib/town/trainRunning.ts')),'trainRunning holds the boarder\'s train');}
+console.log('train-ride gameplay2: ok');
