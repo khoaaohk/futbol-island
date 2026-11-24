@@ -99,3 +99,10 @@ console.log('train-rideux camera: ok');
  const Tn=read('components/Town.tsx');const i=Tn.indexOf('meNearHid=nearHide(meNearHid'),j=Tn.indexOf('renderer.render(scene,camera)');
  assert(i>0&&j>i&&/if\(meNearHid\)player\.root\.visible=false/.test(Tn)&&/if\(kenjiNearHid\)kr\.visible=false/.test(Tn),'Town hides me / Kenji near the camera before the render');}
 console.log('train-rideux fade: ok');
+// 5. the side shot on a station's platform side rises over the station house (a little extra elevation) instead of pulling in
+{const C=L('lib/town/trainCamClear.ts'),TL=L('lib/town/trainLayout.ts'),V=L('lib/town/venues.ts'),lay=TL.trainLayout().profile;
+ for(const st of tt.TRAIN_STATIONS){const nose=st.s+S.TRAIN_LENGTH/2,o=R.OUTSIDE[st.side>0?'left':'right'],sl=tt.wrapS(nose-o.at),c=tt.trackAt(sl),hy=tt.bedAt(lay,sl)+o.lh,ca=Math.cos(o.az),sa=Math.sin(o.az);
+  let got=-1;for(let x=0;x<=1.2;x+=.1){const e2=o.el+x,ce=Math.cos(e2)*o.dist;if(C.camClearFraction(c.x,hy,c.z,c.x+(ca*c.tx+sa*c.tz)*ce,hy+Math.sin(e2)*o.dist,c.z+(ca*c.tz-sa*c.tx)*ce,V.fieldSurfaceHeight)>=1){got=x;break;}}
+  assert(got>=0&&got<=.6,`${st.id}: the platform-side shot clears the station house with ${got.toFixed(1)} rad more elevation`);}
+ assert(/liftWant=x;break;/.test(read('lib/town/trainRide.ts')),'the outside camera rises over a station roof');}
+console.log('train-rideux station side: ok');

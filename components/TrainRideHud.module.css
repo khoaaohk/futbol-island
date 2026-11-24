@@ -35,7 +35,7 @@
 .exit[data-closing]{animation:exitIn .28s cubic-bezier(.2,.9,.3,1.3) both,exitPulse .9s ease-in-out .28s infinite}
 @keyframes exitIn{from{opacity:0;scale:.85}to{opacity:1;scale:1}}
 @keyframes exitPulse{0%,100%{scale:1}50%{scale:1.06}}
-@media (max-width:700px) and (orientation:portrait){.exit{bottom:calc(196px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}}
+@media (max-width:700px) and (orientation:portrait){.exit{bottom:calc(306px + env(safe-area-inset-bottom,0px));max-width:calc(100% - 32px)}}/* above the stick, the cluster and the corner map */
 @media (orientation:landscape) and (max-height:520px){.exit{bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.exit,.exit[data-closing]{animation:none}}
 

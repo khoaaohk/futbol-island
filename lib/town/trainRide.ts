@@ -226,7 +226,7 @@ export function createTrainRide(ports:Ports){
  // Camera views (owner, Nov 24 2026): the view, the ease from the last frame's camera (snap: train-relative position, its rotation;
  // viewT 0 … 1), the last applied pose and the train nose it was relative to; the Inside view's follow point (train frame) and side
  // (+1: the camera on the train frame's +x side); the outside / inside views' spring arms.
- let camView:TrainView='seat',viewT=1,refX=0,refZ=0,inX=0,inU=0,inSide=1,armO=-1,armI=-1,havePose=false;
+ let camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,inX=0,inU=0,inSide=1,armO=-1,armI=-1,havePose=false;
  const snapP=new T.Vector3(),snapQ=new T.Quaternion(),lastP=new T.Vector3(),lastQ=new T.Quaternion(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
@@ -299,7 +299,7 @@ export function createTrainRide(ports:Ports){
  function trainSeatS(run:Run){return wrapS(run.states[k].s-(j>>2)*12.4-6);}
  /** The camera's ease starts from wherever it is now (train-relative), over VIEW_EASE s. */
  function snapshot(){if(!havePose){viewT=1;return;}snapP.set(lastP.x-refX,lastP.y,lastP.z-refZ);snapQ.copy(lastQ);viewT=0;}
- function viewChanged(v:TrainView){if(v===camView)return;snapshot();camView=v;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;armO=armI=-1;trainRideStore.set({camView:v,viewNo:view.viewNo+1});}
+ function viewChanged(v:TrainView){if(v===camView)return;snapshot();camView=v;lift=liftWant=liftIn=0;liftSnap=true;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;armO=armI=-1;trainRideStore.set({camView:v,viewNo:view.viewNo+1});}
  /** Pick a camera view: Inside stands you up in the aisle (the cutaway); any other view sits you back down (your seat if it is still
   *  free, else the nearest free one). False while that cannot happen (walking aboard, stepping off, no free seat). */
  function setView(v:TrainView){
@@ -538,8 +538,13 @@ export function createTrainRide(ports:Ports){
    // the orbit on top, kept clear of roofs, rock, the hill and the truss by its own spring arm.
    if(camView!=='seat'&&camView!=='inside'){
     const o=OUTSIDE[camView],sl=wrapS(s-o.at),c=trackAt(sl,tpo),hy=bedAt(L.profile,sl)+o.lh,az=o.az+orb.yaw,ca=Math.cos(az),sa=Math.sin(az);
-    const el=Math.max(.06,Math.min(1.45,o.el+orb.pitch)),len=o.dist*(portrait?o.portrait:1)*orb.zoom,ce=Math.cos(el)*len;
-    v.set(c.x+(ca*c.tx+sa*c.tz)*ce,hy+Math.sin(el)*len,c.z+(ca*c.tz-sa*c.tx)*ce);clearArm(c.x,hy,c.z,v,h,false);camPos.copy(v);camLook.set(c.x,hy,c.z);}
+    const el0=Math.max(.06,Math.min(1.45,o.el+orb.pitch)),len=o.dist*(portrait?o.portrait:1)*orb.zoom,hx=ca*c.tx+sa*c.tz,hz=ca*c.tz-sa*c.tx;
+    // a station house between a platform-side camera and the train: rather than pull in against the cars, the camera rises over its
+    // roof (the least extra elevation that clears, re-checked 4× a second, eased up fast and down slowly); the spring arm stays the net
+    liftIn-=h;if(liftIn<=0){liftIn=.25;liftWant=0;for(let x=0;x<=1.2;x+=.1){const e2=Math.min(1.45,el0+x),c2=Math.cos(e2)*len;if(camClearFraction(c.x,hy,c.z,c.x+hx*c2,hy+Math.sin(e2)*len,c.z+hz*c2,ports.ground)>=1){liftWant=x;break;}}}
+    if(liftSnap){lift=liftWant;liftSnap=false;}else lift+=(liftWant-lift)*(reduced?1:1-Math.exp(-(liftWant>lift?6:1.5)*h));
+    const el=Math.min(1.45,el0+lift),ce=Math.cos(el)*len;
+    v.set(c.x+hx*ce,hy+Math.sin(el)*len,c.z+hz*ce);clearArm(c.x,hy,c.z,v,h,false);camPos.copy(v);camLook.set(c.x,hy,c.z);}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
    // a view change eases from where the camera was (relative to the train's nose, so it keeps up with the train)
    {const n=trackAt(s,tpn);refX=n.x;refZ=n.z;}
