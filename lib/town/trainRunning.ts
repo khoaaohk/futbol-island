@@ -37,6 +37,10 @@ const tunnelLamps=(s:number)=>{const a=wrapS(s-TUNNEL.west.s+20);return a<TUNNEL
 export const CLACK_RANGE=45,CLACK_STEP=CAR_LENGTH+CAR_GAP,DOOR_SOUND=35,ARRIVE_SOUND=70;
 /** Platform announcements (Nov 24 polish): within ON_PLATFORM m of the platform's middle, ANNOUNCE_S s before the train pulls in. */
 export const ON_PLATFORM=22,ANNOUNCE_S=10;
+/** Owner bug (Nov 25 2026): the box tier showed on a train clearly close on screen from the high overview camera (it was chosen by the
+ *  camera's ground distance). Now by on-screen size: a car's length over the screen's half-height (12.4 m · P[5] / 3-D distance).
+ *  The box only below LOD_FAR_IN (~40 px on an 800 px tall screen), back to full detail above LOD_NEAR_OUT (hysteresis, no flicker). */
+export const LOD_FAR_IN=.10,LOD_NEAR_OUT=.125;
 export const ANIMATE_RANGE=80,LOD_RANGE=150,HIDE_RANGE=400,SIM_RANGE=260,BELL_RANGE=60,HORN_RANGE=220,XING_SHOW=160,XING_SHOW_PED=110,XING_HZ=4,BOARD_SHOW=150,BOARD_HZ=1;
 /** Board flips (Nov 24 polish): within FLIP_RANGE m, FLIP_S s long, redrawn at FLIP_HZ while flipping. */
 export const FLIP_RANGE=45,FLIP_S=.3,FLIP_HZ=20;
@@ -400,7 +404,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
     const show=d<HIDE_RANGE&&frustum.intersectsSphere(sphere);if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
-    const far=d>LOD_RANGE;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
+    const d3=Math.hypot(d,sphere.center.y-cam.y),size=12.4*f.camera.projectionMatrix.elements[5]/Math.max(1,d3);
+    const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}

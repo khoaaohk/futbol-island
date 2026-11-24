@@ -76,7 +76,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  assert((run.match(/new T\.InstancedMesh\(/g)||[]).length===2,'an InstancedMesh per train + one for all door leaves (≤ 4 draws)');
  assert(/castShadow=false/.test(run)&&!/PointLight|SpotLight|castShadow=true/.test(run),'no lights, no shadow pass for the trains');
  assert(!/onBeforeCompile|ShaderMaterial|customProgramCacheKey/.test(run)&&/createVehicleMaterial/.test(run),'no new shader code: the road traffic vehicle material');
- assert(/LOD_RANGE=150\b/.test(run)&&/buildCarBox/.test(run),'one box per car past 150 m');assert(/XING_HZ=4\b/.test(run),'crossings on a 4 Hz / event clock');
+ assert(/LOD_FAR_IN=\.10,LOD_NEAR_OUT=\.125/.test(run)&&/buildCarBox/.test(run),'one box per car only when small on screen (with hysteresis)');assert(/XING_HZ=4\b/.test(run),'crossings on a 4 Hz / event clock');
  assert(/compileAsync\(tr\.root/.test(read('components/Town.tsx')),'train programs warmed at load');
  assert(/FLIP_RANGE=45,FLIP_S=\.3,FLIP_HZ=20\b/.test(run)&&/!f\.reduced/.test(run)&&/trainFrame\.reduced=reduced/.test(town),'board flip: 0.3 s at 20 Hz on a change, near boards only, off with reduced motion');
  assert(/BOARD_HZ=1\b/.test(run),'boards on a 1 Hz clock');assert(/BELL_RANGE=60\b/.test(run)&&/ANIMATE_RANGE=80\b/.test(run)&&/HIDE_RANGE=400\b/.test(run),'bell 60 m, animate 80 m, hide 400 m');
@@ -95,7 +95,9 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  // all three trains pinned at the North station (the gfx view): 6 cars in one draw
  const north=tt.TRAIN_STATIONS[0],p=tt.trackAt(north.s);run.cluster=north.s+20;at(p.x+40,25,p.z+60,p.x,p.z);player.x=p.x;player.z=p.z+30;
  run.update({dt:1/30,camera:cam,player});let d=run.drawn;assert.equal(d.cars,6,'six cars drawn');{const xe=tt.trackAt(tt.TRAIN_CROSSINGS[1].s);at(xe.x+30,20,xe.z+40,xe.x,xe.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.crossings>=1,'crossings shown near North Beach (Phase 4: a footpath crossing within 110 m)');at(p.x+40,25,p.z+60,p.x,p.z);run.update({dt:1/30,camera:cam,player});d=run.drawn;}assert(d.doors>0&&d.far<6,'near tier with doors');
- at(p.x+40,25,p.z+200,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.far>0,'box tier past 150 m');at(p.x+40,25,p.z+60,p.x,p.z);assert(d.boards>=1,'the North board shown');
+ at(p.x+30,60,p.z+178,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert.equal(run.drawn.far,0,'Nov 25: ~180 m off but big on screen (overview camera): full detail, not the box');
+ at(p.x+40,25,p.z+340,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.far>0,'box tier only when tiny on screen');
+ at(p.x+40,25,p.z+230,p.x,p.z);run.update({dt:1/30,camera:cam,player});assert(run.drawn.far>0,'hysteresis: stays the box just inside the switch');at(p.x+40,25,p.z+60,p.x,p.z);assert(d.boards>=1,'the North board shown');
  // looking away: nothing drawn; far away (town square, 400 m+ from every train): nothing drawn
  at(p.x+40,25,p.z+60,p.x+80,p.z+200);run.update({dt:1/30,camera:cam,player});assert.equal(run.drawn.cars,0,'off-screen: no draw');
  run.cluster=NaN;at(103,30,-20,103,-60);player.x=103;player.z=-20;for(let k=0;k<40;k++)run.update({dt:1/30,camera:cam,player});d=run.drawn;/* boards switch at 1 Hz */
