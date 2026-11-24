@@ -37,6 +37,7 @@ export const ANIMATE_RANGE=80,LOD_RANGE=150,HIDE_RANGE=400,SIM_RANGE=260,BELL_RA
 export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 /** Track geometry the cars sit on (trainWorld.ts values: rail top above the bed, ballast top). */
 const RAIL_TOP=.34,BALLAST_TOP=.12;
+const LEAN=.012,LEAN_MAX=.035;
 const WHEEL_R=.43,BOGIE_HALF=4.5,HALF_W=1.4,BODY_Y0=1.05,SPLIT_Y=2.05,SIDE_TOP=3.1,ROOF_TOP=3.75;
 const DOORS=[-3.7,-.2,3.1],DOOR_HALF=.65,DOOR_Y0=1.12,DOOR_Y1=3.02,WIN_Y0=2.18,WIN_Y1=3.0;
 /** Phase 3 (riding): the window runs between the doors (car-local z), shared by the panes, the open variant's holes and the seats. */
@@ -295,9 +296,12 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
  const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
  /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
- function carMatrix(s:number,c:number,out:T.Matrix4){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
+ function carMatrix(s:number,c:number,out:T.Matrix4,v=0){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
   const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
-  bz.set((pa.x-pb.x)*rev,(ya-yb)*rev,(pa.z-pb.z)*rev).normalize();by.set(0,1,0);bx.crossVectors(by,bz).normalize();by.crossVectors(bz,bx);
+  // AAA audit (Nov 24 2026): the body leans into a curve with the speed (the cant a real line gives its curves): v² × curvature,
+  // at most LEAN_MAX rad (≈1.5° at 8 m/s on the tightest 30 m curve). Seats use the same matrix, so riders lean with the car.
+  const lx=pb.tz,lz=-pb.tx,k=((pa.tx-pb.tx)*lx+(pa.tz-pb.tz)*lz)/(2*BOGIE_HALF),th=Math.max(-LEAN_MAX,Math.min(LEAN_MAX,v*v*k*LEAN));
+  bz.set((pa.x-pb.x)*rev,(ya-yb)*rev,(pa.z-pb.z)*rev).normalize();by.set(lx*th,1,lz*th);bx.crossVectors(by,bz).normalize();by.crossVectors(bz,bx);
   out.makeBasis(bx,by,bz);out.setPosition((pa.x+pb.x)/2,(ya+yb)/2,(pa.z+pb.z)/2);return out;}
  const seatM=new T.Matrix4(),seatV=new T.Vector3(),fresh=newTrainState();
  const api={
@@ -308,7 +312,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    *  timetable and the runner's lag (friends are posed before this frame's update); without it, from this frame's states. */
   seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{
    let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
-   const c=Math.min(TRAIN_CARS-1,j>>2),side=(j&1)?1:-1;carMatrix(s,c,seatM);seatV.set(side*SEAT_ROOT_X,CAR_FLOOR_Y,seatZ(j)).applyMatrix4(seatM);
+   const c=Math.min(TRAIN_CARS-1,j>>2),side=(j&1)?1:-1;carMatrix(s,c,seatM,states[k].v);seatV.set(side*SEAT_ROOT_X,CAR_FLOOR_Y,seatZ(j)).applyMatrix4(seatM);
    const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(-side*e[0],-side*e[2]);return out;},
   /** Debug / gfx views only (window.__fi2.trains.cluster = s): all three trains pinned close together at track s; NaN = the timetable. */
   cluster:NaN,
@@ -371,7 +375,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
     tr.look.lamp.z=night*2.6;// the window band: the indicator channel, lit by the shared night factor
-    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4);tr.mesh.setMatrixAt(c,m4);
+    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v);tr.mesh.setMatrixAt(c,m4);
      if(far)continue;writePlate(i,c,m4);np++;// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
       for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);}}}
@@ -386,6 +390,9 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   },
   /** Phase 3: crossing ci's lamps are flashing or its arms are not up (road traffic stops at it: the causeway's cayTraffic). */
   crossingClosed(ci:number){const x=crossings[ci];return !!x&&(x.lamps||x.arm>.02||x.target>0);},
+  /** Headless checks only (read, never per frame): every crossing's live state, and the pure timetable functions. */
+  get xings(){return crossings.map((x,ci)=>({id:TRAIN_CROSSINGS[ci].id,lamps:x.lamps,arm:+x.arm.toFixed(3),target:x.target,x:x.x,z:x.z,shown:x.mesh.visible}));},
+  sched:{trainAt,crossingFor,trainPhase,clock:()=>trainClockSec(),stops:TRAIN_STOPS,crossings:TRAIN_CROSSINGS,trackAt:(s:number)=>trackAt(s,{x:0,z:0,tx:1,tz:0}),bed:(s:number)=>bedAt(L.profile,s)},
   /** For tests and the gfx probe: what is drawn right now. */
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
    return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
