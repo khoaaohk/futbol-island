@@ -179,7 +179,7 @@ export function buildTrainWorld(tools:TrainTools){
   for(let u=-STATION_HALF;u<STATION_HALF;u+=5){const f=trackAt(st.s+u+2.5),fn=leftNormal(f.tx,f.tz),Q=(v:number,y:number)=>[f.x+fn.x*sg*v,y,f.z+fn.z*sg*v];
    const m=Q(v0+depth/2,0),foot=bed-.05;
    plat.box(m[0],top-.04,m[2],f.tx,f.tz,2.53,depth/2,.04);platSide.box(m[0],(top-.08+foot)/2,m[2],f.tx,f.tz,2.5,depth/2-.02,(top-.08-foot)/2);
-   const e=Q(v0+.28,0);edge.box(e[0],top+.005,e[2],f.tx,f.tz,2.53,.18,.006);
+   const e=Q(v0+.28,0);edge.box(e[0],top+.012,e[2],f.tx,f.tz,2.53,.18,.008);// 2 cm proud of the platform top (was 1 cm: flickered at range)
    // Walk surfaces: one box when the piece is near square to the axes, else overlapping 2.3 m tiles (no gaps at any yaw).
    const square=Math.min(Math.abs(f.tx),Math.abs(f.tz))<.2;
    {if(square){const ax=Math.abs(f.tx),az=Math.abs(f.tz);walkSurfaces.push({x:m[0],z:m[2],w:5*ax+depth*az,d:5*az+depth*ax,height:top,stepUp:.6});}
@@ -196,8 +196,9 @@ export function buildTrainWorld(tools:TrainTools){
   {const e=(u:number)=>{const a=P(u,hm,0);plaster.box(a[0],y0+.1+(H-.1)/2,a[2],c.tx,c.tz,.09,hd/2-.1,(H-.1)/2);};e(-3.91);e(3.91);}
   wall(-4,-2.4,hv0+.09,y0+.1,y0+H);wall(2.4,4,hv0+.09,y0+.1,y0+H);wall(-2.4,2.4,hv0+.09,y0+2.25,y0+H);
   // Ticket-window panes on the front and both ends: warm at night (machineNightGlow).
-  for(const u of [-3.2,3.2]){const a=P(u,hv0+.03,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.5,.03,.42);}
-  for(const u of [-3.97,3.97]){const a=P(u,hm,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.03,.8,.42);}
+  // Nov 23 2026 (owner: the house ends flickered): the panes stand 3 cm proud of the wall faces (their outer faces were coplanar with the plaster).
+  for(const u of [-3.2,3.2]){const a=P(u,hv0,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.5,.03,.42);}
+  for(const u of [-4,4]){const a=P(u,hm,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.03,.8,.42);}
   {const a=P(0,hv0+.6,0);pane.box(a[0],y0+1.3,a[2],c.tx,c.tz,1.6,.03,.75);}
   // Dark timber: corner and door posts, a sill band and the eave beam.
   for(const [u,v] of [[-4,hv0],[4,hv0],[-4,hv1],[4,hv1],[-2.4,hv0],[2.4,hv0]]){const a=P(u,v,0);timber.box(a[0],y0+H/2+.05,a[2],c.tx,c.tz,.11,.11,H/2+.05);}
