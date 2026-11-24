@@ -244,6 +244,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       case 'animal-whale':whaleSong();return;
       // The Island Line (Nov 23 2026, lib/town/trainRunning.ts): the level crossing's bell (a bright two-partial "kan", rung every
       // ~0.55 s while the lamps flash, only within 60 m, quieter further off) and the train's two-note horn for someone on the track.
+      case 'train-toot':{/* Gameplay 2 (Nov 24 2026): Conductor Kenji's friendly toot: one short, soft blast of the horn's chord (the full horn is the louder one) */for(const[hz,w]of[[311,1],[370,.85],[466,.7]] as const)tone(hz*1.003,hz*.99,.2,.035*w*gain,'sawtooth',0,.03);tone(155,153,.2,.025*gain,'triangle',0,.03);return;}
       case 'train-bell':tone(1320,1300,.2,.045*gain,'triangle',0,.003);tone(2640,2600,.12,.014*gain,'sine',0,.003);return;
       case 'train-horn':{/* owner Nov 24: a louder, real train honk: a three-reed air-horn chord (Eb-Gb-Bb, slightly detuned), a short toot then a long blast, a little air hiss and a sag at the release */const blast=(d:number,len:number,v:number)=>{for(const[hz,w]of[[311,1],[370,.85],[466,.7]] as const){tone(hz*1.004,hz*.985,len,.07*v*w*gain,'sawtooth',d,.035);tone(hz*.996,hz*.98,len,.05*v*w*gain,'square',d,.035);}tone(155,152,len,.05*v*gain,'triangle',d,.04);hiss(1800,len*.9,.025*v*gain,d);};blast(0,.28,.8);blast(.36,1.15,1);return;}
       // Phase 4 (Nov 23 2026): the wheels' "ka-tan" over a rail joint (two soft knocks, front and rear bogie; trainRunning sends one per

@@ -26,7 +26,7 @@ import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
 import {trainLayout} from './trainLayout';
-import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_AHEAD,LOOK_HALF,STOP_SHORT,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
+import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_AHEAD,LOOK_HALF,STOP_SHORT,HELD_V,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,type TrainState} from './trainSchedule';
 import {createVehicleMaterial,PART} from '../graphics/trafficVehicles';
 import {MACHINE_NIGHT} from '../graphics/machineNightGlow';
@@ -70,6 +70,9 @@ export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
+import {KENJI,kenjiLine} from './trainConductor';
+/** Gameplay 2: the player's radius against a car's box (block and slide); a car's box: ±HALF_W across, ±CAR_LENGTH/2 along. */
+export const PLAYER_R=.35;
 export {LIVERIES};
 export {buildCarGeometry,buildCarBox};
 // ---------------------------------------------------------------- crossings (one mesh each; arms = "wheels", lamps = indicators)
@@ -148,7 +151,9 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
  /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
   *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
-export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null};
+export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null;
+ /** Gameplay 2: Conductor Kenji's new line this frame (trainConductor.ts), or null; the train he speaks from (-1: none) and its cab
+  *  top (where Town keeps the bubble while that train holds for the local player). */say:string|null;sayTrain:number;cabX:number;cabY:number;cabZ:number};
 type Person={x:number;y:number;z:number};
 export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null){
  const L=trainLayout(),root=new T.Group();root.name='island-line-trains';scene.add(root);
@@ -191,7 +196,9 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const pa={x:0,z:0,tx:1,tz:0},pb={x:0,z:0,tx:1,tz:0},pc={x:0,z:0,tx:1,tz:0},xs={lamps:false,arm:0};
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
- const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null},hit={gap:0,side:0,d:0,s:0};
+ const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null,say:null,sayTrain:-1,cabX:0,cabY:0,cabZ:0},hit={gap:0,side:0,d:0,s:0};
+ // Conductor Kenji: seconds the local player has stood in front of train i while it stands (-1: not), his stage, the line counter
+ const kenjiT=new Float32Array(TRAIN_COUNT).fill(-1),kenjiStage=new Uint8Array(TRAIN_COUNT);let kenjiN=0,kenjiQuiet=-1e9;
  let primeLeft=0,clock=0,bellWait=0,boardWait=0,flipWait=0,xingWait=0,lastNow=0,warming=false;
  const onPlatformSide=(s:number,side:number)=>{for(const st of TRAIN_STATIONS)if(side===st.side&&Math.abs(((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2)<STATION_HALF+1)return true;return false;};
  /** Allocation-free: is person p on the line between front + from and front + to (m along)? Fills `hit` (gap along, side, distance). */
@@ -204,10 +211,10 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    hit.s=wrapS(k*TRACK_DS+along);const g=((hit.s-front)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2;hit.gap=g;hit.side=side;hit.d=ad;return true;}
   return false;}
  /** The nearest person ahead of train front `s`: their track s (NaN: clear); `who` = their index. */
- let who=-1;const whoHit={side:0,d:0};
+ let who=-1,bestGap=Infinity;const whoHit={side:0,d:0};
  function personAhead(s:number){let best=Infinity,bs=NaN;who=-1;
   for(let k=0;k<nPeople;k++)if(onLine(people[k],s,0,LOOK_AHEAD+STOP_SHORT,LOOK_HALF)&&hit.gap<best){best=hit.gap;bs=hit.s;who=k;whoHit.side=hit.side;whoHit.d=hit.d;}
-  return bs;}
+  bestGap=best;return bs;}
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
  const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
  /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
@@ -250,13 +257,13 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   prime(){primeLeft=1;},
   warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;},
   update(f:TrainFrame):TrainFrameResult{
-   result.nudgeX=result.nudgeZ=0;result.note=null;if(warming)return result;
+   result.nudgeX=result.nudgeZ=0;result.note=null;result.say=null;result.sayTrain=-1;if(warming)return result;
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
     for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
     doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
    const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
    pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
-   const riding=f.riding??-1;nPeople=0;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
+   const riding=f.riding??-1;nPeople=0;bestGap=Infinity;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
    const cluster=Number.isFinite(api.cluster),night=MACHINE_NIGHT.value as number;
    // ---- trains near the camera are simulated (people, catch-up); the rest are exactly where the timetable says
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];
@@ -277,12 +284,26 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      if(riding<0){if(st.at>=0){annIn[i]=-1;const k=st.at;if(closing&&annOut[i]!==k&&onPlatform(k,f.player)){annOut[i]=k;result.note??=`The train for ${destOf(k)} is leaving.`;}}
       else{annOut[i]=-1;const k=st.next,w=((TRAIN_STOPS[k].arrive-st.t)%360+360)%360;
        if(w<=ANNOUNCE_S&&annIn[i]!==k&&onPlatform(k,f.player)){annIn[i]=k;cue('train-chime',.7);result.note??=`The train for ${destOf(k)} is arriving. Please stand behind the yellow line.`;}}}}
+    // Gameplay 2: Conductor Kenji, for the LOCAL player standing in front of this train while it stands (at a stop or held for
+    // them, within KENJI.near m): a soft toot and a line from the cab, a hurry line after KENJI.hurryAt s; quiet for KENJI.cooldown s
+    // after a hold ends. Then the step-off below (STEP_OFF_AFTER s). Remote players: the approach horn above only.
+    if(blocked&&who===0&&st.v<HELD_V&&bestGap<KENJI.near){if(kenjiT[i]<0){kenjiT[i]=0;kenjiStage[i]=0;}else kenjiT[i]+=dt;
+     const stage=kenjiT[i]>=KENJI.hurryAt?2:1;
+     if(stage>kenjiStage[i]&&(stage===2||clock-kenjiQuiet>KENJI.cooldown)){kenjiStage[i]=stage;cue('train-toot',.8);result.say=stage===2?kenjiLine(kenjiN,true):kenjiLine(kenjiN++);}
+     if(kenjiStage[i]>0){result.sayTrain=i;carMatrix(st.s,0,m4,0);pv3.set(0,3.75+.5,CAR_LENGTH/2-.6).applyMatrix4(m4);result.cabX=pv3.x;result.cabY=pv3.y;result.cabZ=pv3.z;}}
+    else if(kenjiT[i]>=0){kenjiT[i]=-1;if(kenjiStage[i]>0)kenjiQuiet=clock;kenjiStage[i]=0;}
     // Held for the LOCAL player: after STEP_OFF_AFTER s, ask once and slide them gently off the track (never a knock).
     if(blocked&&who===0&&runner.heldFor(i)>=STEP_OFF_AFTER){if(!noted[i]){noted[i]=1;result.note='Please step off the track';}
      if(whoHit.d<LOOK_HALF+.4){const t=trackAt(stopAt,pa),k=SLIDE_SPEED*dt*(whoHit.side||1);result.nudgeX+=t.tz*k;result.nudgeZ+=-t.tx*k;}}
     else if(!blocked)noted[i]=0;}
-   // ---- the local player never stands inside a car: pushed out to the side
-   if(riding<0)for(let i=0;i<TRAIN_COUNT;i++){if(onLine(people[0],states[i].s,-TRAIN_LENGTH-.3,0,HALF_W+.4)){const push=HALF_W+.45-hit.d,t=trackAt(hit.s,pa);if(push>0){result.nudgeX+=t.tz*hit.side*push;result.nudgeZ+=-t.tx*hit.side*push;}break;}}
+   // ---- Gameplay 2: solid trains. One oriented box per car (its timetable pose, ±HALF_W × ±CAR_LENGTH/2 grown by PLAYER_R): the
+   // local player on foot or on a scooter / bike / moped is pushed out along the shallower axis every frame (block and slide: they
+   // never pass through and never stand inside a car). Riders are not tested. A few dot products per car near the player.
+   if(riding<0){const P=f.player;for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];trackAt(st.s-TRAIN_LENGTH/2,pc);if(Math.abs(pc.x-P.x)+Math.abs(pc.z-P.z)>TRAIN_LENGTH+4)continue;
+    for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,m4,st.v);const e=m4.elements,dx=P.x+result.nudgeX-e[12],dy=P.y-e[13],dz=P.z+result.nudgeZ-e[14];if(dy< -1.2||dy>3.9)continue;
+     const ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az,hx=HALF_W+PLAYER_R,hz=CAR_LENGTH/2+PLAYER_R;
+     if(Math.abs(lx)>=hx||Math.abs(lz)>=hz)continue;const px=hx-Math.abs(lx),pz=hz-Math.abs(lz);
+     if(px<=pz){const k=Math.sign(lx||1)*px/ax;result.nudgeX+=e[0]*k;result.nudgeZ+=e[2]*k;}else{const k=Math.sign(lz||1)*pz/az;result.nudgeX+=e[8]*k;result.nudgeZ+=e[10]*k;}}}}
    // ---- crossings: state at XING_HZ (events), arm swing per frame only while moving and drawn; the bell within BELL_RANGE m
    xingWait-=dt;const tick=xingWait<=0;if(tick)xingWait=1/XING_HZ;let bellX=Infinity;
    for(let ci=0;ci<crossings.length;ci++){const x=crossings[ci],show=Math.hypot(x.x-cam.x,x.z-cam.z)<x.show;if(x.mesh.visible!==show)x.mesh.visible=show;

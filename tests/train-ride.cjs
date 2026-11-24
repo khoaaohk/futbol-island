@@ -110,6 +110,26 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  run.ridden[0]=1;run.update({dt:1/30,camera:cam,player,nowSec:now+.05});const d=run.drawn;assert(d.plates,'destination plates drawn near');assert.equal(d.ridden,1);
  let n=0;scene.traverse(o=>{if(o.name==='train-plates'){n++;assert.equal(o.material,scene.getObjectByName('train-board-north').material,'plates use the board material (no new program)');}});assert.equal(n,1,'one plate mesh for every cab');
  const ci=tt.TRAIN_CROSSINGS.findIndex(c=>c.id==='causeway');assert(ci>=0&&typeof run.crossingClosed(ci)==='boolean');
+ // Gameplay 2 (owner, Nov 24 2026): solid trains (one oriented box per car: block and slide, never inside) and Conductor Kenji.
+ {const m=new T.Matrix4();run.carMatrixOf(0,0,m);const e=m.elements,c={x:e[12],y:e[13],z:e[14]},bx={x:e[0],z:e[2]},bz={x:e[8],z:e[10]};
+  // inside car 0, 0.5 m off its centre line: pushed out sideways to HALF_W + PLAYER_R in one frame
+  const inside={x:c.x+bx.x*.5,y:c.y,z:c.z+bx.z*.5};const r=run.update({dt:1/30,camera:cam,player:inside,nowSec:now+.1});
+  const ox=inside.x+r.nudgeX-c.x,oz=inside.z+r.nudgeZ-c.z,lat=ox*bx.x+oz*bx.z;assert(Math.abs(Math.abs(lat)-(1.4+TRN.PLAYER_R))<.02,`pushed out of the car to its side (${lat.toFixed(2)})`);
+  // walking into the side: pushed straight back out (no pass-through), the along-car motion kept (slide)
+  const side={x:c.x+bx.x*1.6+bz.x*2,y:c.y,z:c.z+bx.z*1.6+bz.z*2};const r2=run.update({dt:1/30,camera:cam,player:side,nowSec:now+.15});
+  const along=r2.nudgeX*bz.x+r2.nudgeZ*bz.z,out=r2.nudgeX*bx.x+r2.nudgeZ*bx.z;assert(Math.abs(along)<1e-6&&out>0,'side contact: pushed out across only (slide along)');
+  const rider=run.update({dt:1/30,camera:cam,player:inside,nowSec:now+.2,riding:0});assert(!rider.nudgeX&&!rider.nudgeZ,'riders are not pushed');
+  const far={x:c.x+50,y:c.y,z:c.z+50};const r3=run.update({dt:1/30,camera:cam,player:far,nowSec:now+.25});assert(!r3.nudgeX&&!r3.nudgeZ,'clear of the cars: untouched');}
+ {const K=L('lib/town/trainConductor.ts');assert(K.KENJI_LINES.length>=4&&K.KENJI_LINES.includes('Even Messi waits for the whistle. Off the track, please!'),'the owner lines');
+  assert.notEqual(K.kenjiLine(0),K.kenjiLine(1),'lines rotate');assert(/^Conductor Kenji: /.test(K.kenjiLine(5,true)));
+  const Rn=read('lib/town/trainRunning.ts');assert(/cue\('train-toot',\.8\)/.test(Rn)&&/clock-kenjiQuiet>KENJI\.cooldown/.test(Rn),'a soft toot, then quiet for the cooldown');
+  assert(/blocked&&who===0&&st\.v<HELD_V/.test(Rn),'Kenji only speaks to the local player (remote players: the horn)');
+  assert(/case 'train-toot'/.test(read('lib/audio/islandSound.ts')),'the toot goes through the island sound kit (mute applies)');
+  assert(/kenjiBubble\.show\(0,tr\.say,KENJI\.bubbleS\)/.test(read('components/Town.tsx')),'Town shows the bubble at the cab');}
+ // Kenji live: the local player on the line in front of a standing train (train 0 at North): a line at once, a hurry line after 3 s
+ {const st0=run.states[0],ahead=tt.trackAt(st0.s+6),me={x:ahead.x,y:tt.bedAt(LW('lib/town/trainLayout.ts').trainLayout().profile,st0.s+6)+.4,z:ahead.z};const said=[];let tt0=now+.3;
+  for(let i=0;i<5*30;i++){tt0+=1/30;const r=run.update({dt:1/30,camera:cam,player:me,nowSec:tt0});if(r.say)said.push([i/30,r.say]);}
+  assert(said.length===2&&said[0][0]<.5&&said[1][0]>2.8&&said[1][0]<3.4,`a line, then the hurry line at ~3 s (${JSON.stringify(said)})`);}
  console.log('train-ride: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
 
