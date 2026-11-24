@@ -335,7 +335,7 @@ export const BUG_HOMES:readonly BugHome[]=[
  {id:'ground-beetle',band:'water',x:650,z:14,wander:5}, // north beach (sand): tiger beetles love beaches
  {id:'stag-beetle',band:'water',x:718,z:20,wander:3},   // north-east beach driftwood (sand)
  {id:'dragonfly',band:'water',x:480,z:144,wander:6},    // west beach
- {id:'damselfly',band:'water',x:502,z:212,wander:5},    // south-west beach
+ {id:'damselfly',band:'water',x:484,z:184,wander:5},    // west beach (Nov 23 2026: was 502,212, now the Summit Isle station)
  {id:'ant',band:'water',x:570,z:234,wander:3},          // south-west beach
  {id:'cicada',band:'water',x:736,z:226,wander:4},       // south-east shore
  // MEADOW (low foothills south of the north line, away from paths and shore)

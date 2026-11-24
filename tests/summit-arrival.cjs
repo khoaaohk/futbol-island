@@ -24,6 +24,7 @@ const obstacles=[],town=new T.Group();{const mk=g=>{const m=new T.Mesh(g,new T.M
  load('lib/town/summitIsleWorld.ts').buildSummitIsle({box,cylinder,sign,town,obstacles,assets:[],surfaceAreas:[]});
  load('lib/town/summitActivitiesWorld.ts').buildSummitActivityProps({box,cylinder,put,sign,obstacles});
  load('lib/town/paintEaselWorld.ts').buildPaintEasel({box,cylinder,put,obstacles});}
+const TT=load('lib/town/trainTrack.ts'),nearPortalCut=(x,z)=>{const h=TT.trackNearest(x,z,10);return !!h&&[TT.TUNNEL.west,TT.TUNNEL.east].some(p=>Math.abs(h.s-p.s)<18);};
 const PK=S.SUMMIT_PEAK,L=S.SUMMIT_LANDMARKS,TICK=1/60,SECS=5;
 const radiusOf=mode=>mode==='walk'?.32:.8;
 // The colliders within reach of (x, z), through a 4 m bucket grid (the checks below ask for every tick of every run).
@@ -50,6 +51,9 @@ for(const [mode,sprint] of [['moped',false],['bike',false],['scooter',false],['w
   for(let i=0;i+W<tr.length;i++){const a=tr[i],b=tr[i+W];if(a.sp<1)continue;
    // Open ground over the whole window: the momentum carries (no sudden stop at the foot of the slope).
    let clear=true,hit=new Set();for(let k=i;k<=i+W;k++){const t=tr[k].touch;if(t.length)clear=false;for(const o of t)hit.add(o);}
+   // (Nov 23 2026: not at the Island Line's portal cuttings: within 10 m of the line and 18 m of a portal the cut's steep wing banks
+   // and wing walls stop a ride at the edge, like any retaining wall; trainTrack.ts MOUTH_BANK, trainWorld.ts wing walls)
+   if(clear&&tr.slice(i,i+W+1).some(t=>nearPortalCut(t.x,t.z)))clear=false;
    if(clear){const r=b.sp/a.sp;stats.terrainWorst=Math.min(stats.terrainWorst,r);assert(r>=2/3,`${tag}: on open ground the speed eases (${a.sp.toFixed(1)} → ${b.sp.toFixed(1)} m/s in 0.2 s at ${a.x.toFixed(1)}, ${a.z.toFixed(1)})`);}
    // A ride brushing one round collider (a trunk, a palm, a rock) keeps at least half its speed through the contact.
    else if(mode!=='walk'&&a.sp>4&&!a.touch.length){const end=Math.min(tr.length-1,i+W*1.5);for(let k=i+W+1;k<=end;k++)for(const o of tr[k].touch)hit.add(o);

@@ -70,7 +70,7 @@ export function sNear(x:number,z:number){let b=0,bd=Infinity;for(let i=0;i<TRACK
 // ---- The tunnel through Summit Isle's summit (owner ruling: straight through). Portals sit where the hill above clears the tube
 // roof by ≥ 1.5 m; the east one 6 m out from the Phase 0 spot so the climb trail (which crosses there) runs over the tunnel roof.
 export const TUNNEL_BED=2.2,TUNNEL_HALF_WIDTH=3.6,TUNNEL_HEIGHT=5.6;
-export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:668.5,z:45.5,s:sNear(668.5,45.5)}} as const;
+export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:670.5,z:43.1,s:sNear(670.5,43.1)}} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
 export const inTunnelS=(s:number)=>s>TUNNEL.west.s&&s<TUNNEL.east.s;
 
 // ---- Summit Isle's track bed: piecewise linear in s (beach → station flat → west portal; east portal → north beach).
@@ -85,31 +85,42 @@ export function summitBedAt(s:number){const K=SUMMIT_KEYS;if(s<=K[0][0]||s>=K[K.
 
 /** The Summit cutting / embankment: the ground within `flat` m of the centre line is the bed; beyond, banks of CUT_BANK (rise per
  *  metre) back to the natural slope. Not inside the tunnel (the hill stays over it). Station stretch: a wider flat (house, path). */
-export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26;
+export const CUT_FLAT=3.4,CUT_STATION_FLAT=10,CUT_BANK=1.3,CUT_REACH=26,STATION_BANK=.55;
 const SUMMIT_BOX=(()=>{let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(let i=0;i<TRACK.n;i++){const s=i*TRACK_DS;if(!onSummitTrackS(s))continue;a=Math.min(a,TRACK.x[i]);b=Math.max(b,TRACK.x[i]);c=Math.min(c,TRACK.z[i]);d=Math.max(d,TRACK.z[i]);}
  return {minX:a-CUT_REACH-CUT_STATION_FLAT,maxX:b+CUT_REACH+CUT_STATION_FLAT,minZ:c-CUT_REACH-CUT_STATION_FLAT,maxZ:d+CUT_REACH+CUT_STATION_FLAT};})();
 /** Into the hill past each portal plane the ground is still carved for MOUTH_CARVE m (flat, steep MOUTH_BANK sides) so the
  *  terrain's step back up to the slope lies behind the portal's dark mouth, under its hood (trainWorld.ts), never across the arch. */
 export const MOUTH_CARVE=3.2,MOUTH_BANK=4;
+/** The east portal's carve is shallower (1.4 m, just past its 1.2 m headwall): the climb trail crosses the hill 3 m behind it. */
+export const MOUTH_CARVE_EAST=1.4,MOUTH_RAMP=12;
+export const mouthCarveAt=(s:number)=>s-TUNNEL.west.s<TUNNEL.east.s-s?MOUTH_CARVE:MOUTH_CARVE_EAST;
 /** How far into the tunnel (m, along the line) a point lies past the nearer portal plane (negative outside). */
 function inward(x:number,z:number,s:number){const west=s-TUNNEL.west.s<TUNNEL.east.s-s,p=west?TUNNEL.west:TUNNEL.east,t=trackAt(p.s);return ((x-p.x)*t.tx+(z-p.z)*t.tz)*(west?1:-1);}
 /** Distance to the carved Summit corridor's centre line (1e3 outside it): summitIsleWorld draws the terrain finer there. */
 export function trainCutDistance(x:number,z:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return 1e3;
  const hit=trackNearest(x,z,CUT_REACH+CUT_STATION_FLAT,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit)return 1e3;
- if(inTunnelS(hit.s)&&inward(x,z,hit.s)>MOUTH_CARVE+2.5)return 1e3;return hit.d;}
+ if(inTunnelS(hit.s)&&inward(x,z,hit.s)>mouthCarveAt(hit.s)+MOUTH_RAMP)return 1e3;return hit.d;}
 /** Carve Summit Isle's ground `h` at (x, z) to the track bed (cut and fill). summitGround calls this last. */
 export function trainCut(x:number,z:number,h:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return h;
  const hit=trackNearest(x,z,CUT_REACH+CUT_STATION_FLAT,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit||!onSummitTrackS(hit.s))return h;
- if(inTunnelS(hit.s)){if(inward(x,z,hit.s)>MOUTH_CARVE)return h;const k=Math.max(0,hit.d-TUNNEL_HALF_WIDTH)*MOUTH_BANK;return Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);}
+ if(inTunnelS(hit.s)){// Past the carve the clamp opens at MOUTH_BANK per metre too, so the ground ramps back up to the hill (no cliff to step up).
+  const past=inward(x,z,hit.s)-mouthCarveAt(hit.s);if(past>MOUTH_RAMP)return h;
+  const k=(Math.max(0,hit.d-TUNNEL_HALF_WIDTH)+Math.max(0,past))*MOUTH_BANK;
+  return Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);}
  const st=Math.abs(hit.s-SUMMIT_TRACK.station),flat=st<STATION_HALF+6?CUT_STATION_FLAT:st<STATION_HALF+14?CUT_FLAT+(CUT_STATION_FLAT-CUT_FLAT)*(STATION_HALF+14-st)/8:CUT_FLAT;
- const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*CUT_BANK;
+ // Along the station stretch the banks are walkable (it stands on the beach): STATION_BANK, under the walk limit.
+ // Just east of the east portal the cut has steep wing-wall banks (MOUTH_BANK for 8 m, easing to CUT_BANK by 16 m): the climb
+ // trail runs out along the portal's line there and keeps its ground.
+ const pe=hit.s-TUNNEL.east.s,bank=st<STATION_HALF+14?STATION_BANK:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
+ const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*bank;
+ if(h<=0&&hit.d>flat)return h;// no bank fill out over the sea past the coast (the trestle carries the line there)
  return Math.min(Math.max(h,bed-k),bed+k);
 }
 
 // ---- Kinds and heights along the loop.
-export const TRESTLE_BED=1.05,RAMP_GRADE=.05;
+export const TRESTLE_BED=1.05,RAMP_GRADE=.05,SHORT_LAND=10,RAMP_LAND=6;
 export const TrackKind={Land:0,Sea:1,Wall:2,Tunnel:3} as const;
 /** The south coast sea wall: round the SW corner and along the museum boardwalk (Enoden-style, on the waterline). */
 const isWallPoint=(x:number,z:number)=>x>24&&x<238&&z>174&&z<232;
@@ -120,11 +131,21 @@ export function trackProfile(onLand:(x:number,z:number)=>boolean):TrackProfile{
  const n=TRACK.n,kind=new Uint8Array(n),bed=new Float32Array(n);
  for(let i=0;i<n;i++){const s=i*TRACK_DS,x=TRACK.x[i],z=TRACK.z[i];
   kind[i]=inTunnelS(s)?TrackKind.Tunnel:onSummitTrackS(s)?TrackKind.Land:onLand(x,z)?TrackKind.Land:isWallPoint(x,z)?TrackKind.Wall:TrackKind.Sea;}
+ // Nov 23 2026: a land run shorter than SHORT_LAND m between two sea stretches (the Starfish Sandbar's tip) stays trestle: the
+ // deck runs over it instead of dipping to the sand and climbing straight back up.
+ for(let i=0;i<n;i++){if(kind[i]!==TrackKind.Land||kind[(i-1+n)%n]!==TrackKind.Sea)continue;let j=i;while(kind[j%n]===TrackKind.Land&&j-i<n)j++;
+  if(kind[j%n]===TrackKind.Sea&&(j-i)*TRACK_DS<SHORT_LAND)for(let k=i;k<j;k++)kind[k%n]=TrackKind.Sea;}
  // Distance along the line to the nearest non-sea row, both ways (the trestle's ramps).
- const near=new Float32Array(n).fill(1e9);
- for(let pass=0;pass<2;pass++)for(let k=0;k<2*n;k++){const i=k%n,p=(i-1+n)%n;near[i]=kind[i]!==TrackKind.Sea?0:Math.min(near[i],near[p]+TRACK_DS);}
- for(let pass=0;pass<2;pass++)for(let k=2*n-1;k>=0;k--){const i=k%n,p=(i+1)%n;near[i]=kind[i]!==TrackKind.Sea?0:Math.min(near[i],near[p]+TRACK_DS);}
- for(let i=0;i<n;i++){const s=i*TRACK_DS;bed[i]=kind[i]===TrackKind.Sea?Math.max(Math.min(TRESTLE_BED,RAMP_GRADE*near[i]),summitBedAt(s)):onSummitTrackS(s)?summitBedAt(s):0;}
+ // Nov 23 2026: off Summit Isle the ramp starts RAMP_LAND m inland on a low embankment (a bridge head at the shore, the deck already
+ // clear of the water at the first pier) instead of at the waterline. `toSummit`: distance to Summit Isle's land rows (its own bed);
+ // `toMain`: to the main island's / Coral Cay's; `toSea`: from a land row to the nearest sea row.
+ const spread=(arr:Float32Array,src:(i:number)=>boolean,through:(i:number)=>boolean)=>{arr.fill(1e9);for(const dir of [1,-1])for(let pass=0;pass<2;pass++)for(let k=0;k<2*n;k++){const i=dir>0?k%n:(2*n-1-k)%n,p=(i-dir+n)%n;arr[i]=src(i)?0:through(i)?Math.min(arr[i],arr[p]+TRACK_DS):1e9;}};
+ const isSea=(i:number)=>kind[i]===TrackKind.Sea,summitLand=(i:number)=>kind[i]===TrackKind.Land&&onSummitTrackS(i*TRACK_DS),mainLand=(i:number)=>kind[i]===TrackKind.Land&&!onSummitTrackS(i*TRACK_DS);
+ const toSummit=new Float32Array(n),toMain=new Float32Array(n),toSea=new Float32Array(n);
+ spread(toSummit,summitLand,isSea);spread(toMain,mainLand,isSea);spread(toSea,isSea,mainLand);
+ for(let i=0;i<n;i++){const s=i*TRACK_DS;
+  bed[i]=isSea(i)?Math.max(Math.min(TRESTLE_BED,RAMP_GRADE*toSummit[i],RAMP_GRADE*(toMain[i]-TRACK_DS/2+RAMP_LAND)),summitBedAt(s))
+   :onSummitTrackS(s)?summitBedAt(s):kind[i]===TrackKind.Land?Math.max(0,RAMP_GRADE*(RAMP_LAND-(toSea[i]-TRACK_DS/2))):0;}
  return {kind,bed};
 }
 /** Bed height at s from a profile (lerp between rows). */
@@ -149,5 +170,5 @@ export const TRAIN_CROSSINGS:readonly TrainCrossing[]=[
  {id:'north-beach-east',s:sNear(80,-207),width:3.4},
  {id:'west-beach',s:sNear(-305,-52),width:3},
  {id:'cay-beach',s:sNear(562,-76),width:3},
- {id:'causeway',s:sNear(494,-148),width:9},
+ {id:'causeway',s:sNear(492.4,-142.2),width:16},// Nov 23 2026: centred on the road and the full skewed width of its 14 m deck (was 9 m at 494,-148: ballast stood on the road edges)
 ];

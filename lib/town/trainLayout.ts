@@ -8,6 +8,8 @@ import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,STATION_HALF,trackProfile,trackN
 
 /** Trestle piers: one every PIER_STEP m of sea; each stands on two columns PIER_COLUMN_OFFSET m either side of the centre line. */
 export const PIER_STEP=8,PIER_COLUMN_OFFSET=1.1,PIER_COLUMN_HALF=.24;
+/** The first pier of each trestle stands FIRST_PIER m past the first sea row, just beyond the bridge head (Nov 23 2026: was 4 m). */
+export const FIRST_PIER=2;
 /** A swimmer's reach round a column (its half width plus the body), and the sea wall's half width. */
 export const SWIM_PIER_REACH=.75,SEA_WALL_HALF=2.3;
 export type TrainPier={s:number;x:number;z:number;tx:number;tz:number;bed:number};
@@ -18,7 +20,7 @@ export function trainLayout():TrainLayout{
  const profile=trackProfile(onLand),piers:TrainPier[]=[];
  let next=-1;
  for(let i=0;i<TRACK.n;i++){const s=i*TRACK_DS;if(profile.kind[i]!==TrackKind.Sea){next=-1;continue;}
-  if(next<0)next=s+PIER_STEP/2;if(s<next)continue;next=s+PIER_STEP;piers.push({s,x:TRACK.x[i],z:TRACK.z[i],tx:TRACK.tx[i],tz:TRACK.tz[i],bed:profile.bed[i]});}
+  if(next<0)next=s+FIRST_PIER;if(s<next)continue;next=s+PIER_STEP;piers.push({s,x:TRACK.x[i],z:TRACK.z[i],tx:TRACK.tx[i],tz:TRACK.tz[i],bed:profile.bed[i]});}
  const columns=new Float64Array(piers.length*4);
  piers.forEach((p,k)=>{for(const [j,side] of [[0,1],[1,-1]] as const){columns[k*4+j*2]=p.x+p.tz*PIER_COLUMN_OFFSET*side;columns[k*4+j*2+1]=p.z-p.tx*PIER_COLUMN_OFFSET*side;}});
  layout={profile,piers,columns};return layout;

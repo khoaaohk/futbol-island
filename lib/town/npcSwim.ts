@@ -12,7 +12,7 @@ export const NPC_SWIM_ROOT_Y=-1.43;
 export const NPC_SWIM={speed:1.1,tread:5,drift:.1,waveEvery:11,waveFor:2.2,ripples:30} as const;
 /** The two islanders in the sea, off Palm Coast Beach (loop centres in swimming-depth water). */
 export const NPC_SWIMMERS={
- kiri:{x:-10,z:125,swim:{kind:'swim',r:3.5}},
+ kiri:{x:-14,z:132,swim:{kind:'swim',r:3.5}},// Nov 23 2026: was (-10,125); the south coast moved out for the Island Line's beach
  tavita:{x:-30.5,z:115.5,swim:{kind:'float',r:1.4}},
 } as const satisfies Record<string,{x:number;z:number;swim:NpcSwim}>;
 export type NpcSwimState={cx:number;cz:number;r:number;float:boolean;a:number;t:number;crawl:boolean;phase:number;

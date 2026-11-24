@@ -28,7 +28,8 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  // 3. heights
  for(let i=0;i<TR.n;i++){const k=(i+1)%TR.n,g=Math.abs(prof.bed[k]-prof.bed[i])/tt.TRACK_DS;assert(g<=.055,`grade ${g.toFixed(3)} at s ${i*tt.TRACK_DS|0}`);assert(prof.bed[i]>=-1e-6&&prof.bed[i]<=tt.TUNNEL_BED+1e-6);}
  {const W=tt.TUNNEL.west,E=tt.TUNNEL.east,len=E.s-W.s;assert(len>160&&len<195,`tunnel ${len} m`);
-  for(let s=W.s+4;s<=E.s-4;s+=4){const p=tt.trackAt(s),dev=Math.abs((p.x-W.x)*(E.z-W.z)-(p.z-W.z)*(E.x-W.x))/Math.hypot(E.x-W.x,E.z-W.z);assert(dev<.9,`tunnel straight (${dev.toFixed(2)} m off at ${s|0})`);
+  // (≤ 1 m off the portal-to-portal chord: the east portal sits 2.5 m out on the start of the curve since Nov 23, measured 0.92)
+  for(let s=W.s+4;s<=E.s-4;s+=4){const p=tt.trackAt(s),dev=Math.abs((p.x-W.x)*(E.z-W.z)-(p.z-W.z)*(E.x-W.x))/Math.hypot(E.x-W.x,E.z-W.z);assert(dev<1,`tunnel straight (${dev.toFixed(2)} m off at ${s|0})`);
    if(s>W.s+6&&s<E.s-6){assert.equal(kindAt(s),K.Tunnel);assert(su.summitGround(p.x,p.z)>tt.TUNNEL_BED+6.2,`hill over the tube at ${s|0}`);}}}
  for(let s=tt.SUMMIT_TRACK.landWest;s<=tt.SUMMIT_TRACK.landEast;s+=3){if(tt.inTunnelS(s))continue;const p=tt.trackAt(s);assert(Math.abs(su.summitGround(p.x,p.z)-tt.summitBedAt(s))<.06,`Summit ground carved to the bed at s ${s|0}`);}
  {const st=tt.trackAt(S.summit.s);assert(Math.abs(su.summitGround(st.x,st.z)-tt.SUMMIT_STATION_BED)<.02,'Summit station on its flat');}
@@ -44,7 +45,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  // 5. heat and wiring
  const scene=new T.Scene();const boards=new Set();let tube=null;
  const w2=L('lib/town/world.ts').buildTown(scene);scene.traverse(o=>{if(o.name==='train-tunnel-tube')tube=o;if(o.isMesh&&o.material&&o.material.map&&o.material.map.image&&o.material.map.image.width===1024&&o.material.map.image.height===1024)boards.add(o.material);});
- assert(tube&&tube.visible===false&&tube.parent&&tube.parent.name==='train-tunnel','the tunnel tube is its own mesh, hidden until near');
+ assert(tube&&tube.parent&&tube.parent.name==='train-tunnel','the tunnel tube is its own mesh (visible at build for the warm compile; update() gates it)');
  assert(boards.size<=1,`one station board material (${boards.size})`);
  const cam=new T.PerspectiveCamera();cam.position.set(tt.TUNNEL.west.x-20,12,tt.TUNNEL.west.z+20);cam.updateMatrixWorld(true);w2.train.update(cam);assert(tube.visible,'shown near the west portal');
  cam.position.set(100,20,0);cam.updateMatrixWorld(true);w2.train.update(cam);assert(!tube.visible,'hidden in town');

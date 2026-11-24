@@ -6,6 +6,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {onIsland,distanceToShore} from './shoreline';
+import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -225,6 +226,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   const inGrove=PARK_GROVES.some(([gx,gz,gr])=>Math.hypot(x-gx,z-gz)<gr);
   if(!inGrove&&rnd()>.12)continue;
   if(!clear(x,z,1.8*s))continue;
+  if(trackNearest(x,z,4.6+1.8*s))continue;// Nov 23 2026: none within reach of the Island Line (it runs down the west beach)
   // The sand and the row along the grass edge are palms, leaning their own way, 5–7.4 m tall.
   if(!onGrass(x,z)||grassEdgeDistance(x,z)<PALM_EDGE_M){beachPalm(x,z,5+s*1.6);continue;}
   if(convert>0&&++plainSeen%8===0){convert--;placed.push([x,z]);continue;}// its spot stays open lawn
