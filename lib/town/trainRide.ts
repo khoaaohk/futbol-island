@@ -342,6 +342,8 @@ export function createTrainRide(ports:Ports){
   get glows(){return glows;},get nearSeat(){return nearSeatJ;},standUp,sitDown,
   /** Gameplay 3 debug / checks: the standing spot in the train frame (x across, u along car 0). */
   get spot(){return sp;},
+  /** Gameplay 3 debug: the walk input (x right, z forward, camera-relative) and the camera's forward in the train frame. */
+  get walkInput(){return mv;},get camForward(){return camFwd;},
   /** After Town's train update this frame: the seat, the stop events (announcement, quiz, Get off), the HUD. */
   frame(dt:number,reduced:boolean){
    if(!riding()){if(blend>0)blend=Math.max(0,blend-dt*(reduced?6:2.5));if(blend<=0)unlisten();return;}
@@ -410,7 +412,8 @@ export function createTrainRide(ports:Ports){
     camPos.set(camPos.x+(cx-camPos.x)*b,camPos.y+(cy-camPos.y)*b,camPos.z+(cz-camPos.z)*b);
     camLook.set(camLook.x+(hx+sw*STAND_CAM.ahead-camLook.x)*b,camLook.y+(hy-.15-camLook.y)*b,camLook.z+(hz+cw*STAND_CAM.ahead-camLook.z)*b);}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
-   const e=blend*blend*(3-2*blend);
+   // the ride camera's weight: the seat blend, or (Gameplay 3) standing in the aisle, where the kneel blend is out
+   const wc=Math.max(blend,standCam>0?1:0),e=wc*wc*(3-2*wc);
    if(portrait){if(!fovSaved)fovSaved=camera.fov;const f=fovSaved+(PORTRAIT_FOV-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
    else if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}
    normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
