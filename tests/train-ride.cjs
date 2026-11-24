@@ -50,6 +50,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert(/trainRide\.applyCamera\(camera/.test(town)&&/trainRide\.trick\(\)\?\?stadiumSit\.trick\(\)/.test(town),'ride camera + the bench pose');
  assert(/causewayBarrier\.closed=world\.trainRun\.crossingClosed/.test(town),'causeway traffic stops at the barrier');
  assert(!/new T\.(PointLight|SpotLight|DirectionalLight)/.test(run+read('lib/town/trainRide.ts')),'no new lights');
+ {const tr=read('lib/town/trainRide.ts');assert(/if\(quizIn>=0&&dt>0\)\{quizIn-=Math\.max\(dt,wd\)/.test(tr)&&/const wallS=\(\)=>/.test(tr),'Nov 24: the quiz delay runs on the wall clock (a capped frame dt at 2-4 fps let the train reach the stop first), paused frames hold it');}
  assert(/train:2\b/.test(read('lib/economy.ts'))&&/earnForTrainQuiz/.test(town),'quiz coins (learning, once per question)');}
 // 4. the built trains (the real world in Node, no WebGL)
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));

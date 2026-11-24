@@ -83,14 +83,18 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     const ra = await me(A.p), rb = await me(B.p);
     if (!ra.riding || !rb.riding) console.log('diag', JSON.stringify(await Promise.all([A.p, B.p].map((p) => p.evaluate(() => ({ lw: window.__fi2.trainRide.lastWant, st: window.__fi2.trains.states.map((x) => [x.at, +x.doors.toFixed(2), +x.dwellLeft.toFixed(1)]) }))))).slice(0, 400));
     check('both ride the same train in different seats', ra.riding && rb.riding && ra.train === k && rb.train === k && ra.seat !== rb.seat, `A train ${ra.train} seat ${ra.seat}, B train ${rb.train} seat ${rb.seat}`);
-    const seatOf = (p, kk, j) => p.evaluate(({ kk, j }) => { const o = { x: 0, y: 0, z: 0, yaw: 0 }; window.__fi2.trains.seatPose(kk, j, o); return o; }, { kk, j });
-    const mutual = async () => { const sa = await seatOf(B.p, k, ra.seat), sb = await seatOf(A.p, k, rb.seat); const bSeesA = await nearestRemote(B.p, sa.x, sa.z), aSeesB = await nearestRemote(A.p, sb.x, sb.z); return { bSeesA: bSeesA.best, aSeesB: aSeesB.best, sa }; };
+    // One evaluate per page (Nov 24 2026): the seat this page's last frame put the other rider in, the nearest drawn remote to it and
+    // where it sits on this page's screen. Separate evaluate calls let a SwiftShader frame (~0.5 s, 10+ m of train) pass in between.
+    const view = (p, kk, j) => p.evaluate(({ kk, j }) => { const f = window.__fi2, o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.seatPose(kk, j, o); const h = window.__fi2PublicDraw; let best = Infinity, n = 0;
+      if (h) for (const layer of h.layers) { if (typeof layer.tapSpots !== 'function') continue; for (const sp of layer.tapSpots().spots) { n++; best = Math.min(best, Math.hypot(sp.x - o.x, sp.z - o.z)); } }
+      const v = f.camera.position.clone().set(o.x, o.y + 1, o.z).project(f.camera); return { best, n, seat: o, ndc: [+v.x.toFixed(2), +v.y.toFixed(2), +v.z.toFixed(3)] }; }, { kk, j });
+    const mutual = async () => { const [va, vb] = await Promise.all([view(B.p, k, ra.seat), view(A.p, k, rb.seat)]); return { bSeesA: va.best, aSeesB: vb.best, sa: va.seat, va, vb }; };
     let m0 = null; for (let i = 0; i < 20; i++) { m0 = await mutual(); if (m0.bSeesA < 1 && m0.aSeesB < 1) break; await A.p.waitForTimeout(500); }
     check('each draws the other in their seat (standing train)', m0.bSeesA < 1 && m0.aSeesB < 1, `B sees A ${m0.bSeesA.toFixed(2)} m, A sees B ${m0.aSeesB.toFixed(2)} m from the seat`);
     for (let i = 0; i < 40; i++) { const at = await A.p.evaluate((kk) => window.__fi2.trains.states[kk].at, k); if (at < 0) break; await A.p.waitForTimeout(500); }
     await A.p.waitForTimeout(5000);
     const m1 = await mutual(); await A.p.waitForTimeout(1500); const m2 = await mutual();
-    check('each draws the other in the MOVING seat', m2.bSeesA < 1.2 && m2.aSeesB < 1.2 && Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z) > 5, `B sees A ${m2.bSeesA.toFixed(2)} m, A sees B ${m2.aSeesB.toFixed(2)} m; seat moved ${Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z).toFixed(1)} m`);
+    check('each draws the other in the MOVING seat', m2.bSeesA < 1.2 && m2.aSeesB < 1.2 && Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z) > 5, `B sees A ${m2.bSeesA.toFixed(2)} m, A sees B ${m2.aSeesB.toFixed(2)} m; seat moved ${Math.hypot(m2.sa.x - m1.sa.x, m2.sa.z - m1.sa.z).toFixed(1)} m; on screen A ${m2.vb.ndc} B ${m2.va.ndc}`);
     // timing: the train's place on both screens at the same moment (3 samples), as seconds of running
     const dts = [];
     for (let i = 0; i < 3; i++) { const [a, bb] = await Promise.all([A.p, B.p].map((p) => p.evaluate((kk) => { const t = window.__fi2.trains; return { s: t.states[kk].s, v: t.states[kk].v, now: t.drawn.now, wall: Date.now() }; }, k)));

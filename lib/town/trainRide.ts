@@ -38,6 +38,7 @@ const cap=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
 export const TRAIN_NOTES={board:'All aboard! Drag or use the stick to look around.',wait:'The doors open at the next stop.'} as const;
 /** The quiz comes this long (s) after the doors close, and only on a run at least QUIZ_MIN_RUN s long (every run is 45 s or more). */
 export const QUIZ_AFTER=6,QUIZ_MIN_RUN=30;
+const wallS=()=>(typeof performance!=='undefined'?performance.now():Date.now())/1000;
 /** Board only while the doors are this open and the train waits at least this long (s) more. */
 const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
 /** The ride camera: on the rider's window side, back along the train and up (m); portrait phones a step further out. In the tunnel
@@ -102,7 +103,7 @@ type Ports={
  hold?:(on:boolean)=>void;
 };
 export function createTrainRide(ports:Ports){
- let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,quizIn=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
+ let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const trick:TrickPose=npcSeatPose('bench');trick.w=0;
@@ -119,7 +120,7 @@ export function createTrainRide(ports:Ports){
   const st=run.states[nearTrain];if(st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<BOARD_LEFT)return false;
   let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-me.x,probe.z-me.z);if(d<bd){bd=d;best=s;}}
   if(best<0){setNote('This train is full. The next one comes in 2 minutes.');return false;}
-  k=nearTrain;j=best;lastAt=st.at;quizIn=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
+  k=nearTrain;j=best;lastAt=st.at;quizIn=-1;lastWall=-1;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
   lookS.x=lookS.v=0;stickAim=dragAim=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;
   trainRideStore.set({riding:true,canGetOff:false,quiz:null});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();ensureQuiz();
@@ -184,7 +185,10 @@ export function createTrainRide(ports:Ports){
     if(st.at>=0){anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;quizIn=-1;setNote(arriveLine(st.at));if(view.quiz)trainRideStore.set({quiz:null});}
     else if(lastAt>=0){setNote(nextStopLine(st.next));const stop=TRAIN_STOPS[st.next],from=TRAIN_STOPS[lastAt];const run2=((stop.arrive-from.depart)%360+360)%360;quizIn=run2>=QUIZ_MIN_RUN?QUIZ_AFTER:-1;ensureQuiz();}
     lastAt=st.at;}
-   if(quizIn>=0){quizIn-=dt;if(quizIn<0)askQuiz();}
+   // Nov 24 2026: the quiz delay runs on the wall clock, not the summed frame dt. Town caps dt per frame, so on a slow device (or a
+   // headless check at 2-4 fps) 6 s of dt took most of the run and the train reached the next stop first: the card never showed.
+   // Paused frames (dt 0: map, settings, a zoomed machine) still hold it.
+   {const w=wallS(),wd=lastWall<0?dt:Math.min(1,Math.max(0,w-lastWall));lastWall=w;if(quizIn>=0&&dt>0){quizIn-=Math.max(dt,wd);if(quizIn<0)askQuiz();}}
    const can=st.at>=0&&st.doors>=DOORS_OPEN&&st.dwellLeft>=GET_OFF_LEFT;if(can!==view.canGetOff)trainRideStore.set({canGetOff:can});
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */

@@ -3,7 +3,7 @@ import {FREESTYLE_PAIRS} from './freestyleRoutine';
 import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
-import {effectiveTier,heatOptions} from './heatTier';
+import {LOWEST_TIER,effectiveTier,heatOptions} from './heatTier';
 import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget,stadiumNpcShown,viewingCrowd} from '../town/stadiumNpcs';
 import {dressDripMascot} from './dripMascot';
 import type {BallReactions} from './ballReactions';
@@ -156,8 +156,8 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const thinnedAmbient=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
  // DRIP FC Stadium islanders (lib/town/stadiumNpcs.ts): only the first stadiumNpcBudget(phone, tier) by heatRank show, plus the first
  // viewingCrowd(phone, tier) of the public-viewing crowd; the rest are thinned (not drawn, routined or talkable). Read once per update.
- let stadiumCap=Infinity,viewCap=Infinity;const away=new Set<string>();// Island Line Phase 4: a station islander riding a train (Town setAway) is not drawn, routined or talkable
- const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&!stadiumNpcShown(entry.definition.heatRank,stadiumCap,viewCap))||thinnedAmbient(entry)||(away.size>0&&away.has(entry.definition.id));
+ let stadiumCap=Infinity,viewCap=Infinity,saverLow=false;const away=new Set<string>();// Island Line Phase 4: a station islander riding a train (Town setAway) is not drawn, routined or talkable
+ const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&!stadiumNpcShown(entry.definition.heatRank,stadiumCap,viewCap))||thinnedAmbient(entry)||(away.size>0&&away.has(entry.definition.id))||(saverLow&&!!entry.definition.saverHidden);
  // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
  const floored=entries.filter(e=>!!e.definition.floor);
  // DRIP FC Stadium assistant referees (stadiumNpcs AR_TRACKS): side-step along their touchline with the stadium ball's z (clamped to
@@ -167,7 +167,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   // Match focus (lib/town/matchFocus.ts): everyone held (r −1) and `still`: after ONE held pass (the name tag hides, every pose stays
   // as drawn) the update returns at once; nothing advances, so nothing jumps when it resumes.
   if(focusAt&&focusAt.still&&focusAt.r<0){if(stillPasses>0){stats.moving=0;return;}stillPasses++;}
-  {const tier=effectiveTier();stadiumCap=stadiumNpcBudget(!desktop,tier);viewCap=viewingCrowd(!desktop,tier);}
+  {const tier=effectiveTier();stadiumCap=stadiumNpcBudget(!desktop,tier);viewCap=viewingCrowd(!desktop,tier);saverLow=tier>=LOWEST_TIER;}
   for(const l of linesmen){const e=l.e;if(paused||e.near||e.stunned||isThinned(e)||e.distance>90)continue;const want=STADIUM_BALL.live?Math.min(l.t.max,Math.max(l.t.min,STADIUM_BALL.z)):l.mark,d=want-e.position.z,step=Math.min(Math.abs(d),(STADIUM_BALL.live?3.2:1.2)*Math.min(dt,.1));if(Math.abs(d)>.05)e.position.z+=Math.sign(d)*step;}
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;

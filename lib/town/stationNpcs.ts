@@ -52,7 +52,7 @@ export const STATION_NPC_SPOTS={stand:STAND,bench:BENCH,platformY:PLATFORM_Y};
 type St=keyof typeof PLATFORM_Y;
 type Talk=[question:string,answer:string,followQuestion:string,followAnswer:string];
 const at=(st:St,kind:'stand'|'bench')=>{const p=(kind==='stand'?STAND:BENCH)[st],y=PLATFORM_Y[st];
- return {x:p.x,z:p.z,workYaw:p.yaw,floor:()=>y,...(kind==='bench'?{pose:'bench' as const}:{watch:true})};};
+ return {x:p.x,z:p.z,workYaw:p.yaw,floor:()=>y,...(kind==='bench'?{pose:'bench' as const,saverHidden:true}:{watch:true})};};/* Battery saver: only the board-watcher per station (draw cost ~+5 calls per rig) */
 const topics=(...t:Talk[])=>t.map((x,i)=>({id:'t'+i,question:x[0],answer:x[1],followUp:{question:x[2],answer:x[3]}}));
 
 export const STATION_NPCS:(NpcDefinition&{station:St;boards?:boolean})[]=[

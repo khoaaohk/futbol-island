@@ -16,6 +16,9 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  const ds=(a,b)=>Math.abs(tt.wrapS(a-b+TR.length/2)-TR.length/2);
  // 1. station islanders
  const N=SN.STATION_NPCS;assert.equal(N.length,10,'two per station');assert.equal(new Set(N.map(n=>n.id)).size,10,'unique ids');
+ // Nov 24 2026 (draw cost): on the lowest tier (Battery saver) only the board-watcher shows per station; the bench one is thinned
+ assert.equal(N.filter(n=>n.saverHidden).map(n=>n.pose).join(),Array(5).fill('bench').join(),'the five bench islanders hide on Battery saver');assert(N.filter(n=>n.watch).every(n=>!n.saverHidden),'board-watchers always show');
+ {const src=read('lib/graphics/islandNpcs.ts');assert(/\|\|\(saverLow&&!!entry\.definition\.saverHidden\)/.test(src)&&/saverLow=tier>=LOWEST_TIER/.test(src),'islandNpcs thins saverHidden on the lowest tier');}
  for(const st of tt.TRAIN_STATIONS){const here=N.filter(n=>n.station===st.id);assert.equal(here.length,2,st.id+': two islanders');
   const stand=tl.stationSpot(st,-6.2,3.3),bench=tl.stationSpot(st,-9,3.6);
   for(const n of here){const want=n.pose==='bench'?bench:stand,yaw=n.pose==='bench'?bench.yaw:stand.yaw+Math.PI;
