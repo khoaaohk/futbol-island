@@ -137,11 +137,21 @@ function frameX(g:VGeo,x:number,dir:number,h:Hole,w:number,color:string,bottom=t
  g.panelX(x,h.z0-w,h.z0,h.y0,h.y1,dir,color);g.panelX(x,h.z1,h.z1+w,h.y0,h.y1,dir,color);}
 /** A quad on an end wall at z facing dir (x0…x1, y0…y1). */
 const endQuad=(g:VGeo,z:number,dir:number,x0:number,x1:number,y0:number,y1:number,color:string|((v:V)=>T.Color),part=0)=>g.quad([x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z],color,[(x0+x1)/2,(y0+y1)/2,z-dir],part);
-/** A spinning wheel: tread, a light disc and a dark hub (all PART.rearWheel about its centre, so they turn together). */
-function wheel(g:VGeo,x:number,az:number){const N=8,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],R=(k:number,px:number,r=WHEEL_R):V=>{const t=(k+.5)/N*Math.PI*2;return [px,WHEEL_R+Math.cos(t)*r,az+Math.sin(t)*r];};
- for(let k=0;k<N;k++){g.quad(R(k,xi),R(k+1,xi),R(k+1,xo),R(k,xo),K.wheel,ctr,PART.rearWheel,ctr);if(k>0&&k<N-1)g.tri(R(0,xo),R(k,xo),R(k+1,xo),K.hub,[xi,WHEEL_R,az],PART.rearWheel,ctr);}
- const xh=xo+s*.004;for(let k=0;k<5;k++){const a=k/5*Math.PI*2,b=(k+1)/5*Math.PI*2,r=.13;g.tri([xh,WHEEL_R+.05,az],[xh,WHEEL_R+.05+Math.cos(a)*r,az+Math.sin(a)*r],[xh,WHEEL_R+.05+Math.cos(b)*r,az+Math.sin(b)*r],K.spring,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
-/** A poster on the ceiling cove of side s (u 0 = the wall top, 1 = the ceiling edge; z along the car), offset `off` off the cove. */
+/** A spinning wheel (Looks 2, Nov 24 2026; owner shot 49: the 8-sided wheels read as octagons with an off-centre hub): a round
+ *  tread of WHEEL_SIDES (WHEEL_SIDES_FAR in the far tier), a flange lip on the inner (gauge) side that reaches just under the rail
+ *  top, a light wheel disc, a dark hub and an axle boss, all PART.rearWheel about the wheel's centre (so they turn together). The
+ *  polygon's flats sit ON the rail top (the radius is grown by 1 / cos(π / N)). Full: 7N + 2 tris with the flange; far: 3N + 2. */
+export const WHEEL_SIDES=18,WHEEL_SIDES_FAR=10,FLANGE_R=.035,FLANGE_W=.028;
+function wheel(g:VGeo,x:number,az:number,full:boolean){const N=full?WHEEL_SIDES:WHEEL_SIDES_FAR,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],k0=1/Math.cos(Math.PI/N);
+ const R=(k:number,px:number,r=WHEEL_R):V=>{const t=k/N*Math.PI*2;return [px,WHEEL_R-Math.cos(t)*r*k0,az+Math.sin(t)*r*k0];};// k = 0: straight down
+ const rot=(k:number,px:number,r:number)=>R(k+.5,px,r);// a flat (not a corner) at the bottom
+ for(let k=0;k<N;k++){g.quad(rot(k,xi),rot(k+1,xi),rot(k+1,xo),rot(k,xo),K.wheel,ctr,PART.rearWheel,ctr);
+  if(k>0&&k<N-1)g.tri(rot(0,xo),rot(k,xo),rot(k+1,xo),K.hub,[xi,WHEEL_R,az],PART.rearWheel,ctr);}
+ if(full){const xf=xi-s*FLANGE_W,rf=WHEEL_R+FLANGE_R;// the flange: its rim and the step out to it (seen as a thin dark lip round the tread)
+  for(let k=0;k<N;k++){g.quad(rot(k,xf,rf),rot(k+1,xf,rf),rot(k+1,xi,rf),rot(k,xi,rf),K.spring,ctr,PART.rearWheel,ctr);
+   g.quad(rot(k,xi,WHEEL_R),rot(k+1,xi,WHEEL_R),rot(k+1,xi,rf),rot(k,xi,rf),K.spring,[xi-s,WHEEL_R,az],PART.rearWheel,ctr);}}
+ // the hub: a dark square boss centred on the axle (4 tris; its corners show the spin like the old off-centre plate did)
+ const xh=xo+s*.004,hb=.12;for(let k=0;k<4;k++){const a=k/4*Math.PI*2,b=(k+1)/4*Math.PI*2;g.tri([xh+s*.03,WHEEL_R,az],[xh,WHEEL_R+Math.cos(a)*hb,az+Math.sin(a)*hb],[xh,WHEEL_R+Math.cos(b)*hb,az+Math.sin(b)*hb],K.spring,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
 function coveQuad(g:VGeo,s:number,u0:number,u1:number,z0:number,z1:number,off:number,color:string){
  const dx=(COVE_X-IW)*s,dy=CEIL_Y-SIDE_TOP,l=Math.hypot(dx,dy),nx=-s*dy/l,ny=-Math.abs(dx)/l;// the cove's normal: toward the aisle and down
  const P=(u:number,z:number):V=>[s*IW+dx*u+nx*off,SIDE_TOP+dy*u+ny*off,z];
@@ -244,7 +254,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  for(const bz of [-BOGIE_HALF,BOGIE_HALF]){
   for(const s of [-1,1]){g.box(s*.84,.62,bz,.06,.11,1.35,K.bogie);for(const az of [bz-1.05,bz+1.05])g.box(s*.86,WHEEL_R,az,.07,.09,.12,K.spring);
    g.box(s*.8,.9,bz,.13,.11,.2,K.spring);for(const az of [bz-.55,bz+.55])g.box(s*.86,.62,az,.05,.15,.06,K.under2);}
-  g.box(0,.72,bz,.8,.08,.25,K.bogie);for(const az of [bz-1.05,bz+1.05])for(const x of [-.68,.68])wheel(g,x,az);}
+  g.box(0,.72,bz,.8,.08,.25,K.bogie);for(const az of [bz-1.05,bz+1.05])for(const x of [-.68,.68])wheel(g,x,az,closeUp);}
  // ---- roof: two air-conditioner units (a raised chamfered lid, side grilles, a fan) and a single-arm pantograph on insulators
  for(const z of [-2.7,1.7]){const y=ROOF_TOP-.02;g.box(0,y+.11,z,.6,.11,.82,K.roofUnit);
   const t=y+.3,P=(x:number,yy:number,zz:number):V=>[x,yy,z+zz];
