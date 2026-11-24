@@ -38,7 +38,8 @@
     ".next-seo/types/**/*.ts",
     ".next-aaa-b/types/**/*.ts",
     ".next-train-dev/types/**/*.ts",
-    ".next-g3/types/**/*.ts"
+    ".next-g3/types/**/*.ts",
+    ".next-polish/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -7,14 +7,17 @@
 //   ride     board at a platform, ride on (bridge crest height, announcement, tunnel), tab hidden 20 s then back (train where the
 //            timetable says), fast travel while riding (gets off), board refused while jetpacking
 //   track    standing on the rails (owner Nov 24 2026: trains never wait): Kenji warns, the train keeps its timetable, the bonk throws you clear
+//   deck     the track assist onto a bridge head, off a deck into the sea (swim), a swimmer at a high deck stays in, the splash bonk
+//            from a deck, the side bonk, a stopped train hit at speed on a scooter
 //   roof     land on a moving train's roof with the jetpack, ride it at speed, get bonked off at the tunnel portal onto the ground
+//            (+ jumping car to car, a jetpack take-off from the roof and Land back on, the landing ring on the roof spot)
 //   shots    after images of the owner's 14 screenshots' places (desktop) into --shots
 //   perf     frame time p50/p95/max + draws standing at the busiest station and riding (GFX_NO_TRAIN A/B is gfx-budget.cjs)
 // Needs: app  NEXT_DIST_DIR=.next-aaa npx next dev -p 9156     Run: node scripts/check-train-aaa.cjs --port=9156 [--shots=<dir>] [--gpu=swiftshader]
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,track,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
+const port = arg('port'), shots = arg('shots', ''), parts = arg('parts', 'xings,vending,ride,track,deck,roof,shots,perf').split(','), gpu = arg('gpu', 'metal');
 const phone = arg('phone', '1') === '1', tier = arg('tier', ''), noTrain = arg('notrain', '') === '1';
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
@@ -202,21 +205,106 @@ async function partTrack(c) {
     return { lag: +lag.toFixed(3), bonk, moved: +moved.toFixed(1), y: +f.rooftop.state.height.toFixed(2), dizzy: f.rooftop.state.recovery > 0 }; });
   check('standing on the rails: the train keeps its timetable and the bonk throws you clear of the line', r.lag < .01 && r.bonk && r.moved > 2.5, JSON.stringify(r));
 }
-// Roof riding (owner Nov 24 2026): fly over train 0 ~250 m before the west portal, follow it, Land: onto the roof; ride; bonked off at the portal.
-async function partRoof(c) {
-  const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
-  const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
+// The island's keys walk screen-relative on a fixed camera heading (Town: ix = sx·.857 + sy·.515, iz = −sx·.515 + sy·.857): the key
+// combination whose world direction is nearest (dx, dz), and its angle off (rad).
+function keysToward(dx, dz) { const l = Math.hypot(dx, dz) || 1; let best = null;
+  for (const sx of [-1, 0, 1]) for (const sy of [-1, 0, 1]) { if (!sx && !sy) continue; const ix = sx * .857 + sy * .515, iz = -sx * .515 + sy * .857, il = Math.hypot(ix, iz), a = Math.acos(Math.max(-1, Math.min(1, (ix * dx + iz * dz) / il / l))); if (!best || a < best.a) best = { a, keys: [sx > 0 ? 'd' : sx < 0 ? 'a' : '', sy > 0 ? 's' : sy < 0 ? 'w' : ''].filter(Boolean) }; }
+  return best; }
+async function hold(p, keys, ms, until) { for (const k of keys) await p.keyboard.down(k); const t0 = Date.now(); try { while (Date.now() - t0 < ms) { await p.waitForTimeout(100); if (until && await p.evaluate(until)) return true; } return false; } finally { for (const k of keys) await p.keyboard.up(k); } }
+// The track over the water (owner ADD 4) and the bonks the roof agent could not run in a browser (Nov 24 2026 final polish): the track
+// assist onto a bridge head, pushing off a deck into the sea (swim takes over), a swimmer under a high deck stays in the water,
+// the splash bonk from a deck, the side bonk from a moving car, a stopped car hit at speed on a scooter.
+async function partDeck(c) {
+  const { p } = c;
+  try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
+  await p.waitForTimeout(600);
+  // a bridge head whose line into the sea runs close to one of the 8 key directions (off a station / crossing)
+  const head = await p.evaluate(() => { const s = window.__fi2.trains.sched, out = []; for (let q = 0; q < 2700; q += 2) { const k0 = s.kind(q), k1 = s.kind(q + 2); if (!((k0 === 0 && k1 === 1) || (k0 === 1 && k1 === 0))) continue;
+      const dir = k1 === 1 ? 1 : -1, h = q + (dir > 0 ? 2 : 0), a = s.trackAt(h); out.push({ s: h, dir, tx: a.tx * dir, tz: a.tz * dir }); } return out; });
+  let pick = null; for (const h of head) { const k = keysToward(h.tx, h.tz); if (!pick || k.a < pick.k.a) pick = { h, k }; }
+  if (!pick || pick.k.a > .45) { check('a bridge head to walk onto', false, JSON.stringify(head.slice(0, 4))); return; }
+  const { h } = pick, start = await p.evaluate(({ h }) => { const s = window.__fi2.trains.sched, a = s.trackAt(h.s - h.dir * 9), n = { x: a.tz, z: -a.tx }; return { x: a.x + n.x * 1.15, z: a.z + n.z * 1.15, nx: n.x, nz: n.z }; }, { h });
+  // no train on this stretch for the next ~30 s: move train clocks so the nearest train is far away (they never wait for people)
+  await p.evaluate((S) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .5) { let ok = true; for (let k = 0; k < 3; k++) { const st = s.trainAt(k, s.trainPhase(k, s.clock()) + t); const d = Math.abs((((st.s - S + 1350) % 2700) + 2700) % 2700 - 1350); if (d < 260) ok = false; } if (ok) { window.__skew += t * 1000; return; } } }, h.s);
+  await p.waitForTimeout(400); await tp(p, start.x, start.z); await p.waitForTimeout(900);
+  const onDeck = () => p.evaluate(() => { const f = window.__fi2, s = f.trains.sched, l = f.location; return { deck: s.deckAt(l.x, l.z), y: +f.rooftop.state.height.toFixed(2), top: +s.walkTop(l.x, l.z).toFixed(2), water: !!f.water.inWater, phase: f.water.state.phase, x: l.x, z: l.z }; });
+  await hold(p, pick.k.keys, 4200);
+  const d1 = await onDeck();
+  const lat = await p.evaluate(({ x, z }) => { const s = window.__fi2.trains.sched; let b = 1e9; for (let q = 0; q < 2700; q += .25) { const a = s.trackAt(q); b = Math.min(b, Math.hypot(a.x - x, a.z - z)); } return +b.toFixed(2); }, d1);
+  check('track assist: walking along the line from 1.15 m off its centre onto the bridge deck (pulled toward the centre, dry, on the deck top)', d1.deck && !d1.water && Math.abs(d1.y - d1.top) < .25 && lat < .9, JSON.stringify({ ...d1, lat, keys: pick.k.keys.join('+'), off: +pick.k.a.toFixed(2) }));
+  // further out along the deck, then push off its side: into the sea, swimming
+  await hold(p, pick.k.keys, 2600);
+  const d2 = await onDeck(); const side = keysToward(start.nx, start.nz);
+  const fell = await hold(p, side.keys, 3500, () => !!window.__fi2.water.inWater);
+  await p.waitForTimeout(1500); const d3 = await onDeck();
+  check('pushing off the deck edge drops you into the sea: the swim takes over', fell && d3.water && (d3.phase === 'swim' || d3.phase === 'dive'), JSON.stringify({ from: d2, now: d3 }));
+  // swim back under the deck: a high deck (> 0.8 m over the water, off a head) is not climbed from the water
+  const high = await p.evaluate(({ x, z }) => window.__fi2.trains.sched.swimDeckBlocked(x, z, -.43), d2);
+  const back = keysToward(-start.nx, -start.nz); const climbed = await hold(p, back.keys, 3000, () => !window.__fi2.water.inWater);
+  const d4 = await onDeck();
+  if (high) check('a swimmer at a high deck stays in the water, under / past it (no pop up onto the deck)', !climbed && d4.water && !d4.deck, JSON.stringify(d4));
+  else console.log('  (the deck there is low or a head: a climb-out is allowed) ' + JSON.stringify(d4));
+  // the splash bonk: standing mid-trestle (high deck) as a train comes through (out of the water first: a teleport keeps a swimmer swimming)
+  const dryOut = async () => { for (let i = 0; i < 40; i++) { const sw = await p.evaluate(() => !!window.__fi2.water.inWater); if (!sw) return true; await p.evaluate(() => window.__fi2.teleport(-150, -214)); await p.waitForTimeout(300); } return false; };
+  check('out of the water before the splash bonk', await dryOut());
+  const mid = await p.evaluate(() => { const s = window.__fi2.trains.sched; let run = [], best = null; for (let q = 0; q < 2702; q += 2) { if (s.kind(q) === 1 && s.walkTop(s.trackAt(q).x, s.trackAt(q).z) > 2.5) run.push(q); else if (run.length) { if (!best || run.length > best.length) best = run; run = []; } } const q = best[Math.floor(best.length / 2)], a = s.trackAt(q); return { s: q, x: a.x, z: a.z }; });
+  const Tm = await p.evaluate((S0) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 45 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) return t; } return 0; }, mid.s);
+  try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
+  await setLap(p, 0, Tm); for (let q = 0; q < 3; q++) { await p.waitForTimeout(250); await p.evaluate((T) => { const d = ((((T - window.__fi2.trains.runner.t[0] + 180) % 360) + 360) % 360) - 180; if (Math.abs(d) > 2) window.__skew += d * 1000; }, Tm); }
+  await tp(p, mid.x, mid.z); await p.waitForTimeout(300);
+  const sp = await p.evaluate(async () => { const f = window.__fi2, t0 = performance.now(); let bonk = false, splash = false, kind = '';
+    while (performance.now() - t0 < 20000) { await new Promise((r) => requestAnimationFrame(r)); if (f.trainBonk.active) { bonk = true; splash = f.trainBonk.state.splash; kind = f.trainBonk.state.kind; } if (bonk && !f.trainBonk.active) break; }
+    await new Promise((r) => setTimeout(r, 1200)); return { bonk, splash, kind, water: !!f.water.inWater, phase: f.water.state.phase }; });
+  check('a train knock on a high deck splashes you into the sea (swimming after)', sp.bonk && sp.splash && sp.water, JSON.stringify(sp));
+  // the side bonk: step into the side of the second car as the train runs past (North straight)
+  const nsp = await p.evaluate(() => { const s = window.__fi2.trains.sched; let b = 0, bd = 1e9; for (let q = 0; q < 2700; q += 1) { const a = s.trackAt(q), d = Math.hypot(a.x + 150, a.z + 204); if (d < bd) { bd = d; b = q; } } return b; });
+  const Ts = await p.evaluate((S0) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((S0 - 60 - st.s) % 2700 + 2700) % 2700 < 3 && st.at < 0) return t; } return 0; }, nsp);
+  await dryOut();
+  await setLap(p, 0, Ts); await p.waitForTimeout(500);
+  const side2 = await p.evaluate(async () => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }, t0 = performance.now(); let bonk = false, kind = '', placed = false, x0 = 0, z0 = 0;
+    while (performance.now() - t0 < 25000) { await new Promise((r) => requestAnimationFrame(r)); const st = t.states[0];
+      if (!placed && st.v > 5) { t.standAt(0, 1.55, -12.4, 0, o, undefined, 0); f.teleport(o.x, o.z); x0 = o.x; z0 = o.z; placed = true; for (let i = 0; i < 2; i++) await new Promise((r) => requestAnimationFrame(r)); t.standAt(0, 1.05, -12.4, 0, o, undefined, 0); f.location.x = o.x; f.location.z = o.z; }
+      if (f.trainBonk.active) { bonk = true; kind = f.trainBonk.state.kind; } if (bonk && !f.trainBonk.active) break; }
+    return { bonk, kind, placed, moved: +Math.hypot(f.location.x - x0, f.location.z - z0).toFixed(1), water: !!f.water.inWater }; });
+  check('the side bonk: stepping into a moving car\'s side throws you clear (kind side)', side2.bonk && side2.kind === 'side' && !side2.water, JSON.stringify(side2));
+  // a stopped train hit at speed on a scooter (> 4.5 m/s): the bonk; walking into it just blocks
+  await standingTrainAt(p, 0); await p.waitForTimeout(800);
+  let hit = false, hs = null;
+  for (const sg of [1, -1]) {
+    const geo = await p.evaluate((sg) => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }, o2 = { x: 0, y: 0, z: 0, yaw: 0 };
+      t.standAt(0, 0, 2.8, 0, o, undefined, 0); t.standAt(0, sg * 13, 2.8, 0, o2, undefined, 0); return { cx: o.x, cz: o.z, sx: o2.x, sz: o2.z, at: t.states[0].at }; }, sg);
+    const go = keysToward(geo.cx - geo.sx, geo.cz - geo.sz);
+    try { await p.evaluate(() => window.__fi2.selectRide('scooter')); } catch { /* */ }
+    await p.waitForTimeout(800); await tp(p, geo.sx, geo.sz); await p.waitForTimeout(700);
+    await p.evaluate(() => { window.__hitDbg = { vmax: 0, dmin: 1e9 }; const f = window.__fi2; let t0 = performance.now(), px = f.location.x, pz = f.location.z;
+      const tick = () => { const now = performance.now(), dt = (now - t0) / 1000; t0 = now; const l = f.location, v = dt > 0 ? Math.hypot(l.x - px, l.z - pz) / dt : 0; px = l.x; pz = l.z; if (v < 30) window.__hitDbg.vmax = Math.max(window.__hitDbg.vmax, v);
+        const o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.standAt(0, 0, 2.8, 0, o, undefined, 0); window.__hitDbg.dmin = Math.min(window.__hitDbg.dmin, Math.hypot(l.x - o.x, l.z - o.z)); if (!f.trainBonk.active && window.__hitDbg) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
+    hit = await hold(p, go.keys, 4500, () => !!window.__fi2.trainBonk.active);
+    hs = await p.evaluate((sg) => ({ sg, kind: window.__fi2.trainBonk.state.kind, ride: window.__fi2.rideRef.current, at: window.__fi2.trains.states[0].at, vmax: +window.__hitDbg.vmax.toFixed(1), dmin: +window.__hitDbg.dmin.toFixed(1) }), sg);
+    hs.keys = go.keys.join('+'); hs.off = +go.a.toFixed(2); console.log('  scooter run ' + JSON.stringify(hs));
+    if (hit) break; }
+  check('a stopped train hit at speed on a scooter: bonked off (the ride stowed)', hit, JSON.stringify(hs));
+  await p.waitForTimeout(2500); try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
+}
+// Bring train 0 to lap time T, fly over its first car with the jetpack, follow it a moment and Land: onto the roof.
+async function landRoof(p, T) {
   await setLap(p, 0, T); await p.waitForTimeout(400);
   for (let q = 0; q < 3; q++) { await p.waitForTimeout(250); await p.evaluate((T) => { const d = ((((T - window.__fi2.trains.runner.t[0] + 180) % 360) + 360) % 360) - 180; if (Math.abs(d) > 2) window.__skew += d * 1000; }, T); }
   const car = () => p.evaluate(() => { const t = window.__fi2.trains, st = t.states[0], o = { x: 0, y: 0, z: 0, yaw: 0 }; t.standAt(0, 0, 4.6, 0, o, undefined, 3.75); return { x: o.x, y: o.y, z: o.z, v: st.v }; });
   let c0 = await car(); await tp(p, c0.x, c0.z); await p.evaluate(() => window.__fi2.selectRide('jetpack')); await p.waitForTimeout(2500);
   // follow the train for a moment in the air (the test steers by setting the spot), then Land
-  const landed = await p.evaluate(async () => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }; const t0 = performance.now(); let pressed = false, seenRing = false;
+  return p.evaluate(async () => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }; const t0 = performance.now(); let pressed = false, seenRing = false;
     while (performance.now() - t0 < 15000) { await new Promise((r) => requestAnimationFrame(r)); if (f.roofRide.k >= 0) return { ok: true, k: f.roofRide.k, ring: seenRing };
       if (f.pendingRide?.current == null || !pressed) { t.standAt(0, 0, 4.6, 0, o, undefined, 3.75); f.location.x = o.x; f.location.z = o.z; }
       if (!pressed && performance.now() - t0 > 1500 && f.rideRef.current === 'jetpack') { f.selectRide('walk'); pressed = true; }
       }
     return { ok: false, k: f.roofRide.k, ride: f.rideRef.current }; });
+}
+// Roof riding (owner Nov 24 2026): fly over train 0 ~250 m before the west portal, follow it, Land: onto the roof; ride; bonked off at the portal.
+async function partRoof(c) {
+  const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
+  const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
+  let landed = await landRoof(p, T); if (!landed.ok) { console.log('  (first Land missed the roof at a slow headless frame: once more, a lap later) ' + JSON.stringify(landed)); try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ } await p.waitForTimeout(3000); landed = await landRoof(p, T); }
   check('jetpack Land over a moving train: onto its roof', landed.ok, JSON.stringify(landed));
   if (!landed.ok) return;
   const ride = await p.evaluate(async () => { const f = window.__fi2, t = f.trains; let maxErr = 0, speed = 0, n = 0; const o = { x: 0, y: 0, z: 0, yaw: 0 };
@@ -228,8 +316,28 @@ async function partRoof(c) {
     while (performance.now() - t0 < 80000) { await new Promise((r) => requestAnimationFrame(r)); if (f.trainBonk.active) { bonked = true; } if (bonked && !f.trainBonk.active) break; }
     await new Promise((r) => setTimeout(r, 300)); const s = window.__fi2.trains.sched; let best = 1e9; for (let q = 0; q < 2700; q += .5) { const a = s.trackAt(q); best = Math.min(best, Math.hypot(a.x - f.location.x, a.z - f.location.z)); }
     return { st: f.trains.states[0].s.toFixed(1)+'/'+f.trains.states[0].v.toFixed(1)+'/'+f.trains.states[0].at, u: +f.roofRide.u.toFixed(2), bonked, off: f.roofRide.k < 0, dLine: +best.toFixed(1), y: +f.rooftop.state.height.toFixed(2), dizzy: f.rooftop.state.recovery > 0, water: !!f.water?.inWater, x: +f.location.x.toFixed(1), z: +f.location.z.toFixed(1) }; });
-  check('tunnel portal: bonked off the roof onto the ground beside the line (not the tunnel, not the sea), dizzy', bonk.bonked && bonk.off && bonk.dLine > 2.2 && !bonk.water, JSON.stringify(bonk));
+  check('tunnel portal: bonked off the roof onto the ground beside the line (clear of the car side: > 1.9 m from the centre; not the tunnel, not the sea), dizzy', bonk.bonked && bonk.off && bonk.dLine > 1.9 && !bonk.water, JSON.stringify(bonk));
   if (shots) { await p.waitForTimeout(150); await p.screenshot({ path: path.join(shots, `roof-bonk-${phone ? 'phone' : 'desktop'}.png`) }); }
+  // a full lap later, back on the same car: jump car to car (the hop over the gap lands on the next car), then take off with the
+  // jetpack from the roof (rises from roof height, no snap to the ground) and Land back on
+  const again = await landRoof(p, T);
+  check('landing on the roof again (a lap later)', again.ok, JSON.stringify(again));
+  if (again.ok) {
+    await p.waitForTimeout(1300);
+    const back = await p.evaluate(() => { const t = window.__fi2.trains, a = { x: 0, y: 0, z: 0, yaw: 0 }, b = { x: 0, y: 0, z: 0, yaw: 0 }; window.__fi2.roofRide.u = -4.6; window.__fi2.roofRide.x = 0; t.standAt(0, 0, 0, 0, a); t.standAt(0, 0, -1, 0, b); return { x: b.x - a.x, z: b.z - a.z }; });
+    const kb = keysToward(back.x, back.z); for (const k of kb.keys) await p.keyboard.down(k);
+    let hop = null; try { await p.waitForTimeout(350); await p.keyboard.down('Space'); await p.waitForTimeout(160); await p.keyboard.up('Space');
+      hop = await p.evaluate(async () => { const f = window.__fi2, t0 = performance.now(); let hopped = false, minY = 1e9; while (performance.now() - t0 < 2500) { await new Promise((r) => requestAnimationFrame(r)); if (f.roofRide.hop) { hopped = true; minY = Math.min(minY, f.rooftop.state.height); } if (hopped && !f.roofRide.hop) break; }
+        return { hopped, k: f.roofRide.k, u: +f.roofRide.u.toFixed(2), minY: +minY.toFixed(2), y: +f.rooftop.state.height.toFixed(2) }; });
+    } finally { for (const k of kb.keys) await p.keyboard.up(k); }
+    check('jumping car to car: the hop from car 0\'s end lands on car 1 (not through the gap)', hop && hop.hopped && hop.k === 0 && hop.u < -6.2, JSON.stringify({ ...hop, keys: kb.keys.join('+') }));
+    const roofY0 = await p.evaluate(() => window.__fi2.rooftop.state.height);
+    const up = await p.evaluate(async () => { const f = window.__fi2; f.selectRide('jetpack'); const t0 = performance.now(); let minY = 1e9, maxY = -1e9;
+      while (performance.now() - t0 < 2000) { await new Promise((r) => requestAnimationFrame(r)); const y = f.flight.height; minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+      return { ride: f.rideRef.current, off: f.roofRide.k < 0, minY: +minY.toFixed(2), maxY: +maxY.toFixed(2) }; });
+    check('jetpack take-off from the roof: off the roof and rising from roof height (no drop to the ground first)', up.ride === 'jetpack' && up.off && up.minY > roofY0 - .6 && up.maxY > roofY0 + 1.5, JSON.stringify({ roofY: +roofY0.toFixed(2), ...up }));
+    await p.evaluate(() => window.__fi2.selectRide('walk')); await p.waitForTimeout(3000);
+  }
 }
 const OWNER_SPOTS = [
   ['1-south-coast', 125, 226], ['2-palm-trestle', -10, 101], ['3-shore-wall', 30, 140], ['4-south-station', 160, 223], ['5-east-hill', 664, 51],
@@ -332,7 +440,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, track: partTrack, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));

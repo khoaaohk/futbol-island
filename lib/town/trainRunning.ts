@@ -28,7 +28,7 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
-import {trainLayout} from './trainLayout';
+import {trainLayout,trainWalkHeight,trainDeckAt,swimDeckBlocked} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_HALF,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,type TrainState} from './trainSchedule';
 import {createVehicleMaterial,PART,CUT_SILL_Y} from '../graphics/trafficVehicles';
@@ -448,7 +448,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   crossingClosed(ci:number){const x=crossings[ci];return !!x&&(x.lamps||x.arm>.02||x.target>0);},
   /** Headless checks only (read, never per frame): every crossing's live state, and the pure timetable functions. */
   get xings(){return crossings.map((x,ci)=>({id:TRAIN_CROSSINGS[ci].id,lamps:x.lamps,arm:+x.arm.toFixed(3),target:x.target,x:x.x,z:x.z,shown:x.mesh.visible}));},
-  sched:{trainAt,crossingFor,trainPhase,clock:()=>trainClockSec(),stops:TRAIN_STOPS,crossings:TRAIN_CROSSINGS,trackAt:(s:number)=>trackAt(s,{x:0,z:0,tx:1,tz:0}),bed:(s:number)=>bedAt(L.profile,s)},
+  sched:{trainAt,crossingFor,trainPhase,clock:()=>trainClockSec(),stops:TRAIN_STOPS,crossings:TRAIN_CROSSINGS,trackAt:(s:number)=>trackAt(s,{x:0,z:0,tx:1,tz:0}),bed:(s:number)=>bedAt(L.profile,s),
+   /** headless checks (check-train-aaa track / roof parts): the row kind at s (TrackKind), the walk top, deck tests */kind:(s:number)=>L.profile.kind[Math.round(wrapS(s)/TRACK_DS)%TRACK.n],walkTop:trainWalkHeight,deckAt:trainDeckAt,swimDeckBlocked},
   /** For tests and the gfx probe: what is drawn right now. */
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
    return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
