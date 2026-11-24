@@ -6,7 +6,7 @@ import { Activity, BallState, Cap, Mode, PoseFlag, RoomCode, S, Zone, presenceOf
 import { ballTouches, byteToDir, createKnockGate, dirToByte, fastBall, knockable } from '../town/ballKnock';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
-import { NOT_BUSY, type LocalSeat, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
+import { NOT_BUSY, type LocalSeat, type LocalTrain, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
 import type { LocalBump } from '../graphics/friendBump';
@@ -87,10 +87,11 @@ export type RoomDoorHint = { room: number; x: number; y: number; z: number };
 
 // Town helper: assembles the local pose from values Town already has, into one reused object (no allocation per call).
 const SUMMIT = { x: 640, z: 130, r: 150 }, CAY = { x: 612, z: -160, r: 120 };
-const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY, pitch: 0, seat: null as LocalSeat | null };
+const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY, pitch: 0, seat: null as LocalSeat | null, train: null as LocalTrain | null };
 export function partyLocal(
   loc: { x: number; z: number }, root: { position: { y: number }; rotation: { y: number } }, vel: { x: number; z: number },
   ride: string, swimming: boolean, diving: boolean, hidden: boolean, activity = NOT_BUSY, pitch = 0, seat: LocalSeat | null = null,
+  train: LocalTrain | null = null,
 ) {
   const o = localOut, speed = Math.hypot(vel.x, vel.z);
   o.x = loc.x; o.y = root.position.y; o.z = loc.z; o.facing = root.rotation.y; o.speed = speed; o.hidden = hidden;
@@ -98,8 +99,8 @@ export function partyLocal(
     : ride === 'moped' ? Mode.Moped : ride === 'jetpack' ? Mode.Jetpack : speed > 2.6 ? Mode.Run : speed > 0.15 ? Mode.Walk : Mode.Idle;
   const sx = loc.x - SUMMIT.x, sz = loc.z - SUMMIT.z, cx = loc.x - CAY.x, cz = loc.z - CAY.z;
   o.zone = swimming || diving ? Zone.Sea : sx * sx + sz * sz < SUMMIT.r * SUMMIT.r ? Zone.Summit : cx * cx + cz * cz < CAY.r * CAY.r ? Zone.Cay : Zone.Main;
-  o.warp = false; o.activity = activity; o.pitch = pitch; o.seat = seat;
-  if (seat) { o.mode = Mode.Idle; o.speed = 0; }
+  o.warp = false; o.activity = activity; o.pitch = pitch; o.seat = seat; o.train = train;
+  if (seat || train) { o.mode = Mode.Idle; o.speed = 0; }
   return o;
 }
 
@@ -132,6 +133,9 @@ export function atRoomDoor(m: { room: number; presence: string; activity: number
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
+  /** Island Line riders (train Phase 3): put friend `id` riding seat code `code` into that moving seat (x, y, z, yaw); false = not drawn
+   *  there (left seated = false). Called for every sampled riding friend, allocation-free. */
+  trainSeat?: (id: MemberId, code: number, p: RemotePose) => boolean;
   /** The ground height under x, z (flying friends' plumes settle on it). */
   groundAt?: (x: number, z: number) => number;
   /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
@@ -259,6 +263,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   // eachDrawn's one forEach callback (no closure per call).
   let drawnCb: ((id: MemberId, p: RemotePose) => void) | null = null, drawnHid: ReadonlySet<number> = hiddenFriends();
   let drawnWorld = false;
+  // One sample adapter (no closure per frame): stadium seats first, then Island Line riders (drawn seated in their moving seat).
+  const adaptFriend = (id: MemberId, p: RemotePose) => { seatFriend(id, p); const code = p.train ?? -1; if (code >= 0) { if (ctx.trainSeat?.(id, code, p)) { p.seated = true; p.fade = 1; } else p.train = -1; } };
   const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id) && !(drawnWorld && isHiddenStranger(id))) drawnCb(id, p); };
 
   return {
@@ -341,7 +347,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; beginSeatFrame(); return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
-      beginSeatFrame(nowMs, core.you); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
+      beginSeatFrame(nowMs, core.you); core.sample(nowMs, adaptFriend); // stadium seats: seated friends snap onto (and take) their seat; train riders sit in their moving seat
       if (core.balls.size) { trackDt = dt; core.balls.forEach(track); }
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();

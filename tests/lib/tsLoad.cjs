@@ -14,7 +14,7 @@ function load(file){
   if(/\.css$/.test(id))return {__esModule:true,default:cssProxy};
   if(!id.startsWith('.')&&!id.startsWith('@/'))return require(id);
   const base=id.startsWith('@/')?path.join(root,id.slice(2)):path.resolve(path.dirname(file),id);
-  for(const f of [base,base+'.ts',base+'.tsx',base+'.json'])if(fs.existsSync(f)&&fs.statSync(f).isFile())return load(f);
+  for(const f of [base,base+'.ts',base+'.tsx',base+'.json',path.join(base,'index.ts')])if(fs.existsSync(f)&&fs.statSync(f).isFile())return load(f);
   throw new Error('Cannot resolve '+id+' from '+file);};
  new Function('exports','module','require',out)(mod.exports,mod,req);
  return mod.exports;

@@ -189,6 +189,9 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  const approachBox=(car:Car)=>car.freeDriven||car.index===rider.index?-1:leaving(car)?boxOf(car.from):car.length-car.distance<STOP_ZONE+2+car.v*car.v/(2*DRIVE.brake)&&guarded[car.to]?boxOf(car.to):-1;
  /** Red, or a yellow it can stop for comfortably: the vehicle may not take the box and waits at the stop line. Past the line it clears. */
  const heldByLight=(car:Car)=>car.signalNode>=0&&!leaving(car)&&signalStop(signalLight(clock,signalOffset[car.signalNode],car.axis),car.length-car.distance-STOP_ZONE,car.v,DRIVE.brake);
+ /** Level-crossing barriers on a road (the Island Line's causeway crossing, train Phase 3): while `closed`, a vehicle heading for the
+  *  point (within BARRIER_LOOK m ahead, BARRIER_HALF m of its lane) stops BARRIER_GAP m short of it. Town writes `closed` (no per-frame cost when open). */
+ const barriers:{x:number;z:number;closed:boolean}[]=[],BARRIER_LOOK=40,BARRIER_HALF=6,BARRIER_GAP=7.5;
  function update(dt:number,player:{x:number;y:number;z:number},interaction?:{vx:number;vz:number;reduced:boolean;onCrash:()=>void;drive?:{x:number;z:number};people?:readonly TrafficPerson[]}){stats.trafficChecks=stats.deferredDecisions=0;
   const step=Math.min(.05,Math.max(0,dt));if(step>0){clock+=step;const tick=Math.floor(clock*5);if(tick!==lampTick){lampTick=tick;paintLamps(player.x,player.z);}}
   // Each vehicle's box is worked out once per frame (`boxNow`: the box it is in or needs; `junctionNow`: the same unless a light
@@ -218,6 +221,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   car.held=junctionWaiting;if(junctionWaiting){const s=stopSpeed(remaining-STOP_ZONE-.3);if(s<limit)limit=s;}
   // The visitor: in the lane ahead, or walking into it. Truck passengers are not pedestrians.
   const visitor=rider.index<0&&player.y<2.4&&personInLane(ahead,lateral,sideways>0?vz*dirX-vx*dirZ:vx*dirZ-vz*dirX,car.halfLength+DRIVE.personGap+3+car.v*car.v/(2*DRIVE.brake),2.5);
+  for(let b=0;b<barriers.length;b++){const br=barriers[b];if(!br.closed)continue;const bx=br.x-px,bz=br.z-pz,fw=bx*dirX+bz*dirZ;if(fw<car.halfLength+1||fw>BARRIER_LOOK)continue;if(Math.abs(bx*dirZ-bz*dirX)>BARRIER_HALF)continue;const s=stopSpeed(Math.max(0,fw-car.halfLength-BARRIER_GAP));if(s<limit)limit=s;}// a closed level crossing
   if(visitor){const s=stopSpeed(personStopGap(ahead,car.halfLength));if(s<limit)limit=s;}
   // Townsfolk in the lane: looked for ten times a second per vehicle within 100 m of the visitor (194 townsfolk on the island:
   // a cheap box reject first; vehicles nobody can see skip it, as they always did).
@@ -279,7 +283,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  /** Day, sunset or night (Town calls it beside world.updateTrafficSignals): headlamps and tail lamps come on. Emissive only. */
  function setTimeOfDay(mode:string){glow.head=mode==='night'?1.5:mode==='sunset'?.7:.12;glow.tail=mode==='night'?.55:mode==='sunset'?.3:.06;for(const car of cars){car.look.lamp.x=glow.head;car.look.lamp.y=glow.tail;}lamps?.setNight(mode==='night');}
  paintLamps(0,0);update(0,{x:0,y:99,z:0});
- return {stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,setTimeOfDay,
+ return {barriers,stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,setTimeOfDay,
   /** The lights: heads, which node each belongs to (-1: flashing yellow), per-node cycle offsets (-1: none), the lamp mesh, the clock. */
   signals:{stopZone:STOP_ZONE,heads:signalHeads,headNode,offset:signalOffset,lamps,get clock(){return clock;}},
   dispose(){pickupMarkers.forEach(p=>p.glow.dispose());landingGlowAssets.dispose();lamps?.dispose();for(const car of cars){const index=obstacles.indexOf(car.obstacle);if(index>=0)obstacles.splice(index,1);}root.removeFromParent();speechTextures.forEach(t=>t.dispose());geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}};

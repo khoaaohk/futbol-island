@@ -519,7 +519,7 @@ await ok('the three ride actions: Tuck (faster, within the safe top speed, never
   const rk=ev('KeyR','r');assert.equal(zip.key(rk,true),true);assert(rk.prevented,'R cannot change the ride in mid-air');assert.equal(zip.key(ev('ArrowLeft','ArrowLeft'),true),false,'the arrows still look around');zip.dispose();}
  // The HUD: while riding the cluster IS the three actions (same component, classes and slots), and the normal ones come back after.
  const town=read('components/Town.tsx');
- assert(/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:waterCluster\?\?jobButtons;/.test(town),'Town: the zipline\'s actions replace the cluster while riding (the water\'s after it, Oct 15 2026)');
+ assert(/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:trainCluster\?\?waterCluster\?\?jobButtons;/.test(town),'Town: the zipline\'s actions replace the cluster while riding (the water\'s after it, Oct 15 2026)');
  assert(/useSyncExternalStore\(zipStore\.subscribe,\(\)=>zipStore\.get\(\)\.riding,\(\)=>false\)/.test(town),'… from the store (written only on changes)');
  assert(['travel-mode','touch-shoot','touch-juggle'].every(c=>town.includes(`className="${c}" onPress={pressCluster}/>`)),'… with the job cluster\'s button in the ride, shoot and juggle slots');
  assert(/if\(zipline\.key\(e,true\)\)return;/.test(town)&&/if\(zipline\.key\(e,false\)\)return;/.test(town),'Town hands the keys to the ride first');

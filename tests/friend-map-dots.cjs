@@ -54,7 +54,7 @@ assert.equal(M.mapLegend(true)[7].tip,'friend');assert.match(M.legendTipText('fr
  assert.match(dots,/if\(!live\|\|!multiplayerEnabled\(\)\)\{setDots\(NONE\);return;\}/,'nothing subscribes when not live / multiplayer off');
  assert.match(dots,/const kick=\(\)=>\{if\(timer===undefined\)timer=setTimeout\(flush,everyMs\);\}/,'one timer per burst');
  assert.match(dots,/useFriendDots\(live,full\?\.5:1,full\?300:500\)/,'full map ~3 Hz, minimap 2 Hz and 1 m');
- assert.match(o,/\{terrain\}\{friends!==undefined&&<PlayerMapDots live=\{friends\} me=\{markerPosition\}\/>\}\{friends!==undefined&&<FriendMapDots mode="full" live=\{friends\}[^>]*\/>\}\{you\}/,'other players, then friends above the marks, You on top');
+ assert.match(o,/\{terrain\}\{friends!==undefined&&<PlayerMapDots live=\{friends\} me=\{markerPosition\}\/>\}(\{friends!==undefined&&<TrainMapDots live=\{friends\}\/>\})?\{friends!==undefined&&<FriendMapDots mode="full" live=\{friends\}[^>]*\/>\}\{you\}/,'other players, then friends above the marks, You on top');
  assert.match(o,/<FriendMapDots mode="mini" live=\{active\}\/>/,'minimap dots sleep while the minimap is collapsed');
  assert.match(map,/friends=\{open\}/,'full map dots only while open');}
 

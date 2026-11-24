@@ -56,6 +56,10 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  ziptuck:'M5 4h14 M12 4v5 M12 9a2.4 2.4 0 1 0 0 .01 M12 12v4l4 3 M12 16l-4 3',
  zipspin:'M5 4h14 M12 4v3 M19 13a7 7 0 1 1-2.1-5 M19 5v4h-4',
  zipwave:'M3 4h10 M8 4v5 M8 9a2.4 2.4 0 1 0 0 .01 M8 12v8 M8 13l7-5 M17 4l2 2 M19 9h3',
+ // Island Line ride (train Phase 3, lib/town/trainRide.ts trainButtons): trainoff (a figure stepping out of an open door) and
+ // horn (a horn with two sound lines).
+ trainoff:'M4 3h9v18H4z M13 12h7 M17 9l3 3-3 3 M8 11v.01',
+ horn:'M3 10v4h3l7 4V6L6 10z M16.5 9a4 4 0 0 1 0 6 M19 6.5a7.5 7.5 0 0 1 0 11',
  // Water actions (Oct 15 2026, lib/town/water/waterHud.ts WATER_BUTTONS). Redrawn Oct 15 2026 (user: "icons need to be larger and
  // simplified to match with main actions"): the walk / shoot / juggle weight, 2–3 bold strokes over one wave. swim (the ride
  // switcher's ride: head, body, one arm reaching over), swimfast (sprint: the arm stretched forward, speed lines behind), float (on

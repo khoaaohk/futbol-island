@@ -22,6 +22,8 @@ import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,
 import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
+import {TrainLineMarks,TrainMapDots} from './TrainMapMarks';
+import type {TrainStation} from '@/lib/town/trainTrack';
 import FriendMapDots from './FriendMapDots';
 import PlayerMapDots from './PlayerMapDots';
 import type {FriendDot} from '@/lib/town/friendMarks';
@@ -74,7 +76,7 @@ function ExploreMarks({localMap}:{localMap:boolean}){
 }
 const NONE:ReadonlySet<string>=new Set();
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
-export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit'|'stadium';
+export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit'|'stadium'|`station-${TrainStation['id']}`;
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames,friends,onFriendTip}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void;
  /** Full map: draw the party's friend dots (true only while the travel map is open). The minimap draws them while `active`. */
  friends?:boolean;onFriendTip?:(dot:FriendDot,text:string,el:Element|null)=>void}){
@@ -133,6 +135,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <SummitIsleMap localMap={localMap} pitchProps={destination('summit','Summit 5s')}/>
   {/* The zipline from the summit's lookout to the Coral Cay Hostel roof (Oct 14 2026; ZiplineMapMark.tsx). */}
   <ZiplineMapMark localMap={localMap}/>
+  <TrainLineMarks localMap={localMap} destination={destination}/>
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
   <g aria-label="Stadium Park" data-west-stadium="park">
    {PARK_GROVES.map(([x,z,r],i)=><circle key={'grove'+i} cx={x} cy={z} r={r*.8} fill="#4f7a57" opacity=".35"/>)}
@@ -218,7 +221,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <svg className="minimap-player" viewBox={view} aria-hidden="true"><g aria-label="Your position"><circle cx={0} cy={0} r="4.5" fill="#314f43"/><circle cx={0} cy={0} r="3" fill="#fff0cf" stroke="#fff0cf" strokeWidth="1"/></g></svg>
  </div>;
  if(!mounted)return null;
- return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}{friends!==undefined&&<PlayerMapDots live={friends} me={markerPosition}/>}{friends!==undefined&&<FriendMapDots mode="full" live={friends} onTip={onFriendTip}/>}{you}{labelsTop}</svg>;
+ return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}{friends!==undefined&&<PlayerMapDots live={friends} me={markerPosition}/>}{friends!==undefined&&<TrainMapDots live={friends}/>}{friends!==undefined&&<FriendMapDots mode="full" live={friends} onTip={onFriendTip}/>}{you}{labelsTop}</svg>;
 }
 
 export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&a.frames===b.frames&&a.friends===b.friends&&a.onFriendTip===b.onFriendTip&&(b.active===false||a.position===b.position));

@@ -72,7 +72,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  assert(/MACHINE_NIGHT/.test(run),'night: the shared night uniform');
  assert(/createTrainRunning/.test(world)&&/updateTrains/.test(town),'world and Town wired');
  assert(/case 'train-bell'/.test(snd)&&/case 'train-horn'/.test(snd),'bell and horn cues in the island sound kit (mute respected)');
- assert(/plate:'FI01'/.test(run)&&/emblem:true/.test(run),'headmark: our own ball emblem and FI 01 plate');}
+ assert(/plate:'FI01'/.test(read('lib/town/trainLiveries.ts'))&&/emblem:true/.test(read('lib/town/trainLiveries.ts')),'headmark: our own ball emblem and FI 01 plate');}
 // 6. the built trains (the real world in Node, no WebGL): one draw for every car, LOD, crossings, boards
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,R=LW('lib/town/trainRunning.ts');assert(run,'trains built');

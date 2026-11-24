@@ -37,15 +37,19 @@ export const STEP_OFF_AFTER=5,SLIDE_SPEED=1.2;
 const RAIL_TOP=.34,BALLAST_TOP=.12;
 const WHEEL_R=.43,BOGIE_HALF=4.5,HALF_W=1.4,BODY_Y0=1.05,SPLIT_Y=2.05,SIDE_TOP=3.1,ROOF_TOP=3.75;
 const DOORS=[-3.7,-.2,3.1],DOOR_HALF=.65,DOOR_Y0=1.12,DOOR_Y1=3.02,WIN_Y0=2.18,WIN_Y1=3.0;
+/** Phase 3 (riding): the window runs between the doors (car-local z), shared by the panes, the open variant's holes and the seats. */
+const WIN_RUNS:readonly [number,number][]=[[-5.75,DOORS[0]-DOOR_HALF-.25],[DOORS[0]+DOOR_HALF+.25,DOORS[1]-DOOR_HALF-.25],[DOORS[1]+DOOR_HALF+.25,DOORS[2]-DOOR_HALF-.25]];
+/** Seats (Phase 3): long benches along the walls (a Japanese local train), one rider per bench run, facing the aisle; 4 per car.
+ *  Seat j of a train: car j>>2, side (j&1 ? +x : -x), bench run 1 + ((j>>1)&1). The rider's root stands on the floor, BENCH.rootZ
+ *  in front of the bench centre (npcSeatPose 'bench': seat top .64 above the root), so the island's bench pose fits as it is. */
+export const SEATS_PER_CAR=4,TRAIN_SEATS=TRAIN_CARS*SEATS_PER_CAR;
+export const CAR_FLOOR_Y=1.15;
+const BENCH_HALF_D=.325,BENCH_X=HALF_W-.04-BENCH_HALF_D,SEAT_ROOT_X=BENCH_X-.05;
+const seatZ=(j:number)=>{const [a,b]=WIN_RUNS[1+((j>>1)&1)];return (a+b)/2;};
+export type SeatPose={x:number;y:number;z:number;yaw:number};
 
-/** A: cream / maroon, two cream lines, our ball-emblem headmark (from ref 9.png). B: sea-green / sky-blue, red line (ref 8.png).
- *  C: cream / ocean-blue, sunflower line. All original: no real company's logo or emblem; the plates are our own "FI 01-03". */
-type Livery={upper:string;lower:string;stripes:readonly [number,number,string][];roof:string;plate:string;emblem:boolean};
-export const LIVERIES:readonly Livery[]=[
- {upper:'#f2e9d2',lower:'#8c2a2f',stripes:[[1.62,.05,'#f2e9d2'],[1.78,.05,'#f2e9d2']],roof:'#b8bbbe',plate:'FI01',emblem:true},
- {upper:'#a3dccb',lower:'#5aa8de',stripes:[[2.05,.08,'#d6343a']],roof:'#bfc3c4',plate:'FI02',emblem:false},
- {upper:'#f2e9d2',lower:'#1f5c9c',stripes:[[2.05,.1,'#f5c21b']],roof:'#b8bbbe',plate:'FI03',emblem:false},
-];
+import {LIVERIES,type Livery} from './trainLiveries';
+export {LIVERIES};
 const COL={glass:'#3b424b',screen:'#1b232b',interior:'#2a2b30',dark:'#1f2022',under:'#2f3135',metal:'#8d9297',head:'#fff1c2',tail:'#c93a2c',dest:'#d99a2e',
  gold:'#d9b45a',white:'#f7f4ea',black:'#1d1d1d',shadow:'#34322e',door:'#c9ccd0',yellow:'#f2c230',lamp:'#b8281f',post:'#26231f'} as const;
 
@@ -91,13 +95,16 @@ function plateText(g:VGeo,text:string,cx:number,cy:number,z:number,h:number){
 }
 
 // ---------------------------------------------------------------- one car (local: +z toward its cab, +x left of travel, y up from the rail top)
-export function buildCarGeometry(lv:Livery){
+/** open (Phase 3): the variant drawn while someone rides the train: the window runs are holes (no glass), with a cream inside
+ *  (inner walls, ceiling, floor, ends) and blue bench seats, so riders are seen through the windows. Same material and program. */
+export function buildCarGeometry(lv:Livery,open=false){
  const g=new VGeo();
  const prof:[number,number][]=[[-HALF_W,BODY_Y0],[-HALF_W,SPLIT_Y],[-HALF_W,SIDE_TOP],[-1.33,3.4],[-1.08,3.6],[-.58,3.72],[0,ROOF_TOP],[.58,3.72],[1.08,3.6],[1.33,3.4],[HALF_W,SIDE_TOP],[HALF_W,SPLIT_Y],[HALF_W,BODY_Y0]];
  const segColor=(ya:number,yb:number)=>Math.max(ya,yb)<=SPLIT_Y+.01?lv.lower:Math.min(ya,yb)>=3.39?lv.roof:lv.upper;
  const rings:[number,number][]=[[-6,.985],[-5.9,1],[5.62,1],[5.88,.95],[6,.86]];// z, width (the cab end narrows: rounded corners from above)
  for(let r=0;r<rings.length-1;r++){const [z0,k0]=rings[r],[z1,k1]=rings[r+1];
-  for(let k=0;k<prof.length-1;k++){const [xa,ya]=prof[k],[xb,yb]=prof[k+1];g.quad([xa*k0,ya,z0],[xb*k0,yb,z0],[xb*k1,yb,z1],[xa*k1,ya,z1],segColor(ya,yb),[0,2.4,(z0+z1)/2]);}}
+  for(let k=0;k<prof.length-1;k++){const [xa,ya]=prof[k],[xb,yb]=prof[k+1];if(open&&r===1&&(k===1||k===prof.length-3))continue;// the window band: holes, below
+   g.quad([xa*k0,ya,z0],[xb*k0,yb,z0],[xb*k1,yb,z1],[xa*k1,ya,z1],segColor(ya,yb),[0,2.4,(z0+z1)/2]);}}
  // ends: two colour bands and the roof cap (cab +z narrowed; gangway end −z)
  for(const [z,k] of [[6,.86],[-6,.985]] as const){const w=HALF_W*k,inside:V=[0,2.4,z-Math.sign(z)];
   g.quad([-w,BODY_Y0,z],[w,BODY_Y0,z],[w,SPLIT_Y,z],[-w,SPLIT_Y,z],lv.lower,inside);g.quad([-w,SPLIT_Y,z],[w,SPLIT_Y,z],[w,SIDE_TOP,z],[-w,SIDE_TOP,z],lv.upper,inside);
@@ -108,9 +115,10 @@ export function buildCarGeometry(lv:Livery){
  for(const s of [-1,1]){const x=s*(HALF_W+.006);
   for(const [y,h,c] of lv.stripes)g.panelX(x,-5.9,5.62,y-h/2,y+h/2,s,c);
   const runs:[number,number][]=[[-5.75,DOORS[0]-DOOR_HALF-.25],[DOORS[0]+DOOR_HALF+.25,DOORS[1]-DOOR_HALF-.25],[DOORS[1]+DOOR_HALF+.25,DOORS[2]-DOOR_HALF-.25]];
-  for(const [a,b] of runs){const n=Math.max(1,Math.round((b-a)/1.15)),w=(b-a)/n;for(let k=0;k<n;k++)g.panelX(s*(HALF_W+.01),a+k*w+.07,a+(k+1)*w-.07,WIN_Y0,WIN_Y1,s,COL.glass,PART.left);}
+  if(!open)for(const [a,b] of runs){const n=Math.max(1,Math.round((b-a)/1.15)),w=(b-a)/n;for(let k=0;k<n;k++)g.panelX(s*(HALF_W+.01),a+k*w+.07,a+(k+1)*w-.07,WIN_Y0,WIN_Y1,s,COL.glass,PART.left);}
   g.panelX(s*(HALF_W+.01),4.95,5.57,2.25,2.95,s,COL.screen);
   for(const zc of DOORS)g.panelX(s*(HALF_W+.004),zc-DOOR_HALF,zc+DOOR_HALF,DOOR_Y0,DOOR_Y1,s,COL.interior);}
+ if(open)openInside(g,lv);
  // cab front: windscreen (two panes in a dark frame), lit destination plate, headlamps (high), tail lamps (low), stripes,
  // headmark (A: our ball emblem in a gold ring; B/C a plain round plate) and the number plate, grab rail, skirt, couplers
  {const z=6.004;g.panelZ(0,2.74,z,1.06,.46,1,COL.dark);g.panelZ(-.525,2.74,z+.003,.475,.4,1,COL.screen);g.panelZ(.525,2.74,z+.003,.475,.4,1,COL.screen);
@@ -131,6 +139,24 @@ export function buildCarGeometry(lv:Livery){
  // a dark contact strip on the ballast under the car (the fake shadow: no shadow pass)
  {const y=BALLAST_TOP-RAIL_TOP+.015;g.quad([-1.62,y,-6.1],[1.62,y,-6.1],[1.62,y,6.1],[-1.62,y,6.1],COL.shadow,[0,y-1,0]);}
  return {geometry:g.build(),triangles:g.tris};
+}
+/** The open variant's wall band with window holes, the inside faces (they face inward: seen through the holes) and the benches. */
+function openInside(g:VGeo,lv:Livery){
+ const z0=-5.9,z1=5.62,iw=HALF_W-.04,wall='#ece5d3',ceil='#f6f2e8',floor='#7d8188',seat='#3d6db3',out:V=[0,2.4,0];
+ // The solid pieces of the window band between z0 and z1 (outside: the livery's upper colour; inside: cream).
+ const solid:[number,number][]=[];let z=z0;for(const [a,b] of WIN_RUNS){if(a>z)solid.push([z,a]);z=b;}solid.push([z,z1]);
+ for(const s of [-1,1]){const x=s*HALF_W,xi=s*iw,inn:V=[s*(HALF_W+2),2.4,0];// "inside" points beyond the wall: inner faces face the aisle
+  g.quad([x,SPLIT_Y,z0],[x,WIN_Y0,z0],[x,WIN_Y0,z1],[x,SPLIT_Y,z1],lv.upper,out);g.quad([x,WIN_Y1,z0],[x,SIDE_TOP,z0],[x,SIDE_TOP,z1],[x,WIN_Y1,z1],lv.upper,out);
+  for(const [a,b] of solid)g.quad([x,WIN_Y0,a],[x,WIN_Y1,a],[x,WIN_Y1,b],[x,WIN_Y0,b],lv.upper,out);
+  g.quad([xi,CAR_FLOOR_Y,z0],[xi,WIN_Y0,z0],[xi,WIN_Y0,z1],[xi,CAR_FLOOR_Y,z1],wall,inn);g.quad([xi,WIN_Y1,z0],[xi,SIDE_TOP,z0],[xi,SIDE_TOP,z1],[xi,WIN_Y1,z1],wall,inn);
+  for(const [a,b] of solid)g.quad([xi,WIN_Y0,a],[xi,WIN_Y1,a],[xi,WIN_Y1,b],[xi,WIN_Y0,b],wall,inn);
+  // window reveals (the wall's thickness round each hole): sills and heads
+  for(const [a,b] of WIN_RUNS){g.quad([x,WIN_Y0,a],[xi,WIN_Y0,a],[xi,WIN_Y0,b],[x,WIN_Y0,b],wall,[s*1.2,WIN_Y0-1,(a+b)/2]);g.quad([x,WIN_Y1,a],[xi,WIN_Y1,a],[xi,WIN_Y1,b],[x,WIN_Y1,b],wall,[s*1.2,WIN_Y1+1,(a+b)/2]);}
+  // the benches (seat, front and ends; the long side runs 1 and 2 carry riders, run 0 is a short end bench)
+  for(const [a,b] of WIN_RUNS)g.box(s*BENCH_X,CAR_FLOOR_Y+.32,(a+b)/2,BENCH_HALF_D,.32,(b-a)/2,seat);}
+ g.quad([-iw,SIDE_TOP,z0],[iw,SIDE_TOP,z0],[iw,SIDE_TOP,z1],[-iw,SIDE_TOP,z1],ceil,[0,SIDE_TOP+1,0]);
+ g.quad([-iw,CAR_FLOOR_Y,z0],[iw,CAR_FLOOR_Y,z0],[iw,CAR_FLOOR_Y,z1],[-iw,CAR_FLOOR_Y,z1],floor,[0,CAR_FLOOR_Y-1,0]);
+ for(const [ze,dir] of [[z0+.04,1],[z1-.04,-1]] as const)g.quad([-iw,CAR_FLOOR_Y,ze],[iw,CAR_FLOOR_Y,ze],[iw,SIDE_TOP,ze],[-iw,SIDE_TOP,ze],wall,[0,2.2,ze-dir]);
 }
 /** The far tier: one box per car (12 triangles), two-tone from its vertex colours. */
 export function buildCarBox(lv:Livery){
@@ -162,9 +188,15 @@ function buildCrossing(ci:number,obstacles:Obstacle[]|null){
 
 // ---------------------------------------------------------------- departure boards (one canvas: a row per station; the board material's program)
 const BOARD_W=512,BOARD_ROW=160;
+/** Phase 3: the trains' destination plates are rows of the same canvas (one per stop name, under the board rows): no new texture,
+ *  material or program; the plate quads take a row's UVs. */
+const PLATE_ROW=40,PLATE_TOP=BOARD_ROW*TRAIN_STATIONS.length+16,BOARD_H=PLATE_TOP+PLATE_ROW*TRAIN_STATIONS.length;
 function buildBoards(obstacles:Obstacle[]|null){
- const L=trainLayout(),cv=document.createElement('canvas');cv.width=BOARD_W;cv.height=BOARD_ROW*TRAIN_STATIONS.length+16;
- const g=cv.getContext('2d');if(g){g.fillStyle='#16191c';g.fillRect(0,0,cv.width,cv.height);g.fillStyle='#3a2c20';g.fillRect(0,cv.height-16,cv.width,16);}
+ const L=trainLayout(),cv=document.createElement('canvas');cv.width=BOARD_W;cv.height=BOARD_H;
+ const g=cv.getContext('2d');if(g){g.fillStyle='#16191c';g.fillRect(0,0,cv.width,cv.height);g.fillStyle='#3a2c20';g.fillRect(0,PLATE_TOP-16,cv.width,16);
+  // destination plates (amber on black, the plate's lit look), one row per stop in TRAIN_STOPS order
+  g.textAlign='center';g.textBaseline='middle';for(let r=0;r<TRAIN_STOPS.length;r++){const y=PLATE_TOP+r*PLATE_ROW;g.fillStyle='#1b1712';g.fillRect(0,y,BOARD_W,PLATE_ROW);
+   g.fillStyle='#ffb43a';g.font='800 30px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';g.fillText(TRAIN_STOPS[r].station.name.toUpperCase(),BOARD_W/2,y+PLATE_ROW/2+1,BOARD_W-24);}}
  const tex=new T.CanvasTexture(cv);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;
  // The same settings as the station name boards (world.ts boardMaterial): the same shader program, night glow by emissiveIntensity.
  const mat=new T.MeshStandardMaterial({map:tex,emissiveMap:tex,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});
@@ -173,7 +205,7 @@ function buildBoards(obstacles:Obstacle[]|null){
   // On its own post at the platform's back half, between the bench and the house (independent of the station house's shape).
   const U=-6.2,Vv=4.6,P=(u:number,v:number,y:number)=>new T.Vector3(c.x+c.tx*u+nrm.x*sg*v,y,c.z+c.tz*u+nrm.z*sg*v);
   const w=1.6,h=.5,yc=top+2.25,pos:number[]=[],uv:number[]=[],nor:number[]=[];
-  const vt=1-(r*BOARD_ROW)/cv.height,vb=1-((r+1)*BOARD_ROW)/cv.height,dark=1-(cv.height-6)/cv.height;
+  const vt=1-(r*BOARD_ROW)/cv.height,vb=1-((r+1)*BOARD_ROW)/cv.height,dark=1-(PLATE_TOP-6)/cv.height;
   // A face in the plane at v, seen from the track side (toward) or from behind: anticlockwise for its viewer, reading left to right.
   const face=(u0:number,u1:number,v:number,y0:number,y1:number,uu0:number,uu1:number,t0:number,t1:number,toward:boolean)=>{
    const A=P(u0,v,y0),B=P(u1,v,y0),C=P(u1,v,y1),D=P(u0,v,y1),rightIsPlusU=(toward?1:-1)*sg>0;
@@ -197,13 +229,16 @@ function buildBoards(obstacles:Obstacle[]|null){
 // ---------------------------------------------------------------- the runtime
 export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:number};
  /** Remote players drawn on this screen (x, y, z). */eachRemote?:(cb:(x:number,y:number,z:number)=>void)=>void;
- /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number};
+ /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
+ /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number};
 export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null};
 type Person={x:number;y:number;z:number};
 export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null){
  const L=trainLayout(),root=new T.Group();root.name='island-line-trains';scene.add(root);
  // ---- trains: per train one InstancedMesh (2 cars) with the vehicle material; the far tier swaps in the box geometry
- const detail=LIVERIES.map(buildCarGeometry),boxes=LIVERIES.map(buildCarBox),leaf=buildDoorLeaf();
+ const detail=LIVERIES.map(lv=>buildCarGeometry(lv)),boxes=LIVERIES.map(buildCarBox),leaf=buildDoorLeaf();
+ // The open (ridden) variant per livery, built the first time someone rides that livery (CPU only; same program, no compile).
+ const openGeo:(T.BufferGeometry|null)[]=LIVERIES.map(()=>null),openOf=(lv:number)=>openGeo[lv]??(openGeo[lv]=buildCarGeometry(LIVERIES[lv],true).geometry);
  const trains=Array.from({length:TRAIN_COUNT},(_,i)=>{const look=createVehicleMaterial(),lv=i%LIVERIES.length,mesh=new T.InstancedMesh(detail[lv].geometry,look.material,TRAIN_CARS);
   mesh.name='train-'+'abc'[i];mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.castShadow=false;mesh.receiveShadow=false;mesh.frustumCulled=false;mesh.visible=false;
   look.lamp.set(1,.9,0,0);root.add(mesh);return {mesh,look,lv,far:false,spin:0};});
@@ -211,6 +246,20 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  doors.name='train-doors';doors.instanceMatrix.setUsage(T.DynamicDrawUsage);doors.castShadow=false;doors.receiveShadow=false;doors.frustumCulled=false;doors.visible=false;doors.count=0;root.add(doors);
  const crossings=TRAIN_CROSSINGS.map((_,ci)=>buildCrossing(ci,obstacles));for(const x of crossings)root.add(x.mesh);
  const boards=buildBoards(obstacles);for(const b of boards.meshes)root.add(b.mesh);
+ // Destination plates (Phase 3): ONE mesh for every cab (2 per train) with the boards' material and canvas; its 4 corners per cab
+ // are rewritten only for trains drawn in the near tier, the UVs only when a train's next stop changes.
+ const CABS=TRAIN_COUNT*TRAIN_CARS,platePos=new Float32Array(CABS*4*3),plateUv=new Float32Array(CABS*4*2),plateNor=new Float32Array(CABS*4*3),plateIdx:number[]=[];
+ for(let q=0;q<CABS;q++){const o=q*4;plateIdx.push(o,o+1,o+2,o,o+2,o+3);}
+ const plateGeo=new T.BufferGeometry();plateGeo.setAttribute('position',new T.BufferAttribute(platePos,3).setUsage(T.DynamicDrawUsage));plateGeo.setAttribute('normal',new T.BufferAttribute(plateNor,3).setUsage(T.DynamicDrawUsage));
+ plateGeo.setAttribute('uv',new T.BufferAttribute(plateUv,2).setUsage(T.DynamicDrawUsage));plateGeo.setIndex(plateIdx);
+ const plates=new T.Mesh(plateGeo,boards.mat);plates.name='train-plates';plates.frustumCulled=false;plates.matrixAutoUpdate=false;plates.visible=false;plates.castShadow=false;plates.receiveShadow=false;root.add(plates);
+ const plateStop=new Int8Array(TRAIN_COUNT).fill(-1),PLATE_HW=.56,PLATE_HH=.1,PLATE_Y=3.43,PLATE_Z=6.012,pv3=new T.Vector3();
+ const setPlateUv=(i:number,stop:number)=>{const h=BOARD_H,t=1-(PLATE_TOP+stop*PLATE_ROW+3)/h,b=1-(PLATE_TOP+(stop+1)*PLATE_ROW-3)/h;
+  for(let c=0;c<TRAIN_CARS;c++){const o=(i*TRAIN_CARS+c)*8;plateUv.set([0,b,1,b,1,t,0,t],o);}};
+ const plateCorner=(m:T.Matrix4,o:number,x:number,y:number)=>{pv3.set(x,y,PLATE_Z).applyMatrix4(m);platePos[o]=pv3.x;platePos[o+1]=pv3.y;platePos[o+2]=pv3.z;};
+ /** Write cab c of train i's plate from its car matrix (allocation-free; the plate faces the car's +z). */
+ const writePlate=(i:number,c:number,m:T.Matrix4)=>{const q=i*TRAIN_CARS+c,o=q*12;plateCorner(m,o,-PLATE_HW,PLATE_Y-PLATE_HH);plateCorner(m,o+3,PLATE_HW,PLATE_Y-PLATE_HH);plateCorner(m,o+6,PLATE_HW,PLATE_Y+PLATE_HH);plateCorner(m,o+9,-PLATE_HW,PLATE_Y+PLATE_HH);
+  const e=m.elements;for(let k=0;k<4;k++){plateNor[o+k*3]=e[8];plateNor[o+k*3+1]=e[9];plateNor[o+k*3+2]=e[10];}};
  const runner=createTrainRunner(),states:TrainState[]=Array.from({length:TRAIN_COUNT},newTrainState);
  const hornAt=new Float64Array(TRAIN_COUNT).fill(-1e9),noted=new Uint8Array(TRAIN_COUNT),wasBlocked=new Uint8Array(TRAIN_COUNT);
  const cam=new T.Vector3(),frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(),m4=new T.Matrix4(),dm=new T.Matrix4(),flip=new T.Matrix4().makeRotationY(Math.PI),bx=new T.Vector3(),by=new T.Vector3(),bz=new T.Vector3();
@@ -235,9 +284,23 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   for(let k=0;k<nPeople;k++)if(onLine(people[k],s,0,LOOK_AHEAD+STOP_SHORT,LOOK_HALF)&&hit.gap<best){best=hit.gap;bs=hit.s;who=k;whoHit.side=hit.side;whoHit.d=hit.d;}
   return bs;}
  const cue=(name:string,gain:number)=>{if(typeof document!=='undefined'&&typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue:name,gain}}));};
- const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh)];
+ const all:T.Object3D[]=[...trains.map(t=>t.mesh),doors,...crossings.map(x=>x.mesh),...boards.meshes.map(b=>b.mesh),plates];
+ /** Car c of a train whose front is at track s: its matrix (local +z toward its cab; car 1 runs reversed). Allocation-free. */
+ function carMatrix(s:number,c:number,out:T.Matrix4){const sc=s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
+  const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
+  bz.set((pa.x-pb.x)*rev,(ya-yb)*rev,(pa.z-pb.z)*rev).normalize();by.set(0,1,0);bx.crossVectors(by,bz).normalize();by.crossVectors(bz,bx);
+  out.makeBasis(bx,by,bz);out.setPosition((pa.x+pb.x)/2,(ya+yb)/2,(pa.z+pb.z)/2);return out;}
+ const seatM=new T.Matrix4(),seatV=new T.Vector3(),fresh=newTrainState();
  const api={
   root,triangles:detail[0].triangles,runner,states,
+  /** Phase 3: 1 while someone (me or a drawn friend) rides train i: it draws its open variant (window holes, seats). Town writes it. */
+  ridden:new Uint8Array(TRAIN_COUNT),
+  /** Phase 3: where seat j of train k is (root on the car floor, facing the aisle). `now`: worked out for that clock from the
+   *  timetable and the runner's lag (friends are posed before this frame's update); without it, from this frame's states. */
+  seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose{
+   let s:number;if(now===undefined)s=states[k].s;else if(Number.isFinite(api.cluster))s=states[k].s;else s=scheduleAt(trainPhase(k,now)-runner.behind(k),fresh).s;
+   const c=Math.min(TRAIN_CARS-1,j>>2),side=(j&1)?1:-1;carMatrix(s,c,seatM);seatV.set(side*SEAT_ROOT_X,CAR_FLOOR_Y,seatZ(j)).applyMatrix4(seatM);
+   const e=seatM.elements;out.x=seatV.x;out.y=seatV.y;out.z=seatV.z;out.yaw=Math.atan2(-side*e[0],-side*e[2]);return out;},
   /** Debug / gfx views only (window.__fi2.trains.cluster = s): all three trains pinned close together at track s; NaN = the timetable. */
   cluster:NaN,
   /** When the priming frame was drawn (performance.now(); NaN until then). */
@@ -253,7 +316,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
    const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
    pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
-   nPeople=0;{const p=people[nPeople++];p.x=f.player.x;p.y=f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);
+   const riding=f.riding??-1;nPeople=0;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
    const cluster=Number.isFinite(api.cluster),night=MACHINE_NIGHT.value as number;
    // ---- trains near the camera are simulated (people, catch-up); the rest are exactly where the timetable says
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i];
@@ -269,7 +332,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      if(whoHit.d<LOOK_HALF+.4){const t=trackAt(stopAt,pa),k=SLIDE_SPEED*dt*(whoHit.side||1);result.nudgeX+=t.tz*k;result.nudgeZ+=-t.tx*k;}}
     else if(!blocked)noted[i]=0;}
    // ---- the local player never stands inside a car: pushed out to the side
-   for(let i=0;i<TRAIN_COUNT;i++){if(onLine(people[0],states[i].s,-TRAIN_LENGTH-.3,0,HALF_W+.4)){const push=HALF_W+.45-hit.d,t=trackAt(hit.s,pa);if(push>0){result.nudgeX+=t.tz*hit.side*push;result.nudgeZ+=-t.tx*hit.side*push;}break;}}
+   if(riding<0)for(let i=0;i<TRAIN_COUNT;i++){if(onLine(people[0],states[i].s,-TRAIN_LENGTH-.3,0,HALF_W+.4)){const push=HALF_W+.45-hit.d,t=trackAt(hit.s,pa);if(push>0){result.nudgeX+=t.tz*hit.side*push;result.nudgeZ+=-t.tx*hit.side*push;}break;}}
    // ---- crossings: state at XING_HZ (events), arm swing per frame only while moving and drawn; the bell within BELL_RANGE m
    xingWait-=dt;const tick=xingWait<=0;if(tick)xingWait=1/XING_HZ;let bellX=Infinity;
    for(let ci=0;ci<crossings.length;ci++){const x=crossings[ci],show=Math.hypot(x.x-cam.x,x.z-cam.z)<XING_SHOW;if(x.mesh.visible!==show)x.mesh.visible=show;
@@ -286,30 +349,34 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      if(text!==b.text){b.text=text;boards.draw(r,l1,l2);dirty=true;}}
     if(dirty)boards.tex.needsUpdate=true;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
-   let nd=0;
+   let nd=0,np=0;
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
     const show=d<HIDE_RANGE&&frustum.intersectsSphere(sphere);if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
-    const far=d>LOD_RANGE;if(far!==tr.far){tr.far=far;tr.mesh.geometry=far?boxes[tr.lv]:detail[tr.lv].geometry;}
+    const far=d>LOD_RANGE;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
+    if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
     const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
     if(animate){tr.spin=(st.s/WHEEL_R)%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
     tr.look.lamp.z=night*2.6;// the window band: the indicator channel, lit by the shared night factor
-    for(let c=0;c<TRAIN_CARS;c++){const sc=st.s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,sa=sc+BOGIE_HALF,sb=sc-BOGIE_HALF;trackAt(sa,pa);trackAt(sb,pb);
-     const ya=bedAt(L.profile,sa)+RAIL_TOP,yb=bedAt(L.profile,sb)+RAIL_TOP,rev=c%2===1?-1:1;
-     bz.set((pa.x-pb.x)*rev,(ya-yb)*rev,(pa.z-pb.z)*rev).normalize();by.set(0,1,0);bx.crossVectors(by,bz).normalize();by.crossVectors(bz,bx);
-     m4.makeBasis(bx,by,bz);m4.setPosition((pa.x+pb.x)/2,(ya+yb)/2,(pa.z+pb.z)/2);tr.mesh.setMatrixAt(c,m4);
-     if(far)continue;// doors: drawn only in the near tier; open on the platform side while standing
+    for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4);tr.mesh.setMatrixAt(c,m4);
+     if(far)continue;writePlate(i,c,m4);np++;// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
       for(let dI=0;dI<DOORS.length;dI++)for(let dir=-1;dir<=1;dir+=2){dm.makeTranslation(s*(HALF_W+.02),(DOOR_Y0+DOOR_Y1)/2,DOORS[dI]+dir*(DOOR_HALF/2+o*DOOR_HALF*.95));if(s<0)dm.multiply(flip);dm.premultiply(m4);doors.setMatrixAt(nd++,dm);}}}
     tr.mesh.instanceMatrix.needsUpdate=true;}
+   // plates: the near-tier cabs only (the rest collapse to nothing); one upload a frame while any is drawn
+   const pvis=np>0;if(plates.visible!==pvis)plates.visible=pvis;
+   if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far)platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);
+    (plateGeo.attributes.position as T.BufferAttribute).needsUpdate=true;(plateGeo.attributes.normal as T.BufferAttribute).needsUpdate=true;}
    if(doors.count!==nd)doors.count=nd;const dv=nd>0;if(doors.visible!==dv)doors.visible=dv;if(dv)doors.instanceMatrix.needsUpdate=true;
    doorLook.lamp.z=night*2.6;
    return result;
   },
+  /** Phase 3: crossing ci's lamps are flashing or its arms are not up (road traffic stops at it: the causeway's cayTraffic). */
+  crossingClosed(ci:number){const x=crossings[ci];return !!x&&(x.lamps||x.arm>.02||x.target>0);},
   /** For tests and the gfx probe: what is drawn right now. */
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
-   return {cars,far,doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
-  dispose(){for(const d of detail)d.geometry.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
+   return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,now:lastNow};},
+  dispose(){for(const d of detail)d.geometry.dispose();for(const g of openGeo)g?.dispose();plateGeo.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
    doorLook.material.dispose();doors.dispose();for(const x of crossings){x.mesh.geometry.dispose();x.look.material.dispose();}
    for(const b of boards.meshes)b.mesh.geometry.dispose();boards.mat.dispose();boards.tex.dispose();root.removeFromParent();},
  };
