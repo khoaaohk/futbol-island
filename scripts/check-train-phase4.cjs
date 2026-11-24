@@ -6,11 +6,11 @@
 // the platform at night: lanterns, panes, board, machine, islanders) screenshot. Never port 8092.
 // Needs:  relay  MP_PORT=8797 MP_DEV=1 MP_WORLD_OPEN=1 node multiplayer/dev-relay/server.mjs
 //         app    NEXT_DIST_DIR=.next-train4 NEXT_PUBLIC_MULTIPLAYER=1 NEXT_PUBLIC_PUBLIC_WORLD=1 NEXT_PUBLIC_MULTIPLAYER_URL=http://127.0.0.1:8797 npx next dev -p 9157
-// Run:    node scripts/check-train-phase4.cjs --port=9157 [--shots=<dir>]
+// Run:    node scripts/check-train-phase4.cjs --port=9157 [--shots=<dir>] [--relay=8797]
 const { chromium } = require('playwright');
 const path = require('path');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const port = arg('port'), shots = arg('shots', '');
+const port = arg('port'), shots = arg('shots', ''), relay = arg('relay', '8797');
 if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); process.exit(2); }
 const url = `http://localhost:${port}`;
 const results = [];
@@ -63,7 +63,7 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     // both in the same world: each draws the other on the platform (the relay counts 2 joins)
     let seenA = null, seenB = null;
     for (let i = 0; i < 60; i++) { seenB = await nearestRemote(B.p, spots.A.x, spots.A.z); seenA = await nearestRemote(A.p, spots.B.x, spots.B.z); if (seenA.best < 2.5 && seenB.best < 2.5) break; await A.p.waitForTimeout(1000); if (i % 10 === 9) for (const c of [A, B]) await c.p.keyboard.press('Shift'); }
-    const metrics = await fetch('http://127.0.0.1:8797/dev/metrics').then((r) => r.json()).catch(() => null);
+    const metrics = await fetch(`http://127.0.0.1:${relay}/dev/metrics`).then((r) => r.json()).catch(() => null);
     check('both clients in one public world and drawing each other on the platform', seenA.best < 2.5 && seenB.best < 2.5, `A sees B ${seenA.best.toFixed(2)} m (${seenA.n} remotes), B sees A ${seenB.best.toFixed(2)} m (${seenB.n}); relay ${JSON.stringify(metrics?.worlds ?? metrics)?.slice(0, 120)}`);
     // station islanders and the drink machine on this platform; draw calls on the phone with them in view
     const sta = await A.p.evaluate((id) => { const f = window.__fi2, npcs = f.islandNpcs?.entries ?? []; const here = npcs.filter((e) => e.id.startsWith('stn-') && e.definition.station === id);

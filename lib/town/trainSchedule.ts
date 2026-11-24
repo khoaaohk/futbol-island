@@ -23,7 +23,7 @@ export const LAP=360,HEADWAY=LAP/TRAIN_COUNT,DWELL=14,ACCEL=.8,DECEL=1,CRUISE=12
 /** Catch-up: up to 15 % faster while behind; dwells run at most twice as fast (never shorter than half). */
 export const CATCH_UP=.15,DWELL_TRIM=2;
 /** People on the track: look LOOK_AHEAD m ahead, ±LOOK_HALF m either side; stop STOP_SHORT m short at up to BRAKE m/s². */
-export const LOOK_AHEAD=40,LOOK_HALF=2.5,STOP_SHORT=4,BRAKE=2;
+export const LOOK_AHEAD=40,LOOK_HALF=2.5,STOP_SHORT=4,BRAKE=2,HELD_V=.6;
 /** Barriers: lamps from CROSSING_WARN s before the front reaches the crossing; the arms lower over CROSSING_ARM s. */
 export const CROSSING_WARN=8,CROSSING_ARM=3;
 /** Doors: open DOOR_DELAY s after a stop, close DOOR_DELAY s before leaving, sliding for DOOR_MOVE s. */
@@ -194,7 +194,9 @@ export function createTrainRunner(count=TRAIN_COUNT):TrainRunner{
     if(vs>.3)adv=v[i]/vs*dt;else adv=blocked&&gap<=.5?0:dt*rate;// pulling away / drawing in: time steps at the rate
     if(blocked&&adv>0){const nx=ahead(tmp.s,wrapS(S0+lapX(tau+adv)));if(nx>Math.max(0,gap)){adv=0;v[i]=0;}}}// never past the stopping point
    lag[i]=Math.max(0,lag[i]+dt-adv);tau=wrapT(sched-lag[i]);
-   held[i]=blocked&&(tmp.at>=0?tmp.dwellLeft<.2:v[i]<.05)?held[i]+dt:0;
+   // (standing = under HELD_V: a train inching up to a person who shifts their weight is still standing for them; the count
+   // used to restart on every centimetre of creep, so "Please step off the track" could wait forever)
+   held[i]=blocked&&(tmp.at>=0?tmp.dwellLeft<.2:v[i]<HELD_V)?held[i]+dt:0;
    scheduleAt(tau,out);if(out.at<0)out.v=v[i];t[i]=tau;return out;
   },
   reset(i){lag[i]=0;v[i]=0;held[i]=0;slow[i]=0;fresh[i]=1;},
