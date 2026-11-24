@@ -576,7 +576,7 @@ const recStart = (p, k) => p.evaluate((k) => { const f = window.__fi2, r = f.ren
       rec.push({ t: ts, me: px(pr.x, pr.y + 1, pr.z), car: px(m.elements[12], m.elements[13] + 2.4, m.elements[14]), off: [cam.position.x - pr.x, cam.position.y - pr.y, cam.position.z - pr.z].map((x) => +x.toFixed(2)), ride: f.rideRef.current, roof: f.roofRide.k, bonk: !!(f.trainBonk && f.trainBonk.active) }); }
     return orig.apply(this, arguments); }; }, k);
 const recStop = (p) => p.evaluate(() => { const f = window.__fi2, rec = window.__rec; window.__rec = null; f.renderer.render = window.__recOrig;
-  const on = rec.findIndex((x) => x.ride === 'walk'), t0 = on >= 0 ? rec[on].t + 400 : Infinity, out = { frames: rec.length, landedAt: on, bonk: rec.some((x) => x.bonk), roof: Math.max(...rec.map((x) => x.roof)) };
+  let on = rec.findIndex((x) => x.roof >= 0); if (on < 0) { const j = rec.findIndex((x) => x.ride === 'jetpack'); on = j < 0 ? -1 : rec.findIndex((x, i) => i > j && x.ride === 'walk'); } const t0 = on >= 0 ? rec[on].t + 400 : Infinity, out = { frames: rec.length, landedAt: on, bonk: rec.some((x) => x.bonk), roof: Math.max(...rec.map((x) => x.roof)) };
   for (const key of ['me', 'car']) { const e = []; for (let i = 1; i < rec.length - 1; i++) { if (rec[i - 1].t < t0) continue; const A = rec[i - 1][key], B = rec[i][key], C = rec[i + 1][key], dt = rec[i + 1].t - rec[i - 1].t; if (!(dt > 0)) continue; const w = (rec[i].t - rec[i - 1].t) / dt;
       e.push(Math.hypot(B[0] - (A[0] + (C[0] - A[0]) * w), B[1] - (A[1] + (C[1] - A[1]) * w))); }
     e.sort((a, b) => a - b); out[key] = e.length > 10 ? { n: e.length, p95: +e[Math.floor(e.length * .95)].toFixed(2), max: +e[e.length - 1].toFixed(2) } : null; }
