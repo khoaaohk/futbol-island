@@ -80,7 +80,7 @@ console.log('train-gameplay3 walk frame: ok');
 console.log('train-gameplay3 stand / walk / sit / get off: ok');
 // ---- 3. wiring
 {const town=read('components/Town.tsx'),css=read('app/globals.css'),icon=read('components/TravelIcon.tsx'),pose=L('lib/graphics/trainSeatPose.ts');
- assert(/player\.update\(trainGait\.on\?trainGait\.x:visualLocation\.x,trainGait\.on\?trainGait\.z:visualLocation\.z/.test(town),'the rig walks in the train frame');
+ assert(/player\.update\(trainGait\.on\?trainGait\.x:trainStill\?0:visualLocation\.x,trainGait\.on\?trainGait\.z:trainStill\?0:visualLocation\.z/.test(town),'the rig walks in the train frame (seated: a fixed spot, RIDE 3)');
  assert(/if\(trainGait\.on\)\{trainGait\.facing=NaN;trainRide\.gaitYaw=player\.root\.rotation\.y;player\.root\.position\.set\(gWx,gWy,gWz\)/.test(town),'and goes back to its world spot');
  assert(/className="touch-juggle touch-walk"/.test(town)&&/\.touch-juggle\.touch-walk/.test(css),'the Walk button (round, the cluster style)');
  assert(/trainSeatGlow\.update\(trainRide\.active\?trainRide\.glows:null\)/.test(town),'the seat glow follows the ride');assert(/ sit:'M/.test(icon),'a sit icon');

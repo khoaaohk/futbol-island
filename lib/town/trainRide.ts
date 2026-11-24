@@ -90,12 +90,19 @@ export const TRAIN_VIEW_LABEL:Record<TrainView,string>={seat:'Seat view',front:'
 /** The outside views: the look point (m behind the train's nose, height over the rail bed), the camera's bearing from it (rad: 0 ahead
  *  of the train, π behind, +π/2 on its left), elevation (rad), distance (m; portrait × `portrait`), how far the orbit turns either way
  *  (rad) and the zoom range. The side shots fit the whole train (24.4 m) with scenery round it. */
-export const OUTSIDE:Record<'front'|'back'|'left'|'right'|'above',{at:number;lh:number;az:number;el:number;dist:number;portrait:number;yaw:number;zMin:number;zMax:number}>={
+// RIDE 3: a portrait phone's side shot (28° across) cannot fit the 24.4 m train square on without going tiny: the sides there
+// look from a three-quarter bearing behind the train (`pAz`), so the whole train fits (check-train-aaa framing).
+export const OUTSIDE:Record<'front'|'back'|'left'|'right'|'above',{at:number;lh:number;az:number;pAz?:number;el:number;dist:number;portrait:number;yaw:number;zMin:number;zMax:number}>={
  front:{at:4.5,lh:2.4,az:0,el:.26,dist:13,portrait:1.15,yaw:1.25,zMin:.55,zMax:1.8},
  back:{at:TRAIN_LENGTH-4.5,lh:2.4,az:Math.PI,el:.26,dist:13,portrait:1.15,yaw:1.25,zMin:.55,zMax:1.8},
- left:{at:TRAIN_LENGTH/2,lh:2.2,az:Math.PI/2,el:.2,dist:24,portrait:1.45,yaw:1.2,zMin:.5,zMax:1.6},
- right:{at:TRAIN_LENGTH/2,lh:2.2,az:-Math.PI/2,el:.2,dist:24,portrait:1.45,yaw:1.2,zMin:.5,zMax:1.6},
- above:{at:TRAIN_LENGTH/2,lh:1.5,az:Math.PI,el:1.32,dist:34,portrait:1.3,yaw:Math.PI,zMin:.5,zMax:1.5}};
+ left:{at:TRAIN_LENGTH/2,lh:2.2,az:Math.PI/2,pAz:Math.PI-.62,el:.2,dist:24,portrait:1.6,yaw:1.2,zMin:.5,zMax:1.6},
+ right:{at:TRAIN_LENGTH/2,lh:2.2,az:-Math.PI/2,pAz:.62-Math.PI,el:.2,dist:24,portrait:1.6,yaw:1.2,zMin:.5,zMax:1.6},
+ above:{at:TRAIN_LENGTH/2,lh:1.5,az:Math.PI,el:1.32,dist:44,portrait:1.3,yaw:Math.PI,zMin:.5,zMax:1.5}};
+/** RIDE 3 (owner, Nov 24 2026: "camera angles don't have the train and only show the riders"): in the Summit tunnel the outside
+ *  views have no outside: the rock pulled their spring arm in to the train's centre line, inside the car. While any part of the
+ *  train is in the tube they ease (TUBE.rate /s) to a shot along the tube: Front from `ahead` m before the nose looking back at the
+ *  cab; Back, the sides and From above from `behind` m after the tail looking up the train over its roof. */
+export const TUBE={ahead:7.5,aheadUp:3.4,behind:7.5,behindUp:4.3,lookIn:4,lookUp:2.3,rate:3} as const;
 /** Switching views eases the camera over VIEW_EASE s (train-relative, so it keeps up with the train). */
 export const VIEW_EASE=.6;
 /** Near-camera fade (owner, Nov 24 2026): a body within FADE_NEAR m of the camera is hidden, shown again past FADE_FAR m. */
@@ -212,8 +219,8 @@ export function createTrainRide(ports:Ports){
  // Camera views (owner, Nov 24 2026): the view, the ease from the last frame's camera (snap: train-relative position, its rotation;
  // viewT 0 … 1), the last applied pose and the train nose it was relative to; the Inside view's follow point (train frame) and side
  // (+1: the camera on the train frame's +x side); the outside / inside views' spring arms.
- let camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,inX=0,inU=0,inSide=1,armO=-1,armI=-1,havePose=false;
- const snapP=new T.Vector3(),snapQ=new T.Quaternion(),lastP=new T.Vector3(),lastQ=new T.Quaternion(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
+ let tubeW=0,camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,inX=0,inU=0,inSide=1,armO=-1,armI=-1,havePose=false;
+ const snapP=new T.Vector3(),snapQ=new T.Quaternion(),lastP=new T.Vector3(),lastQ=new T.Quaternion(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},tpc={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
  function board(){
@@ -515,14 +522,22 @@ export function createTrainRide(ports:Ports){
    // The outside views (OUTSIDE): a look point on the train (from its nose back along the track), the camera on a bearing from it,
    // the orbit on top, kept clear of roofs, rock, the hill and the truss by its own spring arm.
    if(camView!=='seat'&&camView!=='inside'){
-    const o=OUTSIDE[camView],sl=wrapS(s-o.at),c=trackAt(sl,tpo),hy=bedAt(L.profile,sl)+o.lh,az=o.az+orb.yaw,ca=Math.cos(az),sa=Math.sin(az);
+    const o=OUTSIDE[camView],sl=wrapS(s-o.at),c=trackAt(sl,tpo),hy=bedAt(L.profile,sl)+o.lh,az=(portrait&&o.pAz!==undefined?o.pAz:o.az)+orb.yaw,ca=Math.cos(az),sa=Math.sin(az);
     const el0=Math.max(.06,Math.min(1.45,o.el+orb.pitch)),len=o.dist*(portrait?o.portrait:1)*orb.zoom,hx=ca*c.tx+sa*c.tz,hz=ca*c.tz-sa*c.tx;
     // a station house between a platform-side camera and the train: rather than pull in against the cars, the camera rises over its
     // roof (the least extra elevation that clears, re-checked 4× a second, eased up fast and down slowly); the spring arm stays the net
     liftIn-=h;if(liftIn<=0){liftIn=.25;liftWant=0;for(let x=0;x<=1.2;x+=.1){const e2=Math.min(1.45,el0+x),c2=Math.cos(e2)*len;if(camClearFraction(c.x,hy,c.z,c.x+hx*c2,hy+Math.sin(e2)*len,c.z+hz*c2,ports.ground)>=1){liftWant=x;break;}}}
     if(liftSnap){lift=liftWant;liftSnap=false;}else lift+=(liftWant-lift)*(reduced?1:1-Math.exp(-(liftWant>lift?6:1.5)*h));
     const el=Math.min(1.45,el0+lift),ce=Math.cos(el)*len;
-    v.set(c.x+hx*ce,hy+Math.sin(el)*len,c.z+hz*ce);clearArm(c.x,hy,c.z,v,h,false);camPos.copy(v);camLook.set(c.x,hy,c.z);}
+    v.set(c.x+hx*ce,hy+Math.sin(el)*len,c.z+hz*ce);clearArm(c.x,hy,c.z,v,h,false);camPos.copy(v);camLook.set(c.x,hy,c.z);
+    // in the tunnel: along the tube at the train's end (TUBE), so the shot is always of the train
+    const tubeOn=inTunnelS(wrapS(s+2))||inTunnelS(wrapS(s-TRAIN_LENGTH/2))||inTunnelS(wrapS(s-TRAIN_LENGTH-2));
+    tubeW=reduced?(tubeOn?1:0):tubeW+((tubeOn?1:0)-tubeW)*(1-Math.exp(-TUBE.rate*h));if(tubeW<.002)tubeW=0;else if(tubeW>.998)tubeW=1;
+    if(tubeW>0){const fr=camView==='front',sc=wrapS(fr?s+TUBE.ahead:s-TRAIN_LENGTH-TUBE.behind),sl=wrapS(fr?s-TUBE.lookIn:s-TRAIN_LENGTH+TUBE.lookIn);
+     const a=trackAt(sc,tpc),ax=a.x,az=a.z,b=trackAt(sl,tpc),w=tubeW*tubeW*(3-2*tubeW);
+     camPos.set(camPos.x+(ax-camPos.x)*w,camPos.y+(bedAt(L.profile,sc)+(fr?TUBE.aheadUp:TUBE.behindUp)-camPos.y)*w,camPos.z+(az-camPos.z)*w);
+     camLook.set(camLook.x+(b.x-camLook.x)*w,camLook.y+(bedAt(L.profile,sl)+TUBE.lookUp-camLook.y)*w,camLook.z+(b.z-camLook.z)*w);}}
+   else tubeW=0;
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
    // a view change eases from where the camera was (relative to the train's nose, so it keeps up with the train)
    {const n=trackAt(s,tpn);refX=n.x;refZ=n.z;}

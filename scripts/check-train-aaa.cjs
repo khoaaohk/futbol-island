@@ -6,6 +6,7 @@
 //   vending  each station's drink machine: the prompt shows on its platform, the machine zooms in with drinks, closes
 //   ride     board at a platform, ride on (bridge crest height, announcement, tunnel), tab hidden 20 s then back (train where the
 //            timetable says), fast travel while riding (gets off), board refused while jetpacking
+//   framing  every outside view at 5 points round the loop (incl. the bridge and the tunnel): camera outside the cars, train on screen
 //   views    ride, then every camera view: the ridden train is drawn (open car mesh), its roof cut only in Inside
 //   track    standing on the rails (owner Nov 24 2026: trains never wait): Kenji warns, the train keeps its timetable, the bonk throws you clear
 //   deck     the track assist onto a bridge head, off a deck into the sea (swim), a swimmer at a high deck stays in, the splash bonk
@@ -105,6 +106,10 @@ async function partVending(c) {
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
     if (await p.locator('[data-vending-machine]').count()) await p.locator('[data-vending-machine]').getByRole('button', { name: /^(Done|Close|Back)$/ }).first().click({ timeout: 1500 }).catch(() => {});
     await p.waitForSelector('[data-vending-machine]', { state: 'detached', timeout: 6000 }).catch(() => {});
+    // RIDE 3 (Nov 24 2026): the zoom out must finish (vending.zooming false, the player shown again) or the island stays paused
+    const out = await p.waitForFunction(() => { const v = window.__fi2.vending; return !v.zooming && !v.hidesPlayer && v.focused === null; }, null, { timeout: 4000 }).then(() => true).catch(() => false);
+    const vs = await p.evaluate(() => { const v = window.__fi2.vending; return `zooming ${v.zooming} hides ${v.hidesPlayer} focused ${v.focused}`; });
+    check(`vending ${id}: the camera zooms back out (island running again)`, out, vs);
   }
 }
 async function standingTrainAt(p, si) {
@@ -327,6 +332,39 @@ async function partViews(c) {
   }
   await p.evaluate(() => window.__fi2.trainRide.finish());
 }
+// RIDE 3 (owner Nov 24 2026: "camera angles don't have the train and only show the riders"): every outside view at 5 points round
+// the loop (3 spread, the South Bridge crest, the Summit tunnel): the camera is outside every car of the ridden train and most of
+// the train's body corners (both cars, 16 points) are on screen.
+async function partFraming(c) {
+  const { p } = c;
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
+  await p.waitForTimeout(1500);
+  const k = await p.evaluate(() => window.__fi2.trainRide.train);
+  if (k < 0) { check('framing: riding', false); return; }
+  const pts = await p.evaluate(() => { const s = window.__fi2.trains.sched, L = 2700, near = (x, z) => { let b = 0, d = 1e9; for (let q = 0; q < L; q += 1) { const a = s.trackAt(q), e = Math.hypot(a.x - x, a.z - z); if (e < d) { d = e; b = q; } } return b; };
+    const w = near(538.5, 169.5), e = near(670.5, 43.1), tun = Math.abs(e - w) < L / 2 ? (w + e) / 2 + 12 : ((w + e + L) / 2 + 12) % L;
+    let br = 0, bb = -1e9; for (let q = 0; q < L; q += 2) { const lo = Math.min(w, e) - 60, hi = Math.max(w, e) + 60; if (q > lo && q < hi) continue; const y = s.bed(q); if (y > bb) { bb = y; br = q; } }
+    return [['a', 300], ['b', 1200], ['c', 2050], ['bridge', br + 12], ['tunnel', tun]]; });
+  for (const [name, sWant] of pts) {
+    const T = await p.evaluate(({ sWant }) => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let t = 0; t < 360; t += .05) { const st = s.trainAt(0, t); const d = Math.abs((((st.s - sWant) % 2700) + 4050) % 2700 - 1350); if (d < bd && st.at < 0) { bd = d; best = t; } } return best; }, { sWant });
+    await setLap(p, k, T); await p.waitForTimeout(600);
+    for (const v of ['front', 'back', 'left', 'right', 'above']) {
+      await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(v === 'front' ? 2200 : 1500);
+      const r = await p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, V = cam.position.constructor, m = new M(), inv = new M(), q = new V();
+        cam.updateMatrixWorld(); let inside = false, on = 0, n = 0;
+        for (let ci = 0; ci < 2; ci++) { f.trains.carMatrixOf(k, ci, m); inv.copy(m).invert(); q.copy(cam.position).applyMatrix4(inv); if (Math.abs(q.x) < 1.55 && q.y > 1 && q.y < 5.2 && Math.abs(q.z) < 6.3) inside = true;
+          for (const x of [-1.4, 1.4]) for (const y of [1.0, 3.8]) for (const z of [-6, 6]) { q.set(x, y, z).applyMatrix4(m).project(cam); n++; if (Math.abs(q.x) <= 1.02 && Math.abs(q.y) <= 1.02 && q.z > -1 && q.z < 1) on++; } }
+        return { inside, on, n, s: +f.trains.states[k].s.toFixed(0), view: f.trainRide.view, riding: f.trainRide.active }; }, k);
+      check(`framing ${name} ${v}: camera outside the cars, the train on screen`, r.riding && r.view === v && !r.inside && r.on >= 14, JSON.stringify(r));
+      if (shots && (name === 'tunnel' || name === 'bridge')) await p.screenshot({ path: path.join(shots, `framing-${name}-${v}-${phone ? 'phone' : 'desktop'}.png`) });
+    }
+  }
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
+  await p.evaluate(() => window.__fi2.trainRide.finish());
+}
 async function partRoof(c) {
   const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
   const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
@@ -466,7 +504,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));
