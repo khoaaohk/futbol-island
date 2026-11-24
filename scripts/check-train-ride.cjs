@@ -25,6 +25,8 @@ async function start(p) {
 }
 async function boot(b, vp, mobile, seed) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
+  // under a local `next start` / dev /api/build-id answers a new id: no "new release" reload mid-check (as check-train-aaa)
+  await ctx.route('**/api/build-id', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
   // as check-train-phase4: a holdout seed in the "on" arm (lib/multiplayer/holdout.ts), never the 10 % Just-me holdout
   await ctx.addInitScript((seed) => { try { if (!sessionStorage.getItem('__t_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint'); localStorage.setItem('fi2-holdout-v1', seed); } sessionStorage.setItem('__t_boot', '1'); } catch { /* */ } }, seed);
   const p = await ctx.newPage(), errs = [];
@@ -93,6 +95,7 @@ const STOP_STATION = ['west', 'south', 'summit', 'cay', 'north'], STATION_INDEX 
     await B.p.evaluate(() => window.__fi2.teleport(170, -150, 0)); await B.p.waitForTimeout(1500);
     await B.p.click('[data-tour="map"], button[aria-label*="map" i]', { timeout: 5000 }).catch(() => {});
     await B.p.waitForTimeout(1500);
+    if (!(await B.p.locator('[data-train-dot]').count())) { await B.p.keyboard.press('m'); await B.p.waitForTimeout(1500); }// the button can sit under a toast on a slow frame: the M key opens the same map
     const map = await B.p.evaluate(() => ({ line: !!document.querySelector('[data-train-line]'), pins: document.querySelectorAll('[data-train-station]').length, dots: [...document.querySelectorAll('[data-train-dot]')].map((d) => d.getAttribute('transform')) }));
     await B.p.waitForTimeout(1200); const dots2 = await B.p.evaluate(() => [...document.querySelectorAll('[data-train-dot]')].map((d) => d.getAttribute('transform')));
     check('map: line, 5 station pins, 3 live dots that move', map.line && map.pins >= 5 && map.dots.length === 3 && dots2.some((d, i) => d !== map.dots[i]), `pins ${map.pins}, dots ${map.dots.length}`);

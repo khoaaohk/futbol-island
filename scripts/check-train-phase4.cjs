@@ -27,6 +27,8 @@ async function start(p) {
 }
 async function boot(b, vp, mobile, seed, time) {
   const ctx = await b.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: 1 });
+  // under a local `next start` / dev /api/build-id answers a new id: no "new release" reload mid-check (as check-train-aaa)
+  await ctx.route('**/api/build-id', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
   await ctx.addInitScript(({ seed, time }) => { try { if (!sessionStorage.getItem('__t_boot')) { localStorage.setItem('fi2-welcome-v1', 'completed'); localStorage.setItem('fi2-public-hint-v1', 'card hint');
     localStorage.setItem('fi2-holdout-v1', seed);/* a seed in the "on" arm (lib/multiplayer/holdout.ts): never the 10 % Just-me holdout */ if (time) localStorage.setItem('fi2-time-of-day', time); } sessionStorage.setItem('__t_boot', '1'); } catch { /* */ } }, { seed, time });
   const p = await ctx.newPage(), errs = [];
