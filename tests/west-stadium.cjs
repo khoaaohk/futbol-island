@@ -118,7 +118,7 @@ console.log('west stadium phase 1: ok');
  const parkTrees=world.assets.filter(a=>a.kind==='tree'&&a.x<-100);
  assert(!parkTrees.some(a=>!L.onGrass(a.x,a.z)||L.grassEdgeDistance(a.x,a.z)<WP.PALM_EDGE_M),'no broadleaf / conifer tree on the beach or its edge row');
  const palms=world.assets.filter(a=>a.kind==='palm'&&a.x<-100);assert(palms.length>=40&&palms.every(a=>distanceToShore(a.x,a.z)>=12),'West Beach palms '+palms.length+' (dry sand / edge row)');
- assert(st.trees>=150&&st.trees<=340&&st.trees+st.palms<=340,'park trees '+st.trees+', palms '+st.palms);
+ assert(st.trees>=145/* Nov 23 2026: the lawn by West Beach station moved off the line (149) */&&st.trees<=340&&st.trees+st.palms<=340,'park trees '+st.trees+', palms '+st.palms);
  // G. The plaza is just "Plaza" in the world too.
  assert.equal(L.PLAZA_LABEL,'PLAZA');assert(!/STADIUM PLAZA/.test(fs.readFileSync(path.join(base,'lib/town/westPark.ts'),'utf8')),'in-world sign says PLAZA');
  // Pond life: wired in Town; near the pond the koi and dragonflies show and move, far away they hide; a ball dropping in the

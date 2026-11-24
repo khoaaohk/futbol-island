@@ -75,7 +75,7 @@ export const POND_JETTY_AT={x:jettyFrame.x,z:jettyFrame.z,ux:jettyFrame.ux,uz:je
 export function onPondJetty(x:number,z:number,margin=0){const J=POND_JETTY_AT,dx=x-J.x,dz=z-J.z,along=dx*J.ux+dz*J.uz,across=-dx*J.uz+dz*J.ux;
  return along>-margin&&along<POND_JETTY.len+margin&&Math.abs(across)<POND_JETTY.w/2+margin;}
 /** Mown lawns (ellipses). Nov 13 2026 (owner): moved clear of every path, the bowl's apron and the pond (the middle one north). */
-export const PARK_LAWNS=[{x:-262,z:-160,rx:20,rz:12},{x:-150,z:-150,rx:20,rz:11},{x:-300,z:-72,rx:12,rz:18}] as const;
+export const PARK_LAWNS=[{x:-260,z:-160,rx:19,rz:12},{x:-150,z:-150,rx:20,rz:11},{x:-290,z:-80,rx:10,rz:13}] as const;// Nov 23 2026 (owner: "move this patch of grass so it doesn't run into the tracks"): every lawn edge >= 4.9 m from the Island Line (ballast foot + 3 m); were (-262,-160,20x12) and (-300,-72,12x18)
 export type P=readonly [number,number];
 export type Curve=readonly [P,P,P,P];
 const bezier=([a,b,c,d]:Curve,t:number):P=>{const u=1-t;return [u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]];};

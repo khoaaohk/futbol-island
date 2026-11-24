@@ -30,6 +30,15 @@ export const POND_BEACH_EXTRA=5;
 const easeBand=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/(b-a)));return k*k*(3-2*k);};
 export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9+(p.z>100?POND_BEACH_EXTRA*easeBand(-112,-140,p.x)*easeBand(-225,-195,p.x):0):p.z>95&&p.x>-30&&p.x<245?22/* Nov 23 2026: the south beach the Island Line runs along (sand from the water past the rails) */:5;
 export const SHORE_SAND=ISLAND_SHORE.map((p,i)=>{const previous=ISLAND_SHORE[(i+ISLAND_SHORE.length-1)%ISLAND_SHORE.length],next=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length],dx=next.x-previous.x,dz=next.z-previous.z,length=Math.hypot(dx,dz),width=shoreSandWidth(p);return {outer:p,inner:{x:p.x-dz/length*width,z:p.z+dx/length*width}};});
+/* Nov 23 2026 (owner: "this part of the island is glitchy"): where the beach is wide and the coast bends tightly (the South
+ * beach's SE corner at (236,242), the cove at (-16,121)) the inner edge, offset straight in from each point, ran backwards and
+ * the sand ribbon folded over itself: three coplanar layers with different wet-band shading, flickering. Untangle: an inner point
+ * on a reversed (or nearly) inner segment moves to its neighbours' midpoint until every inner segment runs the same way as its
+ * coast segment. Straight and gently curved coast keeps its exact widths. */
+{const n=SHORE_SAND.length,ok=(i:number)=>{const k=(i+1)%n,a=SHORE_SAND[i],b=SHORE_SAND[k],ax=b.outer.x-a.outer.x,az=b.outer.z-a.outer.z,bx=b.inner.x-a.inner.x,bz=b.inner.z-a.inner.z;return ax*bx+az*bz>.3*(ax*ax+az*az);};
+ for(let pass=0;pass<200;pass++){let bad=false;for(let i=0;i<n;i++){if(ok(i))continue;bad=true;
+   for(const j of [i,(i+1)%n]){const p=SHORE_SAND[(j+n-1)%n].inner,q=SHORE_SAND[(j+1)%n].inner,c=SHORE_SAND[j].inner;c.x=(c.x+p.x+q.x)/3;c.z=(c.z+p.z+q.z)/3;}}
+  if(!bad)break;}}
 export const NORTH_BEACH_UMBRELLAS=[{x:-48,z:-218},{x:-15,z:-224},{x:22,z:-229},{x:62,z:-229},{x:105,z:-227},{x:145,z:-220},{x:181,z:-218}];// Nov 23 2026: the last one 7 m seaward, off the Island Line (was 178,-211)
 export const NORTH_BEACH_PATHS=[{x:-45,z:-185,w:3,d:52},{x:80,z:-189,w:3,d:60}];
 
