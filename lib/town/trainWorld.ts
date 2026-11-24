@@ -24,6 +24,7 @@ import {summitGround} from './summitIsle';
 import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,SEA_WALL_HALF} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
+import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
 
 type Surface=Obstacle&{height:number};
 export type TrainTools={
@@ -32,8 +33,10 @@ export type TrainTools={
  /** A textured board material registered with the island's sign list (disposal, night emissive). */
  boardMaterial:(canvas:HTMLCanvasElement)=>T.Material;
  town:T.Group;obstacles:Obstacle[];walkSurfaces:Surface[];
+ /** Lighter line (Nov 23 2026, efficiency): default = the heat tier when the world is built is the lowest one (Battery saver). */
+ lite?:boolean;
 };
-const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',ballast:'#9a948a',girder:'#6d5640',pier:'#cbc4b5',wall:'#b8b0a1',wallTop:'#cfc8ba',pole:'#7a5c3e',wire:'#33393a',
+const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',sleeperBed:'#897c6e',ballast:'#9a948a',girder:'#6d5640',pier:'#cbc4b5',wall:'#b8b0a1',wallTop:'#cfc8ba',pole:'#7a5c3e',wire:'#33393a',
  platform:'#d3cbbb',platformSide:'#a8a091',edge:'#f2c230',plaster:'#f0e6cc',timber:'#5e4630',deck:'#a57f57',roof:'#566270',ridge:'#3d4650',pane:'#a9c9d2',lantern:'#d9483a',cap:'#2c2a28',
  bench:'#b48a5e',crossDeck:'#55524d',stone:'#aaa395',stoneDark:'#8d8679',mouth:'#121110'} as const;
 /** Spots a catenary pole must not stand on (it slides to the next row): the Starfish sandbar's hidden ball (coralCayBalls.ts cay-barefoot). */
@@ -72,6 +75,11 @@ class Geo{
 
 export function buildTrainWorld(tools:TrainTools){
  const {put,lit,town,obstacles,walkSurfaces}=tools;
+ // Lowest heat tier at build (the world builds once; Battery saver forces tier 4 from the first frame): no contact wire (poles keep
+ // the post and arm, and their colliders), sleepers as ONE flat strip per row in a sleeper-over-ballast colour (on land it is the
+ // ballast's own top, lifted to the sleeper top: 4 fewer tris a row; on the trestle 2 tris instead of 4), and the stations without
+ // lanterns, tile courses, ridge ends or the bench. Same paints, same batches: no new draw or program. Higher tiers unchanged.
+ const lite=tools.lite??effectiveTier()===LOWEST_TIER;
  const L=trainLayout(),K=L.profile.kind,BED=L.profile.bed,n=TRACK.n;
  const solid=(...os:Obstacle[])=>{for(const o of os){(o as Obstacle&{train?:boolean}).train=true;obstacles.push(o);}};
  const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;m.userData.train=true;return m;};
@@ -87,7 +95,7 @@ export function buildTrainWorld(tools:TrainTools){
  const perChunk=Math.round(CHUNK_LENGTH/TRACK_DS);
  for(let c0=0;c0<n;c0+=perChunk){
   const c1=Math.min(n,c0+perChunk),mid=pt((c0+c1)>>1),ox=Math.round(mid.x),oz=Math.round(mid.z);
-  const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),wire=new Geo(),xdeck=new Geo();
+  const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),wire=new Geo(),xdeck=new Geo(),bedTop=new Geo();
   for(let i=c0;i<c1;i++){
    const a=pt(i),b=pt(i+1);if(isTunnel(i)||isTunnel(i+1))continue;
    // Rails: a top and two sides per rail per row (no ends, no bottom).
@@ -103,14 +111,15 @@ export function buildTrainWorld(tools:TrainTools){
     xdeck.quad(off(a,-1,a.bed+yt),off(b,-1,b.bed+yt),off(b,1,b.bed+yt),off(a,1,a.bed+yt),inside);
     for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*2.6,gy(b)+.01),off(a,side*2.6,gy(a)+.01),inside);}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
-   for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
+   if(lite&&!xing){if(a.kind===TrackKind.Sea||b.kind===TrackKind.Sea)sleepers.quad(off(a,-1.15,a.bed+SLEEPER_TOP),off(b,-1.15,b.bed+SLEEPER_TOP),off(b,1.15,b.bed+SLEEPER_TOP),off(a,1.15,a.bed+SLEEPER_TOP),off(a,0,a.bed-1));}
+   else for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
    if(a.kind!==TrackKind.Sea&&b.kind!==TrackKind.Sea&&!xing){// Ballast: one continuous trapezoid strip on every land row (Nov 23 2026: was broken into
     // slabs round the crossings); it stops only under a crossing deck. On the bridge-head embankment (bed above the ground, trackProfile
     // RAMP_LAND) its sides run on down to the ground, widening as they go.
     const gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0,fa=1.9+(a.bed-gy(a))*1.4,fb=1.9+(b.bed-gy(b))*1.4;
-    const t0=off(a,-1.45,a.bed+BALLAST_TOP),t1=off(a,1.45,a.bed+BALLAST_TOP),u0=off(b,-1.45,b.bed+BALLAST_TOP),u1=off(b,1.45,b.bed+BALLAST_TOP),
+    const bt=lite?SLEEPER_TOP:BALLAST_TOP,t0=off(a,-1.45,a.bed+bt),t1=off(a,1.45,a.bed+bt),u0=off(b,-1.45,b.bed+bt),u1=off(b,1.45,b.bed+bt),
      f0=off(a,-fa,gy(a)-.06),f1=off(a,fa,gy(a)-.06),g0=off(b,-fb,gy(b)-.06),g1=off(b,fb,gy(b)-.06),inside=off(a,0,a.bed-1);
-    ballast.quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
+    (lite?bedTop:ballast).quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
    if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea){// Bridge head at every shore
     // (Nov 23 2026, owner: the first span floated): a stone abutment under the deck's end, its face down into the water, with low
     // wing walls back along the embankment; the ballast runs up onto it and the first pier stands just past it (trainLayout).
@@ -132,17 +141,17 @@ export function buildTrainWorld(tools:TrainTools){
    if(a.s>=poleNext&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
     const base=a.kind===TrackKind.Sea?a.bed-.4:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
-    poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
-    poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);
+    poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);if(!lite){poles.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
+    poles.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
-   wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022,true);
+   if(!lite)wire.beam(off(a,0,a.bed+WIRE_Y),off(b,0,b.bed+WIRE_Y),.022,true);
   }
   // Trestle piers in this chunk: a cap beam across and two columns down into the sea.
   for(const p of L.piers){const i=Math.round(p.s/TRACK_DS);if(i<c0||i>=c1)continue;
    const capY=p.bed-.6;piers.box(p.x,capY,p.z,p.tx,p.tz,.35,1.55,.2,false);
    for(const side of [-1,1]){const x=p.x+p.tz*PIER_COLUMN_OFFSET*side,z=p.z-p.tx*PIER_COLUMN_OFFSET*side,top=capY-.2,foot=-3.2;piers.box(x,(top+foot)/2,z,p.tx,p.tz,PIER_COLUMN_HALF,PIER_COLUMN_HALF,(top-foot)/2);}}
   emit(rails,C.rail,ox,oz);emit(railTops,C.railTop,ox,oz);emit(sleepers,C.sleeper,ox,oz);emit(ballast,C.ballast,ox,oz);emit(girders,C.girder,ox,oz);emit(piers,C.pier,ox,oz);
-  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);
+  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(wire,C.wire,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);
  }
 
  // Level crossings: the deck is in the row loop above; poles, crossbuck, lamps, arms, bell and colliders are Phase 2's crossing
@@ -161,7 +170,7 @@ export function buildTrainWorld(tools:TrainTools){
   for(let u=-STATION_HALF;u<STATION_HALF;u+=5){const f=trackAt(st.s+u+2.5),fn=leftNormal(f.tx,f.tz),Q=(v:number,y:number)=>[f.x+fn.x*sg*v,y,f.z+fn.z*sg*v];
    const m=Q(v0+depth/2,0),foot=bed-.05;
    plat.box(m[0],top-.04,m[2],f.tx,f.tz,2.53,depth/2,.04);platSide.box(m[0],(top-.08+foot)/2,m[2],f.tx,f.tz,2.5,depth/2-.02,(top-.08-foot)/2);
-   const e=Q(v0+.28,0);edge.box(e[0],top+.005,e[2],f.tx,f.tz,2.53,.18,.006);
+   const e=Q(v0+.28,0);edge.box(e[0],top+.012,e[2],f.tx,f.tz,2.53,.18,.008);// 2 cm proud of the platform top (was 1 cm: flickered at range)
    // Walk surfaces: one box when the piece is near square to the axes, else overlapping 2.3 m tiles (no gaps at any yaw).
    const square=Math.min(Math.abs(f.tx),Math.abs(f.tz))<.2;
    {if(square){const ax=Math.abs(f.tx),az=Math.abs(f.tz);walkSurfaces.push({x:m[0],z:m[2],w:5*ax+depth*az,d:5*az+depth*ax,height:top,stepUp:.6});}
@@ -178,8 +187,9 @@ export function buildTrainWorld(tools:TrainTools){
   {const e=(u:number)=>{const a=P(u,hm,0);plaster.box(a[0],y0+.1+(H-.1)/2,a[2],c.tx,c.tz,.09,hd/2-.1,(H-.1)/2);};e(-3.91);e(3.91);}
   wall(-4,-2.4,hv0+.09,y0+.1,y0+H);wall(2.4,4,hv0+.09,y0+.1,y0+H);wall(-2.4,2.4,hv0+.09,y0+2.25,y0+H);
   // Ticket-window panes on the front and both ends: warm at night (machineNightGlow).
-  for(const u of [-3.2,3.2]){const a=P(u,hv0+.03,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.5,.03,.42);}
-  for(const u of [-3.97,3.97]){const a=P(u,hm,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.03,.8,.42);}
+  // Nov 23 2026 (owner: the house ends flickered): the panes stand 3 cm proud of the wall faces (their outer faces were coplanar with the plaster).
+  for(const u of [-3.2,3.2]){const a=P(u,hv0,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.5,.03,.42);}
+  for(const u of [-4,4]){const a=P(u,hm,0);pane.box(a[0],y0+1.55,a[2],c.tx,c.tz,.03,.8,.42);}
   {const a=P(0,hv0+.6,0);pane.box(a[0],y0+1.3,a[2],c.tx,c.tz,1.6,.03,.75);}
   // Dark timber: corner and door posts, a sill band and the eave beam.
   for(const [u,v] of [[-4,hv0],[4,hv0],[-4,hv1],[4,hv1],[-2.4,hv0],[2.4,hv0]]){const a=P(u,v,0);timber.box(a[0],y0+H/2+.05,a[2],c.tx,c.tz,.11,.11,H/2+.05);}
@@ -189,13 +199,13 @@ export function buildTrainWorld(tools:TrainTools){
    const e1=R(-ew,-ed,ry),e2=R(ew,-ed,ry),e3=R(ew,ed,ry),e4=R(-ew,ed,ry),r1=R(-ridgeL,0,ry+rh),r2=R(ridgeL,0,ry+rh);
    roof.quad(e1,e2,r2,r1,inside);roof.quad(e3,e4,r1,r2,inside);roof.tri(e2,e3,r2);roof.tri(e4,e1,r1);roof.quad(e1,e4,e3,e2,R(0,0,ry+1));
    ridge.beam(R(-ridgeL-.1,0,ry+rh+.05),R(ridgeL+.1,0,ry+rh+.05),.12,true);
-   for(const s of [-1,1])for(const t of [-1,1])ridge.beam(R(s*ridgeL,0,ry+rh+.03),R(s*ew,t*ed,ry+.05),.06,true);
+   if(!lite)for(const s of [-1,1])for(const t of [-1,1])ridge.beam(R(s*ridgeL,0,ry+rh+.03),R(s*ew,t*ed,ry+.05),.06,true);
    // Tile courses: three thin darker bands across each long slope.
-   for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025,true);}
+   if(!lite)for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025,true);}
    // Four paper lanterns under the front eave.
-   for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
+   if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
   // A bench on the platform, by the house's down-line end.
-  {const a=P(-9,v0+2.2,0);bench.box(a[0],top+.45,a[2],c.tx,c.tz,1,.24,.04);const b=P(-9,v0+2.42,0);bench.box(b[0],top+.75,b[2],c.tx,c.tz,1,.03,.18);
+  if(!lite){const a=P(-9,v0+2.2,0);bench.box(a[0],top+.45,a[2],c.tx,c.tz,1,.24,.04);const b=P(-9,v0+2.42,0);bench.box(b[0],top+.75,b[2],c.tx,c.tz,1,.03,.18);
    for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.22,l[2],c.tx,c.tz,.04,.2,.22);}}
   emit(plat,C.platform,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
   emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,C.bench,ox,oz);
@@ -243,7 +253,7 @@ export function buildTrainWorld(tools:TrainTools){
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
-  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.35,TUNNEL_BED,p.z-o.z*.35));
+  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.05,TUNNEL_BED,p.z-o.z*.05));// just inside the face: the hill's rise (trainTrack MOUTH_IN..MOUTH_LIFT) is all behind it
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3();
@@ -262,7 +272,7 @@ export function buildTrainWorld(tools:TrainTools){
   const len=E.s-W.s,step=3,rings=Math.ceil(len/step)+1,wallC=new T.Color('#4a4642'),lampC=new T.Color('#ffd99a'),tmp=new T.Color();
   for(let r=0;r<rings;r++){const s=W.s-.3+Math.min(len+.6,r*step),q=trackAt(s),lamp=Math.exp(-((((s-W.s)%15)-7.5)**2)/5);
    for(const [v,y] of prof){pos.push(q.x+q.tz*v,TUNNEL_BED+y,q.z-q.tx*v);const up=y/(2.4+TUNNEL_HALF_WIDTH);tmp.copy(wallC).multiplyScalar(.35+.4*up).lerp(lampC,.75*lamp*Math.max(0,1-Math.abs(up-.55)*2.2));col.push(tmp.r,tmp.g,tmp.b);}}
-  const per=prof.length;for(let r=0;r<rings-1;r++)for(let k=0;k<per-1;k++){const a=r*per+k,b=a+1,c=a+per,d=c+1;idx.push(a,c,b,b,c,d);}
+  const per=prof.length;for(let r=0;r<rings-1;r++)for(let k=0;k<per-1;k++){const a=r*per+k,b=a+1,c=a+per,d=c+1;idx.push(a,b,c,b,d,c);}// wound to face the axis: single-sided, the tube's outside never draws (Nov 23 2026: it showed through the hill)
   // The track inside: ballast floor, sleepers and rails in dim baked colours.
   const add=(g:Geo,color:string,shade:number)=>{const base=pos.length/3;tmp.set(color).multiplyScalar(shade);for(let k=0;k<g.p.length;k+=3){pos.push(g.p[k],g.p[k+1],g.p[k+2]);col.push(tmp.r,tmp.g,tmp.b);}for(let k=0;k<g.p.length/3;k++)idx.push(base+k);};
   const floor=new Geo(),sl=new Geo(),rl=new Geo();
@@ -272,7 +282,7 @@ export function buildTrainWorld(tools:TrainTools){
    for(const v of [-RAIL_HALF_GAUGE,RAIL_HALF_GAUGE])rl.quad(A(a,v-.055,TUNNEL_BED+RAIL_TOP),A(b,v-.055,TUNNEL_BED+RAIL_TOP),A(b,v+.055,TUNNEL_BED+RAIL_TOP),A(a,v+.055,TUNNEL_BED+RAIL_TOP),A(a,v,0));}
   add(floor,C.ballast,.3);add(sl,C.sleeper,.35);add(rl,C.railTop,.55);
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeBoundingSphere();
-  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}));m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
+  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true}));m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
  }
  function portalColliders(x:number,z:number,o:{x:number;z:number},a:{x:number;z:number},half:number){const out:Obstacle[]=[];
   // The headwall either side of the arch (the arch itself stays open; the hill behind it is too steep to walk).

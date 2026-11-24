@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
-import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
+import {ISLAND_SHORE,SHORE_SAND,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
 import {applyGroundTint} from '../graphics/groundTint';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
@@ -89,7 +89,8 @@ export function buildFormatFields(scene:T.Scene){
  // Rows per coast point, sea to land: below the water, the rounded edge on the outline, 0.5 m in, then the inner edge.
  const sandPositions:number[]=[],sandShore:number[]=[],sandIndices:number[]=[],SAND_ROWS=4,SKIRT=1.4,n=ISLAND_SHORE.length;
  ISLAND_SHORE.forEach((p,i)=>{const prev=ISLAND_SHORE[(i+n-1)%n],next=ISLAND_SHORE[(i+1)%n],dx=next.x-prev.x,dz=next.z-prev.z,length=Math.hypot(dx,dz),ox=dz/length,oz=-dx/length;const width=shoreSandWidth(p);
- for(const [o,y] of [[SKIRT,-.5],[0,-.125],[-.5,-.105],[-width,-.105]]){sandPositions.push(p.x+ox*o,y,p.z+oz*o);sandShore.push(-o);}// aShore: metres inland of the outline, for the wet band (groundTint.ts 'beach')
+ for(const [o,y] of [[SKIRT,-.5],[0,-.125],[-.5,-.105]]){sandPositions.push(p.x+ox*o,y,p.z+oz*o);sandShore.push(-o);}
+ {const q=SHORE_SAND[i].inner;sandPositions.push(q.x,-.105,q.z);sandShore.push(Math.min(width,Math.hypot(q.x-p.x,q.z-p.z)));}// the untangled inner edge (shoreline.ts): no fold, no coplanar layers// aShore: metres inland of the outline, for the wet band (groundTint.ts 'beach')
  const a=i*SAND_ROWS,b=((i+1)%n)*SAND_ROWS;for(let r=0;r<SAND_ROWS-1;r++)sandIndices.push(a+r,b+r,a+r+1,b+r,b+r+1,a+r+1);
  });
  const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setAttribute('aShore',new T.Float32BufferAttribute(sandShore,1));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'beach');owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);

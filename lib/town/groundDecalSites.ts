@@ -4,6 +4,10 @@ import {OPEN_MARGIN,openCoverage,scanOpenSpaces,type OpenKind,type OpenScan} fro
 import {planMacroDetail} from './macroDetail';
 import {ISLAND_SHORE,INTERIOR_GRASS,onIsland,shoreSandWidth} from './shoreline';
 import {VENUES} from './venues';
+import {trackNearest} from './trainTrack';
+/** Nov 23 2026 (owner: debris poking through by the line): no decal, pebble, shell or tuft within LINE_CLEAR m of the Island Line's
+ *  centre (ballast foot ~1.9 m + 3 m). */
+export const LINE_CLEAR=4.9;const offLine=(x:number,z:number)=>!trackNearest(x,z,LINE_CLEAR);
 import {CAY_SAND,CAY_LAWN,CAY_SHORE,CAY_CENTER,BEACH_COURT,ROUNDABOUT,CAY_BOULEVARD} from './coralCay';
 import {SUMMIT_SHORE,coastRadius,beachWidth,SUMMIT_BOX,SUMMIT_CENTER,SUMMIT_PATHS,SUMMIT_PITCH,SUMMIT_VISUAL_DROP,beachPoint,onSummitIsle,summitGround,summitSlope,summitTrailDistance} from './summitIsle';
 
@@ -47,7 +51,7 @@ const WIND=.35;
 export function planIslandDecals(w:DecalWorld):{main:DecalPlan;cay:DecalPlan;summit:DecalPlan}{
  const plans=planSmallDecals(w),s=setups(w),scans=scanIslands(w,s);
  for(const name of ['main','cay','summit'] as const){const i=s[name],scan=scans[name],plan=plans[name];
-  const at=(x:number,z:number,k:OpenKind)=>i.ground(x,z)===k&&!s.macroBlocked.blocked(x,z);
+  const at=(x:number,z:number,k:OpenKind)=>i.ground(x,z)===k&&!s.macroBlocked.blocked(x,z)&&offLine(x,z);
   const ok=(x:number,z:number,k:OpenKind,r:number)=>at(x,z,k)&&(r<=.9||(at(x+r,z,k)&&at(x-r,z,k)&&at(x,z+r,k)&&at(x,z-r,k)));
   plan.macro=(!MACRO_DETAIL_ENABLED?[]:planMacroDetail({seed:SEEDS[name]^0x5bd1e995,cap:MACRO_CAP,scan,ok,y:i.y,shore:{ring:i.ring,inside:i.inside},trees:i.trees,wind:WIND})).filter(m=>MACRO_KINDS_KEPT.includes(m.k));
   const small=[...plan.stones,...plan.tufts,...plan.flowers];
@@ -67,21 +71,21 @@ function planSmallDecals(w:DecalWorld):{main:DecalPlan;cay:DecalPlan;summit:Deca
  const mainNear=near.filter(r=>onIsland(r.x,r.z)&&insidePoly(INTERIOR_GRASS,r.x,r.z)),shoreMid=centroid(ISLAND_SHORE);
  const main=planGroundDecals({seed:SEEDS.main,caps:DECAL_CAPS.main,
   sandAt:rng=>ringBandPoint(ISLAND_SHORE,shoreSandWidth,shoreMid,rng,.8,true),grassAt:rng=>edgePoint(mainNear,rng),
-  ok:(x,z,k)=>onIsland(x,z)&&(k==='grass'?insidePoly(INTERIOR_GRASS,x,z):!insidePoly(INTERIOR_GRASS,x,z))&&!blocked.blocked(x,z),
+  ok:(x,z,k)=>offLine(x,z)&&onIsland(x,z)&&(k==='grass'?insidePoly(INTERIOR_GRASS,x,z):!insidePoly(INTERIOR_GRASS,x,z))&&!blocked.blocked(x,z),
   y:(_x,_z,k)=>k==='sand'?-.105:-.112});
  // ---- Coral Cay: the sand ring (outer edge to inner edge), the lawn beside its buildings and paths
  const cayNear=near.filter(r=>insidePoly(CAY_LAWN,r.x,r.z));
  const cay=planGroundDecals({seed:SEEDS.cay,caps:DECAL_CAPS.cay,
   sandAt:rng=>{const s=CAY_SAND[Math.floor(rng()*CAY_SAND.length)%CAY_SAND.length],t=.2+rng()*.6;return {x:s.outer.x+(s.inner.x-s.outer.x)*t,z:s.outer.z+(s.inner.z-s.outer.z)*t};},
   grassAt:rng=>edgePoint(cayNear,rng),
-  ok:(x,z,k)=>(k==='grass'?insidePoly(CAY_LAWN,x,z):!insidePoly(CAY_LAWN,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120)&&!blocked.blocked(x,z),
+  ok:(x,z,k)=>offLine(x,z)&&(k==='grass'?insidePoly(CAY_LAWN,x,z):!insidePoly(CAY_LAWN,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120)&&!blocked.blocked(x,z),
   y:(_x,_z,k)=>k==='sand'?-.105:-.112});
  // ---- Summit Isle: the beach (between the waterline and the dune line); grass a couple of metres off the trails
  const trailPts=SUMMIT_PATHS.flat();
  const summit=planGroundDecals({seed:SEEDS.summit,caps:DECAL_CAPS.summit,
   sandAt:rng=>beachPoint(rng()*Math.PI*2,.15+rng()*.75),
   grassAt:rng=>{const p=trailPts[Math.floor(rng()*trailPts.length)%trailPts.length],a=rng()*Math.PI*2,d=1.9+rng()*2.4;return {x:p.x+Math.cos(a)*d,z:p.z+Math.sin(a)*d};},
-  ok:(x,z,k)=>x>SUMMIT_BOX.minX&&x<SUMMIT_BOX.maxX&&z>SUMMIT_BOX.minZ&&z<SUMMIT_BOX.maxZ&&onSummitIsle(x,z)&&!blocked.blocked(x,z)&&summitSlope(x,z)<(k==='grass'?.3:.12)
+  ok:(x,z,k)=>offLine(x,z)&&x>SUMMIT_BOX.minX&&x<SUMMIT_BOX.maxX&&z>SUMMIT_BOX.minZ&&z<SUMMIT_BOX.maxZ&&onSummitIsle(x,z)&&!blocked.blocked(x,z)&&summitSlope(x,z)<(k==='grass'?.3:.12)
    &&(k==='sand'||(summitTrailDistance(x,z)>1.7&&summitGround(x,z)>.9&&Math.hypot(x-SUMMIT_CENTER.x,z-SUMMIT_CENTER.z)>0)),
   y:(x,z)=>summitGround(x,z)-SUMMIT_VISUAL_DROP});
  return {main,cay,summit};

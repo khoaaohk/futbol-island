@@ -15,7 +15,7 @@ export const SET_LOUNGER={dx:[-1.1,1.1],padY:.12,padH:.18,padLen:2.2,padDz:1.2,t
 export const PALM_LOUNGER={dx:1.4,padY:.16,padH:.22,padLen:2.4,padDz:1,top:.27} as const;
 /** QA Nov 14 2026: the third set stood at (32, 116), ~7 m inland on the lawn (the sand ribbon here ends near x 21); now on the
  *  sand, down the beach from Tama's (tests/beach-npcs.cjs: every set's umbrella and lounger on dry sand). */
-export const PALM_COAST_UMBRELLAS=[{x:-18,z:101},{x:8,z:108},{x:17,z:122}] as const;
+export const PALM_COAST_UMBRELLAS=[{x:-19.5,z:109.3},{x:2,z:119},{x:12,z:127}] as const;// Nov 23 2026: moved 5.7-7.7 m seaward of the Island Line (they stood on it: owner "this area is glitchy"); was (-18,101),(8,108),(17,122)
 /** The Coral Cay beach-ring umbrella on the south sand (coralCayWorld.ts ring, every 17th shore point; tests/beach-npcs.cjs checks
  *  it is still built there): Luana's set. */
 export const CAY_SUNBATHER_UMBRELLA={x:599.4993,z:-247.887} as const;

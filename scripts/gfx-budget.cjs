@@ -50,7 +50,7 @@ if(process.env.GFX_VIEWS==='train')VIEWS.splice(0,VIEWS.length,
  {id:'coral-cay',note:'Coral Cay station, from the plaza path',x:590,z:-94,yaw:0},
  // Phase 2 (Nov 23 2026): the worst case, all three trains pinned at the North station (window.__fi2.trains.cluster), looking down the line.
  {id:'trains-near',note:'North station platform, all 3 trains pinned in view',x:186,z:-203.5,yaw:-Math.PI/2,cluster:2534});
-const NO_TRAIN=process.env.GFX_NO_TRAIN==='1';
+const NO_TRAIN=process.env.GFX_NO_TRAIN==='1',SAVER=process.env.GFX_SAVER==='1';// GFX_SAVER=1: Battery saver on before load, so the world BUILDS at the lowest tier (the Island Line's lighter build)
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0;};
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -59,14 +59,15 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
  const ctx=await browser.newContext(DESKTOP?{viewport:{width:1440,height:900},deviceScaleFactor:1}:{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  const page=await ctx.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('pageerror: '+e.message.slice(0,300)));
- await page.addInitScript(({x,z,time,seed,noTrain})=>{
+ await page.addInitScript(({x,z,time,seed,noTrain,saver})=>{
   localStorage.setItem('fi-staff','1');// staff device: the analytics tracker sends nothing
   sessionStorage.setItem('fi2-in-game','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-save-deleted-v1','device-specs');
   localStorage.setItem('fi2-time-of-day',time);
   if(noTrain)localStorage.setItem('fi-no-train','1');else localStorage.removeItem('fi-no-train');
+  if(saver)localStorage.setItem('fi2-battery-saver','on');else localStorage.removeItem('fi2-battery-saver');
   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x,z,yaw:0,ride:'walk',flightHeight:0}));
   if(seed){let s=20261117;Math.random=()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
- },{x:VIEWS[0].x,z:VIEWS[0].z,time:TIME,seed:SEED,noTrain:NO_TRAIN});
+ },{x:VIEWS[0].x,z:VIEWS[0].z,time:TIME,seed:SEED,noTrain:NO_TRAIN,saver:SAVER});
  await page.goto(BASE+'/play?from=arcade',{timeout:240000});
  await page.waitForFunction(()=>window.__fi2&&window.__fi2.renderer&&window.__fi2.heat&&window.__fi2.water&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});
  // One wrapper for the whole run: every island-scene render records three's counters and its own JS time.
@@ -101,7 +102,7 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,`gfx-${v.id}.png`)});}
  }
  await browser.close();
- console.log(`gfx-budget${NO_TRAIN?' (no train)':''}  ${BASE}  ${DESKTOP?'1440x900 desktop':'390x844'} DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
+ console.log(`gfx-budget${NO_TRAIN?' (no train)':''}${SAVER?' (battery saver build)':''}  ${BASE}  ${DESKTOP?'1440x900 desktop':'390x844'} DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
  console.log('| view | draw calls (min-max) | triangles | programs | textures | geometries | render ms (CPU) | water phase | ocean blended | frames |');
  console.log('|---|---|---|---|---|---|---|---|---|---|');
  for(const o of out)console.log(`| ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.programs} | ${o.textures} | ${o.geometries} | ${o.renderMs} | ${o.phase}${o.reached?'':' (swim NOT reached)'} | ${o.oceanBlended?'yes':'no'} | ${o.frames} |`);

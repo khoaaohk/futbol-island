@@ -1934,14 +1934,18 @@ export function* buildTownSteps(scene: T.Scene) {
   // The East Jetty's chunks (x 250–400, z 0–150) sit outside that region box, so they keep ordinary per-object culling.
   // Summit Isle (Oct 12 2026): its chunks (x ≥ 400, z ≥ 0; the sandbar north of z 0 stays with the cay) get their own region box.
   const chunkCell=(m:T.Mesh)=>m.name.slice('island-chunk-'.length).split(':').map(Number);
-  const isleChunks=new Set(mergedMeshes.filter(m=>{const [cx,cz]=chunkCell(m);return cx>=8&&cz>=0;}));
-  const cayChunks=new Set(mergedMeshes.filter(m=>{const [cx,cz]=chunkCell(m);return cx>=5&&!(cx<=7&&cz>=0&&cz<=2)&&!isleChunks.has(m);}));
-  // West Stadium (Nov 12 2026): the park, beach and stadium chunks west of x -100 (cx ≤ -3) get their own region box too.
-  const westChunks=new Set(mergedMeshes.filter(m=>chunkCell(m)[0]<=-3));
   // minX 220: chunk island-chunk-5:-4's causeway geometry reaches x ≈ 226 (code review finding 15).
   const cayRegion=new T.Box3(new T.Vector3(220,-2,-330),new T.Vector3(800,16,20));let cayShown=true,sceneryShown=true;
   const isleRegion=new T.Box3(new T.Vector3(440,-2,-30),new T.Vector3(870,50,300));let isleShown=true;
   const westRegion=new T.Box3(new T.Vector3(-420,-2,-330),new T.Vector3(-100,36,300));let westShown=true;
+  // Nov 23 2026 (owner: "certain angles, it doesn't show the tracks"): a chunk joins a region only when ALL its geometry lies inside
+  // that region's box. Chunks are keyed by their source mesh's ORIGIN cell, and the Island Line's 100 m track chunks reach far
+  // outside it (island-chunk-5:4, the South beach line, hid with the Coral Cay box). Anything outside keeps per-object culling.
+  const chunkBox=new T.Box3(),inside=(m:T.Mesh,box:T.Box3)=>{if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();const c=chunkBox.copy(m.geometry.boundingBox!).applyMatrix4(m.matrixWorld);return c.min.x>=box.min.x-1&&c.max.x<=box.max.x+1&&c.min.z>=box.min.z-1&&c.max.z<=box.max.z+1;};// plan only (x, z): heights never decided membership
+  const isleChunks=new Set(mergedMeshes.filter(m=>{const [cx,cz]=chunkCell(m);return cx>=8&&cz>=0&&inside(m,isleRegion);}));
+  const cayChunks=new Set(mergedMeshes.filter(m=>{const [cx,cz]=chunkCell(m);return cx>=5&&!(cx<=7&&cz>=0&&cz<=2)&&!isleChunks.has(m)&&inside(m,cayRegion);}));
+  // West Stadium (Nov 12 2026): the park, beach and stadium chunks west of x -100 (cx ≤ -3) get their own region box too.
+  const westChunks=new Set(mergedMeshes.filter(m=>chunkCell(m)[0]<=-3&&inside(m,westRegion)));
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;for(const m of isleChunks)m.visible=sceneryShown&&isleShown;for(const m of westChunks)m.visible=sceneryShown&&westShown;for(const m of stadiumRoofs.roofs)m.visible=sceneryShown&&westShown;stadiumLights.lamps.visible=sceneryShown&&westShown;};
   const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{train?.update(camera);sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion),west=sharks.frustum.intersectsBox(westRegion);if(show!==cayShown||isle!==isleShown||west!==westShown){cayShown=show;isleShown=isle;westShown=west;applyCayVisibility();}};
   const noTrainFrame:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null};

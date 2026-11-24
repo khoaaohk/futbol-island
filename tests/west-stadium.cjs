@@ -45,7 +45,10 @@ assert(!names.has('CORNER DELI')&&!names.has('PRAÇA HOMES')&&names.has('MAKERS 
 // 3. Draw budget: everything west of x -100 is in the 50 m chunk batches (cx ≤ -3), all behind the one west region gate.
 const scene=world.dynamicScenery.parent;const chunks=scene.children.filter(o=>o.isMesh&&o.name.startsWith('island-chunk-')&&+o.name.slice('island-chunk-'.length).split(':')[0]<=-3);
 let tris=0;for(const m of chunks){const g=m.geometry;tris+=(g.index?g.index.count:g.getAttribute('position').count)/3;}
-assert.equal(chunks.length,world.westChunkCount,'every west chunk is gated');
+// Nov 23 2026: a chunk whose geometry reaches east of the gate's box (an Island Line track chunk keyed by its west origin cell) keeps per-object culling.
+const gated=chunks.filter(m=>{m.geometry.computeBoundingBox();const b=m.geometry.boundingBox;return b.min.x>=-421&&b.max.x<=-99&&b.min.z>=-331&&b.max.z<=301;});
+assert(chunks.length-gated.length<=3,'at most the line\'s few long chunks stay ungated: '+(chunks.length-gated.length));
+assert.equal(gated.length,world.westChunkCount,'every west chunk inside the region is gated');
 console.log(`west chunks (draw calls when all in view): ${chunks.length}; triangles: ${Math.round(tris)}; trees ${st.trees}, palms ${st.palms}, flags ${st.flags}, hedges ${st.hedges}, beds ${st.beds}`);
 assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<=150000,'west triangles bounded: '+Math.round(tris));
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
@@ -115,7 +118,7 @@ console.log('west stadium phase 1: ok');
  const parkTrees=world.assets.filter(a=>a.kind==='tree'&&a.x<-100);
  assert(!parkTrees.some(a=>!L.onGrass(a.x,a.z)||L.grassEdgeDistance(a.x,a.z)<WP.PALM_EDGE_M),'no broadleaf / conifer tree on the beach or its edge row');
  const palms=world.assets.filter(a=>a.kind==='palm'&&a.x<-100);assert(palms.length>=40&&palms.every(a=>distanceToShore(a.x,a.z)>=12),'West Beach palms '+palms.length+' (dry sand / edge row)');
- assert(st.trees>=150&&st.trees<=340&&st.trees+st.palms<=340,'park trees '+st.trees+', palms '+st.palms);
+ assert(st.trees>=145/* Nov 23 2026: the lawn by West Beach station moved off the line (149) */&&st.trees<=340&&st.trees+st.palms<=340,'park trees '+st.trees+', palms '+st.palms);
  // G. The plaza is just "Plaza" in the world too.
  assert.equal(L.PLAZA_LABEL,'PLAZA');assert(!/STADIUM PLAZA/.test(fs.readFileSync(path.join(base,'lib/town/westPark.ts'),'utf8')),'in-world sign says PLAZA');
  // Pond life: wired in Town; near the pond the koi and dragonflies show and move, far away they hide; a ball dropping in the

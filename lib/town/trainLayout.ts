@@ -4,7 +4,7 @@
  * trestle's piers or the south sea wall). No three.js, no DOM, nothing per frame.
  */
 import {onLand} from './landmass';
-import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,STATION_HALF,trackProfile,trackNearest,trackAt,inTunnelS,wrapS,type TrackProfile} from './trainTrack';
+import {TRACK,TRACK_DS,TrackKind,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,trackProfile,trackNearest,trackAt,inTunnelS,onSummitTrackS,wrapS,type TrackProfile} from './trainTrack';
 
 /** Trestle piers: one every PIER_STEP m of sea; each stands on two columns PIER_COLUMN_OFFSET m either side of the centre line. */
 export const PIER_STEP=8,PIER_COLUMN_OFFSET=1.1,PIER_COLUMN_HALF=.24;
@@ -48,4 +48,22 @@ export function trackPushOut(x:number,z:number,r:number):{dx:number;dz:number}|n
  if(hit.d>=clear+r)return null;
  const p=trackAt(hit.s);let ux=x-p.x,uz=z-p.z,l=Math.hypot(ux,uz);if(l<1e-3){ux=p.tz*hit.side;uz=-p.tx*hit.side;l=1;}
  const k=(clear+r+.05-hit.d)/l;return {dx:ux*k,dz:uz*k};
+}
+
+/** Walk height on the line (Nov 23 2026, owner: "going through the tracks"; a player on the line stood in the ballast). Feet rest
+ *  on the sleepers (bed + TRAIN_WALK_TOP) across the ballast top, the ballast's sides slope down to the ground, and the crossing
+ *  decks are at deck height across the rails, sloping to the ground 2.6 m out (trainWorld.ts builds the same shapes: BALLAST
+ *  half-width 1.45, foot 1.9 m + 1.4 per metre of embankment, deck top RAIL_TOP - .03). Land rows only (the trestle is not a walk).
+ *  One hash lookup (trackNearest within 3.6 m): rooftopTravel's surface() takes the max with the ground, so 0 means "no line here". */
+export const TRAIN_WALK_TOP=.22;
+const XING_TOP=.31;
+export function trainWalkHeight(x:number,z:number):number{
+ const hit=trackNearest(x,z,3.6);if(!hit)return 0;
+ const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;
+ const t=hit.s/TRACK_DS-Math.floor(hit.s/TRACK_DS),bed=P.bed[i]+(P.bed[k]-P.bed[i])*t,ground=onSummitTrackS(hit.s)?bed:0,d=hit.d;
+ const xing=TRAIN_CROSSINGS.some(c=>Math.abs(wrapS(hit.s-c.s+TRACK.length/2)-TRACK.length/2)<c.width/2+.6);
+ if(!xing&&(P.kind[i]!==TrackKind.Land||P.kind[k]!==TrackKind.Land))return 0;
+ if(xing){const top=bed+XING_TOP;return d<=1?top:d>=2.6?0:top+(ground+.01-top)*(d-1)/1.6;}
+ const top=bed+TRAIN_WALK_TOP,foot=1.9+(bed-ground)*1.4;
+ return d<=1.45?top:d>=foot?0:top+(ground-top)*(d-1.45)/(foot-1.45);
 }

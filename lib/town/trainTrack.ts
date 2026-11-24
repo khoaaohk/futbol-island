@@ -94,6 +94,13 @@ export const MOUTH_CARVE=3.2,MOUTH_BANK=4;
 /** The east portal's carve is shallower (1.4 m, just past its 1.2 m headwall): the climb trail crosses the hill 3 m behind it. */
 export const MOUTH_CARVE_EAST=1.4,MOUTH_RAMP=12;
 export const mouthCarveAt=(s:number)=>s-TUNNEL.west.s<TUNNEL.east.s-s?MOUTH_CARVE:MOUTH_CARVE_EAST;
+/** Nov 23 2026 (owner: the tube stuck out of the hill behind the arch): past MOUTH_LIFT m into the hill the ground is never lower
+ *  than the tube's crown + TUBE_COVER (it was carved DOWN to the bed for MOUTH_CARVE m, leaving an open trench over the tube once
+ *  the hood went). The flat strip in front of that (inside the arch) is just long enough that the terrain's step up (one FINE
+ *  2.5 m grid cell, summitIsleWorld.ts) lies behind the portal's dark mouth plane. Outside, the cutting's flat floor widens to
+ *  PORTAL_FLAT either side near each portal so no bank rises inside the arch. */
+export const MOUTH_LIFT=2.9,MOUTH_IN=.45,TUBE_COVER=.7,PORTAL_FLAT=TUNNEL_HALF_WIDTH+.9;
+const tubeCover=(d:number)=>d<TUNNEL_HALF_WIDTH?2.4+Math.sqrt(TUNNEL_HALF_WIDTH*TUNNEL_HALF_WIDTH-d*d)+TUBE_COVER:2.4+TUBE_COVER-Math.max(0,d-TUNNEL_HALF_WIDTH-.6)*MOUTH_BANK;
 /** How far into the tunnel (m, along the line) a point lies past the nearer portal plane (negative outside). */
 function inward(x:number,z:number,s:number){const west=s-TUNNEL.west.s<TUNNEL.east.s-s,p=west?TUNNEL.west:TUNNEL.east,t=trackAt(p.s);return ((x-p.x)*t.tx+(z-p.z)*t.tz)*(west?1:-1);}
 /** Distance to the carved Summit corridor's centre line (1e3 outside it): summitIsleWorld draws the terrain finer there. */
@@ -106,14 +113,17 @@ export function trainCut(x:number,z:number,h:number){
  if(x<SUMMIT_BOX.minX||x>SUMMIT_BOX.maxX||z<SUMMIT_BOX.minZ||z>SUMMIT_BOX.maxZ)return h;
  const hit=trackNearest(x,z,CUT_REACH+CUT_STATION_FLAT,SUMMIT_TRACK.landWest,SUMMIT_TRACK.landEast);if(!hit||!onSummitTrackS(hit.s))return h;
  if(inTunnelS(hit.s)){// Past the carve the clamp opens at MOUTH_BANK per metre too, so the ground ramps back up to the hill (no cliff to step up).
-  const past=inward(x,z,hit.s)-mouthCarveAt(hit.s);if(past>MOUTH_RAMP)return h;
-  const k=(Math.max(0,hit.d-TUNNEL_HALF_WIDTH)+Math.max(0,past))*MOUTH_BANK;
-  return Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);}
- const st=Math.abs(hit.s-SUMMIT_TRACK.station),flat=st<STATION_HALF+6?CUT_STATION_FLAT:st<STATION_HALF+14?CUT_FLAT+(CUT_STATION_FLAT-CUT_FLAT)*(STATION_HALF+14-st)/8:CUT_FLAT;
+  // The hill always covers the tube past MOUTH_LIFT; from the mouth plane (MOUTH_IN) to there it rises smoothly (behind the dark
+  // mouth, so never seen through the arch; a walker meets a slope, not a step).
+  const inw=inward(x,z,hit.s),lifted=Math.max(h,TUNNEL_BED+tubeCover(hit.d));if(inw>=MOUTH_LIFT)return lifted;
+  const k=Math.max(0,hit.d-PORTAL_FLAT)*MOUTH_BANK,carved=Math.min(Math.max(h,TUNNEL_BED-k),TUNNEL_BED+k);
+  return inw<=MOUTH_IN?carved:carved+(lifted-carved)*(inw-MOUTH_IN)/(MOUTH_LIFT-MOUTH_IN);}
+ const st=Math.abs(hit.s-SUMMIT_TRACK.station),pd=Math.min(Math.abs(hit.s-TUNNEL.west.s),Math.abs(hit.s-TUNNEL.east.s)),
+  flat=st<STATION_HALF+6?CUT_STATION_FLAT:st<STATION_HALF+14?CUT_FLAT+(CUT_STATION_FLAT-CUT_FLAT)*(STATION_HALF+14-st)/8:pd<2.5?PORTAL_FLAT:pd<6?PORTAL_FLAT+(CUT_FLAT-PORTAL_FLAT)*(pd-2.5)/3.5:CUT_FLAT;
  // Along the station stretch the banks are walkable (it stands on the beach): STATION_BANK, under the walk limit.
  // Just east of the east portal the cut has steep wing-wall banks (MOUTH_BANK for 8 m, easing to CUT_BANK by 16 m): the climb
  // trail runs out along the portal's line there and keeps its ground.
- const pe=hit.s-TUNNEL.east.s,bank=st<STATION_HALF+14?STATION_BANK:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
+ const pe=hit.s-TUNNEL.east.s,bank=st<STATION_HALF+14?STATION_BANK:pd<6?MOUTH_BANK/* behind the headwall and wing walls: meets the hill's carve at the face with no step */:pe>=0&&pe<16?CUT_BANK+(MOUTH_BANK-CUT_BANK)*Math.min(1,(16-pe)/8):CUT_BANK;
  const bed=summitBedAt(hit.s),k=Math.max(0,hit.d-flat)*bank;
  if(h<=0&&hit.d>flat)return h;// no bank fill out over the sea past the coast (the trestle carries the line there)
  return Math.min(Math.max(h,bed-k),bed+k);

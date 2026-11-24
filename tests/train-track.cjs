@@ -50,6 +50,23 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  const cam=new T.PerspectiveCamera();cam.position.set(tt.TUNNEL.west.x-20,12,tt.TUNNEL.west.z+20);cam.updateMatrixWorld(true);w2.train.update(cam);assert(tube.visible,'shown near the west portal');
  cam.position.set(100,20,0);cam.updateMatrixWorld(true);w2.train.update(cam);assert(!tube.visible,'hidden in town');
  assert(/trainSwimBlocked\(x,z\)/.test(read('components/Town.tsx')),'Town: swimmers meet the piers');assert(/buildTrainWorld\(/.test(read('lib/town/world.ts')),'world builds the line');
+ // Nov 23 2026 owner fixes. (a) Walking on the line: feet on the sleepers on land rows, on the deck at every crossing (all 5,
+ // the causeway's 16 m included), sloping down to the ground off the ballast; Town feeds it to rooftopTravel's surface.
+ {const P=tl.trainLayout().profile;let n=0;
+  for(let i=0;i<TR.n;i+=37){if(P.kind[i]!==K.Land||P.kind[(i+1)%TR.n]!==K.Land||tt.TRAIN_CROSSINGS.some(c=>Math.abs(c.s-i*tt.TRACK_DS)<12))continue;const p=tt.trackAt(i*tt.TRACK_DS+.5),bed=tt.bedAt(P,i*tt.TRACK_DS+.5),nn=tt.leftNormal(p.tx,p.tz);
+   for(const v of [0,.6,-1.2]){const h=tl.trainWalkHeight(p.x+nn.x*v,p.z+nn.z*v);assert(Math.abs(h-(bed+tl.TRAIN_WALK_TOP))<.02,`on the line at s ${i*2} (${v} m): ${h.toFixed(2)} vs bed ${bed.toFixed(2)}`);}
+   const off=tl.trainWalkHeight(p.x+nn.x*6,p.z+nn.z*6);assert(off===0,'6 m off the line: ground');n++;}
+  assert(n>=18,'sampled land rows '+n);
+  for(const c of tt.TRAIN_CROSSINGS)for(const du of [-c.width/2+.3,0,c.width/2-.3]){const p=tt.trackAt(c.s+du),bed=tt.bedAt(P,c.s+du),h=tl.trainWalkHeight(p.x,p.z);assert(Math.abs(h-(bed+.31))<.02,`crossing ${c.id} at ${du.toFixed(1)}: ${h.toFixed(2)}`);}
+  assert(/trainWalkHeight\(x,z\)/.test(read('components/Town.tsx')),'Town: walk height on the line');}
+ // (b) Beach props, lawns and decals keep 3 m off the ballast (foot ~1.9 m): umbrellas (centre) >= 4.5 m, lawn edges >= 4.9 m, decals guarded.
+ {const near=(x,z,r)=>tt.trackNearest(x,z,r);const B=L('lib/town/beachLoungers.ts'),S=L('lib/town/shoreline.ts'),W=L('lib/town/westParkLayout.ts');
+  const ums=[...B.PALM_COAST_UMBRELLAS,...S.NORTH_BEACH_UMBRELLAS,...world.assets.filter(a=>a.kind==='beach-umbrella')];
+  for(const u of ums)assert(!near(u.x,u.z,4.5),`umbrella at ${u.x},${u.z} is off the line`);
+  for(const l of W.PARK_LAWNS)for(let a=0;a<360;a+=4){const t=a*Math.PI/180;assert(!near(l.x+Math.cos(t)*l.rx,l.z+Math.sin(t)*l.rz,4.9),`lawn ${l.x},${l.z} edge off the line`);}
+  assert(/offLine\(x,z\)&&/.test(read('lib/town/groundDecalSites.ts')),'decals keep off the line');
+  // (c) the sand ribbon never folds over itself (coplanar layers flickered at the South beach's SE corner)
+  const Q=S.SHORE_SAND;for(let i=0;i<Q.length;i++){const a=Q[i],b=Q[(i+1)%Q.length];assert((b.outer.x-a.outer.x)*(b.inner.x-a.inner.x)+(b.outer.z-a.outer.z)*(b.inner.z-a.inner.z)>0,`sand ribbon folds at ${a.outer.x.toFixed(0)},${a.outer.z.toFixed(0)}`);}}
  assert(!/requestAnimationFrame|setInterval|setTimeout/.test(read('lib/town/trainWorld.ts')+read('lib/town/trainTrack.ts')+read('lib/town/trainLayout.ts')),'nothing animates');
  console.log('train-track: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
