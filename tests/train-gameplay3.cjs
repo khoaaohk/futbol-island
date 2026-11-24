@@ -196,7 +196,7 @@ console.log('train kenji ok');
  const R=L('lib/town/trainRunning.ts');assert.equal(R.PLAYER_SEATS.length,28);}
 console.log('train all-seats ok');
 
-// owner Nov 24 2026: while riding, no Talk to passengers or islanders and no islander tags (only Kenji at the partition)
-{const town=read('components/Town.tsx');assert(/trainRide\.active\?\(trainRide\.standing&&kenjiFig\.at\.k===trainRide\.train&&trainRide\.spot\.u>KENJI_TALK_U\?kenjiFig\.npc\(\):null\)/.test(town),'no passenger Talk while riding');
+// owner Nov 24 2026: while riding, no floating labels / islander tags; passengers talk only when close or aimed at (train-talk)
+{const town=read('components/Town.tsx');assert(/trainRide\.active\?\(trainRide\.standing&&kenjiFig\.at\.k===trainRide\.train&&trainRide\.spot\.u>KENJI_TALK_U\?kenjiFig\.npc\(\):trainTalk\.candidate\(/.test(town),'riding: passenger Talk only through trainTalk (close / aimed, no labels; tests/train-talk.cjs)');
  assert(/stadiumSit\.seated\|\|trainRide\.active/.test(town),'no islander tags while riding');}
 console.log('train no-talk ok');

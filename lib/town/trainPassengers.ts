@@ -164,6 +164,8 @@ export const SEAT_ROOT_X=BENCH_BACK-(BENCH.rootZ-BENCH.backFace);
 /** Beyond NEAR_RANGE m (and not the train I ride) a passenger draws its body and head only (no limbs / props): behind a window at
  *  that range they don't read, and they are the bulk of the triangles. */
 export const NEAR_RANGE=28;
+/** A talkable passenger's world spot (floor under their root) this frame. */
+export type TalkSpot={cast:number;x:number;y:number;z:number;k:number;standing:boolean;kid:boolean;/** their feet (seated: toward the aisle; the hover ring) */fx:number;fz:number};
 const PASSES=[2,1] as const;// near trains first, then the far ones
 
 type Run={states:readonly TrainState[];carMatrixOf(k:number,c:number,out:T.Matrix4):T.Matrix4};
@@ -177,7 +179,9 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
  // each slot's neck gaze (eased toward the reaction's target; written to the pose row only when it moved)
  const nearHid=new Uint8Array(TRAIN_COUNT*SLOT_COUNT),gazeP=new Float32Array(TRAIN_COUNT*SLOT_COUNT),gazeY=new Float32Array(TRAIN_COUNT*SLOT_COUNT),near=new Uint8Array(TRAIN_COUNT),dist=new Float32Array(TRAIN_COUNT);
  // the talkable passengers this frame (world spot), filled by update; nearest() reads it
- const talk:{cast:number;x:number;y:number;z:number;k:number}[]=Array.from({length:MAX},()=>({cast:-1,x:0,y:0,z:0,k:-1}));let nTalk=0,shown=0,hornK=-1,hornAt=-99,lastNow=NaN;
+ const talk:TalkSpot[]=Array.from({length:MAX},()=>({cast:-1,x:0,y:0,z:0,k:-1,standing:false,kid:false,fx:0,fz:0}));let nTalk=0,
+ // train-talk (Nov 24 2026, lib/town/trainPassengerTalk.ts): the passenger I'm talking to (cast, -1 none) turns toward (faceX, faceZ) and keeps their seat
+ faceCast=-1,faceX=0,faceZ=0,shown=0,hornK=-1,hornAt=-99,lastNow=NaN;
  // the pose bake (~90 ms) runs in idle slices from load (cost trim Nov 24), long before a train is near; if a train is needed first
  // the rest of it runs at once (the old first-sight path). No idle callback (Node tests): baked on first sight as before.
  const looks=CAST.map(c=>c.pax),baker=bakeSteps(looks);let baked:PaxBaked|null=null,idleId=0;
@@ -213,7 +217,8 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
       // at a stop, the slots that change: the old rider walks off first, then the new one walks on (in the doors' open time)
       const swapping=atStop&&dw>=0&&changesAt(k,c,p,seg)&&(was.on||now_.on)&&(was.cast!==now_.cast||was.on!==now_.on);
       let who=now_,phase=-1,boarding=false;// phase: 0…1 walking (off: seat → door → out; on: out → door → seat)
-      if(swapping){if(dw<ON_FROM){who=was;phase=dw<OFF_FROM?-1:Math.min(1,(dw-OFF_FROM)/WALK_S);if(phase>=1)continue;}
+      if(swapping&&faceCast>=0&&was.on&&was.cast===faceCast&&k===ridingK)who=was;// train-talk: mid-chat they stay put (no walk off)
+      else if(swapping){if(dw<ON_FROM){who=was;phase=dw<OFF_FROM?-1:Math.min(1,(dw-OFF_FROM)/WALK_S);if(phase>=1)continue;}
        else{who=now_;phase=Math.min(1,(dw-ON_FROM)/WALK_S);phase=phase>=1?-1:1-phase;boarding=phase>=0;}}
       if(!who.on||who.cast<0)continue;if(++inCar>cap)continue;if(n>=MAX)break;
       const P=CAST[who.cast],kid=!!P.kid,mask=P.pax.props;
@@ -227,6 +232,9 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
       let tp=PAX_GAZE_PITCH[bake%PAX_POSES]+(P.doze?.32:0),ty=0;
       if(!reduced&&phase<0&&!P.doze){const lk=Math.sin(now*.57+i*2.3+k*1.7);if(lk>.82){ty=.48*Math.sign(Math.sin(i*1.9+k)||1);tp-=.12;if(!seated)yaw+=.35*Math.sign(ty);}}
       if(glance&&phase<0&&!P.doze){const cabX=c%2?-1:1;ty=.5*Math.sign(-Math.sin(yaw)*cabX||1);tp=Math.min(tp,.05);}
+      if(faceCast===who.cast&&k===ridingK&&phase<0){// train-talk: look at me (the neck; standing, the body turns too), in the car frame
+       mi.copy(cm).invert();p3.set(faceX,0,faceZ).applyMatrix4(mi);let rel=Math.atan2(p3.x-x,p3.z-z)-yaw;rel=Math.atan2(Math.sin(rel),Math.cos(rel));
+       if(!seated){const b=Math.max(-1.2,Math.min(1.2,rel));yaw+=b;rel-=b;}ty=Math.max(-.9,Math.min(.9,rel));tp=Math.min(tp,.02);}
       let fade=1;
       if(phase>=0){// walking: seat / strap → the aisle by the nearest door → that door → 1.4 m out onto the platform (fading there)
        let dz=DOORS[0];for(const dd of DOORS)if(Math.abs(dd-z)<Math.abs(dz-z))dz=dd;
@@ -239,11 +247,17 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
       // camera, back past FADE_FAR (the same rule as me and Kenji in Town)
       if(k===ridingK){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const yy=Math.max(p3.y+.25,Math.min(p3.y+1.35,cy)),d=Math.hypot(cx-p3.x,cy-yy,cz-p3.z),hid=nearHid[gi]?d<FADE_FAR:d<FADE_NEAR;nearHid[gi]=hid?1:0;if(hid)continue;}
       if(!parts)build();put(n,who.cast,cm,x,y,z,yaw,roll,bake,(kid?PAX_KID_SCALE:1)*fade,gazeP[gi],gazeY[gi]);
-      if(phase<0&&n<talk.length){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const t=talk[nTalk++];t.cast=who.cast;t.x=p3.x;t.y=p3.y;t.z=p3.z;t.k=k;}
+      if(phase<0&&n<talk.length){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const t=talk[nTalk++];t.cast=who.cast;t.x=p3.x;t.y=p3.y;t.z=p3.z;t.k=k;t.standing=!seated;t.kid=kid;t.fx=t.x;t.fz=t.z;if(seated&&k===ridingK){p3.set(x*.45,CAR_FLOOR_Y,z).applyMatrix4(cm);t.fx=p3.x;t.fz=p3.z;}}
       n++;if(full)nNear=n;}}}
    shown=n;parts?.commit(n,nNear,tier<HAT_TIER);
    void RIDER_ROOT_X;void BENCH_FRONT;void SEATS_PER_CAR;void BENCH_X;
   },
+  /** train-talk: the talkable spots this frame (read-only; the first `count`). */
+  spots(){return {list:talk as readonly Readonly<TalkSpot>[],count:nTalk};},
+  /** train-talk: the passenger's definition (its own copy, x / z kept current by the talk module). */
+  def(castIndex:number):Passenger|undefined{return cast[castIndex];},
+  /** train-talk: cast c (-1: nobody) turns toward the world point (x, z) and keeps their seat. */
+  face(c:number,x=0,z=0){faceCast=c;faceX=x;faceZ=z;},
   /** The horn sounded on train k (a glance toward the cab). */
   horn(k:number,now:number){hornK=k;hornAt=now;},
   /** The passenger to talk to while riding train k: the nearest within TALK_RANGE of (x, z) (its NpcDefinition, at its spot). */

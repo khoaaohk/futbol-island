@@ -37,8 +37,8 @@ export function resetFreshCache(){memo=null;}
 export const lineId=(text:string)=>{let h=5381;for(let i=0;i<text.length;i++)h=(h*33+text.charCodeAt(i))|0;return (h>>>0).toString(36);};
 const EMPTY:NpcFresh={topics:[],challenges:[],openers:[],returning:[]};
 /** This NPC's fresh pool: its own, else its area's, else nothing (base content only). */
-export function freshPool(npc:Pick<NpcDefinition,'id'|'area'>,book:NpcFreshBook=FRESH):NpcFresh{
- return book?.byNpc?.[npc.id]??(npc.area?book?.byArea?.[npc.area]:undefined)??EMPTY;
+export function freshPool(npc:Pick<NpcDefinition,'id'|'area'|'fresh'>,book:NpcFreshBook=FRESH):NpcFresh{
+ return npc.fresh??book?.byNpc?.[npc.id]??(npc.area?book?.byArea?.[npc.area]:undefined)??EMPTY;
 }
 function slot(mem:Memory,npcId:string,kind:Kind){const n=mem.n[npcId]??(mem.n[npcId]={});return n[kind]??(n[kind]={s:[],r:[]});}
 const shuffle=<T,>(items:T[],rand:()=>number)=>{const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -62,7 +62,7 @@ const topicPool=(npc:Pick<NpcDefinition,'topics'>,fresh:NpcFresh):VisitTopic[]=>
  * the very first chat keeps the plain greeting) or, once several topics were asked, a returning line naming one of them (at most
  * once per visit, alternating with openers); a rotating set of unseen topics; and an unseen challenge for the chip, if any.
  */
-export function planNpcVisit(npc:Pick<NpcDefinition,'id'|'area'|'greeting'|'lines'|'topics'>,opts:Opts={}):VisitPlan{
+export function planNpcVisit(npc:Pick<NpcDefinition,'id'|'area'|'greeting'|'lines'|'topics'|'fresh'>,opts:Opts={}):VisitPlan{
  const store=opts.store??localStore,rand=opts.rand??Math.random,fresh=freshPool(npc,opts.book);
  const mem=load(store),n=mem.n[npc.id]??(mem.n[npc.id]={});
  const pool=topicPool(npc,fresh),byId=new Map(pool.map(t=>[t.id,t]));

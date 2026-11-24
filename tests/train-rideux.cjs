@@ -47,7 +47,7 @@ ride.dispose();
 // wiring: the pill in the HUD, the cluster gets exitTo, E talks to Kenji only when there is no pill
 {const H=read('components/TrainRideHud.tsx'),Tn=read('components/Town.tsx');assert(/data-train-exit/.test(H)&&/Doors opening…/.test(H),'the HUD pill');
  assert(/trainButtons\(trainCanGetOff,trainMoved,trainStanding,trainNearSeat,trainNearDoor,trainExitTo\)/.test(Tn),'Town passes the pill station');
- assert(/!trainRideStore\.get\(\)\.exitTo\)\{/.test(Tn),'E gets off (not Talk) while the pill shows');}
+ assert(/\(trainTalk\.aimed\/\* train-talk \*\/\|\|!trainRideStore\.get\(\)\.canGetOff&&!trainRideStore\.get\(\)\.exitTo\)\)\{/.test(Tn),'E gets off (not Talk) while the pill shows, unless you aim at a passenger (train-talk)');}
 console.log('train-rideux exit: ok');
 // 2. the HUD while riding: no fuel readout, no settings gear, no Paths button (its spot kept for the camera button); coins stay
 {const Tn=read('components/Town.tsx'),G=read('app/globals.css');

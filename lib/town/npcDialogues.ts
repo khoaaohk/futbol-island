@@ -27,7 +27,8 @@ export type NpcDefinition={freestyle?:number;/** FREESTYLE_CLIPS id shown first 
  saverHidden?:boolean;
  /** A public-viewing fan (lib/town/stadiumNpcs.ts): looks up at the big screen and keeps facing it (workYaw) while answering a match cue. */ watch?:boolean;
  /** A costume over the rig (the DRIP FC mascot, lib/graphics/dripMascot.ts). */ costume?:'drip';
- /** Gestures on its own now and then while a stadium match is on (coaches, the fourth official; Town picks one at a time). */ emotes?:boolean};
+ /** Gestures on its own now and then while a stadium match is on (coaches, the fourth official; Town picks one at a time). */ emotes?:boolean;
+ /** Nov 24 2026 (Island Line passengers, lib/town/trainPassengerTalk.ts): this chat's own fresh pool (e.g. its quick challenge), ahead of FRESH. */ fresh?:import('./npcFreshTypes').NpcFresh};
 const ISLAND_REGULARS:NpcDefinition[]=[
  {id:'rosa',name:'Coach Rosa',role:'Futsal coach',x:16,z:43,character:'female',face:'warm',clothing:'sunset',greeting:'Welcome to the rooftop! Futsal gives you lots of touches and very little time. What are you working on?',topics:[
   {id:'touch',question:'How do I improve my first touch?',answer:'Look around before the pass arrives. Cushion the ball into space where you can play your next pass. In futsal, your sole can help you stop and protect it.',followUp:{question:'What can I practise?',answer:'Pass against a wall, check over your shoulder, then receive to either side. Start slowly and keep the ball close enough for your next touch.'}},

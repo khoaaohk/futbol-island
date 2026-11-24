@@ -30,13 +30,17 @@ const kenjiTopics=(...t:[string,string,string,string][])=>t.map((x,i)=>({id:'k'+
  *    mistakes (https://en.wikipedia.org/wiki/Pointing_and_calling). A keeper's "Keeper!" call is the same idea: say what you see.
  *  - Kashima Soccer Stadium Station (Kashima Line) is served mainly on match days (https://en.wikipedia.org/wiki/Kashima_Soccer_Stadium_Station).
  *  - England's "football specials": extra trains that carried away fans to a match (https://en.wikipedia.org/wiki/Football_special).
+ *  - Nov 24 2026: most match sprints are short, so acceleration matters (Stølen et al. 2005, "Physiology of soccer"); outfield players
+ *    run roughly 10 km a match (same source); the loop is LAP = 360 s (trainSchedule.ts).
  *  - A Japanese train crew: the driver up front and the conductor (shashō) who checks the doors and makes announcements. */
 export const KENJI_NPC:NpcDefinition={id:'train-kenji',name:CONDUCTOR,role:'Island Line conductor',pursuit:'KEEPING THE ISLAND LINE ON TIME',x:0,z:0,
  character:'male',face:'warm',clothing:'classic',look:{skin:2,hair:'crop',hairColor:'#2b211c',headwear:'cap',headwearColor:'#1d2c4a',top:'#1f3352'},
  persona:'A friendly conductor who points at every signal and knows a train fact for every stop.',
- greeting:'Hello from the cab! I\'m Kenji, the conductor of the Island Line. Want a train fact while we roll?',
+ greeting:'Hello from the cab! I\'m Kenji, the conductor of the Island Line. Want a football tip while we roll?',
  lines:['Signal clear! I point and call it, every time.','Hold on to a strap round the bends!','Doors only close when the platform is clear.'],
  topics:kenjiTopics(
   ['Why do you point at everything?','It\'s called pointing and calling, "shisa kanko" in Japan. I point at each signal and say it out loud, so my eyes, hand and voice all check it. It helps crews make far fewer mistakes.','Do footballers do that?','Yes! A keeper shouts "Keeper!" when coming for the ball, so defenders don\'t crash into each other. Saying what you see helps the whole team.'],
   ['Do fans ride trains to matches?','Lots do! In Japan, Kashima Soccer Stadium Station is served mostly on match days. In England, clubs\' fans once filled "football specials", extra trains just for one match.','Why go by train?','One train carries hundreds of fans at once, so everyone arrives together and the roads stay clear.'],
+  ['Why does the train start so slowly?','A heavy train speeds up gently so nobody falls over. Footballers want the opposite: a quick first step, because most sprints in a match are short.','How do I start faster?','Stay on your toes, lean forward a little and take short, quick steps before longer strides.'],
+  ['How long is one loop of the island?','About 6 minutes, then round we go again. Footballers go a long way too: roughly 10 km in a 90-minute match, mixing walks, jogs and sprints.','How do they last so long?','They pace themselves, sip water at every break and rest at half-time.'],
   ['What does a conductor do?','On many Japanese trains the driver drives up front and the conductor checks the doors, makes the announcements and helps passengers.','Is that like a team?','A bit! Like a captain and a coach, two people with different jobs keep everyone safe and on time.'])};
