@@ -123,6 +123,12 @@ async function leaveRide(p) {
   await p.evaluate(() => { const f = window.__fi2; f.trainRide.finish(); const sp = f.trainRide.stationSpot(0, 0); f.teleport(sp.x, sp.z, sp.yaw); });
   await p.waitForTimeout(1500);
 }
+// Between parts: the travel map closed, on foot (the ride part ends on the jetpack: its 'walk' waits for a landing), off the train.
+async function settle(p) {
+  await closeMap(p);
+  for (let i = 0; i < 20; i++) { const r = await p.evaluate(() => { const f = window.__fi2; if (f.trainRide.active) f.trainRide.finish(); if (f.rideRef?.current !== 'walk') { try { f.selectRide('walk'); } catch { /* */ } } return f.rideRef?.current; }); if (r === 'walk' || r === undefined) break; await p.waitForTimeout(500); }
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(0, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw); }); await p.waitForTimeout(800);
+}
 async function standingTrainAt(p, si) {
   // bring train 0 to stand at station si with its doors open (8 s into the dwell)
   const T = await p.evaluate((si) => { const s = window.__fi2.trains.sched, st = s.stops.find((x) => x.station.id === ['north', 'west', 'south', 'summit', 'cay'][si]); return st.arrive + 3.5; }, si);
@@ -203,6 +209,7 @@ async function partRide(c) {
 async function closeMap(p) { for (let i = 0; i < 6; i++) { const open = await p.evaluate(() => [...document.querySelectorAll('[class*=IslandTravelMap_dialog]')].some((e) => e.tagName === 'DIALOG' ? e.open : e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden')); if (!open) return true; await p.keyboard.press('Escape'); await p.waitForTimeout(600); } return false; }
 async function partTrack(c) {
   const { p } = c;
+  await settle(p);
   // stand on the rails in the north straight; a train comes: it horns, stops short, asks to step off, slides the player aside
   // (Nov 24 polish: the gap counts while the player is still on the line, within 2.4 m of the spot; once eased off the train may go on)
   // on foot first: after the ride part's jetpack check, Walk while flying only queues a landing (pendingRide) that glides down to
@@ -326,13 +333,14 @@ async function landRoof(p, T) {
 // drawn with the open (close-up) geometry, its instance matrices are not degenerate, the roof is cut only in Inside; a shot each (--shots)
 async function partViews(c) {
   const { p } = c;
+  await settle(p);
   await standingTrainAt(p, 2);
   await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
   await p.waitForTimeout(1500);
   await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
   await p.waitForTimeout(800);
   const k = await p.evaluate(() => window.__fi2.trainRide.train);
-  if (k < 0) { check('views: riding', false); return; }
+  if (k < 0) { check('views: riding', false, JSON.stringify(await p.evaluate(() => { const f = window.__fi2; return { want: f.trainRide.lastWant, ride: f.rideRef?.current, map: !!document.querySelector('[data-train-station]'), dialogs: [...document.querySelectorAll('[role=dialog]')].map((d) => (d.getAttribute('aria-label') || d.className || '').slice(0, 30)), loc: [f.location.x, f.location.z].map(Math.round), h: f.rooftop?.state?.height }; }))); return; }
   for (let i = 0; i < 40; i++) { if ((await p.evaluate((k) => window.__fi2.trains.states[k].at, k)) < 0) break; await p.waitForTimeout(500); }
   await p.waitForTimeout(2000);
   for (const v of ['seat', 'front', 'back', 'left', 'right', 'above', 'inside', 'seat']) {
@@ -352,6 +360,7 @@ async function partViews(c) {
 // the train's body corners (both cars, 16 points) are on screen.
 async function partFraming(c) {
   const { p } = c;
+  await settle(p);
   await standingTrainAt(p, 2);
   await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
   await p.waitForTimeout(1500);
@@ -384,6 +393,7 @@ async function partFraming(c) {
 // sit right under the coins pill, and on phones the map toggle is the outer column's top cell (right of Recenter), 44 px targets.
 async function partHud(c) {
   const { p } = c;
+  await settle(p);
   await standingTrainAt(p, 2);
   await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
   await p.waitForTimeout(1500);
@@ -407,6 +417,7 @@ async function partHud(c) {
 // view changes ease smoothly (no camera jump between frames, never inside the car body on an outside-to-outside change).
 async function partInside(c) {
   const { p } = c;
+  await settle(p);
   await standingTrainAt(p, 2);
   await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
   await p.waitForTimeout(1200);
