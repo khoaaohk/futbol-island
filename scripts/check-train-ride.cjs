@@ -30,6 +30,8 @@ async function boot(b, vp, mobile) {
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
   await p.goto(url + '/play?from=arcade', { timeout: 240000 }); await p.waitForTimeout(3000);
   await start(p);
+  // the public world connects only after a first input (as check-train-phase4): a real key press and a pointer move
+  await p.keyboard.press('Shift'); await p.mouse.move(vp.width / 2 + 5, vp.height / 2 + 5);
   await p.evaluate(() => { const f = window.__fi2, r = f.renderer, orig = r.render.bind(r), log = window.__gfx = { on: false, rows: [] };
     r.render = (scene, camera) => { orig(scene, camera); if (log.on && scene === f.scene && r.getRenderTarget() === null) log.rows.push([r.info.render.calls, r.info.render.triangles]); }; });
   return { ctx, p, errs };
