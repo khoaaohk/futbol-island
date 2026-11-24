@@ -49,5 +49,5 @@ assert.equal(sitYieldsToTalk(false,1,TALK_FIRST),true);
 assert.ok(STADIUM.x<0);
 // QA Nov 14 2026: while seated the low stand view hides the townsfolk name tag (a bench coach's tag sat huge and clipped over
 // the pitch), like the vending machine view does (islandNpcs hideTags).
-assert.match(town,/\|\|vending\.focused!==null\|\|stadiumSit\.seated\/\*/,'no townsfolk tag in the seated stand view');
+assert.match(town,/\|\|vending\.focused!==null\|\|stadiumSit\.seated(\|\|trainRide\.active)?\/\*/,'no townsfolk tag in the seated stand view');
 console.log('stadium talk-first: ok');

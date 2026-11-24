@@ -82,7 +82,7 @@ assert.equal(flightRenderHeight(10,12,.25),10.5);assert.equal(flightRenderHeight
  // Wiring: attached before the first compile in both scene builders, updated before Town's render; nothing drawn for it.
  const town=fs.readFileSync('components/Town.tsx','utf8'),warm=fs.readFileSync('lib/town/islandWarm.ts','utf8'),src=fs.readFileSync('lib/graphics/horizonHaze.ts','utf8');
  assert(town.includes("scene.background=new T.Color('#e8b98b');attachHorizonHaze(scene);")&&warm.includes("scene.background=new T.Color('#e8b98b');attachHorizonHaze(scene);"),'both scene builders attach the haze');
- assert(/updateHorizonHaze\(scene,camera\);[^\n]*\n\s*if\(resolution\)\{renderer\.setPixelRatio/.test(town),'Town updates it right before the render');
+ assert(/updateHorizonHaze\(scene,camera\);[^\n]*\n([^\n]*\n){0,6}?[^\n]*?if\(resolution\)\{renderer\.setPixelRatio/.test(town),'Town updates it right before the render');
  assert(!/Mesh|Geometry|Material/.test(src.replace(/\/\*\*[\s\S]*?\*\//g,'')),'the haze adds no mesh, geometry or material');
  // And the shake fixes are wired: drawn flight height interpolated, the flying camera locked to it (no hop-lag sawtooth).
  assert(town.includes('flightRenderHeight(previousFlightHeight,flight.height,blend)')&&town.includes('previousFlightHeight=flight.height;tick(1/60)'),'Town draws the flight height interpolated');

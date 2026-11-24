@@ -304,7 +304,7 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
 {const town=fs.readFileSync('components/Town.tsx','utf8'),rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),fr=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');
  assert.match(town,/const at=liveJoin\.position\(joinPoint\);if\(at\)\{location\.x=at\.x;location\.z=at\.z;/,'the camera and minimap follow your slot');
  assert.match(town,/fieldBumpCtx\.disabled=[^;]*liveJoin\.joined;/,'no field bumps while joined');
- assert.match(town,/const walkingBall=[^;]*!liveJoin\.joined;/,'the walk ball goes to the kit bag');
+ assert.match(town,/const walkingBall=[^;]*!liveJoin\.joined(&&!trainRide\.active)?;/,'the walk ball goes to the kit bag');
  assert.match(town,/if\(liveJoin\.joined\)ball\.visible=false;/);
  assert.match(town,/player\.root\.visible=[^;]*!liveJoin\.joined;/,'the slot rig is you; the avatar is hidden');
  for(const gate of ['liveKnockout.joined||liveJoin.joined||animalRides','moveUiOpen.current||liveKnockout.joined||liveJoin.joined'])assert(town.includes(gate),'gate: '+gate);

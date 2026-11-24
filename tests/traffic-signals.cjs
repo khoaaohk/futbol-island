@@ -130,7 +130,7 @@ ok('7. vehicles: one mesh, one material, one shadow caster each; every style und
   assert(n<=(car.pickup?V.OLD_TRIANGLES.pickup:V.OLD_TRIANGLES.car),`${mesh.name} ${car.index}: ${n} triangles`);triangles+=n;meshes++;if(mesh.castShadow)casters++;materials.add(mesh.material);
   assert(mesh.geometry.getAttribute('aPart')&&mesh.geometry.getAttribute('color'),'vertex colours and part tags');assert(mesh.material.vertexColors&&!mesh.material.map,'no texture');
   const box=mesh.geometry.boundingBox;assert(box.max.x<=(car.pickup?1.13:1.03)&&box.max.z<=(car.pickup?2.36:1.82)&&box.min.z>=-(car.pickup?2.32:1.82)&&box.min.y>=0,'inside its footprint, on the ground');
-  const tags=new Set(mesh.geometry.getAttribute('aPart').array.filter((_,k)=>k%4===3));for(const part of Object.values(V.PART))assert(tags.has(part),'has part '+part);}
+  const tags=new Set(mesh.geometry.getAttribute('aPart').array.filter((_,k)=>k%4===3));for(const [nm,part] of Object.entries(V.PART))if(nm!=='strap')assert(tags.has(part),'has part '+part);}/* strap: the Island Line cars only */
  console.log('     ',JSON.stringify({vehicles:meshes,triangles,was:9*V.OLD_TRIANGLES.car+2*V.OLD_TRIANGLES.pickup+48,shadowCasters:casters,materials:materials.size,lampInstances:heads.length*3}));
  assert.equal(meshes,11);assert.equal(casters,11,'was 44');assert(triangles<=3580*.75,'at least a quarter fewer triangles than the 3,580 before');
  const styles=new Set(V.CAR_STYLES);assert(styles.size>=6,'six looks');const counts=[...styles].map(s=>V.triangleCount(V.buildVehicleGeometry(s,'#bb6857')));assert(new Set(counts).size>=5,'the styles are different shapes');
