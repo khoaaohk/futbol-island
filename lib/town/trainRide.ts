@@ -143,7 +143,7 @@ type Ports={
  ground?:(x:number,z:number)=>number;
 };
 export function createTrainRide(ports:Ports){
- let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,ready=false,walkT=-1,walkDur=0,walkA=0,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
+ let k=-1,j=-1,blend=0,camOn=false,lastAt=-2,queued=-1,hoverK=-1,ready=false,walkT=-1,walkDur=0,walkA=0,quizIn=-1,lastWall=-1,quizzes:TrainQuizQ[]|null=null,quizLoading=false,quizNo=0,near=-1,nearTrain=-1;
  const pose:SeatPose={x:0,y:0,z:0,yaw:0},probe:SeatPose={x:0,y:0,z:0,yaw:0},spot={x:0,y:0,z:0,yaw:0},me={x:0,z:0,h:0};
  const anchor={train:0,seat:0,x:0,y:0,z:0,yaw:0},tp={x:0,z:0,tx:1,tz:0};
  const door:DoorSpot={x:0,y:0,z:0,yaw:0,car:0,door:0},from={x:0,y:0,z:0},walkPose:SeatPose={x:0,y:0,z:0,yaw:0};
@@ -207,6 +207,8 @@ export function createTrainRide(ports:Ports){
   get waiting(){return riding()?(walkT>=0?k:-1):near>=0?nearTrain:-1;},
   /** Gameplay 2: walking to the door (0 … 1), -1 when not; and a Board press waiting for the doors (train index, -1). */
   get walking(){return walkT;},get queued(){return queued;},
+  /** Gameplay 2: the train under the pointer (lib/graphics/trainHover.ts; Town writes it), -1: none. Board then wins as a hover. */
+  get hoverTrain(){return hoverK;},set hoverTrain(v:number){hoverK=v;},
   board,getOff,press,answer,
   /** The Board offer (Town's HUD tick): standing on a platform where a train waits with its doors open. One bounded track test. */
   want(x:number,z:number,y:number,canBoard:boolean):{key:string;distance:number}|null{
@@ -217,7 +219,7 @@ export function createTrainRide(ports:Ports){
    const si=boardZoneAt(x,z,y);if(si<0){queued=-1;return null;}const stop=TRAIN_STOPS.findIndex(s=>s.station===TRAIN_STATIONS[si]);
    for(let i=0;i<TRAIN_COUNT;i++){const w=boardIn(run.states[i],stop);if(!(w<=BOARD_EARLY))continue;near=si;nearTrain=i;ready=w<=0;
      if(queued===i&&ready&&board())return null;// a press while it braked in: on board as the doors open
-     const c=trackAt(TRAIN_STATIONS[si].s,tp);return {key:TRAIN_BOARD_KEY,distance:Math.max(0,Math.hypot(c.x-x,c.z-z)-3)};}
+     const c=trackAt(TRAIN_STATIONS[si].s,tp);return {key:TRAIN_BOARD_KEY,distance:hoverK===i?-1:Math.max(0,Math.hypot(c.x-x,c.z-z)-3)};}// the hovered train (trainHover.ts): explicit intent
    queued=-1;return null;
   },
   /** The Board button over the player's head (the stadium Sit prompt's placement). */

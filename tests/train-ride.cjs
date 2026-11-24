@@ -131,3 +131,25 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  assert(/trainFrame\.boardHold=trainRide\.waiting/.test(T),'Town passes the door hold');
  assert(/runner\.step\(i,now,dt,stopAt,st,f\.boardHold===i\)/.test(read('lib/town/trainRunning.ts')),'trainRunning holds the boarder\'s train');}
 console.log('train-ride gameplay2: ok');
+
+// Gameplay 2 (owner, Nov 24 2026): the green hover outline on a Board-eligible train (lib/graphics/trainHover.ts, buildingGlow 'train').
+{const TH=L('lib/graphics/trainHover.ts'),THREE=require('three'),S3=L('lib/town/trainSchedule.ts'),stop=0,T0=S3.TRAIN_STOPS[stop];
+ const scene=new THREE.Scene(),h=TH.createTrainHover(scene);const p0=tt.trackAt(0);
+ const states=[{s:12.2,at:stop,next:1,t:T0.arrive+4,doors:1,dwellLeft:9},{s:0,at:-1,next:stop,t:T0.arrive+100,doors:0,dwellLeft:0},{s:0,at:-1,next:stop,t:T0.arrive-1,doors:0,dwellLeft:0}];
+ const run={states,carMatrixOf:(k,c,o)=>o.makeTranslation(1000*k,0,-c*12.4+(k===2?500:0))};
+ const ray=k=>{const r=new THREE.Raycaster();r.set(new THREE.Vector3(1000*k-10,2.5,0),new THREE.Vector3(1,0,0));return r;};
+ const far=TH.TRAIN_HOVER_RANGE+50;
+ assert(TH.trainBoardable(states[0])&&!TH.trainBoardable(states[1])&&TH.trainBoardable(states[2]),'eligible: standing with doors open, braking in; not running');
+ // place the player next to train 0's middle (trackAt(s - length/2)) so the 45 m range passes
+ const mid=tt.trackAt(states[0].s-S3.TRAIN_LENGTH/2);assert.equal(h.pick(ray(0),run,mid.x,mid.z),0,'pointing at a standing train: picked');
+ assert.equal(h.pick(ray(0),run,mid.x+far,mid.z),-1,`beyond ${TH.TRAIN_HOVER_RANGE} m: not`);
+ states[1].s=states[0].s;assert.equal(h.pick(ray(1),run,mid.x,mid.z),-1,'a running train: never');
+ assert.equal(h.hover(ray(0),run,mid.x,mid.z,0),0,'hover');h.update(run,1/60,false);assert(scene.getObjectByName('train-hover-0').children[0].visible,'the outline shows');
+ assert.equal(h.hover(null,run,mid.x,mid.z,100),-1,'no pointer: gone');h.dispose();
+ const G=read('lib/graphics/buildingGlow.ts'),T=read('components/Town.tsx'),R3=read('lib/town/trainRide.ts');
+ assert(/kind==='train'\?\[/.test(G),"buildingGlow 'train' shape");
+ assert(/stampPrompt\.hover\(hoverPoint&&canEnter&&!overGasha&&!overTrain&&/.test(T),'the train beats the station house under the pointer');
+ assert(/!trainRide\.active\?characterRay:null/.test(T),'no outline while riding');
+ assert(/distance:hoverK===i\?-1:/.test(R3),'the hovered train makes Board the hovered target');
+ assert(/trainHover\.pick\(characterRay,run,location\.x,location\.z\)[^;]*;if\(tk>=0\)\{[^}]*trainRide\.board\(\)/.test(T),'a tap on the train is Board');}
+console.log('train-ride hover: ok');

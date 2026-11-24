@@ -3,7 +3,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {KIT_SHOP_GLOW} from '../shop/shopDoors';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'|'shop'|'station'){
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'|'shop'|'station'|'train'){
  const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
@@ -29,6 +29,10 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   // along the line × its depth, platform to eave) and the tiled roof's eave slab (9.6 m × depth + 2.5 m, lib/town/trainWorld.ts).
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
   {w:width+1.8,d:depth+2.7,h:.34,x:0,y:height+.3,z:0}
+ ]:kind==='train'?[
+  // Island Line car (Gameplay 2, Nov 24 2026; lib/graphics/trainHover.ts): the car's bounds only (2·HALF_W × car length × body
+  // height), one glow per car placed on the car's own matrix, so the model's internals never matter.
+  {w:width+.2,d:depth+.2,h:height+.12,x:0,y:(height+.12)/2-.06,z:0}
  ]:kind==='konbini'||kind==='museum-wing'?[
   // Konbini (Sep 29 2026): exactly the store's own box (facade to back wall, ground to parapet) plus its flat roof rim.
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
@@ -66,6 +70,6 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   const step=Math.min(Math.max(dt,0),.05);if(hovered&&!wasHovered)phase=0;wasHovered=hovered;
   amount=reduced?Number(hovered):T.MathUtils.damp(amount,Number(hovered),10,step);
   if(!reduced&&amount>.01)phase=(phase+step*.38)%1;
-  effect.visible=amount>.01;uniforms.strength.value=amount;uniforms.moving.value=reduced?0:1;uniforms.rise.value=reduced?-5:phase*((cabinet?height:coaches?11:arcade?10.3:10.5)+4)-2;
+  effect.visible=amount>.01;uniforms.strength.value=amount;uniforms.moving.value=reduced?0:1;uniforms.rise.value=reduced?-5:phase*((cabinet||kind==='train'?height:coaches?11:arcade?10.3:10.5)+4)-2;
  },dispose(){effect.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());wallMaterial.dispose();}};
 }
