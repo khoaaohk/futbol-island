@@ -117,6 +117,12 @@ async function partVending(c) {
     check(`vending ${id}: the camera zooms back out (island running again)`, out, vs);
   }
 }
+// Off the train for the next part: fast-travel style (finish), then onto a platform away from the line and a moment to settle
+// (finish leaves you where your seat was, on the track: a passing train's bonk would then own your position for the next part)
+async function leaveRide(p) {
+  await p.evaluate(() => { const f = window.__fi2; f.trainRide.finish(); const sp = f.trainRide.stationSpot(0, 0); f.teleport(sp.x, sp.z, sp.yaw); });
+  await p.waitForTimeout(1500);
+}
 async function standingTrainAt(p, si) {
   // bring train 0 to stand at station si with its doors open (8 s into the dwell)
   const T = await p.evaluate((si) => { const s = window.__fi2.trains.sched, st = s.stops.find((x) => x.station.id === ['north', 'west', 'south', 'summit', 'cay'][si]); return st.arrive + 3.5; }, si);
@@ -336,10 +342,10 @@ async function partViews(c) {
       const sh = m && m.material.userData?.shader; return { n: cars.length, count: m ? m.count : 0, sx: +sx.toFixed(3), cut: f.trains.roofCut[k], view: f.trainRide.view, tri: m ? (m.geometry.getAttribute('position').count / 3) | 0 : 0 }; }, k);
     if (process.env.VDIAG) console.log('VD', v, JSON.stringify(await p.evaluate((k) => { const f = window.__fi2, c = f.camera, T = c.constructor; const st = f.trains.states[k]; const m = f.trains.root.children.filter((o) => o.isInstancedMesh && o.name.startsWith('train-'));
       return { cam: c.position.toArray().map((x) => +x.toFixed(1)), auto: c.matrixAutoUpdate, near: c.near, far: c.far, fov: c.fov, aspect: c.aspect, s: +st.s.toFixed(1), vis: m.map((o) => o.name + ':' + o.visible), pm: Array.from(c.projectionMatrix.elements).slice(0, 12).map((x) => +x.toFixed(3)), mwi: Array.from(c.matrixWorldInverse.elements).map((x) => +x.toFixed(2)), mw: Array.from(c.matrixWorld.elements).slice(12, 15).map((x) => +x.toFixed(1)) }; }, k)));
-    check(`views ${v}: the ridden train is drawn (open car mesh, non-degenerate), roof cut only in Inside`, r.n >= 1 && r.count >= 2 && r.sx > .9 && r.tri > 2000 && (r.cut === 1) === (v === 'inside'), JSON.stringify(r));
+    check(`views ${v}: the ridden train is drawn (open car mesh, non-degenerate), never cut (RIDE 3: Inside is first person)`, r.n >= 1 && r.count >= 2 && r.sx > .9 && r.tri > 2000 && r.cut === 0, JSON.stringify(r));
     if (shots) await p.screenshot({ path: path.join(shots, `view-${v}-${phone ? 'phone' : 'desktop'}.png`) });
   }
-  await p.evaluate(() => window.__fi2.trainRide.finish());
+  await leaveRide(p);
 }
 // RIDE 3 (owner Nov 24 2026: "camera angles don't have the train and only show the riders"): every outside view at 5 points round
 // the loop (3 spread, the South Bridge crest, the Summit tunnel): the camera is outside every car of the ridden train and most of
@@ -372,7 +378,7 @@ async function partFraming(c) {
     }
   }
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
-  await p.evaluate(() => window.__fi2.trainRide.finish());
+  await leaveRide(p);
 }
 // RIDE 3 HUD (owner shots 42, 47, 50): riding, the camera button is tap only (no list), a view change's toast and the announcement
 // sit right under the coins pill, and on phones the map toggle is the outer column's top cell (right of Recenter), 44 px targets.
@@ -392,9 +398,60 @@ async function partHud(c) {
   if (phone) check('hud (phone): the map toggle is the outer column top cell, right of Recenter, 44 px targets', r.map && r.rec && r.map.l >= r.rec.r - 2 && Math.abs(r.map.t - r.rec.t) < 12 && [r.map, r.off, r.rec, r.walk, r.horn].every((x) => x && x.w >= 44 && x.h >= 44), JSON.stringify({ map: r.map, rec: r.rec, off: r.off, walk: r.walk, horn: r.horn }));
   if (shots) await p.screenshot({ path: path.join(shots, `hud-${phone ? 'phone' : 'desktop'}.png`) });
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));
-  await p.evaluate(() => window.__fi2.trainRide.finish()); await p.waitForTimeout(600);
+  await leaveRide(p);
   if (phone) { const m = await p.evaluate(() => { const a = document.querySelector('.travel-actions .minimap-toggle')?.getBoundingClientRect(), t = document.querySelector('.travel-actions')?.hasAttribute('data-train-actions'); return { t, l: a ? Math.round(a.left) : -1 }; });
     check('hud: off the train the normal layout is back', !m.t, JSON.stringify(m)); }
+}
+// RIDE 3: Inside = first person (eye height in the aisle, my body hidden, roof on, look all round, WASD walks the way you look) and
+// walk out to exit (through an open door at a stop: off the train, on the platform, the camera eases back out, my body shown again);
+// view changes ease smoothly (no camera jump between frames, never inside the car body on an outside-to-outside change).
+async function partInside(c) {
+  const { p } = c;
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
+  await p.waitForTimeout(1300);
+  const k = await p.evaluate(() => window.__fi2.trainRide.train);
+  if (k < 0) { check('inside: riding', false); return; }
+  // smooth view changes: seat -> front -> left (outside views), sampled every frame
+  const ease = await p.evaluate(async (k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(), inv = new M(), q = cam.position.clone(); let inside = false, n = 0, prev = null, prevT = 0; const steps = {}, path = {}, spikes = [];
+    for (const v of ['front', 'left']) { f.trainRide.setView(v); const t0 = performance.now();
+      while (performance.now() - t0 < 1300) { await new Promise((r) => requestAnimationFrame(r)); const st = f.trains.states[k], cp = cam.position.clone();
+        // relative to the train (it moves ~v*dt a frame): the step of the camera minus the train's own step
+        f.trains.carMatrixOf(k, 0, m); const nose = new cp.constructor(m.elements[12], m.elements[13], m.elements[14]); const rel = cp.clone().sub(nose);
+        const tn = performance.now(); if (prev) { const d = rel.distanceTo(prev); path[v] = (path[v] || 0) + d; (steps[v] = steps[v] || []).push(d); } prev = rel; prevT = tn; n++;
+        for (let ci = 0; ci < 2; ci++) { f.trains.carMatrixOf(k, ci, m); inv.copy(m).invert(); q.copy(cp).applyMatrix4(inv); if (Math.abs(q.x) < 1.4 && q.y > 1.1 && q.y < 3.9 && Math.abs(q.z) < 6) inside = true; } } }
+    // a jump: one frame's step far bigger than both neighbours' (the ease's steps change gradually from frame to frame)
+    for (const v in steps) { const a = steps[v].filter((d) => d > 1e-4);/* frames the island skipped (phone 30 fps cap) */ for (let i = 1; i < a.length - 1; i++) if (a[i] > .6 && a[i] > 2.6 * Math.max(a[i - 1], a[i + 1])) spikes.push({ v, i, step: +a[i].toFixed(2), prev: +a[i - 1].toFixed(2), next: +a[i + 1].toFixed(2) }); }
+    return { spikes: spikes.slice(0, 4), path: Object.fromEntries(Object.entries(path).map(([a, b]) => [a, +b.toFixed(1)])), inside, n }; }, k);
+  check('views ease smoothly (no frame jump; never through the car)', ease.n > 20 && !ease.spikes.length && !ease.inside, JSON.stringify(ease));
+  await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(1500);
+  const fp = await p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(); const sp = f.trainRide.spot, car = sp.u >= -6.2 ? 0 : 1; f.trains.carMatrixOf(k, car, m); const q = cam.position.clone().applyMatrix4(m.clone().invert());
+    return { view: f.trainRide.view, standing: f.trainRide.standing, eyeY: +(q.y - 1.15).toFixed(2), x: +q.x.toFixed(2), meShown: f.player ? f.player.root.visible : null, cut: f.trains.roofCut[k], fov: +cam.fov.toFixed(1) }; }, k);
+  check('inside: first person (eye 1.3-1.4 m over the floor in the aisle, roof on, my body hidden)', fp.view === 'inside' && fp.standing && fp.eyeY > 1.25 && fp.eyeY < 1.45 && Math.abs(fp.x) < 1.3 && fp.cut === 0 && fp.meShown !== true, JSON.stringify(fp));
+  if (shots) await p.screenshot({ path: path.join(shots, `inside-fp-${phone ? 'phone' : 'desktop'}.png`) });
+  // look round: a drag on the canvas turns the view; W walks the way you look
+  const box = await p.locator('canvas').first().boundingBox(); const y0 = box.y + box.height * .45, x0 = box.x + box.width * .6;
+  const f0 = await p.evaluate(() => window.__fi2.trainRide.camForward);
+  await p.mouse.move(x0, y0); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(x0 - i * 25, y0); await p.mouse.up(); await p.waitForTimeout(200);
+  const f1 = await p.evaluate(() => window.__fi2.trainRide.camForward);
+  check('inside: a drag turns the view', Math.abs(f1 - f0) > .15, `${f0.toFixed(2)} -> ${f1.toFixed(2)}`);
+  await p.evaluate(() => window.__fi2.trainRide.setView('seat')); await p.waitForTimeout(1400); await p.evaluate(() => window.__fi2.trainRide.setView('inside')); await p.waitForTimeout(1400);
+  const u0 = await p.evaluate(() => window.__fi2.trainRide.spot.u); await p.keyboard.down('w'); await p.waitForTimeout(700); await p.keyboard.up('w');
+  const u1 = await p.evaluate(() => window.__fi2.trainRide.spot.u);
+  check('inside: W walks the way you look (along the car)', Math.abs(u1 - u0) > .3, `${u0.toFixed(2)} -> ${u1.toFixed(2)}`);
+  // walk out: the train brought into its next stop (doors open), stand in the open door's bay, walk toward the platform
+  { const T = await p.evaluate((k) => { const f = window.__fi2, s = f.trains.sched, st = f.trains.states[k]; const stop = s.stops[st.at >= 0 ? st.at : st.next]; return stop.arrive + 3.5; }, k); await setLap(p, k, T); await p.waitForTimeout(900); }
+  const door = await p.evaluate((k) => { const f = window.__fi2, M = f.camera.matrixWorld.constructor, m = new M(), o = { x: 0, y: 0, z: 0, yaw: 0, car: 0, door: 0 }, L = f.location; const ds = f.trains.doorSpot(k, L.x, L.z, o); if (!ds) return null;
+    f.trains.carMatrixOf(k, o.car, m); const q = f.camera.position.clone().set(o.x, f.trains.states[k].s * 0 + 1.2, o.z).applyMatrix4(m.clone().invert()); const x = o.car ? -q.x : q.x, u = o.car ? -12.4 - q.z : q.z; f.trainRide.spot.x = 0; f.trainRide.spot.u = u; return { x: +x.toFixed(2), u: +u.toFixed(2), at: f.trains.states[k].at }; }, k);
+  if (!door) { check('inside: a door open to walk out of', false); return; }
+  await p.waitForTimeout(200);
+  const key = door.x > 0 ? 'a' : 'd'; await p.keyboard.down(key); let off = false; for (let i = 0; i < 30 && !off; i++) { await p.waitForTimeout(100); off = !(await p.evaluate(() => window.__fi2.trainRide.active)); } await p.keyboard.up(key);
+  await p.waitForTimeout(1400);
+  const out = await p.evaluate(() => { const f = window.__fi2, c = f.camera.position, r = f.player.root.position; return { active: f.trainRide.active, camDist: +c.distanceTo(r).toFixed(1), meShown: f.player.root.visible, fov: +f.camera.fov.toFixed(1) }; });
+  check('inside: walking out through the open door gets you off (camera back out, body shown)', off && !out.active && out.camDist > 4 && out.meShown, JSON.stringify({ door, out }));
+  if (shots) await p.screenshot({ path: path.join(shots, `inside-walkout-${phone ? 'phone' : 'desktop'}.png`) });
 }
 async function partRoof(c) {
   const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
@@ -535,7 +592,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, framing: partFraming, hud: partHud, inside: partInside, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));

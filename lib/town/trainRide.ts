@@ -20,7 +20,7 @@ import {trainLayout} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,DOOR_HOLD,LAP,TRAIN_LENGTH} from './trainSchedule';
 import {TRAIN_SEATS,CAR_FLOOR_Y,SEAT_TABLE,PLAYER_SEATS,type SeatPose} from './trainRunning';
 import {trainRiderPose,trainStrapPose,swayStrapPose} from '../graphics/trainSeatPose';
-import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK_IN,NEAR_SEAT,GLOW_SEAT,type TrainLocal} from './trainWalk';
+import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK_IN,NEAR_SEAT,GLOW_SEAT,BAY_X,type TrainLocal} from './trainWalk';
 import type {TrickPose} from '../graphics/trickPose';
 import {springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
@@ -75,14 +75,11 @@ const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,portraitBack:3.5,portraitAhead:
 const PORTRAIT_FOV=58;
 /** Gameplay 3: the standing camera inside the car: distance (× zoom), eye over the floor, how far ahead of you it looks (m).
  *  Portrait phones (final verify Nov 24 2026: the kid filled the lower half) sit a step further back and higher, looking a little further on. */
-/** The Inside view (owner, Nov 24 2026: "a top view where you can see through the train like the buildings with arcade and museum.
- *  Walk around, but not first person"): the arcade / museum room framing. Those rooms look down ~40° from one side (museum 10.2 m up,
- *  12.5 m out; arcade 16 up, 19 out) and follow the player with a soft exponential (museum: rate 5); walls in front are cut away. In
- *  the car: the camera stands off one side, square to the aisle, `pitch` rad down (± the orbit within pitchMin … pitchMax), `dist` m
- *  (× zoom, distMin … distMax; portrait further), turned at most `yaw` rad either way; it follows the walker at `follow` /s; the
- *  ridden train's roof is not drawn and its side wall facing the camera is lowered to the window sill (vehicle material uCut + uCutDir),
- *  so you look straight down into the car past a low wall, the far wall and its windows still standing. */
-export const INSIDE={dist:9.5,portraitDist:12,distMin:6,distMax:15,pitch:.72,pitchMin:.5,pitchMax:1.3,eye:.8,yaw:1.1,follow:5} as const;
+/** The Inside view, RIDE 3 (owner, Nov 24 2026: first person): your own eyes, `eye` m over the car floor at your standing spot, no
+ *  cutaway (roof and both walls stay). Drag (or the right side) turns it all the way round and `pitch` rad up / down; the stick /
+ *  WASD walk the way you look (the aisle, door bays and gangway: trainWalk.ts). Your body is not drawn (the near-camera fade). Wider
+ *  `fov` (portrait `portraitFov`) inside a 2.4 m car; it eases in and out with the view change. */
+export const FP={eye:1.36,pitch:1.05,fov:68,portraitFov:76,look:4} as const;
 /** The ride's camera views (owner, Nov 24 2026), in the order the camera button cycles them. */
 export const TRAIN_VIEWS=['seat','front','back','left','right','above','inside'] as const;
 export type TrainView=typeof TRAIN_VIEWS[number];
@@ -103,8 +100,12 @@ export const OUTSIDE:Record<'front'|'back'|'left'|'right'|'above',{at:number;lh:
  *  train is in the tube they ease (TUBE.rate /s) to a shot along the tube: Front from `ahead` m before the nose looking back at the
  *  cab; Back, the sides and From above from `behind` m after the tail looking up the train over its roof. */
 export const TUBE={ahead:7.5,aheadUp:3.4,behind:7.5,behindUp:4.3,lookIn:4,lookUp:2.3,rate:3} as const;
-/** Switching views eases the camera over VIEW_EASE s (train-relative, so it keeps up with the train). */
-export const VIEW_EASE=.6;
+/** RIDE 3: switching views eases over VIEW_EASE s (smootherstep; reduced motion VIEW_EASE_REDUCED s): round an eased look point
+ *  (bearing the shortest way, elevation and log distance), all relative to the moving train (its nose and heading), lifted over
+ *  station roofs / the hill when the swing would pass through them (trainCamClear), the field of view eased with it. Getting off
+ *  eases back to the follow camera over EXIT_EASE s. */
+export const VIEW_EASE=1.05,VIEW_EASE_REDUCED=.25,EXIT_EASE=1;
+const smoother=(t:number)=>t*t*t*(t*(t*6-15)+10);
 /** Near-camera fade (owner, Nov 24 2026): a body within FADE_NEAR m of the camera is hidden, shown again past FADE_FAR m. */
 export const FADE_NEAR=.75,FADE_FAR=1.1;
 /** The camera's distance (m) to a body standing or sitting with its root at x, y, z (the axis from lo to hi m over the root). */
@@ -206,7 +207,7 @@ export function createTrainRide(ports:Ports){
  // Gameplay 3: standing in the aisle. sp = the train-frame spot (trainWalk.ts: x across, u along car 0), moved by the stick / WASD
  // relative to the camera; tw = the stand-up / sit-down ease (twSit: the seat being sat in, -1 standing up); the strap pose fades in
  // when you stop; gait = the frame Town poses the rig in (the rig walks in the train, then is put back in the world).
- let standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,standCam=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
+ let standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
  const sp={x:0,u:0},twFrom={x:0,u:0},twTo={x:0,u:0},mv={x:0,z:0},carL:TrainLocal={car:0,x:0,z:0},carM=new T.Matrix4(),pv=new T.Vector3(),aisle={x:0,z:0},gp:SeatPose={x:0,y:0,z:0,yaw:0};
  const straps:[TrickPose,TrickPose]=[trainStrapPose(-1),trainStrapPose(1)];
  const gait={on:false,x:0,z:0,facing:NaN};
@@ -219,8 +220,8 @@ export function createTrainRide(ports:Ports){
  // Camera views (owner, Nov 24 2026): the view, the ease from the last frame's camera (snap: train-relative position, its rotation;
  // viewT 0 … 1), the last applied pose and the train nose it was relative to; the Inside view's follow point (train frame) and side
  // (+1: the camera on the train frame's +x side); the outside / inside views' spring arms.
- let tubeW=0,camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,inX=0,inU=0,inSide=1,armO=-1,armI=-1,havePose=false;
- const snapP=new T.Vector3(),snapQ=new T.Quaternion(),lastP=new T.Vector3(),lastQ=new T.Quaternion(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},tpc={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
+ let tubeW=0,camView:TrainView='seat',viewT=1,lift=0,liftWant=0,liftIn=0,liftSnap=true,refX=0,refZ=0,refTx=1,refTz=0,armO=-1,havePose=false,lastFov=0,fovFrom=0,outT=1,outFov=0,swingLift=0;
+ const snapP=new T.Vector3(),snapL=new T.Vector3(),lastP=new T.Vector3(),lastL=new T.Vector3(),lastQ=new T.Quaternion(),outP=new T.Vector3(),outQ=new T.Quaternion(),fromP=new T.Vector3(),fromL=new T.Vector3(),o1=new T.Vector3(),o2=new T.Vector3(),carL2:TrainLocal={car:0,x:0,z:0},carM2=new T.Matrix4(),pv2=new T.Vector3(),tpo={x:0,z:0,tx:1,tz:0},tpn={x:0,z:0,tx:1,tz:0},tpc={x:0,z:0,tx:1,tz:0},ceil2={w:0,y:0},pr=[0,0];
  const riding=()=>k>=0;
  function setNote(note:string){trainRideStore.set({note,notes:view.notes+1});}
  function board(){
@@ -234,12 +235,12 @@ export function createTrainRide(ports:Ports){
   let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(nearTrain,s))continue;run.seatPose(nearTrain,s,probe);const d=Math.hypot(probe.x-ax,probe.z-az);if(d<bd){bd=d;best=s;}}
   if(best<0){queued=-1;setNote('This train is full. The next one comes in 2 minutes.');return false;}
   ports.dismount?.();// on a scooter / bike / moped: on foot first, boarded in the same press
-  queued=-1;k=nearTrain;j=best;anchor.standing=false;run.seatPose(k,j,probe);standing=false;tw=-1;gait.on=false;standCam=0;
+  queued=-1;k=nearTrain;j=best;anchor.standing=false;run.seatPose(k,j,probe);standing=false;tw=-1;gait.on=false;
   // the walk: me → the door → the seat, WALK_SPEED m/s, WALK_MIN … WALK_MAX s in all (eased, so it starts and ends soft)
   from.x=me.x;from.y=me.h;from.z=me.z;if(!ds){door.x=me.x;door.z=me.z;door.y=me.h;door.yaw=probe.yaw;}
   {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
-  orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;camView='seat';viewT=1;havePose=false;armO=armI=-1;
+  orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;camView='seat';viewT=1;havePose=false;armO=-1;outT=1;
   trainRideStore.set({riding:true,canGetOff:false,camView:'seat'});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();
   if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
   return true;
@@ -249,11 +250,13 @@ export function createTrainRide(ports:Ports){
   if(!riding())return false;const run=ports.run();const st=run?.states[k];
   if(!force){if(!run||!st||!doorsOpen(st)){setNote(TRAIN_NOTES.wait);return false;}
    const si=TRAIN_STATIONS.indexOf(TRAIN_STOPS[st.at].station);platformSpot(si,standing?wrapS(trackSOfU(st.s,sp.u)):trainSeatS(run),spot);ports.place(spot.x,spot.z,spot.y,spot.yaw);ports.haptic?.();}
-  leave(run);if(force)blend=0;return true;
+  leave(run);if(force){blend=0;outT=1;}return true;
  }
  function leave(run:Run|null){
   if(run){run.ridden[k]=0;run.roofCut?.fill(0);}k=-1;j=-1;walkT=-1;ports.hold?.(false);standing=false;tw=-1;gait.on=false;strapW=0;for(const g of glows)g.w=0;exitQ=false;exitT=-1;warnedAt=-2;
   trainRideStore.set({riding:false,canGetOff:false,standing:false,nearSeat:false,nearDoor:false,exitTo:'',exitQueued:false,closing:false});
+  // RIDE 3: the camera eases from where it was back to the follow camera (applyCamera), the seat blend is done
+  if(havePose){outT=0;outP.copy(lastP);outQ.copy(lastQ);outFov=lastFov;}blend=0;
  }
  const doorsOpen=(st:Run['states'][number])=>st.at>=0&&st.doors>=DOORS_OPEN&&st.dwellLeft>=GET_OFF_LEFT;
  /** Easy exit: the Get off pill shows from EXIT_EARLY s before the doors open (braking in) until they start to close. */
@@ -288,8 +291,11 @@ export function createTrainRide(ports:Ports){
  /** The track s level with my seat (the train's front minus how far back my car is). */
  function trainSeatS(run:Run){return wrapS(run.states[k].s-(j>>2)*12.4-6);}
  /** The camera's ease starts from wherever it is now (train-relative), over VIEW_EASE s. */
- function snapshot(){if(!havePose){viewT=1;return;}snapP.set(lastP.x-refX,lastP.y,lastP.z-refZ);snapQ.copy(lastQ);viewT=0;}
- function viewChanged(v:TrainView){if(v===camView)return;snapshot();camView=v;lift=liftWant=liftIn=0;liftSnap=true;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;armO=armI=-1;trainRideStore.set({camView:v,viewNo:view.viewNo+1});}
+ function snapshot(){if(!havePose){viewT=1;return;}toTrain(lastP,snapP);toTrain(lastL,snapL);fovFrom=lastFov;viewT=0;swingLift=0;}
+ /** World point ⇄ the train's frame (along its heading at the nose, across, height): a view change eases in this frame. */
+ function toTrain(w:T.Vector3,out:T.Vector3){const dx=w.x-refX,dz=w.z-refZ;return out.set(dx*refTx+dz*refTz,w.y,dx*refTz-dz*refTx);}
+ function fromTrain(t:T.Vector3,out:T.Vector3){return out.set(refX+t.x*refTx+t.z*refTz,t.y,refZ+t.x*refTz-t.z*refTx);}
+ function viewChanged(v:TrainView){if(v===camView)return;snapshot();camView=v;lift=liftWant=liftIn=0;liftSnap=true;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;armO=-1;trainRideStore.set({camView:v,viewNo:view.viewNo+1});}
  /** Pick a camera view: Inside stands you up in the aisle (the cutaway); any other view sits you back down (your seat if it is still
   *  free, else the nearest free one). False while that cannot happen (walking aboard, stepping off, no free seat). */
  function setView(v:TrainView){
@@ -300,9 +306,9 @@ export function createTrainRide(ports:Ports){
  }
  function cycleView(){const i=TRAIN_VIEWS.indexOf(camView);for(let n=1;n<TRAIN_VIEWS.length;n++)if(setView(TRAIN_VIEWS[(i+n)%TRAIN_VIEWS.length]))return true;return false;}
  /** The orbit's elevation range (added to the view's default), zoom range and turn limit (rad either way; ≥ π: free) for this view. */
- function pitchRange(){if(camView==='inside'||standing){pr[0]=INSIDE.pitchMin-INSIDE.pitch;pr[1]=INSIDE.pitchMax-INSIDE.pitch;}else if(camView==='seat'){pr[0]=ORBIT.pitchMin;pr[1]=ORBIT.pitchMax;}else{const o=OUTSIDE[camView];pr[0]=.06-o.el;pr[1]=1.45-o.el;}return pr;}
- function zoomRange(){if(camView==='inside'||standing){pr[0]=INSIDE.distMin/INSIDE.dist;pr[1]=INSIDE.distMax/INSIDE.dist;}else if(camView==='seat'){pr[0]=ORBIT.zoomMin;pr[1]=ORBIT.zoomMax;}else{const o=OUTSIDE[camView];pr[0]=o.zMin;pr[1]=o.zMax;}return pr;}
- const yawLimit=()=>camView==='inside'||standing?INSIDE.yaw:camView==='seat'?Math.PI:OUTSIDE[camView].yaw;
+ function pitchRange(){if(camView==='inside'){pr[0]=-FP.pitch;pr[1]=FP.pitch;}else if(camView==='seat'){pr[0]=ORBIT.pitchMin;pr[1]=ORBIT.pitchMax;}else{const o=OUTSIDE[camView];pr[0]=.06-o.el;pr[1]=1.45-o.el;}return pr;}
+ function zoomRange(){if(camView==='inside'){pr[0]=pr[1]=1;}else if(camView==='seat'){pr[0]=ORBIT.zoomMin;pr[1]=ORBIT.zoomMax;}else{const o=OUTSIDE[camView];pr[0]=o.zMin;pr[1]=o.zMax;}return pr;}
+ const yawLimit=()=>camView==='inside'||camView==='seat'?Math.PI:OUTSIDE[camView].yaw;
  function clampYaw(){const l=yawLimit();if(l<Math.PI&&Math.abs(orb.yaw)>l){orb.yaw=Math.sign(orb.yaw)*l;orb.vy=0;}}
  function setPitch(p:number){const r=pitchRange();orb.pitch=Math.max(r[0],Math.min(r[1],p));}
  function setZoom(z:number){const r=zoomRange();orb.zoom=Math.max(r[0],Math.min(r[1],z));}
@@ -314,9 +320,8 @@ export function createTrainRide(ports:Ports){
   const run=ports.run();if(!riding()||standing||walkT>=0||!run?.carMatrixOf)return false;
   const seat=SEAT_TABLE[PLAYER_SEATS[j]];fromCar(seat.car,seat.x,seat.z,aisle);twFrom.x=aisle.x;twFrom.u=aisle.z;seatAisle(j,aisle);twTo.x=aisle.x;twTo.u=aisle.z;sp.x=twFrom.x;sp.u=twFrom.u;
   standing=true;twSit=-1;tw=0;twDur=.35;strapW=0;mv.x=mv.z=0;gaitMove=0;
-  // face across the aisle; the Inside camera stands off the other side of the car (your seat's wall stays up behind you, the wall
-  // nearest the camera is lowered), square to the aisle, following you (INSIDE)
-  gaitYaw=twTo.x>0?-Math.PI/2:Math.PI/2;gait.facing=gaitYaw;inSide=twTo.x>0?-1:1;camBase=-inSide*Math.PI/2;inX=twTo.x;inU=twTo.u;
+  // RIDE 3: first person: you step into the aisle and look along the car toward the cab (train frame +u); the body turns that way
+  gaitYaw=0;gait.facing=gaitYaw;camBase=0;
   trainRideStore.set({standing:true,nearSeat:false,nearDoor:false});setNote(WALK_NOTES.up);ports.haptic?.();viewChanged('inside');return true;
  }
  /** Gameplay 3: into free player seat jj (eased from where you stand; the kneel blends in). Presence sends the new seat. */
@@ -337,7 +342,12 @@ export function createTrainRide(ports:Ports){
   if(tw>=0){tw=Math.min(1,tw+h/twDur);const e=tw*tw*(3-2*tw);sp.x=twFrom.x+(twTo.x-twFrom.x)*e;sp.u=twFrom.u+(twTo.u-twFrom.u)*e;blend=twSit>=0?Math.max(0,(e-.55)/.45):Math.min(blend,1-e);
    if(tw>=1){if(twSit>=0){finishSit(run);return;}tw=-1;}}
   else{blend=Math.max(0,blend-h*6);const m=Math.hypot(mv.x,mv.z);
-   if(m>.05){const sc=WALK_IN*Math.min(1,m)*h/m,c=Math.cos(camFwd),s=Math.sin(camFwd);stepWalk(sp,(mv.z*s-mv.x*c)*sc,(mv.z*c+mv.x*s)*sc);}}
+   if(m>.05){const sc=WALK_IN*Math.min(1,m)*h/m,c=Math.cos(camFwd),s=Math.sin(camFwd),dx=(mv.z*s-mv.x*c)*sc;stepWalk(sp,dx,(mv.z*c+mv.x*s)*sc);
+    // RIDE 3 (owner: "walk out to exit"): at a stop with the doors open, walking on through an open doorway (in a door bay, pushing
+    // out past the bay's edge toward the platform) gets you off: the step-out walk takes you onto the platform. Between stops (and
+    // on the side away from the platform) the doors stay solid: the walk is clamped to the bay (trainWalk.ts).
+    if(Math.abs(dx)>1e-4&&Math.sign(dx)===Math.sign(sp.x)&&Math.abs(sp.x)>=BAY_X-.02&&nearDoor(sp.x,sp.u,0)>=0&&doorsOpen(run.states[k])){
+     const ds=run.doorSpot?.(k,pose.x,pose.z,door)??null;if(ds&&Math.hypot(ds.x-pose.x,ds.z-pose.z)<1.6&&startExit(run)){exitFrame(run,0);return;}}}}
   const moved=h>0?Math.hypot(sp.x-x0,sp.u-u0)/h:0;gaitMove+=((moved>.25?1:0)-gaitMove)*Math.min(1,h*8);
   strapW+=((tw<0&&moved<.25?1:0)-strapW)*Math.min(1,h*(reduced?12:4));
   toCar(sp.x,sp.u,carL);meCar=carL.car;run.carMatrixOf!(k,carL.car,carM);pv.set(carL.x,CAR_FLOOR_Y,carL.z).applyMatrix4(carM);const e=carM.elements;
@@ -348,8 +358,8 @@ export function createTrainRide(ports:Ports){
   nearSeatJ=tw<0?nearestFreeSeat(sp.x,sp.u,NEAR_SEAT,s=>ports.taken(k,s)):-1;
   for(let s=0;s<TRAIN_SEATS;s++){const g=glows[s];let w=0;if(tw<0&&!ports.taken(k,s)){seatAisle(s,aisle);const d=Math.hypot(aisle.x-sp.x,aisle.z-sp.u);if(d<GLOW_SEAT)w=s===nearSeatJ?1:.35*(1-d/GLOW_SEAT);}
    g.w+=(w-g.w)*Math.min(1,h*(reduced?20:6));if(g.w<.01)g.w=0;if(g.w>0){run.seatPose(k,s,gp);g.x=gp.x;g.y=gp.y;g.z=gp.z;g.yaw=gp.yaw;}}
-  const st=run.states[k],door=st.at>=0&&st.doors>=DOORS_OPEN&&tw<0&&nearDoor(sp.x,sp.u)>=0;
-  if(view.nearSeat!==(nearSeatJ>=0)||view.nearDoor!==door)trainRideStore.set({nearSeat:nearSeatJ>=0,nearDoor:door});
+  const st=run.states[k],atDoor=st.at>=0&&st.doors>=DOORS_OPEN&&tw<0&&nearDoor(sp.x,sp.u)>=0;
+  if(view.nearSeat!==(nearSeatJ>=0)||view.nearDoor!==atDoor)trainRideStore.set({nearSeat:nearSeatJ>=0,nearDoor:atDoor});
  }
  /** A tap on a free seat in reach while standing: walk over and sit (the nearest on screen within SEAT_TAP_PX). */
  function tapSeat(cx:number,cy:number,el:Element){
@@ -358,11 +368,11 @@ export function createTrainRide(ports:Ports){
    const d=Math.hypot(r.left+(v.x+1)*r.width/2-cx,r.top+(1-v.y)*r.height/2-cy);if(d<bd){bd=d;best=s;}}
   return best>=0&&sitDown(best);
  }
- /** The Inside / outside views' clearance from look point h to camera c (in place): under a station's eaves first, then a spring arm
+ /** The outside views' clearance from look point h to camera c (in place): under a station's eaves first, then a spring arm
   *  (in fast, out slow, as the seat view's) clear of roofs, the tunnel rock, the hill and the truss, then over a truss chord. */
- function clearArm(hx:number,hy:number,hz:number,c:T.Vector3,h:number,inside:boolean){
+ function clearArm(hx:number,hy:number,hz:number,c:T.Vector3,h:number){
   camCeiling(c.x,c.z,ceil2);if(ceil2.w>0&&c.y>ceil2.y)c.y+=(ceil2.y-c.y)*ceil2.w;
-  const f=camClearFraction(hx,hy,hz,c.x,c.y,c.z,ports.ground);let a=inside?armI:armO;a=a<0?f:a+(f-a)*(1-Math.exp(-(f<a?14:2.5)*h));if(inside)armI=a;else armO=a;
+  const f=camClearFraction(hx,hy,hz,c.x,c.y,c.z,ports.ground);let a=armO;a=a<0?f:a+(f-a)*(1-Math.exp(-(f<a?14:2.5)*h));armO=a;
   c.set(hx+(c.x-hx)*a,hy+(c.y-hy)*a,hz+(c.z-hz)*a);c.y+=trussLift(c.x,c.y,c.z);
  }
  /** Ease the free camera back to the default framing (Recenter, a double tap). */
@@ -473,7 +483,12 @@ export function createTrainRide(ports:Ports){
   },
   /** After the follow camera: the ride camera on the rider's window side (blended in and out), the look spring stepped once. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(!riding()&&blend<=0){if(camOn){camOn=false;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;arm=-1;}if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
+   if(!riding()&&blend<=0){if(camOn){camOn=false;orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;arm=-1;}
+    // RIDE 3: off the train, the camera eases from its last ride pose back to the follow camera (and the fov back to normal)
+    if(outT<1&&fovSaved){outT=reduced?Math.min(1,outT+Math.max(0,Math.min(dt,.1))/VIEW_EASE_REDUCED):Math.min(1,outT+Math.max(0,Math.min(dt,.1))/EXIT_EASE);const ev=smoother(outT);
+     const f=outFov+(fovSaved-outFov)*ev;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}
+     camera.position.lerpVectors(outP,normalPos.copy(camera.position),ev);camera.quaternion.slerpQuaternions(outQ,normalQ.copy(camera.quaternion),ev);camera.updateMatrixWorld();if(outT<1)return;}
+    outT=1;if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}return;}
    const run=ports.run();if(!run)return;camOn=true;const h=Math.max(0,Math.min(dt,.1));
    // the free camera: keys / stick turn it at a steady rate; a flick keeps turning and slows (no inertia with reduced motion); it
    // stays where it is left; Recenter eases it home.
@@ -503,22 +518,16 @@ export function createTrainRide(ports:Ports){
     camPos.set(hx+(camPos.x-hx)*arm,hy+(camPos.y-hy)*arm,hz+(camPos.z-hz)*arm);camPos.y+=trussLift(camPos.x,camPos.y,camPos.z);}
    // Gameplay 3 / the Inside view: standing, the camera eases between the seated framing and the room view (below) as you stand up
    // and sit down; you walk relative to it (camFwd: square to the aisle, the orbit's turn on top).
-   lastCam=camera;standCam+=((standing?1:0)-standCam)*(reduced?1:1-Math.exp(-3.5*h));if(standCam<.002)standCam=0;
-   if(standing)camFwd=wrapPi(camBase+orb.yaw);
-   // The Inside view (owner, Nov 24 2026: "a top view where you can see through the train like the buildings with arcade and
-   // museum"): INSIDE, the arcade / museum framing: off one side of the car, ~41° down, following you softly; the ridden train's roofs
-   // are not drawn and its wall facing the camera is lowered to the window sill (run.roofCut + run.cutDir: the vehicle material's
-   // uCut / uCutDir, no extra draw), so you look down into the car past a low wall. Clear of station roofs, the rock and the truss.
-   if(run.roofCut)run.roofCut[kk]=standCam>.02?1:0;
-   if(standCam>0&&run.carMatrixOf){
-    const q=reduced?1:1-Math.exp(-INSIDE.follow*h);inX+=(sp.x-inX)*q;inU+=(sp.u-inU)*q;
-    toCar(inX*.5,inU,carL2);run.carMatrixOf(kk,carL2.car,carM2);pv2.set(carL2.x,CAR_FLOOR_Y,carL2.z).applyMatrix4(carM2);const e=carM2.elements,W=Math.atan2(e[8],e[10])+camFwd+(carL2.car%2?Math.PI:0);
-    const el=Math.max(INSIDE.pitchMin,Math.min(INSIDE.pitchMax,INSIDE.pitch+orb.pitch)),len=Math.max(INSIDE.distMin,Math.min(INSIDE.distMax,(portrait?INSIDE.portraitDist:INSIDE.dist)*orb.zoom));
-    const hx=pv2.x,hy=pv2.y+INSIDE.eye,hz=pv2.z,sw=Math.sin(W),cw=Math.cos(W),ce=Math.cos(el)*len;
-    v.set(hx-sw*ce,hy+Math.sin(el)*len,hz-cw*ce);clearArm(hx,hy,hz,v,h,true);const b=standCam*standCam*(3-2*standCam);
-    camPos.set(camPos.x+(v.x-camPos.x)*b,camPos.y+(v.y-camPos.y)*b,camPos.z+(v.z-camPos.z)*b);
-    camLook.set(camLook.x+(hx-camLook.x)*b,camLook.y+(hy-camLook.y)*b,camLook.z+(hz-camLook.z)*b);
-    if(run.cutDir){run.cutDir[0]=-sw;run.cutDir[1]=-cw;}}
+   lastCam=camera;if(standing)camFwd=wrapPi(camBase+orb.yaw);
+   // The Inside view, RIDE 3 (owner, Nov 24 2026): FIRST PERSON. The eye FP.eye m over the floor at your standing spot (no lag: the
+   // camera is you), from this frame's car matrix, looking camFwd (train frame) and the orbit's pitch. No cutaway: roof and walls
+   // stay (the vehicle material's uCut stays 0). Your body is hidden by Town's near-camera fade; walls and poles: the walkable floor.
+   if(camView==='inside'&&exitT>=0){// stepping out through the door: your eyes go with you (then the camera eases back out)
+    camPos.set(walkPose.x,walkPose.y+FP.eye,walkPose.z);camLook.set(camPos.x+Math.sin(walkPose.yaw)*FP.look,camPos.y-.4,camPos.z+Math.cos(walkPose.yaw)*FP.look);}
+   else if(camView==='inside'&&run.carMatrixOf){
+    toCar(sp.x,sp.u,carL2);run.carMatrixOf(kk,carL2.car,carM2);pv2.set(carL2.x,CAR_FLOOR_Y+FP.eye,carL2.z).applyMatrix4(carM2);const e=carM2.elements,W=Math.atan2(e[8],e[10])+camFwd+(carL2.car%2?Math.PI:0);
+    const pt=Math.max(-FP.pitch,Math.min(FP.pitch,orb.pitch)),cp=Math.cos(pt);
+    camPos.copy(pv2);camLook.set(pv2.x+Math.sin(W)*cp*FP.look,pv2.y-Math.sin(pt)*FP.look,pv2.z+Math.cos(W)*cp*FP.look);}
    // The outside views (OUTSIDE): a look point on the train (from its nose back along the track), the camera on a bearing from it,
    // the orbit on top, kept clear of roofs, rock, the hill and the truss by its own spring arm.
    if(camView!=='seat'&&camView!=='inside'){
@@ -529,7 +538,7 @@ export function createTrainRide(ports:Ports){
     liftIn-=h;if(liftIn<=0){liftIn=.25;liftWant=0;for(let x=0;x<=1.2;x+=.1){const e2=Math.min(1.45,el0+x),c2=Math.cos(e2)*len;if(camClearFraction(c.x,hy,c.z,c.x+hx*c2,hy+Math.sin(e2)*len,c.z+hz*c2,ports.ground)>=1){liftWant=x;break;}}}
     if(liftSnap){lift=liftWant;liftSnap=false;}else lift+=(liftWant-lift)*(reduced?1:1-Math.exp(-(liftWant>lift?6:1.5)*h));
     const el=Math.min(1.45,el0+lift),ce=Math.cos(el)*len;
-    v.set(c.x+hx*ce,hy+Math.sin(el)*len,c.z+hz*ce);clearArm(c.x,hy,c.z,v,h,false);camPos.copy(v);camLook.set(c.x,hy,c.z);
+    v.set(c.x+hx*ce,hy+Math.sin(el)*len,c.z+hz*ce);clearArm(c.x,hy,c.z,v,h);camPos.copy(v);camLook.set(c.x,hy,c.z);
     // in the tunnel: along the tube at the train's end (TUBE), so the shot is always of the train
     const tubeOn=inTunnelS(wrapS(s+2))||inTunnelS(wrapS(s-TRAIN_LENGTH/2))||inTunnelS(wrapS(s-TRAIN_LENGTH-2));
     tubeW=reduced?(tubeOn?1:0):tubeW+((tubeOn?1:0)-tubeW)*(1-Math.exp(-TUBE.rate*h));if(tubeW<.002)tubeW=0;else if(tubeW>.998)tubeW=1;
@@ -538,16 +547,26 @@ export function createTrainRide(ports:Ports){
      camPos.set(camPos.x+(ax-camPos.x)*w,camPos.y+(bedAt(L.profile,sc)+(fr?TUBE.aheadUp:TUBE.behindUp)-camPos.y)*w,camPos.z+(az-camPos.z)*w);
      camLook.set(camLook.x+(b.x-camLook.x)*w,camLook.y+(bedAt(L.profile,sl)+TUBE.lookUp-camLook.y)*w,camLook.z+(b.z-camLook.z)*w);}}
    else tubeW=0;
+   // RIDE 3: a view change eases round an eased look point, in the train's frame (its nose and heading now), so it keeps up with the
+   // train and its curves: bearing (the shortest way), elevation and log distance; lifted over a station roof / the hill on the way
+   {const n=trackAt(s,tpn);refX=n.x;refZ=n.z;refTx=n.tx;refTz=n.tz;}
+   const vFov=camView==='inside'?(portrait?FP.portraitFov:FP.fov):portrait?PORTRAIT_FOV:(fovSaved||camera.fov);let rideFov=vFov;
+   if(viewT<1){viewT=Math.min(1,viewT+h/(reduced?VIEW_EASE_REDUCED:VIEW_EASE));const ev=smoother(viewT);
+    fromTrain(snapP,fromP);fromTrain(snapL,fromL);o1.subVectors(fromP,fromL);o2.subVectors(camPos,camLook);
+    const r1=Math.max(.05,o1.length()),r2=Math.max(.05,o2.length()),a1=Math.atan2(o1.x,o1.z),a2=Math.atan2(o2.x,o2.z),e1=Math.asin(Math.max(-1,Math.min(1,o1.y/r1))),e2=Math.asin(Math.max(-1,Math.min(1,o2.y/r2)));
+    const az=a1+wrapPi(a2-a1)*ev,r=Math.exp(Math.log(r1)+(Math.log(r2)-Math.log(r1))*ev);let el=e1+(e2-e1)*ev;
+    camLook.lerpVectors(fromL,camLook,ev);
+    // over a roof / the hill rather than through it (up to ~50° more, gone by the end of the ease); a few clearance marches a frame
+    // (the wanted lift is found in .15 rad steps; the applied one eases to it, quick up and slower down, so it never steps)
+    if(!reduced){const fade=Math.min(1,(1-ev)*4);let want=0;if(fade>0)for(let x=0;x<=.9;x+=.15){const e3=Math.min(1.5,el+x),c3=Math.cos(e3)*r;want=x;if(camClearFraction(camLook.x,camLook.y,camLook.z,camLook.x+Math.sin(az)*c3,camLook.y+Math.sin(e3)*r,camLook.z+Math.cos(az)*c3,ports.ground)>=1)break;}
+     swingLift+=(want-swingLift)*(1-Math.exp(-(want>swingLift?9:4)*h));el=Math.min(1.5,el+swingLift*fade);}
+    const ce=Math.cos(el)*r;camPos.set(camLook.x+Math.sin(az)*ce,camLook.y+Math.sin(el)*r,camLook.z+Math.cos(az)*ce);
+    rideFov=fovFrom+(vFov-fovFrom)*ev;}
    aimer.position.copy(camPos);aimer.up.set(0,1,0);aimer.lookAt(camLook);camQ.copy(aimer.quaternion);
-   // a view change eases from where the camera was (relative to the train's nose, so it keeps up with the train)
-   {const n=trackAt(s,tpn);refX=n.x;refZ=n.z;}
-   if(viewT<1){viewT=reduced?1:Math.min(1,viewT+h/VIEW_EASE);const ev=viewT*viewT*(3-2*viewT);
-    camPos.set(snapP.x+refX+(camPos.x-snapP.x-refX)*ev,snapP.y+(camPos.y-snapP.y)*ev,snapP.z+refZ+(camPos.z-snapP.z-refZ)*ev);camQ.slerpQuaternions(snapQ,camQ,ev);}
-   lastP.copy(camPos);lastQ.copy(camQ);havePose=true;
-   // the ride camera's weight: the seat blend, or (Gameplay 3) standing in the aisle, where the kneel blend is out
-   const wc=Math.max(blend,standCam>0?1:0),e=wc*wc*(3-2*wc);
-   if(portrait){if(!fovSaved)fovSaved=camera.fov;const f=fovSaved+(PORTRAIT_FOV-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
-   else if(fovSaved){camera.fov=fovSaved;fovSaved=0;camera.updateProjectionMatrix();}
+   lastP.copy(camPos);lastL.copy(camLook);lastQ.copy(camQ);havePose=true;lastFov=rideFov;
+   // the ride camera's weight: the seat blend (boarding), or 1 while standing / walking to a seat / stepping out (then the exit ease)
+   const wc=Math.max(blend,standing||exitT>=0?1:0),e=wc*wc*(3-2*wc);
+   if(!fovSaved)fovSaved=camera.fov;{const f=fovSaved+(rideFov-fovSaved)*e;if(Math.abs(camera.fov-f)>.01){camera.fov=f;camera.updateProjectionMatrix();}}
    normalPos.copy(camera.position);normalQ.copy(camera.quaternion);
    camera.position.lerpVectors(normalPos,camPos,e);camera.quaternion.slerpQuaternions(normalQ,camQ,e);camera.updateMatrixWorld();
   },

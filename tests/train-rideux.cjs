@@ -59,7 +59,7 @@ console.log('train-rideux exit: ok');
  assert(/data-tour="quests" aria-label=\{`Paths/.test(read('components/IslandSettings.tsx')),'the pink lightning is the Paths button');}
 console.log('train-rideux hud: ok');
 // 3. camera views: the button / C cycles Seat → Front → Back → Left → Right → Above → Inside; Inside stands you up (the cutaway,
-//    the wall facing the camera lowered), any other view sits you back down; each change eases (VIEW_EASE) and toasts; per-view limits
+//    RIDE 3: first person, no cutaway), any other view sits you back down; each change eases (VIEW_EASE) and toasts; per-view limits
 {Object.assign(states[1],{at:north,doors:1,dwellLeft:10,s:100});const ride2=R.createTrainRide({run:()=>run,place:()=>{},seat:()=>{},taken:()=>false,cue:()=>{}});
  run.roofCut=new Uint8Array(3);run.cutDir=new Float32Array(2);
  ride2.want(sp.x,sp.z,sp.y,true);assert(ride2.board());for(let i=0;i<40&&ride2.walking>=0;i++)ride2.frame(1/30,false);
@@ -71,13 +71,17 @@ console.log('train-rideux hud: ok');
   assert(R.trainRideStore.get().viewNo>n0,'a toast for each change');n0=R.trainRideStore.get().viewNo;
   if(ride2.view!=='inside'&&ride2.view!=='seat'){const look=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion);assert(Number.isFinite(cam.position.x)&&Math.abs(look.length()-1)<1e-6,`${ride2.view}: a camera`);}}
  assert.deepEqual(seen,['front','back','left','right','above','inside'],'the cycle order');
- assert(ride2.standing,'Inside: standing in the aisle');assert.equal(run.roofCut[1],1,'the cutaway is on');assert(Math.hypot(run.cutDir[0],run.cutDir[1])>.99,'the wall facing the camera is lowered');
- // the Inside camera: ~41° down from one side of the car, square to the aisle (the arcade / museum framing), never first person
- {const d=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),pitch=Math.asin(-d.y);assert(pitch>.55&&pitch<.95,`Inside: looking down ~41° (${pitch.toFixed(2)})`);
-  const along=Math.abs(d.z)/Math.hypot(d.x,d.z);assert(along<.3,`Inside: square to the car (along ${along.toFixed(2)})`);
-  const me=ride2.wire();assert(Math.hypot(cam.position.x-me.x,cam.position.z-me.z)>4,'Inside: third person, off to the side');}
+ assert(ride2.standing,'Inside: standing in the aisle');assert.equal(run.roofCut[1],0,'RIDE 3: no cutaway (first person)');
+ // RIDE 3 (owner, Nov 24 2026): the Inside view is FIRST PERSON: the eye FP.eye m over the floor where you stand, level, looking along the car
+ {const d=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion),pitch=Math.asin(-d.y);assert(Math.abs(pitch)<.15,`Inside: looking level (${pitch.toFixed(2)})`);
+  const me=new T.Vector3();ride2.trick();const P={x:0,y:0,z:0};
+  assert(Math.abs(cam.fov-R.FP.fov)<.5,`Inside: the first-person fov (${cam.fov.toFixed(1)})`);
+  const run2=run;const m=new T.Matrix4();run2.carMatrixOf(1,0,m);const local=cam.position.clone().applyMatrix4(m.clone().invert());
+  assert(Math.abs(local.y-(1.15+R.FP.eye))<.25&&Math.abs(local.x)<1.3,`Inside: at eye height in the aisle (${local.x.toFixed(2)}, ${local.y.toFixed(2)})`);void me;void P;
+  // a drag turns it all the way round (no turn limit), pitch limited to ±FP.pitch
+  }
  ride2.press('camera','tap');step(60);assert.equal(ride2.view,'seat','back round to the seat view');assert(!ride2.standing,'any other view sits you down');
- step(60);assert.equal(run.roofCut[1],0,'seated: no cutaway');
+ step(60);assert.equal(run.roofCut[1],0,'seated: no cutaway');assert(Math.abs(cam.fov-50)<.5,'seated (landscape): the fov is back');
  // Walk (the cluster's 'extra' slot) is the Inside view
  ride2.press('walk','tap');step(20);assert(ride2.standing&&ride2.view==='inside','Walk → the Inside view');
  assert(ride2.setView('left'),'pick Left from the menu');step(60);assert(!ride2.standing&&ride2.view==='left','picking Left sits you down');
@@ -106,3 +110,7 @@ console.log('train-rideux fade: ok');
   assert(got>=0&&got<=.6,`${st.id}: the platform-side shot clears the station house with ${got.toFixed(1)} rad more elevation`);}
  assert(/liftWant=x;break;/.test(read('lib/town/trainRide.ts')),'the outside camera rises over a station roof');}
 console.log('train-rideux station side: ok');
+// RIDE 3: the ridden train's passengers use the same near-camera fade as me and Kenji (first person walks right past them)
+{const P=require('fs').readFileSync(require('path').join(__dirname,'..','lib/town/trainPassengers.ts'),'utf8'),R=require('fs').readFileSync(require('path').join(__dirname,'..','lib/town/trainRide.ts'),'utf8');
+ const a=/const FADE_NEAR=([.\d]+),FADE_FAR=([.\d]+);/.exec(P),b=/export const FADE_NEAR=([.\d]+),FADE_FAR=([.\d]+);/.exec(R);
+ require('assert')(a&&b&&a[1]===b[1]&&a[2]===b[2]&&/if\(k===ridingK\)\{[^}]*hid\)continue;\}/.test(P),'passengers: the near-camera fade (same distances)');console.log('train-rideux passenger fade: ok');}

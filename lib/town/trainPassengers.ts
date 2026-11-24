@@ -26,6 +26,8 @@
 import * as T from 'three';
 import {TRAIN_COUNT,TRAIN_CARS,TRAIN_STOPS,HEADWAY,LAP,DOOR_DELAY,DOOR_MOVE,type TrainState} from './trainSchedule';
 import {SEAT_TABLE,NPC_SEATS,SEATS_PER_CAR,RIDER_ROOT_X,CAR_FLOOR_Y} from './trainRunning';
+/** Near-camera fade (m), as lib/town/trainRide.ts FADE_NEAR / FADE_FAR (not imported: trainRide imports the running module too). */
+const FADE_NEAR=.75,FADE_FAR=1.1;
 import {DOORS,BENCH_X,BENCH_FRONT,BENCH_BACK,BENCHES,HALF_W,STRAP_X} from './trainCarModel';
 import {BENCH} from '../graphics/npcSeatPose';
 import {STATION_NPCS,STATION_BOARDERS} from './stationNpcs';
@@ -173,7 +175,7 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
  const m=new T.Matrix4(),m2=new T.Matrix4(),mi=new T.Matrix4(),cm=new T.Matrix4(),q=new T.Quaternion(),e3=new T.Euler(),p3=new T.Vector3(),s3=new T.Vector3(1,1,1),fr=new T.Frustum(),pm=new T.Matrix4(),sph=new T.Sphere();
  const strap={x:0,z:0,yaw:0},cast=CAST.map(c=>({...c}));
  // each slot's neck gaze (eased toward the reaction's target; written to the pose row only when it moved)
- const gazeP=new Float32Array(TRAIN_COUNT*SLOT_COUNT),gazeY=new Float32Array(TRAIN_COUNT*SLOT_COUNT),near=new Uint8Array(TRAIN_COUNT),dist=new Float32Array(TRAIN_COUNT);
+ const nearHid=new Uint8Array(TRAIN_COUNT*SLOT_COUNT),gazeP=new Float32Array(TRAIN_COUNT*SLOT_COUNT),gazeY=new Float32Array(TRAIN_COUNT*SLOT_COUNT),near=new Uint8Array(TRAIN_COUNT),dist=new Float32Array(TRAIN_COUNT);
  // the talkable passengers this frame (world spot), filled by update; nearest() reads it
  const talk:{cast:number;x:number;y:number;z:number;k:number}[]=Array.from({length:MAX},()=>({cast:-1,x:0,y:0,z:0,k:-1}));let nTalk=0,shown=0,hornK=-1,hornAt=-99,lastNow=NaN;
  // the pose bake (~90 ms) runs in idle slices from load (cost trim Nov 24), long before a train is near; if a train is needed first
@@ -233,6 +235,9 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
        bake=paxPoseFor(mask,false,kid,true);tp=0;ty=0;y=reduced?0:Math.abs(Math.sin(phase*WALK_S*Math.PI*1.8))*.035;
        fade=phase>.85?Math.max(.05,(1-phase)/.15):1;}
       const ease=Math.min(1,dt*5);gazeP[gi]+=(tp-gazeP[gi])*ease;gazeY[gi]+=(ty-gazeY[gi])*ease;if(phase>=0||!dt){gazeP[gi]=tp;gazeY[gi]=ty;}
+      // RIDE 3: near-camera fade in the ridden train (first person walks right past them): not drawn within FADE_NEAR m of the
+      // camera, back past FADE_FAR (the same rule as me and Kenji in Town)
+      if(k===ridingK){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const yy=Math.max(p3.y+.25,Math.min(p3.y+1.35,cy)),d=Math.hypot(cx-p3.x,cy-yy,cz-p3.z),hid=nearHid[gi]?d<FADE_FAR:d<FADE_NEAR;nearHid[gi]=hid?1:0;if(hid)continue;}
       if(!parts)build();put(n,who.cast,cm,x,y,z,yaw,roll,bake,(kid?PAX_KID_SCALE:1)*fade,gazeP[gi],gazeY[gi]);
       if(phase<0&&n<talk.length){p3.set(x,CAR_FLOOR_Y,z).applyMatrix4(cm);const t=talk[nTalk++];t.cast=who.cast;t.x=p3.x;t.y=p3.y;t.z=p3.z;t.k=k;}
       n++;if(full)nNear=n;}}}

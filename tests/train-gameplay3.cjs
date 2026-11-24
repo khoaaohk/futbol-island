@@ -176,8 +176,8 @@ console.log('train-gameplay3 interior: ok');
  let roof=0,low=0;for(let v=0;v<p.length/3;v++){if(a[v*4+3]>9.5){roof++;if(p[v*3+1]<CM.ROOF_CUT_Y)low++;}}
  assert(roof>300,'the roof is marked');assert.equal(low,0,'nothing under the wall top is cut');
  const tv=read('lib/graphics/trafficVehicles.ts');assert(/if\(fiRoof&&uCut>\.5\)transformed=vec3\(0\.\);/.test(tv),'roof vertices collapse with uCut');
- const R=L('lib/town/trainRide.ts');assert(R.INSIDE.pitch>.6&&R.INSIDE.pitch<.85&&R.INSIDE.distMin>=5&&R.INSIDE.distMax<=16,'the Inside view: the arcade / museum framing (~41° down, off one side)');
- const ride=read('lib/town/trainRide.ts');assert(/run\.roofCut\[kk\]=standCam>\.02\?1:0/.test(ride),'the ridden train is cut while standing');
+ const R=L('lib/town/trainRide.ts');assert(R.FP.eye>=1.3&&R.FP.eye<=1.4&&R.FP.pitch>1&&R.FP.pitch<1.1,'RIDE 3: the Inside view is first person (eye 1.3-1.4 m, pitch +-60 deg)');
+ const ride=read('lib/town/trainRide.ts');assert(!/roofCut\[kk\]=/.test(ride),'RIDE 3: the ridden train is never cut (roof and walls stay in first person)');
  const town=read('components/Town.tsx');assert(/const walkingBall=[^;]*&&!trainRide\.active;/.test(town),'no ball effects in a train');
  assert(/landImpact>0&&!trainRide\.active/.test(town),'no landing dust in a train');assert(/rampMotion\.state\.phase!=='air'&&!trainRide\.active,reduced,groundVariant/.test(town),'no ride trail in a train');}
 console.log('train cutaway ok');
