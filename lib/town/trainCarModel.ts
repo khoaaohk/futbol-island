@@ -22,10 +22,14 @@ export const COL={glass:'#3b424b',screen:'#1b232b',interior:'#2a2b30',dark:'#454
 export type V=[number,number,number];
 export class VGeo{
  p:number[]=[];n:number[]=[];c:number[]=[];a:number[]=[];private col=new T.Color();
+ /** Bent normals (0…1): tilt every normal toward +y, so a surface the sun cannot reach (a car's ceiling, its inner walls) is still lit
+  *  like a soft interior instead of reading as a dark void. 0: true normals. */
+ bend=0;
  /** color: one colour, or a function of the vertex position (vertex-colour shading: ambient occlusion, sheens). */
  tri(p:V,q:V,r:V,color:string|((v:V)=>T.Color),inside:V,part=0,ctr:V=[0,0,0]){
   const ux=q[0]-p[0],uy=q[1]-p[1],uz=q[2]-p[2],vx=r[0]-p[0],vy=r[1]-p[1],vz=r[2]-p[2];let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
   const flip=nx*(p[0]-inside[0])+ny*(p[1]-inside[1])+nz*(p[2]-inside[2])<0;if(flip){nx=-nx;ny=-ny;nz=-nz;}
+  if(this.bend>0){const b=this.bend;nx*=1-b;ny=ny*(1-b)+b;nz*=1-b;const m=Math.hypot(nx,ny,nz)||1;nx/=m;ny/=m;nz/=m;}
   if(typeof color==='string')this.col.set(color);
   for(const v of flip?[p,r,q]:[p,q,r]){const c=typeof color==='string'?this.col:color(v);this.p.push(v[0],v[1],v[2]);this.n.push(nx,ny,nz);this.c.push(c.r,c.g,c.b);this.a.push(ctr[0],ctr[1],ctr[2],part);}}
  quad(p:V,q:V,r:V,s:V,color:string|((v:V)=>T.Color),inside:V,part=0,ctr?:V){this.tri(p,q,r,color,inside,part,ctr);this.tri(p,r,s,color,inside,part,ctr);}
@@ -99,7 +103,7 @@ const PART_WIN:Hole={z0:-.55,z1:-.05,y0:2.15,y1:2.85};// the partition window in
 const K={frame:'#d5d2ca',rubber:'#5b5853',step:'#b4b6b6',yellow:'#f2c230',under:'#605b55',under2:'#76716a',bogie:'#5a554f',wheel:'#6c6760',
  hub:'#8f8a83',spring:'#4e4943',roofUnit:'#cfd0cc',roofTop:'#bfc1bd',grille:'#7b7e80',panto:'#8f969c',insul:'#e3dccb',surround:'#45423f',
  wall:'#efe6d2',ceil:'#f8f3e7',light:'#fff4d6',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
- bellows:'#5f5a54',bellowsIn:'#77716a',chime:'#f3a73a',blind:'#ebe1c8',rack:'#c8cbcd',vent:'#dcd8ce',slot:'#8a8781'} as const;
+ bellows:'#5f5a54',bellowsIn:'#77716a',chime:'#f3a73a',blind:'#ebe1c8',rack:'#c8cbcd',vent:'#dcd8ce',slot:'#b9b4a8'} as const;
 const _c=new T.Color();
 const col=(hex:string,k=1)=>new T.Color(hex).multiplyScalar(k);
 /** A vertical ambient-occlusion ramp: k0 at y0, 1 at y1 and above. */
@@ -165,8 +169,8 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  const holes=[...DOOR_HOLES,...WINDOWS];
  for(const s of [-1,1]){const x=s*HALF_W,xi=s*IW;
   wallCells(Z0,Z1,[BODY_Y0,SPLIT_Y,SIDE_TOP],holes,(a,b,y0,y1)=>g.panelX(x,a,b,y0,y1,s,(y0+y1)/2<SPLIT_Y?lv.lower:lv.upper));
-  wallCells(ZI0,Z1,[CAR_FLOOR_Y,SIDE_TOP],holes,(a,b,y0,y1)=>g.panelX(xi,a,b,y0,y1,-s,wallRamp),[CAB_Z]);
-  g.quad([xi,CAR_FLOOR_Y,Z1],[xi*CAB_K,CAR_FLOOR_Y,ZI1],[xi*CAB_K,SIDE_TOP,ZI1],[xi,SIDE_TOP,Z1],K.cab,[0,2,Z1]);// the cab's narrowing corner
+  g.bend=INNER_BEND;wallCells(ZI0,Z1,[CAR_FLOOR_Y,SIDE_TOP],holes,(a,b,y0,y1)=>g.panelX(xi,a,b,y0,y1,-s,wallRamp),[CAB_Z]);
+  g.quad([xi,CAR_FLOOR_Y,Z1],[xi*CAB_K,CAR_FLOOR_Y,ZI1],[xi*CAB_K,SIDE_TOP,ZI1],[xi,SIDE_TOP,Z1],K.cab,[0,2,Z1]);g.bend=0;// the cab's narrowing corner
   for(const w of WINDOWS){reveal(g,w,x,xi,K.frame);frameX(g,s*(HALF_W+.004),s,w,.045,K.frame);}
   for(const d of DOOR_HOLES){reveal(g,d,x,xi,K.yellow,true,true);// the door-edge strip: yellow jambs, a silver head
    g.panelX(s*(HALF_W+.003),d.z0-.06,d.z1+.06,d.y1,d.y1+.06,s,K.frame);g.panelX(s*(HALF_W+.003),d.z0-.06,d.z0,BODY_Y0,d.y1,s,K.frame);g.panelX(s*(HALF_W+.003),d.z1,d.z1+.06,BODY_Y0,d.y1,s,K.frame);
@@ -180,15 +184,15 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  // ---- ends: the cab front (+z) with a two-pane windscreen in a dark surround, and the gangway end (−z) with its opening
  {const z=6,w=HALF_W*.86,inC=ramp(K.cab,CAR_FLOOR_Y,CAR_FLOOR_Y+1.2,.8);
   wallCells(-w,w,[BODY_Y0,SPLIT_Y,2.22,SIDE_TOP],SCREEN,(a,b,y0,y1)=>{const yc=(y0+y1)/2,xc=(a+b)/2;endQuad(g,z,1,a,b,y0,y1,yc>2.22&&Math.abs(xc)<1.1?K.surround:yc<SPLIT_Y?lv.lower:lv.upper);},[-1.1,1.1]);
-  wallCells(-IW*CAB_K,IW*CAB_K,[CAR_FLOOR_Y,SIDE_TOP],SCREEN,(a,b,y0,y1)=>endQuad(g,ZI1,-1,a,b,y0,y1,inC));
-  for(const h of SCREEN)reveal(g,h,ZI1,z,K.surround,false);
+  g.bend=INNER_BEND;wallCells(-IW*CAB_K,IW*CAB_K,[CAR_FLOOR_Y,SIDE_TOP],SCREEN,(a,b,y0,y1)=>endQuad(g,ZI1,-1,a,b,y0,y1,inC));
+  g.bend=0;for(const h of SCREEN)reveal(g,h,ZI1,z,K.surround,false);
   for(const s of [-1,1])g.quad([s*IW*CAB_K,SIDE_TOP,ZI1],[s*COVE_X*CAB_K,CEIL_Y,ZI1],[0,CEIL_Y,ZI1],[0,SIDE_TOP,ZI1],K.cab,[0,3.2,ZI1+1]);
   for(let i=SIDE0;i<SIDE1;i++)g.tri([0,SIDE_TOP,z],[prof[i][0]*.86,prof[i][1],z],[prof[i+1][0]*.86,prof[i+1][1],z],lv.upper,[0,2.4,z-1]);}
  {const z=-6,w=HALF_W*.985,gw:Hole={z0:-GANGWAY_HALF,z1:GANGWAY_HALF,y0:CAR_FLOOR_Y,y1:GANGWAY_TOP};
   wallCells(-w,w,[BODY_Y0,SPLIT_Y,SIDE_TOP],[gw],(a,b,y0,y1)=>endQuad(g,z,-1,a,b,y0,y1,(y0+y1)/2<SPLIT_Y?lv.lower:lv.upper));
-  wallCells(-IW,IW,[CAR_FLOOR_Y,SIDE_TOP],[gw],(a,b,y0,y1)=>endQuad(g,ZI0,1,a,b,y0,y1,wallRamp));
+  g.bend=INNER_BEND;wallCells(-IW,IW,[CAR_FLOOR_Y,SIDE_TOP],[gw],(a,b,y0,y1)=>endQuad(g,ZI0,1,a,b,y0,y1,wallRamp));
   for(const s of [-1,1])g.quad([s*IW,SIDE_TOP,ZI0],[s*COVE_X,CEIL_Y,ZI0],[0,CEIL_Y,ZI0],[0,SIDE_TOP,ZI0],K.wall,[0,3.2,ZI0-1]);
-  reveal(g,gw,z,ZI0,K.frame,false,true);
+  g.bend=0;reveal(g,gw,z,ZI0,K.frame,false,true);
   for(let i=SIDE0;i<SIDE1;i++)g.tri([0,SIDE_TOP,z],[prof[i][0]*.985,prof[i][1],z],[prof[i+1][0]*.985,prof[i+1][1],z],lv.roof,[0,2.4,z+1]);
   // the gangway bellows to the next car (half of the 0.4 m gap; the coupled car draws the other half), ribbed, both faces
   const bz0=-6,bz1=-6-CAR_GAP_HALF,bx=GANGWAY_HALF+.17,by0=CAR_FLOOR_Y-.05,by1=GANGWAY_TOP+.12;
@@ -197,7 +201,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
    g.quad([-bx,by1,za],[bx,by1,za],[bx,by1,zb],[-bx,by1,zb],o,[0,0,za]);g.quad([-GANGWAY_HALF,GANGWAY_TOP,za],[GANGWAY_HALF,GANGWAY_TOP,za],[GANGWAY_HALF,GANGWAY_TOP,zb],[-GANGWAY_HALF,GANGWAY_TOP,zb],i,[0,9,za]);}
   g.quad([-GANGWAY_HALF,CAR_FLOOR_Y,bz0],[GANGWAY_HALF,CAR_FLOOR_Y,bz0],[GANGWAY_HALF,CAR_FLOOR_Y,bz1],[-GANGWAY_HALF,CAR_FLOOR_Y,bz1],K.step,[0,0,bz0]);}
  // ---- the interior every train shows: floor, ceiling + cove + light strips, benches, poles, strap rails, the cab partition, the desk
- interior(g,lv,closeUp);
+ g.bend=INNER_BEND;interior(g,lv,closeUp);g.bend=0;
  // ---- cab front: destination board frame, round headlamps in bezels, tail + marker lamps, stripes, headmark, number plate,
  // wipers, grab rail, skirt, anti-climber and coupler
  {const z=6.004;
@@ -234,7 +238,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
   for(const s of [-1,1])g.beam([s*.62,4.77,head[2]],[s*.86,4.66,head[2]],.018,K.panto);}
  return {geometry:g.build(),triangles:g.tris};
 }
-const CAR_GAP_HALF=.2;
+const CAR_GAP_HALF=.2,INNER_BEND=.65;
 /** The cream interior (all trains) and, closeUp, its detail. Faces face the aisle: they are seen through the glass and doorways. */
 function interior(g:VGeo,lv:Livery,closeUp:boolean){
  const F=CAR_FLOOR_Y,seat=moquette(lv),seatDark=col(seat,.78).getStyle(),seatLite=col(seat,1.12).getStyle();
@@ -260,7 +264,7 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    g.box(s*(BENCH_FRONT+.31),F+.575,zc,.31,.065,hz,seatDark);g.quad([s*(BENCH_FRONT+.03),F+.642,a+.02],[s*(IW-.02),F+.642,a+.02],[s*(IW-.02),F+.642,b-.02],[s*(BENCH_FRONT+.03),F+.642,b-.02],seat,[0,F,zc]);
    g.box(s*(BENCH_BACK+.07),F+.74,zc,.07,.1,hz,seatDark);g.box(s*(BENCH_BACK+.07),F+.94,zc,.07,.1,hz,seat);
    if(closeUp){g.quad([s*BENCH_FRONT,F+.6,a],[s*(BENCH_FRONT+.04),F+.642,a],[s*(BENCH_FRONT+.04),F+.642,b],[s*BENCH_FRONT,F+.6,b],seatLite,[0,F+.3,zc]);// a bevel on the cushion's front edge
-    for(const ze of [a,b])g.box(s*(BENCH_FRONT+.33),F+.55,ze,.33,.55,.015,K.pole);// stainless end screens
+    for(const ze of [a,b])g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
     for(let i=0;i<SEAT_SLOTS_Z.length-1;i++){const m=(SEAT_SLOTS_Z[i]+SEAT_SLOTS_Z[i+1])/2;if(m>a+.1&&m<b-.1)g.beam([s*(BENCH_FRONT+.05),F+.66,m],[s*(BENCH_FRONT+.05),F+.9,m],.016,K.pole);}// dividers between slots
     g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}// luggage rack over the bench
   // grab poles at the door bays (bench ends), the strap rail
@@ -279,7 +283,7 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
  if(closeUp){for(const x of [-.47,.43])g.quad([x,F+.002,ZI0+.05],[x+.04,F+.002,ZI0+.05],[x+.04,F+.002,CAB_Z-.05],[x,F+.002,CAB_Z-.05],K.floor2,[0,F-1,0]);
   // ceiling vents (a pale strip with dark slots) and the driver's seat
   g.quad([-.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,CAB_Z-.2],[-.2,CEIL_Y-.004,CAB_Z-.2],K.vent,[0,CEIL_Y+1,0]);
-  for(let z=-5.2;z<CAB_Z-.4;z+=1.3)g.quad([-.14,CEIL_Y-.008,z],[.14,CEIL_Y-.008,z],[.14,CEIL_Y-.008,z+.5],[-.14,CEIL_Y-.008,z+.5],K.slot,[0,CEIL_Y+1,0]);
+  for(let z=-5.2;z<CAB_Z-.4;z+=1.3)g.quad([-.1,CEIL_Y-.008,z],[.1,CEIL_Y-.008,z],[.1,CEIL_Y-.008,z+.36],[-.1,CEIL_Y-.008,z+.36],K.slot,[0,CEIL_Y+1,0]);
   g.box(-.45,F+.3,5.05,.24,.3,.22,K.desk);g.box(-.45,F+.75,4.86,.24,.25,.04,K.desk);}
 }
 /** The far tier: one box per car (12 triangles): the lower livery colour low, the upper high, the roof colour on top. */
@@ -290,9 +294,9 @@ export function buildCarBox(lv:Livery){
 }
 /** One door leaf (stainless, both faces, a real hole for its glass pane and rubber edges), facing +x, centred on its closed spot. */
 export function buildDoorLeaf(){const g=new VGeo(),h=(DOOR_Y1-DOOR_Y0)/2,w=DOOR_HALF/2,yc=(DOOR_Y0+DOOR_Y1)/2,p0=DOOR_PANE[0]-yc,p1=DOOR_PANE[1]-yc,e=DOOR_EDGE,t=.015,st=ramp(COL.door,-h,0,.86);
- for(const d of [1,-1]){const x=d*t;g.panelX(x,-w,w,-h,p0,d,st);g.panelX(x,-w,w,p1,h,d,st);g.panelX(x,-w,-w+e,p0,p1,d,st);g.panelX(x,w-e,w,p0,p1,d,st);
+ for(const d of [1,-1]){const x=d*t;g.bend=d<0?INNER_BEND:0;g.panelX(x,-w,w,-h,p0,d,st);g.panelX(x,-w,w,p1,h,d,st);g.panelX(x,-w,-w+e,p0,p1,d,st);g.panelX(x,w-e,w,p0,p1,d,st);
   g.panelX(d*(t+.002),-w,-w+.02,-h,h,d,K.rubber);g.panelX(d*(t+.002),w-.02,w,-h,h,d,K.rubber);}
- reveal(g,{z0:-w+e,z1:w-e,y0:p0,y1:p1},-t,t,COL.door);for(const z of [-w,w])g.quad([-t,-h,z],[t,-h,z],[t,h,z],[-t,h,z],K.rubber,[0,0,0]);
+ g.bend=0;reveal(g,{z0:-w+e,z1:w-e,y0:p0,y1:p1},-t,t,COL.door);for(const z of [-w,w])g.quad([-t,-h,z],[t,-h,z],[t,h,z],[-t,h,z],K.rubber,[0,0,0]);
  return g.build();}
 
 // ---------------------------------------------------------------- glass + the soft contact shadow: ONE transparent instanced mesh
@@ -309,18 +313,19 @@ function glassGeometry(){
  const vtx=(x:number,y:number,z:number,nx:number,ny:number,nz:number,hex:string,al:number)=>{cl.set(hex);p.push(x,y,z);n.push(nx,ny,nz);c.push(cl.r,cl.g,cl.b,al);a.push(0,0,0,0);};
  // the pane: top edge lighter (the sky), a diagonal sheen; front (+x) and back (−x) faces
  const corner=[[.5,-.5,'#d6e8f0',.5],[.5,.5,'#a8c0cd',.44],[-.5,.5,'#738c9b',.36],[-.5,-.5,'#88a2b1',.4]] as const;// [y, z, colour, alpha]
- for(const d of [1,-1]){const ord=d>0?[0,3,2,0,2,1]:[0,1,2,0,2,3];for(const k of ord){const [y,z,h,al]=corner[k];vtx(0,y,z,d,0,0,h,al);}}
+ for(const d of [1,-1]){const ord=d>0?[0,3,2,0,2,1]:[0,1,2,0,2,3];for(const k of ord){const [y,z,h,al]=corner[k];vtx(0,y,z,d,d>0?0:.6,0,h,d>0?al:al*.55);}}// inside: clearer, lit
  // the shadow: a 4×4 grid, alpha .32 in the core, 0 at the edges
  const xs=[-.5,-SHADOW_CORE/SHADOW_HALF/2,SHADOW_CORE/SHADOW_HALF/2,.5],zs=[-.5,-.5+.35/SHADOW_LEN,.5-.35/SHADOW_LEN,.5];
  const al=(i:number,j:number)=>i===0||i===3||j===0||j===3?0:.32;
  for(let i=0;i<3;i++)for(let j=0;j<3;j++){const q=[[i,j],[i,j+1],[i+1,j+1],[i,j],[i+1,j+1],[i+1,j]] as const;for(const [u,v] of q)vtx(xs[u],-.5,zs[v],0,1,0,'#3b3129',al(u,v));}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('normal',new T.Float32BufferAttribute(n,3));
  g.setAttribute('color',new T.Float32BufferAttribute(c,4));g.setAttribute('aPart',new T.Float32BufferAttribute(a,4));g.computeBoundingSphere();return g;}
-const _q=new T.Quaternion(),_s=new T.Vector3(),_p=new T.Vector3(),FACE_Z=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),-Math.PI/2);
-const paneM=(x:number,yc:number,zc:number,h:number,w:number,faceZ=false)=>new T.Matrix4().compose(_p.set(x,yc,zc),faceZ?FACE_Z:_q.identity(),_s.set(SQUASH,h,w));
+const _q=new T.Quaternion(),_s=new T.Vector3(),_p=new T.Vector3(),FACE_Z=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),-Math.PI/2),FACE_NX=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),Math.PI);
+/** A pane's matrix: its +x face (the outside sheen) toward +x, +z (faceZ) or −x (faceNX: the left side's windows). */
+const paneM=(x:number,yc:number,zc:number,h:number,w:number,faceZ=false,faceNX=false)=>new T.Matrix4().compose(_p.set(x,yc,zc),faceZ?FACE_Z:faceNX?FACE_NX:_q.identity(),_s.set(SQUASH,h,w));
 /** The fixed panes of one car (car-local matrices). */
 const CAR_PANES:readonly T.Matrix4[]=[
- ...[-1,1].flatMap(s=>WINDOWS.map(w=>paneM(s*(HALF_W-.025),(w.y0+w.y1)/2,(w.z0+w.z1)/2,w.y1-w.y0,w.z1-w.z0))),
+ ...[-1,1].flatMap(s=>WINDOWS.map(w=>paneM(s*(HALF_W-.025),(w.y0+w.y1)/2,(w.z0+w.z1)/2,w.y1-w.y0,w.z1-w.z0,false,s<0))),
  ...SCREEN.map(h=>paneM((h.z0+h.z1)/2,(h.y0+h.y1)/2,5.985,h.y1-h.y0,h.z1-h.z0,true)),
  paneM((PART_WIN.z0+PART_WIN.z1)/2,(PART_WIN.y0+PART_WIN.y1)/2,CAB_Z+.025,PART_WIN.y1-PART_WIN.y0,PART_WIN.z1-PART_WIN.z0,true)];
 const SHADOW_M=new T.Matrix4().compose(new T.Vector3(0,SHADOW_Y,0),new T.Quaternion(),new T.Vector3(SHADOW_HALF*2,SQUASH,SHADOW_LEN));

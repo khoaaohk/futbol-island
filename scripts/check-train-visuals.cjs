@@ -60,6 +60,16 @@ async function standAt(p, si) {
           await shot(p, 'seated', vpName);
           for (let i = 0; i < 40; i++) { const at = await p.evaluate(() => window.__fi2.trains.states[window.__fi2.trainRide.train]?.at ?? -1); if (at < 0) break; await p.waitForTimeout(500); }
           await p.waitForTimeout(4000); await shot(p, 'ride', vpName);
+          // inside (close-up interior): the game's ride camera sits outside the window, so render the scene once more from a seated
+          // eye (across the aisle) and a standing eye (the aisle, looking along the car) and save the canvas
+          for (const [name, stand] of [['inside-seated', false], ['inside-standing', true]]) {
+            const data = await p.evaluate((stand) => { const f = window.__fi2, t = f.trains, k = f.trainRide.train, P = { x: 0, y: 0, z: 0, yaw: 0 }; t.seatPose(k, 1, P);
+              const C = f.camera.constructor, cam = new C(stand ? 62 : 58, f.camera.aspect, .05, 800), fx = Math.sin(P.yaw), fz = Math.cos(P.yaw), ax = fz, az = -fx;// a: along the car
+              if (stand) { cam.position.set(P.x + fx * 1.0 - ax * 3.2, P.y + 1.55, P.z + fz * 1.0 - az * 3.2); cam.lookAt(P.x + fx * 1.0 + ax * 4, P.y + 1.2, P.z + fz * 1.0 + az * 4); }
+              else { cam.position.set(P.x - fx * .15, P.y + 1.18, P.z - fz * .15); cam.lookAt(P.x + fx * 3 + ax * 1.2, P.y + 1.05, P.z + fz * 3 + az * 1.2); }
+              cam.updateMatrixWorld(true); f.renderer.render(f.scene, cam); return f.renderer.domElement.toDataURL('image/png'); }, stand);
+            fs.writeFileSync(path.join(out, `${tag}-${name}-${vpName}.png`), Buffer.from(data.split(',')[1], 'base64'));
+          }
         }
       }
       if (c.errs.length) console.log(`${vpName}: page errors: ${c.errs.slice(0, 3).join(' | ')}`);
