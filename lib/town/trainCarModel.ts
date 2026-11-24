@@ -111,7 +111,7 @@ const PART_WIN:Hole={z0:-.55,z1:-.05,y0:2.15,y1:2.85};// the partition window in
 /** Light palette (owner: nothing reads as a void in warm evening light). */
 const K={frame:'#d5d2ca',rubber:'#5b5853',step:'#b4b6b6',yellow:'#f2c230',under:'#605b55',under2:'#76716a',bogie:'#5a554f',wheel:'#6c6760',
  hub:'#8f8a83',spring:'#4e4943',roofUnit:'#cfd0cc',roofTop:'#bfc1bd',grille:'#7b7e80',panto:'#8f969c',insul:'#e3dccb',surround:'#45423f',
- wall:'#ecd9b2',ceil:'#f0ddb6',light:'#fff1cc',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
+ wall:'#ecd9b2',ceil:'#f0ddb6',ceilMid:'#f7d8a3',light:'#fff1cc',floor:'#a49886',floor2:'#b8ad99',kick:'#b9bcbf',pole:'#d3d6d8',cab:'#9a9f9c',desk:'#6b7472',
  bellows:'#5f5a54',bellowsIn:'#77716a',chime:'#f3a73a',blind:'#ebe1c8',rack:'#c8cbcd',vent:'#dcd8ce',slot:'#b9b4a8'} as const;
 const _c=new T.Color();
 const col=(hex:string,k=1)=>new T.Color(hex).multiplyScalar(k);
@@ -272,7 +272,10 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
   const A=(x:number)=>Math.abs(x)>.6?x*ka:x,B=(x:number)=>Math.abs(x)>.6?x*kb:x;g.quad([A(x0),F,za],[A(x1),F,za],[B(x1),F,zb],[B(x0),F,zb],c,[0,F-1,0]);}
  for(const s of [-1,1])for(const [a,b] of BENCHES)g.quad([s*.7,F+.003,a],[s*IW,F+.003,a],[s*IW,F+.003,b],[s*.7,F+.003,b],col(K.floor,.66).getStyle(),[0,F-1,0]);
  // ceiling and cove, two light strips (the indicator channel: lit by the night factor, like the old window band)
- for(const [za,zb,ka,kb] of SEGS){g.quad([-COVE_X*ka,CEIL_Y,za],[COVE_X*ka,CEIL_Y,za],[COVE_X*kb,CEIL_Y,zb],[-COVE_X*kb,CEIL_Y,zb],K.ceil,[0,CEIL_Y+1,0]);
+ // Nov 24 2026 (night ceiling): the flat between the light strips is a warmer cream (K.ceilMid), so under the blue night light plus
+ // the interior glow it reads warm instead of light grey; the outer flats and the cove keep K.ceil.
+ for(const [za,zb,ka,kb] of SEGS){for(const [x0,x1,c] of [[-COVE_X,-.46,K.ceil],[-.46,.46,K.ceilMid],[.46,COVE_X,K.ceil]] as const){const A=(x:number)=>Math.abs(x)>.6?x*ka:x,B=(x:number)=>Math.abs(x)>.6?x*kb:x;
+   g.quad([A(x0),CEIL_Y,za],[A(x1),CEIL_Y,za],[B(x1),CEIL_Y,zb],[B(x0),CEIL_Y,zb],c,[0,CEIL_Y+1,0]);}
   for(const s of [-1,1])g.quad([s*IW*ka,SIDE_TOP,za],[s*COVE_X*ka,CEIL_Y,za],[s*COVE_X*kb,CEIL_Y,zb],[s*IW*kb,SIDE_TOP,zb],ramp(K.ceil,SIDE_TOP,CEIL_Y,.9),[s*3,5,(za+zb)/2]);}
  for(const s of [-1,1]){
   g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
