@@ -6,6 +6,7 @@
 //   vending  each station's drink machine: the prompt shows on its platform, the machine zooms in with drinks, closes
 //   ride     board at a platform, ride on (bridge crest height, announcement, tunnel), tab hidden 20 s then back (train where the
 //            timetable says), fast travel while riding (gets off), board refused while jetpacking
+//   views    ride, then every camera view: the ridden train is drawn (open car mesh), its roof cut only in Inside
 //   track    standing on the rails (owner Nov 24 2026: trains never wait): Kenji warns, the train keeps its timetable, the bonk throws you clear
 //   deck     the track assist onto a bridge head, off a deck into the sea (swim), a swimmer at a high deck stays in, the splash bonk
 //            from a deck, the side bonk, a stopped train hit at speed on a scooter
@@ -301,6 +302,31 @@ async function landRoof(p, T) {
     return { ok: false, k: f.roofRide.k, ride: f.rideRef.current }; });
 }
 // Roof riding (owner Nov 24 2026): fly over train 0 ~250 m before the west portal, follow it, Land: onto the roof; ride; bonked off at the portal.
+// views (owner Nov 24 2026, shots 39-41: "the train I ride is invisible"): ride, then every camera view: the ridden train's car mesh is
+// drawn with the open (close-up) geometry, its instance matrices are not degenerate, the roof is cut only in Inside; a shot each (--shots)
+async function partViews(c) {
+  const { p } = c;
+  await standingTrainAt(p, 2);
+  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(2, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw + Math.PI); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => { document.querySelector('[data-train-board]')?.click(); if (!window.__fi2.trainRide.active) window.__fi2.trainRide.board(); });
+  await p.waitForTimeout(800);
+  const k = await p.evaluate(() => window.__fi2.trainRide.train);
+  if (k < 0) { check('views: riding', false); return; }
+  for (let i = 0; i < 40; i++) { if ((await p.evaluate((k) => window.__fi2.trains.states[k].at, k)) < 0) break; await p.waitForTimeout(500); }
+  await p.waitForTimeout(2000);
+  for (const v of ['seat', 'front', 'back', 'left', 'right', 'above', 'inside', 'seat']) {
+    await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(1600);
+    const r = await p.evaluate((k) => { const f = window.__fi2, cars = []; f.trains.root.traverse((o) => { if (o.isInstancedMesh && o.geometry?.getAttribute?.('aPart') && o.geometry.userData?.straps && o.visible) cars.push(o); });
+      const m = cars[0], e = m ? m.instanceMatrix.array : null; let sx = Infinity; if (e) for (let i = 0; i < m.count; i++) sx = Math.min(sx, Math.hypot(e[i * 16], e[i * 16 + 1], e[i * 16 + 2]), Math.hypot(e[i * 16 + 8], e[i * 16 + 9], e[i * 16 + 10]));
+      const sh = m && m.material.userData?.shader; return { n: cars.length, count: m ? m.count : 0, sx: +sx.toFixed(3), cut: f.trains.roofCut[k], view: f.trainRide.view, tri: m ? (m.geometry.getAttribute('position').count / 3) | 0 : 0 }; }, k);
+    if (process.env.VDIAG) console.log('VD', v, JSON.stringify(await p.evaluate((k) => { const f = window.__fi2, c = f.camera, T = c.constructor; const st = f.trains.states[k]; const m = f.trains.root.children.filter((o) => o.isInstancedMesh && o.name.startsWith('train-'));
+      return { cam: c.position.toArray().map((x) => +x.toFixed(1)), auto: c.matrixAutoUpdate, near: c.near, far: c.far, fov: c.fov, aspect: c.aspect, s: +st.s.toFixed(1), vis: m.map((o) => o.name + ':' + o.visible), pm: Array.from(c.projectionMatrix.elements).slice(0, 12).map((x) => +x.toFixed(3)), mwi: Array.from(c.matrixWorldInverse.elements).map((x) => +x.toFixed(2)), mw: Array.from(c.matrixWorld.elements).slice(12, 15).map((x) => +x.toFixed(1)) }; }, k)));
+    check(`views ${v}: the ridden train is drawn (open car mesh, non-degenerate), roof cut only in Inside`, r.n >= 1 && r.count >= 2 && r.sx > .9 && r.tri > 2000 && (r.cut === 1) === (v === 'inside'), JSON.stringify(r));
+    if (shots) await p.screenshot({ path: path.join(shots, `view-${v}-${phone ? 'phone' : 'desktop'}.png`) });
+  }
+  await p.evaluate(() => window.__fi2.trainRide.finish());
+}
 async function partRoof(c) {
   const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
   const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
@@ -440,7 +466,7 @@ async function partPerf(c) {
     const gl = await c.p.evaluate(() => { const g = window.__fi2.renderer.getContext(), e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; });
     console.log(`viewport ${vp.width}x${vp.height}, GL ${gl}`);
     for (const part of parts) {
-      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
+      try { await ({ perfab: partPerfAB, spot: partSpot, gauge: partGauge, xings: partXings, vending: partVending, ride: partRide, views: partViews, track: partTrack, deck: partDeck, roof: partRoof, shots: partShots, perf: partPerf })[part](c); }
       catch (e) { check(`${part} ran`, false, e.message.slice(0, 200)); }
     }
     check('no page errors', !c.errs.length, c.errs.slice(0, 3).join(' | '));

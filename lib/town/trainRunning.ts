@@ -183,6 +183,10 @@ function buildBoards(obstacles:Obstacle[]|null){
 
 // ---------------------------------------------------------------- the runtime
 export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:number};
+ /** Nov 24 2026 (owner shots 39-41, 44: the ridden train vanished in the Back / Left / From above views): the LAST RENDERED camera's
+  *  view-projection and world position. Town updates the trains before the ride camera is applied, so f.camera then still holds the
+  *  follow camera's matrices (the walk camera behind the seat): culling with it hid every train the ride view looked at. One frame
+  *  old (≤ 0.5 m of train travel; the cull sphere is 23 m). */viewProj?:T.Matrix4;camPos?:T.Vector3;
  /** Remote players drawn on this screen (x, y, z). */eachRemote?:(cb:(x:number,y:number,z:number)=>void)=>void;
  /** Tests only: the shared clock (s) instead of trainClockSec(). */nowSec?:number;
  /** Phase 3: the train the local player rides (-1: none): they are not a person on the track and are never pushed out of it. */riding?:number;
@@ -350,8 +354,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
     for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
     doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;glass.prime(m4);return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
-   const now=f.nowSec??trainClockSec();lastNow=now;f.camera.getWorldPosition(cam);
-   pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
+   const now=f.nowSec??trainClockSec();lastNow=now;if(f.camPos)cam.copy(f.camPos);else f.camera.getWorldPosition(cam);
+   if(f.viewProj)pv.copy(f.viewProj);else pv.multiplyMatrices(f.camera.projectionMatrix,f.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);
    const riding=f.riding??-1;nPeople=0;bestGap=Infinity;{const p=people[nPeople++];p.x=f.player.x;p.y=riding>=0||f.onRoof?-999:f.player.y;p.z=f.player.z;}f.eachRemote?.(addRemote);// riding: never on the track
    const cluster=Number.isFinite(api.cluster),night=MACHINE_NIGHT.value as number;
    // ---- trains near the camera are simulated (people, catch-up); the rest are exactly where the timetable says
@@ -418,7 +422,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    let nd=0,np=0;glass.begin();
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
-    const show=d<HIDE_RANGE&&frustum.intersectsSphere(sphere);if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
+    const show=i===riding||d<HIDE_RANGE&&frustum.intersectsSphere(sphere);/* the train I ride: always drawn */if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;
     const d3=Math.hypot(d,sphere.center.y-cam.y),size=12.4*f.camera.projectionMatrix.elements[5]/Math.max(1,d3);
     const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]||d3<CLOSE_RANGE?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
