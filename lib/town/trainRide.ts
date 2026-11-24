@@ -75,7 +75,7 @@ export function boardIn(st:{at:number;next:number;t:number;doors:number;dwellLef
 const CAM={out:7.5,back:5,up:3.6,portraitOut:1.6,portraitBack:3.5,portraitAhead:1.5,portraitIn:1.15,tunnelOut:2.4,tunnelBack:2,tunnelUp:1.6,ahead:4,eye:1.25} as const;
 const PORTRAIT_FOV=58;
 /** Gameplay 3: the standing camera inside the car: distance (× zoom), eye over the floor, how far ahead of you it looks (m). */
-const STAND_CAM={dist:2.4,eye:1.3,ahead:1.2} as const;
+const STAND_CAM={dist:2.7,eye:1.25,ahead:1.4,pitch:.22} as const;
 /** The free ride camera (Gameplay 2): elevation limits (rad: a little under the horizontal … ~60° down), zoom (× the default
  *  distance: window close-up … wide), drag and key / stick rates, inertia decay (none with reduced motion), the Recenter ease. */
 export const ORBIT={pitchMin:-.09,pitchMax:1.05,zoomMin:.38,zoomMax:2.6,drag:5.2,keyYaw:1.9,keyPitch:1.1,wheel:.0016,decay:4.5,recenter:4,tap2:.32,tapPx:30,moved:.06} as const;
@@ -174,7 +174,7 @@ export function createTrainRide(ports:Ports){
  // Gameplay 3: standing in the aisle. sp = the train-frame spot (trainWalk.ts: x across, u along car 0), moved by the stick / WASD
  // relative to the camera; tw = the stand-up / sit-down ease (twSit: the seat being sat in, -1 standing up); the strap pose fades in
  // when you stop; gait = the frame Town poses the rig in (the rig walks in the train, then is put back in the world).
- let standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,standCam=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
+ let standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camAxis=0,standCam=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
  const sp={x:0,u:0},twFrom={x:0,u:0},twTo={x:0,u:0},mv={x:0,z:0},carL:TrainLocal={car:0,x:0,z:0},carM=new T.Matrix4(),pv=new T.Vector3(),aisle={x:0,z:0},gp:SeatPose={x:0,y:0,z:0,yaw:0};
  const straps:[TrickPose,TrickPose]=[trainStrapPose(-1),trainStrapPose(1)];
  const gait={on:false,x:0,z:0,facing:NaN};
@@ -226,7 +226,7 @@ export function createTrainRide(ports:Ports){
   const seat=SEAT_TABLE[PLAYER_SEATS[j]];fromCar(seat.car,seat.x,seat.z,aisle);twFrom.x=aisle.x;twFrom.u=aisle.z;seatAisle(j,aisle);twTo.x=aisle.x;twTo.u=aisle.z;sp.x=twFrom.x;sp.u=twFrom.u;
   standing=true;twSit=-1;tw=0;twDur=.35;strapW=0;mv.x=mv.z=0;gaitMove=0;
   // face across the aisle, the camera looking along the car toward the cab ahead of you
-  gaitYaw=twTo.x>0?-Math.PI/2:Math.PI/2;gait.facing=gaitYaw;camBase=twTo.u<-6.2?Math.PI:0;
+  gaitYaw=twTo.x>0?-Math.PI/2:Math.PI/2;gait.facing=gaitYaw;camBase=camAxis=twTo.u<-6.2?Math.PI:0;
   trainRideStore.set({standing:true,nearSeat:false,nearDoor:false});setNote(WALK_NOTES.up);ports.haptic?.();return true;
  }
  /** Gameplay 3: into free player seat jj (eased from where you stand; the kneel blends in). Presence sends the new seat. */
@@ -400,9 +400,9 @@ export function createTrainRide(ports:Ports){
    // closer than the seated framing, kept inside the car's room (trainCamClear.interiorClearFraction: a slab test in car-local
    // space, the same spring arm). It eases between the two framings as you stand up and sit down.
    lastCam=camera;standCam+=((standing?1:0)-standCam)*(reduced?1:1-Math.exp(-3.5*h));if(standCam<.002)standCam=0;
-   if(standing&&run.carMatrixOf){if(gaitMove>.05&&!dragging){const q=1-Math.exp(-1.6*h*gaitMove);camBase+=wrapPi(gaitYaw-camBase)*q;}camFwd=wrapPi(camBase+orb.yaw);}
+   if(standing&&run.carMatrixOf){if(gaitMove>.05&&!dragging){const cg=Math.cos(gaitYaw);if(Math.abs(cg)>.35&&mv.z>=-.2)camAxis=cg>0?0:Math.PI;/* walking toward the camera never swings it round (no ping-pong) */const q=1-Math.exp(-1.6*h*gaitMove);camBase+=wrapPi(camAxis-camBase)*q;}camFwd=wrapPi(camBase+orb.yaw);}// it looks along the car (the way you head), never at a wall: the room is long, not wide
    if(standCam>0&&run.carMatrixOf){
-    run.carMatrixOf(kk,meCar,carM);const e=carM.elements,W=Math.atan2(e[8],e[10])+camFwd+(meCar%2?Math.PI:0),el=Math.max(.05,Math.min(1.05,.34+orb.pitch)),len=STAND_CAM.dist*orb.zoom;
+    run.carMatrixOf(kk,meCar,carM);const e=carM.elements,W=Math.atan2(e[8],e[10])+camFwd+(meCar%2?Math.PI:0),el=Math.max(.05,Math.min(1.05,STAND_CAM.pitch+orb.pitch)),len=STAND_CAM.dist*orb.zoom;
     const hx=pose.x,hy=pose.y+STAND_CAM.eye,hz=pose.z,sw=Math.sin(W),cw=Math.cos(W),ce=Math.cos(el)*len;
     let cx=hx-sw*ce,cy=hy+Math.sin(el)*len,cz=hz-cw*ce;
     // into car-local space (the basis is orthonormal: dot with its axes), the room's slab test, then back along the same line
