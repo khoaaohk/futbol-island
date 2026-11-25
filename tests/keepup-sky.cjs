@@ -231,7 +231,7 @@ function holdRun(holdMs,{taps=0,frames=60*6}={}){
 // 9. No talking during keep-ups (owner, Oct 24): while a run is on, no Talk prompt / NPC tag, E and tap-to-talk are ignored.
 {const town=read('components/Town.tsx');
  assert(/keepUpBusy\.current=rideRef\.current==='walk'&&walkBall\.state\.counted;/.test(town),'busy = a counted run on foot');
- assert(/const next=keepUpBusy\.current(\|\|trainRide\.active)?\?null:(trainRide\.active\?(trainPassengers\.nearest\([^)]*\)|\(trainRide\.standing&&kenjiFig[^\n]*?kenjiFig\.npc\(\):null\)):[^\n]*?)?\[/.test(town),'no nearby NPC (Talk prompt) during a run');
+ assert(/const next=keepUpBusy\.current(\|\|trainRide\.active)?\?null:(trainRide\.active\?(trainPassengers\.nearest\([^)]*\)|\(trainRide\.standing&&kenjiFig[^\n]*?kenjiFig\.npc\(\):(null|trainTalk\.candidate\([^\n]*?)\)):[^\n]*?)?\[/.test(town),'no nearby NPC (Talk prompt) during a run');/* train-talk (9d137d82): a passenger candidate in the train branch */
  assert(/const npc=keepUpBusy\.current\?null:islandNpcs\.pick\(characterRay\)/.test(town),'tap on an NPC does not open talk');
  assert(/&&nearbyNpcRef\.current&&!keepUpBusy\.current&&/.test(town),'E does not open talk');
  assert(/emoteCam\.active\|\|keepUpBusy\.current(\|\|liveJoin\.joined)?[^;]*\)/.test(town),'NPC tags (LET’S TALK) hidden');
