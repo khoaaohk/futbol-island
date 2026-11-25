@@ -56,7 +56,11 @@ export const WIRE_R=.014,CAT_FADE_NEAR=4.5,CAT_FADE_FAR=8;// POLISH 3 (owner: th
 /** A tiny triangle soup builder (positions + flat normals, indexed later by the batching pass). */
 class Geo{
  p:number[]=[];n:number[]=[];
- tri(a:number[],b:number[],c:number[]){const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
+ /** Triangle; with `inside`, wound to face away from it (owner shot 90, Nov 25 2026: on a mirrored station, sg -1, the hip
+  *  ends were wound inward and back-face culled, so the house showed its open top from a high angle at Coral Cay). */
+ tri(a:number[],b:number[],c:number[],inside?:number[]):void{const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
+  if(inside&&nx*((a[0]+b[0]+c[0])/3-inside[0])+ny*((a[1]+b[1]+c[1])/3-inside[1])+nz*((a[2]+b[2]+c[2])/3-inside[2])<0){this.tri(a,c,b);return;}
+  const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
   this.p.push(...a,...b,...c);for(let i=0;i<3;i++)this.n.push(nx,ny,nz);}
  /** Quad facing away from `inside` (a point the face should not face). */
  quad(a:number[],b:number[],c:number[],d:number[],inside?:number[]){
@@ -300,7 +304,7 @@ export function buildTrainWorld(tools:TrainTools){
   // Tiled hip roof (kawara grey-blue), its eaves well out over the platform, a dark ridge and two ridge ends.
   {const ew=4.8,ed=hd/2+1.25,rh=1.9,ry=y0+H+.14,ridgeL=ew-ed*.75,R=(u:number,v:number,y:number)=>P(u,hm+v,y),inside=R(0,0,ry);
    const e1=R(-ew,-ed,ry),e2=R(ew,-ed,ry),e3=R(ew,ed,ry),e4=R(-ew,ed,ry),r1=R(-ridgeL,0,ry+rh),r2=R(ridgeL,0,ry+rh);
-   roof.quad(e1,e2,r2,r1,inside);roof.quad(e3,e4,r1,r2,inside);roof.tri(e2,e3,r2);roof.tri(e4,e1,r1);roof.quad(e1,e4,e3,e2,R(0,0,ry+1));
+   roof.quad(e1,e2,r2,r1,inside);roof.quad(e3,e4,r1,r2,inside);roof.tri(e2,e3,r2,inside);roof.tri(e4,e1,r1,inside);/* facing out on every station, mirrored or not */roof.quad(e1,e4,e3,e2,R(0,0,ry+1));
    ridge.beam(R(-ridgeL-.1,0,ry+rh+.05),R(ridgeL+.1,0,ry+rh+.05),.12,true);
    if(!lite)for(const s of [-1,1])for(const t of [-1,1])ridge.beam(R(s*ridgeL,0,ry+rh+.03),R(s*ew,t*ed,ry+.05),.06,true);
    // Tile courses: three thin darker bands across each long slope.

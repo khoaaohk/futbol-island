@@ -36,7 +36,8 @@ async function boot(b, vp, mobile, time) {
       for (const k of trains) {
         await p.evaluate(({ s }) => { window.__fi2.trains.cluster = s; }, { s: north.s + LEN / 2 + 1 - k * (LEN + GAP) });
         await p.evaluate(({ x, z, yaw }) => window.__fi2.teleport(x, z, yaw + Math.PI), north); await p.waitForTimeout(2500);
-        const d = await p.evaluate(() => window.__fi2.trains.drawn); console.log(`${vpName} ${time} train ${k}: wraps ${d.wraps} quads, cars ${d.cars} (far ${d.far})`);
+        const d = await p.evaluate(() => window.__fi2.trains.drawn); console.log(`${vpName} ${time} train ${k}: wraps ${d.wraps} quads, cars ${d.cars} (far ${d.far}), Drip FC masks in the atlas: ${d.wrapArt}`);
+        if (d.wraps > 0 && !d.wrapArt) { console.log('FAIL: the wraps are on screen but the club art never reached the atlas'); process.exitCode = 1; }
         if (k === 0) await p.screenshot({ path: path.join(out, `play-cam-${time}-${vpName}.png`) });// the default play camera, once
         if (k === 0) {// the cab end: the kindness badge over the headmark
           const cab = await p.evaluate(({ s }) => { const f = window.__fi2, t = f.trains, a = t.sched.trackAt(s + 5), by = t.sched.bed(s) || 0, C = f.camera.constructor, cam = new C(45, f.camera.aspect, .1, 600);
