@@ -39,7 +39,8 @@ for(const r of ['scooter','bike','moped']){const a=A.travelArrival({ride:r,swimm
 // ---- 2. Town: both map trips (a place and a pitch) read the mode before the jump and apply it after; no forced walk.
 const town=fs.readFileSync(path.join(ROOT,'components/Town.tsx'),'utf8');
 const block=(start)=>{const i=town.indexOf(start);assert(i>=0,start);return town.slice(i,town.indexOf('\n',i));};
-for(const b of [block('if(travel.current){trainRide.finish();/* fast travel while riding: off the train first */const from=travelFrom();'),block('if(fieldTravel.current){const from=travelFrom();')]){
+for(const b of [block('if(travel.current){trainRide.finish();/* fast travel while riding: off the train first */'),block('if(fieldTravel.current){trainRide.finish();')]){/* owner Nov 25 2026: both end a train / roof ride first */
+ assert(/const from=travelFrom\(\);/.test(b),'the mode is read before the jump');
  assert(!/rideRef\.current='walk'/.test(b),'a map trip no longer forces walking');assert(/applyArrival\(from,/.test(b),'it applies the arrival');}
 assert(/const travelFrom=\(\):ArrivalFrom=>\(\{ride:rideRef\.current,phase:jetActions\.state\.phase,swimming:/.test(town),'the mode is read from the ride, the jetpack phase and the water');
 assert(/if\(a\.flying\)\{jetActions\.reset\(\);[^}]*flight\.height=flight\.startHeight=a\.flightHeight/.test(town),'flying: the flight height is set over the destination');

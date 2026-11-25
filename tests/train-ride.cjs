@@ -261,3 +261,12 @@ console.log('train-ride camera: ok');
   assert(ky>CM.BENCH_TOP-CM.CAR_FLOOR_Y+.03&&ky<CM.BENCH_TOP-CM.CAR_FLOOR_Y+.16,`knee on the cushion (${ky.toFixed(2)})`);assert(TRN2.RIDER_ROOT_X+kz<CM.BENCH_BACK-.03,`knee short of the backrest (${(TRN2.RIDER_ROOT_X+kz).toFixed(2)})`);}}}
 console.log('train-ride kneel: ok');
 {const town=require('fs').readFileSync(require('path').join(__dirname,'..','components/Town.tsx'),'utf8');require('assert')(/if\(travel\.current\)\{trainRide\.finish\(\);[^\n]*?roofRide\.k=-1;roofRide\.hop=false;roofLanding=-1;/.test(town),'owner Nov 25: map travel from a train roof ends the roof ride');console.log('train-ride roof travel ok');}
+{const town=require('fs').readFileSync(require('path').join(__dirname,'..','components/Town.tsx'),'utf8'),A=require('assert');const off=/trainRide\.finish\(\);[^\n]{0,60}?roofRide\.k=-1;roofRide\.hop=false;roofLanding=-1;/;
+ // owner Nov 25 2026 ("standing on the train, unable to transport"): every teleport-style travel takes you off the train and its roof
+ // first (the seat / aisle walk / roof ride re-place you each frame otherwise); scripts/check-train-travel.cjs plays each path in Chrome
+ for(const [name,re] of [['field travel',/if\(fieldTravel\.current\)\{([^\n]*)/],['go fishing',/if\(goFish\.current&&!travel\.current\)\{([^\n]*)/],['map travel',/if\(travel\.current\)\{([^\n]*)/],['a lesson',/const command=lessonCommand\.current;lessonCommand\.current=null;([^\n]*)/]]){const m=town.match(re);A(m&&off.test(m[1].slice(0,260)),`${name} from the train ends the ride and any roof ride first`);}
+ console.log('train-ride travel off the train ok');}
+{const map=require('fs').readFileSync(require('path').join(__dirname,'..','components/IslandTravelMap.tsx'),'utf8'),A=require('assert');
+ // owner Nov 25 2026 (phone, from the train): an off-screen station's edge chip lying over a place's pin on screen passes the tap to that pin
+ A(/data-station-chip=[^\n]*onClick=\{e=>\{const pin=e\.detail>0\?pinUnder\(e\.clientX,e\.clientY\):null;if\(pin\)\{pin\.dispatchEvent/.test(map)&&/const pinUnder=[^\n]*elementsFromPoint[^\n]*\.map-destination/.test(map),'a station chip over a visible pin travels to that place');
+ console.log('train-ride map chip over a pin ok');}
