@@ -5,7 +5,8 @@ import {DRILLS_A} from './drillsA';
 import {DRILLS_B} from './drillsB';
 import {DRILLS_C} from './drillsC';
 import {DRILLS_D} from './drillsD';
-import {GUIDE_DRILLS} from './drillLinks';
+import {DRILL_TERMS,GUIDE_DRILLS} from './drillLinks';
+import {termBySlug} from './terms';
 import {DRILL_AGE_NOTES} from './notesDrills';
 /**
  * The DRILLS cluster (SEO cluster 3, Nov 10 2026): /learn/soccer-drills and one page per drill under it, for the volunteer
@@ -72,6 +73,14 @@ export const pickLessons=(ids:string[],where:string)=>ids.map(id=>{const l=lesso
 export const agesText=(a:readonly Age[])=>a.length===1?`${a[0]} (${AGE_YEARS[a[0]]})`:`${a[0]} to ${a[a.length-1]} (ages ${AGE_YEARS[a[0]].replace(/^ages (\d+).*$/,'$1')} to ${AGE_YEARS[a[a.length-1]].replace(/^.* (\d+)$/,'$1')})`;
 const sentences=(s:string)=>(s.match(/[^.!?]+[.!?]+(?=\s|$)/g)||[]).length;
 const HEAD_IT=/\bhead (?:it|the ball)\b|\bheaders?\b|\bheading (?:drill|practice)\b/i;
+/* SEO batch B, Nov 25 2026: the glossary terms that list this drill (lib/site/drillLinks.ts DRILL_TERMS), after the drill's own links */
+function withTerms(slug:string,links:DrillLink[]):DrillLink[]{
+ const out=[...links];
+ for(const s of DRILL_TERMS[slug]??[]){const t=termBySlug(s);if(!t)throw new Error(`drill ${slug}: DRILL_TERMS term ${s} has no page`);
+  if(!(GUIDE_DRILLS[t.path]??[]).includes(slug))throw new Error(`drill ${slug}: term ${s} does not list this drill in GUIDE_DRILLS`);
+  if(!out.some(l=>l.path===t.path))out.push({path:t.path,name:`${t.name} (soccer term)`,line:t.short});}
+ return out;
+}
 function build(r:RawDrill):Drill{
  const w=`drill ${r.slug}`;
  if(sentences(r.answer)!==2)throw new Error(`${w}: the answer must be exactly two sentences`);
@@ -81,10 +90,11 @@ function build(r:RawDrill):Drill{
  if(r.heading||HEAD_IT.test(all))throw new Error(`${w}: this cluster has no heading drills (lib/site/rules.ts, heading-rules-for-kids)`);
  if(r.steps.length<4||r.cues.length<3||r.cues.length>4||r.mistakes.length<3||r.faq.length<3||r.faq.length>5||r.lessons.length<2)throw new Error(`${w}: steps, cues, mistakes, faq or lessons are short`);
  const scene=grid(r.scene),lessons=pickLessons(r.lessons,w);
- return {...r,path:drillPath(r.slug),h1:r.h1??`${r.name} soccer drill`,scene,picture:drillPicture(r.slug),space:gridSize(scene)+(r.spaceNote?`. ${r.spaceNote}`:''),agesText:agesText(r.ages),lessons,cta:lessons[0],links:r.links??[]};
+ return {...r,path:drillPath(r.slug),h1:r.h1??`${r.name} soccer drill`,scene,picture:drillPicture(r.slug),space:gridSize(scene)+(r.spaceNote?`. ${r.spaceNote}`:''),agesText:agesText(r.ages),lessons,cta:lessons[0],links:withTerms(r.slug,r.links??[])};
 }
 export const DRILLS:readonly Drill[]=[...DRILLS_A,...DRILLS_B,...DRILLS_C,...DRILLS_D].map(build);
 export const drillBySlug=(slug:string)=>DRILLS.find(d=>d.slug===slug);
+for(const k of Object.keys(DRILL_TERMS))if(!drillBySlug(k))throw new Error(`drillLinks DRILL_TERMS: ${k} is not a drill`);
 for(const d of DRILLS){
  if(DRILLS.filter(x=>x.slug===d.slug).length>1)throw new Error(`drill ${d.slug} is listed twice`);
  if(d.related.length<3)throw new Error(`drill ${d.slug}: at least three related drills`);

@@ -7,6 +7,7 @@ import {DRILL_AGE_NOTES} from '@/lib/site/notesDrills';
 import {DRILLS_ES,DRILLS_HUB_ES,LINK_LINES_ES,PLANS_HUB_ES,SKILLS_ES,agesTextEs} from './drills';
 import {DRILL_GUIDES_ES} from './drillGuides';
 import {PLANS_ES} from './plans';
+import {TERMS_ES} from './terms';
 import {hasEs,toEs} from '../esPaths';
 /**
  * Spanish drills, drill guides and practice plans merged over the English records (Spanish round C, Nov 16 2026): the English
@@ -83,6 +84,8 @@ export function esDrillLink(l:DrillLink):{path:string;name:string;line?:string}|
  const known=LINK_LINES_ES[l.path];if(known)return {path:toEs(l.path),name:known.name,line:known.line};
  const d=DRILLS.find(x=>x.path===l.path);if(d){const e=esDrill(d.slug)!;return {path:e.esPath,name:`${e.name} (ejercicio)`,line:drillLineEs(e)};}
  const p=PLANS.find(x=>x.path===l.path);if(p){const e=esPlan(p.slug)!;return {path:e.esPath,name:e.h1,line:`${e.minutes} minutos: ${lower(e.goal)}`};}
+ /* SEO batch B, Nov 25 2026: a glossary term with no line in LINK_LINES_ES (the drill back-links, lib/site/drillLinks.ts DRILL_TERMS) */
+ const tm=/^\/learn\/soccer-terms\/([a-z0-9-]+)$/.exec(l.path),te=tm&&TERMS_ES[tm[1]];if(te)return {path:toEs(l.path),name:`${te.name} (término de fútbol)`,line:te.short};
  return null;
 }
 export const esDrillLinks=(xs:readonly DrillLink[])=>xs.map(esDrillLink).filter((x):x is NonNullable<typeof x>=>!!x);

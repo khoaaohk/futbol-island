@@ -33,6 +33,20 @@ export const G={
  nutmeg:{path:T+'nutmeg',name:'Nutmeg (soccer term)',line:'The ball played through a defender’s legs'},
  counter:{path:T+'counterattack',name:'Counterattack (soccer term)',line:'Attacking fast after winning the ball'},
  marking:{path:T+'marking',name:'Marking (soccer term)',line:'Staying with an opponent'},
+ /* SEO batch B, Nov 25 2026: more glossary terms for the practice plans and drill guides (words from the term pages' own names) */
+ tapIn:{path:T+'tap-in',name:'Tap-in (soccer term)',line:'The easy finish from close range'},volley:{path:T+'volley',name:'Volley (soccer term)',line:'Kicking the ball before it bounces'},
+ halfVolley:{path:T+'half-volley',name:'Half-volley (soccer term)',line:'Kicking the ball just after it bounces'},chip:{path:T+'chip',name:'Chip (soccer term)',line:'Lifting the ball over a goalkeeper'},
+ farPost:{path:T+'far-post',name:'Far post (soccer term)',line:'The goalpost farther from the ball'},stepOver:{path:T+'step-over',name:'Step-over (soccer term)',line:'Swing a foot around the ball, then go the other way'},
+ dribble:{path:T+'dribble',name:'Dribble (soccer term)',line:'Moving with the ball in small touches'},jockeying:{path:T+'jockeying',name:'Jockeying (soccer term)',line:'Staying in front of a dribbler without diving in'},
+ shielding:{path:T+'shielding',name:'Shielding (soccer term)',line:'Your body between the ball and the opponent'},cover:{path:T+'cover',name:'Cover (soccer term)',line:'The second defender behind the first'},
+ lowBlock:{path:T+'low-block',name:'Low block (soccer term)',line:'The whole team defending close to its own goal'},sweeperKeeper:{path:T+'sweeper-keeper',name:'Sweeper keeper (soccer term)',line:'The goalkeeper who comes out to clear'},
+ cleanSheet:{path:T+'clean-sheet',name:'Clean sheet (soccer term)',line:'A game with no goals against'},goalArea:{path:T+'goal-area',name:'Goal area (soccer term)',line:'The six-yard box and its rules'},
+ shootOut:{path:T+'penalty-shoot-out',name:'Penalty shoot-out (soccer term)',line:'How a tied cup game is decided'},possession:{path:T+'possession',name:'Possession (soccer term)',line:'Having the ball, and keeping it'},
+ scanning:{path:T+'scanning',name:'Scanning (soccer term)',line:'Checking your shoulder before the ball arrives'},manOn:{path:T+'man-on',name:'Man on (soccer term)',line:'The warning call for an opponent behind you'},
+ oneTouch:{path:T+'one-touch',name:'One-touch (soccer term)',line:'Passing with your first touch'},weakFoot:{path:T+'weak-foot',name:'Weak foot (soccer term)',line:'The foot you use less, and how to improve it'},
+ support:{path:T+'support',name:'Support (soccer term)',line:'Moving to where the ball can reach you'},thirdMan:{path:T+'third-man-run',name:'Third-man run (soccer term)',line:'A third player receives after two teammates pass'},
+ hatTrick:{path:T+'hat-trick',name:'Hat-trick (soccer term)',line:'Three goals by one player in a game'},
+ dummy:{path:T+'dummy',name:'Dummy (soccer term)',line:'Letting the ball run on to a teammate'},
  f7:{path:'/learn/7v7-soccer-formations',name:'7v7 soccer formations',line:'Shapes for U9 and U10 teams'},
  f9:{path:'/learn/9v9-soccer-formations',name:'9v9 soccer formations',line:'Shapes for U11 and U12 teams'},
  field:{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
@@ -133,4 +147,22 @@ export const GUIDE_DRILLS:Record<string,string[]>={
  [T+'pivot']:['lay-off-and-shoot','receive-and-turn'],
  [T+'penalty-area']:['crossing-and-finishing','goalkeeper-angles'],
  [T+'goal-area']:['goalkeeper-distribution','build-out-game'],
+};
+/**
+ * The way back (SEO batch B, Nov 25 2026): drill slug -> the glossary terms (lib/site/terms.ts slugs) that drill page links in its
+ * "Read more" list. A term page already lists its drills in GUIDE_DRILLS; this sends up to three of those links back, the
+ * least-linked terms first, so every term gets contextual links from the drills cluster. Each pair must also be in GUIDE_DRILLS
+ * (checked in lib/site/drills.ts), so a drill only links a word it really trains.
+ */
+export const DRILL_TERMS:Record<string,readonly string[]>={
+ 'receive-across-the-body':['first-touch'],'first-touch-gates':['first-touch'],'throw-in-game':['set-piece'],'gates-dribbling':['dribble'],'dribble-tag':['dribble'],'knockout':['shielding'],
+ 'one-v-one-two-goals':['shielding'],'clean-your-room':['clearance'],'toe-taps-and-foundations':['weak-foot'],'dribble-and-shoot':['chip'],'give-and-go':['assist','give-and-go'],
+ 'four-goal-game':['width','switching-play'],'one-v-one-to-end-zones':['step-over','nutmeg'],'triangle-passing':['third-man-run','support'],'world-cup-shooting-game':['hat-trick','brace'],
+ 'cone-weave-dribbling':['step-over','dribble'],'partner-passing-through-gates':['square-pass','weak-foot'],'shoulder-check-colors':['man-on','scanning'],'lay-off-and-shoot':['pivot','false-nine'],
+ 'three-v-two-to-goal':['overload','counterattack','two-v-one'],'rondo-4v2':['overload','possession','pressing'],'end-zone-game':['offside-trap','high-line','through-ball'],
+ 'goalkeeper-angles':['clean-sheet','sweeper-keeper','penalty-area'],'thigh-and-chest-control':['half-volley','volley','header'],'follow-the-shot':['tap-in','half-volley','brace'],
+ 'rondo-3v1':['one-touch','square-pass','support'],'build-out-game':['build-up','own-goal','goal-area'],'goalkeeper-distribution':['build-up','goal-area','sweeper-keeper'],
+ 'wall-passing':['one-touch','weak-foot','give-and-go'],'two-v-one-to-goal':['underlap','overlap','counterattack'],'pressure-and-cover-2v2':['low-block','cover','marking'],
+ 'three-team-keep-away':['possession','width','box-to-box'],'receive-and-turn':['man-on','scanning','pivot'],'one-v-one-defending':['jockeying','yellow-card','red-card'],
+ 'recover-goal-side':['high-line','yellow-card','red-card'],'crossing-and-finishing':['far-post','tap-in','near-post']
 };

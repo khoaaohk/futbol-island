@@ -133,7 +133,7 @@ const RAW:RawGuide[]=[
    {q:'What is the best soccer drill to do at home?',a:'Wall passing. It trains the pass and the first touch together, with both feet, and a child can count and beat their own score.'},
    {q:'Can we practice indoors?',a:'Toe taps, foundations and slow turns work indoors on a soft floor with a soft or futsal-style ball, if there is nothing breakable nearby.'},
    {q:'What soccer drills can you do by yourself?',a:'Toe taps and foundations, a cone weave, turn and go between two markers, wall passing and first touch gates. Each needs one ball and a small space, and a wall turns the passing drills into solo drills.'}],
-  lessons:['learn7_receive','learn7_carry','s_onetwo'],links:[G.ball,G.firstTouch,G.giveGo],featured:'wall-passing'},
+  lessons:['learn7_receive','learn7_carry','s_onetwo'],links:[G.ball,G.firstTouch,G.giveGo,G.weakFoot],featured:'wall-passing'},
 
  {slug:'passing',kind:'skill',name:'Passing drills',title:'Soccer Passing Drills for Kids: From Pairs to Rondos',h1:'Soccer passing drills for kids',
   desc:'Soccer passing drills for kids in the order to teach them: pairs through gates, triangles, give-and-go, 3v1 and 4v2 rondos, then possession games.',
@@ -149,7 +149,7 @@ const RAW:RawGuide[]=[
   faq:[{q:'How do you teach kids to pass a soccer ball?',a:'Show the inside of the foot, then play a game in pairs with a score, such as passing through gates. Add a defender as soon as the technique is steady.'},
    {q:'What is the best passing drill for U10?',a:'The 3v1 rondo. It has a real defender, everyone touches the ball often, and it teaches support on both sides of the ball.'},
    {q:'Why do my players pass to the other team?',a:'Usually because they look up too late or no teammate has moved into view. Scanning games and rondos work on both problems.'}],
-  lessons:['prn_7_support','prn_9_support','s_onetwo','learn9_switch'],links:[G.giveGo,G.switching,G.cm],featured:'rondo-3v1'},
+  lessons:['prn_7_support','prn_9_support','s_onetwo','learn9_switch'],links:[G.giveGo,G.switching,G.cm,G.thirdMan,G.oneTouch,G.dummy],featured:'rondo-3v1'},
 
  {slug:'dribbling',kind:'skill',name:'Dribbling drills',title:'Soccer Dribbling Drills for Kids: Games and Ball Mastery',h1:'Soccer dribbling drills for kids',
   desc:'Soccer dribbling drills for kids: ball mastery moves, games with a ball each such as Sharks and Minnows and gates, turns, and 1v1 to beat a defender.',
@@ -165,7 +165,7 @@ const RAW:RawGuide[]=[
   faq:[{q:'What are the best dribbling drills for beginners?',a:'Games where each child has a ball: Red Light Green Light, Sharks and Minnows and gates dribbling. They build close control without anyone waiting in a line.'},
    {q:'How do I teach a child to dribble with both feet?',a:'Make the weaker foot worth more. Run a round where only that foot counts, or give double points for a gate or a turn done with it.'},
    {q:'Are cone drills bad?',a:'No, in short doses. Cones build touch, but a cone never tackles. Follow any cone drill with a game against a defender.'}],
-  lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg,G.twoVone],featured:'gates-dribbling'},
+  lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg,G.twoVone,G.stepOver,G.dribble,G.shielding],featured:'gates-dribbling'},
 
  {slug:'shooting',kind:'skill',name:'Shooting drills',title:'Soccer Shooting Drills for Kids: Finishing Without Lines',h1:'Soccer shooting drills for kids',
   desc:'Soccer shooting drills for kids that avoid long lines: dribble and shoot, lay-off and shoot, World Cup, 2v1 to goal, rebounds and low-cross finishing.',
@@ -181,7 +181,7 @@ const RAW:RawGuide[]=[
   faq:[{q:'How do I teach my child to shoot a soccer ball with power?',a:'Technique first: laces, locked ankle, standing foot beside the ball and body over it. Power comes from a clean strike and from growing, not from swinging harder.'},
    {q:'What is a good shooting drill for U8?',a:'Dribble and shoot in two or three short lanes at small goals. Every child shoots every twenty seconds and fetches their own ball.'},
    {q:'How do I avoid long lines in shooting drills?',a:'Use more goals. Two cones make a goal. Three players per goal means everyone is shooting, serving or fetching.'}],
-  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.cutback,G.cross],featured:'two-v-one-to-goal'},
+  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.cutback,G.cross,G.tapIn,G.volley,G.chip,G.halfVolley],featured:'two-v-one-to-goal'},
 
  {slug:'first-touch',kind:'skill',name:'First touch drills',title:'First Touch Soccer Drills for Kids: Receive and Go',h1:'First touch soccer drills for kids',
   desc:'First touch soccer drills for kids: receive across the body, touch through a gate, turn under pressure, and control a high ball with no heading.',
@@ -197,7 +197,7 @@ const RAW:RawGuide[]=[
   faq:[{q:'How do you improve first touch in soccer?',a:'With many repetitions and a purpose for each one. Wall passing gives the repetitions, and gates and a defender give the touch a direction.'},
    {q:'What is the best first touch drill for kids?',a:'For one player, wall passing. For a team, first touch gates in pairs: receive and take the first touch through a small gate to one side.'},
    {q:'Why does my child’s first touch bounce away?',a:'Usually the foot is stiff. Ask them to relax the ankle a little and pull the foot back as the ball arrives, like catching an egg.'}],
-  lessons:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],links:[G.firstTouch,G.cm,G.heading],featured:'receive-across-the-body'},
+  lessons:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],links:[G.firstTouch,G.cm,G.heading,G.scanning,G.manOn],featured:'receive-across-the-body'},
 
  {slug:'goalkeeper',kind:'skill',name:'Goalkeeper drills',title:'Soccer Goalkeeper Drills for Kids: Safe Basics for U10+',h1:'Soccer goalkeeper drills for kids',
   desc:'Soccer goalkeeper drills for kids from U10: set position, footwork, the W and basket catches, angles and distribution, all with soft, close service.',
@@ -214,7 +214,7 @@ const RAW:RawGuide[]=[
    {q:'What is the first thing to teach a young goalkeeper?',a:'The set position and how to catch: the W for balls above the waist and the basket for low ones. Confidence in their hands comes before diving.'},
    {q:'Should one child always play in goal?',a:'No. Rotating gives every player a feel for the position, and keeps the regular goalkeeper’s outfield skills growing.'},
    {q:'Can a goalkeeper pick up a back pass?',a:'Not if a teammate kicked it to them on purpose. They must use their feet. Our back-pass rule page explains the details.'}],
-  lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick],featured:'goalkeeper-catching-w-and-basket'},
+  lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick,G.sweeperKeeper,G.cleanSheet,G.goalArea,G.shootOut],featured:'goalkeeper-catching-w-and-basket'},
  {slug:'defending',kind:'skill',name:'1v1 defending drills',/* Nov 23 2026 (seo-unindexed): crawled, not indexed, with the same "1v1 Defending Soccer Drill" title as the one-v-one-defending drill page; the guide
      now targets "defending soccer drills for kids" (the URL's own words) and leaves "1v1 defending drill" to the drill */
   title:'Defending Soccer Drills for Kids: 10 Drills, U8 to U12',h1:'1v1 defending soccer drills for kids',
@@ -234,7 +234,7 @@ const RAW:RawGuide[]=[
    {q:'What is the best 1v1 defending drill?',a:'A 1v1 in a narrow channel: the defender passes to the attacker, closes them down and tries to stop the dribble over the line. It repeats the real moment many times in a few minutes.'},
    {q:'At what age should kids learn to defend 1v1?',a:'They start at U6 and U8 by stealing the ball in tag games. The approach and the body shape are taught from about U10, when players can think about the goal behind them.'},
    {q:'Should young defenders slide tackle?',a:'Most youth coaches teach young players to stay on their feet. A defender on the ground is out of the play, and a slide tackle that misses the ball is a foul.'}],
-  lessons:['def_7_goalside','def_f_goalside','learn9_cover','def_11_pressurecover'],links:[G.goalSide,G.tackle,G.pressing,plan('u10-1v1-practice-plan','U10 1v1 practice plan','A whole session on 1v1 attacking and defending')],featured:'one-v-one-defending'},
+  lessons:['def_7_goalside','def_f_goalside','learn9_cover','def_11_pressurecover'],links:[G.goalSide,G.tackle,G.pressing,G.jockeying,G.cover,G.lowBlock,plan('u10-1v1-practice-plan','U10 1v1 practice plan','A whole session on 1v1 attacking and defending')],featured:'one-v-one-defending'},
 ];
 export const DRILL_GUIDES:readonly DrillGuide[]=RAW.map(r=>{
  if(DRILLS.some(d=>d.slug===r.slug))throw new Error(`guide ${r.slug} has the slug of a drill`);
