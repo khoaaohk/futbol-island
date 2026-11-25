@@ -525,7 +525,9 @@ async function jitterRun(p, k, ms, fixed, roof) {
     let paxMesh = null, paxN = -1; f.trains.carMatrixOf(k, 0, m); const c0 = new V().setFromMatrixPosition(m);
     scene.traverse((o) => { if (!paxMesh && o.isInstancedMesh && /^train-pax-/.test(o.name) && o.count > 0) { for (let n = 0; n < o.count; n++) { o.getMatrixAt(n, m); if (q.setFromMatrixPosition(m).distanceTo(c0) < 13) { paxMesh = o; paxN = n; break; } } } });
     const realRaf = window.requestAnimationFrame.bind(window), realPerf = performance.now.bind(performance), realDate = Date.now;
-    let V0 = realPerf(), Vt = V0, lastTs = -1; const dBase = realDate() - V0;
+    // Date.now is already the init script's skewed clock (n() + __skew): take the skew out of the base, or the fixed run counts it twice
+    // and its first frame jumps the train to another place in the timetable (Nov 25 2026: the desktop `left` / `seat` fixed-dt spikes)
+    let V0 = realPerf(), Vt = V0, lastTs = -1; const dBase = realDate() - (window.__skew || 0) - V0;
     if (fixed) { window.requestAnimationFrame = (cb) => realRaf((t) => { if (t !== lastTs) { lastTs = t; Vt += 1000 / 60; } cb(Vt); }); performance.now = () => Vt; Date.now = () => dBase + Vt + (window.__skew || 0); }
     let rafTs = 0; const tap = (t) => { rafTs = t; if (live) realRaf2(tap); }; let live = true; const realRaf2 = window.requestAnimationFrame.bind(window); realRaf2(tap);
     const put = (arr, x, y, z) => { q.set(x, y, z).project(cam); arr.push(q.z < 1 && Math.abs(q.x) < 1.5 && Math.abs(q.y) < 1.5 ? [(q.x + 1) / 2 * W, (1 - q.y) / 2 * H] : null); };
