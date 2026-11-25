@@ -87,7 +87,7 @@ const ES:Record<RulePlaySlug,PlayEs>={
    'no-goal':{name:'No hay gol directo de saque de banda',explain:'No se puede meter gol directo de un saque de banda. Otro jugador tiene que tocar el balón primero.',
     example:'Un saque largo pasa por encima de todos y entra directo en el arco del otro equipo.',next:'No es gol: es saque de meta. Si entra directo en tu propio arco, es saque de esquina.'},
    offside:{name:'No hay fuera de juego en un saque de banda',explain:'Un jugador que recibe el balón directo de un saque de banda no puede estar en fuera de juego, esté donde esté.',
-    example:'Un delantero está detrás del último defensa y recibe un saque de banda.',next:'El juego sigue. El que recibe no está en fuera de juego.'}},
+    example:'Un delantero está detrás del penúltimo defensa y recibe un saque de banda.',next:'El juego sigue. El que recibe no está en fuera de juego.'}},
   game:{choices:{foul:'Incorrecto',good:'Bueno'},top:'Todas bien. Podrías ser el árbitro asistente con la bandera.',
    words:{title:'¿Saque bueno o incorrecto?',intro:'Tú eres el árbitro. Lee cómo se hizo el saque de banda y decide. Un saque incorrecto le da el saque al otro equipo.',
     how:'Desliza a la derecha para bueno y a la izquierda para incorrecto. O toca un botón.'},

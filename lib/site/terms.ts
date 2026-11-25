@@ -555,7 +555,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   answer:'The far post in soccer (football) is the goalpost that is farther from the ball. The near post is the one closer to the ball. Attackers run to the far post because a cross or a shot that goes past everyone often ends up there.',
   scene:{title:'A far-post run',who:'7@88,82 9@60,88 11@26,76 !3@78,86 !5@49,88 !2@38,82 !G@54,96',ball:[87,83],passes:['87,83>43,92'],runs:['26,76>41,91','60,80>60,88'],
    caption:'Number 7 crosses from the right. Number 9 runs to the near post and takes a defender along. Number 11 arrives late at the far post, behind the defenders, and meets the ball in front of an open goal.'},
-  howTitle:'How do you make a far-post run?',how:['Start away from the goal, so you can run on to the ball.','Stay behind the last defender’s shoulder, where they cannot see you and the ball together.',
+  howTitle:'How do you make a far-post run?',how:['Start away from the goal, so you can run on to the ball.','Stay on the second-last defender’s shoulder, where they cannot see you and the ball together.',
    'Arrive as the ball arrives. Do not stand and wait at the post.','Keep the finish simple: pass the ball into the goal with the inside of the foot.'],
   mistakes:['Every attacker running to the near post, so nobody is at the far post.','Arriving too early and standing still next to a defender.','Watching the cross from outside the penalty area.'],
   formats:'In 7v7 and 9v9 the far-post runner is often the wide player from the other side of the field. In 11v11 one attacker goes near, one goes far and one waits for the cutback. In futsal the far post is where many goals are scored, with a simple tap-in from a pass across the goal.',

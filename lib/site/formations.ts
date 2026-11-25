@@ -284,7 +284,7 @@ const RAW:Raw[]=[
    {spot:'The front two have no width of their own.',cover:'The wide midfielders run outside them, one at a time.',lesson:'nx9_twostrikers'},
    {spot:'If a wide midfielder joins the attack, the midfield is one short.',cover:'The other two midfielders slide across, and the three is rebuilt as soon as the ball is lost.',lesson:'nx9_midfieldjoins'},
    {spot:'Two strikers pressing three defenders can be passed around.',cover:'A wide midfielder joins the press only when the others protect behind.',lesson:'next9_frontpairpress'}],
-  attack:'With the ball, the wide midfielders move up outside the strikers. One striker comes short to link with the midfield and the other stays on the last defender.',
+  attack:'With the ball, the wide midfielders move up outside the strikers. One striker comes short to link with the midfield and the other stays level with the second-last defender.',
   defend:'Without the ball, the three midfielders stay in one line in front of the three defenders. The two strikers stand between the other team’s defenders and midfielders.',
   suits:'Teams with two forwards who enjoy playing together, and wide midfielders who can run up and back. Good for players aged 11 and 12.',
   faq:[

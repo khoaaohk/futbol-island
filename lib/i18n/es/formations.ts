@@ -220,7 +220,7 @@ export const FORMATIONS_ES:Readonly<Record<string,FormationEs>>={
   weak:[{spot:'Los dos de adelante no tienen ancho propio.',cover:'Los mediocampistas abiertos corren por fuera de ellos, uno a la vez.'},
    {spot:'Si un mediocampista abierto se suma al ataque, al mediocampo le falta uno.',cover:'Los otros dos mediocampistas se corren, y el trío se rearma en cuanto se pierde el balón.'},
    {spot:'Dos delanteros que presionan a tres defensas pueden ser superados con pases.',cover:'Un mediocampista abierto se suma a la presión solo cuando los demás protegen atrás.'}],
-  attack:'Con el balón, los mediocampistas abiertos suben por fuera de los delanteros. Un delantero viene corto para unirse con el mediocampo y el otro se queda con el último defensa.',
+  attack:'Con el balón, los mediocampistas abiertos suben por fuera de los delanteros. Un delantero viene corto para unirse con el mediocampo y el otro se queda a la altura del penúltimo defensa.',
   defend:'Sin el balón, los tres mediocampistas se quedan en una línea delante de los tres defensas. Los dos delanteros se colocan entre los defensas y los mediocampistas del otro equipo.',
   suits:'Equipos con dos delanteros a los que les gusta jugar juntos, y mediocampistas abiertos que pueden subir y bajar. Bueno para jugadores de 11 y 12 años.',
   faq:[{q:'¿Cuál es la diferencia entre el 3-3-2 y el 3-2-3?',a:'Un jugador. El 3-3-2 tiene un mediocampista más y dos delanteros en el medio. El 3-2-3 tiene un delantero más y dos de los delanteros empiezan abiertos. El 3-3-2 es más fuerte en el medio. El 3-2-3 es más ancho adelante.'},

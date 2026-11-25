@@ -219,10 +219,10 @@ export const POSITIONS_ES:Readonly<Record<string,PositionEs>>={
    {q:'¿Cómo evita el delantero centro el fuera de juego?',a:'Esperando a la altura del penúltimo defensa hasta que salga el pase, y luego corriendo. Un delantero que arranca demasiado pronto queda en fuera de juego.'},
    {q:'¿Qué es aguantar el balón?',a:'Quedarte con el balón de espaldas al arco mientras un defensa te empuja por detrás. Les da tiempo a tus compañeros para subir y unirse al ataque.'}],
   notes:{
-   coach:'Enséñale al delantero centro a empezar sus carreras desde un lugar donde pueda ver el balón y al último defensa, para quedarse habilitado.',
+   coach:'Enséñale al delantero centro a empezar sus carreras desde un lugar donde pueda ver el balón y al penúltimo defensa, para quedarse habilitado.',
    match:'Un momento conocido: el delantero centro arranca demasiado pronto y le marcan fuera de juego. Un paso atrás y una carrera más tarde lo habrían dejado habilitado.',
    ages:[['U8','El 4v4 no tiene fuera de juego ni un delantero fijo, pero todos los niños deben aprender a tirar cuando ven el arco.'],
-    ['U10','En 7v7 el fuera de juego empieza en la línea de salida, así que el delantero aprende a fijarse en el último defensa.'],
+    ['U10','En 7v7 el fuera de juego empieza en la línea de salida, así que el delantero aprende a fijarse en el penúltimo defensa.'],
     ['U12','Con el fuera de juego completo desde la línea media en 9v9, medir las carreras se vuelve la habilidad clave del delantero centro.'],
     ['U13 and up','En 11v11 un delantero centro solo adelante aprende a aguantar el balón hasta que lleguen los mediocampistas.']],
    mistakes:['Quedarse junto al portero esperando el balón y caer en fuera de juego.','No perseguir el balón cuando se pierde, así el otro equipo sale jugando fácil.']}},

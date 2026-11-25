@@ -34,8 +34,8 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
    {q:'¿Cómo se le explica el fuera de juego a un niño?',a:'Con una frase: cuando un compañero te pasa el balón hacia adelante, dos jugadores del otro equipo, casi siempre el portero y un defensa, tienen que estar a tu altura o más cerca de su propia línea de meta. En tu propia mitad, o detrás del balón, siempre estás habilitado. Si estás en fuera de juego, el otro equipo saca un tiro libre indirecto.'},
    {q:'¿Hay fuera de juego en el fútbol 7v7?',a:'En las normas de U.S. Soccer, sí, pero solo entre la línea de salida y la línea de meta. Tu liga puede ser distinta, así que revisa sus reglas.'}],
   notes:{
-   coach:'Enseña a los delanteros a mirar la línea del último defensa justo antes de que un compañero pase, y a empezar la carrera cuando sale el pase.',
-   match:'Una confusión común en la banda: un delantero está detrás del último defensa cuando llega el balón, pero estaba a su altura cuando lo patearon. Ese jugador estaba habilitado.',
+   coach:'Enseña a los delanteros a mirar la línea del penúltimo defensa justo antes de que un compañero pase, y a empezar la carrera cuando sale el pase.',
+   match:'Una confusión común en la banda: un delantero está detrás del penúltimo defensa cuando llega el balón, pero estaba a su altura cuando lo patearon. Ese jugador estaba habilitado.',
    ages:[['U8','No hay fuera de juego en el 4v4 de U6 y U8, así que los niños pueden pararse donde quieran.'],
     ['U10','En 7v7, un jugador solo puede estar en fuera de juego entre la línea de salida y la línea de meta.'],
     ['U12','Desde el 9v9 de U11 y U12, el fuera de juego completo se aplica en todo el campo contrario.']]}},
