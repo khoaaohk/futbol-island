@@ -3,7 +3,10 @@
 //  1. the model: 8 stamps, each with one ink, a football fact and its source; collect → persist → read back; a second visit keeps
 //     the first date; tilt ±4° and offset ±2 fixed at stamping; junk sanitised; "line complete" at 5 stations, "complete" on the 8th;
 //  2. synced with a save code (SYNC_KEYS) and tiny; analytics ids allowlisted (is: family) with labels and call sites;
-//  3. the art: 8 original SVGs, round ring + name + a football + the ink filter, unique ids per instance, small;
+//  3. the art (v2, Nov 24 2026: more intricate): 8 original SVGs, triple ring with an ornament band + name + a football + the ink
+//     filter, layered scenes (masks) shaded with hatch patterns, a date plate (the stamping date from the book), unique ids per
+//     instance, each ≤ 20 KB;
+//  3b. the stamp stands: a desk + pad + chained stamp + sign on every platform (signs in ONE mesh), pad + stamp at the counters;
 //  4. the station houses' hover/tap boxes stand on the five stations; the prompt wants the HUD slot near a house and on hover;
 //  5. the wiring: Town (glow + Collect stamp + tap), the three counters' "Can I get a stamp?", the backpack shelf, the host.
 // usage: node tests/island-stamps.cjs
@@ -65,9 +68,15 @@ const A=load('lib/town/stampArt.ts');
 for(const s of M.STAMPS){const svg=A.stampSvg(s.id);
  ok(svg.startsWith('<svg')&&svg.includes('viewBox="0 0 200 200"')&&svg.includes(`color:${s.ink}`),`${s.id}: one-ink SVG`);
  ok(svg.includes(s.name.toUpperCase())&&svg.includes('feTurbulence')&&svg.includes('feDisplacementMap'),`${s.id}: name on the ring, ink texture`);
- ok((svg.match(/r="93"/g)||[]).length>=1&&(svg.match(/<circle[^>]*r="(?:[4-9]|1[0-3])(?:\.\d)?"/g)||[]).length>=1,`${s.id}: round ring and a football in the scene`);
- ok(svg.length<14000,`${s.id}: small (${svg.length} bytes)`);
+ ok((svg.match(/r="95"/g)||[]).length>=1&&(svg.match(/<circle[^>]*r="(?:[4-9]|1[0-3])(?:\.\d)?"/g)||[]).length>=1,`${s.id}: round ring and a football in the scene`);
+ ok(svg.length<=20480,`${s.id}: small (${svg.length} bytes)`);
+ ok((svg.match(/<pattern /g)||[]).length>=4&&(svg.match(/<mask /g)||[]).length>=2&&(svg.match(/url\(#st-[^)]*-[dbhxs]\)/g)||[]).length>=3,`${s.id}: layered scene shaded with hatching`);
+ ok(/stroke-dasharray|M[\d.]+ [\d.]+L[\d.]+ [\d.]+M/.test(svg)&&(svg.match(/<circle cx="100" cy="100"/g)||[]).length>=4,`${s.id}: ornamental triple ring`);
+ ok(!/id="st-/.test(svg.replace(new RegExp(`id="st-${s.id}-`,'g'),'')),`${s.id}: every id carries the instance prefix`);
  ok((s.where==='station')===svg.includes('ISLAND LINE'),`${s.id}: Island Line on the station stamps`);}
+ok(A.stampSvg('west','w','24.11.26').includes('>24.11.26</text>')&&!A.stampSvg('west').includes('24.11.26'),'the date plate shows the stamping date (an empty date box without one)');
+ok(M.stampPlateDate(new Date(2026,10,4,12).getTime())==='04.11.26','plate date reads dd.mm.yy');
+ok(/stampSvg\(def\.id,`\$\{def\.id\}-\$\{slot\}`,stampPlateDate\(mark\.at\)\)/.test(read('components/StampBook.tsx')),'the book passes the stamping date');
 const two=A.stampSvg('west','a')+A.stampSvg('west','b');ok(!two.match(/id="st-a-f"[\s\S]*id="st-a-f"/)&&two.includes('id="st-b-f"'),'unique filter ids per instance');
 
 // ---- 4. station houses + prompt ----
@@ -84,7 +93,22 @@ upd(W.x-20,W.z+20,W.y);ok(prompt.pick(ray)?.id==='west','a tap ray on the house 
 prompt.hover(ray,0);ok(upd(W.x-20,W.z+20,W.y)?.distance===-1,'a hovered house wants the slot as explicit intent');
 ok(scene.getObjectByName('station-stamp-selection')?.getObjectByName('building-outline-glow').visible===true,'the hovered house gets the green outline');
 const far=new T.Raycaster();far.set(new T.Vector3(W.x-200,W.y+2,W.z),new T.Vector3(1,0,0));upd(W.x-200,W.z,W.y);ok(prompt.pick(far)===null,'too far away: no tap or hover');
+// the platform's stamp stand: hovering / tapping it picks its station, standing at it shows the button
+{const st=track.TRAIN_STATIONS.find(x=>x.id==='west'),L=load('lib/town/trainLayout.ts'),sp=L.stampStandSpot(st);
+ ok(Math.hypot(sp.x-W.stand.x,sp.z-W.stand.z)<.01,'west: the stand spot is the house record\'s stand');
+ const r2=new T.Raycaster();r2.set(new T.Vector3(sp.x-6,W.y+1,sp.z-6),new T.Vector3(6,0,6).normalize());upd(sp.x-6,sp.z-6,W.y);prompt.hover(null,1e6);
+ const hitStand=prompt.pick(r2);ok(hitStand?.id==='west','a tap ray on the stamp stand picks its station');
+ prompt.hover(null,2e6);const by=L.stationSpot(st,L.STAMP_STAND_U+2.3,L.stationHouseFront(st)-L.STAMP_STAND_BACK);
+ ok(Math.hypot(by.x-W.x,by.z-W.z)>P.STAMP_REACH&&upd(by.x,by.z,W.y)?.key===P.STAMP_FOCUS_KEY,'standing by the stand (beyond the house reach) wants the HUD slot');
+ const all=houses.map(h=>Math.hypot(h.stand.x-h.x,h.stand.z-h.z));ok(all.every(d=>d>4&&d<8),`each stand stands by its house (${all.map(d=>d.toFixed(1)).join(', ')} m)`);}
 prompt.dispose();
+// ---- 3b. the stands and counter props (source checks; the world build needs a DOM canvas) ----
+{const w=read('lib/town/trainWorld.ts');
+ ok(/STAMP_STAND_U/.test(w)&&/emit\(ink,inkHex/.test(w)&&/cap\.beam\(a,m/.test(w),'trainWorld: desk, inked pad and rubber, and the chain on every platform');
+ ok(/name='station-stamp-signs'/.test(w)&&(w.match(/new T\.Mesh\(/g)||[]).length<=6,'the five stand signs are ONE mesh (+1 draw for the line)');
+ ok(/SIGN_CELL/.test(w)&&/'STAMP'/.test(w),'the sign cells are painted into the station board atlas');
+ for(const [f,ink] of [['lib/konbini/konbiniScene.ts','#d06a1e'],['lib/museum/museumScene.ts','#7a5a2e'],['lib/shop/shopScene.ts','#2d6fa8']])
+  ok(read(f).includes('Island stamp book (Nov 24 2026)')&&read(f).includes(ink),`${f}: an ink pad and stamp in the stamp's ink at the counter`);}
 
 // ---- 5. wiring ----
 const town=read('components/Town.tsx');

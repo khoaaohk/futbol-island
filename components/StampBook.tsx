@@ -17,7 +17,7 @@
  * open; two short timers for the stamping moment, cleared on close; no rAF.
  */
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
-import {STAMPS,STAMP_PAGES,STAMP_IDS,readStamps,stampById,stampCount,lineComplete,bookComplete,stampDate,STAMP_BOOK_BONUS,type StampId,type StampSave} from '@/lib/town/islandStamps';
+import {STAMPS,STAMP_PAGES,STAMP_IDS,readStamps,stampById,stampCount,lineComplete,bookComplete,stampDate,stampPlateDate,STAMP_BOOK_BONUS,type StampId,type StampSave} from '@/lib/town/islandStamps';
 import {stampSvg} from '@/lib/town/stampArt';
 import {STAMP_COINS} from '@/lib/town/islandStampsReward';
 import {playFishCue} from '@/lib/town/fishing/fishingDelightStore';
@@ -116,7 +116,7 @@ function Page({index,save,slot,fresh,phase,count,line,full,onJump}:{index:number
   <p className={styles.rallyNote}>+{STAMP_COINS} coins for each new stamp, +{STAMP_BOOK_BONUS} when the book is full.</p>
  </section>;
  const def=stampById(key)!,mark=save.stamps[def.id],isFresh=fresh===def.id,showInk=!!mark&&(!isFresh||phase==='inked'||phase==='done');
- const svg=mark?stampSvg(def.id,`${def.id}-${slot}`):'';
+ const svg=mark?stampSvg(def.id,`${def.id}-${slot}`,stampPlateDate(mark.at)):'';
  const writing=isFresh&&(phase==='inked'||phase==='done'),hideText=isFresh&&!writing;
  return <section className={styles.page} data-stamp-page={def.id} data-stamped={mark?'1':undefined} data-pressing={isFresh&&phase==='press'||undefined} data-writing={writing||undefined}>
   <p className={styles.pageNo}>{STAMP_IDS.indexOf(def.id)+1}</p>

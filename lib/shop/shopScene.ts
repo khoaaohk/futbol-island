@@ -238,6 +238,9 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  // Podium screens lie on the tilted graphite top (normal 0, .94, .34 before the podium's turn).
  for(const s of SHOP_STATIONS)sign(SIGN[`${s}Screen` as const],.74,{y:1.03+.03*.94,z:.03*.34,rx:-Math.PI/2+.35,parent:podiumFrame(s)});
  sign(SIGN.till,.44,{x:1.6,y:1.165,z:COUNTER.z-.325,rx:-.25});
+ // Island stamp book (Nov 24 2026): Femi's ink pad and the Kit Shop's rubber stamp by the till (the stamp's own blue ink).
+ {const sz=cz+.3;box(.17,.03,.12,P.graphite,{x:1.25,y:.995,z:sz});box(.135,.008,.09,'#2d6fa8',{x:1.25,y:1.013,z:sz});
+  box(.09,.016,.09,'#2d6fa8',{x:1.02,y:.988,z:sz});box(.1,.05,.1,P.graphite,{x:1.02,y:1.021,z:sz});box(.035,.075,.035,P.wood,{x:1.02,y:1.08,z:sz});box(.065,.04,.065,P.accent,{x:1.02,y:1.135,z:sz});}
 
  // ---- The boot a shopper holds up: one small boot from the same builder, its own (hidden until held) mesh.
  const propFrom=solid.length;boot(0,0,0,.42,0,BOOTS[3]);const propParts=solid.splice(propFrom);
