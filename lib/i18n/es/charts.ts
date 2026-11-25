@@ -108,6 +108,10 @@ export const LINKS_ES:Readonly<Record<string,LinkEs>>={
  '/tools/soccer-juggling-challenge':{name:'Reto de dominadas de fútbol',line:'Niveles de 5 a 100 toques y un registro de récords'},
  '/tools/soccer-team-name-generator':{name:'Generador de nombres de equipos de fútbol',line:'Nombres para un equipo infantil nuevo'},
  '/tools/8v8-lineup-builder':{name:'Creador de alineaciones de fútbol 8',line:'El fútbol 8 de España: portero y siete, con su cancha y sus reglas'},/* round 4D */
+ '/learn/soccer-practice-plans':{name:'Planes de entrenamiento de fútbol por edad',line:'Sesiones de U6 a U12 con horario, con la cancha y el balón correctos'},/* SEO batch D */
+ '/tools/soccer-practice-plan-generator':{name:'Generador de planes de entrenamiento de fútbol',line:'Un plan con horario para tu categoría, duración y tema'},
+ '/learn/soccer-drills/u6':{name:'Ejercicios de fútbol U6',line:'Juegos para niños de 5 y 6 años'},'/learn/soccer-drills/u8':{name:'Ejercicios de fútbol U8',line:'Juegos para niños de 7 y 8 años'},
+ '/learn/soccer-drills/u10':{name:'Ejercicios de fútbol U10',line:'Juegos para niños de 9 y 10 años'},'/learn/soccer-drills/u12':{name:'Ejercicios de fútbol U12',line:'Juegos para niños de 11 y 12 años'},
  '/learn/soccer-ball-size-by-age':{name:'Tamaño del balón de fútbol por edad',line:'Tamaño 3, 4 o 5 para cada categoría, con una tabla'},
  '/learn/soccer-field-size-by-age':{name:'Tamaño de la cancha de fútbol por edad',line:'Cancha, arco y duración del partido para cada categoría'},
  '/learn/soccer-age-groups':{name:'Las categorías de edad del fútbol explicadas',line:'De U6 a U19, fechas de nacimiento y el partido de cada una'},
