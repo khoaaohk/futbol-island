@@ -8,6 +8,15 @@
   home 703 -> 591 KB, LCP unchanged (1.6 s, the hero still). Less to download and decode; no runtime work added. No iPhone heat claim.
   Data: `.claude/worktrees/_recovery-nov20/seo-ai-speed/` (speed.cjs, before.json, after.json).
 
+## Island lighting retune: warm night, softer day, real traffic-light cycles (Nov 24 2026, branch `lighting-nov24`, local, not deployed, no phone test)
+
+Owner: night "too dark ... needs to feel warmer and more inviting"; day "too saturated"; the corner light by Pier Bakery "just blinking yellow". Bisect (same five camera spots, desktop): night plaza luma 81 (f04e1b3b) -> 80 (12d5e288) -> **65 (234531cb, batch 1 item B below: night hemi 1.15 -> .9, bluer fill)**; day saturation rose with 12d5e288 (pitch `#6e9678` -> `#78a970`) and 234531cb (bluer fill). Details and shots: `.claude/worktrees/_recovery-nov20/lighting/HANDOFF.md`.
+
+- **Constants only, no new lights, meshes, passes, textures or shader ALU.** Night preset (`islandLighting.ts`): hemi .9 -> 1.3 warm lavender `#b3abcb` over a warm brown bounce `#6a5646`, sky/haze `#2f3352`, moon .9 `#bcc6e6`, exposure 1. Day preset: greyer sky `#b4d3e3`, fill `#e1e8f1`, bounce `#a7a68f`, sun `#fff7ee`. Windows 1.3 (dusk .26), the four glass materials get four warm tones (`NIGHT_WINDOW_TONES`), lamp lens amber 2.7, sign night glow x1.2, pool gradient warmer and a little stronger. Sea: `SEA_TINT` ~25 % toward grey, emissive `#245a86`, `WATER_NIGHT_TINT` `(.9,.55,.4)` (the same one multiply: a slate-teal night sea instead of electric blue). Pitches `#7ba476` (stripes `#83b07e`).
+- **One small fill cost:** the default street-lamp pool is 12 m instead of 10 m (`STREET_POOL_SIZE`, world.ts): same instanced batches and 32 px texture, ~44 % more additive ground pixels under each street lamp at night only.
+- **Traffic lights** (`world.ts`, `trafficSignals.ts`, `streetTraffic.ts`): no head flashes. Corners and dead ends get no pole at all, and no head hangs over the short street inside a shared box; 50 heads at 17 junctions, all on a real cycle. `LAMP_RANGE` skip unchanged; the lamp mesh is still one draw.
+- **gfx-budget** (390x844 SwiftShader, GFX_SEED default; main lib df531e07 vs branch): tier 0 night town/shore/swim/stadium 158/102/94/76 -> 159/103/92-95/78; tier 4 night 154/91/80/67 -> 155/92/81/68; tier 0 day 152/98/89/73 -> 155/99/90/76. The static scene has 9 fewer meshes (node buildTown: 1203 -> 1194, the corner poles); the +1-3 draws also appear by day (no pools), so they come from townsfolk/car placement shifting once the pole obstacles are gone, not from the lighting. Programs, textures and geometries are equal or lower. Not measured on an iPhone.
+
 ## Zero-heat graphics batch 1: split greens, light ratio, richer load-time bake, window gradient (Nov 21 2026, branch `gfx-zero-heat-1`, local, not deployed, no phone test)
 
 Owner brief: make the island read better (pitches stand out, less milky, night with warm pools) with **no added heat**. Everything in this batch is a constant or one-time load work. Four commits, one per item, so any one can be dropped.
