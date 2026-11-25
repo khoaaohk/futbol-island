@@ -4,6 +4,7 @@ import {LEARN_FAQ,LEARN_FEATURES,LEARN_GROUPS,LEARN_GROWNUP_LINE,LEARN_HERO,LEAR
 import {learnAsset,learnMontage,learnSlideAsset,learnWideAsset,LEARN_THEME,type LearnImage} from '@/lib/site/learnMedia';
 import {hiddenMeta,LOGO_COLOURS,MARKETING_OVERVIEW_PATH} from '@/lib/site/marketing';
 import {CLUB_LABEL,CLUB_NAME,KIT_ART,KIT_ITEMS,KIT_NAVY,KIT_PACKAGE,KIT_PITCH,KIT_RULES,PLACEMENT_GROUPS,SPONSOR_KIT_LINE,SPONSOR_TAG,type KitItem} from '@/lib/site/kitDeck';
+import {TRAIN_ITEMS,TRAIN_MAROON,TRAIN_PACKAGE,TRAIN_PACKAGES,TRAIN_PITCH,TRAIN_RULES,type TrainItem} from '@/lib/site/trainDeck';
 import {DECK_PACKAGES,DECK_SLOTS,slotShare,slotSize,STADIUM_FAMILY_RULES,STADIUM_GREEN,STADIUM_NEXT,STADIUM_PITCH,type DeckSlot} from '@/lib/site/stadiumDeck';
 
 /**
@@ -20,6 +21,7 @@ import {DECK_PACKAGES,DECK_SLOTS,slotShare,slotSize,STADIUM_FAMILY_RULES,STADIUM
  *  on a tint field instead of drawn art) · Play together's three steps · the DRIP FC Stadium sponsor chapter (Nov 13 2026, owner:
  *  opener, an overhead plan with every sponsor spot numbered, each slot with its in-game screenshot, the packages, the family rules;
  *  copy and numbers in lib/site/stadiumDeck.ts) · the Kit Shop chapter (Nov 14 2026: Drip FC club kit as the example, lib/site/kitDeck.ts)
+ *  · the Island Line chapter (Nov 25 2026: branding on the trains, the Drip FC kindness wraps as the example, lib/site/trainDeck.ts)
  *  · every way a brand can appear, the packages and the family rules · questions · about · contact.
  * Every one of LEARN_FEATURES appears once (data-feature; the build script checks the count).
  */
@@ -212,23 +214,74 @@ function KitChapter(){
  </div>;
 }
 
+/** Island Line screenshots (public/marketing/train, 1280 x 720 WebP, shot at 1600 x 900 from a production build: scripts/shot-marketing-train.cjs). */
+const trainShot=(k:string,alt:string,focus?:string):Pic=>({img:{src:`/marketing/train/${k}.webp`,width:1280,height:720} as LearnImage,alt,focus});
+
+function TrainCard({x}:{x:TrainItem}){
+ return <article className={s.slotCard} data-train-item={x.id}>
+  <figure><Img p={trainShot(x.shot,`${x.name} on an Island Line train`)} className={s.slotImg}/><figcaption>{x.caption}</figcaption></figure>
+  <h3>{x.name}</h3>
+  <p className={s.slotLine}>{x.line}</p>
+  <dl className={s.slotSpec}><div><dt>Where</dt><dd>{x.where}</dd></div><div><dt>You send</dt><dd>{x.provide}</dd></div></dl>
+ </article>;
+}
+
+/** The Island Line sponsor chapter (lib/site/trainDeck.ts): the Drip FC kindness wraps as the live example. */
+function TrainChapter(){
+ const folio=TRAIN_PITCH.title;
+ return <div className={s.group} data-train-chapter="">
+  <Slide className={s.stadiumOpener} folio={folio} dark style={{background:TRAIN_MAROON}}>
+   <div className={s.openerText}>
+    <h2 className={s.openerTitle}>{TRAIN_PITCH.title}</h2>
+    <p className={s.openerBlurb}>{TRAIN_PITCH.blurb}</p>
+    <ul className={s.openerList}>{TRAIN_PITCH.points.map(x=><li key={x}>{x}</li>)}</ul>
+   </div>
+   <Img p={trainShot('hero','Island Line trains in Drip FC kindness wraps at North Beach station','34% 50%')} className={s.stadiumHero}/>
+  </Slide>
+
+  <Slide className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:TRAIN_MAROON}}>Where your brand rides</h2></div>
+   <div className={s.slotRow}>{TRAIN_ITEMS.map(x=><TrainCard key={x.id} x={x}/>)}</div>
+  </Slide>
+
+  <Slide className={s.familyPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:TRAIN_MAROON}}>How train wraps work for kids</h2></div>
+   <div className={s.familyBody}>
+    <div className={s.familyRules}>{TRAIN_RULES.map(r=><div key={r.title}><h3>{r.title}</h3><p>{r.text}</p></div>)}
+     <div className={s.kitArt}><h3>What you send, once</h3>
+      <dl className={s.slotSpec}>{KIT_ART.map(a=><div key={a.name}><dt>{a.name}</dt><dd>{a.spec}. {a.example}</dd></div>)}</dl>
+      <p>The same files as the Kit Shop. The team draws the panels, the slogan pill and the cab badge round them.</p>
+     </div>
+    </div>
+    <aside className={s.familyNext}>
+     <Img p={trainShot('slogan','A slogan panel: the Drip FC crest beside “Help a friend up!”')} className={`${s.familyImg} ${s.kitLabelImg}`}/>
+     <h3 className={s.h3}>One train or the whole line</h3>
+     <ul className={s.trainPacks}>{TRAIN_PACKAGES.map(x=><li key={x.id} data-train-package={x.id}><b>{x.name}:</b> {x.line}</li>)}</ul>
+     <p>Set up with the team, which draws the wraps from your art. Drip FC is shown as the example: it is the club partner on the trains today.</p>
+    </aside>
+   </div>
+  </Slide>
+ </div>;
+}
+
 /** After both chapters: every placement in one list, the packages, and how it works for families. */
 function SponsorClose(){
  const folio='Sponsors';
  const pack=[...DECK_PACKAGES.map(x=>({id:x.id as string,pin:x.pin as number|null,name:x.name as string,line:x.line as string,today:x.today as string,p:shot(x.shot,x.id==='feed'?'The live broadcast feed on the back of the big screen, DRIP FC logo top right':'DRIP FC Stadium floodlit at night'),cap:x.id==='feed'?'The back of the big screen during a match':'The stadium at night'})),
-  {id:KIT_PACKAGE.id,pin:null,name:KIT_PACKAGE.name,line:KIT_PACKAGE.line,today:KIT_PACKAGE.today,p:kitShot(KIT_PACKAGE.shot,'The ready-made Drip FC shirt and boots in the Kit Shop'),cap:'The ready-made Drip FC kit (example)'}];
+  {id:KIT_PACKAGE.id,pin:null,name:KIT_PACKAGE.name,line:KIT_PACKAGE.line,today:KIT_PACKAGE.today,p:kitShot(KIT_PACKAGE.shot,'The ready-made Drip FC shirt and boots in the Kit Shop'),cap:'The ready-made Drip FC kit (example)'},
+  {id:TRAIN_PACKAGE.id,pin:null,name:TRAIN_PACKAGE.name,line:TRAIN_PACKAGE.line,today:TRAIN_PACKAGE.today,p:trainShot(TRAIN_PACKAGE.shot,'The three Island Line trains in Drip FC kindness wraps'),cap:'The Drip FC train wraps (example)'}];
  return <div className={s.group} data-sponsor-close="">
   <Slide className={s.slotPage} folio={folio}>
    <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Every way your brand can appear</h2></div>
-   <div className={s.allBody}>{PLACEMENT_GROUPS.map(g=><div key={g.id} className={s.allGroup} data-placement-group={g.id}>
+   <div className={s.allBody}>{[PLACEMENT_GROUPS.slice(0,1),PLACEMENT_GROUPS.slice(1)].map((col,c)=><div key={c} className={s.allCol}>{col.map(g=><div key={g.id} className={s.allGroup} data-placement-group={g.id}>
     <h3>{g.title}</h3><p className={s.allLine}>{g.line}</p>
     <ul>{g.items.map(i=><li key={i.id} data-placement={i.id}><b>{i.name}</b><span>{i.where}</span><em>{i.share}</em></li>)}</ul>
-   </div>)}</div>
+   </div>)}</div>)}</div>
   </Slide>
 
   <Slide className={s.slotPage} folio={folio}>
-   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Packages: the name, the broadcast and the kit</h2></div>
-   <div className={s.slotRow}>{pack.map(x=><article key={x.id} className={s.packCard} data-stadium-package={x.id}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Packages: the name, the broadcast, the kit and the trains</h2></div>
+   <div className={`${s.slotRow} ${s.packRow4}`}>{pack.map(x=><article key={x.id} className={s.packCard} data-stadium-package={x.id}>
     <figure><Img p={x.p} className={s.packImg}/><figcaption>{x.cap}</figcaption></figure>
     <h3>{x.pin?<Pin n={x.pin}/>:null}{x.name}</h3>
     <p className={s.slotLine}>{x.line}</p>
@@ -342,6 +395,8 @@ export default function Overview(){
   <StadiumChapter/>
   {/* ---- the Kit Shop: club kit kids choose ---- */}
   <KitChapter/>
+  {/* ---- the Island Line: kindness train wraps ---- */}
+  <TrainChapter/>
   {/* ---- every placement, the packages, families ---- */}
   <SponsorClose/>
 

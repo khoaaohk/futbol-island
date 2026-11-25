@@ -7,6 +7,7 @@
 // state>", "reason": "..." }]. A matched offender is listed as allowed, never as a failure.
 // Needs a dev or production server: NEXT_DIST_DIR=.next-align npx next dev -p 9189   (never 8092 / 9160)
 // Run: npm run check:ui-align -- --port=9189 | --url=https://futbolisland.app [--only=site|game] [--vp=phone|desktop] [--json=<file>] [--shots=<dir>] [--report]
+//      [--paths=/marketing,/marketing/overview]: measure only these site pages (no discovery, no game rooms; use with --only=site).
 //      --report: print and exit 0 even with offenders. ONE headless Chrome (--mute-audio), closed at the end.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -104,6 +105,8 @@ const firstLink = (p, prefix) => p.evaluate((pre) => { const a = [...document.qu
 
 async function site(b, v) {
   const { ctx, p } = await newPage(b, v);
+  const pathsArg = arg('paths', '');
+  if (pathsArg) { for (const u of pathsArg.split(',')) { try { await go(p, u); await measure(p, u, v.name); } catch (e) { missed.push(`${u}/${v.name}: ${e.message.slice(0, 60)}`); } } await ctx.close(); return; }
   const fixed = [['home', '/'], ['games', '/games'], ['library', '/library'], ['marketing', '/marketing'], ['books', '/books'], ['tools', '/tools']];
   const discover = [['game-page', '/games', '/games/'], ['book', '/books', '/books/'], ['tool', '/tools', '/tools/'], ['rule', '/learn/soccer-rules', '/learn/soccer-rules/'],
     ['term', '/learn/soccer-terms', '/learn/soccer-terms/'], ['quiz', '/learn/quizzes', '/learn/quizzes/'], ['es-home', null, '/es'], ['es-games', '/es', '/es/games'], ['es-learn', '/es', '/es/learn/']];
