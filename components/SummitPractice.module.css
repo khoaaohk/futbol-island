@@ -1,26 +1,27 @@
+/* Owner Nov 25 2026 (shot 84: "make this look like the other information bars and not the green colours"): the island's cream info-bar look (TrainRideHud .note: #fff1d3, green ink, gold drop). */
 /* Summit 5s practice HUD (components/SummitPracticeHud.tsx). The camera and Exit buttons borrow LiveJoinHud.module.css's .cam and
    .leave (the live games' look); the rest uses the island's button tokens. Static; the toast animates once (none
    with reduced motion). Every target is 44 px or more. */
 .hud{position:absolute;inset:0;z-index:34;pointer-events:none}
 .hud>button,.card,.tray{pointer-events:auto}
-.card{position:absolute;left:50%;top:calc(var(--island-hud-row-top,16px) + var(--island-hud-row-height,44px) + 12px);translate:-50% 0;box-sizing:border-box;width:min(440px,calc(100% - 32px));padding:10px 14px 12px;border:2px solid #fff2cd;border-radius:16px;background:#294f43f0;color:#fff4d8;font:14px/1.4 var(--font-body,Arial),sans-serif}
+.card{position:absolute;left:50%;top:calc(var(--island-hud-row-top,16px) + var(--island-hud-row-height,44px) + 12px);translate:-50% 0;box-sizing:border-box;width:min(440px,calc(100% - 32px));padding:10px 14px 12px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;font:14px/1.4 var(--font-body,Arial),sans-serif}
 .title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0}
-.title strong{font-weight:800;font-size:16px;line-height:1.2;color:#ffd98a}
-.cam{font-size:13px;line-height:1.2;color:#cfe6da}
+.title strong{font-weight:800;font-size:16px;line-height:1.2;color:#244d40}
+.cam{font-size:13px;line-height:1.2;color:#6b6a4f}
 .tip{margin:4px 0 0;font-size:14px;line-height:1.4}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
 .card .row{justify-content:flex-start}
 .btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;height:44px;padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#f4cc7c) var(--btn-grain,none) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 4px 0 #a8863d);font:800 14px/1 var(--font-body,Arial),sans-serif;white-space:nowrap;cursor:pointer;touch-action:manipulation;transition:translate .14s,box-shadow .14s}
 .btn:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #a8863d)}
-.mint{background:var(--btn-mint,#beded1);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
-.mint:active{box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
+.mint{background:#bfe0ef;box-shadow:0 4px 0 #7fa7bb}/* shot 84: the island's sky-blue chip (Map button), not green */
+.mint:active{box-shadow:0 1px 0 #7fa7bb}
 .btn:disabled,.add:disabled{opacity:.5;cursor:default;translate:none}
-.btn:focus-visible,.add:focus-visible{outline:3px solid #fff4d8;outline-offset:2px}
-.tray{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));translate:-50% 0;box-sizing:border-box;width:min(440px,calc(100% - 32px));padding:2px 12px 12px;border:2px solid #fff2cd;border-radius:16px;background:#294f43f0;color:#fff4d8}
+.btn:focus-visible,.add:focus-visible{outline:3px solid #244d40;outline-offset:2px}
+.tray{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));translate:-50% 0;box-sizing:border-box;width:min(440px,calc(100% - 32px));padding:2px 12px 12px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d}
 .tray .row{justify-content:center}
-.add{display:grid;place-items:center;box-sizing:border-box;width:48px;height:48px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:50%;background:#fff4d8;box-shadow:0 3px 0 #a8863d;cursor:pointer;touch-action:manipulation;transition:translate .14s,box-shadow .14s}
+.add{display:grid;place-items:center;box-sizing:border-box;width:48px;height:48px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:50%;background:#fffaf0;box-shadow:0 3px 0 #a8863d;cursor:pointer;touch-action:manipulation;transition:translate .14s,box-shadow .14s}
 .add:active{translate:0 3px;box-shadow:0 0 0 #a8863d}
-.sel{display:inline-flex;align-items:center;min-height:44px;font-weight:800;font-size:15px;line-height:1.2;color:#ffd98a}
+.sel{display:inline-flex;align-items:center;min-height:44px;font-weight:800;font-size:15px;line-height:1.2;color:#244d40}
 .toast{position:absolute;left:50%;top:42%;translate:-50% 0;margin:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:0 18px;border:2px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;font:800 15px/1 var(--font-body,Arial),sans-serif;white-space:nowrap;pointer-events:none;animation:toast 2.6s ease-out both}
 @keyframes toast{0%{opacity:0;scale:.9}10%{opacity:1;scale:1}80%{opacity:1}100%{opacity:0;visibility:hidden}}
 
