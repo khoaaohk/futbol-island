@@ -390,7 +390,7 @@ async function partFraming(c) {
       const d = await p.evaluate((k) => { const f = window.__fi2, cam = f.camera, M = cam.matrixWorld.constructor, m = new M(), q = cam.position.clone(); cam.updateMatrixWorld(); f.trains.carMatrixOf(k, 0, m); q.applyMatrix4(m.clone().invert());
         const st = f.trains.states[k], a = f.trains.sched.trackAt((st.s + 30) % 2700), b = cam.position.clone().set(a.x, f.trains.sched.bed((st.s + 30) % 2700) + .5, a.z).project(cam);
         return { view: f.trainRide.view, x: +q.x.toFixed(2), y: +q.y.toFixed(2), z: +q.z.toFixed(2), ahead: [+b.x.toFixed(2), +b.y.toFixed(2), +b.z.toFixed(2)], kenji: !!(f.kenji && f.kenji.root && f.kenji.root.visible) }; }, k);
-      check(`framing ${name} driver: in the leading cab, the line ahead on screen, no Kenji`, d.view === 'driver' && d.z > 4.75 && d.z < 6 && Math.abs(d.x) < 1.1 && Math.abs(d.ahead[0]) < .9 && Math.abs(d.ahead[1]) < .95 && d.ahead[2] < 1 && !d.kenji, JSON.stringify(d));
+      check(`framing ${name} driver: just ahead of the leading cab's windscreen (POLISH 3, shot 67), the line ahead on screen, no Kenji`, d.view === 'driver' && d.z > 6.1 && d.z < 6.6 && Math.abs(d.x) < 1.1 && Math.abs(d.ahead[0]) < .9 && Math.abs(d.ahead[1]) < .95 && d.ahead[2] < 1 && !d.kenji, JSON.stringify(d));
       if (shots) await p.screenshot({ path: path.join(shots, `framing-${name}-driver-${phone ? 'phone' : 'desktop'}.png`) }); }
   }
   await p.evaluate(() => window.__fi2.trainRide.setView('seat'));

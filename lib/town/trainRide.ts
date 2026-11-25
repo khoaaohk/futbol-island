@@ -93,7 +93,10 @@ export const TRAIN_VIEWS=['seat','driver','front','back','left','right','above',
  *  the train is going), driver's height, a little back from the windscreen so its frame, the wipers and the desk's top edge show;
  *  locked to this frame's car matrix (no smoothing, no bob); a small look round (±35° / ±15°) that eases back when let go. Kenji is
  *  hidden in it (his warnings come as the ride's note). */
-export const DRIVER={x:0,eye:1.5,z:5.5,look:20,down:.05,yaw:.61,pitch:.26,fov:62,portraitFov:78,back:2.5} as const;
+// POLISH 3 (owner shot 67: "remove the wipers, the divider and the bottom piece, just the view of the train moving forward"): the eye
+// is 0.35 m AHEAD of the windscreen (cab face z 6.0, wipers 6.02), so no cab part is in frame even at the full ±35° / ±15° look
+// (the cab sides are > 100° off the look; the coupler and skirt far below the lowest pitch); it stays locked to car 0's matrix.
+export const DRIVER={x:0,eye:1.5,z:6.35,look:20,down:.05,yaw:.61,pitch:.26,fov:62,portraitFov:78,back:2.5} as const;
 export type TrainView=typeof TRAIN_VIEWS[number];
 export const TRAIN_VIEW_LABEL:Record<TrainView,string>={seat:'Seat view',front:'Front view',back:'Back view',left:'Left side',right:'Right side',above:'From above',inside:'Inside view',driver:"Driver's view"};
 /** The outside views: the look point (m behind the train's nose, height over the rail bed), the camera's bearing from it (rad: 0 ahead
