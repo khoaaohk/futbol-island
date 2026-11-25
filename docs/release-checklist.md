@@ -13,6 +13,10 @@ It runs, in order, and stops at the first failure:
 2. `npm run build:quiet`: a production build (into `NEXT_DIST_DIR`, default `.next`).
 3. `npm run smoke:fishing`: **can a kid fish?** (scripts/smoke-fishing.mjs, about 1.5 minutes).
 
+Also before every push that adds or changes UI (owner, Nov 24 2026): `npm run check:ui-align -- --port=<your dev or `next start`
+port>` (scripts/check-ui-alignment.cjs, the UI alignment safeguard in AGENTS.md) must report 0 FAIL. It needs a running server,
+so it is not part of `release:check`; run it against the server you already use for the browser checks.
+
 Agents and parallel sessions: give the build and the smoke their own dist dir and port, and never use 8092 or `.next-dev`:
 
 ```sh

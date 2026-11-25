@@ -23,3 +23,13 @@ For every feature and change, keeping phone heat down is a primary concern. Pref
 ## Button font (owner, Nov 4 2026)
 
 No button text uses IslandBrush (including primary and Play buttons): use the regular UI sans, weight 800, a size 1-3px under the old brush size. IslandBrush stays for headings, the wordmark/logo, titles and big numerals.
+
+## UI alignment safeguard (owner, Nov 24 2026: all new designs)
+
+Text in every button, pill, chip, badge, toast and tag sits in the middle of its box. Every new or changed UI must pass
+`npm run check:ui-align -- --port=<dev port>` (scripts/check-ui-alignment.cjs) before it is pushed: on phone 390x844 and desktop it
+visits the site templates (home, games, a game page, library, a rule / term / quiz page, a tool, books, a book, marketing, /es) and the
+game states (island HUD, travel map, backpack, stamp book, the train's Board / Get off pills, ride HUD and toasts, an NPC conversation,
+arcade room and a cabinet, museum, konbini, Kit Shop, a live game), and fails any single-line centred text whose box is more than
+1.5 px off the middle vertically (2 px horizontally). Fix the CSS (line-height, padding, flex centring), never the measurement; a
+real exception goes in `scripts/ui-align-allowlist.json` with its reason. New screens or states get added to the script's lists.
