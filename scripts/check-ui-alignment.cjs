@@ -126,7 +126,9 @@ async function game(b, v) {
     if (i === 0) await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {});
     await p.waitForTimeout(2000);
   }
-  await p.waitForFunction(() => !!window.__fi2 && !!window.__fi2.trainRide && !!window.__fi2.trains && !!window.__fi2.renderer && !document.querySelector('[data-island-return-loading]'), null, { timeout: 600000 });
+  const ready = () => p.waitForFunction(() => !!window.__fi2 && !!window.__fi2.trainRide && !!window.__fi2.trains && !!window.__fi2.renderer && !document.querySelector('[data-island-return-loading]'), null, { timeout: 300000 });
+  // a dev server can restart mid-load (memory threshold): one reload
+  await ready().catch(async () => { await p.reload({ timeout: 300000 }); await p.waitForTimeout(3000); for (const t of ['I saved it', 'Get my code', 'Play']) await p.click(`button:visible:has-text("${t}")`, { timeout: 500 }).catch(() => {}); await ready(); });
   await p.waitForTimeout(3000); await esc();
   await tryState('island-hud', async () => true);
   await tryState('travel-map', async () => { await p.click('[aria-label="View map"]', { timeout: 5000 }); await p.waitForTimeout(1500); return true; }); await esc(); await p.keyboard.press('Escape'); await p.waitForTimeout(600);
@@ -177,7 +179,7 @@ async function game(b, v) {
 
 (async () => {
   const b = await chromium.launch({ channel: 'chrome', headless: true, args: ['--mute-audio', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
-  try { for (const v of VIEWPORTS) { if (only !== 'game') await site(b, v); if (only !== 'site') await game(b, v); } }
+  try { for (const v of VIEWPORTS) { if (only !== 'game') await site(b, v).catch((e) => missed.push(`site/${v.name}: ${e.message.slice(0, 80)}`)); if (only !== 'site') await game(b, v).catch((e) => missed.push(`game/${v.name}: ${e.message.slice(0, 80)}`)); } }
   finally { await b.close(); }
   const rows = [...found.values()].sort((a, b) => (!!a.allowed - !!b.allowed) || (Math.abs(b.dy) + Math.abs(b.dx)) - (Math.abs(a.dy) + Math.abs(a.dx)));
   const fails = rows.filter((r) => !r.allowed), allowed = rows.filter((r) => r.allowed);
