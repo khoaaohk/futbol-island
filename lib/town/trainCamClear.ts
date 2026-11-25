@@ -8,7 +8,8 @@
  *  - the ground (Town passes fieldSurfaceHeight: Summit Isle's hill and its cutting banks), except inside the tube;
  *  - the South Bridge's pony trusses: a lift, not a pull-in (the truss is open lattice: looking through it is fine, sitting in it is not);
  *  - (AAA 3, Nov 25 2026; live audit #3: on a phone at Summit Isle the Seat camera stood behind the station name board, which filled
- *    the view) each station's two boards (the name board and the line board, trainWorld.ts buildStation): a box round the panel.
+ *    the view) each station's two boards (the name board and the line board, trainWorld.ts buildStation): a box round the panel, for
+ *    the Seat view only (`boards`: the rider's own orbit; the outside views keep their framing distance, check-train-aaa framing).
  * No allocation; ~20 point tests a frame while riding (each: 5 station boxes + 10 boards + one track hash lookup + the ground).
  */
 import {TRAIN_STATIONS,TUNNEL_BED,TUNNEL_HALF_WIDTH,SOUTH_BRIDGE,trackAt,trackNearest,leftNormal,inTunnelS,bedAt} from './trainTrack';
@@ -32,13 +33,13 @@ const BOARD_SPOTS=TRAIN_STATIONS.flatMap(st=>BOARDS.map(b=>{const p=stationSpot(
 
 export type Ground=((x:number,z:number)=>number)|null|undefined;
 /** Is (x, y, z) inside (or within CLEAR_M of) something the camera must not enter? */
-export function camBlocked(x:number,y:number,z:number,ground?:Ground){
+export function camBlocked(x:number,y:number,z:number,ground?:Ground,boards=false){
  for(const h of HOUSES){const dx=x-h.x,dz=z-h.z,u=dx*h.tx+dz*h.tz;if(Math.abs(u)>ROOF_EW+CLEAR_M+CLEAR_U)continue;
   const w=Math.abs(dx*h.nx+dz*h.nz-h.hm);if(w>h.ed+CLEAR_M)continue;
   // the roof (a solid from its flat soffit up to the tiles) and, under it, the walls (the platform under the eaves stays open)
   if(y>h.top+ROOF_Y0-CLEAR_M&&y<h.top+ROOF_Y0+ROOF_RISE*Math.max(0,Math.min(1,1-w/h.ed))+CLEAR_M)return true;
   if(w<h.hd/2+CLEAR_M&&Math.abs(u)<WALL_U+CLEAR_M+CLEAR_U&&y<h.top+ROOF_Y0&&y>h.top-1)return true;}
- for(const b of BOARD_SPOTS){const dx=x-b.x,dz=z-b.z;if(Math.abs(y-b.y)>b.hy+CLEAR_M)continue;const u=dx*b.tx+dz*b.tz;if(Math.abs(u)>b.hu+CLEAR_M)continue;
+ if(boards)for(const b of BOARD_SPOTS){const dx=x-b.x,dz=z-b.z;if(Math.abs(y-b.y)>b.hy+CLEAR_M)continue;const u=dx*b.tx+dz*b.tz;if(Math.abs(u)>b.hu+CLEAR_M)continue;
   if(Math.abs(dz*b.tx-dx*b.tz)<CLEAR_M)return true;}
  const hit=trackNearest(x,z,12);
  if(hit&&inTunnelS(hit.s)){const r=TUNNEL_HALF_WIDTH-CLEAR_M,yy=y-TUNNEL_BED,d=hit.d;
@@ -59,9 +60,9 @@ export function camCeiling(x:number,z:number,out={w:0,y:0}){out.w=0;
 }
 
 /** How far (0.15 … 1) along head → camera the camera may stand: the last clear sample before the first blocked one. */
-export function camClearFraction(px:number,py:number,pz:number,cx:number,cy:number,cz:number,ground?:Ground){
+export function camClearFraction(px:number,py:number,pz:number,cx:number,cy:number,cz:number,ground?:Ground,boards=false){
  const ex=cx-px,ey=cy-py,ez=cz-pz;
- for(let i=1;i<=CLEAR_STEPS;i++){const f=i/CLEAR_STEPS;if(camBlocked(px+ex*f,py+ey*f,pz+ez*f,ground))return Math.max(.15,(i-1)/CLEAR_STEPS);}
+ for(let i=1;i<=CLEAR_STEPS;i++){const f=i/CLEAR_STEPS;if(camBlocked(px+ex*f,py+ey*f,pz+ez*f,ground,boards))return Math.max(.15,(i-1)/CLEAR_STEPS);}
  return 1;
 }
 
