@@ -82,7 +82,7 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
  assert(/BOARD_HZ=1\b/.test(run),'boards on a 1 Hz clock');assert(/BELL_RANGE=60\b/.test(run)&&/ANIMATE_RANGE=80\b/.test(run)&&/HIDE_RANGE=400\b/.test(run),'bell 60 m, animate 80 m, hide 400 m');
  assert(/MACHINE_NIGHT/.test(run),'night: the shared night uniform');
  // Polish (Nov 24): headlamps brighter at night and in the tunnel through the head / tail lamp channels (no light, no shader)
- assert(/tr\.look\.lamp\.x=1\+\.6\*night\+1\.4\*tr\.tun/.test(run)&&/const tunnelLamps=/.test(run),'headlamp boost: night + tunnel, eased');
+ assert(/tr\.look\.lamp\.x=\(?1\+\.6\*night\+1\.4\*tr\.tun/.test(run)&&/const tunnelLamps=/.test(run),'headlamp boost: night + tunnel, eased');
  assert(/createTrainRunning/.test(world)&&/updateTrains/.test(town),'world and Town wired');
  assert(/case 'train-bell'/.test(snd)&&/case 'train-horn'/.test(snd),'bell and horn cues in the island sound kit (mute respected)');
  assert(/plate:'FI01'/.test(read('lib/town/trainLiveries.ts'))&&/emblem:true/.test(read('lib/town/trainLiveries.ts')),'headmark: our own ball emblem and FI 01 plate');}

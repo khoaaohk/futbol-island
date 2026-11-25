@@ -270,7 +270,8 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
       if(!atStop&&tA<STAND_BEFORE+STAND_S&&now_.on&&changesAt(k,c,p,seg+1)){const nx=slotAt(k,c,p,seg+1,scratch,ports.away);if(nx.cast<0)nx.on=false;leaving=!nx.on||nx.cast!==now_.cast;}
       for(let pass2=0;pass2<2;pass2++){
        let who:Slot,mode=0;
-       if(stay){if(pass2)break;who=was;}
+       if(stay){if(pass2)break;who=was;// train-talk: the one I'm talking to stays put
+       }
        else if(swapping){who=pass2?now_:was;mode=pass2?2:1;}
        else{if(pass2)break;who=now_;mode=leaving?1:0;}
        if(!who.on||who.cast<0)continue;
