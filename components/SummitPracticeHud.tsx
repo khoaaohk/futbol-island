@@ -33,14 +33,14 @@ export default function SummitPracticeHud(){
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><rect x="2.5" y="7" width="13" height="10" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg>
    </button>
    <button type="button" data-practice-exit className={live.leave} onClick={()=>practiceActions.exit()} title="Exit practice · Back" aria-label="Exit practice">Exit</button>
-   <section className={styles.card} aria-label={`Practice drill: ${v.name}`} data-practice-card>
-    <p className={styles.title}><strong data-practice-drill={v.drill}>{v.name}</strong><span className={styles.cam} aria-live="polite">{v.cam} view</span></p>
-    <p className={styles.tip}>{v.tip}</p>
-    <div className={styles.row}>
-     <button type="button" className={styles.btn} data-practice-shuffle onClick={()=>practiceActions.shuffle()}>Shuffle drill</button>
-     <button type="button" className={`${styles.btn} ${styles.mint}`} data-practice-edit onClick={()=>practiceActions.edit()}>Edit</button>
-    </div>
-   </section>
+   {/* Owner Nov 25 2026 (shot 92: "remove all that text and move the shuffle and edit btn into the same bar space as camera and
+       exit"): no card; Shuffle + Edit sit in the top HUD row beside the camera button. The drill's name and coaching tip stay for
+       screen readers (polite live region), so the drill still teaches when it changes. */}
+   <div className={styles.top} role="group" aria-label={`Practice drill: ${v.name}`} data-practice-card>
+    <span className={styles.sr} aria-live="polite" data-practice-drill={v.drill}>{v.name}. {v.tip}</span>
+    <button type="button" className={styles.btn} data-practice-shuffle onClick={()=>practiceActions.shuffle()} aria-label="Shuffle drill">Shuffle<span className={styles.wide}> drill</span></button>
+    <button type="button" className={`${styles.btn} ${styles.mint}`} data-practice-edit onClick={()=>practiceActions.edit()}>Edit</button>
+   </div>
    <p key={v.hello} className={styles.toast} role="status" data-practice-toast>Practice pitch: kick around!</p>
   </>}
   {editing&&<>
