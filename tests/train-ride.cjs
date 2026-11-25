@@ -139,7 +139,7 @@ for(const st of tt.TRAIN_STATIONS)assert(R.STOP_FACTS[st.id]&&R.nextStopLine(S.s
  // Gameplay 2 (owner, Nov 24 2026): solid trains (one oriented box per car: block and slide, never inside) and Conductor Kenji.
  {const m=new T.Matrix4();run.carMatrixOf(0,0,m);const e=m.elements,c={x:e[12],y:e[13],z:e[14]},bx={x:e[0],z:e[2]},bz={x:e[8],z:e[10]};
   // inside car 0, 0.5 m off its centre line: pushed out sideways to HALF_W + PLAYER_R in one frame
-  const inside={x:c.x+bx.x*.5,y:c.y,z:c.z+bx.z*.5};const r=run.update({dt:1/30,camera:cam,player:inside,nowSec:now+.1});
+  const inside={x:c.x+bx.x*.5+bz.x*1.5,y:c.y,z:c.z+bx.z*.5+bz.z*1.5};/* POLISH 4: between two doors (an open doorway at a stop now lets you walk in) */const r=run.update({dt:1/30,camera:cam,player:inside,nowSec:now+.1});
   const ox=inside.x+r.nudgeX-c.x,oz=inside.z+r.nudgeZ-c.z,lat=ox*bx.x+oz*bx.z;assert(Math.abs(Math.abs(lat)-(1.4+TRN.PLAYER_R))<.02,`pushed out of the car to its side (${lat.toFixed(2)})`);
   // walking into the side: pushed straight back out (no pass-through), the along-car motion kept (slide)
   const side={x:c.x+bx.x*1.6+bz.x*2,y:c.y,z:c.z+bx.z*1.6+bz.z*2};const r2=run.update({dt:1/30,camera:cam,player:side,nowSec:now+.15});

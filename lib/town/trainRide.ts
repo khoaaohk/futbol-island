@@ -19,6 +19,7 @@ import {TRAIN_STATIONS,STATION_HALF,STATION_PLATFORM_Y,TRACK,trackAt,trackNeares
 import {trainLayout} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,DOOR_HOLD,LAP,TRAIN_LENGTH} from './trainSchedule';
 import {TRAIN_SEATS,CAR_FLOOR_Y,SEAT_TABLE,PLAYER_SEATS,type SeatPose} from './trainRunning';
+import {HALF_W,DOORS} from './trainCarModel';
 import {trainRiderPose,trainStrapPose,swayStrapPose} from '../graphics/trainSeatPose';
 import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK_IN,NEAR_SEAT,GLOW_SEAT,BAY_X,type TrainLocal} from './trainWalk';
 import type {TrickPose} from '../graphics/trickPose';
@@ -260,6 +261,24 @@ export function createTrainRide(ports:Ports){
   if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
   return true;
  }
+ /** POLISH 4 (owner shot 69): walking (or riding: stowed) through an open door from the platform boards you STANDING in that door's bay,
+  *  first person (Inside), easing in from the doorway; the free seat nearest you is still yours (presence, Sit). trainRunning reports
+  *  the doorway (its solid-car test lets you into an open one on the platform side). */
+ function walkIn(kk:number,car:number,d:number){
+  const run=ports.run();if(riding()||!run?.carMatrixOf||kk<0||kk>=TRAIN_COUNT)return false;const st=run.states[kk];
+  if(st.at<0||st.doors<DOORS_OPEN||st.dwellLeft<BOARD_LEFT||d<0||d>=DOORS.length)return false;
+  let best=-1,bd=Infinity;for(let s=0;s<TRAIN_SEATS;s++){if(ports.taken(kk,s))continue;run.seatPose(kk,s,probe);const dd=Math.hypot(probe.x-me.x,probe.z-me.z);if(dd<bd){bd=dd;best=s;}}
+  if(best<0){setNote('This train is full. The next one comes in 2 minutes.');return false;}
+  ports.dismount?.();queued=-1;k=kk;j=best;walkT=-1;lastAt=st.at;run.ridden[k]=1;run.seatPose(k,j,pose);
+  anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;anchor.standing=true;
+  const sx=TRAIN_STOPS[st.at].station.side*(car%2===1?-1:1);
+  fromCar(car,sx*HALF_W,DOORS[d],aisle);twFrom.x=aisle.x;twFrom.u=aisle.z;fromCar(car,sx*(BAY_X-.35),DOORS[d],aisle);twTo.x=aisle.x;twTo.u=aisle.z;sp.x=twFrom.x;sp.u=twFrom.u;
+  standing=true;twSit=-1;tw=0;twDur=.45;strapW=0;mv.x=mv.z=0;gaitMove=0;gaitYaw=0;gait.facing=gaitYaw;camBase=0;
+  orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(st.s)?1:0;tight.v=0;camView='inside';viewT=1;havePose=false;armO=-1;outT=1;
+  trainRideStore.set({riding:true,canGetOff:false,camView:'inside',standing:true,nearSeat:false,nearDoor:false});setNote(wrapBoardNote(k,TRAIN_NOTES.board));ports.hold?.(true);ports.haptic?.();
+  if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
+  return true;
+ }
  /** Off the train. force: fast travel / a teleport (Town places the player); otherwise only while the doors are open at a stop. */
  function getOff(force=false){
   if(!riding())return false;const run=ports.run();const st=run?.states[k];
@@ -436,7 +455,7 @@ export function createTrainRide(ports:Ports){
   get walking(){return walkT;},get queued(){return queued;},
   /** Gameplay 2: the train under the pointer (lib/graphics/trainHover.ts; Town writes it), -1: none. Board then wins as a hover. */
   get hoverTrain(){return hoverK;},set hoverTrain(v:number){hoverK=v;},
-  board,getOff,press,
+  board,walkIn,getOff,press,
   /** The Board offer (Town's HUD tick): standing on a platform where a train waits with its doors open. One bounded track test. */
   want(x:number,z:number,y:number,canBoard:boolean):{key:string;distance:number}|null{
    me.x=x;me.z=z;me.h=y;near=-1;nearTrain=-1;ready=false;lastWant.x=x;lastWant.z=z;lastWant.y=y;lastWant.can=canBoard;lastWant.n++;if(riding())return null;if(!canBoard){queued=-1;return null;}

@@ -210,7 +210,7 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** Nov 24 2026: the local player is on a ride faster than Town's bonk speed: a stopped car bonks instead of blocking. */fast?:boolean;
  /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
   *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
-export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** a note to show once */note:string|null;
+export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** POLISH 4: walked into an open doorway from the platform (train, car, door; -1 none): Town boards you standing */walkInTrain:number;walkInCar:number;walkInDoor:number;/** a note to show once */note:string|null;
  /** Gameplay 2: Conductor Kenji's new line this frame (trainConductor.ts), or null; the train he speaks from (-1: none) and its cab
   *  top (where Town keeps the bubble while that train holds for the local player). */say:string|null;sayTrain:number;cabX:number;cabY:number;cabZ:number;
  /** Nov 24 2026: a car hit the local player this frame: 'track' (the lead car's front swept them) or 'side' (a moving car's side, or
@@ -276,7 +276,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const pa={x:0,z:0,tx:1,tz:0},pb={x:0,z:0,tx:1,tz:0},pc={x:0,z:0,tx:1,tz:0},xs={lamps:false,arm:0};
  const people:Person[]=Array.from({length:17},()=>({x:0,y:0,z:0}));let nPeople=0;
  const addRemote=(x:number,y:number,z:number)=>{if(nPeople>=people.length)return;const p=people[nPeople++];p.x=x;p.y=y;p.z=z;};
- const result:TrainFrameResult={nudgeX:0,nudgeZ:0,note:null,say:null,sayTrain:-1,cabX:0,cabY:0,cabZ:0,knock:null,knockX:0,knockZ:0,dirX:0,dirZ:0,knockV:0,knockTrain:-1},hit={gap:0,side:0,d:0,s:0};
+ const result:TrainFrameResult={nudgeX:0,nudgeZ:0,walkInTrain:-1,walkInCar:-1,walkInDoor:-1,note:null,say:null,sayTrain:-1,cabX:0,cabY:0,cabZ:0,knock:null,knockX:0,knockZ:0,dirX:0,dirZ:0,knockV:0,knockTrain:-1},hit={gap:0,side:0,d:0,s:0};
  // Conductor Kenji's warning: warned this approach (per train), the bubble's seconds left, the line counter, the last shout (clock s)
  const warned=new Uint8Array(TRAIN_COUNT),sayLeft=new Float32Array(TRAIN_COUNT);let kenjiN=0,kenjiQuiet=-1e9;
  /** Seconds until train i's front (local phase runner.t) reaches `gap` m ahead of where it is now, up to `most` s (Infinity: later). */
@@ -378,7 +378,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   useNightPool(mat:T.Material){nightGlow.use(mat);},
   warm(on:boolean){warming=on;for(const o of all)o.visible=on;for(const t of trains)t.mesh.count=TRAIN_CARS;doors.count=on?1:0;glass.warm(on);nightGlow.warm(on);},
   update(f:TrainFrame):TrainFrameResult{
-   result.nudgeX=result.nudgeZ=0;result.note=null;result.say=null;result.sayTrain=-1;result.knock=null;result.knockTrain=-1;if(warming)return result;
+   result.nudgeX=result.nudgeZ=0;result.walkInTrain=-1;result.note=null;result.say=null;result.sayTrain=-1;result.knock=null;result.knockTrain=-1;if(warming)return result;
    if(primeLeft>0){primeLeft--;api.primedAt=typeof performance!=='undefined'?performance.now():0;m4.makeTranslation(0,-600,0);
     for(const t of trains){t.mesh.visible=true;t.mesh.count=TRAIN_CARS;for(let c=0;c<TRAIN_CARS;c++)t.mesh.setMatrixAt(c,m4);t.mesh.instanceMatrix.needsUpdate=true;}
     doors.visible=true;doors.count=1;doors.setMatrixAt(0,m4);doors.instanceMatrix.needsUpdate=true;glass.prime(m4);wraps.prime(m4)/* WRAPS */;return result;}const dt=Math.max(0,Math.min(f.dt,.25));clock+=dt;
@@ -423,6 +423,10 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     for(let c=0;c<TRAIN_CARS;c++){carMatrix(st.s,c,m4,st.v);const e=m4.elements,dx=P.x+result.nudgeX-e[12],dy=P.y-e[13],dz=P.z+result.nudgeZ-e[14];if(dy< -1.2||dy>3.2)continue;/* AAA 2: feet above the body side (3.1 m: on / over the roof) are not blocked (was 3.9: a roof lander was pushed sideways each frame) */
      const ax=Math.hypot(e[0],e[2])||1,az=Math.hypot(e[8],e[10])||1,lx=(dx*e[0]+dz*e[2])/ax,lz=(dx*e[8]+dz*e[10])/az,hx=HALF_W+PLAYER_R,hz=CAR_LENGTH/2+PLAYER_R;
      if(Math.abs(lx)>=hx||Math.abs(lz)>=hz)continue;const px=hx-Math.abs(lx),pz=hz-Math.abs(lz);
+     // POLISH 4 (owner shot 69): at a stop with the doors open, an open doorway on the platform side is not solid: stepping 0.3 m into
+     // it boards you standing (Town; a ride is stowed). Closed doors, the car's sides between doors and the far side stay solid.
+     if(st.at>=0&&(st.doors??0)>.9&&Math.sign(lx)===TRAIN_STOPS[st.at].station.side*(c%2===1?-1:1)){let d=-1;for(let q=0;q<DOORS.length;q++)if(Math.abs(lz-DOORS[q])<DOOR_HALF-.1){d=q;break;}
+      if(d>=0){if(px>.3&&result.walkInTrain<0){result.walkInTrain=i;result.walkInCar=c;result.walkInDoor=d;}continue;}}
      if((st.v>KNOCK_V||f.fast)&&!result.knock){const sg=Math.sign(lx||1)/ax,rev=c%2===1?-1:1;result.knock=c===0&&lz>CAR_LENGTH/2-1.4&&st.v>KNOCK_V?'track':'side';
       result.knockX=e[0]*sg;result.knockZ=e[2]*sg;result.dirX=e[8]/az*rev;result.dirZ=e[10]/az*rev;result.knockV=st.v;result.knockTrain=i;}
      if(px<=pz){const k=Math.sign(lx||1)*px/ax;result.nudgeX+=e[0]*k;result.nudgeZ+=e[2]*k;}else{const k=Math.sign(lz||1)*pz/az;result.nudgeX+=e[8]*k;result.nudgeZ+=e[10]*k;}}}}

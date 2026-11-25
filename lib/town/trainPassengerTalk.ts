@@ -117,7 +117,7 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
  // constant screen size (a world-sized tag 1 m away in first person would fill the view), hidden whenever nobody is offered.
  const glow=createNpcHover(scene,'train-talk-hover'),ring=glow.root;let hoverOn=false;
  let tagCanvas:HTMLCanvasElement|null=null,tagTex:T.CanvasTexture|null=null;// made on the first tag (none in a ride without talk)
- const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(.15,.047,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
+ const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(.2,.0625,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
  let candCast=-1,tagCast=-1;const glowAt={id:'',x:0,y:0,z:0};
  const drawTag=(name:string)=>{if(typeof document==='undefined')return;if(!tagCanvas){tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=160;tagTex=new T.CanvasTexture(tagCanvas);tagTex.colorSpace=T.SRGBColorSpace;tag.material.map=tagTex;tag.material.needsUpdate=true;}
   const ctx=tagCanvas.getContext('2d');if(!ctx||!tagTex)return;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';
