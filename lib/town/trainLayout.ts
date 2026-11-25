@@ -176,6 +176,12 @@ export const STATION_VENDING_U=3.25,STATION_VENDING_BACK=.62;
  *  vending rule, tests/vending-machines.cjs). North and West Beach face their line AWAY from the camera: there the machine stands
  *  against the house's back (town-side) wall instead, centred, on the ground the station's visitors walk up from. */
 export const STATION_HOUSE_DEPTH=(st:Pick<TrainStation,'id'>)=>st.id==='south'?3.8:4.6;
+/** The Island stamp book's stamp stand (Nov 24 2026, owner: "a small physical stamp stand on the platform"): a wooden desk with an
+ *  ink pad, the stamp on a chain and a little roofed sign, on the platform past the house's up-line end (u STAMP_STAND_U, clear of
+ *  the drink machine at u 3.25 and the name board's posts at u 8.3), its middle STAMP_STAND_BACK m in front of the house line.
+ *  Built in trainWorld.ts buildStation; lib/graphics/stationStampPrompt.ts hovers / reaches it like the house. */
+export const STAMP_STAND_U=6,STAMP_STAND_BACK=.75;
+export const stampStandSpot=(st:TrainStation)=>stationSpot(st,STAMP_STAND_U,stationHouseFront(st)-STAMP_STAND_BACK);
 export const readsFromCamera=(yaw:number)=>(Math.sin(yaw)*16+Math.cos(yaw)*33)/Math.hypot(16,33)>.3;
 export function stationVendingSpot(id:TrainStation['id']){
  const st=TRAIN_STATIONS.find(s=>s.id===id)!,r=(v:number)=>Math.round(v*100)/100,front=stationSpot(st,STATION_VENDING_U,stationHouseFront(st)-STATION_VENDING_BACK);

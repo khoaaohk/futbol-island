@@ -185,6 +185,9 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
     else{box(f,0,.72,.41,len,.08,.02,P.trim2);}
     // register, card-pay pad and a small pack display
     box(f,.3,1.2,-.1,.5,.28,.4,'#3a4a48');box(f,.3,1.47,-.05,.42,.26,.05,'#9fe0d6');box(f,.85,1.12,.15,.2,.12,.26,'#50605e');
+    // Island stamp book (Nov 24 2026): the cashier's ink pad and rubber stamp beside the register (the stamp's own orange ink).
+    box(f,-.36,1.075,.22,.17,.03,.12,'#2c2a28');box(f,-.36,1.093,.22,.135,.008,.09,'#d06a1e');
+    box(f,-.6,1.068,.2,.09,.016,.09,'#d06a1e');box(f,-.6,1.1,.2,.1,.05,.1,'#3a3a3a');box(f,-.6,1.16,.2,.035,.075,.035,'#a57f57');box(f,-.6,1.215,.2,.065,.04,.065,'#d9483a');
     item(f,DECOR.pack,'decor','pack',hl-.45,1.23,.2,.34,.34,0,0,1,0,1.06);item(f,DECOR.ball,'decor','ball',hl-.85,1.21,.2,.3,.3,0,0,1,0,1.06);
     // hot-food warmer (glass case, lit) + the nikuman steamer / stone yaki-imo warmer at the front end
     const hot=bySection('hot'),hx=-hl+.75;box(f,hx,1.08,0,1.3,.06,.7,'#c9d2d0');box(f,hx,1.72,0,1.3,.06,.7,'#c9d2d0');box(f,hx,1.4,0,1.3,.62,.66,'#000',glass);box(f,hx,1.7,0,1.2,.03,.5,'#fff3c4');box(f,hx,1.405,0,1.24,.02,.6,'#dfe6e4');

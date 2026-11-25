@@ -7068,3 +7068,19 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
   Not measured on a real phone; no iPhone temperature claim.
 
 - Train passengers (Nov 24): islanders' bean skin, ≤5 instanced draws, ~6k rastered tris per near passenger, bodies only beyond 28 m; rows uploaded on change only. Cost trim: hair / hat / props draw through a subset index of the shared buffers holding only the styles and props of the riders shown now (re-indexed only when that set changes), so unworn styles cost no vertex work; a 5-rider car counts ~38k tris (worst ~45k; was ~59k), the hat draw is skipped from heat tier 3 up, and the ~90 ms pose bake runs in idle slices from load (≤ ~37 ms in Node per slice) instead of on first sight.
+
+## Nov 24 2026: Island stamp art v2 and the platform stamp stands (branch `stamps-art-v2`, local, not deployed)
+
+- **Stamp SVGs** (`lib/town/stampArt.ts`): denser line art (layered scenes, hatch / stipple patterns, nested masks for occlusion,
+  an ornament band, a date plate). Each string is 11–19 KB (test cap 20 KB). The faint "bleed" copy is now a `<use>` of the art,
+  not a second copy, and dot rings are zero-length dashes. They still render only while the stamp book is open; the ink filter
+  rasterises once per page paint (one or two stamps on screen). No timers, no rAF.
+- **Stamp stands** (`lib/town/trainWorld.ts` buildStation): ~30 small boxes per platform in the station's existing paint batches
+  (the pad and rubber in each stamp's ink colour: five new palette entries, no new draw on land). The five sign faces (front and
+  back) are ONE textured mesh using the station board atlas: **+1 draw** for the whole line where any sign is in view, ~20 tris.
+  Colliders: one small box per stand. The prompt (`stationStampPrompt.ts`) adds one box test per station on hover/tap and one
+  squared distance per station per frame.
+- **Counter props** (Konbini register, museum desk, Kit Shop till): 6 boxes each, merged into each room's existing static mesh
+  (no draw added).
+- Validation: `tests/island-stamps.cjs` (art size and structure, stand pick/reach, sign mesh count), `scripts/check-island-stamps.cjs`
+  (desktop + phone). No device measurement (the change adds no per-frame work beyond the checks above).

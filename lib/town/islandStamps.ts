@@ -103,6 +103,8 @@ export function collectStamp(id:StampId,now=Date.now(),port:Port=local,rand:()=>
 }
 export function markStampReward(port:Port=local){const s=readStamps(port);if(!s.reward){s.reward=true;writeStamps(s,port);}return s;}
 /** The date line under a stamp, written like the photo's hand ("23 Nov 2026"), in the player's own calendar day. */
+/** The date carved into the stamp's little date plate, eki style: "24.11.26" (day, month, two-digit year). */
+export function stampPlateDate(at:number):string{const d=new Date(at),two=(n:number)=>String(n).padStart(2,'0');return `${two(d.getDate())}.${two(d.getMonth()+1)}.${two(d.getFullYear()%100)}`;}
 export function stampDate(at:number):string{const d=new Date(at);return `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`;}
 
 /** The book's pages: the cover page, one per stamp (the order above), and the back page. */

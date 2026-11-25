@@ -141,6 +141,9 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  onWall=0;
  box(DESK.w,DESK.h,DESK.d,DESK.x,DESK.h/2,DESK.z,P.plinth);box(DESK.w-.06,.04,DESK.d-.06,DESK.x,.02,DESK.z,P.reveal);print(DESK_RECT,DESK.x,.7,DESK.z+DESK.d/2+.004,1.5,.43);
  shade(DESK.x,.016,DESK.z+.08,DESK.w*.72,DESK.d*.9);
+ // Island stamp book (Nov 24 2026): Ada's ink pad and the museum's rubber stamp on the desk (the stamp's own brown ink).
+ {const sx=DESK.x+.5,sz=DESK.z+.12;box(.17,.03,.12,sx+.2,DESK.h+.015,sz,P.ink);box(.135,.008,.09,sx+.2,DESK.h+.033,sz,'#7a5a2e');
+  box(.09,.016,.09,sx,DESK.h+.008,sz,'#7a5a2e');box(.1,.05,.1,sx,DESK.h+.041,sz,P.ink);box(.035,.075,.035,sx,DESK.h+.1,sz,'#a57f57');box(.065,.04,.065,sx,DESK.h+.155,sz,'#c2452d');}
 
  // ---- Exhibit plinths ----------------------------------------------------------------------------------------------------------
  const TOP=CASE.plinthH+.04;

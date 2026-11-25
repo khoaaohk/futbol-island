@@ -14,6 +14,9 @@
  *  - Five static stations: platform (yellow edge strip), a small wooden Japanese-style station house (tiled hip roof, cream walls,
  *    dark timber, warm panes that glow at night through machineNightGlow, four paper lanterns), a bench and two boards (station
  *    name board, line board) cut from ONE canvas atlas: one textured material for all five stations (one draw where one is seen).
+ *  - Island stamp book stands (Nov 24 2026): a wooden desk on each platform with an ink pad, the station's stamp on a little chain
+ *    and a roofed sign; solid parts in the station's paint batches (the pad and the rubber in the stamp's own ink), the five signs'
+ *    faces (cut from the same board atlas) merged into ONE mesh for the whole line: +1 draw at most.
  *  - Five level crossing decks; poles, lamps, barriers and bells are Phase 2's crossing machines (trainRunning.ts).
  * Colliders: house footprints, board posts, catenary poles and crossing poles on land; platforms are walk surfaces (one step up);
  * the South platform over the water is a landable deck. Swimmers meet the piers and the sea wall (trainLayout.trainSwimBlocked).
@@ -23,10 +26,11 @@ import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
 import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,SOUTH_BRIDGE,bedAt,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
-import {trainLayout,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,MAIN_COLUMN_HALF,SEA_WALL_HALF,XING_FOOT} from './trainLayout';
+import {trainLayout,STAMP_STAND_U,STAMP_STAND_BACK,stationHouseFront,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,MAIN_COLUMN_HALF,SEA_WALL_HALF,XING_FOOT} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
 import {onLand} from './landmass';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
+import {stampById} from './islandStamps';
 
 type Surface=Obstacle&{height:number};
 export type TrainTools={
@@ -247,12 +251,16 @@ export function buildTrainWorld(tools:TrainTools){
 
  // ------------------------------------------------------------------ stations
  const atlas=stationAtlas();const boardMat=tools.boardMaterial(atlas);
+ const signPos:number[]=[],signNor:number[]=[],signUv:number[]=[];
  for(const st of TRAIN_STATIONS)buildStation(st);
+ // The five stamp-stand signs: ONE textured mesh (both faces of every sign, ~20 triangles), the line's only added draw.
+ {const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(signPos,3));g.setAttribute('normal',new T.Float32BufferAttribute(signNor,3));g.setAttribute('uv',new T.Float32BufferAttribute(signUv,2));g.computeBoundingSphere();
+  const m=new T.Mesh(g,boardMat);m.name='station-stamp-signs';m.userData.train=true;m.userData.skipRoofObstacle=true;town.add(m);}
  function buildStation(st:TrainStation){
   const c=trackAt(st.s),i0=Math.round(st.s/TRACK_DS)%n,bed=BED[i0],south=st.id==='south',top=bed+STATION_PLATFORM_Y,sg=st.side;
   const nrm=leftNormal(c.tx,c.tz),P=(u:number,v:number,y:number)=>[c.x+c.tx*u+nrm.x*sg*v,y,c.z+c.tz*u+nrm.z*sg*v];
   const ox=Math.round(c.x),oz=Math.round(c.z);
-  const plat=new Geo(),footing=new Geo(),platSide=new Geo(),edge=new Geo(),plaster=new Geo(),timber=new Geo(),deck=new Geo(),roof=new Geo(),ridge=new Geo(),pane=new Geo(),lantern=new Geo(),cap=new Geo(),bench=new Geo();
+  const plat=new Geo(),footing=new Geo(),platSide=new Geo(),edge=new Geo(),plaster=new Geo(),timber=new Geo(),deck=new Geo(),roof=new Geo(),ridge=new Geo(),pane=new Geo(),lantern=new Geo(),cap=new Geo(),bench=new Geo(),ink=new Geo();
   const v0=1.45,v1=south?8.1:5.45,depth=v1-v0;
   // Platform in 5 m pieces along the curve (each on its own frame), with the yellow edge strip.
   for(let u=-STATION_HALF;u<STATION_HALF;u+=5){const f=trackAt(st.s+u+2.5),fn=leftNormal(f.tx,f.tz),Q=(v:number,y:number)=>[f.x+fn.x*sg*v,y,f.z+fn.z*sg*v];
@@ -304,6 +312,29 @@ export function buildTrainWorld(tools:TrainTools){
   // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.
   {/* every tier (a station islander sits here; 3 boxes in the existing bench batch) */const a=P(-9,v0+2.2,0);bench.box(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04);const b=P(-9,v0+2.2+.25,0);bench.box(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225);
    for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.28,l[2],c.tx,c.tz,.04,.26,.28);}}
+  // The Island stamp book's stamp stand (trainLayout.ts STAMP_STAND_U): desk, shelf and apron, two posts carrying a roofed sign
+  // (its face is in the shared sign mesh above), an ink pad and the rubber stamp on a short chain. ~30 boxes in existing batches.
+  {const SU=STAMP_STAND_U,SV=stationHouseFront(st)-STAMP_STAND_BACK,B=(g:Geo,u:number,v:number,y:number,hl:number,hw:number,hh:number)=>{const a=P(u,v,0);g.box(a[0],top+y,a[2],c.tx,c.tz,hl,hw,hh);};
+   for(const du of [-.44,.44])for(const dv of [-.2,.2])B(timber,SU+du,SV+dv,.42,.035,.035,.42);
+   B(deck,SU,SV,.865,.52,.27,.025);B(deck,SU,SV,.24,.46,.2,.015);B(timber,SU,SV-.255,.78,.5,.015,.06);
+   for(const du of [-.29,.29])B(timber,SU+du,SV+.22,.97,.035,.035,.97);
+   B(timber,SU,SV+.24,1.52,.27,.02,.33);B(timber,SU,SV+.24,1.17,.31,.04,.025);
+   {const ry=top+2.05,ey=top+1.86,R=(u:number,v:number,y:number)=>P(SU+u,SV+.24+v,y),inside=R(0,0,ry-.3);
+    roof.quad(R(-.4,-.26,ey),R(.4,-.26,ey),R(.4,0,ry),R(-.4,0,ry),inside);roof.quad(R(-.4,.26,ey),R(.4,.26,ey),R(.4,0,ry),R(-.4,0,ry),inside);
+    ridge.beam(R(-.43,0,ry+.02),R(.43,0,ry+.02),.035,true);}
+   // the pad (a dark tin, its felt in the stamp's ink) and the stamp (ink rubber, dark block, a timber handle with a red knob)
+   const inkHex=stampById(st.id)?.ink??C.lantern;
+   B(cap,SU+.2,SV-.02,.9,.1,.07,.012);B(ink,SU+.2,SV-.02,.914,.082,.055,.004);
+   B(ink,SU-.14,SV-.05,.897,.055,.055,.007);B(cap,SU-.14,SV-.05,.93,.06,.06,.026);B(timber,SU-.14,SV-.05,1,.022,.022,.05);B(lantern,SU-.14,SV-.05,1.07,.038,.038,.03);
+   {const a=P(SU-.14,SV-.05,top+.98),m=P(SU-.24,SV+.1,top+.9),b=P(SU-.29,SV+.18,top+1.05);cap.beam(a,m,.007,true);cap.beam(m,b,.007,true);}
+   emit(ink,inkHex,ox,oz);
+   // the sign's two faces (front toward the line, back toward the house: North and West Beach are seen from behind)
+   const atU=(TRAIN_STATIONS.indexOf(st)*SIGN_CELL)/1024,u1=atU+SIGN_CELL/1024,v0=1-1024/1024,v1=1-(LINE_ROW0)/1024;
+   for(const face of [1,-1]){const nx=-nrm.x*sg*face,nz=-nrm.z*sg*face,rx=nz,rz=-nx,ctr=P(SU,SV+.24-face*.025,0),w=.21,hh=.28,cy=top+1.52;
+    const q=[[-w,-hh,atU+.5,v0],[w,-hh,u1+.5,v0],[w,hh,u1+.5,v1],[-w,hh,atU+.5,v1]],idx=[0,1,2,0,2,3];
+    for(const k of idx){const [a,b,uu,vv]=q[k];signPos.push(ctr[0]+rx*a,cy+b,ctr[2]+rz*a);signNor.push(nx,0,nz);signUv.push(uu,vv);}}
+   const sq0=Math.min(Math.abs(c.tx),Math.abs(c.tz))<.2,ax=Math.abs(c.tx),az=Math.abs(c.tz),sc=P(SU,SV+.03,0);
+   solid(sq0?{x:sc[0],z:sc[2],w:1.08*ax+.62*az,d:1.08*az+.62*ax}:{x:sc[0],z:sc[2],w:.95,d:.95});}
   emit(plat,C.platform,ox,oz);emit(footing,C.footing,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
   emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,lite?C.timber:C.bench,ox,oz);/* lite: in the timber batch (no new paint on the lowest tier) */
   {const m=emit(pane,C.pane,ox,oz);if(m)lit(m,.9,true);}{const m=emit(lantern,C.lantern,ox,oz);if(m)lit(m,1);}
@@ -415,6 +446,8 @@ export function buildTrainWorld(tools:TrainTools){
 // ---- The board atlas: 1024 × 1024. Rows 0-4: one station each, its name board's two faces (x 0-512 front, 512-1024 back, the
 // back's arrows swapped so they point the right way from that side). LINE_ROW0 down: the line board (same on every station).
 export const ATLAS_ROW=176,LINE_ROW0=5*ATLAS_ROW+8;
+/** The stamp-stand sign cells: five cells SIGN_CELL px wide from x 512, rows LINE_ROW0…1024 (the line board's free right half). */
+export const SIGN_CELL=102;
 function stationAtlas(){
  const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const g=cv.getContext('2d');if(!g)return cv;
  const sans='system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',LINE='#2f7d5b';
@@ -433,5 +466,13 @@ function stationAtlas(){
  {const y0=LINE_ROW0,W=512,H=1024-LINE_ROW0;g.fillStyle='#244d49';g.fillRect(0,y0,W,H);g.fillStyle='#fff0cf';g.textAlign='center';g.textBaseline='middle';
   g.font=`800 34px ${sans}`;g.fillText('ISLAND LINE',W/2,y0+30);g.font=`600 19px ${sans}`;g.fillText('North · West Beach · South · Summit Isle · Coral Cay',W/2,y0+68);
   g.font=`700 19px ${sans}`;g.fillStyle='#f2c230';g.fillText('Trains every 2 minutes · Free ride',W/2,y0+102);}
+ // Stamp-stand signs (Nov 24 2026): "STAMP" on an ink band, a little round stamp with the station number, the station's name.
+ TRAIN_STATIONS.forEach((st,r)=>{const x0=512+r*SIGN_CELL,y0=LINE_ROW0,W=SIGN_CELL,H=1024-LINE_ROW0,ink=stampById(st.id)?.ink??'#2f7d5b',cx=x0+W/2;
+  g.fillStyle='#fbf4e2';g.fillRect(x0,y0,W,H);g.strokeStyle='#5e4630';g.lineWidth=5;g.strokeRect(x0+2.5,y0+2.5,W-5,H-5);
+  g.fillStyle=ink;g.fillRect(x0+5,y0+5,W-10,26);g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.font=`800 19px ${sans}`;g.fillText('STAMP',cx,y0+19);
+  g.strokeStyle=ink;g.lineWidth=4;g.beginPath();g.arc(cx,y0+70,29,0,Math.PI*2);g.stroke();g.lineWidth=1.5;g.beginPath();g.arc(cx,y0+70,23,0,Math.PI*2);g.stroke();
+  g.fillStyle=ink;g.font=`800 28px ${sans}`;g.fillText(String(st.number),cx,y0+72);
+  for(let k=0;k<12;k++){const a=k*Math.PI/6;g.beginPath();g.arc(cx+Math.cos(a)*26,y0+70+Math.sin(a)*26,1.2,0,Math.PI*2);g.fill();}
+  g.font=`800 ${st.name.length>9?13:15}px ${sans}`;g.fillText(st.name,cx,y0+117);});
  return cv;
 }
