@@ -101,6 +101,9 @@ export const TRAIN_VIEWS=['seat','driver','front','back','left','right','above',
 // (the cab sides are > 100° off the look; the coupler and skirt far below the lowest pitch); it stays locked to car 0's matrix.
 export const DRIVER={x:0,eye:1.5,z:6.35,look:20,down:.05,yaw:.61,pitch:.26,fov:62,portraitFov:78,back:2.5} as const;
 export type TrainView=typeof TRAIN_VIEWS[number];
+/** Owner Nov 25 2026 (shot 80: "hide the talk to option for the characters for all camera angles besides when they are on the train"):
+ *  Talk (passengers + Kenji), their name tag and hover / tap only in the views whose eye is inside the car. */
+export const trainTalkView=(v:TrainView):boolean=>v==='seat'||v==='inside';
 export const TRAIN_VIEW_LABEL:Record<TrainView,string>={seat:'Seat view',front:'Front view',back:'Back view',left:'Left side',right:'Right side',above:'From above',inside:'Inside view',driver:"Driver's view"};
 /** The outside views: the look point (m behind the train's nose, height over the rail bed), the camera's bearing from it (rad: 0 ahead
  *  of the train, π behind, +π/2 on its left), elevation (rad), distance (m; portrait × `portrait`), how far the orbit turns either way

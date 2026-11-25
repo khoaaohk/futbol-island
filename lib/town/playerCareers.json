@@ -1034,8 +1034,7 @@
    {"club": "Flamengo", "from": 2011, "to": 2012},
    {"club": "Atlético Mineiro", "from": 2012, "to": 2014},
    {"club": "Querétaro", "from": 2014, "to": 2015},
-   {"club": "Fluminense", "from": 2015, "to": 2015},
-   {"club": "Ravenna", "from": 2026, "to": null}
+   {"club": "Fluminense", "from": 2015, "to": 2015}
   ],
   "national": {"team": "Brazil", "from": 1999, "to": 2013},
   "source": "wiki-infobox",

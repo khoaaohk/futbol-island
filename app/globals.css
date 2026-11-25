@@ -1084,5 +1084,8 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
    Paths button (the pink lightning: island paths / quests); the ride's camera-view button (TrainRideHud) takes the Paths spot. All
    back on Get off (the attribute goes with trainRideStore.riding). */
 .town-app[data-train-riding] [data-job-wallet] [data-fuel]{display:none}
+/* Owner Nov 25 2026: "remove the energy bar" during practice and on the train (every camera view): the coins / fish / fruit / fuel
+   bar (the bolt-and-100 bar) steps aside like it does in a live match; it is back on Exit / Get off. */
+.town-app:is([data-practice],[data-train-riding]) [data-job-wallet]{visibility:hidden;pointer-events:none}
 .town-app[data-train-riding] nav[data-hud-triggers]>button[data-tour=quests]{visibility:hidden;pointer-events:none}
 .town-app[data-train-riding] nav[data-hud-triggers]>button[aria-label=Settings]{display:none}

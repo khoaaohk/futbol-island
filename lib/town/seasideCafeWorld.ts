@@ -128,12 +128,13 @@ export function buildSeasideCafe(t:CafeTools):CafeBuild{
    const back=skip(box(.42,.42,.05,c,cx+Math.cos(a)*.2,F+.68,cz+Math.sin(a)*.2));back.rotation.y=-a+Math.PI/2;}
   obstacles.push({x:tb.x,z:tb.z,w:1.5,d:1.5});});
  // ---- The rowboat moored off the east deck, tied to a post.
- {const B=CAFE_BOAT,g=new T.Group();g.position.set(B.x,-.3,B.z);g.rotation.y=B.yaw;town.add(g);
+ const BOAT_Y=.05;
+ {const B=CAFE_BOAT,g=new T.Group();g.position.set(B.x,BOAT_Y,B.z);g.rotation.y=B.yaw;town.add(g);/* owner shot 83: it sat under the water; now the hull rides on top (waterline ~ a third up) */
   box(B.len*.72,.42,B.beam,HULL,-.2,0,0,g);const bow=box(B.beam*.71,.42,B.beam*.71,HULL,B.len*.36-.2,0,0,g);bow.rotation.y=Math.PI/4;
   box(B.len*.68,.1,B.beam-.22,HULL_D,-.2,.17,0,g);box(.24,.06,B.beam-.18,CREAM,-.1,.24,0,g);box(.24,.06,B.beam-.18,CREAM,-1,.24,0,g);
   box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,B.beam/2,g);box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,-B.beam/2,g);
-  for(const s of [-1,1]){const oar=line(V(B.x-.3,0,B.z+s*.5),V(B.x-1.5,.1,B.z+s*.85),.03,WOOD);oar.userData.skipRoofObstacle=true;}
-  skip(line(V(B.x-1.5,-.05,B.z-.3),V(718.7,F-.3,-100.5),.015,ROPE));
+  for(const s of [-1,1]){const oar=line(V(B.x-.3,BOAT_Y+.3,B.z+s*.5),V(B.x-1.5,BOAT_Y+.4,B.z+s*.85),.03,WOOD);oar.userData.skipRoofObstacle=true;}
+  skip(line(V(B.x-1.5,BOAT_Y+.25,B.z-.3),V(718.7,F-.3,-100.5),.015,ROPE));
   obstacles.push({x:B.x,z:B.z,w:B.len,d:B.beam+.6});}
  // ---- The fixtures chalkboard (A-frame) and the garden sign: frames batched; faces are the atlas below.
  {const K=CAFE_CHALKBOARD,g=new T.Group();g.position.set(K.x,0,K.z);g.rotation.y=K.yaw;town.add(g);

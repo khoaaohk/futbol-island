@@ -1,4 +1,5 @@
 'use client';
+import {DIVE_SPOTS} from '@/lib/town/water/diveSpots';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import {useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
@@ -21,7 +22,9 @@ const MAP_X=FLIGHT_BOUNDS.minX-8,MAP_Z=FLIGHT_BOUNDS.minZ-8,MAP_W=FLIGHT_BOUNDS.
 const STEP=.6,DRAG_SLOP=8;
 /** The right pan stops at the easternmost land (Coral Cay's or Summit Isle's shore plus room for its beach and labels), not at the far edge of
  *  the flight area's empty south-east lobe: on a phone the last taps used to push CORAL CAY and HOSTEL off the left edge. */
-const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(...CAY_SHORE.map(p=>p.x),...SUMMIT_SHORE.map(p=>p.x))+24);
+// Owner Nov 25 2026 (shot 88, phone + tablet: "the map on east side of the island is cut off, extend that more"): the Explore dive pins
+// out at sea east of the land were clipped at the stop; it now also reaches the easternmost dive pin plus room for its badge.
+const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(Math.max(...CAY_SHORE.map(p=>p.x),...SUMMIT_SHORE.map(p=>p.x))+24,Math.max(...DIVE_SPOTS.map(d=>d.surface.x))+22));
 /** Short screens (landscape phones, Oct 23 2026 landscape audit batch 3): the frame is ~270 px tall, so "cover" showed about half the
  *  island and the History Museum pin sat off screen. Under this query the map is CONTAINED instead (the whole island, west rim to
  *  CONTENT_EAST, centred in the frame) and the pan arrows hide. Keep in step with the max-height:500px block in the CSS. */
