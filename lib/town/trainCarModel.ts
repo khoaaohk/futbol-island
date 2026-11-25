@@ -86,7 +86,7 @@ const CAB_K=(HALF_W*.86-.04)/IW;// the interior's width factor at the cab front 
 export const CAB_Z=4.7,GANGWAY_HALF=.45,GANGWAY_TOP=2.95;
 /** Bench geometry for the ride / passenger code (car-local, the same on both sides, mirrored in x): the bench runs along z, the
  *  seat top height, the seat front edge |x| and the backrest face |x|. Interior parts never enter the seat volume (from the seat
- *  front to the backrest, BENCH_TOP to BENCH_TOP + 0.95) except the dividers at the bench ends and between seat slots. */
+ *  front to the backrest, BENCH_TOP to BENCH_TOP + 0.95) except the end screens at the bench ends. */
 export const BENCHES:readonly [number,number][]=[[-5.82,-4.45],[-2.95,-.95],[.55,2.35],[3.85,4.6]];
 export const BENCH_TOP=CAR_FLOOR_Y+.64,BENCH_FRONT=BENCH_X-BENCH_HALF_D,BENCH_BACK=1.2;
 /** Seat slots (car-local z centres, the same on both sides at x = ±BENCH_X): 2 + 2 + 2 + 1 per side, 14 a car. */
@@ -303,7 +303,7 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    g.box(s*(BENCH_BACK+.07),F+.74,zc,.07,.1,hz,seatDark);g.box(s*(BENCH_BACK+.07),F+.94,zc,.07,.1,hz,seat);
    if(closeUp){g.quad([s*BENCH_FRONT,F+.6,a],[s*(BENCH_FRONT+.04),F+.642,a],[s*(BENCH_FRONT+.04),F+.642,b],[s*BENCH_FRONT,F+.6,b],seatLite,[0,F+.3,zc]);// a bevel on the cushion's front edge
     for(const ze of [a,b])g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
-    for(let i=0;i<SEAT_SLOTS_Z.length-1;i++){const m=(SEAT_SLOTS_Z[i]+SEAT_SLOTS_Z[i+1])/2;if(m>a+.1&&m<b-.1)g.beam([s*(BENCH_FRONT+.05),F+.66,m],[s*(BENCH_FRONT+.05),F+.9,m],.016,K.pole);}// dividers between slots
+    // POLISH 3 (owner shot 68: "remove this divider bar between seats, it's weird just sticking out"): no upright posts between slots
     g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}// luggage rack over the bench
   // grab poles at the door bays (bench ends), the strap rail
   for(const zc of DOORS)for(const d of [-1,1])g.beam([s*.78,F,zc+d*(DOOR_HALF+.12)],[s*.78,CEIL_Y,zc+d*(DOOR_HALF+.12)],.022,K.pole);
