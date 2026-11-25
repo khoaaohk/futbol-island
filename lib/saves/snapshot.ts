@@ -26,6 +26,7 @@ export const SYNC_KEYS:readonly string[]=[
  // Exploration
  'futbol-island-quests-v1','fi2-passport-v1','fi2-club-stories-v1','fi2-matchday-coins-v1','fi2-explore-activity-v1',
  'fi2-east-pier-challenge-v1',
+ 'fi2-summit-practice-v1',// Summit 5s practice (Nov 24 2026, lib/town/summitPractice.ts): the drill on the pitch + the player's edited layouts (≤ ~3 KB)
  'fi2-summit-kick-v1','fi2-telescope-v1',// Summit Isle (Oct 12 2026): the Summit Kick best; the telescope's glints (the telescope was removed Oct 14 2026: the key
  // stays so an older save's data still round-trips and is never dropped)
  // The museum passport (Oct 9 2026): exhibits stepped inside / finished (lib/museum/museumVisits.ts)
