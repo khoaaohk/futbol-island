@@ -34,7 +34,18 @@ import {AGE_PROFILES} from '../town/townsfolkCast';
  *  the strap), strapPhone (+ a phone in the other), stand (arms down: walking on / off, kids), standHold (a ball in front). */
 export const PAX_POSE={lap:0,hold:1,phone:2,read:3,strap:4,strapPhone:5,stand:6,standHold:7} as const;
 export const PAX_POSES=8,PAX_KID_SCALE=AGE_PROFILES.kid.height;
-export const paxSeated=(bake:number)=>bake%PAX_POSES<4;
+/** AAA 4 (Nov 25 2026): more bakes after the 16 above, so idles and walks BLEND (createPassengerMesh set(): two bakes and a weight).
+ *  Extras (seated, + PAX_EXTRAS for a kid): a talking hand (chatting with the neighbour), the scarf held up high in two swings (a fan
+ *  waving it as the train passes the stadium), legs swung forward (a kid on the bench; lap or hold). Walk: PAX_WALK_FRAMES bakes over
+ *  one stride (two steps) of a planted-foot cycle, arms swinging or a ball held in front, adult and kid: the host picks the frame
+ *  pair from the distance walked (PAX_STRIDE m a cycle), so the feet never slide. */
+export const PAX_EXTRA={talk:0,cheerA:1,cheerB:2,swing:3,swingHold:4} as const;
+export const PAX_EXTRAS=5,PAX_EXTRA0=2*PAX_POSES,PAX_WALK_FRAMES=8,PAX_WALK0=PAX_EXTRA0+2*PAX_EXTRAS,PAX_BAKES=PAX_WALK0+4*PAX_WALK_FRAMES;
+/** Stride (m per cycle, before the kid scale) of the baked walk; the stance foot moves back at exactly the root's speed. */
+export const PAX_STRIDE=.9,PAX_STANCE=.62;
+export const paxExtra=(x:number,kid:boolean)=>PAX_EXTRA0+(kid?PAX_EXTRAS:0)+x;
+export const paxWalk=(f:number,kid:boolean,ball:boolean)=>PAX_WALK0+((kid?2:0)+(ball?1:0))*PAX_WALK_FRAMES+((f%PAX_WALK_FRAMES)+PAX_WALK_FRAMES)%PAX_WALK_FRAMES;
+export const paxSeated=(bake:number)=>bake<PAX_EXTRA0?bake%PAX_POSES<4:bake<PAX_WALK0;
 /** Prop bits (PaxLook.props). */
 export const PAX_PROP={ball:0,bento:1,paper:2,phone:3,notebook:4,camera:5,scarf:6,bag:7} as const;
 export type PaxProp=keyof typeof PAX_PROP;
@@ -59,11 +70,26 @@ export const PAX_STRAP_HAND={y:1.5,z:.24,x:.23} as const;
 export const PAX_SEAT_BACK:Record<BeanBuild,number>=(()=>{const deep=(s:typeof BEAN_SHAPES.regular)=>{let z=0;for(let u=.15;u<=.6;u+=.05)z=Math.min(z,beanPoint(s,u,Math.PI).z);return z;};
  const all=Object.values(BEAN_SHAPES).map(deep),env=Math.min(...all),o={} as Record<BeanBuild,number>;for(const k of Object.keys(BEAN_SHAPES) as BeanBuild[])o[k]=Math.max(0,deep(BEAN_SHAPES[k])-env);return o;})();
 const STATIC_W=BD.lumbar,DYN_W=BD.size-BD.lumbar,ROWS_MIN=64;
-type Bake={dyn:Float32Array;torso:T.Matrix4;hands:[T.Vector3,T.Vector3];feet:[T.Vector3,T.Vector3]};
+type Bake={dyn:Float32Array;torso:T.Matrix4;hands:[T.Vector3,T.Vector3];feet:[T.Vector3,T.Vector3];/** AAA 4: what it is (hand props) */kind?:'base'|'extra'|'walk';pose?:number;kid?:boolean;ball?:boolean;/** torso frame split for blends */tp?:T.Vector3;tq?:T.Quaternion};
 
 // ---------------------------------------------------------------- the bake (one hidden rig, once)
 /** Arms relaxed by the sides (standing). */
 function relaxArms(o:TrickPose){for(const a of o.arms){a.sx=.08;a.sz=.1;a.el=-.32;a.w=1;}}
+/** AAA 4: frame f of the walk cycle (PAX_WALK_FRAMES a stride): each foot planted for PAX_STANCE of the cycle, sliding back at a
+ *  constant rate (so a linear blend between two frames keeps it planted), lifted and swung forward the rest; the pelvis bobs twice a
+ *  cycle; the arms swing against the legs (or hold a ball in front). Rig-local metres before the kid scale. */
+function walkPose(f:number,ball:boolean){
+ const o=standPose(),ph=f/PAX_WALK_FRAMES,A=PAX_STANCE*PAX_STRIDE/2,zs=[0,0];
+ o.pelvisY=.875+.02*Math.cos((ph-.31)*Math.PI*4);o.torsoPitch=.05;
+ for(const [i,l] of o.legs.entries()){const u=(ph+i*.5)%1;
+  if(u<PAX_STANCE){l.z=A-2*A*(u/PAX_STANCE);l.y=.075;l.toe=0;}
+  else{const q=(u-PAX_STANCE)/(1-PAX_STANCE),e=q*q*(3-2*q);l.z=-A+2*A*e;l.y=.075+.09*Math.sin(Math.PI*q);l.toe=.2*Math.sin(Math.PI*q);}
+  zs[i]=l.z/A;}
+ o.pelvisYaw=.07*zs[1];o.torsoYaw=-.1*zs[1];
+ if(ball){for(const [i,a] of o.arms.entries())restHand(o,i?1:-1,.27,o.pelvisY+.12,a);}
+ else for(const [i,a] of o.arms.entries()){const z=zs[1-i];a.sx=.04-.3*z;a.sz=.1;a.el=-.3-.18*Math.max(0,z);a.w=1;}
+ return o;
+}
 function standPose(){const o=createTrickPose();o.w=1;o.pelvisY=.9;o.headPitch=0;for(const [i,l] of o.legs.entries()){l.x=i?.11:-.11;l.y=.075;l.z=0;l.toe=0;l.w=1;}relaxArms(o);return o;}
 export type PaxBaked={statics:Float32Array;hats:Uint8Array;bakes:Bake[]};
 /** Bakes every pose (adult and kid) and every cast member's static row from one hidden rig. Pure CPU, ~90 ms in all, once.
@@ -89,6 +115,7 @@ export function* bakeSteps(looks:readonly PaxLook[]):Generator<void,PaxBaked,voi
   return {dyn,torso,hands:[at(BD.frames,0,-.02,0,new T.Vector3()),at(BD.frames+3,0,-.02,0,new T.Vector3())],feet:[at(BD.frames+6,0,0,.05,new T.Vector3()),at(BD.frames+9,0,0,.05,new T.Vector3())]};
  };
  {
+  const adultX:Bake[]=[],kidX:Bake[]=[],adultW:Bake[]=[],kidW:Bake[]=[];
   for(const kid of [false,true]){
    const scale=kid?PAX_KID_SCALE:1;if(kid)rig.setProfile(AGE_PROFILES.kid);
    const seat=()=>npcSeatPose('bench',scale);
@@ -101,10 +128,22 @@ export function* bakeSteps(looks:readonly PaxLook[]):Generator<void,PaxBaked,voi
    const strap=standPose(),H=PAX_STRAP_HAND;restHand(strap,1,H.z/scale,H.y/scale,strap.arms[1]);
    const strapPhone=standPose();restHand(strapPhone,1,H.z/scale,H.y/scale,strapPhone.arms[1]);restHand(strapPhone,-1,.3,strapPhone.pelvisY+.36,strapPhone.arms[0]);
    const standHold=standPose();for(const [i,a] of standHold.arms.entries())restHand(standHold,i?1:-1,.27,standHold.pelvisY+.12,a);
-   bakes.push(lap);
-   for(const [o,i] of [[hold,1],[phone,2],[read,3],[strap,4],[strapPhone,5],[standPose(),6],[standHold,7]] as const){bakes.push(run(o,PAX_GAZE_PITCH[i]));yield;}
+   const tag=(b:Bake,kind:'base'|'extra'|'walk',pose:number,ball=false)=>{b.kind=kind;b.pose=pose;b.kid=kid;b.ball=ball;return b;};
+   bakes.push(tag(lap,'base',0));
+   for(const [o,i] of [[hold,1],[phone,2],[read,3],[strap,4],[strapPhone,5],[standPose(),6],[standHold,7]] as const){bakes.push(tag(run(o,PAX_GAZE_PITCH[i]),'base',i));yield;}
+   // AAA 4: the extras (seated) and the walk cycle, kept aside so the base indices stay pose + PAX_POSES × kid
+   const talk=seat();restHand(talk,1,talk.pelvisZ+.36,talk.pelvisY+.34,talk.arms[1]);talk.headYaw=0;
+   const cheer=(sx:number,sz:number,el:number)=>{const o=seat();const a=o.arms[1];a.sx=sx;a.sz=sz;a.el=el;a.w=1;o.torsoRoll=-.05;return o;};
+   const swing=(o:ReturnType<typeof seat>)=>{for(const l of o.legs){l.z+=.17;l.y+=.15;l.toe=-.2;}return o;};
+   const swingHold=swing(seat());for(const [i,a] of swingHold.arms.entries())restHand(swingHold,i?1:-1,lapZ,lapY+.07,a);
+   const ex=kid?kidX:adultX;
+   for(const [o,i] of [[talk,0],[cheer(-2.55,.42,-.3),1],[cheer(-2.8,.08,-.75),2],[swing(seat()),3],[swingHold,4]] as const){ex.push(tag(run(o,.06),'extra',i));yield;}
+   const wk=kid?kidW:adultW;
+   for(const ball of [false,true])for(let f=0;f<PAX_WALK_FRAMES;f++){wk.push(tag(run(walkPose(f,ball),0),'walk',f,ball));if(f%2)yield;}
   }
+  bakes.push(...adultX,...kidX,...adultW,...kidW);
   }
+  for(const b of bakes){const p=new T.Vector3(),q=new T.Quaternion(),s=new T.Vector3();b.torso.decompose(p,q,s);b.tp=p;b.tq=q;}
  return {statics,hats,bakes};
  }finally{rig.dispose();}
 }
@@ -112,7 +151,7 @@ export function* bakeSteps(looks:readonly PaxLook[]):Generator<void,PaxBaked,voi
 // ---------------------------------------------------------------- props (one geometry, every prop in every baked spot)
 /** aPax: x colour code (0 prop colour A, 1 B, 2 white, 3 ink, 4 print grey, 5 screen, 6 wood), y prop bit, z selector (a bake
  *  index; 20 any pose, 21 standing only, 22 seated only; ≥ 20 = worn on the body: follows the build's width / height). */
-const C={A:0,B:1,white:2,ink:3,print:4,screen:5,wood:6,case:7} as const,ANY=20,STANDING=21,SEATED=22;
+const C={A:0,B:1,white:2,ink:3,print:4,screen:5,wood:6,case:7} as const,ANY=100,STANDING=101,SEATED=102;
 function tagged(g:T.BufferGeometry,colour:number|((tri:number,c:T.Vector3)=>number),bit:number,sel:number){
  const out=g.index?g.toNonIndexed():g;if(out!==g)g.dispose();for(const k of Object.keys(out.attributes))if(k!=='position'&&k!=='normal')out.deleteAttribute(k);if(!out.getAttribute('normal'))out.computeVertexNormals();
  const pos=out.getAttribute('position'),n=pos.count,a=new Float32Array(n*3),c=new T.Vector3();
@@ -158,12 +197,19 @@ function wornProps(out:T.BufferGeometry[]){
 }
 /** The hand-held props of one bake (its hands, in the root frame → that bake's torso frame). */
 function handProps(out:T.BufferGeometry[],b:Bake,bi:number){
- const pose=bi%PAX_POSES;if(bi>=PAX_POSES&&pose!==PAX_POSE.hold&&pose!==PAX_POSE.lap&&pose!==PAX_POSE.standHold)return;
+ const P0=PAX_POSE,X=PAX_EXTRA,kind=b.kind??'base',kid=!!b.kid;
+ // AAA 4: extras and walk frames map onto the base pose whose props they carry (a held ball, a bag at the feet); -1 none
+ const pose=kind==='base'?b.pose??bi%PAX_POSES:kind==='walk'?(b.ball?P0.standHold:-1):b.pose===X.swingHold?P0.hold:b.pose===X.swing?-1:P0.lap;
+ if(kind==='base'&&kid&&pose!==P0.hold&&pose!==P0.lap&&pose!==P0.standHold)return;
+ if(kind==='extra'&&(b.pose===X.cheerA||b.pose===X.cheerB)){// the scarf held up in the raised hand: striped, hanging from the fist
+  const toT=b.torso.clone().invert(),h=b.hands[1];for(let j=0;j<5;j++){const g=place(box(.085,.1,.02),h.x+.02,h.y-.06-j*.1,h.z+.01*j,0,0,b.pose===X.cheerA?.12:-.1);g.applyMatrix4(toT);out.push(tagged(g,j%2?C.B:C.A,PAX_PROP.scarf,bi));}}
+ if(pose<0)return;
  const toTorso=b.torso.clone().invert(),P=PAX_POSE,add=(g:T.BufferGeometry,colour:Parameters<typeof tagged>[1],bit:number)=>{g.applyMatrix4(toTorso);out.push(tagged(g,colour,bit,bi));};
  const [L,R]=b.hands,mid=L.clone().add(R).multiplyScalar(.5);
  if(pose===P.hold||pose===P.standHold){
   const f=football(.1);place(f.g,mid.x,mid.y+(pose===P.hold?.035:.0),mid.z+.02);add(f.g,f.colour,PAX_PROP.ball);
  }
+ if(kind!=='base'){if(pose<4&&pose>=0&&kind==='extra'){const f=b.feet[0].clone().add(b.feet[1]).multiplyScalar(.5);add(place(box(.28,.3,.13),f.x,.15,f.z+.13,-.08),C.A,PAX_PROP.bag);add(place(box(.25,.1,.02),f.x,.24,f.z+.2,-.08),C.B,PAX_PROP.bag);}return;}
  if(pose===P.hold){
   add(place(box(.2,.075,.14),mid.x,mid.y+.0,mid.z+.01),C.wood,PAX_PROP.bento);
   add(place(box(.212,.022,.152),mid.x,mid.y+.048,mid.z+.01),C.A,PAX_PROP.bento);
@@ -197,16 +243,17 @@ function propGeometry(bakes:readonly Bake[]){
 const PROP_VERT_HEAD=`attribute vec3 aPax;attribute vec4 iPose;attribute vec3 iColA;attribute vec3 iColB;varying vec3 vPax;
 `;
 const PROP_VERT_BODY=`
- {float sel=aPax.z,b=iPose.x;bool seated=mod(b,${PAX_POSES}.)<3.5;
-  bool on=mod(floor(iPose.y/exp2(aPax.y)+.5),2.)>.5&&(sel<19.5?abs(sel-b)<.5:sel<20.5?true:sel<21.5?!seated:seated);
-  if(!on)transformed=vec3(0.);else if(sel>19.5){transformed.xz*=iPose.z;transformed.y+=iPose.w;}
+ {float sel=aPax.z,b=iPose.x;bool seated=b<${PAX_EXTRA0}.-.5?mod(b,${PAX_POSES}.)<3.5:b<${PAX_WALK0}.-.5;
+  float xe=mod(b-${PAX_EXTRA0}.,${PAX_EXTRAS}.);bool cheer=b>${PAX_EXTRA0}.-.5&&b<${PAX_WALK0}.-.5&&xe>.5&&xe<2.5;
+  bool on=mod(floor(iPose.y/exp2(aPax.y)+.5),2.)>.5&&(sel<99.5?abs(sel-b)<.5:sel<100.5?!(cheer&&abs(aPax.y-${PAX_PROP.scarf}.)<.5):sel<101.5?!seated:seated);
+  if(!on)transformed=vec3(0.);else if(sel>99.5){transformed.xz*=iPose.z;transformed.y+=iPose.w;}
   float c=aPax.x;vPax=c<.5?iColA:c<1.5?iColB:c<2.5?vec3(.95,.93,.88):c<3.5?vec3(.12,.12,.14):c<4.5?vec3(.55,.53,.5):c<5.5?vec3(.55,.8,.98):c<6.5?vec3(.62,.4,.22):vec3(.3,.77,.78);}
 `;
 function propMaterial(){
  const m=new T.MeshLambertMaterial({color:0xffffff});
  m.onBeforeCompile=sh=>{sh.vertexShader=PROP_VERT_HEAD+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>'+PROP_VERT_BODY);
   sh.fragmentShader='varying vec3 vPax;\n'+sh.fragmentShader.replace('vec4 diffuseColor = vec4( diffuse, opacity );','vec4 diffuseColor = vec4( diffuse*vPax, opacity );');};
- m.customProgramCacheKey=()=>'train-pax-props-1';return m;
+ m.customProgramCacheKey=()=>'train-pax-props-2';return m;
 }
 
 // ---------------------------------------------------------------- the meshes
@@ -247,22 +294,29 @@ export function createPassengerMesh(max:number,looks:readonly PaxLook[],pre?:Pax
  hair.instanceMatrix=hat.instanceMatrix=body.instanceMatrix;// one torso-frame matrix buffer for body, hair and hat
  const pg=propGeometry(bakes),attr=(n:number)=>{const a=new T.InstancedBufferAttribute(new Float32Array(max*n),n);a.setUsage(T.DynamicDrawUsage);return a;};
  const iPose=attr(4),iColA=attr(3),iColB=attr(3);pg.setAttribute('iPose',iPose);pg.setAttribute('iColA',iColA);pg.setAttribute('iColB',iColB);
- const pax=pg.getAttribute('aPax'),propV=subsetView(pg,v=>pax.getY(v)*32+pax.getZ(v));
+ const pax=pg.getAttribute('aPax'),propV=subsetView(pg,v=>pax.getY(v)*128+pax.getZ(v));
  const props=new T.InstancedMesh(propV.geometry,propMaterial(),max);props.name='train-pax-props';props.frustumCulled=false;props.count=0;props.castShadow=props.receiveShadow=false;props.instanceMatrix=body.instanceMatrix;group.add(props);
  // what each instance row holds now (rows are rewritten only when that changes: a texture upload only then)
- const rowCast=new Int32Array(max).fill(-1),rowBake=new Int32Array(max).fill(-1),rowGP=new Float32Array(max),rowGY=new Float32Array(max),rowHat=new Uint8Array(max);
- const tm=new T.Matrix4(),col=new T.Color();let fixedDirty=false,poseDirty=false;
+ const rowCast=new Int32Array(max).fill(-1),rowBake=new Int32Array(max).fill(-1),rowB2=new Int32Array(max).fill(-1),rowW=new Float32Array(max),rowGP=new Float32Array(max),rowGY=new Float32Array(max),rowHat=new Uint8Array(max);
+ const tm=new T.Matrix4(),col=new T.Color(),bp=new T.Vector3(),bq=new T.Quaternion(),one=new T.Vector3(1,1,1);let fixedDirty=false,poseDirty=false,lpm=-1,llo=-1,lhi=-1,propKey=0;
  const fits=looks.map(l=>WORN_FIT[l.look.build]??WORN_FIT.regular),colA=looks.map(l=>new T.Color(l.propA)),colB=looks.map(l=>new T.Color(l.propB));
  return {
   group,bakes,statics,
   /** Instance n: cast member ci in bake bi (paxPoseFor) at `root` (the rig-root matrix in the world, kid scale included), neck
    *  gaze pitch / yaw (rad; + pitch = down, + yaw = toward the passenger's +x). */
-  set(n:number,ci:number,bi:number,root:T.Matrix4,gazeP:number,gazeY:number){
-   limbs.setMatrixAt(n,root);tm.multiplyMatrices(root,bakes[bi].torso);body.setMatrixAt(n,tm);
+  set(n:number,ci:number,bi:number,root:T.Matrix4,gazeP:number,gazeY:number,bi2=-1,w=0){
+   // AAA 4: a blend of two bakes (bi → bi2 by w, quantised to 1/64): the pose row is their lerp, the torso frame lerp + slerp; the
+   // props follow the nearer bake. w 0 (or no bi2) = the plain bake, as before (the row is rewritten only when this changes).
+   const wq=bi2>=0?Math.round(Math.max(0,Math.min(1,w))*64)/64:0,b2=wq>0?bi2:-1;
+   limbs.setMatrixAt(n,root);
+   if(b2<0)tm.multiplyMatrices(root,bakes[bi].torso);else{const A=bakes[bi],B=bakes[b2];bp.lerpVectors(A.tp!,B.tp!,wq);bq.slerpQuaternions(A.tq!,B.tq!,wq);tm.compose(bp,bq,one).premultiply(root);}
+   body.setMatrixAt(n,tm);
    if(rowCast[n]!==ci){rowCast[n]=ci;fixedA.set(statics.subarray(ci*STATIC_W*4,(ci+1)*STATIC_W*4),n*STATIC_W*4);rowHat[n]=hats[ci];fixedDirty=true;}
    const gp=Math.round(gazeP*50)/50,gy=Math.round(gazeY*50)/50;
-   if(rowBake[n]!==bi||rowGP[n]!==gp||rowGY[n]!==gy){rowBake[n]=bi;rowGP[n]=gp;rowGY[n]=gy;const o=n*DYN_W*4;poseA.set(bakes[bi].dyn,o);poseA[o+3]=gp;poseA[o+7]=gy;poseDirty=true;}
-   const L=looks[ci],f=fits[ci],a=iPose.array as Float32Array;a[n*4]=bi;a[n*4+1]=L.props;a[n*4+2]=f[0];a[n*4+3]=f[1];
+   if(rowBake[n]!==bi||rowB2[n]!==b2||rowW[n]!==wq||rowGP[n]!==gp||rowGY[n]!==gy){rowBake[n]=bi;rowB2[n]=b2;rowW[n]=wq;rowGP[n]=gp;rowGY[n]=gy;const o=n*DYN_W*4;
+    if(b2<0)poseA.set(bakes[bi].dyn,o);else{const a=bakes[bi].dyn,c=bakes[b2].dyn;for(let i=0;i<a.length;i++)poseA[o+i]=a[i]+(c[i]-a[i])*wq;}
+    poseA[o+3]=gp;poseA[o+7]=gy;poseDirty=true;}
+   const L=looks[ci],f=fits[ci],a=iPose.array as Float32Array;a[n*4]=b2>=0&&wq>=.5?b2:bi;a[n*4+1]=L.props;a[n*4+2]=f[0];a[n*4+3]=f[1];
    col.copy(colA[ci]).toArray(iColA.array as Float32Array,n*3);col.copy(colB[ci]).toArray(iColB.array as Float32Array,n*3);
   },
   /** After the frame's set() calls: nAll instances (the first nNear with limbs and props); withHats false = the hat draw is skipped
@@ -270,9 +324,11 @@ export function createPassengerMesh(max:number,looks:readonly PaxLook[],pre?:Pax
   commit(nAll:number,nNear:number,withHats=true){
    body.count=hair.count=hat.count=nAll;limbs.count=props.count=nNear;
    // the styles / props of the riders shown now (bitmasks; the subsets re-index only when these change)
-   let hm=0,tm2=0,pm=0,bm=0;for(let i=0;i<nAll;i++){const c=rowCast[i];if(c<0)continue;hm|=1<<castHair[c];if(withHats&&rowHat[i])tm2|=1<<castHat[c];if(i<nNear){pm|=looks[c].props;bm|=1<<rowBake[i];}}
+   let hm=0,tm2=0,pm=0,lo=0,hi=0;const ia=iPose.array as Float32Array;
+   for(let i=0;i<nAll;i++){const c=rowCast[i];if(c<0)continue;hm|=1<<castHair[c];if(withHats&&rowHat[i])tm2|=1<<castHat[c];if(i<nNear){pm|=looks[c].props;const pb=ia[i*4];if(pb<30)lo|=1<<pb;else hi|=1<<(pb-30);}}
+   if(pm!==lpm||lo!==llo||hi!==lhi){lpm=pm;llo=lo;lhi=hi;propKey++;}
    const hairTris=hm?hairV.use(hm,k=>(hm>>k&1)===1):0,hatTris=tm2?hatV.use(tm2,k=>(tm2>>k&1)===1):0;
-   const propTris=pm?propV.use(pm*65536+bm,k=>{const bit=Math.floor(k/32),sel=k%32;return (pm>>bit&1)===1&&(sel>=ANY||(bm>>sel&1)===1);}):0;
+   const propTris=pm?propV.use(propKey,k=>{const bit=Math.floor(k/128),sel=k%128;return (pm>>bit&1)===1&&(sel>=ANY||(sel<30?(lo>>sel&1):(hi>>(sel-30)&1))===1);}):0;
    body.visible=nAll>0;hair.visible=hairTris>0;hat.visible=hatTris>0;limbs.visible=nNear>0;props.visible=propTris>0&&nNear>0;group.visible=nAll>0;
    if(nAll>0){body.instanceMatrix.needsUpdate=true;limbs.instanceMatrix.needsUpdate=nNear>0;}
    if(nNear>0)iPose.needsUpdate=iColA.needsUpdate=iColB.needsUpdate=true;

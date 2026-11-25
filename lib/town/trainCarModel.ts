@@ -143,13 +143,15 @@ const endQuad=(g:VGeo,z:number,dir:number,x0:number,x1:number,y0:number,y1:numbe
  *  top, a light wheel disc, a dark hub and an axle boss, all PART.rearWheel about the wheel's centre (so they turn together). The
  *  polygon's flats sit ON the rail top (the radius is grown by 1 / cos(π / N)). Full: 7N + 2 tris with the flange; far: 3N + 2. */
 export const WHEEL_SIDES=16,WHEEL_SIDES_FAR=9,FLANGE_R=.035,FLANGE_W=.028;
+/** AAA 4: the flange rim's colour: steel polished by the rail head (a thin bright lip that catches the light as the wheel turns). */
+const FLANGE_SHINE='#c4c0b6';
 function wheel(g:VGeo,x:number,az:number,full:boolean){const N=full?WHEEL_SIDES:WHEEL_SIDES_FAR,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],k0=1/Math.cos(Math.PI/N);
  const R=(k:number,px:number,r=WHEEL_R):V=>{const t=k/N*Math.PI*2;return [px,WHEEL_R-Math.cos(t)*r*k0,az+Math.sin(t)*r*k0];};// k = 0: straight down
  const rot=(k:number,px:number,r=WHEEL_R)=>R(k+.5,px,r);// a flat (not a corner) at the bottom
  for(let k=0;k<N;k++){g.quad(rot(k,xi),rot(k+1,xi),rot(k+1,xo),rot(k,xo),K.wheel,ctr,PART.rearWheel,ctr);
   if(k>0&&k<N-1)g.tri(rot(0,xo),rot(k,xo),rot(k+1,xo),K.hub,[xi,WHEEL_R,az],PART.rearWheel,ctr);}
  if(full){const xf=xi-s*FLANGE_W,rf=WHEEL_R+FLANGE_R;// the flange: its rim and the step out to it (seen as a thin dark lip round the tread)
-  for(let k=0;k<N;k++){g.quad(rot(k,xf,rf),rot(k+1,xf,rf),rot(k+1,xi,rf),rot(k,xi,rf),K.spring,ctr,PART.rearWheel,ctr);
+  for(let k=0;k<N;k++){g.quad(rot(k,xf,rf),rot(k+1,xf,rf),rot(k+1,xi,rf),rot(k,xi,rf),FLANGE_SHINE,ctr,PART.rearWheel,ctr);// AAA 4: the rim polished bright by the rail
    g.quad(rot(k,xi,WHEEL_R),rot(k+1,xi,WHEEL_R),rot(k+1,xi,rf),rot(k,xi,rf),K.spring,[xi-s,WHEEL_R,az],PART.rearWheel,ctr);}}
  // the hub: a dark square boss centred on the axle (4 tris; its corners show the spin like the old off-centre plate did)
  const xh=xo+s*.004,hb=.12;for(let k=0;k<4;k++){const a=k/4*Math.PI*2,b=(k+1)/4*Math.PI*2;g.tri([xh+s*.03,WHEEL_R,az],[xh,WHEEL_R+Math.cos(a)*hb,az+Math.sin(a)*hb],[xh,WHEEL_R+Math.cos(b)*hb,az+Math.sin(b)*hb],K.spring,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
@@ -265,9 +267,11 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
   for(let k=0;k<6;k++){const a=k/6*Math.PI*2,b=(k+1)/6*Math.PI*2;g.tri([0,t+.005,z],[Math.cos(a)*.22,t+.005,z+Math.sin(a)*.22],[Math.cos(b)*.22,t+.005,z+Math.sin(b)*.22],K.grille,[0,0,z]);}}
  {const pz=-.5,y=ROOF_TOP-.01;for(const x of [-.42,.42])for(const dz of [-.4,.4])g.box(x,y+.06,pz+dz,.05,.06,.05,K.insul);
   g.box(0,y+.14,pz,.48,.025,.48,K.panto);const knee:V=[0,4.22,pz+.95],head:V=[0,4.74,pz-.2];
-  for(const x of [-.14,.14])g.beam([x,y+.17,pz-.3],[x*.4,knee[1],knee[2]],.03,K.panto);g.beam([0,y+.17,pz-.1],[0,y+.5,pz+.4],.02,K.panto);
-  g.beam(knee,head,.022,K.panto);for(const dz of [-.07,.07])g.beam([-.62,4.77,head[2]+dz],[.62,4.77,head[2]+dz],.022,K.panto);
-  for(const s of [-1,1])g.beam([s*.62,4.77,head[2]],[s*.86,4.66,head[2]],.018,K.panto);}
+  // AAA 4: the arm and the pan head are PART.panto about the base frame (the vehicle shader folds them a little with the sway)
+  const PB:V=[0,y+.17,pz],PP=PART.panto;
+  for(const x of [-.14,.14])g.beam([x,y+.17,pz-.3],[x*.4,knee[1],knee[2]],.03,K.panto,PP,PB);g.beam([0,y+.17,pz-.1],[0,y+.5,pz+.4],.02,K.panto,PP,PB);
+  g.beam(knee,head,.022,K.panto,PP,PB);for(const dz of [-.07,.07])g.beam([-.62,4.77,head[2]+dz],[.62,4.77,head[2]+dz],.022,K.panto,PP,PB);
+  for(const s of [-1,1])g.beam([s*.62,4.77,head[2]],[s*.86,4.66,head[2]],.018,K.panto,PP,PB);}
  return {geometry:g.build(),triangles:g.tris};
 }
 const CAR_GAP_HALF=.2,INNER_BEND=.65;
@@ -374,11 +378,19 @@ const DOOR_PANE_M=(()=>{const yc=(DOOR_Y0+DOOR_Y1)/2;return paneM(0,(DOOR_PANE[0
  *  door(leaf matrix) for every drawn leaf; end(). Allocation-free. */
 export function createTrainGlass(cars:number,doorLeaves:number){
  const look=createVehicleMaterial(),mat=look.material;mat.transparent=true;mat.depthWrite=false;mat.roughness=.18;mat.metalness=.05;mat.name='train-glass';
+ // AAA 4 (window reflections): a faint sky sheen on the panes, a Fresnel rim plus a soft diagonal band in VIEW space, so it slides
+ // across the glass as the camera or the train moves (the scene seen in the pane), dimmed at night; uSheen.w = 0 turns it off (the
+ // lowest heat tier). The same draw, one more program variant (no texture, no light).
+ const sheen=new T.Vector4(.75,.85,.95,1),base=mat.onBeforeCompile.bind(mat);
+ mat.onBeforeCompile=(sh,r)=>{base(sh,r);sh.uniforms.uSheen={value:sheen};sh.fragmentShader='uniform vec4 uSheen;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+ if(uSheen.w>0.){vec3 fiV=normalize(vViewPosition);float fiF=pow(1.-abs(dot(normal,fiV)),3.),fiB=smoothstep(.6,.98,sin(dot(vViewPosition.xy,vec2(.42,.27))+vViewPosition.z*.05));
+  totalEmissiveRadiance+=uSheen.rgb*uSheen.w*(fiF*.3+fiB*.1);}`);};
+ mat.customProgramCacheKey=()=>'street-vehicle-v7-glass';
  const geo=glassGeometry(),mesh=new T.InstancedMesh(geo,mat,cars*(CAR_PANES.length+1)+doorLeaves);
  mesh.name='train-glass';mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.castShadow=false;mesh.receiveShadow=false;mesh.frustumCulled=false;mesh.visible=false;mesh.count=0;mesh.renderOrder=2;
  const tmp=new T.Matrix4();let n=0;
  const put=(m:T.Matrix4,l:T.Matrix4)=>{if(n<mesh.instanceMatrix.count){tmp.multiplyMatrices(m,l);mesh.setMatrixAt(n++,tmp);}};
- return {mesh,look,
+ return {mesh,look,sheen,
   begin(){n=0;},
   shadow(m:T.Matrix4){put(m,SHADOW_M);},
   /** skip: −1 / +1 leaves out that side's window panes (the Inside view's lowered wall), 0 none. */

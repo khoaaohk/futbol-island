@@ -9,7 +9,9 @@ export type VehicleStyle='sedan'|'hatch'|'van'|'wagon'|'jeep'|'taxi'|'pickup';
 /** Ordinary cars by traffic index (the two pickups are indices 7 and 8). */
 export const CAR_STYLES:readonly VehicleStyle[]=['sedan','hatch','taxi','wagon','van','hatch','jeep','pickup','pickup','van','wagon'];
 /** aPart.w: what a vertex belongs to. xyz is the wheel centre for wheels. */
-export const PART={body:0,rearWheel:1,frontWheel:2,head:3,brake:4,left:5,right:6,strap:7} as const;
+export const PART={body:0,rearWheel:1,frontWheel:2,head:3,brake:4,left:5,right:6,strap:7,panto:8} as const;
+/** PART.panto (AAA 4, Island Line pantograph): the arm folds down a little toward its base (aPart.xyz) by uSway.y m at the head, plus
+ *  the car's curve lean (the head stays on the wire while the body leans). Height-weighted, so the base frame never moves. */
 /** PART.strap (Island Line hand straps, Nov 24 2026): swings about its pivot (aPart.xyz, the strap rail) and glows like the interior
  *  (the left / night channel). Lateral: the car's curve lean, read from the instance matrix (4x the roll, outward). Fore-aft: one
  *  pendulum per train (uSway, from car 0's motion in onBeforeRender: O(1) per draw, no per-strap CPU work). Off with reduced motion. */
@@ -136,14 +138,14 @@ export function createVehicleMaterial(){
  let pt=-1,px=0,pz=0,ps=0,acc=0,th=0,om=0,dx=0,dz=1;
  material.onBeforeRender=(_r,_s,_c,geo,obj)=>{
   if(!geo.userData.straps||!(obj as T.InstancedMesh).isInstancedMesh)return;
-  if(!motionOk()){sway.set(0,0,0,0);pt=-1;return;}
+  if(!motionOk()){sway.x=sway.z=sway.w=0;pt=-1;return;}
   const now=performance.now()/1000,dt=now-pt;if(dt<.004&&pt>=0)return;// a second pass in the same frame
   const e=(obj as T.InstancedMesh).instanceMatrix.array,x=e[12],z=e[14];
-  if(pt<0||dt>.3||Math.hypot(x-px,z-pz)>8){pt=now;px=x;pz=z;ps=acc=th=om=0;sway.set(0,0,0,1);return;}
+  if(pt<0||dt>.3||Math.hypot(x-px,z-pz)>8){pt=now;px=x;pz=z;ps=acc=th=om=0;sway.x=sway.z=0;sway.w=1;return;}
   const mx=x-px,mz=z-pz,d=Math.hypot(mx,mz),sp=d/dt;if(d>1e-4){dx=mx/d;dz=mz/d;}
   acc+=((sp-ps)/dt-acc)*(1-Math.exp(-5*dt));ps=sp;pt=now;px=x;pz=z;
   const want=Math.max(-STRAP_MAX,Math.min(STRAP_MAX,-acc*STRAP_GAIN/9.8));
-  om+=(-STRAP_W*STRAP_W*(th-want)-STRAP_DAMP*om)*dt;th=Math.max(-.18,Math.min(.18,th+om*dt));sway.set(dx*th,0,dz*th,1);};
+  om+=(-STRAP_W*STRAP_W*(th-want)-STRAP_DAMP*om)*dt;th=Math.max(-.18,Math.min(.18,th+om*dt));sway.x=dx*th;sway.z=dz*th;sway.w=1;};
  material.onBeforeCompile=shader=>{
   shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};shader.uniforms.uSway={value:sway};
   shader.vertexShader='attribute vec4 aPart;\nuniform vec4 uWheel;\nuniform vec4 uLamp;\nuniform vec4 uSway;\nvarying float vGlow;\n'+shader.vertexShader
@@ -157,13 +159,16 @@ if(fiWheel){vec3 fiQ=transformed-aPart.xyz;fiQ.yz=vec2(fiQ.y*uWheel.x-fiQ.z*uWhe
  if(fiSteer){float fiC=1.-.5*uWheel.w*uWheel.w;fiQ.xz=vec2(fiQ.x*fiC+fiQ.z*uWheel.w,fiQ.z*fiC-fiQ.x*uWheel.w);}
  transformed=aPart.xyz+fiQ;transformed.y+=aPart.z*uWheel.z-aPart.x*uLamp.w;}
 #ifdef USE_INSTANCING
-if(fiW>6.5&&uSway.w>.5){vec3 fiQ=transformed-aPart.xyz;float fiR=${STRAP_ROLL.toFixed(2)}*instanceMatrix[0].y,fiF=dot(instanceMatrix[2].xyz,uSway.xyz),fiCr=cos(fiR),fiSr=sin(fiR),fiCf=cos(fiF),fiSf=sin(fiF);
+if(fiW>6.5&&fiW<7.5&&uSway.w>.5){vec3 fiQ=transformed-aPart.xyz;float fiR=${STRAP_ROLL.toFixed(2)}*instanceMatrix[0].y,fiF=dot(instanceMatrix[2].xyz,uSway.xyz),fiCr=cos(fiR),fiSr=sin(fiR),fiCf=cos(fiF),fiSf=sin(fiF);
  fiQ.xy=vec2(fiQ.x*fiCr-fiQ.y*fiSr,fiQ.x*fiSr+fiQ.y*fiCr);fiQ.zy=vec2(fiQ.z*fiCf-fiQ.y*fiSf,fiQ.z*fiSf+fiQ.y*fiCf);transformed=aPart.xyz+fiQ;}
 #endif
-vGlow=fiW<2.5?0.:fiW<3.5?uLamp.x:fiW<4.5?uLamp.y:fiW<5.5||fiW>6.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
+#ifdef USE_INSTANCING
+if(fiW>7.5){float fiH=clamp((transformed.y-aPart.y)/.6,0.,1.);transformed.y-=fiH*(uSway.y+abs(instanceMatrix[0].y)*.7);transformed.z+=fiH*(uSway.y+abs(instanceMatrix[0].y)*.7)*.35;}
+#endif
+vGlow=fiW<2.5||fiW>7.5?0.:fiW<3.5?uLamp.x:fiW<4.5?uLamp.y:fiW<5.5||fiW>6.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
   shader.fragmentShader='varying float vGlow;\n'+shader.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;','vec3 totalEmissiveRadiance = vColor.rgb * vGlow;');
  };
- material.customProgramCacheKey=()=>'street-vehicle-v6';
- return {material,wheel,lamp};
+ material.customProgramCacheKey=()=>'street-vehicle-v7';
+ return {material,wheel,lamp,sway};
 }
 export const triangleCount=(g:T.BufferGeometry)=>g.getAttribute('position').count/3;

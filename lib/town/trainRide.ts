@@ -20,7 +20,7 @@ import {trainLayout} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_STOPS,DOOR_DELAY,DOOR_MOVE,DOOR_HOLD,LAP,TRAIN_LENGTH} from './trainSchedule';
 import {TRAIN_SEATS,CAR_FLOOR_Y,SEAT_TABLE,PLAYER_SEATS,type SeatPose} from './trainRunning';
 import {HALF_W,DOORS} from './trainCarModel';
-import {trainRiderPose,trainStrapPose,swayStrapPose} from '../graphics/trainSeatPose';
+import {trainRiderPose,trainStrapPose,swayStrapPose,KNEEL} from '../graphics/trainSeatPose';
 import {toCar,fromCar,stepWalk,seatAisle,nearestFreeSeat,nearDoor,trackSOfU,WALK_IN,NEAR_SEAT,GLOW_SEAT,BAY_X,type TrainLocal} from './trainWalk';
 import type {TrickPose} from '../graphics/trickPose';
 import {springTo} from './zipline';
@@ -196,7 +196,7 @@ export function platformSpot(i:number,s:number,out:{x:number;y:number;z:number;y
 }
 
 type DoorSpot={x:number;y:number;z:number;yaw:number;car:number;door:number};
-type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;
+type Run={states:readonly {s:number;at:number;doors:number;dwellLeft:number;next:number;t:number;v?:number}[];seatPose(k:number,j:number,out:SeatPose,now?:number):SeatPose;ridden:Uint8Array;
  /** The local runner (door hold for a rider: how long train i's doors have been held at this stop). */runner?:{doorHeldFor(i:number):number};
  /** Car c of train k's matrix this frame (Gameplay 3: the standing rider's train-relative spot). */carMatrixOf?(k:number,c:number,out:T.Matrix4):T.Matrix4;
  /** The open door nearest x, z (trainRunning.doorSpot); null while the train runs. */doorSpot?(k:number,x:number,z:number,out:DoorSpot):DoorSpot|null};
@@ -230,7 +230,7 @@ export function createTrainRide(ports:Ports){
  // Gameplay 3: standing in the aisle. sp = the train-frame spot (trainWalk.ts: x across, u along car 0), moved by the stick / WASD
  // relative to the camera; tw = the stand-up / sit-down ease (twSit: the seat being sat in, -1 standing up); the strap pose fades in
  // when you stop; gait = the frame Town poses the rig in (the rig walks in the train, then is put back in the world).
- let standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
+ let swayV=NaN,swayA=0,swayP=0,swayR=0,standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
  const sp={x:0,u:0},twFrom={x:0,u:0},twTo={x:0,u:0},mv={x:0,z:0},carL:TrainLocal={car:0,x:0,z:0},carM=new T.Matrix4(),pv=new T.Vector3(),aisle={x:0,z:0},gp:SeatPose={x:0,y:0,z:0,yaw:0};
  const straps:[TrickPose,TrickPose]=[trainStrapPose(-1),trainStrapPose(1)];
  const gait={on:false,x:0,z:0,facing:NaN};
@@ -405,6 +405,15 @@ export function createTrainRide(ports:Ports){
   const st=run.states[k],atDoor=st.at>=0&&st.doors>=DOORS_OPEN&&tw<0&&nearDoor(sp.x,sp.u)>=0;
   if(view.nearSeat!==(nearSeatJ>=0)||view.nearDoor!==atDoor)trainRideStore.set({nearSeat:nearSeatJ>=0,nearDoor:atDoor});
  }
+ /** AAA 4 (owner: "the seated pose subtly reacts to curves and braking"): the kneeling rider's torso tips with the car, eased: the
+  *  curve (the car's lean) toward / away from the window (pitch), the lurch of pulling away or braking along the train (roll toward
+  *  the way it was going). A few multiplies a frame; none with reduced motion. */
+ function seatSway(run:Run,dt:number,reduced:boolean){
+  const h=Math.min(dt,.1),st=run.states[k],v=st.v??0;if(h>0&&Number.isFinite(swayV))swayA+=(Math.max(-3,Math.min(3,(v-swayV)/h))-swayA)*Math.min(1,h*4);swayV=v;
+  let dp=0,dr=0;if(!reduced&&run.carMatrixOf){run.carMatrixOf(k,Math.max(0,Math.min(1,j>>2)),carM);const e=carM.elements,fwdX=Math.sin(pose.yaw)*e[0]+Math.cos(pose.yaw)*e[2];
+   dp=Math.max(-.06,Math.min(.06,-e[1]*Math.sign(fwdX)*1.3));dr=Math.max(-.08,Math.min(.08,swayA*.035*((pose.lean??1)>0?1:-1)));}
+  const r=1-Math.exp(-4*h);swayP+=(dp-swayP)*r;swayR+=(dr-swayR)*r;for(const t of tricks){t.torsoPitch=KNEEL.pitch+swayP;t.torsoRoll=swayR;}
+ }
  /** A tap on a free seat in reach while standing: walk over and sit (the nearest on screen within SEAT_TAP_PX). */
  function tapSeat(cx:number,cy:number,el:Element){
   if(!standing||tw>=0||!lastCam)return false;const r=el.getBoundingClientRect();let best=-1,bd=SEAT_TAP_PX;
@@ -524,7 +533,7 @@ export function createTrainRide(ports:Ports){
     if(view.exitTo!==to||view.exitQueued!==exitQ||view.closing!==closing)trainRideStore.set({exitTo:to,exitQueued:exitQ,closing});}
    if(standing&&run.carMatrixOf)standFrame(run,dt,reduced);
    if(!riding())return;
-   if(!standing){blend=Math.min(1,blend+dt*(reduced?6:2.5));run.seatPose(k,j,pose);ports.seat(pose);}
+   if(!standing){blend=Math.min(1,blend+dt*(reduced?6:2.5));run.seatPose(k,j,pose);ports.seat(pose);seatSway(run,dt,reduced);}
    if(st.at!==lastAt){
     if(st.at>=0){run.seatPose(k,j,probe);anchor.x=probe.x;anchor.y=probe.y;anchor.z=probe.z;anchor.yaw=probe.yaw;setNote(arriveLine(st.at));}
     else if(lastAt>=0){setNote(nextStopLine(st.next));}

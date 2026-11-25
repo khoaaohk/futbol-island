@@ -12,9 +12,9 @@ import {HALF_W} from './trainCarModel';
 /** Car-local window glow quads: z centres along the car, the band's height and centre (m). */
 const WIN_Z=[-4.3,-1.45,1.45,4.3],WIN_LEN=3.9,WIN_H=1.35,WIN_Y=2.6;
 /** Instances per train: windows (4 × 2 sides × 2 cars) + spill (2 × 2) + head 2 + tail 2 + boards 2 + beam 3 + tunnel walls 6. */
-export const GLOW_PER_TRAIN=4*2*2+4+2+2+2+3+6;
+export const GLOW_PER_TRAIN=4*2*2+4+2+2+2+3+6+1;// AAA 4: + the pantograph spark
 /** Colours (linear, before the night factor; additive, so > 1 saturates toward white in the halo's core). */
-const C={win:[1.3,.8,.38],spill:[.95,.66,.36],platform:[1.1,.76,.42],head:[2.6,2.35,1.9],beam:[1.25,1.1,.85],wall:[1.05,.92,.7],tail:[2.4,.18,.1],board:[1.4,.8,.25]} as const;
+const C={win:[1.3,.8,.38],spill:[.95,.66,.36],platform:[1.1,.76,.42],head:[2.6,2.35,1.9],spark:[2.2,2.6,3.4],beam:[1.25,1.1,.85],wall:[1.05,.92,.7],tail:[2.4,.18,.1],board:[1.4,.8,.25]} as const;
 const Y_UP=new T.Vector3(0,1,0);
 
 export function createTrainNightGlow(trains:number){
@@ -33,6 +33,9 @@ export function createTrainNightGlow(trains:number){
   p.set(x,y,z).applyMatrix4(cm);d.subVectors(cam,p);const dist=d.length();if(dist<.5)return;d.multiplyScalar(1/dist);
   const e=cm.elements;ax.set(e[8],e[9],e[10]).normalize();const f=d.dot(ax),face=Math.max(0,Math.min(1,(f+.15)/.55));if(face<=0)return;
   p.addScaledVector(d,.35);q.setFromUnitVectors(Y_UP,d);s.set(size,1,size);m.compose(p,q,s);put(m,c,w*face*face);};
+ /** A halo seen from every side (no facing test), turned to the camera. */
+ const halo2=(cm:T.Matrix4,x:number,y:number,z:number,size:number,c:readonly number[],w:number)=>{p.set(x,y,z).applyMatrix4(cm);d.subVectors(cam,p);const dist=d.length();if(dist<.5)return;d.multiplyScalar(1/dist);
+  q.setFromUnitVectors(Y_UP,d);s.set(size,1,size);m.compose(p,q,s);put(m,c,w);};
  return {mesh,
   /** The street lamps' light-pool material (world.ts), set once after it exists; until then nothing is drawn. */
   use(mat:T.Material){(mesh.material as T.Material).dispose();mesh.material=mat;ready=true;},
@@ -49,6 +52,8 @@ export function createTrainNightGlow(trains:number){
    if(rear){halo(cm,-1.06,1.45,6,1.05,C.tail,1);halo(cm,1.06,1.45,6,1.05,C.tail,1);}
    if(lead||rear)halo(cm,0,3.43,6,1.1,C.board,.55);
   },
+  /** AAA 4: a pantograph spark on the wire: a small blue-white halo at car-local (x, y, z) (size m, strength w). */
+  spark(cm:T.Matrix4,x:number,y:number,z:number,size:number,w:number){halo2(cm,x,y,z,size,C.spark,w);},
   /** The beam pool on the track ahead (world x, y, z, tangent tx, tz), weight w (nearer = brighter). */
   beam(x:number,y:number,z:number,tx:number,tz:number,w:number){q.setFromAxisAngle(Y_UP,Math.atan2(tx,tz));m.compose(p.set(x,y+.06,z),q,s.set(3.4,1,7.5));put(m,C.beam,w);},
   /** The beam on a tunnel wall: a vertical wash at lateral offset v (signed, m) from the centre line at (x, z), floor height y. */

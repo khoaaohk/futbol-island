@@ -27,13 +27,17 @@
  */
 import * as T from 'three';
 import type {Obstacle} from './simulation';
-import {TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,TUNNEL_HALF_WIDTH,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
+import {inSouthBridgeS,TRACK,TRACK_DS,TRAIN_STATIONS,TRAIN_CROSSINGS,STATION_HALF,STATION_PLATFORM_Y,TrackKind,TUNNEL,TUNNEL_HALF_WIDTH,trackAt,leftNormal,wrapS,bedAt} from './trainTrack';
 import {trainLayout,trainWalkHeight,trainDeckAt,swimDeckBlocked,trainSwimBlocked,bridgeHeads} from './trainLayout';
 import {TRAIN_COUNT,TRAIN_CARS,CAR_LENGTH,CAR_GAP,TRAIN_LENGTH,LOOK_HALF,TRAIN_STOPS,createTrainRunner,newTrainState,trainAt,trainPhase,
  scheduleAt,crossingFor,nextTrains,waitText,trainClockSec,LAP,type TrainState} from './trainSchedule';
 import {createVehicleMaterial,PART} from '../graphics/trafficVehicles';
 import {MACHINE_NIGHT} from '../graphics/machineNightGlow';
 /** The front from 20 m short of the west portal until the rear has left the east one (trains run west → east through the hill). */
+/** AAA 4: the car's light by section (material colour): in the tunnel, the truss's deepest shade, and the interior lamp lift there. */
+const SHADE={tunnel:.74,truss:.09,lamp:1.1} as const,DOOR_BOUNCE=[.32,.28] as const;
+/** The car (0 / 1) of train i that sparks in this 0.4 s bucket, or −1 (seeded: about one bucket in 23). */
+const sparkCar=(i:number,clock:number)=>{const b=Math.floor(clock*2.5),h=Math.imul(b+i*97,2654435761)>>>0;return h%23===0?(h>>>8)&1:-1;};
 const tunnelLamps=(s:number)=>{const a=wrapS(s-TUNNEL.west.s+20);return a<TUNNEL.east.s-TUNNEL.west.s+20+TRAIN_LENGTH;};
 
 /** Phase 4: wheel clack within CLACK_RANGE m (one per CLACK_STEP m run), door chime within DOOR_SOUND m, arrival melody within ARRIVE_SOUND m. */
@@ -208,6 +212,7 @@ export type TrainFrame={dt:number;camera:T.Camera;player:{x:number;y:number;z:nu
  /** prefers-reduced-motion: the boards change without the flip. */reduced?:boolean;
  /** Nov 24 2026: the local player stands on a train's roof (trainRoof.ts): not a person on the track, never pushed. */onRoof?:boolean;/** AAA 2: the local player is in the air (jetpack, a fall, a jump, easing down to land): not blocked or knocked by the cars. */air?:boolean;
  /** Nov 24 2026: the local player is on a ride faster than Town's bonk speed: a stopped car bonks instead of blocking. */fast?:boolean;
+ /** AAA 4: Town's effective heat tier (0 best … 4 lowest): the spark and the glass sheen are off on the lowest. */tier?:number;
  /** Gameplay 2 (owner, Nov 24 2026): the train the local player is boarding or waiting for on its platform (-1: none): its doors
   *  are held open up to DOOR_HOLD s past their closing time (trainSchedule runner). */boardHold?:number};
 export type TrainFrameResult={/** gentle slide for the local player (m this frame) */nudgeX:number;nudgeZ:number;/** POLISH 4: walked into an open doorway from the platform (train, car, door; -1 none): Town boards you standing */walkInTrain:number;walkInCar:number;walkInDoor:number;/** a note to show once */note:string|null;
@@ -226,7 +231,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const openGeo:(T.BufferGeometry|null)[]=LIVERIES.map(()=>null),openOf=(lv:number)=>openGeo[lv]??(openGeo[lv]=buildCarGeometry(LIVERIES[lv],true).geometry);
  const trains=Array.from({length:TRAIN_COUNT},(_,i)=>{const look=createVehicleMaterial(),lv=i%LIVERIES.length,mesh=new T.InstancedMesh(detail[lv].geometry,look.material,TRAIN_CARS);
   mesh.name='train-'+'abc'[i];mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.castShadow=false;mesh.receiveShadow=false;mesh.frustumCulled=false;mesh.visible=false;
-  look.lamp.set(1,.9,0,0);root.add(mesh);return {mesh,look,lv,far:false,spin:0,tun:0};});
+  look.lamp.set(1,.9,0,0);root.add(mesh);return {mesh,look,lv,far:false,spin:0,tun:0,tw:0,flick:-9,shade:1,dPrev:0,openAt:-9,shutAt:-9};});
  const doorLook=createVehicleMaterial(),DOOR_LEAVES=TRAIN_CARS*DOORS.length*4,doors=new T.InstancedMesh(leaf,doorLook.material,TRAIN_COUNT*DOOR_LEAVES);
  doors.name='train-doors';doors.instanceMatrix.setUsage(T.DynamicDrawUsage);doors.castShadow=false;doors.receiveShadow=false;doors.frustumCulled=false;doors.visible=false;doors.count=0;root.add(doors);
  const glass=createTrainGlass(TRAIN_COUNT*TRAIN_CARS,TRAIN_COUNT*DOOR_LEAVES);root.add(glass.mesh);// train visuals (Nov 24): every pane + the soft shadows, one draw
@@ -359,6 +364,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
   carMatrixOf(k:number,c:number,out:T.Matrix4){return carMatrix(states[k].s,c,out,states[k].v,k,JOLT.ride);},
   /** Gameplay 2: the open door of train k (standing at a stop) nearest x, z: a spot on the platform just outside it, facing in
    *  (out.yaw), and which car / door it is. Null while the train runs. Allocation-free. */
+  /** AAA 4: the platform top (world y) of the stop train k stands at (the passengers' step down), NaN while it runs. */
+  platformTop(k:number){const st=states[k];return st&&st.at>=0?bedAt(L.profile,TRAIN_STOPS[st.at].station.s)+STATION_PLATFORM_Y:NaN;},
   doorSpot(k:number,x:number,z:number,out:{x:number;y:number;z:number;yaw:number;car:number;door:number}){
    const st=states[k];if(st.at<0)return null;const side=TRAIN_STOPS[st.at].station.side,top=bedAt(L.profile,TRAIN_STOPS[st.at].station.s)+STATION_PLATFORM_Y;let best=Infinity;
    for(let c=0;c<TRAIN_CARS;c++){const sx=side*(c%2===1?-1:1);carMatrix(st.s,c,seatM,0,k);const e=seatM.elements;
@@ -467,19 +474,33 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     const d3=Math.hypot(d,sphere.center.y-cam.y),size=12.4*f.camera.projectionMatrix.elements[5]/Math.max(1,d3);
     const far=tr.far?size<LOD_NEAR_OUT:size<LOD_FAR_IN;tr.far=far;{const g=far?boxes[tr.lv]:api.ridden[i]||d3<CLOSE_RANGE?openOf(tr.lv):detail[tr.lv].geometry;if(tr.mesh.geometry!==g)tr.mesh.geometry=g;}
     if(!far&&plateStop[i]!==st.next){plateStop[i]=st.next;setPlateUv(i,st.next);(plateGeo.attributes.uv as T.BufferAttribute).needsUpdate=true;}
-    const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1,open=animate?st.doors:0;
+    const animate=d<ANIMATE_RANGE,stop=st.at>=0?TRAIN_STOPS[st.at]:null,side=stop?stop.station.side:1;
+    // AAA 4: the door leaves ease (smoothstep), give a small cushion past fully open and a rebound as they meet (none with reduced motion)
+    const dn=st.doors;if(dn>=1&&tr.dPrev<1)tr.openAt=clock;if(dn<=0&&tr.dPrev>0)tr.shutAt=clock;tr.dPrev=dn;
+    let leaf=dn*dn*(3-2*dn);if(!f.reduced&&stop){const a=clock-tr.openAt,b=clock-tr.shutAt;if(a<DOOR_BOUNCE[0])leaf+=.045*Math.sin(Math.PI*a/DOOR_BOUNCE[0]);if(b<DOOR_BOUNCE[1])leaf+=.05*Math.sin(Math.PI*b/DOOR_BOUNCE[1]);}
+    const open=animate?Math.max(0,leaf):0;
     if(animate){tr.spin=(st.s/WHEEL_R+slip[i])%(Math.PI*2);tr.look.wheel.x=Math.cos(tr.spin);tr.look.wheel.y=Math.sin(tr.spin);}
-    tr.look.lamp.z=night*INTERIOR_GLOW;// the window band: the indicator channel, lit by the shared night factor
+    // AAA 4 (interior feel): the light over the car by track section, eased: dimmer in the tunnel (the car's own lamps take over: the
+    // interior / window channel comes up), a soft pulse of shade under the South Bridge's truss members; the material's colour only
+    const sm=st.s-TRAIN_LENGTH/2,inTun=sm>TUNNEL.west.s&&sm<TUNNEL.east.s,truss=inSouthBridgeS(sm)&&!f.reduced?.5+.5*Math.sin(sm*Math.PI*2/3.6):0;
+    const shadeTo=inTun?SHADE.tunnel:1-SHADE.truss*truss*truss;tr.shade+=(shadeTo-tr.shade)*(1-Math.exp(-(inTun?3:9)*dt));tr.look.material.color.setScalar(tr.shade);
+    tr.look.lamp.z=night*INTERIOR_GLOW+(1-tr.shade)*SHADE.lamp;// the window band: the indicator channel, lit by the shared night factor
+    // AAA 4: the pantograph arm folds a little with the car's bounce on the rail joints (vehicle shader PART.panto), at speed only
+    tr.look.sway.y=f.reduced||!animate?0:Math.min(1,st.v/8)*(.028*Math.sin(st.s*1.7+i)+.014*Math.sin(st.s*4.3));
     // Polish (Nov 24 2026): headlamps up at night and full in the tunnel (from 20 m before the west mouth until the rear is out of
     // the east one), eased over ~0.3 s: the head / tail lamp channels of the same uniform, no light, no new shader.
-    {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));tr.look.lamp.x=1+.6*night+1.4*tr.tun;tr.look.lamp.y=.9+.5*tr.tun;}
+    {const want=tunnelLamps(st.s)?1:0;tr.tun+=(want-tr.tun)*(1-Math.exp(-3*dt));if(want!==tr.tw){tr.tw=want;tr.flick=clock;}
+     // AAA 4: the headlamps flicker for ~0.5 s as they switch up / down at the tunnel mouth (a cheap channel multiply; not reduced motion)
+     const fk=animate&&!f.reduced&&clock-tr.flick<.5?(Math.sin(clock*71+i)*Math.sin(clock*43)>.15?.5:1):1;tr.look.lamp.x=(1+.6*night+1.4*tr.tun)*fk;tr.look.lamp.y=.9+.5*tr.tun;}
     if(glow){// POLISH 3: the headlamp beam on the track ahead of the leading cab (on the curve's own tangent) and on the tunnel walls
      for(let b=0;b<3;b++){const sb=st.s+9+b*5;trackAt(sb,gp);const y=bedAt(L.profile,sb)+RAIL_TOP,w=(.85-b*.2)*(1+.4*tr.tun);nightGlow.beam(gp.x,y,gp.z,gp.tx,gp.tz,w);
       if(sb>TUNNEL.west.s&&sb<TUNNEL.east.s){nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,TUNNEL_HALF_WIDTH-.06,w);nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,-(TUNNEL_HALF_WIDTH-.06),w);}}}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v,i);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
      if(glow){const sc=st.s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,kind=L.profile.kind[Math.round(wrapS(sc)/TRACK_DS)%TRACK.n];let ps=0;
       for(const ts of TRAIN_STATIONS){const ds=Math.abs(((sc-ts.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2);if(ds<STATION_HALF){ps=ts.side*rev;break;}}
-      nightGlow.car(m4,-RAIL_TOP,ps,STATION_PLATFORM_Y-RAIL_TOP,c===0,c===TRAIN_CARS-1,kind!==TrackKind.Sea);}
+      nightGlow.car(m4,-RAIL_TOP,ps,STATION_PLATFORM_Y-RAIL_TOP,c===0,c===TRAIN_CARS-1,kind!==TrackKind.Sea);
+      // AAA 4: now and then (one 0.4 s bucket in ~23, a train at speed) a tiny blue-white spark where the pan meets the wire; not on the lowest tier
+      if(c===sparkCar(i,clock)&&st.v>4&&(f.tier??0)<4&&!f.reduced)nightGlow.spark(m4,0,4.8,-.7,.55+.35*Math.abs(Math.sin(clock*57)),1);}
      if(far){writeInside(i,c,m4,false,0);continue;}glass.car(m4);writePlate(i,c,m4);np++;wraps.car(i,c,m4,size);// WRAPS: faded by on-screen size
      writeInside(i,c,m4,!!api.ridden[i]||d3<CLOSE_RANGE,open>0?side*rev:0);// Gameplay 3: poster titles + chime lamps (lit while the doors open)// doors: drawn only in the near tier; open on the platform side while standing
      for(let s=-1;s<=1;s+=2){const o=open>0&&s===side*rev?open:0;
@@ -490,7 +511,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    if(pvis){for(let i=0;i<TRAIN_COUNT;i++)if(!trains[i].mesh.visible||trains[i].far){platePos.fill(0,i*TRAIN_CARS*12,(i+1)*TRAIN_CARS*12);const b=(CABS+i*TRAIN_CARS*INSIDE_QUADS)*12;platePos.fill(0,b,b+TRAIN_CARS*INSIDE_QUADS*12);}
     (plateGeo.attributes.position as T.BufferAttribute).needsUpdate=true;(plateGeo.attributes.normal as T.BufferAttribute).needsUpdate=true;}
    if(doors.count!==nd)doors.count=nd;const dv=nd>0;if(doors.visible!==dv)doors.visible=dv;if(dv)doors.instanceMatrix.needsUpdate=true;
-   doorLook.lamp.z=night*2.6;glass.end();nightGlow.end();wraps.end(night);// WRAPS
+   doorLook.lamp.z=night*2.6;doorLook.material.color.setScalar(riding>=0&&riding<TRAIN_COUNT?trains[riding].shade:1);glass.sheen.w=(f.tier??0)>=4?0:1-night*.75;glass.end();nightGlow.end();wraps.end(night);// WRAPS
    return result;
   },
   /** Phase 3: crossing ci's lamps are flashing or its arms are not up (road traffic stops at it: the causeway's cayTraffic). */
