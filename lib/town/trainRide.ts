@@ -25,6 +25,7 @@ import type {TrickPose} from '../graphics/trickPose';
 import {springTo} from './zipline';
 import {camClearFraction,camCeiling,trussLift} from './trainCamClear';
 import {PHONE_STICK_QUERY} from './floatingStick';
+import {wrapBoardNote} from './trainWraps';// WRAPS (train-wraps)
 
 export const TRAIN_BOARD_KEY='train-board';
 /** Owner (Nov 25 2026): Board is offered on foot and from the scooter, bike and moped (never from the jetpack: it lands first).
@@ -252,7 +253,7 @@ export function createTrainRide(ports:Ports){
   {const a=Math.hypot(door.x-from.x,door.z-from.z),b=Math.hypot(probe.x-door.x,probe.z-door.z);walkA=a/Math.max(.01,a+b);walkDur=Math.max(WALK_MIN,Math.min(WALK_MAX,(a+b)/WALK_SPEED));walkT=0;}lastAt=st.at;run.ridden[k]=1;run.seatPose(k,j,pose);
   anchor.train=k;anchor.seat=j;anchor.x=pose.x;anchor.y=pose.y;anchor.z=pose.z;anchor.yaw=pose.yaw;
   orb.yaw=orb.pitch=orb.vy=0;orb.zoom=1;recentering=false;keyYaw=keyPitch=0;tight.x=inTunnelS(run.states[k].s)?1:0;tight.v=0;camView='seat';viewT=1;havePose=false;armO=-1;outT=1;
-  trainRideStore.set({riding:true,canGetOff:false,camView:'seat'});setNote(TRAIN_NOTES.board);ports.hold?.(true);ports.haptic?.();
+  trainRideStore.set({riding:true,canGetOff:false,camView:'seat'});setNote(wrapBoardNote(k,TRAIN_NOTES.board)/* WRAPS: the train's kindness theme, once a theme */);ports.hold?.(true);ports.haptic?.();
   if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);window.addEventListener('wheel',onWheel,{capture:true,passive:true});}
   return true;
  }
