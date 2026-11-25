@@ -119,7 +119,8 @@ console.log('train-talk picking ok');
  const src=read('lib/town/trainPassengers.ts');assert(/faceCast===who\.cast&&k===ridingK/.test(src)&&/who=was;\/\/ train-talk/.test(src),'talked-to passenger turns and keeps their seat');
  talk.dispose();assert(!scene.getObjectByName('train-talk-hover'),'disposed');}
 {const town=read('components/Town.tsx');
- assert(/kenjiFig\.npc\(\):trainTalk\.candidate\(camera,trainRide\.train,trainRide\.standing,location\.x,location\.z,/.test(town),'riding: Talk only via trainTalk (close / aimed)');
+ assert(/!trainTalkView\(trainRide\.view\)\?trainTalk\.candidate\(camera,-1,/.test(town)&&/offerOther\(kenjiFig\.npc\(\),kenjiFig\.at,[^)]*\).*?\*\/:trainTalk\.candidate\(camera,trainRide\.train,trainRide\.standing,location\.x,location\.z,/.test(town),'riding: Talk only via trainTalk (close / aimed), inside views only (shot 80), Kenji via the tag (shot 81)');
+ assert(/hudFocus==='talk'&&!trainRiding/.test(town),'shot 81: no Talk pill on the train');
  assert(/trainTalk\.frame\(camera,trainRide\.active\?trainRide\.train:-1/.test(town),'per-frame hook');
  assert(/trainTalk\.aimed\/\* train-talk \*\/\|\|!trainRideStore\.get\(\)\.canGetOff/.test(town),'E at a stop only when aiming');
  assert(/stadiumSit\.seated\|\|trainRide\.active/.test(town),'no islander tags while riding');

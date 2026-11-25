@@ -111,14 +111,17 @@ export function carSightClear(ox:number,oy:number,oz:number,px:number,py:number,
 }
 
 type Ports={/** POLISH 4: the island's hover sound on a new hovered passenger */hoverSound?:()=>void;states:()=>readonly {next:number;doors?:number}[]|undefined;/** POLISH 3: car c of train k's matrix (occlusion by the car body) */carMatrix?:(k:number,c:number,out:T.Matrix4)=>T.Matrix4;open:(npc:NpcDefinition)=>void;blocked:()=>boolean};
+/** Owner Nov 25 2026 (shot 81: "remove the talk to btn. there's already the option to talk to the npc. but we need to make that a
+ *  little larger"): on the train the name tag IS the Talk control: 1.6x the old .2 × .0625, and a tap on it opens the chat. */
+export const TAG_W=.32,TAG_H=.1;
 export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports:Ports){
  // POLISH 4 (owner: "exactly like island NPCs"): the island's own hover glow (npcHover: ring, halo, soft column) on the hovered
  // passenger, and the island's near-only name tag (its colours and type) over the one the Talk prompt offers: one small sprite of
  // constant screen size (a world-sized tag 1 m away in first person would fill the view), hidden whenever nobody is offered.
  const glow=createNpcHover(scene,'train-talk-hover'),ring=glow.root;let hoverOn=false;
  let tagCanvas:HTMLCanvasElement|null=null,tagTex:T.CanvasTexture|null=null;// made on the first tag (none in a ride without talk)
- const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(.2,.0625,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
- let candCast=-1,tagCast=-1;const glowAt={id:'',x:0,y:0,z:0};
+ const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(TAG_W,TAG_H,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
+ let candCast=-1,tagCast=-1,tagName='';let ext:{x:number;y:number;z:number;name:string}|null=null,offerDef:NpcDefinition|null=null;const glowAt={id:'',x:0,y:0,z:0};
  const drawTag=(name:string)=>{if(typeof document==='undefined')return;if(!tagCanvas){tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=160;tagTex=new T.CanvasTexture(tagCanvas);tagTex.colorSpace=T.SRGBColorSpace;tag.material.map=tagTex;tag.material.needsUpdate=true;}
   const ctx=tagCanvas.getContext('2d');if(!ctx||!tagTex)return;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';
   ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(name,256,66,470);ctx.fillStyle='#e6cb8b';ctx.font='700 25px sans-serif';ctx.fillText('LET’S TALK',256,115,470);tagTex.needsUpdate=true;};
@@ -132,8 +135,13 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
  const onDown=(e:PointerEvent)=>{down={x:e.clientX,y:e.clientY,t:performance.now(),id:e.pointerId};};
  // A tap is resolved right here, in the capture phase, so a passenger hit is not ALSO a click on an island hover target behind
  // them (owner's station-house stamp, a vending machine...): Town's canvas pointerup / click handlers never see it.
+ const tp=new T.Vector3();
+ // the tag's screen box (sizeAttenuation off: its NDC size is scale × the projection's focal terms), padded for a thumb
+ const tagHit=(e:PointerEvent)=>{if(!tag.visible||!offerDef||!cam||!dom)return false;const r=dom.getBoundingClientRect(),P=cam.projectionMatrix.elements;tp.copy(tag.position).project(cam);if(tp.z>1)return false;
+  const cx=r.left+(tp.x+1)/2*r.width,cy=r.top+(1-tp.y)/2*r.height,hw=TAG_W*P[0]*r.width/4+10,hh=TAG_H*P[5]*r.height/4+10;return Math.abs(e.clientX-cx)<hw&&Math.abs(e.clientY-cy)<hh;};
  const onUp=(e:PointerEvent)=>{const d=down;down=null;if(!d||d.id!==e.pointerId)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>TAP_PX||performance.now()-d.t>TAP_MS)return;
   if(curK<0||!cam||curTalking)return;if(ports.blocked()){lastTap='blocked';return;}
+  if(tagHit(e)){lastTap='tag';e.stopImmediatePropagation();swallowClick=true;ports.open(offerDef!);return;}
   toNdc(e,tapV);const i=rayAt(cam,tapV,curK,curStanding?TALK_STAND+.5:SEAT_REACH);lastTap=i<0?'miss':'open';if(i<0)return;
   e.stopImmediatePropagation();swallowClick=true;const def=defOf(pax.spots().list[i],curK);if(def)ports.open(def);};
  const onClick=(e:MouseEvent)=>{if(!swallowClick)return;swallowClick=false;e.stopImmediatePropagation();e.preventDefault();};
@@ -169,16 +177,19 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
    hovered=-1;if(hoveredCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===hoveredCast&&list[i].k===k){hovered=i;break;}if(hovered<0)hoveredCast=-1;}
    if(hovered>=0){const s=pax.spots().list[hovered];glowAt.id='pax-'+s.cast;glowAt.x=s.fx;glowAt.y=s.y;glowAt.z=s.fz;glow.update(glowAt,dt,reduced);hoverOn=true;setCursor(true);}else{if(hoverOn){hoverOn=false;setCursor(false);}if(glow.root.visible)glow.update(null,dt,reduced);}
    // the near-only name tag over the offered passenger (moves with the train: their spot this frame)
+   if(ext){if(tagName!==ext.name){tagName=ext.name;tagCast=-2;drawTag(ext.name);}tag.position.set(ext.x,ext.y,ext.z);if(!tag.visible)tag.visible=true;return;}
    let ts=-1;if(candCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===candCast&&list[i].k===k){ts=i;break;}}
-   if(ts>=0){const s=pax.spots().list[ts];if(tagCast!==s.cast){tagCast=s.cast;drawTag(pax.def(s.cast)?.name??'');}tag.position.set(s.x,s.y+(s.standing?2.05:1.62)*(s.kid?KID:1),s.z);if(!tag.visible)tag.visible=true;}else if(tag.visible)tag.visible=false;
+   if(ts>=0){const s=pax.spots().list[ts];if(tagCast!==s.cast){tagCast=s.cast;tagName='';drawTag(pax.def(s.cast)?.name??'');}tag.position.set(s.x,s.y+(s.standing?2.05:1.62)*(s.kid?KID:1),s.z);if(!tag.visible)tag.visible=true;}else if(tag.visible)tag.visible=false;
   },
   /** HUD tick: the passenger the Talk prompt offers (or null). getOffPrimary: a stop's Get off pill is up (then aiming only). */
   candidate(camera:T.Camera,k:number,standing:boolean,x:number,z:number,getOffPrimary:boolean):NpcDefinition|null{
    // POLISH 4: island NPC rules: the nearest within reach (train-relative), any camera view, seated or standing, at a stop too
    // (Talk in the NPC slot beside the Get off pill); aiming at someone in reach still picks them (desktop). getOffPrimary: unused now.
-   aimed=false;void getOffPrimary;if(k<0){candCast=-1;return null;}me.x=x;me.z=z;const {list,count}=pax.spots(),reach=standing?TALK_NEAR:SEAT_REACH;
+   aimed=false;void getOffPrimary;ext=null;if(k<0){candCast=-1;offerDef=null;return null;}me.x=x;me.z=z;const {list,count}=pax.spots(),reach=standing?TALK_NEAR:SEAT_REACH;
    let i=rayAt(camera,centre.set(0,0),k,reach);if(i>=0)aimed=true;else i=pickNear(list,count,k,me,reach,candCast);
-   candCast=i>=0?list[i].cast:-1;return i>=0?defOf(list[i],k):null;},
+   candCast=i>=0?list[i].cast:-1;offerDef=i>=0?defOf(list[i],k):null;return offerDef;},
+  /** Shot 81: someone who isn't a passenger (Conductor Kenji) is offered: the same tag over them (p: their seat base) and tap. */
+  offerOther(def:NpcDefinition,p:{x:number;y:number;z:number},lift=1.62):NpcDefinition{candCast=-1;offerDef=def;ext={x:p.x,y:p.y+lift,z:p.z,name:def.name};return def;},
   /** The current candidate is under the camera's aim (E may talk even while Get off is the primary prompt). */
   get aimed(){return aimed;},
   /** Tests / checks. */
