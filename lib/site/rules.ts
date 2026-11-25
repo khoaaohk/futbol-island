@@ -265,7 +265,7 @@ export const RULES:readonly Rule[]=([
      per page: the term pages answer the meaning, this page is the full rules guide for both cards ("yellow and red card rules",
      "yellow card and red card in football", "penalty cards"), so its title and H1 no longer say "meaning". */
   title:'Yellow and Red Card Rules in Soccer (Football): All Offenses',h1:'Yellow and red card rules in soccer: every card offense',
-  desc:'Yellow and red card rules (the penalty cards) in soccer and football, Law 12: all 14 card offenses, yellow vs red and what happens after a red card.',
+  desc:'The yellow and red card rules in soccer, the penalty cards of football (Law 12): all 14 card offenses, yellow vs red and what happens after a red card.',
   answer:'In soccer (football), a yellow card means a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card means a sending-off for the rest of the game, and the team plays one player short, with no one to replace them.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
