@@ -6,16 +6,19 @@
 // Allowlist: scripts/ui-align-allowlist.json  [{ "match": "<regex on the element descriptor>", "where": "<optional regex on the
 // state>", "reason": "..." }]. A matched offender is listed as allowed, never as a failure.
 // Needs a dev or production server: NEXT_DIST_DIR=.next-align npx next dev -p 9189   (never 8092 / 9160)
-// Run: npm run check:ui-align -- --port=9189 [--only=site|game] [--vp=phone|desktop] [--json=<file>] [--shots=<dir>] [--report]
+// Run: npm run check:ui-align -- --port=9189 | --url=https://futbolisland.app [--only=site|game] [--vp=phone|desktop] [--json=<file>] [--shots=<dir>] [--report]
 //      --report: print and exit 0 even with offenders. ONE headless Chrome (--mute-audio), closed at the end.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const has = (k) => process.argv.includes(`--${k}`);
 const port = arg('port'), only = arg('only', ''), vpOnly = arg('vp', ''), jsonOut = arg('json', ''), shots = arg('shots', '');
-if (!port || ['8092', '9160', '8800'].includes(port)) { console.error('give --port=<n> (not 8092 / 9160 / 8800)'); process.exit(2); }
+// --url=<origin> (Nov 24 2026 live audit): measure a deployed site instead (e.g. https://futbolisland.app). The game states that
+// move the player through __fi2.teleport / location are left off there by design (lib/dev/debugHooks.ts): they show as "not covered".
+const urlArg = arg('url', '').replace(/\/$/, '');
+if (!urlArg && (!port || ['8092', '9160', '8800'].includes(port))) { console.error('give --port=<n> (not 8092 / 9160 / 8800) or --url=<origin>'); process.exit(2); }
 if (shots) fs.mkdirSync(shots, { recursive: true });
-const url = `http://localhost:${port}`;
+const url = urlArg || `http://localhost:${port}`;
 const allow = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-align-allowlist.json'), 'utf8')); } catch { return []; } })();
 const VIEWPORTS = [{ name: 'phone', vp: { width: 390, height: 844 }, mobile: true }, { name: 'desktop', vp: { width: 1280, height: 800 }, mobile: false }]
   .filter((v) => !vpOnly || v.name === vpOnly);

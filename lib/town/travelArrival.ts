@@ -21,8 +21,12 @@ export type ArrivalFrom={ride:TravelMode;
 export type Arrival={ride:TravelMode;flying:boolean;swimming:boolean;
  /** The flight height to set (world y), when flying. */
  flightHeight:number};
-/** The arrival at a destination whose ground is at `groundY`, water or not. */
-export function travelArrival(from:ArrivalFrom,dest:{groundY:number;water:boolean}):Arrival{
+/** The arrival at a destination whose ground is at `groundY`, water or not. `station`: an Island Line station pin (train live audit,
+ *  Nov 24 2026): the trip is to catch a train and Board is never offered from the jetpack (lib/town/trainRide.ts TRAIN_BOARD_FROM),
+ *  so a flyer lands on the platform on foot (the live site left a kid hovering 28 m over the platform with no Board and no hint;
+ *  the parachute took ~20 s). The ground rides (scooter, bike, moped) still arrive riding: Board takes them. */
+export function travelArrival(from:ArrivalFrom,dest:{groundY:number;water:boolean;station?:boolean}):Arrival{
+ if(dest.station&&from.ride==='jetpack'&&!dest.water)return {ride:'walk',flying:false,swimming:false,flightHeight:dest.groundY};
  if(from.ride==='jetpack'&&from.phase!=='fall'){const air=Number.isFinite(from.air)?from.air:ARRIVAL_FLIGHT.min;
   return {ride:'jetpack',flying:true,swimming:false,flightHeight:dest.groundY+Math.max(ARRIVAL_FLIGHT.min,Math.min(ARRIVAL_FLIGHT.max,air))};}
  if(from.swimming||from.ride==='jetpack')return {ride:'walk',flying:false,swimming:dest.water,flightHeight:dest.groundY};
