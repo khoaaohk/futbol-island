@@ -286,6 +286,8 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
   get drill(){return drill;},
   get heldStyle(){return held;},
   get cameraAngle(){return camCtl.angle;},
+  /** The pitch centre (checks and tools teleport here). */
+  get pitch(){return {x:P.x,z:P.z};},
   /** At the start of each island tick: the editor holds the player still (balls freeze too). */
   holdPlayer(){return mode==='edit';},
   /** Screen-relative steering under the practice cameras (the live games' rule): writes the turned stick into `stick`. */
@@ -325,11 +327,11 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
      const style=b.style;b.x=wb.x;b.y=Math.max(g+PRACTICE_BALL.rest,wb.y);b.z=wb.z;
      if(wb.mode==='return'){b.vx=b.vy=b.vz=0;}else{b.vx=wb.vx;b.vy=wb.vy;b.vz=wb.vz;}
      b.awake=true;b.out=insidePracticeFence(b.x,b.z,-.3)?0:b.out;b.style=held;held=style;tintDirty=true;
-     ports.setBallStyle(held<0?null:PRACTICE_BALL_STYLES[held]);ports.walkBall.reset({x:p.x,y:p.y,z:p.z,yaw:p.yaw});cue('select');
+     ports.setBallStyle(held<0?null:PRACTICE_BALL_STYLES[held]);ports.walkBall.reset({x:p.x,y:p.y,z:p.z,yaw:p.yaw});cue('select');dirty=true;
     }else if(!away){const dx=b.x-p.x,dz=b.z-p.z,d=Math.hypot(dx,dz)||1,sp=Math.hypot(p.vx,p.vz),push=Math.max(1.4,sp*1.35);
-     if(b.vx*dx+b.vz*dz<push*d*.5)kickBall(b,dx/d*push+p.vx*.3,.4,dz/d*push+p.vz*.3);}
+     if(b.vx*dx+b.vz*dz<push*d*.5){kickBall(b,dx/d*push+p.vx*.3,.4,dz/d*push+p.vz*.3);dirty=true;}}
    }
-   dirty=true;writeMatrices();
+   if(step.moving||dirty||tintDirty)writeMatrices();// only frames where something moved
   },
   /** Town, before its follow lerp: put back the follow camera's own position (cameraApply moved it). */
   cameraRestore(camera:T.Camera){if(!camSaved)return;camera.position.set(camBase.x,camBase.y,camBase.z);camSaved=false;},

@@ -142,7 +142,7 @@ await ok('runtime: not allowed (jetpack, live match, Summit Kick) → no practic
 
 await ok('wiring: Town, HUD, CSS, saves, npm test',()=>{
  const town=read('components/Town.tsx');
- for(const s of ['createSummitPractice(scene','practice.holdPlayer()','practice.steer(ix,iz,dt)','practice.cameraRestore(camera)','practice.cameraApply(camera','practice.update({','!practice.busy','<SummitPracticeHud/>','practice.dispose()',"summitFun.kickPhase==='idle'&&!liveJoin.joined"])assert(town.includes(s),s);
+ for(const s of ['createSummitPractice(scene','__fi2={summitFun,practice,','practice.holdPlayer()','practice.steer(ix,iz,dt)','practice.cameraRestore(camera)','practice.cameraApply(camera','practice.update({','!practice.busy','<SummitPracticeHud/>','practice.dispose()',"summitFun.kickPhase==='idle'&&!liveJoin.joined"])assert(town.includes(s),s);
  const css=read('app/globals.css');assert(css.includes('.town-app[data-practice] :is(nav[data-hud-triggers]'),'paths / settings hidden');assert(css.includes('.town-app[data-practice-edit]'));
  const hud=read('components/SummitPracticeHud.tsx');for(const s of ['data-practice-cam','data-practice-exit','data-practice-shuffle','data-practice-edit','data-practice-reset','data-practice-done','registerBackCloser'])assert(hud.includes(s),s);
  assert(read('lib/saves/snapshot.ts').includes("'fi2-summit-practice-v1'"),'SYNC_KEYS');
