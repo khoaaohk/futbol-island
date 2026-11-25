@@ -13,6 +13,7 @@
  * on the ground, as colliders; rails and the masts are roof-prop barriers (floor/top), so the deck and the stair hold you.
  */
 import * as T from 'three';
+import {behindSign} from './signPosts';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
 import {ZIP_TOWER,ZIP_PLATFORM,ZIP_LAUNCH,ZIP_DIR,ZIP_DECK,ZIP_STAIR,HOSTEL_ROOF,ZIP_ANCHOR_TOWER,ZIP_ANCHOR_ROOF,ZIP_T0,ZIP_T1,ZIP_SPAN,cableAt} from './zipline';
@@ -81,7 +82,8 @@ export function buildZiplineProps(t:ZiplineTools){
   {const c=cableAt(0),w=skip(put(new T.TorusGeometry(.14,.045,6,12),ORANGE,c.x,c.y-.05,c.z));w.rotation.y=ZIP_DIR.yaw+Math.PI/2;}
   const stripe=skip(box(1.2,.02,.16,CREAM,ZIP_LAUNCH.x,deck+.01,ZIP_LAUNCH.z+.35));stripe.castShadow=false;}
  // The sign, on two short posts at the south-east corner, facing the camera.
- {const sx=P.x+h-.25,sz=P.z+h+.55,g=summitGround(sx,sz);for(const dx of [-.62,.62])skip(box(.08,1.75,.08,DARK,sx+dx*Math.cos(FACE),g+.875,sz-dx*Math.sin(FACE)));
+ {const sx=P.x+h-.25,sz=P.z+h+.55,g=summitGround(sx,sz),b=behindSign(sx,sz,FACE);// posts behind the face (signs audit, Nov 25 2026)
+  for(const dx of [-.62,.62])skip(box(.08,1.75,.08,DARK,b.x+dx*Math.cos(FACE),g+.875,b.z-dx*Math.sin(FACE)));
   skip(sign('ZIPLINE TO CORAL CAY',1.6,.42,sx,g+1.5,sz,GREEN,'#ffd27a',FACE));obstacles.push({x:sx,z:sz,w:1.2,d:.3});}
 
  // ---------------------------------------------------------------- the cable
@@ -107,7 +109,7 @@ export function buildZiplineProps(t:ZiplineTools){
   {const s=cableAt(1+.6/ZIP_SPAN),sp=skip(put(new T.CylinderGeometry(.16,.16,.5,10),ORANGE,s.x,s.y,s.z));sp.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(ZIP_DIR.x,0,ZIP_DIR.z));}
   const flag=skip(box(.04,.42,.7,ORANGE,A.x,top+.05,A.z+.35));flag.castShadow=false;}
  // The landing sign at the deck's south-west corner (clear of the rider, the landing spot and the mast), facing the camera.
- {const sx=D.x-D.w/2+.45,sz=D.z+D.d/2-.4;for(const dx of [-.55,.55])skip(box(.07,1.35,.07,GREEN,sx+dx*Math.cos(FACE),dy+.675,sz-dx*Math.sin(FACE)));
+ {const sx=D.x-D.w/2+.45,sz=D.z+D.d/2-.4,b=behindSign(sx,sz,FACE);for(const dx of [-.55,.55])skip(box(.07,1.35,.07,GREEN,b.x+dx*Math.cos(FACE),dy+.675,b.z-dx*Math.sin(FACE)));
   skip(sign('ZIPLINE FROM SUMMIT ISLE',1.5,.36,sx,dy+1.15,sz,GREEN,'#ffd27a',FACE));rails.push({x:sx,z:sz,w:1.1,d:.25,floor:HOSTEL_ROOF-.1,top:dy+1.4});}
 
  // ---------------------------------------------------------------- the outside stair down the east wall

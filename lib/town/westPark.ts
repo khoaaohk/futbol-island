@@ -4,6 +4,7 @@
 // the shared vertex-colour paint (one draw call per chunk and paint, wind sway on the trees and palms for free), and the whole
 // west region is hidden by one frustum-box test when it is out of view (world.ts, westRegion). No per-frame work, no new texture.
 import * as T from 'three';
+import {behindSign} from './signPosts';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
@@ -156,7 +157,7 @@ export function buildWestPark(t:Tools):WestParkStats{
    const pond=flat(g,water,POND_Y,'park-pond');pond.receiveShadow=true;}
   // Swimmable (Nov 13 2026): no collider; the water model (waterDepth.ts PARK_POND_WATER) wades and swims a walker in.
   for(const [bx,bz] of POND_BENCHES)bench(bx,bz);
-  {const {x:sx,z:sz,rotation}=POND_SIGN;prop('sign',()=>{sign('LILY POND',3.2,.6,sx,1.5,sz,'#477c6a',undefined,rotation);for(const d of [-1.3,1.3])cylinder(.05,1.5,'#9d805b',sx,.75,sz+d);});// kick audit: it wobbles
+  {const {x:sx,z:sz,rotation}=POND_SIGN;prop('sign',()=>{sign('LILY POND',3.2,.6,sx,1.5,sz,'#477c6a',undefined,rotation);const b=behindSign(sx,sz,rotation);for(const d of [-1.3,1.3])cylinder(.05,1.5,'#9d805b',b.x,.75,b.z+d);});// posts behind the face (signs audit, Nov 25 2026)// kick audit: it wobbles
    obstacles.push({x:sx,z:sz,w:.2,d:3});}
   // Where the edge detail keeps clear: the pond walk's end, the jetty, the fishing stall's cast line, the benches, the sandy shore.
   const busy=(a:number,pad=0)=>{const near=(b:number,w:number)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))<w+pad;

@@ -2,7 +2,8 @@
 // colliders Town.tsx adds at runtime (vending machines, fishing kiosks) and the rooftop/stair surface model (rooftopTravel.ts).
 // Used by scripts/audit-island-connectivity.cjs and tests/island-connectivity.cjs. No browser, no WebGL.
 const fs=require('fs'),vm=require('vm'),path=require('path'),ts=require('typescript');
-/** opts.onStep(scene, i): called at each buildTownSteps pause (i = 0, 1, ...) with the scene as built so far (the clearance check
+/** Each fake canvas keeps the strings drawn on it (canvas.texts: the sign check names a board by its words).
+ *  opts.onStep(scene, i): called at each buildTownSteps pause (i = 0, 1, ...) with the scene as built so far (the clearance check
  *  reads the meshes before the batching pass merges them). */
 async function loadIslandWorld(base=process.cwd(),opts={}){
  const T=require(path.join(base,'node_modules/three'));
@@ -12,7 +13,7 @@ async function loadIslandWorld(base=process.cwd(),opts={}){
  const storage={getItem:()=>null,setItem(){},removeItem(){}};
  const sandbox={console:{log(){},warn(){},error:console.error,info(){}},Math,performance,Float32Array,Uint8Array,Uint16Array,Uint32Array,Int32Array,Uint8ClampedArray,Float64Array,Map,Set,WeakMap,Date,JSON,Array,Object,Promise,
   window:{matchMedia:()=>({matches:false}),location:{search:''},localStorage:storage,addEventListener(){},devicePixelRatio:1},localStorage:storage,navigator:{userAgent:'node'},
-  document:{createElement:()=>({width:0,height:0,getContext:()=>ctx,style:{}}),addEventListener(){},dispatchEvent(){}},setTimeout,clearTimeout,queueMicrotask,process:{env:{}}};
+  document:{createElement:()=>{const c={width:0,height:0,style:{},texts:[]};c.getContext=()=>new Proxy(ctx,{get:(o,k)=>k==='fillText'?(t=>{c.texts.push(String(t));}):o[k]});return c;},addEventListener(){},dispatchEvent(){}},setTimeout,clearTimeout,queueMicrotask,process:{env:{}}};
  function resolve(from,id){const p=id.startsWith('@/')?path.join(base,id.slice(2)):path.resolve(path.dirname(from),id);for(const c of [p+'.ts',p+'.tsx',path.join(p,'index.ts'),p])if(fs.existsSync(c)&&fs.statSync(c).isFile())return c;throw new Error('cannot resolve '+id+' from '+from);}
  function load(file){if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);
   if(file.endsWith('.json')){m.exports=JSON.parse(fs.readFileSync(file,'utf8'));return m.exports;}

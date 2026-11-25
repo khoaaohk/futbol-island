@@ -1,4 +1,5 @@
 import type {SignalHead} from './trafficSignals';
+import {SIGN_POST_SET} from './signPosts';
 import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
@@ -241,7 +242,10 @@ export function* buildTownSteps(scene: T.Scene) {
       // Arcade: keep the wall above the double door clear of windows/balconies.
       if(arcade&&floor>0&&Math.abs(xx-x)<2.4)continue;
       box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
-      if(!knockout&&floor>0&&col%2===(scheme?.balconyOdd&&columns>2?1:0)){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
+      // Signs audit (Nov 25 2026): no first-floor balcony behind the Coaches Centre's NOW OPEN board (its rail's balusters stood
+      // 0.4 m in front of the words).
+      const nowOpen=label==='PLAYER DEVELOPMENT'&&floor===1&&Math.abs(xx-x)<3.2;
+      if(!knockout&&!nowOpen&&floor>0&&col%2===(scheme?.balconyOdd&&columns>2?1:0)){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
     }
     // Side windows remain visible from the follow camera.
     for(let floor=0;floor<floors;floor++)for(let k=0;k<3;k++)if(!knockout||k!==1)box(.065,1.22,.86,'#3d625c',x+w/2+.035,1.4+floor*2.45,z-d/2+(k+.5)*d/3);
@@ -345,8 +349,11 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   function districtSign(text:string,x:number,z:number){prop('sign',()=>districtSignParts(text,x,z));}
   function districtSignParts(text:string,x:number,z:number){
-    sign(text,8,.9,x,2.5,z,'#477c6a');
-    for(const dx of [-3.3,3.3]){cylinder(.06,2.4,'#9d805b',x+dx,1.2,z);obstacles.push({x:x+dx,z,w:.15,d:.15});}
+    // Signs audit (Nov 25 2026, owner: "make sure the poles don't run up into the sign and cover the text"): the posts stand
+    // SIGN_POST_SET behind the face (hidden by it from the readable side) and the same mesh and material, turned round (no new
+    // texture or program), closes the back twice that far behind: the arch reads both ways, the posts sandwiched between faces.
+    const face=sign(text,8,.9,x,2.5,z,'#477c6a'),back=face.clone();back.position.z=z-SIGN_POST_SET*2;back.rotation.y=Math.PI;town.add(back);
+    for(const dx of [-3.3,3.3]){cylinder(.06,2.4,'#9d805b',x+dx,1.2,z-SIGN_POST_SET);obstacles.push({x:x+dx,z:z-SIGN_POST_SET,w:.15,d:.15});}
   }
   function arcadeWalk(x:number,z:number,w:number){
     // A shaded colonnade, with walkable openings between stone piers.
@@ -584,7 +591,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const x of [schoolX-2.5,schoolX,schoolX+2.5])box(.16,6.5,.18,'#d2bc94',x,3.7,-56.25);
   box(7.6,.18,.18,'#d2bc94',schoolX,3.1,-56.25);
   box(12,.45,3,'#eddfbb',schoolX,4.1,-55.5);
-  sign('ISLAND HIGH SCHOOL',20,1.35,schoolX,10,-56.77,'#477c6a');
+  sign('ISLAND HIGH SCHOOL',20,1.35,schoolX,10,-56.65,'#477c6a');// 12 cm out (was -56.77): the top window row's mullions stood 5 cm proud of it (signs audit, Nov 25 2026)
   sign('LEARN THE GAME · PLAY TOGETHER',13,.65,schoolX,8.35,-56.5,'#bd7657');
   // Six real flights connect ground → garden → wing → central roof on both
   // sides. Rise stays below the walking solver's .35 m step limit. Stair bodies
@@ -916,7 +923,7 @@ export function* buildTownSteps(scene: T.Scene) {
    box(2, .06,.1,'#e8e7d5',door,2.9,front+.28);
    box(2.15,.07,.75,'#879b92',door,.04,front+.35);
    for(const side of [-1,1])box(.18,3.2,.22,'#eee9d8',x+side*4.83,1.65,front+.14);
-   sign('MATCH DAY',1.6,.55,x-3.5,2.65,front+.23,'#fff1d3','#247957');
+   sign('MATCH DAY',1.6,.55,x-3.5,2.65,front+.26,'#fff1d3','#247957');// 3 cm proud of the window's centre mullion (was flush: signs audit, Nov 25 2026)
    box(1.8,.65,1.3,'#bac5bc',x+2.6,4.98,z-2);
    for(let i=0;i<5;i++)box(1.3,.025,.05,'#536b65',x+2.6,5.32,z-2.4+i*.18);
    buildings.push({x,z,w:10,d:10,height:4.72,name:'KONBINI'});
@@ -1207,7 +1214,7 @@ export function* buildTownSteps(scene: T.Scene) {
   obstacles.push({x:72,z:198,w:.12,d:9.2});
   bench(86,198);palm(88,203,5.5);
   sign('BEACH VOLLEYBALL',5.8,.7,84,1.8,191,'#477c6a');
-  for(const x of [81.5,86.5])cylinder(.055,1.8,'#9d805b',x,.9,191);
+  for(const x of [81.5,86.5])cylinder(.055,1.8,'#9d805b',x,.9,191-SIGN_POST_SET);// behind the face (signs audit, Nov 25 2026)
 
 
 

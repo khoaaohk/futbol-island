@@ -351,7 +351,7 @@ export function buildCoralCay(t:CayTools){
  for(let i=0;i<3;i++)lamp(CAY_PLAZA.x-12+i*12,CAY_PLAZA.z+13.5,-.03);
  // Café terrace tables and surfboards leaning outside the surf shop.
  {const [cx,cz,,cd]=CAY_HOUSES[0];for(const dx of [-5,4])table(cx+dx,cz+cd/2+4.4);}
- {const [sx,sz,,sd]=CAY_HOUSES[1];['#589aa0','#f4cc7c','#bd7657'].forEach((c,i)=>{const board=box(.62,2.3,.09,c,sx+3+i*.85,1.12,sz+sd/2+.35);board.rotation.x=-.18;board.rotation.z=(i-1)*.05;});obstacles.push({x:sx+3.85,z:sz+sd/2+.45,w:2.6,d:.6});}
+ {const [sx,sz,,sd]=CAY_HOUSES[1];['#589aa0','#f4cc7c','#bd7657'].forEach((c,i)=>{const board=box(.62,2.1,.09,c,sx+3+i*.85,1.02,sz+sd/2+.35);/* 2.1 m (was 2.3): the tips reached into SURF SHOP's words (signs audit, Nov 25 2026) */board.rotation.x=-.18;board.rotation.z=(i-1)*.05;});obstacles.push({x:sx+3.85,z:sz+sd/2+.45,w:2.6,d:.6});}
  // Paths: plaza → court, road → huts, plaza → south beach. The first hut's path starts under the roundabout's pavement
  // (z -145.5), not under its asphalt (Oct 15 2026: it ran 1.6 m into the ring, 3 cm under the carriageway).
  path(628,z0,48,3);path(CAY_HUTS[1].x,-146.5,3,13);path(CAY_HUTS[0].x,-143.5,3,4);path(CAY_HUTS[2].x,-147,3,11);path(CAY_PLAZA.x,-117,3,54);
