@@ -121,7 +121,7 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
  const glow=createNpcHover(scene,'train-talk-hover'),ring=glow.root;let hoverOn=false;
  let tagCanvas:HTMLCanvasElement|null=null,tagTex:T.CanvasTexture|null=null;// made on the first tag (none in a ride without talk)
  const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(TAG_W,TAG_H,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
- let candCast=-1,tagCast=-1,tagName='';let ext:{x:number;y:number;z:number;name:string}|null=null,offerDef:NpcDefinition|null=null;const glowAt={id:'',x:0,y:0,z:0};
+ let candCast=-1,tagCast=-1,tagName='';let ext:{p:{readonly x:number;readonly y:number;readonly z:number};lift:number;name:string}|null=null,offerDef:NpcDefinition|null=null;const glowAt={id:'',x:0,y:0,z:0};
  const drawTag=(name:string)=>{if(typeof document==='undefined')return;if(!tagCanvas){tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=160;tagTex=new T.CanvasTexture(tagCanvas);tagTex.colorSpace=T.SRGBColorSpace;tag.material.map=tagTex;tag.material.needsUpdate=true;}
   const ctx=tagCanvas.getContext('2d');if(!ctx||!tagTex)return;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';
   ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(name,256,66,470);ctx.fillStyle='#e6cb8b';ctx.font='700 25px sans-serif';ctx.fillText('LET’S TALK',256,115,470);tagTex.needsUpdate=true;};
@@ -177,7 +177,7 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
    hovered=-1;if(hoveredCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===hoveredCast&&list[i].k===k){hovered=i;break;}if(hovered<0)hoveredCast=-1;}
    if(hovered>=0){const s=pax.spots().list[hovered];glowAt.id='pax-'+s.cast;glowAt.x=s.fx;glowAt.y=s.y;glowAt.z=s.fz;glow.update(glowAt,dt,reduced);hoverOn=true;setCursor(true);}else{if(hoverOn){hoverOn=false;setCursor(false);}if(glow.root.visible)glow.update(null,dt,reduced);}
    // the near-only name tag over the offered passenger (moves with the train: their spot this frame)
-   if(ext){if(tagName!==ext.name){tagName=ext.name;tagCast=-2;drawTag(ext.name);}tag.position.set(ext.x,ext.y,ext.z);if(!tag.visible)tag.visible=true;return;}
+   if(ext){if(tagName!==ext.name){tagName=ext.name;tagCast=-2;drawTag(ext.name);}tag.position.set(ext.p.x,ext.p.y+ext.lift,ext.p.z);if(!tag.visible)tag.visible=true;return;}
    let ts=-1;if(candCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===candCast&&list[i].k===k){ts=i;break;}}
    if(ts>=0){const s=pax.spots().list[ts];if(tagCast!==s.cast){tagCast=s.cast;tagName='';drawTag(pax.def(s.cast)?.name??'');}tag.position.set(s.x,s.y+(s.standing?2.05:1.62)*(s.kid?KID:1),s.z);if(!tag.visible)tag.visible=true;}else if(tag.visible)tag.visible=false;
   },
@@ -189,7 +189,10 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
    let i=rayAt(camera,centre.set(0,0),k,reach);if(i>=0)aimed=true;else i=pickNear(list,count,k,me,reach,candCast);
    candCast=i>=0?list[i].cast:-1;offerDef=i>=0?defOf(list[i],k):null;return offerDef;},
   /** Shot 81: someone who isn't a passenger (Conductor Kenji) is offered: the same tag over them (p: their seat base) and tap. */
-  offerOther(def:NpcDefinition,p:{x:number;y:number;z:number},lift=1.62):NpcDefinition{candCast=-1;offerDef=def;ext={x:p.x,y:p.y+lift,z:p.z,name:def.name};return def;},
+  offerOther(def:NpcDefinition,p:{readonly x:number;readonly y:number;readonly z:number},lift=1.62):NpcDefinition{candCast=-1;offerDef=def;ext={p,lift,name:def.name};return def;},
+  /** Owner shot 91 (Kenji's tag raced and jittered): `p` is his LIVE spot (kept by reference, not copied on the HUD tick), and Town
+   *  calls this right after his figure moves each frame, so the tag sits exactly over his head with no lag. */
+  syncTag(){if(ext&&tag.visible)tag.position.set(ext.p.x,ext.p.y+ext.lift,ext.p.z);},
   /** The current candidate is under the camera's aim (E may talk even while Get off is the primary prompt). */
   get aimed(){return aimed;},
   /** Tests / checks. */
