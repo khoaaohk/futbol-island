@@ -1023,6 +1023,11 @@ html[data-game-guard] canvas{touch-action:none}
 .town-app[data-live-join] .town-minimap,.town-app[data-live-join] nav[data-hud-triggers]{display:none!important}
 .town-app:has([data-knockout-leave]:not([hidden])) nav[data-hud-triggers]{display:none!important}/* Rooftop Knockout's Leave takes the settings button's top-right spot mid-round (QA Nov 14 2026) *//* the match bar takes the top row: no paths / friends / settings buttons mid-match */
 .town-app[data-live-join] [data-job-wallet]{visibility:hidden;pointer-events:none}/* the match bar takes the coins bar's place */
+/* Summit 5s practice area (components/SummitPracticeHud.tsx, owner Nov 24 2026): no paths / friends / settings, no map, no ride switch on
+   the practice pitch (the camera button and Exit take the top corners); kick / juggle and the stick stay. The editor hides the controls too. */
+.town-app[data-practice] :is(nav[data-hud-triggers],.town-minimap,.field-learn-card){display:none!important}
+.town-app[data-practice] .travel-actions :is(.travel-mode,.minimap-toggle){visibility:hidden;pointer-events:none}
+.town-app[data-practice-edit] :is(.travel-actions,.touch-actions,.touch-controls,.joystick){visibility:hidden;pointer-events:none}
 
 /* Pitch bar title (owner, Nov 4): smaller so the Learn + Play buttons fit beside it. */
 .town-app .field-learn-card:not([hidden]) strong{font-size:15px!important;line-height:1.15}
