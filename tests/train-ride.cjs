@@ -260,3 +260,4 @@ console.log('train-ride camera: ok');
   const t=TP.TRICK_RIG.thigh,ky=o.pelvisY-t*Math.cos(out.hipX)*Math.cos(out.hipZ),kz=-t*Math.sin(out.hipX);
   assert(ky>CM.BENCH_TOP-CM.CAR_FLOOR_Y+.03&&ky<CM.BENCH_TOP-CM.CAR_FLOOR_Y+.16,`knee on the cushion (${ky.toFixed(2)})`);assert(TRN2.RIDER_ROOT_X+kz<CM.BENCH_BACK-.03,`knee short of the backrest (${(TRN2.RIDER_ROOT_X+kz).toFixed(2)})`);}}}
 console.log('train-ride kneel: ok');
+{const town=require('fs').readFileSync(require('path').join(__dirname,'..','components/Town.tsx'),'utf8');require('assert')(/if\(travel\.current\)\{trainRide\.finish\(\);[^\n]*?roofRide\.k=-1;roofRide\.hop=false;roofLanding=-1;/.test(town),'owner Nov 25: map travel from a train roof ends the roof ride');console.log('train-ride roof travel ok');}
