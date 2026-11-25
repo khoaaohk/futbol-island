@@ -228,12 +228,26 @@ export function buildSummitIsle(t:SummitTools){
   // u: 2 m out to 2.6 m in (a cell past the plane); only triangles with a corner in front of the mouth cap (0.12 m out) are dropped
   // (one wholly behind it is hidden by the cap from outside, and is the hill seen from above and the side: no holes there)
   let minU=0;const inOpening=(x:number,z:number,loose:boolean)=>{for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;if(u<-2||u>2.6||Math.abs(v)>TUNNEL_HALF_WIDTH+4)continue;if(lat(x,z,v)<TUNNEL_HALF_WIDTH+(loose?.7:0)&&(loose||u<.3)){minU=Math.min(minU,u);return true;}}return false;};
-  for(const piece of sectors){const P=piece.pos,I=piece.idx,keep:number[]=[];
+  // RELEASE (Nov 24 2026, a light sliver behind the west headwall's top-left corner from the high angle): a dropped triangle that ran
+  // from the floor in front of the mouth up to the hill behind the headwall left a hole behind the wall's top. Its part behind the
+  // headwall's back plane (0.05 m in) is put back (clipped there), except inside the tube's box (|lateral| < half width + 0.1 m,
+  // under the crown + 0.3 m: it would show in the tunnel's mouth from inside). Hidden from the front by the headwall and the mouth cap.
+  const backPart=(piece:Piece,ia:number,ib:number,ic:number,cx:number,cz:number)=>{let e=snapT[0],bd=Infinity;for(const s of snapT){const d=Math.hypot(cx-s.p.x,cz-s.p.z);if(d<bd){bd=d;e=s;}}
+   // vertex: x, y, z (world), u (in from the plane), v (straight-frame lateral), source vertex (its colour)
+   const P=piece.pos,src=[ia,ib,ic].map(i=>{const x=P[i*3]+piece.ox,z=P[i*3+2]+piece.oz;return [x,P[i*3+1],z,((x-e.p.x)*e.t.tx+(z-e.p.z)*e.t.tz)*e.w,(x-e.p.x)*e.t.tz-(z-e.p.z)*e.t.tx,i];});
+   const clip=(poly:number[][],f:(v:number[])=>number)=>{const out:number[][]=[];for(let k=0;k<poly.length;k++){const A=poly[k],Bv=poly[(k+1)%poly.length],fa=f(A),fb=f(Bv);if(fa>=0)out.push(A);if((fa>=0)!==(fb>=0)){const g=fa/(fa-fb);out.push([0,1,2,3,4].map(n=>A[n]+(Bv[n]-A[n])*g).concat(A[5]));}}return out;};
+   // behind the headwall's back plane; beside the tube's box, or over its crown (never inside the tunnel's mouth, seen from inside)
+   const W2=TUNNEL_HALF_WIDTH+.1,base=clip(src,v=>v[3]-.05);if(base.length<3)return;
+   for(const poly of [clip(base,v=>v[4]-W2),clip(base,v=>-W2-v[4]),clip(clip(clip(base,v=>W2-v[4]),v=>v[4]+W2),v=>v[1]-(B+2.4+TUNNEL_HALF_WIDTH+.3))]){if(poly.length<3)continue;
+    const ids=poly.map(v=>{const ci=v[5]*3;piece.pos.push(v[0]-piece.ox,v[1],v[2]-piece.oz);piece.nor.push(0,1,0);piece.colr.push(piece.colr[ci],piece.colr[ci+1],piece.colr[ci+2]);piece.tree.push(piece.tree[v[5]]??0);return piece.pos.length/3-1;});
+    for(let k=1;k<ids.length-1;k++)extra.push(ids[0],ids[k],ids[k+1]);}};
+  let extra:number[]=[];
+  for(const piece of sectors){const P=piece.pos,I=piece.idx,keep:number[]=[];extra=[];
    for(let q=0;q<I.length;q+=3){const a=I[q]*3,b=I[q+1]*3,c=I[q+2]*3,ya=P[a+1],yb=P[b+1],yc=P[c+1],lo=Math.min(ya,yb,yc),hi=Math.max(ya,yb,yc);
     if(hi>B+.25&&lo<B+2.4&&lo<top){/* a corner below the springing: it reaches into the opening (the hill over the arch's top stays) */const cx=(P[a]+P[b]+P[c])/3+piece.ox,cz=(P[a+2]+P[b+2]+P[c+2])/3+piece.oz;
-     minU=0;if(inOpening(cx,cz,false)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)&&minU<-.1)continue;}
+     minU=0;if(inOpening(cx,cz,false)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)&&minU<-.1){backPart(piece,I[q],I[q+1],I[q+2],cx,cz);continue;}}
     keep.push(I[q],I[q+1],I[q+2]);}
-   piece.idx=keep;}}
+   piece.idx=keep.concat(extra);}}
  const sectorOf=(x:number,z:number)=>{let a=Math.atan2(z-PK.z,x-PK.x);if(a<0)a+=Math.PI*2;return sectors[Math.min(SECTORS-1,Math.floor(a/(Math.PI*2)*SECTORS))];};
  // ---- Paths (Oct 13 2026, user: "the path is not all connected", then a screenshot of it drawn as separate wedge-shaped strips):
  // one continuous ribbon per path, SUMMIT_PATH_WIDTH wide everywhere, draped on the terrain AS DRAWN. The old ribbon had one
