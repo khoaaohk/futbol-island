@@ -36,16 +36,17 @@ export type LineupPage={kind:'lineup';slug:string;path:string;format?:GuideForma
 export {F8_SOURCES};
 const formationImg=(slug:string)=>`/learn/diagrams/${slug}-formation.png`;
 export const LINEUP_PAGES:readonly LineupPage[]=[
- {kind:'lineup',slug:'soccer-lineup-builder',path:LINEUP_PATH,crumb:'Lineup builder',title:'Soccer Lineup Builder: Free, Printable, No Sign-Up',h1:'Soccer lineup builder',
-  description:'Free soccer lineup builder for 7v7, 9v9, 11v11 and futsal. Pick a formation, type names, drag players, then print it, save a picture or share a link.',
-  lead:'Build your starting lineup on a real field diagram. Pick the game and the formation, type first names, move players between positions and the bench, then print it, save it as a picture or copy a link for the team chat.',
+ {kind:'lineup',slug:'soccer-lineup-builder',path:LINEUP_PATH,crumb:'Lineup builder',title:'Soccer Lineup Builder: Free Lineup Maker to Print or Share'/* SEO wave 2, Nov 24 2026  (GSC 23 @ 23.3); was "Soccer Lineup Builder: Free, Printable, No Sign-Up" */,h1:'Soccer lineup builder',
+  description:'Free soccer lineup builder and lineup maker for 7v7, 8v8, 9v9, 11v11 and futsal: pick a formation, type names, drag players, then print or share it.',
+  lead:'This free soccer lineup maker puts your starting lineup on a real field diagram, with no sign-up. Pick the game and the formation, type first names, move players between positions and the bench, then print it, save it as a picture or copy a link for the team chat.',
   blurb:'Names on a field diagram for 7v7, 9v9, 11v11 or futsal: print, picture or link',
   intro:['A lineup on paper settles the questions children ask in the car park: “Where am I playing?” and “Am I starting?” This builder draws the answer on the same field diagrams the Futbol Island lessons use, so the shape on the sheet is the shape the players have already seen.',
    'It works for every game US youth teams play: 7v7 at U9 and U10, 9v9 at U11 and U12, 11v11 from U13, and futsal indoors. Change the formation at any time and the names stay with you.'],
   faq:[{q:'Is the soccer lineup builder really free?',a:'Yes. There is no account, no trial and no advert. You can build, print, download and share as many lineups as you like.'},
    {q:'Where are my players’ names stored?',a:'Only in your own browser, so the lineup is still there when you come back on the same device. Nothing is sent to a server. A link you copy holds the lineup inside the link itself, so only people you send it to can open it.'},
    {q:'Can I use it on my phone at the field?',a:'Yes. It is made for one thumb: tap a player, then tap the spot or the substitute to swap with. On a computer you can drag instead, or use the Tab, arrow and Enter keys.'},
-   {q:'How do I share a lineup with parents?',a:'Use “Download picture” and post the picture in your team chat, or use “Copy link” and paste the link. Use first names or nicknames only when you share a lineup of children.'}]},
+   {q:'How do I share a lineup with parents?',a:'Use “Download picture” and post the picture in your team chat, or use “Copy link” and paste the link. Use first names or nicknames only when you share a lineup of children.'},
+   {q:'Which games can I make a lineup for?',a:'7v7, 8v8 (fútbol 8), 9v9, 11v11 and futsal. Each one also has its own builder page with its formations, the jobs in the starting shape and a printable cheat sheet.'}]},
  {kind:'lineup',slug:'7v7-lineup-builder',path:'/tools/7v7-lineup-builder',format:'7v7',crumb:'7v7 lineup builder',title:'7-a-Side Football Formation Creator: Free 7v7 Soccer Lineup',h1:'7v7 soccer lineup builder',
   description:'A free 7-a-side football formation creator for 7v7 soccer. Pick a 2-3-1, 3-2-1, 2-2-2 or 3-1-2, type names, drag players, then print or share it.',
   lead:'Set out your seven starters and your substitutes on a 7v7 field with build-out lines. Choose a 2-3-1, 3-2-1, 2-2-2 or 3-1-2, type first names and move players until it looks right. Then show the formation to your team on paper, as a picture or as a link.',
@@ -54,6 +55,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    'At this age nobody should own a position. Save a lineup, then swap two players for the second half and print both. A child who plays in defense one week and up front the next learns the whole game.'],
   faq:[{q:'What is the best 7v7 formation to start with?',a:'Most coaches start with a 2-3-1: two defenders, three midfielders and one forward in front of the goalkeeper. It gives width in the middle and is easy for young players to understand.'},
    {q:'How many substitutes should a 7v7 team have?',a:'Three to five is common, which makes a squad of ten to twelve. With more than that it becomes hard to give every child a fair share of the game.'},
+   {q:'How many players are on a 7v7 team?',a:'Seven on the field: a goalkeeper and six outfield players. US teams play 7v7 at U9 and U10, and the builder lists the rest of the squad on the bench beside the field.'},
    {q:'Does the 7v7 field in the builder have build-out lines?',a:'Yes. The two dashed lines are the build-out lines used in US 7v7. The other team waits behind the line while your goalkeeper restarts play, so show your defenders where to stand to receive the ball.'}]},
  {kind:'lineup',slug:'8v8-lineup-builder',path:'/tools/8v8-lineup-builder',format:'8v8',crumb:'8v8 lineup builder',title:'8v8 Lineup Builder: Free Fútbol 8 Soccer Lineup',h1:'8v8 soccer lineup builder',
   description:'A free 8v8 (fútbol 8) lineup builder: a keeper and seven players in a 3-3-1, 3-2-2 or 2-3-2. Type names, drag players and subs, then print or share it.',
@@ -68,7 +70,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    {q:'Are substitutions unlimited in fútbol 8?',a:'In the Valencian and Basque rules, yes: changes are unlimited and a player who comes off can go back on. The coach app plans those rolling changes so every child gets a fair share.'}],
   rules:[['Players','8 a side: a goalkeeper and 7 outfield players'],['Field','50 to 65 m long, 30 to 45 m wide (Álava)'],['Goals','6 × 2 m (Álava)'],['Penalty mark','9 m (Álava, Euskadi)'],['Ball','Size 4 (Álava)'],['Game length','Alevín 2 × 30 min, benjamín and prebenjamín 2 × 25 min (FFCV)'],['Changes','Unlimited, rolling, players may go back on (FFCV, Álava)'],['Playing time','Everyone on the match sheet must play (FFCV)'],['Offside','Only inside the last 13 m (Álava, Euskadi)']],
   sources:F8_SOURCES},
- {kind:'lineup',slug:'9v9-lineup-builder',path:'/tools/9v9-lineup-builder',format:'9v9',crumb:'9v9 lineup builder',title:'9v9 Lineup Builder: Free Printable Soccer Lineup',h1:'9v9 soccer lineup builder',
+ {kind:'lineup',slug:'9v9-lineup-builder',path:'/tools/9v9-lineup-builder',format:'9v9',crumb:'9v9 lineup builder',title:'9v9 Soccer Lineup Builder: Free 3-2-3 and 3-3-2 Lineups'/* SEO wave 2, Nov 24 2026  (GSC 23 @ 10); was "9v9 Lineup Builder: Free Printable Soccer Lineup" */,h1:'9v9 soccer lineup builder',
   description:'Build a 9v9 soccer lineup in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1. Type names, drag players and subs, then print or share it. Free, no sign-up.',
   lead:'Place your nine starters on a 9v9 field in a 3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 or 4-3-1, add the substitutes, and hand every player a clear picture of where they begin.',
   blurb:'Nine starters and the bench on a 9v9 field',
@@ -76,6 +78,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    'Try the same squad in two shapes. Build it in a 3-2-3, copy the link, then switch to a 3-3-2 and compare: the names move with the shape, so you can see at once which players change jobs.'],
   faq:[{q:'What is the most common 9v9 formation?',a:'The 3-2-3 is the usual first choice: three defenders, two central midfielders and three forwards. It prepares players for the 4-3-3 they will meet in 11v11.'},
    {q:'Can I move a player from the bench into the lineup?',a:'Yes. Tap the substitute, then tap the player on the field. They swap places. On a computer you can drag one onto the other.'},
+   {q:'How many players are on a 9v9 team?',a:'Nine on the field: a goalkeeper and eight outfield players. With 12 to 15 in the squad, three to six wait on the bench at a time, so plan the changes as well as the starters.'},
    {q:'Can I print the 9v9 lineup?',a:'Yes. “Print” makes a one-page sheet in black on white with the field, the names, the bench and your match note, ready for a clipboard.'}]},
  {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'Starting 11 Maker: Free Soccer Lineup Builder (Football 11)',h1:'Starting 11 maker: 11v11 soccer lineup builder',
   description:'Starting 11 maker for soccer and football: put your 11 in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, type names, drag players, then print or share. Free.',
@@ -96,6 +99,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    'Use the bench as your order of substitutes: the first name is the first one on. Build one lineup for each half and keep both links.'],
   faq:[{q:'What do fixo, ala and pivot mean?',a:'They are the futsal positions. The fixo is the last court player in front of the goalkeeper, the two alas play wide and the pivot plays highest, with their back to goal.'},
    {q:'Which futsal formation is easiest for beginners?',a:'The 2-2: two players at the back and two in front. Move to the 1-2-1 diamond when the players can pass and move.'},
+   {q:'How many players are on a futsal team?',a:'Five on the court: a goalkeeper and four court players. Substitutions are unlimited and on the fly under the FIFA Futsal Laws, so the rest of the squad comes on and off all game.'},
    {q:'How many substitutes can a futsal team use?',a:'Futsal uses rolling substitutions, so players go off and come back many times. The size of the squad is set by your league; check its rules.'}]},
 ];
 export type GameLength={label:string;ages:string;periods:number;periodMin:number};
@@ -109,9 +113,9 @@ export function gameLengths(format:GuideFormat):GameLength[]{
 }
 export type PlannerPage={kind:'planner';slug:string;path:string;format?:Exclude<GuideFormat,'futsal'>;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
 export const PLANNER_PAGES:readonly PlannerPage[]=[
- {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Playing Time Calculator for Soccer: Equal Minutes and Subs',h1:'Equal playing time calculator for soccer',
-  description:'Free soccer minutes calculator: enter your players and game length, get a fair sub rotation with equal playing time for every child. Print it in one tap.',
-  lead:'A soccer playing time calculator, also called a sub calculator, a game time calculator or an equal minutes calculator, works out a substitution plan in which every player gets the same share of the game, to within one change. Tell it how many players came, how many play at once and how long the game is.',
+ {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Playing Time Calculator: Fair Minutes for Every Kid'/* SEO wave 2, Nov 24 2026 (GSC 386 @ 7.7); was "Playing Time Calculator for Soccer: Equal Minutes and Subs" */,h1:'Equal playing time calculator for soccer',
+  description:'Free soccer playing time calculator: type your players and game length, get a sub plan with fair, equal minutes for every kid. No sign-up. Print or share.',
+  lead:'Type how many players came, how many play at once and how long the game is: this free calculator gives you a substitution plan with equal minutes for every kid, to within one change. Coaches also call it a sub calculator, a game time calculator or an equal minutes calculator.',
   blurb:'A fair substitution plan with equal minutes for every player',
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',
    'It works for any game: choose 7v7, 9v9, 11v11 or futsal, or type your own numbers for a tournament with short games.'],
@@ -119,7 +123,8 @@ export const PLANNER_PAGES:readonly PlannerPage[]=[
    {q:'What if a player does not turn up, gets hurt or arrives late?',a:'Before the game, change the number of players and the plan is made again at once. During the game, the free coach app does it for you: mark the player hurt, late or gone and the rest of the substitutions re-balance so the minutes stay equal.'},
    {q:'Should the goalkeeper rotate too?',a:'With young players, yes if you can: it lets every child try the position and keeps the minutes equal. Choose “a new goalkeeper each period” and the keeper changes at the breaks. If one child stays in goal, they play the whole game and the others share the rest.'},
    {q:'Are the names I type saved anywhere?',a:'Only in your own browser. Nothing is sent to a server. Names are optional: the plan works with “Player 1, Player 2” as well.'},
-   {q:'Can I get the playing time in Excel or Google Sheets?',a:'Yes. After the game the coach app downloads a CSV file with every player’s minutes per period, minutes in goal and share of the game. It opens in Excel, Google Sheets and Numbers.'}]},
+   /* SEO wave 2 (Nov 24 2026): the Excel question is answered in its own section (#excel), so this FAQ now states the promise */
+   {q:'Is the playing time calculator free?',a:'Yes, free for every coach and team: no account, no trial and no ads. Make as many plans as you like, print them or send them to the team chat. The coach app that runs the plan at the field is free too.'}]},
  {kind:'planner',slug:'7v7-substitution-rotation',path:'/tools/7v7-substitution-rotation',format:'7v7',crumb:'7v7 substitution rotation',title:'7v7 Soccer Substitution Rotation: Equal-Time Planner',h1:'7v7 soccer substitution rotation',
   description:'A 7v7 soccer substitution rotation for 8 to 14 players. Enter who came and get a fair plan with equal playing time, ready to print or paste in a team chat.',
   lead:'Seven on the field and a bench of excited eight- and nine-year-olds. Enter how many players you have and get a 7v7 substitution rotation in which everyone plays the same amount, to within one change.',
@@ -139,14 +144,15 @@ export const PLANNER_PAGES:readonly PlannerPage[]=[
    {q:'How do I share time between twelve players in 9v9?',a:'Three players sit out in each block. Over a game of six ten-minute blocks, some players are on for four blocks and some for five. The planner picks who gets the extra block; swap the names next week so it evens out over the season.'},
    {q:'Does the plan keep the same goalkeeper?',a:'You choose. One goalkeeper for the whole game, or a new goalkeeper each period so that more players learn the position.'}]},
 ];
-export const TOOLS_HUB={path:TOOLS_PATH,crumb:'Coach tools',title:'Free Soccer Coaching Tools: Lineups, Subs, Printables',h1:'Free soccer coaching tools',
- description:'Free tools for youth soccer coaches: a lineup builder, a fair playing time calculator, blank field diagrams and formation cheat sheets. No sign-up, no ads.',
- lead:'A lineup builder, a fair playing-time planner and printable field diagrams for volunteer coaches of 7v7, 9v9, 11v11 and futsal teams. Free, with no account and nothing to install.',
+export const TOOLS_HUB={path:TOOLS_PATH,crumb:'Coach tools',title:'Free Soccer Coaching Tools: Lineups, Subs, Practice Plans'/* SEO wave 2, Nov 24 2026; was "Free Soccer Coaching Tools: Lineups, Subs, Printables" */,h1:'Free soccer coaching tools',
+ description:'Free youth soccer coaching tools: a lineup builder, a playing time calculator, a practice plan generator, a match timer and field diagrams. No sign-up.',
+ lead:'Free tools for volunteer youth soccer coaches: a lineup builder, a playing time calculator with equal minutes for every kid, a practice plan generator, a scanning trainer, a match timer and printable field diagrams, for 7v7, 9v9, 11v11 and futsal. No account, no ads and nothing to install.',
  blurb:'A lineup builder, a fair playing-time planner and printable field diagrams for coaches',
  faq:[{q:'Who are these soccer coaching tools for?',a:'Volunteer and youth coaches, physical education teachers and parents who help a team of children aged about 7 to 12. Adult teams can use them too.'},
   {q:'Do the tools collect any information?',a:'No. Player names and lineups stay in your own browser. Nothing you type is sent to Futbol Island, and there is no account to create.'},
   {q:'Can I share the printables with my club?',a:'Yes. They are free to print and share for teams, clubs and schools. Each sheet carries a small futbolisland.app credit; please leave it on.'},
-  {q:'Do the tools work on a phone?',a:'Yes. They are built for a phone held in one hand at the side of a field, and they also work on tablets and computers.'}] as Faq[]};
+  {q:'Do the tools work on a phone?',a:'Yes. They are built for a phone held in one hand at the side of a field, and they also work on tablets and computers.'},
+  {q:'Which coaching tool should I use first?',a:'Before the first game, the lineup builder and the playing time calculator. For practice nights, the practice plan generator. On game day the free coach app keeps the lineup, the changes and the clock together on one phone.'}] as Faq[]};
 export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',title:'Blank Soccer Field Diagrams: Free Printable Templates',h1:'Blank soccer field diagrams to print',
  description:'Free printable soccer field diagrams: blank 7v7, 9v9, 11v11 and futsal templates in portrait and landscape, formation cheat sheets and a positions chart.',
  lead:`Blank soccer field templates for 7v7, 9v9, 11v11 and futsal, formation cheat sheets and a positions chart: ${PRINT_FILES.length} sheets, each as a PNG and an SVG, free to print.`,

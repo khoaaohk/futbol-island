@@ -102,9 +102,12 @@ const EXTRA_TOOLS:Record<string,string[]>={
  /* Nov 22 2026, second batch (lib/site/tools/moreTools.ts) */
  [R+'build-out-line']:['/tools/youth-soccer-field-size-guide'],[R+'futsal-rules']:['/tools/youth-soccer-field-size-guide'],[R+'penalty-kick']:['/tools/youth-soccer-field-size-guide'],
  [R+'heading-rules-for-kids']:['/tools/soccer-juggling-challenge'],[TM+'penalty-area']:['/tools/youth-soccer-field-size-guide'],[TM+'goal-area']:['/tools/youth-soccer-field-size-guide'],
- [TM+'weak-foot']:['/tools/soccer-juggling-challenge'],[TM+'first-touch']:['/tools/soccer-juggling-challenge','/tools/soccer-practice-plan-generator'],
+ [TM+'weak-foot']:['/tools/soccer-juggling-challenge'],[TM+'first-touch']:['/tools/soccer-scanning-trainer','/tools/soccer-juggling-challenge','/tools/soccer-practice-plan-generator'],
  [TM+'assist']:['/tools/youth-soccer-stats-tracker'],[TM+'hat-trick']:['/tools/youth-soccer-stats-tracker'],[TM+'brace']:['/tools/youth-soccer-stats-tracker'],[TM+'clean-sheet']:['/tools/youth-soccer-stats-tracker'],
  [TM+'give-and-go']:['/tools/soccer-practice-plan-generator'],[TM+'two-v-one']:['/tools/soccer-practice-plan-generator'],
+ /* SEO wave 2, Nov 24 2026: the scanning trainer (the best click page) from the skills that need a look over the shoulder first */
+ [TM+'scanning']:['/tools/soccer-scanning-trainer'],[TM+'one-touch']:['/tools/soccer-scanning-trainer'],[TM+'through-ball']:['/tools/soccer-scanning-trainer'],
+ [TM+'third-man-run']:['/tools/soccer-scanning-trainer'],[TM+'switching-play']:['/tools/soccer-scanning-trainer'],
 };
 const extraLink=(path:string):XLink=>{const t=TOOL_PAGES.find(x=>x.path===path);if(!t)throw new Error(`crossLinks: tool ${path} does not exist`);return {path:t.path,name:t.name,line:t.blurb};};
 Object.values(EXTRA_TOOLS).flat().forEach(extraLink);
@@ -128,6 +131,14 @@ const POSITION_TERMS:Record<string,string[]>={
  'striker':['false-nine','through-ball','cutback','penalty-area','hat-trick'],
 };
 for(const [p,ts] of Object.entries(POSITION_TERMS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(termLink);}
+/** Position page -> coach tools (SEO wave 2, Nov 24 2026): the scanning trainer for the outfield positions that must look before
+ *  they receive (every outfield player scans; the midfielders and center backs most), and the lineup builder for all. */
+const SCAN='/tools/soccer-scanning-trainer';
+const POSITION_TOOLS:Record<string,string[]>={'center-back':[SCAN],'fullback':[SCAN],'wingback':[SCAN],'defensive-midfielder':[SCAN],'central-midfielder':[SCAN],
+ 'attacking-midfielder':[SCAN],'winger':[SCAN],'striker':[SCAN]};
+for(const [p,ts] of Object.entries(POSITION_TOOLS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(extraLink);}
+export const positionToolPaths=(slug:string):readonly string[]=>POSITION_TOOLS[slug]??[];
+export const positionToolLinks=(slug:string):XLink[]=>positionToolPaths(slug).map(extraLink);
 export const positionTermSlugs=(slug:string):readonly string[]=>POSITION_TERMS[slug]??[];
 export const positionTermLinks=(slug:string):XLink[]=>positionTermSlugs(slug).map(termLink);
 export function ruleCrossLinks(slug:string):XLink[]{

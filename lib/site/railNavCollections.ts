@@ -40,9 +40,9 @@ export const toolsHubRail=(es=false):Rail=>hub(L(es,'Coach tools on this page','
 /** `rules` (round 4D, fútbol 8): the page has a rules table and its sources instead of a formation's roles */
 export const lineupRail=(format:boolean,es=false,rules=false):Rail=>page(onPage(es),toolsBack(es),[['how',L(es,'How to build it','Cómo armarla')],['about',L(es,'About lineups','Sobre las alineaciones')],
  ...(rules?[['rules',L(es,'Fútbol 8 rules','Reglas del fútbol 8')],['sources',L(es,'Sources','Fuentes')]] as const:[format?['roles',L(es,'Who plays where','Quién juega dónde')] as const:['shapes',L(es,'Every formation','Todas las formaciones')] as const]),qa(es),more(es,L(es,'More tools','Más herramientas'))],es);
-export const plannerRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['plan',L(es,'Your plan','Tu plan')],['about',L(es,'Why plan','Por qué planear')],
+export const plannerRail=(format:boolean,es=false):Rail=>page(onPage(es),toolsBack(es),[['plan',L(es,'Your plan','Tu plan')],...(format?[]:[['how-it-works',L(es,'How it works','Cómo funciona')]] as const),['about',L(es,'Why plan','Por qué planear')],
  ['why',L(es,'Equal playing time','Minutos iguales')],['lengths',L(es,'Game lengths','Duración de los partidos')],['method',L(es,'How the plan is made','Cómo se hace el plan')],
- ...(es?[]:format?[['game-day','Game day'] as const]:[['example','A worked example'],['game-day','During the game'],['uk','In the UK'],['sources','Sources'],['excel','Excel or Sheets']] as const),
+ ...(es?(format?[]:[['example','Un ejemplo'],['game-day','Durante el partido']] as const):format?[['game-day','Game day'] as const]:[['example','A worked example'],['game-day','During the game'],['uk','In the UK'],['sources','Sources'],['excel','Excel or Sheets']] as const),
  qa(es),more(es,L(es,'More tools','Más herramientas'))],es);
 export const printablesHubRail=(es=false):Rail=>page(onPage(es),toolsBack(es),[['fields',L(es,'Blank fields','Canchas en blanco')],['cheat-sheets',L(es,'Formation cheat sheets','Hojas de formaciones')],
  ['positions',L(es,'Positions and numbers','Posiciones y números')],['terms',L(es,'Free to print','Gratis para imprimir')],qa(es),['related',L(es,'Tools that use them','Herramientas relacionadas')]],es);

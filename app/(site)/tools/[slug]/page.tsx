@@ -20,6 +20,8 @@ import {cheatSheetPath,PRINTABLES_HUB_PATH} from '@/lib/site/tools/printables';
 import {COACH_APP_PATH,gameLengths,LINEUP_PAGES,LINEUP_PATH,lineupPage,PLANNER_EXAMPLE,PLANNER_PAGES,PLANNER_PATH,PLANNER_SOURCES,plannerImage,plannerPage,PRINTABLES_HUB,TOOL_PAGES,toolCrumbs,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
 import {SHAPES} from '@/lib/site/tools/shapes';
 import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
+import {TIMER_PATH} from '@/lib/site/tools/newTools';
+import {FIELD_GUIDE_PATH} from '@/lib/site/tools/moreTools';
 import {embedSnippet} from '@/lib/site/tools/embed';
 import site from '../../site.module.css';
 
@@ -71,6 +73,15 @@ function Lineup({p}:{p:LineupPage}){
     </ol>
    </Section>
    <Section id="about" title={p.format?`About ${FORMAT_WORD(format)} lineups`:'Why draw the lineup'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
+   {/* SEO wave 2 (Nov 24 2026): the format landings get a game-day block: the format's sizes (lib/site/sizes.ts via gameLengths, sourced
+       U.S. Soccer / US Youth Soccer; futsal from the FIFA Futsal Laws 2025-26, Laws 2, 3 and 7) and the tools for the same squad */}
+   {p.format&&!eight&&<Section id="glance" title={`${format==='futsal'?'Futsal':format} game day at a glance`}>
+    {format==='futsal'?<DataTable label="Futsal at a glance" head={['Rule','What the FIFA Futsal Laws say']} rows={[['Players on the court','5 a side: a goalkeeper and 4 court players'],['Substitutions','Unlimited and on the fly: players go off and come back on'],['Game length','Two periods of 20 minutes for adults; youth leagues set their own'],['Ball','A size 4 futsal ball that bounces less than an outdoor ball']]}/>
+     :<DataTable label={`${format} game day at a glance`} head={['Age group','Players on the field','Game length']} rows={gameLengths(format).map(x=>[x.ages,`${PLAYERS_PER_TEAM[format]}: a goalkeeper and ${PLAYERS_PER_TEAM[format]-1}`,x.label])}/>}
+    <p>After the lineup, the same squad needs fair minutes, a field of the right size and a clock. These free tools do the {FORMAT_WORD(format)} version of each job:</p>
+    <LinkList links={[format==='7v7'||format==='9v9'?{path:`/tools/${format}-substitution-rotation`,name:`${format} substitution rotation`,line:'Equal playing time for every player in your squad'}:{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'Equal playing time for every player in your squad'},
+     {path:FIELD_GUIDE_PATH,name:'Youth soccer field size guide',line:`The ${FORMAT_WORD(format)} field, goals and markings drawn to scale`},{path:TIMER_PATH,name:'Soccer match timer and scoreboard',line:'Halves or quarters set by age, with sub reminders'}]}/>
+   </Section>}
    {!p.format&&<Section id="shapes" title="Every formation you can build" fold>
     <p>{FORMATIONS.length} shapes across five games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
     <LinkList links={FORMATIONS.map(x=>({path:x.path,name:`${x.name} formation`,line:x.best}))}/>
@@ -123,6 +134,14 @@ function Planner({p}:{p:PlannerPage}){
   <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH+(p.format?'#tool=subs':'#tool=minutes')+(p.format?`&format=${p.format}`:''),label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>
   <Screen>
+   {/* SEO wave 2 (Nov 24 2026): the main calculator shows how it works right under the tool, not folded */}
+   {!p.format&&<Section id="how-it-works" title="How the playing time calculator works, in 3 steps">
+    <ol>
+     <li><b>Type your numbers.</b> How many players came, how many play at once (7 in 7v7, 9 in 9v9, 11 in 11v11) and the game: halves or quarters, and how long each one is.</li>
+     <li><b>Choose your changes.</b> How often you change players, for example every 5 or 10 minutes, and whether one goalkeeper stays in goal or a new one plays each period. Add first names if you like.</li>
+     <li><b>Read the plan.</b> Each block shows who plays and who sits out, and each player’s total minutes are equal to within one change. Print it, copy it as text for the team chat or share the link, then run it at the field in the free coach app.</li>
+    </ol>
+   </Section>}
    <Section id="about" title={p.format?`Sharing a ${p.format} game`:'Why plan the changes'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
    <Section id="why" title="Why equal playing time matters at these ages">
     <p>Children learn the game by playing it. A ten-year-old on the bench is not learning to receive a pass under pressure, and nobody can tell at that age who will be the best player at sixteen: children grow and learn at very different speeds.</p>
@@ -143,7 +162,7 @@ function Planner({p}:{p:PlannerPage}){
     </ul>
    </Section>
    {!p.format&&<>
-   <Section id="example" title="Substitution calculator: a worked example" fold>
+   <Section id="example" title="Substitution calculator: a worked example">
     <p>Ten players turn up for a 7v7 game of two 25-minute halves, and you change players every 5 minutes. That is 10 blocks of 5 minutes with 7 places in each: 70 places to share.</p>
     <ul>
      <li><b>Goalkeeper changes each half:</b> 70 places for 10 players is 7 blocks each, so every child plays 35 minutes, and two of them each keep goal for one half.</li>

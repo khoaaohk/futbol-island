@@ -114,7 +114,8 @@ export const PRACTICE_PLAN_EN:NewToolWords={slug:'soccer-practice-plan-generator
   {q:'How many drills should be in one practice?',a:'Two or three, plus a game. Young players learn by repeating a game they understand, so two drills on the same focus work better than five new ones.'},
   {q:'Can I share the plan with another coach?',a:'Yes. Tap Share or Copy link: the link holds the age, length, focus and your swaps, so it opens exactly the same plan on another phone.'},
   {q:'Is there goalkeeper training for young players?',a:'From U10. In the US small-sided standards 4v4 has no goalkeepers, so goalkeeping drills start at U10, with soft, rolled or underarm service. If you choose goalkeeping for U6 or U8, the plan uses fun ball games instead.'}],
- relatedTitle:'Drills, plans and more tools',related:[DRILLS,PLANS,U8,{path:'/learn/soccer-drills/u10',name:'U10 soccer drills',line:'Drills for 9 and 10 year olds'},TIMER,CALC,FIELDS]};
+ relatedTitle:'Drills, plans and more tools',related:[DRILLS,PLANS,U8,{path:'/learn/soccer-drills/u10',name:'U10 soccer drills',line:'Drills for 9 and 10 year olds'},TIMER,CALC,FIELDS,
+  /* SEO wave 2, Nov 24 2026 */{path:'/tools/soccer-scanning-trainer',name:'Soccer scanning trainer',line:'A phone on a cone that trains players to look over the shoulder'}]};
 
 export const FIELD_EN:NewToolWords={slug:'youth-soccer-field-size-guide',crumb:'Field size guide',title:'Youth Soccer Field Size Guide: 4v4, 7v7, 9v9, 11v11',h1:'Youth soccer field size guide',
  description:'Youth soccer field dimensions for 4v4, 5v5, 7v7, 9v9, 11v11 and futsal: field, goal and penalty area sizes drawn to scale, and how to mark it with cones.',
