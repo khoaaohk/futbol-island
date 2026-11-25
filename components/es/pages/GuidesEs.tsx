@@ -24,7 +24,7 @@ import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {esRuleCrossLinks,esTermCrossLinks} from '@/lib/i18n/es/crossLinks';
-import {positionTermSlugs,positionToolPaths} from '@/lib/site/crossLinks';
+import {positionRuleSlugs,positionTermSlugs,positionToolPaths} from '@/lib/site/crossLinks';
 import {SCAN_ES} from '@/lib/i18n/es/scanTrainer';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
@@ -78,6 +78,11 @@ export function RulesHubEsPage(){
    <p>Los puntos dorados son el equipo que ataca hacia arriba y los verde oscuro son el otro equipo. <a href={offside.esPath}>Lee la regla del fuera de juego</a>.</p>
   </Section>
   <Section id="basics" title="El juego en cinco líneas"><IconRows items={H.basics.map((t,i)=>({icon:BASIC_ICONS[i]??'ball',text:t}))}/></Section>
+  {/* SEO batch A, Nov 25 2026: as English, the restarts table, each row linked to its Spanish rule page */}
+  <Section id="restarts" title={H.restarts.title}>
+   <DataTable label={H.restarts.title} head={H.restarts.head} rows={H.restarts.rows.map(([what,how],i)=>{const slug=RULES_HUB.restarts.rows[i][2],x=rules.find(y=>y.slug===slug)!;return [what,how,<a key={slug} href={x.esPath}>{x.name}</a>];})}/>
+   <p className={styles.caption}>{H.restarts.note}</p>
+  </Section>
   {RULES_HUB.groups.map((g,i)=>{const list=g.rules.map(x=>rules.find(r=>r.slug===x.slug)!),sc=list[0].scenes[0];return <Band key={g.title} id={`g${i}`} title={H.groups[i].title} line={H.groups[i].line} tone={i%2?'paper':'tint'} count={`${list.length} ${list.length===1?'regla':'reglas'}`}
    art={<PitchDiagram id={`band${i}`} format={sc.format} spots={sc.spots} arrows={sc.runs} title={sc.title} desc={sceneDescEs(sc)} small scene={{ball:sc.ball,lineY:sc.lineY,lineWord:sc.lineWord,zone:sc.zone,passes:sc.passes}}/>}>
    <CardGrid lang="es" ids="rule" cards={list.map(r=>({path:r.esPath,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
@@ -274,6 +279,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
    {id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(p.path)},
    {id:'tools',links:positionToolPaths(p.slug).filter(x=>x==='/tools/soccer-scanning-trainer').map(()=>({path:'/es/tools/soccer-scanning-trainer',name:SCAN_ES.h1,line:SCAN_ES.blurb}))},/* SEO wave 2, Nov 24 2026, as in English */
    {id:'terms',links:positionTermSlugs(p.slug).map(s=>ES_TERMS().find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:`${x.name} (término)`,line:x.short}))},/* Nov 22 2026, as in English */
+   {id:'rules',links:positionRuleSlugs(p.slug).map(s=>ES_RULES().find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.h1,line:`${x.law}, con diagrama`}))},/* SEO batch A, Nov 25 2026, as in English */
    {id:'compare',label:'Comparar',icon:'swap',links:compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}],p.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>

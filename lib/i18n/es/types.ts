@@ -15,6 +15,8 @@ export type RuleEs={name:string;title:string;h1:string;desc:string;answer:string
  extra?:{title:string;intro?:string;steps?:readonly string[];head?:readonly string[];rows?:readonly (readonly string[])[];note?:string}};
 export type RulesHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;more:string;basics:readonly string[];
  groups:readonly {title:string;line:string}[];faq:readonly Faq[];leagueLine:string;sourceLine:string;
+ /** SEO batch A, Nov 25 2026: the English hub's restarts table, 1:1 rows (the rule link comes from English) */
+ restarts:{title:string;head:readonly string[];rows:readonly (readonly [string,string])[];note:string};
  futsalVsSoccer:{title:string;head:readonly string[];rows:readonly (readonly string[])[];note:string}};
 export type TermEs={name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:SceneEs;howTitle:string;
  how:readonly string[];mistakes:readonly string[];formats:string;faq:readonly Faq[];notes:CoachNotesEs;
