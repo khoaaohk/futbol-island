@@ -6,10 +6,10 @@ import LibraryMenuSpy from '@/components/site/LibraryMenuSpy';
 import RailNav from '@/components/site/shell/RailNav';
 import KeepReading from '@/components/site/KeepReading';
 import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
-import {Section,LinkList} from '@/lib/site/GuideParts';
+import {DataTable,Section,LinkList} from '@/lib/site/GuideParts';
 import {QA} from '@/components/site/LessonHub';
 import {EsBreadcrumbs,esCrumbs} from '../EsParts';
-import {allShots,GAME_PAGES,GAMES_HUB,GAMES_UPDATED,gameBySlug,type GamePage,type GameShot} from '@/lib/site/games';
+import {allShots,GAME_FACTS,GAME_PAGES,GAMES_HUB,GAMES_UPDATED,NEWEST_GAMES,gameBySlug,learnTopic,relatedGames,type GamePage,type GameShot} from '@/lib/site/games';
 import {gameClip,gameStills,GAMES_HERO_PHONE,GAMES_LEAD_CLIP,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import {cardShot,stageShots} from '@/lib/site/gamePlay';
 import {pageModified} from '@/lib/site/lastmod';
@@ -17,7 +17,7 @@ import {pageRail,sec} from '@/lib/site/railNavMore';
 import {abs,breadcrumbLd,faqLd,KIDS_AUDIENCE,PLAY_PATH,PUBLISHER,SITE_NAME,SITE_URL} from '@/lib/site/seo';
 import {esMeta} from '@/lib/i18n/es/seo';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
-import {ES_GAME_FOOT,ES_GAME_NAMES,esGame,esGameKind,esGuideLink,esHowToPlay,esPlayNow,esPlayWorks,gamesHubEs,type GameEs} from '@/lib/i18n/es/games';
+import {ES_BOARD_LINE,ES_GAME_FOOT,ES_GAME_NAMES,GAME_FACTS_ES,esGame,esGameKind,esGuideLink,esHowToPlay,esPlayNow,esPlayWorks,gamesHubEs,type GameEs} from '@/lib/i18n/es/games';
 import site from '@/app/(site)/site.module.css';
 import g from '@/components/site/games/games.module.css';
 import lib from '@/components/site/library.module.css';
@@ -29,7 +29,7 @@ import lib from '@/components/site/library.module.css';
  * carries inLanguage es.
  */
 const HUB_ES=toEs(GAMES_HUB.path);
-const H=()=>gamesHubEs(GAME_PAGES.length);
+const H=()=>gamesHubEs(GAME_PAGES.length,GAME_PAGES.filter(x=>GAME_FACTS[x.id].daily).length);
 const crumbs=(...tail:{name:string;path:string}[])=>esCrumbs({name:H().crumb,path:HUB_ES},...tail);
 const words=(g:GamePage)=>esGame(g.id);
 /** Spanish alt and caption of every picture of a game, by its source file. */
@@ -90,10 +90,13 @@ function videoGameLdEs(game:GamePage,es:GameEs){
 export function GameEsPage({game}:{game:GamePage}){
  const es=words(game),path=gamePathEs(game),cr=crumbs({name:game.name,path});
  if(typeof ReactDOM.preload==='function')ReactDOM.preload(stageShots(game)[0].src,{as:'image',fetchPriority:'high'});
- const others=[...GAME_PAGES.filter(x=>x!==game).map(x=>{const e=words(x);return {path:gamePathEs(x),name:`${x.name}: ${esGameKind(e).toLowerCase()}`,line:e.blurb};}),
-  {path:HUB_ES,name:`Los ${GAME_PAGES.length} juegos de fútbol gratis`,line:H().blurb}];
+ // Nov 24 2026 (SEO wave 2): as the English page, the related games, the hub and the Learn topic first; every other game under "Ver N más"
+ const card=(x:GamePage)=>{const e=words(x);return {path:gamePathEs(x),name:`${x.name}: ${esGameKind(e).toLowerCase()}`,line:e.blurb};},near=relatedGames(game);
+ const topic=esGuideLink(es.guides[0],hasEs,toEs);
+ const others=[...near.map(card),{path:HUB_ES,name:`Los ${GAME_PAGES.length} juegos de fútbol gratis`,line:H().blurb},{path:topic.path,name:`Aprende la idea: ${topic.name}`,line:topic.line},
+  ...GAME_PAGES.filter(x=>x!==game&&!near.includes(x)).map(card)];
  const rail=pageRail(`${game.name} en esta página`,{href:HUB_ES,name:'Todos los juegos'},[sec('what','Qué es'),sec('how','Cómo jugar'),sec('teaches','Qué enseña'),
-  sec('tips','Consejos'),sec('harder','Dificultad'),sec('parents','Para padres'),sec('faq','Preguntas'),sec('more','Más juegos'),sec('island','Toda la isla')],true);
+  sec('tips','Consejos'),sec('harder','Dificultad'),sec('parents','Para padres'),sec('faq','Preguntas'),sec('again','Juega otra vez'),sec('more','Más juegos'),sec('island','Toda la isla')],true);
  return <>
   <JsonLd data={breadcrumbLd(cr)}/>
   <JsonLd data={videoGameLdEs(game,es)}/>
@@ -122,7 +125,8 @@ export function GameEsPage({game}:{game:GamePage}){
   <Section id="harder" title="Cómo sube la dificultad"><List items={es.harder}/></Section>
   <Section id="parents" title="Para padres y entrenadores"><List items={es.parents}/></Section>
   <QA id="faq" title={`Preguntas sobre ${game.name}`} faq={es.faq}/>
-  <KeepReading id="more" title="Más juegos de fútbol gratis" groups={[{id:'more-games',links:others}]} lang="es"/>
+  <Section id="again" title={`Juega otra vez a ${game.name}`}><p>{GAME_FACTS_ES[game.id].back} {ES_BOARD_LINE}</p></Section>
+  <KeepReading id="more" title="Más juegos gratis" groups={[{id:'more-games',links:others}]} show={near.length+3} lang="es"/>
   <Section id="island" title="Juega en toda la isla">
    <p>{game.name} es uno de los juegos del arcade de Futbol Island. La isla también tiene lecciones, pruebas, pesca y cartas de jugadores. <a href={PLAY_PATH} data-island-link="">Juega en toda la isla</a>.</p>
   </Section>
@@ -195,7 +199,9 @@ function gamesHubLdEs(){
 export function GamesHubEsPage(){
  const h=H(),top=islandClips().find(c=>c.key===GAMES_LEAD_CLIP);
  if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high'});
- const MENU:readonly (readonly [string,string])[]=[['#quick','Juega ahora'],...GAME_PAGES.map(x=>[`#game-${x.id}`,x.name] as const),
+ const daily=GAME_PAGES.filter(x=>GAME_FACTS[x.id].daily),newest=GAME_PAGES.filter(x=>NEWEST_GAMES.includes(x.id));
+ const y=(xs:readonly string[])=>xs.length>1?`${xs.slice(0,-1).join(', ')} y ${xs[xs.length-1]}`:xs.join('');
+ const MENU:readonly (readonly [string,string])[]=[['#quick','Juega ahora'],['#table','Todos de un vistazo'],...(daily.length?[['#daily','Nuevo cada día'] as const]:[]),...GAME_PAGES.map(x=>[`#game-${x.id}`,x.name] as const),
   ['#pick','Por cuál empezar'],['#safe','Para padres'],['#faq','Preguntas'],['#guides','Aprende las ideas']];
  return <>
   <JsonLd data={breadcrumbLd(crumbs())}/>
@@ -211,6 +217,15 @@ export function GamesHubEsPage(){
     <Section id="quick" title={`Juega ahora: ${GAME_PAGES.length} juegos para elegir`}>
      <div className={g.bleed}><QuickPlayEs games={GAME_PAGES}/></div>
     </Section>
+    {/* Nov 24 2026 (SEO wave 2): the games table and the daily modes, as on /games */}
+    <Section id="table" title="Juegos de fútbol gratis para niños, de un vistazo">
+     <DataTable label="Cada juego de fútbol gratis: lo que enseña, edades, tiempo de juego y dónde aprender la idea" head={['Juego','Habilidad de fútbol que enseña','Edades','Tiempo de juego','Aprende la idea']}
+      rows={GAME_PAGES.map(x=>{const e=words(x),t=esGuideLink(e.guides[0],hasEs,toEs),f=GAME_FACTS_ES[x.id];return [<a key="g" href={gamePathEs(x)}>{x.name}</a>,e.skill,f.ages,f.time,<a key="l" href={t.path}>{t.name}</a>];})}/>
+    </Section>
+    {daily.length>0&&<Section id="daily" title="Nuevo cada día, y nuevo en el arcade">
+     <p>{daily.length} de los juegos tienen un modo diario, igual para todos ese día: {y(daily.map(x=>x.name))}. Nadie tiene que jugar todos los días, y el resto de cada juego siempre está abierto.{newest.length>0&&<> Las máquinas más nuevas son {y(newest.map(x=>x.name))}.</>}</p>
+     <p>{ES_BOARD_LINE}</p>
+    </Section>}
     <Section id="games" title={`Los ${GAME_PAGES.length} juegos de arcade de fútbol`}>
      <div className={`${g.arcadeIntro} ${g.bleed}`}><div>{h.intro.map(x=><p key={x}>{x}</p>)}</div></div>
      <ul className={`${g.features} ${g.bleed}`}>{GAME_PAGES.map(x=><GameFeatureEs key={x.id} game={x}/>)}</ul>

@@ -9,6 +9,7 @@ import {POSITIONS} from './positions';
 import {FORMATIONS_HUB} from './formations';
 import {EXHIBITS} from '@/lib/endgame/museum';
 import {hubBySlug} from './hubs';
+import {gameLink,isGameListed} from './games';
 /**
  * Cross-cluster links (SEO foundation, Nov 20 2026): the pages that can rank had few links from OTHER clusters. A rule page
  * linked the next two rules and its hubs, a term page linked terms, and each pop-up book had one inlink (the shelf). The
@@ -138,7 +139,9 @@ const POSITION_TOOLS:Record<string,string[]>={'center-back':[SCAN],'fullback':[S
  'attacking-midfielder':[SCAN],'winger':[SCAN],'striker':[SCAN]};
 for(const [p,ts] of Object.entries(POSITION_TOOLS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(extraLink);}
 export const positionToolPaths=(slug:string):readonly string[]=>POSITION_TOOLS[slug]??[];
-export const positionToolLinks=(slug:string):XLink[]=>positionToolPaths(slug).map(extraLink);
+/* SEO wave 2: the goalkeeper position links the keeper-vs-shooter arcade game */
+const POSITION_GAMES:Record<string,readonly ('airhockey'|'snake')[]>={goalkeeper:['airhockey']};
+export const positionToolLinks=(slug:string):XLink[]=>[...positionToolPaths(slug).map(extraLink),...(POSITION_GAMES[slug]??[]).filter(isGameListed).map(gameLink)];
 export const positionTermSlugs=(slug:string):readonly string[]=>POSITION_TERMS[slug]??[];
 export const positionTermLinks=(slug:string):XLink[]=>positionTermSlugs(slug).map(termLink);
 export function ruleCrossLinks(slug:string):XLink[]{

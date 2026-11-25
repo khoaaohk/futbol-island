@@ -188,7 +188,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'Why is first touch so important in soccer?',a:'It decides how much time you have. A touch into space gives you a second to look up. A touch that bounces away gives the ball to the other team.'},
    {q:'What is scanning in soccer?',a:'Looking around before the ball arrives, so you already know where the defenders and the free teammates are.'},
    {q:'How can kids practise first touch at home?',a:'Pass against a wall and take the first touch to one side, then the other. Use both feet, and look away from the ball before it comes back.'}],
-  lessonIds:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],related:['through-ball','switching-play','give-and-go','pressing','shielding']},
+  links:[...(['tennis','keepyuppy'] as const).filter(isGameListed).map(gameLink)/* SEO wave 2, Nov 24 2026: the game that trains it */],lessonIds:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],related:['through-ball','switching-play','give-and-go','pressing','shielding']},
 
  {slug:'pressing',sides:{title:'How do you play against a press?',items:['Spread out, wide and deep, so the pressing players have more ground to cover.','Look around before the ball comes, so you already know your next pass.','Play with one or two touches. The ball moves faster than a runner.','Use the goalkeeper as a free player to pass to.','Switch the ball to the far side, where there is more space.']},
   name:'Press',also:'pressing, pressure',short:'Running to close down the player with the ball so they have less time, while a teammate covers behind.',
@@ -220,7 +220,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'What does goal-side mean?',a:'Between the attacker and your own goal. From there you can always step in front of a pass or block a shot.'},
    {q:'What is the difference between man-to-man and zonal marking?',a:'In man-to-man marking each defender follows one opponent. In zonal marking each defender guards an area.'},
    {q:'What is ball watching?',a:'Looking only at the ball and forgetting the runner you should be marking. Our lesson See the Ball and the Runner teaches the fix: look between the ball and the runner.'}],
-  lessonIds:['def_7_goalside','dbz_7_dontballwatch','gap9_runnerhandoff','def_f_goalside'],related:['goal-side','pressing','tackle','clean-sheet','man-on']},
+  links:[...(['kitrush'] as const).filter(isGameListed).map(gameLink)/* SEO wave 2, Nov 24 2026: the game that trains it */],lessonIds:['def_7_goalside','dbz_7_dontballwatch','gap9_runnerhandoff','def_f_goalside'],related:['goal-side','pressing','tackle','clean-sheet','man-on']},
 
  {slug:'goal-side',name:'Goal-Side',also:'goal side, goalside',short:'Standing between an attacker and your own goal.',
   title:'Goal-Side in Soccer: What It Means, for Kids',h1:'What does goal-side mean in soccer?',
@@ -263,7 +263,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'What is transition in soccer?',a:'The moment the ball changes teams. Going from defending to attacking is one transition, and from attacking to defending is the other.'},
    {q:'How do you stop a counterattack?',a:'Get back between the ball and your goal, protect the middle first, and slow the attack down until teammates recover.'},
    {q:'Is counterattacking a formation?',a:'No. It is a way of playing that any formation can use.'}],
-  lessonIds:['trn_9_firstpass','trn_f_firstpass','trn_11_restdefense','gap7_lostball'],related:['two-v-one','through-ball','pressing','goal-side','box-to-box']},
+  links:[...(['kitrush'] as const).filter(isGameListed).map(gameLink)/* SEO wave 2, Nov 24 2026: the game that trains it */],lessonIds:['trn_9_firstpass','trn_f_firstpass','trn_11_restdefense','gap7_lostball'],related:['two-v-one','through-ball','pressing','goal-side','box-to-box']},
 
  {slug:'set-piece',name:'Set Piece',also:'set play, dead ball, restart',short:'A restart with the ball standing still: a free kick, corner kick, throw-in, goal kick, penalty kick or kick-off.',
   desc:'Set pieces in soccer explained for kids: free kicks, corners, throw-ins and other restarts, why teams plan them, with a diagram, tips and free lessons.',
@@ -293,7 +293,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Can attackers stand in the wall?',a:'Not since 2019. When the wall has three or more defenders, every attacker must stay at least 1 yard away from it until the ball is in play, or the defending team gets an indirect free kick.'},
    {q:'How many players should be in the wall?',a:'It depends on how close and how central the kick is. Close and central needs more players, wide or far away needs fewer or none. The goalkeeper decides.'},
    {q:'Is there a wall for a penalty kick?',a:'No. At a penalty kick only the goalkeeper defends, and every other player waits outside the penalty area and the arc until the kick.'}],
-  lessonIds:['exp11_shortfreekick','expf_freekickbalance','learn11_restart'],related:['set-piece','marking','goal-side','cross']},
+  links:[...(['flickit'] as const).filter(isGameListed).map(gameLink)/* SEO wave 2, Nov 24 2026: the game that trains it */],lessonIds:['exp11_shortfreekick','expf_freekickbalance','learn11_restart'],related:['set-piece','marking','goal-side','cross']},
 
  {slug:'nutmeg',title:'Nutmeg in Soccer: What It Means to Nutmeg Someone',name:'Nutmeg',also:'megs',short:'Playing the ball between an opponent’s legs and getting it on the other side.',
   desc:'What is a nutmeg in soccer? Playing the ball through a defender’s legs and getting it back. When it works and when a simpler move is better, for kids.',
@@ -829,7 +829,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'When should you scan?',a:'While the ball is moving between other players, and once more as it travels to you. Do not look away at the moment the ball arrives.'},
    {q:'How can kids practice scanning?',a:'A partner behind the player holds up a colored cone before each pass. The player has to call the color before the ball arrives.'},
    {q:'Why do coaches say “head up”?',a:'A player who looks only at the ball cannot see teammates or danger. With the head up you can see the field and choose better.'}],
-  lessonIds:['learn7_receive','bld_11_throughlines','bld_f_passtofeet'],related:['first-touch','man-on','support','one-touch','shielding']},
+  links:[...(['popup','kitrush'] as const).filter(isGameListed).map(gameLink)/* SEO wave 2, Nov 24 2026: the game that trains it */],lessonIds:['learn7_receive','bld_11_throughlines','bld_f_passtofeet'],related:['first-touch','man-on','support','one-touch','shielding']},
 
  {slug:'support',sides:{title:'How do defenders stop support?',items:['Stand in the passing lane between the ball and the nearest teammate.','Press the ball from an angle that blocks one pass.','A second defender marks the closest supporting player.','Stay close together, so the gaps to pass through are small.']},
   name:'Support',also:'supporting, support play, support angle',short:'Moving to where the teammate with the ball can pass to you, out from behind a defender.',

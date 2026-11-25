@@ -2,9 +2,9 @@ import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
 import {posterSrcSet} from '@/lib/site/learnMedia';
 import {ClipFigure,GameFeature,GamesHero,HERO_SIZES,ISLAND_FEATURE_KEY,IslandBand,IslandGallery,QuickPlay,gamesCss} from '@/components/site/games/GameParts';
-import {Section} from '@/lib/site/GuideParts';
+import {DataTable,Section} from '@/lib/site/GuideParts';
 import {FaqBand,GuidesBand,PickBand,SafeBand} from '@/components/site/games/GamesLower';
-import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,gameCrumbs,gameListLd,gamesHubLd} from '@/lib/site/games';
+import {BOARD_LINE,GAME_FACTS,GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_NAMES,GAMES_WORD,NEWEST_GAMES,gameCrumbs,gameListLd,gamesHubLd,learnTopic} from '@/lib/site/games';
 import {HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -18,7 +18,7 @@ const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
 // Batch 3 (Nov 20 2026): Overview (the hero, #top) is the first entry; the island game now lives in the hero, so it has no entry of its own.
 // Nov 22 2026 (play now): the quick-play grid comes straight after the hero, before the long sections.
-const MENU:readonly (readonly [string,string])[]=[['#quick','Play a game now'],...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
+const MENU:readonly (readonly [string,string])[]=[['#quick','Play a game now'],['#table','All games at a glance'],['#daily','New every day'],...GAME_PAGES.map(g=>[`#game-${g.id}`,g.name] as const),
  ['#island','Inside the island'],['#pick','Which game to start with'],['#safe','For parents and coaches'],['#faq','Questions'],['#guides','Learn the ideas']];
 export default function GamesHub(){
  // The lead clip's poster (GAMES_LEAD_CLIP, in the hero) is the page's LCP: preload it at high priority.
@@ -27,6 +27,9 @@ export default function GamesHub(){
  const set=top&&posterSrcSet(top.poster,top.pw);
  if(top&&typeof ReactDOM.preload==='function')ReactDOM.preload(top.poster,{as:'image',fetchPriority:'high',...(set?{imageSrcSet:set,imageSizes:HERO_SIZES}:{})});
  const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
+ // Nov 24 2026 (SEO wave 2): the daily modes and the newest machines, named only while their games are listed (lib/site/games.ts GAME_FACTS)
+ const daily=GAME_PAGES.filter(g=>GAME_FACTS[g.id].daily),newest=GAME_PAGES.filter(g=>NEWEST_GAMES.includes(g.id));
+ const and=(xs:readonly string[])=>xs.length>1?`${xs.slice(0,-1).join(', ')} and ${xs[xs.length-1]}`:xs.join('');
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={gamesHubLd()}/>
@@ -47,6 +50,15 @@ export default function GamesHub(){
     <Section id="quick" title={`Play a game now: ${GAMES_WORD} to choose from`}>
      <div className={gamesCss.bleed}><QuickPlay games={GAME_PAGES}/></div>
     </Section>
+    {/* Nov 24 2026 (SEO wave 2, owner: a games table with the skill, ages and play time, and each game's Learn page) */}
+    <Section id="table" title="Free football games for kids at a glance">
+     <DataTable label="Every free soccer game: the skill it teaches, ages, play time and where to learn the idea" head={['Game','Football skill it teaches','Ages','Play time','Learn the idea']}
+      rows={GAME_PAGES.map(g=>{const t=learnTopic(g),f=GAME_FACTS[g.id];return [<a key="g" href={g.path}>{g.name}</a>,g.skill,f.ages,f.time,<a key="l" href={t.path}>{t.name}</a>];})}/>
+    </Section>
+    {daily.length>0&&<Section id="daily" title="New every day, and new in the arcade">
+     <p>{daily.length} of the games have a daily mode, the same for everyone that day: {and(daily.map(g=>g.name))}. Nobody has to play every day, and the rest of each game is always open.{newest.length>0&&<> The newest machines are {and(newest.map(g=>g.name))}.</>}</p>
+     <p>{BOARD_LINE}</p>
+    </Section>}
     <IslandBand title="Futbol Island, the main game" note={GAMES_NAMES}
      lines={['A free 3D island where you learn football by playing. Walk or fly around it, fish from the pier, design a kit and join a match on the beach.','Short lessons on real pitches teach the rules, the positions and how a team plays. It runs in the browser, with no download.']}/>
   <Section id="games" title={`The ${GAMES_WORD} soccer arcade games`}>{/* Nov 20 2026 (new layout SEO): "soccer arcade games" is a search */}
