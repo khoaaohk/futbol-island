@@ -13,6 +13,7 @@ import {beanShapeOf} from './beanGearFit';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
 import {npcDress} from '../town/beanLooks';
 import {KENJI_NPC,KENJI_SEAT} from '../town/trainConductor';
+import {kenjiWrapNpc} from '../town/trainWraps';// WRAPS (train-wraps)
 import {CAR_FLOOR_Y} from '../town/trainCarModel';
 import type {NpcDefinition} from '../town/npcDialogues';
 
@@ -52,7 +53,7 @@ export function createKenjiFigure(scene:T.Scene){
   /** The drawn rig's root (null before the first build): Town's near-camera fade hides it for a frame. */
   get root(){return rig?rig.root:null;},
   /** His talk definition at his spot (Town's Talk slide-out). */
-  npc():NpcDefinition{KENJI_NPC.x=at.x;KENJI_NPC.z=at.z;return KENJI_NPC;},
+  npc():NpcDefinition{KENJI_NPC.x=at.x;KENJI_NPC.z=at.z;return kenjiWrapNpc(at.k,KENJI_NPC)/* WRAPS: the train's theme */;},
   dispose(){if(rig){rig.root.removeFromParent();rig.dispose();}rig=null;},
  };
 }
