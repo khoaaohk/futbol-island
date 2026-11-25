@@ -18,6 +18,9 @@ const HOVER_GRACE=600,FRONT={x:CAFE.x,z:CAFE.front+3.75};
 export type CafePromptUpdate={x:number;z:number;onFoot:boolean;canEnter:boolean;focusKey:string|null;camera:T.Camera;width:number;height:number;
  ui:<E extends HTMLElement>(selector:string)=>E|null|undefined;place:(el:HTMLElement,x:number,y:number)=>void;hide:(el:HTMLElement,hidden:boolean)=>void;dt?:number;reduced?:boolean};
 
+/** Owner Nov 25 2026: "remove the visit cafe btn for now and green hover. can't go inside": off until the café has an inside
+ *  (no Visit café button, no hover glow, no tap). Flip to true when it opens. */
+export const CAFE_VISIT_OPEN=false;
 export function createCafePrompt(scene?:T.Object3D){
  const boxes=[new T.Box3(new T.Vector3(CAFE.x-C2(CAFE.w),0,CAFE.z-C2(CAFE.d)-.6),new T.Vector3(CAFE.x+C2(CAFE.w),CAFE.floor+CAFE.wallH+CAFE.upperH+CAFE.roofRise+.4,CAFE.front+.2)),
   new T.Box3(new T.Vector3(700,0,CAFE.front),new T.Vector3(713.8,CAFE.floor+2.9,-88)),new T.Box3(new T.Vector3(712,0,-106),new T.Vector3(719,CAFE.floor+1.2,-95.5))];
@@ -26,7 +29,7 @@ export function createCafePrompt(scene?:T.Object3D){
  const glowRoot=scene?new T.Group():null,glow=glowRoot?createBuildingGlow(glowRoot,CAFE.w,CAFE.d,CAFE.floor+CAFE.wallH,'cafe'):null;
  if(glowRoot){glowRoot.name='cafe-selection';glowRoot.position.set(CAFE.x,0,CAFE.z);scene!.add(glowRoot);glowRoot.updateMatrixWorld(true);}
  const inRange=()=>(px-CAFE.x)**2+(pz-CAFE.z)**2<H2;
- const pick=(ray:T.Raycaster)=>inRange()&&boxes.some(b=>ray.ray.intersectBox(b,hit)!==null);
+ const pick=(ray:T.Raycaster)=>CAFE_VISIT_OPEN&&inRange()&&boxes.some(b=>ray.ray.intersectBox(b,hit)!==null);
  return {
   get hovered(){return hovered;},
   get near(){return near;},
@@ -35,8 +38,8 @@ export function createCafePrompt(scene?:T.Object3D){
   /** True when a tap ray hits the café (within range). */
   pick(ray:T.Raycaster){return pick(ray);},
   update(c:CafePromptUpdate):{key:string;distance:number}|null{
-   px=c.x;pz=c.z;const over=c.canEnter&&hovered&&inRange(),d2=(c.x-FRONT.x)**2+(c.z-FRONT.z)**2;
-   near=over||(c.canEnter&&c.onFoot&&d2<R2);
+   px=c.x;pz=c.z;const canEnter=CAFE_VISIT_OPEN&&c.canEnter,over=canEnter&&hovered&&inRange(),d2=(c.x-FRONT.x)**2+(c.z-FRONT.z)**2;
+   near=over||(canEnter&&c.onFoot&&d2<R2);
    glow?.update(over,c.dt??1/60,c.reduced??false);
    const el=c.ui<HTMLButtonElement>('[data-cafe-go]');
    if(el){let hidden=!(near&&c.focusKey===CAFE_PROMPT.key);
