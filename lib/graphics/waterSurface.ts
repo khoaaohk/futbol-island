@@ -79,10 +79,12 @@ const empty=new T.DataTexture(new Uint8Array([0,0,0,0]),1,1);empty.needsUpdate=t
  * same numbers and the same ripple texture on the same clock, so a change here changes both.
  */
 // Nov 24 2026: emissive '#185a94' -> '#245a86' (less saturated; it also carried the deep blue into the night sea).
-export const SEA_WATER_LOOK={color:'#368eb3',emissive:'#245a86',emissiveIntensity:.3,roughness:.52,metalness:.02} as const;
+// Nov 25 2026 (owner shot 99: "the water near the shore is way too different than the outer ocean. what we had before was better"):
+// the day sea is back to its Nov 23 colours (emissive '#185a94', SEA_TINT below); the Nov 24 night tint stays.
+export const SEA_WATER_LOOK={color:'#368eb3',emissive:'#185a94',emissiveIntensity:.3,roughness:.52,metalness:.02} as const;
 // Nov 24 2026 (owner: day "looks too saturated"): the three sea colours moved ~25 % toward their own grey (same brightness), so the
 // sea reads natural rather than neon. Was lagoon [.04,.62,.7], aqua [.02,.44,.64], deep [.015,.2,.47]. Constants only.
-export const SEA_TINT={lagoon:[.15,.59,.65],aqua:[.1,.42,.57],deep:[.055,.195,.4],rippleTint:[.855,.913,1]} as const;
+export const SEA_TINT={lagoon:[.04,.62,.7],aqua:[.02,.44,.64],deep:[.015,.2,.47],rippleTint:[.855,.913,1]} as const;// Nov 25: restored (see SEA_WATER_LOOK)
 const v3=(c:readonly number[])=>`vec3(${c.map(v=>v.toFixed(3)).join(',')})`;
 export const SEA_GLSL={lagoon:v3(SEA_TINT.lagoon),aqua:v3(SEA_TINT.aqua),deep:v3(SEA_TINT.deep),rippleTint:v3(SEA_TINT.rippleTint)} as const;
 /** The ripple tile's scale on the ocean (texture repeat 44 per 1400 m of UV: waterRipples.ts, world.ts) per world metre, and its drift. */
