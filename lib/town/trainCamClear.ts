@@ -6,8 +6,10 @@
  *    (the platform under the eaves stays open: the camera may stand there, like someone waiting for the train);
  *  - the Summit tunnel: outside the tube (walls ±TUNNEL_HALF_WIDTH to the springing, a half-round crown) between the portal planes;
  *  - the ground (Town passes fieldSurfaceHeight: Summit Isle's hill and its cutting banks), except inside the tube;
- *  - the South Bridge's pony trusses: a lift, not a pull-in (the truss is open lattice: looking through it is fine, sitting in it is not).
- * No allocation; ~20 point tests a frame while riding (each: 5 station boxes + one track hash lookup + the ground).
+ *  - the South Bridge's pony trusses: a lift, not a pull-in (the truss is open lattice: looking through it is fine, sitting in it is not);
+ *  - (AAA 3, Nov 25 2026; live audit #3: on a phone at Summit Isle the Seat camera stood behind the station name board, which filled
+ *    the view) each station's two boards (the name board and the line board, trainWorld.ts buildStation): a box round the panel.
+ * No allocation; ~20 point tests a frame while riding (each: 5 station boxes + 10 boards + one track hash lookup + the ground).
  */
 import {TRAIN_STATIONS,TUNNEL_BED,TUNNEL_HALF_WIDTH,SOUTH_BRIDGE,trackAt,trackNearest,leftNormal,inTunnelS,bedAt} from './trainTrack';
 import {trainLayout,stationHouseFront,STATION_HOUSE_DEPTH,stationSpot} from './trainLayout';
@@ -23,6 +25,11 @@ const SPRING=2.4;
 const HOUSES=TRAIN_STATIONS.map(st=>{const c=trackAt(st.s),n=leftNormal(c.tx,c.tz),hd=STATION_HOUSE_DEPTH(st),hv0=stationHouseFront(st);
  return {x:c.x,z:c.z,tx:c.tx,tz:c.tz,nx:n.x*st.side,nz:n.z*st.side,top:stationSpot(st,0,0).y,hm:hv0+hd/2,hd,ed:hd/2+ROOF_ED};});
 
+/** trainWorld.ts buildStation's boards in the station frame (u along, v out, y over the platform top; half sizes): the name board
+ *  (u 9.5, 2.9 × 1 m, 1.95 m up) and the line board (u −12.5, 1.9 × 0.54 m, 1.75 m up), both at v ≈ 1.45 + 2.12. */
+export const BOARDS=[{u:9.5,v:3.57,y:1.95,hu:1.45,hy:.5},{u:-12.5,v:3.57,y:1.75,hu:.95,hy:.27}] as const;
+const BOARD_SPOTS=TRAIN_STATIONS.flatMap(st=>BOARDS.map(b=>{const p=stationSpot(st,b.u,b.v),c=trackAt(st.s);return {x:p.x,z:p.z,y:p.y+b.y,tx:c.tx,tz:c.tz,hu:b.hu,hy:b.hy};}));
+
 export type Ground=((x:number,z:number)=>number)|null|undefined;
 /** Is (x, y, z) inside (or within CLEAR_M of) something the camera must not enter? */
 export function camBlocked(x:number,y:number,z:number,ground?:Ground){
@@ -31,6 +38,8 @@ export function camBlocked(x:number,y:number,z:number,ground?:Ground){
   // the roof (a solid from its flat soffit up to the tiles) and, under it, the walls (the platform under the eaves stays open)
   if(y>h.top+ROOF_Y0-CLEAR_M&&y<h.top+ROOF_Y0+ROOF_RISE*Math.max(0,Math.min(1,1-w/h.ed))+CLEAR_M)return true;
   if(w<h.hd/2+CLEAR_M&&Math.abs(u)<WALL_U+CLEAR_M+CLEAR_U&&y<h.top+ROOF_Y0&&y>h.top-1)return true;}
+ for(const b of BOARD_SPOTS){const dx=x-b.x,dz=z-b.z;if(Math.abs(y-b.y)>b.hy+CLEAR_M)continue;const u=dx*b.tx+dz*b.tz;if(Math.abs(u)>b.hu+CLEAR_M)continue;
+  if(Math.abs(dz*b.tx-dx*b.tz)<CLEAR_M)return true;}
  const hit=trackNearest(x,z,12);
  if(hit&&inTunnelS(hit.s)){const r=TUNNEL_HALF_WIDTH-CLEAR_M,yy=y-TUNNEL_BED,d=hit.d;
   // inside the tube: free (the hill's ground is overhead here); anywhere else between the portals is rock

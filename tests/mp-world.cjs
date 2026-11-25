@@ -6,7 +6,7 @@ const { execFileSync } = require('node:child_process');
 const { loadTs } = require('../multiplayer/dev-relay/loadTs.cjs');
 const ROOT = path.join(__dirname, '..');
 const P = loadTs(path.join(ROOT, 'multiplayer/protocol/index.ts'));
-const { RoomCore, CLOSE } = loadTs(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts'));
+const RC = loadTs(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts')), { RoomCore, CLOSE } = RC;
 const LC = loadTs(path.join(ROOT, 'multiplayer/relay/src/worldLobbyCore.ts'));
 const SC = loadTs(path.join(ROOT, 'multiplayer/relay/src/relayStatsCore.ts'));
 const { C, S, Mode, Zone, Emote, LeaveReason, ErrorCode, PROTOCOL_VERSION, CAPS_WORLD, CAPS_ALL, Cap, WORLD_HARD, WORLD_SOFT } = P;
@@ -498,6 +498,20 @@ t('leave: the token beacon frees only my own unconnected slot; never a connected
   const pn = Pw.room.size; Pw.room.leaveByToken(pb.token); assert.equal(Pw.room.size, pn, 'a code party never takes a beacon'); void pa;
 });
 
+t('a woken world keeps still players in sight while their poses come back (AAA 3, live audit #5)', () => {
+  const W = world(); const a = join(W), b = join(W), c = join(W); at(W, a, 10, 0); at(W, b, 12, 0); at(W, c, 14, 0); W.run(600);
+  assert.ok(known(a).has(b.id) && known(b).has(a.id) && known(a).has(c.id), 'they see each other');
+  // a Durable Object eviction: a new core restores the members from their socket attachments (no poses)
+  const W2 = world(); W2.clock.t = W.clock.t;
+  for (const p of [a, b, c]) W2.room.restoreMember(p, W.room.attachmentFor(p));
+  W2.room.restoredWorld(); const ma = a.msgs.length, mb = b.msgs.length;
+  W2.run(5000);
+  assert.ok(!a.msgs.slice(ma).some((m) => m[0] === S.Left) && !b.msgs.slice(mb).some((m) => m[0] === S.Left), 'no Far for still players right after the wake');
+  at(W2, a, 10, 0); at(W2, b, 12, 0); W2.run(600); // the clients' still-pose resend (connection.ts STILL_RESEND_MS)
+  assert.ok(posedIds(a, ma).has(b.id) && posedIds(b, mb).has(a.id), 'their poses flow again');
+  W2.run(RC.RESTORE_KEEP_MS);
+  assert.ok(known(a).has(b.id) && !known(a).has(c.id), 'past the keep window, one whose pose never came back leaves sight (Far)');
+});
 (async () => {
   const { WorldLobby } = loadTs(path.join(ROOT, 'multiplayer/relay/src/worldLobby.ts'));
   const worker = loadTs(path.join(ROOT, 'multiplayer/relay/src/index.ts')).default;

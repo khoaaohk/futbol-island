@@ -12,6 +12,7 @@ const GASHA_KEY=capsuleGlyph(12,12,5.8);// the Gashapon entry's capsule (Nov 9 2
 import {usePartyHasFriends} from './FriendMapDots';
 import {usePlayersOnMap} from './PlayerMapDots';
 import type {FriendDot} from '@/lib/town/friendMarks';
+import {TRAIN_PINS} from './TrainMapMarks';
 import styles from './IslandTravelMap.module.css';
 type Props={position:{x:number;z:number};open:boolean;onOpenChange:(open:boolean)=>void;onSelect:(destination:MapDestination)=>void;roads:MapFootprint[];buildings:MapFootprint[]};
 type Direction='up'|'right'|'down'|'left';
@@ -104,6 +105,19 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  useEffect(()=>{if(!tip)return;const down=(e:globalThis.PointerEvent)=>{const t=e.target;if(t instanceof Element&&t.closest('[data-legend-tip]'))return;setTip(null);};
   window.addEventListener('pointerdown',down,true);return()=>window.removeEventListener('pointerdown',down,true);},[tip]);
  const onTipBlur=(e:React.FocusEvent)=>{const next=e.relatedTarget;if(next instanceof Element&&next.closest('[data-legend-tip]'))return;setTip(null);};
+ // Off-screen station chips (AAA 3, Nov 25 2026; live audit #4: a phone's map opened with 3 of the 5 station pins off screen, and a
+ // finger never drags the map). Every station pin outside the frame gets a small chip on that edge ("‹ West Beach"); a tap eases the
+ // map over to it. Fitting the whole line instead would draw the island at a third of its size on a phone (24 px pins, unreadable
+ // labels). Worked out per render from the pan (no loop, nothing while closed); none on desktop, where every pin is on screen.
+ const chips=!scale||size.fit?[]:(()=>{const out:{id:string;name:string;side:'left'|'right'|'top'|'bottom';at:number;px:number;py:number}[]=[],M=14;
+  for(const p of TRAIN_PINS){const px=(p.x-MAP_X)*scale+offX,py=(p.z-MAP_Z)*scale+offY,sx=px-pan.x,sy=py-pan.y;
+   if(sx>M&&sx<size.w-M&&sy>M&&sy<size.h-M)continue;
+   const side=sx<=M?'left':sx>=size.w-M?'right':sy<=M?'top':'bottom';out.push({id:p.st.id,name:p.st.name,side,at:side==='left'||side==='right'?sy:sx,px,py});}
+  // along each edge: keep clear of the corner arrows and of each other (44 px apart)
+  for(const side of ['left','right','top','bottom'] as const){const row=out.filter(c=>c.side===side).sort((a,b)=>a.at-b.at),lo=side==='left'||side==='right'?64:96,hi=(side==='left'||side==='right'?size.h-84:size.w-96);
+   let prev=-1e9;for(const c of row){c.at=Math.max(lo,Math.min(hi,c.at),prev+44);prev=c.at;}for(let i=row.length-1,next=1e9;i>=0;i--){row[i].at=Math.min(row[i].at,next-44);next=row[i].at;}}
+  return out;})();
+ const showPin=(c:{px:number;py:number})=>{setEased(true);setPan(clamp(c.px-size.w/2,c.py-size.h/2));};
  const stageStyle:CSSProperties=scale?{left:offX,top:offY,width:stageW,height:stageH,transform:`translate3d(${-pan.x}px,${-pan.y}px,0)`}:{visibility:'hidden'};
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="town-dialog-title" onCancel={e=>{e.preventDefault();if(tip){setTip(null);return;}onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'&&tip){e.preventDefault();setTip(null);}}} onKeyUp={e=>e.stopPropagation()}>
  <section className={`${styles.panel} ${shell.shell} ${shell.white}`}><header className={shell.header}><div><h2 id="town-dialog-title">Pick your patch</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
@@ -112,6 +126,7 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
 <div ref={view} className={styles.map} data-map-fit={size.fit?'true':undefined} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
    <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect} friends={open} onFriendTip={friendTip}/></div>
   </div>
+  {chips.map(c=><button key={c.id} type="button" className={styles.stationChip} data-station-chip={c.id} data-side={c.side} style={c.side==='left'||c.side==='right'?{top:Math.round(c.at)}:{left:Math.round(c.at)}} aria-label={`Show ${c.name} station on the map`} onClick={()=>showPin(c)}>{c.side==='left'?<Icon name="up" size={14} style={{transform:'rotate(270deg)'}}/>:c.side==='top'?<Icon name="up" size={14}/>:null}<span>{c.name}</span>{c.side==='right'?<Icon name="up" size={14} style={{transform:'rotate(90deg)'}}/>:c.side==='bottom'?<Icon name="up" size={14} style={{transform:'rotate(180deg)'}}/>:null}</button>)}
   {ARROWS.map(({dir,label,rotate})=><button key={dir} type="button" className={styles.arrow} data-dir={dir} hidden={!scale||hidden(dir)} disabled={!can[dir]} aria-label={label} data-tip={label} onClick={()=>move(dir)}><Icon name="up" size={22} style={rotate?{transform:`rotate(${rotate}deg)`}:undefined}/></button>)}
  </div></div></section>
  {tip&&<div key={tip.friend?`friend-${tip.friend.id}`:tip.kind} ref={tipEl} id="map-tip" role="tooltip" className={styles.tip} data-tip-kind={tip.kind} style={{left:tip.x,'--tip-top':`${tip.top}px`,'--tip-bottom':`${tip.bottom}px`} as CSSProperties}>{tip.friend?<><strong>{tip.friend.name}</strong> <span>{tip.friend.text}</span></>:<><strong>{LEGEND_TIPS[tip.kind].title}</strong> <span>{LEGEND_TIPS[tip.kind].text}</span></>}</div>}

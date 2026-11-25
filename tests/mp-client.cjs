@@ -141,7 +141,9 @@ t('send throttle: walking 10 s -> 45-55 poses; standing 10 s -> <= 3 messages af
   assert.ok(P.parseClient(JSON.stringify(poses[0])),'pose passes validator');
   const e2=makeEnv();const s2=goLive(e2);
   for(let ms=0;ms<=10000;ms+=16){e2.c.sendPose(pose(500),e2.clock.now());e2.clock.advance(16);}
-  assert.ok(s2.sent.length-1<=3,`standing sent ${s2.sent.length-1} after Hello`);
+  assert.ok(s2.sent.length-1<=4,`standing sent ${s2.sent.length-1} after Hello`);
+  // AAA 3 (Nov 25 2026): a still pose is resent every STILL_RESEND_MS (a woken relay lost it), never more often
+  {const still=e2.msgs(s2).filter(m=>m[0]===1);assert.equal(still.length,2,`standing 10 s: the first pose + one resend (${still.length})`);}
   assert.ok(e2.msgs(s2).some(m=>m[0]===9),'Beat sent');
   // standing with tiny speed changes: <= 1 Hz
   const e3=makeEnv();const s3=goLive(e3);

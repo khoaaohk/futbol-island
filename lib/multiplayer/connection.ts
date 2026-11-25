@@ -150,6 +150,10 @@ export const LIVE_MOVE_GAP_MS = 90; // 90, not 100: on a 60 / 30 fps frame loop 
 export const BALL_GAP_MS = 100;
 const BALL_MOVE_DM = 1;
 const IDLE_GAP_MS = 1000; // 1 Hz
+/** AAA 3 (Nov 25 2026; live audit #5): a still player resends its unchanged pose this often, so a relay that lost it (a woken Durable
+ *  Object restores members without poses) draws them again within seconds instead of never. ~0.1 Hz per still player; the relay's
+ *  idle clock counts movement, not poses, so this never keeps an idle slot (roomCore WORLD_IDLE_MS). */
+export const STILL_RESEND_MS = 10_000;
 const EMOTE_GAP_MS = 2000;
 const MOVE_DM = 1.5; // 0.15 m
 const YAW_UNITS = (8 * 256) / 360; // 8 degrees
@@ -769,6 +773,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate
       else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= (worldOn && near === 0 ? QUIET_MOVE_GAP_MS : (caps & Cap.Live) ? LIVE_MOVE_GAP_MS : MOVE_GAP_MS);
       else if (body.some((v, i) => v !== last![i])) send = nowMs - lastPoseAt >= IDLE_GAP_MS;
+      else send = nowMs - lastPoseAt >= STILL_RESEND_MS;
       if (!send) return;
       if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body; lastPoseAt = nowMs; commitPose(gov, body, nowMs); }
     },

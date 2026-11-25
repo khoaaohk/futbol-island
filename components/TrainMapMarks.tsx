@@ -11,7 +11,8 @@ import {LIVERIES} from '@/lib/town/trainLiveries';
 
 const LINE_POINTS=(()=>{const out:string[]=[];for(let i=0;i<TRACK.n;i+=4)out.push(`${Math.round(TRACK.x[i]*10)/10},${Math.round(TRACK.z[i]*10)/10}`);out.push(out[0]);return out.join(' ');})();
 /** Each station pin sits on the platform side, 7 m off the line (the label hangs further out on the full map). */
-const PINS=TRAIN_STATIONS.map(st=>{const c=trackAt(st.s),nx=c.tz*st.side,nz=-c.tx*st.side;return {st,x:c.x+nx*7,z:c.z+nz*7,lx:c.x+nx*22,lz:c.z+nz*22};});
+export const TRAIN_PINS=TRAIN_STATIONS.map(st=>{const c=trackAt(st.s),nx=c.tz*st.side,nz=-c.tx*st.side;return {st,x:c.x+nx*7,z:c.z+nz*7,lx:c.x+nx*22,lz:c.z+nz*22};});
+const PINS=TRAIN_PINS;
 type Dest=(id:`station-${TrainStation['id']}`,label:string)=>Record<string,unknown>;
 
 /** The line and the five station pins (static; inside the memoized terrain). */
