@@ -212,12 +212,12 @@ export const quizForPage=(enPath:string,lang:Lang='en')=>{const s=QUIZ_FOR[enPat
 
 /** SEO batch E (Nov 25 2026): the quizzes each lesson hub links (English hub slugs; the Spanish hubs use the same list). */
 export const HUB_QUIZZES:Readonly<Record<string,readonly string[]>>={
- 'football-rules-for-kids':['soccer-rules-quiz','throw-in-quiz','corner-kick-and-goal-kick-quiz','free-kick-quiz','7v7-soccer-rules-quiz'],
- 'soccer-quiz-for-kids':['soccer-rules-quiz','offside-quiz','soccer-positions-quiz','soccer-terms-quiz','world-cup-quiz'],
+ 'football-rules-for-kids':['soccer-rules-quiz','throw-in-quiz','corner-kick-and-goal-kick-quiz','free-kick-quiz','goalkeeper-rules-quiz','7v7-soccer-rules-quiz','9v9-soccer-rules-quiz'],
+ 'soccer-quiz-for-kids':['soccer-rules-quiz','offside-quiz','soccer-positions-quiz','soccer-positions-by-number-quiz','soccer-terms-quiz','world-cup-quiz','famous-soccer-players-quiz','womens-world-cup-quiz'],
  'passing-and-support':['attacking-tactics-quiz','soccer-skills-terms-quiz','soccer-terms-quiz'],
  'futsal-for-kids':['futsal-rules-quiz','soccer-formations-quiz','soccer-field-and-ball-size-quiz'],
  '7v7-9v9-11v11':['7v7-soccer-rules-quiz','9v9-soccer-rules-quiz','soccer-formations-quiz','soccer-field-and-ball-size-quiz'],
- lessons:['soccer-rules-quiz','offside-quiz','soccer-positions-quiz','attacking-tactics-quiz','defending-tactics-quiz']};
+ lessons:['soccer-rules-quiz','offside-quiz','soccer-positions-quiz','attacking-tactics-quiz','defending-tactics-quiz','soccer-field-and-ball-size-quiz','throw-in-quiz']};
 export const HUB_QUIZ_WORDS={en:{title:'Quizzes with answers',rail:'Quizzes',hub:'All soccer quizzes',hubLine:(n:number)=>`${n} free quizzes by topic, with answers`},
  es:{title:'Quizzes con respuestas',rail:'Quizzes',hub:'Todos los quizzes de fútbol',hubLine:(n:number)=>`${n} quizzes gratis por tema, con respuestas`}};
 /** The links for a hub's quiz section (null when the hub has none). */

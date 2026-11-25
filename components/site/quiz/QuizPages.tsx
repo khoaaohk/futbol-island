@@ -43,8 +43,10 @@ export function QuizPageView({quiz,lang}:{quiz:SiteQuiz;lang:Lang}){
  const t=T[lang],es=lang==='es',crumbs=crumbsFor(lang,{name:quiz.name,path:quiz.path}),n=quiz.questions.length;
  const facts:Fact[]=[{icon:'kid',label:t.ages,value:t.agesV},{icon:'quiz',label:t.qs,value:t.qsV(n),href:'#play'},{icon:'tag',label:t.topic,value:topicName(quiz.topic,lang),href:`${hubPath(lang)}#${quiz.topic}`}];
  const rail=<RailNav rail={pageRail(t.onPage,{href:hubPath(lang),name:t.allQuizzes},[sec('play',t.railQuiz),sec('covers',t.railCovers),...(quiz.practise.length?[sec('practise',t.railPractise)]:[]),sec('answers',t.railKey),sec('faq',t.railFaq),sec('more-quizzes',t.railMore),sec('sources',t.railSources)],es)} current="#top"/>;
- const others=(es?quizzesIn(quiz.topic,'es'):quizzesIn(quiz.topic)).filter(x=>x.slug!==quiz.slug);
- const more=[...others,...[...QUIZ_TOPICS].flatMap(g=>g.id===quiz.topic?[]:quizzesIn(g.id,lang).slice(0,1))].slice(0,5).map(x=>({path:x.path,name:x.h1,line:t.qsV(x.questions.length)}));
+ /* SEO batch E (Nov 25 2026): the next quizzes of the same topic in turn (wrapping round), then one quiz of each other topic picked
+    by this quiz's place, so every quiz gets links from its neighbours instead of the first few taking them all */
+ const same=quizzesIn(quiz.topic,lang),at=same.findIndex(x=>x.slug===quiz.slug),others=[...same.slice(at+1),...same.slice(0,Math.max(at,0))];
+ const more=[...others.slice(0,3),...[...QUIZ_TOPICS].flatMap(g=>{if(g.id===quiz.topic)return [];const l=quizzesIn(g.id,lang);return l.length?[l[at%l.length]]:[];}),...others.slice(3)].slice(0,5).map(x=>({path:x.path,name:x.h1,line:t.qsV(x.questions.length)}));
  const ld={...articleLd({headline:quiz.title,path:quiz.path,description:quiz.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:quiz.name}),
   learningResourceType:'Quiz',educationalUse:'assessment',typicalAgeRange:'7-12',
   hasPart:quizPart({path:quiz.path,anchor:'answers',name:quiz.name,about:quiz.name.replace(/^Quiz (de|del) /,'').replace(/ quiz$/i,''),questions:quiz.questions.filter(x=>x.kind!=='order')/* multiple choice only: an order question has no one right option */})};
