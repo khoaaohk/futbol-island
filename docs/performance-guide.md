@@ -7068,3 +7068,11 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
   Not measured on a real phone; no iPhone temperature claim.
 
 - Train passengers (Nov 24): islanders' bean skin, ≤5 instanced draws, ~6k rastered tris per near passenger, bodies only beyond 28 m; rows uploaded on change only. Cost trim: hair / hat / props draw through a subset index of the shared buffers holding only the styles and props of the riders shown now (re-indexed only when that set changes), so unworn styles cost no vertex work; a 5-rider car counts ~38k tris (worst ~45k; was ~59k), the hat draw is skipped from heat tier 3 up, and the ~90 ms pose bake runs in idle slices from load (≤ ~37 ms in Node per slice) instead of on first sight.
+
+- Summit 5s practice area (Nov 24, lib/graphics/summitPractice.ts, local, not deployed): nothing exists off the pitch (Town pays one
+  x > 400 test per frame on the main island, one box test on Summit Isle). On the pitch: three InstancedMeshes (cones ≤ 40,
+  mannequins ≤ 8, balls ≤ 10; one shared MeshStandardMaterial, no shadows, frustumCulled off) = +3 draws; the editor adds a grid
+  (LineSegments) and a selection ring = +5. Matrices are rewritten only on frames where a ball / cone / mannequin moved; physics
+  only for awake balls (they sleep at rest); ball-to-ball pairs only with a moving ball; no timers, no rAF, no network (local
+  only), no allocation in the frame. A resting drill keeps the rest gate (Town footRest: !practice.busy) so the island can idle.
+  Everything is disposed on leaving the pitch. Not measured on a real phone; no iPhone temperature claim.
