@@ -6,7 +6,7 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
-import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,MOUTH_IN,drawnPlane} from './trainTrack';
+import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,TUNNEL_BED,MOUTH_IN,drawnPlane} from './trainTrack';
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
@@ -153,7 +153,10 @@ export function buildSummitIsle(t:SummitTools){
   for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;
    // Looks 2: either side of the plane (outside: carved; inside: the drawn full cover, summitDrawnGround): a cliff AT it
    // (the inside band is a whole cell deep, so no drawn triangle can slope from the carved floor across the plane into the hill)
-   const pl=drawnPlane(Math.abs(v));if(Math.abs(v)<SNAP_V&&u>pl-SNAP_U&&u<pl+SNAP_IN){const du=(u<pl?pl-.03-u:pl+.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
+   // POLISH 4 (owner shot 70): the plane's lateral switch is read at the CURVE's distance (trainCut's own hit.d), not the straight
+   // frame's |v|: the west portal stands on a curve, so a corner snapped to the arch's plane was drawn at the side's plane (a hill
+   // triangle sloped into the left of the west arch)
+   const hc=Math.abs(v)<SNAP_V+2?trackNearest(x,z,SNAP_V+3):null,pl=drawnPlane(hc?hc.d:Math.abs(v));if(Math.abs(v)<SNAP_V&&u>pl-SNAP_U&&u<pl+SNAP_IN){const du=(u<pl?pl-.03-u:pl+.03-u)*w;return [x+t.tx*du,z+t.tz*du];}}
   return [x,z];}
  // Looks 2: the coarse grid's own points in those bands snap too (they are the corners of the fine quads there, shared with their
  // neighbours, so the mesh stays crack-free): no corner left on the slope across the plane.
@@ -217,6 +220,20 @@ export function buildSummitIsle(t:SummitTools){
   // Bearings run anticlockwise seen from above (+x → +z), rings from the sea inward: wind each quad so it faces up.
   for(let j=0;j<ids.length-1;j++)for(let k=0;k<R-1;k++){if(fine[(s*per+j)%BEARINGS][k])fineQuad(piece,s*per+j,k);else{const a=ids[j][k],b=ids[j+1][k],c=ids[j][k+1],d=ids[j+1][k+1];piece.idx.push(a,c,b,b,c,d);}}
  }
+ // POLISH 4 (owner shots 70 / 76: "the tunnel is green here, this should be dark"): the terrain is cut out of each arch opening's
+ // footprint, from in front of the headwall's face (2 m out) to a cell into the hill: a triangle whose middle lies within the opening
+ // (curve distance < the arch's half width) and whose corners stay near it, with any part between the floor and just over the crown,
+ // is dropped. The floor (at the bed) and the hill's cover over the tube stay. The dark mouth cap and the tube fill the opening.
+ {const B=TUNNEL_BED-DROP,top=TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+.3-DROP,lat=(x:number,z:number,v:number)=>{const h=trackNearest(x,z,TUNNEL_HALF_WIDTH+4);return h?Math.min(h.d,Math.abs(v)):Math.abs(v);};
+  // u: 2 m out to 2.6 m in (a cell past the plane); only triangles with a corner in front of the mouth cap (0.12 m out) are dropped
+  // (one wholly behind it is hidden by the cap from outside, and is the hill seen from above and the side: no holes there)
+  let minU=0;const inOpening=(x:number,z:number,loose:boolean)=>{for(const {p,t,w} of snapT){const u=((x-p.x)*t.tx+(z-p.z)*t.tz)*w,v=(x-p.x)*t.tz-(z-p.z)*t.tx;if(u<-2||u>2.6||Math.abs(v)>TUNNEL_HALF_WIDTH+4)continue;if(lat(x,z,v)<TUNNEL_HALF_WIDTH+(loose?.7:0)&&(loose||u<.3)){minU=Math.min(minU,u);return true;}}return false;};
+  for(const piece of sectors){const P=piece.pos,I=piece.idx,keep:number[]=[];
+   for(let q=0;q<I.length;q+=3){const a=I[q]*3,b=I[q+1]*3,c=I[q+2]*3,ya=P[a+1],yb=P[b+1],yc=P[c+1],lo=Math.min(ya,yb,yc),hi=Math.max(ya,yb,yc);
+    if(hi>B+.25&&lo<B+2.4&&lo<top){/* a corner below the springing: it reaches into the opening (the hill over the arch's top stays) */const cx=(P[a]+P[b]+P[c])/3+piece.ox,cz=(P[a+2]+P[b+2]+P[c+2])/3+piece.oz;
+     minU=0;if(inOpening(cx,cz,false)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)&&minU<-.1)continue;}
+    keep.push(I[q],I[q+1],I[q+2]);}
+   piece.idx=keep;}}
  const sectorOf=(x:number,z:number)=>{let a=Math.atan2(z-PK.z,x-PK.x);if(a<0)a+=Math.PI*2;return sectors[Math.min(SECTORS-1,Math.floor(a/(Math.PI*2)*SECTORS))];};
  // ---- Paths (Oct 13 2026, user: "the path is not all connected", then a screenshot of it drawn as separate wedge-shaped strips):
  // one continuous ribbon per path, SUMMIT_PATH_WIDTH wide everywhere, draped on the terrain AS DRAWN. The old ribbon had one

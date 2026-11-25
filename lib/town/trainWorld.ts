@@ -354,18 +354,26 @@ export function buildTrainWorld(tools:TrainTools){
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
-  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x-o.x*.05,TUNNEL_BED,p.z-o.z*.05));// just inside the face: the hill's rise (trainTrack MOUTH_IN..MOUTH_LIFT) is all behind it
+  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x+o.x*.12,TUNNEL_BED,p.z+o.z*.12));// POLISH 4 (owner shot 70): 0.12 m out from the headwall's back, inside its arched hole, so it is in front of the drawn hill's cliff at the plane (the summit grid snaps it to ±0.03 m; on the curved west portal a cliff triangle at +0.03 stood in front of the old cap at +0.05 in and showed as a green band inside the arch)
+  // POLISH 4: a dark floor through the headwall's arched hole (the summit terrain is cut out of the opening: summitIsleWorld)
+  {const fl=new Geo(),R2=TUNNEL_HALF_WIDTH;fl.quad(P(-R2,-.15,-.02),P(R2,-.15,-.02),P(R2,depth+.4,-.02),P(-R2,depth+.4,-.02),P(0,1,-2));emit(fl,C.mouth,ox,oz);}
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
- const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3();
+ const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3(),tW=trackAt(W.s),tE=trackAt(E.s);
  const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);
  const cat=catArm.empty&&catWire.empty?null:buildCatenary();if(cat)tubeRoot.add(cat);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
  return {
   /** Added to the scene after the batching pass (its own mesh, never merged). */
   tubeRoot,
   movedProps:()=>moved,addMoved:(k:number)=>{moved+=k;},
-  /** The tube shows only near a portal or inside (one distance test per frame). */
-  update(camera:T.Camera){camera.getWorldPosition(cam);const near=Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW||insideTunnel(cam.x,cam.z);if(near!==tube.visible)tube.visible=near;},
+  /** POLISH 4 (owner shot 70, a dark wedge beside the west arch): the tube shows only while the camera is INSIDE it, past both mouth
+   *  planes and under its crown. From outside, each portal's opaque arch-shaped mouth already fills the opening, so the tube added
+   *  nothing there but its crown showing dark through the hill's 2.5 m grid right behind the headwall. A few multiplies a frame. */
+  update(camera:T.Camera){camera.getWorldPosition(cam);let inside=false;
+   if(Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW||insideTunnel(cam.x,cam.z)){
+    const inW=(cam.x-W.x)*tW.tx+(cam.z-W.z)*tW.tz,inE=-((cam.x-E.x)*tE.tx+(cam.z-E.z)*tE.tz);
+    inside=inW>-.3&&inE>-.3&&insideTunnel(cam.x,cam.z)&&cam.y<TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+1.5;}
+   if(inside!==tube.visible)tube.visible=inside;},
   dispose(){tube.geometry.dispose();(tube.material as T.Material).dispose();if(cat){cat.geometry.dispose();(cat.material as T.Material).dispose();}tubeRoot.removeFromParent();},
  };
  /** The catenary mesh (wire + thin arms) in vertex colours, with the near-camera fade (see the catenary section above). */

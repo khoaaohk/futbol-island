@@ -141,7 +141,10 @@ export const PORTAL_RING_R=TUNNEL_HALF_WIDTH+.85,PORTAL_SPRING=2.4,PORTAL_TOP_CA
 export const TUBE_BANK=.8;
 const tubeCover=(d:number)=>d<TUNNEL_HALF_WIDTH?2.4+Math.sqrt(TUNNEL_HALF_WIDTH*TUNNEL_HALF_WIDTH-d*d)+TUBE_COVER:2.4+TUBE_COVER-Math.max(0,d-TUNNEL_HALF_WIDTH-.6)*TUBE_BANK;
 /** The headwall's top over the arch at lateral d (trainWorld portal: ring + 0.25, capped), banked down past the ring's edge. */
-const hoodCover=(d:number)=>{const r=PORTAL_RING_R;return HOOD_OVER+(d<r?Math.min(PORTAL_TOP_CAP,PORTAL_SPRING+.25+Math.sqrt(r*r-d*d)):PORTAL_SPRING+.25-(d-r)*MOUTH_BANK);};
+const hoodCover=(d:number)=>{const r=PORTAL_RING_R;return HOOD_OVER+(d<r?Math.min(PORTAL_TOP_CAP,PORTAL_SPRING+.25+Math.sqrt(r*r-d*d)):PORTAL_SPRING+.25-(d-r)*HOOD_SHOULDER_BANK);};
+/** POLISH 4 (owner shot 70): past the ring's edge the hill behind the headwall falls at 1.2 per metre (was MOUTH_BANK 4: a pit behind
+ *  the headwall's shoulder, where the tube's dark crown showed, and with the tube now drawn only from inside, a train in it). */
+export const HOOD_SHOULDER_BANK=1.2;
 /** How far into the tunnel (m, along the line) a point lies past the nearer portal plane (negative outside). */
 function inward(x:number,z:number,s:number){const west=s-TUNNEL.west.s<TUNNEL.east.s-s,p=west?TUNNEL.west:TUNNEL.east,t=trackAt(p.s);return ((x-p.x)*t.tx+(z-p.z)*t.tz)*(west?1:-1);}
 /** Distance to the carved Summit corridor's centre line (1e3 outside it): summitIsleWorld draws the terrain finer there. */

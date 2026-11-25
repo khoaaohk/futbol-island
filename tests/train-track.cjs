@@ -61,7 +61,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
  const w2=L('lib/town/world.ts').buildTown(scene);scene.traverse(o=>{if(o.name==='train-tunnel-tube')tube=o;if(o.isMesh&&o.material&&o.material.map&&o.material.map.image&&o.material.map.image.width===1024&&o.material.map.image.height===1024)boards.add(o.material);});
  assert(tube&&tube.parent&&tube.parent.name==='train-tunnel','the tunnel tube is its own mesh (visible at build for the warm compile; update() gates it)');
  assert(boards.size<=1,`one station board material (${boards.size})`);
- const cam=new T.PerspectiveCamera();cam.position.set(tt.TUNNEL.west.x-20,12,tt.TUNNEL.west.z+20);cam.updateMatrixWorld(true);w2.train.update(cam);assert(tube.visible,'shown near the west portal');
+ const cam=new T.PerspectiveCamera();cam.position.set(tt.TUNNEL.west.x-20,12,tt.TUNNEL.west.z+20);cam.updateMatrixWorld(true);w2.train.update(cam);assert(!tube.visible,'POLISH 4: hidden outside, even near a portal (the arch-shaped mouth fills the opening)');{const m=tt.trackAt((tt.TUNNEL.west.s+tt.TUNNEL.east.s)/2);cam.position.set(m.x,tt.TUNNEL_BED+2,m.z);cam.updateMatrixWorld(true);w2.train.update(cam);assert(tube.visible,'shown inside the tube');}
  cam.position.set(100,20,0);cam.updateMatrixWorld(true);w2.train.update(cam);assert(!tube.visible,'hidden in town');
  assert(/trainSwimBlocked\(x,z\)/.test(read('components/Town.tsx')),'Town: swimmers meet the piers');assert(/buildTrainWorld\(/.test(read('lib/town/world.ts')),'world builds the line');
  // Nov 23 2026 owner fixes. (a) Walking on the line: feet on the sleepers on land rows, on the deck at every crossing (all 5,

@@ -13,6 +13,11 @@ const VIEWS = [// look target: [u, v, y] absolute (u along into the hill from th
   ['east-out', 'east', -14, 3, 4.5, 1.5, 0, 2.5], ['east-in', 'east', 9, .8, 2.4, -3, 0, 2.6], ['east-in-up', 'east', 4, -1.5, 1.6, 1, 2.5, 4.8], ['east-in-up2', 'east', 4, 1.5, 1.6, 1, -2.5, 4.8],
   ['west-out', 'west', -14, -3, 4.5, 1.5, 0, 2.5], ['west-in', 'west', 9, -.8, 2.4, -3, 0, 2.6], ['west-wing', 'west', -10, -9, 3.5, 2, -6, 1],
   ['west-wing-e', 'west', -10, 9, 3.5, 2, 6, 1],
+  // POLISH 4 (owner shot 70, the dark wedge beside the arch): overview, high, side and low angles on both portals
+  ['west-over', 'west', -34, -14, 34, 0, 0, 2], ['west-high', 'west', -16, 6, 16, 0, 0, 2], ['west-side', 'west', -6, -16, 6, 0, 0, 2.5], ['west-low', 'west', -12, 2, 1.2, 0, 0, 2.5],
+  ['west-front', 'west', -9, 0, 1.7, 2, 0, 2.2], ['west-side2', 'west', -9, -9, 4, 0, 0, 2.5], ['west-driver', 'west', -3, .3, 2.7, 8, 0, 2.5],
+  ['east-front', 'east', -9, 0, 1.7, 2, 0, 2.2], ['east-side2', 'east', -9, 9, 4, 0, 0, 2.5], ['east-driver', 'east', -3, -.3, 2.7, 8, 0, 2.5],
+  ['east-over', 'east', -34, 14, 34, 0, 0, 2], ['east-high', 'east', -16, -6, 16, 0, 0, 2], ['east-side', 'east', -6, 16, 6, 0, 0, 2.5], ['east-low', 'east', -12, -2, 1.2, 0, 0, 2.5],
 ];
 const want = (n) => !only || only.split(',').includes(n);
 (async () => {
@@ -41,7 +46,13 @@ const want = (n) => !only || only.split(',').includes(n);
         const c = at(along, lat, h), tg = at(la, ll, lh), q = at(-14, 0, 0); return { p: c, t: tg, px: q[0], pz: q[2] }; }, { which, along, lat, h, la, ll, lh });
       await p.evaluate(({ x, z }) => window.__fi2.teleport(x, z, 0), { x: pose.px, z: pose.pz });
       await p.evaluate((P) => { window.__pose = P; }, pose); await p.waitForTimeout(2600);
+      if (arg('hide', '')) await p.evaluate((n) => { for (const name of n.split(',')) window.__fi2.renderer && window.__fi2.camera && (() => { let root = (window.__fi2.player && window.__fi2.player.root) || window.__fi2.camera; while (root.parent) root = root.parent; root.traverse((o) => { if (o.name === name) o.visible = false; }); })(); }, arg('hide', '')).catch(() => {}), await p.waitForTimeout(600);
       await p.screenshot({ path: path.join(out, `${tag}-${name}.png`) });
+      if (arg('pick', '')) console.log(name, 'pick', JSON.stringify(await p.evaluate((xy) => { const f = window.__fi2, c = f.camera, V = c.position.constructor, [nx, ny] = xy.split('x').map(Number); const P = window.__pose; if (P) { c.position.set(P.p[0], P.p[1], P.p[2]); c.up.set(0, 1, 0); c.lookAt(P.t[0], P.t[1], P.t[2]); c.updateMatrixWorld(); c.updateProjectionMatrix(); } let root = (f.player && f.player.root) || c; while (root.parent) root = root.parent;
+        const o = c.position.clone(), d = new V(nx, ny, .5).unproject(c).sub(o).normalize(), out = [];
+        root.traverse((m) => { if (!m.isMesh || !m.visible || !m.geometry) return; let v = m; while (v) { if (!v.visible) return; v = v.parent; } if (!m.geometry.boundingSphere) m.geometry.computeBoundingSphere(); const bs = m.geometry.boundingSphere; if (!bs) return;
+          const cw = bs.center.clone().applyMatrix4(m.matrixWorld), rad = bs.radius * m.matrixWorld.getMaxScaleOnAxis(), w = cw.clone().sub(o), t = w.dot(d); if (t < 0) return; const dist = w.clone().sub(d.clone().multiplyScalar(t)).length(); if (dist < rad) out.push({ n: m.name || m.type, t: +t.toFixed(1), r: +rad.toFixed(1), col: m.material && m.material.color ? m.material.color.getHexString() : '' }); });
+        return out.sort((a, b) => a.r - b.r).slice(0, 12); }, arg('pick', ''))));
     }
     if (want('car-inside')) {// board at North, render from a standing eye looking along the car toward the ceiling middle
       await p.evaluate(() => { window.__pose = null; });
