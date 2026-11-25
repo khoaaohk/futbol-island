@@ -6,7 +6,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {GameIntro,PlayLink,Shots} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
-import {ALL_GAME_PAGES,GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,isGameListed,videoGameLd} from '@/lib/site/games';
+import {ALL_GAME_PAGES,BOARD_LINE,GAME_FACTS,GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,isGameListed,learnTopic,relatedGames,videoGameLd} from '@/lib/site/games';
 import {breadcrumbLd,faqLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
 import site from '../../site.module.css';
 import RailNav from '@/components/site/shell/RailNav';
@@ -36,7 +36,12 @@ export default function GamePageView({params}:{params:{slug:string}}){
  const crumbs=gameCrumbs({name:g.name,path:g.path}),ld=videoGameLd(g);
  // Nov 22 2026 (play now): the play stage's first poster is the page's LCP; preload it at high priority (lib/site/gamePlay.ts).
  if(typeof ReactDOM.preload==='function')ReactDOM.preload(stageShots(g)[0].src,{as:'image',fetchPriority:'high'});
- const others=[...GAME_PAGES.filter(x=>x!==g).map(x=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb})),{path:GAMES_HUB.path,name:`All ${GAMES_WORD} free soccer games`,line:GAMES_HUB.blurb}];
+ // Nov 24 2026 (SEO wave 2, owner: a visible "More free games" row of 3-4 related games, the game's Learn topic and /games): one ordered
+ // group, so the first seven cards are the related games, the hub, the Learn topic and the Library card (KeepReading MAIN); every other
+ // game stays linked under "Show N more" (tests/seo-games.cjs: each game page links every other listed game).
+ const card=(x:typeof g)=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb}),near=relatedGames(g),topic=learnTopic(g);
+ const others=[...near.map(card),{path:GAMES_HUB.path,name:`All ${GAMES_WORD} free soccer games`,line:GAMES_HUB.blurb},{path:topic.path,name:`Learn the idea: ${topic.name}`,line:topic.line},
+  ...GAME_PAGES.filter(x=>x!==g&&!near.includes(x)).map(card)];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={ld}/>{/* Nov 18 2026: no trailer VideoObject here; the clip's one home is its watch page (lib/site/videos.ts) */}
@@ -59,7 +64,9 @@ export default function GamePageView({params}:{params:{slug:string}}){
   <Section id="harder" title="How the difficulty grows"><List items={g.harder}/></Section>
   <Section id="parents" title="For parents and coaches"><List items={g.parents}/></Section>
   <QA id="faq" title={`Questions about ${g.name}`} faq={g.faq}/>
-  <KeepReading id="more" title="More free soccer games" groups={[{id:'more-games',links:others}]}/>
+  {/* Nov 24 2026 (SEO wave 2, owner: "these will get returning users"): only modes that exist in the game's code (lib/site/games.ts GAME_FACTS) */}
+  <Section id="again" title={`Play ${g.name} again`}><p>{GAME_FACTS[g.id].back} {BOARD_LINE}</p></Section>
+  <KeepReading id="more" title="More free games" groups={[{id:'more-games',links:others}]} show={near.length+3}/>
   {/* Nov 20 2026 (SEO foundation): each game page leads on to the island itself (a game page, not the home page) */}
   <Section id="island" title="Play the whole island">
    <p>{g.name} is one game in the Futbol Island arcade. The island also has lessons, quizzes, fishing and player cards. <a href={PLAY_PATH} data-island-link="">Play the whole island</a>.</p>

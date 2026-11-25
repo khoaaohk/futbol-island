@@ -21,7 +21,7 @@ const rail=(label:string,hub:RailItem,groups:RailGroup[],es=false):Rail=>({label
 /** /games/<slug>: Back to all games, then the game page's own sections. */
 export function gameRail(name:string):Rail{
  return pageRail(`${name} on this page`,{href:GAMES_HUB.path,name:'All games'},[sec('what','What it is'),sec('how','How to play'),sec('teaches','What it teaches'),
-  sec('tips','Tips'),sec('harder','Difficulty'),sec('parents','For parents'),sec('faq','Questions'),sec('more','More games'),sec('island','The whole island')]);
+  sec('tips','Tips'),sec('harder','Difficulty'),sec('parents','For parents'),sec('faq','Questions'),sec('again','Play again'),sec('more','More games'),sec('island','The whole island')]);/* Nov 24 2026: the Play again section */
 }
 
 /** A lesson page: Back to all lessons, Overview, then the lesson's own sections (quiz, topic hubs and guides only where it has them). */

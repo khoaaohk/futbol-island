@@ -58,8 +58,8 @@ const PARENTS_SAFE='Free, with no ads, no account and no open chat. The high-sco
 export const ALL_GAME_PAGES:readonly GamePage[]=[
  {id:'kitrush',slug:'soccer-swipe-game',path:page('soccer-swipe-game'),name:'Kit Rush',play:play('kitrush'),
   title:'Soccer Swipe Game for Kids: Kit Rush, Free Online',h1:'Soccer swipe game: Kit Rush',
-  description:'Kit Rush is a free soccer swipe game for kids. Swipe your team’s kit out of the air, leave the other team’s, and dodge the whistle. No ads, no sign-up.',
-  lead:'A kit bag bursts open and shirts, boots, bibs and balls fly into the air. Swipe everything in your team’s colours, leave the other team’s kit alone, and never touch the whistle.',
+  description:'Kit Rush is a free soccer swipe game for kids: cut your team’s kit, leave theirs and dodge the whistle. It trains scanning. No download, no ads.',
+  lead:'Kit Rush is a free soccer swipe game for kids: swipe every item in your team’s kit, leave the other team’s alone and never touch the whistle. It trains the quick look every player needs to tell a team-mate from an opponent.',
   blurb:'Swipe your team’s kit, leave theirs, dodge the whistle',genre:['Arcade','Sports','Educational'],skill:'Recognising your team at a glance and scanning before you act',
   og:img('kit-rush-soccer-swipe-game-og.jpg'),ogAlt:'Kit Rush, a soccer swipe game: teal kit sliced in the air in front of a goal',
   shots:[phone('kit-rush-soccer-swipe-game.webp','Kit Rush on a phone: a swipe cuts two teal boots in front of a goal and the word ONE-TWO appears','A two-item swipe: the banner at the top shows your kit and your three lives.'),
@@ -88,8 +88,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What does a soccer swipe game teach?',a:'Recognising your own team quickly by colour and pattern, and scanning the whole picture before acting. Each run also ends with one fact about kits, bibs, the armband or the whistle.'}]},
  {id:'snake',slug:'soccer-snake-game',path:page('soccer-snake-game'),name:'Squad Snake',play:play('snake'),
   title:'Soccer Snake Game: Play Squad Snake Free Online',h1:'Soccer snake game: Squad Snake',
-  description:'Squad Snake is a free soccer snake game. Your captain collects team-mates in position order until eleven players name a formation such as 4-3-3. No ads.',
-  lead:'The classic snake game, played with a football squad. Your captain runs the pitch and team-mates join the line in position order, until a full eleven stands as a real formation.',
+  description:'Squad Snake is a free soccer snake game for kids: collect team-mates in position order until eleven make a formation like 4-3-3. No download, no ads.',
+  lead:'Squad Snake is a free soccer snake game for kids: your captain runs the pitch and team-mates join the line in position order. It teaches the positions and how a formation such as 4-3-3 is counted, until a full eleven stands in shape.',
   blurb:'Snake with a squad: collect eleven players and build a formation',genre:['Arcade','Sports','Educational'],skill:'Positions and how a formation is counted',
   og:img('squad-snake-soccer-snake-game-og.jpg'),ogAlt:'Squad Snake, a soccer snake game: a full squad named as a 4-3-3 formation',
   shots:[phone('squad-snake-soccer-snake-game.webp','Squad Snake on a phone: a line of numbered players follows the captain across a pitch toward a forward to collect','The team sheet at the top fills in position colours as players join.'),
@@ -118,8 +118,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'Which formations can you build in Squad Snake?',a:'Seven: 3-4-3, 3-5-2, 4-3-3, 4-4-2, 4-5-1, 5-3-2 and 5-4-1. You choose the shape by deciding when to stop collecting one line and start the next.'}]},
  {id:'runner',slug:'soccer-runner-game',path:page('soccer-runner-game'),name:'Breakaway Run',play:play('runner'),
   title:'Soccer Runner Game for Kids: Breakaway Run, Free Online',h1:'Soccer runner game: Breakaway Run',
-  description:'Breakaway Run is a free endless soccer runner game for kids. Dribble a coast road, beat tackles with a jump or a skill move, then shoot at goal. No ads.',
-  lead:'An endless runner with a ball at your feet. Dribble along an island coast road at sunset, change lanes to find space, beat each tackle and finish past the goalkeeper.',
+  description:'Breakaway Run is a free soccer runner game for kids: dribble a coast road, beat tackles with a jump or a skill move, then shoot. No download, no ads.',
+  lead:'Breakaway Run is a free endless soccer runner game for kids: dribble an island coast road at sunset, beat each tackle and finish past the goalkeeper. It teaches what a dribbler needs: finding space, timing the move past a defender and a calm finish.',
   blurb:'Endless dribbling runner: beat the tackle, find the goal',genre:['Endless runner','Sports','Educational'],skill:'Beating a tackle, timing and finishing',
   og:img('breakaway-run-soccer-runner-game-og.jpg'),ogAlt:'Breakaway Run, a soccer runner game: a player dribbles along a coast road toward a defender',
   shots:[phone('breakaway-run-soccer-runner-game.webp','Breakaway Run on a phone held upright: a player dribbles down a three-lane coast road toward a defender, with footballs on the road and Jump, Slide, Skill and Shoot buttons','Three lanes, a defender ahead and footballs to collect on the way.'),
@@ -172,8 +172,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What is soccer tennis?',a:'A training game that football players of every level use: two sides play a ball over a low net with feet, thighs, chest and head, never hands. It builds touch and control. Futbol Tennis is a one-against-one video game version of it.'}]},
  {id:'pinball',slug:'soccer-pinball',path:page('soccer-pinball'),name:'Futbol Pinball',play:play('pinball'),
   title:'Soccer Pinball Game: Free Football Pinball Online',h1:'Soccer pinball: Futbol Pinball',
-  description:'Futbol Pinball is a free soccer pinball game online. Flip the ball up a pitch-shaped table, break the wall, beat the keeper and score. No ads, no download.',
-  lead:'A pinball table laid out as a football pitch. Two flippers are your left and right foot: pass off the bumpers, knock down the wall, pull the goalkeeper out of place and score.',
+  description:'Futbol Pinball is a free soccer pinball game: flip the ball up a pitch-shaped table, learn rebounds and wall passes, beat the keeper. No download, no ads.',
+  lead:'Futbol Pinball is a free soccer pinball game: a pinball table laid out as a football pitch, with two flippers for your left and right foot. It teaches rebounds, wall passes and timing as you pass off the bumpers, knock down the wall and beat the keeper.',
   blurb:'A pinball table that is a pitch: rebounds, wall passes, timing',genre:['Pinball','Sports','Educational'],skill:'Reading rebounds, wall passes and timing',
   og:img('futbol-pinball-soccer-pinball-game-og.jpg'),ogAlt:'Futbol Pinball, a soccer pinball table shaped like a pitch with a goal, a wall and two flippers',
   shots:[phone('futbol-pinball-soccer-pinball-game.webp','Futbol Pinball on a phone: a pinball table drawn as a soccer pitch with a goalkeeper, a wall, bumpers and two flippers, and Left, Nudge and Right keys','The whole table on a phone, with the two flipper keys under your thumbs.'),
@@ -199,8 +199,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'Do I need to download anything to play?',a:'No. Futbol Pinball runs in the web browser on futbolisland.app. There is no app to install and no plug-in.'}]},
  {id:'puzzle',slug:'soccer-passing-puzzle-game',path:page('soccer-passing-puzzle-game'),name:'Pass Puzzles',play:play('puzzle'),
   title:'Soccer Passing Game for Kids: Pass Puzzles, Free Online',h1:'Soccer passing puzzle game: Pass Puzzles',
-  description:'Pass Puzzles is a free soccer puzzle game for kids. Read a frozen moment, draw the pass through the defence and score. Endless Run plus 46 levels. No ads.',
-  lead:'A tactics puzzle game. The match is frozen: you read where the defenders and your team-mates are, draw the pass with one stroke, and watch whether it gets through.',
+  description:'Pass Puzzles is a free soccer passing game for kids: read a frozen moment and draw the pass through the defence. It teaches space and offside. No ads.',
+  lead:'Pass Puzzles is a free soccer passing puzzle game for kids: the match is frozen, you read where the defenders and your team-mates are and draw the pass with one stroke. It teaches seeing space, passing lanes and the offside line.',
   blurb:'Draw the pass through the defence: space, lanes and offside',genre:['Puzzle','Sports','Educational'],skill:'Seeing space, passing lanes and offside',
   og:img('pass-puzzles-soccer-passing-puzzle-game-og.jpg'),ogAlt:'Pass Puzzles, a soccer passing puzzle game: a drawn pass curves past defenders toward a team-mate near the goal',
   shots:[phone('pass-puzzles-soccer-passing-puzzle.webp','Pass Puzzles on a phone: a pass is drawn from player 10 to player 9 near the goal, with Scan, Auto, Ground, Lift and Shoot keys','Draw from one player to the next; the keys choose a ground pass, a lifted pass or a shot.'),
@@ -229,8 +229,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'How many levels are there?',a:'There are 46 authored puzzles in packs, and Endless Run has no last level: it remixes the puzzles (mirrored, shifted, with extra defenders) and gets harder as you go.'}]},
  {id:'airhockey',slug:'air-hockey-soccer-game',path:page('air-hockey-soccer-game'),name:'Air Futbol',play:play('airhockey'),
   title:'Soccer Air Hockey: Free Air Futbol Game vs the Computer',h1:'Soccer air hockey game: Air Futbol',
-  description:'Air Futbol is a free air hockey soccer game against the computer, on a phone, tablet or computer. Guard your goal and score off the boards. No ads.',
-  lead:'Air hockey on a small football pitch. Drag your striker, knock the puck into the other goal, and take on a line of computer opponents that get sharper as you win.',
+  description:'Air Futbol is a free air hockey soccer game vs the computer: guard your goal, score off the boards and learn angles. No download, no ads.',
+  lead:'Air Futbol is a free air hockey soccer game against the computer: drag your striker, knock the puck into the other goal and take on opponents that get sharper as you win. It teaches angles, rebounds and the goalkeeper’s job of staying between the ball and the goal.',
   blurb:'Air hockey on a football pitch, against the computer',genre:['Arcade','Sports','Educational'],skill:'Angles and rebounds, and the goalkeeper’s job of staying between the ball and the goal',
   og:img('air-futbol-air-hockey-soccer-game-og.jpg'),ogAlt:'Air Futbol, an air hockey soccer game: your teal striker against the computer’s red one, with a football puck on a small pitch',
   shots:[tall('air-futbol-air-hockey-soccer-game.webp','Air Futbol on a phone: a teal striker and a red striker on a small football pitch with the puck moving between them','Your half is the bottom of the table. The big numbers printed on the pitch are the score.'),
@@ -260,8 +260,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What age is Air Futbol for?',a:'Futbol Island is made for children aged 7 to 12. One finger is all it takes, and the first opponent is gentle, so it is one of the easiest arcade games to start.'}]},
  {id:'lineup',slug:'soccer-block-puzzle-game',path:page('soccer-block-puzzle-game'),name:'Line Up!',play:play('lineup'),
   title:'Soccer Block Puzzle Game: Line Up!, Free Online',h1:'Soccer block puzzle game: Line Up!',
-  description:'Line Up! is a free soccer block puzzle game for kids. Drag shapes made of footballs onto an 8 by 8 pitch and fill a row or a column to clear it. No ads.',
-  lead:'Line Up! is a free soccer block puzzle game in your browser. Drag shapes made of footballs onto an 8 by 8 pitch. A full row or column is a complete line, and it clears.',
+  description:'Line Up! is a free soccer block puzzle game for kids: drag shapes onto an 8 by 8 pitch and fill a line to clear it, like a team keeping its shape. No ads.',
+  lead:'Line Up! is a free soccer block puzzle game in your browser: drag shapes made of footballs onto an 8 by 8 pitch, and a full row or column is a complete line that clears. It teaches how a team keeps its shape and closes the gaps in a line.',
   blurb:'Fit shapes of footballs into full lines on a pitch',genre:['Puzzle','Sports','Educational'],skill:'Keeping a team’s shape and closing the gaps in a line',
   og:img('line-up-soccer-block-puzzle-game-og.jpg'),ogAlt:'Line Up!, a soccer block puzzle game: shapes of smiling players fill a pitch and a line clears',
   shots:[phone('line-up-soccer-block-puzzle-game.webp','Line Up! on a phone: shapes of footballs fill an 8 by 8 pitch in front of a stand of fans, and LINE UP! appears as a line clears','A line clears and the footballs are kicked off the pitch.'),
@@ -290,8 +290,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What is the Daily Line-Up?',a:'A daily challenge on the start card. Everyone gets the same shapes in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
  {id:'trophydrop',slug:'soccer-merge-game',path:page('soccer-merge-game'),name:'Trophy Drop',play:play('trophydrop'),
   title:'Soccer Merge Game: Trophy Drop, Free in Your Browser',h1:'Soccer merge game: Trophy Drop',
-  description:'Trophy Drop is a free soccer merge game for kids. Drop balls into a trophy cabinet; two the same merge into the next, up to the golden trophy. No ads.',
-  lead:'Trophy Drop is a free soccer merge game in your browser. Slide to aim, let go, and drop a ball into a glass trophy cabinet. Two of the same that touch become the next item, from a small ball up to the golden trophy.',
+  description:'Trophy Drop is a free soccer merge game for kids: drop balls in a trophy cabinet and merge them up to the golden trophy. Online, no download, no ads.',
+  lead:'Trophy Drop is a free soccer merge game in your browser: slide to aim and drop a ball into a glass trophy cabinet, and two of the same that touch become the next item, up to the golden trophy. It teaches patience, planning ahead and how small touches add up.',
   blurb:'Drop and merge, from a small ball to the golden trophy',genre:['Puzzle','Arcade','Educational'],skill:'Patience, planning ahead, and how small touches add up',
   og:img('trophy-drop-soccer-merge-game-og.jpg'),ogAlt:'Trophy Drop, a soccer merge game: balls, boots, gloves and a medal in a glass trophy cabinet',
   shots:[phone('trophy-drop-soccer-merge-game.webp','Trophy Drop on a phone: a small ball hangs over a glass trophy cabinet with a shield, a medal, two gloves, a boot and balls at the bottom','Slide to aim the ball. The dashed line shows where it will land.'),
@@ -320,8 +320,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What is the biggest item in Trophy Drop?',a:'The golden trophy, made from two cups. Two golden trophies that touch leave the cabinet together as a Golden Double, worth 640 points.'}]},
  {id:'rollball',slug:'soccer-ball-rolling-puzzle-game',path:page('soccer-ball-rolling-puzzle-game'),name:'Roll It In',play:play('rollball'),
   title:'Soccer Ball Rolling Puzzle Game: Roll It In, Free',h1:'Soccer ball rolling puzzle game: Roll It In',
-  description:'Roll It In is a free soccer puzzle game for kids. You are the ball: roll over hills, sand and planks, press plates and open gates to reach the goal.',
-  lead:'Roll It In is a free 3D puzzle game in your browser where you are the football. Roll over grass, sand, wet tiles and wooden planks, press plates, knock down cones and open gates, then roll the ball into the goal.',
+  description:'Roll It In is a free soccer ball rolling puzzle game: you are the ball. Roll over hills and planks, open gates and reach the goal. No download, no ads.',
+  lead:'Roll It In is a free 3D soccer puzzle game in your browser where you are the football: roll over grass, sand, wet tiles and planks, press plates and open gates, then roll into the goal. It teaches the weight of a pass and planning the next touch.',
   blurb:'You are the ball: roll onto plates to open the way to goal',genre:['Puzzle','Sports','Educational'],skill:'Weight of pass and planning the next touch',
   og:img('roll-it-in-soccer-ball-rolling-puzzle-game-og.jpg'),ogAlt:'Roll It In, a soccer ball rolling puzzle game: the ball jumps a gap between rooftops towards a plate and a goal',
   shots:[phone('roll-it-in-soccer-ball-rolling-puzzle-game.webp','Roll It In on a phone: the football jumps a gap over the water from a metal ramp, with a yellow plate, a red and white gate and the goal ahead','Take the ramp fast to clear the gap.'),
@@ -348,8 +348,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
    {q:'What age is Roll It In for?',a:'Futbol Island is made for children aged 7 to 12. The first levels teach one idea at a time with no clock, and later levels mix several puzzles, so older children and adults find them hard too.'},
    {q:'What is the Daily Roll?',a:'A daily challenge on the start card. Everyone gets the same puzzles in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]}, {id:'ballblaster',slug:'soccer-shooting-game',path:page('soccer-shooting-game'),name:'Ball Blaster',play:play('ballblaster'),
   title:'Soccer Shooting Game for Kids: Ball Blaster, Free Online',h1:'Soccer shooting game: Ball Blaster',
-  description:'Ball Blaster is a free soccer shooting game for kids. Kick footballs at wind-up robots, crates and barrels before they reach your goal. No ads.',
-  lead:'Ball Blaster is a free soccer shooting game in your browser. Wind-up training robots march down the pitch toward your goal. Drag to aim, let go to kick, and break them with footballs before they get there.',
+  description:'Ball Blaster is a free soccer shooting game for kids: aim and kick footballs at wind-up robots before they reach your goal. Online, no download, no ads.',
+  lead:'Ball Blaster is a free soccer shooting game in your browser: wind-up training robots march down the pitch toward your goal, and you drag to aim and let go to kick footballs at them. It teaches picking a target and striking the ball cleanly.',
   blurb:'Kick footballs at robots before they reach your goal',genre:['Arcade','Sports','Educational'],skill:'Picking a target and striking the ball cleanly',
   og:img('ball-blaster-soccer-shooting-game-og.jpg'),ogAlt:'Ball Blaster, a soccer shooting game: footballs fly up a pitch at wind-up robots and break them into pieces',
   shots:[phone('ball-blaster-soccer-shooting-game.webp','Ball Blaster on a phone: a football breaks a robot on the pitch, with three hearts, the score and the ball rack on the screen','Break the robots before they reach your goal.'),
@@ -379,8 +379,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
  // docs/arcade-aaa/keepyuppy-direction.md). Placed Nov 21 2026 on the east wall of the arcade room (arcadeCabinets), so the page is listed.
  {id:'keepyuppy',slug:'soccer-juggling-game',path:page('soccer-juggling-game'),name:'Keepy-Uppy Beat',play:play('keepyuppy'),
   title:'Soccer Juggling Game for Kids: Keepy-Uppy Beat, Free Online',h1:'Soccer juggling game: Keepy-Uppy Beat',
-  description:'Keepy-Uppy Beat is a free soccer juggling game for kids. Keep the ball up to the beat with feet, thigh and head, learn tricks and train your weak foot.',
-  lead:'Keepy-Uppy Beat is a free football juggling game in your browser, a keepy uppy game set to music. Balls fall towards four pads: left foot, thigh, head and right foot. Tap the matching pad as the ball lands, on the beat, and keep it up to the end of the track.',
+  description:'Keepy-Uppy Beat is a free soccer juggling game for kids: keep the ball up to the beat with feet, thigh and head, and train your weak foot. No download.',
+  lead:'Keepy-Uppy Beat is a free soccer juggling game in your browser, a keepy uppy game set to music: balls fall towards four pads (left foot, thigh, head and right foot), and you tap the right one as the ball lands, on the beat. It teaches a soft touch, rhythm and both feet.',
   blurb:'Juggle the ball to the beat with feet, thigh and head',genre:['Arcade','Music','Sports','Educational'],skill:'Juggling: a soft touch, rhythm, the right body part and both feet',
   og:img('keepy-uppy-beat-soccer-juggling-game-og.jpg'),ogAlt:'Keepy-Uppy Beat, a soccer juggling game: on one phone the juggler plays the ball up off the left foot for SWEET! in the park, on the other AROUND THE WORLD! +240 on the Cup Final track at night',
   shots:gameStills('keepyuppy',2),
@@ -411,8 +411,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
  // own slug, from "soccer target game" (target practice; /games/soccer-shooting-game is Ball Blaster's).
  {id:'popup',slug:'soccer-target-game',path:page('soccer-target-game'),name:'Pop-Up Shot',play:play('popup'),
   title:'Soccer Target Game for Kids: Pop-Up Shot, Free Online',h1:'Soccer target game: Pop-Up Shot',
-  description:'Pop-Up Shot is a free soccer target game for kids. Flick ball after ball at targets that pop out of windows, boats and stands, then hide again.',
-  lead:'Pop-Up Shot is a free football target game in your browser: a shooting gallery with a football. Targets pop out of shop windows, bins, boats, huts and the stands, and hide again a moment later. Look up, pick one and flick the ball at it, ball after ball, for 50 seconds.',
+  description:'Pop-Up Shot is a free soccer target game for kids: flick ball after ball at targets that pop up and hide again. It trains looking up. No download, no ads.',
+  lead:'Pop-Up Shot is a free soccer target game in your browser: targets pop out of shop windows, bins, boats, huts and the stands and hide again, and you flick ball after ball at them for 50 seconds. It teaches looking up, picking a target and striking quickly.',
   blurb:'Flick ball after ball at targets before they hide',genre:['Arcade','Sports','Action','Educational'],skill:'Looking up, picking a target and striking quickly',
   og:img('pop-up-shot-soccer-target-game-og.jpg'),ogAlt:'Pop-Up Shot, a soccer target game: on one phone a target in the Town Plaza is knocked down for SLAP! +680 on a x3 combo, on the other a target in the Stadium Stands goes DOWN! for +300',
   shots:gameStills('popup',2),
@@ -442,8 +442,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
  // that most targets are cans, tyres and balloons, not goals.
  {id:'flickit',slug:'soccer-free-kick-game',path:page('soccer-free-kick-game'),name:'Flick It',play:play('flickit'),
   title:'Soccer Free Kick Game for Kids: Flick It, Free Online',h1:'Soccer free kick game: Flick It',
-  description:'Flick It is a free soccer free kick game for kids. Swipe to curl, lift and dip the ball round walls at cans, tyres, balloons and goals in 3D places.',
-  lead:'Flick It is a free football flick game in your browser: a free-kick and trick-shot game in 3D. Swipe up through a still ball and it flies at cans, crates, tyres, balloons, bells and sometimes a goal. Bend it round a wall, lift it over a fence and knock down as much as you can with one kick.',
+  description:'Flick It is a free soccer free kick game for kids: swipe to curl, lift and dip the ball round walls at targets and goals in 3D. No download, no ads.',
+  lead:'Flick It is a free soccer free kick game in your browser: swipe up through a still ball and it curls, lifts and dips round walls at cans, crates, tyres, balloons and sometimes a goal. It teaches striking a still ball and bending it, the skill behind every free kick.',
   blurb:'Swipe to curl, lift and dip the ball at targets',genre:['Arcade','Sports','Educational'],skill:'Striking a still ball and curling it',
   og:img('flick-it-soccer-free-kick-game-og.jpg'),ogAlt:'Flick It, a soccer free kick game: on one phone a curled flick goes through the tyre in the top corner at the Training Pitch, on the other a long-range goal at the Island Stadium at night',
   shots:gameStills('flickit',2),
@@ -473,8 +473,8 @@ export const ALL_GAME_PAGES:readonly GamePage[]=[
  // Slug: "soccer golf" is the US parents' name for footgolf and keeps the pattern of the other pages; "FootGolf" is in the name, title and h1.
  {id:'footgolf',slug:'soccer-golf-game',path:page('soccer-golf-game'),name:'FootGolf Island',play:play('footgolf'),
   title:'Soccer Golf Game for Kids: FootGolf Island, Free Online',h1:'Soccer golf game: FootGolf Island',
-  description:'FootGolf Island is a free soccer golf game for kids. Kick a football round nine 3D holes into a big cup with a long kick, chip, pass or putt.',
-  lead:'FootGolf Island is a free footgolf game in your browser: golf played with a football. Kick the ball round nine holes on the island, over hills, sand and water, into a big cup in as few kicks as you can.',
+  description:'FootGolf Island is a free soccer golf game for kids: kick a football round nine 3D holes with a long kick, chip, pass or putt. No download, no ads.',
+  lead:'FootGolf Island is a free soccer golf game in your browser: golf played with a football, round nine holes over hills, sand and water into a big cup in as few kicks as you can. It teaches picking the right kick and its weight, the same choice every pass and shot needs.',
   blurb:'Kick a football round nine holes into the cup',genre:['Arcade','Sports','Educational'],skill:'Picking a kick and its weight',
   og:img('footgolf-island-soccer-golf-game-og.jpg'),ogAlt:'FootGolf Island, a soccer golf game: on one phone the player stands at the Lighthouse Jetty tee with the kick picker, on the other the ball drops into the cup at Coral Cay for BIRDIE!',
   shots:gameStills('footgolf',2),
@@ -505,6 +505,43 @@ export const listedGamePages=(placed:ReadonlySet<string>)=>ALL_GAME_PAGES.filter
 /** The listed game pages: the hub, the sitemap, the counts and every link read this. */
 export const GAME_PAGES:readonly GamePage[]=listedGamePages(PLACED_GAME_IDS);
 export const isGameListed=(id:GameId)=>PLACED_GAME_IDS.has(id);
+/** Nov 24 2026 (SEO wave 2, owner: "these will get returning users"): per game, the hub table's ages and play time (from each page's
+ *  "What age" answer and "Session length" line), the 3-4 related games of its "More free games" row, and its return-visit line.
+ *  Every `back` line names a mode that is in the game's code: the daily buttons (data-<game>-daily in components/games/*Game.tsx:
+ *  Daily Rush, Daily Squad, Daily Line-Up, Daily Drop, Daily Roll, Daily Blast, Track of the Day, Daily Arena, Daily Flick, Daily
+ *  Hole), the Daily Run (lib/arcade/runnerModes.ts), the Daily puzzle (lib/passPuzzle/daily.ts) and the tier boards
+ *  (lib/arcade/leaderboard.ts BOARD_TIER_TABS). No streak pressure: nothing says a day must be played. */
+export type GameFacts={ages:string;time:string;related:readonly GameId[];daily:boolean;back:string};
+const EASY='7 to 12, an easy start',ALL_AGES='7 to 12',OLDER='7 to 12, best for older kids';
+export const GAME_FACTS:Readonly<Record<GameId,GameFacts>>={
+ kitrush:{ages:EASY,time:'1 to 3 minutes a run',related:['popup','snake','puzzle','ballblaster'],daily:true,back:'The Daily Rush gives everyone the same waves, new each day.'},
+ snake:{ages:EASY,time:'A few minutes a run',related:['lineup','puzzle','kitrush','trophydrop'],daily:true,back:'The Daily Squad gives everyone the same calls and pick-ups, new each day.'},
+ runner:{ages:ALL_AGES,time:'A few minutes a run',related:['ballblaster','footgolf','flickit','kitrush'],daily:true,back:'The Daily Run is one new course a day, the same for everyone, beside the Warm-up, Night Derby and Storm Final routes.'},
+ tennis:{ages:OLDER,time:'A few minutes a court',related:['keepyuppy','airhockey','pinball','footgolf'],daily:false,back:'After the ladder of courts come the Pro Tour and the Legend Tour, each with its own high-score board.'},
+ pinball:{ages:EASY,time:'3 minutes a match',related:['airhockey','tennis','rollball','ballblaster'],daily:false,back:'Derby Night and World Final are harder levels of play, each with its own high-score board.'},
+ puzzle:{ages:ALL_AGES,time:'10 seconds to a minute a puzzle',related:['rollball','lineup','snake','footgolf'],daily:true,back:'The Daily puzzle remixes an idea you have already learned, and the Pro Cup and the Legend Cup have their own boards.'},
+ airhockey:{ages:EASY,time:'1 to 3 minutes a match',related:['pinball','tennis','popup','ballblaster'],daily:false,back:'A line of computer opponents gets sharper as you win, so there is always a next match to try.'},
+ lineup:{ages:EASY,time:'A few minutes a run',related:['snake','trophydrop','puzzle','rollball'],daily:true,back:'The Daily Line-Up deals everyone the same shapes, new each day.'},
+ trophydrop:{ages:EASY,time:'A few minutes a run',related:['lineup','rollball','snake','keepyuppy'],daily:true,back:'The Daily Drop gives everyone the same items in the same order, new each day.'},
+ rollball:{ages:ALL_AGES,time:'5 to 15 minutes a run',related:['footgolf','puzzle','lineup','trophydrop'],daily:true,back:'The Daily Roll gives everyone the same puzzles, new each day.'},
+ ballblaster:{ages:OLDER,time:'2 to 5 minutes a run',related:['popup','flickit','runner','kitrush'],daily:true,back:'The Daily Blast gives everyone the same waves, new each day.'},
+ keepyuppy:{ages:ALL_AGES,time:'About a minute a track',related:['tennis','flickit','popup','runner'],daily:true,back:'The Track of the Day is one of the first tracks with a new twist each day, such as weak foot only.'},
+ popup:{ages:ALL_AGES,time:'Under a minute a round',related:['flickit','ballblaster','kitrush','keepyuppy'],daily:true,back:'The Daily Arena picks one place and one set of targets each day, the same on every device.'},
+ flickit:{ages:ALL_AGES,time:'A couple of minutes a stage',related:['footgolf','popup','ballblaster','keepyuppy'],daily:true,back:'The Daily Flick is one more stage each day, the same on every device.'},
+ footgolf:{ages:ALL_AGES,time:'1 to 2 minutes a hole',related:['flickit','rollball','puzzle','popup'],daily:true,back:'The Daily Hole is one hole a day, the same on every device, with its own wind.'},
+};
+/** The return-visit line every game page ends its "Play again" section with (lib/arcade/leaderboard.ts: three letters, no name;
+ *  app/manifest.ts: Add to Home Screen opens /play). */
+export const BOARD_LINE='Your best score can go on the island high-score board with three arcade letters, never a name. On a phone, add Futbol Island to the home screen: it opens the island, and the arcade is one of its rooms.';
+/** A game's "More free games" row: its related games that are listed, topped up from the rest so the row always has three or four. */
+export const relatedGames=(g:GamePage,listed:readonly GamePage[]=GAME_PAGES):GamePage[]=>{
+ const own=GAME_FACTS[g.id].related.map(id=>listed.find(x=>x.id===id)).filter((x):x is GamePage=>!!x);
+ return [...own,...listed.filter(x=>x!==g&&!own.includes(x))].slice(0,4);
+};
+/** The Learn page a game teaches: its first guide (tests/seo-games.cjs checks every guide path is a real page). */
+export const learnTopic=(g:GamePage)=>g.guides[0];
+/** The newest machines in the arcade room (Nov 21-22 2026), named on the hub only while listed. */
+export const NEWEST_GAMES:readonly GameId[]=['popup','flickit','footgolf','keepyuppy'];
 /** A game page's pictures: the hand-made screenshots, then new gameplay stills up to four (lib/site/gameMedia.ts). */
 export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,4).filter(s=>!g.shots.some(x=>x.src===s.src))].slice(0,Math.max(4,g.shots.length));
 /** Any game page, listed or not (its own route renders an unlisted page, noindex). */
@@ -520,22 +557,23 @@ const TARGET_LISTED=isGameListed('popup');
 const FLICK_LISTED=isGameListed('flickit'),GOLF_LISTED=isGameListed('footgolf');
 /** The hub description's kinds of game: one new kind reads 'a ... game', two or more are listed as nouns, four or more alone (the description stays 120-155 characters). */
 const NEW_KINDS=[JUGGLE_LISTED&&'juggling',TARGET_LISTED&&'pop-up targets',FLICK_LISTED&&'free kicks',GOLF_LISTED&&'footgolf'].filter(Boolean) as string[];
-export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Online Soccer Games for Kids: Football Arcade, No Ads',h1:'Play free soccer games for kids online',/* Nov 22 2026 (play now): the H1 says what searchers ask for ("soccer games for kids to play online") */
+export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids Online: No Download, No Ads'/* Nov 24 2026 (SEO wave 2): the exact searches "free soccer games", "free soccer games for kids", "soccer games online free, no download"; "football games" leads the description */,h1:'Play free soccer games for kids online',/* Nov 22 2026 (play now): the H1 says what searchers ask for ("soccer games for kids to play online") */
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to ... games"): "football" and "arcade" in the title, "football" and the devices
      (a school Chromebook among them, as the FAQ says) in the description; "No ads" stays in the title for parents. */
- description:`${GAMES_WORD_CAP} free soccer (football) games for kids to play online on a phone, tablet or Chromebook: ${NEW_KINDS.length>3?`${NEW_KINDS.slice(0,-1).join(', ')} and ${NEW_KINDS[NEW_KINDS.length-1]}`:NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':TARGET_LISTED?'a target game, pinball, snake and puzzles':FLICK_LISTED?'a free kick game, pinball, snake and puzzles':GOLF_LISTED?'a footgolf game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
- lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
+ description:`${GAMES_WORD_CAP} free soccer games for kids, or football games, to play online with no download: ${NEW_KINDS.length>3?`${NEW_KINDS.slice(0,-1).join(', ')} and ${NEW_KINDS[NEW_KINDS.length-1]}`:NEW_KINDS.length>2?`${NEW_KINDS.join(', ')} and puzzles`:NEW_KINDS.length>1?`${NEW_KINDS.join(', ')}, pinball and puzzles`:JUGGLE_LISTED?'a juggling game, pinball, snake and puzzles':TARGET_LISTED?'a target game, pinball, snake and puzzles':FLICK_LISTED?'a free kick game, pinball, snake and puzzles':GOLF_LISTED?'a footgolf game, pinball, snake and puzzles':'pinball, snake, air hockey, a runner and puzzles'}. No ads.`,
+ lead:`${GAMES_WORD_CAP} free soccer games for kids, or football games, that you play online with no download. Each one teaches one real football skill, from first touch to the offside line: no ads, no accounts, nothing to install.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
  intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, ${JUGGLE_LISTED?'a juggling rhythm game, ':''}${TARGET_LISTED?'a pop-up target game, ':''}${FLICK_LISTED?'a free-kick game, ':''}${GOLF_LISTED?'footgolf, ':''}a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle or the weight of a pass.`,
   'Every game opens from its page and gets harder the longer you play; a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
   ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.'],...(JUGGLE_LISTED?[['For a child who loves music','Keepy-Uppy Beat.']]:[]),...(TARGET_LISTED?[['For quick eyes','Pop-Up Shot.']]:[])] as [string,string][],/* Nov 21 2026: no pick line for the west wall games: the hub is at its word bound (tests/seo-games.cjs) */
- faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
-  {q:'Can kids play these soccer games at school?',a:'Yes: they run in a web browser on a Chromebook, tablet or phone, if the school’s filter allows futbolisland.app.'},
+ faq:[{q:'Are these soccer games free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time; island coins are earned by playing and never sold.`},
+  {q:'Do these games work on phones and Chromebooks?',a:'Yes. They run in a web browser with nothing to download and are built for phones first. They also work on tablets, computers and school Chromebooks, if the school’s filter allows futbolisland.app.'},
   {q:'What ages are the games for?',a:'Children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:`Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${TARGET_LISTED?', looking up before you strike':''}${FLICK_LISTED?', curling a free kick':''}${GOLF_LISTED?', the weight of a kick':''}.`},
+  {q:'What do kids learn from these soccer games?',a:`Each game is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at${JUGGLE_LISTED?', juggling to a beat':''}${TARGET_LISTED?', looking up before you strike':''}${FLICK_LISTED?', curling a free kick':''}${GOLF_LISTED?', the weight of a kick':''}.`},
+  {q:'Is there something new to play each day?',a:`Yes. ${GAME_PAGES.filter(g=>GAME_FACTS[g.id].daily).length} of the games have a daily mode that is the same for everyone that day, such as the Daily Rush or the Daily Hole. Nobody has to play every day, and the rest of each game is always open.`},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

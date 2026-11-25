@@ -19,7 +19,8 @@ import {SIZES_SEASON} from '@/lib/site/sizes';
 import {EMBED_HEIGHT,embedPath,plannerSetup} from '@/lib/site/tools/embed';
 import {DEFAULT_FORMATION} from '@/lib/site/tools/lineup';
 import {cheatSheetPath,fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,templateSheet,type Printable,type PrintFile,type Variant} from '@/lib/site/tools/printables';
-import {gameLengths,LINEUP_PAGES,LINEUP_PATH,PLANNER_PAGES,PLANNER_PATH,plannerImage,printableImage,printableLd,PRINTABLES_HUB,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
+import {planRotation} from '@/lib/site/tools/rotation';
+import {gameLengths,PLANNER_EXAMPLE,LINEUP_PAGES,LINEUP_PATH,PLANNER_PAGES,PLANNER_PATH,plannerImage,printableImage,printableLd,PRINTABLES_HUB,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
 import {SHAPES} from '@/lib/site/tools/shapes';
 import ScanTrainerPage from '@/components/site/tools/ScanTrainerPage';
 import {EsGridFigure} from './DrillsEs';
@@ -247,6 +248,13 @@ function LineupEs({p}:{p:LineupPage}){
    {e.sources&&<Section id="sources" title="Fuentes">
     <ul>{e.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
    </Section>}
+   {/* SEO wave 2 (Nov 24 2026): the same game-day block as the English landings (sizes from lib/site/sizes.ts; futsal from the FIFA Futsal Laws 2025-26) */}
+   {p.format&&!eight&&<Section id="glance" title={`El día del partido de ${fmtWord}, de un vistazo`}>
+    {format==='futsal'?<DataTable label="El futsal de un vistazo" head={['Regla','Lo que dicen las Reglas de Futsal de la FIFA']} rows={[['Jugadores en la cancha','5 por equipo: un portero y 4 jugadores de cancha'],['Cambios','Ilimitados y al vuelo: los jugadores salen y vuelven a entrar'],['Duración','Dos periodos de 20 minutos para adultos; las ligas infantiles fijan los suyos'],['Balón','Un balón de futsal tamaño 4 que bota menos que uno de exterior']]}/>
+     :<DataTable label={`El día del partido de ${format}, de un vistazo`} head={['Grupo de edad','Jugadores en la cancha','Duración del partido']} rows={gameLengths(format).map(x=>[lengthEs(x.ages),`${PLAYERS_PER_TEAM[format]}: un portero y ${PLAYERS_PER_TEAM[format]-1}`,lengthEs(x.label)])}/>}
+    <p>Después de la alineación, el mismo plantel necesita minutos justos, una cancha del tamaño correcto y un reloj. Estas herramientas gratis hacen la versión de {fmtWord} de cada tarea:</p>
+    <LinkList links={links([esLink(format==='7v7'||format==='9v9'?`/tools/${format}-substitution-rotation`:PLANNER_PATH,{line:'Minutos iguales para cada jugador de tu plantel'}),esLink('/tools/youth-soccer-field-size-guide',{line:`La cancha de ${fmtWord}, los arcos y las líneas dibujados a escala`}),esLink('/tools/soccer-match-timer',{line:'Tiempos o cuartos según la edad, con avisos de cambios'})])}/>
+   </Section>}
    {p.format&&f&&<Section id="roles" title={`Quién juega dónde en un ${f.shapeEs}`}>
     <p>El creador se abre con la formación {f.name}. Estas son sus tareas; <a href={f.esPath}>la guía del {f.shapeEs}</a> tiene las fortalezas, los puntos débiles y cómo se mueve la forma.</p>
     <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos&&hasEs(positionPath(r.pos))?<a href={toEs(positionPath(r.pos))}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
@@ -270,6 +278,7 @@ function PlannerEs({p}:{p:PlannerPage}){
   esLink(p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,{line:'Pon a los titulares en un diagrama de cancha'}),
   ...PLANNER_PAGES.filter(x=>x!==p).map(x=>toolLink(x.path)),esLink(PRINTABLES_HUB_PATH,{name:'Diagramas de cancha de fútbol en blanco'})]);
  const ages=esLink('/learn/soccer-age-groups',{key:true})!;
+ const ex=planRotation(PLANNER_EXAMPLE);
  const facts:Fact[]=[{icon:'lineup',label:'Modalidades',value:p.format??'7v7, 9v9, 11v11'},{icon:'clock',label:'Minutos',value:'Iguales para cada jugador'},
   {icon:'share',label:'Compártelo',value:'Imprimir, texto o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
  return <>
@@ -282,6 +291,16 @@ function PlannerEs({p}:{p:PlannerPage}){
   <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app={p.format?'subs':'minutes'} fmt={p.format} facts={facts}/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
+   {/* SEO wave 2 (Nov 24 2026): the main calculator says how it works, the rule with numbers and a worked example, like the English page.
+       The numbers come from planRotation() itself, so the page can never disagree with the tool. */}
+   {!p.format&&<Section id="how-it-works" title="Cómo funciona la calculadora de minutos, en 3 pasos">
+    <ol>
+     <li><b>Escribe tus números.</b> Cuántos jugadores vinieron, cuántos juegan a la vez (7 en 7v7, 9 en 9v9, 11 en 11v11) y el partido: tiempos o cuartos, y cuánto dura cada uno.</li>
+     <li><b>Elige tus cambios.</b> Cada cuánto cambias jugadores, por ejemplo cada 5 o 10 minutos, y si un solo portero se queda en el arco o juega uno nuevo en cada periodo. Agrega nombres de pila si quieres.</li>
+     <li><b>Lee el plan.</b> Cada bloque muestra quién juega y quién descansa, y los minutos de cada jugador son iguales con una diferencia de un cambio como máximo. Imprímelo, cópialo como texto para el chat del equipo o comparte el enlace, y llévalo en la cancha con la app gratis del entrenador.</li>
+    </ol>
+    <p><b>La regla:</b> minutos de cada uno = jugadores en la cancha × minutos del partido ÷ jugadores del plantel. Con {ex.input.players} jugadores, {ex.input.onField} en la cancha y un partido de {ex.gameMin} minutos, son {ex.input.onField} × {ex.gameMin} ÷ {ex.input.players}, unos {Math.round(ex.fairShare)} minutos cada uno.</p>
+   </Section>}
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
    <Section id="why" title="Por qué importan los minutos iguales a estas edades">
     <p>Los niños aprenden el juego jugándolo. Un niño de diez años en la banca no está aprendiendo a recibir un pase bajo presión, y a esa edad nadie puede saber quién será el mejor jugador a los dieciséis: los niños crecen y aprenden a velocidades muy distintas.</p>
@@ -301,6 +320,19 @@ function PlannerEs({p}:{p:PlannerPage}){
      <li>Los mismos números siempre dan el mismo plan. Cambia el orden de los nombres para cambiar quién empieza.</li>
     </ul>
    </Section>
+   {!p.format&&<>
+   <Section id="example" title="Calculadora de cambios: un ejemplo paso a paso">
+    <p>Llegan diez jugadores a un partido de 7v7 de dos tiempos de 25 minutos, y cambias jugadores cada 5 minutos. Son 10 bloques de 5 minutos con 7 lugares en cada uno: 70 lugares para repartir.</p>
+    <ul>
+     <li><b>El portero cambia en cada tiempo:</b> 70 lugares para 10 jugadores son 7 bloques cada uno, así que cada niño juega 35 minutos, y dos de ellos tapan un tiempo cada uno.</li>
+     <li><b>El mismo portero todo el partido:</b> el portero juega los 50 minutos. Los otros 9 se reparten 60 lugares de campo: seis juegan 35 minutos y tres juegan 30.</li>
+     <li><b>Un jugador se lastima a los 10 minutos:</b> los 40 minutos que faltan se reparten de nuevo entre los 9 que quedan, así que los minutos siguen lo más parejos posible.</li>
+    </ul>
+   </Section>
+   <Section id="game-day" title="Minutos iguales durante el partido">
+    <p>Un plan en papel es solo la mitad del trabajo. La <a href="/coach">app gratis del entrenador</a> lo lleva en tu teléfono al lado de la cancha: una tarjeta grande muestra quién sale, quién entra y cuándo. Si un niño se lastima, llega tarde o se va antes, un toque reparte de nuevo el resto del partido, y al final descarga los minutos de cada jugador en un archivo CSV para Excel o Google Sheets.</p>
+   </Section>
+   </>}
    <EmbedSnippet snippet={embedSnippetEs(p,e.h1)} name={e.h1.toLowerCase()} lang="es"/>
    <QA id="faq" title={`Preguntas sobre ${p.format?`los cambios en ${format}`:'los minutos de juego'}`} faq={e.faq.map(x=>({...x}))}/>
   <KeepReading lang="es" title="Reglas, tablas y más herramientas" groups={[{id:'related',links:related}]}/>

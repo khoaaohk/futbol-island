@@ -167,7 +167,9 @@ export const POSITIONS_ES:Readonly<Record<string,PositionEs>>={
   faq:[
    {q:'¿Qué hace el número 10 en el fútbol?',a:'El 10 es el mediocampista ofensivo: el enlace entre el mediocampo y el delantero centro. Recibe en espacios reducidos y trata de dar el pase que termina en un tiro.'},
    {q:'¿Qué es un creador de juego?',a:'Un jugador al que el equipo busca cuando quiere crear una ocasión. La palabra se usa más para el mediocampista ofensivo, pero un mediocampista más atrasado también puede ser creador de juego.'},
-   {q:'¿El mediocampista ofensivo tiene que defender?',a:'Sí. Cuando se pierde el balón, muchas veces el mediocampista ofensivo es el jugador más cercano para ayudar al mediocampista de contención. En nuestra lección de 9v9, esa carrera para recuperar es la idea clave.'}],
+   {q:'¿El mediocampista ofensivo tiene que defender?',a:'Sí. Cuando se pierde el balón, muchas veces el mediocampista ofensivo es el jugador más cercano para ayudar al mediocampista de contención. En nuestra lección de 9v9, esa carrera para recuperar es la idea clave.'},
+   {q:'¿Qué significa MCO en el fútbol?',a:'MCO es la abreviatura de mediocampista central ofensivo: el que juega en el medio, justo detrás del delantero. Es la misma posición que el 10, al que en España también llaman mediapunta.'},
+   {q:'¿Cuál es la diferencia entre un mediocampista ofensivo y un mediocampista central?',a:'Un mediocampista central juega en el medio de la cancha y ayuda al equipo a defender y a atacar. Un mediocampista ofensivo juega más arriba, cerca del delantero, y su trabajo principal es crear ocasiones y marcar.'}],
   notes:{
    coach:'Muéstrale al 10 cómo encontrar espacio entre los mediocampistas y los defensas rivales, y cómo abrir el cuerpo para girar y quedar de frente al arco.',
    match:'Puede que veas al 10 bajar muy atrás a buscar el balón. Cuando se queda más arriba, en el hueco, un solo pase desde el mediocampo lo deja de frente al arco.',
