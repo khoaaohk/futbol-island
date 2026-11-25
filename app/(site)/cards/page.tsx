@@ -9,6 +9,8 @@ import {cardPath,SITE_CARDS} from '@/lib/site/cards';
 import {ROLE_LABELS,ROLE_ORDER} from '@/lib/town/cardCollection';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import {REFEREE_CARDS_LINK} from '@/lib/site/crossLinks';
+import {FactTable,type FactRow} from '@/components/site/FactTable';
+import {SITE_BOOKS} from '@/lib/site/books';
 import styles from '../site.module.css';
 import {CardThumbGrid,cardLink} from '@/components/site/cards/GameCard';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
@@ -16,9 +18,24 @@ import {libraryCrumbs} from '@/lib/site/libraryPath';
 export const dynamic='force-static';
 const PLAYERS=SITE_CARDS.filter(c=>!c.coach).length,COACHES=SITE_CARDS.length-PLAYERS;
 const DESC=`The Futbol Island card binder: ${PLAYERS} player cards and ${COACHES} coach cards, from today’s stars to all-time greats, in football and futsal.`;
-export const metadata=pageMeta('Football Player Cards for Kids: Today’s Stars and Greats',DESC,'/cards',{whole:true})/* Nov 20 2026: was "Player cards" */;
+/** SEO batch F (Nov 25 2026): the snippet leads with the search words and says what is on a card (DESC stays the binder line) */
+const META=`Free football player cards for kids: ${PLAYERS} players and ${COACHES} coaches, today’s stars and all-time greats, each with position, strengths and clubs.`;
+export const metadata=pageMeta('Football Player Cards for Kids: Today’s Stars and Greats',META.length<=155?META:DESC,'/cards',{whole:true})/* Nov 20 2026: was "Player cards" */;
 const CRUMBS=libraryCrumbs({name:'Cards',path:'/cards'});/* Nov 20 2026: through the Library */
 
+/** SEO batch F (Nov 25 2026, owner: hubs get a clear "what's here" table): the binder in one table, every count from the roster. */
+function whatsHere():FactRow[]{
+ const roles=ROLE_ORDER.filter(r=>SITE_CARDS.some(c=>c.role===r)),books=SITE_BOOKS.filter(b=>!!b.card&&!!b.page).length;
+ return [
+  {label:'Cards',value:`${PLAYERS} player cards and ${COACHES} coach cards, from today’s stars to all-time greats`},
+  {label:'By position',value:<>{roles.map((r,i)=><span key={r}>{i?', ':''}<a href={`#role-${r}`}>{ROLE_LABELS[r]??r}</a> ({SITE_CARDS.filter(c=>c.role===r).length})</span>)}</>},
+  {label:'Collections',value:<>{CARD_COLLECTIONS.map((c,i)=><span key={c.slug}>{i?', ':''}<a href={c.path}>{c.crumb}</a></span>)}</>},
+  {label:'On every card',value:'The player’s position, country, national team, strengths and clubs, with a lesson for that position'},
+  {label:'Pop-up books',value:<><a href="/books">{books} players in the binder have a free pop-up book</a> about their life</>},
+  {label:'Learn the positions',value:<><a href="/learn/soccer-positions">Soccer positions explained</a>: what each position on a card does</>},
+  {label:'Collect them',value:<><a href="/play">Open card packs on the island</a>, free in the browser</>},
+ ];
+}
 export default function CardsIndex(){
  return <>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
@@ -28,10 +45,12 @@ export default function CardsIndex(){
   <RailNav rail={cardsHubRail(ROLE_ORDER.filter(r=>SITE_CARDS.some(c=>c.role===r)).map(r=>[`role-${r}`,ROLE_LABELS[r]??r] as const))} current="#top"/>
   <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
-   <h1 className={styles.title}>Player cards</h1>
-   <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
+   {/* SEO batch F (Nov 25 2026): the H1 names the search ("football player cards for kids"); the lead answers first */}
+   <h1 className={styles.title}>Football player cards for kids</h1>
+   <p className={styles.lead}>Futbol Island’s football player cards are free to read: {PLAYERS} players and {COACHES} coaches, from today’s stars to all-time greats, in football and futsal. Every card tells you the player’s position, what they are good at and where they played.</p>
    <a className={styles.cta} href="/play">Collect cards on the island</a>
   </header>
+  <FactTable id="whats-here" title="What’s in the binder" label="What is in the player card binder" head={['Binder','What you find']} rows={whatsHere()}/>
   <CollectionLinks list={CARD_COLLECTIONS} title="Browse the cards by collection"/>
   {ROLE_ORDER.filter(role=>SITE_CARDS.some(c=>c.role===role)).map((role,idx)=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
    <h2 className={`${styles.h2} ${tgt.target}`} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>

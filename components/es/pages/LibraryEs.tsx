@@ -91,7 +91,7 @@ export function LibraryEsPage(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={esLd(collectionLd({name:W.h1,path:PATH,description:W.description,published:LIBRARY_PUBLISHED,modified:SITE_UPDATED.library,items:sections.map(c=>({name:c.name,path:c.href}))}))}/>
   <LibraryPage crumbs={<EsBreadcrumbs crumbs={CRUMBS}/>} h1={W.h1} lead={W.lead} play={W.play} playTitle={W.playTitle} playLine={W.playLine}
-   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} sections={sections} menuLabel="Secciones de la biblioteca" topLabel="Resumen" coachApp="/coach?lang=es" coachLabel="Abrir la app del entrenador" kicker="Para entrenadores y familias" exLabel="algunas para empezar"/>
+   hero={{...LIBRARY_HERO,mainAlt:W.heroAlt,insetAlt:W.insetAlt}} sections={sections} menuLabel="Secciones de la biblioteca" topLabel="Resumen" coachApp="/coach?lang=es" coachLabel="Abrir la app del entrenador" kicker="Para entrenadores y familias" exLabel="algunas para empezar" whats={{title:"Qué hay en la biblioteca",label:"Todas las secciones de la biblioteca",head:["Sección","Qué encuentras"]}}/>
  </>;
 }
 export const libraryEsRoute=(enPath:string):EsRoute|null=>enPath===LIBRARY_PATH?{meta:()=>esMeta(W.title,W.description,enPath,{url:LIBRARY_OG.url,alt:LIBRARY_OG.altEs}),render:()=><LibraryEsPage/>}:null;
