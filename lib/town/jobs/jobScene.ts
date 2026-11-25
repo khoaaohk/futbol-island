@@ -131,7 +131,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   parts.push({geometry:box,matrix:m4(d.x,dy+1.17,d.z,0,1.89,.09,.09),color:'#f5f1e4'},{geometry:box,matrix:m4(d.x,dy+.03,d.z-.6,0,1.8,.05,.05),color:'#d8d2c0'});}
  for(const job of JOBS){const {x,z,yaw}=job.board,y=floor(x,z),s=Math.sin(yaw),c=Math.cos(yaw);
   {
-  for(const side of [-1,1])parts.push({geometry:box,matrix:m4(x+c*side*1.25,y+1.1,z-s*side*1.25,yaw,.12,2.2,.12),color:'#6e5540'});
+  // Signs audit (Nov 25 2026): the posts flank the board just past its ends (were 1.25 m out, through the label quads' ends).
+  for(const side of [-1,1])parts.push({geometry:box,matrix:m4(x+c*side*1.41,y+1.1,z-s*side*1.41,yaw,.12,2.2,.12),color:'#6e5540'});
   parts.push({geometry:box,matrix:m4(x,y+1.72,z,yaw,2.7,.72,.1),color:'#6e5540'});
   parts.push({geometry:box,matrix:m4(x,y+2.14,z,yaw,2.9,.1,.3),color:job.color});
   }

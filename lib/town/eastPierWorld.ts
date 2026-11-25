@@ -145,10 +145,12 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
  // ---- Shooting challenge: a painted kick spot on the outer north stretch and a board on the outer kerb beside it.
  box(1.3,.3,1.3,'#f3ecdc',PIER_KICK_SPOT.x,-.147,PIER_KICK_SPOT.z);
  {const c=coilAt(-Math.PI/2+.32,kerbLine+.05),yaw=Math.atan2(c.tz,-c.tx),ix=c.tz*.07,iz=-c.tx*.07;// faces inward, across the walkway
-  prop('sign',()=>{for(const d of [-1.3,1.3])cylinder(.07,2.2,POST,c.x+c.tx*d,1.32,c.z+c.tz*d);
+  // Signs audit (Nov 25 2026): the posts stand behind the backing board (were flush with the faces, over the words' ends).
+  const bx=-c.tz*.14,bz=c.tx*.14;
+  prop('sign',()=>{for(const d of [-1.3,1.3])cylinder(.07,2.2,POST,c.x+c.tx*d+bx,1.32,c.z+c.tz*d+bz);
   box(3.1,1.05,.12,'#294f43',c.x,1.97,c.z).rotation.y=yaw;
   sign('JETTY SHOOTING CHALLENGE',2.9,.42,c.x+ix,2.27,c.z+iz,'#294f43','#f4cc7c',yaw);
   sign('PICK YOUR SPOT · LAND IT IN THE RING',2.9,.34,c.x+ix,1.77,c.z+iz,'#294f43','#fff0cf',yaw);});
-  for(const d of [-1.3,1.3])obstacles.push({x:c.x+c.tx*d,z:c.z+c.tz*d,w:.2,d:.2});}
+  for(const d of [-1.3,1.3])obstacles.push({x:c.x+c.tx*d+bx,z:c.z+c.tz*d+bz,w:.2,d:.2});}
  return {lampSites,destination:{name:'East Jetty',x:P.cx,z:P.cz}};
 }

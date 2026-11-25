@@ -344,14 +344,19 @@ export function buildTrainWorld(tools:TrainTools){
   if(sq){const ax=Math.abs(c.tx),az=Math.abs(c.tz);solid({x:hc[0],z:hc[2],w:8.2*ax+(hd+.2)*az,d:8.2*az+(hd+.2)*ax});}
   else{for(let u=-4;u<=4.01;u+=1.2)for(const v of [hv0,hv1]){const a=P(u,v,0);solid({x:a[0],z:a[2],w:1.2,d:1.2});}
    for(let v=hv0;v<=hv1+.01;v+=1.2)for(const u of [-4,4]){const a=P(u,v,0);solid({x:a[0],z:a[2],w:1.2,d:1.2});}}
-  // The boards: station name board (two faces, the far side's arrows mirrored) on two posts at the up-line end, and the line board.
+  // The boards: station name board (two faces, the far side's arrows mirrored) on two posts at the up-line end, and the line board
+  // (two faces) on two posts at its ends.
   const board=(u:number,v:number,y:number,w:number,h:number,face:number,uv:[number,number,number,number])=>{
    const g=new T.PlaneGeometry(w,h),a=g.getAttribute('uv') as T.BufferAttribute;for(let k=0;k<a.count;k++)a.setXY(k,uv[0]+a.getX(k)*(uv[2]-uv[0]),1-uv[3]+a.getY(k)*(uv[3]-uv[1]));
    const m=new T.Mesh(g,boardMat),p=P(u,v,y),fx=-nrm.x*sg*face,fz=-nrm.z*sg*face;m.position.set(p[0],p[1],p[2]);m.rotation.y=Math.atan2(fx,fz);m.userData.train=true;m.userData.skipRoofObstacle=true;town.add(m);};
   const row=TRAIN_STATIONS.indexOf(st),rv=(r:number)=>[r*ATLAS_ROW/1024,(r+1)*ATLAS_ROW/1024] as const,[r0,r1]=rv(row);
   board(9.5,v0+2.1,top+1.95,2.9,1,1,[0,r0,.5,r1]);board(9.5,v0+2.14,top+1.95,2.9,1,-1,[.5,r0,1,r1]);
-  {const posts=new Geo();for(const u of [8.3,10.7]){const a=P(u,v0+2.12,0);posts.box(a[0],top+1.2,a[2],c.tx,c.tz,.06,.06,1.2);solid({x:a[0],z:a[2],w:.3,d:.3});}
-   const lb=P(-12.5,v0+2.12,0);posts.box(lb[0],top+.9,lb[2],c.tx,c.tz,.05,.05,.9);emit(posts,C.timber,ox,oz);solid({x:lb[0],z:lb[2],w:.3,d:.3});}
+  // Signs audit (Nov 25 2026, owner shots 78/79: the line board's one post ran up through "ISLAND LINE", the name board's posts
+  // crossed its words and arrows): both boards stand on two posts just past their END edges (1 cm clear), between the faces'
+  // planes, so no post crosses either face (scripts/sign-posts-scan.cjs).
+  {const posts=new Geo();for(const u of [9.5-1.52,9.5+1.52]){const a=P(u,v0+2.12,0);posts.box(a[0],top+1.2,a[2],c.tx,c.tz,.06,.06,1.2);solid({x:a[0],z:a[2],w:.3,d:.3});}
+   for(const u of [-12.5-1.01,-12.5+1.01]){const a=P(u,v0+2.12,0);posts.box(a[0],top+.9,a[2],c.tx,c.tz,.05,.05,.9);solid({x:a[0],z:a[2],w:.3,d:.3});}
+   emit(posts,C.timber,ox,oz);}
   board(-12.5,v0+2.08,top+1.75,1.9,.54,1,[0,LINE_ROW0/1024,.5,1]);board(-12.5,v0+2.16,top+1.75,1.9,.54,-1,[0,LINE_ROW0/1024,.5,1]);
  }
 
