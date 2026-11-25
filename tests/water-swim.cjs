@@ -163,7 +163,7 @@ ok('Town wiring: the cluster swap, the parked ball, no kicks in the sea, the spl
  assert.match(town,/data-water-actions=\{waterCluster\?'':undefined\}/);
  assert.match(town,/const ballPlayer=water\.inWater&&BALL_STAYS_ON_SAND&&water\.state\.park\?water\.state\.park:/,'decision 3: the ball follows the parked spot');
  assert.match(town,/&&!jobFrame\.ball&&!water\.inWater\)\{/,'no dribble sync while in the sea');
- assert.match(town,/if\(jobButtonsRef\.current\|\|water\.inWater\)\{input\.current\.kick=input\.current\.juggle=false;/,'kick and juggle off in the water');
+ assert.match(town,/if\(jobButtonsRef\.current\|\|water\.inWater(\|\|practice\.bare)?\)\{input\.current\.kick=input\.current\.juggle=false;/,'kick and juggle off in the water');
  assert.match(town,/const selectRide=\(mode:TravelMode\)=>\{if\(waterStore\.get\(\)\.inWater\)return;/,'no ride change from the water');
  assert.match(town,/if\(result\.landed&&result\.splash\)\{/,'the jetpack fall / cut canopy lands in the sea');
  assert.match(town,/splashSource='dropin';jetActions\.crash\(flight\.height\)/,'the jetpack "Drop in"');

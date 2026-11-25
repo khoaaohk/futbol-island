@@ -27,6 +27,11 @@ await ok('drills: six real drills, tips, props inside the pitch, 6-10 balls, cap
   assert(n('cone')>=4&&n('cone')<=SP.PRACTICE_LIMITS.cone,`${d.id}: cones`);assert(n('man')<=SP.PRACTICE_LIMITS.man);
   for(const p of d.props){const w=SP.toWorld(p.u,p.v);assert(SP.insidePracticeFence(w.x,w.z,.5),`${d.id}: ${p.k} inside the fence`);}}
  assert(SP.DRILLS.some(d=>SP.countKind(d.props,'man')>=4),'a free-kick wall of mannequins');
+ // Owner Nov 25 2026: more mannequins in every drill; nothing overlaps (the 1.3x cones included).
+ for(const d of SP.DRILLS){assert(SP.countKind(d.props,'man')>=2,`${d.id}: mannequins to play past`);
+  for(let i=0;i<d.props.length;i++)for(let j=i+1;j<d.props.length;j++){const a=d.props[i],b=d.props[j];assert(Math.hypot(a.u-b.u,a.v-b.v)>=.75,`${d.id}: ${a.k}@${a.u},${a.v} clear of ${b.k}@${b.u},${b.v}`);}}
+ assert(SP.PRACTICE_BALL.cone>=.2,'1.3x cones: wider contact');assert.equal(SP.PRACTICE_BALL_WHITE,'#ffffff');
+ assert(SP.buildPracticeWorld(SP.drillById('slalom').props).balls.every(b=>b.style===0),'every ball the same white');
  assert.match(SP.drillById('slalom').tip,/both feet/);assert.match(SP.drillById('wall').tip,/curl it round|dink/);
 });
 
@@ -82,7 +87,7 @@ function rig(){
  const me={x:300,y:0,z:0,yaw:0,vx:0,vz:0},log={style:[],stow:0,place:[],goal:0,resets:0};
  const walkBall={state:{x:0,y:0,z:0,vx:0,vy:0,vz:0,mode:'attached'},reset(p){log.resets++;Object.assign(this.state,{x:p.x+Math.sin(p.yaw)*.5,y:p.y+.2,z:p.z+Math.cos(p.yaw)*.5,vx:0,vy:0,vz:0,mode:'attached'});}};
  const rt=R.createSummitPractice(scene,{canvas:()=>null,root:()=>rootEl,walkBall,player:()=>me,place:(x,z,yaw)=>{log.place.push([x,z]);me.x=x;me.z=z;walkBall.reset({...me,yaw});},nudge:(x,z)=>{me.x=x;me.z=z;},
-  stowRide:()=>log.stow++,setBallStyle:s=>log.style.push(s),ownBallTint:()=>'#eee4c4',impact(){},goal:()=>log.goal++,wake(){}});
+  stowRide:()=>log.stow++,setBallStyle:s=>log.style.push(s),impact(){},goal:()=>log.goal++,wake(){}});
  const frame=(n=1,allowed=true)=>{for(let i=0;i<n;i++){rt.update({dt:1/60,reduced:false,camera,allowed});rt.cameraRestore(camera);rt.cameraApply(camera,1/60,false);}};
  const draws=()=>{let n=0;scene.traverse(o=>{if((o.isMesh||o.isLine)&&o.visible)n++;});return n;};
  return {scene,camera,me,walkBall,rt,frame,draws,log};
@@ -104,20 +109,27 @@ await ok('runtime: idle is free; entering lays out the saved drill (+3 draws), h
  ST.practiceActions.shuffle();assert.notEqual(rt.drill,drill,'Shuffle: another drill');assert.equal(JSON.parse(env.store.get(SP2.PRACTICE_SAVE_KEY)).drill,rt.drill);
  rt.dispose();assert.equal(scene.children.length,0);
 });
-await ok('runtime: take a touched ball, your own ball stays on the pitch; Exit steps out with your own ball',()=>{
+await ok('runtime: no ball of your own; walk up to a ball to dribble it, a kick lets it go; Exit gives yours back',()=>{
  env.store.clear();ST.practiceStore.reset();attrs.clear();
  const {rt,frame,me,walkBall,log}=rig();me.x=P.x;me.z=P.z;frame(1);assert(rt.active);
- // Your ball is out on a shot; walk onto a loose ball.
- const b=rt.world.balls[2],style=b.style;Object.assign(walkBall.state,{mode:'shot',x:P.x+8,y:G+1,z:P.z,vx:10,vy:2,vz:0});
+ assert.equal(rt.bare,true,'bare feet on entry (Town hides the walking ball)');assert.equal(rt.heldStyle,-1);
+ const n=rt.world.balls.length,b=rt.world.balls[2];
  me.x=b.x;me.z=b.z-.25;me.yaw=0;frame(1);
- assert.equal(walkBall.state.mode,'attached','the touched ball is at your feet');assert.equal(rt.heldStyle,style,'in its design');
- assert.equal(log.style.at(-1),SP2.PRACTICE_BALL_STYLES[style]);assert.equal(b.style,-1,'your own ball became a loose ball');assert(b.awake&&b.vx>0,'still flying');
- // Dribbling into a ball knocks it on.
- const c=rt.world.balls.find(x=>!x.awake&&x!==b);me.x=c.x;me.z=c.z-.3;me.vz=4;frame(1);assert(c.awake&&c.vz>0,'knocked on');me.vz=0;
- ST.practiceActions.exit();assert.equal(rt.active,false);assert.equal(log.style.at(-1),null,'own ball look restored');assert(!attrs.has('data-practice'));
+ assert.equal(rt.carrying,true,'walking up to a ball picks it up');assert.equal(rt.bare,false);assert.equal(log.style.at(-1),'white','a white ball at the feet');
+ assert.equal(rt.world.balls.length,n-1,'it left the loose balls');assert.equal(walkBall.state.mode,'attached');
+ // Kick: the ball is let go where the shot is, it rolls on, and you are bare again.
+ Object.assign(walkBall.state,{mode:'shot',x:me.x,y:G+.3,z:me.z+.6,vx:0,vy:1,vz:9});frame(1);
+ assert.equal(rt.carrying,false,'the kick lets it go');assert.equal(rt.world.balls.length,n,'back among the loose balls');assert.equal(log.style.at(-1),null);
+ const k=rt.world.balls.at(-1);assert(k.awake&&k.vz>0,'still rolling');assert.equal(walkBall.state.mode,'attached','walking ball back at the (hidden) feet');
+ frame(2);assert.equal(rt.carrying,false,'no instant re-pickup');
+ frame(240);assert(Math.hypot(k.vx,k.vz)<.5,'it stops where it rolls');assert(k.z>me.z+3,'away from the feet');
+ me.x=k.x;me.z=k.z-.25;frame(1);assert.equal(rt.carrying,true,'walk to it: yours again');
+ // Dribbling into another ball knocks it on.
+ const c=rt.world.balls.find(x=>!x.awake);me.x=c.x;me.z=c.z-.3;me.vz=4;frame(1);assert(c.awake&&c.vz>0,'knocked on');me.vz=0;
+ ST.practiceActions.exit();assert.equal(rt.active,false);assert.equal(log.style.at(-1),null,'own ball look restored');assert.equal(rt.bare,false);assert(!attrs.has('data-practice'));
  assert(log.place.length===1&&!SP2.insidePracticeFence(me.x,me.z,-.35),'stepped out of the gate');assert.equal(walkBall.state.mode,'attached','ball at the feet');
  frame(3);assert.equal(rt.active,false,'no instant re-entry');
- me.x=P.x+10;me.z=P.z;frame(1);assert.equal(rt.active,true,'walk back in: practice again');rt.dispose();
+ me.x=P.x+10;me.z=P.z;frame(1);assert.equal(rt.active,true,'walk back in: practice again');assert.equal(rt.bare,true);rt.dispose();
 });
 await ok('runtime: the editor holds you, drags / adds / removes / resets, persists per drill, ≤ +5 draws',()=>{
  env.store.clear();ST.practiceStore.reset();
@@ -142,7 +154,7 @@ await ok('runtime: not allowed (jetpack, live match, Summit Kick) → no practic
 
 await ok('wiring: Town, HUD, CSS, saves, npm test',()=>{
  const town=read('components/Town.tsx');
- for(const s of ['createSummitPractice(scene','__fi2={summitFun,practice,','practice.holdPlayer()','practice.steer(ix,iz,dt)','practice.cameraRestore(camera)','practice.cameraApply(camera','practice.update({','!practice.busy','<SummitPracticeHud/>','practice.dispose()',"summitFun.kickPhase==='idle'&&!liveJoin.joined"])assert(town.includes(s),s);
+ for(const s of ['!practice.bare&&(rideRef.current','water.inWater||practice.bare','createSummitPractice(scene','__fi2={summitFun,practice,','practice.holdPlayer()','practice.steer(ix,iz,dt)','practice.cameraRestore(camera)','practice.cameraApply(camera','practice.update({','!practice.busy','<SummitPracticeHud/>','practice.dispose()',"summitFun.kickPhase==='idle'&&!liveJoin.joined"])assert(town.includes(s),s);
  const css=read('app/globals.css');assert(css.includes('.town-app[data-practice] :is(nav[data-hud-triggers]'),'paths / settings hidden');assert(css.includes('.town-app[data-practice-edit]'));
  const hud=read('components/SummitPracticeHud.tsx');for(const s of ['data-practice-cam','data-practice-exit','data-practice-shuffle','data-practice-edit','data-practice-reset','data-practice-done','registerBackCloser'])assert(hud.includes(s),s);
  assert(read('lib/saves/snapshot.ts').includes("'fi2-summit-practice-v1'"),'SYNC_KEYS');

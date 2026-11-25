@@ -25,7 +25,7 @@ export type DrillId='slalom'|'gates'|'box'|'wall'|'cross'|'rondo';
 export type Drill={id:DrillId;name:string;tip:string;props:PracticeProp[]};
 
 /** Caps (the instanced meshes' sizes): cones, mannequins, balls. */
-export const PRACTICE_LIMITS={cone:40,man:8,ball:10} as const;
+export const PRACTICE_LIMITS={cone:40,man:10,ball:10} as const;
 /** Snap grid (m) for edited props, and the margin kept inside the pitch lines. */
 export const PRACTICE_GRID=.5,PROP_MARGIN=.5;
 export const PRACTICE_SAVE_KEY='fi2-summit-practice-v1';
@@ -34,7 +34,7 @@ export const PRACTICE_BALL={radius:.19,rest:.2,gravity:13,floorBounce:.5,wallBou
  /** Fence rail height (sides) and the ball-stop netting behind the goals (ends): a ball over them leaves the pitch. */
  railHeight:SUMMIT_FENCE.height,netHeight:4.5,
  /** Seconds a ball may stay outside the fence before it goes home, and the cone / mannequin contact radii. */
- outReset:1.2,cone:.17,man:.26,manHeight:1.75} as const;
+ outReset:1.2,cone:.22,man:.26,manHeight:1.75} as const;
 
 // ---------------------------------------------------------------------------------------------------------------- geometry
 const P=SUMMIT_PITCH,F=SUMMIT_FENCE;
@@ -67,21 +67,27 @@ const W=-Math.PI/2,E=Math.PI/2,N=Math.PI,S=0;
 export const DRILLS:readonly Drill[]=[
  {id:'slalom',name:'Cone slalom',tip:'Slalom: keep the ball close with small touches, and use both feet (inside and outside).',
   props:[...[-4,4].flatMap(v=>Array.from({length:7},(_,i)=>cone(-11+i*2.5,v,i%2?'yellow':'orange'))),cone(-14,-5.5,'blue'),cone(-14,-2.5,'blue'),cone(-14,2.5,'blue'),cone(-14,5.5,'blue'),
+   /* Owner Nov 25 2026 "add more mannequins": defenders to beat after the slalom, on the way to the east goal. */man(7,-4,W),man(7,4,W),man(10,0,W),
    ball(-15,-4),ball(-15,4),ball(-16,-5),ball(-16,5),ball(-15.5,0),ball(10,-6),ball(10,6),ball(12,0)]},
  {id:'gates',name:'Passing gates',tip:'Gates: pass through a gate with the inside of your foot, then follow your pass to the next gate.',
   props:[...[[-11,-6],[-5,5],[1,-3],[7,6],[11,-6],[-6,-1]].flatMap(([u,v])=>[cone(u,v-.75,'blue'),cone(u,v+.75,'blue')]),cone(-15,0,'yellow'),cone(14,0,'yellow'),
+   /* passing-lane blockers beside (never on) the gate-to-gate lines */man(-2,3,S),man(4,-2.5,N),man(12.5,2,W),
    ball(-14,-2),ball(-14,2),ball(-9,3),ball(-2,-7),ball(4,2),ball(9,0),ball(13,4),ball(0,8)]},
  {id:'box',name:'1v1 box',tip:'1v1: run at the defender, drop a shoulder, then change pace past their front foot.',
   props:[...[[-3,-5],[2,-5],[7,-5],[7,0],[7,5],[2,5],[-3,5],[-3,0]].map(([u,v])=>cone(u,v,'yellow')),cone(7,-1.5,'orange'),cone(7,1.5,'orange'),man(3,0,W),
+   /* a second line of cover, and a keeper behind the exit gate */man(5,-2.5,W),man(5,2.5,W),man(12,0,W),
    ball(-6,-3),ball(-6,0),ball(-6,3),ball(-7,-1.5),ball(-7,1.5),ball(-8,0)]},
  {id:'wall',name:'Free-kick wall',tip:'Wall: curl it round the end of the wall or dink it over, and aim for the corners.',
-  props:[man(11,-1.2,W),man(11,-.4,W),man(11,.4,W),man(11,1.2,W),...[-6,-3,0,3,6].map(v=>cone(3,v,'orange')),
+  props:[man(11,-1.2,W),man(11,-.4,W),man(11,.4,W),man(11,1.2,W),
+   /* a keeper on the line and two wide defenders: aim for the corners */man(16.5,0,W),man(14,-4,W),man(14,4,W),...[-6,-3,0,3,6].map(v=>cone(3,v,'orange')),
    ball(4,-5),ball(4.5,-2.5),ball(5,0),ball(4.5,2.5),ball(4,5),ball(2,-1),ball(2,1),ball(1,0)]},
  {id:'cross',name:'Crossing lane',tip:'Crossing: run the lane, look up, and whip it in between the keeper and the defenders.',
   props:[...[-6,-3,0,3,6,9,12].map(u=>cone(u,-6.5,'orange')),cone(14,-2.5,'blue'),cone(14,2.5,'blue'),cone(16.5,-2.5,'blue'),cone(16.5,2.5,'blue'),man(15,-1,N),man(14,1.5,N),
+   /* a keeper, a defender closing the lane's end and a far-post marker */man(16.5,0,W),man(12,-3,N),man(16,4,N),
    ball(-8,-8.5),ball(-6,-8.5),ball(-4,-8.5),ball(-2,-8.5),ball(0,-8.5),ball(-7,-9.5),ball(-3,-9.5),ball(-5,-7.5)]},
  {id:'rondo',name:'Rondo square',tip:'Rondo: one or two touches, open your body to see the next pass, and keep the ball moving.',
   props:[...[[-10,-4],[-2,-4],[-2,4],[-10,4]].map(([u,v])=>cone(u,v,'blue')),...[[-6,-4],[-2,0],[-6,4],[-10,0]].map(([u,v])=>cone(u,v,'orange')),man(-6,-1,S),man(-6,1,N),
+   /* two more pressers in the square: find the pass between them */man(-4,-2,W),man(-8,2,E),
    ball(-8,-3),ball(-3,-2),ball(-4,3),ball(-9,2),ball(-6,-5.5),ball(-6,5.5),ball(5,0)]},
 ];
 export const DRILL_IDS=DRILLS.map(d=>d.id);
@@ -152,20 +158,22 @@ export function pickProp(ps:readonly PracticeProp[],u:number,v:number,reach:numb
 export function layoutInBounds(ps:readonly PracticeProp[]){return ps.every(p=>{const s=clampSpot(p.u,p.v);return Math.abs(s.u-p.u)<1e-9&&Math.abs(s.v-p.v)<1e-9;});}
 
 // ---------------------------------------------------------------------------------------------------------------- balls
-/** A loose practice ball (world metres). style: the ball design index into PRACTICE_BALL_STYLES (-1 = the player's own ball). */
+/** A loose practice ball (world metres). style: kept for saves/tests; every practice ball is plain white (owner Nov 25 2026). */
 export type PBall={x:number;y:number;z:number;vx:number;vy:number;vz:number;hx:number;hz:number;style:number;awake:boolean;out:number;spin:number};
-/** Designs from the island's ball collection (lib/town/customization.ts BALL_COLORS + the vending specials). */
+/** Owner Nov 25 2026: "make all the balls white": every practice ball (and the one you pick up) is a plain white football. */
+export const PRACTICE_BALL_WHITE='#ffffff';
+/** Legacy list (no longer used for the look). */
 export const PRACTICE_BALL_STYLES=['classic','sunset','futsal','hivis','frost','beach','retro','cosmic','grassroots','panna'] as const;
 export type PCone={x:number;z:number;c:ConeColor;down:number;fall:number;dx:number;dz:number};
 export type PMan={x:number;z:number;yaw:number;tilt:number;tiltV:number;ax:number;az:number};
 export type PracticeWorld={balls:PBall[];cones:PCone[];men:PMan[]};
-/** Build the live pieces of a layout (world metres). Ball styles cycle through the collection. */
+/** Build the live pieces of a layout (world metres). */
 export function buildPracticeWorld(ps:readonly PracticeProp[]):PracticeWorld{
- const g=PITCH_HEIGHT,w:PracticeWorld={balls:[],cones:[],men:[]};let b=0;
+ const g=PITCH_HEIGHT,w:PracticeWorld={balls:[],cones:[],men:[]};
  for(const p of ps){const {x,z}=toWorld(p.u,p.v);
   if(p.k==='cone')w.cones.push({x,z,c:p.c,down:0,fall:0,dx:0,dz:1});
   else if(p.k==='man')w.men.push({x,z,yaw:p.yaw,tilt:0,tiltV:0,ax:1,az:0});
-  else w.balls.push({x,z,y:g+PRACTICE_BALL.rest,vx:0,vy:0,vz:0,hx:x,hz:z,style:b++%PRACTICE_BALL_STYLES.length,awake:false,out:0,spin:0});}
+  else w.balls.push({x,z,y:g+PRACTICE_BALL.rest,vx:0,vy:0,vz:0,hx:x,hz:z,style:0,awake:false,out:0,spin:0});}
  return w;
 }
 export function resetBall(b:PBall){b.x=b.hx;b.z=b.hz;b.y=PITCH_HEIGHT+PRACTICE_BALL.rest;b.vx=b.vy=b.vz=0;b.awake=false;b.out=0;}

@@ -20,8 +20,8 @@ if (!urlArg && (!port || ['8092', '9160', '8800'].includes(port))) { console.err
 if (shots) fs.mkdirSync(shots, { recursive: true });
 const url = urlArg || `http://localhost:${port}`;
 const allow = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'ui-align-allowlist.json'), 'utf8')); } catch { return []; } })();
-const VIEWPORTS = [{ name: 'phone', vp: { width: 390, height: 844 }, mobile: true }, { name: 'desktop', vp: { width: 1280, height: 800 }, mobile: false }]
-  .filter((v) => !vpOnly || v.name === vpOnly);
+const VIEWPORTS = [{ name: 'phone', vp: { width: 390, height: 844 }, mobile: true }, { name: 'desktop', vp: { width: 1280, height: 800 }, mobile: false }, { name: 'tablet', vp: { width: 820, height: 1180 }, mobile: true, opt: true }]
+  .filter((v) => vpOnly ? v.name === vpOnly : !v.opt);// --vp=tablet (820x1180) only on request
 const found = new Map(); const covered = []; const missed = []; let checkedTotal = 0;
 
 // ---- the in-page measurement (no closures: runs in the page)
@@ -141,8 +141,9 @@ async function game(b, v) {
     await p.waitForTimeout(1500); const tg = p.locator('[data-view-toggle] button:has-text("Backpack"), [data-view-toggle] [role="radio"]:has-text("Backpack")').first();
     if (!(await tg.count())) return false; await tg.click(); await p.waitForTimeout(1200); return !!(await p.$('[data-backpack]')); }); await esc();
   await tryState('stamp-book', async () => { await p.evaluate(() => window.dispatchEvent(new CustomEvent('fi2-open-stamp-book', { detail: {} }))); await p.waitForTimeout(1500); return !!(await p.$('[data-stamp-book]')); }); await esc();
+  const fuelShown = () => p.evaluate(() => { const e = document.querySelector('[data-job-wallet]'); if (!e) return false; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; });
   // ---- the Summit 5s practice pitch (Nov 24 2026): the practice HUD (camera, Exit, drill card, toast) and the drill editor's tray
-  await tryState('practice-hud', async () => { await p.evaluate(() => { const f = window.__fi2, c = f.practice.pitch; f.teleport(c.x - 6, c.z + 2, 0); }); await p.waitForTimeout(1200); return !!(await p.$('[data-practice-card]')); });
+  await tryState('practice-hud', async () => { await p.evaluate(() => { const f = window.__fi2, c = f.practice.pitch; f.teleport(c.x - 6, c.z + 2, 0); }); await p.waitForTimeout(1200); if (await fuelShown()) missed.push(`practice-fuel/${v.name}: the energy (fuel) readout shows while practising`); return !!(await p.$('[data-practice-card]')); });
   await tryState('practice-edit', async () => { await p.click('[data-practice-edit]', { timeout: 3000 }); await p.waitForTimeout(900); await p.click('[data-practice-add="cone-blue"]', { timeout: 3000 }); await p.waitForTimeout(500); return !!(await p.$('[data-practice-selected]')); });
   await p.click('[data-practice-done]', { timeout: 2000 }).catch(() => {}); await p.waitForTimeout(400); await p.click('[data-practice-exit]', { timeout: 2000 }).catch(() => {}); await p.waitForTimeout(800);
   // ---- the Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts): the Visit café pill on its deck
@@ -163,6 +164,8 @@ async function game(b, v) {
     for (let i = 0; i < 30 && !(await p.evaluate((k) => window.__fi2.trains.states[k].at < 0, k)); i++) { await pollToast(); await p.waitForTimeout(700); }
     for (let i = 0; i < 6; i++) { await pollToast(); await p.waitForTimeout(500); }
     await tryState('train-ride-moving', async () => { await p.waitForTimeout(600); return true; });
+    // Owner Nov 25 2026: no energy (fuel) readout while riding, in every camera view.
+    for (const view of ['seat', 'driver', 'front', 'back', 'left', 'right', 'above', 'inside', 'seat']) { await p.evaluate((vw) => window.__fi2.trainRide.setView(vw), view); await p.waitForTimeout(700); if (await fuelShown()) missed.push(`train-fuel/${v.name}: the energy (fuel) readout shows in the ${view} view`); }
     // jump the clock to 5 s before the next stop, then catch the arrival / leaving toasts and the Get off pill at that stop
     await p.evaluate((k) => { const s = window.__fi2.trains.sched, P = s.trainPhase(k, s.clock()); const nx = s.stops.map((x) => x.arrive).filter((a) => a > P + 8).sort((a, b) => a - b)[0]; if (nx != null) window.__skew += (nx - 5 - P) * 1000; }, k);
     let getoff = false;

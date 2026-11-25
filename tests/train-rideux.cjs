@@ -59,7 +59,9 @@ console.log('train-rideux exit: ok');
  assert(/\.town-app\[data-train-riding\] \[data-job-wallet\] \[data-fuel\]\{display:none\}/.test(G),'no fuel readout');
  assert(/\.town-app\[data-train-riding\] nav\[data-hud-triggers\]>button\[data-tour=quests\]\{visibility:hidden/.test(G),'no Paths button (spot kept)');
  assert(/\.town-app\[data-train-riding\] nav\[data-hud-triggers\]>button\[aria-label=Settings\]\{display:none\}/.test(G),'no settings gear');
- assert(!/data-train-riding\][^{]*\[data-job-wallet\]\{/.test(G),'the coins stay');
+ // Owner Nov 25 2026 ("remove the energy bar when riding the train for all camera angles"): the whole coins / fuel bar steps aside
+ // while riding (one rule on the town-app attribute, so every camera view), and while practising on the Summit 5s pitch.
+ assert(G.includes('.town-app:is([data-practice],[data-train-riding]) [data-job-wallet]{visibility:hidden;pointer-events:none}'),'no energy bar while riding (any view) or practising');
  assert(/data-tour="quests" aria-label=\{`Paths/.test(read('components/IslandSettings.tsx')),'the pink lightning is the Paths button');}
 console.log('train-rideux hud: ok');
 // 3. camera views: the button / C cycles Seat → Front → Back → Left → Right → Above → Inside; Inside stands you up (the cutaway,

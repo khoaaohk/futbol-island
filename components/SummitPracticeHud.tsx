@@ -16,9 +16,9 @@ import styles from './SummitPractice.module.css';
 const CONES:{c:ConeColor;label:string}[]=[{c:'orange',label:'Orange cone'},{c:'yellow',label:'Yellow cone'},{c:'blue',label:'Blue cone'}];
 const KIND_NAME={cone:'Cone',man:'Mannequin',ball:'Ball'} as const;
 
-function ConeIcon({c}:{c:string}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 3 18 19H6z" fill={c}/><rect x="3.5" y="18.5" width="17" height="3" rx="1" fill="#244d40"/></svg>;}
-function ManIcon(){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><circle cx="12" cy="4.6" r="2.6" fill="#f3c623"/><rect x="7.5" y="8" width="9" height="7.5" rx="1.2" fill="#f3c623"/><rect x="7.5" y="10" width="9" height="1.6" fill="#1d3557"/><rect x="11" y="15.5" width="2" height="4" fill="#244d40"/><rect x="7" y="19.5" width="10" height="2.2" rx="1" fill="#244d40"/></svg>;}
-function BallIcon(){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="#fff6e0" stroke="#244d40" strokeWidth="1.6"/><path d="m12 8.2 3.4 2.5-1.3 4H9.9l-1.3-4z" fill="#244d40"/></svg>;}
+function ConeIcon({c}:{c:string}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 3 18 19H6z" fill={c}/><rect x="3.5" y="18.5" width="17" height="3" rx="1" fill="#7a7466"/></svg>;}
+function ManIcon(){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><circle cx="12" cy="4.6" r="2.6" fill="#f3c623"/><rect x="7.5" y="8" width="9" height="7.5" rx="1.2" fill="#f3c623"/><rect x="7.5" y="10" width="9" height="1.6" fill="#1d3557"/><rect x="11" y="15.5" width="2" height="4" fill="#7a7466"/><rect x="7" y="19.5" width="10" height="2.2" rx="1" fill="#3b3f46"/></svg>;}
+function BallIcon(){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="#ffffff" stroke="#3b3f46" strokeWidth="1.6"/><path d="m12 8.2 3.4 2.5-1.3 4H9.9l-1.3-4z" fill="#3b3f46"/></svg>;}
 
 export default function SummitPracticeHud(){
  const v=useSyncExternalStore(practiceStore.subscribe,practiceStore.get,practiceStore.server);

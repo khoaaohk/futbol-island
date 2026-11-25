@@ -1305,10 +1305,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       place:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
       nudge:(x,z)=>{location.x=x;location.z=z;},
       stowRide:()=>{if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'){rideRef.current='walk';setRideMode('walk');}},
-      // A practice ball's design on the walking ball (the Kit Shop skin steps aside); null = the player's own ball again.
-      setBallStyle:style=>{if(style){if(shopBallOn){shopBallSkin.setDesign(null);shopBallOn=false;for(const patch of ballPatches)patch.visible=true;}ballAppearance.invalidate();ballAppearance.setStyle(style as CharacterCustomization['ball']);}
+      // A picked-up practice ball on the walking ball: plain white with the classic dark panels (owner Nov 25 2026; the Kit Shop
+      // skin steps aside); null = the player's own ball again.
+      setBallStyle:style=>{if(style){if(shopBallOn){shopBallSkin.setDesign(null);shopBallOn=false;for(const patch of ballPatches)patch.visible=true;}ballAppearance.invalidate();ballAppearance.setStyle('classic');ballMaterial.color.set('#ffffff');ballAppearance.invalidate();}
         else{const shopBall=shopBallSkin.setDesign(gearRef.current.ball);ballAppearance.invalidate();if(!shopBall)ballAppearance.setStyle(customizationRef.current.ball);shopBallOn=shopBall;for(const patch of ballPatches)patch.visible=!shopBall;}},
-      ownBallTint:()=>gearRef.current.ball?'#ffffff':BALL_COLORS[customizationRef.current.ball]??'#eee4c4',
       impact:(x,y,z)=>ballEffects.impact(x,y,z),goal:()=>{setGoals(n=>n+1);setScored(true);goalTimer=2.5;},wake:()=>wakeLoopRef.current?.()});
     disposers.add(()=>practice.dispose());
     const cannon=createBallCannon(scene,{teleport:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;},kick:()=>sound.ball('kick'),impact:(x,y,z)=>ballEffects.impact(x,y,z),splash:(x,y,z)=>ballEffects.splash(x,y,z)});// Summit Isle Ball Cannon (idle: flag checks)
@@ -1917,7 +1917,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(rideRef.current!=='walk'){if(rampMotion.state.phase==='idle'&&input.current.kick)rideTricks.start(rideRef.current,0);if(rampMotion.state.phase==='idle'&&input.current.juggle)rideTricks.start(rideRef.current,1);input.current.kick=input.current.juggle=false;walkBall.reset(ballPlayer);orb.x=location.x+.7;orb.z=location.z;orb.vx=orb.vz=0;return;}
       // A job's own buttons own the ball while it runs: no kicks, juggles or charged shots; a set-down or kicked ball is placed
       // by jobMoves (Kick the tree, the ball beside the player while the hands work).
-      if(jobButtonsRef.current||water.inWater){input.current.kick=input.current.juggle=false;input.current.shotPower=0;input.current.charging=false;if(walkBall.state.mode==='charging'||walkBall.state.mode==='windup')walkBall.reset(ballPlayer);}
+      if(jobButtonsRef.current||water.inWater||practice.bare){input.current.kick=input.current.juggle=false;input.current.shotPower=0;input.current.charging=false;if(walkBall.state.mode==='charging'||walkBall.state.mode==='windup')walkBall.reset(ballPlayer);}
       if(jobFrame.ball){orb.x=jobFrame.ball.x;orb.z=jobFrame.ball.z;orb.vx=orb.vz=0;return;}
       goalTimer=Math.max(0,goalTimer-dt);
       const nearbyWalls=ballWallGrid.query(ballPlayer.x,ballPlayer.z,8).filter(w=>w.floor<=ballPlayer.y+.4&&w.top>ballPlayer.y+1.15&&Math.abs(ballPlayer.x-w.x)<=w.w/2+8&&Math.abs(ballPlayer.z-w.z)<=w.d/2+8);
@@ -2129,7 +2129,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       {const inTeam=Boolean(lessonRef.current)||liveKnockout.joined;if(inTeam!==appliedTeamLook||inTeam&&customizationChanged){appliedTeamLook=inTeam;const c=customizationRef.current,g=gearRef.current,d=mainPlayerDress(beanLookFor(c),gearOutfit(playerOutfit(c),g),inTeam,DEFAULT_PLAYER_NUMBER);player.setBeanLook(d.look,inTeam?teamOutfitWithBoots(d.outfit,g):d.outfit);}}
       const isParachuting=jetActions.state.phase==='parachute',airJuggling=isParachuting&&jetActions.state.juggleAge>=0,airJuggleCycle=jetActions.state.juggleAge/.8,airJugglePhase=airJuggleCycle-Math.floor(airJuggleCycle),airJuggleSide=(Math.floor(airJuggleCycle)%2===0?1:-1) as -1|1;if(skyJugglingRef.current!==airJuggling){skyJugglingRef.current=airJuggling;setSkyJuggling(airJuggling);}if(parachutingRef.current!==isParachuting){parachutingRef.current=isParachuting;setParachuting(isParachuting);}
       const vendingHide=vending.hidesPlayer||gashaPrompt.hidesPlayer;player.root.visible=!fieldMenu.current&&!vendingHide&&!liveJoin.joined;ring.visible=!fieldMenu.current&&!vendingHide&&rideRef.current!=='jetpack'&&!party?.meRing&&!(water.inWater&&water.state.phase==='swim')&&!liveJoin.joined;// no static foot ring in the sea: swim ripples instead
-      ball.visible=!fieldMenu.current&&!vendingHide&&(rideRef.current==='walk'||airJuggling);
+      ball.visible=!fieldMenu.current&&!vendingHide&&!practice.bare&&(rideRef.current==='walk'||airJuggling);/* practising: no ball until you walk up to one */
       if(Math.hypot(velocity.x,velocity.z)>.1)arrivalFacing=undefined;
       const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced,location.x,location.z,flight.height,jetActions.state.phase,customizationRef.current.jetpack):undefined;
       partyPitch=flightPose?.pitch??0;

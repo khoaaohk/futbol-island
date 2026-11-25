@@ -5,8 +5,10 @@
  * - Walk onto the pitch (inside the fence) → practice mode: the island's paths / settings / map / ride buttons hide (CSS on
  *   .town-app[data-practice]), the live games' camera button cycles Follow → Tactical → Behind goal → Side-on, the drill's cones,
  *   mannequins and balls appear. Walk off (or Exit, which steps you out of the gate) → normal walking with your own ball.
- * - Many balls: touch a loose ball while yours is away and you take it (yours stays on the pitch as a loose ball); walk into one
- *   while dribbling and you knock it on. Every ball bounces off the fence, goals, mannequins and the other balls; cones topple.
+ * - No ball of your own (owner Nov 25 2026): your dribble ball is stowed on entry. Walk up to any loose (white) practice ball and
+ *   it becomes your dribble ball (a small pickup cue); a kick (or a dropped keep-up) lets it go: it rolls on and stays where it
+ *   stops, and you walk to a ball (the same or another) to have one again. Walk into one while dribbling and you knock it on.
+ *   Exit (or walking off) gives you your own ball back. Every ball bounces off the fence, goals, mannequins and the other balls; cones topple.
  * - Edit mode: the tactical camera over the pitch; drag props (0.5 m grid), tap to select (rotate / colour / remove), add from
  *   the tray, Reset drill, Done. Two fingers / right-drag / wheel move the camera. The layout is saved per drill.
  *
@@ -18,14 +20,13 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createClassicBallGeometry,CLASSIC_BALL} from './ballAppearance';
-import {BALL_COLORS} from '../town/customization';
 import {SUMMIT_PITCH,PITCH_HEIGHT} from '../town/summitIsle';
 import {
- PRACTICE_LIMITS,PRACTICE_SAVE_KEY,PRACTICE_BALL,PRACTICE_BALL_STYLES,CONE_HEX,HALF_U,HALF_V,
+ PRACTICE_LIMITS,PRACTICE_SAVE_KEY,PRACTICE_BALL,PRACTICE_BALL_WHITE,CONE_HEX,HALF_U,HALF_V,
  practiceZone,insidePracticeFence,gateExit,sanitizePracticeSave,enterDrill,shuffleDrill,layoutFor,saveLayout,resetLayout,drillById,
  buildPracticeWorld,resetPracticeWorld,stepPractice,createPracticeStep,hitProps,kickBall,touchBall,countKind,
  moveProp,rotateProp,removeProp,addProp,pickProp,
- type PracticeSave,type PracticeProp,type PracticeWorld,type DrillId,type ConeColor,type PropKind,
+ type PracticeSave,type PracticeProp,type PracticeWorld,type PBall,type DrillId,type ConeColor,type PropKind,
 } from '../town/summitPractice';
 import {practiceStore,installPracticeActions} from '../town/summitPracticeStore';
 import {createJoinCamera,createJoinCamFrame,joinCamFrame,turnStick,type JoinCamAngle,type JoinCamPitch} from '../town/liveJoinCamera';
@@ -43,10 +44,8 @@ export type PracticePorts={
  nudge:(x:number,z:number)=>void;
  /** A scooter / bike / moped ridden onto the pitch is stowed (you walk on the pitch). */
  stowRide:()=>void;
- /** The walking ball's look: a practice ball's design, or null = the player's own ball again. */
- setBallStyle:(style:string|null)=>void;
- /** The player's own ball colour (it shows on the pitch as a loose ball after you take another). */
- ownBallTint:()=>string;
+ /** The walking ball's look: 'white' = a practice ball picked up, null = the player's own ball again. */
+ setBallStyle:(style:'white'|null)=>void;
  impact:(x:number,y:number,z:number)=>void;
  /** A loose ball scored: Town's goal cheer (the same as the walking ball's). */
  goal:()=>void;
@@ -61,14 +60,15 @@ const CAMS:readonly JoinCamAngle[]=['broadcast','wide','behind','side'];
 export const PRACTICE_CAM_LABEL:Record<string,string>={broadcast:'Follow',wide:'Tactical',behind:'Behind goal',side:'Side-on'};
 const CAM_KEY='fi2-practice-cam';
 const cue=(detail:string)=>{if(typeof document!=='undefined')document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail}));};
-const STYLE_TINT=PRACTICE_BALL_STYLES.map(s=>(BALL_COLORS as Record<string,string>)[s]??CLASSIC_BALL.color);
 
 // ------------------------------------------------------------------------------------------------------------ geometry
 function paint(g:T.BufferGeometry,c:string|number){const col=new T.Color(c),n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=col.r;a[i*3+1]=col.g;a[i*3+2]=col.b;}g.setAttribute('color',new T.BufferAttribute(a,3));if(g.getAttribute('uv'))g.deleteAttribute('uv');return g;}
 const at=(g:T.BufferGeometry,x:number,y:number,z:number)=>{g.translate(x,y,z);return g;};
 const merged=(parts:T.BufferGeometry[])=>{const ns=parts.map(p=>p.index?p.toNonIndexed():p);const m=mergeGeometries(ns)!;parts.forEach(p=>p.dispose());ns.forEach(p=>p.dispose());return m;};
 /** A training cone (white body for the instance tint, a slightly darker square base). Origin at the ground. */
-function coneGeometry(){return merged([paint(at(new T.CylinderGeometry(.022,.13,.3,10),0,.18,0),'#ffffff'),paint(at(new T.BoxGeometry(.3,.03,.3),0,.015,0),'#b8b8b8')]);}
+/* Owner Nov 25 2026: "make the cones a little larger": 1.3x (0.43 m tall, 0.39 m base). */
+const CS=1.3;
+function coneGeometry(){return merged([paint(at(new T.CylinderGeometry(.022*CS,.13*CS,.3*CS,10),0,.03*CS+.15*CS,0),'#ffffff'),paint(at(new T.BoxGeometry(.3*CS,.03*CS,.3*CS),0,.015*CS,0),'#b8b8b8')]);}
 /** A free-kick wall mannequin, an original look: a sunny yellow silhouette with a navy chest band and a white chest disc (its
  *  front), on a pole and a spring base. Origin at the ground, facing +z, ~1.84 m tall. */
 function manGeometry(){
@@ -95,8 +95,8 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
  const P=SUMMIT_PITCH,g=PITCH_HEIGHT,R=PRACTICE_BALL.radius;
  let mode:'off'|'play'|'edit'='off',suppress=false;
  let save:PracticeSave=readSave(),drill:DrillId='slalom',layout:PracticeProp[]=[],world:PracticeWorld={balls:[],cones:[],men:[]};
- /** The walking ball's design while practising: -1 = the player's own ball; else an index into PRACTICE_BALL_STYLES. */
- let held=-1,goals=0,hello=0;
+ /** The practice ball at your feet (taken out of world.balls while carried); null = bare feet (Town hides the walking ball). */
+ let carried:PBall|null=null,pickupWait=0,goals=0,hello=0;
  const step=createPracticeStep();
  // ---- meshes (built on entry, disposed on exit)
  let root:T.Group|null=null,cones:T.InstancedMesh|null=null,men:T.InstancedMesh|null=null,balls:T.InstancedMesh|null=null,mat:T.MeshStandardMaterial|null=null;
@@ -134,17 +134,17 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
   const rg=new T.RingGeometry(.46,.6,28);rg.rotateX(-Math.PI/2);
   ring=new T.Mesh(rg,new T.MeshBasicMaterial({color:'#ffd27a',transparent:true,opacity:.95,depthWrite:false,toneMapped:false}));ring.name='practice-select';ring.renderOrder=2;ring.visible=false;root.add(ring);
  }
- function rebuildWorld(){world=buildPracticeWorld(layout);for(const q0 of ballQ)q0.identity();dirty=tintDirty=true;}
+ function rebuildWorld(){if(carried){carried=null;ports.setBallStyle(null);}world=buildPracticeWorld(layout);for(const q0 of ballQ)q0.identity();dirty=tintDirty=true;}
  function writeMatrices(){
   if(!cones||!men||!balls)return;
   if(tintDirty){
    for(let i=0;i<world.cones.length;i++)cones.setColorAt(i,col.set(CONE_HEX[world.cones[i].c]));
    for(let i=0;i<world.men.length;i++)men.setColorAt(i,col.set('#ffffff'));
-   for(let i=0;i<world.balls.length;i++){const b=world.balls[i];balls.setColorAt(i,col.set(b.style<0?ports.ownBallTint():STYLE_TINT[b.style]));}
+   for(let i=0;i<world.balls.length;i++){const b=world.balls[i];balls.setColorAt(i,col.set(PRACTICE_BALL_WHITE));}
    for(const m of [cones,men,balls])if(m.instanceColor)m.instanceColor.needsUpdate=true;tintDirty=false;}
   cones.count=world.cones.length;men.count=world.men.length;balls.count=world.balls.length;
   for(let i=0;i<world.cones.length;i++){const c=world.cones[i];
-   if(c.down){const a=c.fall*1.28;axis.set(c.dz,0,-c.dx).normalize();q.setFromAxisAngle(axis,a);pos.set(c.x+c.dx*.1*c.fall,g+Math.sin(a)*.1,c.z+c.dz*.1*c.fall);}
+   if(c.down){const a=c.fall*1.28;axis.set(c.dz,0,-c.dx).normalize();q.setFromAxisAngle(axis,a);pos.set(c.x+c.dx*.1*CS*c.fall,g+Math.sin(a)*.1*CS,c.z+c.dz*.1*CS*c.fall);}
    else{q.identity();pos.set(c.x,g,c.z);}
    cones.setMatrixAt(i,m4.compose(pos,q,one));}
   for(let i=0;i<world.men.length;i++){const m=world.men[i];q.setFromAxisAngle(UP,m.yaw);if(m.tilt){axis.set(m.az,0,-m.ax);q2.setFromAxisAngle(axis,m.tilt);q.premultiply(q2);}pos.set(m.x,g,m.z);men.setMatrixAt(i,m4.compose(pos,q,one));}
@@ -164,7 +164,7 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
  // ---- enter / leave
  function enter(){
   save=readSave();const e=enterDrill(save);save=e.save;drill=e.drill;writeSave();
-  layout=layoutFor(save,drill);build();rebuildWorld();held=-1;mode='play';hello++;selected=-1;
+  layout=layoutFor(save,drill);build();rebuildWorld();pickupWait=0;mode='play';hello++;selected=-1;
   ports.stowRide();app('data-practice',true);
   try{const a=sessionStorage.getItem(CAM_KEY);if(a&&CAMS.includes(a as JoinCamAngle))camCtl.set(a as JoinCamAngle,0);}catch{}
   addKeys();publish();cue('select');
@@ -173,7 +173,7 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
   if(mode==='off')return;
   if(mode==='edit')endEdit();
   mode='off';disposeMeshes();world={balls:[],cones:[],men:[]};
-  if(held>=0){held=-1;ports.setBallStyle(null);}
+  if(carried){carried=null;ports.setBallStyle(null);}
   app('data-practice',false);app('data-practice-edit',false);removeKeys();camCtl.set('broadcast',0);
   const p=ports.player();
   if(stepOut){const o=gateExit();ports.place(o.x,o.z,o.yaw);suppress=true;}
@@ -187,7 +187,7 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
  function beginEdit(){if(mode!=='play')return;mode='edit';prevCam=camCtl.angle;camCtl.set('wide',0);zoom=1;panU=panV=0;selected=-1;
   layout=layoutFor(save,drill);rebuildWorld();buildEditMeshes();app('data-practice-edit',true);addPointers();publish();cue('select');ports.wake();}
  function endEdit(){if(mode!=='edit')return;removePointers();disposeEditMeshes();mode='play';selected=-1;camCtl.set(prevCam,0);app('data-practice-edit',false);rebuildWorld();}
- function edited(){save=saveLayout(save,drill,layout);writeSave();const keep=world.balls.map(b=>b.style);rebuildWorld();world.balls.forEach((b,i)=>{if(i<keep.length)b.style=keep[i];});publish();ports.wake();}
+ function edited(){save=saveLayout(save,drill,layout);writeSave();rebuildWorld();publish();ports.wake();}
  const actionsOff=installPracticeActions({
   shuffle,
   exit:()=>{leave(true);cue('confirm');ports.wake();},
@@ -236,7 +236,7 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
   const p=ptrs.get(e.pointerId);if(mode!=='edit'||!p)return;e.preventDefault();e.stopPropagation();p.x=e.clientX;p.y=e.clientY;
   if(pinch&&ptrs.size>=2){const [a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1;zoom=Math.max(.4,Math.min(1.5,pinch.zoom*pinch.d/d));panBy((a.x+b.x)/2-pinch.mx,(a.y+b.y)/2-pinch.my,pinch.u,pinch.v);return;}
   if(drag&&drag.id===e.pointerId){if(Math.hypot(p.x-p.sx,p.y-p.sy)<6&&!drag.moved)return;drag.moved=true;const gp=ground(e.clientX,e.clientY);if(!gp)return;
-   const before=layout[drag.i];const bu=before.u,bv=before.v;moveProp(layout,drag.i,gp.u+drag.du,gp.v+drag.dv);if(before.u!==bu||before.v!==bv){const keep=world.balls.map(b=>b.style);rebuildWorld();world.balls.forEach((b,i)=>{if(i<keep.length)b.style=keep[i];});ports.wake();}return;}
+   const before=layout[drag.i];const bu=before.u,bv=before.v;moveProp(layout,drag.i,gp.u+drag.du,gp.v+drag.dv);if(before.u!==bu||before.v!==bv){rebuildWorld();ports.wake();}return;}
   if(pan)panBy(e.clientX-pan.x,e.clientY-pan.y,pan.u,pan.v);
  };
  const onUp=(e:PointerEvent)=>{
@@ -284,7 +284,11 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
   get world(){return world;},
   get layout(){return layout;},
   get drill(){return drill;},
-  get heldStyle(){return held;},
+  /** 0 = carrying a practice ball, -1 = not (checks). */
+  get heldStyle(){return carried?0:-1;},
+  /** Practising with bare feet: Town hides the walking ball and ignores Kick / Juggle until you walk up to a ball. */
+  get bare(){return mode!=='off'&&!carried;},
+  get carrying(){return !!carried;},
   get cameraAngle(){return camCtl.angle;},
   /** The pitch centre (checks and tools teleport here). */
   get pitch(){return {x:P.x,z:P.z};},
@@ -319,16 +323,20 @@ export function createSummitPractice(scene:T.Scene,ports:PracticePorts){
     for(const b of world.balls){const dx=b.x-wb.x,dz=b.z-wb.z,d=Math.hypot(dx,dz);if(d<2*R&&d>1e-6&&Math.abs(b.y-wb.y)<2*R){const nx=dx/d,nz=dz/d,vn=wb.vx*nx+wb.vz*nz;if(vn>0){kickBall(b,b.vx+nx*vn*.85,Math.max(b.vy,wb.vy*.3),b.vz+nz*vn*.85);wb.vx-=nx*vn*.7;wb.vz-=nz*vn*.7;}}}}
    // The player against the mannequins (they stand on a base: you walk round them).
    for(const m of world.men){const dx=p.x-m.x,dz=p.z-m.z,d=Math.hypot(dx,dz),r=PRACTICE_BALL.man+.3;if(d<r&&d>1e-6){ports.nudge(m.x+dx/d*r,m.z+dz/d*r);}}
-   // The player's feet on a loose ball: take it (yours is away) or knock it on (you're dribbling yours).
+   // A kick (or a keep-up that fell) lets the carried ball go: it carries on as a loose ball from where the walking ball is now,
+   // and the walking ball goes back to the (bare) feet, hidden.
+   if(carried&&(wb.mode==='shot'||wb.mode==='drop')){const b=carried;carried=null;
+    b.x=wb.x;b.y=Math.max(g+PRACTICE_BALL.rest,wb.y);b.z=wb.z;b.vx=wb.vx;b.vy=wb.vy;b.vz=wb.vz;b.awake=true;b.out=0;b.spin=Math.hypot(wb.vx,wb.vz);
+    world.balls.push(b);pickupWait=.6;ports.setBallStyle(null);ports.walkBall.reset({x:p.x,y:p.y,z:p.z,yaw:p.yaw});dirty=true;}
+   if(pickupWait>0)pickupWait-=dt;
+   // The player's feet on a loose ball: pick it up (bare feet) or knock it on (you're dribbling one).
    const k=touchBall(world,p.x+Math.sin(p.yaw)*.25,p.z+Math.cos(p.yaw)*.25,.5);
-   if(k>=0){const b=world.balls[k],away=wb.mode==='shot'||wb.mode==='return'||wb.mode==='drop';
-    if(away&&b.vx*b.vx+b.vz*b.vz<36){
-     // Swap: your ball stays on the pitch where it is now (with its flight), you take this one at your feet in its colours.
-     const style=b.style;b.x=wb.x;b.y=Math.max(g+PRACTICE_BALL.rest,wb.y);b.z=wb.z;
-     if(wb.mode==='return'){b.vx=b.vy=b.vz=0;}else{b.vx=wb.vx;b.vy=wb.vy;b.vz=wb.vz;}
-     b.awake=true;b.out=insidePracticeFence(b.x,b.z,-.3)?0:b.out;b.style=held;held=style;tintDirty=true;
-     ports.setBallStyle(held<0?null:PRACTICE_BALL_STYLES[held]);ports.walkBall.reset({x:p.x,y:p.y,z:p.z,yaw:p.yaw});cue('select');dirty=true;
-    }else if(!away){const dx=b.x-p.x,dz=b.z-p.z,d=Math.hypot(dx,dz)||1,sp=Math.hypot(p.vx,p.vz),push=Math.max(1.4,sp*1.35);
+   if(k>=0){const b=world.balls[k];
+    if(!carried){if(pickupWait<=0&&b.vx*b.vx+b.vz*b.vz<36){
+     // Pick up: the ball leaves the loose set (its spin slot moves to the end) and is your dribble ball, white.
+     world.balls.splice(k,1);const q0=ballQ.splice(k,1)[0];ballQ.push(q0);carried=b;
+     ports.setBallStyle('white');ports.walkBall.reset({x:p.x,y:p.y,z:p.z,yaw:p.yaw});ports.impact(b.x,b.y-PRACTICE_BALL.rest+.02,b.z);cue('select');dirty=true;}}
+    else if(wb.mode!=='shot'&&wb.mode!=='return'&&wb.mode!=='drop'){const dx=b.x-p.x,dz=b.z-p.z,d=Math.hypot(dx,dz)||1,sp=Math.hypot(p.vx,p.vz),push=Math.max(1.4,sp*1.35);
      if(b.vx*dx+b.vz*dz<push*d*.5){kickBall(b,dx/d*push+p.vx*.3,.4,dz/d*push+p.vz*.3);dirty=true;}}
    }
    if(step.moving||dirty||tintDirty)writeMatrices();// only frames where something moved

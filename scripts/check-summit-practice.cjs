@@ -44,12 +44,22 @@ async function run(b, v) {
   await p.click('[data-practice-cam]'); await p.waitForTimeout(1200);// Tactical for the shot
   // Shuffle: another drill
   const d0 = (await st()).drill; await p.click('[data-practice-shuffle]'); await p.waitForTimeout(600); s = await st(); log(s.drill !== d0, `${v.name}: Shuffle ${d0} → ${s.drill}`);
-  // a kick, then walk onto a loose ball: it becomes yours
-  const took = await p.evaluate(async () => { const f = window.__fi2, x = f.practice, w = f.walkBall.state; Object.assign(w, { mode: 'shot', vx: 9, vy: 1, vz: 0 });
-    const b = x.world.balls.find((q) => !q.awake); f.teleport(b.x, b.z - .3, 0); w.mode = 'shot'; w.x = b.x + 6; w.z = b.z; w.vx = 6;
-    await new Promise((r) => setTimeout(r, 400)); return { held: x.heldStyle, mode: f.walkBall.state.mode }; });
-  log(took.held >= 0 && took.mode === 'attached', `${v.name}: touching a loose ball takes it (design ${took.held})`);
+  // Owner Nov 25 2026: no ball of your own while practising, no fuel (energy) readout; walk up to a white ball to dribble it.
+  const bare = await p.evaluate(() => { const f = window.__fi2; return { bare: f.practice.bare, shown: f.ball.visible }; });
+  log(bare.bare && !bare.shown, `${v.name}: bare feet on entry (own ball hidden)`);
+  log(!(await vis('[data-job-wallet]')), `${v.name}: energy bar (coins / fuel bar) hidden while practising`);
+  const white = await p.evaluate(() => { const m = window.__fi2.scene.getObjectByName('practice-balls'); if (!m || !m.instanceColor) return false; const a = m.instanceColor.array; for (let i = 0; i < m.count * 3; i++) if (a[i] < .99) return false; return m.count > 0; });
+  log(white, `${v.name}: every practice ball is white`);
   await p.click('[data-practice-cam]'); await p.click('[data-practice-cam]'); await p.click('[data-practice-cam]'); await p.waitForTimeout(900);// back to Follow
+  await p.evaluate(() => { const f = window.__fi2, x = f.practice, b = x.world.balls.find((q) => !q.awake); f.teleport(b.x - 1.4, b.z - 1.4, Math.PI / 4); }); await p.waitForTimeout(1200);
+  if (v.mobile && shots) await p.screenshot({ path: path.join(shots, 'practice-walk-up-phone.png') });
+  const took = await p.evaluate(async () => { const f = window.__fi2, x = f.practice, b = x.world.balls.find((q) => !q.awake); f.teleport(b.x, b.z - .3, 0);
+    await new Promise((r) => setTimeout(r, 400)); return { carrying: x.carrying, shown: f.ball.visible, held: x.heldStyle, mode: f.walkBall.state.mode }; });
+  log(took.carrying && took.shown && took.mode === 'attached', `${v.name}: walking up to a ball picks it up (shown at the feet)`);
+  const kicked = await p.evaluate(async () => { const f = window.__fi2, x = f.practice, w = f.walkBall.state; const n = x.world.balls.length; Object.assign(w, { mode: 'shot', vx: 0, vy: 1, vz: 8 });
+    await new Promise((r) => setTimeout(r, 300)); return { carrying: x.carrying, back: x.world.balls.length === n + 1, shown: f.ball.visible }; });
+  log(!kicked.carrying && kicked.back && !kicked.shown, `${v.name}: a kick lets it go (it stays on the pitch, feet bare again)`);
+
   if (v.mobile && shots) await p.screenshot({ path: path.join(shots, 'practice-phone.png') });
   // ---- the editor: drag the first prop, add a cone, reset
   await p.click('[data-practice-edit]'); await p.waitForTimeout(1500); s = await st();
@@ -72,7 +82,8 @@ async function run(b, v) {
   await p.click('[data-practice-done]'); await p.waitForTimeout(600); log(!(await st()).editing, `${v.name}: Done returns to play`);
   // draw calls: on the pitch vs off it, same spot of the island (the gate)
   await p.click('[data-practice-exit]'); await p.waitForTimeout(1500); s = await st(); const callsOff = await calls();
-  log(!s.active && s.mode === 'attached' && s.held === -1, `${v.name}: Exit: normal walking, own ball at the feet`);
+  log(!s.active && s.mode === 'attached' && s.held === -1 && (await p.evaluate(() => window.__fi2.ball.visible)), `${v.name}: Exit: normal walking, own ball at the feet`);
+  log(await vis('[data-job-wallet]'), `${v.name}: energy bar back after Exit`);
   log(await vis('nav[data-hud-triggers]'), `${v.name}: paths / settings back`);
   console.log(`     ${v.name}: draw calls practising ${callsOn}, after Exit (at the gate) ${callsOff}`);
   if (errs.length) log(false, `${v.name}: page errors: ${errs.slice(0, 3).join(' | ')}`);
