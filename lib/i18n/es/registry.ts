@@ -38,7 +38,7 @@ export function esTerm(slug:string):EsTerm|null{
  const t=termBySlug(slug);if(!t)return null;const e=need(TERMS_ES,slug,'term');
  if((t.howFact&&!e.howFact)||(t.quizHow&&!e.quizHow))throw new Error(`Spanish term ${slug}: howFact/quizHow missing`);
  return {...t,howFact:e.howFact,quizHow:e.quizHow,name:e.name,also:e.also,title:e.title,h1:e.h1,desc:e.desc,short:e.short,answer:e.answer,scene:mergeScene(t.scene,e.scene),howTitle:e.howTitle,
-  how:[...e.how],mistakes:[...e.mistakes],formats:e.formats,faq:e.faq.map(f=>({...f})),esPath:toEs(t.path),notes:e.notes};
+  how:[...e.how],mistakes:[...e.mistakes],formats:e.formats,faq:e.faq.map(f=>({...f})),esPath:toEs(t.path),notes:e.notes,extra:esRuleExtra(slug,t.extra,e.extra)};
 }
 export function esPosition(slug:string):EsPosition|null{
  const p=positionBySlug(slug);if(!p)return null;const e=need(POSITIONS_ES,slug,'position');

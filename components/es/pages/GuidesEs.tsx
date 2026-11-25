@@ -189,6 +189,7 @@ export function TermEsPage({t}:{t:EsTerm}){
   <EsIntro top rail={<RailNav rail={guideRail('terms',[],true)} current="#top"/>} onward={onwardFor(t.cta,true)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagrama`}><EsSceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
+  {t.extra&&<RuleExtraSection x={t.extra}/>}
   <Section id="mistakes" title="Errores comunes"><Bullets items={t.mistakes}/></Section>
   <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>

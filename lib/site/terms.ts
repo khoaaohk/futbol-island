@@ -2,6 +2,7 @@ import {lessonById,type SiteLesson} from './lessons';
 import type {Faq} from './safety';
 import {scene,type RawScene,type Scene} from './scenes';
 import {gameLink,isGameListed} from './games';
+import type {RuleExtra} from './rules';
 /**
  * The GLOSSARY (SEO cluster 2, Nov 10 2026): /learn/soccer-terms with every term on one page in A-Z sections, and a page of
  * its own under /learn/soccer-terms/<slug> only for the terms people search for and that can carry a diagram and 250+ useful
@@ -19,6 +20,9 @@ import {gameLink,isGameListed} from './games';
  *  - Museum data (lib/endgame/museum.ts) for "kit", "boots" and the video assistant referee (exhibit var-2018).
  *  - Everyday soccer words (assist, brace, clean sheet, hat-trick, nutmeg, nil, derby-style slang is left out) are defined by
  *    their plain meaning only. No word origins, no records, no statistics and no named players: none of that was verified.
+ *  - One exception (SEO quick wins, Nov 24 2026): the false nine's history section names Hidegkuti (Hungary 6-3 England,
+ *    Wembley, 25 Nov 1953) and Messi under Guardiola (Real Madrid 2-6 Barcelona, 2 May 2009). Source: Jonathan Wilson,
+ *    Inverting the Pyramid (revised ed. 2013), chapters on the Hungarians and on Guardiola's Barcelona, plus the match reports.
  */
 export type TermPage={slug:string;path:string;name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:Scene;picture:string;how:string[];howTitle:string;
  mistakes:string[];formats:string;faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;related:string[];
@@ -28,7 +32,10 @@ export type TermPage={slug:string;path:string;name:string;also?:string;title:str
   *  a second use of the same word ("Also means") and the named kinds of the move. Plain coaching points in our own words: no
   *  records, no statistics, no named players, like the rest of this file. */
  sides?:{title:string;items:string[]};alsoMeans?:string;kinds?:{title:string;rows:[string,string][]};
- links?:{path:string;name:string;line:string}[];howFact?:{label:string;value:string};quizHow?:{q:string;why:string}};
+ links?:{path:string;name:string;line:string}[];howFact?:{label:string;value:string};quizHow?:{q:string;why:string};
+ /** Optional (SEO quick wins, Nov 24 2026): one extra section after the steps, the same shape and renderer as a rule page's
+  *  extra (lib/site/rules.ts RuleExtra, GuideParts RuleExtraSection). The Spanish twin must have one too. */
+ extra?:RuleExtra};
 export type GlossaryEntry={term:string;id:string;def:string;to?:string;toName?:string};
 export const TERMS_HUB_PATH='/learn/soccer-terms';
 export const termPath=(slug:string)=>`${TERMS_HUB_PATH}/${slug}`;
@@ -120,8 +127,8 @@ export const TERM_PAGES:readonly TermPage[]=([
  {slug:'two-v-one',alsoMeans:'2v1 is also the name of a small practice game. Two attackers play against one defender in a small space, again and again, so both sides learn the choice.',
   sides:{title:'How do you defend a 2v1?',items:['Do not rush in. Back off slowly and stay between the ball and your goal.','Stand half turned, so you can see the ball and the second attacker.','Try to block the pass and show the dribbler toward the side line.','Slow the attack down. Every second helps a teammate get back.','Step in to win the ball only when the dribbler takes a heavy touch.']},
   name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
-  title:'2v1 Meaning in Soccer: Two v One Explained, With a Drill',h1:'What does 2v1 mean in soccer?',
-  desc:'2v1 in soccer means two attackers against one defender. The one choice that wins it, pass or dribble, how to defend it, a diagram, a drill and a kids quiz.',
+  title:'2v1 in Soccer: What It Means + How to Beat a Defender',h1:'What does 2v1 mean in soccer?',
+  desc:'2v1 in soccer is two attackers against one defender. How to beat the defender in 4 steps (dribble at them, then pass or go), with a diagram and a drill.',
   answer:'2v1 (two v one) in soccer means two attackers against one defender. The player with the ball dribbles at the defender: if the defender comes to the ball, pass to the teammate, and if the defender stays with the teammate, keep going.',
   scene:{title:'A 2v1',who:'7@44,58 9@62,60 !4@50,70 !G@50,96',ball:[45,59],runs:['44,58>46,68','62,60>62,80'],passes:['46,68>62,79'],
    caption:'Number 7 dribbles straight at the one defender, marked 4. When the defender steps toward the ball, number 7 passes to number 9, who has run into the space beside them.'},
@@ -131,8 +138,8 @@ export const TERM_PAGES:readonly TermPage[]=([
   formats:'A 2v1 is the smallest team move, so it appears in every game. In futsal a counterattack is very often a 2v1, and the lone defender tries to slow it down until a teammate gets back.',
   faq:[{q:'How do you practice a 2v1?',a:'Mark out a small channel with one defender in it and a line or a small goal at the end. Two attackers start together and try to get past with a pass or a dribble. Swap roles after every turn, so everyone defends too.'},
    {q:'What does 2v1 mean in soccer?',a:'Two attackers against one defender, so the team with the ball has one spare player. You may also see 3v2 or 1v1: the first number is the team with the ball. The attackers win a 2v1 by making the defender choose between the dribbler and the pass.'},
-   {q:'How does one defender stop a 2v1?',a:'By slowing it down: staying between the two attackers and the goal without diving in, until a teammate comes back to help.'},
-   {q:'How do you make a 2v1?',a:'With an overlap, a give-and-go, or by running forward quickly after winning the ball.'},
+   {q:'Should you pass or dribble in a 2v1?',a:'Let the defender decide for you. Dribble straight at the defender first. If the defender steps to you, pass to your teammate. If the defender stays with your teammate, keep dribbling and shoot or go past.'},
+   {q:'What is the difference between a 2v1 and a 1v1?',a:'In a 1v1 the player with the ball has to beat the defender alone, with a skill move or speed. In a 2v1 there is a spare attacker, so a well-timed pass beats the defender without a dribble. Teams make a 2v1 with an overlap, a give-and-go or a fast run after winning the ball.'},
    {q:'Is a 2v1 an overload in soccer?',a:'Yes, the smallest one. An overload means having more players than the other team in one part of the field, and a 2v1 is two attackers against one defender there. Bigger overloads, like a 3v2, are won with the same choice: pass or dribble.'}],
   lessonIds:['learn9_two_one','learn7_carry','expf_2v1','expf_delay2v1'],related:['overlap','give-and-go','counterattack','goal-side','overload']},
 
@@ -647,17 +654,25 @@ export const TERM_PAGES:readonly TermPage[]=([
   name:'False Nine',also:'false 9, a dropping forward',short:'A center forward who moves back into midfield to get the ball, instead of staying up against the center backs.',
   title:'False 9 in Soccer: What Is a False Nine and How It Works',h1:'What is a false nine (false 9) in soccer?',
   desc:'A false nine in soccer is a center forward who drops back into midfield to get the ball. Why teams use one and how defenders deal with it, with a diagram.',
-  answer:'A false nine (false 9) in soccer is a center forward who drops back into midfield to get the ball, instead of staying up against the center backs. The move leaves the center backs with nobody to mark and opens space behind them for the wingers.',
+  answer:'A false nine (false 9) in soccer is a center forward who drops back into midfield to get the ball, instead of staying up against the center backs. A center back must follow or let the false nine turn, and either way space opens behind them for the wingers.',
   scene:{title:'A false nine',who:'9@50,58 8@42,46 7@82,68 11@18,68 !4@42,74 !5@58,74 !6@60,62 !G@50,96',ball:[42,47],passes:['42,47>50,57','50,57>70,84'],runs:['50,70>50,58','82,68>70,84'],
    caption:'Number 9 leaves the two center backs, marked 4 and 5, and drops into midfield to receive from number 8. A center back has to choose: follow or stay. Winger number 7 runs into the space behind them.'},
   howTitle:'How does a false nine play?',how:['Start high, next to the center backs, like a normal number 9.','Drop into midfield as a teammate gets ready to pass, and look over your shoulder on the way.',
-   'If no defender follows, turn and face the goal with the ball.','If a center back follows, pass with one touch and let a winger run into the gap.'],
+   'If no defender follows, turn and face the goal with the ball.','If a center back follows, pass with one touch and let a winger run into the gap.',
+   'The wingers start wide and run inside, on a diagonal, into the space the center back left.'],
+  extra:{id:'history',title:'Where the false nine came from',intro:'The idea is older than the name. Two teams made it famous.',head:['When','What happened'],
+   rows:[['1953','Nándor Hidegkuti of Hungary wore number 9 but played deep in midfield. In Hungary’s 6-3 win over England at Wembley, the England center half did not know whether to follow him, and Hidegkuti scored three goals.'],
+    ['2009','Pep Guardiola moved Lionel Messi from the right wing into the middle for Barcelona, starting with a 6-2 win at Real Madrid in May 2009. Messi kept dropping into midfield, the center backs were pulled out, and the false nine became famous.']],
+   note:'Sources: Jonathan Wilson, Inverting the Pyramid: The History of Football Tactics (revised edition, 2013); match reports of Hungary 6-3 England (25 November 1953) and Real Madrid 2-6 Barcelona (2 May 2009).'},
   mistakes:['Dropping back when no teammate runs forward, so nobody is near the goal.','Dropping so deep that the player takes a midfielder’s space.','Receiving the ball without looking first, with a defender close behind.'],
   formats:'The name comes from 11v11, where the center forward is called the number 9. In 7v7 and 9v9 a lone forward who comes short to help the midfield is doing the same job. In futsal the pivot often comes away from goal in a similar way, and a teammate runs into the space.',
   faq:[{q:'Why is it called a false nine?',a:'The number 9 is the short name for the center forward. A false nine lines up as the number 9 but does not play like one, because the player keeps leaving that space.'},
    {q:'What is the difference between a false nine and a striker?',a:'A striker stays close to the last defenders and runs behind them. A false nine moves away from them toward the ball and helps the midfield.'},
-   {q:'What skills does a false nine need?',a:'A good first touch, the habit of looking around before the ball comes, and passing that finds running teammates.'}],
-  links:[{path:'/learn/soccer-positions/striker',name:'Striker in soccer',line:'The number 9 and what the position does'},{path:'/learn/soccer-positions/attacking-midfielder',name:'Attacking midfielder in soccer',line:'The number 10, who shares the space a false nine drops into'},{path:'/learn/soccer-positions/numbers',name:'Soccer positions by number',line:'Why the center forward is called the number 9'}],
+   {q:'What skills does a false nine need?',a:'A good first touch, the habit of looking around before the ball comes, and passing that finds running teammates.'},
+   {q:'Who was the first false nine?',a:'Nándor Hidegkuti of Hungary is the best-known early one. In 1953 he wore number 9 but played deep, and England’s defenders could not pick him up in Hungary’s 6-3 win at Wembley.'},
+   {q:'Was Messi a false nine?',a:'Yes. From 2009 Pep Guardiola often played Lionel Messi as a false nine at Barcelona: he started in the middle, dropped into midfield and ran at the defense from deep.'}],
+  links:[{path:'/learn/soccer-positions/striker',name:'Striker in soccer',line:'The number 9 and what the position does'},{path:'/learn/soccer-positions/attacking-midfielder',name:'Attacking midfielder in soccer',line:'The number 10, who shares the space a false nine drops into'},{path:'/learn/soccer-positions/numbers',name:'Soccer positions by number',line:'Why the center forward is called the number 9'},
+   {path:'/learn/soccer-positions/center-back',name:'Center back in soccer',line:'The defender a false nine pulls out of position'},{path:'/learn/soccer-positions/winger',name:'Winger in soccer',line:'The player who runs into the space a false nine leaves'}],
   lessonIds:['exp11_droppingnine','f_pivot','expf_replacepivot'],related:['third-man-run','through-ball','box-to-box','overload']},
 
  {slug:'sweeper-keeper',sides:{title:'How do attackers play against a sweeper keeper?',items:['Look up. If the goalkeeper is far from the goal, a long shot can score.','Press the goalkeeper quickly when the ball is at their feet.','Play the through ball wide, away from the middle where the goalkeeper waits.','Do not hit the pass too hard. A ball that runs long is the goalkeeper’s ball.']},
@@ -1001,23 +1016,30 @@ export const TERM_PAGES:readonly TermPage[]=([
 
  {slug:'penalty-area',sides:{title:'What should players remember inside the penalty area?',items:['Defenders stay on their feet. A careless tackle here can be a penalty kick.','Defenders keep their arms close to the body when a shot or a cross comes in.','Attackers keep the ball moving and shoot early. There is little time in the area.','The goalkeeper may use hands up to the line, and not past it.']},
   name:'Penalty Area',also:'the box, 18-yard box, the 18, penalty box',short:'The big box in front of each goal. The goalkeeper may use hands inside it, and a foul by a defender inside it can be a penalty kick.',
-  title:'Penalty Area in Soccer: What Is the 18-Yard Box?',h1:'What is the penalty area in soccer?',
-  desc:'What is the penalty area in soccer? The big box in front of each goal, also called the 18-yard box or the box. Its size, its lines and the rules inside it.',
-  answer:'The penalty area in soccer (football) is the big box marked in front of each goal, 18 yards deep on a full-size field. People also call it the 18-yard box or the box. Inside their own penalty area the goalkeeper may use hands, and a direct free kick foul by a defender there is a penalty kick.',
+  title:'Penalty Area in Soccer: Size, Rules and the 18-Yard Box',h1:'What is the penalty area in soccer?',
+  desc:'The penalty area in soccer is the big box in front of each goal: 18 yards (16.5 m) deep, 44 yards wide, penalty spot at 12 yards (11 m). Its rules.',
+  answer:'The penalty area in soccer is the big box in front of each goal, 18 yards (16.5 m) deep on a full-size field, with the penalty spot 12 yards (11 m) out. It is also called the 18-yard box. Inside it the goalkeeper may use hands, and a direct free kick foul by a defender is a penalty kick.',
   kinds:{title:'Other names for the penalty area',rows:[['18-yard box','The most common other name, because on a full-size field the area reaches 18 yards out from the goal line.'],['The box','The short name players and commentators use, as in “a shot from outside the box”.'],['Penalty box','The same area, named after the penalty kick that a foul inside it can give.'],['The 18','A short name some coaches use, from the 18 yards.']]},
   scene:{title:'The penalty area',who:'9@50,81 10@36,76 7@70,90 !4@45,90 !5@58,88 !3@78,85 !G@50,98.5',ball:[51,82.5],zone:[20.4,84.3,79.6,100],
    caption:'The shaded box is the penalty area in front of the dark green team’s goal. Their goalkeeper may use hands anywhere inside it. A direct free kick foul by one of their defenders inside it gives the gold team a penalty kick.'},
-  howTitle:'What are the rules of the penalty area?',howFact:{label:'Full-size field',value:'18 yards deep'},quizHow:{q:'Which one is true about the penalty area?',why:'The goalkeeper may handle the ball only inside their own penalty area. Outside it, the goalkeeper follows the same handball rule as every other player.'},
+  howTitle:'What are the penalty area rules in soccer?',howFact:{label:'Full-size field',value:'18 yards deep'},quizHow:{q:'Which one is true about the penalty area?',why:'The goalkeeper may handle the ball only inside their own penalty area. Outside it, the goalkeeper follows the same handball rule as every other player.'},
   how:['The goalkeeper may handle the ball inside their own penalty area, and nowhere else on the field.','A direct free kick foul by a defender inside their own penalty area is a penalty kick.',
    'At a goal kick, the other team waits outside the penalty area until the ball is kicked.','At a penalty kick, every player except the kicker and the goalkeeper waits outside the area and the arc.','The lines are part of the area. A foul on the line counts as inside.'],
+  extra:{id:'penalty-area-size',title:'Penalty area dimensions: the size of the box',intro:'These are the full-size field markings from Law 1 of the Laws of the Game. Every distance is measured from the goal line or from the goal.',
+   head:['Marking','Full-size field'],rows:[['Penalty area depth','18 yards (16.5 m) out from the goal line'],['Penalty area width','44 yards (40.3 m): 18 yards beyond each goalpost'],
+    ['Penalty spot (penalty mark)','12 yards (11 m) from the middle of the goal line'],['Penalty arc (the D)','10 yards (9.15 m) from the penalty spot, outside the area'],
+    ['Goal area (6-yard box)','6 yards (5.5 m) deep and 20 yards (18.3 m) wide'],['Goal','8 yards (7.32 m) wide and 8 feet (2.44 m) high']],
+   note:'Source: IFAB Laws of the Game, Law 1 (The Field of Play), theifab.com. Fields for 7v7 and 9v9 use a smaller penalty area: check your league’s field diagram.'},
   mistakes:['Thinking the goalkeeper may use hands anywhere. The goalkeeper may do so only inside the area.','Thinking every foul in the area is a penalty kick. An indirect free kick foul is not.','A goalkeeper carrying the ball over the line while getting ready to kick it.'],
   formats:'On a full-size field the penalty area is 44 yards wide and 18 yards deep, and the penalty mark is 12 yards from the goal line. The arc at the top of the box keeps players 10 yards from the mark at a penalty kick. The penalty area is smaller on 7v7 and 9v9 fields. Futsal has a penalty area with curved corners instead.',
-  faq:[{q:'Why is it called the 18-yard box?',a:'On a full-size field the penalty area reaches 18 yards out from the goal line. That is where the name comes from.'},
+  faq:[{q:'Where is the penalty spot in the penalty area?',a:'On a full-size field the penalty spot (the penalty mark) is 12 yards (11 m) out from the middle of the goal line, inside the penalty area. Penalty kicks and the kicks in a penalty shootout are taken from it.'},
    {q:'What is the difference between the penalty area and the goal area?',a:'The goal area is the small box inside the penalty area, 6 yards deep on a full-size field. Goal kicks are taken from it. The penalty area is the big box around it.'},
    {q:'How big is the penalty area in soccer?',a:'On a full-size field it is 44 yards wide and 18 yards deep (40.3 by 16.5 meters), as Law 1 of the Laws of the Game sets out. Fields for 7v7 and 9v9 use a smaller penalty area, so check your league’s field rules.'},
    {q:'Can the goalkeeper leave the penalty area?',a:'Yes. Outside the area the goalkeeper plays like any other player and may not use hands.'},
    {q:'What is the D on a soccer field?',a:'The arc at the top of the penalty area. It is not part of the area. At a penalty kick, players stay outside it so they are 10 yards from the penalty mark.'}],
-  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'What happens after a foul in the penalty area'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'How big the field is for 7v7, 9v9 and 11v11'}],
+  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'What happens after a foul in the penalty area'},{path:'/learn/soccer-terms/penalty-shoot-out',name:'Penalty shootout rules',line:'Five kicks each from the penalty spot, then sudden death'},
+   {path:'/learn/soccer-positions/goalkeeper',name:'Goalkeeper in soccer',line:'The only player who may use hands, and only inside this box'},{path:'/learn/quizzes/penalty-kick-quiz',name:'Penalty kick quiz',line:'Test the penalty rules in a few questions'},
+   {path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'How big the field is for 7v7, 9v9 and 11v11'}],
   lessonIds:['learn11_cutback','next7_shotreaction','learn7_buildout'],related:['goal-area','penalty-shoot-out','free-kick-wall','sweeper-keeper','set-piece']},
 
  {slug:'goal-area',sides:{title:'What do players do in the goal area?',items:['The goalkeeper places the ball anywhere in the goal area for a goal kick.','Defenders clear a loose ball away from the goal area quickly.','Attackers arrive there as the ball does, for a tap-in or a rebound.','On a corner kick, the goalkeeper needs room to move. Defenders mark without blocking their own goalkeeper.']},
@@ -1079,24 +1101,31 @@ export const TERM_PAGES:readonly TermPage[]=([
 
  {slug:'penalty-shoot-out',sides:{title:'What can a goalkeeper do in a shoot-out?',items:['Stay on the goal line until the ball is kicked. Part of one foot must be on the line or level with it.','Stand tall in the middle and stay calm. The kicker feels the pressure too.','Watch the kicker’s run and the standing foot.','Choose a side and dive with full effort.']},
   name:'Penalty Shoot-Out',also:'penalty shootout, shootout, penalties, kicks from the penalty mark, PKs',short:'A way to decide a tied cup game: each team takes five kicks from the penalty mark in turns, and more if it is still tied.',
-  title:'Penalty Shootout in Soccer: How It Works and the Rules',h1:'What is a penalty shootout in soccer?',
-  desc:'A penalty shootout decides a tied knockout game: five kicks each from the penalty mark, in turns, then sudden death. Who may kick and the keeper rules.',
-  answer:'A penalty shootout is how a tied knockout soccer (football) game that needs a winner is decided. Each team takes five kicks from the penalty mark in turns. The team that scores more wins, and if they are level the kicks go on until one team is ahead. The Laws of the Game call it kicks from the penalty mark.',
+  title:'Penalty Shootout Rules in Soccer: How a Shoot-Out Works',h1:'What is a penalty shootout (shoot-out) in soccer?',
+  desc:'How a penalty shootout (penalty shoot-out) works in soccer: 5 kicks each in turns, then sudden death, and where the goalkeeper stands. IFAB Law 10.',
+  answer:'A penalty shootout (penalty shoot-out) decides a tied knockout soccer (football) game that needs a winner. Each team takes five kicks from the penalty mark in turns. The team that scores more wins, and if they are level the kicks go on until one team is ahead. The Laws of the Game call it kicks from the penalty mark.',
   scene:{title:'A penalty shoot-out',who:'9@50,86 G@82,99.5 4@39,50 5@45,56 10@45,44 !G@50,99.5 !7@56,44 !8@56,56 !6@62,50',ball:[50,89.5],passes:['50,89.5>46.6,100'],
    caption:'Number 9 takes a kick from the penalty mark against the other team’s goalkeeper. The other players wait in the center circle, and number 9’s own goalkeeper waits on the goal line beside the penalty area.'},
-  howTitle:'How does a penalty shoot-out work?',howFact:{label:'Kicks',value:'5 each, then one each'},quizHow:{q:'Which one is true about a penalty shoot-out?',why:'Each team takes five kicks in turns. If the score in kicks is level after five each, the teams keep taking one kick each until one team is ahead.'},
+  howTitle:'How does a penalty shootout work, step by step?',howFact:{label:'Kicks',value:'5 each, then one each'},quizHow:{q:'Which one is true about a penalty shoot-out?',why:'Each team takes five kicks in turns. If the score in kicks is level after five each, the teams keep taking one kick each until one team is ahead.'},
   how:['Each team takes five kicks in turns, and the team that scores more wins.','The referee tosses a coin to choose the goal, and again to decide which team kicks first.',
    'The kicks stop early when one team cannot catch up with the kicks it has left.','If it is level after five kicks each, the teams take one kick each until one scores and the other does not. This is called sudden death.','A different player takes each kick. Everyone on a team kicks once before anyone kicks twice.',
    'Only players on the field when the game ends may take part. If one team has more players, it leaves some out, so both teams have the same number.',
    'The goalkeeper stays on the goal line, between the posts and facing the kicker, until the ball is kicked. A goalkeeper who is hurt may be replaced by a named substitute.'],
+  extra:{id:'shoot-out-rules',title:'Penalty shoot-out rules: where everyone stands',intro:'Law 10 of the Laws of the Game sets out the shoot-out. Here is where each player must be, and when a kick counts.',
+   head:['Who or what','The rule'],rows:[['The kicker','Kicks the ball forward from the penalty spot, 12 yards (11 m) from goal, and may not touch it again.'],
+    ['The goalkeeper facing the kick','On the goal line between the posts until the ball is kicked, with part of one foot touching or level with the line.'],
+    ['The kicking team’s goalkeeper','Waits on the field, on the goal line where it meets the penalty area line.'],['Everyone else','Waits inside the center circle.'],
+    ['Off the post or the keeper','Still a goal if it goes in. The kick ends when the ball stops, goes out or the referee stops play.']],
+   note:'Source: IFAB Laws of the Game, Law 10 (Determining the Outcome of a Match), theifab.com.'},
   mistakes:['Mixing it up with a penalty kick, which is given for a foul during the game.','Trying to score from a rebound. In a shoot-out the kicker gets one touch and the kick is over.','Thinking any player may kick. The kickers come from the players who were in the game when it ended.'],
   formats:'Shootouts are used only when a game must have a winner: knockout cup games, tournament playoffs and finals. Most kids’ leagues do not use them, because a tied league game simply ends as a tie. When they are used, they work the same way in 7v7, 9v9, 11v11 and futsal, and the details change with the competition. Some youth events go straight to kicks with no extra time, and some use fewer than five kicks to begin with. The kicks are taken after the game has ended, and they decide which team goes on.',
   faq:[{q:'How many kicks does each team get in a shoot-out?',a:'Five each to begin with. If the teams are level after five, they take one kick each until one team is ahead after the same number of kicks.'},
    {q:'What is the difference between a penalty kick and a penalty shoot-out?',a:'A penalty kick is given during the game for a foul in the penalty area. A shoot-out comes after a tied game, and uses kicks from the same mark to find a winner.'},
    {q:'Can the goalkeeper take a kick in a shoot-out?',a:'Yes. The goalkeeper is one of the players on the field, so they may take a kick, and they must take one before any teammate kicks twice.'},
-   {q:'Who goes first in a penalty shoot-out?',a:'The referee tosses a coin. The team that wins the toss chooses to kick first or second.'},
+   {q:'Is it a penalty shootout or a penalty shoot-out?',a:'Both. Penalty shootout, penalty shoot-out and penalty shoot out are the same thing, and people also say penalties. The Laws of the Game call it kicks from the penalty mark. The coin toss winner chooses to kick first or second.'},
    {q:'Do kids’ soccer leagues have penalty shootouts?',a:'Most do not. A tied league game ends as a tie. Shootouts are for tournament and cup games that need a winner, and some young age groups skip them altogether.'}],
-  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'The kick given for a foul, with a diagram'},{path:'/learn/soccer-positions/goalkeeper',name:'Goalkeeper in soccer',line:'The player who faces every kick in a shootout'},
+  links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'The kick given for a foul, with a diagram'},{path:'/learn/soccer-terms/penalty-area',name:'Penalty area and penalty spot',line:'The box and the spot every shootout kick is taken from'},
+   {path:'/learn/soccer-positions/goalkeeper',name:'Goalkeeper in soccer',line:'The player who faces every kick in a shootout'},{path:'/learn/quizzes/penalty-kick-quiz',name:'Penalty kick quiz',line:'Test the penalty and shootout rules'},
    ...(['ballblaster','flickit'] as const).filter(isGameListed).map(gameLink)/* Nov 23 2026: practise the kick from the spot as a game */],
   lessonIds:['next7_shotreaction','expf_keeperposition','learn7_roles'],related:['extra-time','stoppage-time','penalty-area','set-piece']},
 ] as Raw[]).map(make);

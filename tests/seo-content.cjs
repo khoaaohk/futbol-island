@@ -46,7 +46,7 @@ for(const [p,t,d] of metas){
  assert(!seenT.has(t),`${p}: title repeats ${seenT.get(t)}: ${t}`);seenT.set(t,p);assert(!seenD.has(d),`${p}: description repeats ${seenD.get(d)}`);seenD.set(d,p);}
 // the Search Console wording (gsc data, Nov 15 2026; 2v1, heading and tennis re-led Nov 18 2026) stays in the titles of the pages people found
 // Nov 22 2026 (CTR round): the cards rule page is the rules deep-dive; the term pages answer "what does a yellow card mean".
-const WANT={'/learn/soccer-rules/yellow-and-red-cards':/yellow and red card rules in soccer/i,'/learn/soccer-terms/two-v-one':/^2v1 meaning in soccer/i,'/learn/soccer-rules/heading-rules-for-kids':/^heading rules in youth soccer/i,'/games/soccer-tennis-game':/^soccer tennis game/i,'/learn/soccer-rules/futsal-rules':/futsal rules vs soccer/i,
+const WANT={'/learn/soccer-rules/yellow-and-red-cards':/yellow and red card rules in soccer/i,'/learn/soccer-terms/two-v-one':/^2v1 in soccer: what it means/i,/* Nov 24 2026: "2v1" at 2.6 with 0 clicks, re-led for the click */'/learn/soccer-rules/heading-rules-for-kids':/^heading rules in youth soccer/i,'/games/soccer-tennis-game':/^soccer tennis game/i,'/learn/soccer-rules/futsal-rules':/futsal rules vs soccer/i,
  '/tools/soccer-playing-time-calculator':/playing time calculator/i,'/learn/soccer-terms':/soccer terms a to z/i,'/learn/soccer-rules/back-pass-rule':/back[- ]pass rule in soccer/i};
 for(const [p,re] of Object.entries(WANT))assert(re.test((metas.find(m=>m[0]===p)||[])[1]||''),`${p}: title keeps the search wording`);
 
