@@ -12,7 +12,8 @@
 //   deck     the track assist onto a bridge head, off a deck into the sea (swim), a swimmer at a high deck stays in, the splash bonk
 //            from a deck, the side bonk, a stopped train hit at speed on a scooter
 //   roof     land on a moving train's roof with the jetpack, ride it at speed, get bonked off at the tunnel portal onto the ground
-//            (+ jumping car to car, a jetpack take-off from the roof and Land back on, the landing ring on the roof spot)
+//            (+ jumping car to car, a jetpack take-off from the roof and Land back on, the landing ring on the roof spot; then
+//            --roof-runs=N (default 10) more Lands over the moving roof: at least 90 % must land on it)
 //   shots    after images of the owner's 14 screenshots' places (desktop) into --shots
 //   perf     frame time p50/p95/max + draws standing at the busiest station and riding (GFX_NO_TRAIN A/B is gfx-budget.cjs)
 // Needs: app  NEXT_DIST_DIR=.next-aaa npx next dev -p 9156     Run: node scripts/check-train-aaa.cjs --port=9156 [--shots=<dir>] [--gpu=swiftshader]
@@ -297,23 +298,27 @@ async function partDeck(c) {
     return { bonk, kind, placed, moved: +Math.hypot(f.location.x - x0, f.location.z - z0).toFixed(1), water: !!f.water.inWater }; });
   check('the side bonk: stepping into a moving car\'s side throws you clear (kind side)', side2.bonk && side2.kind === 'side' && !side2.water, JSON.stringify(side2));
   // a stopped train hit at speed on a scooter (> 4.5 m/s): the bonk; walking into it just blocks
-  await standingTrainAt(p, 0); await p.waitForTimeout(800);
+  // Aimed at the solid panel between two doors (u 1.45: doors at -0.2 and 3.1, +-0.65): since walk-in boarding (4e5e44d9) a scooter
+  // through an OPEN doorway on the platform side boards you, stowed, by design (probe-train-walkin), so the old aim (u 2.8, inside the
+  // 3.1 door) boarded instead of bonking and the train had left by the second try. Each try starts 3.5 s into a fresh dwell.
   let hit = false, hs = null;
   for (const sg of [1, -1]) {
+    await standingTrainAt(p, 0); await p.waitForTimeout(800);
     const geo = await p.evaluate((sg) => { const f = window.__fi2, t = f.trains, o = { x: 0, y: 0, z: 0, yaw: 0 }, o2 = { x: 0, y: 0, z: 0, yaw: 0 };
-      t.standAt(0, 0, 2.8, 0, o, undefined, 0); t.standAt(0, sg * 13, 2.8, 0, o2, undefined, 0); return { cx: o.x, cz: o.z, sx: o2.x, sz: o2.z, at: t.states[0].at }; }, sg);
+      t.standAt(0, 0, 1.45, 0, o, undefined, 0); t.standAt(0, sg * 13, 1.45, 0, o2, undefined, 0); return { cx: o.x, cz: o.z, sx: o2.x, sz: o2.z, at: t.states[0].at }; }, sg);
     const go = keysToward(geo.cx - geo.sx, geo.cz - geo.sz);
     try { await p.evaluate(() => window.__fi2.selectRide('scooter')); } catch { /* */ }
     await p.waitForTimeout(800); await tp(p, geo.sx, geo.sz); await p.waitForTimeout(700);
     await p.evaluate(() => { window.__hitDbg = { vmax: 0, dmin: 1e9 }; const f = window.__fi2; let t0 = performance.now(), px = f.location.x, pz = f.location.z;
       const tick = () => { const now = performance.now(), dt = (now - t0) / 1000; t0 = now; const l = f.location, v = dt > 0 ? Math.hypot(l.x - px, l.z - pz) / dt : 0; px = l.x; pz = l.z; if (v < 30) window.__hitDbg.vmax = Math.max(window.__hitDbg.vmax, v);
-        const o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.standAt(0, 0, 2.8, 0, o, undefined, 0); window.__hitDbg.dmin = Math.min(window.__hitDbg.dmin, Math.hypot(l.x - o.x, l.z - o.z)); if (!f.trainBonk.active && window.__hitDbg) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
+        const o = { x: 0, y: 0, z: 0, yaw: 0 }; f.trains.standAt(0, 0, 1.45, 0, o, undefined, 0); window.__hitDbg.dmin = Math.min(window.__hitDbg.dmin, Math.hypot(l.x - o.x, l.z - o.z)); if (!f.trainBonk.active && window.__hitDbg) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
     hit = await hold(p, go.keys, 4500, () => !!window.__fi2.trainBonk.active);
-    hs = await p.evaluate((sg) => ({ sg, kind: window.__fi2.trainBonk.state.kind, ride: window.__fi2.rideRef.current, at: window.__fi2.trains.states[0].at, vmax: +window.__hitDbg.vmax.toFixed(1), dmin: +window.__hitDbg.dmin.toFixed(1) }), sg);
+    hs = await p.evaluate((sg) => ({ sg, kind: window.__fi2.trainBonk.state.kind, ride: window.__fi2.rideRef.current, at: window.__fi2.trains.states[0].at, onTrain: window.__fi2.trainRide.active, vmax: +window.__hitDbg.vmax.toFixed(1), dmin: +window.__hitDbg.dmin.toFixed(1) }), sg);
     hs.keys = go.keys.join('+'); hs.off = +go.a.toFixed(2); console.log('  scooter run ' + JSON.stringify(hs));
     if (hit) break; }
   check('a stopped train hit at speed on a scooter: bonked off (the ride stowed)', hit, JSON.stringify(hs));
   await p.waitForTimeout(2500); try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ }
+  await settle(p);
 }
 // Bring train 0 to lap time T, fly over its first car with the jetpack, follow it a moment and Land: onto the roof.
 async function landRoof(p, T) {
@@ -614,7 +619,7 @@ async function partLanding(c) {
     await p.evaluate(() => window.__fi2.selectRide('walk')); await p.waitForTimeout(4500); const r = await recStop(p); report(name, r); await settle(p); }
 }
 async function partRoof(c) {
-  const { p } = c; const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
+  const { p } = c; await settle(p); const tw = await p.evaluate(() => { const s = window.__fi2.trains.sched; let best = 0, bd = 1e9; for (let q = 0; q < 2700; q++) { const a = s.trackAt(q), d = Math.hypot(a.x - 538.5, a.z - 169.5); if (d < bd) { bd = d; best = q; } } return best; });
   const T = await p.evaluate((W) => { const s = window.__fi2.trains.sched; for (let t = 0; t < 360; t += .1) { const st = s.trainAt(0, t); if (((W - 260 - st.s) % 2700 + 2700) % 2700 < 3) return t; } return 0; }, tw);
   let landed = await landRoof(p, T); if (!landed.ok) { console.log('  (first Land missed the roof at a slow headless frame: once more, a lap later) ' + JSON.stringify(landed)); try { await p.evaluate(() => window.__fi2.selectRide('walk')); } catch { /* */ } await p.waitForTimeout(3000); landed = await landRoof(p, T); }
   check('jetpack Land over a moving train: onto its roof', landed.ok, JSON.stringify(landed));
@@ -660,6 +665,12 @@ async function partRoof(c) {
     check('jetpack take-off from the roof: off the roof and rising from roof height (no drop to the ground first)', up.ride === 'jetpack' && up.off && up.minY > roofY0 - .6 && up.maxY > roofY0 + 1.5, JSON.stringify({ roofY: +roofY0.toFixed(2), ...up }));
     await p.evaluate(() => window.__fi2.selectRide('walk')); await p.waitForTimeout(3000);
   }
+  // Release blocker (Nov 24 2026): Land over a moving roof must be reliable: N more tries (--roof-runs, default 10), at least 90 % onto
+  // the roof. Each try starts on foot, off any roof (settle), no retry inside a try.
+  const N = +arg('roof-runs', '10'); let ok = 0; const miss = [];
+  for (let i = 0; i < N; i++) { await settle(p); const r = await landRoof(p, T); if (r.ok) ok++; else miss.push(r); }
+  check(`jetpack Land over a moving roof: reliable (${ok} of ${N} tries onto the roof, need 90 %)`, ok >= Math.ceil(N * .9), JSON.stringify(miss.slice(0, 2)));
+  await settle(p);
 }
 const OWNER_SPOTS = [
   ['1-south-coast', 125, 226], ['2-palm-trestle', -10, 101], ['3-shore-wall', 30, 140], ['4-south-station', 160, 223], ['5-east-hill', 664, 51],

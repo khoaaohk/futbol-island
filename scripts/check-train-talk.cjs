@@ -81,12 +81,17 @@ async function partWalkUp(c, label, mobile, k) {
     f.trains.carMatrixOf(r.train, 0, m); const inv = m.clone().invert();
     for (let j = 0; j < count; j++) { const s = list[j]; if (s.k !== r.train) continue; const q = new V(s.x, s.y, s.z).applyMatrix4(inv); if (q.z < -5.5 || q.z > 4) continue; r.spot.u = q.z; r.spot.x = q.x > 0 ? q.x - .75 : q.x + .75; return true; } return false; });
   await besideAPassenger(p);
-  let both = null; for (let i = 0; i < 120; i++) { await p.waitForTimeout(500);
+  let both = null, last = null; const seen = { exit: 0, talk: 0, t0: Date.now() }; for (let i = 0; i < 120; i++) { await p.waitForTimeout(500);
+    const dbg = await p.evaluate(() => { const f = window.__fi2, r = f.trainRide, s = f.trains.states[r.train < 0 ? 0 : r.train]; return { act: r.active, at: s.at, next: s.next, dw: +(s.dwellLeft ?? 0).toFixed(1), stand: r.standing, spot: [+r.spot.x.toFixed(2), +r.spot.u.toFixed(2)], exit: !!document.querySelector('[data-train-exit]'), talk: !!document.querySelector('.npc-talk-prompt'), dlg: !!document.querySelector('dialog[open]') }; });
+    if (dbg.exit) seen.exit++; if (dbg.talk) seen.talk++; if (process.env.TALK_DBG) console.log(`  stop wait ${i}: ${JSON.stringify(dbg)}`);
     both = await p.evaluate(() => { const t = document.querySelector('.npc-talk-prompt'), x = document.querySelector('[data-train-exit]'); if (!x) return null; const a = t?.getBoundingClientRect(), b = x.getBoundingClientRect();
       return { talk: !!t, exit: true, overlap: !!a && !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top), a: a ? [a.left, a.top, a.width, a.height].map(Math.round) : null, b: [b.left, b.top, b.width, b.height].map(Math.round) }; });
-    if (both && both.talk) break; if (both && !both.talk) await besideAPassenger(p); }
-  check(`${label}: at a stop: Talk and the Get off pill both show, apart`, both && both.talk && !both.overlap, JSON.stringify(both));
-  if (shots && both) await p.screenshot({ path: path.join(shots, `talk-stop-${label}.png`) });
+    if (both) last = both; if (both && both.talk) break; if (both && !both.talk) await besideAPassenger(p); }
+  // the pill and the Talk prompt are separate checks (Nov 24 2026: one combined check read a stop whose dwell ended before a passenger
+  // was beside me, the pill gone again, as "no Get off pill"); the last sighting is reported, not the empty poll after the doors shut
+  check(`${label}: at a stop: the Get off pill shows (Inside, standing)`, seen.exit > 0, JSON.stringify({ polls: seen.exit, s: Math.round((Date.now() - seen.t0) / 1000) }));
+  check(`${label}: at a stop: Talk and the Get off pill both show, apart`, last && last.talk && !last.overlap, JSON.stringify({ ...last, talkPolls: seen.talk }));
+  if (shots && last) await p.screenshot({ path: path.join(shots, `talk-stop-${label}.png`) });
 }
 async function partTalk(c, label, mobile) {
   const { p } = c; const k = await ride(p);
