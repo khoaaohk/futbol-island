@@ -26,11 +26,10 @@ for(const r of ['scooter','bike','moped']){const a=A.travelArrival({ride:r,swimm
 {const a=A.travelArrival({ride:'walk',swimming:true,air:0},land);assert(a.ride==='walk'&&!a.swimming,'swimming to land: walking');
  assert(A.travelArrival({ride:'walk',swimming:true,air:0},sea).swimming,'swimming to water: swimming');}
 
-// ---- 1b. Live audit Nov 24 2026: a station pin lands a flyer on the platform on foot (Board is never offered from the jetpack); the
+// ---- 1b. (Owner Nov 25 2026: reverted) a station pin used to land a flyer on foot; now it keeps the mode (Board is never offered from the jetpack); the
 // ground rides still arrive riding (Board takes them); everywhere else flying still arrives flying.
 {const st={groundY:.6,water:false,station:true};
- assert.deepEqual({...A.travelArrival({ride:'jetpack',phase:'idle',swimming:false,air:22},st)},{ride:'walk',flying:false,swimming:false,flightHeight:.6},'a station pin: the flyer lands on the platform on foot');
- assert.equal(A.travelArrival({ride:'jetpack',phase:'parachute',swimming:false,air:9},st).ride,'walk','under the parachute too');
+ assert(A.travelArrival({ride:'jetpack',phase:'idle',swimming:false,air:22},st).flying,'owner Nov 25 (decision 4): a station pin keeps flying like every other pin');
  for(const r of ['walk','scooter','bike','moped'])assert.equal(A.travelArrival({ride:r,swimming:false,air:0},st).ride,r,r+' to a station keeps its mode');
  assert(A.travelArrival({ride:'jetpack',phase:'idle',swimming:false,air:22},{groundY:.4,water:false}).flying,'other places: flying still arrives flying');
  const town0=fs.readFileSync(path.join(ROOT,'components/Town.tsx'),'utf8');
