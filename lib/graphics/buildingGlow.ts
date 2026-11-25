@@ -3,7 +3,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {KIT_SHOP_GLOW} from '../shop/shopDoors';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'|'shop'|'station'|'train'){
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'|'shop'|'station'|'train'|'cafe'){
  const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
@@ -29,6 +29,14 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   // along the line × its depth, platform to eave) and the tiled roof's eave slab (9.6 m × depth + 2.5 m, lib/town/trainWorld.ts).
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
   {w:width+1.8,d:depth+2.7,h:.34,x:0,y:height+.3,z:0}
+ ]:kind==='cafe'?[
+  // Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts; graphics/cafePrompt.ts): origin = the footprint centre at sand level. The
+  // ground floor on its stone base, the balcony ledge, the upper floor, the gable roof's bounds and the front deck with its awning.
+  {w:10.3,d:7.3,h:4.1,x:0,y:2.05,z:0},
+  {w:8.6,d:5.6,h:2.75,x:0,y:5.35,z:-.3},
+  {w:10.1,d:6.6,h:1.95,x:0,y:7.65,z:-.3},
+  {w:13.9,d:7.6,h:.9,x:-.1,y:.45,z:7.25},
+  {w:7.1,d:10.6,h:.9,x:8.5,y:.45,z:-1.75}
  ]:kind==='train'?[
   // Island Line car (Gameplay 2, Nov 24 2026; lib/graphics/trainHover.ts): the car's bounds only (2·HALF_W × car length × body
   // height), one glow per car placed on the car's own matrix, so the model's internals never matter.
@@ -62,7 +70,7 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   const geometry=mergeGeometries(parts)!;parts.forEach(part=>part.dispose());geometries.push(geometry);
   const mesh=new T.Mesh(geometry,materials[layer]);mesh.name=layer?'building-edge-halo':'building-edge-outline';mesh.raycast=()=>{};effect.add(mesh);
  }
- const wallGeometry=kind==='ferry'||cabinet?(()=>{const parts=shapes.map(s=>new T.BoxGeometry(s.w,s.h,s.d).translate(s.x,s.y,s.z));const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;})():new T.BoxGeometry(width+.16,height-.04,depth+.18).translate(0,(height-.04)/2,0);// top face 4 cm under the roof: coplanar with it, the additive glow z-fought (striped flicker on the Konbini roof, Sep 29 2026)geometries.push(wallGeometry);
+ const wallGeometry=kind==='ferry'||kind==='cafe'||cabinet?(()=>{const parts=shapes.map(s=>new T.BoxGeometry(s.w,s.h,s.d).translate(s.x,s.y,s.z));const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;})():new T.BoxGeometry(width+.16,height-.04,depth+.18).translate(0,(height-.04)/2,0);// top face 4 cm under the roof: coplanar with it, the additive glow z-fought (striped flicker on the Konbini roof, Sep 29 2026)geometries.push(wallGeometry);
  const wallMaterial=new T.ShaderMaterial({uniforms,vertexShader,fragmentShader:'varying vec3 localPoint; uniform float strength; uniform float rise; uniform float moving; uniform vec3 tint; void main(){float band=exp(-pow((localPoint.y-rise)/0.8,2.0));float trail=exp(-pow((localPoint.y-rise+0.9)/1.5,2.0));float alpha=strength*moving*(band*0.17+trail*0.035);gl_FragColor=vec4(tint,alpha);}',transparent:true,depthWrite:false,side:T.FrontSide,blending:T.AdditiveBlending,toneMapped:false});
  const walls=new T.Mesh(wallGeometry,wallMaterial);walls.name='building-rising-glow';walls.raycast=()=>{};effect.add(walls);
  let amount=0,phase=0,wasHovered=false;

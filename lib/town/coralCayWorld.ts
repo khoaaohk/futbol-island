@@ -7,6 +7,7 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
@@ -570,8 +571,8 @@ export function buildCoralCay(t:CayTools){
  const onBuilding=(p:{x:number;z:number})=>CAY_HOUSES.some(([x,z,w,d])=>Math.abs(p.x-x)<w/2+3&&Math.abs(p.z-z)<d/2+3);
  const onCourt=(p:{x:number;z:number})=>onBuilding(p)||Math.abs(p.x-BEACH_COURT.x)<BEACH_COURT.length/2+5&&p.z>BEACH_COURT.z-BEACH_COURT.width/2-12&&p.z<BEACH_COURT.z+BEACH_COURT.width/2+12;
  const nearCauseway=(p:{x:number;z:number})=>onCourt(p)||p.x<CAY_BOULEVARD.x0+30&&Math.abs(p.z-z0)<18||Math.abs(p.x-CAY_KONBINI.x)<CAY_KONBINI.w/2+4&&p.z>CAY_KONBINI.z-CAY_KONBINI.d/2-4&&p.z<ROUNDABOUT.z;
- for(let i=0;i<n;i+=5){const p=inward(i,.6+jitter(i)*.2);if(nearCauseway(p)||inGashaponView(p.x,p.z))continue;palm(p.x,p.z,5.3+jitter(i,2)*1.3);}
- let u=0;for(let i=2;i<n;i+=17){const p=inward(i,.4);if(nearCauseway(p))continue;umbrella(p.x,p.z,u++);}
+ for(let i=0;i<n;i+=5){const p=inward(i,.6+jitter(i)*.2);if(nearCauseway(p)||inGashaponView(p.x,p.z)||inCafeClear(p.x,p.z))continue;/* Half-Time Café (seasideCafe.ts): palms 135 / 140 stood on it */palm(p.x,p.z,5.3+jitter(i,2)*1.3);}
+ let u=0;for(let i=2;i<n;i+=17){const p=inward(i,.4);if(nearCauseway(p)||inCafeClear(p.x,p.z))continue;umbrella(p.x,p.z,u++);}
  // Tide-line rocks never sit on the roundabout or the causeway's paving (Oct 15 2026: the cay's west shore runs under the
  // ring's west half, and pebbles poked up through the asphalt and the zebra).
  const onPaving=(p:{x:number;z:number})=>Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+5.5||P.some(q=>Math.hypot(q.x-p.x,q.z-p.z)<deck+1.5);
