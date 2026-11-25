@@ -4,7 +4,10 @@
  * both sides; the liveries (trainLiveries.ts) stay the base colours:
  *  A "Fair Play" (shaking hands, a high five, the referee's thumbs-up) · B "Help Each Other Up" (helping a fallen opponent up,
  *  passing, sharing a water bottle) · C "Cheer Everyone On" (a crowd cheering both teams, the keeper and the striker hugging).
- * ORIGINAL art (trainWrapArt.ts): the island's bean islanders and Conductor Kenji; no franchise, anime or brand look-alikes.
+ * v3 (owner, Nov 25 2026: "show drip fc and no images of kids or characters. still have the text"): no people at all; the Drip FC
+ * crest and wordmark (lib/shop/clubArt.ts, the club's own masks) on club-blue cards with football objects per theme; the slogans,
+ * boarding notes and Kenji's talk are unchanged. The masks are fetched on demand the first time a wrap is drawn on screen (never at
+ * load: until then the atlas carries the lettered fallback), then the atlas is redrawn ONCE into the same texture (same size).
  *
  * Heat first: ONE canvas atlas drawn once at load (ATLAS_W × ATLAS_H, mipmapped), ONE mesh for every wrap of every train (one draw),
  * its own MeshStandardMaterial (never a map on the shared vehicle material: every street vehicle's program stays as it is). The
@@ -19,7 +22,8 @@ import * as T from 'three';
 import {HALF_W,DOORS,DOOR_HALF,WIN_Y0,BODY_Y0} from './trainCarModel';
 import {TRAIN_COUNT,TRAIN_CARS} from './trainSchedule';
 import {LIVERIES} from './trainLiveries';
-import {drawWrapTile,drawWrapBadge,WRAP_TILES} from './trainWrapArt';
+import {drawWrapTile,drawWrapBadge,WRAP_TILES,type ClubMarkFn} from './trainWrapArt';
+import {clubArtReady,drawClubMark} from '../shop/clubArt';
 import type {NpcDefinition} from './npcDialogues';
 
 /** The three themes (index = livery). Copy: kid-friendly, positive, football facts checked:
@@ -72,12 +76,12 @@ export function quadLocal(q:number,t:number){const H=ATLAS_H,W=ATLAS_W;
  return {p:[x,WRAP_Y0,zl, x,WRAP_Y0,zr, x,WRAP_Y1,zr, x,WRAP_Y1,zl],n:[side,0,0],uv:uvOf(r,W,H,false)};}
 function uvOf(r:Rect,W:number,H:number,_m:boolean){const u0=(r.x+.5)/W,u1=(r.x+r.w-.5)/W,v0=1-(r.y+r.h-.5)/H,v1=1-(r.y+.5)/H;return [u0,v0,u1,v0,u1,v1,u0,v1];}
 
-/** Draw the whole atlas (once, at load). */
-export function drawWrapAtlas(c:CanvasRenderingContext2D|OffscreenCanvasRenderingContext2D){
+/** Draw the whole atlas (at load, and once more when the club's masks arrive). `mark` draws the Drip FC crest / wordmark / drop. */
+export function drawWrapAtlas(c:CanvasRenderingContext2D|OffscreenCanvasRenderingContext2D,mark:ClubMarkFn=drawClubMark){
  c.clearRect(0,0,ATLAS_W,ATLAS_H);
  for(let t=0;t<WRAP_THEMES.length;t++){const L=WRAP_THEMES[t];
-  for(let k=0;k<WRAP_TILES.length;k++){const r=tileRect(t,k),s=r.h/100;c.save();c.translate(r.x,r.y);c.scale(s,s);drawWrapTile(c,t,k,r.w/s,L.slogan);c.restore();}
-  const b=badgeRect(t),s=b.w/100;c.save();c.translate(b.x,b.y);c.scale(s,s);drawWrapBadge(c,t);c.restore();}}
+  for(let k=0;k<WRAP_TILES.length;k++){const r=tileRect(t,k),s=r.h/100;c.save();c.translate(r.x,r.y);c.scale(s,s);drawWrapTile(c,t,k,r.w/s,L.slogan,mark);c.restore();}
+  const b=badgeRect(t),s=b.w/100;c.save();c.translate(b.x,b.y);c.scale(s,s);drawWrapBadge(c,t,mark);c.restore();}}
 
 // ---------------------------------------------------------------- the mesh (one draw for all three trains)
 export function createTrainWraps(){
@@ -86,8 +90,10 @@ export function createTrainWraps(){
  for(let i=0;i<TRAIN_COUNT;i++)for(let c=0;c<TRAIN_CARS;c++)for(let q=0;q<QUADS_PER_CAR;q++){const o=(i*TRAIN_CARS+c)*QUADS_PER_CAR+q;uv.set(LOCAL[i%LIVERIES.length][q].uv,o*8);idx.push(o*4,o*4+1,o*4+2,o*4,o*4+2,o*4+3);}
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(pos,3).setUsage(T.DynamicDrawUsage));geo.setAttribute('normal',new T.BufferAttribute(nor,3).setUsage(T.DynamicDrawUsage));
  geo.setAttribute('uv',new T.BufferAttribute(uv,2));geo.setAttribute('color',new T.BufferAttribute(col,4).setUsage(T.DynamicDrawUsage));geo.setIndex(idx);
- let tex:T.Texture;
+ let tex:T.Texture,artAsked=false,artDone=false,disposed=false;let redraw=()=>{};
  if(typeof document!=='undefined'){const cv=document.createElement('canvas');cv.width=ATLAS_W;cv.height=ATLAS_H;const g=cv.getContext('2d');if(g)drawWrapAtlas(g);
+  // the club's masks: asked for the first time a wrap is on screen, then the atlas is redrawn once (same canvas, same texture size)
+  redraw=()=>{if(artAsked)return;artAsked=true;void clubArtReady().then(()=>{if(disposed||!g)return;drawWrapAtlas(g);tex.needsUpdate=true;artDone=true;});};
   const ct=new T.CanvasTexture(cv);ct.colorSpace=T.SRGBColorSpace;ct.anisotropy=4;ct.generateMipmaps=true;ct.minFilter=T.LinearMipmapLinearFilter;tex=ct;}
  else tex=new T.Texture();// headless tests (no canvas): an empty texture, same material settings
  const mat=new T.MeshStandardMaterial({map:tex,emissiveMap:tex,emissive:'#fff1d6',emissiveIntensity:0,roughness:.85,vertexColors:true,transparent:true,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
@@ -104,7 +110,7 @@ export function createTrainWraps(){
   /** Before the trains' draw loop. */
   begin(){seen.fill(0);quads=0;dirty=false;},
   /** Car c of train i in the near tier, from its instance matrix; `size` is its on-screen size (wrapAlpha). */
-  car(i:number,c:number,m:T.Matrix4,size:number){const a=wrapAlpha(size);if(a<=.01)return;seen[i]=1;shown[i]=1;writeCar(i,c,m,a);},
+  car(i:number,c:number,m:T.Matrix4,size:number){const a=wrapAlpha(size);if(a<=.01)return;if(!artAsked)redraw();seen[i]=1;shown[i]=1;writeCar(i,c,m,a);},
   /** After the loop: collapse the trains no longer drawn, upload once, the night glow. */
   end(night:number){for(let i=0;i<TRAIN_COUNT;i++)if(shown[i]&&!seen[i]){shown[i]=0;pos.fill(0,i*TRAIN_CARS*QUADS_PER_CAR*12,(i+1)*TRAIN_CARS*QUADS_PER_CAR*12);dirty=true;}
    if(dirty)(geo.attributes.position as T.BufferAttribute).needsUpdate=(geo.attributes.normal as T.BufferAttribute).needsUpdate=true;
@@ -114,7 +120,9 @@ export function createTrainWraps(){
   warm(on:boolean){mesh.visible=on;},
   /** For tests and the gfx probe. */
   get drawn(){return mesh.visible?quads:0;},
-  dispose(){geo.dispose();mat.dispose();tex.dispose();mesh.removeFromParent();},
+  /** True once the club's masks are in the atlas (tests and the train audit). */
+  get clubArt(){return artDone;},
+  dispose(){disposed=true;geo.dispose();mat.dispose();tex.dispose();mesh.removeFromParent();},
  };
  return api;
 }

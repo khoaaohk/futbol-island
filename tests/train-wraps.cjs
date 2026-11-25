@@ -4,7 +4,7 @@
 //  2. the panels stay on the lower body band: clear of every door frame, under the window frames, on the straight side; the atlas
 //     tiles fit and do not overlap; the tiles read left to right on both sides (never mirrored)
 //  3. ONE mesh / draw for every wrap, its own material (the shared vehicle material keeps no map); written only in the near tier,
-//     faded out before the far box tier (LOD hide), collapsed when a train is no longer drawn; original art (no images loaded)
+//     faded out before the far box tier (LOD hide), collapsed when a train is no longer drawn; v3 Drip FC art, no people (Nov 25)
 const assert=require('node:assert/strict');
 const {L,read}=require('./lib/tsLoad.cjs');
 const W=L('lib/town/trainWraps.ts'),M=L('lib/town/trainCarModel.ts'),R=L('lib/town/trainRunning.ts'),S=L('lib/town/trainSchedule.ts'),LV=L('lib/town/trainLiveries.ts').LIVERIES;
@@ -44,5 +44,14 @@ const T=require('three');
  assert(/if\(far\)\{writeInside\(i,c,m4,false,0\);continue;\}[^\n]*wraps\.car\(i,c,m4,size\)/.test(Rn),'written only in the near tier');
  assert(/wraps\.end\(night\)/.test(Rn)&&/wraps\.prime\(m4\)/.test(Rn)&&/wraps\.dispose\(\)/.test(Rn)&&/plates,wraps\.mesh/.test(Rn),'hooks: end / prime / warm / dispose');
  assert(!/trainWrap|\.map=/.test(read('lib/graphics/trafficVehicles.ts')),'the shared vehicle material keeps no map');
- const art=read('lib/town/trainWrapArt.ts');assert(!/drawImage|new Image|https?:|fetch\(/.test(art),'original vector art, nothing loaded');}
+ const art=read('lib/town/trainWrapArt.ts');assert(!/drawImage|new Image|https?:|fetch\(/.test(art),'plain canvas art, nothing loaded here (the club masks come in through `mark`)');
+ // v3 (owner, Nov 25 2026): Drip FC, no people. No islander / Kenji / figure drawers left in the wrap art, the club's own art drawer used
+ assert(!/\bbean\(|\bkenji\(|SKIN|HAIR|BeanPose|\bhand\(|\barm\(|\bleg\(/.test(art),'no people, islanders, Kenji or body parts in the wraps');
+ assert(/roundel\(c,[^;]*mark\)/.test(art)&&/wordTab\(c,[^;]*mark\)/.test(art),'the Drip FC crest roundel and wordmark tab are drawn');
+ const Ws=read('lib/town/trainWraps.ts');assert(/import \{clubArtReady,drawClubMark\} from '\.\.\/shop\/clubArt'/.test(Ws),'the club art comes from lib/shop/clubArt.ts (no new logo)');
+ assert(/car\(i:number,c:number,m:T\.Matrix4,size:number\)\{[^\n]*if\(!artAsked\)redraw\(\)/.test(Ws),'the club masks are asked for only when a wrap is first on screen');
+ const A=L('lib/town/trainWrapArt.ts');assert.deepEqual([...A.WRAP_TILES],['crest','slogan','scene1','scene2']);assert.equal(A.WRAP_LOOK.length,3);
+ assert.deepEqual({...A.CLUB},{blue:'#1d5fd1',navy:'#0d2350',white:'#f7f3ea'},'the club colours');
+ const DK=L('lib/shop/dripKit.ts');assert.deepEqual({...DK.CLUB_COLORS},{...A.CLUB},'wrap colours = CLUB_COLORS');
+ const w2=W.createTrainWraps();assert.equal(w2.clubArt,false,'headless: no masks');w2.dispose();}
 console.log('train-wraps: ok');

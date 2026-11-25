@@ -522,7 +522,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    /** headless checks (check-train-aaa track / roof parts): the row kind at s (TrackKind), the walk top, deck tests */kind:(s:number)=>L.profile.kind[Math.round(wrapS(s)/TRACK_DS)%TRACK.n],tunnelS:[TUNNEL.west.s,TUNNEL.east.s],walkTop:trainWalkHeight,deckAt:trainDeckAt,swimDeckBlocked,swimBlocked:trainSwimBlocked,heads:bridgeHeads},
   /** For tests and the gfx probe: what is drawn right now. */
   get drawn(){let cars=0,far=0;for(const t of trains)if(t.mesh.visible){cars+=TRAIN_CARS;if(t.far)far+=TRAIN_CARS;}
-   return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,wraps:wraps.drawn/* WRAPS */,now:lastNow};},
+   return {cars,far,plates:plates.visible,ridden:api.ridden.reduce((a,b)=>a+b,0),doors:doors.visible?doors.count:0,crossings:crossings.filter(x=>x.mesh.visible).length,boards:boards.meshes.filter(b=>b.mesh.visible).length,wraps:wraps.drawn,wrapArt:wraps.clubArt/* WRAPS */,now:lastNow};},
   dispose(){nightGlow.dispose();for(const d of detail)d.geometry.dispose();for(const g of openGeo)g?.dispose();plateGeo.dispose();for(const b of boxes)b.dispose();leaf.dispose();for(const t of trains){t.look.material.dispose();t.mesh.dispose();}
    doorLook.material.dispose();doors.dispose();glass.dispose();for(const x of crossings){x.mesh.geometry.dispose();x.look.material.dispose();}
    for(const b of boards.meshes)b.mesh.geometry.dispose();boards.mat.dispose();boards.tex.dispose();wraps.dispose()/* WRAPS */;root.removeFromParent();},
