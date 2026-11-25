@@ -247,7 +247,7 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
     run.carMatrixOf(k,0,cm);const e=cm.elements;run.carMatrixOf(k,1,m);const f=m.elements;sph.center.set((e[12]+f[12])/2,(e[13]+f[13])/2,(e[14]+f[14])/2);sph.radius=14;
     const d=sph.center.distanceTo(p3.set(cx,cy,cz));dist[k]=d;near[k]=k===ridingK||(d<=Math.min(SHOW_RANGE,DETAIL_RANGE)&&fr.intersectsSphere(sph))?(k===ridingK||d<NEAR_RANGE?2:1):0;
     // the lurch: the train's acceleration (m/s², smoothed), from its speed this frame
-    const v=run.states[k].v??0;if(dt>0&&Number.isFinite(vWas[k]))acc[k]+=(Math.max(-3,Math.min(3,(v-vWas[k])/dt))-acc[k])*Math.min(1,dt*4);vWas[k]=v;}
+    const v=run.states[k].v??0;if(dt>.008&&Number.isFinite(vWas[k]))acc[k]+=(Math.max(-1.2,Math.min(1.2,(v-vWas[k])/dt))-acc[k])*Math.min(1,dt*2.5);if(dt>.008||!Number.isFinite(vWas[k]))vWas[k]=v;}
    let nNear=0;
    for(const pass of PASSES)for(let k=0;k<TRAIN_COUNT&&k<run.states.length;k++){if(near[k]!==pass)continue;const st=run.states[k],full=pass===2;
     const seg=segOf(k,now,st);let r=rosters[k];if(!r||segs[k]!==seg){r=rosters[k]=rosterFor(k,seg,ports.away,r??undefined);segs[k]=seg;pairUp(k,r);for(let i=0;i<SLOT_COUNT;i++)yawS[k*SLOT_COUNT+i]=yawB[k*SLOT_COUNT+i]=NaN;}
@@ -348,7 +348,7 @@ export function createTrainPassengers(scene:T.Scene,ports:Ports){
        ya[gi]=yy;yaw=yy;
        const ge=Math.min(1,dt*5);gazeP[gi]+=(tp-gazeP[gi])*ge;gazeY[gi]+=(ty-gazeY[gi])*ge;if(walking||!dt){gazeP[gi]=tp;gazeY[gi]=ty;}
        // a gentle bob with the car on the rail joints (running), the lurch / sway tilt (standing riders more)
-       if(!walking&&bob>0)y+=bob*(.004*Math.sin(st.s*5.1+i)+.003*Math.sin(st.s*2.3+i*1.7));
+       if(!walking&&bob>0)y+=bob*(.003*Math.sin(st.s*.51+i)+.0015*Math.sin(st.s*1.27+i*1.7));// ~1 Hz at line speed: a sway, never a buzz
        const tl=walking?0:seated?.4:kid?1.4:1;
        // RIDE 3: near-camera fade in the ridden train (first person walks right past them): not drawn within FADE_NEAR m of the
        // camera, back past FADE_FAR (the same rule as me and Kenji in Town)

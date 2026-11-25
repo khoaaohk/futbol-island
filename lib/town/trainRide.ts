@@ -409,7 +409,7 @@ export function createTrainRide(ports:Ports){
   *  curve (the car's lean) toward / away from the window (pitch), the lurch of pulling away or braking along the train (roll toward
   *  the way it was going). A few multiplies a frame; none with reduced motion. */
  function seatSway(run:Run,dt:number,reduced:boolean){
-  const h=Math.min(dt,.1),st=run.states[k],v=st.v??0;if(h>0&&Number.isFinite(swayV))swayA+=(Math.max(-3,Math.min(3,(v-swayV)/h))-swayA)*Math.min(1,h*4);swayV=v;
+  const h=Math.min(dt,.1),st=run.states[k],v=st.v??0;if(h>.008&&Number.isFinite(swayV))swayA+=(Math.max(-1.2,Math.min(1.2,(v-swayV)/h))-swayA)*Math.min(1,h*2.5);if(h>.008||!Number.isFinite(swayV))swayV=v;
   let dp=0,dr=0;if(!reduced&&run.carMatrixOf){run.carMatrixOf(k,Math.max(0,Math.min(1,j>>2)),carM);const e=carM.elements,fwdX=Math.sin(pose.yaw)*e[0]+Math.cos(pose.yaw)*e[2];
    dp=Math.max(-.06,Math.min(.06,-e[1]*Math.sign(fwdX)*1.3));dr=Math.max(-.08,Math.min(.08,swayA*.035*((pose.lean??1)>0?1:-1)));}
   const r=1-Math.exp(-4*h);swayP+=(dp-swayP)*r;swayR+=(dr-swayR)*r;for(const t of tricks){t.torsoPitch=KNEEL.pitch+swayP;t.torsoRoll=swayR;}

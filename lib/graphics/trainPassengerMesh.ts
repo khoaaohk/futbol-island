@@ -199,6 +199,9 @@ function wornProps(out:T.BufferGeometry[]){
 function handProps(out:T.BufferGeometry[],b:Bake,bi:number){
  const P0=PAX_POSE,X=PAX_EXTRA,kind=b.kind??'base',kid=!!b.kid;
  // AAA 4: extras and walk frames map onto the base pose whose props they carry (a held ball, a bag at the feet); -1 none
+ // walk frames: only frame 0 of the ball set carries the ball (the whole set draws it: one prop selector a set, so the subset index
+ // is not rebuilt every step)
+ if(kind==='walk'&&(b.pose??0)!==0)return;
  const pose=kind==='base'?b.pose??bi%PAX_POSES:kind==='walk'?(b.ball?P0.standHold:-1):b.pose===X.swingHold?P0.hold:b.pose===X.swing?-1:P0.lap;
  if(kind==='base'&&kid&&pose!==P0.hold&&pose!==P0.lap&&pose!==P0.standHold)return;
  if(kind==='extra'&&(b.pose===X.cheerA||b.pose===X.cheerB)){// the scarf held up in the raised hand: striped, hanging from the fist
@@ -243,7 +246,7 @@ function propGeometry(bakes:readonly Bake[]){
 const PROP_VERT_HEAD=`attribute vec3 aPax;attribute vec4 iPose;attribute vec3 iColA;attribute vec3 iColB;varying vec3 vPax;
 `;
 const PROP_VERT_BODY=`
- {float sel=aPax.z,b=iPose.x;bool seated=b<${PAX_EXTRA0}.-.5?mod(b,${PAX_POSES}.)<3.5:b<${PAX_WALK0}.-.5;
+ {float sel=aPax.z,b=iPose.x;if(b>${PAX_WALK0}.-.5)b=${PAX_WALK0}.+floor((b-${PAX_WALK0}.+.5)/${PAX_WALK_FRAMES}.)*${PAX_WALK_FRAMES}.;bool seated=b<${PAX_EXTRA0}.-.5?mod(b,${PAX_POSES}.)<3.5:b<${PAX_WALK0}.-.5;
   float xe=mod(b-${PAX_EXTRA0}.,${PAX_EXTRAS}.);bool cheer=b>${PAX_EXTRA0}.-.5&&b<${PAX_WALK0}.-.5&&xe>.5&&xe<2.5;
   bool on=mod(floor(iPose.y/exp2(aPax.y)+.5),2.)>.5&&(sel<99.5?abs(sel-b)<.5:sel<100.5?!(cheer&&abs(aPax.y-${PAX_PROP.scarf}.)<.5):sel<101.5?!seated:seated);
   if(!on)transformed=vec3(0.);else if(sel>99.5){transformed.xz*=iPose.z;transformed.y+=iPose.w;}
@@ -325,7 +328,7 @@ export function createPassengerMesh(max:number,looks:readonly PaxLook[],pre?:Pax
    body.count=hair.count=hat.count=nAll;limbs.count=props.count=nNear;
    // the styles / props of the riders shown now (bitmasks; the subsets re-index only when these change)
    let hm=0,tm2=0,pm=0,lo=0,hi=0;const ia=iPose.array as Float32Array;
-   for(let i=0;i<nAll;i++){const c=rowCast[i];if(c<0)continue;hm|=1<<castHair[c];if(withHats&&rowHat[i])tm2|=1<<castHat[c];if(i<nNear){pm|=looks[c].props;const pb=ia[i*4];if(pb<30)lo|=1<<pb;else hi|=1<<(pb-30);}}
+   for(let i=0;i<nAll;i++){const c=rowCast[i];if(c<0)continue;hm|=1<<castHair[c];if(withHats&&rowHat[i])tm2|=1<<castHat[c];if(i<nNear){pm|=looks[c].props;let pb=ia[i*4];if(pb>=PAX_WALK0)pb=PAX_WALK0+Math.floor((pb-PAX_WALK0)/PAX_WALK_FRAMES)*PAX_WALK_FRAMES;if(pb<30)lo|=1<<pb;else hi|=1<<(pb-30);}}
    if(pm!==lpm||lo!==llo||hi!==lhi){lpm=pm;llo=lo;lhi=hi;propKey++;}
    const hairTris=hm?hairV.use(hm,k=>(hm>>k&1)===1):0,hatTris=tm2?hatV.use(tm2,k=>(tm2>>k&1)===1):0;
    const propTris=pm?propV.use(propKey,k=>{const bit=Math.floor(k/128),sel=k%128;return (pm>>bit&1)===1&&(sel>=ANY||(sel<30?(lo>>sel&1):(hi>>(sel-30)&1))===1);}):0;
