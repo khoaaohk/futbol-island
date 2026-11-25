@@ -36,16 +36,16 @@ ok('3. island with lights, 30 simulated minutes: red is obeyed, queues release o
  const {traffic:a,S,D,overlap}=fixture(island),N=a.cars.length,ZONE=a.signals.stopZone,dt=1/60;
  const signalled=[...a.signals.offset].filter(o=>o>=0).length,flashing=a.signals.headNode.filter(n=>n<0).length;
  assert(signalled>=10,'the town junctions have working lights: '+signalled);assert(a.cayTraffic.ring.every(id=>a.signals.offset[id]<0)&&a.signals.offset[a.cayTraffic.spurEnd]<0,'the roundabout stays a yield roundabout');
- assert(flashing>0,'corners flash yellow');assert.equal(a.signals.lamps.mesh.count,a.signals.heads.length*3,'three lamps per head, one instanced mesh');
+ /* Nov 24 2026 (owner: a flashing amber reads as broken): no head flashes or stays dark; corners have none (was: 'corners flash yellow'). */assert.equal(flashing,0,'every head runs a real cycle');assert.equal(a.signals.lamps.mesh.count,a.signals.heads.length*3,'three lamps per head, one instanced mesh');
  const body=c=>({x:c.group.position.x,z:c.group.position.z,yaw:c.group.rotation.y,width:(c.pickup?2.1:1.9)-.2,length:(c.pickup?4.5:3.6)-.2});
  const prev=a.cars.map(c=>({p:c.group.position.clone(),v:c.v,yaw:c.group.rotation.y,remaining:c.length-c.distance,route:c.from+':'+c.to,heldAtRed:false})),idle=Array(N).fill(0),longest=Array(N).fill(0),travel=Array(N).fill(0);
  let ranRed=0,crossings=0,waitedAtRed=0,releasedOnGreen=0,hardStops=0,worstTurn=0,worstCayTurn=0,worstGap=Infinity,worstOverlap=0,lampErrors=0,redAge=0;
  // What a driver SEES (Nov 18 2026 verify pass): the head facing each approach, as painted. Passing 10.5 m from the junction centre
  // (where the stop line is) under a head that has shown red for longer than the all-red gap is running a red light, whether or not
- // the car has a stop line there. The short street inside a shared box has none, so its two heads flash yellow instead.
+ // the car has a stop line there. The short street inside a shared box has none, and (Nov 24 2026) no heads either: they used to flash yellow.
  const heads=a.signals.heads,headNode=a.signals.headNode,headFor=(n,f)=>{const A=a.nodes[n],F=a.nodes[f],ux=F.x-A.x,uz=F.z-A.z,l=Math.hypot(ux,uz);return heads.findIndex(h=>Math.abs(h.jx-A.x)<.6&&Math.abs(h.jz-A.z)<.6&&(Math.sin(h.yaw)*ux+Math.cos(h.yaw)*uz)/l>.9);};
  const pairs=[];for(const n of a.nodes)for(const id of n.links)if(id>n.id&&a.signals.offset[n.id]>=0&&a.signals.offset[id]>=0&&Math.hypot(a.nodes[id].x-n.x,a.nodes[id].z-n.z)<24)pairs.push([n.id,id]);
- assert(pairs.length>=1,'the island has two junctions that share a box');for(const [p,q] of pairs)for(const [n,f] of [[p,q],[q,p]]){const k=headFor(n,f);assert(k>=0&&headNode[k]===-1,'the head facing the short street inside a shared box flashes yellow');assert(a.nodes[n].links.filter(id=>id!==f).every(id=>{const o=headFor(n,id);return o<0||headNode[o]===n;}),'its other heads run the lights');}
+ assert(pairs.length>=1,'the island has two junctions that share a box');for(const [p,q] of pairs)for(const [n,f] of [[p,q],[q,p]]){const k=headFor(n,f);assert(k<0,'no head faces the short street inside a shared box');assert(a.nodes[n].links.filter(id=>id!==f).every(id=>{const o=headFor(n,id);return o<0||headNode[o]===n;}),'its other heads run the lights');}
  let passedHeads=0,passedRed=0,bothOpen=0,maxQueue=0,queueGapMin=Infinity,queueGapMax=0;const nodeDistance=a.cars.map(()=>Infinity);
  // The visitor hovers over the town (too high to be a pedestrian), so the lamps are in range and painted.
  const over={x:60,y:40,z:-40};

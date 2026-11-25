@@ -194,8 +194,8 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  tintGroundMesh(box(80,.02,115,'#c9b892',S.x,-.065,S.z),'path').castShadow=false;// the pitch-level ring round the boards
  tintGroundMesh(box(20,.02,STADIUM_GATE.halfWidth*2,'#c9b892',S.x+50,-.065,S.z),'path').castShadow=false;// the gate's walk in
  // The turf keeps the island grass tint (its mottle) on a material of its own with the night fill (stadiumNight.ts): one batch.
- {const turf=box(W+8,.05,L+8,'#78a970',S.x,-.07,S.z);turf.material=patchStadiumNight(applyGroundTint(new T.MeshStandardMaterial({color:'#78a970',roughness:.85}),'grass'),STADIUM_NIGHT_GAIN.turf);t.materials?.push(turf.material);}
- for(let i=0;i<10;i+=2)box(W,.008,L/10,'#80b578',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
+ {const turf=box(W+8,.05,L+8,'#7ba476',S.x,-.07,S.z);turf.material=patchStadiumNight(applyGroundTint(new T.MeshStandardMaterial({color:'#7ba476',roughness:.85}),'grass'),STADIUM_NIGHT_GAIN.turf);t.materials?.push(turf.material);}
+ for(let i=0;i<10;i+=2)box(W,.008,L/10,'#83b07e',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
  const white='#f4f1e6',ln=.12,ly=-.034,netPts:number[]=[],netRuns:{start:number;count:number;x:number;z:number}[]=[];
  const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
  for(const sx of [-1,1])lineBox(ln,L,S.x+sx*W/2,S.z);

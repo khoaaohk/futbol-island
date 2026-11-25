@@ -14,7 +14,7 @@ import {createObstacleGrid} from '../town/obstacleGrid';
 import {findTruckRoadRoute,truckRoadRouteSearch} from '../town/truckNavigation';
 import {extendRoadNetworkWithCay} from '../town/cayTraffic';
 import {DRIVE,stopSpeed,stepSpeed,turnSpeed,personStopGap,personInLane} from '../town/trafficDriving';
-import {YELLOW,signalLight,signalStop,signalledNodes,flashOn,type SignalHead,type SignalAxis} from '../town/trafficSignals';
+import {signalLight,signalStop,signalledNodes,type SignalHead,type SignalAxis} from '../town/trafficSignals';
 import {buildVehicleGeometry,createVehicleMaterial,CAR_STYLES,WHEEL_RADIUS} from './trafficVehicles';
 import {createTrafficSignalLamps} from './trafficSignalLamps';
 /** A townsperson the traffic stops for: anything with a position (islandNpcs.entries). */
@@ -67,22 +67,22 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  const box=nodes.map(n=>n.id);const boxOf=(id:number):number=>box[id]===id?id:(box[id]=boxOf(box[id]));
  for(const n of nodes)if(guarded[n.id])for(const id of n.links)if(guarded[id]&&!(cayTraffic?.armBoxes.has(n.id)&&cayTraffic.armBoxes.has(id))&&Math.hypot(nodes[id].x-n.x,nodes[id].z-n.z)<24)box[boxOf(id)]=boxOf(n.id);
  const starts=[[124,-45],[-45,20],[48,90],[124,-140],[218,70],[48,-100],[130,170],[48,-40],[218,110],[516,-159],[560,-159]];
- // Lights: `signalOffset[node]` is the node's cycle offset, -1 where no lights run the junction (corners flash yellow; the
+ // Lights: `signalOffset[node]` is the node's cycle offset, -1 where no lights run the junction (corners have no heads; the
  // roundabout and the cay have none).
  const signalOffset=signalledNodes(nodes,signalHeads);if(cayTraffic){for(const id of cayTraffic.ring)signalOffset[id]=-1;signalOffset[cayTraffic.spurEnd]=-1;}
  // Two junctions close enough to share one box (under 24 m) run as one set of lights: the same cycle, and the short street between
  // them has no stop line of its own (a car stopped there would hold the shared box against the car behind it).
  for(const n of nodes)if(signalOffset[n.id]>=0&&signalOffset[boxOf(n.id)]>=0)signalOffset[n.id]=signalOffset[boxOf(n.id)];
- const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);if(!n||signalOffset[n.id]<0)return -1;
-  // A head faces the street its drivers arrive on. Where that street is the short one inside a shared box (no stop line: see above)
-  // the head flashes yellow like a corner's: a red there would be driven past by everyone who entered the pair on green.
-  const sx=Math.sin(h.yaw),sz=Math.cos(h.yaw);for(const id of n.links){const f=nodes[id],dx=f.x-n.x,dz=f.z-n.z;if((dx*sx+dz*sz)/Math.hypot(dx,dz)>.9&&signalOffset[id]>=0&&boxOf(id)===boxOf(n.id))return -1;}
-  return n.id;});
+ // Nov 24 2026 (owner: "fix this light ... it's just blinking yellow", the corner by Pier Bakery): nothing flashes yellow any more,
+ // kids read it as broken. lib/town/world.ts hangs heads only at junctions with three or more streets and none over the short street
+ // inside a shared box, so every head the game passes runs its junction's cycle. A head whose node has no lights (a tool's or test's
+ // own heads) stays dark (-1) rather than flashing.
+ const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);return !n||signalOffset[n.id]<0?-1:n.id;});
  let clock=0,lampTick=-1;
  // The lamp draw is skipped (and nothing is painted or uploaded) while no signal is within LAMP_RANGE of the visitor: from Coral Cay,
  // the stadium or the far beaches the whole town's lamps would otherwise be one more draw that the old per-chunk lenses never cost.
  const lampSites=signalHeads.filter((h,i)=>signalHeads.findIndex(o=>o.jx===h.jx&&o.jz===h.jz)===i).map(h=>({x:h.jx,z:h.jz}));
- const paintLamps=(x:number,z:number)=>{if(!lamps)return;let near=false;for(const site of lampSites){const dx=site.x-x,dz=site.z-z;if(dx*dx+dz*dz<LAMP_RANGE*LAMP_RANGE){near=true;break;}}lamps.mesh.visible=near;if(!near)return;let changed=false;const flash=flashOn(clock)?YELLOW:-1;for(let i=0;i<signalHeads.length;i++){const node=headNode[i];if(lamps.set(i,node>=0?signalLight(clock,signalOffset[node],signalHeads[i].axis):flash))changed=true;}if(changed)lamps.commit();};
+ const paintLamps=(x:number,z:number)=>{if(!lamps)return;let near=false;for(const site of lampSites){const dx=site.x-x,dz=site.z-z;if(dx*dx+dz*dz<LAMP_RANGE*LAMP_RANGE){near=true;break;}}lamps.mesh.visible=near;if(!near)return;let changed=false;for(let i=0;i<signalHeads.length;i++){const node=headNode[i];if(lamps.set(i,node>=0?signalLight(clock,signalOffset[node],signalHeads[i].axis):-1))changed=true;}if(changed)lamps.commit();};
  const glow={head:.12,tail:.06};
  const cars=['#bb6857','#638d9c','#d9b563','#7eaa81','#ab8eaf','#e1b796','#6a919e','#319c8c','#efad45',...(cayTraffic?['#6fa7c9','#c77d9d']:[])].map((color,i)=>{const group=new T.Group();group.name='street-car-'+i;group.rotation.order='YXZ';root.add(group);
   const pickup=i===7||i===8;if(pickup)group.name='matchday-pickup-'+(i-7);
