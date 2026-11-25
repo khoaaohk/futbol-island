@@ -18,6 +18,8 @@ import RailNav from './shell/RailNav';
 import {hubGroupLabel,hubRail,sec} from '@/lib/site/railNavMore';
 import type {RailItem} from '@/lib/site/railNav';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
+import HubQuizLinks,{HUB_QUIZ_ID} from '@/components/site/quiz/HubQuizLinks';
+import {HUB_QUIZ_WORDS,HUB_QUIZZES} from '@/lib/site/quizzes';
 /**
  * One topic hub (lib/site/hubs.ts): answer-first lead, the lesson groups as linked lists, short Q&A (mirrored exactly in the
  * FAQPage JSON-LD), related hubs and one gold Play link. Server-rendered, no client code, the reading pages' one stylesheet.
@@ -57,7 +59,7 @@ export default function LessonHub({hub,children,extra=[]}:{hub:Hub;children?:Rea
  const crumbs=hubCrumbs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav (owner, Nov 20 2026: "all internal pages need to have side navs"): Back to the Library, Overview, then what is on
     this hub in page order: its own sections, each lesson group, the questions and More to learn */
- const rail=hubRail(`${hub.crumb} on this page`,[{items:[...(guideVideo(hub.path)?[sec(`clip-${guideVideo(hub.path)!.key}`,'See it in the game')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Questions'),sec('more','More to learn')]}]);
+ const rail=hubRail(`${hub.crumb} on this page`,[{items:[...(guideVideo(hub.path)?[sec(`clip-${guideVideo(hub.path)!.key}`,'See it in the game')]:[]),...extra,...(HUB_QUIZZES[hub.slug]?[sec(HUB_QUIZ_ID,HUB_QUIZ_WORDS.en.rail)]:[]),...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Questions'),sec('more','More to learn')]}]);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -73,7 +75,7 @@ export default function LessonHub({hub,children,extra=[]}:{hub:Hub;children?:Rea
    <a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>
   </header>
   </Hero>
-  {children}{/* page-specific sections before the lesson groups (Nov 15 2026: the 7v7 vs 9v9 vs 11v11 table) */}
+  {children}<HubQuizLinks slug={hub.slug}/>{/* SEO batch E: the quizzes with answers for this hub *//* page-specific sections before the lesson groups (Nov 15 2026: the 7v7 vs 9v9 vs 11v11 table) */}
   {/* batch 3, Nov 17 2026: each group a chapter band: icon, title, what you'll learn, the count, then six lesson cards and
       "Show all N" (every lesson link stays in the HTML and in the CollectionPage JSON-LD) */}
   {hub.groups.map((g,i)=><Band key={g.title} id={`g-${i}`} title={g.title} line={g.line} tone={i%2?'paper':'tint'} icon={groupIcon(g.lessons)}

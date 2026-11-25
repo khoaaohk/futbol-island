@@ -34,7 +34,7 @@ export function lessonRail(has:{quiz:boolean;hubs:boolean;guides:boolean},es=fal
 /** The lessons index: Back to the Library, Overview, then what is on the index (the clip where it has one, the topics, the four formats). */
 export function lessonsIndexRail(clip:string|null,es=false):Rail{
  const w=(f:string)=>f==='futsal'?(es?'futsal':'Futsal'):FORMAT_LABEL[f as keyof typeof FORMAT_LABEL]??f;
- return hubRail(es?'Lecciones en esta página':'Lessons on this page',[{items:[...(clip?[sec(clip,es?'Míralo en el juego':'See it in the game')]:[]),sec('topics',es?'Por tema':'By topic'),
+ return hubRail(es?'Lecciones en esta página':'Lessons on this page',[{items:[...(clip?[sec(clip,es?'Míralo en el juego':'See it in the game')]:[]),sec('topics',es?'Por tema':'By topic'),sec('quizzes','Quizzes')/* SEO batch E */,
   ...FORMAT_ORDER.map(f=>sec(`fmt-${f}`,es?`Lecciones de ${w(f)}`:`${w(f)} lessons`))]}],es);
 }
 /** A practice plan: Back to all plans, Overview, then the plan's sections. */

@@ -30,6 +30,7 @@ import fx from '@/components/site/siteForms.module.css';
 import RailNav from '@/components/site/shell/RailNav';
 import {lessonRail,lessonsIndexRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
+import HubQuizLinks from '@/components/site/quiz/HubQuizLinks';
 /**
  * The Spanish lessons (Spanish round D, Nov 16 2026): /es/learn/lessons (index), /es/learn/lessons/<id> (96 reading pages) and
  * the Spanish guide search /es/learn?q= (not a sitemap page; noindex, like /learn). Same sections and classes as
@@ -149,9 +150,9 @@ export function LessonEsPage({l}:{l:EsLesson}){
 }
 
 // ---- the index ----------------------------------------------------------------------------------------------------------------
-export const LESSONS_INDEX_ES={title:'Lecciones y pruebas de fútbol para niños',
+export const LESSONS_INDEX_ES={title:'Lecciones de fútbol para niños gratis, con preguntas'/* SEO batch E, Nov 25 2026; was "Lecciones y pruebas de fútbol para niños" */,
  desc:`Las ${LESSONS.length} lecciones de fútbol de Futbol Island para niños: posiciones, pases, defensa y reanudaciones en 7v7 a 11v11 y futsal, con pruebas.`};
-const LEAD=`${DEFINITION_ES} Aquí están sus ${LESSONS.length} lecciones: posiciones, forma del equipo, pases, defensa y reanudaciones en 7v7, 9v9, 11v11 y futsal, cada una con una prueba corta. En la isla cada lección se juega en una cancha con jugadores que se mueven; aquí puedes leer las palabras del entrenador y las preguntas.`;
+const LEAD=`Las ${LESSONS.length} lecciones de fútbol para niños de Futbol Island: posiciones, forma del equipo, pases, defensa y reanudaciones en 7v7, 9v9, 11v11 y futsal, cada una con una prueba corta. ${DEFINITION_ES} En la isla cada lección se juega en una cancha con jugadores que se mueven; aquí puedes leer las palabras del entrenador y las preguntas.`;
 /** The plain no-JavaScript search form, to /es/learn?q= (as components/site/LearnSearchForm.tsx). */
 function EsSearchForm(){
  return <form role="search" action={toEs('/learn')} method="get" className={fx.searchFormCentred}>
@@ -178,6 +179,7 @@ export function LessonsIndexEsPage(){
   {topics.length>0&&<section className={styles.section} aria-labelledby="topics"><h2 className={`${styles.h2} ${rt.target}`} id="topics">Lecciones por tema</h2>
    <ul className={styles.list}>{topics.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.name}</span><span className={styles.itemMeta}>{h.blurb}</span></a></li>)}</ul>
   </section>}
+  <HubQuizLinks slug="lessons" lang="es"/>{/* SEO batch E */}
   {FORMAT_ORDER.map(f=>{const list=all.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
    <h2 className={`${styles.h2} ${rt.target}`} id={`fmt-${f}`}>Lecciones de {fmtWord(FORMAT_LABEL[f])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={l.esPath}><span className={styles.itemTitle}>{l.title}</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>

@@ -10,7 +10,7 @@ import {onwardFor} from '@/lib/site/railNav';
 import {quizPart} from '@/lib/site/learningLd';
 import {abs,articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
-import {QUIZ_HUB,QUIZ_HUB_FAQ,QUIZ_TOPICS,QUIZZES_PATH,inLang,quizBySlug,quizForPage,quizzesIn,type Lang,type SiteQuiz} from '@/lib/site/quizzes';
+import {QUIZ_FOR_WHO,QUIZ_HUB,QUIZ_HUB_FAQ,QUIZ_TOPICS,QUIZZES_PATH,inLang,quizBySlug,quizForPage,quizzesIn,type Lang,type SiteQuiz} from '@/lib/site/quizzes';
 import QuizPlay from './QuizPlay';
 import styles from '@/app/(site)/site.module.css';
 import q from './quizPages.module.css';
@@ -24,11 +24,15 @@ const T={
  en:{hub:QUIZ_HUB.en.crumb,play:'Play the quiz',key:'Answer key',order:'Right order',keyOpen:(n:number)=>`Show all ${n} questions and answers`,right:'Right answer',why:'Why',more:'Learn more',faq:'Questions',
   others:'More quizzes',sources:'Sources',ages:'Ages',agesV:'7 to 12',qs:'Questions',qsV:(n:number)=>`${n} questions`,topic:'Topic',allQuizzes:'All soccer quizzes',
   test:'Test yourself',testLine:(n:number)=>`${n} quick questions with answers. Free, no account.`,takeQuiz:'Take the quiz',
-  railQuiz:'Quiz',railKey:'Answers',railFaq:'Questions',railMore:'More quizzes',railSources:'Sources',onPage:'Quiz: on this page'},
+  railQuiz:'Quiz',railKey:'Answers',railFaq:'Questions',railMore:'More quizzes',railSources:'Sources',onPage:'Quiz: on this page',
+  covers:'What this quiz covers',railCovers:'What it covers',coversLine:(n:number)=>`It tests ${n===1?'one topic':`${n} topics`}. Each one links to the page that teaches it:`,qN:(n:number)=>n===1?'1 question':`${n} questions`,
+  practise:'Practise it: games and tools',railPractise:'Practise it'},
  es:{hub:QUIZ_HUB.es.crumb,play:'Juega el quiz',key:'Respuestas',order:'Orden correcto',keyOpen:(n:number)=>`Ver las ${n} preguntas con sus respuestas`,right:'Respuesta correcta',why:'Por qué',more:'Aprende más',faq:'Preguntas',
   others:'Más quizzes',sources:'Fuentes',ages:'Edades',agesV:'7 a 12 años',qs:'Preguntas',qsV:(n:number)=>`${n} preguntas`,topic:'Tema',allQuizzes:'Todos los quizzes de fútbol',
   test:'Ponte a prueba',testLine:(n:number)=>`${n} preguntas rápidas con respuestas. Gratis, sin cuenta.`,takeQuiz:'Haz el quiz',
-  railQuiz:'Quiz',railKey:'Respuestas',railFaq:'Preguntas',railMore:'Más quizzes',railSources:'Fuentes',onPage:'Quiz: en esta página'}};
+  railQuiz:'Quiz',railKey:'Respuestas',railFaq:'Preguntas',railMore:'Más quizzes',railSources:'Fuentes',onPage:'Quiz: en esta página',
+  covers:'Qué repasa este quiz',railCovers:'Qué repasa',coversLine:(n:number)=>`Repasa ${n===1?'un tema':`${n} temas`}. Cada uno enlaza a la página que lo explica:`,qN:(n:number)=>n===1?'1 pregunta':`${n} preguntas`,
+  practise:'Practica: juegos y herramientas',railPractise:'Practica'}};
 /** Spanish JSON-LD: every inLanguage is es (as components/es/pages/GuidesEs.tsx esLd; not imported, to keep the import graph flat). */
 const esLd=<X,>(x:X):X=>JSON.parse(JSON.stringify(x),(k,v)=>k==='inLanguage'?'es':v);
 const topicName=(t:SiteQuiz['topic'],lang:Lang)=>{const x=QUIZ_TOPICS.find(y=>y.id===t)!;return lang==='es'?x.es:x.en;};
@@ -38,7 +42,7 @@ const crumbsFor=(lang:Lang,tail?:{name:string;path:string})=>{const hub={name:T[
 export function QuizPageView({quiz,lang}:{quiz:SiteQuiz;lang:Lang}){
  const t=T[lang],es=lang==='es',crumbs=crumbsFor(lang,{name:quiz.name,path:quiz.path}),n=quiz.questions.length;
  const facts:Fact[]=[{icon:'kid',label:t.ages,value:t.agesV},{icon:'quiz',label:t.qs,value:t.qsV(n),href:'#play'},{icon:'tag',label:t.topic,value:topicName(quiz.topic,lang),href:`${hubPath(lang)}#${quiz.topic}`}];
- const rail=<RailNav rail={pageRail(t.onPage,{href:hubPath(lang),name:t.allQuizzes},[sec('play',t.railQuiz),sec('answers',t.railKey),sec('faq',t.railFaq),sec('more-quizzes',t.railMore),sec('sources',t.railSources)],es)} current="#top"/>;
+ const rail=<RailNav rail={pageRail(t.onPage,{href:hubPath(lang),name:t.allQuizzes},[sec('play',t.railQuiz),sec('covers',t.railCovers),...(quiz.practise.length?[sec('practise',t.railPractise)]:[]),sec('answers',t.railKey),sec('faq',t.railFaq),sec('more-quizzes',t.railMore),sec('sources',t.railSources)],es)} current="#top"/>;
  const others=(es?quizzesIn(quiz.topic,'es'):quizzesIn(quiz.topic)).filter(x=>x.slug!==quiz.slug);
  const more=[...others,...[...QUIZ_TOPICS].flatMap(g=>g.id===quiz.topic?[]:quizzesIn(g.id,lang).slice(0,1))].slice(0,5).map(x=>({path:x.path,name:x.h1,line:t.qsV(x.questions.length)}));
  const ld={...articleLd({headline:quiz.title,path:quiz.path,description:quiz.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:quiz.name}),
@@ -54,6 +58,10 @@ export function QuizPageView({quiz,lang}:{quiz:SiteQuiz;lang:Lang}){
    <h2 className={styles.h2} id="play">{t.play}</h2>
    <QuizPlay slug={quiz.slug} name={quiz.name} lang={lang} questions={quiz.questions} url={abs(quiz.path)}/>
   </section>
+  {/* SEO batch E (Nov 25 2026): who the quiz is for, the pages it tests (one link per topic), and games and tools to practise it */}
+  <Section id="covers" title={t.covers}><p>{QUIZ_FOR_WHO[quiz.topic][es?1:0]} {t.coversLine(quiz.covers.length)}</p>
+   <LinkList links={quiz.covers.map(c=>({path:c.path,name:c.name,line:t.qN(c.n)}))}/></Section>
+  {quiz.practise.length>0&&<Section id="practise" title={t.practise}><LinkList links={quiz.practise}/></Section>}
   <section className={styles.section} aria-labelledby="answers">
    <h2 className={styles.h2} id="answers">{t.key}</h2>
    <details className={q.key} data-answer-key="">
