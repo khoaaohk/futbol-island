@@ -653,7 +653,7 @@ export const TERM_PAGES:readonly TermPage[]=([
  {slug:'false-nine',sides:{title:'How do you defend against a false nine?',items:['The center backs talk and decide who follows and who stays.','A defensive midfielder picks up the false nine in midfield.','If a center back follows, the other defenders move closer together.','Watch the wingers. They run into the space the false nine left.']},
   name:'False Nine',also:'false 9, a dropping forward',short:'A center forward who moves back into midfield to get the ball, instead of staying up against the center backs.',
   title:'False 9 in Soccer: What Is a False Nine and How It Works',h1:'What is a false nine (false 9) in soccer?',
-  desc:'A false nine in soccer is a center forward who drops back into midfield to get the ball. Why teams use one and how defenders deal with it, with a diagram.',
+  desc:'A false nine in soccer is a center forward who drops into midfield and pulls the center backs out. How it plays, from Hidegkuti to Messi, with a diagram.',
   answer:'A false nine (false 9) in soccer is a center forward who drops back into midfield to get the ball, instead of staying up against the center backs. A center back must follow or let the false nine turn, and either way space opens behind them for the wingers.',
   scene:{title:'A false nine',who:'9@50,58 8@42,46 7@82,68 11@18,68 !4@42,74 !5@58,74 !6@60,62 !G@50,96',ball:[42,47],passes:['42,47>50,57','50,57>70,84'],runs:['50,70>50,58','82,68>70,84'],
    caption:'Number 9 leaves the two center backs, marked 4 and 5, and drops into midfield to receive from number 8. A center back has to choose: follow or stay. Winger number 7 runs into the space behind them.'},
