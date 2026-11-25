@@ -638,6 +638,7 @@ export const TOWNSFOLK_VOICES:Record<string,{persona:string;lines:string[]}>={
  'cay-runner':{persona:'A causeway runner who trains with short sand sprints.',lines:['Short sprints with rests, just like a beach match.','Sand running is hard work. Build up slowly!']},
  'farm-lani':{persona:'The cay farmer who grows football fuel.',lines:['Rice, bread, potatoes and fruit: that’s football fuel.','Every colour on your plate brings something good.']},
  'farm-bo':{persona:'The orchard keeper who turns fruit into kit-bag snacks.',lines:['A banana is the easiest snack to carry in a kit bag.','Different fruits, different vitamins. Mix them up!']},
+ 'cay-malia':{persona:'The Half-Time Café owner who fills a water jug for every bench.',lines:['Small sips at every break, big drink after the whistle.','Fruit at half-time, a proper meal a few hours before.']},
  'farm-mele':{persona:'The farm stand seller who always asks about your water.',lines:['Have you had your water today?','Sip at every break. Don’t wait until you’re very thirsty.']},
  'hostel-ari':{persona:'The hostel receptionist who welcomes visiting teams.',lines:['Visiting teams sleep here before tournaments. Early nights win games!','Say thank you to your hosts. Respect gets you invited back.']},
  'home-koa':{persona:'A neighbourhood kid who plays mixed teams with visitors.',lines:['Mixed teams make new friends fast.','My mini goal has seen a thousand goals. Well, almost!']},

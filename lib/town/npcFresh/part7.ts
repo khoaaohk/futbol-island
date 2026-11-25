@@ -583,4 +583,34 @@ export const PART_7:Record<string,NpcFresh>={
    'Ah, the one who asked "{topic}" Patience pays off. Here is something fresh.'
   ]
  },
+ // Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts): Malia, the café owner on Coral Cay's east point.
+ 'cay-malia':{
+  topics:[
+   t7('cafe-name','Why is it called the Half-Time Café?','Because half-time is my favourite part of a match. Players sip water, grab a bite of fruit and listen to the coach, all in a few minutes.','How long is half-time?','In an 11-a-side match it is up to 15 minutes. Youth and small-sided games often have shorter breaks.'),
+   t7('rowboat','Is that your rowboat by the deck?','Yes! I row out at sunrise to watch the beach games from the water. Rowing together needs timing, just like a team pressing.','How is rowing like pressing?','Everyone moves at the same moment. If one player presses alone, the other team just passes round them.'),
+   t7('busy-day','When is the café busiest?','Tournament days! Teams come off the court thirsty, so I fill a jug of water for every bench before the first whistle.','Why water before the first whistle?','So nobody starts the game already thirsty. Small sips through the day work better than a big gulp at the end.'),
+   t7('chalk-board','Who writes the fixtures on your chalkboard?','I do, every morning, from the scores desk. Players love to talk about the big games while they eat.','Why do players watch other matches?','You learn by watching. Notice where a good midfielder stands before the ball arrives.'),
+   t7('new-food','Can I try a new snack before my match?','Better to try new food at training first. On match day, stick to what your tummy already knows.','What if I feel too nervous to eat?','Have something small and easy a little earlier, like a banana. Then take slow breaths and sip water.'),
+   t7('team-table','Why are your tables so close together?','So teams sit together after a game and chat about what went well. Talking it through is part of learning.','What should we talk about after a loss?','One thing we did well and one thing to practise. Then shake hands and move on.'),
+   t7('garden-flowers','Why did you plant so many flowers?','The flowers bring the butterflies, and the butterflies bring smiles. A happy place helps people relax before a big game.','Do flowers help football?','Not directly! But feeling calm and ready helps you play your best, and a quiet garden is a good spot to breathe.'),
+   t7('sea-deck','Why build the deck over the water?','The sea breeze keeps everyone cool on hot days. Cooling down in the shade after playing is good for tired legs.','Should I sit down straight after a game?','Walk and stretch gently for a few minutes first, then sit, drink and refuel.')
+  ],
+  challenges:[
+   c7('c-before-meal','Your match starts at 3 pm. When is a good time for a proper meal?',['At 2:55, just before kick-off','Around lunchtime, about 3 hours before','No food at all on match day'],1,'Eating your main meal a few hours early gives your body time to turn it into fuel.','Eating just before can make you feel heavy, and skipping food leaves you low on fuel. Eat a meal a few hours earlier.'),
+   c7('c-halftime-snack','What makes a good half-time snack?',['A big plate of chips','Nothing, food is not allowed','Water and a few orange slices'],2,'Sips of water and a little fruit top you up for the second half without feeling heavy.','A big meal sits heavy and snacks are fine at the break. Water and a little fruit are best.'),
+   c7('c-thirsty','When should you drink water during a game?',['Only when you feel very thirsty','At the breaks and whenever you can sip','Save it all for the drive home'],1,'Little sips at the breaks keep you topped up. Do not wait until you are very thirsty.','Waiting until you are very thirsty means you are already low. Sip at every break.'),
+   c7('c-recover','The game is over. What helps your body recover?',['Water plus food with carbs and some protein','Just a fizzy drink','Skipping dinner'],0,'Fluids, carbohydrate and some protein help your muscles refuel and repair.','Your body needs real food and water to recover. Try a sandwich, rice and fish, or yoghurt and fruit.')
+  ],
+  openers:[
+   'Welcome to the Half-Time Café! Pull up a chair on the deck. What would you like to know?',
+   'I just wiped the chalkboard and wrote today’s games. Who are you cheering for?',
+   'Mind the butterflies on your way up the steps! They love the hibiscus. Come and chat.',
+   'A jug of water for every bench, done. Now I have time for a football question.'
+  ],
+  returning:[
+   'You asked me "{topic}" last time. Grab a seat, I have something new for you.',
+   'Back for more? After "{topic}" I thought of another tip for match day.',
+   'The one who asked "{topic}"! The kettle is on and I have a fresh story.'
+  ]
+ },
 };

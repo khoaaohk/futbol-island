@@ -138,6 +138,8 @@ async function game(b, v) {
     await p.waitForTimeout(1500); const tg = p.locator('[data-view-toggle] button:has-text("Backpack"), [data-view-toggle] [role="radio"]:has-text("Backpack")').first();
     if (!(await tg.count())) return false; await tg.click(); await p.waitForTimeout(1200); return !!(await p.$('[data-backpack]')); }); await esc();
   await tryState('stamp-book', async () => { await p.evaluate(() => window.dispatchEvent(new CustomEvent('fi2-open-stamp-book', { detail: {} }))); await p.waitForTimeout(1500); return !!(await p.$('[data-stamp-book]')); }); await esc();
+  // ---- the Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts): the Visit café pill on its deck
+  await tryState('cafe-visit', async () => { await p.evaluate(() => window.__fi2.teleport(707, -90.2, Math.PI)); await p.waitForTimeout(2500); return !!(await p.$('[data-cafe-go]:not([hidden])')); });
   // ---- the Island Line: Board pill at South, the ride HUD at the stop (Get off pill, toasts), Talk, moving, the next arrival
   const setLap = (k, T) => p.evaluate(({ k, T }) => { const s = window.__fi2.trains.sched, P = s.trainPhase(k, s.clock()); window.__skew += (((T - P) % 360) + 360) % 360 * 1000; }, { k, T });
   await tryState('train-board', async () => {

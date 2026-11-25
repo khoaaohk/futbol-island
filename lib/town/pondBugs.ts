@@ -33,10 +33,18 @@ export const pondDiverPinOn=(inPond:boolean,under:number)=>inPond&&under>.35;
 export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean;under?:boolean;swimming?:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job&&!o.under&&!o.swimming;
 /** The Bug book catch of a pond dragonfly, plus the same events a shift catch fires (the first-ever coin, the completion bonus). */
 export function netPondDragonfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
- const rec=recordBugCatch('bug',POND_DRAGONFLY_ID,port);
- if(rec.first)fire('document',BUG_NEW_SPECIES_EVENT,POND_DRAGONFLY_ID);
+ return netIslandBug(POND_DRAGONFLY_ID,'Dragonfly',port,fire);
+}
+/** Nov 24 2026: the Half-Time Café garden's monarchs (seasideCafe.ts CAFE_BUTTERFLY_ID) are netted the same way: the Bug book's
+ *  Captain Monarch, recorded exactly like a shift catch, and the same toast event (detail.id tells the toast which bug). */
+export function netCafeButterfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
+ return netIslandBug('monarch','Monarch',port,fire);
+}
+function netIslandBug(id:string,fallback:string,port:Port,fire:(target:'window'|'document',name:string,detail:unknown)=>void):BugCatchRecord{
+ const rec=recordBugCatch('bug',id,port);
+ if(rec.first)fire('document',BUG_NEW_SPECIES_EVENT,id);
  if(rec.completed)fire('document',BUG_BOOK_COMPLETE_EVENT,'complete');
- const detail:PondBugCaught={id:POND_DRAGONFLY_ID,name:bugSpeciesById(POND_DRAGONFLY_ID)?.name??'Dragonfly',first:rec.first,count:rec.count};
+ const detail:PondBugCaught={id,name:bugSpeciesById(id)?.name??fallback,first:rec.first,count:rec.count};
  fire('window',POND_BUG_CAUGHT,detail);
  return rec;
 }
@@ -46,5 +54,5 @@ function dispatch(target:'window'|'document',name:string,detail:unknown){
 /** The toast after a pond catch (kid copy). */
 export function pondCatchToast(c:PondBugCaught){
  return {title:c.first?`New in your Bug book: ${c.name}!`:`${c.name} netted!`,
-  detail:c.first?'Huge eyes that see almost all the way round: the best scanner on the pitch. You looked, learned and let it go.':`Caught ${c.count} times now. You looked, learned and let it go.`};
+  detail:c.first?(c.id==='monarch'?'Bright orange that warns the birds, and a zigzag flight like a winger beating a defender. You looked, learned and let it go.':'Huge eyes that see almost all the way round: the best scanner on the pitch. You looked, learned and let it go.'):`Caught ${c.count} times now. You looked, learned and let it go.`};
 }
