@@ -89,7 +89,8 @@ function keyFactRowsEs(x:SiteBook,w:BookEs):FactRow[]{
   else if(r.kind==='famous')rows.push({label:'Logros',value:r.idx.map(lv).join('; ')});
   else if(r.kind==='story'&&restEs(w))rows.push({label:'La historia',value:restEs(w)});
  }
- if(x.card&&!rows.some(r=>r.label==='Club'||r.label==='Clubes'))rows.push({label:'Clubes',value:<a href={cardPath(x.card.number)}>La carta de {x.card.displayName} tiene todos sus clubes (en inglés)</a>});
+ if(x.card&&!rows.some(r=>r.label==='Club'||r.label==='Clubes')){const at=rows.findIndex(r=>r.label==='Posición')+1||rows.findIndex(r=>r.label==='País')+1;
+  rows.splice(at,0,{label:'Clubes',value:<a href={cardPath(x.card.number)}>La carta de {x.card.displayName} tiene todos sus clubes (en inglés)</a>});}
  const ex=(x.page!.exhibits??[]).map(exhibitById).filter((e):e is NonNullable<ReturnType<typeof exhibitById>>=>!!e);
  if(ex.length)rows.push({label:'En el museo',value:<>{ex.map((e,i)=><span key={e.id}>{i>0&&'; '}<a href={exhibitPath(e.id)}>{enNote(e.title)}</a></span>)}</>});
  const g=bookGameLink(x);if(g)rows.push({label:'Juega la posición',value:<a href={fix(g.path)}>{g.name.split(':')[0]}, juego gratis</a>});

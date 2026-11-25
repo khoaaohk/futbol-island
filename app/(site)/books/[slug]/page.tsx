@@ -48,7 +48,8 @@ function keyFactRows(book:SiteBook):FactRow[]{
   else if(r.kind==='famous')rows.push({label:'Famous for',value:r.idx.map(lv).join('; ')});
   else if(r.kind==='story')rows.push({label:'The story',value:bookStoryLine(book)});
  }
- if(book.card&&!rows.some(r=>r.label==='Club'||r.label==='Clubs'))rows.push({label:'Clubs',value:<a href={cardPath(book.card.number)}>{book.card.displayName}’s player card lists every club</a>});
+ if(book.card&&!rows.some(r=>r.label==='Club'||r.label==='Clubs')){const at=rows.findIndex(r=>r.label==='Position')+1||rows.findIndex(r=>r.label==='Country')+1;/* right after the position, as on a book that names a club */
+  rows.splice(at,0,{label:'Clubs',value:<a href={cardPath(book.card.number)}>{book.card.displayName}’s player card lists every club</a>});}
  const ex=(book.page!.exhibits??[]).map(exhibitById).filter((e):e is NonNullable<ReturnType<typeof exhibitById>>=>!!e);
  if(ex.length)rows.push({label:'In the museum',value:<>{ex.map((e,i)=><span key={e.id}>{i>0&&'; '}<a href={exhibitPath(e.id)}>{e.title}</a></span>)}</>});
  const g=bookGameLink(book);if(g)rows.push({label:'Play the position',value:<a href={g.path}>{g.name}</a>});
