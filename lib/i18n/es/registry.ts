@@ -61,7 +61,7 @@ export const esFormationsIn=(format:string)=>ES_FORMATIONS().filter(f=>f.format=
 export const esFormatGuide=(format:'7v7'|'8v8'|'9v9'|'11v11')=>{const g=FORMAT_GUIDES.find(x=>x.format===format)!;return {...g,...FORMAT_GUIDES_ES[format],esPath:toEs(g.path)};};
 export type EsComparison=Comparison&{esPath:string};
 export function esComparison(slug:string):EsComparison|null{const c=comparisonBySlug(slug);if(!c)return null;const e=need(COMPARISONS_ES,slug,'comparison');
- return {...c,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,fit:[...e.fit],switching:[...e.switching],esPath:toEs(c.path)};}
+ return {...c,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,fit:[...e.fit],switching:[...e.switching],faq:e.faq.map(q=>({...q})),esPath:toEs(c.path)};}
 export const ES_COMPARISONS=():EsComparison[]=>COMPARISONS.map(c=>esComparison(c.slug)!);
 export const ES_RULES=():EsRule[]=>RULES.map(r=>esRule(r.slug)!);
 export const ES_TERMS=():EsTerm[]=>TERM_PAGES.map(t=>esTerm(t.slug)!);

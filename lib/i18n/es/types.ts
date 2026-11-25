@@ -44,7 +44,7 @@ export type FormatGuideEs={crumb:string;blurb:string;title:string;description:st
 export type FormationsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;what:readonly string[];
  groups:Readonly<Record<'7v7'|'8v8'|'9v9'|'11v11'|'futsal',string>>;faq:readonly Faq[]};
 /** Comparison pages: the table cells come from the Spanish position / formation records. */
-export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[]};
+export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[];faq:readonly Faq[]};
 /** Lessons (Spanish round D, Nov 16 2026): the words of one lib/site/lessons.ts SiteLesson. steps / questions / options are 1:1 with
  *  the English site lesson (options in the English A-Z order; the Spanish page re-sorts them A-Z in Spanish). No answer key. */
 export type LessonQuestionEs={q:string;options:readonly string[];explain:string};

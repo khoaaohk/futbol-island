@@ -194,14 +194,16 @@ export function CompareEsPage({c}:{c:EsComparison}){
  const img=pos?[positionImage(c.a),positionImage(c.b)]:[formationImage(c.a),formationImage(c.b)];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
+  <JsonLd data={faqLd(c.faq)}/>
   <JsonLd data={esLd(articleLd({headline:c.title,path:c.esPath,description:c.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:c.h1,teaches:c.answer,image:img[0]}))}/>
   <EsIntro top rail={<RailNav rail={pageRail('Esta comparación',{href:hub.path,name:pos?'Todas las posiciones':'Todas las formaciones'},[sec('side-by-side','Lado a lado'),
-   sec('fit','Cuál le queda'),sec('switching','Cómo cambiar'),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={c.h1} lead={c.answer}/>
+   sec('fit','Cuál le queda'),sec('switching','Cómo cambiar'),sec('faq','Preguntas'),sec('keep-reading','Sigue leyendo')],true)} current="#top"/>} crumbs={crumbs} h1={c.h1} lead={c.answer}/>
   <Section id="side-by-side" title="Lado a lado">
    <DataTable label={c.h1.replace(/:.*$/,'')} head={['Tema',nameOf(A),nameOf(B)]} rows={compareRows(c)}/>
   </Section>
   <Section id="fit" title="¿Cuál le queda a tu equipo?"><Bullets items={c.fit}/></Section>
   <Section id="switching" title="Cómo pasar de una a otra"><Bullets items={c.switching}/></Section>
+  <QA id="faq" title="Preguntas" faq={c.faq}/>
   <KeepReading lang="es" title="Lee cada una, y más" groups={withMesh([{id:'related',links:[...links,...extra]}],c.path,'es')}/>
   <EsGuideEnd checked={pos?FAMILY_CHECKED.positions:FAMILY_CHECKED.formations}/>
  </>;
