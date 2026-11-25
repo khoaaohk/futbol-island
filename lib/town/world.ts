@@ -251,7 +251,9 @@ export function* buildTownSteps(scene: T.Scene) {
     for(let floor=0;floor<floors;floor++)for(let k=0;k<3;k++)if(!knockout||k!==1)box(.065,1.22,.86,'#3d625c',x+w/2+.035,1.4+floor*2.45,z-d/2+(k+.5)*d/3);
     if(knockout)return; // Plain stair wall: no shopfront, balcony or awning projections.
     // The arcade's name lives on its roof neon only; its awning splits around the door.
-    if(label&&!arcade)sign(label,front*.86,.62,x,2.45,z+d/2+.1,scheme?.sign);
+    // Signs audit (Nov 25 2026): the Coral Cay hostel's ground-floor name sat 3 m behind its verandah's columns (one stood across the
+    // words); the big lit sign on its roof names it.
+    if(label&&!arcade&&label!=='CORAL CAY HOSTEL')sign(label,front*.86,.62,x,2.45,z+d/2+.1,scheme?.sign);
     if(arcade)for(const side of [-1,1])for(let col=0;col<3;col++){const inner=2.35,span=(front/2-inner)/3,awning=box(span,.10,1.3,col%2?'#ecdcb8':accent,x+side*(inner+(col+.5)*span),2.08,z+d/2+.58);awning.rotation.x=.14;}
     else for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,scheme?awningColour(scheme,col,8):col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
     box(front-.6,1.65,.06,'#274c48',x,.97,z+d/2+.07);
@@ -780,7 +782,9 @@ export function* buildTownSteps(scene: T.Scene) {
   street(318,19.5,131);street(412,19.5,131);street(365,-46,94,false);street(365,85,94,false);
   path(365,78,4,13);path(365,76,42,3);
   for(const x of [325,405])for(const z of [-34,-10,16,41,65]){if(x===405&&z===16)continue;tree(x,z);bench(x,z+4);}
-  districtSign('ISLAND HIGH SCHOOL',390,77);
+  // Signs audit (Nov 25 2026): over the gate path between the fences (was at x 390, 1 m behind the east gate pillar and fence,
+  // which stood in front of its words).
+  districtSign('ISLAND HIGH SCHOOL',365,78);
 
   // A continuous shaded frontage joins the terraces to the central entrance.
   path(365,-54.5,73,5);
@@ -1417,9 +1421,11 @@ export function* buildTownSteps(scene: T.Scene) {
     box(4.2,.15,.22,'#477c6a',gh.x,3.5,z);
     for(const x of [200,204]){
       box(.16,3.5,.16,'#477c6a',x,1.75,z);
-      box(.1,3.1,1.6,'#97bcb0',x,1.75,z+side*.85);
-      for(const y of [.2,3.3])box(.14,.12,1.75,'#477c6a',x,y,z+side*.85);
-      box(.14,3.2,.12,'#477c6a',x,1.75,z+side*1.7);
+      // Signs audit (Nov 25 2026): the open leaves are 2.6 m tall (were 3.3 m: their outer stiles, 1.7 m out, rose into GROW &
+      // SHARE's words above the door); the frame and lintel stay 3.5 m.
+      box(.1,2.5,1.6,'#97bcb0',x,1.45,z+side*.85);
+      for(const y of [.2,2.65])box(.14,.12,1.75,'#477c6a',x,y,z+side*.85);
+      box(.14,2.6,.12,'#477c6a',x,1.4,z+side*1.7);
       obstacles.push({x,z:z+side*.85,w:.16,d:1.7});
     }
   }

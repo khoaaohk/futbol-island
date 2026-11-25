@@ -16,7 +16,9 @@ const near = (b) => Math.hypot(b.at[0] - SOUTH[0], b.at[2] - SOUTH[1]);
 const pick = (name, test) => { const b = boards.filter(test).sort((a, c) => near(a) - near(c))[0]; if (!b) console.error('no board for', name); return b && { name, b }; };
 const byText = (t) => (b) => !b.train && b.text.startsWith(t);
 const VIEWS = [
-  pick('station-name-board', (b) => b.train && b.w > 2.5), pick('station-line-board', (b) => b.train && b.w < 2.5),
+  // the station boards: both faces (track side and platform-back side) of South's name and line boards
+  ...[['station-name-board', (b) => b.train && b.w > 2.5], ['station-line-board', (b) => b.train && b.w < 2.5]].flatMap(([n, t]) =>
+    boards.filter(t).sort((a, c) => near(a) - near(c)).slice(0, 2).map((b, i) => ({ name: `${n}-${i ? 'b' : 'a'}`, b }))),
   ...[['district-arch', 'NORTH BEACH'], ['beach-volleyball', 'BEACH VOLLEYBALL'], ['lily-pond', 'LILY POND'], ['zipline-launch', 'ZIPLINE TO CORAL CAY'],
     ['zipline-landing', 'ZIPLINE FROM SUMMIT ISLE'], ['jetty-challenge', 'JETTY SHOOTING CHALLENGE'], ['summit-5s', 'SUMMIT 5s'], ['sandbar-post-sign', 'STARFISH SANDBAR'],
     ['teaching-board', 'BEACH SOCCER'], ['ferry-dock', 'FERRY DOCK'], ['post-match-tables', 'POST-MATCH TABLES'], ['community-garden', 'COMMUNITY GARDEN'],
@@ -43,7 +45,7 @@ const VIEWS = [
     const shots = [];
     for (const { name, b: s } of VIEWS) {
       const [x, y, z] = s.at, [nx, , nz] = s.nrm, l = Math.hypot(nx, nz) || 1, ux = nx / l, uz = nz / l, tx = uz, tz = -ux;
-      const d = Math.max(3.2, s.w * .95), side = d * .32;
+      const d = s.train ? 2.6 : Math.min(4.2, Math.max(3.2, s.w * .95)), side = d * .32;
       const pose = { p: [x + ux * d + tx * side, y + .35, z + uz * d + tz * side], t: [x, y, z] };
       await p.evaluate(({ x, z }) => window.__fi2.teleport(x, z, 0), { x: x + ux * (d + 4), z: z + uz * (d + 4) });
       await p.waitForTimeout(1500);
