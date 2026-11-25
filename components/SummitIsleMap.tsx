@@ -23,11 +23,11 @@ export default function SummitIsleMap({localMap,pitchProps}:{localMap:boolean;pi
    {CONTOURS.map(c=><polygon key={c.h} points={c.points} fill={c.fill} stroke="#4c7550" strokeWidth={localMap?.45:.8} strokeOpacity=".6"/>)}
    <polygon aria-label="Summit" points={TERRACE_PTS} fill="#94b98f" stroke="#4c7550" strokeWidth={localMap?.8:1.2}/></g>
   {PATHS.map((p,i)=><polyline key={'summit-path'+i} points={p} fill="none" stroke="#dcdbb8" strokeWidth={SUMMIT_PATH_WIDTH} strokeLinejoin="round" strokeLinecap="round"/>)}
-  <g aria-label="Summit 5s pitch (5v5)" data-summit-isle="pitch" {...pitchProps}>
+  <g aria-label="Summit 5s open practice pitch" data-summit-isle="pitch" {...pitchProps}>
    <rect data-summit-isle="pitch-tap" x={P.x-F.halfX-14} y={P.z-F.halfZ-14} width={F.halfX*2+28} height={F.halfZ*2+28} fill="transparent"/>
    <rect x={P.x-F.halfX} y={P.z-F.halfZ} width={F.halfX*2} height={F.halfZ*2} fill="none" stroke="#9d805b" strokeWidth=".8"/>
    <rect x={P.x-P.length/2} y={P.z-P.width/2} width={P.length} height={P.width} fill="#6e9678" stroke="#fff0cc" strokeWidth="1.5"/>
-   <text x={P.x} y={P.z+(localMap?3.5:5.5)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:16} fontWeight="700">5v5</text>
+   <text x={P.x} y={P.z+(localMap?3.5:5.5)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:16} fontWeight="700">OPEN</text>{/* owner Nov 25 2026: the practice pitch reads OPEN on the map, not 5v5 */}
   </g>
   {!localMap&&<text x={SUMMIT_CENTER.x-92} y={SUMMIT_CENTER.z+48} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize="11" fontWeight="700">SUMMIT ISLE</text>}
   {localMap&&<text x={SUMMIT_CENTER.x} y={SUMMIT_CENTER.z+54} textAnchor="middle" fontSize="9" fill="#76583a" fontWeight="700">SUMMIT ISLE</text>}
