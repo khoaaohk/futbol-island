@@ -50,6 +50,15 @@ const T=require('three');
  assert(/roundel\(c,[^;]*mark\)/.test(art)&&/wordTab\(c,[^;]*mark\)/.test(art),'the Drip FC crest roundel and wordmark tab are drawn');
  const Ws=read('lib/town/trainWraps.ts');assert(/import \{clubArtReady,drawClubMark\} from '\.\.\/shop\/clubArt'/.test(Ws),'the club art comes from lib/shop/clubArt.ts (no new logo)');
  assert(/car\(i:number,c:number,m:T\.Matrix4,size:number\)\{[^\n]*if\(!artAsked\)redraw\(\)/.test(Ws),'the club masks are asked for only when a wrap is first on screen');
+ // Nov 25 2026 (owner): the small "Sponsor" tag on the crest panel, the stadium boards' / Kit Shop's word and look
+ {const At=read('lib/stadium/sponsors/atlas.ts'),A0=L('lib/town/trainWrapArt.ts');
+  assert.equal(A0.SPONSOR_TAG_TEXT,L('lib/shop/dripKit.ts').SPONSOR_TAG,'the Kit Shop tag word');
+  assert(At.includes(`INK='${A0.TAG_INK}',PAPER='${A0.TAG_PAPER}'`),'the stadium tag colours');
+  assert(/if\(k===0\)\{[^\n]*\n[^]*?sponsorTag\(c,w\);return;\}/.test(art),'the tag is drawn on the crest panel');
+  assert(!/drawWrapBadge[^\n]*sponsorTag|if\(k===1\)[^\n]*sponsorTag/.test(art),'never on the slogan panel');
+  // clear of the crest roundel (centre w/2, 42, r 23) on the narrowest crest panel
+  const w0=Math.min(...[0,1,2].map(t=>{const r=W.tileRect(t,0);return r.w/(r.h/100);})),tw=A0.SPONSOR_TAG_TEXT.length*A0.TAG_H*.72*.62+A0.TAG_H*.8,x0=w0-A0.TAG_PAD-2-tw,yb=A0.TAG_PAD+1.5+A0.TAG_H;
+  const dx=Math.max(0,x0-w0/2),dy=Math.max(0,42-yb);assert(Math.hypot(dx,dy)>23+2,'the tag clears the crest roundel');}
  const A=L('lib/town/trainWrapArt.ts');assert.deepEqual([...A.WRAP_TILES],['crest','slogan','scene1','scene2']);assert.equal(A.WRAP_LOOK.length,3);
  assert.deepEqual({...A.CLUB},{blue:'#1d5fd1',navy:'#0d2350',white:'#f7f3ea'},'the club colours');
  const DK=L('lib/shop/dripKit.ts');assert.deepEqual({...DK.CLUB_COLORS},{...A.CLUB},'wrap colours = CLUB_COLORS');

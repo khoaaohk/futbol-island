@@ -179,6 +179,11 @@ t('honesty: "Drip FC club kit" + "Sponsor" tag in every studio; no links, no buy
   assert.match(SAFE.SPONSOR_KIT_LINE, /sponsor/i); assert.match(SAFE.SPONSOR_KIT_LINE, /game coins/); assert.match(SAFE.SPONSOR_KIT_LINE, /picks them/);
   assert.ok(SAFE.SAFE_FAQ.some((f) => f.a.includes(SAFE.SPONSOR_KIT_LINE)), 'in the parents\' FAQ');
   assert.ok(read('lib/site/learnFeatures.ts').includes(SAFE.SPONSOR_KIT_LINE), 'and on the learn hub FAQ');
+  // Nov 25 2026 (owner): the Drip FC train wraps in the same answer, EN and ES
+  assert.match(SAFE.SPONSOR_TRAIN_LINE, /Sponsor/); assert.match(SAFE.SPONSOR_TRAIN_LINE, /no links and nothing to buy/);
+  assert.ok(SAFE.SAFE_FAQ.some((f) => f.a.includes(SAFE.SPONSOR_TRAIN_LINE)), 'train wraps in the parents\' FAQ');
+  assert.ok(read('lib/site/learnFeatures.ts').includes(SAFE.SPONSOR_TRAIN_LINE), 'and on the learn hub FAQ');
+  assert.ok(/'\+SPONSOR_KIT_LINE_ES\+' '\+SPONSOR_TRAIN_LINE_ES\}/.test(read('lib/i18n/es/safety.ts')), 'and in Spanish');
 });
 
 t('heat: nothing per frame; the bean marks are one shared texture; the club pictures load only on demand', () => {

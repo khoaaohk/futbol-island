@@ -39,7 +39,7 @@ export const TRAIN_PITCH={
 /** Where a brand appears on a train, each with its screenshot (public/marketing/train). */
 export type TrainItem={id:string;name:string;line:string;where:string;provide:string;shot:string;caption:string};
 export const TRAIN_ITEMS:TrainItem[]=[
- {id:'panels',name:'Car-side wrap',shot:'wrap',caption:`Example: the ${WRAP_THEMES[0].name} train in ${CLUB_NAME} colours`,
+ {id:'panels',name:'Car-side wrap',shot:'wrap',caption:`Example: the ${WRAP_THEMES[0].name} train, with its “${SPONSOR_TAG}” tag`,
   line:`${['','One','Two','Three','Four','Five'][PANELS.length]??PANELS.length} panels on each side of every car: your crest over your wordmark, your crest beside the train’s slogan (“${slogan(0)}”), then two panels of football things in your colours.`,
   where:TRAIN_CARS===2?'Both sides of both cars':`Both sides of all ${TRAIN_CARS} cars`,provide:'Crest, wordmark and three colours, as for the Kit Shop'},
  {id:'badge',name:'Cab badge',shot:'badge',caption:`Example: the ${CLUB_NAME} crest over the headmark`,

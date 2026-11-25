@@ -42,7 +42,11 @@ const want = (n) => !only || only.split(',').includes(n);
     // the player stands well away for the camera shots (never in front of a wrap)
     const away = () => p.evaluate(({ x, z, yaw }) => window.__fi2.teleport(x - 40, z + 40, yaw), north);
     if (want('hero')) { await pin(0); await p.evaluate(({ s }) => { window.__fi2.trains.cluster = s; }, { s: north.s + 20 }); await away(); save('hero', await cam({ s: north.s, back: -15, along: -13, up: 7, look: 1, lookUp: 1.6, fov: 45 })); }
-    if (want('wrap')) { await pin(0); await away(); save('wrap', await cam({ s: north.s, back: 3.6, along: 9, up: 2.3, look: -2.5, lookUp: 1.5, fov: 55 })); }
+    if (want('wrap')) { await pin(0); await p.waitForTimeout(500);// from the platform at eye height (scripts/shot-train-wraps.cjs's platform view): the crest panel and its Sponsor tag nearest
+      save('wrap', await p.evaluate(({ s }) => { const f = window.__fi2, t = f.trains, sp = f.trainRide.stationSpot(0, 0), a = t.sched.trackAt(s), by = t.sched.bed(s) || 0;
+        const dx = sp.x - a.x, dz = sp.z - a.z, l = Math.hypot(dx, dz) || 1, C = f.camera.constructor, cam = new C(58, f.camera.aspect, .1, 600);
+        cam.position.set(sp.x + dx / l * 1.2 - a.tx * 3, (sp.y ?? by + 1) + 1.6, sp.z + dz / l * 1.2 - a.tz * 3); cam.lookAt(a.x + a.tx * 2, by + 2, a.z + a.tz * 2); cam.updateMatrixWorld(true);
+        f.renderer.render(f.scene, cam); return f.renderer.domElement.toDataURL('image/png'); }, { s: north.s })); }
     if (want('badge')) { await pin(0); await away(); save('badge', await cam({ s: north.s + LEN / 2 + 1, back: 1.2, along: 7.5, up: 2.3, look: 0, lookUp: 1.9, fov: 42 })); }
     if (want('slogan')) { await pin(1); await away(); save('slogan', await cam({ s: north.s - 3.3, back: 5, along: 0, up: 2.1, look: -1.6, lookUp: 1.6, fov: 34 })); }
     if (want('ride')) { await pin(2); await p.waitForTimeout(1500); save('ride', await cam({ s: north.s, back: -15, along: 15, up: 4.5, look: -2, lookUp: 1.8, fov: 50 })); }
