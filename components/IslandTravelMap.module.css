@@ -59,6 +59,14 @@
 .arrow[data-dir=left]{left:12px;top:50%;margin-top:-22px}
 .arrow[data-dir=right]{right:12px;top:50%;margin-top:-22px}
 
+/* Off-screen station chips (AAA 3, Nov 25 2026): the station pin's own paper and ink, on the edge the station lies past. */
+.stationChip{position:absolute;z-index:2;display:inline-flex;align-items:center;gap:3px;box-sizing:border-box;height:36px;padding:0 11px;border:2px solid #294f43;border-radius:18px;background:#fff8e5;color:#294f43;font:800 13px/1 var(--btn-font);white-space:nowrap;box-shadow:0 3px 0 #183b3440;cursor:pointer;translate:0 -50%;transition:translate .15s ease}
+.stationChip::before{content:"";position:absolute;inset:-4px -2px}
+.stationChip span{display:block;line-height:1}
+.stationChip[data-side=left]{left:8px;padding-left:6px}.stationChip[data-side=right]{right:8px;padding-right:6px}
+.stationChip[data-side=top]{top:8px;translate:-50% 0}.stationChip[data-side=bottom]{bottom:68px;translate:-50% 0}
+.stationChip:active{filter:brightness(.95)}
+.stationChip:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .entering{animation:arrive .26s ease-out}.leaving{animation:leave .2s ease-in both;pointer-events:none}
 @keyframes arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes leave{to{opacity:0;transform:translateY(12px)}}
 
@@ -83,7 +91,7 @@
  .legend li{min-height:44px}
  .legendTip{min-height:44px}.legendTip::before{inset:0 -5px}
 }
-@media(prefers-reduced-motion:reduce){.entering,.leaving,.tip{animation:none}.stage[data-eased],.arrow{transition:none}}
+@media(prefers-reduced-motion:reduce){.entering,.leaving,.tip{animation:none}.stage[data-eased],.arrow,.stationChip{transition:none}}
 
 /* Shared button hover (owner, Nov 23 2026; tokens in app/globals.css --btn-hover-*): mouse only, brighten + gold ring outline. Hover only. */
 @media(hover:hover) and (pointer:fine){

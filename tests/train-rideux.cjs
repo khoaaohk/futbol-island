@@ -38,7 +38,7 @@ Object.assign(states[1],{at:west,doors:.2,dwellLeft:20});ride.frame(1/30,false);
 assert.equal(ride.waiting,1,'a rider at a stop holds the doors');
 states[1].doors=1;ride.frame(1/30,false);assert(ride.exiting>=0,'doors open: the step-out walk starts');assert.equal(R.trainRideStore.get().exitTo,'','the pill goes');
 let n=0;while(ride.active&&n<60){ride.frame(1/30,false);n++;}
-assert(!ride.active&&placed,'off the train');assert(n/30<1,`the walk takes under 1 s (${(n/30).toFixed(2)} s)`);
+assert(!ride.active&&placed,'off the train');assert(n/30<=R.WALK_MAX+.05,`the walk takes at most WALK_MAX (AAA 3: a brisk 4.2 m/s walk, ${(n/30).toFixed(2)} s)`);
 assert(placed.x>1.95+1,'out on the platform, clear of the doorway');assert(Math.abs(Math.sin(placed.yaw)-1)<1e-6,'facing away from the train');
 // the doors-closing warning: the chime + the note EXIT_WARN s before the doors start to shut (the hold counted)
 ride.want(sp.x,sp.z,sp.y,true);Object.assign(states[1],{at:north,doors:1,dwellLeft:10});ride.want(sp.x,sp.z,sp.y,true);assert(ride.board());for(let i=0;i<40&&ride.walking>=0;i++)ride.frame(1/30,false);

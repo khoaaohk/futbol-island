@@ -44,6 +44,8 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   readonly riders: RiderSpots | null;
   /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
   readonly shown: number; readonly rigs: number;
+  /** Checks (scripts/probe-mp-idle.cjs): the stranger layer's counts and the friend core's poses / ids. */
+  debugDraw(): Record<string, unknown>;
   /** Tests / headless checks only: friends' emote state (remoteAvatars.debugEmotes). */
   debugEmotes(): { id: MemberId; emote: number; age: number; x: number; z: number; yaw: number }[];
   /** Relay v1.4 two-ball duets: a friend's avatar plays its half with `partner` (-1 = me) as `role` (remoteAvatars.duet). */
@@ -273,6 +275,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get localBump() { return core.live && meRingOn ? avatars.localBump : null; },
     get riders() { return core.live && avatars.root.visible && avatars.riders.n > 0 ? avatars.riders : null; },
     get shown() { return avatars.shown; },
+    debugDraw() { return { ...avatars.debugPublic(), poses: core.poses.size, ids: core.ids.length, live: core.live }; },
     get rigs() { return avatars.rigs; },
     get tumbling() { return avatars.tumbling; },
     setRoomLayer(layer) {

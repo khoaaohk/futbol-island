@@ -60,7 +60,9 @@ const DOORS_OPEN=.5,BOARD_LEFT=1.5,GET_OFF_LEFT=.8;
 /** Easier boarding (owner, Nov 24 2026): the Board zone is the whole platform ± BOARD_ENDS m and up to BOARD_DEPTH m back from its
  *  edge (PLATFORM_EDGE m from the line); Board shows BOARD_EARLY s before the doors open (a train braking in) and a press then
  *  waits for them; Board walks you to the nearest open door in WALK_MAX s at most (WALK_SPEED m/s, smooth) and on into the seat. */
-export const BOARD_ENDS=2,BOARD_DEPTH=4,PLATFORM_EDGE=1.45,BOARD_EARLY=4,WALK_SPEED=7,WALK_MIN=.35,WALK_MAX=.95;
+/** AAA 3 (Nov 25 2026, owner: "smooth boarding/alighting walks, no sliding feet"): a brisk walk (4.2 m/s, was a 7 m/s dash in under
+ *  a second) so the rig's stride matches the ground it covers; still capped so a far door never makes Board feel slow. */
+export const BOARD_ENDS=2,BOARD_DEPTH=4,PLATFORM_EDGE=1.45,BOARD_EARLY=4,WALK_SPEED=4.2,WALK_MIN=.45,WALK_MAX=1.3;
 /** Seconds until train state st's doors are open enough to board at stop `stop` (0: open now; Infinity: not coming within a lap). */
 export function boardIn(st:{at:number;next:number;t:number;doors:number;dwellLeft:number},stop:number){
  const usable=DOOR_DELAY+DOOR_MOVE*DOORS_OPEN;
@@ -183,6 +185,11 @@ export function boardZoneAt(x:number,z:number,y:number){
  return -1;
 }
 /** The spot on station i's platform level with track s (2.6 m from the line): where a rider steps off. */
+/** Where a station pin on the travel map lands you (AAA 3, Nov 25 2026; live audit: the old spot, u +6, was 3.0 m from the drink
+ *  machine's walk-up spot, inside its 3.2 m "Go" reach, so a click right after landing could open the machine and zoom the camera
+ *  onto it): u −2 along the platform, by the house's window, more than 5 m from every station machine's front (tests/train-aaa3.cjs),
+ *  clear of the islanders (u −6.2, −9), the boards (u 9.5, −12.5) and the platform edge. */
+export const STATION_ARRIVAL_DU=-2;
 export function platformSpot(i:number,s:number,out:{x:number;y:number;z:number;yaw:number}){
  const st=TRAIN_STATIONS[i],du=((s-st.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2,u=Math.max(-STATION_HALF+1.5,Math.min(STATION_HALF-1.5,du));
  const c=trackAt(st.s+u),nx=c.tz*st.side,nz=-c.tx*st.side;out.x=c.x+nx*2.6;out.z=c.z+nz*2.6;out.y=bedAt(L.profile,st.s)+STATION_PLATFORM_Y;out.yaw=Math.atan2(nx,nz);return out;
@@ -557,7 +564,7 @@ export function createTrainRide(ports:Ports){
    // the rider's head (trainCamClear.ts): it comes in fast (~0.07 s) when something is in the way and eases back out slowly, so the
    // camera never pops; the station boxes reach 1.5 m past the eaves so it is already in before the roof arrives.
    camCeiling(camPos.x,camPos.z,ceil);if(ceil.w>0&&camPos.y>ceil.y)camPos.y+=(ceil.y-camPos.y)*ceil.w;// beside a station house: down under the eaves first
-   {const hx=pose.x,hy=pose.y+CAM.eye,hz=pose.z,f=camClearFraction(hx,hy,hz,camPos.x,camPos.y,camPos.z,ports.ground);
+   {const hx=pose.x,hy=pose.y+CAM.eye,hz=pose.z,f=camClearFraction(hx,hy,hz,camPos.x,camPos.y,camPos.z,ports.ground,true);
     arm=arm<0?f:arm+(f-arm)*(1-Math.exp(-(f<arm?14:2.5)*h));
     camPos.set(hx+(camPos.x-hx)*arm,hy+(camPos.y-hy)*arm,hz+(camPos.z-hz)*arm);camPos.y+=trussLift(camPos.x,camPos.y,camPos.z);}
    // Gameplay 3 / the Inside view: standing, the camera eases between the seated framing and the room view (below) as you stand up

@@ -69,6 +69,8 @@ const BAD_FRAME_LIMIT = 5;
 const WARP_MIN_GAP_MS = 5000;
 /** Relay v1.1: a change of room (island <-> room, room <-> room) is an implicit warp, at most one per second (no page loads faster). */
 const ROOM_FLIP_MIN_GAP_MS = 1000;
+/** After a hibernated world wakes: how long members restored without a pose keep being shown (clients resend a still pose every 10 s). */
+export const RESTORE_KEEP_MS = 15_000;
 export const KICK_LOCK_MS = 60_000; // auto-lock after a kick (review #6)
 
 interface Member {
@@ -178,6 +180,8 @@ export class RoomCore {
   private tickNo = 0;
   private beaconCount = 0;
   private stampSeq = 0;
+  /** When restoredWorld() last ran (a woken world): see canSee. */
+  private restoredAt = -1e12;
   /** Fan-out counters for the cost model / smoke test: Poses frames sent and pose entries inside them. */
   stats = { poseFrames: 0, poseEntries: 0, ballEntries: 0 };
   private emptySince: number;
@@ -276,6 +280,7 @@ export class RoomCore {
    *  visibility pass sends Far for anyone it should no longer see (an id it never knew is ignored by the client). */
   restoredWorld(): void {
     if (!this.world) return;
+    this.restoredAt = this.clock.now();
     this.members.forEach((r) => { this.members.forEach((d) => { if (d !== r) { r.known.add(d.id); r.met.add(d.id); } }); });
   }
   attachmentFor(peer: Peer): MemberAttachment | null {
@@ -685,6 +690,11 @@ export class RoomCore {
    *  d not quarantined, neither has reported the other, and d is not held back from r by the following guard. */
   private canSee(r: Member, d: Member, had: boolean): boolean {
     const a = r.pose, b = d.pose;
+    // AAA 3 (Nov 25 2026; live audit #5: two kids standing still on one platform stopped seeing each other after ~30 s on prod): a
+    // woken Durable Object restores its members WITHOUT poses (the attachment carries none), so this pass sent Far for every pair, and
+    // a still player sends no new pose (connection.ts: only on change, plus STILL_RESEND_MS). Keep what the clients show for
+    // RESTORE_KEEP_MS while the restored poses come back; a member who really left sight is still sent Far once its pose is in.
+    if ((!a || !b) && had && this.clock.now() - this.restoredAt < RESTORE_KEEP_MS && !d.quarantined && !r.hides.has(d.id) && !d.hides.has(r.id) && r.room === d.room) return true;
     if (!a || !b || r === d || d.quarantined || r.hides.has(d.id) || d.hides.has(r.id)) return false;
     const f = this.follow.get(d.id * 64 + r.id);
     if (f && f.blocked) return false;
