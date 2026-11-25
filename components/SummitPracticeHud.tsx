@@ -41,7 +41,7 @@ export default function SummitPracticeHud(){
     <button type="button" className={styles.btn} data-practice-shuffle onClick={()=>practiceActions.shuffle()} aria-label="Shuffle drill">Shuffle<span className={styles.wide}> drill</span></button>
     <button type="button" className={`${styles.btn} ${styles.mint}`} data-practice-edit onClick={()=>practiceActions.edit()}>Edit</button>
    </div>
-   <p key={v.hello} className={styles.toast} role="status" data-practice-toast>Practice pitch: kick around!</p>
+   <p key={v.hello} className={styles.toast} role="status" data-practice-toast>Welcome! Your own practice pitch: kick around!</p>{/* owner Nov 25: a welcome that says the drill is just yours (it fades on its own) */}
   </>}
   {editing&&<>
    <section className={styles.card} aria-label={`Editing ${v.name}`} data-practice-editcard>
