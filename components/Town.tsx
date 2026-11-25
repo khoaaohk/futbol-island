@@ -1737,11 +1737,15 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Track assist (owner, Nov 24 2026: "make it easier to go on the track, but still have the option to fall off"): moving along the
       // line within ~2 m of the rails toward / on a trestle, a soft pull to the deck's centre (never forced: steering away (< ~45° off
       // the line) cancels it). Pushing off a deck's edge for DECK_PUSH s on foot (at once at ride speed) drops you into the sea.
-      {const il=Math.hypot(ix,iz);deckPush=il>.1?deckPush:0;if(il>.1&&!rooftop.state.falling&&!water.inWater){const h=trackNearest(location.x,location.z,2.2);
+      {const il=Math.hypot(ix,iz);deckPush=il>.1?deckPush:0;if(il>.1&&!rooftop.state.falling&&!water.inWater){const h=trackNearest(location.x,location.z,2.6);
         if(h){const p=trainTrackAt(h.s),n=trainLeftNormal(p.tx,p.tz),along=(ix*p.tx+iz*p.tz)/il,dir=along>=0?1:-1,ahead=Math.floor(((h.s+dir*8)%TRAIN_TRACK.length+TRAIN_TRACK.length)%TRAIN_TRACK.length/TRAIN_DS)%TRAIN_TRACK.n;
           const onDeck=trainDeckAt(location.x,location.z),toward=onDeck||trainLayoutKind(ahead)===TrainKind.Sea;
           const lat=(location.x-p.x)*n.x+(location.z-p.z)*n.z;// + left of the line
-          if(toward&&Math.abs(along)>.7){const pull=-Math.max(-1,Math.min(1,lat/1.2))*.35*il;ix+=n.x*pull;iz+=n.z*pull;}
+          // POLISH 4 (owner shots 71 / 72, "can't walk or ride on it"): the soft 0.35 pull lost to a keyboard's 8 headings (up to 22° off
+          // the line): a walker drifted off the 2.6 m deck at the head into the water and a ride stopped at the sea's edge. Now, heading
+          // within 45° of the line toward / on a deck, the move follows the line (the input's sideways part is dropped) with a firmer
+          // pull to the centre; steering more than 45° off still leaves the line (and pushing off a deck's edge still drops you in).
+          if(toward&&Math.abs(along)>.7){const pull=-Math.max(-1,Math.min(1,lat/1.1))*.5*il;ix=p.tx*dir*il+n.x*pull;iz=p.tz*dir*il+n.z*pull;}
           if(onDeck&&Math.abs(lat)>DECK_HALF-.25){const out=Math.sign(lat)||1,push=(ix*n.x+iz*n.z)*out/il;deckPush=push>.6?deckPush+dt:0;
             if(deckPush>(rideRef.current==='walk'&&Math.hypot(velocity.x,velocity.z)<5?.35:0)){deckPush=0;const y=rooftop.state.height;location.x+=n.x*out*(DECK_HALF-Math.abs(lat)+.9);location.z+=n.z*out*(DECK_HALF-Math.abs(lat)+.9);rooftop.reset(location.x,location.z,WATER_LEVEL);velocity.x=velocity.z=0;splashInto('fall',y);return;}}}}}
       if(streetTraffic.rider.index>=0){

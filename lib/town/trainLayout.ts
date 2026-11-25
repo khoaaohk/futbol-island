@@ -39,6 +39,7 @@ let colGrid:Map<number,number[]>|null=null;const CG=12,ck=(a:number,b:number)=>a
  *  track's own hash only within 3 m of the line. */
 export function trainSwimBlocked(x:number,z:number){
  const L=trainLayout();
+ if(headRocks(x,z)||lowDeckOver(x,z))return true;// POLISH 4: the abutment's front + rip-rap, and a low deck near a head (no swimming inside the girders)
  if(!colGrid){colGrid=new Map();for(let k=0;k<L.columns.length/2;k++){const a=Math.floor(L.columns[k*2]/CG),b=Math.floor(L.columns[k*2+1]/CG),key=ck(a,b);const l=colGrid.get(key);if(l)l.push(k);else colGrid.set(key,[k]);}}
  const a=Math.floor(x/CG),b=Math.floor(z/CG);
  for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=colGrid.get(ck(a+i,b+j));if(!l)continue;for(const k of l){const r=L.piers[k>>1].main?MAIN_PIER_REACH:SWIM_PIER_REACH;if(Math.abs(L.columns[k*2]-x)<r&&Math.abs(L.columns[k*2+1]-z)<r)return true;}}
@@ -87,7 +88,29 @@ const XING_TOP=.31;
  *  2.6: the long dark ramps lying on the grass read as a skewed slab at West Beach, owner 13.png). */
 export const XING_FOOT=2;
 export const DECK_HALF=1.3;
-export function trainWalkHeight(x:number,z:number):number{
+export function trainWalkHeight(x:number,z:number):number{const h=headTop(x,z),l=lineWalkHeight(x,z);return h>l?h:l;}
+// ---- Bridge heads (POLISH 4, Nov 24 2026, owner shots 71 / 72: "can't walk or ride on it"): trainWorld.ts bridgeHead's stone abutment
+// at each of the 6 land / trestle joints, in its own frame (u: metres from the land row into the sea, v: across). Its top is a floor
+// (the back wall at bed + 0.09 to the seat, the bearing seat 0.42 under the bed to the front face), so a walker or a ride that comes
+// onto the head a little off the centre line stands on the stone instead of dropping into the water beside the 2.6 m deck; a swimmer
+// meets the abutment's front and the rip-rap round its foot as a wall (trainSwimBlocked) and climbs out only onto the top.
+export const HEAD_BACK=-1.1,HEAD_SEAT=.35,HEAD_FRONT=1.25,HEAD_HW=2.3,HEAD_ROCKS=1.4,HEAD_ROCKS_HW=HEAD_HW+1.2;
+type BridgeHead={s:number;x:number;z:number;tx:number;tz:number;bed:number};
+let heads:BridgeHead[]|null=null;
+export function bridgeHeads():readonly BridgeHead[]{
+ if(heads)return heads;const P=trainLayout().profile;heads=[];
+ for(let i=0;i<TRACK.n;i++){const k=(i+1)%TRACK.n,a=P.kind[i]!==TrackKind.Sea,b=P.kind[k]!==TrackKind.Sea;if(a===b)continue;
+  const land=a?i:k,dir=a?1:-1;heads.push({s:land*TRACK_DS,x:TRACK.x[land],z:TRACK.z[land],tx:TRACK.tx[land]*dir,tz:TRACK.tz[land]*dir,bed:P.bed[land]});}
+ return heads;
+}
+const HF={u:0,v:0,bed:0};
+/** (x, z) in the nearest bridge head's frame (HF), false when no head is within 7 m. Six box tests. */
+function headFrame(x:number,z:number){for(const h of bridgeHeads()){const dx=x-h.x,dz=z-h.z;if(dx>7||dx<-7||dz>7||dz<-7)continue;HF.u=dx*h.tx+dz*h.tz;HF.v=Math.abs(dx*h.tz-dz*h.tx);HF.bed=h.bed;return true;}return false;}
+/** The abutment's top under (x, z) (at least 0.05), 0 off it. */
+export function headTop(x:number,z:number){if(!headFrame(x,z)||HF.u<HEAD_BACK||HF.u>HEAD_FRONT||HF.v>HEAD_HW)return 0;return Math.max(.05,HF.u<=HEAD_SEAT?HF.bed+.09:HF.bed-.42);}/* a beach-level head (bed 0): its seat is at the waterline, still stone */
+/** The abutment's front face and the rip-rap round its foot in the water (a swimmer's wall), not its top. */
+function headRocks(x:number,z:number){return headFrame(x,z)&&HF.u>HEAD_BACK&&HF.u<HEAD_FRONT+HEAD_ROCKS&&HF.v<HEAD_ROCKS_HW&&!(HF.u<=HEAD_FRONT&&HF.v<=HEAD_HW);}
+function lineWalkHeight(x:number,z:number):number{
  const hit=trackNearest(x,z,3.6);if(!hit)return 0;
  const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;
  const t=hit.s/TRACK_DS-Math.floor(hit.s/TRACK_DS),bed=P.bed[i]+(P.bed[k]-P.bed[i])*t,ground=onSummitTrackS(hit.s)?bed:0,d=hit.d;
@@ -108,6 +131,14 @@ export function trainDeckAt(x:number,z:number){
  *  of a bridge head (where the deck meets the land); elsewhere the deck is overhead and the swimmer stays in the water under or beside
  *  it (no 3-6 m pop up onto the trestle). True at (x, z) when that point is deck a swimmer may NOT climb onto. One hash lookup. */
 export const DECK_CLIMB_H=.8,DECK_HEAD_S=4;
+/** POLISH 4: the sea's surface (waterDepth.ts WATER_LEVEL; not imported: no import cycle) and the lowest deck top a swimmer passes
+ *  under: the girders hang ~0.62 m under the walk top, so under a deck lower than DECK_SWIM_UNDER over the water the swimmer would be
+ *  inside them. Between DECK_CLIMB_H (climb out) and that, the deck's footprint is a wall to a swimmer. */
+const SEA_Y=-.43,DECK_SWIM_UNDER=1.45;
+function lowDeckOver(x:number,z:number){
+ const hit=trackNearest(x,z,DECK_HALF+.4);if(!hit||hit.d>DECK_HALF+.35)return false;
+ const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;if(P.kind[i]!==TrackKind.Sea&&P.kind[k]!==TrackKind.Sea)return false;
+ const t=hit.s/TRACK_DS-Math.floor(hit.s/TRACK_DS),top=P.bed[i]+(P.bed[k]-P.bed[i])*t+TRAIN_WALK_TOP-SEA_Y;return top>DECK_CLIMB_H&&top<DECK_SWIM_UNDER;}
 export function swimDeckBlocked(x:number,z:number,waterY:number){
  const hit=trackNearest(x,z,DECK_HALF+.05);if(!hit||hit.d>DECK_HALF)return false;
  const P=trainLayout().profile,i=Math.floor(hit.s/TRACK_DS)%TRACK.n,k=(i+1)%TRACK.n;if(P.kind[i]!==TrackKind.Sea&&P.kind[k]!==TrackKind.Sea)return false;
@@ -119,7 +150,7 @@ export function swimDeckBlocked(x:number,z:number,waterY:number){
 export function trestleDecks():LandableDeck[]{
  const P=trainLayout().profile,out:LandableDeck[]=[];let a=-1;
  const flush=(b:number)=>{let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let j=a;j<=b;j++){const i=j%TRACK.n;x0=Math.min(x0,TRACK.x[i]);x1=Math.max(x1,TRACK.x[i]);z0=Math.min(z0,TRACK.z[i]);z1=Math.max(z1,TRACK.z[i]);}
-  const pad=DECK_HALF+1;out.push({id:'trestle-'+out.length,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0+pad*2,d:z1-z0+pad*2,yaw:0,height:0,floating:true,contains:trainDeckAt,
+  const pad=HEAD_HW+1.5;out.push({id:'trestle-'+out.length,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0+pad*2,d:z1-z0+pad*2,yaw:0,height:0,floating:true,contains:(x:number,z:number)=>trainDeckAt(x,z)||headTop(x,z)>0/* POLISH 4: the abutment top too */,
    distance:(x:number,z:number)=>{const h=trackNearest(x,z,12);return h&&(P.kind[h.i]===TrackKind.Sea)?Math.max(0,h.d-DECK_HALF):12;}});};
  // walk the loop from a non-sea row so a run never wraps unseen
  let start=0;while(start<TRACK.n&&P.kind[start]===TrackKind.Sea)start++;

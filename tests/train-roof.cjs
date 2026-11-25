@@ -74,6 +74,12 @@ console.log('train-roof pure: ok');
    assert(Math.hypot(pos.x-side.x,pos.z-side.z)>4,'swims on under the deck and out the other side');
    swimming.on=false;pr.sample(pm.x,pm.z,1,true);assert(pr.land,'on foot the deck is land again');
    assert(/swimLand=\(x:number,z:number\)=>onLand\(x,z\)&&!\(swimmingNow\(\)&&swimDeckBlocked/.test(read('components/Town.tsx'))&&/createWaterProbe\(distanceToLand,swimLand\)/.test(read('components/Town.tsx')),'Town: the probe and the swim step use the swimmer rule');}
+  // POLISH 4 (owner shots 71 / 72): every bridge head's abutment top is a floor and land (the landable deck's shape); the rip-rap and a low
+  // deck near a head are walls to a swimmer; the Town assist follows the line (the input's sideways part dropped within 45°).
+  {const LM=LW('lib/town/landmass.ts'),H=TL.bridgeHeads();assert(H.length===6,'six bridge heads ('+H.length+')');for(const h of H){const at=(u,v)=>({x:h.x+h.tx*u+h.tz*v,z:h.z+h.tz*u-h.tx*v});
+    const top=at(.8,1.9);assert(TL.trainWalkHeight(top.x,top.z)>=h.bed-.43&&TL.headTop(top.x,top.z)>0,'the bearing seat beside the deck is a floor');assert(LM.onLand(top.x,top.z),'the abutment top is land (landable deck)');
+    const rock=at(2,2.8);assert(TL.trainSwimBlocked(rock.x,rock.z),'the rip-rap is a wall to a swimmer');const far=at(2,6);assert(!TL.trainSwimBlocked(far.x,far.z),'open sea past the rocks');}
+   assert(/ix=p\.tx\*dir\*il\+n\.x\*pull;iz=p\.tz\*dir\*il\+n\.z\*pull/.test(read('components/Town.tsx')),'Town: the assist follows the line');}
   off.forEach(f=>f());}
  console.log('train-roof trestle: ok');
  if(k<0){console.log('train-roof live: skipped (no train at speed now)');return;}
