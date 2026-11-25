@@ -168,8 +168,9 @@ async function partRide(c) {
   if (shots) await p.screenshot({ path: path.join(shots, 'ride-bridge.png') });
   // owner Nov 24 2026: no Talk prompt at all while riding seated (passengers and islanders stay, untalkable; only Kenji at the cab partition)
   const hud = await p.evaluate(() => { const f = window.__fi2, r = f.trainRide, l = f.location; const pax = r.active && l ? f.trainPassengers.nearest(r.train, l.x, l.z) : null;
-    return { talk: !!document.querySelector('.npc-talk-prompt'), passenger: pax ? pax.name : null, fov: f.camera.fov }; });
-  check('riding: no "Talk to" prompt; portrait ride fov opened', !hud.talk && (!phone || hud.fov > 50), JSON.stringify(hud));
+    return { talk: !!document.querySelector('.npc-talk-prompt'), text: document.querySelector('.npc-talk-prompt')?.textContent ?? '', passenger: pax ? pax.name : null, fov: f.camera.fov }; });
+  // POLISH 4: island rules on the train (a passenger within reach of my seat is offered "Talk to <name>"; nobody: no prompt)
+  check('riding: the Talk prompt only names a passenger near my seat; portrait ride fov opened', (!hud.talk || /^Talk to /.test(hud.text)) && (!phone || hud.fov > 50), JSON.stringify(hud));
   // tab hidden 20 s then back: the train must be where the timetable says
   await p.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
   await p.evaluate(() => { window.__skew += 20000; });

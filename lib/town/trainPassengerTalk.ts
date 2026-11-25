@@ -2,21 +2,21 @@
  * Island Line: talking to the passengers (owner, Nov 24 2026: "should be able to interact with NPCs on the train. These NPCs should
  * talk about different events, games, teach"). Earlier the owner removed the floating Talk labels while riding (distracting), so
  * NOTHING is drawn or labelled until you are close or you aim at someone:
- *  - Standing (the aisle / Inside view): Town's usual small Talk prompt (E / tap) only for a passenger within TALK_STAND m of you and
- *    roughly in front of the camera (TALK_VIEW_COS).
- *  - Seated: tap / click a passenger within SEAT_REACH m (about two seats); aiming the camera's centre at one also offers Talk.
- *  - Desktop hover: a faint ring at the passenger's feet and the pointer cursor, nothing else (no tag, no name).
- *  - At a stop, while "Get off" is the primary prompt, Talk is only offered when you aim at the passenger (`aimed`).
+ *  POLISH 4 (owner: "exactly like island NPCs"): Town's "Talk to <name>" prompt (E / tap) for the nearest passenger within
+ *  TALK_NEAR m standing or SEAT_REACH m of your seat (train-relative), in every camera view, at a stop too (Talk in the NPC slot
+ *  beside the Get off pill); the island's near-only name tag over that one passenger; a tap / click on a passenger in reach; the
+ *  island's hover glow (npcHover) + pointer + hover sound on desktop. Nothing drawn while nobody is in reach.
  * Opening uses Town's NpcConversation slide-out with a per-talk definition: (c) banter about the next stop as the greeting, three
  * topics ((a) an island event or game from real game data, (b) a teaching tip from the archetype, one more of either) and (d) one
  * quick question in the chat's challenge UI. lib/town/trainPassengerTalkPools.ts holds the content and its sources.
  * Rules: rotation without repeats per session (per archetype; the events across everyone); the passenger being talked to turns
  * toward you and keeps their seat (trainPassengers.face). Local only: nothing is sent, remote players never see a chat.
  * Heat: not riding = one branch per frame. Riding: a ray test against the ridden train's ≤ 14 riders only when the mouse moved or a
- * tap landed, the prompt test on the HUD tick, the ring (one tiny mesh, hidden by default) moved only while hovered. No allocation
+ * tap landed, the prompt test on the HUD tick, the glow and the tag (hidden by default) moved only while shown. No allocation
  * per frame.
  */
 import * as T from 'three';
+import {createNpcHover} from '../graphics/npcHover';
 import type {NpcDefinition} from './npcDialogues';
 import type {TalkSpot,TrainPassengers} from './trainPassengers';
 import {TRAIN_STOPS,TRAIN_CARS} from './trainSchedule';
@@ -25,6 +25,10 @@ import {EVENTS,FITNESS,ROLE_POOLS,isTalkRole,type EventKind,type TalkRole,type T
 
 /** Standing: talk reach (m) and the view cone (cos of the half angle, ~50°). Seated: reach (m, about two seats along the bench or across the aisle: SEAT_TABLE pitch ~1 m, benches ~1.9 m apart). */
 export const TALK_STAND=1.5,TALK_VIEW_COS=Math.cos(50*Math.PI/180),SEAT_REACH=3;
+/** POLISH 4 (owner: "interact exactly like island NPCs"): standing, the nearest passenger within TALK_NEAR m (train-relative: everyone
+ *  in my train moves with me) is offered, in any camera view, no view cone and no aiming needed; held while within TALK_HOLD m more
+ *  unless someone is TALK_SWITCH m closer (the island's tag hysteresis). Seated: the same within SEAT_REACH of my seat. */
+export const TALK_NEAR=2.2,TALK_HOLD=.4,TALK_SWITCH=.5;
 /** A tap: at most this many px of movement and ms down (a longer drag is the ride camera's look). */
 export const TAP_PX=10,TAP_MS=450;
 /** Body capsule for the ray test (m over the floor; kids scaled), radius. */
@@ -69,6 +73,13 @@ export function pickStanding(spots:readonly Readonly<TalkSpot>[],count:number,k:
   if(d>.25&&(dx*fwd.x+dz*fwd.z)/(d*fl)<TALK_VIEW_COS)continue;best=i;bd=d;}
  return best;
 }
+/** POLISH 4: the nearest talkable spot of train k within `reach` of `me` (no view cone), keeping `keep` (a cast) while it is within
+ *  reach + TALK_HOLD and nobody is TALK_SWITCH m closer; -1 none. */
+export function pickNear(spots:readonly Readonly<TalkSpot>[],count:number,k:number,me:{x:number;z:number},reach:number,keep=-1):number{
+ let best=-1,bd=reach,ki=-1,kd=Infinity;
+ for(let i=0;i<count;i++){const s=spots[i];if(s.k!==k)continue;const d=Math.hypot(s.x-me.x,s.z-me.z);if(s.cast===keep&&d<reach+TALK_HOLD){ki=i;kd=d;}if(d<bd){best=i;bd=d;}}
+ return ki>=0&&!(best>=0&&best!==ki&&bd<kd-TALK_SWITCH)?ki:best;
+}
 /** The talkable spot of train k a ray (o + t·dir, dir unit) hits first (a vertical body capsule), within `reach` m of `me`; -1 none. */
 export function pickRay(spots:readonly Readonly<TalkSpot>[],count:number,k:number,o:V3,dir:V3,me:{x:number;z:number},reach:number,clear?:(s:Readonly<TalkSpot>)=>boolean):number{
  let best=-1,bt=Infinity;
@@ -99,11 +110,19 @@ export function carSightClear(ox:number,oy:number,oz:number,px:number,py:number,
  return false;
 }
 
-type Ports={states:()=>readonly {next:number;doors?:number}[]|undefined;/** POLISH 3: car c of train k's matrix (occlusion by the car body) */carMatrix?:(k:number,c:number,out:T.Matrix4)=>T.Matrix4;open:(npc:NpcDefinition)=>void;blocked:()=>boolean};
+type Ports={/** POLISH 4: the island's hover sound on a new hovered passenger */hoverSound?:()=>void;states:()=>readonly {next:number;doors?:number}[]|undefined;/** POLISH 3: car c of train k's matrix (occlusion by the car body) */carMatrix?:(k:number,c:number,out:T.Matrix4)=>T.Matrix4;open:(npc:NpcDefinition)=>void;blocked:()=>boolean};
 export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports:Ports){
- const ring=new T.Mesh(new T.RingGeometry(.3,.4,28),new T.MeshBasicMaterial({color:'#fff4d6',transparent:true,opacity:.38,depthWrite:false,side:T.DoubleSide}));
- ring.rotation.x=-Math.PI/2;ring.visible=false;ring.name='train-talk-hover';ring.renderOrder=2;scene.add(ring);
- const ndc=new T.Vector2(),tapV=new T.Vector2(),centre=new T.Vector2(0,0),rc=new T.Raycaster(),fwd=new T.Vector3(),me={x:0,z:0};
+ // POLISH 4 (owner: "exactly like island NPCs"): the island's own hover glow (npcHover: ring, halo, soft column) on the hovered
+ // passenger, and the island's near-only name tag (its colours and type) over the one the Talk prompt offers: one small sprite of
+ // constant screen size (a world-sized tag 1 m away in first person would fill the view), hidden whenever nobody is offered.
+ const glow=createNpcHover(scene,'train-talk-hover'),ring=glow.root;let hoverOn=false;
+ let tagCanvas:HTMLCanvasElement|null=null,tagTex:T.CanvasTexture|null=null;// made on the first tag (none in a ride without talk)
+ const tag=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,sizeAttenuation:false}));tag.scale.set(.15,.047,1);tag.visible=false;tag.name='train-talk-tag';tag.renderOrder=3;scene.add(tag);
+ let candCast=-1,tagCast=-1;const glowAt={id:'',x:0,y:0,z:0};
+ const drawTag=(name:string)=>{if(typeof document==='undefined')return;if(!tagCanvas){tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=160;tagTex=new T.CanvasTexture(tagCanvas);tagTex.colorSpace=T.SRGBColorSpace;tag.material.map=tagTex;tag.material.needsUpdate=true;}
+  const ctx=tagCanvas.getContext('2d');if(!ctx||!tagTex)return;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';
+  ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(name,256,66,470);ctx.fillStyle='#e6cb8b';ctx.font='700 25px sans-serif';ctx.fillText('LET’S TALK',256,115,470);tagTex.needsUpdate=true;};
+ const ndc=new T.Vector2(),tapV=new T.Vector2(),centre=new T.Vector2(0,0),rc=new T.Raycaster(),me={x:0,z:0};
  const defs=new Map<number,NpcDefinition>();// the definition offered to each passenger until they are talked to (no rotation churn)
  let dom:HTMLElement|null=null,cam:T.Camera|null=null,curK=-1,curStanding=false,curTalking=false,swallowClick=false,hoverDirty=false,mouseIn=false,hovered=-1,hoveredCast=-1,down:{x:number;y:number;t:number;id:number}|null=null;
  let lastTap='',aimed=false,talkCast=-1,lastTalkId:string|null=null,cursorSet=false;
@@ -137,31 +156,35 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
   attach(el:HTMLElement){dom=el;el.addEventListener('pointermove',onMove,{passive:true});el.addEventListener('pointerleave',onLeave,{passive:true});
    el.addEventListener('pointerdown',onDown,{passive:true});el.addEventListener('pointerup',onUp,{capture:true});el.addEventListener('click',onClick,{capture:true});},
   /** Every frame after trainPassengers.update. k: the train I ride (-1: not riding); my world spot; the open chat's NPC id. */
-  frame(camera:T.Camera,k:number,standing:boolean,x:number,z:number,talkingId:string|null){
+  frame(camera:T.Camera,k:number,standing:boolean,x:number,z:number,talkingId:string|null,dt=1/60,reduced=false){
    cam=camera;curK=k;curStanding=standing;curTalking=!!talkingId;
-   if(k<0){if(hovered>=0||ring.visible||talkCast>=0){hovered=hoveredCast=-1;ring.visible=false;setCursor(false);}if(talkCast>=0){talkCast=-1;pax.face(-1);}if(lastTalkId!==talkingId)lastTalkId=talkingId;return;}
+   if(k<0){candCast=-1;if(tag.visible)tag.visible=false;if(hovered>=0||hoverOn||talkCast>=0){hovered=hoveredCast=-1;hoverOn=false;setCursor(false);}if(glow.root.visible)glow.update(null,dt,reduced);if(talkCast>=0){talkCast=-1;pax.face(-1);}if(lastTalkId!==talkingId)lastTalkId=talkingId;return;}
    me.x=x;me.z=z;const reach=standing?TALK_STAND+.5:SEAT_REACH;
    // the chat: who turns to me; when it closes, their next talk gets fresh content
    if(talkingId!==lastTalkId){const was=castOf(lastTalkId);if(was>=0)defs.delete(was);lastTalkId=talkingId;talkCast=castOf(talkingId);if(talkCast<0)pax.face(-1);}
    if(talkCast>=0)pax.face(talkCast,x,z);
-   if(talkingId){if(hovered>=0){hovered=hoveredCast=-1;ring.visible=false;setCursor(false);}return;}
-   if(hoverDirty){hoverDirty=false;const i=mouseIn&&!ports.blocked()?rayAt(camera,ndc,k,reach):-1;hoveredCast=i>=0?pax.spots().list[i].cast:-1;}
+   if(talkingId){if(tag.visible)tag.visible=false;if(hovered>=0||hoverOn){hovered=hoveredCast=-1;hoverOn=false;setCursor(false);}glow.update(null,dt,reduced);return;}
+   if(hoverDirty){hoverDirty=false;const i=mouseIn&&!ports.blocked()?rayAt(camera,ndc,k,reach):-1,was=hoveredCast;hoveredCast=i>=0?pax.spots().list[i].cast:-1;if(hoveredCast>=0&&hoveredCast!==was)ports.hoverSound?.();}
    // the hovered passenger moves with the train: follow their spot (found again by cast; gone = unhover)
    hovered=-1;if(hoveredCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===hoveredCast&&list[i].k===k){hovered=i;break;}if(hovered<0)hoveredCast=-1;}
-   if(hovered>=0){const s=pax.spots().list[hovered];ring.position.set(s.fx,s.y+.03,s.fz);ring.visible=true;setCursor(true);}else if(ring.visible){ring.visible=false;setCursor(false);}
+   if(hovered>=0){const s=pax.spots().list[hovered];glowAt.id='pax-'+s.cast;glowAt.x=s.fx;glowAt.y=s.y;glowAt.z=s.fz;glow.update(glowAt,dt,reduced);hoverOn=true;setCursor(true);}else{if(hoverOn){hoverOn=false;setCursor(false);}if(glow.root.visible)glow.update(null,dt,reduced);}
+   // the near-only name tag over the offered passenger (moves with the train: their spot this frame)
+   let ts=-1;if(candCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===candCast&&list[i].k===k){ts=i;break;}}
+   if(ts>=0){const s=pax.spots().list[ts];if(tagCast!==s.cast){tagCast=s.cast;drawTag(pax.def(s.cast)?.name??'');}tag.position.set(s.x,s.y+(s.standing?2.05:1.62)*(s.kid?KID:1),s.z);if(!tag.visible)tag.visible=true;}else if(tag.visible)tag.visible=false;
   },
   /** HUD tick: the passenger the Talk prompt offers (or null). getOffPrimary: a stop's Get off pill is up (then aiming only). */
   candidate(camera:T.Camera,k:number,standing:boolean,x:number,z:number,getOffPrimary:boolean):NpcDefinition|null{
-   aimed=false;if(k<0)return null;me.x=x;me.z=z;const {list,count}=pax.spots();
-   const a=rayAt(camera,centre.set(0,0),k,standing?TALK_STAND+.3:SEAT_REACH);
-   let i=a;if(i>=0)aimed=true;else if(standing&&!getOffPrimary){camera.getWorldDirection(fwd);i=pickStanding(list,count,k,me,fwd);}
-   return i>=0?defOf(list[i],k):null;},
+   // POLISH 4: island NPC rules: the nearest within reach (train-relative), any camera view, seated or standing, at a stop too
+   // (Talk in the NPC slot beside the Get off pill); aiming at someone in reach still picks them (desktop). getOffPrimary: unused now.
+   aimed=false;void getOffPrimary;if(k<0){candCast=-1;return null;}me.x=x;me.z=z;const {list,count}=pax.spots(),reach=standing?TALK_NEAR:SEAT_REACH;
+   let i=rayAt(camera,centre.set(0,0),k,reach);if(i>=0)aimed=true;else i=pickNear(list,count,k,me,reach,candCast);
+   candCast=i>=0?list[i].cast:-1;return i>=0?defOf(list[i],k):null;},
   /** The current candidate is under the camera's aim (E may talk even while Get off is the primary prompt). */
   get aimed(){return aimed;},
   /** Tests / checks. */
-  get hovered(){return hoveredCast;},get lastTap(){return lastTap;},ring,
+  get hovered(){return hoveredCast;},get lastTap(){return lastTap;},ring,get hoverShown(){return hoverOn;},get tagShown(){return tag.visible;},
   dispose(){if(dom){dom.removeEventListener('pointermove',onMove);dom.removeEventListener('pointerleave',onLeave);dom.removeEventListener('pointerdown',onDown);dom.removeEventListener('pointerup',onUp,{capture:true});dom.removeEventListener('click',onClick,{capture:true});setCursor(false);}
-   ring.removeFromParent();ring.geometry.dispose();(ring.material as T.Material).dispose();pax.face(-1);},
+   glow.dispose();tag.removeFromParent();tag.material.dispose();tagTex?.dispose();pax.face(-1);},
  };
 }
 export type TrainPassengerTalk=ReturnType<typeof createTrainPassengerTalk>;

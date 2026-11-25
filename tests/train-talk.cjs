@@ -93,14 +93,15 @@ console.log('train-talk picking ok');
  const carM=(k,c,out)=>{out.identity();if(c%2)out.makeRotationY(Math.PI);out.setPosition(states[k].s,1,-c*12.4);return out;};const run={states,carMatrixOf:carM};
  cam.position.set(200,3,4);cam.lookAt(200,1,0);cam.updateMatrixWorld();pax.update(run,60,cam,0,0,false);const {list,count}=pax.spots();assert(count>0,'riders this frame');
  const s=list[0];const opened=[];const talk=TK.createTrainPassengerTalk(scene,pax,{states:()=>states,open:n=>opened.push(n),blocked:()=>false});
- assert(!talk.ring.visible,'nothing drawn by default (no labels)');
+ assert(!talk.hoverShown&&!talk.tagShown,'nothing drawn by default (no labels)');
  // stand next to the rider, facing them: Talk offered; at a stop with Get off up and not aiming: nothing
  const me={x:s.x-.9,z:s.z};cam.position.set(me.x,s.y+1.6,me.z);cam.lookAt(s.x+1,s.y+3,s.z+.6);cam.updateMatrixWorld();/* looking past them, up: not aimed, but in view */
  const fwdCam=new T.Vector3();cam.getWorldDirection(fwdCam);const c1=talk.candidate(cam,0,true,me.x,me.z,false);
  const inView=(s.x-me.x)*fwdCam.x+(s.z-me.z)*fwdCam.z>0;assert(inView&&c1&&c1.id===PX.CAST[s.cast].id&&!talk.aimed,'standing by them, in view: Talk');
  cam.position.set(s.x-2.5,s.y+1.6,s.z);cam.lookAt(s.x+1,s.y+3,s.z+.6);cam.updateMatrixWorld();{const c3=talk.candidate(cam,0,true,s.x-2.5,s.z,false);assert(!c3||c3.id!==PX.CAST[s.cast].id,'2.5 m away, not aiming: no prompt for them');}cam.position.set(me.x,s.y+1.6,me.z);
  cam.lookAt(s.x,s.y+1,s.z);cam.updateMatrixWorld();const c2=talk.candidate(cam,0,true,me.x,me.z,true);assert(c2&&talk.aimed,'Get off up, but aiming at them: Talk');
- cam.lookAt(me.x-5,s.y+1.6,me.z);cam.updateMatrixWorld();assert.equal(talk.candidate(cam,0,true,me.x,me.z,true),null,'Get off up, not aiming: no Talk');
+ cam.lookAt(me.x-5,s.y+1.6,me.z);cam.updateMatrixWorld();{const c4=talk.candidate(cam,0,true,me.x,me.z,true);assert(c4&&c4.id===PX.CAST[s.cast].id&&!talk.aimed,'POLISH 4: at a stop (Get off up), looking away: Talk still offered (island rules: proximity, any view)');}
+ {const seat={x:s.x+1.1,z:s.z};cam.position.set(seat.x,s.y+1.2,seat.z);cam.lookAt(seat.x+3,s.y+1.2,seat.z);cam.updateMatrixWorld();const c5=talk.candidate(cam,0,false,seat.x,seat.z,false);assert(c5&&c5.id===PX.CAST[s.cast].id,'POLISH 4: seated, looking out: the neighbour is offered');talk.frame(cam,0,false,seat.x,seat.z,null);assert(talk.tagShown,'their near-only name tag shows');}
  assert.equal(talk.candidate(cam,-1,true,me.x,me.z,false),null,'not riding: nothing');
  // open via the runtime (tap path) then close: they face me while open
  const h={},el={style:{},addEventListener:(t,f)=>{h[t]=f;},removeEventListener(){},getBoundingClientRect:()=>({left:0,top:0,width:100,height:100})};talk.attach(el);
@@ -110,8 +111,8 @@ console.log('train-talk picking ok');
  assert.equal(stopped,2,'a passenger tap never reaches the island\'s own canvas click targets (stamp house, machines)');
  assert.equal(opened.length,1,'a tap on the passenger opens the talk');assert(opened[0].topics.length===3&&opened[0].fresh.challenges.length===1,'with its content');
  h.pointerdown({clientX:50,clientY:50,pointerId:2});h.pointerup(ev({clientX:90,clientY:50,pointerId:2}));talk.frame(cam,0,true,me.x,me.z,null);assert.equal(opened.length,1,'a drag (the ride camera look) does not open');
- h.pointermove({pointerType:'mouse',clientX:50,clientY:50});talk.frame(cam,0,true,me.x,me.z,null);assert(talk.ring.visible&&el.style.cursor==='pointer','desktop hover: a faint ring + pointer only');
- talk.frame(cam,0,true,me.x,me.z,opened[0].id);assert(!talk.ring.visible,'open: no hover ring');
+ h.pointermove({pointerType:'mouse',clientX:50,clientY:50});talk.frame(cam,0,true,me.x,me.z,null);assert(talk.hoverShown&&talk.ring.visible&&el.style.cursor==='pointer','desktop hover: the island hover glow + pointer');
+ talk.frame(cam,0,true,me.x,me.z,opened[0].id);assert(!talk.hoverShown&&!talk.tagShown,'open: no hover glow, no tag');
  talk.frame(cam,0,true,me.x,me.z,null);const again=talk.candidate(cam,0,true,me.x,me.z,false);assert(again&&again!==opened[0],'closed: the next talk gets fresh content');
  const def=talk.candidate((cam.lookAt(s.x,s.y+1,s.z),cam.updateMatrixWorld(),cam),0,true,me.x,me.z,false);talk.frame(cam,0,true,me.x,me.z,def.id);
  pax.update(run,60.1,cam,0,0,false);talk.frame(cam,0,true,me.x,me.z,null);
@@ -122,6 +123,6 @@ console.log('train-talk picking ok');
  assert(/trainTalk\.frame\(camera,trainRide\.active\?trainRide\.train:-1/.test(town),'per-frame hook');
  assert(/trainTalk\.aimed\/\* train-talk \*\/\|\|!trainRideStore\.get\(\)\.canGetOff/.test(town),'E at a stop only when aiming');
  assert(/stadiumSit\.seated\|\|trainRide\.active/.test(town),'no islander tags while riding');
- const tt=read('lib/town/trainPassengerTalk.ts');assert(!/CSS2DObject|Sprite|textContent|createElement/.test(tt),'no labels or DOM tags from the talk module');
+ const tt=read('lib/town/trainPassengerTalk.ts');assert(!/CSS2DObject|textContent/.test(tt)&&/sizeAttenuation:false/.test(tt)&&(tt.match(/new T\.Sprite\(/g)||[]).length===1,'POLISH 4: one near-only tag sprite (the offered passenger), no DOM labels');
  assert(!/send|presence|broadcast/i.test(tt.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'local only: nothing sent');}
 console.log('train-talk runtime ok');
