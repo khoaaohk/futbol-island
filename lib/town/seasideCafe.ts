@@ -155,5 +155,8 @@ export const CAFE_BUTTERFLY_ID='monarch';
 /** count: desktop / phone; near: the motion gate (m from the garden's middle); flee: the scatter radius from a moving player; calmSpeed:
  *  under it the player is "still" (no scatter, and now and then one comes close: curious); net: the Net it range; away: s a netted one
  *  is gone. */
+/** Owner Nov 25 2026 (shot 94: "remove the net it option for the butterflies at the cafe"): the garden's monarchs are just to look
+ *  at: no Net it prompt, no catch. The Stadium Park pond's dragonflies keep theirs. Flip to true to bring it back. */
+export const CAFE_NET_OPEN=false;
 export const CAFE_BUTTERFLIES={count:[10,8] as const,near:40,flee:2.4,calmSpeed:1.2,curious:.4,net:3,away:40,key:'cafe-net',size:.62} as const;
 export const CAFE_BUTTERFLY_WHERE='Or stand still in the Half-Time Café’s flower garden on Coral Cay: a monarch will flutter close enough to net.';
