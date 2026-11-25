@@ -116,12 +116,12 @@ export const QUIZ_FOR:Readonly<Record<string,string>>={
  [RQ('back-pass-rule')]:'goalkeeper-rules-quiz',[RQ('advantage')]:'free-kick-quiz',[RQ('drop-ball')]:'free-kick-quiz',
  ...Object.fromEntries(POSITIONS.map(p=>[p.path,'soccer-positions-quiz'])),[P_('goalkeeper')]:'goalkeeper-rules-quiz',
  ...Object.fromEntries(FORMATIONS.map(f=>[f.path,'soccer-formations-quiz'])),
- ...Object.fromEntries(['nutmeg','hat-trick','brace','clean-sheet','assist','own-goal','man-on','tap-in','header','volley','chip','stoppage-time','extra-time','near-post','far-post','penalty-area','possession'].map(s=>[TQ(s),'soccer-terms-quiz'])),
+ ...Object.fromEntries(['nutmeg','hat-trick','brace','clean-sheet','assist','own-goal','man-on','tap-in','header','volley','chip','stoppage-time','extra-time','near-post','far-post','possession'].map(s=>[TQ(s),'soccer-terms-quiz'])),
  ...Object.fromEntries(['two-v-one','through-ball','give-and-go','overlap','underlap','cutback','switching-play','width','counterattack','third-man-run','overload','support','build-up'].map(s=>[TQ(s),'attacking-tactics-quiz'])),
  ...Object.fromEntries(['pressing','cover','marking','goal-side','jockeying','clearance','low-block','high-line','offside-trap','tackle'].map(s=>[TQ(s),'defending-tactics-quiz'])),
  ...Object.fromEntries(['false-nine','box-to-box','sweeper-keeper','pivot'].map(s=>[TQ(s),'soccer-formations-quiz'])),
  ...Object.fromEntries(['step-over','dummy','shielding','first-touch','one-touch','half-volley','weak-foot','scanning','square-pass','cross','dribble'].map(s=>[TQ(s),'soccer-skills-terms-quiz'])),
  [TQ('set-piece')]:'free-kick-quiz',[TQ('free-kick-wall')]:'free-kick-quiz',[TQ('goal-area')]:'corner-kick-and-goal-kick-quiz',
- [TQ('penalty-shoot-out')]:'penalty-kick-quiz',[TQ('yellow-card')]:'fouls-and-cards-quiz',[TQ('red-card')]:'fouls-and-cards-quiz'};
+ [TQ('penalty-shoot-out')]:'penalty-kick-quiz',[TQ('penalty-area')]:'penalty-kick-quiz'/* Nov 24 2026: the penalty cluster shares one quiz */,[TQ('yellow-card')]:'fouls-and-cards-quiz',[TQ('red-card')]:'fouls-and-cards-quiz'};
 /** The quiz for an English guide path, in a language (null when the page has none). */
 export const quizForPage=(enPath:string,lang:Lang='en')=>{const s=QUIZ_FOR[enPath];return s?quizBySlug(s,lang):null;};

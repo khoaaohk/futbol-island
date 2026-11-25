@@ -14,7 +14,7 @@ import {drillLinksFor} from '@/lib/site/drills';
 import {termCrossLinks} from '@/lib/site/crossLinks';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,RuleExtraSection,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {termQuiz} from '@/lib/site/guideQuiz';
@@ -59,6 +59,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <GuideIntro top rail={<RailNav rail={guideRail('terms',[...(t.kinds?['types']:[]),...(t.sides?['other-side']:[]),...(t.alsoMeans?['also-means']:[])])} current="#top"/>} onward={onwardFor(t.cta)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
+  {t.extra&&<RuleExtraSection x={t.extra}/>/* Nov 24 2026 (SEO quick wins) */}
   {/* Nov 20 2026 (SEO foundation): the kinds of the move, the other side of it, a second meaning, then one drill and one lesson */}
   {t.kinds&&<Section id="types" title={t.kinds.title}><DataTable label={t.kinds.title} head={['Type','What it is']} rows={t.kinds.rows}/></Section>}
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>

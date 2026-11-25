@@ -19,7 +19,9 @@ export type RulesHubEs={crumb:string;blurb:string;title:string;description:strin
 export type TermEs={name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:SceneEs;howTitle:string;
  how:readonly string[];mistakes:readonly string[];formats:string;faq:readonly Faq[];notes:CoachNotesEs;
  /** Required when the English page has them (lib/site/terms.ts TermPage). */
- howFact?:{label:string;value:string};quizHow?:{q:string;why:string}};
+ howFact?:{label:string;value:string};quizHow?:{q:string;why:string};
+ /** Required when the English page has an extra section (Nov 24 2026), 1:1 steps and rows. */
+ extra?:{title:string;intro?:string;steps?:readonly string[];head?:readonly string[];rows?:readonly (readonly string[])[];note?:string}};
 export type GlossaryEs={term:string;def:string};
 export type TermsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;more?:string;faq:readonly Faq[];
  /** The A-Z list, keyed by the English GLOSSARY entry id. */
