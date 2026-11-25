@@ -429,7 +429,7 @@ function NewToolEs({slug}:{slug:NewToolSlug}){
 }
 const BOARD_RELATED_ES:readonly [string,string][]=[['Formaciones de fútbol','Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'],['Posiciones de fútbol','Qué hace cada posición y los números del 1 al 11'],
  ['Ejercicios de fútbol para niños','Ejercicios con diagrama para practicar la jugada que dibujaste'],['Creador de alineaciones de fútbol','Nombres en un diagrama de cancha para el partido'],
- ['Diagramas de cancha de fútbol en blanco','Imprime una cancha para dibujar jugadas en papel'],['Entrenador de escaneo','Los jugadores aprenden a mirar por encima del hombro']];
+ ['Diagramas de cancha de fútbol en blanco','Imprime una cancha para dibujar jugadas en papel'],['Entrenador de escaneo','Los jugadores aprenden a mirar por encima del hombro'],['Quiz de táctica de ataque','12 preguntas sobre el 2v1, el desdoble y el centro atrás, con respuestas'],['Generador de planes de entrenamiento','Un entrenamiento con tiempos para practicar la jugada']];
 /** The tactics board's front door in Spanish (Nov 22 2026; the same body as the English page) */
 function BoardEs(){
  const crumbs=toolCrumbsEs({name:BOARD_ES.crumb,path:toEs(BOARD_PATH)});
