@@ -98,7 +98,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(definition.costume==='drip'){const costume=dressDripMascot(rig);if(costume){geometriesOwned.push(...costume.geometries);materials.push(...costume.materials);}}
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
   const canvas=tagCanvas,texture=tagTexture,material=tagMaterial;// the one shared tag (drawn when shown: labelStatus '' never matches a status)
-  const label=new T.Sprite(material);label.visible=false;label.renderOrder=3;label.position.y=2.5;label.scale.set(3.5/rig.profileScale,1.094/rig.profileScale,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
+  const label=new T.Sprite(material);label.visible=false;label.renderOrder=10/* above every train layer (cars use up to 3; owner shot 87) */;label.position.y=2.5;label.scale.set(3.5/rig.profileScale,1.094/rig.profileScale,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
   const position={x,y:authoredRoute?.[0].y??definition.floor?.()??(definition.swim?NPC_SWIM_ROOT_Y:placement.heightAt(x,z)),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const freestyle=definition.freestyle===undefined?null:createCourtFreestyle(rig,definition.freestyle,definition.id);
   const activity=definition.activity?createNpcActivity(definition.activity,rig):null;
