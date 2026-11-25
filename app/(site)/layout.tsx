@@ -24,7 +24,7 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
   <style>{'html,body{background:#fbf7ee;color-scheme:light}@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}::view-transition-group(fi-nav-chip){animation-duration:.3s;animation-timing-function:cubic-bezier(.34,1.56,.64,1)}}'}</style>
   {/* release check, Nov 20 2026: the game routes never opt in (above), so Chrome aborted this page's transition into them and
       logged "Transition was aborted because of invalid state" on /play and /arcade; the page skips it itself before it leaves */}
-  <script dangerouslySetInnerHTML={{__html:"addEventListener('pageswap',function(e){var v=e.viewTransition,a=e.activation,u=a&&a.entry&&a.entry.url;if(v&&u){var p=new URL(u).pathname;if(/^\\/(play|arcade|coach|admin)(\\/|$)/.test(p))v.skipTransition()}})"}}/>
+  <script dangerouslySetInnerHTML={{__html:"addEventListener('pageswap',function(e){var v=e.viewTransition,a=e.activation,u=a&&a.entry&&a.entry.url;if(v&&u){var p=new URL(u).pathname;if(/^\\/(play|arcade|coach|admin)(\\/|$)/.test(p)){var n=function(){};v.ready&&v.ready.catch(n);v.finished&&v.finished.catch(n);v.updateCallbackDone&&v.updateCallbackDone.catch(n);v.skipTransition()}}})"}}/>
   {/* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): the home page's bar, static (SiteNav). This
       replaces the Oct 16 "brand only, no section navigation" header. It stays a direct <header> child: the home page and
       /marketing bring their own bar and hide this one (learn.module.css / marketing.module.css, `>header`). */}

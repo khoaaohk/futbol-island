@@ -11,7 +11,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {flushSync} from 'react-dom';
 
 export type Dir='forward'|'back'|'tab'|'fade';
-type VTDoc=Document&{startViewTransition?:(cb:()=>void)=>{finished:Promise<void>}};
+type VTDoc=Document&{startViewTransition?:(cb:()=>void)=>{finished:Promise<void>;ready?:Promise<void>;updateCallbackDone?:Promise<void>}};
 
 export const reducedMotion=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{return false;}};
 export const hasViewTransitions=()=>typeof document!=='undefined'&&typeof (document as VTDoc).startViewTransition==='function';
@@ -27,6 +27,9 @@ export function screenChange(dir:Dir,change:()=>void,after?:()=>void){
  if(!hasViewTransitions()||reducedMotion()||document.visibilityState!=='visible'||document.documentElement.dataset.vt){run();return;}
  const root=document.documentElement;root.dataset.vt=dir;
  try{const t=d.startViewTransition!(run);
+  /* admin top errors (Nov 25 2026): a skipped transition also rejects ready / updateCallbackDone; nothing awaited them, so each
+     skip was an unhandled "Transition was skipped" in the beacon */
+  const quiet=()=>{};t.ready?.catch(quiet);t.updateCallbackDone?.catch(quiet);
   t.finished.finally(()=>{if(root.dataset.vt===dir)delete root.dataset.vt;}).catch(()=>{/* aborted (the viewport changed): the change already ran */});
  }catch{delete root.dataset.vt;run();}
 }

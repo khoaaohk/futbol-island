@@ -9,7 +9,9 @@ import {useEffect} from 'react';
 
 const KEY='fi2-err-beacon-n',MAX=3;
 /** Chrome/Firefox/Safari noise that is not a bug and costs nothing (lib/siteReports.ts drops it too). */
-export const BENIGN_ERROR=/^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/;
+/** Benign browser noise, never sent. Nov 25 2026: a skipped view transition ("Transition was skipped" / "Skipping view transition
+ *  because skipTransition() was called"): an animation the browser dropped, no user-facing effect (the sources now catch it too). */
+export const BENIGN_ERROR=/^(Uncaught )?(ResizeObserver loop (completed with undelivered notifications|limit exceeded)|(AbortError: )?(Transition was skipped|Skipping view transition))/;
 /** A short, data-free name for a rejection that is not an Error (Nov 20 2026: these all showed as "unhandled rejection @ unknown"). */
 export function rejectionText(r:unknown):string{
  if(r instanceof Error)return r.message||r.name||'Error';
