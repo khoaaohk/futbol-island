@@ -28,6 +28,8 @@ async function boot(b, { save = true, seed = '', night = false, label = '' } = {
       if (seed) localStorage.setItem('fi2-holdout-v1', seed); if (night) localStorage.setItem('fi2-time-of-day', 'night'); } sessionStorage.setItem('__l_boot', '1'); } catch { /* */ }
     window.__lt = []; try { new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__lt.push([Math.round(e.startTime), Math.round(e.duration)]); }).observe({ type: 'longtask', buffered: true }); } catch { /* */ }
   }, { save, seed, night });
+  // a local `next start` answers a new /api/build-id each start (lib/buildUpdate.ts would reload the tab, as check-train-aaa notes)
+  if (!/futbolisland\.app/.test(url)) await ctx.route('**/api/build-id', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
   const p = await ctx.newPage(), errs = [], warns = [], net = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 200)));
   p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') warns.push(`${m.type()}: ${m.text().slice(0, 180)}`); });
@@ -104,6 +106,7 @@ async function landIfFlying(p, tag) {
 async function flyToNextTrain(p, c, tag) {
   let s = null; for (let i = 0; i < 60 && !s; i++) { s = await p.evaluate(() => { const st = window.__fi2.trains.states; for (let i = 0; i < st.length; i++) if (st[i].at < 0) return { train: i, stop: st[i].next }; return null; }); if (!s) await p.waitForTimeout(1000); }
   if (!s) { check(`${tag}: a train is running somewhere`, false); return null; }
+  const want = arg('station', ''); if (want) s = { train: -1, stop: STOP_STATION.indexOf(want) };// --station=<id>: that station, whatever train comes
   const id = STOP_STATION[s.stop], si = STATION_INDEX[id];
   const mapOk = await openMap(p); check(`${tag}: travel map opens with the station pins`, mapOk);
   if (!mapOk) return null;
@@ -132,7 +135,7 @@ async function waitBoard(p, s, tag) {
   for (let i = 0; i < 300; i++) { k = await p.evaluate((stop) => window.__fi2.trains.states.findIndex((x) => x.at === stop && x.doors > .6 && x.dwellLeft > 3), s.stop);
     if (k >= 0) { standSeen = true; shown = await boardShown(p); if (shown) break; } await p.waitForTimeout(500); }
   const waited = (Date.now() - tW) / 1000;
-  if (!shown) { const diag = await p.evaluate(() => { const r = window.__fi2.trainRide, w = r.lastWant; return { want: { x: +w.x.toFixed(1), z: +w.z.toFixed(1), can: w.can }, ride: window.__fi2.rideRef?.current }; }); check(`${tag}: Board prompt shows when the train stands at the platform`, false, `train standing seen ${standSeen}, ${JSON.stringify(diag)}`); }
+  if (!shown) { const diag = await p.evaluate(() => { const r = window.__fi2.trainRide, w = r.lastWant; return { want: { x: +w.x.toFixed(1), z: +w.z.toFixed(1), can: w.can, n: w.n }, ride: window.__fi2.rideRef?.current, trains: window.__fi2.trains.states.map((x) => [x.at, x.next, +x.v.toFixed(1)]), url: location.pathname, dlg: [...document.querySelectorAll('dialog[open],[role=dialog]')].map((d) => String(d.className).slice(0, 30)) }; }); check(`${tag}: Board prompt shows when the train stands at the platform`, false, `train standing seen ${standSeen}, ${JSON.stringify(diag)}`); }
   else check(`${tag}: Board prompt shows`, true, `waited ${waited.toFixed(0)} s`);
   return shown ? k : -1;
 }
