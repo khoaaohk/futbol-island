@@ -230,7 +230,7 @@ export function createTrainRide(ports:Ports){
  // Gameplay 3: standing in the aisle. sp = the train-frame spot (trainWalk.ts: x across, u along car 0), moved by the stick / WASD
  // relative to the camera; tw = the stand-up / sit-down ease (twSit: the seat being sat in, -1 standing up); the strap pose fades in
  // when you stop; gait = the frame Town poses the rig in (the rig walks in the train, then is put back in the world).
- let swayV=NaN,swayA=0,swayP=0,swayR=0,standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
+ const swayM=new T.Matrix4();let swayV=NaN,swayA=0,swayP=0,swayR=0,standing=false,tw=-1,twDur=.35,twSit=-1,strapW=0,gaitYaw=0,gaitMove=0,camBase=0,camFwd=0,nearSeatJ=-1,lean=0,lastCam:T.Camera|null=null,meCar=0;
  const sp={x:0,u:0},twFrom={x:0,u:0},twTo={x:0,u:0},mv={x:0,z:0},carL:TrainLocal={car:0,x:0,z:0},carM=new T.Matrix4(),pv=new T.Vector3(),aisle={x:0,z:0},gp:SeatPose={x:0,y:0,z:0,yaw:0};
  const straps:[TrickPose,TrickPose]=[trainStrapPose(-1),trainStrapPose(1)];
  const gait={on:false,x:0,z:0,facing:NaN};
@@ -410,7 +410,7 @@ export function createTrainRide(ports:Ports){
   *  the way it was going). A few multiplies a frame; none with reduced motion. */
  function seatSway(run:Run,dt:number,reduced:boolean){
   const h=Math.min(dt,.1),st=run.states[k],v=st.v??0;if(h>.008&&Number.isFinite(swayV))swayA+=(Math.max(-1.2,Math.min(1.2,(v-swayV)/h))-swayA)*Math.min(1,h*2.5);if(h>.008||!Number.isFinite(swayV))swayV=v;
-  let dp=0,dr=0;if(!reduced&&run.carMatrixOf){run.carMatrixOf(k,Math.max(0,Math.min(1,j>>2)),carM);const e=carM.elements,fwdX=Math.sin(pose.yaw)*e[0]+Math.cos(pose.yaw)*e[2];
+  let dp=0,dr=0;if(!reduced&&run.carMatrixOf){run.carMatrixOf(k,Math.max(0,Math.min(1,j>>2)),swayM);const e=swayM.elements,fwdX=Math.sin(pose.yaw)*e[0]+Math.cos(pose.yaw)*e[2];
    dp=Math.max(-.06,Math.min(.06,-e[1]*Math.sign(fwdX)*1.3));dr=Math.max(-.08,Math.min(.08,swayA*.035*((pose.lean??1)>0?1:-1)));}
   const r=1-Math.exp(-4*h);swayP+=(dp-swayP)*r;swayR+=(dr-swayR)*r;for(const t of tricks){t.torsoPitch=KNEEL.pitch+swayP;t.torsoRoll=swayR;}
  }
