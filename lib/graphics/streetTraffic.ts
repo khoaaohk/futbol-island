@@ -73,11 +73,10 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  // Two junctions close enough to share one box (under 24 m) run as one set of lights: the same cycle, and the short street between
  // them has no stop line of its own (a car stopped there would hold the shared box against the car behind it).
  for(const n of nodes)if(signalOffset[n.id]>=0&&signalOffset[boxOf(n.id)]>=0)signalOffset[n.id]=signalOffset[boxOf(n.id)];
- // Nov 24 2026 (owner: "fix this light ... it's just blinking yellow", the junction by Pier Bakery): no head flashes yellow any more,
- // kids read it as broken. A head facing the short street inside a shared box shows the box's own phase for its street (the pair
- // runs as one set of lights, so it matches what the other heads of the pair show for that direction; cars on the short street
- // still wait for the box, not for this head). Corners and dead ends get no heads at all (lib/town/world.ts builds heads only at
- // junctions with three or more streets); a head whose node has no lights would stay dark (-1) instead of flashing.
+ // Nov 24 2026 (owner: "fix this light ... it's just blinking yellow", the corner by Pier Bakery): nothing flashes yellow any more,
+ // kids read it as broken. lib/town/world.ts hangs heads only at junctions with three or more streets and none over the short street
+ // inside a shared box, so every head the game passes runs its junction's cycle. A head whose node has no lights (a tool's or test's
+ // own heads) stays dark (-1) rather than flashing.
  const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);return !n||signalOffset[n.id]<0?-1:n.id;});
  let clock=0,lampTick=-1;
  // The lamp draw is skipped (and nothing is painted or uploaded) while no signal is within LAMP_RANGE of the visitor: from Coral Cay,

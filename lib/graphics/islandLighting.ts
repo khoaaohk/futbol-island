@@ -6,14 +6,21 @@ const presets={
  // Nov 21 2026 (zero-heat graphics batch 1, numbers only): less fill and more sun, a bluer sky colour so shadows read blue, a warmer
  // green bounce. Was upper '#eaf4ff', lower '#8a8f7c', hemi 1.6, direct 3.4. Sunset was hemi 1.45, direct 3.2. Night was upper '#9fb0cf',
  // lower '#4a5163', hemi 1.15 (darker, bluer ambient; the town's window and lamp glow in lib/town/world.ts went up to carry it).
- day:{sky:'#a9d4ed',upper:'#d3e6ff',lower:'#a2ab7c',sun:'#fff5e6',hemi:1.5,direct:3.7,exposure:1},
+ // Nov 24 2026 (owner: day "looks too saturated"): the same light ratio with greyer colours, so every surface and shadow carries
+ // less tint: sky '#a9d4ed' -> '#b4d3e3', fill '#d3e6ff' -> '#e1e8f1' (shade still a touch blue), bounce '#a2ab7c' -> '#a7a68f'
+ // (no green cast on walls and people), sun '#fff5e6' -> '#fff7ee'.
+ day:{sky:'#b4d3e3',upper:'#e1e8f1',lower:'#a7a68f',sun:'#fff7ee',hemi:1.5,direct:3.7,exposure:1},
  // Honey-gold sunlight, apricot sky and warm ochre bounce across the island.
  sunset:{sky:'#efb477',upper:'#ffdda6',lower:'#ad8254',sun:'#ffbf72',hemi:1.3,direct:3.45,exposure:1},// Nov 10 2026: was hemi 1.7, direct 2.95
  // Keep the night sky while warm broad fill reaches trees, paths and pitches.
  // Reusing these lights brightens shadowed scenery without extra light passes.
  // Nov 10 2026: a cooler moonlit fill. One-line revert to the earlier deliberate warm night fill:
  // night:{sky:'#0d1830',upper:'#d4c6af',lower:'#706653',sun:'#c8d0e4',hemi:1.15,direct:1.05,exposure:.98},
- night:{sky:'#0d1830',upper:'#8098c8',lower:'#3c4660',sun:'#a8bce6',hemi:.9,direct:.85,exposure:.98},
+ // Nov 24 2026 (owner: night "feels darker and not as good ... needs to feel warmer and more inviting, it's too dark"; the darkening
+ // was the Nov 21 batch-1 item B above, 234531cb): a cosy seaside evening bright enough for kids. Fill 0.9 -> 1.3 (+44 %) in a warm
+ // lavender, a warm brown ground bounce instead of slate blue, a violet-teal sky (it is also the haze colour, so far streets sink into
+ // a warm dusk instead of navy), a softer moon. Was sky '#0d1830', upper '#8098c8', lower '#3c4660', sun '#a8bce6', direct .85, exposure .98.
+ night:{sky:'#2f3352',upper:'#b3abcb',lower:'#6a5646',sun:'#bcc6e6',hemi:1.3,direct:.9,exposure:1},
 };
 /** The island's light presets, shared with the shop snapshots (components/StorePreviews.tsx) so a ball picture is lit like the island. */
 export const ISLAND_LIGHT_PRESETS=presets;

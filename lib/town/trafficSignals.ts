@@ -6,7 +6,8 @@
 // then everything is red for a moment, then the east-west street (axis 'x') has its turn. The light is a pure function of the
 // traffic clock and the junction's offset, so nothing is stored or stepped per junction. Opposing streets can never be green or
 // yellow together: their windows are half a cycle apart with an all-red gap on both sides. Corners and dead ends (two streets or
-// fewer: nothing to cross) flash yellow, as real off-peak signals do. The roundabout has no heads and stays a yield roundabout.
+// fewer: nothing to cross) have no heads (Nov 24 2026, owner: a flashing amber "is not working properly"; they used to flash yellow),
+// nor does the short street inside a shared box. The roundabout has no heads and stays a yield roundabout.
 import type {RoadNode} from './roadNetwork';
 export const SIGNAL_GREEN=8,SIGNAL_YELLOW=2,SIGNAL_ALL_RED=1.5,SIGNAL_HALF=SIGNAL_GREEN+SIGNAL_YELLOW+SIGNAL_ALL_RED,SIGNAL_CYCLE=SIGNAL_HALF*2;
 export const RED=0,YELLOW=1,GREEN=2,FLASH_PERIOD=1.6;
@@ -37,12 +38,13 @@ export function signalledNodes(nodes:RoadNode[],heads:readonly SignalHead[]){
  for(const n of nodes)if(n.links.length>=3&&heads.some(h=>Math.abs(h.jx-n.x)<.6&&Math.abs(h.jz-n.z)<.6))offsets[n.id]=signalOffset(n.x,n.z);
  return offsets;
 }
-/** One head per approach at every node with two or more streets, hung on the far side of the crossing over the incoming lane
- *  (the same places lib/town/world.ts hangs the island's heads). For tests and tools; the game passes world.signalHeads. */
+/** One head per approach at every node with three or more streets, hung on the far side of the crossing over the incoming lane,
+ *  except over the short street (under 24 m) to another such node, the two of them being one shared box (the same places
+ *  lib/town/world.ts hangs the island's heads; Nov 24 2026). For tests and tools; the game passes world.signalHeads. */
 export function signalHeadsForNodes(nodes:RoadNode[]):SignalHead[]{
  const heads:SignalHead[]=[];
- for(const n of nodes){if(n.links.length<2)continue;
-  for(const id of n.links){const from=nodes[id],dx=from.x-n.x,dz=from.z-n.z,length=Math.hypot(dx,dz);if(length<12||Math.abs(dx)>1&&Math.abs(dz)>1)continue;
+ for(const n of nodes){if(n.links.length<3)continue;
+  for(const id of n.links){const from=nodes[id],dx=from.x-n.x,dz=from.z-n.z,length=Math.hypot(dx,dz);if(length<12||Math.abs(dx)>1&&Math.abs(dz)>1||from.links.length>=3&&length<24)continue;
    const ux=dx/length,uz=dz/length,axis:SignalAxis=Math.abs(dx)>Math.abs(dz)?'x':'z';
    // Travel direction is (-ux,-uz); the head hangs 5.3 m past the centre, 2 m to the driver's right, facing back at the driver.
    heads.push({x:n.x-ux*5.3+uz*2,y:5.5,z:n.z-uz*5.3-ux*2,yaw:Math.atan2(ux,uz),jx:n.x,jz:n.z,axis});}}

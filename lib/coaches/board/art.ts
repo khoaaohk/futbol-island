@@ -7,9 +7,9 @@ import type {Chip} from './types';
  * (it never repaints while chips move), and the PNG export reuses the same markup for the whole picture.
  */
 /** The island's own pitch colours (Nov 23 2026, owner: "use the same green colours as the game fields"): every game ground's
- *  surface '#78a970' (lib/town/venues.ts) in its mown light/dark bands (×1.06 / ×0.94 in linear light, lib/graphics/pitchStripes.ts
+ *  surface '#7ba476' (lib/town/venues.ts) in its mown light/dark bands (×1.06 / ×0.94 in linear light, lib/graphics/pitchStripes.ts
  *  STRIPE_LIGHT/DARK), the plain light shade on the run-off, and the island lawn '#608870' (lib/town/shoreline.ts) beyond it. */
-export const GREEN={lawn:'#608870',surface:'#78a970',a:'#7bad73',b:'#75a46d',line:'#f5f8f0'};
+export const GREEN={lawn:'#608870',surface:'#7ba476',a:'#7ea879',b:'#789f73',line:'#f5f8f0'};
 /** Futsal (Nov 23 2026, owner: "use the game's grey for the futsal court"): the Palm Coast Rooftop court's hard surface '#737c75'
  *  (lib/town/venues.ts), which the game lays 3 m past the lines on every side, with the game's cream lines '#f5eed5', its goal frame
  *  '#fff6df' and its net '#c6d4cc' (lib/town/fields.ts). The grass formats keep GREEN. */

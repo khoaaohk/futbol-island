@@ -289,7 +289,7 @@ export function buildSummitIsle(t:SummitTools){
  // runs east–west, so the striped slab (built along z) is turned a quarter turn.
  {const top=new Piece(SUMMIT_PITCH.x,SUMMIT_PITCH.z),H=PITCH_HEIGHT;
   const PI=SUMMIT_PITCH,plan=stripePlan(PI.length),slab=stripedSlabGeometry(PI.width+PI.runoff*2,.14,PI.length+PI.runoff*2,plan,PI.width,PI.length);
-  const sp=slab.getAttribute('position'),sn=slab.getAttribute('normal'),sc=slab.getAttribute('color'),base=top.pos.length/3,turf=col('#78a970');
+  const sp=slab.getAttribute('position'),sn=slab.getAttribute('normal'),sc=slab.getAttribute('color'),base=top.pos.length/3,turf=col('#7ba476');
   for(let i=0;i<sp.count;i++)top.vertex(PI.x+sp.getZ(i),H-DROP+.055+sp.getY(i),PI.z-sp.getX(i),turf.clone().multiplyScalar(sc.getX(i)),[sn.getZ(i),sn.getY(i),-sn.getX(i)]);
   const si=slab.index!;for(let i=0;i<si.count;i++)top.idx.push(base+si.getX(i));slab.dispose();
   // White lines (10 cm), 6 mm over the turf: touchlines, goal lines, halfway, centre circle and spot, small-sided areas.
