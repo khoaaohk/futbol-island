@@ -128,7 +128,9 @@ async function leaveRide(p) {
 async function settle(p) {
   await closeMap(p);
   for (let i = 0; i < 20; i++) { const r = await p.evaluate(() => { const f = window.__fi2; if (f.trainRide.active) f.trainRide.finish(); if (f.rideRef?.current !== 'walk') { try { f.selectRide('walk'); } catch { /* */ } } return f.rideRef?.current; }); if (r === 'walk' || r === undefined) break; await p.waitForTimeout(500); }
-  await p.evaluate(() => { const sp = window.__fi2.trainRide.stationSpot(0, 0); window.__fi2.teleport(sp.x, sp.z, sp.yaw); }); await p.waitForTimeout(800);
+  // off any train roof too (the debug teleport keeps a roof ride: the roof part's last Land left me pinned to the roof, so the next
+  // part's platform teleport snapped back onto it and Board was never offered: phone "jitter: riding", Nov 24 2026)
+  await p.evaluate(() => { const f = window.__fi2; if (f.roofRide) { f.roofRide.k = -1; f.roofRide.hop = false; } const sp = f.trainRide.stationSpot(0, 0); f.teleport(sp.x, sp.z, sp.yaw); }); await p.waitForTimeout(800);
 }
 async function standingTrainAt(p, si) {
   // bring train 0 to stand at station si with its doors open (8 s into the dwell)
@@ -556,7 +558,7 @@ async function partJitter(c) {
   const results = [];
   for (const v of ['seat', 'driver', 'left', 'inside']) for (const fixed of [false, true]) {
     await setLap(p, k, T); await p.evaluate((v) => window.__fi2.trainRide.setView(v), v); await p.waitForTimeout(1800);
-    const r = await jitterRun(p, k, 5000, fixed, false); results.push({ v, fixed, ...r });
+    const r = await jitterRun(p, k, 5000, fixed, false); results.push({ ...r, v, fixed });
     console.log(`  jitter ${v} ${fixed ? 'fixed dt' : 'real dt'}: ${r.frames} frames, car ${JSON.stringify(r.car)} kenji ${JSON.stringify(r.kenji)} pax ${JSON.stringify(r.pax)} me ${JSON.stringify(r.me)}`);
   }
   const worst = (r, key) => r[key] ? r[key].p95 : 0;
