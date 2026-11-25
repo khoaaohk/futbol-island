@@ -27,7 +27,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn7_receive','s_onetwo','learn9_wall'],links:[G.firstTouch,G.giveGo,G.ball,G.pinball],related:['receive-across-the-body','give-and-go','toe-taps-and-foundations','first-touch-gates'],
   faq:[{q:'How far from the wall should I stand?',a:'Three yards to begin, so the rebound is gentle. Move back to five or six yards as your pass gets firmer.'},
    {q:'How long should a child do wall passing?',a:'About ten minutes. Short, regular sessions beat one long one, and the drill only works while the player is concentrating.'},
-   {q:'What if we have no wall?',a:'A parent can be the wall: pass the ball back first time to the child’s feet. A bench turned on its side or a rebound net also works.'}]},
+   {q:'What if we have no wall?',a:'A parent can be the wall: pass the ball back first time to the child’s feet. A bench turned on its side or a rebound net also works.'},{q:'What wall passing drills can a child do alone?',a:'Right foot, left foot, then one-touch, then receive across the body. Count passes in 30 seconds to beat a best.'},{q:'What age can do wall passing?',a:'Any age from U6. Young players stand close; older players stand back and pass first time.'}]},
 
  {slug:'receive-across-the-body',name:'Receive across the body',skill:'first-touch',ages:['U8','U10','U12'],
   title:'Receive Across the Body: Soccer First Touch Drill',
@@ -47,7 +47,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','bld_11_throughlines'],links:[G.firstTouch,G.cm,G.switching],related:['receive-and-turn','first-touch-gates','triangle-passing','shoulder-check-colors'],
   faq:[{q:'What does “receive on the back foot” mean?',a:'The back foot is the one farther from where the pass comes from. Receiving with it lets the ball travel across your body so you end up facing forward.'},
    {q:'What is an open body shape?',a:'Standing half turned, so you can see the passer and the field ahead at the same time, instead of facing the passer with your back to the game.'},
-   {q:'When should a player not turn?',a:'When a defender is tight behind them. Then the safe choice is to pass back and move again. Checking over the shoulder tells the player which it is.'}]},
+   {q:'When should a player not turn?',a:'When a defender is tight behind them. Then the safe choice is to pass back and move again. Checking over the shoulder tells the player which it is.'},{q:'How do I set up a receive across the body drill?',a:'Two cone gates about 10 yards apart with a player at each, and a middle player between them. The middle player receives from one side, opens up and passes to the other.'},{q:'What age can learn to receive across the body?',a:'From U8, once players can stop a ball with the inside of the foot. At U10 and U12 add a defender so the turn has to be quick.'}]},
 
  {slug:'first-touch-gates',name:'First touch gates',skill:'first-touch',ages:['U8','U10','U12'],
   title:'First Touch Gates: Soccer Receiving Drill in Pairs',
@@ -67,7 +67,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','bld_f_passtofeet'],links:[G.firstTouch,G.cm,G.tennis],related:['receive-across-the-body','wall-passing','receive-and-turn','partner-passing-through-gates'],
   faq:[{q:'What is a good first touch in soccer?',a:'One that puts the ball where you want it for your next action, about a step away and out of a defender’s reach. Stopping it dead under your body is rarely the best choice.'},
    {q:'Which part of the foot should I use?',a:'The inside of the foot to take the ball across your body, the outside to take it away to the same side. Good players use both.'},
-   {q:'How do I make it game-like?',a:'Add a defender who follows the pass. The receiver now has to notice which side the pressure comes from and touch away from it.'}]},
+   {q:'How do I make it game-like?',a:'Add a defender who follows the pass. The receiver now has to notice which side the pressure comes from and touch away from it.'},{q:'How wide should first touch gates be?',a:'About two yards wide, a few yards to the side of the receiver. Make them wider for beginners and narrower, or farther away, for older players.'},{q:'What age is the first touch gates drill for?',a:'U8 to U12. Younger players touch the ball through a gate with any foot; older players take it through with the back foot, then pass on.'}]},
 
  {slug:'thigh-and-chest-control',name:'Thigh and chest control',skill:'first-touch',ages:['U8','U10','U12'],h1:'Thigh and chest control soccer drill (no heading)',
   title:'Thigh and Chest Control: Soccer Drill With No Heading',
@@ -87,7 +87,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','next9_restartreturn'],links:[G.heading,G.firstTouch,G.throwIn,...G.keepyUppy],related:['throw-in-game','receive-across-the-body','wall-passing','first-touch-gates'],
   faq:[{q:'How can kids control a high ball without heading?',a:'With the foot, the thigh or the chest, or by letting it bounce first. This drill teaches all of them with soft, underarm throws.'},
    {q:'At what age can kids head the ball in the US?',a:'Heading is allowed in games from age 11, with limits on heading in practice at 11 and 12. Players aged 10 and under do not head the ball at all.'},
-   {q:'Is chest control safe for young kids?',a:'With a soft underarm throw and a ball of the right size, yes. Start with the foot and thigh, and add the chest from about U10 when players are ready.'}]},
+   {q:'Is chest control safe for young kids?',a:'With a soft underarm throw and a ball of the right size, yes. Start with the foot and thigh, and add the chest from about U10 when players are ready.'},{q:'How do you control a ball with your thigh?',a:'Lift the thigh to meet the ball, then let it drop a little as the ball lands, so the ball falls softly to the feet. Keep your eyes on the ball and your arms out for balance.'},{q:'How do I make thigh and chest control harder?',a:'Throw from farther away, or add a pass to a target after the control.'}]},
 
  {slug:'receive-and-turn',name:'Receive and turn',skill:'first-touch',ages:['U8','U10','U12'],
   title:'Receive and Turn: Soccer Drill With “Turn” and “Man On”',
@@ -106,7 +106,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','bld_11_throughlines','f_pivot'],links:[G.cm,G.dm,G.firstTouch],related:['receive-across-the-body','shoulder-check-colors','turn-and-go','rondo-4v2'],
   faq:[{q:'What does “man on” mean in soccer?',a:'It is a warning from a teammate that a defender is close behind you. The safe answer is to protect the ball or pass it back.'},
    {q:'What is receiving on the half turn?',a:'Standing side on as the ball arrives, so one touch takes you forward. It is quicker than stopping the ball and then turning.'},
-   {q:'How do I teach kids to look over their shoulder?',a:'Give them a reason. Put something behind them that changes, such as a defender or a colored cone, and ask them what they saw.'}]},
+   {q:'How do I teach kids to look over their shoulder?',a:'Give them a reason. Put something behind them that changes, such as a defender or a colored cone, and ask them what they saw.'},{q:'How do I set up a receive and turn drill?',a:'A grid about 20 by 15 yards with a server at each end and one or two players in the middle. Servers pass in; the middle player checks the shoulder, hears “turn” or “man on” and acts.'},{q:'What position uses receive and turn the most?',a:'Central midfielders, who get the ball with players behind them, and strikers who come short. Fullbacks and wingers use it near the touchline too.'}]},
 
  {slug:'partner-passing-through-gates',name:'Partner passing through gates',skill:'passing',ages:['U6','U8','U10'],h1:'Partner passing through gates: soccer passing drill',
   title:'Passing Through Gates: Soccer Passing Drill for Kids',
@@ -126,7 +126,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['prn_7_support','prn_7_spread','learn7_receive'],links:[G.cm,G.firstTouch,G.rollBall,...G.footGolf],related:['gates-dribbling','triangle-passing','give-and-go','wall-passing'],
   faq:[{q:'What is the best passing drill for beginners?',a:'This one. It is a game with a score, every pair is busy the whole time, and it rewards the two habits that matter: an accurate pass and moving afterward.'},
    {q:'How do I teach the inside-of-the-foot pass?',a:'Standing foot beside the ball and pointing at the target, kicking foot turned out with the ankle locked, and strike through the middle of the ball.'},
-   {q:'Can U6 players do passing drills?',a:'In short spells. Five-year-olds mostly want their own ball, which is normal for the age, so keep this to a few minutes and return to dribbling games.'}]},
+   {q:'Can U6 players do passing drills?',a:'In short spells. Five-year-olds mostly want their own ball, which is normal for the age, so keep this to a few minutes and return to dribbling games.'},{q:'How do you play partner passing through gates?',a:'Pairs share one ball in a big area full of cone gates. They pass through a gate to each other, then dribble to a new gate, and count the gates in one minute.'},{q:'How do I make partner passing harder?',a:'Make the gates narrower, play one-touch, use only the weaker foot, or add two defenders who try to stand in the gates.'}]},
 
  {slug:'give-and-go',name:'Give-and-go',skill:'passing',ages:['U8','U10','U12'],h1:'Give-and-go soccer drill (wall pass)',
   title:'Give-and-Go Soccer Drill: Teach the Wall Pass (1-2)',
@@ -146,7 +146,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['s_onetwo','learn9_wall','f_pared','learn9_two_one'],links:[G.giveGo,G.twoVone,G.st],related:['two-v-one-to-goal','wall-passing','triangle-passing','rondo-3v1'],
   faq:[{q:'What is a give-and-go in soccer?',a:'A two-pass move: you give the ball to a teammate, go past your defender, and get it back. It is also called a one-two or a wall pass.'},
    {q:'What age can learn the give-and-go?',a:'From about U8, once players pass accurately over 5 to 10 yards. Before that, 2v1 games teach the same idea more simply: dribble or pass.'},
-   {q:'Why does the first pass need to be late?',a:'Because the defender must be committed to the ball. If they are still far away they can turn and cover the runner.'}]},
+   {q:'Why does the first pass need to be late?',a:'Because the defender must be committed to the ball. If they are still far away they can turn and cover the runner.'},{q:'How do I set up a give-and-go drill?',a:'One passer, one wall player and a cone or a passive defender between them and a small goal. The passer plays into the wall player, runs past the cone and gets the ball back.'},{q:'How do I make the give-and-go harder?',a:'Make the defender active, ask for one-touch return passes, or play 2v1 so the attacker chooses between the give-and-go and a dribble.'}]},
 
  {slug:'triangle-passing',name:'Triangle passing',skill:'passing',ages:['U8','U10','U12'],
   title:'Triangle Passing Soccer Drill: Pass and Move',
@@ -165,7 +165,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['prn_7_support','prn_9_support','learn7_receive','e_thirdman'],links:[G.cm,G.f7,G.switching],related:['rondo-3v1','receive-across-the-body','give-and-go','partner-passing-through-gates'],
   faq:[{q:'Why do coaches talk about triangles?',a:'Because a player with a teammate on each side always has two passes. Three players in a triangle are hard to defend with one or two defenders.'},
    {q:'How big should the triangle be?',a:'About 10 yards a side for U10 and U12, and 6 to 8 yards for U8. The pass should arrive firmly without being hard to control.'},
-   {q:'Is this better than a rondo?',a:'It is a step before it. The triangle has no defender, so use it briefly to set habits, then move to a 3v1 rondo where the same passes are made under pressure.'}]},
+   {q:'Is this better than a rondo?',a:'It is a step before it. The triangle has no defender, so use it briefly to set habits, then move to a 3v1 rondo where the same passes are made under pressure.'},{q:'How do you set up a triangle passing drill?',a:'Three cones about 8 to 12 yards apart with a player at each, plus one extra player at a cone. Pass and follow your pass to the next cone.'},{q:'What age is triangle passing for?',a:'U8 to U12. Make the triangle smaller for younger players, and for older players add one-touch passing, a change of direction on a call, or a defender.'}]},
 
  {slug:'rondo-3v1',name:'Rondo 3v1',skill:'passing',ages:['U8','U10','U12'],h1:'3v1 rondo soccer drill',
   title:'3v1 Rondo Soccer Drill: Setup, Rules and Coaching Points',
@@ -186,7 +186,7 @@ export const DRILLS_B:RawDrill[]=[
   faq:[{q:'What is a rondo in soccer?',a:'A keep-away game in a small area where the players on the outside have more numbers than the defenders in the middle, such as 3v1, 4v1 or 4v2.'},
    {q:'What size should a 3v1 rondo be?',a:'Start at 10 by 10 yards for young or new players and shrink toward 8 by 8 as they improve. If the defender wins every ball, the square is too small.'},
    {q:'What age can play rondos?',a:'From about U8, when players can pass over 5 yards and start to share the ball. For U6, dribbling games are a better use of time.'},
-   {q:'How long should the defender stay in?',a:'Up to a minute, or until they have touched the ball three times. Rotate on a clock so the middle is a turn, not a punishment.'}]},
+   {q:'How long should the defender stay in?',a:'Up to a minute, or until they have touched the ball three times. Rotate on a clock so the middle is a turn, not a punishment.'},{q:'How do I make a 3v1 rondo harder?',a:'Shrink the square, limit players to two touches, or count passes and ask for a new record. When it is easy, move to a 4v2 rondo.'}]},
 
  {slug:'rondo-4v2',name:'Rondo 4v2',skill:'passing',ages:['U10','U12'],h1:'4v2 rondo soccer drill',
   title:'4v2 Rondo Soccer Drill: Split the Two Defenders',
@@ -205,7 +205,7 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['bld_11_throughlines','def_11_pressurecover','prn_9_support','learn9_cover'],links:[G.pressing,G.dm,G.cm],related:['rondo-3v1','three-team-keep-away','pressure-and-cover-2v2','receive-and-turn'],
   faq:[{q:'What is a split pass?',a:'A pass that travels through the gap between two defenders. It is the most valuable pass in a rondo because it beats both defenders with one ball.'},
    {q:'What size is a 4v2 rondo?',a:'About 12 by 12 yards for U10 and U12. Go bigger if the attackers cannot make five passes, smaller if the defenders never win it.'},
-   {q:'How should the two defenders work together?',a:'One goes to the ball and the other stands behind and to the side, close enough to block the pass through the middle. They swap jobs as the ball moves.'}]},
+   {q:'How should the two defenders work together?',a:'One goes to the ball and the other stands behind and to the side, close enough to block the pass through the middle. They swap jobs as the ball moves.'},{q:'What age is a 4v2 rondo for?',a:'U10 and U12. Players should already be comfortable in a 3v1; if the 4v2 breaks down every pass, make the area bigger or go back to 3v1.'},{q:'How do I make a 4v2 rondo harder?',a:'Shrink the area, play two touches, or give a point for each split pass between the two defenders. Add a fifth attacker in the middle for a 5v2.'}]},
 
  {slug:'three-team-keep-away',name:'Three-team keep-away',skill:'passing',ages:['U10','U12'],h1:'Three-team keep-away soccer drill',
   title:'3-Team Keep-Away Soccer Drill for U10 and U12',
@@ -224,5 +224,5 @@ export const DRILLS_B:RawDrill[]=[
   lessons:['learn9_switch','gap7_lostball','trn_9_firstpass','prn_7_spread'],links:[G.switching,G.pressing,G.f9],related:['rondo-4v2','rondo-3v1','end-zone-game','four-goal-game'],
   faq:[{q:'How do you play three-team keep-away?',a:'Two teams pass to each other and the third team tries to win the ball. Whichever team loses the ball becomes the new defenders straight away.'},
    {q:'How many players do I need?',a:'Nine is the fewest, in three teams of three. It works well up to fifteen. With more, set up two areas.'},
-   {q:'What does it teach that a rondo does not?',a:'Transition. In a rondo the roles are fixed for a minute. Here they change every time the ball is lost, so players must react.'}]},
+   {q:'What does it teach that a rondo does not?',a:'Transition. In a rondo the roles are fixed for a minute. Here they change every time the ball is lost, so players must react.'},{q:'What size area for three-team keep-away?',a:'About 25 by 25 yards for teams of three or four. Make it bigger if the team on the ball loses it every pass, smaller if the defenders never win it.'},{q:'How do I make three-team keep-away harder?',a:'Limit touches to two, ask for a pass between the two defenders to score, or make the defending team win it in less time.'}]},
 ];

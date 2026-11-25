@@ -63,7 +63,17 @@ export const G={
  /* seo-nov18: the two pages stuck near position 19 get links from the age guides, plans and tool pages. */
  calc:{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time, with equal minutes for every player'},
  positions:{path:'/learn/soccer-positions',name:'Soccer positions explained',line:'Learn the positions and what each player does'},
+ /* SEO batch D, Nov 25 2026: the coach tools every drill, plan and guide page now links (lib/site/tools/moreTools.ts) */
+ gen:{path:'/tools/soccer-practice-plan-generator',name:'Soccer practice plan generator',line:'Pick an age, a length and a theme: get a timed plan with these drills'},
+ fieldGuide:{path:'/tools/youth-soccer-field-size-guide',name:'Youth soccer field size guide',line:'Each format drawn to scale, with a cone plan to mark it'},
 } as const;
+/** SEO batch D, Nov 25 2026: every drill page links the position that uses its skill most and the practice plan generator
+ *  (drills.ts withTerms adds these after the drill's own links; a path the drill already links is skipped). */
+export const DRILL_SKILL_LINKS:Readonly<Record<string,readonly {path:string;name:string;line?:string}[]>>={
+ dribbling:[G.wg,G.gen],'first-touch':[G.cm,G.gen],passing:[G.cm,G.gen],shooting:[G.st,G.gen],'attacking-1v1':[G.wg,G.gen,G.fieldGuide],
+ 'defending-1v1':[G.fb,G.cb,G.gen],scanning:[G.cm,G.dm,G.gen],'small-sided':[G.positions,G.gen,G.fieldGuide],goalkeeper:[G.gk,G.gen],'warm-up':[G.gen,G.fieldGuide],
+};
+
 /**
  * The other direction (Nov 10 2026): which drills an existing guide page links to ("Drills to practice this"), keyed by the
  * guide's path. Read by drillLinksFor() in lib/site/drills.ts and rendered by the position, rule and glossary pages.

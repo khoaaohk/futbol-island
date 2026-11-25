@@ -5,7 +5,7 @@ import {DRILLS_A} from './drillsA';
 import {DRILLS_B} from './drillsB';
 import {DRILLS_C} from './drillsC';
 import {DRILLS_D} from './drillsD';
-import {DRILL_TERMS,GUIDE_DRILLS} from './drillLinks';
+import {DRILL_SKILL_LINKS,DRILL_TERMS,GUIDE_DRILLS} from './drillLinks';
 import {termBySlug} from './terms';
 import {DRILL_AGE_NOTES} from './notesDrills';
 /**
@@ -74,11 +74,14 @@ export const agesText=(a:readonly Age[])=>a.length===1?`${a[0]} (${AGE_YEARS[a[0
 const sentences=(s:string)=>(s.match(/[^.!?]+[.!?]+(?=\s|$)/g)||[]).length;
 const HEAD_IT=/\bhead (?:it|the ball)\b|\bheaders?\b|\bheading (?:drill|practice)\b/i;
 /* SEO batch B, Nov 25 2026: the glossary terms that list this drill (lib/site/drillLinks.ts DRILL_TERMS), after the drill's own links */
-function withTerms(slug:string,links:DrillLink[]):DrillLink[]{
+function withTerms(slug:string,links:DrillLink[],skill?:SkillId):DrillLink[]{
  const out=[...links];
  for(const s of DRILL_TERMS[slug]??[]){const t=termBySlug(s);if(!t)throw new Error(`drill ${slug}: DRILL_TERMS term ${s} has no page`);
   if(!(GUIDE_DRILLS[t.path]??[]).includes(slug))throw new Error(`drill ${slug}: term ${s} does not list this drill in GUIDE_DRILLS`);
   if(!out.some(l=>l.path===t.path))out.push({path:t.path,name:`${t.name} (soccer term)`,line:t.short});}
+ /* SEO batch D, Nov 25 2026: the position that uses this skill and the coach tools (lib/site/drillLinks.ts DRILL_SKILL_LINKS) */
+ if(skill){const extra=DRILL_SKILL_LINKS[skill];if(!extra)throw new Error(`drill ${slug}: skill ${skill} has no DRILL_SKILL_LINKS row`);
+  for(const l of extra)if(!out.some(x=>x.path===l.path))out.push({path:l.path,name:l.name});}/* name only: the drill pages keep under the 1250-word cap */
  return out;
 }
 function build(r:RawDrill):Drill{
@@ -90,7 +93,7 @@ function build(r:RawDrill):Drill{
  if(r.heading||HEAD_IT.test(all))throw new Error(`${w}: this cluster has no heading drills (lib/site/rules.ts, heading-rules-for-kids)`);
  if(r.steps.length<4||r.cues.length<3||r.cues.length>4||r.mistakes.length<3||r.faq.length<3||r.faq.length>5||r.lessons.length<2)throw new Error(`${w}: steps, cues, mistakes, faq or lessons are short`);
  const scene=grid(r.scene),lessons=pickLessons(r.lessons,w);
- return {...r,path:drillPath(r.slug),h1:r.h1??`${r.name} soccer drill`,scene,picture:drillPicture(r.slug),space:gridSize(scene)+(r.spaceNote?`. ${r.spaceNote}`:''),agesText:agesText(r.ages),lessons,cta:lessons[0],links:withTerms(r.slug,r.links??[])};
+ return {...r,path:drillPath(r.slug),h1:r.h1??`${r.name} soccer drill`,scene,picture:drillPicture(r.slug),space:gridSize(scene)+(r.spaceNote?`. ${r.spaceNote}`:''),agesText:agesText(r.ages),lessons,cta:lessons[0],links:withTerms(r.slug,r.links??[],r.skill)};
 }
 export const DRILLS:readonly Drill[]=[...DRILLS_A,...DRILLS_B,...DRILLS_C,...DRILLS_D].map(build);
 export const drillBySlug=(slug:string)=>DRILLS.find(d=>d.slug===slug);
