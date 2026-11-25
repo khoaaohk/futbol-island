@@ -33,4 +33,6 @@
 .top{position:absolute;top:var(--island-hud-row-top,16px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px) + var(--btn-icon,44px) + 10px);display:flex;align-items:center;gap:8px;height:var(--island-hud-row-height,44px)}
 .top .btn{height:var(--island-hud-row-height,44px);min-height:var(--island-hud-row-height,44px);padding:0 14px}
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* the button is inline-flex, which drops the span's leading space ("Shuffledrill" on desktop, gfx audit Nov 25): space it with a margin */
+.wide{margin-left:.28em}
 @media (max-width:420px){.wide{display:none}}
