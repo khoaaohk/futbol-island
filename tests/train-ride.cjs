@@ -23,7 +23,7 @@ const P=L('multiplayer/protocol/index.ts'),pres=L('lib/multiplayer/presence.ts')
  const ms=(tt.SOUTH_BRIDGE.spanA+tt.SOUTH_BRIDGE.spanB)/2,b=tt.trackAt(ms),bn=tt.leftNormal(b.tx,b.tz),bb=tt.bedAt(lay,ms);
  near(C.trussLift(b.x+bn.x*C.TRUSS_OFFSET,bb+1.5,b.z+bn.z*C.TRUSS_OFFSET),C.TRUSS_H+.35-1.5,.01,'in the truss: lifted over the top chord');assert.equal(C.trussLift(b.x+bn.x*5,bb+1.5,b.z+bn.z*5),0,'clear of it: no lift');
  const W=read('lib/town/trainWorld.ts');assert(new RegExp(`TRUSS_OFFSET=${C.TRUSS_OFFSET},TRUSS_H=${C.TRUSS_H}\\b`).test(W)&&/const ew=4\.8,ed=hd\/2\+1\.25,rh=1\.9,ry=y0\+H\+\.14/.test(W)&&/H=2\.9,y0=top/.test(W),'clearance volumes match trainWorld.ts (roof, truss)');
- const R=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R)&&/f<arm\?14:2\.5/.test(R),'ride camera: spring arm, in fast, out slow');
+ const R=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground(,true)?\)/.test(R)&&/f<arm\?14:2\.5/.test(R),'ride camera: spring arm, in fast, out slow');
  assert(/ground:fieldSurfaceHeight\}\)/.test(read('components/Town.tsx')),'Town passes the ground');
  // beside a house the camera first comes down under the eaves (a person on the platform at the window): pulled in less, never far off
  for(const st of tt.TRAIN_STATIONS){const h=TL.stationSpot(st,0,1.1),c=TL.stationSpot(st,-3.5,10.2),hy=h.y+1.8;let cy=hy+2.35;const k=C.camCeiling(c.x,c.z);
@@ -250,7 +250,7 @@ console.log('train-ride hover: ok');
  // tunnel: the orbit eases to the default framing inside and comes back after
  const mid2=(tt.TUNNEL.west.s+tt.TUNNEL.east.s)/2;const out1=step(1);states[0].s=mid2+12;step(150);const inT=cam.position.clone();ride.press('recenter','tap');step(200);const inHome=step(1);
  assert(inT.distanceTo(inHome)<.3,'in the tunnel the camera is at the default framing');
- const R7=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground\)/.test(R7),'the free camera keeps the clearance spring arm');
+ const R7=read('lib/town/trainRide.ts');assert(/camClearFraction\(hx,hy,hz,camPos\.x,camPos\.y,camPos\.z,ports\.ground(,true)?\)/.test(R7),'the free camera keeps the clearance spring arm');
  assert(/el\.tagName!=='CANVAS'\)return/.test(R7),'only canvas presses drag');assert(/trainButtons\(trainCanGetOff,trainMoved[,)]/.test(read('components/Town.tsx'))&&/recenter:'M12/.test(read('components/TravelIcon.tsx')),'Recenter in the ride cluster');
  ride.dispose();delete globalThis.window;}
 console.log('train-ride camera: ok');
