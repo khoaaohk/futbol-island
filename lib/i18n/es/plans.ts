@@ -24,7 +24,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Los niños se alejan o se ponen a recoger flores.',instead:'Pasa directo a Tiburones y pececitos y tú eres el tiburón. Que el entrenador los persiga arregla casi todo a esta edad.'},
   faq:[{q:'¿Qué hago en mi primer entrenamiento de fútbol U6?',a:'Aprende los nombres, dale un balón a cada niño y pon juegos sencillos: Simón dice con balón, Luz roja, luz verde y Piratas y tesoro. Termina con un partido 3v3 corto.'},
    {q:'¿Cuánto debe durar un entrenamiento U6?',a:'Unos 45 minutos, según la guía para entrenadores de US Youth Soccer para esta edad. Después de eso, los niños de cinco y seis años ya tuvieron suficiente.'},
-   {q:'¿Y si algunos niños nunca han jugado?',a:'Este plan supone que nadie ha jugado. Cada juego sirve para un niño que toca un balón de fútbol por primera vez.'}]},
+   {q:'¿Y si algunos niños nunca han jugado?',a:'Este plan supone que nadie ha jugado. Cada juego sirve para un niño que toca un balón de fútbol por primera vez.'},{q:'¿Qué material necesito para un primer entrenamiento U6?',a:'Un balón número 3 por niño, unos 20 conos, chalecos de dos colores, dos o cuatro arcos pequeños o puertas de conos, agua y un botiquín. Las etiquetas con nombres ayudan el primer día.'},{q:'¿Cuántos entrenadores necesita un entrenamiento U6?',a:'Lo ideal son dos adultos: uno dirige el juego y el otro ayuda al niño que está triste o necesita ir al baño. Si estás solo, pide ayuda a un padre o una madre.'}]},
 
  'u6-dribbling-practice-plan':{theme:'Regate',
   title:'Entrenamiento de regate U6: juegos de fútbol (45 min)',
@@ -48,7 +48,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Regate por las puertas está muy tranquilo y el grupo está inquieto.',instead:'Conviértelo en Piratas y tesoro: la misma área, balones en el centro, y los llevan a casa por cualquier puerta.'},
   faq:[{q:'¿Qué ejercicios de regate sirven para niños de 5 años?',a:'Juegos con persecución y una historia: Las atrapadas con balón, Tiburones y pececitos y puertas que puedes llamar entradas o túneles. Cada uno dura menos de diez minutos.'},
    {q:'¿Deben los jugadores U6 hacer ejercicios con conos?',a:'Casi nunca. Un zigzag corto como carrera está bien, pero los juegos enseñan los mismos toques y mantienen mucho mejor la atención.'},
-   {q:'¿Por qué empezar con partidos 2v2?',a:'Es el primer “jugar” de la estructura Jugar-Practicar-Jugar de U.S. Soccer: los niños llegan y juegan enseguida, y nadie espera a que empiece el entrenamiento.'}]},
+   {q:'¿Por qué empezar con partidos 2v2?',a:'Es el primer “jugar” de la estructura Jugar-Practicar-Jugar de U.S. Soccer: los niños llegan y juegan enseguida, y nadie espera a que empiece el entrenamiento.'},{q:'¿Cómo hago que los niños de 5 años regateen todo el rato?',a:'Dale a cada niño un balón y una historia, como tiburones que persiguen peces, y haz juegos cortos. Cambia el juego o una regla cada pocos minutos, antes de que se aburran, y deja que todos vuelvan rápido.'},{q:'¿Qué deben aprender del regate los jugadores U6?',a:'Toques cortos con los dos pies, llevar el balón cerca, pararlo con la suela y levantar la vista para buscar espacio. Las fintas pueden esperar: a esta edad buscamos muchos toques y mucha diversión.'}]},
 
  'u6-shooting-practice-plan':{theme:'Patear y tirar',
   title:'Entrenamiento de tiro U6: patear y tirar (45 min)',
@@ -72,7 +72,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Conducir y tirar se convirtió en una fila.',instead:'Pon más arcos a la vez, o cambia a Piratas y tesoro, donde el “barco” es un arco pequeño y cada balón debe entrar con un tiro.'},
   faq:[{q:'¿Cómo le enseño a un niño de 5 años a patear un balón de fútbol?',a:'Muéstrale el empeine con la punta del pie hacia abajo, pon el otro pie al lado del balón y dale decenas de intentos en un juego como Limpia tu cuarto.'},
    {q:'¿Los ejercicios de tiro U6 deben tener portero?',a:'No. Los partidos de menores de 8 años no tienen porteros. Los arcos pequeños enseñan a apuntar, y a nadie le pega un balonazo.'},
-   {q:'¿Cuántos balones necesito?',a:'Por lo menos uno por niño. En los juegos de tiro, los balones extra mantienen el juego en marcha mientras otros van a buscarlos.'}]},
+   {q:'¿Cuántos balones necesito?',a:'Por lo menos uno por niño. En los juegos de tiro, los balones extra mantienen el juego en marcha mientras otros van a buscarlos.'},{q:'¿De qué tamaño deben ser los arcos para un entrenamiento de tiro U6?',a:'Pequeños: arcos plegables o dos conos a unas 2 o 3 yardas funcionan bien. Varios arcos pequeños dan a cada niño más tiros que un arco grande con una fila delante.'},{q:'¿Los jugadores U6 deben aprender a tirar con el empeine?',a:'Deja que lo intenten, pero no lo conviertas en un ejercicio. Casi todos los niños de 5 y 6 años patean con la punta o el interior. Felicita el intento, muestra el empeine una vez y deja que tiren mucho en los partidos.'}]},
 
  'u8-first-practice':{theme:'Primer entrenamiento de la temporada',
   title:'Plan de entrenamiento U8: primer entrenamiento (60 min)',
@@ -97,7 +97,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'El 1v1 es muy difícil para los nuevos y pierden el balón cada vez.',instead:'Haz las canchas más anchas y deja que el defensa empiece con una rodilla en el suelo. O cambia a Regate por las puertas y vuelve al 1v1 la próxima semana.'},
   faq:[{q:'¿Cómo dirijo mi primer entrenamiento de fútbol U8?',a:'Empieza con partidos pequeños mientras llegan los jugadores, haz dos juegos con un balón cada uno, prueba el 1v1 en canchas pequeñas y termina con un 4v4. Aprende todos los nombres antes del final.'},
    {q:'¿Qué les digo a los papás el primer día?',a:'Cuándo son los entrenamientos y cuánto duran, que cada niño necesita un balón del tamaño correcto y agua, y que los entrenamientos serán sobre todo juegos.'},
-   {q:'¿Qué tamaño de balón usan los jugadores U8?',a:'Tamaño 3. Los jugadores pasan al tamaño 4 en U9.'}]},
+   {q:'¿Qué tamaño de balón usan los jugadores U8?',a:'Tamaño 3. Los jugadores pasan al tamaño 4 en U9.'},{q:'¿Cuántos jugadores debe tener un entrenamiento U8?',a:'Un equipo U8 juega 4v4, así que es normal tener de seis a diez niños. Con tantos, organiza dos partidos pequeños a la vez para que nadie espere su turno.'},{q:'¿Qué juegos debe tener un primer entrenamiento U8?',a:'Juegos con un balón por niño, como la atrapada con balón y las puertas, un primer 1v1 y un 4v4 al final. Usa reglas simples el primer día y añade una idea nueva la semana siguiente.'}]},
 
  'u8-dribbling-practice-plan':{theme:'Regate y 1v1',
   title:'Entrenamiento de regate y 1v1 U8: plan de fútbol (60 min)',
@@ -121,7 +121,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Gira y sal está apagado y los jugadores lo hacen por cumplir.',instead:'Hazlo una competencia en parejas: uno conduce y gira cuando quiere, y el compañero lo sigue como sombra. Cambian después de treinta segundos.'},
   faq:[{q:'¿Cómo enseño a los jugadores U8 a superar a un defensa?',a:'Un solo movimiento, un cambio de ritmo y muchos intentos. Las canchas pequeñas de 1v1 le dan a cada jugador un nuevo intento cada minuto.'},
    {q:'¿El 1v1 es demasiado competitivo para niños de 7 años?',a:'No, si los turnos son cortos y los rivales cambian. A los niños de esta edad les gusta competir, y tanto el atacante como el defensa están aprendiendo.'},
-   {q:'¿Por qué terminamos con un partido?',a:'Es la última etapa de Jugar-Practicar-Jugar. Los jugadores prueban en un partido de verdad lo que practicaron, y el entrenador observa qué se les quedó.'}]},
+   {q:'¿Por qué terminamos con un partido?',a:'Es la última etapa de Jugar-Practicar-Jugar. Los jugadores prueban en un partido de verdad lo que practicaron, y el entrenador observa qué se les quedó.'},{q:'¿Qué fintas de 1v1 deben aprender los jugadores U8?',a:'Amagar hacia un lado y salir por el otro, arrastrar el balón hacia atrás y un cambio de ritmo repentino. Una o dos fintas en las que el niño confía valen más que cinco a medio aprender.'},{q:'¿Cómo hago justo el 1v1 entre niños de distinto nivel?',a:'Empareja a jugadores de nivel parecido, o da al que le cuesta más una zona final más grande o un poco de ventaja. Cambia las parejas a menudo para que todos ganen algún duelo.'}]},
 
  'u8-passing-practice-plan':{theme:'Pases',
   title:'Entrenamiento de pases U8: primeros juegos (60 min)',
@@ -145,7 +145,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'El rondo 3v1 no funciona: el defensa gana todos los balones.',instead:'Que jueguen 4v1 en un cuadro más grande, o que el defensa lleve un chaleco en cada mano y camine. Primero el éxito, la presión después.'},
   faq:[{q:'¿Cuándo deben empezar los niños a aprender a pasar?',a:'Alrededor de U8, en parejas y en juegos 2v1. Antes de eso, casi todos los niños todavía están aprendiendo a controlar el balón ellos mismos.'},
    {q:'¿Cuál es el mejor ejercicio de pases para niños de 7 años?',a:'Pases por las puertas en pareja. Es un juego con marcador, y premia tanto el pase como moverse a otra puerta.'},
-   {q:'¿Los rondos son demasiado difíciles para U8?',a:'Un 3v1 en un cuadro grande es lo adecuado al final de la temporada. Si los jugadores no logran tres pases, vuelve a las parejas e inténtalo de nuevo en unas semanas.'}]},
+   {q:'¿Los rondos son demasiado difíciles para U8?',a:'Un 3v1 en un cuadro grande es lo adecuado al final de la temporada. Si los jugadores no logran tres pases, vuelve a las parejas e inténtalo de nuevo en unas semanas.'},{q:'¿Los jugadores U8 deben pasar o regatear más?',a:'Sobre todo regatear, y pasar cuando un compañero está libre. Un pase a un compañero con espacio es una buena decisión en U8, pero antes necesitan mucho regate para proteger el balón bajo presión.'},{q:'¿Cómo enseño a los U8 a pasar con el interior del pie?',a:'Muéstralo una vez: el pie de apoyo junto al balón y mirando al compañero, el tobillo firme y empujar por el centro del balón. Después juega a las puertas en pareja para que lo repitan muchas veces.'}]},
 
  'u10-first-practice':{theme:'Primer entrenamiento de la temporada',
   title:'Plan de entrenamiento U10: primer entrenamiento (60 min)',
@@ -169,7 +169,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'El 2v1 al arco tiene una fila larga porque el grupo es grande.',instead:'Divídelo en dos arcos, o que jueguen 2v1 a lo ancho de canchas pequeñas hacia arcos de conos sin portero. Seis jugadores por cancha es el límite.'},
   faq:[{q:'¿Qué debe incluir un primer entrenamiento U10?',a:'Partidos pequeños para ver a los jugadores, un juego de pases como un rondo 3v1, un juego de ataque como 2v1 al arco y un partido tipo 7v7 para terminar.'},
    {q:'¿Cómo explico la línea de salida?',a:'En el primer saque de meta del partido final: el otro equipo espera detrás de la línea punteada hasta que se juega el balón, para que nuestros defensas tengan tiempo de recibirlo.'},
-   {q:'¿Cuánto dura un entrenamiento U10?',a:'De 60 a 75 minutos, según la guía para entrenadores de US Youth Soccer. Este plan usa 60.'}]},
+   {q:'¿Cuánto dura un entrenamiento U10?',a:'De 60 a 75 minutos, según la guía para entrenadores de US Youth Soccer. Este plan usa 60.'},{q:'¿Con qué formación debe empezar un equipo U10?',a:'En 7v7 casi todos los equipos U10 empiezan con un 2-3-1 o un 3-2-1. Elige una, mantenla las primeras semanas y deja que los jugadores prueben más de una posición.'},{q:'¿Qué balón y qué cancha usan los jugadores U10?',a:'Un balón número 4 y, según las normas de U.S. Soccer, una cancha de 7v7 de 55 a 65 yardas de largo y 35 a 45 de ancho, con arcos de hasta 6,5 por 18,5 pies. Consulta tu liga, porque las medidas cambian.'}]},
 
  'u10-passing-practice-plan':{theme:'Pases y primer toque',
   title:'Entrenamiento de pases U10: primer toque (60 min)',
@@ -192,7 +192,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Recibir con el pie lejano va lento y los jugadores se ven aburridos.',instead:'Conviértelo en Primer toque por las puertas en parejas con marcador: diez toques limpios por la puerta, y luego una carrera contra otra pareja.'},
   faq:[{q:'¿Cómo mejoro el primer toque en U10?',a:'Enseña a recibir con el pie lejano y el cuerpo abierto, y luego ponlo bajo poca presión en un rondo. Los jugadores necesitan la técnica y una razón para usarla.'},
    {q:'¿Con qué frecuencia debemos hacer rondos?',a:'Diez minutos en casi todos los entrenamientos es suficiente. Cambia el tamaño, el límite de toques o la forma de puntuar para que siga siendo nuevo.'},
-   {q:'¿Por qué dos arcos en cada lado?',a:'Para que mover el balón al otro lado tenga un premio claro. Los jugadores empiezan a mirar al otro lado de la cancha antes de recibir.'}]},
+   {q:'¿Por qué dos arcos en cada lado?',a:'Para que mover el balón al otro lado tenga un premio claro. Los jugadores empiezan a mirar al otro lado de la cancha antes de recibir.'},{q:'¿Qué ejercicio de primer toque sirve para niños de 9 y 10 años?',a:'Recibir con el pie lejano: el jugador controla con el pie de atrás y gira para pasar al otro lado. Ocupa poco espacio y cada jugador toca el balón muchas veces en pocos minutos.'},{q:'¿Cómo evito que se queden quietos después de pasar?',a:'Pon una regla como pasar y moverse a otro cono, o da un punto cuando el que pasó recibe otra vez. Felicita el movimiento después del pase, no solo el pase.'}]},
 
  'u10-1v1-practice-plan':{theme:'Ataque y defensa 1v1',
   title:'Entrenamiento 1v1 U10: ataque y defensa (60 min)',
@@ -216,7 +216,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Los defensas se lanzan una y otra vez y los atacantes anotan siempre.',instead:'Agrega una regla a Defensa 1v1: el defensa gana un punto solo por mantener al atacante fuera de la zona final durante seis segundos. Ahora la paciencia tiene premio.'},
   faq:[{q:'¿Cómo enseño la defensa 1v1 a jugadores U10?',a:'Tres pasos: cerrar el espacio rápido, frenar a dos o tres yardas, y ponerse de perfil. Luego tener paciencia hasta que el atacante se lleve el balón muy lejos.'},
    {q:'¿Cuánto 1v1 debemos hacer?',a:'Un poco en casi todos los entrenamientos. Los momentos de uno contra uno deciden los partidos de niños, y dan confianza con el balón.'},
-   {q:'¿Los defensas deben meter la pierna o esperar?',a:'Esperar hasta que el balón se pueda ganar. Un defensa que se queda de pie y del lado del arco hizo su trabajo aunque no haga una entrada.'}]},
+   {q:'¿Los defensas deben meter la pierna o esperar?',a:'Esperar hasta que el balón se pueda ganar. Un defensa que se queda de pie y del lado del arco hizo su trabajo aunque no haga una entrada.'},{q:'¿Por qué deben practicar el 1v1 los jugadores U10?',a:'Muchas jugadas de un partido de 7v7 son un atacante contra un defensor. Quien tiene confianza en el 1v1 protege el balón, supera a un rival para crear una ocasión y defiende sin lanzarse.'},{q:'¿Cuánto debe durar cada duelo 1v1?',a:'Duelos cortos, de unos 10 a 20 segundos, y luego descanso mientras juegan otros. Los esfuerzos cortos mantienen la intensidad alta y dan turno a todos.'}]},
 
  'u12-first-practice':{theme:'Primer entrenamiento de la temporada',
   title:'Plan de entrenamiento U12: primer entrenamiento (75 min)',
@@ -240,7 +240,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'El rondo 4v2 se rompe una y otra vez después de uno o dos pases.',instead:'Agranda el cuadro y permite tres toques, o que jueguen 5v2. Achícalo otra vez cuando el grupo logre cinco pases.'},
   faq:[{q:'¿Qué debe incluir un primer entrenamiento U12?',a:'Partidos reducidos al llegar, un juego de posesión como un rondo 4v2, un juego de ataque al arco y un partido tipo 9v9. Al final, habla con el grupo de las metas del equipo.'},
    {q:'¿Cuánto dura un entrenamiento de fútbol U12?',a:'Unos 75 minutos, según la guía para entrenadores de US Youth Soccer.'},
-   {q:'¿Los equipos U12 juegan con fuera de juego?',a:'Sí. El partido 9v9 tiene fuera de juego, así que úsalo en los partidos del entrenamiento y explícalo una vez. Nuestra página de fuera de juego tiene un diagrama.'}]},
+   {q:'¿Los equipos U12 juegan con fuera de juego?',a:'Sí. El partido 9v9 tiene fuera de juego, así que úsalo en los partidos del entrenamiento y explícalo una vez. Nuestra página de fuera de juego tiene un diagrama.'},{q:'¿Qué les explico a los U12 sobre el 9v9 el primer día?',a:'Que la cancha es más grande, que hay fuera de juego y que cada jugador tiene un sitio en el dibujo del equipo. Después a jugar: un partido corto enseña más que una charla larga.'},{q:'¿Qué balón usan los jugadores U12?',a:'Un balón número 4. Pasan al número 5 en U13, cuando el partido es 11v11 en una cancha de tamaño completo.'}]},
 
  'u12-possession-practice-plan':{theme:'Pases y posesión',
   title:'Entrenamiento de posesión U12: pases (75 min)',
@@ -264,7 +264,7 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Mantener el balón con tres equipos es un caos y nadie sabe quién defiende.',instead:'Congélalo, dale a cada equipo una sola tarea durante tres minutos sin cambios, y luego vuelve a poner el cambio cuando los pases se asienten.'},
   faq:[{q:'¿Cómo enseño a los jugadores U12 a mantener la posesión?',a:'Empieza con mirar alrededor y un buen primer toque, agrega un rondo para pasar bajo presión y termina con un partido donde perder el balón cuesta de inmediato.'},
    {q:'¿La posesión es más importante que meter goles?',a:'No. Mantener el balón es la forma en que un equipo crea una buena ocasión de gol. Premia el pase hacia adelante y el tiro que vienen después.'},
-   {q:'¿Cuántos toques deben tener los jugadores?',a:'Dos es un reto útil en U12, pero no una ley. El objetivo son decisiones rápidas, y a veces la decisión correcta es regatear.'}]},
+   {q:'¿Cuántos toques deben tener los jugadores?',a:'Dos es un reto útil en U12, pero no una ley. El objetivo son decisiones rápidas, y a veces la decisión correcta es regatear.'},{q:'¿Qué ejercicio de posesión sirve para niños de 11 y 12 años?',a:'Un rondo 4v2 y después mantener el balón con tres equipos: los dos enseñan a encontrar al compañero libre y a buscar un ángulo nuevo tras el pase. Termina con un partido donde una serie de pases vale un punto.'},{q:'¿Cómo enseño a moverse para apoyar al compañero con balón?',a:'Pide al jugador sin balón que forme un triángulo con el que pasa y salga de la sombra del defensor. Detén el juego una vez para mostrarlo y deja que sigan jugando.'}]},
 
  'u12-finishing-practice-plan':{theme:'Tiro y definición',
   title:'Entrenamiento de definición U12: tiro a puerta (75 min)',
@@ -289,5 +289,5 @@ export const PLANS_ES:Readonly<Record<string,PlanEs>>={
   swap:{sign:'Centros y definición va lento porque los centros no llegan a los corredores.',instead:'Acerca al jugador de banda y deja que pase un balón parado al otro lado, o cambia a 2v1 al arco desde una salida por la banda para que el “centro” sea un pase corto.'},
   faq:[{q:'¿Cuáles son buenos ejercicios de definición para U12?',a:'Descarga y tiro para tiros de primera, Centros y definición con balones bajos, y 3v2 al arco para definir bajo presión.'},
    {q:'¿Los jugadores U12 deben cabecear centros en los entrenamientos?',a:'Este plan usa centros bajos que se definen con el pie. US Youth Soccer limita cabecear en los entrenamientos a los 11 y 12 años, y el balón bajo es la habilidad más útil.'},
-   {q:'¿Cómo mantengo a todos ocupados en un entrenamiento de tiro?',a:'Usa dos arcos, grupos de cuatro o cinco, y una regla de que el que tira busca su propio balón. La espera baja a un turno.'}]},
+   {q:'¿Cómo mantengo a todos ocupados en un entrenamiento de tiro?',a:'Usa dos arcos, grupos de cuatro o cinco, y una regla de que el que tira busca su propio balón. La espera baja a un turno.'},{q:'¿Cómo enseño a los U12 a rematar centros bajos?',a:'Atacar el primer palo o la zona del penal, llegar tarde a la carrera y dirigir el balón con el interior del pie. Los centros bajos además evitan el cabeceo, que en U12 está limitado en los entrenamientos.'},{q:'¿Cuántos tiros debe hacer cada jugador en un entrenamiento de definición?',a:'Todos los que quepan: usa dos o tres arcos pequeños o dos porteros, filas de dos o tres y recoge los balones rápido. Muchos tiros con decisiones rápidas valen más que pocas esperas largas.'}]},
 };

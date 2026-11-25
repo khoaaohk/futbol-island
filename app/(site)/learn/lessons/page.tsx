@@ -12,12 +12,13 @@ import {lessonsIndexRail} from '@/lib/site/railNavMore';
 import rt from '@/components/site/railTarget.module.css';
 import {guideVideo} from '@/lib/site/guideVideos';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
+import HubQuizLinks from '@/components/site/quiz/HubQuizLinks';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
 // the search-result description is kept under 155 characters; the page lead stays the full sentence
 const META=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, passing, defending and restarts in 7v7 to 11v11 and futsal, with quizzes.`;
-export const metadata=pageMeta('Football Lessons and Quizzes for Kids',META,'/learn/lessons');
+export const metadata=pageMeta('Soccer Lessons for Kids: Free Football Lessons and Quizzes',META,'/learn/lessons');/* SEO batch E, Nov 25 2026: "soccer lessons for kids"; was "Football Lessons and Quizzes for Kids" */
 const CRUMBS=libraryCrumbs({name:'Lessons',path:'/learn/lessons'});/* Nov 20 2026: through the Library *//* no /learn crumb: it redirects to / */
 
 export default function LearnIndex(){
@@ -29,7 +30,7 @@ export default function LearnIndex(){
   <header className={`${styles.intro} ${rt.target}`} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football lessons for kids</h1>
-   <p className={styles.lead}>{DEFINITION} {DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
+   <p className={styles.lead}>{DESC} {DEFINITION} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href="/play">Play the lessons on the island</a>
    <LearnSearchForm/>
@@ -38,6 +39,7 @@ export default function LearnIndex(){
   <section className={styles.section} aria-labelledby="topics"><h2 className={`${styles.h2} ${rt.target}`} id="topics">Lessons by topic</h2>
    <ul className={styles.list}>{HUBS.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span><span className={styles.itemMeta}>{h.blurb}</span></a></li>)}</ul>
   </section>
+  <HubQuizLinks slug="lessons"/>{/* SEO batch E: the quiz pages with answers */}
   {FORMAT_ORDER.map(f=>{const list=LESSONS.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
    <h2 className={`${styles.h2} ${rt.target}`} id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={lessonPath(l.id)}><span className={styles.itemTitle}>{l.title}</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>

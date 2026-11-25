@@ -128,7 +128,7 @@ export const RULE_PLAY:Record<RulePlaySlug,RulePlayContent>={
     example:'A long throw flies over everyone and drops straight into the other team’s goal.',next:'No goal: it is a goal kick. Straight into your own goal, it is a corner kick.'},
    {id:'offside',tone:'gold',icon:'flag',name:'No offside from a throw-in',
     explain:'A player who gets the ball straight from a throw-in cannot be offside, wherever they stand.',
-    example:'An attacker stands behind the last defender and receives a throw-in.',next:'Play goes on. The receiver is not offside.'}],
+    example:'An attacker stands behind the second-last defender and receives a throw-in.',next:'Play goes on. The receiver is not offside.'}],
   game:{id:'throw-in-game',
    choices:[{id:'foul',label:'Foul throw',swipe:'left',tone:'red'},{id:'good',label:'Good throw',swipe:'right',tone:'pitch'}],
    scenarios:[

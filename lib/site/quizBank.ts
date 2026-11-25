@@ -50,7 +50,7 @@ const BASE:readonly BankQuiz[]=[
    c('How many players does each team have on the field in an 11v11 game?',['11, including the goalkeeper','11, plus a goalkeeper','10, including the goalkeeper'],0,'Eleven, and one of them is the goalkeeper.',P('goalkeeper'),{fact:'A game cannot start or go on if a team has fewer than seven players.'}),
   ]},
  {slug:'offside-quiz',topic:'rules',name:'Offside quiz',title:'Offside Quiz: Offside Rule Questions for Kids',
-  desc:'Test the offside rule with a free quiz for kids: when offside is judged, who counts as the last defender, and when you can never be offside.',
+  desc:'Test the offside rule with a free quiz for kids: when offside is judged, who counts as the second-last defender, and when you can never be offside.',
   h1:'Offside quiz',intro:'Offside is the rule people ask about most. These questions check the key moments, one at a time, with a reason for every answer.',
   sources:[law('Law 11 (Offside)','offside/'),{name:'U.S. Soccer small-sided standards (7v7 offside)',url:'https://www.ussoccer.com/stories/2017/08/five-things-to-know-how-smallsided-standards-will-change-youth-soccer'}],
   faq:[{q:'What is the easiest way to explain offside?',a:'When a teammate passes the ball forward to you, two players from the other team, usually the goalkeeper and one defender, must be level with you or nearer their own goal line.'},

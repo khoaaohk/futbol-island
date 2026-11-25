@@ -24,7 +24,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_carry','next7_dribbleroom','learn7_receive'],links:[G.ball,G.wg,G.trophyDrop,...G.keepyUppy],related:['cone-weave-dribbling','turn-and-go','simon-says-soccer','gates-dribbling'],
   faq:[{q:'What are toe taps in soccer?',a:'A ball mastery move: you touch the top of a still ball with the sole of one foot, then the other, in a quick rhythm. The ball barely moves; your feet do.'},
    {q:'What are foundations in soccer?',a:'Passing the ball to yourself between the insides of your two feet, with your knees bent. Coaches also call it tick-tocks, bells or pendulums.'},
-   {q:'How many toe taps should a child do?',a:'Go by time, not by number. Thirty seconds of work and thirty of rest, three or four times, is plenty. Stop while it is still fun.'}]},
+   {q:'How many toe taps should a child do?',a:'Go by time, not by number. Thirty seconds of work and thirty of rest, three or four times, is plenty. Stop while it is still fun.'},{q:'Are toe taps good for 6 year olds?',a:'Yes, in short bursts of a minute or two, with a count or a song: many touches with both feet.'}]},
 
  {slug:'cone-weave-dribbling',name:'Cone weave dribbling',skill:'dribbling',ages:['U6','U8','U10','U12'],
   title:'Cone Weave Dribbling Drill for Soccer (No Long Lines)',
@@ -46,7 +46,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg],related:['gates-dribbling','toe-taps-and-foundations','turn-and-go','one-v-one-to-end-zones'],
   faq:[{q:'How far apart should cones be for dribbling?',a:'About 2 yards (two big steps) for most players aged 7 to 12. Use 3 yards for beginners and 1 yard for a hard challenge.'},
    {q:'How do I stop kids waiting in line?',a:'Build more lanes. Three players per lane is the most you want, and the next player starts when the one in front is halfway.'},
-   {q:'Is the cone weave good for under-6 players?',a:'In small doses. Five- and six-year-olds learn more from games with a story, such as Sharks and Minnows, so keep the weave short and turn it into a race.'}]},
+   {q:'Is the cone weave good for under-6 players?',a:'In small doses. Five- and six-year-olds learn more from games with a story, such as Sharks and Minnows, so keep the weave short and turn it into a race.'},{q:'How many cones do I need for a cone weave?',a:'Five or six per lane, and one lane for every two or three players.'}]},
 
  {slug:'gates-dribbling',name:'Gates dribbling',skill:'dribbling',ages:['U6','U8','U10'],
   title:'Gates Dribbling Game: Soccer Drill for U6 to U10',
@@ -67,7 +67,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_carry','prn_7_spread','next7_dribbleroom'],links:[G.wg,G.cm],related:['busy-square-dribbling','sharks-and-minnows','partner-passing-through-gates','cone-weave-dribbling'],
   faq:[{q:'How wide should the gates be?',a:'About 2 yards, or two big steps. Wider for beginners, narrower for players who find it easy.'},
    {q:'How many gates do I need?',a:'A few more than the number of players, so there is always an open gate to find. For 10 players, 12 gates is about right.'},
-   {q:'Can I use gates for passing too?',a:'Yes. Put the players in pairs with one ball, and a point is a pass through a gate to your partner. That version is on our partner passing page.'}]},
+   {q:'Can I use gates for passing too?',a:'Yes. Put the players in pairs with one ball, and a point is a pass through a gate to your partner. That version is on our partner passing page.'},{q:'What age is gates dribbling for?',a:'It works from U6 to U10. Young players count the gates they dribble through; older players race the clock, use only the weaker foot or get chased by a defender.'},{q:'How do I add defenders to the gates game?',a:'Give one or two players a pinnie: they guard gates, and a dribbler who loses the ball swaps with the defender. Everyone stays in the game.'}]},
 
  {slug:'red-light-green-light',name:'Red Light, Green Light',skill:'dribbling',ages:['U6','U8'],
   title:'Red Light Green Light Soccer Drill for U6 and U8',
@@ -87,7 +87,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_carry','learn7_receive'],links:[G.ages,G.ball],related:['simon-says-soccer','sharks-and-minnows','pirates-and-treasure','toe-taps-and-foundations'],
   faq:[{q:'What age is Red Light, Green Light for?',a:'It suits U6 and U8 best, which means ages 5 to 8. Older players get more from games with a defender.'},
    {q:'What happens if a player does not stop in time?',a:'They take five big steps back and keep playing. Sending a five-year-old out of the game only takes away the practice they need most.'},
-   {q:'What does it teach?',a:'Close control. To stop the ball on the call, a player has to keep it within one step, which is the base of all dribbling.'}]},
+   {q:'What does it teach?',a:'Close control. To stop the ball on the call, a player has to keep it within one step, which is the base of all dribbling.'},{q:'How do you play Red Light Green Light in soccer?',a:'Every child dribbles a ball. On “green light” they dribble, on “yellow” they slow down, and on “red light” they stop the ball with the sole of the foot.'},{q:'How do I make Red Light Green Light harder?',a:'Add new colors with new jobs, such as “purple” for a turn or “blue” for the weaker foot, or let a player be the caller.'}]},
 
  {slug:'sharks-and-minnows',name:'Sharks and Minnows',skill:'dribbling',ages:['U6','U8','U10'],
   title:'Sharks and Minnows Soccer Drill: Setup and Rules',
@@ -107,7 +107,7 @@ export const DRILLS_A:RawDrill[]=[
   faq:[{q:'How do you play Sharks and Minnows in soccer?',a:'Minnows dribble from one end line to the other. Sharks in the middle try to kick their balls out. A minnow who loses the ball becomes a shark on the next crossing.'},
    {q:'How big should the area be?',a:'About 20 by 30 yards for 10 to 12 players. If the sharks win every ball, make it wider. If no ball is ever won, make it narrower.'},
    {q:'Is it a good game for U6?',a:'Yes, with one change: the coach or a parent is the first shark and is not very good at it. Five-year-olds should get across most of the time.'},
-   {q:'What does it teach?',a:'Dribbling with your head up, shielding the ball, changing direction, and for the sharks, closing down a player and winning the ball.'}]},
+   {q:'What does it teach?',a:'Dribbling with your head up, shielding the ball, changing direction, and for the sharks, closing down a player and winning the ball.'},{q:'What age is Sharks and Minnows for?',a:'It suits ages 5 to 10 (U6 to U10). For the youngest, start with one shark and a big area; for U10, add more sharks or make the area smaller.'}]},
 
  {slug:'pirates-and-treasure',name:'Pirates and Treasure',skill:'dribbling',ages:['U6','U8'],
   title:'Pirates and Treasure Soccer Game for U6 and U8',
@@ -127,7 +127,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_carry','learn7_receive','trn_9_firstpass'],links:[G.ages,G.counter],related:['sharks-and-minnows','clean-your-room','red-light-green-light','dribble-tag'],
   faq:[{q:'How many balls do I need?',a:'At least one for every two players, and more is better. If you are short, add cones to the pile as extra treasure that must be carried on top of a ball trip.'},
    {q:'What if one team always wins?',a:'Mix the crews after each round, or let the crew with the least treasure start two seconds early.'},
-   {q:'Is this the same as “Steal the Bacon”?',a:'It is a close cousin. Coaches also call it Treasure Hunt, Robin Hood or Bank Robbers. The rules are the same: collect balls with your feet and bring them home.'}]},
+   {q:'Is this the same as “Steal the Bacon”?',a:'It is a close cousin. Coaches also call it Treasure Hunt, Robin Hood or Bank Robbers. The rules are the same: collect balls with your feet and bring them home.'},{q:'How do you play Pirates and Treasure in soccer?',a:'The balls are treasure in the middle. On “go”, pirates run out, take one ball back to their home with their feet, and go again until the treasure is gone.'},{q:'What age is Pirates and Treasure for?',a:'It suits U6 and U8 players. With older players, let pirates steal from other homes so they have to dribble past opponents.'}]},
 
  {slug:'turn-and-go',name:'Turn and go',skill:'dribbling',ages:['U8','U10','U12'],
   title:'Turn and Go: Soccer Turning Drill (Three Easy Turns)',
@@ -147,7 +147,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','learn7_carry'],links:[G.cm,G.firstTouch],related:['toe-taps-and-foundations','cone-weave-dribbling','one-v-one-to-end-zones','receive-and-turn'],
   faq:[{q:'What is the easiest turn to teach first?',a:'The drag-back. Sole on top of the ball, pull it behind you, turn and go. Most seven-year-olds get it in one practice.'},
    {q:'When should a player turn in a game?',a:'When a defender blocks the way forward and there is room behind or to the side. If a defender is tight behind you as well, a pass back is the better choice.'},
-   {q:'How do I teach turning with the weaker foot?',a:'Give double points for it. Players choose what scores, so make the weak foot worth more.'}]},
+   {q:'How do I teach turning with the weaker foot?',a:'Give double points for it. Players choose what scores, so make the weak foot worth more.'},{q:'What are the three easy turns in soccer?',a:'The drag back (pull the ball back with the sole), the inside cut and the outside cut. Each one changes direction fast, and they work with both feet.'},{q:'How do I make turn and go harder?',a:'Call the turn late, add a defender who follows the player, or ask for a turn on the weaker foot and a burst of speed to a gate after the turn.'}]},
 
  {slug:'knockout',name:'Knockout',skill:'dribbling',ages:['U8','U10','U12'],
   title:'Knockout Soccer Game for Kids: Rules and Setup',
@@ -166,7 +166,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_receive','f_pivot','gap7_lostball'],links:[G.st,G.tackle,G.fouls],related:['sharks-and-minnows','dribble-tag','one-v-one-defending','busy-square-dribbling'],
   faq:[{q:'How do you play Knockout in soccer?',a:'Everyone dribbles in a square and tries to kick other balls out while protecting their own. In our version a player who is knocked out does ten toe taps and comes back in.'},
    {q:'Why not make players sit out?',a:'Because the children who go out first are the ones who need the most touches. A quick task and a fast return keeps the game fair and useful.'},
-   {q:'What is shielding?',a:'Standing side on between the defender and the ball, with the ball on the far foot. The defender has to go through you to reach it, and that is a foul.'}]},
+   {q:'What is shielding?',a:'Standing side on between the defender and the ball, with the ball on the far foot. The defender has to go through you to reach it, and that is a foul.'},{q:'What age is the Knockout soccer game for?',a:'It works from U8 to U12. For U8, make the area big and let knocked-out players do a quick task to come back; for U12, shrink the area.'},{q:'How do I make Knockout harder?',a:'Shrink the area as players go out, add a rule that a ball must be won with a fair tackle, or give two players no ball so they hunt together.'}]},
 
  {slug:'dribble-tag',name:'Dribble tag',skill:'warm-up',ages:['U6','U8','U10'],
   title:'Dribble Tag: Soccer Warm-Up Game With a Ball Each',
@@ -185,7 +185,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_receive','learn7_carry'],links:[G.ages,G.pressing],related:['sharks-and-minnows','busy-square-dribbling','simon-says-soccer','knockout'],
   faq:[{q:'Is tag a good soccer warm-up?',a:'Yes, when everyone has a ball. Players warm up, change direction and look around, all while touching the ball, and nobody needs it explained.'},
    {q:'How long should it last?',a:'Five to eight minutes at the start of practice, in rounds of about a minute with new taggers each round.'},
-   {q:'What is tunnel tag?',a:'The freeze-tag version: a tagged player stands with legs apart and is freed when a teammate passes a ball through the “tunnel”.'}]},
+   {q:'What is tunnel tag?',a:'The freeze-tag version: a tagged player stands with legs apart and is freed when a teammate passes a ball through the “tunnel”.'},{q:'How do you play dribble tag in soccer?',a:'Every player dribbles a ball. One or two taggers, also dribbling, try to tag others with a hand; a tagged player does a quick skill and joins in again.'},{q:'What age is dribble tag for?',a:'U6 to U10. Young players play with one tagger in a big area; older players use more taggers, a smaller area or tag with the ball only.'}]},
 
  {slug:'simon-says-soccer',name:'Simon Says with a ball',skill:'warm-up',ages:['U6','U8'],h1:'Simon Says soccer game with a ball',
   title:'Simon Says Soccer Game: Body-Part Dribbling for U6',
@@ -205,7 +205,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['learn7_receive','learn7_carry'],links:[G.ages,G.ball],related:['red-light-green-light','toe-taps-and-foundations','dribble-tag','clean-your-room'],
   faq:[{q:'What is a good first soccer drill for 5-year-olds?',a:'This one. Every child has a ball, the rules take ten seconds, and nobody can lose. It also teaches stopping the ball, which everything else needs.'},
    {q:'Do players use their hands?',a:'Only to touch a ball that has already stopped, when the coach calls “hand” or “elbow”. The ball is always moved with the feet.'},
-   {q:'How does it help the coach?',a:'You can use names in the calls: “Simon says the player in the red shirt picks the next one”, then ask their name. By the end you know everyone.'}]},
+   {q:'How does it help the coach?',a:'You can use names in the calls: “Simon says the player in the red shirt picks the next one”, then ask their name. By the end you know everyone.'},{q:'How do you play Simon Says with a soccer ball?',a:'Players dribble in a square. When the coach says “Simon says sole”, they stop the ball with the sole; if Simon does not say it, they keep dribbling.'},{q:'How long should Simon Says soccer last?',a:'About five to eight minutes. Stop while the children still want more, and let a player be Simon at the end.'}]},
 
  {slug:'clean-your-room',name:'Clean Your Room',skill:'warm-up',ages:['U6','U8'],
   title:'Clean Your Room Soccer Game for U6 and U8 Practices',
@@ -224,7 +224,7 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['next7_shotreaction','learn7_shape'],links:[G.ages,G.kickOff],related:['pirates-and-treasure','dribble-and-shoot','simon-says-soccer','red-light-green-light'],
   faq:[{q:'How do you play Clean Your Room?',a:'Two teams, two halves, lots of balls. Each team kicks balls out of its half into the other for a minute. The half with fewer balls at the end wins.'},
    {q:'Is it safe with lots of balls flying?',a:'Keep the rule that balls stay below the knee, use size 3 balls for under-8s, and keep the two teams well apart with a wide middle line.'},
-   {q:'What does it teach?',a:'Striking the ball. Many young players have never been shown how to use their laces, and this game gives dozens of tries in a few minutes.'}]},
+   {q:'What does it teach?',a:'Striking the ball. Many young players have never been shown how to use their laces, and this game gives dozens of tries in a few minutes.'},{q:'How many balls do I need for Clean Your Room?',a:'At least one ball per child, and more is better. Split them between the two halves at the start so both rooms are messy.'},{q:'What age is Clean Your Room for?',a:'U6 and U8. It teaches kicking with both feet and looking up, and it works well as the first game of a practice.'}]},
 
  {slug:'throw-in-game',name:'Throw-in game',skill:'warm-up',ages:['U8','U10','U12'],h1:'Throw-in soccer drill and game',
   title:'Soccer Throw-In Drill: Teach a Legal Throw in a Game',
@@ -244,5 +244,5 @@ export const DRILLS_A:RawDrill[]=[
   lessons:['next9_restartreturn','set_f_throwin','next7_dribblein'],links:[G.throwIn,G.fb,G.firstTouch],related:['thigh-and-chest-control','three-v-three-game','rondo-3v1','wall-passing'],
   faq:[{q:'What makes a throw-in legal?',a:'The thrower faces the field, has part of each foot on or behind the touchline, and throws with both hands from behind and over the head. Our throw-in rule page has the diagram.'},
    {q:'At what age do kids take throw-ins?',a:'It depends on the league. Many US leagues use throw-ins from the youngest ages, while England’s FA uses a pass-in or dribble-in for young players. Ask your league.'},
-   {q:'Can you score straight from a throw-in?',a:'No. A goal cannot be scored directly from a throw-in. Another player has to touch the ball first.'}]},
+   {q:'Can you score straight from a throw-in?',a:'No. A goal cannot be scored directly from a throw-in. Another player has to touch the ball first.'},{q:'What happens if a throw-in is not legal?',a:'The other team takes the throw-in from the same place. Some recreational leagues for young players let the child try again and explain what went wrong.'},{q:'How do I teach a throw-in to a child?',a:'Both feet on the ground, both hands on the ball, take it from behind the head and release it over the head. Practice into a partner’s hands before throwing it at feet.'}]},
 ];

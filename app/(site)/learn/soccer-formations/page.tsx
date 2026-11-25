@@ -7,7 +7,7 @@ import {FORMATIONS,FORMATIONS_HUB as HUB,formationsIn,formatGuide} from '@/lib/s
 import {POSITIONS_HUB} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {gameLink} from '@/lib/site/games';
-import {Bullets,Diagram,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,DataTable,Diagram,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {FORMATION_FORMATS} from '@/lib/site/pitch';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -26,6 +26,11 @@ export default function FormationsHub(){
   <JsonLd data={faqLd(HUB.faq)}/>
   <GuideIntro top rail={<RailNav rail={hubRail('Soccer formations on this page',FORMATION_FORMATS.map(fmt=>({title:LABEL[fmt],items:formationsIn(fmt).map(f=>anchor('formation',f.path,f.name))})))} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} cta/>
   <Section id="what" title="What is a formation?"><Bullets items={HUB.what}/></Section>
+  {/* SEO batch C, Nov 25 2026: the best formation by age, from each format's first formation and its own "best ages" line */}
+  <Section id="by-age" title="The best soccer formation by age">
+   <DataTable label="The best soccer formation by age" head={['Game','Ages','Start with','Then try']} rows={FORMATION_FORMATS.map(fmt=>{const [first,...rest]=formationsIn(fmt),g=formatGuide(fmt);
+    return [g?<a key={fmt} href={g.path}>{fmt}</a>:<a key={fmt} href="/learn/futsal-for-kids">futsal</a>,first.ages,<a key="f" href={first.path}>{first.shape}</a>,<>{rest.map((x,i)=><span key={x.slug}>{i>0&&', '}<a href={x.path}>{x.shape}</a></span>)}</>];})}/>
+  </Section>
   {FORMATION_FORMATS.map(fmt=>{const list=formationsIn(fmt),first=list[0],guide=formatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
     <p>{HUB.groups[fmt]} {guide&&<a href={guide.path}>Compare all {list.length} in the {fmt} guide</a>}{guide&&'.'}</p>

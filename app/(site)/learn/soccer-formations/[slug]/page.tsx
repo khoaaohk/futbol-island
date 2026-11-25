@@ -12,7 +12,7 @@ import {FORMATIONS,FORMATIONS_HUB,formationBySlug,formationsIn,formatGuide,withK
 import {POSITIONS_HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
 import {lessonById,lessonPath} from '@/lib/site/lessons';
 import {PLAYERS_PER_TEAM} from '@/lib/site/pitch';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -22,6 +22,9 @@ import {FORMATION_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
 import {comparisonsFor} from '@/lib/site/comparisons';
 import {AppLink} from '@/components/site/tools/ToolParts';
+import {gameLink} from '@/lib/site/games';
+import {drillLinksFor} from '@/lib/site/drills';
+import {formationTermLinks} from '@/lib/site/crossLinks';
 import styles from '../../../site.module.css';
 
 /** One formation (lib/site/formations.ts): the answer first, a pitch diagram, every role, strengths, weak spots, how it moves, FAQ, lessons. */
@@ -54,8 +57,14 @@ export default function FormationPage({params}:{params:{slug:string}}){
     ?<p>{f.shape} counts the four outfield players from the back to the front. The goalkeeper is counted separately, so a futsal team has {PLAYERS_PER_TEAM.futsal} players on the court.</p>
     :<p>Coaches write this shape in two ways. <b>{f.shape}</b> counts the {PLAYERS_PER_TEAM[f.format]-1} outfield players, from the defense forward. U.S. Soccer counts the goalkeeper first and writes <b>{withKeeper(f)}</b>. Both mean the same formation. The numbers on the dots are a common coaching custom, not a rule: players can wear any shirt number.</p>}
   </Section>
-  <Section id="roles" title="Who plays where">
-   <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos?<a href={positionPath(r.pos)}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
+  {/* SEO batch C, Nov 25 2026: the formation at a glance (lines, best ages, best for, watch out) and every position in one table */}
+  <Section id="glance" title={`The ${f.shape} at a glance`}>
+   <DataTable label={`The ${f.name} formation at a glance`} head={['',`${f.shape} formation`]} rows={[['Players',`${PLAYERS_PER_TEAM[f.format]} a side (${futsal?'futsal':f.format}), goalkeeper included`],
+    ['Lines',f.lines.filter(l=>l.name!=='Goalkeeper').map(l=>`${l.spots.length} ${l.name.toLowerCase()}`).join(', ')],['Best ages',f.ages],['Best for',f.best],['Watch out for',f.watch],
+    ['Try it',<><a href={lineupLinkFor(f.slug)}>Build this lineup</a>{futsal?'':<>, or line up a whole squad in <a href={gameLink('snake').path}>Squad Snake</a> and keep a line’s shape in <a href={gameLink('lineup').path}>Line Up!</a></>}.</>]]}/>
+  </Section>
+  <Section id="roles" title={`Positions in the ${f.shape}: who plays where`}>
+   <DataTable label={`Positions in the ${f.name}`} head={['Position','Job']} rows={f.roles.map(r=>[r.pos?<a href={positionPath(r.pos)}>{r.title}</a>:r.title,r.job])}/>
   </Section>
   <Section id="strengths" title={`Strengths of the ${f.shape}`}><Bullets items={f.strengths}/></Section>
   <Section id="weak" title="Weak spots and how to cover them">
@@ -76,7 +85,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   </Section>}
   {/* Nov 23 2026: the formations quiz (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={f.path}/>
   {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
-  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}],f.path)}/>
+  <KeepReading groups={withMesh([{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(f.path)},{id:'terms',links:formationTermLinks(f.slug)},/* SEO batch C, Nov 25 2026 */{id:'related',links:related}],f.path)}/>
   <GuideEnd path={f.path} checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
   <ReadNext path={f.path}/>
  </>;

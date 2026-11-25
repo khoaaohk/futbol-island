@@ -99,5 +99,8 @@ export const LINK_LINES_ES:Readonly<Record<string,{name:string;line:string}>>={
  '/learn/9v9-soccer-formations':{name:'Formaciones de fútbol 9v9',line:'Sistemas para equipos U11 y U12'},
  '/learn/soccer-field-size-by-age':{name:'Tamaño de la cancha de fútbol por edad',line:'Cancha, arco y duración del partido para cada edad'},
  '/learn/soccer-ball-size-by-age':{name:'Tamaño del balón de fútbol por edad',line:'Tamaño 3, 4 o 5 para cada edad'},
+ '/learn/soccer-positions':{name:'Las posiciones del fútbol explicadas',line:'Qué hace cada jugador en ataque y en defensa'},
+ '/tools/soccer-practice-plan-generator':{name:'Generador de planes de entrenamiento de fútbol',line:'Elige edad, duración y tema: un plan con horario y estos ejercicios'},
+ '/tools/youth-soccer-field-size-guide':{name:'Guía de medidas de canchas de fútbol infantil',line:'Cada modalidad a escala, con un plan de conos para marcarla'},
  '/learn/soccer-age-groups':{name:'Las categorías por edad en el fútbol',line:'Qué significan U6, U8, U10 y U12'},
 };

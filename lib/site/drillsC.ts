@@ -27,7 +27,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['next7_shotreaction','learn7_carry','learnf_farpost'],links:[G.st,G.wg,G.field,G.runner],related:['world-cup-shooting-game','lay-off-and-shoot','follow-the-shot','clean-your-room'],
   faq:[{q:'How do I teach a young child to shoot?',a:'Laces, not toes: point the toe down, lock the ankle, put the standing foot beside the ball and kick through its middle. Then practice with a ball that is rolling.'},
    {q:'Do U6 and U8 players need a goalkeeper for shooting?',a:'No. Games at these ages are played without goalkeepers, so shoot at small goals. A coach standing in goal and moving slowly is fine for fun.'},
-   {q:'How far out should kids shoot from?',a:'About 6 to 8 yards at U6 and U8, and 10 to 12 yards at U10. The ball should reach the goal with pace along the ground.'}]},
+   {q:'How far out should kids shoot from?',a:'About 6 to 8 yards at U6 and U8, and 10 to 12 yards at U10. The ball should reach the goal with pace along the ground.'},{q:'How do I set up a dribble and shoot drill?',a:'Two or three small goals and a ball for every player. Players dribble through a gate, then shoot at any goal from a few yards, fetch the ball and go again.'},{q:'How do I make dribble and shoot harder?',a:'Add a defender who chases from behind, ask for a shot with the weaker foot, or move the shooting line back a few yards.'}]},
 
  {slug:'world-cup-shooting-game',name:'World Cup shooting game',skill:'shooting',ages:['U8','U10','U12'],h1:'World Cup soccer shooting game',
   title:'World Cup Soccer Game for Practice: Rules and Setup',
@@ -46,7 +46,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.gk,G.cutback,G.ballBlaster,...G.flickIt],related:['follow-the-shot','two-v-one-to-goal','dribble-and-shoot','numbers-game'],
   faq:[{q:'How do you play World Cup in soccer?',a:'Pairs each choose a country. All pairs attack one goal with one ball. In the classic rules a pair that scores is through to the next round and the last pair is knocked out.'},
    {q:'How do I stop players sitting out?',a:'Keep every pair in and count goals over a timed round. A pair that scores runs around the goal and rejoins, which gives the others a short advantage.'},
-   {q:'Who plays goalkeeper?',a:'From U10, players take turns for a round each, or a coach goes in. For U8, play with no goalkeeper and a small goal, because their games have no goalkeepers.'}]},
+   {q:'Who plays goalkeeper?',a:'From U10, players take turns for a round each, or a coach goes in. For U8, play with no goalkeeper and a small goal, because their games have no goalkeepers.'},{q:'What age is the World Cup soccer game for?',a:'U8 to U12. Play it in pairs or small teams so a team that scores goes through and everyone is back in the next round within a minute or two.'},{q:'How many players do I need for World Cup?',a:'Six or more, in pairs or teams of three. With a big group, use two goals and two games so nobody waits long.'}]},
 
  {slug:'two-v-one-to-goal',name:'2v1 to goal',skill:'shooting',ages:['U8','U10','U12'],h1:'2v1 to goal soccer drill',
   title:'2v1 to Goal Soccer Drill: Dribble or Pass, Then Finish',
@@ -65,7 +65,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['learn9_two_one','expf_2v1','learn7_carry','trn_9_firstpass'],links:[G.twoVone,G.counter,G.offside],related:['give-and-go','three-v-two-to-goal','one-v-one-to-end-zones','world-cup-shooting-game'],
   faq:[{q:'What is the rule of thumb in a 2v1?',a:'The player on the ball dribbles at the defender. If the defender comes to the ball, pass. If the defender stays with the teammate, keep going.'},
    {q:'Where should the second attacker run?',a:'Wide enough that one defender cannot cover both players, and where the passer can see them. In leagues with offside, not past the defender before the pass.'},
-   {q:'What is the defender trying to do?',a:'Slow the attack down and wait for help, staying between the ball and the goal. Our lesson on delaying a 2v1 covers the defender’s side.'}]},
+   {q:'What is the defender trying to do?',a:'Slow the attack down and wait for help, staying between the ball and the goal. Our lesson on delaying a 2v1 covers the defender’s side.'},{q:'How do I set up a 2v1 to goal drill?',a:'A channel about 20 yards long and 15 wide with a small goal or a keeper at one end. Two attackers start at the far end and one defender starts near the goal.'},{q:'What age is 2v1 to goal for?',a:'U8 to U12. Younger players attack a wide goal with no keeper; at U10 and U12 add a goalkeeper and a time limit to finish.'}]},
 
  {slug:'crossing-and-finishing',name:'Crossing and finishing',skill:'shooting',ages:['U10','U12'],
   title:'Crossing and Finishing Soccer Drill (Low Crosses)',
@@ -85,7 +85,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['learn11_cutback','learnf_farpost','next7_outsideback','expf_cornercutback'],links:[G.cross,G.cutback,G.wg,G.heading],related:['lay-off-and-shoot','two-v-one-to-goal','follow-the-shot','three-v-two-to-goal'],
   faq:[{q:'Should young players practice heading crosses?',a:'No. Players aged 10 and under do not head the ball in US youth soccer, and heading in practice is limited at 11 and 12. This drill uses low crosses finished with the foot.'},
    {q:'What is a cutback?',a:'A pass pulled backward from near the end line to a teammate arriving around the penalty spot. Defenders are running the other way, so it is hard to stop.'},
-   {q:'What are near-post and far-post runs?',a:'The near post is the one closer to the ball. One attacker runs there and one to the far post, so the cross has two targets and the goalkeeper cannot cover both.'}]},
+   {q:'What are near-post and far-post runs?',a:'The near post is the one closer to the ball. One attacker runs there and one to the far post, so the cross has two targets and the goalkeeper cannot cover both.'},{q:'How do I set up a crossing and finishing drill?',a:'A goal with a keeper, a wide player on each side near the end line, and two or three attackers at the top of the box. The wide player dribbles and plays a low cross for a run to finish.'},{q:'What age is crossing and finishing for?',a:'U10 and U12. Keep crosses low so finishes are with the foot; heading is out at 10 and under and limited at 11 and 12.'}]},
 
  {slug:'lay-off-and-shoot',name:'Lay-off and shoot',skill:'shooting',ages:['U8','U10','U12'],
   title:'Lay-Off and Shoot: Soccer Shooting Drill for Kids',
@@ -104,7 +104,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['f_pivot','expf_trailingoption','next7_shotreaction','next7_reachableforward'],links:[G.st,G.gk,G.giveGo],related:['dribble-and-shoot','follow-the-shot','give-and-go','crossing-and-finishing'],
   faq:[{q:'What is a lay-off in soccer?',a:'A short, soft pass, usually one touch, played back or sideways to a teammate who is arriving and can shoot or pass forward.'},
    {q:'How do I teach shooting first time?',a:'Slow the pass down. A gentle lay-off, a short run, eyes on the ball and a side-foot finish. Add pace only when the contact is clean.'},
-   {q:'Should the goalkeeper be a child?',a:'From U10, yes, in turns, and the shots should come from a sensible distance. For U8, use a small goal with no goalkeeper.'}]},
+   {q:'Should the goalkeeper be a child?',a:'From U10, yes, in turns, and the shots should come from a sensible distance. For U8, use a small goal with no goalkeeper.'},{q:'How do I set up a lay-off and shoot drill?',a:'A goal, a target player with their back to it at the top of the area, and a line of shooters. The shooter passes in, the target lays it off, and the shooter strikes first time.'},{q:'What age is lay-off and shoot for?',a:'U8 to U12. Younger players stop the lay-off before they shoot; older players shoot first time and the target player turns to follow the rebound.'}]},
 
  {slug:'follow-the-shot',name:'Follow the shot',skill:'shooting',ages:['U8','U10','U12'],h1:'Follow the shot: soccer rebound drill',
   title:'Follow the Shot: Soccer Rebound and Finishing Drill',
@@ -123,7 +123,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['next7_shotreaction','learnf_farpost','exp11_secondball'],links:[G.st,G.gk],related:['world-cup-shooting-game','dribble-and-shoot','lay-off-and-shoot','crossing-and-finishing'],
   faq:[{q:'Why should players follow their shot?',a:'Because a saved or blocked shot often comes back into play. The attacker who is already running gets there before a defender who is turning around.'},
    {q:'Is it safe to challenge the goalkeeper for a rebound?',a:'Players go for a loose ball only. Once the goalkeeper has a hand on the ball it is theirs, and attackers must pull away. Teach that rule before you start.'},
-   {q:'How do I run it without a goalkeeper?',a:'Lay a bench or a board on its side across the goal so shots bounce back out, or have the coach roll in a second ball after every shot.'}]},
+   {q:'How do I run it without a goalkeeper?',a:'Lay a bench or a board on its side across the goal so shots bounce back out, or have the coach roll in a second ball after every shot.'},{q:'How do I set up a follow the shot drill?',a:'A goal with a keeper and two lines of players about 15 yards out. One player shoots, and a player from the other line and the shooter race in for any rebound.'},{q:'What age is follow the shot for?',a:'U8 to U12. With younger players use a large goal and no keeper so many shots bounce back; at U10 and U12 add a keeper with soft hands.'}]},
 
  {slug:'one-v-one-to-end-zones',name:'1v1 to end zones',skill:'attacking-1v1',ages:['U6','U8','U10','U12'],h1:'1v1 to end zones soccer drill',
   title:'1v1 to End Zones: Soccer Dribbling Drill for All Ages',
@@ -143,7 +143,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg,G.tackle],related:['one-v-one-two-goals','one-v-one-defending','numbers-game','turn-and-go'],
   faq:[{q:'Why are 1v1 drills so important for kids?',a:'Soccer is full of one-against-one moments, and a small 1v1 field gives a child many tries at attacking and defending in a few minutes.'},
    {q:'What size is a 1v1 field?',a:'About 10 by 15 yards for most ages. Wider helps the attacker and narrower helps the defender, so change it to keep the contest even.'},
-   {q:'What moves should I teach?',a:'Start with one: a step to one side and a push of the ball to the other with the outside of the foot, then speed. One move done fast beats five done slowly.'}]},
+   {q:'What moves should I teach?',a:'Start with one: a step to one side and a push of the ball to the other with the outside of the foot, then speed. One move done fast beats five done slowly.'},{q:'How do you play 1v1 to end zones?',a:'Two players in a narrow field with an end zone at each end. The attacker scores by stopping the ball in the defender’s end zone; if the defender wins it, they attack the other way.'},{q:'How do I make 1v1 to end zones harder?',a:'Make the field narrower or add a time limit.'}]},
 
  {slug:'one-v-one-two-goals',name:'1v1 to two small goals',skill:'attacking-1v1',ages:['U8','U10','U12'],h1:'1v1 to two small goals soccer drill',
   title:'1v1 to Two Small Goals: Soccer Attacking Drill',
@@ -162,7 +162,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.st,G.goalSide],related:['one-v-one-to-end-zones','one-v-one-defending','four-goal-game','numbers-game'],
   faq:[{q:'Why use two goals in a 1v1?',a:'It gives the attacker a reason to change direction. With one goal the defender just blocks the way. With two, the defender has to choose and can be wrong-footed.'},
    {q:'Can I use cones as goals?',a:'Yes. Two cones 2 yards apart make a small goal. Score by passing through them along the ground.'},
-   {q:'How long should each 1v1 last?',a:'About ten seconds. If nobody has scored, the next pair goes. Short turns keep the speed high.'}]},
+   {q:'How long should each 1v1 last?',a:'About ten seconds. If nobody has scored, the next pair goes. Short turns keep the speed high.'},{q:'How do you set up 1v1 to two small goals?',a:'A field about 15 by 20 yards with two small goals at each end, near the corners. The attacker can score in either goal, so they look for the side the defender leaves open.'},{q:'What age is 1v1 to two goals for?',a:'U8 to U12. At U8 use bigger goals and a wider field; at U12 shrink the goals or add a rule that the attacker must change direction before scoring.'}]},
 
  {slug:'numbers-game',name:'Numbers game',skill:'attacking-1v1',ages:['U6','U8','U10','U12'],h1:'Numbers game soccer drill',
   title:'Numbers Game Soccer Drill: 1v1, 2v2 and 3v3 on the Call',
@@ -181,7 +181,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['trn_9_firstpass','def_7_goalside','learn7_carry','learn9_two_one'],links:[G.goalSide,G.twoVone,G.counter],related:['one-v-one-to-end-zones','three-v-three-game','world-cup-shooting-game','one-v-one-defending'],
   faq:[{q:'How do you play the numbers game in soccer?',a:'Each player on two teams has a number. The coach calls a number and serves a ball, and those players come out to play until a goal is scored or the ball goes out.'},
    {q:'How do I keep everyone busy?',a:'Split into two small games if you have more than ten players, call two or three numbers at a time, and keep each turn under 30 seconds.'},
-   {q:'Is the numbers game good for U6?',a:'Yes, as 1v1 and 2v2 with a short field. Five-year-olds understand “when you hear your number, go and score”.'}]},
+   {q:'Is the numbers game good for U6?',a:'Yes, as 1v1 and 2v2 with a short field. Five-year-olds understand “when you hear your number, go and score”.'},{q:'What age is the numbers game for?',a:'Every age from U6 to U12. Young players get a 1v1 or 2v2 with big goals; older players get 3v3 or 4v3 and two calls in a row.'},{q:'How do I make the numbers game harder?',a:'Call two numbers so it becomes 2v2 or 3v3, give one team an extra player, or add a rule that a team must pass before it scores.'}]},
 
  {slug:'one-v-one-defending',name:'1v1 defending',skill:'defending-1v1',ages:['U8','U10','U12'],h1:'1v1 defending soccer drill',
   title:'1v1 Defending Soccer Drill: Close Down, Slow Down',
@@ -200,7 +200,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['def_7_goalside','def_f_goalside','trn_11_recover','gap7_lostball'],links:[G.goalSide,G.tackle,G.cb,G.fouls],related:['recover-goal-side','pressure-and-cover-2v2','one-v-one-to-end-zones','knockout'],
   faq:[{q:'What is jockeying in soccer?',a:'Staying in front of the attacker at arm’s length, side on and moving backward with them, without diving in. It buys time for teammates to get back.'},
    {q:'When should a defender tackle?',a:'When the attacker’s touch takes the ball too far from their foot, or when they are pinned against the side line. Until then, be patient.'},
-   {q:'Which way should the defender show the attacker?',a:'Usually toward the nearest side line and away from the goal, or toward a covering teammate. In this drill, pick a side and stick to it.'}]},
+   {q:'Which way should the defender show the attacker?',a:'Usually toward the nearest side line and away from the goal, or toward a covering teammate. In this drill, pick a side and stick to it.'},{q:'How do I set up a 1v1 defending drill?',a:'A channel about 10 yards wide and 20 long with a small goal or end line behind the defender. The defender passes to the attacker, closes down fast and tries to stop them scoring.'},{q:'What age can learn 1v1 defending?',a:'From U8, as a simple game: close down, slow down and stay on your feet. At U10 and U12 add showing the attacker one way and when to tackle.'}]},
 
  {slug:'recover-goal-side',name:'Recover goal-side',skill:'defending-1v1',ages:['U8','U10','U12'],h1:'Recover goal-side: soccer defending drill',
   title:'Recover Goal-Side: Soccer Recovery Run Defending Drill',
@@ -219,7 +219,7 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['trn_9_recover','trn_11_recover','def_7_goalside','gap7_lostball'],links:[G.goalSide,G.fb,G.fouls,G.counter],related:['one-v-one-defending','pressure-and-cover-2v2','two-v-one-to-goal','numbers-game'],
   faq:[{q:'What does goal-side mean?',a:'Standing between the attacker and your own goal. From there the attacker has to go through or around you to score.'},
    {q:'What is a recovery run?',a:'A sprint back toward your own goal after your team loses the ball, taking the shortest line to a position between the ball and the goal.'},
-   {q:'Why not just chase the ball?',a:'Because a player dribbling straight is nearly as fast as the chaser, and a challenge from behind is often a foul. Getting in front solves both.'}]},
+   {q:'Why not just chase the ball?',a:'Because a player dribbling straight is nearly as fast as the chaser, and a challenge from behind is often a foul. Getting in front solves both.'},{q:'How do I set up a recover goal-side drill?',a:'An attacker and a defender start side by side, or with the defender a few yards behind, facing a goal. The attacker dribbles at goal and the defender races to get between them and the goal.'},{q:'What position needs recovery runs most?',a:'Fullbacks and center backs, but every player needs them: a winger or midfielder who loses the ball should sprint back goal-side before trying to win it.'}]},
 
  {slug:'pressure-and-cover-2v2',name:'Pressure and cover 2v2',skill:'defending-1v1',ages:['U10','U12'],h1:'Pressure and cover: 2v2 soccer defending drill',
   title:'Pressure and Cover: 2v2 Soccer Defending Drill',
@@ -238,5 +238,5 @@ export const DRILLS_C:RawDrill[]=[
   lessons:['learn9_cover','def_11_pressurecover','def_f_goalside','expf_pressreturn'],links:[G.pressing,G.cb,G.marking,G.goalSide,G.lineUp],related:['one-v-one-defending','recover-goal-side','rondo-4v2','three-v-two-to-goal'],
   faq:[{q:'What is pressure and cover in soccer?',a:'Two defenders sharing the work. One goes to the ball to pressure it. The other stands behind, ready to step in if the first is beaten or to pick up the pass.'},
    {q:'How far behind should the covering defender be?',a:'A few yards, at an angle toward the goal. Close enough to challenge if the presser is beaten, not so deep that the second attacker has free space.'},
-   {q:'What age can learn it?',a:'From about U10. Younger players are still learning to defend one against one, which comes first.'}]},
+   {q:'What age can learn it?',a:'From about U10. Younger players are still learning to defend one against one, which comes first.'},{q:'How do I set up a 2v2 pressure and cover drill?',a:'A field about 20 by 25 yards with a small goal or end zone for each pair. Two attackers play against two defenders: one presses the ball and the other covers behind.'},{q:'What positions use pressure and cover?',a:'Every defender, and midfielders too. Center backs and fullbacks use it most: when one steps out to press, the nearest teammate drops in behind to cover.'}]},
 ];

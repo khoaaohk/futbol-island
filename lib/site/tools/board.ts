@@ -90,4 +90,6 @@ export const BOARD_RELATED:readonly {path:string;name:string;line:string}[]=[
  {path:'/learn/soccer-drills',name:'Soccer drills for kids',line:'Drills with a diagram to practice the move you drew'},
  {path:'/tools/soccer-lineup-builder',name:'Soccer lineup builder',line:'Names on a field diagram for game day'},
  {path:'/tools/soccer-field-diagrams',name:'Blank soccer field diagrams',line:'Print a field to draw plays on paper'},
- {path:'/tools/soccer-scanning-trainer',name:'Soccer scanning trainer',line:'Players learn to look over the shoulder'}];
+ {path:'/tools/soccer-scanning-trainer',name:'Soccer scanning trainer',line:'Players learn to look over the shoulder'},
+ /* SEO batch E, Nov 25 2026 */{path:'/learn/quizzes/attacking-tactics-quiz',name:'Attacking tactics quiz',line:'12 questions on the 2v1, overlap and cutback, with answers'},
+ {path:'/tools/soccer-practice-plan-generator',name:'Soccer practice plan generator',line:'A timed practice to train the move you drew'}];

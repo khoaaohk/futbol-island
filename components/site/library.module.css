@@ -171,3 +171,7 @@ nav.menu ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8
 /* Shared button hover on the rail and chip-bar entries (owner, Nov 23 2026: Back, Overview and every section pill): brighten + the gold
    ring, drawn inside like this rail's focus ring (-3px) so the scrolling list never clips it. Hover only; the press stays as it is. */
 @media(hover:hover) and (pointer:fine){.menu ul a:hover{filter:var(--btn-hover-filter);outline:var(--btn-hover-ring);outline-offset:-3px}}
+
+/* SEO batch F (Nov 25 2026): the what's-here table under the hero, at the sections' reading width */
+.whats{margin-inline:calc(50% - 50vw);padding:var(--s4) max(var(--gutter),calc(50vw - 590px))}
+@media(min-width:1280px){.shelfMain .whats{margin-inline:0;padding:var(--s4) 44px}}

@@ -9,6 +9,8 @@ import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
 import {SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {BookCover,BookShelf,GuideCover} from '@/components/site/books/BookParts';
 import {SITE_FISH} from '@/lib/site/fish';
+import {FactTable,type FactRow} from '@/components/site/FactTable';
+import {ES_BOOK_IDS,toEs} from '@/lib/i18n/esPaths';
 import styles from '../site.module.css';
 import b from '@/components/site/books/books.module.css';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
@@ -30,6 +32,19 @@ const FACTS:Fact[]=[
  {icon:'clock',label:'Reading time',value:'About 4 minutes, or listen'},
  {icon:'tag',label:'Price',value:'Free to read'},
 ];
+/** SEO batch F (Nov 25 2026, owner: hubs get a clear "what's here" table): the shelf in one table, every row from the registry. */
+function whatsHere():FactRow[]{
+ const sh=shelf(),pos=byPosition(),withCard=SITE_BOOKS.filter(x=>!!x.card).length,es=SITE_BOOKS.filter(x=>(ES_BOOK_IDS as readonly string[]).includes(x.id)).length;
+ return [
+  {label:'Pop-up books',value:<>{N} true stories about real football players, free to read and to hear read aloud</>},
+  {label:'By where they are from',value:<>{sh.map((g,i)=><span key={g.region}>{i?', ':''}<a href={`#${regionId(g.region)}`}>{g.region}</a> ({g.books.length})</span>)}</>},
+  {label:'By position',value:<>{pos.map((g,i)=><span key={g.role}>{i?', ':''}<a href="#by-position">{POSITION_PLURAL[g.role]}</a> ({g.books.length})</span>)}</>},
+  {label:'In every book',value:'Six chapters with a “What it teaches” lesson each, a key facts table (born, country, position, clubs, famous for), questions and answers, and the sources'},
+  {label:'Player cards',value:<>{withCard} books link the player’s <a href="/cards">football card</a>, with every club they played for</>},
+  {label:'Museum and games',value:<>Books link the <a href="/exhibits">football history museum</a> and a <a href="/games">free soccer game</a> for the player’s position</>},
+  {label:'In Spanish',value:<><a href={toEs(BOOKS_PATH)}>{es} books in Spanish</a> (cuentos de fútbol para niños)</>},
+ ];
+}
 export default function BooksHub(){
  const featured=bookBySlug(BUILT_BOOKS[0]??'');let start=0;
  return <>
@@ -43,6 +58,7 @@ export default function BooksHub(){
    <h1 className={styles.title}>Soccer pop-up books for kids</h1>
    <QuickAnswer lead={LEAD} facts={FACTS}/>
   </header>
+  <FactTable id="whats-here" title="What’s on the shelf" label="What is in the pop-up books" head={['Shelf','What you find']} rows={whatsHere()}/>
   {featured&&<section className={`${b.feature} ${tgt.target}`} aria-labelledby="first" id="first-book">
    <a className={b.coverLink} href={featured.path!} tabIndex={-1} aria-hidden="true"><BookCover book={featured} tone="gold" size="lg" as="span"/></a>
    <div className={b.featureText}>

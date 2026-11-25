@@ -16,9 +16,9 @@ import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {NUMBERS_PATH} from '@/lib/site/positionNumbers';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,Section,DataTable} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
-import {booksForRole,positionTermLinks,positionToolLinks} from '@/lib/site/crossLinks';
+import {booksForRole,positionRuleLinks,positionTermLinks,positionToolLinks} from '@/lib/site/crossLinks';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -56,6 +56,11 @@ export default function PositionPage({params}:{params:{slug:string}}){
    <Diagram id="where-d" format={f.format} lines={f.lines} what={`the ${lower} position in a ${f.shape} formation`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
   </Section>
+  {/* SEO batch C, Nov 25 2026: the job in one table (attack, defense, key skills), for "what does a ... do" searches */}
+  <Section id="glance" title={`${p.name}: the job at a glance`}>
+   <DataTable label={`The ${lower} at a glance`} head={['',p.name]} rows={[['Job in attack',p.glance.attack],['Job in defense',p.glance.defend],['Key skills',p.glance.skills],['Shirt number',p.numbers],
+    ['Formations',<>{used.slice(0,4).map((x,i)=><span key={x.slug}>{i>0&&', '}<a href={x.path}>{x.name}</a></span>)}{used.length>0&&'. '}Put a {lower} in your team with the <a href="/tools/soccer-lineup-builder">free lineup builder</a>.</>]]}/>
+  </Section>
   <Section id="with" title="With the ball"><Bullets items={p.withBall}/></Section>
   <Section id="without" title="Without the ball"><Bullets items={p.withoutBall}/></Section>
   <Section id="habits" title="Three habits to practise">
@@ -77,6 +82,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
    {id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(p.path)},
    {id:'tools',links:positionToolLinks(p.slug)},/* SEO wave 2, Nov 24 2026: the scanning trainer */
    {id:'terms',links:positionTermLinks(p.slug)},/* Nov 22 2026: the soccer terms this position uses most */
+   {id:'rules',links:positionRuleLinks(p.slug)},/* SEO batch A, Nov 25 2026: the rules this position meets most */
    {id:'books',label:'Pop-up book',icon:'book',links:booksForRole(p.cardRole)},/* Nov 20 2026: the books about players of this position */
    {id:'compare',label:'Compare',icon:'swap',links:compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',links:[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}],p.path)}/>

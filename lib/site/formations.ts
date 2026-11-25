@@ -49,6 +49,7 @@ export const F8_SOURCES:readonly Source[]=[
 export type Weak={spot:string;cover:string;lesson?:string};
 export type Formation={slug:string;path:string;format:GuideFormat;shape:string;name:string;title:string;h1:string;desc:string;answer:string;best:string;watch:string;
  lines:Line[];roles:Role[];strengths:string[];weak:Weak[];attack:string;defend:string;suits:string;faq:Faq[];lessons:SiteLesson[];
+ /** SEO batch C (Nov 25 2026): the "Best ages" cell of the at-a-glance table, from this page's own `suits` and the U.S. Soccer chart */ages:string;
  /** round 4F: the rule documents a page quotes (the 8v8 pages: fútbol 8 rules differ by region) */sources?:readonly Source[]};
 export const FORMATIONS_HUB_PATH='/learn/soccer-formations';
 export const formationPath=(slug:string)=>`${FORMATIONS_HUB_PATH}/${slug}`;
@@ -95,7 +96,7 @@ const RAW:Raw[]=[
    {q:'Is 2-3-1 the best formation for 7v7?',a:'There is no single best shape. The 2-3-1 is a common place to start because it is balanced: two players behind, three across the middle and one ahead. Pick a shape that fits your players, then teach the jobs.'},
    {q:'Who should play in the middle of a 2-3-1?',a:'A player who likes being near the ball and looks around a lot. The middle midfielder helps the defenders, the wide players and the forward. At this age every child should still try every spot.'},
    {q:'What does a 2-3-1 do on a goal kick?',a:'The two defenders move wide, one on each side of the penalty area. In U.S. Soccer 7v7 rules the other team waits behind the build-out line until the ball is played, so the keeper has time to pass short. Check your own league’s rules.'},
-   {q:'How do I teach the 2-3-1 to nine-year-olds?',a:'Name three lines: defenders, midfielders, forward. Walk through one idea at a time: spread out with the ball, squeeze in without it. Then let them play. A formation is a starting arrangement, and players may leave their spot when the game needs it.'}],
+   {q:'How do I teach the 2-3-1 to nine-year-olds?',a:'Name three lines: defenders, midfielders, forward. Walk through one idea at a time: spread out with the ball, squeeze in without it. Then let them play. A formation is a starting arrangement, and players may leave their spot when the game needs it.'},{q:'What age is the 2-3-1 best for?',a:'Players aged 9 and 10 (U9 and U10), the ages that play 7v7 in U.S. Soccer’s small-sided standards. It also suits any team new to 7v7, because every child has a clear job, and the same jobs carry over to the 3-2-3 in 9v9.'}],ages:'9 and 10 (U9 and U10), and any team in its first 7v7 season',
   lessonIds:['learn7_roles','learn7_shape','learn7_buildout','prn_7_spread','gap7_lostball','next7_reachableforward']},
  {slug:'7v7-3-2-1',format:'7v7',shape:'3-2-1',best:'Teams that let in a lot of goals.',watch:'No wide midfielders. Outside backs must go forward.',
   desc:'The 3-2-1 formation for 7v7 soccer in plain words: three defenders, two midfielders, one forward. Diagram, roles, weak spots and free lessons for kids.',
@@ -118,10 +119,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is 3-2-1 too defensive for kids?',a:'Not if the outside backs join the attack. With three at the back there is always cover, so one outside back can go forward safely. If all three stay back, the team has too few players ahead of the ball.'},
    {q:'What is the difference between 3-2-1 and 2-3-1?',a:'Where the wide players start. In a 3-2-1 the wide players are defenders who move up. In a 2-3-1 they are midfielders who drop back. The 3-2-1 starts safer. The 2-3-1 starts with more players in midfield.'},
-   {q:'Who gives width in a 3-2-1?',a:'The outside backs. When your team has the ball, the outside back on that side moves up along the sideline to offer a pass. The other two defenders slide across to cover.'}],
+   {q:'Who gives width in a 3-2-1?',a:'The outside backs. When your team has the ball, the outside back on that side moves up along the sideline to offer a pass. The other two defenders slide across to cover.'},{q:'What age is the 3-2-1 best for?',a:'Most teams start 7v7 at 9 and 10 (U9 and U10), in U.S. Soccer’s small-sided standards. The 3-2-1 suits a new team at that age that lets in a lot of goals, because three players stay back. As the players grow in confidence, the outside backs can attack more.'},{q:'How does a 3-2-1 attack?',a:'The outside backs go wide and one of them moves up the side, because there are no wide midfielders. The two midfielders stand at different heights, one near the defenders and one near the forward, and the forward stays high as the target.'}],ages:'9 and 10 (U9 and U10), above all new teams that give away a lot of chances',
   lessonIds:['next7_outsideback','learn7_shape','def_7_goalside','bld_7_usekeeper']},
- {slug:'7v7-2-2-2',format:'7v7',shape:'2-2-2',best:'New players. Pairs are easy to understand.',watch:'Nobody starts wide, so the team bunches up.',
-  desc:'The 2-2-2 formation for 7v7 soccer: three pairs that are easy for kids to learn. See the diagram, each role, the weak spots and how to cover them.',
+ {slug:'7v7-2-2-2',format:'7v7',shape:'2-2-2',title:'2-2-2 Formation for 7v7 Soccer: Diagram, Positions and Tips',best:'New players. Pairs are easy to understand.',watch:'Nobody starts wide, so the team bunches up.',
+  desc:'The 2-2-2 formation for 7v7 soccer: three pairs that kids learn fast. A diagram, a table of every position, strengths, weak spots and the best ages for it.',
   answer:'The 2-2-2 is a 7v7 soccer formation made of three pairs: two defenders, two midfielders and two forwards. It suits beginners, because each player has a partner next to them and the jobs are simple.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 2:RB','Midfielders|6:LCM 8:RCM','Forwards|10:LS 9:RS'],
   roles:[
@@ -140,10 +141,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'Why do some coaches avoid the 2-2-2?',a:'Because it has no wide players and no single player in the middle. Teams can end up in one crowd around the ball. It works when each pair spreads out with the ball.'},
    {q:'Is the 2-2-2 good for beginners?',a:'Yes, as a first step. Pairs are simple: one goes to the ball, one covers. When players are comfortable, many coaches move to a 2-3-1 to add width.'},
-   {q:'How do the two forwards work together?',a:'They take different jobs. One shows for the ball at the feet. The other stays higher to keep a defender busy. Then they swap.'}],
+   {q:'How do the two forwards work together?',a:'They take different jobs. One shows for the ball at the feet. The other stays higher to keep a defender busy. Then they swap.'},{q:'What age is the 2-2-2 best for?',a:'Most teams start 7v7 at 9 and 10 (U9 and U10), in U.S. Soccer’s small-sided standards. The 2-2-2 suits children in their first 7v7 season, because pairs are easy to understand and they learn pressing and covering two at a time before wide players are added.'},{q:'How do you stop a 2-2-2 bunching up?',a:'Give each pair a side: one player left, one player right. With the ball, the pairs spread toward the sidelines so there is a pass on each side. Without it, only the nearest player goes to the ball and the partner covers behind.'}],ages:'9 and 10 (U9 and U10), in a first 7v7 season',
   lessonIds:['prn_7_spread','prn_7_support','def_7_goalside','learn7_shape']},
- {slug:'7v7-3-1-2',format:'7v7',shape:'3-1-2',best:'Teams with two strong forwards.',watch:'One midfielder has a lot of ground to cover.',
-  desc:'The 3-1-2 formation for 7v7 soccer: three defenders, one midfielder and two forwards. A clear diagram, the roles, strengths, weak spots and free lessons.',
+ {slug:'7v7-3-1-2',format:'7v7',shape:'3-1-2',title:'3-1-2 Formation for 7v7 Soccer: Diagram, Positions and Tips',best:'Teams with two strong forwards.',watch:'One midfielder has a lot of ground to cover.',
+  desc:'The 3-1-2 formation for 7v7 soccer: three defenders, one midfielder, two forwards. A diagram, a positions table, strengths, weak spots and the best ages.',
   answer:'The 3-1-2 is a 7v7 soccer formation with three defenders, one midfielder and two forwards. It suits teams that have two keen forwards and want three defenders behind them for safety.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Midfielder|8:CM','Forwards|10:LS 9:RS'],
   roles:[
@@ -163,7 +164,7 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is 3-1-2 a good 7v7 formation?',a:'It can be, when the lone midfielder gets help. The outside backs must step up with the ball and a forward must drop back without it. Without that help the middle is empty.'},
    {q:'What does the single midfielder do in a 3-1-2?',a:'Connects the team. With the ball, this player shows for a pass from the defenders, then finds a forward. Without the ball, this player slows the attack down until teammates get back.'},
-   {q:'Should both forwards stay up the field?',a:'No. If both stay high, the pass to them is too long. One comes toward the ball and one keeps the height. They take turns.'}],
+   {q:'Should both forwards stay up the field?',a:'No. If both stay high, the pass to them is too long. One comes toward the ball and one keeps the height. They take turns.'},{q:'What age is the 3-1-2 best for?',a:'Most teams start 7v7 at 9 and 10 (U9 and U10), in U.S. Soccer’s small-sided standards. The 3-1-2 suits a team at that age with players who love to score and a midfielder with lots of energy. That single midfielder covers a lot of ground, so rotate the job.'},{q:'Who gives width in a 3-1-2?',a:'The outside backs. Nobody starts wide in midfield, so with the ball one outside back moves up beside the midfielder, and one forward comes short while the other stays high. That gives the passer a near choice and a far choice.'}],ages:'9 and 10 (U9 and U10), for teams with two keen forwards',
   lessonIds:['next7_outsideback','next7_reachableforward','learn7_shape','prn_7_support']},
  // ---- 8v8 (round 4F, fútbol 8): the same spots and labels as lib/site/tools/shapes8.ts (the coach app's shapes; tests/seo-tools.cjs) ----
  {slug:'8v8-3-3-1',format:'8v8',shape:'3-3-1',best:'Most teams. Three clear units, a good first shape.',watch:'The lone forward can be left on their own.',
@@ -191,7 +192,7 @@ const RAW:Raw[]=[
    {q:'Is the 3-3-1 the best formation for 8v8?',a:'It is the most common place to start, not the only good shape. Three defenders, three midfielders and one forward give every child a clear job and cover the whole field. Pick a shape your players understand, then teach the jobs.'},
    {q:'How do you stop the 3-3-1 forward being left alone?',a:'Give the wide midfielders a cue: when the ball is played to their side, they run up to join the forward. The middle midfielder follows behind, so the forward has a pass back and a pass wide.'},
    {q:'Who should play in the middle of a 3-3-1?',a:'A player who likes being near the ball and looks around a lot. The middle midfielder links the defenders, the wide players and the forward. With rolling changes, every child can still have a turn in each line.'},
-   {q:'How does a 7v7 team change to a 3-3-1 for 8v8?',a:'Add one defender. The 7v7 2-3-1 keeps its three midfielders and its forward, and the extra player joins the two defenders as a center back, so the back two becomes a back three.'}],
+   {q:'How does a 7v7 team change to a 3-3-1 for 8v8?',a:'Add one defender. The 7v7 2-3-1 keeps its three midfielders and its forward, and the extra player joins the two defenders as a center back, so the back two becomes a back three.'},{q:'What age is the 3-3-1 best for?',a:'Most fútbol 8 ages. In Spain fútbol 8 is played in the prebenjamín, benjamín and alevín categories, roughly ages 7 to 12, and each regional federation writes its own rules. The 3-3-1 is the easiest first shape, above all for a team moving up from 7v7.'}],ages:'Most fútbol 8 ages (about 7 to 12), and a team’s first 8v8 season',
   sources:F8_SOURCES,lessonIds:['learn9_shape','nx9_twoblocks','next7_reachableforward','prn_7_spread','learn7_shape','gap7_lostball']},
  {slug:'8v8-3-2-2',format:'8v8',shape:'3-2-2',best:'Teams with two forwards who play as a pair.',watch:'A narrow midfield. The width must come from the back.',
   title:'3-2-2 Formation for 8v8 Soccer (Fútbol 8): Diagram, Roles',
@@ -216,7 +217,7 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is the 3-2-2 a good 8v8 formation?',a:'Yes, when the outside backs give width. With no wide midfielders, the team needs an outside back to run up the side with the ball. If all three defenders stay back, the attack gets stuck in the middle.'},
    {q:'How do the two forwards work together in a 3-2-2?',a:'They take different jobs. One comes toward the ball to receive it at the feet, the other stays higher to keep a defender busy. When one goes short, the other goes long, and then they swap.'},
-   {q:'What is the difference between the 3-2-2 and the 3-3-1?',a:'Where the eighth player starts. The 3-3-1 has three midfielders, two of them wide, and one forward. The 3-2-2 moves one midfielder up front: two forwards, but only two midfielders and nobody wide.'}],
+   {q:'What is the difference between the 3-2-2 and the 3-3-1?',a:'Where the eighth player starts. The 3-3-1 has three midfielders, two of them wide, and one forward. The 3-2-2 moves one midfielder up front: two forwards, but only two midfielders and nobody wide.'},{q:'What age is the 3-2-2 best for?',a:'Fútbol 8 teams, played in Spain from roughly 7 to 12, that have two keen forwards and outside backs with plenty of energy. For a brand-new team the 3-3-1 is easier; the 3-2-2 comes once the outside backs are happy to go forward.'},{q:'Who gives width in a 3-2-2?',a:'The outside backs. The two midfielders play in the middle, so with the ball one outside back moves up the side while the other stays with the center back. The forwards can drift wide too, but one of them must stay near the goal.'}],ages:'Fútbol 8 teams (about 7 to 12) with two forwards who play as a pair',
   sources:F8_SOURCES,lessonIds:['nx9_twostrikers','next7_outsideback','nx9_midfieldhelper','prn_7_support','def_7_goalside','next9_frontpairpress']},
  {slug:'8v8-2-3-2',format:'8v8',shape:'2-3-2',best:'Attacking teams that already pass well.',watch:'Only two at the back. A midfielder must drop.',
   title:'2-3-2 Formation for 8v8 Soccer (Fútbol 8): Diagram, Roles',
@@ -241,7 +242,7 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is the 2-3-2 too risky for kids?',a:'Not if the team has a rule for losing the ball. The middle midfielder drops between the two defenders, and the keeper is ready to come out. Without that rule, a fast break catches the two defenders on their own.'},
    {q:'Who covers when a defender goes to the ball in a 2-3-2?',a:'The other defender covers behind, and the middle midfielder fills the space in front of the goal. That is why the middle midfielder in a 2-3-2 must keep looking back as well as forward.'},
-   {q:'When should a team switch from a 3-3-1 to a 2-3-2?',a:'When the players pass well and the middle midfielder reads the game. Some coaches also switch late in a game they are losing, to put one more player forward.'}],
+   {q:'When should a team switch from a 3-3-1 to a 2-3-2?',a:'When the players pass well and the middle midfielder reads the game. Some coaches also switch late in a game they are losing, to put one more player forward.'},{q:'What age is the 2-3-2 best for?',a:'Older fútbol 8 teams, such as alevín teams near the top of the 7 to 12 range, that already pass and move well. It has only two players at the back, so start a new team in the 3-3-1 and move to the 2-3-2 later.'},{q:'What are the strengths of the 2-3-2?',a:'It attacks with many players: two forwards, three midfielders and a keeper who joins in as a passing option. The two forwards can work as a pair, one coming short and one running behind, and the two forwards can press the other team’s defenders high.'}],ages:'Older fútbol 8 teams, such as alevín teams that already pass well',
   sources:F8_SOURCES,lessonIds:['nx9_twobackcover','nx9_keeperthird','gap7_lostball','next9_backtwoflanks','learn9_cover','bld_7_usekeeper']},
  // ---- 9v9 ----------------------------------------------------------------------------------------------------------------
  {slug:'9v9-3-2-3',format:'9v9',shape:'3-2-3',title:'3-2-3 Soccer Formation (9v9): Diagram, Roles and Tips',best:'Most teams. Wide forwards and a clear back three.',watch:'Two midfielders can face three.',
@@ -267,10 +268,10 @@ const RAW:Raw[]=[
    {q:'Is 3-2-3 the best 9v9 formation?',a:'No shape is best for every team. The 3-2-3 is popular because it is balanced and close to the 4-3-3 that many clubs use in 11v11. It needs two midfielders who work hard.'},
    {q:'How does a 3-2-3 defend with only two midfielders?',a:'The wide forwards help. When the other team has the ball, they drop back beside the midfielders. That makes a line of four or five across the middle.'},
    {q:'Who covers when an outside back goes forward?',a:'The center back slides toward that side and stays behind the ball. The other outside back comes inside a little. The formation gives starting jobs, and support changes as the ball moves.'},
-   {q:'How does the 3-2-3 turn into a 4-3-3?',a:'Add one defender and one midfielder. The back three becomes a back four and the midfield pair becomes a three. The wide forwards and the center forward keep the same jobs.'}],
+   {q:'How does the 3-2-3 turn into a 4-3-3?',a:'Add one defender and one midfielder. The back three becomes a back four and the midfield pair becomes a three. The wide forwards and the center forward keep the same jobs.'},{q:'What age is the 3-2-3 best for?',a:'Players aged 11 and 12 (U11 and U12), the ages that play 9v9 in U.S. Soccer’s small-sided standards. It is a good first 9v9 shape because the 7v7 jobs grow into it, and it turns into the 4-3-3 when the team moves up to 11v11.'}],ages:'11 and 12 (U11 and U12), and a team’s first 9v9 season',
   lessonIds:['learn9_shape','nx9_twoblocks','nx9_midfieldhelper','nx9_fourthrunner','bld_9_usekeeper']},
- {slug:'9v9-3-3-2',format:'9v9',shape:'3-3-2',best:'Teams with two forwards who work as a pair.',watch:'No wide forwards. Wide midfielders must run.',
-  desc:'The 3-3-2 formation for 9v9 soccer: three defenders, three midfielders, two strikers. Diagram, roles, strengths, weak spots and free lessons for kids.',
+ {slug:'9v9-3-3-2',format:'9v9',shape:'3-3-2',title:'3-3-2 Formation for 9v9 Soccer: Diagram, Positions and Tips',best:'Teams with two forwards who work as a pair.',watch:'No wide forwards. Wide midfielders must run.',
+  desc:'The 3-3-2 formation for 9v9 soccer: three defenders, three midfielders, two strikers. A diagram, positions table, strengths, weak spots and best ages.',
   answer:'The 3-3-2 is a 9v9 soccer formation with three defenders, three midfielders and two strikers. It suits teams that want a strong middle of the field and two players near goal.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Midfielders|11:LM 8:CM 7:RM','Strikers|10:LS 9:RS'],
   roles:[
@@ -284,16 +285,16 @@ const RAW:Raw[]=[
    {spot:'The front two have no width of their own.',cover:'The wide midfielders run outside them, one at a time.',lesson:'nx9_twostrikers'},
    {spot:'If a wide midfielder joins the attack, the midfield is one short.',cover:'The other two midfielders slide across, and the three is rebuilt as soon as the ball is lost.',lesson:'nx9_midfieldjoins'},
    {spot:'Two strikers pressing three defenders can be passed around.',cover:'A wide midfielder joins the press only when the others protect behind.',lesson:'next9_frontpairpress'}],
-  attack:'With the ball, the wide midfielders move up outside the strikers. One striker comes short to link with the midfield and the other stays on the last defender.',
+  attack:'With the ball, the wide midfielders move up outside the strikers. One striker comes short to link with the midfield and the other stays level with the second-last defender.',
   defend:'Without the ball, the three midfielders stay in one line in front of the three defenders. The two strikers stand between the other team’s defenders and midfielders.',
   suits:'Teams with two forwards who enjoy playing together, and wide midfielders who can run up and back. Good for players aged 11 and 12.',
   faq:[
    {q:'What is the difference between 3-3-2 and 3-2-3?',a:'One player. The 3-3-2 has an extra midfielder and two strikers in the middle. The 3-2-3 has an extra forward and two of the forwards start wide. The 3-3-2 is stronger in the middle. The 3-2-3 is wider up front.'},
    {q:'How should two strikers move in a 3-3-2?',a:'At different depths. One shows toward the ball to connect with the midfield. The other keeps depth, staying high so a defender has to stay back too.'},
-   {q:'Who gives width in a 3-3-2?',a:'The wide midfielders. They supply the width that the front line is missing, so they need energy to go forward and come back.'}],
+   {q:'Who gives width in a 3-3-2?',a:'The wide midfielders. They supply the width that the front line is missing, so they need energy to go forward and come back.'},{q:'What age is the 3-3-2 best for?',a:'Players aged 11 and 12 (U11 and U12), who play 9v9 in U.S. Soccer’s small-sided standards, on a team with two forwards who enjoy playing together and wide midfielders who can run up and back.'},{q:'How does a 3-3-2 defend?',a:'The three midfielders stay in one line in front of the three defenders, so there are two lines of three close together. The two strikers stand between the other team’s defenders and midfielders to block the easy pass forward.'}],ages:'11 and 12 (U11 and U12), for teams with two forwards who play as a pair',
   lessonIds:['nx9_twostrikers','nx9_midfieldjoins','next9_frontpairpress','next9_spareback']},
- {slug:'9v9-2-3-2-1',format:'9v9',shape:'2-3-2-1',best:'Teams that keep the ball well.',watch:'Only two at the back. The middle needs a protector.',
-  desc:'The 2-3-2-1 formation for 9v9 soccer in plain words: two defenders and four lines of passing. Diagram, roles, weak spots and how kids can cover them.',
+ {slug:'9v9-2-3-2-1',format:'9v9',shape:'2-3-2-1',title:'2-3-2-1 Formation for 9v9 Soccer: Diagram, Positions, Tips',best:'Teams that keep the ball well.',watch:'Only two at the back. The middle needs a protector.',
+  desc:'The 2-3-2-1 formation for 9v9 soccer, the Christmas tree: two defenders and four lines of passing. A positions table, strengths, weak spots and best ages.',
   answer:'The 2-3-2-1 is a 9v9 soccer formation with two defenders, three midfielders, two attacking midfielders and one striker. It suits teams that pass well, because it puts many players in the middle of the field at different heights.',
   rows:['Goalkeeper|1:GK','Defenders|5:LCB 4:RCB','Midfielders|3:LM 6:CM 2:RM','Attacking midfielders|10:LAM 8:RAM','Striker|9:ST'],
   roles:[
@@ -314,10 +315,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'Why is the 2-3-2-1 called a Christmas tree?',a:'Because of how it looks from above. The lines get narrower toward the front: three, then two, then one, like the top of a tree.'},
    {q:'Is two at the back safe in 9v9?',a:'Only with help. When the other team keeps three forwards high, the central midfielder must become the third protector in the middle while the two defenders handle the wide forwards.'},
-   {q:'Who plays wide in a 2-3-2-1?',a:'The two wide midfielders. Nobody else starts near the sideline, so they need to be fit and to enjoy both attacking and defending.'}],
+   {q:'Who plays wide in a 2-3-2-1?',a:'The two wide midfielders. Nobody else starts near the sideline, so they need to be fit and to enjoy both attacking and defending.'},{q:'What age is the 2-3-2-1 best for?',a:'Players aged 11 and 12 (U11 and U12) in their second 9v9 season, with confident passers. It is harder to learn than a 3-2-3, so it is not a first 9v9 shape.'},{q:'How does a 2-3-2-1 defend?',a:'The central midfielder drops close to the two center backs and the wide midfielders run back beside them, so the team defends with more players at the back. The two attacking midfielders block passes through the middle.'}],ages:'11 and 12 (U11 and U12), in a second 9v9 season, not as a first shape',
   lessonIds:['nx9_twobackcover','next9_backtwoflanks','learn9_receive','bld_9_usekeeper']},
- {slug:'9v9-3-1-3-1',format:'9v9',shape:'3-1-3-1',best:'Teams with a calm holding midfielder.',watch:'The holder is alone when the ball is lost.',
-  desc:'The 3-1-3-1 formation for 9v9 soccer: three defenders, one holding midfielder, three attacking midfielders, one striker. Diagram, roles and lessons.',
+ {slug:'9v9-3-1-3-1',format:'9v9',shape:'3-1-3-1',title:'3-1-3-1 Formation for 9v9 Soccer: Diagram, Positions, Tips',best:'Teams with a calm holding midfielder.',watch:'The holder is alone when the ball is lost.',
+  desc:'The 3-1-3-1 formation for 9v9 soccer: three defenders, a holding midfielder, three attacking mids and a striker. Positions table, weak spots, best ages.',
   answer:'The 3-1-3-1 is a 9v9 soccer formation with three defenders, one holding midfielder, three attacking midfielders and one striker. It suits teams that want to attack with many players and have one calm player to hold the middle.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 4:CB 2:RB','Holding midfielder|6:DM','Attacking midfielders|11:LM 10:AM:4 7:RM','Striker|9:ST'],
   roles:[
@@ -338,10 +339,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'What does the holding midfielder do in a 3-1-3-1?',a:'The holder stays between the defenders and the attackers. With the ball, the holder is the link. Without it, the holder slows the other team down in the middle until help arrives.'},
    {q:'Is 3-1-3-1 an attacking formation?',a:'Yes. It starts with four players ahead of the holder. The price is that those players must run back when the ball is lost, starting with the central attacking midfielder.'},
-   {q:'What is the difference between 3-1-3-1 and 3-2-3?',a:'In a 3-1-3-1 one midfielder holds and one plays high behind the striker. In a 3-2-3 the two midfielders play side by side. The wide players and the back three are much the same.'}],
+   {q:'What is the difference between 3-1-3-1 and 3-2-3?',a:'In a 3-1-3-1 one midfielder holds and one plays high behind the striker. In a 3-2-3 the two midfielders play side by side. The wide players and the back three are much the same.'},{q:'What age is the 3-1-3-1 best for?',a:'Teams aged 11 and 12 (U11 and U12) that like to attack and have one player who is happy to stay behind the ball as the holder. Rotate the holder job, because that player is alone when the ball is lost.'},{q:'How does a 3-1-3-1 defend?',a:'The central attacking midfielder drops beside the holder and the wide midfielders come back level with them. That makes a line of four in front of the back three, so the holder is no longer alone.'}],ages:'11 and 12 (U11 and U12), for teams that like to attack',
   lessonIds:['next9_singleholder','learn9_shape','trn_9_recover','learn9_cover']},
- {slug:'9v9-4-3-1',format:'9v9',shape:'4-3-1',best:'Getting ready for a back four in 11v11.',watch:'One striker alone. Fullbacks must join in.',
-  desc:'The 4-3-1 formation for 9v9 soccer: a back four, three midfielders and one striker. Diagram, each role, weak spots and how young players cover them.',
+ {slug:'9v9-4-3-1',format:'9v9',shape:'4-3-1',title:'4-3-1 Formation for 9v9 Soccer: Diagram, Positions and Tips',best:'Getting ready for a back four in 11v11.',watch:'One striker alone. Fullbacks must join in.',
+  desc:'The 4-3-1 formation for 9v9 soccer: a back four, three midfielders and one striker. A diagram, a positions table, strengths, weak spots and the best ages.',
   answer:'The 4-3-1 is a 9v9 soccer formation with four defenders, three midfielders and one striker. It suits teams that want to learn a back four before moving to 11v11, and teams that need to be hard to score against.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 5:LCB 4:RCB 2:RB','Midfielders|11:LM 8:CM 7:RM','Striker|9:ST'],
   roles:[
@@ -362,7 +363,7 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is four at the back too many in 9v9?',a:'It can be, if nobody goes forward. A back four works in 9v9 when a fullback joins each attack. Then the team attacks with five or six players and still has three behind the ball.'},
    {q:'How does a 4-3-1 get ready for 11v11?',a:'It teaches the back four: two center backs and two fullbacks who share the space. In 11v11, the 4-3-3 keeps that back four and the three midfielders and adds two wide forwards.'},
-   {q:'How does the lone striker get help?',a:'From the wide midfielders. When the ball is played up, they run close to the striker so there is a short pass. One fullback follows to keep the width.'}],
+   {q:'How does the lone striker get help?',a:'From the wide midfielders. When the ball is played up, they run close to the striker so there is a short pass. One fullback follows to keep the width.'},{q:'What age is the 4-3-1 best for?',a:'Teams in their last 9v9 season, usually 12-year-olds (U12), who will play 11v11 from U13. The back four in a 4-3-1 is the same back four they will use in a 4-3-3 or a 4-4-2.'},{q:'What are the strengths of the 4-3-1?',a:'Four defenders and three midfielders make two lines close together, which is hard to play through, and the fullbacks learn the 11v11 job early. It helps against a strong attacking opponent, as long as one fullback goes forward to help the striker.'}],ages:'12 (U12), in the last 9v9 season before 11v11',
   lessonIds:['learn9_cover','bld_9_usekeeper','learn9_switch','gap9_runnerhandoff']},
  // ---- 11v11 --------------------------------------------------------------------------------------------------------------
  {slug:'11v11-4-3-3',format:'11v11',shape:'4-3-3',best:'Teams with wingers who like to attack.',watch:'Space behind the fullbacks when they go forward.',
@@ -389,10 +390,10 @@ const RAW:Raw[]=[
    {q:'Why do so many youth teams play 4-3-3?',a:'It covers the whole field with clear lines, and it teaches every kind of job: center back, fullback, three different midfielders, winger and center forward. It also follows on from the 3-2-3 used in 9v9.'},
    {q:'What do the three midfielders do in a 4-3-3?',a:'They connect the lines. In the shape our lessons use, one starts deeper and two offer angles ahead. Without the ball, all three help protect the middle.'},
    {q:'What is 1-4-3-3?',a:'The same formation with the goalkeeper counted. 4-3-3 leaves out the keeper. 1-4-3-3 includes them, which is how U.S. Soccer writes it.'},
-   {q:'Should the fullback overlap in a 4-3-3?',a:'Sometimes. The rule in our lesson is to fill the lane nobody holds. With the winger wide, the fullback moves inside. With the winger inside, the fullback goes wide.'}],
+   {q:'Should the fullback overlap in a 4-3-3?',a:'Sometimes. The rule in our lesson is to fill the lane nobody holds. With the winger wide, the fullback moves inside. With the winger inside, the fullback goes wide.'},{q:'What age is the 4-3-3 best for?',a:'Players aged 13 and up, who play 11v11 in U.S. Soccer’s chart. Teams that played a 3-2-3 in 9v9 find it familiar: the wide forwards, the center forward and the midfield link are the same jobs with a back four behind them.'}],ages:'13 and up (U13+), after a 3-2-3 in 9v9',
   lessonIds:['learn11_shape','exp11_insidefullback','exp11_checking8','exp11_droppingnine','def_11_shift']},
- {slug:'11v11-4-4-2',format:'11v11',shape:'4-4-2',best:'Teams that want simple lines and two strikers.',watch:'Two central midfielders can be outnumbered.',
-  desc:'The 4-4-2 soccer formation explained simply: two lines of four and two strikers. See the diagram, each role, strengths, weak spots and free lessons.',
+ {slug:'11v11-4-4-2',format:'11v11',shape:'4-4-2',title:'4-4-2 Formation in Soccer: Positions, Diagram, Tips (11v11)',best:'Teams that want simple lines and two strikers.',watch:'Two central midfielders can be outnumbered.',
+  desc:'The 4-4-2 soccer formation explained: two lines of four and two strikers. A diagram, a table of every position, strengths, weak spots and the best ages.',
   answer:'The 4-4-2 is an 11v11 soccer formation with four defenders, four midfielders and two strikers. It suits teams that want simple, tidy lines and two players close to goal.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 5:LCB 4:RCB 2:RB','Midfielders|11:LM 6:LCM 8:RCM 7:RM','Strikers|10:LS 9:RS'],
   roles:[
@@ -413,10 +414,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is the 4-4-2 old-fashioned?',a:'It is one of the oldest shapes still in use, and it still works. Its two lines of four are a simple way to learn how a team slides across the field together.'},
    {q:'What do the two strikers do in a 4-4-2?',a:'They occupy different depths around the first pass. They should not both go for the ball at the same point. One challenges, and the other reads where the ball will drop.'},
-   {q:'What is the difference between 4-4-2 and 4-3-3?',a:'The 4-4-2 has two strikers and four across midfield. The 4-3-3 has one center forward, two wingers higher up and three central midfielders. The 4-3-3 has one more player in the middle.'}],
+   {q:'What is the difference between 4-4-2 and 4-3-3?',a:'The 4-4-2 has two strikers and four across midfield. The 4-3-3 has one center forward, two wingers higher up and three central midfielders. The 4-3-3 has one more player in the middle.'},{q:'What age is the 4-4-2 best for?',a:'Players aged 13 and up who are new to 11v11, because the two lines of four give everyone a clear place without the ball. It also suits teams with two forwards who play well together.'},{q:'What are the positions in a 4-4-2?',a:'A goalkeeper, two center backs, two fullbacks, two central midfielders, two wide midfielders and two strikers. The table on this page lists each one with its job, and each position links to its own page.'}],ages:'13 and up (U13+), above all teams new to 11v11',
   lessonIds:['exp11_secondball','def_11_shift','def_11_pressurecover','learn11_shape']},
- {slug:'11v11-4-2-3-1',format:'11v11',shape:'4-2-3-1',best:'Teams with a creative attacking midfielder.',watch:'The striker is alone if the three behind stay away.',
-  desc:'The 4-2-3-1 soccer formation in plain words: a back four, two holding midfielders, three attackers and one striker. Diagram, roles, weak spots, lessons.',
+ {slug:'11v11-4-2-3-1',format:'11v11',shape:'4-2-3-1',title:'4-2-3-1 Formation in Soccer: Positions, Diagram and Tips',best:'Teams with a creative attacking midfielder.',watch:'The striker is alone if the three behind stay away.',
+  desc:'The 4-2-3-1 formation in plain words: a back four, two holding midfielders, three attackers and a striker. A positions table, weak spots and the best ages.',
   answer:'The 4-2-3-1 is an 11v11 soccer formation with four defenders, two holding midfielders, three attacking midfielders and one striker. It suits teams that want two players guarding the middle and a creative player behind the striker.',
   rows:['Goalkeeper|1:GK','Defenders|3:LB 5:LCB 4:RCB 2:RB','Holding midfielders|6:LDM 8:RDM','Attacking midfielders|11:LW 10:AM 7:RW','Striker|9:ST'],
   roles:[
@@ -438,10 +439,10 @@ const RAW:Raw[]=[
   faq:[
    {q:'What is the difference between 4-2-3-1 and 4-3-3?',a:'Where the midfield triangle points. In a 4-2-3-1, two midfielders sit deep and one plays high behind the striker. In the 4-3-3 our lessons use, one sits deep and two play ahead.'},
    {q:'What is a double pivot?',a:'A name for the two holding midfielders in a 4-2-3-1. Pivot means a point that play turns around. The two of them take the ball from the defenders and turn the play forward.'},
-   {q:'What does the number 10 do in a 4-2-3-1?',a:'The 10 is the attacking midfielder in the middle of the line of three. This player receives between the lines, turns if there is room, and links the midfield to the striker.'}],
+   {q:'What does the number 10 do in a 4-2-3-1?',a:'The 10 is the attacking midfielder in the middle of the line of three. This player receives between the lines, turns if there is room, and links the midfield to the striker.'},{q:'What age is the 4-2-3-1 best for?',a:'Players aged 13 and up with some 11v11 experience. It has more lines to learn than a 4-4-2 or a 4-3-3, so it is not a first 11v11 shape.'},{q:'How does a 4-2-3-1 defend?',a:'The wide attackers drop beside the two holding midfielders, making a line of four in front of the back four. The 10 and the striker block the passes into the middle, so the team defends in a shape close to a 4-4-2.'}],ages:'13 and up (U13+), with some 11v11 experience',
   lessonIds:['bld_11_throughlines','exp11_droppingnine','trn_11_restdefense','learn11_cutback']},
- {slug:'11v11-3-5-2',format:'11v11',shape:'3-5-2',best:'Teams with two fit wing-backs.',watch:'Space behind the wing-backs.',
-  desc:'The 3-5-2 soccer formation explained for young players: three center backs, two wing-backs, three midfielders and two strikers. Diagram, roles, lessons.',
+ {slug:'11v11-3-5-2',format:'11v11',shape:'3-5-2',title:'3-5-2 Formation in Soccer: Positions, Diagram and Tips',best:'Teams with two fit wing-backs.',watch:'Space behind the wing-backs.',
+  desc:'The 3-5-2 soccer formation for young players: three center backs, two wing-backs, three midfielders, two strikers. Positions table, weak spots, best ages.',
   answer:'The 3-5-2 is an 11v11 soccer formation with three center backs, five midfielders (two of them wing-backs) and two strikers. It suits teams with two fit wide players who can attack and defend the whole sideline.',
   rows:['Goalkeeper|1:GK','Center backs|5:LCB 4:CB 6:RCB','Midfielders|3:LWB 8:LCM 7:CM 10:RCM 2:RWB','Strikers|11:LS 9:RS'],
   roles:[
@@ -461,11 +462,11 @@ const RAW:Raw[]=[
   faq:[
    {q:'Is 3-5-2 the same as 5-3-2?',a:'They are the same players in different moments. With the ball, the wing-backs are high and it looks like 3-5-2. Without the ball, they drop beside the center backs and it looks like 5-3-2.'},
    {q:'What is the difference between a wing-back and a fullback?',a:'A fullback starts in a back four and has a winger in front. A wing-back starts higher, outside three center backs, and has the whole side alone.'},
-   {q:'Is 3-5-2 good for youth teams?',a:'It can be for older players. Younger teams often find a back four simpler, because the fullback and winger share the side. Three at the back asks the outer center backs to defend wide spaces.'}],
+   {q:'Is 3-5-2 good for youth teams?',a:'It can be for older players. Younger teams often find a back four simpler, because the fullback and winger share the side. Three at the back asks the outer center backs to defend wide spaces.'},{q:'What age is the 3-5-2 best for?',a:'Older, fitter players, usually 14 and up. The wing-back job is the hardest running job on the team, so the squad needs more than two players who can do it, and they should swap often.'},{q:'How does a 3-5-2 defend?',a:'The wing-backs drop beside the three center backs to make a back five, and the three central midfielders stay close together in front of them. The two strikers block the passes into the other team’s midfield.'}],ages:'Usually 14 and up, with more than two players who can play wing-back',
   lessonIds:['exp11_wingbackcue','exp11_checking8','def_11_shift','exp11_safetyfive']},
  // ---- futsal -------------------------------------------------------------------------------------------------------------
- {slug:'futsal-2-2',format:'futsal',shape:'2-2',best:'Beginners. Two pairs are easy to learn.',watch:'A big gap between the two pairs.',
-  desc:'The 2-2 futsal formation for kids, also called the box or square: two players behind, two ahead. Diagram, roles, weak spots and free futsal lessons.',
+ {slug:'futsal-2-2',format:'futsal',shape:'2-2',title:'2-2 Futsal Formation (the Box): Diagram, Positions, Tips',best:'Beginners. Two pairs are easy to learn.',watch:'A big gap between the two pairs.',
+  desc:'The 2-2 futsal formation for kids, also called the box or square: two players behind, two ahead. A diagram, a positions table, weak spots and who it suits.',
   answer:'The 2-2 is a futsal formation with two players behind and two ahead, plus the goalkeeper. In soccer terms it is two defenders and two forwards. It suits beginners, because the pairs are easy to see and every player has a partner.',
   rows:['Goalkeeper|1:GK','Rear pair|B:BACK B:BACK','Front pair|F:FRONT F:FRONT'],
   roles:[
@@ -483,9 +484,9 @@ const RAW:Raw[]=[
   faq:[
    {q:'What is the box formation in futsal?',a:'Another name for the 2-2. From above, the four outfield players stand like the corners of a box or square.'},
    {q:'Is 2-2 a good futsal formation for kids?',a:'Yes, to start with. Two pairs are easy to explain. Once players can keep a supporting angle behind the ball, many coaches add the 3-1 with a pivot.'},
-   {q:'Do futsal players stay in their positions?',a:'No. Futsal players change places all the time. The formation is a starting relationship. Players move with the game, rather than staying in four fixed squares.'}],
+   {q:'Do futsal players stay in their positions?',a:'No. Futsal players change places all the time. The formation is a starting relationship. Players move with the game, rather than staying in four fixed squares.'},{q:'What age is the 2-2 best for?',a:'Any age, as a first futsal shape. It suits children new to futsal and outdoor teams playing futsal in winter, because two pairs are easy to learn. Once they know it, move on to the diamond or the 3-1.'},{q:'How does a 2-2 defend?',a:'The front pair drops to the halfway line and the four court players make a small box in front of their own goal. The nearest player presses the ball and the partner covers behind.'}],ages:'Any age, for children new to futsal',
   lessonIds:['learnf_shape22','prn_f_support','def_f_goalside','f_pared']},
- {slug:'futsal-1-2-1-diamond',format:'futsal',shape:'1-2-1',tag:'Diamond',best:'Teams that pass and move well.',watch:'The middle opens if one ala is slow to tuck in.',
+ {slug:'futsal-1-2-1-diamond',format:'futsal',shape:'1-2-1',title:'1-2-1 Diamond Futsal Formation: Diagram, Positions, Tips',tag:'Diamond',best:'Teams that pass and move well.',watch:'The middle opens if one ala is slow to tuck in.',
   desc:'The 1-2-1 diamond futsal formation for kids: one fixo, two alas, one pivot. See the diagram, the roles, how the diamond moves and free futsal lessons.',
   answer:'The 1-2-1 diamond is a futsal formation with one player at the back (the fixo), two on the sides (the alas) and one at the front (the pivot). In soccer terms that is a defender, two wingers and a striker. It suits teams that pass and move, because the diamond gives the ball carrier a choice in three directions.',
   rows:['Goalkeeper|1:GK','Fixo|F:FIXO','Alas|A:ALA A:ALA','Pivot|P:PIVOT'],
@@ -505,9 +506,9 @@ const RAW:Raw[]=[
   faq:[
    {q:'What is a diamond formation in futsal?',a:'Four outfield players standing as the points of a diamond: one at the back, one on each side and one at the front. It is written 1-2-1.'},
    {q:'What are the futsal positions called?',a:'Goalkeeper, fixo, ala and pivot. The fixo supports behind the ball. The two alas, or wings, offer width on either side. The pivot provides depth ahead, toward the goal the team attacks.'},
-   {q:'How does a diamond defend?',a:'As a unit. It shifts toward the ball without opening the passing lane through the middle. When one side presses, the other ala helps close the middle.'}],
+   {q:'How does a diamond defend?',a:'As a unit. It shifts toward the ball without opening the passing lane through the middle. When one side presses, the other ala helps close the middle.'},{q:'What age is the diamond best for?',a:'Any age, once the players know the 2-2 and are ready for different jobs: a fixo at the back, two alas on the sides and a pivot at the front. Teams that pass and move well get the most from it.'},{q:'How does the diamond attack?',a:'The alas go wide and the pivot stays high to stretch the court, while the fixo stays behind the ball as the safe pass. That gives the player with the ball a pass to each side and one forward.'}],ages:'Any age, once players know the 2-2',
   lessonIds:['expf_diamondshift','expf_thirdplayer','expf_replacepivot','f_pivot']},
- {slug:'futsal-3-1',format:'futsal',shape:'3-1',best:'Teams with a strong pivot.',watch:'The pivot can be cut off from the other three.',
+ {slug:'futsal-3-1',format:'futsal',shape:'3-1',title:'3-1 Futsal Formation: Diagram, Positions and Tips for Kids',best:'Teams with a strong pivot.',watch:'The pivot can be cut off from the other three.',
   desc:'The 3-1 futsal formation for kids: a fixo, two alas and a pivot. See the diagram, each court role, strengths, weak spots and free futsal lessons.',
   answer:'The 3-1 is a futsal formation with three players behind the ball (a fixo and two alas) and one pivot ahead. In soccer terms the pivot is the striker. It suits teams with a player who can hold the ball with a defender close, and it is the shape the Futbol Island futsal lessons start with.',
   rows:['Goalkeeper|1:GK','Back three|A:ALA F:FIXO:-9 A:ALA','Pivot|P:PIVOT'],
@@ -527,7 +528,7 @@ const RAW:Raw[]=[
   faq:[
    {q:'What does 3-1 mean in futsal?',a:'Three-one counts the four outfield players: three behind and one ahead. The goalkeeper is separate. Futsal has five players per team, one goalkeeper and four outfield players.'},
    {q:'What does the pivot do in futsal?',a:'The pivot provides depth ahead. The pivot reads the marker and chooses: turn toward goal if there is room, or lay the ball off to a teammate.'},
-   {q:'What is the difference between 3-1 and the diamond?',a:'Very little. Both have a fixo, two alas and a pivot. In a 3-1 the alas start deeper, close to the fixo. In a 1-2-1 diamond they start a little higher. Many coaches use both names for one shape.'}],
+   {q:'What is the difference between 3-1 and the diamond?',a:'Very little. Both have a fixo, two alas and a pivot. In a 3-1 the alas start deeper, close to the fixo. In a 1-2-1 diamond they start a little higher. Many coaches use both names for one shape.'},{q:'What age is the 3-1 best for?',a:'Any age, once a team has learned the 2-2 and has a player who likes to play with their back to goal as the pivot. Swap the jobs so every player learns to attack, defend and help.'},{q:'How does a 3-1 defend?',a:'The pivot drops toward the halfway line and the three players behind form a triangle in front of the goal. The ala nearest the ball presses, and the fixo stays in the middle.'}],ages:'Any age, after the 2-2, with a player who likes the pivot job',
   lessonIds:['learnf_roles31','f_pivot','expf_replacepivot','expf_denypivot']},
 ];
 export const FORMATIONS:readonly Formation[]=RAW.map(make);
@@ -542,7 +543,7 @@ export type FormatGuide={format:Exclude<GuideFormat,'futsal'>;path:string;crumb:
 const LEAGUE='Leagues can set their own details, so check your league’s rules.';
 export const FORMAT_GUIDES:readonly FormatGuide[]=[
  {format:'7v7',path:formatGuidePath('7v7'),crumb:'7v7 formations',blurb:'2-3-1, 3-2-1, 2-2-2 and 3-1-2 compared, with diagrams',
-  title:'7v7 Soccer Formations: 2-3-1, 3-2-1 and More, for Kids',
+  title:'Best 7v7 Soccer Formations: 2-3-1, 3-2-1 and More, for Kids',
   description:'The four common 7v7 soccer formations, or 7-a-side football formations (2-3-1, 3-2-1, 2-2-2, 3-1-2), compared in one table, with diagrams for kids.',
   h1:'7v7 soccer formations',
   lead:'In 7v7 soccer each team has a goalkeeper and six outfield players. The four common formations are the 2-3-1, the 3-2-1, the 2-2-2 and the 3-1-2. For most teams of nine and ten-year-olds, the 2-3-1 is the best place to start.',
@@ -558,11 +559,11 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'What is the best formation for 7v7 soccer?',a:'There is no single best one. The 2-3-1 is the most common starting point because it is balanced and teaches width. The best formation for your team is the one your players understand.'},
    {q:'What does 1-2-3-1 mean?',a:'It is the 2-3-1 with the goalkeeper counted first: one keeper, two defenders, three midfielders, one forward. U.S. Soccer writes youth formations this way.'},
    {q:'Should 7v7 players stay in one position all season?',a:'No. At nine and ten, children learn most by trying every job: defending, playing wide, playing in the middle and scoring. Rotate positions from game to game.'},
-   {q:'How many defenders should a 7v7 team have?',a:'Two or three. Two defenders leave more players for midfield. Three defenders are safer but need the outside backs to go forward, or the team has too few attackers.'}],
+   {q:'How many defenders should a 7v7 team have?',a:'Two or three. Two defenders leave more players for midfield. Three defenders are safer but need the outside backs to go forward, or the team has too few attackers.'},{q:'What is the most attacking 7v7 formation?',a:'The 3-1-2 and the 2-2-2 put two forwards up the field, so more players attack near the goal. Both leave gaps: the 3-1-2 asks one midfielder to cover the whole middle, and the 2-2-2 has nobody wide. For a safer shape, the 3-2-1 keeps three at the back.'}],
   lessons:pick(['learn7_roles','learn7_shape','learn7_buildout','next7_offsideboundary','bld_7_usekeeper','prn_7_spread'])},
  /* round 4F: 8v8 (fútbol 8). Rules quoted only from the documents in F8_SOURCES; outside Spain, only "some leagues" (not verified further). */
  {format:'8v8',path:formatGuidePath('8v8'),crumb:'8v8 formations',blurb:'3-3-1, 3-2-2 and 2-3-2 compared, with diagrams',
-  title:'8v8 Soccer Formations: 3-3-1, 3-2-2, 2-3-2 (Fútbol 8)',
+  title:'Best 8v8 Soccer Formations: 3-3-1, 3-2-2, 2-3-2 (Fútbol 8)',
   description:'The three common 8v8 soccer formations, or fútbol 8 formations (3-3-1, 3-2-2, 2-3-2), compared in one table, with diagrams and the rules that shape them.',
   h1:'8v8 soccer formations',
   lead:'In 8v8 soccer, called fútbol 8 in Spain, each team has a goalkeeper and seven outfield players. The three common formations are the 3-3-1, the 3-2-2 and the 2-3-2. For most teams, the 3-3-1 is the best place to start.',
@@ -581,10 +582,10 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'What is the best formation for 8v8 soccer?',a:'There is no single best one. The 3-3-1 is the usual starting point because it is balanced and has three clear units. The best formation for your team is the one your players understand.'},
    {q:'What does 1-3-3-1 mean?',a:'It is the 3-3-1 with the goalkeeper counted first: one keeper, three defenders, three midfielders and one forward. Some coaches write youth formations this way.'},
    {q:'Is 8v8 the same game as fútbol 8?',a:'Yes. Fútbol 8 is the Spanish name for eight-a-side: a goalkeeper and seven outfield players on a field about half the size of a full pitch. The rules are written by each regional federation, so check yours.'},
-   {q:'How many defenders should an 8v8 team have?',a:'Two or three. Three defenders, as in the 3-3-1 and the 3-2-2, are simpler and safer. Two defenders, as in the 2-3-2, leave one more player for the attack, but the middle midfielder must drop back to help.'}],
+   {q:'How many defenders should an 8v8 team have?',a:'Two or three. Three defenders, as in the 3-3-1 and the 3-2-2, are simpler and safer. Two defenders, as in the 2-3-2, leave one more player for the attack, but the middle midfielder must drop back to help.'},{q:'What is the most attacking 8v8 formation?',a:'The 2-3-2: two forwards and three midfielders, with only two players at the back, so a midfielder has to drop to help them. The 3-2-2 also plays two forwards but keeps three defenders. Most teams start in the 3-3-1 and add a forward later.'}],
   sources:F8_SOURCES,lessons:pick(['learn9_shape','learn7_shape','nx9_twostrikers','nx9_twobackcover','prn_7_spread','learn9_cover'])},
  {format:'9v9',path:formatGuidePath('9v9'),crumb:'9v9 formations',blurb:'3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1 and 4-3-1 compared, with diagrams',
-  title:'9v9 Soccer Formations: 3-2-3, 3-3-2 and More, for Kids',
+  title:'Best 9v9 Soccer Formations: 3-2-3, 3-3-2 and More, for Kids',
   description:'Five 9v9 soccer formations (3-2-3, 3-3-2, 2-3-2-1, 3-1-3-1, 4-3-1) compared in one table, with diagrams and a clear answer on which to choose.',
   h1:'9v9 soccer formations',
   lead:'In 9v9 soccer each team has a goalkeeper and eight outfield players. Common formations are the 3-2-3, the 3-3-2, the 2-3-2-1, the 3-1-3-1 and the 4-3-1. For most teams of eleven and twelve-year-olds, the 3-2-3 is a good first choice.',
@@ -600,10 +601,10 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'What is the best formation for 9v9 soccer?',a:'The 3-2-3 is the most common starting point, because it is balanced and prepares players for the 4-3-3. But the best shape is the one that fits your players and that they understand.'},
    {q:'What does 1-3-2-3 mean?',a:'It is the 3-2-3 with the goalkeeper counted first: one keeper, three defenders, two midfielders and three forwards.'},
    {q:'How do 7v7 formations turn into 9v9 formations?',a:'Add one defender and one forward. The 7v7 2-3-1 becomes a 3-2-3 when a center back joins the two defenders and the wide midfielders move up to play as wide forwards beside the striker.'},
-   {q:'Should a 9v9 team play with two or three defenders?',a:'Three is simpler: one can go to the ball and two still cover. Two defenders work only if a midfielder drops in as the third protector when the other team attacks.'}],
+   {q:'Should a 9v9 team play with two or three defenders?',a:'Three is simpler: one can go to the ball and two still cover. Two defenders work only if a midfielder drops in as the third protector when the other team attacks.'},{q:'What is the most defensive 9v9 formation?',a:'The 4-3-1: four defenders and three midfielders make two lines close together, with one striker up front. It suits a team in its last 9v9 season, getting ready for a back four in 11v11, and games against a strong attacking opponent.'}],
   lessons:pick(['learn9_shape','nx9_twoblocks','nx9_twostrikers','next9_singleholder','nx9_twobackcover','bld_9_usekeeper'])},
  {format:'11v11',path:formatGuidePath('11v11'),crumb:'11v11 formations',blurb:'4-3-3, 4-4-2, 4-2-3-1 and 3-5-2 compared, with diagrams',
-  title:'11v11 Soccer Formations: 4-3-3, 4-4-2, 4-2-3-1 and 3-5-2',
+  title:'Best 11v11 Soccer Formations: 4-3-3, 4-4-2, 4-2-3-1, 3-5-2',
   description:'The main 11v11 soccer formations (4-3-3, 4-4-2, 4-2-3-1, 3-5-2) compared in one table, with diagrams and a plain answer on which suits a youth team.',
   h1:'11v11 soccer formations',
   lead:'In 11v11 soccer each team has a goalkeeper and ten outfield players. Four formations cover most of what young players meet: the 4-3-3, the 4-4-2, the 4-2-3-1 and the 3-5-2. Teams moving up from 9v9 usually find the 4-3-3 the easiest step.',
@@ -619,7 +620,7 @@ export const FORMAT_GUIDES:readonly FormatGuide[]=[
    {q:'What is the best formation for a youth 11v11 team?',a:'Many youth teams start with the 4-3-3, because it follows on from 9v9 and covers the field evenly. A 4-4-2 is simpler without the ball. The best one is the shape your players understand.'},
    {q:'What do the numbers in a soccer formation mean?',a:'They count the outfield players in each line, from the defense forward. A 4-4-2 has four defenders, four midfielders and two strikers. The goalkeeper is left out unless the shape is written 1-4-4-2.'},
    {q:'What is the most attacking formation?',a:'A shape does not attack by itself. Players do. A 4-3-3 starts with three forwards, but a 4-4-2 with fullbacks who go forward can attack with just as many players.'},
-   {q:'When do kids start playing 11v11?',a:'In the U.S. Soccer standards, at under 13. Before that, children play 7v7 at U9 and U10 and 9v9 at U11 and U12. Some leagues differ.'}],
+   {q:'When do kids start playing 11v11?',a:'In the U.S. Soccer standards, at under 13. Before that, children play 7v7 at U9 and U10 and 9v9 at U11 and U12. Some leagues differ.'},{q:'Is 4-3-3 or 4-4-2 better for youth soccer?',a:'Neither is better for every team. The 4-3-3 has one more central midfielder and wingers who attack, and it follows on from the 3-2-3 in 9v9. The 4-4-2 has two simple lines of four and two strikers, which many teams new to 11v11 find easier without the ball.'}],
   lessons:pick(['learn11_shape','exp11_insidefullback','exp11_secondball','exp11_wingbackcue','def_11_shift','bld_11_throughlines'])},
 ];
 export const formatGuide=(f:GuideFormat)=>FORMAT_GUIDES.find(g=>g.format===f);
@@ -640,4 +641,4 @@ export const FORMATIONS_HUB={path:FORMATIONS_HUB_PATH,crumb:'Soccer formations',
   {q:'What is a formation in soccer?',a:'The starting arrangement of a team: how many players are in defense, midfield and attack. It gives players starting jobs. They still move as the game changes.'},
   {q:'How do you read formation numbers?',a:'From the back to the front, leaving out the goalkeeper. A 4-3-3 is four defenders, three midfielders and three forwards. Add a 1 at the start to count the goalkeeper: 1-4-3-3.'},
   {q:'What formation should a kids’ team play?',a:'One the players can understand. Common first choices are the 2-3-1 in 7v7, the 3-2-3 in 9v9 and the 4-3-3 in 11v11, because each one leads into the next.'},
-  {q:'Does the formation matter for young players?',a:'A little. Learning the jobs matters more: spread out with the ball, squeeze together without it, and help the teammate who has the ball. A good formation makes those jobs easy to see.'}] as Faq[]};
+  {q:'Does the formation matter for young players?',a:'A little. Learning the jobs matters more: spread out with the ball, squeeze together without it, and help the teammate who has the ball. A good formation makes those jobs easy to see.'},{q:'How do formations change as kids get older?',a:'They grow with the team size. In U.S. Soccer’s small-sided standards, U9 and U10 play 7v7 (often a 2-3-1), U11 and U12 play 9v9 (often a 3-2-3), and teams play 11v11 from U13 (often a 4-3-3). Each step adds players to lines the kids already know.'}] as Faq[]};

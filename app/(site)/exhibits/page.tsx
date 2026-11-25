@@ -5,6 +5,8 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {exhibitPath,GALLERIES,SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
+import {FactTable,type FactRow} from '@/components/site/FactTable';
+import {booksForExhibit} from '@/lib/site/crossLinks';
 import styles from '../site.module.css';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 
@@ -17,6 +19,18 @@ const META=`The Futbol Island History Museum: ${SITE_EXHIBITS.length} exhibits o
 export const metadata=pageMeta('Football History for Kids: Museum Exhibits',META,'/exhibits');
 const CRUMBS=libraryCrumbs({name:'Museum',path:'/exhibits'});/* Nov 20 2026: through the Library */
 
+/** SEO batch F (Nov 25 2026, owner: hubs get a clear "what's here" table): one row per gallery (its own blurb and how many cases,
+ *  linked to its list below), then the pages the cases lead to. Every count is from the museum data. */
+function whatsHere():FactRow[]{
+ const books=new Set(SITE_EXHIBITS.flatMap(e=>booksForExhibit(e.id).map(b=>b.path))).size;
+ return [
+  ...GALLERIES.filter(g=>SITE_EXHIBITS.some(e=>e.gallery===g.id)).map(g=>{const list=SITE_EXHIBITS.filter(e=>e.gallery===g.id);
+   return {label:g.title,value:<><a href={`#g-${g.id}`}>{list.length} {list.length===1?'exhibit':'exhibits'}</a>: {g.blurb.replace(/\.$/,'')}</>};}),
+  {label:'Today’s rules',value:<>Each exhibit links the rule, term or position page about the same thing, like the <a href="/learn/soccer-rules/offside">offside rule</a> or the <a href="/learn/soccer-rules/penalty-kick">penalty kick</a></>},
+  {label:'True stories',value:<><a href="/books">{books} pop-up books</a> about real players link an exhibit</>},
+  {label:'On the island',value:<><a href="/museum">Walk into the museum in the game</a>, free in the browser</>},
+ ];
+}
 export default function ExhibitsIndex(){
  return <>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
@@ -27,9 +41,11 @@ export default function ExhibitsIndex(){
   <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football history museum for kids</h1>
-   <p className={styles.lead}>{DESC}</p>
+   {/* SEO batch F (Nov 25 2026): the answer first (what football history the museum covers), then the museum line */}
+   <p className={styles.lead}>Football history for kids, one short exhibit at a time: how the Laws of the Game began in 1863, the first World Cup in 1930, how the ball and the kit changed, and how offside and formations grew into today’s game. {DESC}</p>
    <a className={styles.cta} href="/museum">Walk into the museum on the island</a>
   </header>
+  <FactTable id="whats-here" title="What’s in the museum" label="What is in the football history museum" head={['Gallery','What you find']} rows={whatsHere()}/>
   {GALLERIES.map(g=>{const list=SITE_EXHIBITS.filter(e=>e.gallery===g.id);if(!list.length)return null;return <section key={g.id} className={styles.section} aria-labelledby={`g-${g.id}`}>
    <h2 className={`${styles.h2} ${tgt.target}`} id={`g-${g.id}`}>{g.title}</h2>
    <p className={styles.caption}>{g.blurb}</p>

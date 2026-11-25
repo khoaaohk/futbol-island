@@ -5,6 +5,7 @@ import {PLAY_PATH} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import l from './library.module.css';
 import RailNav from './shell/RailNav';
+import {FactTable} from './FactTable';
 import SectionPicPlayer from './SectionPicPlayer';
 import {SECTION_PICTURES,SECTION_SIZE,SectionSvg} from '@/lib/site/sectionImage';
 import {railOrder} from '@/lib/site/railNav';
@@ -41,7 +42,7 @@ function Section({s,tone,exLabel,coachApp,coachLabel,kicker}:{s:LibrarySection;t
   </div>
  </section>;
 }
-export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,sections,menuLabel='Library sections',topLabel='Overview',exLabel='a few to start with',coachApp='/coach',coachLabel='Open the Coach app',kicker='For coaches and parents'}:{coachApp?:string;coachLabel?:string;kicker?:string;crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
+export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero,sections,menuLabel='Library sections',topLabel='Overview',exLabel='a few to start with',coachApp='/coach',coachLabel='Open the Coach app',kicker='For coaches and parents',whats={title:'What’s in the library',label:'Every section of the library',head:['Section','What you find']}}:{whats?:{title:string;label:string;head:readonly [string,string]};coachApp?:string;coachLabel?:string;kicker?:string;crumbs:ReactNode;h1:string;lead:string;play:string;playTitle:string;playLine:string;
  menuLabel?:string;topLabel?:string;exLabel?:string;hero:{main:LibraryPic;inset:LibraryPic;mainAlt:string;insetAlt:string};sections:readonly LibrarySection[]}){
  const list=railOrder([...sections]);
  return <div className={l.page}>
@@ -70,6 +71,9 @@ export default function LibraryPage({crumbs,h1,lead,play,playTitle,playLine,hero
     <img className={l.heroInset} src={hero.inset.src} alt={hero.insetAlt} width={hero.inset.w} height={hero.inset.h} decoding="async"/>
    </div>
   </div>
+  {/* SEO batch F (Nov 25 2026, owner: hubs get a clear "what's here" table): every section, what is in it and how many, linked */}
+  <div className={l.whats}><FactTable id="whats-here" title={whats.title} label={whats.label} head={whats.head}
+   rows={list.map(x=>({label:x.name,value:<><a href={x.href}>{x.line.replace(/\.$/,'')}</a>{x.count?<> · {x.count}</>:null}</>}))}/></div>
   {list.map((x,i)=><Section key={x.id} s={x} tone={i%2===0?'tint':'paper'} exLabel={exLabel} coachApp={coachApp} coachLabel={coachLabel} kicker={kicker}/>)}
   <SectionPicPlayer/>
   <section className={l.close} aria-labelledby="lib-play">

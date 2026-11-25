@@ -7,6 +7,7 @@ import {FISH_COLLECTIONS} from '@/lib/site/collections';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {fishPath,rarityWord,SITE_FISH} from '@/lib/site/fish';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
+import {SITE_BOOKS} from '@/lib/site/books';
 import styles from '../site.module.css';
 import {libraryCrumbs} from '@/lib/site/libraryPath';
 
@@ -25,13 +26,13 @@ export default function FishIndex(){
   <RailNav rail={fishHubRail(ORDER.flatMap(r=>{const x=SITE_FISH.find(f=>f.rarity===r);return x?[[`r-${r}`,rarityWord(x)] as const]:[];}))} current="#top"/>
   <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
-   <h1 className={styles.title}>Fishbook</h1>
+   <h1 className={styles.title}>Fishbook: sea animals and their football clubs</h1>{/* SEO batch F (Nov 25 2026): the H1 says what the page is, like its title */}
    <p className={styles.lead}>{DESC} Fishing on the island also teaches a goalkeeper’s patience: wait for the real bite, like a keeper waits for the real shot.</p>
    <p className={styles.caption}>Where each animal lives on the island is a made-up island story. The club facts are real.</p>
    <a className={styles.cta} href="/play">Go fishing on the island</a>
   </header>
   <CollectionLinks list={FISH_COLLECTIONS} title="Browse the Fishbook by group and spot"/>
-  <p className={styles.caption}>The Fishbook sits on the island’s bookshelf next to <a href="/books">36 pop-up story books about real football players</a>.</p>
+  <p className={styles.caption}>The Fishbook sits on the island’s bookshelf next to <a href="/books">{SITE_BOOKS.length} pop-up story books about real football players</a>{/* SEO batch F (Nov 25 2026): was a fixed 36 */}.</p>
   {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
    <h2 className={`${styles.h2} ${tgt.target}`} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><span className={styles.itemTitle}>{f.name}</span><span className={styles.itemMeta}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>

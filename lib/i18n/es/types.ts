@@ -15,6 +15,8 @@ export type RuleEs={name:string;title:string;h1:string;desc:string;answer:string
  extra?:{title:string;intro?:string;steps?:readonly string[];head?:readonly string[];rows?:readonly (readonly string[])[];note?:string}};
 export type RulesHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;more:string;basics:readonly string[];
  groups:readonly {title:string;line:string}[];faq:readonly Faq[];leagueLine:string;sourceLine:string;
+ /** SEO batch A, Nov 25 2026: the English hub's restarts table, 1:1 rows (the rule link comes from English) */
+ restarts:{title:string;head:readonly string[];rows:readonly (readonly [string,string])[];note:string};
  futsalVsSoccer:{title:string;head:readonly string[];rows:readonly (readonly string[])[];note:string}};
 export type TermEs={name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:SceneEs;howTitle:string;
  how:readonly string[];mistakes:readonly string[];formats:string;faq:readonly Faq[];notes:CoachNotesEs;
@@ -28,19 +30,21 @@ export type TermsHubEs={crumb:string;blurb:string;title:string;description:strin
  glossary:Readonly<Record<string,GlossaryEs>>};
 export type HabitEs={name:string;how:string};
 export type PositionEs={name:string;short:string;numberLine:string;title:string;h1:string;desc:string;answer:string;job:string;suits:string;
- where:string;withBall:readonly string[];withoutBall:readonly string[];habits:readonly HabitEs[];small:string;faq:readonly Faq[];notes:CoachNotesEs};
+ where:string;withBall:readonly string[];withoutBall:readonly string[];habits:readonly HabitEs[];small:string;faq:readonly Faq[];notes:CoachNotesEs;
+ /** SEO batch C: the at-a-glance table (attack, defense, key skills) */glance:{attack:string;defend:string;skills:string}};
 export type PositionsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;faq:readonly Faq[];
  /** 1:1 with the English POSITIONS_HUB.lines / .numbers / .formats, and NUMBERS (the 1-11 table rows, name + job line). */
  lines:readonly {name:string;text:string}[];numbers:readonly string[];formats:readonly {text:string}[];futsal:string;numberRows:readonly {name:string;line:string}[]};
 /** Formations (Spanish round 2, Nov 16 2026): the words of one lib/site/formations.ts record; roles/strengths/weak/faq 1:1. */
 export type FormationEs={best:string;watch:string;desc:string;answer:string;roles:readonly {title:string;job:string}[];strengths:readonly string[];
- weak:readonly {spot:string;cover:string}[];attack:string;defend:string;suits:string;faq:readonly Faq[];notes:CoachNotesEs};
+ weak:readonly {spot:string;cover:string}[];attack:string;defend:string;suits:string;faq:readonly Faq[];notes:CoachNotesEs;
+ /** SEO batch C: the best-ages cell */ages:string};
 export type FormatGuideEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;basics:readonly string[];pickTitle:string;pick:readonly string[];faq:readonly Faq[];
  /** round 4F (fútbol 8): the rule documents, in Spanish */sources?:readonly {name:string;url:string;says:string}[]};
 export type FormationsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;what:readonly string[];
  groups:Readonly<Record<'7v7'|'8v8'|'9v9'|'11v11'|'futsal',string>>;faq:readonly Faq[]};
 /** Comparison pages: the table cells come from the Spanish position / formation records. */
-export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[]};
+export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[];faq:readonly Faq[]};
 /** Lessons (Spanish round D, Nov 16 2026): the words of one lib/site/lessons.ts SiteLesson. steps / questions / options are 1:1 with
  *  the English site lesson (options in the English A-Z order; the Spanish page re-sorts them A-Z in Spanish). No answer key. */
 export type LessonQuestionEs={q:string;options:readonly string[];explain:string};

@@ -34,7 +34,7 @@ export function lessonRail(has:{quiz:boolean;hubs:boolean;guides:boolean},es=fal
 /** The lessons index: Back to the Library, Overview, then what is on the index (the clip where it has one, the topics, the four formats). */
 export function lessonsIndexRail(clip:string|null,es=false):Rail{
  const w=(f:string)=>f==='futsal'?(es?'futsal':'Futsal'):FORMAT_LABEL[f as keyof typeof FORMAT_LABEL]??f;
- return hubRail(es?'Lecciones en esta página':'Lessons on this page',[{items:[...(clip?[sec(clip,es?'Míralo en el juego':'See it in the game')]:[]),sec('topics',es?'Por tema':'By topic'),
+ return hubRail(es?'Lecciones en esta página':'Lessons on this page',[{items:[...(clip?[sec(clip,es?'Míralo en el juego':'See it in the game')]:[]),sec('topics',es?'Por tema':'By topic'),sec('quizzes','Quizzes')/* SEO batch E */,
   ...FORMAT_ORDER.map(f=>sec(`fmt-${f}`,es?`Lecciones de ${w(f)}`:`${w(f)} lessons`))]}],es);
 }
 /** A practice plan: Back to all plans, Overview, then the plan's sections. */
@@ -104,9 +104,9 @@ const GUIDE_SECTIONS:Record<RailFamily,readonly L2[]>={
   ['also-means','Also means','También significa',true],['formats','By game size','Por tamaño de juego']],
  drills:[['diagram','Setup','Montaje'],['facts','At a glance','De un vistazo'],['steps','How to run it','Cómo hacerlo'],['cues','Coaching points','Consignas'],['versions','Easier or harder','Más fácil o más difícil'],
   ['mistakes','Mistakes','Errores'],['game','In a game','En el partido'],['home','At home','En casa',true]],
- positions:[['where','Where they stand','Dónde se coloca'],['with','With the ball','Con el balón'],['without','Without the ball','Sin el balón'],['habits','Habits','Hábitos'],
+ positions:[['where','Where they stand','Dónde se coloca'],['glance','At a glance','De un vistazo'],['with','With the ball','Con el balón'],['without','Without the ball','Sin el balón'],['habits','Habits','Hábitos'],
   ['number','Shirt number','Dorsal'],['small','Smaller games','Juegos más pequeños']],
- formations:[['diagram','Diagram','Diagrama'],['roles','Who plays where','Quién juega dónde'],['strengths','Strengths','Puntos fuertes'],['weak','Weak spots','Puntos débiles'],
+ formations:[['diagram','Diagram','Diagrama'],['glance','At a glance','De un vistazo'],['roles','Who plays where','Quién juega dónde'],['strengths','Strengths','Puntos fuertes'],['weak','Weak spots','Puntos débiles'],
   ['moves','How it moves','Cómo se mueve'],['suits','Who it suits','A quién le va']],
 };
 /** `has` may include 'cards' for the yellow and red cards page's own sections; `play` is a rule page's card deck and game

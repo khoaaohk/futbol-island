@@ -6,7 +6,7 @@ import {RULES,RULES_HUB as HUB,ruleBySlug} from '@/lib/site/rules';
 import {CHARTS} from '@/lib/site/sizes';
 import {TERMS_HUB} from '@/lib/site/terms';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {GuideEnd,GuideIntro,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {DataTable,GuideEnd,GuideIntro,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {sceneDesc} from '@/lib/site/scenes';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
@@ -35,6 +35,11 @@ export default function RulesHub(){
    <p>Gold dots are the team attacking up the picture and dark green dots are the other team. <a href={offside.path}>Read the offside rule</a>.</p>
   </Section>
   <Section id="basics" title="The game in five lines"><IconRows items={HUB.basics.map((t,i)=>({icon:BASIC_ICONS[i]??'ball',text:t}))}/></Section>
+  {/* SEO batch A, Nov 25 2026: what restarts play, each row linked to its rule page */}
+  <Section id="restarts" title={HUB.restarts.title}>
+   <DataTable label={HUB.restarts.title} head={HUB.restarts.head} rows={HUB.restarts.rows.map(([what,how,slug])=>{const x=ruleBySlug(slug)!;return [what,how,<a key={slug} href={x.path}>{x.name}</a>];})}/>
+   <p className={styles.caption}>{HUB.restarts.note}</p>
+  </Section>
   {HUB.groups.map((g,i)=>{const sc=g.rules[0].scenes[0];return <Band key={g.title} id={`g${i}`} title={g.title} line={g.line} tone={i%2?'paper':'tint'} count={`${g.rules.length} ${g.rules.length===1?'rule':'rules'}`}
    art={<PitchDiagram id={`band${i}`} format={sc.format} spots={sc.spots} arrows={sc.runs} title={sc.title} desc={sceneDesc(sc)} small scene={{ball:sc.ball,lineY:sc.lineY,lineWord:sc.lineWord,zone:sc.zone,passes:sc.passes}}/>}>
    <CardGrid ids="rule" cards={g.rules.map(r=>({path:r.path,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>

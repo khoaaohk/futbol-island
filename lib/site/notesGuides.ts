@@ -188,10 +188,10 @@ export const POSITION_NOTES:Readonly<Record<string,CoachNotes>>={
    ['U13 and up','In 11v11 wingers work with a fullback behind them and learn to run back when the ball is lost.']],
   mistakes:['Coming inside too early and leaving no width.','Dribbling into a crowd of defenders instead of passing.']},
  'striker':{
-  coach:'Teach the striker to start runs from a spot where they can see both the ball and the last defender, so they can stay onside.',
+  coach:'Teach the striker to start runs from a spot where they can see both the ball and the second-last defender, so they can stay onside.',
   match:'A familiar moment: the striker runs too early and offside is called. One step back and a later run would have been onside.',
   ages:[['U8','4v4 has no offside and no fixed striker, but every child should learn to shoot when they see the goal.'],
-   ['U10','In 7v7 offside starts at the build-out line, so the forward learns to watch the last defender.'],
+   ['U10','In 7v7 offside starts at the build-out line, so the forward learns to watch the second-last defender.'],
    ['U12','With full offside from the halfway line in 9v9, timing runs becomes the striker’s key skill.'],
    ['U13 and up','In 11v11 a lone striker learns to hold the ball up until midfielders arrive.']],
   mistakes:['Standing next to the goalkeeper waiting for the ball and getting caught offside.','Not chasing when the ball is lost, so the other team builds up easily.']},
@@ -199,8 +199,8 @@ export const POSITION_NOTES:Readonly<Record<string,CoachNotes>>={
 
 export const RULE_NOTES:Readonly<Record<string,CoachNotes>>={
  'offside':{
-  coach:'Teach forwards to glance along the line of the last defender just before a teammate passes, and to start the run as the pass is played.',
-  match:'A common sideline mix-up: a forward is behind the last defender when the ball arrives, but was level when it was kicked. That player was onside.',
+  coach:'Teach forwards to glance along the line of the second-last defender just before a teammate passes, and to start the run as the pass is played.',
+  match:'A common sideline mix-up: a forward is behind the second-last defender when the ball arrives, but was level when it was kicked. That player was onside.',
   ages:[['U8','There is no offside in 4v4 at U6 and U8, so children can stand anywhere.'],
    ['U10','In 7v7 a player can only be offside between the build-out line and the goal line.'],
    ['U12','From 9v9 at U11 and U12, full offside applies anywhere in the other team’s half.']]},
@@ -316,7 +316,7 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
    ['U12','In 9v9 the outside backs start overlapping the wide forwards when the team has the ball.'],
    ['U13 and up','In 11v11 the fullback overlapping the winger is a common way to attack down the side.']]},
  'through-ball':{
-  coach:'Teach passers to aim into the space ahead of the runner, not at their feet, and to watch the last defender before choosing the moment.',
+  coach:'Teach passers to aim into the space ahead of the runner, not at their feet, and to watch the second-last defender before choosing the moment.',
   match:'A midfielder slides a pass between two defenders and the striker runs on to it. If the run started too early, offside is called.',
   ages:[['U8','With no offside in 4v4, children can learn to pass into space for a teammate to run on to.'],
    ['U10','In 7v7 offside starts at the build-out line, so runners and passers must time it together.'],

@@ -28,8 +28,8 @@ const PLANS='/learn/soccer-practice-plans';
 const plan=(slug:string,name:string,line:string):DrillLink=>({path:`${PLANS}/${slug}`,name,line});
 const NOTE='Game format, field, ball and game length are U.S. Soccer’s small-sided standards; practice length is US Youth Soccer’s coaching guidance. Your league may differ.';
 const RAW:RawGuide[]=[
- {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'Soccer Drills for 5 and 6 Year Olds: 9 Fun U6 Games',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
-  desc:'Soccer drills for 5 and 6 year olds work best as games: a ball for every child, a story and no lines. Nine fun U6 drills, plus what to avoid at this age.',
+ {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'U6 Soccer Drills for 5 and 6 Year Olds: 9 Fun Games',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
+  desc:'Soccer drills for 6 year olds and 5 year olds (U6) work best as games: a ball each, a story and no lines. Nine fun U6 drills and what to avoid.',
   blurb:'Nine games for 5 and 6 year olds, a ball each, with what to avoid',
   lead:'The best soccer drills for 5 and 6 year olds do not look like drills at all. They are games with a story, where every child has a ball and nobody waits for a turn.',
   more:'At this age a practice has one aim: each child falls in love with having a ball at their feet. Dribbling, stopping and kicking come first. Passing and positions can wait.',
@@ -50,8 +50,8 @@ const RAW:RawGuide[]=[
    {q:'What are the best soccer drills for 5 and 6 year olds?',a:'Games where every child has a ball and a story to play: Simon says soccer, red light green light, sharks and minnows, and pirates and treasure. Finish with a 3v3 game on a small field.'}],
   lessons:['learn7_carry','learn7_receive','learn7_roles'],links:[plan('u6-first-practice','U6 first practice plan','A 45-minute plan for the first day'),G.ages,G.ball,G.field,G.calc],featured:'sharks-and-minnows'},
 
- {slug:'u8',kind:'age',age:'U8',name:'U8 drills',title:'Soccer Drills for 7 and 8 Year Olds: 10 Fun U8 Drills',h1:'U8 soccer drills for 7 and 8 year olds',
-  desc:'Ten soccer drills for 7 and 8 year olds (U8): dribbling games, 1v1, first passing games and 3v3. What players this age can do, and what to avoid.',
+ {slug:'u8',kind:'age',age:'U8',name:'U8 drills',title:'U8 Soccer Drills for 7 and 8 Year Olds: 10 Fun Games',h1:'U8 soccer drills for 7 and 8 year olds',
+  desc:'Soccer drills for 7 year olds and 8 year olds (U8): dribbling games, 1v1, first passing games and 3v3. Ten fun U8 drills, and what to avoid at this age.',
   blurb:'Ten drills for 7 and 8 year olds: dribbling, 1v1, first passing and 3v3',
   lead:'Soccer drills for 7 and 8 year olds (U8) should still be games, but players this age are ready for more: a partner, a defender and a score to beat. Dribbling and 1v1 stay at the center, and passing in pairs begins.',
   more:'Players this age can hold attention a little longer than at U6 and start to enjoy working with one teammate. They still play 4v4 with no goalkeepers, so practice should look like that game.',
@@ -72,7 +72,7 @@ const RAW:RawGuide[]=[
    {q:'What are good soccer drills for 7 year olds?',a:'Dribbling games with a defender, such as sharks and minnows and gates dribbling, then 1v1 to end zones, the first passing in pairs through gates, and a 3v3 game to finish. Keep each one to eight to ten minutes.'}],
   lessons:['learn7_carry','learn7_receive','prn_7_support','prn_7_spread'],links:[plan('u8-first-practice','U8 first practice plan','A 60-minute plan for the first day'),plan('u8-dribbling-practice-plan','U8 dribbling practice plan','One hour built around 1v1'),G.ages,G.field,G.positions,G.calc],featured:'gates-dribbling'},
 
- {slug:'u10',kind:'age',age:'U10',name:'U10 drills',title:'Soccer Drills for 9 and 10 Year Olds: 10 U10 Drills',h1:'U10 soccer drills for 9 and 10 year olds',
+ {slug:'u10',kind:'age',age:'U10',name:'U10 drills',title:'U10 Soccer Drills for 9 and 10 Year Olds: 10 Fun Drills',h1:'U10 soccer drills for 9 and 10 year olds',
   desc:'Ten soccer drills for 9 and 10 year olds (U10): rondos, first touch, give-and-go, 2v1, 1v1 defending and first goalkeeper work. What to coach and avoid.',
   blurb:'Ten drills for 9 and 10 year olds: rondos, first touch, 2v1 and first goalkeeping',
   lead:'Soccer drills for 9 and 10 year olds (U10) can ask more of players, because children this age are ready to learn with teammates. This is the age for first touch, passing in threes, 2v1 and the first goalkeeper basics.',
@@ -90,10 +90,10 @@ const RAW:RawGuide[]=[
   faq:[{q:'How long should a U10 soccer practice be?',a:'60 to 75 minutes, according to US Youth Soccer’s coaching guidance. That is time for a small game to start, two practice activities and a longer game to finish.'},
    {q:'What should U10 players work on?',a:'First touch, passing and receiving in threes and fours, 1v1 and 2v1 in attack, 1v1 defending, and for everyone, the basics of goalkeeping.'},
    {q:'Can U10 players head the ball?',a:'No. In US youth soccer, players aged 10 and under do not head the ball in games or practice. Teach chest, thigh and foot control for high balls.'},
-   {q:'What formation should a U10 team play?',a:'U10 teams play 7v7. Shapes such as 2-3-1 give every player a clear job, and our 7v7 formations page compares them.'}],
+   {q:'What formation should a U10 team play?',a:'U10 teams play 7v7. Shapes such as 2-3-1 give every player a clear job, and our 7v7 formations page compares them.'},{q:'What are good soccer drills for 9 year olds?',a:'Rondos such as 3v1, receiving across the body, the give-and-go, 2v1 to goal and 1v1 defending games all suit 9-year-olds. Finish every practice with a 4v4 or 7v7 game so they use the skill.'}],
   lessons:['learn7_receive','prn_7_support','learn7_buildout','def_7_goalside'],links:[plan('u10-first-practice','U10 first practice plan','A 60-minute plan for the first day'),plan('u10-passing-practice-plan','U10 passing practice plan','Rondos, a first touch and a four-goal game'),G.f7,G.buildOut,G.heading,G.positions,G.calc],featured:'rondo-3v1'},
 
- {slug:'u12',kind:'age',age:'U12',name:'U12 drills',title:'Soccer Drills for 11 and 12 Year Olds: 10 U12 Drills',h1:'U12 soccer drills for 11 and 12 year olds',
+ {slug:'u12',kind:'age',age:'U12',name:'U12 drills',title:'U12 Soccer Drills for 11 and 12 Year Olds: 10 Drills',h1:'U12 soccer drills for 11 and 12 year olds',
   desc:'Ten soccer drills for 11 and 12 year olds (U12): 4v2 rondos, possession games, pressure and cover, 3v2 and finishing from low crosses. What to coach.',
   blurb:'Ten drills for 11 and 12 year olds: 4v2 rondos, possession, defending in pairs and finishing',
   lead:'Soccer drills for 11 and 12 year olds (U12) can look more like the real game, because players this age can think about teammates and opponents at the same time. Possession games, defending in pairs and attacks that end with a finish all fit this age.',
@@ -111,7 +111,7 @@ const RAW:RawGuide[]=[
   faq:[{q:'How long should a U12 soccer practice be?',a:'About 75 minutes, according to US Youth Soccer’s coaching guidance: an opening game, two practice activities on one theme, and a longer game at the end.'},
    {q:'What should U12 players focus on?',a:'Passing and receiving under pressure, scanning before the ball arrives, defending in pairs, and finishing attacks quickly when they have an extra player.'},
    {q:'Can U12 players head the ball?',a:'US Youth Soccer allows heading in games from age 11, with limits on heading in practice at 11 and 12. None of our drills use heading. Check your own league’s rule.'},
-   {q:'What formation do U12 teams play?',a:'U12 teams play 9v9. Shapes such as 3-2-3 and 3-3-2 are common, and our 9v9 formations page shows each one.'}],
+   {q:'What formation do U12 teams play?',a:'U12 teams play 9v9. Shapes such as 3-2-3 and 3-3-2 are common, and our 9v9 formations page shows each one.'},{q:'What are good soccer drills for 11 year olds?',a:'Drills with a decision in them: a 4v2 rondo, three-team keep-away, pressure and cover in 2v2, 3v2 to goal and finishing from low crosses. Keep the areas small so every player gets the ball often.'}],
   lessons:['learn9_receive','learn9_cover','learn9_switch','gap11_runoncue'],links:[plan('u12-first-practice','U12 first practice plan','A 75-minute plan for the first day'),plan('u12-possession-practice-plan','U12 possession practice plan','Rondos into a three-team game'),G.f9,G.offside,G.heading,G.positions,G.calc],featured:'rondo-4v2'},
 
  {slug:'at-home',kind:'skill',name:'Drills to do at home',title:'Soccer Drills to Do by Yourself at Home, or With a Parent',h1:'Soccer drills to do by yourself at home',
@@ -133,7 +133,7 @@ const RAW:RawGuide[]=[
    {q:'What is the best soccer drill to do at home?',a:'Wall passing. It trains the pass and the first touch together, with both feet, and a child can count and beat their own score.'},
    {q:'Can we practice indoors?',a:'Toe taps, foundations and slow turns work indoors on a soft floor with a soft or futsal-style ball, if there is nothing breakable nearby.'},
    {q:'What soccer drills can you do by yourself?',a:'Toe taps and foundations, a cone weave, turn and go between two markers, wall passing and first touch gates. Each needs one ball and a small space, and a wall turns the passing drills into solo drills.'}],
-  lessons:['learn7_receive','learn7_carry','s_onetwo'],links:[G.ball,G.firstTouch,G.giveGo],featured:'wall-passing'},
+  lessons:['learn7_receive','learn7_carry','s_onetwo'],links:[G.ball,G.firstTouch,G.giveGo,G.weakFoot],featured:'wall-passing'},
 
  {slug:'passing',kind:'skill',name:'Passing drills',title:'Soccer Passing Drills for Kids: From Pairs to Rondos',h1:'Soccer passing drills for kids',
   desc:'Soccer passing drills for kids in the order to teach them: pairs through gates, triangles, give-and-go, 3v1 and 4v2 rondos, then possession games.',
@@ -148,8 +148,8 @@ const RAW:RawGuide[]=[
   after:[{id:'mistakes',title:'Common passing mistakes',items:['Toe pokes, which are fast but not accurate.','Passing and standing still. The pass is half the job.','Passes that bounce. Keep the knee over the ball.','Drills with no defender for too long. Passing is a decision as well as a technique.']}],
   faq:[{q:'How do you teach kids to pass a soccer ball?',a:'Show the inside of the foot, then play a game in pairs with a score, such as passing through gates. Add a defender as soon as the technique is steady.'},
    {q:'What is the best passing drill for U10?',a:'The 3v1 rondo. It has a real defender, everyone touches the ball often, and it teaches support on both sides of the ball.'},
-   {q:'Why do my players pass to the other team?',a:'Usually because they look up too late or no teammate has moved into view. Scanning games and rondos work on both problems.'}],
-  lessons:['prn_7_support','prn_9_support','s_onetwo','learn9_switch'],links:[G.giveGo,G.switching,G.cm],featured:'rondo-3v1'},
+   {q:'Why do my players pass to the other team?',a:'Usually because they look up too late or no teammate has moved into view. Scanning games and rondos work on both problems.'},{q:'How many passing drills should be in one practice?',a:'One or two, then a game. Start in pairs or a triangle so everyone touches the ball, move to a rondo with a defender, and finish with a small game where passing helps the team score.'},{q:'Should kids pass with the inside of the foot?',a:'Yes, for short passes. The inside of the foot is the flattest surface, so the ball goes where the player aims. Lock the ankle, point the standing foot at the target and follow through.'}],
+  lessons:['prn_7_support','prn_9_support','s_onetwo','learn9_switch'],links:[G.giveGo,G.switching,G.cm,G.thirdMan,G.oneTouch,G.dummy],featured:'rondo-3v1'},
 
  {slug:'dribbling',kind:'skill',name:'Dribbling drills',title:'Soccer Dribbling Drills for Kids: Games and Ball Mastery',h1:'Soccer dribbling drills for kids',
   desc:'Soccer dribbling drills for kids: ball mastery moves, games with a ball each such as Sharks and Minnows and gates, turns, and 1v1 to beat a defender.',
@@ -164,8 +164,8 @@ const RAW:RawGuide[]=[
   after:[{id:'mistakes',title:'Common dribbling mistakes',items:['Kicking the ball ahead and chasing it.','Using only the strong foot.','Looking down the whole time.','Dribbling into a crowd when a teammate is free. Dribble into space, and pass out of trouble.']}],
   faq:[{q:'What are the best dribbling drills for beginners?',a:'Games where each child has a ball: Red Light Green Light, Sharks and Minnows and gates dribbling. They build close control without anyone waiting in a line.'},
    {q:'How do I teach a child to dribble with both feet?',a:'Make the weaker foot worth more. Run a round where only that foot counts, or give double points for a gate or a turn done with it.'},
-   {q:'Are cone drills bad?',a:'No, in short doses. Cones build touch, but a cone never tackles. Follow any cone drill with a game against a defender.'}],
-  lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg,G.twoVone],featured:'gates-dribbling'},
+   {q:'Are cone drills bad?',a:'No, in short doses. Cones build touch, but a cone never tackles. Follow any cone drill with a game against a defender.'},{q:'How long should kids practice dribbling?',a:'About 10 to 15 minutes of a practice, spread over a warm-up game and one main drill, is plenty for young players. Then let them dribble in a small game, where they decide when to run with the ball.'},{q:'What dribbling moves should kids learn first?',a:'A drag back with the sole, an inside cut and an outside cut, then a step-over. Each one changes direction, and a change of direction with a burst of speed beats most young defenders.'}],
+  lessons:['learn7_carry','next7_dribbleroom','expf_2v1'],links:[G.wg,G.nutmeg,G.twoVone,G.stepOver,G.dribble,G.shielding],featured:'gates-dribbling'},
 
  {slug:'shooting',kind:'skill',name:'Shooting drills',title:'Soccer Shooting Drills for Kids: Finishing Without Lines',h1:'Soccer shooting drills for kids',
   desc:'Soccer shooting drills for kids that avoid long lines: dribble and shoot, lay-off and shoot, World Cup, 2v1 to goal, rebounds and low-cross finishing.',
@@ -180,8 +180,8 @@ const RAW:RawGuide[]=[
   after:[{id:'safety',title:'Keeping shooting practice safe',items:['No goalkeepers at U6 and U8. Use small goals.','From U10, shoot from a sensible distance, and never from point-blank range at a young goalkeeper.','Nobody stands behind the goal collecting balls while others shoot.','Crosses stay low. There is no heading at age 10 and under.']}],
   faq:[{q:'How do I teach my child to shoot a soccer ball with power?',a:'Technique first: laces, locked ankle, standing foot beside the ball and body over it. Power comes from a clean strike and from growing, not from swinging harder.'},
    {q:'What is a good shooting drill for U8?',a:'Dribble and shoot in two or three short lanes at small goals. Every child shoots every twenty seconds and fetches their own ball.'},
-   {q:'How do I avoid long lines in shooting drills?',a:'Use more goals. Two cones make a goal. Three players per goal means everyone is shooting, serving or fetching.'}],
-  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.cutback,G.cross],featured:'two-v-one-to-goal'},
+   {q:'How do I avoid long lines in shooting drills?',a:'Use more goals. Two cones make a goal. Three players per goal means everyone is shooting, serving or fetching.'},{q:'Which part of the foot should kids shoot with?',a:'The laces, the top of the foot, for power and the inside of the foot for accuracy. Keep the head over the ball, the standing foot next to it, and strike through the middle to keep the shot low.'},{q:'Should young players shoot with their weak foot?',a:'Yes. Give every shooting drill a turn on each foot, or a goal that only counts with the weaker foot. Players who can finish with both feet need less time to set up a shot in a game.'}],
+  lessons:['next7_shotreaction','learnf_farpost','learn11_cutback'],links:[G.st,G.cutback,G.cross,G.tapIn,G.volley,G.chip,G.halfVolley],featured:'two-v-one-to-goal'},
 
  {slug:'first-touch',kind:'skill',name:'First touch drills',title:'First Touch Soccer Drills for Kids: Receive and Go',h1:'First touch soccer drills for kids',
   desc:'First touch soccer drills for kids: receive across the body, touch through a gate, turn under pressure, and control a high ball with no heading.',
@@ -196,8 +196,8 @@ const RAW:RawGuide[]=[
   after:[{id:'mistakes',title:'Common first touch mistakes',items:['Stopping the ball dead under the body, which invites a tackle.','Receiving flat-footed. Stay on your toes.','A touch toward the defender, because the player did not look.','Using only one foot, so half the field is closed.']}],
   faq:[{q:'How do you improve first touch in soccer?',a:'With many repetitions and a purpose for each one. Wall passing gives the repetitions, and gates and a defender give the touch a direction.'},
    {q:'What is the best first touch drill for kids?',a:'For one player, wall passing. For a team, first touch gates in pairs: receive and take the first touch through a small gate to one side.'},
-   {q:'Why does my child’s first touch bounce away?',a:'Usually the foot is stiff. Ask them to relax the ankle a little and pull the foot back as the ball arrives, like catching an egg.'}],
-  lessons:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],links:[G.firstTouch,G.cm,G.heading],featured:'receive-across-the-body'},
+   {q:'Why does my child’s first touch bounce away?',a:'Usually the foot is stiff. Ask them to relax the ankle a little and pull the foot back as the ball arrives, like catching an egg.'},{q:'How often should kids practice first touch?',a:'A little at most practices. Ten minutes of receiving in pairs or through gates, then a small game, works better than one long session a month. Wall passing at home adds many more touches.'},{q:'Which foot should a player receive the ball with?',a:'Usually the foot farther from the ball, the back foot. Receiving across the body opens the hips to the field, so the player sees more and can pass or dribble forward with the next touch.'}],
+  lessons:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],links:[G.firstTouch,G.cm,G.heading,G.scanning,G.manOn],featured:'receive-across-the-body'},
 
  {slug:'goalkeeper',kind:'skill',name:'Goalkeeper drills',title:'Soccer Goalkeeper Drills for Kids: Safe Basics for U10+',h1:'Soccer goalkeeper drills for kids',
   desc:'Soccer goalkeeper drills for kids from U10: set position, footwork, the W and basket catches, angles and distribution, all with soft, close service.',
@@ -213,8 +213,8 @@ const RAW:RawGuide[]=[
   faq:[{q:'At what age do kids start playing goalkeeper?',a:'At U9 or U10 in US youth soccer, when the game becomes 7v7. The 4v4 game for under-8s has no goalkeepers.'},
    {q:'What is the first thing to teach a young goalkeeper?',a:'The set position and how to catch: the W for balls above the waist and the basket for low ones. Confidence in their hands comes before diving.'},
    {q:'Should one child always play in goal?',a:'No. Rotating gives every player a feel for the position, and keeps the regular goalkeeper’s outfield skills growing.'},
-   {q:'Can a goalkeeper pick up a back pass?',a:'Not if a teammate kicked it to them on purpose. They must use their feet. Our back-pass rule page explains the details.'}],
-  lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick],featured:'goalkeeper-catching-w-and-basket'},
+   {q:'Can a goalkeeper pick up a back pass?',a:'Not if a teammate kicked it to them on purpose. They must use their feet. Our back-pass rule page explains the details.'},{q:'How often should a young goalkeeper train?',a:'A short block of 10 to 15 minutes at a regular practice is enough at U10 and U12, with soft, close service. Let keepers play in the field too, so they learn to pass and move with the ball.'}],
+  lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick,G.sweeperKeeper,G.cleanSheet,G.goalArea,G.shootOut],featured:'goalkeeper-catching-w-and-basket'},
  {slug:'defending',kind:'skill',name:'1v1 defending drills',/* Nov 23 2026 (seo-unindexed): crawled, not indexed, with the same "1v1 Defending Soccer Drill" title as the one-v-one-defending drill page; the guide
      now targets "defending soccer drills for kids" (the URL's own words) and leaves "1v1 defending drill" to the drill */
   title:'Defending Soccer Drills for Kids: 10 Drills, U8 to U12',h1:'1v1 defending soccer drills for kids',
@@ -233,14 +233,17 @@ const RAW:RawGuide[]=[
   faq:[{q:'How do you teach 1v1 defending to kids?',a:'Start with one rule: stay on your feet. Then teach the approach, fast while the ball travels and slow near the attacker, and finish with a live 1v1 game where the defender scores by winning the ball.'},
    {q:'What is the best 1v1 defending drill?',a:'A 1v1 in a narrow channel: the defender passes to the attacker, closes them down and tries to stop the dribble over the line. It repeats the real moment many times in a few minutes.'},
    {q:'At what age should kids learn to defend 1v1?',a:'They start at U6 and U8 by stealing the ball in tag games. The approach and the body shape are taught from about U10, when players can think about the goal behind them.'},
-   {q:'Should young defenders slide tackle?',a:'Most youth coaches teach young players to stay on their feet. A defender on the ground is out of the play, and a slide tackle that misses the ball is a foul.'}],
-  lessons:['def_7_goalside','def_f_goalside','learn9_cover','def_11_pressurecover'],links:[G.goalSide,G.tackle,G.pressing,plan('u10-1v1-practice-plan','U10 1v1 practice plan','A whole session on 1v1 attacking and defending')],featured:'one-v-one-defending'},
+   {q:'Should young defenders slide tackle?',a:'Most youth coaches teach young players to stay on their feet. A defender on the ground is out of the play, and a slide tackle that misses the ball is a foul.'},{q:'Why do young defenders dive in?',a:'They want the ball back fast, so they lunge before they are close enough. Teach them to close down quickly, slow down at about an arm’s length, stand side on and wait for a heavy touch before they tackle.'}],
+  lessons:['def_7_goalside','def_f_goalside','learn9_cover','def_11_pressurecover'],links:[G.goalSide,G.tackle,G.pressing,G.jockeying,G.cover,G.lowBlock,plan('u10-1v1-practice-plan','U10 1v1 practice plan','A whole session on 1v1 attacking and defending')],featured:'one-v-one-defending'},
 ];
+const GUIDE_POSITION:Record<string,DrillLink[]>={passing:[G.cm],dribbling:[G.wg],shooting:[G.st],defending:[G.fb,G.cb],u10:[G.f7],u12:[G.f9]};
 export const DRILL_GUIDES:readonly DrillGuide[]=RAW.map(r=>{
  if(DRILLS.some(d=>d.slug===r.slug))throw new Error(`guide ${r.slug} has the slug of a drill`);
  if(r.picks.length<8||r.picks.length>10)throw new Error(`guide ${r.slug}: 8 to 10 drills`);
  const picks=r.picks.map(([slug,line])=>{const d=drill(slug);if(r.age&&!d.ages.includes(r.age))throw new Error(`guide ${r.slug}: ${slug} is not tagged ${r.age}`);return {drill:d,line};});
- return {...r,path:`${DRILLS_HUB_PATH}/${r.slug}`,picks,lessons:pickLessons(r.lessons,`guide ${r.slug}`),picture:drill(r.featured).picture};
+ /* SEO batch D, Nov 25 2026: the plan generator on every guide; the field size guide on the age guides; the skill's position */
+ const links=[...r.links];for(const l of [G.gen,...(r.age?[G.fieldGuide]:[]),...(GUIDE_POSITION[r.slug]??[])])if(!links.some(x=>x.path===l.path))links.push(l);
+ return {...r,links,path:`${DRILLS_HUB_PATH}/${r.slug}`,picks,lessons:pickLessons(r.lessons,`guide ${r.slug}`),picture:drill(r.featured).picture};
 });
 export const drillGuideBySlug=(slug:string)=>DRILL_GUIDES.find(g=>g.slug===slug);
 export const AGE_GUIDES=DRILL_GUIDES.filter(g=>g.kind==='age');

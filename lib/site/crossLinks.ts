@@ -6,7 +6,7 @@ import {cardPath,type SiteCard} from './cards';
 import type {Collection} from './collections';
 import {CHARTS} from './sizes';
 import {POSITIONS} from './positions';
-import {FORMATIONS_HUB} from './formations';
+import {FORMATIONS,FORMATIONS_HUB} from './formations';
 import {EXHIBITS} from '@/lib/endgame/museum';
 import {hubBySlug} from './hubs';
 import {gameLink,isGameListed} from './games';
@@ -25,43 +25,44 @@ const TOOL={calc:'/tools/soccer-playing-time-calculator',lineup:'/tools/soccer-l
 type ToolKey=keyof typeof TOOL;
 const R='/learn/soccer-rules/';
 /** Rule page -> the coach tool that goes with it, 2 or 3 glossary terms the rule uses, and a sister rule where one explains the other. */
+/* SEO batch A, Nov 25 2026: every rule names 3-4 sister rules (restarts with restarts, fouls with cards and advantage) */
 const RULE_LINKS:Record<string,{tool:ToolKey;terms:string[];rules?:string[]}>={
- 'kick-off':{tool:'calc',terms:['set-piece','pressing','own-goal','extra-time']},
- 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal','support'],rules:['yellow-and-red-cards']},
- 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up','goal-area','penalty-area']},
- 'corner-kick':{tool:'fields',terms:['set-piece','cross','cutback','marking','far-post','near-post'],rules:['heading-rules-for-kids']},
- 'drop-ball':{tool:'fields',terms:['set-piece','first-touch']},
- 'yellow-and-red-cards':{tool:'lineup',terms:['yellow-card','red-card','tackle']},
- 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying','penalty-area'],rules:['yellow-and-red-cards','handball','penalty-kick']},
- 'penalty-kick':{tool:'fields',terms:['penalty-shoot-out','penalty-area','set-piece','red-card','brace'],/* Nov 24 2026: the penalty cluster first */rules:['yellow-and-red-cards']},
- 'handball':{tool:'fields',terms:['free-kick-wall','yellow-card','red-card','sweeper-keeper','penalty-area'],rules:['yellow-and-red-cards']},
- 'advantage':{tool:'fields',terms:['counterattack','tackle','yellow-card'],rules:['yellow-and-red-cards']},
- 'offside':{tool:'lineup',terms:['through-ball','cutback','give-and-go','offside-trap','high-line'],rules:['throw-in','goal-kick']},/* Nov 23 2026: the restarts with no offside (its FAQ) */
- 'back-pass-rule':{tool:'l7',terms:['penalty-area','sweeper-keeper','pressing','first-touch','switching-play','possession']},
- 'build-out-line':{tool:'l7',terms:['pressing','two-v-one','switching-play','build-up'],rules:['heading-rules-for-kids','goal-kick','back-pass-rule']},
- 'heading-rules-for-kids':{tool:'l7',terms:['cross','set-piece','first-touch','clearance','volley','header'],rules:['substitutions-and-game-length','throw-in']},
- 'substitutions-and-game-length':{tool:'calc',terms:['pressing','marking','box-to-box','stoppage-time','extra-time'],rules:['heading-rules-for-kids']},
- 'futsal-rules':{tool:'futsal',terms:['give-and-go','two-v-one','pressing','pivot'],rules:['yellow-and-red-cards']},
+ 'kick-off':{tool:'calc',terms:['set-piece','pressing','own-goal','extra-time'],rules:['drop-ball','offside','substitutions-and-game-length']},
+ 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal','support'],rules:['yellow-and-red-cards','offside','corner-kick']},
+ 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up','goal-area','penalty-area'],rules:['build-out-line','corner-kick','back-pass-rule']},
+ 'corner-kick':{tool:'fields',terms:['set-piece','cross','cutback','marking','far-post','near-post','volley'],rules:['heading-rules-for-kids','goal-kick','throw-in','offside']},
+ 'drop-ball':{tool:'fields',terms:['set-piece','first-touch','stoppage-time'],rules:['kick-off','advantage','goal-kick']},
+ 'yellow-and-red-cards':{tool:'lineup',terms:['yellow-card','red-card','tackle','free-kick-wall'],rules:['fouls-and-free-kicks','advantage','handball','penalty-kick']},
+ 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying','penalty-area'],rules:['yellow-and-red-cards','handball','penalty-kick','advantage']},
+ 'penalty-kick':{tool:'fields',terms:['penalty-shoot-out','penalty-area','set-piece','red-card','brace','stoppage-time','extra-time'],/* Nov 24 2026: the penalty cluster first */rules:['yellow-and-red-cards','fouls-and-free-kicks','handball']},
+ 'handball':{tool:'fields',terms:['free-kick-wall','yellow-card','red-card','sweeper-keeper','penalty-area'],rules:['yellow-and-red-cards','fouls-and-free-kicks','penalty-kick']},
+ 'advantage':{tool:'fields',terms:['counterattack','tackle','yellow-card'],rules:['yellow-and-red-cards','fouls-and-free-kicks','drop-ball']},
+ 'offside':{tool:'lineup',terms:['through-ball','cutback','give-and-go','offside-trap','high-line'],rules:['throw-in','goal-kick','corner-kick','build-out-line']},/* Nov 23 2026: the restarts with no offside (its FAQ) */
+ 'back-pass-rule':{tool:'l7',terms:['penalty-area','sweeper-keeper','pressing','first-touch','switching-play','possession'],rules:['goal-kick','build-out-line','fouls-and-free-kicks']},
+ 'build-out-line':{tool:'l7',terms:['pressing','two-v-one','switching-play','build-up'],rules:['heading-rules-for-kids','goal-kick','back-pass-rule','offside']},
+ 'heading-rules-for-kids':{tool:'l7',terms:['cross','set-piece','first-touch','clearance','volley','header'],rules:['substitutions-and-game-length','throw-in','corner-kick']},
+ 'substitutions-and-game-length':{tool:'calc',terms:['pressing','marking','box-to-box','stoppage-time','extra-time'],rules:['heading-rules-for-kids','build-out-line','futsal-rules']},
+ 'futsal-rules':{tool:'futsal',terms:['give-and-go','two-v-one','pressing','pivot'],rules:['yellow-and-red-cards','substitutions-and-game-length','offside']},
 };
 /** Term page -> the rule (or two) the word meets in a game. */
 const TERM_RULES:Record<string,string[]>={
  'two-v-one':['offside','futsal-rules'],'give-and-go':['offside','futsal-rules'],'through-ball':['offside'],'third-man-run':['offside'],'overlap':['offside'],
  'switching-play':['build-out-line'],'cross':['corner-kick','heading-rules-for-kids'],'cutback':['offside'],'first-touch':['throw-in'],
  'nutmeg':['fouls-and-free-kicks'],'counterattack':['advantage','offside'],'pressing':['back-pass-rule','build-out-line'],'marking':['corner-kick'],
- 'goal-side':['corner-kick'],'tackle':['fouls-and-free-kicks','yellow-and-red-cards'],'set-piece':['fouls-and-free-kicks','heading-rules-for-kids'],
- 'free-kick-wall':['fouls-and-free-kicks','handball'],'yellow-card':['yellow-and-red-cards'],'red-card':['yellow-and-red-cards'],
+ 'goal-side':['corner-kick'],'tackle':['fouls-and-free-kicks','yellow-and-red-cards','advantage'],'set-piece':['fouls-and-free-kicks','heading-rules-for-kids'],
+ 'free-kick-wall':['fouls-and-free-kicks','handball'],'yellow-card':['yellow-and-red-cards','advantage'],'red-card':['yellow-and-red-cards'],
  'clean-sheet':['substitutions-and-game-length'],'hat-trick':['kick-off'],
  /* batch 1 of new term pages, Nov 20 2026 */
- 'dribble':['fouls-and-free-kicks'],'shielding':['fouls-and-free-kicks'],'volley':['corner-kick','heading-rules-for-kids'],'half-volley':['fouls-and-free-kicks'],
+ 'dribble':['fouls-and-free-kicks','advantage'],'shielding':['fouls-and-free-kicks'],'volley':['corner-kick','heading-rules-for-kids'],'half-volley':['fouls-and-free-kicks'],
  'square-pass':['offside','back-pass-rule'],'man-on':['yellow-and-red-cards'],'overload':['offside'],'underlap':['offside'],'far-post':['corner-kick'],
  'offside-trap':['offside','build-out-line'],'jockeying':['fouls-and-free-kicks','yellow-and-red-cards'],'cover':['offside'],'clearance':['heading-rules-for-kids','corner-kick'],
  'build-up':['build-out-line','goal-kick'],'false-nine':['offside'],'sweeper-keeper':['handball','back-pass-rule'],'box-to-box':['substitutions-and-game-length'],
- 'assist':['corner-kick'],'brace':['penalty-kick','kick-off'],'own-goal':['throw-in','back-pass-rule'],
+ 'assist':['corner-kick'],'brace':['penalty-kick','kick-off'],'own-goal':['throw-in','back-pass-rule','kick-off','drop-ball'],
  /* batch 2 of new term pages, Nov 20 2026 */
  'header':['heading-rules-for-kids','corner-kick'],'weak-foot':['corner-kick'],'one-touch':['fouls-and-free-kicks'],'scanning':['throw-in'],'support':['back-pass-rule'],
- 'possession':['back-pass-rule','throw-in'],'width':['goal-kick'],'step-over':['fouls-and-free-kicks'],'dummy':['corner-kick','offside'],'chip':['fouls-and-free-kicks'],'tap-in':['offside'],
- 'near-post':['corner-kick'],'low-block':['offside'],'high-line':['offside','build-out-line'],'pivot':['futsal-rules'],'penalty-area':['penalty-kick','handball','back-pass-rule'],'goal-area':['goal-kick','fouls-and-free-kicks'],
- 'stoppage-time':['substitutions-and-game-length'],'extra-time':['substitutions-and-game-length','kick-off'],'penalty-shoot-out':['penalty-kick'],
+ 'possession':['back-pass-rule','throw-in','drop-ball'],'width':['goal-kick'],'step-over':['fouls-and-free-kicks'],'dummy':['corner-kick','offside'],'chip':['fouls-and-free-kicks'],'tap-in':['offside'],
+ 'near-post':['corner-kick'],'low-block':['offside'],'high-line':['offside','build-out-line'],'pivot':['futsal-rules'],'penalty-area':['penalty-kick','handball','back-pass-rule','drop-ball'],'goal-area':['goal-kick','fouls-and-free-kicks'],
+ 'stoppage-time':['substitutions-and-game-length','drop-ball'],'extra-time':['substitutions-and-game-length','kick-off'],'penalty-shoot-out':['penalty-kick'],
 };
 /** Term page -> a coach tool, only where the word is about team shape or game time. */
 const TERM_TOOL:Record<string,ToolKey>={/* Nov 22 2026: moves (overlap, switch, counter, overload) point at the tactics board */'pressing':'calc','switching-play':'board','overlap':'board','counterattack':'board','marking':'lineup','set-piece':'fields','free-kick-wall':'fields',
@@ -120,16 +121,18 @@ Object.values(TERM_TOOL).forEach(tool);Object.values(ROLE_TOPICS).flat().forEach
 /** A rule page's links out of its cluster: its coach tool, its terms, a sister rule. */
 /** Position page -> the glossary terms that position uses most (SEO striking-distance round, Nov 22 2026): contextual links
  *  into the term pages near page one (through ball, 2v1, cutback, give-and-go, jockeying, penalty area, false nine). */
+/* SEO batch B, Nov 25 2026: every term gets 3+ contextual links from the rules, positions and drills clusters; the terms that had
+ *  0-2 were added to the positions that use them (offside trap to the fullback who holds the line, low block to the holding players). */
 const POSITION_TERMS:Record<string,string[]>={
- 'goalkeeper':['penalty-area','penalty-shoot-out','sweeper-keeper','goal-area','clean-sheet'],
- 'center-back':['jockeying','goal-side','high-line','clearance','header','clean-sheet','false-nine'],
- 'fullback':['overlap','jockeying','cross','underlap'],
- 'wingback':['overlap','cross','cutback','width'],
- 'defensive-midfielder':['pivot','cover','pressing','box-to-box'],
- 'central-midfielder':['box-to-box','give-and-go','switching-play','scanning'],
- 'attacking-midfielder':['through-ball','give-and-go','two-v-one','false-nine','assist'],
- 'winger':['cutback','two-v-one','cross','dribble'],
- 'striker':['false-nine','through-ball','cutback','penalty-area','hat-trick'],
+ 'goalkeeper':['penalty-area','penalty-shoot-out','sweeper-keeper','goal-area','clean-sheet','free-kick-wall'],
+ 'center-back':['jockeying','goal-side','high-line','clearance','header','clean-sheet','false-nine','low-block'],
+ 'fullback':['overlap','jockeying','cross','underlap','cover','offside-trap'],
+ 'wingback':['overlap','cross','cutback','width','overload','underlap','near-post'],
+ 'defensive-midfielder':['pivot','cover','pressing','box-to-box','square-pass','man-on','low-block'],
+ 'central-midfielder':['box-to-box','give-and-go','switching-play','scanning','third-man-run','one-touch'],
+ 'attacking-midfielder':['through-ball','give-and-go','two-v-one','false-nine','assist','third-man-run','dummy'],
+ 'winger':['cutback','two-v-one','cross','dribble','far-post','step-over','assist'],
+ 'striker':['false-nine','through-ball','cutback','penalty-area','hat-trick','volley','tap-in','penalty-shoot-out'],
 };
 for(const [p,ts] of Object.entries(POSITION_TERMS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(termLink);}
 /** Position page -> coach tools (SEO wave 2, Nov 24 2026): the scanning trainer for the outfield positions that must look before
@@ -138,9 +141,52 @@ const SCAN='/tools/soccer-scanning-trainer';
 const POSITION_TOOLS:Record<string,string[]>={'center-back':[SCAN],'fullback':[SCAN],'wingback':[SCAN],'defensive-midfielder':[SCAN],'central-midfielder':[SCAN],
  'attacking-midfielder':[SCAN],'winger':[SCAN],'striker':[SCAN]};
 for(const [p,ts] of Object.entries(POSITION_TOOLS)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);ts.forEach(extraLink);}
+/** Position page -> the rules that position meets most (SEO batch A, Nov 25 2026): every rule page links its positions (lib/site/rules.ts
+ *  links), and this sends the link back, so each rule gets 1-4 contextual links from the positions cluster. */
+const POSITION_RULES:Record<string,string[]>={
+ 'goalkeeper':['back-pass-rule','goal-kick','penalty-kick','handball','drop-ball'],
+ 'center-back':['offside','fouls-and-free-kicks','yellow-and-red-cards','heading-rules-for-kids','corner-kick'],
+ 'fullback':['throw-in','offside','fouls-and-free-kicks'],
+ 'wingback':['throw-in','offside','corner-kick'],
+ 'defensive-midfielder':['fouls-and-free-kicks','yellow-and-red-cards','advantage','handball'],
+ 'central-midfielder':['kick-off','advantage','drop-ball'],
+ 'attacking-midfielder':['fouls-and-free-kicks','offside','advantage'],
+ 'winger':['corner-kick','throw-in','offside'],
+ 'striker':['offside','penalty-kick','kick-off','build-out-line'],
+};
+for(const [p,rs] of Object.entries(POSITION_RULES)){if(!POSITIONS.some(x=>x.slug===p))throw new Error(`crossLinks: position ${p} does not exist`);rs.forEach(rule);}
+export const positionRuleSlugs=(slug:string):readonly string[]=>POSITION_RULES[slug]??[];
+export const positionRuleLinks=(slug:string):XLink[]=>positionRuleSlugs(slug).map(ruleLink);
 export const positionToolPaths=(slug:string):readonly string[]=>POSITION_TOOLS[slug]??[];
 /* SEO wave 2: the goalkeeper position links the keeper-vs-shooter arcade game */
-const POSITION_GAMES:Record<string,readonly ('airhockey'|'snake')[]>={goalkeeper:['airhockey']};
+/* SEO batch C, Nov 25 2026: Squad Snake (collect a squad in position order) on every position page */
+const POSITION_GAMES:Record<string,readonly ('airhockey'|'snake')[]>=Object.fromEntries(POSITIONS.map(p=>[p.slug,p.slug==='goalkeeper'?['airhockey','snake']:['snake']]));
+/** Formation page -> the soccer terms its shape leans on (SEO batch C, Nov 25 2026): 3 per formation, shown in Keep reading. */
+const FORMATION_TERMS:Record<string,string[]>={
+ '7v7-2-3-1':['width','support','build-up'],
+ '7v7-3-2-1':['cover','overlap','counterattack'],
+ '7v7-2-2-2':['cover','pressing','support'],
+ '7v7-3-1-2':['two-v-one','through-ball','cover'],
+ '8v8-3-3-1':['width','support','switching-play'],
+ '8v8-3-2-2':['two-v-one','overlap','cover'],
+ '8v8-2-3-2':['pressing','cover','build-up'],
+ '9v9-3-2-3':['width','switching-play','build-up'],
+ '9v9-3-3-2':['two-v-one','give-and-go','width'],
+ '9v9-2-3-2-1':['possession','build-up','cover'],
+ '9v9-3-1-3-1':['counterattack','through-ball','support'],
+ '9v9-4-3-1':['low-block','overlap','cover'],
+ '11v11-4-3-3':['width','pressing','overlap'],
+ '11v11-4-4-2':['low-block','two-v-one','switching-play'],
+ '11v11-4-2-3-1':['box-to-box','through-ball','counterattack'],
+ '11v11-3-5-2':['overlap','cross','high-line'],
+ 'futsal-2-2':['give-and-go','cover','two-v-one'],
+ 'futsal-1-2-1-diamond':['pivot','give-and-go','switching-play'],
+ 'futsal-3-1':['pivot','shielding','give-and-go'],
+};
+for(const f of FORMATIONS)if(!FORMATION_TERMS[f.slug])throw new Error(`crossLinks: formation ${f.slug} has no terms`);
+for(const [f,ts] of Object.entries(FORMATION_TERMS)){if(!FORMATIONS.some(x=>x.slug===f))throw new Error(`crossLinks: formation ${f} does not exist`);ts.forEach(termLink);}
+export const formationTermSlugs=(slug:string):readonly string[]=>FORMATION_TERMS[slug]??[];
+export const formationTermLinks=(slug:string):XLink[]=>formationTermSlugs(slug).map(termLink);
 export const positionToolLinks=(slug:string):XLink[]=>[...positionToolPaths(slug).map(extraLink),...(POSITION_GAMES[slug]??[]).filter(isGameListed).map(gameLink)];
 export const positionTermSlugs=(slug:string):readonly string[]=>POSITION_TERMS[slug]??[];
 export const positionTermLinks=(slug:string):XLink[]=>positionTermSlugs(slug).map(termLink);
@@ -183,6 +229,11 @@ export function booksForCollection(c:Pick<Collection,'parent'|'groups'>):XLink[]
  const listed=new Set(c.groups.flatMap(g=>g.links.map(l=>l.path)));
  return built.filter(b=>b.card&&listed.has(cardPath(b.card.number))).map(bookLink);
 }
+/** SEO batch F (Nov 25 2026): book -> one arcade game for the player's position (the game's own skill line says why): the keeper
+ *  game for goalkeepers, the shape game for defenders, the passing-lanes puzzle for midfielders and futsal players, beating a
+ *  tackle for wingers, striking the ball for strikers. */
+const ROLE_GAME:Record<string,'airhockey'|'lineup'|'puzzle'|'runner'|'ballblaster'>={goalkeeper:'airhockey',centerback:'lineup',fullback:'lineup',midfielder:'puzzle',winger:'runner',striker:'ballblaster'};
+export const bookGameLink=(b:Pick<SiteBook,'card'>):XLink|undefined=>{const id=b.card?(ROLE_GAME[b.card.role]??(b.card.futsal?'puzzle':undefined)):undefined;return id&&isGameListed(id)?gameLink(id):undefined;};
 /** Books with no player card on the site yet: they join the positions guide's book list so no book has only the shelf link. */
 export const booksWithoutCard=():XLink[]=>built.filter(b=>!b.card).map(bookLink);
 

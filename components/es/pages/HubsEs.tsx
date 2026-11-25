@@ -31,6 +31,8 @@ import {Band,CardGrid,groupIcon,Hero,lessonIcon} from '@/components/site/HubPart
 import {esLd} from './GuidesEs';
 import type {EsRoute} from '../routes';
 import styles from '@/app/(site)/site.module.css';
+import HubQuizLinks,{HUB_QUIZ_ID} from '@/components/site/quiz/HubQuizLinks';
+import {HUB_QUIZ_WORDS,HUB_QUIZZES} from '@/lib/site/quizzes';
 /**
  * Spanish round D (Nov 16 2026): the five lesson hubs (components/site/LessonHub.tsx), the three size charts
  * (app/(site)/learn/ChartView.tsx) and the parents' guide (app/(site)/safe-football-game-for-kids), same sections, markup and
@@ -70,7 +72,7 @@ function MoreToLearnEs({except}:{except?:string}){
 function LessonHubEs({hub,children,extra=[]}:{hub:EsHub;children?:React.ReactNode;extra?:readonly RailItem[]}){
  const crumbs=hubCrumbsEs(hub),items=hub.groups.flatMap(g=>g.lessons);
  /* the side nav, as English (components/site/LessonHub.tsx): Back to the Biblioteca, Resumen, the page's own section, each group, Preguntas, Más para aprender */
- const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...(guideVideo(hub.enPath)&&hub.video?[sec(`clip-${guideVideo(hub.enPath)!.key}`,'Míralo en el juego')]:[]),...extra,...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
+ const rail=hubRail(`${hub.crumb} en esta página`,[{items:[...(guideVideo(hub.enPath)&&hub.video?[sec(`clip-${guideVideo(hub.enPath)!.key}`,'Míralo en el juego')]:[]),...extra,...(HUB_QUIZZES[hub.enPath.replace(/^\/learn\//,'')]?[sec(HUB_QUIZ_ID,HUB_QUIZ_WORDS.es.rail)]:[]),...hub.groups.map((g,i)=>sec(`g-${i}`,hubGroupLabel(g.title))),sec('faq','Preguntas'),sec('more','Más para aprender')]}],true);
  return <>
   <RailNav rail={rail} current="#top"/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -86,7 +88,7 @@ function LessonHubEs({hub,children,extra=[]}:{hub:EsHub;children?:React.ReactNod
    <a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a>
   </header>
   </Hero>
-  {children}
+  {children}<HubQuizLinks slug={hub.enPath.replace(/^\/learn\//,'')} lang="es"/>{/* SEO batch E */}
   {hub.groups.map((g,i)=><Band key={g.title} id={`g-${i}`} title={g.title} line={g.line} tone={i%2?'paper':'tint'} icon={groupIcon(g.lessons)}
    count={hub.showQuestion?`${g.lessons.length} ${g.lessons.length===1?'cuestionario':'cuestionarios'}`:`${g.lessons.length} ${g.lessons.length===1?'lección':'lecciones'}`}>
    <CardGrid lang="es" cards={g.lessons.map(l=>({path:hub.showQuestion?`${l.esPath}#quiz`:l.esPath,name:l.title,icon:lessonIcon(l.category),

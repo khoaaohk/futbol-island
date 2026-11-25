@@ -4,7 +4,7 @@
  * SOURCES (checked Nov 10 2026): the pages themselves (lib/site/rules.ts, positions.ts, terms.ts, formations.ts, sizes.ts).
  */
 import {gameLink,isGameListed} from './games';
-const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/';
+const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/',F='/learn/soccer-formations/';
 export const G={
  throwIn:{path:R+'throw-in',name:'The throw-in rule',line:'Both feet down, both hands, from behind and over the head'},
  heading:{path:R+'heading-rules-for-kids',name:'Heading rules for kids in the US',line:'No heading at 10 and under'},
@@ -33,6 +33,20 @@ export const G={
  nutmeg:{path:T+'nutmeg',name:'Nutmeg (soccer term)',line:'The ball played through a defender’s legs'},
  counter:{path:T+'counterattack',name:'Counterattack (soccer term)',line:'Attacking fast after winning the ball'},
  marking:{path:T+'marking',name:'Marking (soccer term)',line:'Staying with an opponent'},
+ /* SEO batch B, Nov 25 2026: more glossary terms for the practice plans and drill guides (words from the term pages' own names) */
+ tapIn:{path:T+'tap-in',name:'Tap-in (soccer term)',line:'The easy finish from close range'},volley:{path:T+'volley',name:'Volley (soccer term)',line:'Kicking the ball before it bounces'},
+ halfVolley:{path:T+'half-volley',name:'Half-volley (soccer term)',line:'Kicking the ball just after it bounces'},chip:{path:T+'chip',name:'Chip (soccer term)',line:'Lifting the ball over a goalkeeper'},
+ farPost:{path:T+'far-post',name:'Far post (soccer term)',line:'The goalpost farther from the ball'},stepOver:{path:T+'step-over',name:'Step-over (soccer term)',line:'Swing a foot around the ball, then go the other way'},
+ dribble:{path:T+'dribble',name:'Dribble (soccer term)',line:'Moving with the ball in small touches'},jockeying:{path:T+'jockeying',name:'Jockeying (soccer term)',line:'Staying in front of a dribbler without diving in'},
+ shielding:{path:T+'shielding',name:'Shielding (soccer term)',line:'Your body between the ball and the opponent'},cover:{path:T+'cover',name:'Cover (soccer term)',line:'The second defender behind the first'},
+ lowBlock:{path:T+'low-block',name:'Low block (soccer term)',line:'The whole team defending close to its own goal'},sweeperKeeper:{path:T+'sweeper-keeper',name:'Sweeper keeper (soccer term)',line:'The goalkeeper who comes out to clear'},
+ cleanSheet:{path:T+'clean-sheet',name:'Clean sheet (soccer term)',line:'A game with no goals against'},goalArea:{path:T+'goal-area',name:'Goal area (soccer term)',line:'The six-yard box and its rules'},
+ shootOut:{path:T+'penalty-shoot-out',name:'Penalty shoot-out (soccer term)',line:'How a tied cup game is decided'},possession:{path:T+'possession',name:'Possession (soccer term)',line:'Having the ball, and keeping it'},
+ scanning:{path:T+'scanning',name:'Scanning (soccer term)',line:'Checking your shoulder before the ball arrives'},manOn:{path:T+'man-on',name:'Man on (soccer term)',line:'The warning call for an opponent behind you'},
+ oneTouch:{path:T+'one-touch',name:'One-touch (soccer term)',line:'Passing with your first touch'},weakFoot:{path:T+'weak-foot',name:'Weak foot (soccer term)',line:'The foot you use less, and how to improve it'},
+ support:{path:T+'support',name:'Support (soccer term)',line:'Moving to where the ball can reach you'},thirdMan:{path:T+'third-man-run',name:'Third-man run (soccer term)',line:'A third player receives after two teammates pass'},
+ hatTrick:{path:T+'hat-trick',name:'Hat-trick (soccer term)',line:'Three goals by one player in a game'},
+ dummy:{path:T+'dummy',name:'Dummy (soccer term)',line:'Letting the ball run on to a teammate'},
  f7:{path:'/learn/7v7-soccer-formations',name:'7v7 soccer formations',line:'Shapes for U9 and U10 teams'},
  f9:{path:'/learn/9v9-soccer-formations',name:'9v9 soccer formations',line:'Shapes for U11 and U12 teams'},
  field:{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
@@ -49,12 +63,42 @@ export const G={
  /* seo-nov18: the two pages stuck near position 19 get links from the age guides, plans and tool pages. */
  calc:{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time, with equal minutes for every player'},
  positions:{path:'/learn/soccer-positions',name:'Soccer positions explained',line:'Learn the positions and what each player does'},
+ /* SEO batch D, Nov 25 2026: the coach tools every drill, plan and guide page now links (lib/site/tools/moreTools.ts) */
+ gen:{path:'/tools/soccer-practice-plan-generator',name:'Soccer practice plan generator',line:'Pick an age, a length and a theme: get a timed plan with these drills'},
+ fieldGuide:{path:'/tools/youth-soccer-field-size-guide',name:'Youth soccer field size guide',line:'Each format drawn to scale, with a cone plan to mark it'},
 } as const;
+/** SEO batch D, Nov 25 2026: every drill page links the position that uses its skill most and the practice plan generator
+ *  (drills.ts withTerms adds these after the drill's own links; a path the drill already links is skipped). */
+export const DRILL_SKILL_LINKS:Readonly<Record<string,readonly {path:string;name:string;line?:string}[]>>={
+ dribbling:[G.wg,G.gen],'first-touch':[G.cm,G.gen],passing:[G.cm,G.gen],shooting:[G.st,G.gen],'attacking-1v1':[G.wg,G.gen,G.fieldGuide],
+ 'defending-1v1':[G.fb,G.cb,G.gen],scanning:[G.cm,G.dm,G.gen],'small-sided':[G.positions,G.gen,G.fieldGuide],goalkeeper:[G.gk,G.gen],'warm-up':[G.gen,G.fieldGuide],
+};
+
 /**
  * The other direction (Nov 10 2026): which drills an existing guide page links to ("Drills to practice this"), keyed by the
  * guide's path. Read by drillLinksFor() in lib/site/drills.ts and rendered by the position, rule and glossary pages.
  */
 export const GUIDE_DRILLS:Record<string,string[]>={
+ /* SEO batch C, Nov 25 2026: every formation page links 3 drills that train its shape's main idea */
+ [F+'7v7-2-3-1']:['build-out-game','triangle-passing','recover-goal-side'],
+ [F+'7v7-3-2-1']:['pressure-and-cover-2v2','build-out-game','two-v-one-to-goal'],
+ [F+'7v7-2-2-2']:['pressure-and-cover-2v2','two-v-one-to-goal','rondo-3v1'],
+ [F+'7v7-3-1-2']:['two-v-one-to-goal','end-zone-game','pressure-and-cover-2v2'],
+ [F+'8v8-3-3-1']:['four-goal-game','triangle-passing','build-out-game'],
+ [F+'8v8-3-2-2']:['two-v-one-to-goal','crossing-and-finishing','pressure-and-cover-2v2'],
+ [F+'8v8-2-3-2']:['pressure-and-cover-2v2','three-v-two-to-goal','build-out-game'],
+ [F+'9v9-3-2-3']:['four-goal-game','crossing-and-finishing','build-out-game'],
+ [F+'9v9-3-3-2']:['two-v-one-to-goal','give-and-go','three-v-two-to-goal'],
+ [F+'9v9-2-3-2-1']:['rondo-4v2','three-team-keep-away','recover-goal-side'],
+ [F+'9v9-3-1-3-1']:['rondo-4v2','end-zone-game','three-v-two-to-goal'],
+ [F+'9v9-4-3-1']:['pressure-and-cover-2v2','recover-goal-side','crossing-and-finishing'],
+ [F+'11v11-4-3-3']:['crossing-and-finishing','rondo-4v2','four-goal-game'],
+ [F+'11v11-4-4-2']:['four-goal-game','two-v-one-to-goal','pressure-and-cover-2v2'],
+ [F+'11v11-4-2-3-1']:['receive-and-turn','end-zone-game','three-v-two-to-goal'],
+ [F+'11v11-3-5-2']:['crossing-and-finishing','recover-goal-side','three-v-two-to-goal'],
+ [F+'futsal-2-2']:['give-and-go','pressure-and-cover-2v2','two-v-one-to-goal'],
+ [F+'futsal-1-2-1-diamond']:['rondo-3v1','give-and-go','triangle-passing'],
+ [F+'futsal-3-1']:['lay-off-and-shoot','give-and-go','rondo-3v1'],
  [P+'goalkeeper']:['goalkeeper-catching-w-and-basket','goalkeeper-footwork-and-set','goalkeeper-angles','goalkeeper-distribution'],
  [P+'center-back']:['one-v-one-defending','pressure-and-cover-2v2','build-out-game'],
  [P+'fullback']:['recover-goal-side','one-v-one-defending','throw-in-game'],
@@ -133,4 +177,22 @@ export const GUIDE_DRILLS:Record<string,string[]>={
  [T+'pivot']:['lay-off-and-shoot','receive-and-turn'],
  [T+'penalty-area']:['crossing-and-finishing','goalkeeper-angles'],
  [T+'goal-area']:['goalkeeper-distribution','build-out-game'],
+};
+/**
+ * The way back (SEO batch B, Nov 25 2026): drill slug -> the glossary terms (lib/site/terms.ts slugs) that drill page links in its
+ * "Read more" list. A term page already lists its drills in GUIDE_DRILLS; this sends up to three of those links back, the
+ * least-linked terms first, so every term gets contextual links from the drills cluster. Each pair must also be in GUIDE_DRILLS
+ * (checked in lib/site/drills.ts), so a drill only links a word it really trains.
+ */
+export const DRILL_TERMS:Record<string,readonly string[]>={
+ 'receive-across-the-body':['first-touch'],'first-touch-gates':['first-touch'],'throw-in-game':['set-piece'],'gates-dribbling':['dribble'],'dribble-tag':['dribble'],'knockout':['shielding'],
+ 'one-v-one-two-goals':['shielding'],'clean-your-room':['clearance'],'toe-taps-and-foundations':['weak-foot'],'dribble-and-shoot':['chip'],'give-and-go':['assist','give-and-go'],
+ 'four-goal-game':['width','switching-play'],'one-v-one-to-end-zones':['step-over','nutmeg'],'triangle-passing':['third-man-run','support'],'world-cup-shooting-game':['hat-trick','brace'],
+ 'cone-weave-dribbling':['step-over','dribble'],'partner-passing-through-gates':['square-pass','weak-foot'],'shoulder-check-colors':['man-on','scanning'],'lay-off-and-shoot':['pivot','false-nine'],
+ 'three-v-two-to-goal':['overload','counterattack','two-v-one'],'rondo-4v2':['overload','possession','pressing'],'end-zone-game':['offside-trap','high-line','through-ball'],
+ 'goalkeeper-angles':['clean-sheet','sweeper-keeper','penalty-area'],'thigh-and-chest-control':['half-volley','volley','header'],'follow-the-shot':['tap-in','half-volley','brace'],
+ 'rondo-3v1':['one-touch','square-pass','support'],'build-out-game':['build-up','own-goal','goal-area'],'goalkeeper-distribution':['build-up','goal-area','sweeper-keeper'],
+ 'wall-passing':['one-touch','weak-foot','give-and-go'],'two-v-one-to-goal':['underlap','overlap','counterattack'],'pressure-and-cover-2v2':['low-block','cover','marking'],
+ 'three-team-keep-away':['possession','width','box-to-box'],'receive-and-turn':['man-on','scanning','pivot'],'one-v-one-defending':['jockeying','yellow-card','red-card'],
+ 'recover-goal-side':['high-line','yellow-card','red-card'],'crossing-and-finishing':['far-post','tap-in','near-post']
 };

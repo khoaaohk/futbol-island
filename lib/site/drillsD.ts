@@ -29,7 +29,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['learn7_receive','learn9_receive','dbz_7_dontballwatch','bld_11_throughlines'],links:[G.cm,G.dm,G.firstTouch,G.kitRush,...G.popUp],related:['receive-and-turn','receive-across-the-body','busy-square-dribbling','rondo-3v1'],
   faq:[{q:'What is scanning in soccer?',a:'Looking around, away from the ball, to see where teammates, opponents and space are. Coaches also call it checking your shoulder.'},
    {q:'At what age can kids learn to scan?',a:'From about U8 with simple games like this one. Younger players are still learning to control the ball, which takes all their attention.'},
-   {q:'When should a player look?',a:'While the ball is travelling to a teammate or to them, not while it is at their own feet. The last look comes just before the pass arrives.'}]},
+   {q:'When should a player look?',a:'While the ball is travelling to a teammate or to them, not while it is at their own feet. The last look comes just before the pass arrives.'},{q:'How do I set up the shoulder check color drill?',a:'Pairs pass in a grid while the coach stands behind one player and holds up a colored cone. Before receiving, the player checks the shoulder and calls the color.'},{q:'How do I make the shoulder check drill harder?',a:'Use colors and fingers, change the card more often, or ask players to pass toward the side that matches the color they saw.'}]},
 
  {slug:'busy-square-dribbling',name:'Busy square dribbling',skill:'scanning',ages:['U6','U8','U10'],h1:'Busy square: heads-up soccer dribbling drill',
   title:'Busy Square: Heads-Up Soccer Dribbling Drill for Kids',
@@ -48,7 +48,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['learn7_receive','prn_7_spread','learn7_carry'],links:[G.cm,G.ages],related:['gates-dribbling','dribble-tag','shoulder-check-colors','knockout'],
   faq:[{q:'How do I teach kids to dribble with their head up?',a:'Give them a reason to look: other players to avoid and silent signals to spot. Telling them “head up” works far less well than a game that needs it.'},
    {q:'How big should the square be?',a:'Start with about 15 by 15 yards for ten players, then shrink it. It should feel crowded but not impossible.'},
-   {q:'Is this a warm-up or a drill?',a:'Both. It makes a good first activity because every player has a ball and it needs no explanation.'}]},
+   {q:'Is this a warm-up or a drill?',a:'Both. It makes a good first activity because every player has a ball and it needs no explanation.'},{q:'How many players fit in a busy square?',a:'Eight to twelve players in a square about 20 by 20 yards, each with a ball. Add players or shrink the square to make it busier.'},{q:'How do I make busy square dribbling harder?',a:'Shrink the square, call out turns and changes of speed, or send in two defenders without a ball who try to win one.'}]},
 
  {slug:'three-v-three-game',name:'3v3 small-sided game',skill:'small-sided',ages:['U6','U8','U10'],h1:'3v3 small-sided soccer game for practice',
   title:'3v3 Soccer Game for Practice: Field Size and Rules',
@@ -69,7 +69,7 @@ export const DRILLS_D:RawDrill[]=[
   faq:[{q:'Why do coaches use 3v3 at practice?',a:'With six players and one ball, everyone is always near the play. Children dribble, pass, shoot and defend many more times than in a big game.'},
    {q:'What size is a 3v3 soccer field?',a:'About 20 by 30 yards at practice. U.S. Soccer’s 4v4 game field for under-8s is 25 to 35 yards long and 15 to 25 yards wide.'},
    {q:'Should there be goalkeepers in 3v3?',a:'No. US small-sided games for under-8s have no goalkeepers, and small goals reward a pass into the goal over a long kick.'},
-   {q:'How do I handle an odd number of players?',a:'Play 3v2 or 4v3 and give the smaller team the stronger players, or let one player be a “bonus” who plays for whichever team has the ball.'}]},
+   {q:'How do I handle an odd number of players?',a:'Play 3v2 or 4v3 and give the smaller team the stronger players, or let one player be a “bonus” who plays for whichever team has the ball.'},{q:'How long should a 3v3 game last at practice?',a:'Short games of about four to six minutes, with a water break between them. Swap teams or opponents after each game to keep it even.'}]},
 
  {slug:'four-goal-game',name:'Four-goal game',skill:'small-sided',ages:['U8','U10','U12'],h1:'Four-goal soccer game (4v4)',
   title:'4v4 Four-Goal Soccer Game: Teach Kids to Switch Play',
@@ -88,7 +88,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['learn9_switch','e_switch','prn_7_spread','def_11_shift'],links:[G.switching,G.wg,G.f7],related:['three-v-three-game','end-zone-game','three-team-keep-away','one-v-one-two-goals'],
   faq:[{q:'What does the four-goal game teach?',a:'Switching play and width in attack, and shifting across as a unit in defense. It also stops young teams from attacking only through the crowded middle.'},
    {q:'What size should the field be?',a:'About 30 yards wide by 25 long for 4v4. The extra width is what makes the switch worth it.'},
-   {q:'Can I play it with more players?',a:'Yes: 5v5 or 6v6 on a bigger field works well for U12. With extra players, rotate a third team in every four minutes.'}]},
+   {q:'Can I play it with more players?',a:'Yes: 5v5 or 6v6 on a bigger field works well for U12. With extra players, rotate a third team in every four minutes.'},{q:'How do you set up a four-goal game?',a:'A field about 30 by 25 yards with two small goals at each end, one near each corner. Each team attacks two goals and defends two, so the open side is always worth looking for.'},{q:'What age is the four-goal game for?',a:'U8 to U12. At U8 play 3v3 or 4v4 with wide goals; at U10 and U12 play 4v4 or 5v5 and give a bonus goal after a switch of play.'}]},
 
  {slug:'end-zone-game',name:'End zone game',skill:'small-sided',ages:['U8','U10','U12'],h1:'End zone soccer game',
   title:'End Zone Soccer Game: Small-Sided Passing and Running',
@@ -107,7 +107,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['gap11_runoncue','bld_11_throughlines','f_paralela','prn_7_support'],links:[G.offside,G.st,G.f9],related:['four-goal-game','three-v-three-game','three-team-keep-away','give-and-go'],
   faq:[{q:'How do you score in the end zone game?',a:'By passing to a teammate who receives and controls the ball inside the end zone. The receiver has to run into the zone and cannot stand there waiting.'},
    {q:'Why play without goals?',a:'It takes away the long shot and makes teams work the ball forward by passing and moving. Add goals back in the last game of practice.'},
-   {q:'How does it help with offside?',a:'Players learn to start their run as the pass is played, not before. That is the habit that keeps a forward onside in 9v9 and 11v11.'}]},
+   {q:'How does it help with offside?',a:'Players learn to start their run as the pass is played, not before. That is the habit that keeps a forward onside in 9v9 and 11v11.'},{q:'What size is the field for the end zone game?',a:'About 30 by 25 yards with an end zone about 5 yards deep at each end. Make the zones deeper to make scoring easier.'},{q:'What age is the end zone game for?',a:'U8 to U12. At U8 a player can dribble into the zone to score; at U10 and U12 a goal only counts when a teammate receives a pass in the zone.'}]},
 
  {slug:'three-v-two-to-goal',name:'3v2 to goal',skill:'small-sided',ages:['U10','U12'],h1:'3v2 to goal soccer drill',
   title:'3v2 to Goal Soccer Drill: Attack With an Extra Player',
@@ -126,7 +126,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['trn_9_firstpass','learn9_two_one','expf_2v1','trn_f_firstpass'],links:[G.counter,G.twoVone,G.offside,G.st],related:['two-v-one-to-goal','pressure-and-cover-2v2','crossing-and-finishing','four-goal-game'],
   faq:[{q:'What is the aim of a 3v2 drill?',a:'To teach attackers to use an extra player quickly, before more defenders recover, and to teach two defenders to delay and protect the middle.'},
    {q:'Who should have the ball in a 3v2?',a:'The middle attacker is best, because they can pass to either side. Dribbling straight at one defender leaves a wide teammate free.'},
-   {q:'What should the two defenders do?',a:'Drop toward their goal together, stay narrow, and force a pass wide. They try to make the attack take longer than eight seconds.'}]},
+   {q:'What should the two defenders do?',a:'Drop toward their goal together, stay narrow, and force a pass wide. They try to make the attack take longer than eight seconds.'},{q:'How do I set up a 3v2 to goal drill?',a:'Half a 7v7 or 9v9 field with a goal and a keeper. Three attackers start at the halfway line and two defenders near the top of the area.'},{q:'How do I make 3v2 harder for the attackers?',a:'Add a time limit, send a recovering defender in after a few seconds to make it 3v3, or let the defenders score on a counter into a small goal.'}]},
 
  {slug:'build-out-game',name:'Build-out game',skill:'small-sided',ages:['U10','U12'],h1:'Build-out game: playing out from the goalkeeper in soccer',
   title:'Build-Out Game: Soccer Drill for Playing Out From the Back',
@@ -145,7 +145,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['learn7_buildout','bld_7_usekeeper','learn9_restart','nx9_keeperthird'],links:[G.buildOut,G.goalKick,G.backPass,G.gk,G.cb],related:['goalkeeper-distribution','rondo-4v2','three-v-three-game','four-goal-game'],
   faq:[{q:'What is the build-out line?',a:'A line across each half of a 7v7 field in US youth soccer. When the goalkeeper has the ball or there is a goal kick, the other team must drop behind it until the ball is in play.'},
    {q:'Why teach kids to play out from the back?',a:'Because it gives every player, defenders and the goalkeeper included, practice at receiving and passing under pressure, and it is how 7v7 restarts are designed to work.'},
-   {q:'Can the goalkeeper pick up a pass back?',a:'Not a deliberate kick from a teammate. The goalkeeper must play it with their feet, which our back-pass rule page explains.'}]},
+   {q:'Can the goalkeeper pick up a pass back?',a:'Not a deliberate kick from a teammate. The goalkeeper must play it with their feet, which our back-pass rule page explains.'},{q:'What positions learn most from the build-out game?',a:'The goalkeeper, center backs and fullbacks, who start the attack, and the defensive midfielder, who drops in for a pass.'}]},
 
  {slug:'goalkeeper-footwork-and-set',name:'Goalkeeper footwork and set position',skill:'goalkeeper',ages:['U10','U12'],h1:'Goalkeeper footwork and set position soccer drill',
   title:'Soccer Goalkeeper Footwork Drill: Get Set for the Shot',
@@ -164,7 +164,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['expf_keeperposition','next7_shotreaction','bld_7_usekeeper'],links:[G.gk,G.backPass,G.ages],related:['goalkeeper-catching-w-and-basket','goalkeeper-angles','goalkeeper-distribution','follow-the-shot'],
   faq:[{q:'What is the set position for a goalkeeper?',a:'A balanced, ready stance at the moment of the shot: feet about shoulder-width apart, knees bent, weight forward on the toes, hands in front of the body.'},
    {q:'At what age should kids start goalkeeper training?',a:'US small-sided games have no goalkeepers until U9 and U10. From then, every player should take turns in goal and learn the basics, with gentle service.'},
-   {q:'Should young keepers dive?',a:'Start with footwork: stepping across to get the body behind the ball. Low collapsing saves can be added later on soft ground, taught by someone who knows how.'}]},
+   {q:'Should young keepers dive?',a:'Start with footwork: stepping across to get the body behind the ball. Low collapsing saves can be added later on soft ground, taught by someone who knows how.'},{q:'How do I set up a goalkeeper footwork drill?',a:'A goal, or two cones for posts, with a cone in the middle and one at each post. The keeper shuffles to a cone on the call, gets set, and catches a soft ball.'},{q:'How often should young keepers do footwork drills?',a:'A few minutes at the start of most practices is enough. Footwork comes before diving, and it keeps the keeper on their feet for most saves.'}]},
 
  {slug:'goalkeeper-catching-w-and-basket',name:'Goalkeeper catching: W and basket',skill:'goalkeeper',ages:['U10','U12'],h1:'Goalkeeper catching soccer drill: the W and the basket',
   title:'Soccer Goalkeeper Catching Drill: W and Basket Catch',
@@ -184,7 +184,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['next7_shotreaction','expf_keeperposition','bld_7_usekeeper'],links:[G.gk,G.backPass,G.ball],related:['goalkeeper-footwork-and-set','goalkeeper-angles','goalkeeper-distribution','thigh-and-chest-control'],
   faq:[{q:'What is the W catch in goalkeeping?',a:'The hand shape for catching a ball above the waist: fingers spread, thumbs almost touching behind the ball. The thumbs and first fingers make the letter W.'},
    {q:'What is the basket catch?',a:'The catch for a low ball: palms up, little fingers together, scooping the ball up and hugging it to the chest.'},
-   {q:'Do kids need goalkeeper gloves?',a:'They help with grip and confidence, but they are not required to learn. Good hand shape matters more than gloves.'}]},
+   {q:'Do kids need goalkeeper gloves?',a:'They help with grip and confidence, but they are not required to learn. Good hand shape matters more than gloves.'},{q:'How do I set up a goalkeeper catching drill?',a:'A server five to eight yards from the keeper with a few balls. Serve soft balls at chest height for the W catch, then low and waist-high balls for the basket.'},{q:'When should a keeper use the W catch or the basket?',a:'The W catch is for balls at chest height and above; the basket catch is for balls at the stomach or along the ground, scooped up into the chest.'}]},
 
  {slug:'goalkeeper-distribution',name:'Goalkeeper distribution',skill:'goalkeeper',ages:['U10','U12'],h1:'Goalkeeper distribution soccer drill: roll, throw and pass',
   title:'Soccer Goalkeeper Distribution Drill: Roll, Throw, Pass',
@@ -203,7 +203,7 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['expf_keeperrelease','bld_7_usekeeper','learn7_buildout','learn9_restart'],links:[G.gk,G.buildOut,G.goalKick,G.backPass],related:['build-out-game','goalkeeper-catching-w-and-basket','goalkeeper-footwork-and-set','goalkeeper-angles'],
   faq:[{q:'What is distribution in goalkeeping?',a:'How the goalkeeper gives the ball to a teammate after a save or a pass back: a roll, a throw, a pass with the foot or, in older age groups, a kick from the hands.'},
    {q:'Can goalkeepers punt in 7v7?',a:'Not under U.S. Soccer’s small-sided standards. In 7v7 the goalkeeper may not punt or drop-kick the ball, so rolling, throwing and passing are the skills to learn.'},
-   {q:'How long can a goalkeeper hold the ball?',a:'The Laws limit how long a goalkeeper may hold the ball in their hands, and the limit changed recently. Check the current rule with your league or referee.'}]},
+   {q:'How long can a goalkeeper hold the ball?',a:'The Laws limit how long a goalkeeper may hold the ball in their hands, and the limit changed recently. Check the current rule with your league or referee.'},{q:'How do I set up a goalkeeper distribution drill?',a:'The keeper in goal with balls, and two or three teammates in cone gates at different distances. The keeper rolls, throws or passes to the open gate you call.'},{q:'Which distribution should young keepers learn first?',a:'The roll along the ground, then the overarm throw, then passing with the feet. These are accurate and start the attack without giving the ball away.'}]},
 
  {slug:'goalkeeper-angles',name:'Goalkeeper angles',skill:'goalkeeper',ages:['U10','U12'],h1:'Goalkeeper angles soccer drill: where to stand',
   title:'Soccer Goalkeeper Angles Drill: Where to Stand in Goal',
@@ -222,5 +222,5 @@ export const DRILLS_D:RawDrill[]=[
   lessons:['expf_keeperposition','next7_shotreaction','gapf_farpostdefense'],links:[G.gk,G.field,G.cb],related:['goalkeeper-footwork-and-set','goalkeeper-catching-w-and-basket','goalkeeper-distribution','two-v-one-to-goal'],
   faq:[{q:'Where should a goalkeeper stand?',a:'On an imaginary line from the ball to the middle of the goal, usually a step or two in front of the goal line, so both sides of the goal are equally covered.'},
    {q:'What does narrowing the angle mean?',a:'Stepping toward the ball so that the keeper’s body blocks more of the goal from the shooter’s view. A little goes a long way.'},
-   {q:'Are these shots safe for young keepers?',a:'In this drill the ball is passed along the ground from ten yards, only after the keeper is set. Power is not the point; position is.'}]},
+   {q:'Are these shots safe for young keepers?',a:'In this drill the ball is passed along the ground from ten yards, only after the keeper is set. Power is not the point; position is.'},{q:'How do I set up a goalkeeper angles drill?',a:'A goal and four or five cones in an arc around the area. A server stands at one cone, the keeper moves to the right spot and gets set, then the server plays a soft shot.'},{q:'How far off the line should a young goalkeeper stand?',a:'A few steps off the line, on the line between the ball and the middle of the goal. Too far out and a ball can go over them; on the line and the angle is wide open.'}]},
 ];

@@ -1,3 +1,4 @@
+import type {Faq} from './safety';
 import {POSITIONS_HUB,positionBySlug,type Position} from './positions';
 import {FORMATIONS_HUB,formationBySlug,formationsUsing,type Formation} from './formations';
 import {formationImage,positionImage} from './guides';
@@ -16,7 +17,7 @@ import {formationImage,positionImage} from './guides';
  * lib/site/rules.ts (copied from those pages, so the numbers match).
  */
 export type Comparison={slug:string;path:string;kind:'position'|'formation';hub:{name:string;path:string};a:string;b:string;title:string;h1:string;desc:string;
- answer:string;head:[string,string,string];rows:[string,string,string][];fit:string[];switching:string[];links:{path:string;name:string;line:string}[];images:string[]};
+ answer:string;head:[string,string,string];rows:[string,string,string][];fit:string[];switching:string[];/** SEO batch C (Nov 25 2026): 3 questions */faq:Faq[];links:{path:string;name:string;line:string}[];images:string[]};
 export const COMPARISONS_UPDATED='2026-11-15';
 const pos=(slug:string):Position=>{const p=positionBySlug(slug);if(!p)throw new Error(`comparisons: position ${slug}`);return p;};
 const form=(slug:string):Formation=>{const f=formationBySlug(slug);if(!f)throw new Error(`comparisons: formation ${slug}`);return f;};
@@ -41,7 +42,7 @@ export const COMPARISONS:readonly Comparison[]=[
   switching:['A fullback who loves to attack is already halfway to the wingback job: the overlapping run down the side is the same run, a wingback just makes it far more often.',
    'Going from wingback back to fullback means staying home more. When one fullback goes forward, the fullback on the other side usually stays back with the center backs.',
    'Try it in practice: play one half with four defenders and one half with three center backs, then ask the wide players how their running changed.',
-   'Watch for tired legs. A wingback covers the whole side of the field, so give them a rest when you can, above all on hot days.'],
+   'Watch for tired legs. A wingback covers the whole side of the field, so give them a rest when you can, above all on hot days.'],faq:[{q:'Is a wingback a defender?',a:'Partly. A wingback defends like a fullback, dropping back to make a back five, but also gives the team all its width in attack, because there is no winger in front. That is why the job has more running than a fullback’s.'},{q:'Which formations use fullbacks and which use wingbacks?',a:'Formations with a back four use fullbacks: the 4-3-3, 4-4-2 and 4-2-3-1 in 11v11, and the 4-3-1 in 9v9. Formations with three center backs, such as the 3-5-2, use wingbacks instead.'},{q:'Can a fullback play wingback?',a:'Yes. The jobs are close, and a fullback who likes to attack often makes a good wingback. The wingback starts higher and has no winger in front, so the job needs more stamina and good crossing.'}],
   links:[{path:FB.path,name:FB.h1,line:FB.short},{path:WB.path,name:WB.h1,line:WB.short},{path:form('11v11-3-5-2').path,name:'The 3-5-2 formation',line:'The shape with two wingbacks'},{path:F433.path,name:'The 4-3-3 formation',line:'The shape with two fullbacks'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:'Every position by number, 1 to 11'}],
   images:[positionImage(FB.slug),positionImage(WB.slug)]},
  {slug:'striker-vs-winger',path:`${POSITIONS_HUB.path}/striker-vs-winger`,kind:'position',hub:PH,a:ST.slug,b:WG.slug,
@@ -53,7 +54,7 @@ export const COMPARISONS:readonly Comparison[]=[
   switching:['Many young forwards play both. A winger who cuts inside to shoot is already doing part of the striker’s job.',
    'A striker who drifts out wide pulls a defender away from the middle, and that opens a gap for a winger to run into.',
    'In small-sided games there are fewer forwards, so one player often does both jobs: scoring in the middle and helping out on the side.',
-   'Try it in practice: let the striker and a winger swap places every few minutes, then talk about which one felt more natural.'],
+   'Try it in practice: let the striker and a winger swap places every few minutes, then talk about which one felt more natural.'],faq:[{q:'Is a winger a forward?',a:'Yes. In a 4-3-3 the two wingers and the striker make the front three, so all three are forwards. The winger plays wide on the left or right, and the striker plays in the middle, closest to the goal.'},{q:'Should a fast player be a striker or a winger?',a:'Both jobs use speed. A winger uses it to beat the fullback and reach the goal line to cross. A striker uses it to run in behind the defenders as the pass is played. Try a fast player in both spots: young players should play several positions.'},{q:'Can a winger play striker?',a:'Yes. Many wingers cut inside to shoot, and in 7v7 and 9v9 the same player often does both jobs. The striker job asks for more play with the back to goal: holding the ball with a defender close, then laying it off.'}],
   links:[{path:ST.path,name:ST.h1,line:ST.short},{path:WG.path,name:WG.h1,line:WG.short},{path:'/cards/strikers',name:'Famous strikers',line:'Player cards'},{path:'/cards/wingers',name:'Famous wingers',line:'Player cards'},{path:F433.path,name:'The 4-3-3 formation',line:'One striker with a winger on each side'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:'Every position by number, 1 to 11'}],
   images:[positionImage(ST.slug),positionImage(WG.slug)]},
  {slug:'4-3-3-vs-4-4-2',path:`${FORMATIONS_HUB.path}/4-3-3-vs-4-4-2`,kind:'formation',hub:FH,a:F433.slug,b:F442.slug,
@@ -68,7 +69,7 @@ export const COMPARISONS:readonly Comparison[]=[
   switching:['Both shapes start with the same back four, so a team can switch between them without changing its defenders.',
    'To go from a 4-4-2 to a 4-3-3, one of the two forwards drops into the middle of midfield and the two wide midfielders push up to become wingers.',
    'Teams change shape during a game too: a 4-3-3 often looks like a 4-5-1 when it defends, with the wingers dropping back beside the midfielders.',
-   'Try it in practice: play the first half in one shape and the second half in the other, then ask the players where they found more space.'],
+   'Try it in practice: play the first half in one shape and the second half in the other, then ask the players where they found more space.'],faq:[{q:'Which is more attacking, the 4-3-3 or the 4-4-2?',a:'The 4-3-3 puts three forwards up front, with wingers who stay high and wide. The 4-4-2 has two strikers, and its wide midfielders start deeper. Both can attack well: it depends on the players and on how far the fullbacks go forward.'},{q:'Is the 4-3-3 good for youth soccer?',a:'It is a common first 11v11 shape, because teams that played the 3-2-3 in 9v9 already know its jobs: wide forwards, a center forward and midfield links. Add a back four and the shape is the same.'},{q:'Which is easier to defend in, the 4-3-3 or the 4-4-2?',a:'Many teams find the 4-4-2 easier without the ball, because it has two simple lines of four that slide across together. In a 4-3-3 the wingers have to drop back beside the midfielders to make a line of five.'}],
   links:[{path:F433.path,name:F433.h1,line:F433.best},{path:F442.path,name:F442.h1,line:F442.best},{path:'/learn/11v11-soccer-formations',name:'11v11 soccer formations',line:'Every 11v11 shape compared'},{path:'/tools/11v11-lineup-builder',name:'11v11 lineup builder',line:'Put your players on the field and print it'},{path:FORMATIONS_HUB.path,name:'All soccer formations',line:'Every shape for 7v7, 9v9, 11v11 and futsal'}],
   images:[formationImage(F433.slug),formationImage(F442.slug)]},
 ];
