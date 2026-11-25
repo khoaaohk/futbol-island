@@ -115,6 +115,23 @@ assert.match(read('components/marketing/marketing.module.css'),/break-inside:avo
  assert.match(doc,/SPONSOR_KIT_LINE/,'the family rules carry lib/site/safety SPONSOR_KIT_LINE');
  assert(!/\$\s?\d|£\s?\d|€\s?\d|per month|per year|USD|price:\s*\d/i.test(kit),'no prices in the kit chapter');}
 
+// Nov 25 2026 (owner): the Island Line chapter: branding on the trains, the Drip FC kindness wraps as the example
+{const tr=read('lib/site/trainDeck.ts'),kit=read('lib/site/kitDeck.ts');
+ assert.match(doc,/<TrainChapter\/>/,'the deck prints the Island Line chapter');
+ assert(doc.indexOf('<KitChapter/>')<doc.indexOf('<TrainChapter/>')&&doc.indexOf('<TrainChapter/>')<doc.indexOf('<SponsorClose/>'),'kit, then trains, then the close');
+ assert.match(doc,/from '@\/lib\/site\/trainDeck'/,'train copy comes from lib/site/trainDeck');
+ assert.match(doc,/data-train-item=\{x\.id\}/,'every train card is marked data-train-item');
+ for(const id of ['panels','badge','ride']){
+  const m=tr.match(new RegExp(`\\{id:'${id}',name:'[^']+',shot:'(\\w+)'`));
+  assert(m,`the train chapter shows the ${id} item`);
+  assert(has(`public/marketing/train/${m[1]}.webp`),`${id}: its screenshot public/marketing/train/${m[1]}.webp exists`);}
+ for(const k of ['hero','slogan'])assert(has(`public/marketing/train/${k}.webp`),`train ${k} screenshot exists`);
+ for(const k of ['TRAIN_COUNT','HEADWAY','TRAIN_STATIONS','WRAP_THEMES','PANELS','SPONSOR_TAG'])assert(tr.includes(k),`train facts read from the game: ${k}`);
+ assert.match(doc,/TRAIN_PACKAGE/,'the packages page carries the train package');
+ assert.match(kit,/\{id:'train',title:/,'the all-placements page lists the trains');
+ assert(!/Express|departure board/i.test(strip(tr).replace(/^\s*\*.*$/gm,'')),'no named train: it is not built');
+ assert(!/\$\s?\d|£\s?\d|€\s?\d|per month|per year|USD|price:\s*\d/i.test(tr),'no prices in the train chapter');}
+
 // ---- 4. a built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
 if(!fs.existsSync(path.join(app,'marketing.html'))){console.log('marketing page ok (sources; SKIP built checks: no build with /marketing)');process.exit(0);}

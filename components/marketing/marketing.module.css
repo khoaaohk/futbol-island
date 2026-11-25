@@ -249,3 +249,8 @@
 .allGroup li b{font-size:13.5px;font-weight:600}
 .allGroup li em{font-style:normal;font-weight:600;text-align:right}
 .familyNext .kitLabelImg{height:auto;aspect-ratio:16/9}
+/* Island Line chapter (Nov 25 2026): the packages page with the train card makes four; the all-placements page stacks kit and trains */
+.packRow4{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.allCol{display:grid;gap:22px;align-content:start}
+.trainPacks{display:grid;gap:6px;margin:4px 0 8px!important;font-size:13.5px;line-height:1.45}
+.trainPacks b{font-weight:600}

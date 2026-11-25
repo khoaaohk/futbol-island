@@ -160,6 +160,17 @@ const FONT='ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", "Va
 /** A dark soft shadow under an object on the club-blue pitch. */
 const shade=(c:WrapCtx,x:number,y:number,rx:number)=>groundShadow(c,x,y,rx,rx*.22,.5);
 
+// ---------------------------------------------------------------- the "Sponsor" tag (owner, Nov 25 2026: "add the small Sponsor tag")
+/** The word and look of the stadium boards' tag (lib/stadium/sponsors/atlas.ts drawSponsorLabel: INK pill at .86, PAPER 800 text) and
+ *  the Kit Shop's SPONSOR_TAG (lib/shop/dripKit.ts); copied so this file imports nothing (tests/train-wraps.cjs pins them equal). */
+export const SPONSOR_TAG_TEXT='Sponsor',TAG_INK='#231a2e',TAG_PAPER='#fff3d6';
+/** The tag box on the crest panel, in tile units (100 high): top right, clear of the crest roundel and the wordmark tab. */
+export const TAG_H=11,TAG_PAD=6.5;
+export function sponsorTag(c:WrapCtx,w:number){const h=TAG_H,fs=h*.72;
+ c.save();c.font=`800 ${fs}px system-ui,-apple-system,"Segoe UI",sans-serif`;const tw=Math.ceil(c.measureText(SPONSOR_TAG_TEXT).width)+h*.8,x=w-TAG_PAD-2-tw,y=TAG_PAD+1.5;
+ c.globalAlpha=.86;c.fillStyle=TAG_INK;c.beginPath();c.roundRect(x,y,tw,h,h/2);c.fill();
+ c.globalAlpha=1;c.fillStyle=TAG_PAPER;c.textAlign='center';c.textBaseline='middle';c.fillText(SPONSOR_TAG_TEXT,x+tw/2,y+h/2+.5);c.restore();}
+
 // ---------------------------------------------------------------- the tiles (theme t, tile k; tile 1 is always the slogan)
 /** The panel tiles of a theme in slot order (car-local −z → +z): the crest, the slogan, two theme scenes. */
 export const WRAP_TILES=['crest','slogan','scene1','scene2'] as const;
@@ -177,11 +188,12 @@ export function drawWrapTile(c:WrapCtx,t:number,k:number,w:number,slogan:readonl
    let fs=28;c.font=`800 ${fs}px ${FONT}`;const mw=Math.max(c.measureText(slogan[0]).width,c.measureText(slogan[1]).width);if(mw>tw-16){fs*=(tw-16)/mw;c.font=`800 ${fs}px ${FONT}`;}
    for(const [i,s] of slogan.entries()){const y=(i?1:-1)*fs*.56+1;c.fillStyle=CLUB.navy;c.fillText(s,0,y);}
    c.restore();heart(c,tx+tw/2-4,17,9.5,t===1?L.accent:'#ef5a69');ball(c,tx+tw/2,82,8.5);star(c,tx-tw/2+4,16,6.5);return;}
-  if(k===0){// the club: the crest roundel and the wordmark tab, the theme's own sparkle round it
-   if(t===0)for(const [x,y,r] of [[w*.14,20,7],[w*.86,18,6.5],[w*.13,54,4.5],[w*.88,52,5]] as const)star(c,x,y,r);
-   else if(t===1)for(const [x,y,r] of [[w*.15,22,8],[w*.86,20,7],[w*.13,56,5],[w*.88,54,5.5]] as const)heart(c,x,y,r,L.accent);
-   else{confetti(c,w,51,22,8,66);star(c,w*.14,20,6.5);star(c,w*.86,20,6.5);}
-   roundel(c,w/2,39,27,mark);wordTab(c,w/2,80,Math.min(w*.8,104),25,mark);return;}
+  if(k===0){// the club: the crest roundel and the wordmark tab, the theme's own sparkle round it, the "Sponsor" tag top right
+   // (the top-right sparkle sits lower, under the tag; the roundel is a touch smaller and lower so the tag never touches it)
+   if(t===0)for(const [x,y,r] of [[w*.14,20,7],[w*.87,32,5.5],[w*.13,54,4.5],[w*.88,52,5]] as const)star(c,x,y,r);
+   else if(t===1)for(const [x,y,r] of [[w*.15,22,8],[w*.87,33,6],[w*.13,56,5],[w*.88,54,5.5]] as const)heart(c,x,y,r,L.accent);
+   else{confetti(c,w,51,22,8,66);star(c,w*.14,20,6.5);star(c,w*.87,33,5.5);}
+   roundel(c,w/2,42,23,mark);wordTab(c,w/2,80,Math.min(w*.8,104),25,mark);sponsorTag(c,w);return;}
   const s2=k===3;
   if(t===0){
    if(!s2){// Fair Play: two shirts swapped at full time (respect), a heart between them

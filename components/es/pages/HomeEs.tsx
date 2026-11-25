@@ -39,13 +39,14 @@ const HL:readonly Hl[]=[
 ];
 /** lib/site/learnFeatures.ts LEARN_GROWNUP_LINE in Spanish. */
 const GROWNUP_LINE='Los adultos tienen el control: primero hay un control para adultos, y en “Settings” (ajustes) se puede apagar.';
-/** lib/site/safety.ts SPONSOR_BOARDS_LINE and SPONSOR_KIT_LINE in Spanish. */
+/** lib/site/safety.ts SPONSOR_BOARDS_LINE, SPONSOR_KIT_LINE and SPONSOR_TRAIN_LINE in Spanish. */
 const SPONSOR_BOARDS_ES='El estadio de la isla muestra carteles de patrocinadores que ayudan a que el juego siga siendo gratis. Son solo imágenes: sin enlaces, sin rastreo, y nunca les piden a los niños que compren nada. Los patrocinadores solo ven totales combinados, nunca nada sobre un niño.';
 const SPONSOR_KIT_ES='Algunos uniformes y calcomanías opcionales de la “Kit Shop” (tienda de uniformes) llevan la marca de Drip FC, el club patrocinador del estadio. El jugador los elige, y solo se compran con monedas del juego ganadas en la isla, nunca con dinero real.';
+const SPONSOR_TRAIN_ES='Los trenes de la “Island Line” llevan decoraciones de Drip FC con frases sobre ser amables en el fútbol y una pequeña etiqueta que dice “Sponsor” (patrocinador). Son solo imágenes y palabras: sin enlaces y sin nada que comprar.';
 /** LEARN_FAQ_TOP, in that order, with the LEARN_FAQ answers in Spanish. */
 const FAQ:readonly {q:string;a:string}[]=[
  {q:'¿Futbol Island es gratis?',a:'Sí. Es gratis para jugar y no hay nada que comprar. Las monedas de la isla se ganan jugando y aprendiendo, nunca se compran con dinero real. Las donaciones a organizaciones locales sin fines de lucro son opcionales y están detrás de un control para adultos.'},
- {q:'¿Hay anuncios?',a:`No hay anuncios emergentes, en video ni de rastreo. ${SPONSOR_BOARDS_ES} ${SPONSOR_KIT_ES} El juego también usa su propio contador de visitas, sin cookies y sin analítica de terceros.`},
+ {q:'¿Hay anuncios?',a:`No hay anuncios emergentes, en video ni de rastreo. ${SPONSOR_BOARDS_ES} ${SPONSOR_KIT_ES} ${SPONSOR_TRAIN_ES} El juego también usa su propio contador de visitas, sin cookies y sin analítica de terceros.`},
  {q:'¿Mi hijo o hija puede chatear con otras personas?',a:'No. No hay chat de texto libre ni chat de voz. Los isleños son parte del juego y hablan con temas ya preparados que el niño toca. “Play with friends” (jugar con amigos) usa solo frases de fútbol y gestos ya preparados.'},
  {q:'¿Mi hijo o hija necesita una cuenta?',a:'No. Cada jugador recibe en su lugar un código de guardado de tres palabras de fútbol y un número. El código se crea al azar y no lleva datos personales. Si lo escribes en otro dispositivo, se carga la misma isla.'},
  {q:'¿Pueden entrar desconocidos o los niños pueden mandarse mensajes?',a:PUB

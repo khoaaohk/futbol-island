@@ -17,6 +17,8 @@ export const SAFE_TRUST_LINE='Free. No pop-up, video or tracking ads, no account
 export const SPONSOR_BOARDS_LINE='The island’s stadium shows sponsor boards that help keep the game free. They are pictures only: no links, no tracking, and they never ask kids to buy anything. Sponsors only ever see combined totals, never anything about a child.';
 /** Drip FC club kit in the Kit Shop (Nov 13 2026, lib/shop/dripKit.ts): the one honest line about sponsor-branded kit. */
 export const SPONSOR_KIT_LINE='Some optional Kit Shop kit and stickers carry the branding of Drip FC, the stadium’s sponsor club. A player picks them, and they are bought only with game coins earned on the island, never with real money.';
+/** The Island Line's Drip FC kindness wraps (Nov 25 2026, lib/town/trainWraps.ts): the one line about sponsor branding on the trains. */
+export const SPONSOR_TRAIN_LINE='The Island Line trains wear Drip FC wraps with football kindness slogans and a small “Sponsor” tag. They are pictures and words only: no links and nothing to buy.';
 export type SafeFact={title:string;text:string};
 /** The trust tiles under the title of the about and safety pages (visual pass b5, Nov 17 2026): the same promises in five words. */
 export const SAFE_TRUST:readonly {icon:'coin'|'noads'|'nochat'|'key'|'kid';title:string;line:string}[]=[
@@ -40,7 +42,7 @@ export const SAFE_FACTS_TODAY:readonly SafeFact[]=[
 export type Faq={q:string;a:string};
 export const SAFE_FAQ_TODAY:readonly Faq[]=[
  {q:'Is Futbol Island safe for kids?',a:'Futbol Island is built for kids aged 7 to 12: it has no pop-up or tracking ads, no accounts and no open chat, and it never asks a child for personal details such as a last name, age, email, photo, school or location.'},
- {q:'Are there ads?',a:'There are no pop-up, video or tracking ads. '+SPONSOR_BOARDS_LINE+' '+SPONSOR_KIT_LINE},
+ {q:'Are there ads?',a:'There are no pop-up, video or tracking ads. '+SPONSOR_BOARDS_LINE+' '+SPONSOR_KIT_LINE+' '+SPONSOR_TRAIN_LINE},
  {q:'Can my child chat with strangers?',a:'No. There is no free-text chat and no voice chat. Friends in a private party, started by a grown-up and joined by code, can only use preset emotes.'},
  {q:'Does my child need an account or an email?',a:'No. Progress is kept with a random save code that carries no personal details. There is no sign-up.'},
  {q:'Does Futbol Island collect data?',a:'It counts anonymous usage totals, without names, to run and improve the game and to show sponsors combined totals. It uses no tracking cookies and no third-party analytics or advertising tools. The privacy policy explains what is kept and for how long.'},

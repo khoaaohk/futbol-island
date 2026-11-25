@@ -18,6 +18,8 @@ export const HUB_COMMON_FAQ_ES:readonly Faq[]=publicWorldEnabled()?HUB_COMMON_FA
 
 // ---- the parents' guide (/es/safe-football-game-for-kids), lib/site/safety.ts SAFE_FACTS / SAFE_FAQ 1:1 ----------------------------
 export const SPONSOR_BOARDS_LINE_ES='El estadio de la isla muestra carteles de patrocinadores que ayudan a que el juego siga siendo gratis. Son solo imágenes: sin enlaces, sin rastreo, y nunca les piden a los niños que compren nada. Los patrocinadores solo ven totales combinados, nunca nada sobre un niño.';
+/** lib/site/safety.ts SPONSOR_TRAIN_LINE in Spanish. */
+export const SPONSOR_TRAIN_LINE_ES='Los trenes de la “Island Line” llevan decoraciones de Drip FC con frases sobre ser amables en el fútbol y una pequeña etiqueta que dice “Sponsor” (patrocinador). Son solo imágenes y palabras: sin enlaces y sin nada que comprar.';
 export const SPONSOR_KIT_LINE_ES='Algunos uniformes y calcomanías opcionales de la “Kit Shop” (tienda de uniformes) llevan la marca de Drip FC, el club patrocinador del estadio. El niño los elige, y solo se compran con monedas del juego ganadas en la isla, nunca con dinero real.';
 export const SAFE_FACTS_TODAY_ES:readonly SafeFactEs[]=[
  {title:'Gratis, sin anuncios emergentes ni de rastreo',text:'Futbol Island se juega gratis. No tiene anuncios emergentes, de video ni de rastreo. Las monedas de la isla se ganan jugando y aprendiendo, nunca se compran con dinero real.'},
@@ -31,7 +33,7 @@ export const SAFE_FACTS_TODAY_ES:readonly SafeFactEs[]=[
 ];
 export const SAFE_FAQ_TODAY_ES:readonly Faq[]=[
  {q:'¿Futbol Island es seguro para niños?',a:'Futbol Island está hecho para niños de 7 a 12 años: no tiene anuncios emergentes ni de rastreo, no tiene cuentas ni chat abierto, y nunca le pide a un niño datos personales como su apellido, edad, correo electrónico, foto, escuela o ubicación.'},
- {q:'¿Hay anuncios?',a:'No hay anuncios emergentes, de video ni de rastreo. '+SPONSOR_BOARDS_LINE_ES+' '+SPONSOR_KIT_LINE_ES},
+ {q:'¿Hay anuncios?',a:'No hay anuncios emergentes, de video ni de rastreo. '+SPONSOR_BOARDS_LINE_ES+' '+SPONSOR_KIT_LINE_ES+' '+SPONSOR_TRAIN_LINE_ES},
  {q:'¿Mi hijo puede chatear con desconocidos?',a:'No. No hay chat de texto libre ni chat de voz. Los amigos de un grupo privado, que crea un adulto y al que se entra con un código, solo pueden usar gestos predefinidos.'},
  {q:'¿Mi hijo necesita una cuenta o un correo electrónico?',a:'No. El progreso se guarda con un código de guardado al azar que no lleva datos personales. No hay registro.'},
  {q:'¿Futbol Island recopila datos?',a:'Cuenta totales de uso anónimos, sin nombres, para hacer funcionar y mejorar el juego y para mostrar totales combinados a los patrocinadores. No usa cookies de rastreo ni herramientas de análisis o de publicidad de terceros. La política de privacidad explica qué se guarda y por cuánto tiempo.'},

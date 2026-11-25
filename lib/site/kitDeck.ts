@@ -22,6 +22,7 @@ import {DECAL_ZONES} from '@/lib/shop/boots';
 import {SLOT_SPECS,type SponsorSlot} from '@/lib/stadium/sponsors/slots';
 import {SPONSOR_KIT_LINE} from '@/lib/site/safety';
 import {STADIUM_NAME} from '@/lib/stadium/dripfc';
+import {TRAIN_COUNT} from '@/lib/town/trainSchedule';
 
 export {CLUB_LABEL,CLUB_NAME,SPONSOR_TAG,SPONSOR_KIT_LINE};
 /** The chapter colour: the club's own deep navy (CLUB_COLORS.navy). */
@@ -96,6 +97,10 @@ export const PLACEMENT_GROUPS:{id:string;title:string;line:string;items:Placemen
   {id:'boots',name:'Boot stickers',where:'Boot studio: sides, heel, toe and tongue',share:'1 club partner'},
   {id:'shirt',name:'Shirt crest and wordmark',where:'Jersey studio: chest or sleeve, wordmark across the front',share:'1 club partner'},
   {id:'ready',name:'Ready-made kit',where:'A home shirt and boots in the club’s colours',share:'1 club partner'},
+ ]},
+ {id:'train',title:'Island Line trains',line:'Kindness wraps on the trains, drawn by the team from your art.',items:[
+  {id:'panels',name:'Car-side wrap',where:'Crest, slogan and motif panels on both sides of both cars',share:`Per train, up to ${TRAIN_COUNT}`},
+  {id:'badge',name:'Cab badge',where:'Your crest on the front of each cab',share:'Comes with the wrap'},
  ]},
 ];
 /** Every placement id the overview page lists (the test checks the stadium ones against SLOT_SPECS). */
