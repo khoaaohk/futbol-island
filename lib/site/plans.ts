@@ -55,7 +55,7 @@ const RAW:RawPlan[]=[
    {q:'What if some children have never played?',a:'This plan assumes nobody has. Every game works for a child touching a soccer ball for the first time.'},{q:'What equipment do I need for a first U6 practice?',a:'A size 3 ball for every child, about 20 cones, pinnies in two colors, two or four small goals or cone gates, water and a first-aid kit. Name stickers help on the first day.'},{q:'How many coaches does a U6 practice need?',a:'Two adults is ideal: one runs the game while the other helps a child who is upset or needs the bathroom. Ask a parent to help if you are on your own.'}],
   lessons:['learn7_carry','learn7_roles'],links:[G.ages,G.ball]},
 
- {slug:'u6-dribbling-practice-plan',age:'U6',theme:'Dribbling',title:'U6 Soccer Practice Plan for Dribbling: 45-Minute Session',
+ {slug:'u6-dribbling-practice-plan',age:'U6',theme:'Dribbling',title:'U6 Dribbling Practice Plan: Soccer Games (45 Minutes)',
   desc:'A 45-minute U6 soccer practice plan built on dribbling: dribble tag, Sharks and Minnows and gates, with a clock table, water breaks and a 3v3 finish.',
   lead:'A 45-minute dribbling practice for 5 and 6 year olds. Every game has a ball for every child, and each one asks for a little more: keep it close, get away from a chaser, find a gap.',
   goal:'Keep the ball close and go where the space is',minutes:45,players:'6 to 12',field:FIELD.U6,
@@ -70,7 +70,7 @@ const RAW:RawPlan[]=[
    {q:'Why start with 2v2 games?',a:'It is the first “play” of U.S. Soccer’s Play-Practice-Play structure: children arrive and play at once, and nobody waits for practice to start.'},{q:'How do I keep 5-year-olds dribbling the whole time?',a:'Give each child a ball and a story, such as sharks chasing fish, and keep each game short. Change the game or one rule every few minutes, before they get bored, and let everyone back in quickly.'},{q:'What should U6 players learn about dribbling?',a:'Small touches with both feet, keeping the ball close, stopping it with the sole and looking up for space. Moves can wait: at this age the aim is many touches and a lot of fun.'}],
   lessons:['learn7_carry','next7_dribbleroom'],links:[G.ages,G.wg,G.dribble]},
 
- {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Soccer Practice Plan for Shooting: 45-Minute Session',
+ {slug:'u6-shooting-practice-plan',age:'U6',theme:'Kicking and shooting',title:'U6 Soccer Shooting Practice Plan: Kicking Games (45 Min)',
   desc:'A 45-minute U6 soccer practice plan for kicking and shooting: Clean Your Room, dribble and shoot at small goals with no goalkeeper, and a 3v3 game.',
   lead:'A 45-minute practice that lets 5 and 6 year olds do what they like best: kick the ball and score. Small goals, no goalkeepers, lots of balls and no lines.',
   goal:'Kick with the laces and score',minutes:45,players:'6 to 12',field:FIELD.U6,
@@ -100,7 +100,7 @@ const RAW:RawPlan[]=[
    {q:'What size ball do U8 players use?',a:'A size 3. Players move to a size 4 at U9.'},{q:'How many players should be at a U8 practice?',a:'A U8 team plays 4v4, so a roster of six to ten is common. With that many, run two small games side by side so no one waits for a turn.'},{q:'What games should a first U8 practice have?',a:'Games where each child has a ball, such as dribble tag and gates, a first 1v1, and a 4v4 at the end. Keep the rules simple on day one and add one new idea the next week.'}],
   lessons:['learn7_carry','learn7_roles','prn_7_spread'],links:[G.ages,G.ball,G.field]},
 
- {slug:'u8-dribbling-practice-plan',age:'U8',theme:'Dribbling and 1v1',title:'U8 Soccer Practice Plan for Dribbling: 1v1 Games (60 Min)',
+ {slug:'u8-dribbling-practice-plan',age:'U8',theme:'Dribbling and 1v1',title:'U8 Dribbling Practice Plan: 1v1 Soccer Games (60 Min)',
   desc:'A 60-minute U8 soccer practice plan for dribbling and 1v1: gates, turn and go, 1v1 to end zones and the numbers game, with a clock table and breaks.',
   lead:'A 60-minute practice for 7 and 8 year olds on the skill that matters most at this age: taking the ball past a defender. It builds from a ball each, to turns, to 1v1, to a game.',
   goal:'Beat a defender with a change of speed or direction',minutes:60,players:'8 to 14',field:FIELD.U8,
@@ -115,7 +115,7 @@ const RAW:RawPlan[]=[
    {q:'Why do we finish with a game?',a:'It is the last stage of Play-Practice-Play. Players try what they practiced in a real game, and the coach watches to see what stuck.'},{q:'What 1v1 moves should U8 players learn?',a:'A fake one way and go the other, a drag back, and a sudden change of speed. One or two moves a player trusts are worth more than five they half know.'},{q:'How do I make 1v1 fair for players of different levels?',a:'Pair players of a similar level, or give the weaker player a bigger end zone or a head start. Rotate partners often so every child wins some duels.'}],
   lessons:['learn7_carry','next7_dribbleroom','def_7_goalside'],links:[G.wg,G.tackle,G.ages,G.stepOver]},
 
- {slug:'u8-passing-practice-plan',age:'U8',theme:'Passing',title:'U8 Soccer Practice Plan for Passing: 60-Minute Session',
+ {slug:'u8-passing-practice-plan',age:'U8',theme:'Passing',title:'U8 Passing Practice Plan: First Soccer Passing Games',
   desc:'A 60-minute U8 soccer practice plan that introduces passing: partner gates, 2v1 to goal and a first 3v1 rondo, with a clock table and water breaks.',
   lead:'A 60-minute practice that introduces passing to 7 and 8 year olds. It keeps the ball between two players for most of the hour and gives every pass a reason: a gate to hit, a defender to beat, a goal to score.',
   goal:'Pass to a teammate, then move',minutes:60,players:'8 to 14',field:FIELD.U8,
@@ -145,7 +145,7 @@ const RAW:RawPlan[]=[
    {q:'How long is a U10 practice?',a:'60 to 75 minutes in US Youth Soccer’s coaching guidance. This plan uses 60.'},{q:'What formation should a U10 team start with?',a:'In 7v7 most U10 teams start with a 2-3-1 or a 3-2-1. Pick one, keep it for the first few weeks, and let players try more than one position.'},{q:'What size ball and field do U10 players use?',a:'A size 4 ball, and in the U.S. Soccer standards a 7v7 field 55 to 65 yards long and 35 to 45 yards wide, with goals up to 6.5 by 18.5 feet. Check your league, as sizes vary.'}],
   lessons:['learn7_buildout','learn7_roles','prn_7_support'],links:[G.f7,G.buildOut,G.gk]},
 
- {slug:'u10-passing-practice-plan',age:'U10',theme:'Passing and first touch',title:'U10 Soccer Practice Plan for Passing and First Touch',
+ {slug:'u10-passing-practice-plan',age:'U10',theme:'Passing and first touch',title:'U10 Passing Practice Plan: First Touch Soccer Session',
   desc:'A 60-minute U10 soccer practice plan for passing and first touch: receive across the body, a 3v1 rondo and the four-goal game, with a clock table.',
   lead:'A 60-minute practice for 9 and 10 year olds with one theme from start to finish: receive the ball so you can play forward. It moves from a first touch on the back foot, to a rondo, to a game that rewards switching sides.',
   goal:'Open up, receive on the back foot and play forward',minutes:60,players:'10 to 14',field:FIELD.U10,
@@ -160,7 +160,7 @@ const RAW:RawPlan[]=[
    {q:'Why two goals at each end?',a:'So that moving the ball to the other side has an obvious reward. Players start to look across the field before they receive.'},{q:'What is a good first touch drill for 9 and 10 year olds?',a:'Receive across the body: a player takes the ball on the back foot and turns to pass the other way. It needs little space, and every player gets the ball many times in a few minutes.'},{q:'How do I stop players standing still after they pass?',a:'Use a rule such as pass and move to a new cone, or give a point when the passer gets the ball back. Praise the run after the pass, not only the pass itself.'}],
   lessons:['learn7_receive','prn_7_support','learn9_switch'],links:[G.firstTouch,G.switching,G.cm,G.oneTouch,G.weakFoot,G.dummy]},
 
- {slug:'u10-1v1-practice-plan',age:'U10',theme:'1v1 attacking and defending',title:'U10 Soccer Practice Plan for 1v1 Attacking and Defending',
+ {slug:'u10-1v1-practice-plan',age:'U10',theme:'1v1 attacking and defending',title:'U10 1v1 Practice Plan: Soccer Attacking and Defending',
   desc:'A 60-minute U10 soccer practice plan for 1v1: attacking two small goals, defending side on, recovery runs and a numbers game, with a clock table.',
   lead:'A 60-minute practice for 9 and 10 year olds on both sides of the 1v1. Attackers learn to shift a defender and go the other way, and defenders learn to slow down, get side on and stay goal-side.',
   goal:'Win your 1v1, with and without the ball',minutes:60,players:'8 to 14',field:FIELD.U10,
@@ -190,7 +190,7 @@ const RAW:RawPlan[]=[
    {q:'Do U12 teams play offside?',a:'Yes. The 9v9 game has offside, so use it in practice games and explain it once. Our offside page has a diagram.'},{q:'What should I tell U12 players about 9v9 on day one?',a:'Explain that the field is bigger, that offside applies, and that each player has a place in the team shape. Then play: a short game teaches more than a long talk.'},{q:'What ball size do U12 players use?',a:'A size 4 ball. Players move up to a size 5 at U13, when the game becomes 11v11 on a full-size field.'}],
   lessons:['learn9_shape','gap11_runoncue','bld_11_throughlines'],links:[G.f9,G.offside,G.heading]},
 
- {slug:'u12-possession-practice-plan',age:'U12',theme:'Passing and possession',title:'U12 Soccer Practice Plan for Possession: 75-Minute Session',
+ {slug:'u12-possession-practice-plan',age:'U12',theme:'Passing and possession',title:'U12 Possession Practice Plan: Soccer Passing Session',
   desc:'A 75-minute U12 soccer practice plan for possession: receive and turn, a 4v2 rondo and three-team keep-away, then a game. Clock table and water breaks.',
   lead:'A 75-minute practice for 11 and 12 year olds on keeping the ball with a purpose. It links three ideas: look before you receive, find the pass through two defenders, and react the moment the ball is lost.',
   goal:'Keep the ball to go forward, and react when it is lost',minutes:75,players:'12 to 16',field:FIELD.U12,
@@ -205,7 +205,7 @@ const RAW:RawPlan[]=[
    {q:'How many touches should players be allowed?',a:'Two is a useful challenge at U12, but not a law. The aim is quick decisions, and sometimes the right decision is to dribble.'},{q:'What is a good possession drill for 11 and 12 year olds?',a:'A 4v2 rondo, then three-team keep-away: both teach players to find the open teammate and move to a new angle after a pass. Finish with a game where a run of passes counts as a point.'},{q:'How do I teach players to move to support the ball?',a:'Ask the player off the ball to make a triangle with the passer and step out of the defender’s shadow. Freeze play once to show it, then let them play again.'}],
   lessons:['learn9_receive','learn9_switch','bld_11_throughlines','gap7_lostball'],links:[G.switching,G.pressing,G.cm,G.possession,G.scanning]},
 
- {slug:'u12-finishing-practice-plan',age:'U12',theme:'Shooting and finishing',title:'U12 Soccer Practice Plan for Finishing and Shooting',
+ {slug:'u12-finishing-practice-plan',age:'U12',theme:'Shooting and finishing',title:'U12 Finishing Practice Plan: Soccer Shooting Session',
   desc:'A 75-minute U12 soccer practice plan for finishing: lay-off and shoot, low crosses, 3v2 to goal and a game, with a clock table and water breaks.',
   lead:'A 75-minute practice for 11 and 12 year olds on finishing attacks. Shots come from a lay-off, from a low cross and from a 3v2, so players practice the chances a real game gives them.',
   goal:'Finish first time, and follow every shot',minutes:75,players:'12 to 16, with goalkeepers taking turns',field:FIELD.U12,

@@ -82,7 +82,7 @@ export const HUBS:readonly Hub[]=[
    {q:'Why switch the play?',a:concept('e_switch')},
    ...HUB_COMMON_FAQ]},
  {slug:'futsal-for-kids',path:'/learn/futsal-for-kids',crumb:'Futsal',blurb:`${FUTSAL.length} lessons for the futsal court`,
-  title:'Futsal for Kids: How to Play, Rules and Free Lessons',
+  title:'Futsal for Kids: Lessons, Rules and Quizzes',
   description:`${FUTSAL.length} free futsal lessons for kids: court roles, the pivot, wall passes, kick-ins, corners and defending, each with a short quiz. Play in your browser.`,
   h1:'Futsal lessons for kids',
   lead:`${DEFINITION} It has ${FUTSAL.length} futsal lessons with ${qs(FUTSAL)} quiz questions, grouped here by ${FUTSAL_GROUPS.map(g=>g.title.replace(' (futsal)','').toLowerCase()).join(', ').replace(/, ([^,]*)$/,' and $1')}.`,
