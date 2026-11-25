@@ -6,7 +6,7 @@ import {FORMATIONS_HUB,formationBySlug,formatGuide} from '@/lib/site/formations'
 import {NUMBERS,POSITIONS,POSITIONS_HUB as HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {gameLink} from '@/lib/site/games';
-import {Bullets,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
+import {Bullets,DataTable,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import {booksWithoutCard} from '@/lib/site/crossLinks';
 import {Band,CardGrid,shirtBadge} from '@/components/site/HubParts';
@@ -35,6 +35,10 @@ export default function PositionsHub(){
   <Band id="each" title="Each position explained" tone="tint" icon="shirt" count={`${POSITIONS.length} positions`}>
    <CardGrid ids="position" show={POSITIONS.length} cards={POSITIONS.map(p=>({path:p.path,name:`${p.name} (${p.short})`,line:p.job,icon:'shirt' as const,badge:shirtBadge(p.numbers)}))}/>
   </Band>
+  {/* SEO batch C, Nov 25 2026: every position's job in attack and in defense, one row each (the same lines as each page's at-a-glance table) */}
+  <Section id="jobs" title="What each soccer position does in attack and defense">
+   <DataTable label="What each soccer position does" head={['Position','In attack','In defense']} rows={POSITIONS.map(p=>[<a key={p.slug} href={p.path}>{p.name}</a>,p.glance.attack,p.glance.defend])}/>
+  </Section>
   <Section id="numbers" title="Soccer position numbers 1 to 11">
    <Bullets items={HUB.numbers}/>
    <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Soccer position numbers"><table className={styles.table}>

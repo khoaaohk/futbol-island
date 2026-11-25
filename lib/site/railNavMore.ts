@@ -104,9 +104,9 @@ const GUIDE_SECTIONS:Record<RailFamily,readonly L2[]>={
   ['also-means','Also means','También significa',true],['formats','By game size','Por tamaño de juego']],
  drills:[['diagram','Setup','Montaje'],['facts','At a glance','De un vistazo'],['steps','How to run it','Cómo hacerlo'],['cues','Coaching points','Consignas'],['versions','Easier or harder','Más fácil o más difícil'],
   ['mistakes','Mistakes','Errores'],['game','In a game','En el partido'],['home','At home','En casa',true]],
- positions:[['where','Where they stand','Dónde se coloca'],['with','With the ball','Con el balón'],['without','Without the ball','Sin el balón'],['habits','Habits','Hábitos'],
+ positions:[['where','Where they stand','Dónde se coloca'],['glance','At a glance','De un vistazo'],['with','With the ball','Con el balón'],['without','Without the ball','Sin el balón'],['habits','Habits','Hábitos'],
   ['number','Shirt number','Dorsal'],['small','Smaller games','Juegos más pequeños']],
- formations:[['diagram','Diagram','Diagrama'],['roles','Who plays where','Quién juega dónde'],['strengths','Strengths','Puntos fuertes'],['weak','Weak spots','Puntos débiles'],
+ formations:[['diagram','Diagram','Diagrama'],['glance','At a glance','De un vistazo'],['roles','Who plays where','Quién juega dónde'],['strengths','Strengths','Puntos fuertes'],['weak','Weak spots','Puntos débiles'],
   ['moves','How it moves','Cómo se mueve'],['suits','Who it suits','A quién le va']],
 };
 /** `has` may include 'cards' for the yellow and red cards page's own sections; `play` is a rule page's card deck and game

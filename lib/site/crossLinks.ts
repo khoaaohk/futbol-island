@@ -6,7 +6,7 @@ import {cardPath,type SiteCard} from './cards';
 import type {Collection} from './collections';
 import {CHARTS} from './sizes';
 import {POSITIONS} from './positions';
-import {FORMATIONS_HUB} from './formations';
+import {FORMATIONS,FORMATIONS_HUB} from './formations';
 import {EXHIBITS} from '@/lib/endgame/museum';
 import {hubBySlug} from './hubs';
 import {gameLink,isGameListed} from './games';
@@ -159,7 +159,34 @@ export const positionRuleSlugs=(slug:string):readonly string[]=>POSITION_RULES[s
 export const positionRuleLinks=(slug:string):XLink[]=>positionRuleSlugs(slug).map(ruleLink);
 export const positionToolPaths=(slug:string):readonly string[]=>POSITION_TOOLS[slug]??[];
 /* SEO wave 2: the goalkeeper position links the keeper-vs-shooter arcade game */
-const POSITION_GAMES:Record<string,readonly ('airhockey'|'snake')[]>={goalkeeper:['airhockey']};
+/* SEO batch C, Nov 25 2026: Squad Snake (collect a squad in position order) on every position page */
+const POSITION_GAMES:Record<string,readonly ('airhockey'|'snake')[]>=Object.fromEntries(POSITIONS.map(p=>[p.slug,p.slug==='goalkeeper'?['airhockey','snake']:['snake']]));
+/** Formation page -> the soccer terms its shape leans on (SEO batch C, Nov 25 2026): 3 per formation, shown in Keep reading. */
+const FORMATION_TERMS:Record<string,string[]>={
+ '7v7-2-3-1':['width','support','build-up'],
+ '7v7-3-2-1':['cover','overlap','counterattack'],
+ '7v7-2-2-2':['cover','pressing','support'],
+ '7v7-3-1-2':['two-v-one','through-ball','cover'],
+ '8v8-3-3-1':['width','support','switching-play'],
+ '8v8-3-2-2':['two-v-one','overlap','cover'],
+ '8v8-2-3-2':['pressing','cover','build-up'],
+ '9v9-3-2-3':['width','switching-play','build-up'],
+ '9v9-3-3-2':['two-v-one','give-and-go','width'],
+ '9v9-2-3-2-1':['possession','build-up','cover'],
+ '9v9-3-1-3-1':['counterattack','through-ball','support'],
+ '9v9-4-3-1':['low-block','overlap','cover'],
+ '11v11-4-3-3':['width','pressing','overlap'],
+ '11v11-4-4-2':['low-block','two-v-one','switching-play'],
+ '11v11-4-2-3-1':['box-to-box','through-ball','counterattack'],
+ '11v11-3-5-2':['overlap','cross','high-line'],
+ 'futsal-2-2':['give-and-go','cover','two-v-one'],
+ 'futsal-1-2-1-diamond':['pivot','give-and-go','switching-play'],
+ 'futsal-3-1':['pivot','shielding','give-and-go'],
+};
+for(const f of FORMATIONS)if(!FORMATION_TERMS[f.slug])throw new Error(`crossLinks: formation ${f.slug} has no terms`);
+for(const [f,ts] of Object.entries(FORMATION_TERMS)){if(!FORMATIONS.some(x=>x.slug===f))throw new Error(`crossLinks: formation ${f} does not exist`);ts.forEach(termLink);}
+export const formationTermSlugs=(slug:string):readonly string[]=>FORMATION_TERMS[slug]??[];
+export const formationTermLinks=(slug:string):XLink[]=>formationTermSlugs(slug).map(termLink);
 export const positionToolLinks=(slug:string):XLink[]=>[...positionToolPaths(slug).map(extraLink),...(POSITION_GAMES[slug]??[]).filter(isGameListed).map(gameLink)];
 export const positionTermSlugs=(slug:string):readonly string[]=>POSITION_TERMS[slug]??[];
 export const positionTermLinks=(slug:string):XLink[]=>positionTermSlugs(slug).map(termLink);

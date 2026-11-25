@@ -18,6 +18,9 @@ import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
 import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,esLessonLinks,LinkList,QA,Section,esCrumbs,esLibCrumbs} from '@/components/es/EsParts';
 import {esLesson} from '@/lib/i18n/es/lessons';
+import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
+import {formationTermSlugs} from '@/lib/site/crossLinks';
+import {ES_TERMS} from '@/lib/i18n/es/registry';
 import {esLd} from './GuidesEs';
 import styles from '@/app/(site)/site.module.css';
 /**
@@ -50,6 +53,11 @@ export function FormationsHubEsPage(){
   <JsonLd data={faqLd(H.faq)}/>
   <EsIntro top rail={<RailNav rail={hubRail('Formaciones en esta página',FORMATION_FORMATS.map(fmt=>({title:LABEL[fmt],items:esFormationsIn(fmt).map(f=>anchor('formation',f.esPath,f.name))})),true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
   <Section id="what" title="¿Qué es una formación?"><Bullets items={H.what}/></Section>
+  {/* SEO batch C: la mejor formación por edad */}
+  <Section id="by-age" title="La mejor formación de fútbol por edad">
+   <DataTable label="La mejor formación de fútbol por edad" head={['Juego','Edades','Empieza con','Después prueba']} rows={FORMATION_FORMATS.map(fmt=>{const [first,...rest]=esFormationsIn(fmt),g=fmt==='futsal'?null:esFormatGuide(fmt);
+    return [g?<a key={fmt} href={g.esPath}>{fmt==='8v8'?'fútbol 8':fmt}</a>:'futsal',first.ages,<a key="f" href={first.esPath}>{first.shapeEs}</a>,<>{rest.map((x,i)=><span key={x.slug}>{i>0&&', '}<a href={x.esPath}>{x.shapeEs}</a></span>)}</>];})}/>
+  </Section>
   {FORMATION_FORMATS.map(fmt=>{const list=esFormationsIn(fmt),first=list[0],guide=fmt==='futsal'?null:esFormatGuide(fmt);
    return <Section key={fmt} id={`f-${fmt}`} title={LABEL[fmt]}>
     <p>{H.groups[fmt]} {guide&&<><a href={guide.esPath}>Compara las {list.length} en la guía de {fmt==='8v8'?'fútbol 8':fmt}</a>.</>}</p>
@@ -86,8 +94,14 @@ export function FormationEsPage({f}:{f:EsFormation}){
     ?<p>El {f.shape} cuenta a los cuatro jugadores de campo de atrás hacia adelante. Al portero se le cuenta aparte, así que un equipo de futsal tiene {PLAYERS_PER_TEAM.futsal} jugadores en la cancha.</p>
     :<p>Los entrenadores escriben esta forma de dos maneras. <b>{f.shape}</b> cuenta a los {PLAYERS_PER_TEAM[f.format]-1} jugadores de campo, desde la defensa hacia adelante. U.S. Soccer cuenta primero al portero y escribe <b>{withKeeper(f)}</b>. Las dos quieren decir la misma formación. Los números de los puntos son una costumbre común de los entrenadores, no una regla: los jugadores pueden usar cualquier número de camiseta.</p>}
   </Section>
-  <Section id="roles" title="Quién juega dónde">
-   <ul>{f.roles.map(r=>{const p=posEs(r.pos);return <li key={r.title}><b>{p?<a href={p.esPath}>{r.title}</a>:r.title}.</b> {r.job}</li>;})}</ul>
+  {/* SEO batch C, Nov 25 2026: la formación de un vistazo y cada posición en una tabla */}
+  <Section id="glance" title={`El ${f.shapeEs} de un vistazo`}>
+   <DataTable label={`La formación ${f.name} de un vistazo`} head={['',`Formación ${f.shapeEs}`]} rows={[['Jugadores',`${PLAYERS_PER_TEAM[f.format]} por equipo (${futsal?'futsal':f.format==='8v8'?'fútbol 8':f.format}), con el portero`],
+    ['Líneas',lineWords(f)],['Mejores edades',f.ages],['Ideal para',f.best],['Cuidado con',f.watch],
+    ['Pruébalo',<><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>{futsal?'':<>, junta a todo el equipo en <a href={toEs('/games/soccer-snake-game')}>Squad Snake</a> y mantén la línea en <a href={toEs('/games/soccer-block-puzzle-game')}>Line Up!</a></>}.</>]]}/>
+  </Section>
+  <Section id="roles" title={`Posiciones del ${f.shapeEs}: quién juega dónde`}>
+   <DataTable label={`Posiciones del ${f.shapeEs}`} head={['Posición','Trabajo']} rows={f.roles.map(r=>{const p=posEs(r.pos);return [p?<a href={p.esPath}>{r.title}</a>:r.title,r.job];})}/>
   </Section>
   <Section id="strengths" title={`Fortalezas del ${f.shapeEs}`}><Bullets items={f.strengths}/></Section>
   <Section id="weak" title="Puntos débiles y cómo cubrirlos">
@@ -106,7 +120,8 @@ export function FormationEsPage({f}:{f:EsFormation}){
    <ul>{f.sources.map(x=><li key={x.url}><a href={x.url} rel="noopener" hrefLang="es">{x.name}</a>: {x.says}.</li>)}</ul>
   </Section>}
   {/* Nov 23 2026: the formations quiz (lib/site/quizzes.ts QUIZ_FOR) */}<TestYourself enPath={f.path} lang="es"/>
-  <KeepReading lang="es" groups={withMesh([{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}],f.path,'es')}/>
+  <KeepReading lang="es" groups={withMesh([{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(f.path)},
+   {id:'terms',links:formationTermSlugs(f.slug).map(s=>ES_TERMS().find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:`${x.name} (término)`,line:x.short}))},/* SEO batch C, as in English */{id:'related',links:related}],f.path,'es')}/>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>
  </>;

@@ -35,7 +35,7 @@ const BASE:readonly BankQuiz[]=[
    c('¿Cuántos jugadores tiene cada equipo en la cancha en un partido de 11v11?',['11, contando al portero','11, más el portero','10, contando al portero'],0,'Once, y uno de ellos es el portero.',P('goalkeeper'),{fact:'Un partido no puede empezar ni seguir si un equipo tiene menos de siete jugadores.'}),
   ]},
  {slug:'offside-quiz',topic:'rules',name:'Quiz del fuera de juego',title:'Quiz del fuera de juego: preguntas para niños',
-  desc:'Pon a prueba la regla del fuera de juego con un quiz gratis para niños: cuándo se mira, quién cuenta como penúltimo defensa y cuándo nunca hay fuera de juego.',
+  desc:'Pon a prueba la regla del fuera de juego con un quiz gratis para niños: cuándo se mira, quién es el penúltimo defensa y cuándo nunca hay fuera de juego.',
   h1:'Quiz del fuera de juego',intro:'El fuera de juego es la regla que más dudas da. Estas preguntas revisan los momentos clave, una a una, con el porqué de cada respuesta.',
   sources:[law('Regla 11 (Fuera de juego)','offside/'),{name:'U.S. Soccer: normas de juego reducido (fuera de juego en 7v7, en inglés)',url:USS}],
   faq:[{q:'¿Cuál es la forma más fácil de explicar el fuera de juego?',a:'Cuando un compañero te pasa el balón hacia delante, dos rivales, casi siempre el portero y un defensa, tienen que estar a tu altura o más cerca de su línea de meta.'},

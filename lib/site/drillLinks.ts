@@ -4,7 +4,7 @@
  * SOURCES (checked Nov 10 2026): the pages themselves (lib/site/rules.ts, positions.ts, terms.ts, formations.ts, sizes.ts).
  */
 import {gameLink,isGameListed} from './games';
-const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/';
+const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/',F='/learn/soccer-formations/';
 export const G={
  throwIn:{path:R+'throw-in',name:'The throw-in rule',line:'Both feet down, both hands, from behind and over the head'},
  heading:{path:R+'heading-rules-for-kids',name:'Heading rules for kids in the US',line:'No heading at 10 and under'},
@@ -69,6 +69,26 @@ export const G={
  * guide's path. Read by drillLinksFor() in lib/site/drills.ts and rendered by the position, rule and glossary pages.
  */
 export const GUIDE_DRILLS:Record<string,string[]>={
+ /* SEO batch C, Nov 25 2026: every formation page links 3 drills that train its shape's main idea */
+ [F+'7v7-2-3-1']:['build-out-game','triangle-passing','recover-goal-side'],
+ [F+'7v7-3-2-1']:['pressure-and-cover-2v2','build-out-game','two-v-one-to-goal'],
+ [F+'7v7-2-2-2']:['pressure-and-cover-2v2','two-v-one-to-goal','rondo-3v1'],
+ [F+'7v7-3-1-2']:['two-v-one-to-goal','end-zone-game','pressure-and-cover-2v2'],
+ [F+'8v8-3-3-1']:['four-goal-game','triangle-passing','build-out-game'],
+ [F+'8v8-3-2-2']:['two-v-one-to-goal','crossing-and-finishing','pressure-and-cover-2v2'],
+ [F+'8v8-2-3-2']:['pressure-and-cover-2v2','three-v-two-to-goal','build-out-game'],
+ [F+'9v9-3-2-3']:['four-goal-game','crossing-and-finishing','build-out-game'],
+ [F+'9v9-3-3-2']:['two-v-one-to-goal','give-and-go','three-v-two-to-goal'],
+ [F+'9v9-2-3-2-1']:['rondo-4v2','three-team-keep-away','recover-goal-side'],
+ [F+'9v9-3-1-3-1']:['rondo-4v2','end-zone-game','three-v-two-to-goal'],
+ [F+'9v9-4-3-1']:['pressure-and-cover-2v2','recover-goal-side','crossing-and-finishing'],
+ [F+'11v11-4-3-3']:['crossing-and-finishing','rondo-4v2','four-goal-game'],
+ [F+'11v11-4-4-2']:['four-goal-game','two-v-one-to-goal','pressure-and-cover-2v2'],
+ [F+'11v11-4-2-3-1']:['receive-and-turn','end-zone-game','three-v-two-to-goal'],
+ [F+'11v11-3-5-2']:['crossing-and-finishing','recover-goal-side','three-v-two-to-goal'],
+ [F+'futsal-2-2']:['give-and-go','pressure-and-cover-2v2','two-v-one-to-goal'],
+ [F+'futsal-1-2-1-diamond']:['rondo-3v1','give-and-go','triangle-passing'],
+ [F+'futsal-3-1']:['lay-off-and-shoot','give-and-go','rondo-3v1'],
  [P+'goalkeeper']:['goalkeeper-catching-w-and-basket','goalkeeper-footwork-and-set','goalkeeper-angles','goalkeeper-distribution'],
  [P+'center-back']:['one-v-one-defending','pressure-and-cover-2v2','build-out-game'],
  [P+'fullback']:['recover-goal-side','one-v-one-defending','throw-in-game'],

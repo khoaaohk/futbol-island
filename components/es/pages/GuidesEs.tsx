@@ -229,6 +229,10 @@ export function PositionsHubEsPage(){
   <Band id="each" title="Cada posición explicada" tone="tint" icon="shirt" count={`${all.length} posiciones`}>
    <CardGrid lang="es" ids="position" show={all.length} cards={all.map(p=>({path:p.esPath,name:`${p.name} (${p.short})`,line:p.job,icon:'shirt' as const,badge:shirtBadge(p.numbers)}))}/>
   </Band>
+  {/* SEO batch C: el trabajo de cada posición en ataque y en defensa */}
+  <Section id="jobs" title="Qué hace cada posición del fútbol en ataque y en defensa">
+   <DataTable label="Qué hace cada posición del fútbol" head={['Posición','En ataque','En defensa']} rows={all.map(p=>[<a key={p.slug} href={p.esPath}>{p.name}</a>,p.glance.attack,p.glance.defend])}/>
+  </Section>
   <Section id="numbers" title="Los números de las posiciones, del 1 al 11">
    <Bullets items={H.numbers}/>
    <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Números de las posiciones"><table className={styles.table}>
@@ -260,6 +264,11 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <Section id="where" title={`Dónde se coloca: ${lower}`}>
    <EsDiagram id="where-d" format={f.format} lines={f.lines} what={`la posición de ${lower} en una formación ${f.shape}`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
+  </Section>
+  {/* SEO batch C, Nov 25 2026: el trabajo en una tabla (ataque, defensa, claves) */}
+  <Section id="glance" title={`${p.name}: su trabajo de un vistazo`}>
+   <DataTable label={`${p.name}: de un vistazo`} head={['',p.name]} rows={[['En ataque',p.glance.attack],['En defensa',p.glance.defend],['Claves',p.glance.skills],['Número de camiseta',p.numbers],
+    ['Formaciones',<>{used.slice(0,4).map((x,i)=><span key={x.slug}>{i>0&&', '}<a href={x.esPath}>{x.name}</a></span>)}{used.length>0&&'. '}Ponlo en tu equipo con el <a href={toEs('/tools/soccer-lineup-builder')}>creador de alineaciones gratis</a>.</>]]}/>
   </Section>
   <Section id="with" title="Con el balón"><Bullets items={p.withBall}/></Section>
   <Section id="without" title="Sin el balón"><Bullets items={p.withoutBall}/></Section>

@@ -30,13 +30,15 @@ export type TermsHubEs={crumb:string;blurb:string;title:string;description:strin
  glossary:Readonly<Record<string,GlossaryEs>>};
 export type HabitEs={name:string;how:string};
 export type PositionEs={name:string;short:string;numberLine:string;title:string;h1:string;desc:string;answer:string;job:string;suits:string;
- where:string;withBall:readonly string[];withoutBall:readonly string[];habits:readonly HabitEs[];small:string;faq:readonly Faq[];notes:CoachNotesEs};
+ where:string;withBall:readonly string[];withoutBall:readonly string[];habits:readonly HabitEs[];small:string;faq:readonly Faq[];notes:CoachNotesEs;
+ /** SEO batch C: the at-a-glance table (attack, defense, key skills) */glance:{attack:string;defend:string;skills:string}};
 export type PositionsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;faq:readonly Faq[];
  /** 1:1 with the English POSITIONS_HUB.lines / .numbers / .formats, and NUMBERS (the 1-11 table rows, name + job line). */
  lines:readonly {name:string;text:string}[];numbers:readonly string[];formats:readonly {text:string}[];futsal:string;numberRows:readonly {name:string;line:string}[]};
 /** Formations (Spanish round 2, Nov 16 2026): the words of one lib/site/formations.ts record; roles/strengths/weak/faq 1:1. */
 export type FormationEs={best:string;watch:string;desc:string;answer:string;roles:readonly {title:string;job:string}[];strengths:readonly string[];
- weak:readonly {spot:string;cover:string}[];attack:string;defend:string;suits:string;faq:readonly Faq[];notes:CoachNotesEs};
+ weak:readonly {spot:string;cover:string}[];attack:string;defend:string;suits:string;faq:readonly Faq[];notes:CoachNotesEs;
+ /** SEO batch C: the best-ages cell */ages:string};
 export type FormatGuideEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;basics:readonly string[];pickTitle:string;pick:readonly string[];faq:readonly Faq[];
  /** round 4F (fútbol 8): the rule documents, in Spanish */sources?:readonly {name:string;url:string;says:string}[]};
 export type FormationsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;what:readonly string[];

@@ -16,7 +16,7 @@ import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {NUMBERS_PATH} from '@/lib/site/positionNumbers';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,Section,DataTable} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
 import {booksForRole,positionRuleLinks,positionTermLinks,positionToolLinks} from '@/lib/site/crossLinks';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
@@ -55,6 +55,11 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <Section id="where" title={`Where the ${lower} stands`}>
    <Diagram id="where-d" format={f.format} lines={f.lines} what={`the ${lower} position in a ${f.shape} formation`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
+  </Section>
+  {/* SEO batch C, Nov 25 2026: the job in one table (attack, defense, key skills), for "what does a ... do" searches */}
+  <Section id="glance" title={`${p.name}: the job at a glance`}>
+   <DataTable label={`The ${lower} at a glance`} head={['',p.name]} rows={[['Job in attack',p.glance.attack],['Job in defense',p.glance.defend],['Key skills',p.glance.skills],['Shirt number',p.numbers],
+    ['Formations',<>{used.slice(0,4).map((x,i)=><span key={x.slug}>{i>0&&', '}<a href={x.path}>{x.name}</a></span>)}{used.length>0&&'. '}Put a {lower} in your team with the <a href="/tools/soccer-lineup-builder">free lineup builder</a>.</>]]}/>
   </Section>
   <Section id="with" title="With the ball"><Bullets items={p.withBall}/></Section>
   <Section id="without" title="Without the ball"><Bullets items={p.withoutBall}/></Section>

@@ -43,7 +43,7 @@ export function esTerm(slug:string):EsTerm|null{
 export function esPosition(slug:string):EsPosition|null{
  const p=positionBySlug(slug);if(!p)return null;const e=need(POSITIONS_ES,slug,'position');
  return {...p,numbers:p.numbers.replace(/ and /g,' y ').replace(/ or /g,' o '),name:e.name,short:e.short,numberLine:e.numberLine,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,job:e.job,suits:e.suits,where:e.where,
-  withBall:[...e.withBall],withoutBall:[...e.withoutBall],habits:e.habits.map(h=>({...h})),small:e.small,faq:e.faq.map(f=>({...f})),esPath:toEs(p.path),notes:e.notes};
+  withBall:[...e.withBall],withoutBall:[...e.withoutBall],habits:e.habits.map(h=>({...h})),small:e.small,faq:e.faq.map(f=>({...f})),glance:{...e.glance},esPath:toEs(p.path),notes:e.notes};
 }
 export type EsFormation=Formation&{esPath:string;notes:CoachNotesEs;shapeEs:string};
 const same=(slug:string,what:string,a:readonly unknown[],b:readonly unknown[])=>{if(a.length!==b.length)throw new Error(`Spanish formation ${slug}: ${what} ${b.length}, English has ${a.length}`);};
@@ -54,7 +54,7 @@ export function esFormation(slug:string):EsFormation|null{
  return {...f,shapeEs:sh,name:fs?`${sh} (futsal)`:f8?`${sh} (fútbol 8)`:`${sh} (${f.format})`,title:f8?`Formación ${sh} en fútbol 8: roles y diagrama`:[fs?`Formación ${sh} de futsal (fútbol sala): roles y diagrama`:`Formación ${sh} en fútbol ${f.format.replace(/v\d+$/,'')} (${f.format}): roles y diagrama`,fs?`Formación ${sh} de futsal: roles y diagrama`:`Formación ${sh} en fútbol ${f.format}: roles y diagrama`].find(t=>t.length<=60)!,/* Nov 23 2026: "fútbol 7" is how Spain/LatAm search */
   h1:fs?`Formación ${sh} de futsal`:f8?`Formación ${sh} de fútbol 8`:`Formación ${sh} de fútbol (${f.format})`,sources:f.sources?F8_SOURCES_ES:undefined,best:e.best,watch:e.watch,desc:e.desc,answer:e.answer,
   roles:f.roles.map((r,i)=>({...r,title:e.roles[i].title,job:e.roles[i].job})),strengths:[...e.strengths],weak:f.weak.map((w,i)=>({...w,spot:e.weak[i].spot,cover:e.weak[i].cover})),
-  attack:e.attack,defend:e.defend,suits:e.suits,faq:e.faq.map(q=>({...q})),esPath:toEs(f.path),notes:e.notes};
+  attack:e.attack,defend:e.defend,suits:e.suits,ages:e.ages,faq:e.faq.map(q=>({...q})),esPath:toEs(f.path),notes:e.notes};
 }
 export const ES_FORMATIONS=():EsFormation[]=>FORMATIONS.map(f=>esFormation(f.slug)!);
 export const esFormationsIn=(format:string)=>ES_FORMATIONS().filter(f=>f.format===format);
