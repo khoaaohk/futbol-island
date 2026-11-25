@@ -8,7 +8,9 @@ import {BookMark,coverTone,GuideCover,SPREAD_H,SPREAD_W,spreadSrc} from '@/compo
 import {QA} from '@/components/site/LessonHub';
 import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,esLibCrumbs} from '../EsParts';
-import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookPath,byPosition,chapterAnchor,readerBook,relatedBooks,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
+import {BOOKS_PATH,BUILT_BOOKS,bookBySlug,bookImage,bookKeyFacts,bookPath,byPosition,chapterAnchor,readerBook,relatedBooks,shelf,SITE_BOOKS,type SiteBook} from '@/lib/site/books';
+import {bookGameLink} from '@/lib/site/crossLinks';
+import {FactTable,type FactRow} from '@/components/site/FactTable';
 import {regionId} from '@/lib/site/railNavCollections';
 import {hubRail,pageRail,sec} from '@/lib/site/railNavMore';
 import {roleGuide} from '@/lib/site/related';
@@ -71,6 +73,29 @@ function ChaptersEs({book,w}:{book:SiteBook;w:BookEs}){
 const ROLE_ES:Record<string,{name:string;meta:string}>={goalkeeper:{name:'Qué hace un portero',meta:'Posiciones del fútbol'},fullback:{name:'Qué hace un lateral',meta:'Posiciones del fútbol'},
  centerback:{name:'Qué hace un defensa central',meta:'Posiciones del fútbol'},midfielder:{name:'Qué hace un mediocampista central',meta:'Posiciones del fútbol'},
  winger:{name:'Qué hace un extremo',meta:'Posiciones del fútbol'},striker:{name:'Qué hace un delantero',meta:'Posiciones del fútbol'},coach:{name:'Las formaciones que usan los entrenadores',meta:'Formaciones con diagramas'}};
+/** The card role as a Spanish position word, for the key facts table when the book's own tiles name no position. */
+const POS_ES:Record<string,string>={goalkeeper:'Portero',fullback:'Lateral',centerback:'Defensa central',midfielder:'Mediocampista',winger:'Extremo',striker:'Delantero'};
+/** SEO batch F (Nov 25 2026): the English page's "Key facts" table in Spanish: the same rows (lib/site/books.ts bookKeyFacts), the
+ *  book's translated tiles at the same index (lib/i18n/es/books/<id>.json facts), the Spanish story line and the same links. */
+function keyFactRowsEs(x:SiteBook,w:BookEs):FactRow[]{
+ const F=w.facts,v=(i:number)=>F[i].value,lv=(i:number)=>/^(club|posición|deporte|nació|país)$/i.test(F[i].label)?F[i].value:`${F[i].label}: ${F[i].value}`;
+ const fix=(h?:string)=>h&&hasEs(h)?toEs(h):h,rows:FactRow[]=[];
+ for(const r of bookKeyFacts(x)){
+  if(r.kind==='born')rows.push({label:'Nació',value:r.idx.map(v).join('; ')});
+  else if(r.kind==='country'){if(r.idx.length)rows.push({label:'País',value:r.idx.map(v).join('; ')});}
+  else if(r.kind==='position'){const t=r.idx.length?r.idx.map(v).join(' · '):x.card?POS_ES[x.card.role]:undefined;if(t)rows.push({label:'Posición',value:r.href?<a href={fix(r.href)}>{t}</a>:t});}
+  else if(r.kind==='clubs')rows.push({label:r.idx.length>1?'Clubes':'Club',value:<>{r.idx.map(lv).join('; ')}{x.card&&<> · <a href={cardPath(x.card.number)}>todos sus clubes en su carta (en inglés)</a></>}</>});
+  else if(r.kind==='life')rows.push({label:F[r.idx[0]].label,value:r.idx.map(v).join('; ')});
+  else if(r.kind==='famous')rows.push({label:'Logros',value:r.idx.map(lv).join('; ')});
+  else if(r.kind==='story'&&restEs(w))rows.push({label:'La historia',value:restEs(w)});
+ }
+ if(x.card&&!rows.some(r=>r.label==='Club'||r.label==='Clubes'))rows.push({label:'Clubes',value:<a href={cardPath(x.card.number)}>La carta de {x.card.displayName} tiene todos sus clubes (en inglés)</a>});
+ const ex=(x.page!.exhibits??[]).map(exhibitById).filter((e):e is NonNullable<ReturnType<typeof exhibitById>>=>!!e);
+ if(ex.length)rows.push({label:'En el museo',value:<>{ex.map((e,i)=><span key={e.id}>{i>0&&'; '}<a href={exhibitPath(e.id)}>{enNote(e.title)}</a></span>)}</>});
+ const g=bookGameLink(x);if(g)rows.push({label:'Juega la posición',value:<a href={fix(g.path)}>{g.name.split(':')[0]}, juego gratis</a>});
+ rows.push({label:'Fuentes',value:<><a href="#sources">{x.sources.length} {x.sources.length===1?'fuente':'fuentes'}</a>, al final de la historia</>});
+ return rows;
+}
 type Tile={path:string;name:string;meta?:string;icon:'cards'|'shirt'|'law'|'deck'};
 /** "Sigue leyendo" (books.ts bookLinks in Spanish): the player's card (English page), the position guide (Spanish), a museum case, the shelf. */
 function linksEs(x:SiteBook):Tile[]{
@@ -89,7 +114,8 @@ function TilesEs({links}:{links:Tile[]}){
  </a></li>)}</ul>;
 }
 /** "Historia de Lionel Messi para niños: libro desplegable" when it fits in 60 characters, else the book title. */
-export const bookTitleEs=(x:SiteBook)=>{const t=`Historia de ${x.player} para niños: libro desplegable`;return t.length<=60?t:`${x.title}: cuento desplegable para niños`;};
+/** SEO batch F (Nov 25 2026): "datos" (the facts table) when it fits: "Historia de Cafu para niños: datos y libro desplegable". */
+export const bookTitleEs=(x:SiteBook)=>[`Historia de ${x.player} para niños: datos y libro desplegable`,`Historia de ${x.player} para niños: libro desplegable`].find(t=>t.length<=60)??`${x.title}: cuento desplegable para niños`;
 /** Nov 23 2026 (seo-books-games): the snippet leads with the player (the description's own words after "Libro desplegable gratis
  *  para niños sobre "), then the lesson from the summary; 70-155 characters or the old description. */
 const ES_PREFIX='Libro desplegable gratis para niños sobre ';
@@ -120,7 +146,7 @@ export function BookEsPage({book}:{book:SiteBook}){
  const w=es(book),path=pathEs(book.id),crumbs=esLibCrumbs({name:'Cuentos desplegables',path:HUB_ES},{name:book.title,path});
  const modified=sitePaths().find(p=>p.path===bookPath(book.id))?.lastmod??SITE_UPDATED.books;
  const facts:Fact[]=book.page!.facts.map((f,i)=>({icon:f.icon,label:w.facts[i].label,value:w.facts[i].value,href:f.href&&hasEs(f.href)?toEs(f.href):f.href}));
- const rail=pageRail('En esta página',{href:HUB_ES,name:'Todos los cuentos'},[sec('read-book','El libro desplegable'),sec('story','La historia'),sec('sources','Fuentes'),sec('faq','Preguntas'),sec('keep','Sigue leyendo')],true);
+ const rail=pageRail('En esta página',{href:HUB_ES,name:'Todos los cuentos'},[sec('read-book','El libro desplegable'),sec('key-facts','Datos clave'),sec('story','La historia'),sec('sources','Fuentes'),sec('faq','Preguntas'),sec('keep','Sigue leyendo')],true);
  return <>
   <JsonLd data={bookLdEs(book,w,modified)}/>
   <JsonLd data={faqLd(w.faq)}/>
@@ -145,6 +171,8 @@ export function BookEsPage({book}:{book:SiteBook}){
    <h2 className={styles.h2} id="about">Sobre este libro</h2>
    <p>{restEs(w)?<>Este libro cuenta la historia de {restEs(w).replace(/\.$/,'')}. </>:null}{lessonEs(w)} Está escrito para niños de 7 a 12 años, se lee en unos 4 minutos y Coach Bella lo lee en voz alta (en inglés).{guide&&gw&&<> Su posición en el campo: <a href={hasEs(guide.path)?toEs(guide.path):guide.path}>{gw.name.toLowerCase()}</a>.</>}</p>
   </section>
+  <FactTable id="key-facts" title={`Datos de ${book.title} para niños`} label={`Datos clave de ${book.player}`} head={['Dato','Detalle']} rows={keyFactRowsEs(book,w)}
+   intro={<>Los datos clave de {book.player} que confirman las fuentes de este libro. Lo que las fuentes no dicen, no está.</>}/>
   <section className={`${styles.section} ${tgt.target}`} aria-labelledby="story-title" id="story">
    <h2 className={styles.h2} id="story-title">La historia</h2>
    <ChaptersEs book={book} w={w}/>
@@ -170,11 +198,24 @@ const HUB=()=>({title:'Cuentos de fútbol para niños: libros desplegables grati
  h1:'Cuentos de fútbol para niños: libros desplegables',
  lead:`Futbol Island tiene ${N()} libros desplegables gratis para niños, cada uno una historia real y corta sobre un jugador de fútbol, en seis capítulos. Cada capítulo termina con lo que enseña, como seguir adelante después de un no o estar listo desde la banca, y cada dato se revisa con sus fuentes. Las historias están en español en esta página; el libro desplegable y su narración están en inglés.`});
 const POSITION_PLURAL_ES:Record<string,string>={goalkeeper:'Porteros',fullback:'Laterales',centerback:'Defensas centrales',midfielder:'Mediocampistas',winger:'Extremos',striker:'Delanteros'};
+/** SEO batch F (Nov 25 2026): the English hub's "What's on the shelf" table in Spanish. */
+function whatsHereEs():FactRow[]{
+ const sh=shelf(),pos=byPosition(),withCard=SITE_BOOKS.filter(x=>!!x.card).length;
+ return [
+  {label:'Cuentos desplegables',value:<>{N()} historias reales de jugadores de fútbol, gratis para leer y escuchar</>},
+  {label:'Por región',value:<>{sh.map((g,i)=><span key={g.region}>{i?', ':''}<a href={`#${regionId(g.region)}`}>{REGION_ES[g.region]??g.region}</a> ({g.books.length})</span>)}</>},
+  {label:'Por posición',value:<>{pos.map((g,i)=><span key={g.role}>{i?', ':''}<a href="#by-position">{POSITION_PLURAL_ES[g.role]}</a> ({g.books.length})</span>)}</>},
+  {label:'En cada libro',value:'Seis capítulos con una lección de “Lo que enseña” cada uno, una tabla de datos clave (nació, país, posición, clubes, logros), preguntas con respuestas y las fuentes'},
+  {label:'Cartas de jugadores',value:<>{withCard} libros enlazan la <a href="/cards">carta del jugador</a> (en inglés), con todos sus clubes</>},
+  {label:'Museo y juegos',value:<>Los libros enlazan el <a href="/exhibits">museo de historia del fútbol</a> (en inglés) y un <a href={toEs('/games')}>juego de fútbol gratis</a> para la posición del jugador</>},
+  {label:'En inglés',value:<><a href={BOOKS_PATH}>Los mismos {N()} libros en inglés</a> (soccer books for kids)</>},
+ ];
+}
 export function BooksHubEsPage(){
  const h=HUB(),crumbs=esLibCrumbs({name:'Cuentos desplegables',path:HUB_ES}),featured=bookBySlug(BUILT_BOOKS[0]??''),groups=shelf();let start=0;
  const facts:Fact[]=[{icon:'deck',label:'Libros',value:`${N()} historias reales`},{icon:'steps',label:'Cada libro',value:'6 capítulos, una lección cada uno'},
   {icon:'clock',label:'Tiempo de lectura',value:'Unos 4 minutos'},{icon:'tag',label:'Precio',value:'Gratis'}];
- const rail=hubRail('Cuentos en esta página',[{items:[...(featured?[sec('first-book','Empieza aquí')]:[]),...groups.map(g=>sec(regionId(g.region),REGION_ES[g.region]??g.region)),sec('guides','Guías de la isla'),sec('how','Cómo se hacen')]}],true);
+ const rail=hubRail('Cuentos en esta página',[{items:[sec('whats-here','Qué hay'),...(featured?[sec('first-book','Empieza aquí')]:[]),...groups.map(g=>sec(regionId(g.region),REGION_ES[g.region]??g.region)),sec('guides','Guías de la isla'),sec('how','Cómo se hacen')]}],true);
  const ld={'@context':'https://schema.org','@type':'CollectionPage',name:h.h1,url:abs(HUB_ES),description:h.description,inLanguage:'es',datePublished:SITE_PUBLISHED,
   dateModified:pageModified(BOOKS_PATH,SITE_UPDATED.books),isAccessibleForFree:true,audience:KIDS_AUDIENCE,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
   mainEntity:{'@type':'ItemList',numberOfItems:BUILT_BOOKS.length,itemListElement:BUILT_BOOKS.map((id,i)=>{const x=bookBySlug(id)!;return {'@type':'ListItem',position:i+1,name:`${x.title}: ${es(x).subtitle}`,url:abs(pathEs(id))};})}};
@@ -187,6 +228,7 @@ export function BooksHubEsPage(){
    <h1 className={styles.title}>{h.h1}</h1>
    <QuickAnswer lead={h.lead} facts={facts}/>
   </header>
+  <FactTable id="whats-here" title="Qué hay en la estantería" label="Qué hay en los cuentos desplegables" head={['Estantería','Qué encuentras']} rows={whatsHereEs()}/>
   {featured&&<section className={`${b.feature} ${tgt.target}`} aria-labelledby="first" id="first-book">
    <a className={b.coverLink} href={pathEs(featured.id)} tabIndex={-1} aria-hidden="true"><CoverEs book={featured} tone="gold" size="lg" as="span"/></a>
    <div className={b.featureText}>

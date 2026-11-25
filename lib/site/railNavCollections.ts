@@ -69,9 +69,9 @@ export const exhibitRail=(o:{story:boolean;sources:boolean}):Rail=>page('On this
 /* story books: /books lists the featured book, its shelves by region, the field guides and how the books are made; a book goes Back
    to All story books and lists its own sections */
 export const regionId=(region:string)=>'r-'+region.toLowerCase().replace(/[^a-z]+/g,'-');
-export const booksHubRail=(featured:boolean,regions:readonly string[]):Rail=>hub('Story books on this page',[...(featured?[['first-book','Start here'] as const]:[]),
+export const booksHubRail=(featured:boolean,regions:readonly string[]):Rail=>hub('Story books on this page',[['whats-here','What’s here'] as const,...(featured?[['first-book','Start here'] as const]:[]),
  ...regions.map(r=>[regionId(r),r] as const),['guides','Island field guides'],['how','How the books are made']]);
-export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All story books'},[['read-book','Read the pop-up book'],['story','The story'],['sources','Sources'],
+export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All story books'},[['read-book','Read the pop-up book'],['key-facts','Key facts'],['story','The story'],['sources','Sources'],
  ['faq','Questions'],['keep','Keep reading']]);
 
 /* age groups and the other by-age charts (app/(site)/learn/ChartView.tsx, the Spanish ChartEsPage): Back to the Library, then the

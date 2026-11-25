@@ -136,3 +136,23 @@ export function bookIntro(b:SiteBook){
 export type ReaderBook={id:string;title:string;subtitle:string;narration:string;chapters:Pick<BookChapter,'id'|'year'|'title'|'text'|'prompt'|'response'|'steps'>[]};
 export const readerBook=(b:SiteBook):ReaderBook=>({id:b.id,title:b.title,subtitle:b.subtitle,narration:b.narration,
  chapters:b.chapters.map(({id,year,title,text,prompt,response,steps})=>({id,year,title,text,prompt,response,steps}))});
+/** SEO batch F (Nov 25 2026, owner: "a key facts table with born / position / clubs / famous for, sourced"): the rows of a book
+ *  page's "Key facts" table, built ONLY from facts the page already states and checked against its sources: the book's own fact
+ *  tiles (bookPages/<id>.ts, by index, so the Spanish page takes its translated label and value at the same index), the turn of
+ *  the story (bookPages/hooks.ts) and the player card's position. Nothing new is stated; a row with no checked fact is left out
+ *  (only some books state a birth year, so "Born" shows only there). The player card's club list is NOT copied in: it is linked. */
+export type KeyFact={kind:'born'|'country'|'position'|'clubs'|'life'|'famous'|'story';label?:string;idx:number[];href?:string};
+const KF_KIND=(label:string):KeyFact['kind']|null=>/^the book$/i.test(label)?null:/^born$/i.test(label)?'born':/^country$/i.test(label)?'country'
+ :/^(position|sport)$/i.test(label)?'position':/club/i.test(label)?'clubs':/grew up|new home|left home|family|real name|nickname|lives with|teenage job/i.test(label)?'life':'famous';
+export function bookKeyFacts(b:SiteBook):KeyFact[]{
+ const facts=b.page?.facts??[],by=(k:KeyFact['kind'])=>facts.map((f,i)=>({f,i})).filter(x=>KF_KIND(x.f.label)===k);
+ const rows:KeyFact[]=[];
+ for(const k of ['born','country','position','clubs'] as const){const xs=by(k);if(xs.length)rows.push({kind:k,idx:xs.map(x=>x.i),href:xs.find(x=>x.f.href)?.f.href});
+  else if(k==='position'&&b.card&&!b.card.coach)rows.push({kind:'position',idx:[],href:roleGuide(b.card.role)?.path});}
+ for(const x of by('life'))rows.push({kind:'life',label:x.f.label,idx:[x.i]});
+ const fam=by('famous');if(fam.length)rows.push({kind:'famous',idx:fam.map(x=>x.i)});
+ if(BOOK_HOOKS[b.id]?.includes('’s story: '))rows.push({kind:'story',idx:[]});
+ return rows;
+}
+/** The turn of the story as a sentence ("Five clubs said no, …"), from bookPages/hooks.ts. */
+export const bookStoryLine=(b:Pick<SiteBook,'id'>)=>{const t=(BOOK_HOOKS[b.id]??'').split('’s story: ')[1]??'';return t?t[0].toUpperCase()+t.slice(1):'';};

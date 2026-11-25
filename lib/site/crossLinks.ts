@@ -229,6 +229,11 @@ export function booksForCollection(c:Pick<Collection,'parent'|'groups'>):XLink[]
  const listed=new Set(c.groups.flatMap(g=>g.links.map(l=>l.path)));
  return built.filter(b=>b.card&&listed.has(cardPath(b.card.number))).map(bookLink);
 }
+/** SEO batch F (Nov 25 2026): book -> one arcade game for the player's position (the game's own skill line says why): the keeper
+ *  game for goalkeepers, the shape game for defenders, the passing-lanes puzzle for midfielders and futsal players, beating a
+ *  tackle for wingers, striking the ball for strikers. */
+const ROLE_GAME:Record<string,'airhockey'|'lineup'|'puzzle'|'runner'|'ballblaster'>={goalkeeper:'airhockey',centerback:'lineup',fullback:'lineup',midfielder:'puzzle',winger:'runner',striker:'ballblaster'};
+export const bookGameLink=(b:Pick<SiteBook,'card'>):XLink|undefined=>{const id=b.card?(ROLE_GAME[b.card.role]??(b.card.futsal?'puzzle':undefined)):undefined;return id&&isGameListed(id)?gameLink(id):undefined;};
 /** Books with no player card on the site yet: they join the positions guide's book list so no book has only the shelf link. */
 export const booksWithoutCard=():XLink[]=>built.filter(b=>!b.card).map(bookLink);
 
