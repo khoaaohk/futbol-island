@@ -1,5 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {groundLift} from '../town/elevation';
+import {footToGround} from '../town/elevationDrape';
 import {createBuildingGlow} from './buildingGlow';
 import {patchVendingNight} from './machineNightGlow';
 import {machineStock,VENDING_MACHINES,VENDING_SIZE,type VendingMachine,type VendingMachineId} from '../town/vendingCatalog';
@@ -345,6 +347,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  const entries=VENDING_MACHINES.map((m,i)=>{
   const geometry=buildMachineGeometry(m,i),mesh=new T.Mesh(geometry,material);mesh.name=`vending-${m.id}`;mesh.castShadow=!m.station;mesh.receiveShadow=true;
   mesh.position.set(m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.scale.setScalar(S);mesh.updateMatrix();mesh.matrixAutoUpdate=false;root.add(mesh);mesh.updateMatrixWorld(true);
+  if(m.onSlope)footToGround(mesh,groundLift);// on a grade the cabinet's base meets the ground all round (elevation.ts propSeat; pre-push Nov 26 2026)
   const box=new T.Box3().setFromObject(mesh);const fx=Math.sin(m.yaw),fz=Math.cos(m.yaw);
   return {machine:m,mesh,geometry,box,front:{x:m.x+fx*1.5,z:m.z+fz*1.5},dir:new T.Vector3(fx,0,fz)};
  });

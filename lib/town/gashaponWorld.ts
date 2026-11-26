@@ -12,6 +12,8 @@
  * (lib/graphics/gashaponLive.ts) and folded back when you leave.
  */
 import * as T from 'three';
+import {groundLift} from './elevation';
+import {footToGround} from './elevationDrape';
 import type {Obstacle} from './simulation';
 import {islandGashaponMachines} from '../gashapon/machines';
 import {gashaponPieces,gashaponBases,disposeBases,gashaponGlassMaterial,gashaponFootprint} from '../graphics/gashaponMesh';
@@ -26,7 +28,7 @@ export function buildGashaponProps(t:GashaponWorldTools){
  machines.forEach((m,i)=>{
   for(const piece of gashaponPieces(m,i,b)){
    if(piece.glass){const mesh=new T.Mesh(piece.geometry,glass);mesh.position.set(m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=false;mesh.receiveShadow=false;mesh.name='gashapon-glass';mesh.userData.gashaponId=m.id;t.town.add(mesh);continue;}
-   const mesh=t.put(piece.geometry,piece.color,m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=true;mesh.userData.gashaponId=m.id;if(piece.glow)mesh.userData.machineGlow=[piece.glow,false];// the front panel glows at night (machineNightGlow.ts)// world.ts keeps its vertex runs (gashaponStatic: the open machine swaps to its live copy)
+   const mesh=t.put(piece.geometry,piece.color,m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=true;mesh.userData.gashaponId=m.id;if(m.onSlope){mesh.updateMatrixWorld(true);if(new T.Box3().setFromObject(mesh).min.y-m.y<.03){mesh.geometry=mesh.geometry.clone();footToGround(mesh,groundLift);}}/* on a grade the base meets the ground all round */if(piece.glow)mesh.userData.machineGlow=[piece.glow,false];// the front panel glows at night (machineNightGlow.ts)// world.ts keeps its vertex runs (gashaponStatic: the open machine swaps to its live copy)
   }
   t.obstacles.push(gashaponFootprint(m));
  });

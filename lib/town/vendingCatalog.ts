@@ -1,4 +1,4 @@
-import {onGround} from './elevation';
+import {seatOnGround} from './elevation';
 import './westElevation';
 import './coralCayElevation';
 import {STORE_ITEMS,type StoreItem,type StoreCategory} from './store';
@@ -22,6 +22,8 @@ import {stadiumVendingSpot} from './stadiumShops';
  */
 export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|'summit'|'stadium'|DrinkMachineId;
 export type VendingMachine={id:VendingMachineId;name:string;place:string;x:number;z:number;y:number;yaw:number;
+ /** On a grade (elevation.ts propSeat): the cabinet's foot is carried down to the ground. */
+ onSlope?:boolean;
  /** Cabinet colour, lighter sign colour and a readable ink for the UI. */
  color:string;light:string;ink:string;specials:string[];lesson:string;
  /** Sep 29 2026: one of the two outdoor drink machines (lib/town/drinkMachines.ts): sells drinks, not the vending catalogue. */
@@ -69,13 +71,14 @@ export const VENDING_MACHINES:VendingMachine[]=([
  // (lib/town/stadiumShops.ts). Regular rows plus the Coral Cay Konbini's four island-favourite books (no specials of its own), so
  // its glass is that machine's glass (lib/graphics/vendingMachines.ts GLASS_TWIN) and the atlas does not grow.
  {id:'stadium',name:'DRIP FC Stadium',place:'against the south stand, under the big screen where the fans watch',...stadiumVendingSpot(),y:0,color:'#c2185b',light:'#ffd9e8',ink:'#4a0722',specials:[],lesson:'Matchday fuel: a banana or a rice ball an hour or two before you play gives your legs energy.'},
-] as VendingMachine[]).map(onGround);// (elevation.ts: machines on raised ground stand on it under ?elev=1)
+] as VendingMachine[]).map(m=>seatOnGround(m,VENDING_SIZE.w/2,VENDING_SIZE.d/2));// (elevation.ts: machines on raised ground stand on it; on a grade level, at the footprint's high side, the foot carried down: propSeat)
 // Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
 // Nov 23 2026 (Island Line Phase 4): plus one on each station platform, placed from the station (trainLayout.ts stationVendingSpot).
 for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id];
  if(info.station){const p=stationVendingSpot(info.station);VENDING_MACHINES.push({id,name:info.name,place:info.place,x:p.x,z:p.z,y:p.y,yaw:p.yaw,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true,station:true});continue;}
  const next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
- VENDING_MACHINES.push({id,name:info.name,place:info.place,...drinkSpotBeside(next),y:next.y,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true});}
+ const drink:VendingMachine={id,name:info.name,place:info.place,...drinkSpotBeside(next),y:next.y,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true};
+ VENDING_MACHINES.push(next.y===seatOnGround({...next,y:0},VENDING_SIZE.w/2,VENDING_SIZE.d/2).y?seatOnGround({...drink,y:0},VENDING_SIZE.w/2,VENDING_SIZE.d/2):drink);}/* a ground machine's twin is seated on its own spot (the same y on level ground); a terrace one (the summit) keeps its neighbour's y */
 const displayThemes:Record<VendingMachineId,[string,string,string]>={
  plaza:['Messi','Close control','#76bad4'],rooftop:['Falcão','Quick feet','#30a7ad'],oldtown:['Marta','Find space','#64a355'],
  clubgrounds:['Maldini','Defend together','#d48c45'],eleven:['Zidane','Scan and pass','#5c7fc3'],beach:['Ronaldinho','Creative play','#db81a5'],

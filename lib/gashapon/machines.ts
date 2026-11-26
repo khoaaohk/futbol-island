@@ -18,7 +18,7 @@
 import {konbiniMachineSpot,summitSnackSpot,ISLAND_SQUARE_KONBINI,KONBINI_FACADE_PROUD,KONBINI_BACK_GAP} from '../town/vendingPlaces';
 import {CAY_KONBINI,CAY_KONBINI_DOOR} from '../town/coralCay';
 import {summitGround} from '../town/summitIsle';
-import {onGround} from '../town/elevation';
+import {seatOnGround} from '../town/elevation';
 import '../town/westElevation';
 import '../town/coralCayElevation';
 import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_VENDING_HALF,STADIUM_GASHA_OFFSETS,stadiumShopZ} from '../town/stadiumShops';
@@ -32,6 +32,8 @@ export type GashaponZone='konbini-square'|'konbini-cay'|'arcade'|'outdoor'|'stad
 export type GashaponMachine={id:GashaponMachineId;name:string;theme:string;zone:GashaponZone;place:string;
  /** World metres (arcade: room metres). y is the ground the cabinet stands on. */
  x:number;z:number;y:number;yaw:number;
+ /** On a grade (elevation.ts propSeat): the cabinet's foot is carried down to the ground (gashaponWorld.ts). */
+ onSlope?:boolean;
  /** Cabinet colours for the shared instanced mesh (instance colour only, no new materials). */
  color:string;accent:string;
  /** Nov 13 2026: a machine that sells another machine's six toys (the DRIP FC Stadium's four, lib/town/stadiumShops.ts): the
@@ -147,7 +149,7 @@ export const GASHAPON_MACHINES:readonly GashaponMachine[]=([
  {id:'gs-stadium-boots',name:'Boots & Kits · Stadium',theme:'Football gear with faces',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-boots'),y:0,color:'#1d3a8a',accent:'#f4f1e6',set:'gs-eleven'},
  {id:'gs-stadium-pixel',name:'Pixel Pitch · Stadium',theme:'Retro 8-bit football',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-pixel'),y:0,color:'#6a4cff',accent:'#ffd447',set:'gs-arcade-pixel'},
  {id:'gs-stadium-beach',name:'Beach Day · Stadium',theme:'Beach soccer and sunny sand',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-beach'),y:0,color:'#ff8c42',accent:'#2bb3d1',set:'gs-westbeach'},
-] as GashaponMachine[]).map(onGround);// (elevation.ts: outdoor machines stand on raised ground under ?elev=1)
+] as GashaponMachine[]).map(m=>seatOnGround(m,GASHA_SIZE.w/2,GASHA_SIZE.d/2));/* on a grade: level at the footprint's high side, foot carried down (elevation.ts propSeat) */// (elevation.ts: outdoor machines stand on raised ground under ?elev=1)
 export const GASHAPON_MACHINE_IDS=GASHAPON_MACHINES.map(m=>m.id);
 export const gashaponMachine=(id:string)=>GASHAPON_MACHINES.find(m=>m.id===id);
 export const isGashaponMachine=(id:unknown):id is GashaponMachineId=>typeof id==='string'&&GASHAPON_MACHINES.some(m=>m.id===id);

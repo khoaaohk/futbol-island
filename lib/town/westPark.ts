@@ -22,7 +22,7 @@ import {stadiumOrchardTrees,orchardPlanOf,ORCHARD_LEGACY,type StadiumOrchardTree
 import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial,pondSeaDistance} from '../graphics/pondWater';
 
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,POND_BENCH_BEARINGS,POND_DEPTH,POND_JETTY,POND_JETTY_AT,POND_STALL_BEARING,POND_SAND,POND_LOBE_MAX,POND_REED_BEARINGS,POND_WALK_BEARING,PLAZA_LABEL,PARK_SIGNS,TRAIL_WIDTH,
- inStadiumFootprint,parkPathLines,pathPoints,trailPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,pondEdge,pondShape,pondInset,pondDepthForInset,onPondJetty,type P} from './westParkLayout';
+ inStadiumFootprint,parkPathLines,trailPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,pondEdge,pondShape,pondInset,pondDepthForInset,onPondJetty,type P} from './westParkLayout';
 export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;

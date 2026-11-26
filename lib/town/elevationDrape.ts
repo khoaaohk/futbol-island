@@ -3,7 +3,7 @@
 // has run, drapePieces() lays the flat layers it placed (paths, paving, kerbs, soil rows, road ribbons, fence rails) over the
 // same height function (never below the drawn terrain), so no two ground layers ever cross.
 import * as T from 'three';
-import {regionLift as groundLift,elevBuild,type Pt} from './elevation';
+import {regionLift as groundLift,elevBuild,SEAT,type Pt} from './elevation';
 import {createDrawnGround} from './drawnGround';
 
 export const TERRAIN_RINGS=36;
@@ -71,4 +71,50 @@ export function drapePieces(skip:string[],terrains:string[]=[]){
    for(let i=0;i<pos.count;i++)pos.setY(i,pos.getY(i)+(seen.get(keys[i])??any)-piece.lift);
    pos.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();marks++;}}
  return {added,draped,marks};
+}
+
+/** Carry a rigid prop's foot down to the ground (pre-push fix, Nov 26 2026): every vertex within 1 cm of the mesh's lowest point that
+ *  stands above `ground(x, z) - sink` moves straight down to it, so the base meets a sloped ground along its whole edge (a plinth set
+ *  into the slope) and the prop above stays level. The mesh must not be tilted. Edits the geometry in place (clone it first if it is
+ *  shared). Returns the largest drop (m). */
+export function footToGround(m:T.Mesh,ground:(x:number,z:number)=>number,sink=.01){
+ m.updateMatrixWorld(true);const g=m.geometry,pos=g.getAttribute('position') as T.BufferAttribute,mw=m.matrixWorld,inv=new T.Matrix4().copy(mw).invert(),v=new T.Vector3();
+ let min=Infinity,drop=0;for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i).applyMatrix4(mw);if(v.y<min)min=v.y;}
+ for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i).applyMatrix4(mw);if(v.y>min+.01)continue;const t=ground(v.x,v.z)-sink;if(v.y<=t+1e-4)continue;
+  drop=Math.max(drop,v.y-t);v.y=t;v.applyMatrix4(inv);pos.setXYZ(i,v.x,v.y,v.z);}
+ if(drop){pos.needsUpdate=true;g.computeBoundingBox();g.computeBoundingSphere();}return drop;
+}
+/** Kinds that grow out of the ground: a trunk may stand into a bank, only a float is filled. */
+const ORGANIC=new Set(['tree','palm','bush','flower','grass','reed','rock']);
+/** Every rigid prop (world.ts `prop`: one anchored / rigid group, tagged) on a grade (pre-push fix, Nov 26 2026): the pieces whose
+ *  designed foot is at the datum (-2..+6 cm) are its feet. A compact prop (feet within 2.5 m: a machine, bench, planter, table, crate,
+ *  stall, bin) is raised until no foot is buried more than 1 cm (upright, the whole prop together, so its tap / kick bounds, read from
+ *  its meshes afterwards, follow); then every foot is carried down to the ground (footToGround), so none floats. A wide one (a district
+ *  sign's two posts, a court net) and anything organic keeps its height: its posts are planted, only a float is filled. Level ground
+ *  (feet within 2 cm of their design): untouched. A compact UNTAGGED anchored group (furniture built without `prop`) only has its float
+ *  filled; buildings are never touched. */
+export function seatProps(){
+ const groups=new Map<number,Piece[]>(),v=new T.Vector3();
+ for(const p of elevBuild.pieces as (Piece&{group?:number})[])if(p.group&&p.anchored){let l=groups.get(p.group);if(!l)groups.set(p.group,l=[]);l.push(p);}
+ let seated=0,raised=0,maxRaise=0,feet=0,maxDrop=0;
+ for(const list of groups.values()){
+  const kind=(list.find(p=>p.mesh.userData.propTag)?.mesh.userData.propTag as {kind:string}|undefined)?.kind??'',foot:Piece[]=[];let bur=-Infinity,gap=-Infinity,x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;
+  for(const p of list){const m=p.mesh;if(Math.abs(m.rotation.x)>1e-4||Math.abs(m.rotation.z)>1e-4)continue;m.updateMatrixWorld(true);const pos=m.geometry.getAttribute('position') as T.BufferAttribute;if(!pos)continue;
+   let min=Infinity;for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i).applyMatrix4(m.matrixWorld);if(v.y<min)min=v.y;}
+   const design=min-p.lift;if(design<-.02||design>.06)continue;
+   // A flat foot (a box, a post, a cabinet's base: its lowest vertices span at least half its width both ways) is carried down; a round
+   // one (a wheel, a ball of leaves) only counts for the seat: pulling its lowest point down would drag it into a spike.
+   let fx0=Infinity,fx1=-Infinity,fz0=Infinity,fz1=-Infinity,ax0=Infinity,ax1=-Infinity,az0=Infinity,az1=-Infinity;
+   for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i).applyMatrix4(m.matrixWorld);ax0=Math.min(ax0,v.x);ax1=Math.max(ax1,v.x);az0=Math.min(az0,v.z);az1=Math.max(az1,v.z);if(v.y>min+.01)continue;
+    const d=groundLift(v.x,v.z)-p.lift;if(d>bur)bur=d;if(-d>gap)gap=-d;fx0=Math.min(fx0,v.x);fx1=Math.max(fx1,v.x);fz0=Math.min(fz0,v.z);fz1=Math.max(fz1,v.z);
+    if(v.x<x0)x0=v.x;if(v.x>x1)x1=v.x;if(v.z<z0)z0=v.z;if(v.z>z1)z1=v.z;}
+   if(fx1-fx0>=.5*(ax1-ax0)&&fz1-fz0>=.5*(az1-az0)){foot.push(p);m.userData.footDesign=design;m.userData.footSize=Math.max(ax1-ax0,az1-az0);}}
+  if(bur<=SEAT.level&&gap<=SEAT.level)continue;
+  const compact=Math.max(x1-x0,z1-z0)<=2.5;// untagged (built without `prop`): only small feet are filled (a café planter or table in a terrace built as one), never a wall
+  if(!kind&&!compact)for(let k=foot.length-1;k>=0;k--)if((foot[k].mesh.userData.footSize as number)>2.5)foot.splice(k,1);
+  const r=kind&&!ORGANIC.has(kind)&&compact&&bur>SEAT.sink?bur-SEAT.sink:0;
+  if(r){for(const p of list){p.mesh.position.y+=r;p.lift+=r;p.mesh.updateMatrixWorld(true);}raised++;if(r>maxRaise)maxRaise=r;}
+  seated++;for(const p of foot){p.mesh.geometry=p.mesh.geometry.clone();const d=footToGround(p.mesh,groundLift,SEAT.sink);if(d){feet++;if(d>maxDrop)maxDrop=d;}}
+ }
+ return {groups:seated,raised,maxRaise:+maxRaise.toFixed(3),feet,maxDrop:+maxDrop.toFixed(3)};
 }

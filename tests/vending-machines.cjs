@@ -106,7 +106,10 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   if(m.id==='stadium'){const SS=load(path.join(root,'lib/town/stadiumShops.ts'));same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(SS.stadiumVendingSpot()),'stadium placed from its wall anchor');
    assert.equal(m.y,GL(m.x,m.z),'on the stadium terrace');assert.equal(m.y,load(path.join(root,'lib/town/westElevation.ts')).STADIUM_BASE,'level with the bowl');assert(Math.abs(m.z-.559-(SS.STADIUM_SHOP_WALL_Z+.03))<.011,'flush to the wall');assert(onIsland(m.x,m.z),'on the island');
    same(C.machineStock('stadium')[1].items.map(i=>i.id),C.machineStock('caykonbini')[1].items.map(i=>i.id),'the Coral Cay Konbini\'s four books (its glass twin)');continue;}
-  if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,GL(m.x,m.z),m.id+' on the cay\'s ground, not floating or sunk');
+  if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');{/* pre-push Nov 26 2026: a rigid cabinet on a grade is seated (elevation.ts propSeat): level, at the footprint's high side less 1 cm, its foot carried down (onSlope); on level ground its centre's height, as before */
+   const EL=load(path.join(root,'lib/town/elevation.ts')),Z=load(path.join(root,'lib/town/vendingCatalog.ts')).VENDING_SIZE,s=EL.propSeat(m.x,m.z,Z.w/2,Z.d/2,m.yaw);
+   assert.equal(m.y,s.slope?s.hi-EL.SEAT.sink:GL(m.x,m.z),m.id+' on the cay\'s ground, not floating or sunk');assert.equal(!!m.onSlope,s.slope,m.id+': its foot is carried down on a grade');
+   if(s.slope)assert(m.y-s.hi>=-.0101&&m.y-s.hi<=0,m.id+': no edge buried more than 1 cm');}
    const s=cayVendingSpots[m.id==='cayplaza'?'cafe':m.id==='caykonbini'?'konbini':m.id]();same([m.x,m.z,m.yaw],[s.x,s.z,s.yaw],m.id+' placed from the Coral Cay anchors');
    assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
   if(SUMMIT_MACHINES.includes(m.id)){assert(onSummitIsle(m.x,m.z)&&(standsOnSummit(m)||load('lib/town/vendingPlaces.ts').standsAtSummitFence(m)),m.id+' stands on flat, walkable ground outside the Summit 5s fence (Nov 10 2026: or in the line against its east fence)');

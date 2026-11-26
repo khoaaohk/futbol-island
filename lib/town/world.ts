@@ -10,7 +10,7 @@ import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
 import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn} from './elevation';
-import {drapePieces} from './elevationDrape';
+import {drapePieces,seatProps} from './elevationDrape';
 import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
 import {mergeLawnPatch} from './westTerrain';
 import {trackNearest} from './trainTrack';
@@ -114,10 +114,10 @@ export function* buildTownSteps(scene: T.Scene) {
   const palette = new Map<string,T.MeshStandardMaterial>();
   const nightSigns:T.MeshStandardMaterial[]=[];
   const mat = (color: string) => { if (!palette.has(color)) {const m=new T.MeshStandardMaterial({color,roughness:.85});palette.set(color,m);materials.push(m);}return palette.get(color)!;};
-  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {const lift=parent===town?buildLift(x,z):0;if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y+lift,z);if(elevBuild.active&&parent===town)elevBuild.pieces.push({mesh:m,lift,anchored:elevBuild.anchor!==null});m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
+  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {const lift=parent===town?buildLift(x,z):0;if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y+lift,z);if(elevBuild.active&&parent===town)elevBuild.pieces.push({mesh:m,lift,anchored:elevBuild.anchor!==null,group:elevBuild.group});m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
   // Elevation (?elev=1; lib/town/elevation.ts): from here to the batching pass every piece `put` / `sign` places stands on the raised
   // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
-  elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.pieces.length=0;
+  elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.group=0;elevBuild.pieces.length=0;
   const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Night glow (machineNightGlow.ts): mark a piece to glow with the night factor, `w` 0…1; warm: a lit-interior white, else its own colour. */
   const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
@@ -1776,6 +1776,8 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation: placement ends here. Drape the flat layers over each region's terrain; roofs stand on the raised ground (rooftop landing).
   // Props built as their own Group (a palm: pieces `put` into the group) stand at the group's spot: lifted here, once. A Group left at
   // the origin holds pieces at world coordinates: each is lifted at its own spot. `userData.ownHeight` opts a Group out.
+  // Rigid props on a grade stand level with their foot carried down to the ground (elevationDrape.ts seatProps; pre-push Nov 26 2026).
+  if(elevBuild.active)elevBuild.seated=seatProps();
   if(elevBuild.active){elevBuild.stats={...drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']),westWall:westWalls.triangles,westLawn:westLawnTriangles};for(const b of buildings)b.height+=regionLift(b.x,b.z);
    const stand=(o:T.Object3D)=>{const g=regionLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
    for(const o of town.children)if(o instanceof T.Group&&!o.userData.ownHeight&&!o.userData.train){if(o.position.x===0&&o.position.y===0&&o.position.z===0)o.children.forEach(stand);else stand(o);}}

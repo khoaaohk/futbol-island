@@ -98,15 +98,29 @@ export const groundSlope=(x:number,z:number)=>Math.hypot(groundLift(x+1,z)-groun
 /** A placed record ({x, z, y}: a vending machine, a hidden ball, a gashapon) standing on the raised ground: y plus the lift at
  *  its spot. The same object back where the ground is not raised. Use at the data's definition. */
 export function onGround<S extends {x:number;z:number;y:number}>(o:S):S{const g=groundLift(o.x,o.z);return g?{...o,y:o.y+g}:o;}// (a `wall` target's y is measured from the spot's own y, coinHunt.ts: it rises with it)
+/** Rigid upright props on sloped ground (pre-push fix, Nov 26 2026: a vending machine on the Coral Cay plaza's ~10 % grade stood at
+ *  its centre's height, one edge ~5 cm off the ground). The ground under the footprint (half size hw x hd turned by yaw: corners, edge
+ *  mid-points, centre) spans lo..hi. On a grade (span over SEAT.level) the prop stands at hi - SEAT.sink, so no edge is buried more
+ *  than 1 cm, upright, and its foot is carried down to the ground below it (elevationDrape.ts footToGround: a plinth set into the
+ *  slope); on level ground it keeps its centre's height, exactly as before. Pure: the data (a machine's y, its tap and kick targets)
+ *  and the drawn prop read the same seat. */
+export const SEAT={level:.02,sink:.01} as const;
+export function propSeat(x:number,z:number,hw:number,hd:number,yaw=0,ground:(x:number,z:number)=>number=groundLift){
+ const c=Math.cos(yaw),s=Math.sin(yaw);let lo=Infinity,hi=-Infinity;
+ for(const u of [-1,0,1])for(const v of [-1,0,1]){const ox=u*hw,oz=v*hd,h=ground(x+ox*c+oz*s,z-ox*s+oz*c);if(h<lo)lo=h;if(h>hi)hi=h;}
+ const mid=ground(x,z);return {y:hi-lo>SEAT.level?hi-SEAT.sink:mid,lo,hi,slope:hi-lo>SEAT.level};}
+/** onGround for a rigid prop standing ON the ground (y 0): seated by propSeat; `onSlope` tells the drawn side to carry its foot down. */
+export function seatOnGround<S extends {x:number;z:number;y:number;yaw?:number}>(o:S,hw:number,hd:number):S&{onSlope?:boolean}{
+ if(o.y)return onGround(o);const s=propSeat(o.x,o.z,hw,hd,o.yaw??0);return s.slope?{...o,y:s.y,onSlope:true}:s.y?{...o,y:s.y}:o;}
 
 // ---- Build-time placement (world.ts `put` / `sign`). While `active`, every piece a builder places is lifted to the ground at
 // its own spot, or to `anchor` (ONE height for a whole prop: a palm, a house, a table: wrap its builder in anchored()).
 // `pieces` records what was built so the flat layers can be draped afterwards (elevationDrape.ts drapePieces).
-export const elevBuild:{active:boolean;anchor:number|null;pieces:{mesh:unknown;lift:number;anchored:boolean}[];stats?:{added:number;draped:number;marks?:number;westWall?:number;westLawn?:number}}={active:false,anchor:null,pieces:[]};
+export const elevBuild:{active:boolean;anchor:number|null;/** the rigid prop being built (anchored / rigid: one id each, 0 outside): elevationDrape.ts seatProps */group:number;seq:number;pieces:{mesh:unknown;lift:number;anchored:boolean;group?:number}[];seated?:{groups:number;raised:number;maxRaise:number;feet:number;maxDrop:number};stats?:{added:number;draped:number;marks?:number;westWall?:number;westLawn?:number}}={active:false,anchor:null,group:0,seq:0,pieces:[]};
 export const buildLift=(x:number,z:number)=>elevBuild.active?(elevBuild.anchor!==null&&elevBuild.anchor!==elevBuild.anchor/* NaN: rigid() */?(elevBuild.anchor=regionLift(x,z)):elevBuild.anchor??regionLift(x,z)):0;
-export function anchored<R>(x:number,z:number,build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=regionLift(x,z);try{return build();}finally{elevBuild.anchor=null;}}
+export function anchored<R>(x:number,z:number,build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=regionLift(x,z);elevBuild.group=++elevBuild.seq;try{return build();}finally{elevBuild.anchor=null;elevBuild.group=0;}}
 /** Pieces that carry their own heights (a terrain mesh, a shore ring): built with no lift. */
 export function unlifted<R>(build:()=>R):R{if(!elevBuild.active)return build();const was=elevBuild.anchor;elevBuild.anchor=0;try{return build();}finally{elevBuild.anchor=was;}}
 /** ONE height for everything `build` places, taken at its FIRST piece (Nov 26 2026: world.ts `prop`: a lamp, a bush, a crate, a sign
  *  on a bank is one rigid object; lifted piece by piece its parts sheared by a few cm). Inside anchored() / unlifted() that height wins. */
-export function rigid<R>(build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=NaN;try{return build();}finally{elevBuild.anchor=null;}}
+export function rigid<R>(build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=NaN;elevBuild.group=++elevBuild.seq;try{return build();}finally{elevBuild.anchor=null;elevBuild.group=0;}}
