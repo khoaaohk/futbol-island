@@ -10,6 +10,7 @@ import type {Cell} from '@/lib/analytics/learning';
 import type {PeriodTotals} from '@/lib/analytics/overview';
 import {BarList,ChartCard,Delta,Sparkline,fmtDuration,fmtInt,fmtPct} from './charts';
 import {Steps} from './StartSection';
+import {START_BASE_SINCE,fmtDay} from '@/lib/analytics/dashboard';
 import {saveData,saveGap} from './SavesSection';
 import styles from './admin.module.css';
 import liveStyles from './LivePanel.module.css';
@@ -102,9 +103,12 @@ export function EngagementTiles({report}:{report:Report}){
 /** Title screen → Start → code made → “I saved it” → island, then the day-2 return from save codes made in the range. */
 export function InvestorFunnel({report}:{report:Report}){
  const o=report.overview,s=o?.current.steps,d=saveData(report);
- const steps=s?[['st:view','Saw the title screen'],['st:start','Pressed Start'],['st:created','Save code made'],['st:saved','“I saved it” (code check passed)'],['st:play_ready','Went to the island (Play)']].map(([id,label])=>({id,label,sessions:s[id]??0})):[];
+ // Nov 25 2026 (title-screen audit M1): from Nov 14 2026 the base is st:new ("Start shown": new players only); st:view also counts every
+ // returning player's title view (Play card, no Start). A range that starts earlier keeps st:view, labelled for what it is.
+ const newBase=report.from>=START_BASE_SINCE;
+ const steps=s?[newBase?['st:new','Shown the Start button']:['st:view','Saw the title screen (returning players too)'],['st:start','Pressed Start'],['st:created','Save code made'],['st:saved','“I saved it” (code check passed)'],['st:play_ready','Went to the island (Play)']].map(([id,label])=>({id,label,sessions:s[id]??0})):[];
  const empty=!s||!steps.some(x=>x.sessions!==0);
- return <ChartCard wide title="New-player funnel" subtitle="Sessions at each step in this range, then save codes made in the range that came back on a later day. Bars are scaled to the first step; the drop from the step before is on the right."
+ return <ChartCard wide title="New-player funnel" subtitle={`Sessions at each step in this range, then save codes made in the range that came back on a later day. Bars are scaled to the first step; the drop from the step before is on the right. ${newBase?"The first step is sessions shown the Start button (new players only).":`The range starts before ${fmtDay(START_BASE_SINCE)}, when “Start shown” began counting, so the first step is every title view, returning players too.`}`}
   empty={empty&&!d} emptyText="No title-screen visits in this range yet."
   table={{columns:['Step','Count','Unit'],rows:[...steps.map(x=>[x.label,show(x.sessions),'sessions']),['Came back on a later day (so far)',d?`${fmtInt(d.range.returned)} of ${fmtInt(d.range.created)}`:'—','save codes made in the range']]}}>
   {!empty&&<Steps steps={steps}/>}

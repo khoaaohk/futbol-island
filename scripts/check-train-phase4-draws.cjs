@@ -15,7 +15,7 @@ if (!port || port === '8092') { console.error('give --port=<n> (never 8092)'); p
     await ctx.addInitScript(() => { try { localStorage.setItem('fi-staff', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-holdout-v1', 'f'.repeat(32)); } catch { /* */ } });
     const p = await ctx.newPage();
     await p.goto(`http://localhost:${port}/play?from=arcade`, { timeout: 240000 });
-    for (let i = 0; i < 90 && !(await p.evaluate(() => !!window.__fi2)); i++) { for (const t of ['I saved it', 'Get my code', 'Play']) await p.click(`button:visible:has-text("${t}")`, { timeout: 300 }).catch(() => {}); if (i === 0) await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2000); }
+    for (let i = 0; i < 90 && !(await p.evaluate(() => !!window.__fi2)); i++) { for (const t of ['I saved it', 'Get my code', 'Play']) await p.click(`button:visible:has-text("${t}")`, { timeout: 300 }).catch(() => {}); if (i === 0) await p.click('[data-title-start]', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2000); }
     await p.waitForFunction(() => !!window.__fi2?.trainRide && !!window.__fi2.renderer, null, { timeout: 240000 });
     await p.evaluate(() => { const f = window.__fi2, r = f.renderer, orig = r.render.bind(r), log = window.__gfx = { on: false, rows: [] };
       r.render = (scene, camera) => { orig(scene, camera); if (log.on && scene === f.scene && r.getRenderTarget() === null) log.rows.push([r.info.render.calls, r.info.render.triangles]); }; });

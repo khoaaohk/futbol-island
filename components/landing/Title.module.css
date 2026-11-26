@@ -1,7 +1,7 @@
 /* Futbol Island title screen (/start, Oct 9 2026). The game's identity only: the loading screen's sea blue and riso grain, the
    IslandBrush face, the loading-island vectors split into depth layers, the splash cast, the shared --btn-* tokens
    (docs/ui/BUTTONS.md) and the cream modal surface. Motion is transform/opacity only:
-   - one choreographed entrance (~1.5 s: letters drop, island rises, cast pops, buttons settle last), CSS one-shots;
+   - one choreographed entrance (~1.5 s: letters drop, island rises, cast pops; the buttons are there from the first frame, Nov 25 2026), CSS one-shots;
    - ambient life (palms, flag, glints, cast, balls) as CSS loops that PAUSE when TitleScene sets data-calm (8 s idle) or
      data-hidden (tab hidden);
    - parallax transforms written by TitleScene only while its spring moves (will-change only then, via data-moving).
@@ -127,6 +127,8 @@ button.backLink.backLink.backLink.backLink{position:absolute}
 /* ---- Actions (bottom, over the pink coast) ---- */
 .actions{position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:6px}
 .choices{display:grid;justify-items:center;gap:8px;width:min(340px,100%)}
+/* Nov 25 2026 (title-screen audit F2): one calm line over Start that says what this is, for a new visitor. Static (no motion). */
+.tagline{margin:0 0 2px;max-width:100%;padding:0 8px;color:var(--btn-ink,#0f2a2f);font:700 15px/1.3 var(--btn-font,inherit);letter-spacing:.01em;text-align:center;text-wrap:balance}
 /* Nov 14 2026 (retention): before the save module settles the state ('boot'), both button sets are in the static HTML; the pre-paint
    <html data-title-code> flag (lib/boot/titleCode.ts TITLE_CODE_BOOT) shows the returning Play, otherwise Start. */
 .actions[data-title-state=boot] [data-boot-card=returning],:global(html[data-title-code]) .actions[data-title-state=boot] [data-boot-card=new]{display:none}
@@ -229,19 +231,14 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
  .screen [data-enter=props]{animation:pop .55s 1s cubic-bezier(.2,1.5,.35,1) both}
  .screen [data-enter=eyebrow]{animation:fadeUp .5s .05s ease-out both}
  .letter{animation:drop .62s calc(.12s + var(--i) * .045s) cubic-bezier(.2,1.45,.35,1) both}
- /* The title buttons land one after the other (user, Oct 22 2026): Play first, then Use a different code, then Join friends. */
- /* Nov 14 2026 (retention): the first button lands at .7 s (was 1.02 s), with the island, so Start is there sooner; the order is kept. */
- .screen [data-enter=actions]>*{animation:settle .6s calc(.7s + var(--b,0) * .18s) cubic-bezier(.2,1.28,.32,1) both}
- .screen [data-enter=actions]>:nth-child(2){--b:1}
- .screen [data-enter=actions]>:nth-child(n+3){--b:2}
- .screen [data-enter=actions-late]{animation:settle .6s calc(.7s + .36s) cubic-bezier(.2,1.28,.32,1) both}
+ /* Nov 25 2026 (title-screen audit F4): the title buttons have NO entrance: Start is opaque and tappable in the first painted frame
+    (it used to wait .7 s and settle until ~1.3 s, on top of a ~3 s blank on slow phones). The art keeps its entrance. */
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes rise{from{transform:translateY(60px)}to{transform:none}}
 @keyframes islandRise{from{opacity:0;transform:translateY(22%) scale(.86)}35%{opacity:1}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:translateY(18%) scale(.7)}40%{opacity:1}to{opacity:1;transform:none}}
 @keyframes drop{from{opacity:0;transform:translateY(-70%) rotate(-8deg)}35%{opacity:1}to{opacity:1;transform:none}}
-@keyframes settle{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
 
 /* ---- Ambient life: CSS loops that pause when calm (8 s idle) or hidden ---- */
 @media(prefers-reduced-motion:no-preference){

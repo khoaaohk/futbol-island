@@ -38,7 +38,7 @@ function friend(code, name, look) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage();
     const errs = []; p.on('pageerror', (e) => errs.push(e.message));
     await p.goto(url, { timeout: 300000 }); await p.waitForTimeout(6000);
-    await p.click('text=Get my save code').catch(() => {}); await p.waitForTimeout(2000);
+    await p.click('[data-title-start]').catch(() => {}); await p.waitForTimeout(2000);
     await p.click('button:has-text("Play")').catch(() => {});
     await p.waitForFunction(() => window.__fi2 && window.__fi2.selectRide, null, { timeout: 300000 }); await p.waitForTimeout(3000);
     await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);

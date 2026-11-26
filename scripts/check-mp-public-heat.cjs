@@ -78,7 +78,7 @@ async function measure(p, info, wake) {
     if (!ARCADE_ONLY) {
     await p.goto(url + '/play', { waitUntil: 'domcontentloaded', timeout: 240000 });
     await p.waitForTimeout(8000);
-    await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+    await p.click('[data-title-start]', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
     await p.click('button:has-text("Get my code")', { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(1500);
     await p.click('button:has-text("I saved it")', { timeout: 8000 }).catch(() => {}); // the Nov 2026 "Before you start" sheet
     await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});

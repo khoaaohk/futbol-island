@@ -136,8 +136,12 @@ export default function TitleActions(){
       renders BOTH the new-player and the returning buttons into the static HTML, and the pre-paint flag <html data-title-code>
       (TITLE_CODE_BOOT, Landing.tsx) shows the right one at first paint (Title.module.css). The same nodes stay when the state settles. */}
   {(state==='new'||state==='boot')&&<div className={styles.choices} data-enter="actions" data-boot-card="new">
+   {/* Nov 25 2026 (title-screen audit F2): say what this is, in plain view, for a new visitor (a returning player's card has no line).
+       aria-hidden: the page's screen-reader paragraph (Landing.tsx) already says it, so it is not announced twice. */}
+   <p className={styles.tagline} data-title-tagline aria-hidden="true">Free football game for kids · no sign-up</p>
+   {/* Nov 25 2026 (audit F2): the subtitle invites play; the save code is explained on the next step (the intro sheet). */}
    <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={busy} aria-busy={busy||undefined} onClick={e=>{warmIsland('create');void open('create',e.currentTarget);}}>
-    <span>Start</span><small>Get my save code</small>
+    <span>Start</span><small>Make your island</small>
    </button>
    <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
   </div>}
@@ -161,7 +165,9 @@ export default function TitleActions(){
 
   {/* Join friends (flag only): type a party code here instead of using a link. It stores the code as the pending party, then continues
       as Play (returning) or Start (new player: save code + intro first) would. Nothing is mounted with the flag off. */}
-  {multiplayerEnabled()&&(state==='new'||state==='returning')&&<JoinFriends onOpen={openJoin}/>}
+  {/* Nov 25 2026 (title-screen audit F1): mounted in 'boot' too, so its slot is in the static HTML and nothing moves when the state
+      settles (it used to appear at ~3.6 s on a slow phone and push Start up 56 px, "I have a save code" landing under the thumb). */}
+  {multiplayerEnabled()&&(state==='new'||state==='returning'||state==='boot')&&<JoinFriends onOpen={openJoin} ready={state!=='boot'&&!!saves}/>}
 
   {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={footerBack||undefined}>
    <div ref={backdrop} className={styles.backdrop} onClick={()=>void leave(null)} aria-hidden="true"/>

@@ -31,7 +31,7 @@ const TENNIS = stand('tennis'), PUZZLE = stand('puzzle');
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   await p.goto(url); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code'); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]'); await p.waitForTimeout(2000);
   for (let i = 0; i < 30 && !(await p.evaluate(() => { const b = document.querySelector('[data-landing-play]') || [...document.querySelectorAll('button')].find((x) => /^\s*Play/.test(x.textContent)); b?.click(); return !!b; })); i++) await p.waitForTimeout(1000);
   await p.waitForTimeout(15000); // the landing button keeps animating: clicked from the page
   await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);

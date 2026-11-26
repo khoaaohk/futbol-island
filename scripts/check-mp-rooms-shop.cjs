@@ -22,7 +22,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   await p.goto(url); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code'); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]'); await p.waitForTimeout(2000);
   await p.click('button:has-text("Play")', { force: true }); // the landing pill floats (never "stable") await p.waitForTimeout(15000);
   await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);
   await p.evaluate(() => document.querySelector('[data-party-open]')?.click());

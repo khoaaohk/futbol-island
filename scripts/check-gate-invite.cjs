@@ -10,7 +10,7 @@ require('fs').mkdirSync(out, { recursive: true });
     const p = await b.newPage({ viewport: vp, hasTouch: name === 'phone' });
     const errs = []; p.on('pageerror', (e) => errs.push(e.message));
     await p.goto(url); await p.waitForTimeout(6000);
-    if (process.env.START) { await p.click('text=Get my save code'); await p.waitForTimeout(2000); await p.click('button:has-text("Play")'); await p.waitForTimeout(15000); await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500); await p.screenshot({ path: `${out}/${name}-0-started.png` }); }
+    if (process.env.START) { await p.click('[data-title-start]'); await p.waitForTimeout(2000); await p.click('button:has-text("Play")'); await p.waitForTimeout(15000); await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500); await p.screenshot({ path: `${out}/${name}-0-started.png` }); }
     await p.evaluate(() => {
       window.__log = [];
       const t = () => { const s = [...document.querySelectorAll('[role=dialog]')].map((d) => d.getAttribute('aria-label')).join('|') || 'none'; const l = window.__log; if (!l.length || l[l.length - 1][1] !== s) l.push([Math.round(performance.now()), s]); };

@@ -4,7 +4,7 @@
  * taps or an id of anyone. Pure and tiny: the tracker bundle (countIds.ts), the click listener (startEvents.ts), the server
  * report (startReport.ts) and the tests import it. Labels live on the server (startReport.ts).
  *
- *   st:<step>      the title screen: view, Start, code made / saved, "I have a save code", restored, Play from each card, tilt
+ *   st:<step>      the title screen: view, Start, code made / saved, "I have a save code", restored, Play from each card, tilt, Back, Guides
  *   sg:<step>      For grown-ups: sheet opened, each link in it, Donate → grown-up check → amount tier, donation completed
  *   sp:open        the Privacy link in the bottom row (sg:privacy is the "Read the privacy policy" link inside For grown-ups)
  *   sp:<section>   a table-of-contents entry of the privacy policy (components/privacy/PrivacyPolicy.tsx, #pp-<section>)
@@ -18,7 +18,10 @@ export const START_TITLE_IDS=['view','start','created','word','word_ok','saved',
  'new','home_tip','home_add','home_open',
  // Nov 15 2026 (owner): the returning card's outcomes (lib/analytics/returningCard.ts): Join friends from it, left the page while it
  // was up, and one band of how long it had been on screen then (< 5 s, 5-15 s, 15-60 s, > 1 min).
- 'ret_friends','ret_left','ret_t5','ret_t15','ret_t60','ret_tmore'] as const;
+ 'ret_friends','ret_left','ret_t5','ret_t15','ret_t60','ret_tmore',
+ // Nov 25 2026 (title-screen audit, M3): the title screen's exits that had no counter: the top-left Back (to the tour at /) and the
+ // bottom-row Guides link (/learn/lessons). Tap totals only, like every id here (For grown-ups = sg:open, Privacy = sp:open).
+ 'back','guides'] as const;
 /** The non-profits (components/DonationLinks.tsx NONPROFITS, slugged: lower case, non-letters → _) and the Stripe tiers. */
 export const START_NONPROFITS=['fc_yap','street_soccer_san_diego','ronin_futsal'] as const;
 export const START_AMOUNTS=[5,10,15,25] as const;

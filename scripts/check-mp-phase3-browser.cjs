@@ -44,7 +44,7 @@ async function boot(b, vp, mobile, off) {
   p.on('console', (m) => { if (m.type() === 'error' && !/DevTools|favicon|ERR_CONNECTION|Failed to load resource/.test(m.text())) errs.push(m.text().slice(0, 200)); });
   await p.goto(url + '/play'); await p.waitForTimeout(4000);
   for (let i = 0; i < 4 && !(await p.evaluate(() => !!window.__fi2)); i++) { // a cold dev compile: try the title steps again
-    await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
+    await p.click('[data-title-start]', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
     await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
     await p.click('button:has-text("I saved it")', { timeout: 6000 }).catch(() => {}); await p.waitForTimeout(1500);
     await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(15000);

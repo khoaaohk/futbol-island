@@ -33,7 +33,7 @@ const BASE = { 'desktop 1280x800': { l: 487, r: 793, t: 20 }, 'tablet 768x1024':
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function enter(p) {
   await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
   await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
   await p.click('button:has-text("I saved it")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
   await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});

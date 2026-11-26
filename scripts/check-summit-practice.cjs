@@ -21,7 +21,7 @@ async function run(b, v) {
   await p.goto(url + '/play?from=arcade', { timeout: 300000 }); await p.waitForTimeout(3000);
   for (let i = 0; i < 90 && !(await p.evaluate(() => !!(window.__fi2 && window.__fi2.practice && window.__fi2.renderer))); i++) {
     for (const t of ['I saved it', 'Get my code', 'Play']) await p.click(`button:visible:has-text("${t}")`, { timeout: 300 }).catch(() => {});
-    if (i === 0) await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {});
+    if (i === 0) await p.click('[data-title-start]', { timeout: 4000 }).catch(() => {});
     await p.waitForTimeout(2000);
   }
   await p.waitForTimeout(2500); for (let i = 0; i < 3; i++) { if (!(await p.locator('dialog[open]').count())) break; await p.keyboard.press('Escape'); await p.waitForTimeout(400); }

@@ -22,7 +22,7 @@ const mem=(init={})=>{const d={...init};return {getItem:k=>k in d?d[k]:null,setI
  assert(!/disabled=\{!saves/.test(a),'Start is not disabled while the save module loads');
  assert.match(a,/const m=saves\?\?await loadSaves\(\)\.catch\(\(\)=>null\);/,'an early tap waits for the module');
  assert.match(css,/\.actions\[data-title-state=boot\] \[data-boot-card=returning\],:global\(html\[data-title-code\]\) \.actions\[data-title-state=boot\] \[data-boot-card=new\]\{display:none\}/);
- assert.match(css,/\[data-enter=actions\]>\*\{animation:settle \.6s calc\(\.7s \+ var\(--b,0\) \* \.18s\)/,'the buttons land at .7 s');
+ assert.doesNotMatch(css,/\[data-enter=actions\]>\*\{animation/,'the buttons have no entrance (Nov 25 2026: was .7 s, Nov 14: 1.02 s)');
 }
 // 2. Counters: st:new (the real base of Pressed Start) and the Home Screen steps are allowlisted and shown in the admin funnel.
 {
@@ -132,5 +132,25 @@ const mem=(init={})=>{const d={...init};return {getItem:k=>k in d?d[k]:null,setI
  assert.match(ta,/if\(state!=='returning'\)return;return whenIdle\(\(\)=>warmIsland\('returning'\),1500\);/,'the card warms the island on idle');
  assert.match(ta,/if\(state==='returning'\)\{trackStart\('st:ret_friends'\)/);assert.match(ta,/onClickCapture=\{endCard\}/);
  const pre=read('components/root/islandPreload.ts');assert.match(pre,/if\(\(intent==='create'\|\|intent==='returning'\)&&!prefetchAllowed\(\)\)return;/,'Save-Data / 2G respected');
+}
+// 4. Title-screen audit fixes (Nov 25 2026): what it is in plain view, Start's subtitle, Join friends' slot from the first paint,
+//    no entrance delay on the buttons, the grown-up lock known before paint, and the exits counted.
+{
+ const TC=load('lib/boot/titleCode.ts'),ta=read('components/landing/TitleActions.tsx'),css=read('components/landing/Title.module.css'),
+  jf=read('components/landing/JoinFriends.tsx'),jcss=read('components/landing/JoinFriends.module.css'),land=read('components/landing/Landing.tsx');
+ assert.match(read('lib/multiplayerAllowed.ts'),new RegExp(`ALLOWED_KEY = '${TC.MP_LOCK_KEY}'`),'the boot reads the grown-up lock key');
+ const flags=(store)=>{const attrs={};new Function('localStorage','document',TC.TITLE_CODE_BOOT)({getItem:k=>store[k]??null},{documentElement:{setAttribute:(k)=>{attrs[k]=1;}}});return attrs;};
+ assert.equal('data-title-nomp' in flags({[TC.MP_LOCK_KEY]:'off'}),true,'lock Off → no Join friends slot from the first frame');
+ assert.equal('data-title-nomp' in flags({[TC.MP_LOCK_KEY]:'friends'}),false);assert.equal('data-title-nomp' in flags({}),false);
+ assert.match(jcss,/:global\(html\[data-title-nomp\]\) \.stack\{display:none\}/);
+ assert.match(ta,/<p className=\{styles\.tagline\} data-title-tagline aria-hidden="true">Free football game for kids · no sign-up<\/p>/,'the visible line, not announced twice');
+ assert.match(land,/className=\{styles\.srOnly\}>Start your island[^<]*free football learning game for kids/,'the screen-reader copy stays');
+ assert.match(ta,/<span>Start<\/span><small>Make your island<\/small>/,'a friendlier Start subtitle');assert.doesNotMatch(ta,/Get my save code<\/small>/);
+ assert.match(ta,/\(state==='new'\|\|state==='returning'\|\|state==='boot'\)&&<JoinFriends onOpen=\{openJoin\} ready=/,'Join friends is in the static HTML (boot), so Start never moves');
+ assert.match(jf,/useState\(true\)/,'rendered on the server, not after an effect');assert.match(jf,/aria-disabled=\{!ready\|\|undefined\}/);
+ assert.doesNotMatch(jf,/data-enter="actions-late"/);
+ assert.doesNotMatch(css,/\[data-enter=actions\][^{]*\{animation/,'no entrance delay on the title buttons: Start is tappable at first paint');
+ assert.doesNotMatch(css,/\[data-enter=actions-late\]/);
+ assert.match(read('components/landing/LandingBack.tsx'),/data-track="st:back"/);assert.match(land,/href="\/learn\/lessons" data-track="st:guides"/);
 }
 console.log('retention-front ok');

@@ -54,7 +54,7 @@ async function rotate(env, size) {
 
 async function enter(p) {
   await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
   await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
   await p.click('button:has-text("I saved it")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
   await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});
@@ -185,7 +185,7 @@ const SCENES = {
     await A(env, size, 'title');
     await flow(env, size, 'join', async () => { if (await clickText(p, 'text=Join friends')) { await p.waitForTimeout(1500); await A(env, size, 'join'); await esc(p); } });
     await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(5000);
-    await clickText(p, 'text=Get my save code', 20000); await p.waitForTimeout(2500);
+    await clickText(p, '[data-title-start]', 20000); await p.waitForTimeout(2500);
     await A(env, size, 'welcome');
     await clickText(p, 'button:has-text("Get my code")', 4000); await p.waitForTimeout(2500);
     await A(env, size, 'save-code');
@@ -312,7 +312,7 @@ const SCENES = {
     log('b1-title', await p.evaluate(() => { const vh = innerHeight, at = (re) => { const e = [...document.querySelectorAll('a,button')].find((x) => re.test(x.textContent) && x.getBoundingClientRect().width); return e ? Math.round(e.getBoundingClientRect().bottom) : null; };
       return { vh, pageScroll: document.scrollingElement.scrollHeight - vh, grownups: at(/grown-?ups/i), privacy: at(/privacy/i) }; }));
     await A(env, size, 'title');
-    await clickText(p, 'text=Get my save code', 20000); await p.waitForTimeout(2500);
+    await clickText(p, '[data-title-start]', 20000); await p.waitForTimeout(2500);
     log('b1-welcome', await p.evaluate(() => ({ vh: innerHeight, pageScroll: document.scrollingElement.scrollHeight - innerHeight })));
     await clickText(p, 'button:has-text("Get my code")', 4000); await p.waitForTimeout(2500);
     await clickText(p, 'button:has-text("I saved it")', 4000); await p.waitForTimeout(1500);
@@ -336,7 +336,7 @@ const SCENES = {
         const g = await env.b.newContext({ viewport: { width: env.s.w, height: env.s.h }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 }); const gp = await g.newPage();
         await (await g.newCDPSession(gp)).send('Emulation.setSafeAreaInsetsOverride', { insets: env.s.inset }).catch(() => {});
         await gp.goto(url + '/play?party=' + code, { waitUntil: 'domcontentloaded', timeout: 120000 }); await gp.waitForTimeout(6000);
-        await clickText(gp, 'text=Get my save code', 20000); await gp.waitForTimeout(2500); await clickText(gp, 'button:has-text("Get my code")', 4000); await gp.waitForTimeout(2500);
+        await clickText(gp, '[data-title-start]', 20000); await gp.waitForTimeout(2500); await clickText(gp, 'button:has-text("Get my code")', 4000); await gp.waitForTimeout(2500);
         await clickText(gp, 'button:has-text("I saved it")', 4000); await gp.waitForTimeout(1500); await clickText(gp, 'button:has-text("Play")', 8000);
         await gp.waitForFunction(() => !!window.__fi2?.scene, null, { timeout: 120000 }).catch(() => {}); await gp.waitForTimeout(9000);
         await clickText(gp, 'button:has-text("Skip")', 8000); await gp.waitForTimeout(1200);

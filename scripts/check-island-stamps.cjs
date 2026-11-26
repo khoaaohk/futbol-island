@@ -18,7 +18,7 @@ async function boot(b,vp,mobile,stamps){
  await ctx.addInitScript(([k,v])=>{try{if(!sessionStorage.getItem('__s_boot')){localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem(k,v);}sessionStorage.setItem('__s_boot','1');}catch{}},[KEY,seed(stamps)]);
  const p=await ctx.newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message.slice(0,200)));
  await p.goto(url+'/play?from=arcade',{timeout:240000});
- for(let i=0;i<90&&!(await p.evaluate(()=>!!window.__fi2));i++){for(const t of ['I saved it','Get my code','Play'])await p.click(`button:visible:has-text("${t}")`,{timeout:300}).catch(()=>{});if(i===0)await p.click('text=Get my save code',{timeout:4000}).catch(()=>{});await p.waitForTimeout(2000);}
+ for(let i=0;i<90&&!(await p.evaluate(()=>!!window.__fi2));i++){for(const t of ['I saved it','Get my code','Play'])await p.click(`button:visible:has-text("${t}")`,{timeout:300}).catch(()=>{});if(i===0)await p.click('[data-title-start]',{timeout:4000}).catch(()=>{});await p.waitForTimeout(2000);}
  await p.waitForFunction(()=>!!window.__fi2&&!!window.__fi2.stampPrompt&&!!window.__fi2.renderer&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});
  await p.waitForTimeout(4000);return {ctx,p,errs};
 }

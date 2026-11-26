@@ -20,7 +20,7 @@ async function start(p) { // the title screen (same path as check-mp-public-brow
   // the title screen: Start (save code) -> Get my code -> I saved it -> Play, each appearing in turn on a slow dev server
   for (let i = 0; i < 90 && !(await p.evaluate(() => !!window.__fi2)); i++) {
     for (const t of ['I saved it', 'Get my code', 'Play']) await p.click(`button:visible:has-text("${t}")`, { timeout: 300 }).catch(() => {});
-    if (i === 0) await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {});
+    if (i === 0) await p.click('[data-title-start]', { timeout: 4000 }).catch(() => {});
     await p.waitForTimeout(2000);
   }
   await p.waitForFunction(() => !!window.__fi2 && !!document.querySelector('[data-hud-triggers]'), null, { timeout: 180000 });

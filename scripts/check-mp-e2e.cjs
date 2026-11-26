@@ -72,7 +72,7 @@ const waitFor = async (p, fn, ms = 30000, every = 400) => { const t0 = Date.now(
 async function enter(p, pathQ = '/play', fresh = true, reload = false) { // the game is /play (/ is the tour site since Nov 2026)
   if (reload) await p.reload({ waitUntil: 'domcontentloaded', timeout: 120000 }); else await p.goto(APP + pathQ, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await p.waitForTimeout(6000);
-  if (fresh) { await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+  if (fresh) { await p.click('[data-title-start]', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
     // With the save backend on (a checkout that has .env.local with SAVE_LOCAL_FILE, or production) Start is two steps: 'Get my code', then the code card's 'I saved it'. Without a backend neither exists (both optional).
     await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
     await p.click('button:has-text("I saved it")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500); }

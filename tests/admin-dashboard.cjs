@@ -169,8 +169,17 @@ await ok('today alone: compared with yesterday up to the same time of day (like 
  // the two player tiles: in a multi-day range both deltas use the same days
  const a=DB.kpi(week,DB.K.players).prev,b=DB.kpi(week,DB.K.distinct)?.prev;if(b&&b.status==='ok')deq([a.from,a.to,a.curTo],[b.from,b.to,b.curTo],'same baseline days');
 });
-await ok('funnels use the same days for every step; movers need a base; unusual days are robust (MAD) and skip the first tracked day',()=>{
+await ok('funnels use the same days for every step; movers need a base; unusual days are robust (MAD) and skip the first tracked day',async()=>{
  const f=DB.funnels(dash);
+ // Nov 25 2026 (title-screen audit M1): the new-player funnel's base is st:new ("Shown the Start button", from Nov 14), never every
+ // title view (returning players see Play, not Start); a range that ends before Nov 14 keeps st:view and says so in its label.
+ assert(DB.DASH_KEYS.includes('counters.st:new.sessions'),'the server sends st:new');
+ if(dash.to>=DB.START_BASE_SINCE&&DB.seriesOf(dash,DB.K.titleNew)){assert.equal(f.onboarding.base,'new');assert.equal(f.onboarding[0].key,DB.K.titleNew);
+  assert.equal(f.onboarding[0].label,'Shown the Start button');assert(!f.onboarding.since||f.onboarding.since>=DB.START_BASE_SINCE,'steps start with the base');}
+ const old=await DBA.loadDashboard(store,{from:'2026-11-05',to:'2026-11-05'},NOW),fo=DB.funnels(old).onboarding;
+ assert.equal(fo.base,'view');assert.equal(fo[0].key,DB.K.titleView);assert.match(fo[0].label,/returning players too/,'the old base is labelled honestly');
+ const ov=read('app/admin/OverviewStory.tsx');assert.match(ov,/New visitors \(browsers\)/,'the cohort is labelled as browsers, not players');
+ assert.match(ov,/every browser first seen on the site/);assert.doesNotMatch(ov,/'New players','Back next day/);
  assert.equal(f.fishing.since,'2026-11-06','fish landed counts since Oct 15, Fish tapped since Nov 6: the funnel starts Nov 6');
  const landNov6=D.seriesByKey(layer,'fishing.funnel_sessions.land').points.find(p=>p.day==='2026-11-06').value;assert.equal(f.fishing[4].value,landNov6);
  assert(f.fishing.every((st,i)=>i===0||st.value===null||f.fishing[0].value===null||st.value<=f.fishing[0].value*10),'no step out-counts by days');

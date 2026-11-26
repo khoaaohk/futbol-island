@@ -20,7 +20,7 @@ require('fs').mkdirSync(out, { recursive: true });
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   await p.goto(url); await p.waitForTimeout(6000);
   // New player: take a save code, play, skip the walkthrough.
-  await p.click('text=Get my save code'); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]'); await p.waitForTimeout(2000);
   await p.click('button:has-text("Play")'); await p.waitForTimeout(15000);
   await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);
   // Start a party (first name, grown-up gate).

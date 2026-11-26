@@ -9,3 +9,5 @@
 @media(prefers-reduced-motion:reduce){.join{transition:none}.join:hover,.join:active{scale:1}}
 /* Oct 22 2026 (user: fix the spacing and padding): the button sits in a column as wide as the title's other buttons (the .choices width), 8 px below them */
 .stack{display:grid;justify-items:center;gap:8px;width:min(340px,100%);margin:8px auto 0}
+/* Nov 25 2026 (audit F1): the grown-up lock is Off (pre-paint flag, lib/boot/titleCode.ts TITLE_CODE_BOOT): no slot from the first frame. */
+:global(html[data-title-nomp]) .stack{display:none}

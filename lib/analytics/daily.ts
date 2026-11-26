@@ -104,6 +104,11 @@ for(const [st,what] of [['v','page views'],['p','Play taps (once per view)'],['r
  for(const [s,l] of SF_SECTIONS)LABELS.set(sfId(st,s),`${l}: ${what}`);
 for(const [st,what] of [['v','game page views'],['p','Play taps on its game page (once per view)'],['h','Play taps on its /games card']] as const)
  for(const [g,,l] of GP_GAMES)LABELS.set(gpId(st,g),`${l}: ${what}`);
+// Nov 25 2026 (title-screen audit M1/M3): the title-screen counters the Overview funnel reads, in words (the Definitions list).
+for(const [id,l] of [['st:view','Title screen seen (every /play title view, returning players too: their card has Play, no Start)'],
+ ['st:new','Start shown (the new-player buttons were on screen: the base for Pressed Start, from Nov 14 2026)'],['st:start','Pressed Start'],
+ ['st:created','Save code made'],['st:play_ready','Went to the island (Play after a new code)'],
+ ['st:back','Title screen: pressed Back (to the tour at /)'],['st:guides','Title screen: pressed Guides (to /learn/lessons)']] as const)LABELS.set(id,l);
 export const counterLabel=(id:string)=>LABELS.get(id)??id;
 
 // ---- the catalog ------------------------------------------------------------------------------------------------------

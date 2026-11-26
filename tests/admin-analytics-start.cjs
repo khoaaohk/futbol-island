@@ -49,12 +49,15 @@ const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'');
 await ok('ids allowlisted',()=>{
  assert.equal(new Set(SI.START_COUNT_IDS).size,SI.START_COUNT_IDS.length,'no duplicates');
  for(const id of SI.START_COUNT_IDS){assert(K.isCountId(id),id);assert(K.COUNT_KEY_RE.test(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);}
- assert(SI.START_COUNT_IDS.length<=K.MAX_BEAT_COUNTS,'every start id fits one beat');
+ // Nov 25 2026 (st:back, st:guides took the list to 66): the ids ONE title-screen visit can send (st:, sg:, sp:open) fit one beat;
+ // the privacy policy's sp:<section> ids are sent from /privacy, another page (and the tracker carries any overflow to the next beat).
+ assert(SI.START_COUNT_IDS.filter(id=>!(id.startsWith('sp:')&&id!=='sp:open')).length<=K.MAX_BEAT_COUNTS,'every title-screen id fits one beat');
+ assert(['st:back','st:guides'].every(id=>SI.START_COUNT_IDS.includes(id)),'the title screen exits are counted (Nov 25 2026)');
  for(const bad of ['st:foo','sg:amt_7','sp:pp-short','sg:Street Soccer','st:view:1','st:','sg:<b>','sp:open ','ST:view'])assert.equal(K.isCountId(bad),false,bad);
  // Every data-track in the start page's files is an allowlisted id (the literal ones; the computed ones are checked below).
- const files=['components/landing/TitleActions.tsx','components/landing/GrownUps.tsx','components/about/AboutGrownUps.tsx','components/landing/Donate.tsx','components/landing/TitleScene.tsx'];
+ const files=['components/landing/TitleActions.tsx','components/landing/Landing.tsx','components/landing/LandingBack.tsx','components/landing/GrownUps.tsx','components/about/AboutGrownUps.tsx','components/landing/Donate.tsx','components/landing/TitleScene.tsx'];
  const literal=files.flatMap(f=>[...read(f).matchAll(/data-track="([^"]+)"/g)].map(m=>m[1]));
- assert.deepEqual(literal.sort(),['sg:donate','sg:instagram','sg:open','sg:privacy','sg:wsv','sp:open','st:have','st:other_code','st:start'].sort());
+ assert.deepEqual(literal.sort(),['sg:donate','sg:instagram','sg:open','sg:privacy','sg:wsv','sp:open','st:back','st:guides','st:have','st:other_code','st:start'].sort());
  for(const id of literal)assert(SI.isStartId(id),id);
  // Computed ids: the non-profits, the amounts and the privacy contents match their sources.
  const np=[...read('lib/site/aboutCopy.ts').match(/NONPROFITS=\[(.*?)\] as const/)[1].matchAll(/name:'([^']+)'/g)].map(m=>SI.nonprofitSlug(m[1]));
@@ -69,7 +72,7 @@ await ok('ids allowlisted',()=>{
  for(const card of ['returning','ready','break'])assert(new RegExp(`data-title-card(=\\{?"${card}"|=\\{?'${card}')`).test(ta)||ta.includes(`data-title-card="${card}"`),card),assert(SI.isStartId('st:play_'+card));
  assert(/data-landing-play/.test(read('components/landing/PlayButton.tsx')),'PlayButton keeps its data-landing-play hook');
  // The server keeps them (and drops a well-formed id that is not on the list).
- const v=C.validateEvent(JSON.stringify({v:1,t:'beat',s:'StartSessionStart0001',p:'/start',e:5000,k:Object.fromEntries(SI.START_COUNT_IDS.map(id=>[id,1]))}));assert(v.ok);
+ const v=C.validateEvent(JSON.stringify({v:1,t:'beat',s:'StartSessionStart0001',p:'/start',e:5000,k:Object.fromEntries(SI.START_COUNT_IDS.filter(id=>!(id.startsWith('sp:')&&id!=='sp:open')).map(id=>[id,1]))}));assert(v.ok);// a title-screen beat (the privacy sections are /privacy's)
  assert.deepEqual(Object.keys(C.clampCounts({'st:view':1,'st:foo':2,'sg:amt_10':1})),['st:view','sg:amt_10']);
  assert.equal(C.SCHEMA_VERSION,4);
 });

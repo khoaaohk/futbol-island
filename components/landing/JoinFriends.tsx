@@ -15,22 +15,26 @@ import styles from './JoinFriends.module.css';
  */
 /** TitleActions fires this after it stores a typed code, so the "Party code waiting" line refreshes. */
 export const TITLE_PENDING_EVENT='fi-title-party-pending';
-export default function JoinFriends({onOpen}:{onOpen:(opener:HTMLElement)=>void}){
- const [on,setOn]=useState(false),[pending,setPending]=useState<string|null>(null);
+/* Nov 25 2026 (title-screen audit F1: Join friends appeared late and pushed Start up 56 px): the button is in the static HTML from the
+   first paint (TitleActions mounts it in 'boot'), so its slot never appears later. `ready` = the title state has settled and the save
+   module is here; before that a tap does nothing (aria-disabled, the same look). A grown-up lock of Off is known before paint
+   (<html data-title-nomp>, TITLE_CODE_BOOT in lib/boot/titleCode.ts) and hides the slot in CSS, so that case does not move either. */
+export default function JoinFriends({onOpen,ready=true}:{onOpen:(opener:HTMLElement)=>void;ready?:boolean}){
+ const [on,setOn]=useState(true),[pending,setPending]=useState<string|null>(null);
  useEffect(()=>{
   const sync=()=>{const ok=multiplayerEnabled()&&multiplayerAllowed();setOn(ok);setPending(ok?readPendingParty():null);};
   sync();window.addEventListener(TITLE_PENDING_EVENT,sync);const off=subscribeMultiplayerAllowed(sync);
   return()=>{window.removeEventListener(TITLE_PENDING_EVENT,sync);off();};
  },[]);
  if(!on)return null;
- return <div className={styles.stack} data-title-join-stack data-enter="actions-late">
+ return <div className={styles.stack} data-title-join-stack>
   {pending&&<p className={styles.waiting} data-party-waiting role="status">
    <span>Party code waiting: <b>{groupCode(pending)}</b></span>
    <button type="button" className={styles.clear} aria-label="Forget the party code" onClick={()=>{clearPendingParty();setPending(null);}}>
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
    </button>
   </p>}
-  <button type="button" className={styles.join} data-title-join onClick={e=>onOpen(e.currentTarget)}>
+  <button type="button" className={styles.join} data-title-join aria-disabled={!ready||undefined} onClick={e=>{if(ready)onOpen(e.currentTarget);}}>
    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2M15.5 14.4c3 0 5.5 1.6 5.5 4.6"/></svg>
    Join friends
   </button>

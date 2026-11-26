@@ -38,7 +38,7 @@ function inFront(p, d, side = 0) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (/shader|THREE|WebGL|GL_/i.test(m.text())) errs.push('console: ' + m.text().slice(0, 400)); });
   await p.goto(url); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code').catch(() => {}); await p.waitForTimeout(2000);
+  await p.click('[data-title-start]').catch(() => {}); await p.waitForTimeout(2000);
   await p.click('button:has-text("Play")').catch(() => {}); await p.waitForTimeout(15000);
   await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);
   await p.evaluate(() => { const f = window.__fi2; window.__spawn = { x: f.location.x, z: f.location.z }; f.selectRide('walk'); }); await p.waitForTimeout(3000);

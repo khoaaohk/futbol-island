@@ -6,7 +6,7 @@
  * the same as the export for the same range. Not tracked = a dash and a sentence, never a fake 0. No goals or targets.
  */
 import {useMemo,useState} from 'react';
-import {K,WAITS_TEXT,aggregate,anomalies,byWeekday,cohortTable,compareState,dailyValues,daysRule,fmtDay,kpi,fmtNum,fmtPctAbs,fmtShare,fmtUnit,funnels,movers,seriesOf,takeaway,weekly,
+import {K,WAITS_TEXT,aggregate,anomalies,byWeekday,cohortTable,compareState,dailyValues,daysRule,fmtDay,START_BASE_SINCE,kpi,fmtNum,fmtPctAbs,fmtShare,fmtUnit,funnels,movers,seriesOf,takeaway,weekly,
  ANOMALY_Z,ANOMALY_MIN_REL,MOVER_MIN_BASE,type DashboardData} from '@/lib/analytics/dashboard';
 import {ChartCard} from './charts';
 import {FunnelBars,HeatStrip,Legend,StackedColumns,TrendChart,dayX,type XLabel} from './DashCharts';
@@ -150,15 +150,19 @@ function WhenTheyPlay({data}:{data:DashboardData}){
 
 function Funnels({data}:{data:DashboardData}){
  const f=funnels(data);
- const card=(title:string,sub:string,steps:typeof f.onboarding,metric:string,extra?:string)=>{const since=(steps as {since?:string|null}).since;
+ const card=(title:string,sub:string,steps:typeof f.fishing,metric:string,extra?:string)=>{const since=(steps as {since?:string|null}).since;
   return <ChartCard title={title} subtitle={sub+(since?` Counted from ${fmtDay(since)}, when every step was tracked.`:'')} empty={!steps.some(s=>s.value)} emptyText="Nothing in this range yet (or not tracked yet)."
    table={{columns:['Step','Count','Unit','Of the step before'],rows:steps.map(s=>[s.label,s.value===null?'—':s.value,s.unit,s.fromPrev===null?'—':fmtShare(s.fromPrev)])}}>
    <div data-metric={metric}><FunnelBars steps={steps} ariaLabel={title}/>{extra&&<p className={styles.note}>{extra}</p>}</div>
   </ChartCard>;};
  const c=cohortTable(data);
  return <div className={d.grid3}>
-  {card('New players: title screen to island','Sessions at each step (a session counts once per step).',f.onboarding,'overview.funnel_onboarding',
-   c.d1?`Came back the next day: ${fmtNum(c.d1.n)} of ${fmtNum(c.d1.of)} new players (${fmtShare(c.d1.n/c.d1.of)}), from the cohorts below.`:data.people.status==='ok'?undefined:'Coming back the next day needs the people function (Retention below).')}
+  {/* Nov 25 2026 (title-screen audit M1): the base is "Shown the Start button" (st:new, from Nov 14), not every title view. */}
+  {card('New players: title screen to island',f.onboarding.base==='new'
+    ?'Sessions at each step (a session counts once per step). The first step is sessions shown the Start button: new players only (a returning player’s card has Play, not Start).'
+    :`Sessions at each step (a session counts once per step). This range ends before ${fmtDay(START_BASE_SINCE)}, when “Start shown” began counting, so the first step is every title-screen view, returning players included, and Pressed Start reads low.`,
+   f.onboarding,'overview.funnel_onboarding',
+   c.d1?`Came back the next day: ${fmtNum(c.d1.n)} of ${fmtNum(c.d1.of)} new visitors (${fmtShare(c.d1.n/c.d1.of)}): every browser first seen on the site, learn-page readers too, not only players (the cohorts below).`:data.people.status==='ok'?undefined:'Coming back the next day needs the people function (Retention below).')}
   {card('Fishing: tap to landed','Sessions that reached each step (the fishing funnel counters).',f.fishing,'overview.funnel_fishing')}
   {card('Live matches: visit to finish','Pitch visits (the Learn + Play bar), matches joined, matches finished with their time counted. Events, not people.',f.matches,'overview.funnel_matches')}
  </div>;
@@ -166,13 +170,13 @@ function Funnels({data}:{data:DashboardData}){
 
 function Retention({data,onPlayers}:{data:DashboardData;onPlayers:()=>void}){
  const c=cohortTable(data),st=data.people.status;
- return <ChartCard wide title="Do they come back?" subtitle="New players by the day they were first seen, and how many played again the next day (D1) and 7 days later (D7). First seen = within the 14 days of raw rows, so the earliest cohorts read high."
-  table={{columns:['First seen','New players','Back next day (D1)','D1 %','Back on day 7 (D7)','D7 %'],rows:c.rows.map(r=>[fmtDay(r.day),r.players,r.d1===null?'not yet':r.d1,fmtShare(r.d1Share),r.d7===null?'not yet':r.d7,fmtShare(r.d7Share)])}}
-  empty={st==='ok'&&!c.rows.length} emptyText="No new players inside the raw-row window for this range.">
+ return <ChartCard wide title="Do they come back?" subtitle="New visitors by the day they were first seen: every browser seen anywhere on the site (learn-page readers too, not only players), and how many came back the next day (D1) and 7 days later (D7). First seen = within the 14 days of raw rows, so the earliest cohorts read high. A new player who makes a save code is keyed by the device on day 0 and by the code from then on, so their return can count as a new id."
+  table={{columns:['First seen','New visitors (browsers)','Back next day (D1)','D1 %','Back on day 7 (D7)','D7 %'],rows:c.rows.map(r=>[fmtDay(r.day),r.players,r.d1===null?'not yet':r.d1,fmtShare(r.d1Share),r.d7===null?'not yet':r.d7,fmtShare(r.d7Share)])}}
+  empty={st==='ok'&&!c.rows.length} emptyText="No new visitors inside the raw-row window for this range.">
   <div data-metric="overview.cohorts">
    {st!=='ok'?<p className={d.state} data-people-missing><b>Needs the people function.</b> Cohorts link a player’s days, which only the raw rows (kept 14 days) can do. Run <code>docs/analytics-proposed/analytics_daily_people.sql</code> in Supabase (proposed, not run yet) and this table fills in by itself.{st==='error'?' (The function did not answer just now.)':''}</p>
    :<div className={d.tableWrap}><table className={d.tbl}>
-    <thead><tr><th scope="col">First seen</th><th scope="col">New players</th><th scope="col">D1</th><th scope="col">D7</th></tr></thead>
+    <thead><tr><th scope="col">First seen</th><th scope="col">New visitors</th><th scope="col">D1</th><th scope="col">D7</th></tr></thead>
     <tbody>{c.rows.map(r=><tr key={r.day}><th scope="row" style={{fontWeight:400}}>{fmtDay(r.day)}</th><td>{fmtNum(r.players)}</td>
      <td>{r.d1===null?<span title="that day has not ended">not yet</span>:<>{fmtNum(r.d1)} <small>({fmtShare(r.d1Share)})</small></>}</td>
      <td>{r.d7===null?<span title="day 7 has not ended">not yet</span>:<>{fmtNum(r.d7)} <small>({fmtShare(r.d7Share)})</small></>}</td></tr>)}

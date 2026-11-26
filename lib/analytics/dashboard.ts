@@ -50,7 +50,7 @@ export const K={
  fishTapped:'fishing.funnel_sessions.start',fishLanded:'fishing.funnel_events.land',
  tourViews:'marketing.tour_views',tourPlay:'marketing.tour_play_sessions',investorVisits:'marketing.investor_visits',investorAvg:'marketing.investor_avg_stay_seconds',
  firstTries:'learning.first_try.tries',firstRight:'learning.first_try.share',
- titleView:'counters.st:view.sessions',titleStart:'counters.st:start.sessions',titleCreated:'counters.st:created.sessions',titlePlay:'counters.st:play_ready.sessions',
+ titleView:'counters.st:view.sessions',titleNew:'counters.st:new.sessions',titleStart:'counters.st:start.sessions',titleCreated:'counters.st:created.sessions',titlePlay:'counters.st:play_ready.sessions',
  parties:'counters.mp:in.sessions',swims:'counters.wa:swim_start.total',kicks:'counters.su:kick_play.total',balls:'counters.su:ball_find.total',emotePicks:'counters.em:pick.total',
 } as const;
 export const DASH_KEYS:readonly string[]=Object.values(K);
@@ -196,12 +196,21 @@ function steps(d:DashboardData,list:[string,string,string][]):FunnelStep[]&{sinc
   const r:FunnelStep={key,label,value:v,unit,fromPrev:prev!==null&&v!==null&&prev>0?v/prev:null};prev=v;return r;});
  out.since=since&&since>d.from?since:null;return out;
 }
-export const funnels=(d:DashboardData)=>({
- onboarding:steps(d,[[K.titleView,'Saw the title screen','sessions'],[K.titleStart,'Pressed Start','sessions'],[K.titleCreated,'Save code made','sessions'],[K.titlePlay,'Went to the island','sessions']]),
+/** The first step of the new-player funnel (Nov 25 2026, title-screen audit M1). `st:view` counts EVERY title view, returning players
+ *  too (their card has Play, no Start), so "Pressed Start" over it read low. `st:new` ("Start shown": the new-player buttons were on
+ *  screen) is the right base, counted from Nov 14 2026 (START_BASE_SINCE). A range with any day from then on uses it (the funnel's
+ *  `since` then says the steps start that day); a range that ends before it keeps the old base, labelled for what it is. */
+export const START_BASE_SINCE='2026-11-14';
+export function onboardingBase(d:DashboardData):'new'|'view'{
+ const s=seriesOf(d,K.titleNew);return s&&s.trackedSince&&s.trackedSince<=d.to?'new':'view';
+}
+export const ONBOARDING_FIRST={new:'Shown the Start button',view:'Saw the title screen (returning players too)'} as const;
+export const funnels=(d:DashboardData)=>{const base=onboardingBase(d);return {
+ onboarding:Object.assign(steps(d,[[base==='new'?K.titleNew:K.titleView,ONBOARDING_FIRST[base],'sessions'],[K.titleStart,'Pressed Start','sessions'],[K.titleCreated,'Save code made','sessions'],[K.titlePlay,'Went to the island','sessions']]),{base}),
  fishing:steps(d,[['fishing.funnel_sessions.start','Fish tapped','sessions'],['fishing.funnel_sessions.cast','Cast','sessions'],['fishing.funnel_sessions.bite','Bite','sessions'],
   ['fishing.funnel_sessions.hook_spin','Hooked','sessions'],['fishing.funnel_sessions.land','Landed','sessions']]),
  matches:steps(d,[[K.lmVisits,'Pitch visits','visits'],[K.lmJoins,'Joined a match','matches'],[K.lmLeaves,'Finished (time counted)','matches']]),
-});
+};};
 /** Cohorts that started inside the range, with D1 / D7 shares (null while the day has not ended). */
 export function cohortTable(d:DashboardData){
  const rows=d.people.cohorts.filter(c=>c.day>=d.from&&c.day<=d.to);

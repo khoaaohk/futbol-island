@@ -13,7 +13,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let fails = 0; const bad = (m) => { fails++; console.log('FAIL ' + m); };
 async function enter(p, q = '') {
   await p.goto(url + q, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(6000);
-  await p.click('text=Get my save code', { timeout: 15000 }).catch(() => {}); await p.waitForTimeout(1500);
+  await p.click('[data-title-start]', { timeout: 15000 }).catch(() => {}); await p.waitForTimeout(1500);
   await p.click('button:has-text("Get my code")', { timeout: 3000 }).catch(() => {}); await p.waitForTimeout(2000);
   await p.click('button:has-text("I saved it")', { timeout: 3000 }).catch(() => {}); await p.waitForTimeout(1200);
   await p.click('button:has-text("Play")', { timeout: 6000 }).catch(() => {});

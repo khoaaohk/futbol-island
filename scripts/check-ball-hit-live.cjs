@@ -43,7 +43,7 @@ async function glide(f, x, y, z, yaw, mode = P.Mode.Idle) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage();
     const errs = []; p.on('pageerror', (e) => errs.push(e.message));
     await p.goto(url); await p.waitForTimeout(6000);
-    await p.click('text=Get my save code').catch(() => {}); await p.waitForTimeout(2000);
+    await p.click('[data-title-start]').catch(() => {}); await p.waitForTimeout(2000);
     await p.click('button:has-text("Play")').catch(() => {}); await p.waitForTimeout(15000);
     await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(1500);
     await p.evaluate(() => { const f = window.__fi2; f.selectRide('walk'); }); await p.waitForTimeout(2500);

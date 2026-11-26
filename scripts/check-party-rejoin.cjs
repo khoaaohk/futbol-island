@@ -45,7 +45,7 @@ const PHONE = { width: 390, height: 844 }, DESK = { width: 1280, height: 800 };
   // New player: take a save code, play, skip the walkthrough. Returning (stored save): Play if asked, skip.
   const enter = async (p, path = '/', fresh = true) => {
     await p.goto(url + path, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(6000);
-    if (fresh) { await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000); }
+    if (fresh) { await p.click('[data-title-start]', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000); }
     await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(14000);
     await p.click('button:has-text("Skip")', { timeout: 12000 }).catch(() => {}); await p.waitForTimeout(1500);
   };

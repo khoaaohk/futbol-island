@@ -37,7 +37,7 @@ export type Overview={min:number;from:string;to:string;prevFrom:string;prevTo:st
  fruit:{kind:string;label:string;hand:Cell;ball:Cell}[]};
 
 /** The title-screen and save-code steps the overview reads (startIds.ts). */
-export const OVERVIEW_STEPS=['st:view','st:start','st:created','st:saved','st:play_ready','st:have','st:restored','st:play_restored','st:restore_fail','st:returning','st:play_returning','st:break','st:play_break'] as const;
+export const OVERVIEW_STEPS=['st:view','st:new','st:start','st:created','st:saved','st:play_ready','st:have','st:restored','st:play_restored','st:restore_fail','st:returning','st:play_returning','st:break','st:play_break'] as const;
 
 const cellOf=(n:number|undefined):Cell=>{const v=n||0;return v>=MIN_SESSIONS?v:v>0?null:0;};
 const sumPrefix=(rec:Record<string,number>,re:RegExp)=>Object.entries(rec).reduce((a,[k,v])=>re.test(k)?a+v:a,0);

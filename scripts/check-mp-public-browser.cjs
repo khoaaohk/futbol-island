@@ -32,7 +32,7 @@ async function gate(p) { // the grown-up multiplication
   await p.click('[data-parent-gate] button[type=submit]');
 }
 async function start(p) { // the title screen: save code once (a fresh profile), then Play
-  await p.click('text=Get my save code', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
+  await p.click('[data-title-start]', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
   await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
   await p.click('button:has-text("I saved it")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500);
   await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});

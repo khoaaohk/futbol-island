@@ -11,7 +11,7 @@ import {MIN_SESSIONS,type Cell} from './learning';
 import {PRIVACY_SECTION_IDS,START_AMOUNTS} from './startIds';
 
 export type StartStep={id:string;label:string;sessions:Cell};
-export type StartFunnel={id:'new'|'restore'|'returning'|'break'|'home';title:string;steps:StartStep[];side:StartStep[]};
+export type StartFunnel={id:'new'|'restore'|'returning'|'break'|'home'|'exits';title:string;steps:StartStep[];side:StartStep[]};
 export type StartReport={
  hasData:boolean;min:number;hidden:number;
  /** visitors / sessions of the start-page subset (null when the storage update is missing, `partial` when some days lack it). */
@@ -65,6 +65,11 @@ export function buildStart(m:Pick<Merged,'counts'|'countSessions'|'start'|'dims'
   // Nov 14 2026 (retention): the in-game "Add to your Home Screen" note (components/HomeScreenTip.tsx, phones with a save code).
   {id:'home',title:'Home Screen (phones)',steps:[step('st:home_tip','“Add to your Home Screen” note shown'),step('st:home_add','Added with the browser’s install button (Android; iPhone adds via Share, seen as Opened from the Home Screen)')],
    side:[step('st:home_open','Opened from the Home Screen icon')]},
+  // Nov 25 2026 (title-screen audit, M3): the links that leave the title screen, as tap totals (sessions with at least one tap).
+  // Back and Guides from Nov 25 2026; For grown-ups and Privacy have been counted since Oct 9.
+  {id:'exits',title:'Left the title screen by a link',steps:[step('st:view','Saw the title screen')],
+   side:[step('st:back','Pressed Back (top left, to the tour at /; from Nov 25 2026)'),step('st:guides','Pressed Guides (bottom row, to /learn/lessons; from Nov 25 2026)'),
+    step('sg:open','Opened For grown-ups'),step('sp:open','Pressed Privacy (bottom row)')]},
  ];
  const report:StartReport={
   hasData:false,min:MIN_SESSIONS,hidden:0,
