@@ -21,6 +21,7 @@
  * Lessons: thirteen stadium ideas no other ball (island or reef) teaches (tests/stadium-balls.cjs); sources in ballHuntSources.ts,
  * never in kid UI. Pure data (no three.js): the island imports it through coinQuest.ts, like every other ball.
  */
+import {onGround} from './elevation';
 import type {CoinSpot,WallFacing} from './coinQuest';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {STANDS,ROOF,ROW_DEPTH,SEAT_DEPTH,SEAT_TOP,SEAT_PITCH,AISLE_WIDTH,SCREEN,GATE_ARCH_X,rowHeight,standBack,standWorld,standSpans,spanSeats,type StandDef} from './stadiumSeats';
@@ -68,7 +69,7 @@ function roof(id:'west'|'east',along:number){const s=stand(id),p=standWorld(s,(R
 
 const kick='A football target! Back away and hold Kick for a high shot.',seat='A ball is resting on a seat among the fans. Step into the row to pick it up!';
 const T={kind:'kick' as const,stadium:true},C={kind:'hidden' as const,loose:true,stadium:true};
-export const STADIUM_BALL_SPOTS:CoinSpot[]=[
+export const STADIUM_BALL_SPOTS:CoinSpot[]=([
  {id:'stadium-gate',name:'DRIP FC Stadium · north gate pillar',...pillar(-1),...T,concept:'world-stewards',near:kick,
   clue:'Look up at the gold gate pillars of DRIP FC Stadium. The people who look after fans wait here on matchday.',
   detail:'Stand on the plaza, east of the gate, and face the north gold pillar. Find the round target on its east face, hold Kick for a high shot, then collect the ball below it.',
@@ -122,5 +123,5 @@ export const STADIUM_BALL_SPOTS:CoinSpot[]=[
   clue:'The big screen has two posts. The other one hides a target too, under the score and the clock that every fan checks.',
   detail:'Walk round the outside of the stadium to the south end, behind the south stand. Find the round target on the big screen’s west post, on the left as you face the screen, back away to the south and hold Kick for a high shot.',
   teaching:'The scoreboard tells everyone the story. It shows both teams, the score and the match clock, which counts up from 0 to 45 minutes in the first half and from 45 to 90 in the second.',lesson:'support'},
-];
+] as CoinSpot[]).map(s=>s.y===0?onGround(s):s);// ground-level spots (and their wall targets) stand on the west terrace (?elev=1, elevation.ts)
 export const STADIUM_BALL_IDS=STADIUM_BALL_SPOTS.map(s=>s.id);

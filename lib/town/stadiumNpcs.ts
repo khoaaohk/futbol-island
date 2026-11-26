@@ -5,6 +5,7 @@ import {latestMatchStories,recentMatchStories} from './matchStory';
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_TRAILS,pathPoints,ringPoints,type P} from './westParkLayout';
 import {SCREEN,STANDS,ROW_DEPTH,CONCOURSE_HEIGHT,rowHeight,standWorld,standYaw,standBack,stairEnd,type StandDef} from './stadiumSeats';
 import {STADIUM_PITCH_Y} from './venues';
+import {STADIUM_BASE} from './westElevation';
 
 /**
  * DRIP FC Stadium islanders (Nov 13 2026, owner: "add more NPCs around the stadium ... every NPC must be tied to a football
@@ -61,7 +62,7 @@ export const PHOTO_SPOTS=[
  {id:'stadium-photo-rafael',x:S.x+S.pitchW/2+1.9,z:S.z+16,yaw:-Math.PI/2},
 ] as const;
 /** The lens tip (world) of a sitting photographer's long lens: where the shutter glint shows. */
-export const photoLens=(p:{x:number;z:number;yaw:number})=>({x:p.x+Math.sin(p.yaw)*.95,y:STADIUM_PITCH_Y+.78,z:p.z+Math.cos(p.yaw)*.95});
+export const photoLens=(p:{x:number;z:number;yaw:number})=>({x:p.x+Math.sin(p.yaw)*.95,y:STADIUM_BASE+STADIUM_PITCH_Y+.78,z:p.z+Math.cos(p.yaw)*.95});
 
 // ---- The benches side (the west touchline, under the gantry): two dugouts against the stand front, behind the boards, and a
 // painted technical area for each team between the touchline and the boards (IFAB Law 1: it reaches to 1 m from the touchline).
@@ -123,7 +124,7 @@ const CONC_A=concourse(EAST,-14),CONC_B=concourse(EAST,-46),AISLE_A=aisle(EAST,2
 const crew=(along:number,depth:number)=>({...standWorld(WEST,depth,along),yaw:standYaw(WEST)});
 const CREW_WIDE=crew(-3.2,GANTRY.d0+1.25),CREW_TIGHT=crew(3.2,GANTRY.d0+1.25),COM_A=crew(-.7,GANTRY.deskD+.85),COM_B=crew(.7,GANTRY.deskD+.85);
 const fixed=(p:{floor:number})=>()=>p.floor;
-const gantry=()=>GANTRY_FLOOR,pitchSide=()=>STADIUM_PITCH_Y;
+const gantry=()=>GANTRY_FLOOR,pitchSide=()=>STADIUM_BASE+STADIUM_PITCH_Y;
 const start=(id:string)=>STADIUM_NPC_ROUTES[id][0];
 
 /** Score fans: one league each, slot 2 (the island desks use slots 0 and 1, so these tell a different recent match). */

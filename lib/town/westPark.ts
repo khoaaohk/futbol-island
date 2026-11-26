@@ -10,6 +10,7 @@ import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
 import {elevationOn,groundLift} from './elevation';
+import {onWestStair} from './westElevation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
@@ -58,7 +59,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   // every piece in the trail paving carries aVerge (zeros = no verge), so the batching pass can merge them with the ribbons
   // Elevation (?elev=1): these meshes carry their own heights, so each vertex is laid on the raised ground at its spot (the trails
   // 3 cm proud: a 2.25 m paving chord over the lawn's 2 m lattice).
-  if(elevationOn()){const p=g.getAttribute('position') as T.BufferAttribute,up=material===trailMat?.03:0;let any=false;for(let i=0;i<p.count;i++){const h=groundLift(p.getX(i),p.getZ(i));if(h>0){p.setY(i,p.getY(i)+h+up);any=true;}}if(any){p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();}}
+  if(elevationOn()){const p=g.getAttribute('position') as T.BufferAttribute,up=material===trailMat?.03:0;let any=false;for(let i=0;i<p.count;i++){const h=groundLift(p.getX(i),p.getZ(i));if(h>0){p.setY(i,p.getY(i)+h+(onWestStair(p.getX(i),p.getZ(i),.6)?-.6/* under the treads */:up));any=true;}}if(any){p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();}}
   if(material===trailMat&&!g.getAttribute('aVerge'))g.setAttribute('aVerge',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*3),3));const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
   const m=new T.Mesh(g,material);m.position.set(c.x,y,c.z);m.castShadow=false;m.receiveShadow=true;if(name)m.name=name;t.add(m);return m;};
  const paint=(g:T.BufferGeometry,c:T.Color)=>{const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};

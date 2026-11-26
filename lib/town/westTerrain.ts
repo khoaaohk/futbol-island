@@ -8,7 +8,7 @@
 //    Pieces go through world.ts `put`, so they merge into the chunk's paint batch and take its baked light (walls darken to the foot).
 import * as T from 'three';
 import {elevationOn} from './elevation';
-import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,onWestTerrace,terraceOutline,type Stair} from './westElevation';
+import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,onWestTerrace,terraceOutline,stairLocal,type Stair} from './westElevation';
 import type {Obstacle} from './simulation';
 
 export type LawnPatch={position:number[];normal:number[];uv:number[];index:number[];triangles:number};
@@ -77,18 +77,18 @@ function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean}){
 }
 /** A pier (the end of a wall, the sides of a stair's mouth): a square post with a cap, from below the ground at its spot. */
 function pier(t:Tools,x:number,z:number,top:number){const foot=Math.min(westNatural(x,z),top)-.5,h=top-foot;t.put(new T.BoxGeometry(1,h,1),WALL.stone,x,foot+h/2,z);t.put(new T.BoxGeometry(1.2,.16,1.2),WALL.coping,x,top+.08,z);t.obstacles.push({x,z,w:1,d:1});return 24;}
-const stairLength=(s:Stair)=>{for(let d=.25;d<s.len;d+=.25)if(WEST.terrace-s.slope*d<=westNatural(s.x+s.dx*d,s.z+s.dz*d)+.02)return d;return s.len;};
+const stairLength=(s:Stair)=>{for(let d=s.inset+.25;d<s.len;d+=.25)if(WEST.terrace-s.slope*d<=westNatural(s.x+s.dx*d,s.z+s.dz*d)+.02)return d;return s.len;};
 function stairs(t:Tools,s:Stair){
  const L=stairLength(s),rise=.14,run=rise/s.slope,n=Math.ceil(L/run),px=-s.dz,pz=s.dx;let tris=0;
  // Treads: each a block from under the ground to its tread (the walked ramp passes through every nosing).
  for(let k=0;k<n;k++){const d0=k*run,top=WEST.terrace-s.slope*(d0+run*.5)+.01,mx=s.x+s.dx*(d0+run/2),mz=s.z+s.dz*(d0+run/2),foot=Math.min(westNatural(mx,mz),top)-.3,h=top-foot;
   t.put(new T.BoxGeometry(s.dx?run+.03:s.w,h,s.dx?s.w:run+.03),WALL.tread,mx,foot+h/2,mz);tris+=12;}
  // Cheek walls with a low parapet either side, and piers at the mouth (on the terrace's edge) and the foot.
- for(const side of [-1,1]){const pts:WallPt[]=[];for(let d=0;d<=L+.001;d+=Math.min(1,L)){const x=s.x+s.dx*d+px*side*(s.w/2+.25),z=s.z+s.dz*d+pz*side*(s.w/2+.25);pts.push({x,z,top:WEST.terrace-s.slope*d+.75,foot:westNatural(x,z)});}
+ for(const side of [-1,1]){const pts:WallPt[]=[];for(let d=s.inset;d<=L+.001;d+=(L-s.inset)/Math.ceil(L-s.inset)){const x=s.x+s.dx*d+px*side*(s.w/2+.25),z=s.z+s.dz*d+pz*side*(s.w/2+.25);pts.push({x,z,top:WEST.terrace-s.slope*d+.75,foot:westNatural(x,z)});}
   const out=pts;// a closed prism: both faces and the top are wound right whichever way it runs
   tris+=sweep(t,out,WALL.stone,[[.25,'foot',-.5],[.25,'top',0],[-.25,'top',0],[-.25,'foot',-.5]]);tris+=sweep(t,out,WALL.coping,[[.31,'top',-.03],[.31,'top',.12],[-.31,'top',.12],[-.31,'top',-.03]],true);
-  const mx=s.x+s.dx*L/2+px*side*(s.w/2+.25),mz=s.z+s.dz*L/2+pz*side*(s.w/2+.25);t.obstacles.push({x:mx,z:mz,w:s.dx?L:.5,d:s.dx?.5:L});
-  tris+=pier(t,s.x+px*side*(s.w/2+.5)-s.dx*.5,s.z+pz*side*(s.w/2+.5)-s.dz*.5,WEST.terrace+WALL.copingH+WALL.hedgeH+.12);
+  const mx=s.x+s.dx*(L+s.inset)/2+px*side*(s.w/2+.25),mz=s.z+s.dz*(L+s.inset)/2+pz*side*(s.w/2+.25);t.obstacles.push({x:mx,z:mz,w:s.dx?L-s.inset:.5,d:s.dx?.5:L-s.inset});
+  tris+=pier(t,s.x+s.dx*(s.inset-.5)+px*side*(s.w/2+.5),s.z+s.dz*(s.inset-.5)+pz*side*(s.w/2+.5),WEST.terrace+WALL.copingH+WALL.hedgeH+.12);
   tris+=pier(t,s.x+s.dx*(L+.3)+px*side*(s.w/2+.25),s.z+s.dz*(L+.3)+pz*side*(s.w/2+.25),westNatural(s.x+s.dx*L,s.z+s.dz*L)+1);}
  return tris;
 }
@@ -99,8 +99,9 @@ export function buildWestWalls(t:Tools):WestWallStats{
  const H=WEST.terrace,C=WEST_TERRACE,o=terraceOutline(1.5),ring:WallPt[]=[];
  // The outline, resampled every ≤ 1.5 m on the straights too; the foot is the natural ground 0.3 m outside.
  for(let i=0;i<o.length;i++){const a=o[i],b=o[(i+1)%o.length],l=Math.hypot(b.x-a.x,b.z-a.z),n=Math.max(1,Math.ceil(l/1.5));
-  for(let k=0;k<n;k++){const x=a.x+(b.x-a.x)*k/n,z=a.z+(b.z-a.z)*k/n,d=Math.hypot(x-C.x,z-C.z)||1;ring.push({x,z,top:H,foot:Math.min(H,westNatural(x+(x-C.x)/d*.3,z+(z-C.z)/d*.3))});}}
- const inStair=(p:WallPt)=>WEST_STAIRS.some(s=>{const ax=p.x-s.x,az=p.z-s.z;return Math.abs(ax*s.dx+az*s.dz)<1.2&&Math.abs(-ax*s.dz+az*s.dx)<s.w/2+.5;});
+  for(let k=0;k<n;k++){const x=a.x+(b.x-a.x)*k/n,z=a.z+(b.z-a.z)*k/n,d=Math.hypot(x-C.x,z-C.z)||1;ring.push({x,z,top:H,foot:Math.min(H,westNatural(x+(x-C.x)/d*.3,z+(z-C.z)/d*.3),westNatural(x,z))});}}
+ // The top of a flight (the notch's back edge, or the mouth on the terrace's edge) is open.
+ const inStair=(p:WallPt)=>WEST_STAIRS.some(s=>{const {t,a}=stairLocal(s,p.x,p.z);return Math.abs(t)<.4&&Math.abs(a)<s.w/2-.05;});
  // Runs: `tall` (hedge, buttresses, a collider) and `kerb` (a low wall you step over), broken at the stairs' mouths.
  const kind=(p:WallPt)=>inStair(p)?0:H-p.foot>WALL.low?2:H-p.foot>.012?1:0,n=ring.length;
  let start=0;while(start<n&&kind(ring[start])===kind(ring[(start+n-1)%n]))start++;

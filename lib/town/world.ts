@@ -1469,7 +1469,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
-  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[],stadiumSurface0=walkSurfaces.length;const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign,goalNets:stadiumGoalNets}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>{o.position.y+=STADIUM_BASE;o.userData.ownHeight=true;town.add(o);},materials,prop});
+  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[],stadiumSurface0=walkSurfaces.length;const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign,goalNets:stadiumGoalNets}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>{o.position.y+=STADIUM_BASE;o.userData.ownHeight=true;if(!o.matrixAutoUpdate)o.updateMatrix();town.add(o);},materials,prop});
   // Elevation (?elev=1): the bowl stands on the west terrace (westElevation.ts STADIUM_BASE; `put` lifted its pieces): its walk
   // surfaces, rails and landable roofs carry absolute heights, so they rise with it. Then the terrace's retaining wall and stairs.
   if(STADIUM_BASE){for(let i=stadiumSurface0;i<walkSurfaces.length;i++)walkSurfaces[i].height+=STADIUM_BASE;for(const r of stadiumRails){r.floor+=STADIUM_BASE;r.top+=STADIUM_BASE;}for(const c of stadiumRoofCanopies)c.height+=STADIUM_BASE;}
@@ -1497,7 +1497,7 @@ export function* buildTownSteps(scene: T.Scene) {
   try{buildPaintEasel({box,cylinder,put,obstacles});}catch(error){console.error('Summit Isle painting easel failed to build',error);}
   // Gashapon capsule machines (lib/town/gashaponWorld.ts, Nov 8 2026): 12 island machines, solid pieces in the paint batches,
   // the globes in one shared glass material; footprints become obstacles.
-  try{buildGashaponProps({put,town,obstacles,materials});}catch(error){console.error('Gashapon machines failed to build',error);}
+  try{unlifted(()=>buildGashaponProps({put,town,obstacles,materials}));/* a machine's y is already on the raised ground (machines.ts onGround) */}catch(error){console.error('Gashapon machines failed to build',error);}
 
   // Canonical centre lines remove offsets and duplicated dash phases. Touching
   // collinear sections become one street before any road surface is generated.
@@ -1718,7 +1718,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Nov 13 2026: warm pools on the pavement in front of the two lit Konbinis and the stadium's machine row (instances in the existing
   // pool batches: the stadium's joins chunk 'stadium').
   lampSites.push({x:ISLAND_SQUARE_KONBINI.x-.3,z:ISLAND_SQUARE_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},{x:CAY_KONBINI.x-.3,z:CAY_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},
-   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+STADIUM_SHOP_POOL.dz,ground:.02,poolWidth:STADIUM_SHOP_POOL.width,poolDepth:STADIUM_SHOP_POOL.depth,chunk:'stadium'});
+   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+STADIUM_SHOP_POOL.dz,ground:.02+STADIUM_BASE,poolWidth:STADIUM_SHOP_POOL.width,poolDepth:STADIUM_SHOP_POOL.depth,chunk:'stadium'});
   const signStates=nightSigns.map(material=>({material,intensity:material.emissiveIntensity}));
 
   // Spatial/material batches preserve culling: a distant city's meshes never share

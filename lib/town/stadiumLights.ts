@@ -12,6 +12,8 @@
 //  - The light the lamps throw on the stadium itself (pools on the seats under the roofs, the beam hits at the pitch edge, the
 //    scalloped uplight washes up the outer walls) is a term in the stadium paint's night patch (stadiumNight.ts): 0 draws.
 // Nothing per frame: the night factor and the roof fade are uniform writes made only when they change.
+import {STADIUM_BASE as BASE,STADIUM_BASE} from './westElevation';
+import {groundLift} from './elevation';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {Obstacle} from './simulation';
@@ -75,7 +77,7 @@ const tag=(g:T.BufferGeometry,colour:string,glow:number):Part=>{const n=g.getAtt
  for(let i=0;i<n;i++)col.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(col,3));g.setAttribute('aGlow',new T.BufferAttribute(new Float32Array(n).fill(glow),1));return g;};
 /** A roof-lamp box (stand-local depth / along / height centre) for the roof mesh: aGlow 1 (the whole box is the lens). */
 export function roofLampPart(s:StandDef,a:number,centre:T.Vector3){const p=standWorld(s,ROOF_LAMP.d,a),long=s.axis==='x';
- const g=new T.BoxGeometry(long?ROOF_LAMP.depth:ROOF_LAMP.w,ROOF_LAMP.h,long?ROOF_LAMP.w:ROOF_LAMP.depth);g.translate(p.x-centre.x,ROOF_LAMP.y-centre.y,p.z-centre.z);return tag(g,'#f5eed5',1);}
+ const g=new T.BoxGeometry(long?ROOF_LAMP.depth:ROOF_LAMP.w,ROOF_LAMP.h,long?ROOF_LAMP.w:ROOF_LAMP.depth);g.translate(p.x-centre.x,ROOF_LAMP.y-STADIUM_BASE-centre.y,p.z-centre.z);/* the build's own frame (stadiumWorld.ts) */return tag(g,'#f5eed5',1);}
 /** Tags a roof piece as plain paint (aGlow 0), so the roof's pieces and lamps merge. */
 export const noGlow=(g:T.BufferGeometry)=>{g.setAttribute('aGlow',new T.BufferAttribute(new Float32Array(g.getAttribute('position').count),1));return g;};
 
@@ -121,8 +123,8 @@ export type StadiumLampSite={x:number;z:number;ground:number;poolWidth:number;po
 export function buildStadiumLights(t:StadiumLightsTools){
  const parts:Part[]=[],glow:{pos:number[];uv:number[];tint:number[];shape:number[];idx:number[]}={pos:[],uv:[],tint:[],shape:[],idx:[]};
  let verts=0;const push=(g:Part)=>{parts.push(g);verts+=g.getAttribute('position').count;};
- const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.BoxGeometry(w,h,d);g.translate(x,y,z);push(tag(g,colour,lit));};
- const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.CylinderGeometry(r,r,h,8);g.translate(x,y,z);push(tag(g,colour,lit));};
+ const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.BoxGeometry(w,h,d);g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
+ const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.CylinderGeometry(r,r,h,8);g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
  const W=STADIUM_NIGHT_LIGHTS.warm;
  /** A glow quad: corners (bl, br, tr, tl) with v=1 along the top edge (tl-tr) — the bright end of a gradient. */
  const quad=(c:readonly T.Vector3[],strength:number,soft:number,mode:0|1,roof:0|1|2)=>{const o=glow.pos.length/3;
@@ -130,7 +132,7 @@ export function buildStadiumLights(t:StadiumLightsTools){
   for(let i=0;i<4;i++){glow.tint.push(W[0]*strength,W[1]*strength,W[2]*strength);glow.shape.push(soft,mode,roof);}
   glow.idx.push(o,o+1,o+2,o,o+2,o+3);};
  const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
- const pool=(x:number,z:number,r:number,y:number,strength:number)=>quad([V(x-r,y,z+r),V(x+r,y,z+r),V(x+r,y,z-r),V(x-r,y,z-r)],strength,0,1,2);
+ const pool=(x:number,z:number,r:number,y0:number,strength:number)=>{const y=y0+groundLift(x,z);quad([V(x-r,y,z+r),V(x+r,y,z+r),V(x+r,y,z-r),V(x-r,y,z-r)],strength,0,1,2);};
  const stats={posts:0,fixtures:0,bollards:0,beams:0,colliders:0};
  // Kick reactions (kick audit, Nov 13 2026; lib/graphics/propReactions.ts): each post / bollard / fixture's vertex run in the one
  // merged lamp mesh (mergeGeometries keeps the parts' order), so world.ts can make a PropSpec of it. Build-time only.
@@ -145,7 +147,7 @@ export function buildStadiumLights(t:StadiumLightsTools){
   run('lamp',()=>{lampCyl(L.baseR,L.baseH,DARK,x,b0+L.baseH/2,z);lampCyl(L.poleR,L.poleH,DARK,x,b0+L.poleH/2,z);
   lampBox(L.cap,.12,L.cap,DARK,x,b0+4.22,z);lampBox(L.head,L.headH,L.head,LENS,x,b0+3.99,z,1);});
   collide(x,z,L.collider,L.collider);t.assets.push({kind:'stadium-lamp',x,z,w:L.collider,d:L.collider,visualW:.65,visualD:.65});
-  sites.push({x,z,ground:-.02,poolWidth:L.pool,poolDepth:L.pool,chunk:'stadium'});stats.posts++;}
+  sites.push({x,z,ground:-.02+groundLift(x,z),poolWidth:L.pool,poolDepth:L.pool,chunk:'stadium'});stats.posts++;}
 
  // --- Uplights at the foot of each stand's outer wall (their wash is the paint patch's), clear of stairs, posts and gates -----
  const roofPosts=[-50,-38,-12,12,38,50];
@@ -168,21 +170,21 @@ export function buildStadiumLights(t:StadiumLightsTools){
   for(const sz of [-1,1]){const z=G.z+sz*(G.halfWidth+.4),x=gx+1.5,lz=z-sz*.5;
    run('bollard',()=>{lampBox(.5,.22,.5,FIXTURE,x,APRON_Y+.11,lz);lampBox(.4,.04,.4,LENS,x,APRON_Y+.24,lz,1);});collide(x,lz,.5,.5);stats.fixtures++;
    // The pillar's plaza face (x gx+.8, 1.6 m wide): the foot corners take v=1, so it is bright at the foot, fading up.
-   quad([V(gx+.82,9.6,z+.85),V(gx+.82,9.6,z-.85),V(gx+.82,0,z-.85),V(gx+.82,0,z+.85)],.22,.25,0,2);
+   quad([V(gx+.82,BASE+9.6,z+.85),V(gx+.82,BASE+9.6,z-.85),V(gx+.82,BASE,z-.85),V(gx+.82,BASE,z+.85)],.22,.25,0,2);
    pool(x,lz,1.4,-.05,.3);}
   for(const dz of [-4,0,4])lampBox(.9,.08,.45,LENS,gx,8.16,G.z+dz,1);
-  quad([V(gx+.73,10.6,G.z+8.6),V(gx+.73,10.6,G.z-8.6),V(gx+.73,8.2,G.z-8.6),V(gx+.73,8.2,G.z+8.6)],.1,.1,0,2);}
+  quad([V(gx+.73,BASE+10.6,G.z+8.6),V(gx+.73,BASE+10.6,G.z-8.6),V(gx+.73,BASE+8.2,G.z-8.6),V(gx+.73,BASE+8.2,G.z+8.6)],.1,.1,0,2);}
 
  // --- Roof beams and haze (the lamps themselves are in the roof meshes) ---------------------------------------------------------
  STANDS.filter(s=>s.roof).forEach((s,ri)=>{const roof=ri as 0|1,long=s.axis==='x',alongDir=long?V(0,0,1):V(1,0,0);
   roofLampAlongs().forEach((a,k)=>{if(k%2)return;
-   const top=standWorld(s,ROOF_LAMP.d,a),hit=standWorld(s,STADIUM_NIGHT_LIGHTS.beamHit,a),T0=V(top.x,ROOF_LAMP.y-ROOF_LAMP.h/2,top.z),T1=V(hit.x,0,hit.z);
+   const top=standWorld(s,ROOF_LAMP.d,a),hit=standWorld(s,STADIUM_NIGHT_LIGHTS.beamHit,a),T0=V(top.x,ROOF_LAMP.y-ROOF_LAMP.h/2,top.z),T1=V(hit.x,BASE,hit.z);
    const axis=T1.clone().sub(T0),across=axis.clone().cross(alongDir).normalize();
    for(const dir of [alongDir,across]){const w0=dir.clone().multiplyScalar(.45),w1=dir.clone().multiplyScalar(2.4);
     quad([T1.clone().sub(w1),T1.clone().add(w1),T0.clone().add(w0),T0.clone().sub(w0)],.14,.5,0,roof);}
    stats.beams++;});
   const lo=standWorld(s,36,0),hi=standWorld(s,ROOF.front+.3,0),span=STADIUM_NIGHT_LIGHTS.lampSpan+2,a0=alongDir.clone().multiplyScalar(span);
-  const top=V(hi.x,ROOF.y-.6,hi.z),bottom=V(lo.x,1.2,lo.z);
+  const top=V(hi.x,ROOF.y-.6,hi.z),bottom=V(lo.x,BASE+1.2,lo.z);
   quad([bottom.clone().sub(a0),bottom.clone().add(a0),top.clone().add(a0),top.clone().sub(a0)],.04,.06,0,roof);});
 
  // --- Meshes ---------------------------------------------------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 import {onGround} from './elevation';
+import './westElevation';
 import './coralCayElevation';
 import {STORE_ITEMS,type StoreItem,type StoreCategory} from './store';
 import {CLUB_COSTUMES,getCostume} from './costumes';

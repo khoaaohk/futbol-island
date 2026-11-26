@@ -91,8 +91,8 @@ export const elevationRegions=():readonly Region[]=>regions;
 export function groundLift(x:number,z:number){if(!enabled)return 0;let h=0;for(let i=0;i<regions.length;i++)h+=regions[i].ground(x,z);return h;}
 export const groundSlope=(x:number,z:number)=>Math.hypot(groundLift(x+1,z)-groundLift(x-1,z),groundLift(x,z+1)-groundLift(x,z-1))/2;
 /** A placed record ({x, z, y}: a vending machine, a hidden ball, a gashapon) standing on the raised ground: y plus the lift at
- *  its spot (and a `wall` target's y with it). The same object back where the ground is not raised. Use at the data's definition. */
-export function onGround<S extends {x:number;z:number;y:number;wall?:{y:number}}>(o:S):S{const g=groundLift(o.x,o.z);return g?{...o,y:o.y+g,...(o.wall?{wall:{...o.wall,y:o.wall.y+g}}:{})}:o;}
+ *  its spot. The same object back where the ground is not raised. Use at the data's definition. */
+export function onGround<S extends {x:number;z:number;y:number}>(o:S):S{const g=groundLift(o.x,o.z);return g?{...o,y:o.y+g}:o;}// (a `wall` target's y is measured from the spot's own y, coinHunt.ts: it rises with it)
 
 // ---- Build-time placement (world.ts `put` / `sign`). While `active`, every piece a builder places is lifted to the ground at
 // its own spot, or to `anchor` (ONE height for a whole prop: a palm, a house, a table: wrap its builder in anchored()).
