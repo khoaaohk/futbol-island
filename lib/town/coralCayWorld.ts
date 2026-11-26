@@ -327,7 +327,7 @@ export function buildCoralCay(t:CayTools){
  {const s=SANDBARS[0],far=-s.side;{const p=onBar(s,6,far*6,1.5);lifeguardChair(p.x,p.z);}{const p=onBar(s,-7,-far*3.5,4);teachingBoard('BEACH SOCCER · PLAY BAREFOOT',p.x,p.z);}postSign('STARFISH SANDBAR',s.spur.x,s.spur.roadZ+s.side*(CAUSEWAY.railHalf+.5));}
  {const s=SANDBARS[1],far=-s.side;{const p=onBar(s,4,-far*6,4.5);teachingBoard('KICK-IN OR THROW-IN: YOUR CHOICE',p.x,p.z,8.4);}
   // A small practice goal on the sand for kick-ins toward a teammate.
-  const g=onBar(s,-9,-far*4,2),gx=g.x,gz=g.z;for(const dx of [-1,1])box(.09,1.2,.09,'#fff1d3',gx+dx*1.2,.6,gz);box(2.5,.09,.09,'#fff1d3',gx,1.2,gz);for(let dx=-1.1;dx<=1.11;dx+=.275)box(.02,1.15,.02,'#c3d1b9',gx+dx,.6,gz-.6).castShadow=false;obstacles.push({x:gx,z:gz-.3,w:2.6,d:.8});
+  const g=onBar(s,-9,-far*4,2),gx=g.x,gz=g.z;for(const dx of [-1,1])box(.09,1.2,.09,'#fff1d3',gx+dx*1.2,.6,gz);box(2.5,.09,.09,'#fff1d3',gx,1.2,gz);for(let dx=-1.1;dx<=1.11;dx+=.275)box(.02,1.15,.02,'#c3d1b9',gx+dx,.6,gz-.6).castShadow=false;for(const dx of [-1.2,1.2]){for(let y=.3;y<1.2;y+=.3)box(.02,.02,.6,'#c3d1b9',gx+dx,y,gz-.3).castShadow=false;box(.02,1.15,.02,'#c3d1b9',gx+dx,.6,gz-.3).castShadow=false;}obstacles.push({x:gx,z:gz-.3,w:2.6,d:.8});
   postSign('TURTLE SANDBAR',s.spur.x,s.spur.roadZ+s.side*(CAUSEWAY.railHalf+.9));}
 
  // ---- The cay: foundation, an uneven sand ring (beach all round) and the lawn. Geometry is built relative to the cay
@@ -402,7 +402,10 @@ export function buildCoralCay(t:CayTools){
   prop('net',()=>{for(const side of [-1,1]){box(.12,h,.12,'#fff1d3',gx,h/2,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,h,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,.06,K.z+side*gw);}
   box(.12,.12,K.goalWidth+.12,'#fff1d3',gx,h,K.z);box(.07,.07,K.goalWidth,'#fff1d3',back,h*.55,K.z);
   for(let y=.2;y<=h;y+=.3)box(.022,.022,K.goalWidth,'#c3d1b9',back,y,K.z).castShadow=false;
-  for(let z=-gw;z<=gw+.01;z+=.3){box(.022,h,.022,'#c3d1b9',back,h/2,K.z+z).castShadow=false;box(1.5,.022,.022,'#c3d1b9',(gx+back)/2,h,K.z+z).castShadow=false;}});
+  for(let z=-gw;z<=gw+.01;z+=.3){box(.022,h,.022,'#c3d1b9',back,h/2,K.z+z).castShadow=false;box(1.5,.022,.022,'#c3d1b9',(gx+back)/2,h,K.z+z).castShadow=false;}
+  // Side nets (owner Nov 25: the side panels were open frames): cords on both sides, in the same batch as the back net.
+  for(const side of [-1,1]){const sz=K.z+side*gw;for(let y=.2;y<h;y+=.3)box(1.5,.022,.022,'#c3d1b9',(gx+back)/2,y,sz).castShadow=false;
+   for(let f=.3;f<1.5;f+=.3)box(.022,h,.022,'#c3d1b9',gx+end*f,h/2,sz).castShadow=false;}});
   for(const o of [{x:(gx+back)/2,z:K.z-gw,w:1.5,d:.14},{x:(gx+back)/2,z:K.z+gw,w:1.5,d:.14},{x:back,z:K.z,w:.14,d:K.goalWidth}])obstacles.push(o);
  }
  // Team benches face the pitch behind the substitution zone; low bleachers beyond them.
@@ -584,7 +587,8 @@ export function buildCoralCay(t:CayTools){
   box(.06,.6,3.2,'#eddfbb',gx+(i%2?-.8:.8),.3,h.z+1.6);obstacles.push({x:gx+(i%2?-.8:.8),z:h.z+1.6,w:.12,d:3.2});
  });
  // Kids' mini goal in the south-east yard, a ball in front of it.
- {const G=MINI_GOAL;prop('net',()=>{for(const dx of [-1.1,1.1])box(.08,1,.08,'#fff1d3',G.x+dx,.5,G.z);box(2.3,.08,.08,'#fff1d3',G.x,1,G.z);for(let dx=-1;dx<=1.01;dx+=.25)box(.02,.95,.02,'#c3d1b9',G.x+dx,.5,G.z-.5).castShadow=false;});
+ {const G=MINI_GOAL;prop('net',()=>{for(const dx of [-1.1,1.1])box(.08,1,.08,'#fff1d3',G.x+dx,.5,G.z);box(2.3,.08,.08,'#fff1d3',G.x,1,G.z);for(let dx=-1;dx<=1.01;dx+=.25)box(.02,.95,.02,'#c3d1b9',G.x+dx,.5,G.z-.5).castShadow=false;
+  for(const dx of [-1.1,1.1]){for(let y=.25;y<1;y+=.25)box(.02,.02,.5,'#c3d1b9',G.x+dx,y,G.z-.25).castShadow=false;box(.02,.95,.02,'#c3d1b9',G.x+dx,.5,G.z-.25).castShadow=false;}});
   put(new T.IcosahedronGeometry(.19,1),'#f4edd3',G.x+.3,.19,G.z+1.8);obstacles.push({x:G.x,z:G.z-.25,w:2.4,d:.7});}
  // Palms and a second washing line among the homes.
  for(const [x,z,hgt] of [[542.5,-109.5,6],[586,-117.5,5.2],[589,-107.5,6.4],[569.5,-97,4.8],[552.8,-96,5.5]] as [number,number,number][])palm(x,z,hgt);

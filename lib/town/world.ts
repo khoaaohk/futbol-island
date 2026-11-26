@@ -1007,6 +1007,9 @@ export function* buildTownSteps(scene: T.Scene) {
     box(.10,.10,3.3,'#fff1d3',gx,2.07,cz);
     for(let y=.15;y<=2.08;y+=.25)box(.022,.022,3.2,'#c3d1b9',back,y,cz).castShadow=false;
     for(let z=cz-1.6;z<=cz+1.61;z+=.25){box(.022,2,.022,'#c3d1b9',back,1.07,z).castShadow=false;box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,2.07,z).castShadow=false;}
+    // Side nets (owner Nov 25: open side frames): cords on both sides, same batch as the back net.
+    for(const z of [cz-1.6,cz+1.6]){for(let y=.15;y<2.05;y+=.25)box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,y,z).castShadow=false;
+     for(let f=.26;f<1.3;f+=.26)box(.022,2,.022,'#c3d1b9',gx+(back-gx)/1.3*f,1.07,z).castShadow=false;}
     for(const z of [cz-2.5,cz+2.5])box(2.5,.014,.07,'#fff1d3',gx-side*1.25,.069,z);
     box(.07,.014,5,'#fff1d3',gx-side*2.5,.069,cz);
    }

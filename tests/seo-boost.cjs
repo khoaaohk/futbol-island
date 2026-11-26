@@ -62,7 +62,7 @@ const L=rel=>load(path.join(root,rel));
  const layout=read('app/(site)/layout.tsx')+read('lib/site/footerHubs.ts');/* Nov 20 2026: the footer's list lives in lib/site/footerHubs.ts (shared with the Library) */
  assert(/<FooterHubs\/>/.test(layout)&&/g\.links\.map\(\(\[href,label\]\)=>/.test(read('components/site/FooterHubs.tsx')),'the footer renders the shared list (Nov 20 2026: in four Library groups, components/site/FooterHubs.tsx)');
  for(const h of ['/learn/lessons','/learn/soccer-drills','/learn/soccer-practice-plans','/learn/soccer-formations','/learn/soccer-positions','/learn/soccer-rules','/learn/soccer-terms','/tools','/games'])assert(layout.includes(`'${h}'`),`footer links ${h}`);
- assert.match(read('components/landing/Landing.tsx'),/href="\/learn\/lessons">Guides<\/a>/,'/play links to the guides');
+ assert.match(read('components/landing/Landing.tsx'),/href="\/learn\/lessons"[^>]*>Guides<\/a>/,'/play links to the guides');
  // JSON-LD builders
  const seo=L('lib/site/seo.ts'),play=seo.playLd(),site=seo.siteLd();
  for(const g of [play,site]){assert.equal(g.operatingSystem,'Web browser');assert.equal(g.isFamilyFriendly,true);assert.equal(g.offers.price,0);assert.equal(g.audience.suggestedMinAge,7);assert.equal(g.audience.suggestedMaxAge,12);
