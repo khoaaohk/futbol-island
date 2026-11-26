@@ -18,6 +18,8 @@
 import {konbiniMachineSpot,summitSnackSpot,ISLAND_SQUARE_KONBINI,KONBINI_FACADE_PROUD,KONBINI_BACK_GAP} from '../town/vendingPlaces';
 import {CAY_KONBINI,CAY_KONBINI_DOOR} from '../town/coralCay';
 import {summitGround} from '../town/summitIsle';
+import {onGround} from '../town/elevation';
+import '../town/coralCayElevation';
 import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_VENDING_HALF,STADIUM_GASHA_OFFSETS,stadiumShopZ} from '../town/stadiumShops';
 
 export type GashaponMachineId=
@@ -123,7 +125,7 @@ export const stadiumCabinetOnLeft=(id:string)=>{const i=STADIUM_ROW.indexOf(id a
  return me-left<.5;};
 const STADIUM_PLACE='at the DRIP FC Stadium, against the south stand under the big screen, beside the vending machines';
 
-export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
+export const GASHAPON_MACHINES:readonly GashaponMachine[]=([
  {id:'gs-square-snacks',name:'Onigiri Pals',theme:'Konbini snacks with faces',zone:'konbini-square',place:'outside the Island Square Konbini, west of the sliding doors',...SQUARE_PAIR[0],y:0,color:'#e94b3c',accent:'#fff3d6'},
  {id:'gs-square-lucky',name:'Lucky Little Japan',theme:'Cute Japanese good-luck figurines',zone:'konbini-square',place:'outside the Island Square Konbini, west of the sliding doors',...SQUARE_PAIR[1],y:0,color:'#d23a63',accent:'#ffe08a'},
  {id:'gs-cay-sweets',name:'Sweet Shop Treats',theme:'Japanese sweets and fizzy drinks',zone:'konbini-cay',place:'outside the Coral Cay Konbini, west of the sliding doors',...CAY_PAIR[0],y:0,color:'#f28cb8',accent:'#fff6fb'},
@@ -144,7 +146,7 @@ export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
  {id:'gs-stadium-boots',name:'Boots & Kits · Stadium',theme:'Football gear with faces',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-boots'),y:0,color:'#1d3a8a',accent:'#f4f1e6',set:'gs-eleven'},
  {id:'gs-stadium-pixel',name:'Pixel Pitch · Stadium',theme:'Retro 8-bit football',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-pixel'),y:0,color:'#6a4cff',accent:'#ffd447',set:'gs-arcade-pixel'},
  {id:'gs-stadium-beach',name:'Beach Day · Stadium',theme:'Beach soccer and sunny sand',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-beach'),y:0,color:'#ff8c42',accent:'#2bb3d1',set:'gs-westbeach'},
-];
+] as GashaponMachine[]).map(onGround);// (elevation.ts: outdoor machines stand on raised ground under ?elev=1)
 export const GASHAPON_MACHINE_IDS=GASHAPON_MACHINES.map(m=>m.id);
 export const gashaponMachine=(id:string)=>GASHAPON_MACHINES.find(m=>m.id===id);
 export const isGashaponMachine=(id:unknown):id is GashaponMachineId=>typeof id==='string'&&GASHAPON_MACHINES.some(m=>m.id===id);

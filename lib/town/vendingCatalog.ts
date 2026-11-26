@@ -1,3 +1,5 @@
+import {onGround} from './elevation';
+import './coralCayElevation';
 import {STORE_ITEMS,type StoreItem,type StoreCategory} from './store';
 import {CLUB_COSTUMES,getCostume} from './costumes';
 import {getIslandCostume} from './islandCostumes';
@@ -39,7 +41,7 @@ export const VENDING_SIZE={w:1.3,d:.86,h:2.12} as const;
 /** Oct 13 2026: the kiosk now stands 50 m up, on the summit terrace, so (unlike every sea-level machine below) its height
  *  comes from summitGround at its own spot rather than a literal 0. */
 const SUMMIT_SNACK=summitSnackSpot();
-export const VENDING_MACHINES:VendingMachine[]=[
+export const VENDING_MACHINES:VendingMachine[]=([
  {id:'plaza',name:'Konbini',place:'under the convenience-store canopy beside the sliding doors',...konbiniMachineSpot(ISLAND_SQUARE_KONBINI),y:0,color:'#d8342c',light:'#ffd9c9',ink:'#5a0f0b',specials:['ball:telstar','pack:legends'],lesson:'Football history lives here: the 1970 TV ball and all-time legends.'},
  {id:'rooftop',name:'Palm Coast Rooftop',place:'on the rooftop futsal court',x:11,z:-7.8,y:6,yaw:VENDING_YAW,color:'#1f9aa6',light:'#c9f5f2',ink:'#073c42',specials:['ball:futsal','pack:futsal'],lesson:'Futsal is 5-a-side on a hard court with a smaller, low-bounce ball.'},
  {id:'oldtown',name:'Old Town Ground',place:'beside the 7v7 pitch',x:8,z:-48,/* beside the entrance walk path(11,-46,3,9), not on it (Oct 22 2026 path audit: at x 11 it left 0.5 m either side) */y:0,yaw:VENDING_YAW,color:'#3d8f4f',light:'#d7f5c9',ink:'#12391a',specials:['ball:grassroots','pack:wingers'],lesson:'7v7 plays a 2–3–1: fewer players means more touches for everyone.'},
@@ -66,7 +68,7 @@ export const VENDING_MACHINES:VendingMachine[]=[
  // (lib/town/stadiumShops.ts). Regular rows plus the Coral Cay Konbini's four island-favourite books (no specials of its own), so
  // its glass is that machine's glass (lib/graphics/vendingMachines.ts GLASS_TWIN) and the atlas does not grow.
  {id:'stadium',name:'DRIP FC Stadium',place:'against the south stand, under the big screen where the fans watch',...stadiumVendingSpot(),y:0,color:'#c2185b',light:'#ffd9e8',ink:'#4a0722',specials:[],lesson:'Matchday fuel: a banana or a rice ball an hour or two before you play gives your legs energy.'},
-];
+] as VendingMachine[]).map(onGround);// (elevation.ts: machines on raised ground stand on it under ?elev=1)
 // Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
 // Nov 23 2026 (Island Line Phase 4): plus one on each station platform, placed from the station (trainLayout.ts stationVendingSpot).
 for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id];

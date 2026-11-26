@@ -8,6 +8,8 @@
  *
  * Pure data (no three.js): the island imports it through coinQuest.ts, like every other ball.
  */
+import {onGround} from './elevation';
+import './coralCayElevation';
 import type {CoinSpot} from './coinQuest';
 import * as cay from './coralCay';
 
@@ -62,7 +64,7 @@ const court=cay.BEACH_COURT;
 const betweenSpurs=(starfish.spur.s+turtle.spur.s)/2/cay.CAUSEWAY_LENGTH;
 
 /** Where each ball sits and how it is found. Teaching text is written for the level its difficulty sets (ballHuntLessons.ts). */
-export const CORAL_CAY_SPOTS:CoinSpot[]=[
+export const CORAL_CAY_SPOTS:CoinSpot[]=([
  // ── The causeway (eight): deck edges, the beach banks, a road cover, the welcome arch and two aerial balls. ──
  {id:'cay-warmup',name:'Causeway · south pavement',...at(deck(.115,4.6)),y:0,kind:'hidden',
   clue:'Before the long walk to Coral Cay, a training bag waits where the causeway leaves the island.',
@@ -148,7 +150,8 @@ export const CORAL_CAY_SPOTS:CoinSpot[]=[
   clue:'The lifeguard keeps swimmers safe on the cay’s eastern headland. A padded box sits by the tower.',
   detail:'Walk to the easternmost beach and find the lifeguard tower. Land on the padded box beside it, or face it and kick the target.',
   teaching:'Heading and young players. To keep heads safe, younger children in England and the USA do not practise heading. Keep the ball on the ground and play with your feet.',lesson:'support'},
-];
+// Elevation (?elev=1, elevation.ts): spots on the cay's raised interior stand on it (sky and buoy balls keep their heights).
+] as CoinSpot[]).map(s=>s.parachute||s.buoy?s:onGround(s));
 
 /** Every Coral Cay ball id, in hunt order (used by tests and the save migration). */
 export const CORAL_CAY_BALL_IDS=CORAL_CAY_SPOTS.map(s=>s.id);

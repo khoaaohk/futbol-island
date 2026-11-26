@@ -7,8 +7,9 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
-import {cayAnchored,cayBuild,cayElevationOn,cayGround} from './coralCayElevation';
-import {buildCayLawnGeometry} from './coralCayTerrain';
+import {unlifted,elevationOn} from './elevation';
+import {cayGround} from './coralCayElevation';
+import {buildStarTerrain} from './elevationDrape';
 import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
@@ -40,12 +41,12 @@ const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
 const CORAL_ORCHARD:[number,number,'mango'|'citrus'|'papaya'][]=[[655,-124,'mango'],[664,-124,'citrus'],[673,-124,'mango'],[682,-124,'citrus'],[655,-117.5,'citrus'],[664,-117.5,'mango'],[673,-117.5,'citrus'],[682,-117.5,'papaya'],[651.5,-120.5,'papaya']];
 /** A farm fruit tree's canopy (an icosahedron of radius r at y 2.4, squashed to 0.85 high) and its five fruit, sitting on the real
  *  faceted leaves (lib/town/canopyHang.ts; Nov 8 2026: they floated beside the citrus canopies). */
-function coralTreeFruit(x:number,z:number,kind:'mango'|'citrus',i:number){const r=kind==='mango'?1.55:1.3,L=new T.Matrix4().compose(V(x,2.4,z),new T.Quaternion(),V(r,r*.85,r)),out:T.Vector3[]=[];
+function coralTreeFruit(x:number,z:number,kind:'mango'|'citrus',i:number){const r=kind==='mango'?1.55:1.3,cy=2.4+cayGround(x,z)/* elevation: the canopy stands on the raised ground */,L=new T.Matrix4().compose(V(x,cy,z),new T.Quaternion(),V(r,r*.85,r)),out:T.Vector3[]=[];
  for(let k=0;k<5;k++){const a=k*1.3+i,el=Math.atan2(-.5+jitter(i,k)*.7,1.05),d=V(Math.cos(el)*Math.cos(a),Math.sin(el),Math.cos(el)*Math.sin(a));
-  out.push(canopyHang([L],{x,y:2.4,z},d,.3*.13)??V(x+d.x*r*.8,2.4+d.y*r*.68,z+d.z*r*.8));}
+  out.push(canopyHang([L],{x,y:cy,z},d,.3*.13)??V(x+d.x*r*.8,cy+d.y*r*.68,z+d.z*r*.8));}
  return out;}
 /** For tests/fruit-on-tree.cjs: each farm fruit tree's canopy and fruit. */
-export function coralOrchardFruit(){return CORAL_ORCHARD.flatMap(([x,z,kind],i)=>kind==='papaya'?[]:[{kind,x,z,cy:2.4,r:kind==='mango'?1.55:1.3,fruit:coralTreeFruit(x,z,kind,i)}]);}
+export function coralOrchardFruit(){return CORAL_ORCHARD.flatMap(([x,z,kind],i)=>kind==='papaya'?[]:[{kind,x,z,cy:2.4+cayGround(x,z),r:kind==='mango'?1.55:1.3,fruit:coralTreeFruit(x,z,kind,i)}]);}
 /** Merge simple same-attribute boxes (the farm's soil rows) into one geometry. */
 function mergeRows(parts:T.BufferGeometry[]){const pos:number[]=[],nor:number[]=[],idx:number[]=[];let o=0;for(const g of parts){const p=g.getAttribute('position'),n=g.getAttribute('normal');for(let i=0;i<p.count;i++){pos.push(p.getX(i),p.getY(i),p.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));}const index=g.index!;for(let i=0;i<index.count;i++)idx.push(index.getX(i)+o);o+=p.count;}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setIndex(idx);return g;}
@@ -58,11 +59,8 @@ const GASHA_VIEW_DIR={x:16/Math.hypot(16,33),z:33/Math.hypot(16,33)};
 export function inGashaponView(x:number,z:number){return CAY_GASHAPON_VIEWS.some(m=>{const dx=x-m.x,dz=z-m.z,along=dx*GASHA_VIEW_DIR.x+dz*GASHA_VIEW_DIR.z,perp=dx*GASHA_VIEW_DIR.z-dz*GASHA_VIEW_DIR.x;return along>-2&&along<20&&Math.abs(perp)<6;});}
 
 export function buildCoralCay(t:CayTools){
- const {box,cylinder,put,line,sign,path,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
- // Elevation pilot (?elev=1): whole props stand at one height (their own spot's ground); identity with the flag off.
- const palm:CayTools['palm']=(x,z,h)=>cayAnchored(x,z,()=>t.palm(x,z,h)),house:CayTools['house']=(x,z,w,d,h,label,i)=>cayAnchored(x,z,()=>t.house(x,z,w,d,h,label,i)),
-  table:CayTools['table']=(x,z)=>cayAnchored(x,z,()=>t.table(x,z)),planter:CayTools['planter']=(x,z)=>cayAnchored(x,z,()=>t.planter(x,z)),districtSign:CayTools['districtSign']=(text,x,z)=>cayAnchored(x,z,()=>t.districtSign(text,x,z));
- const firstBuilding=buildings.length;
+ const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
+
  const lampSites:CayLampSite[]=[];
  const farmDecor:DecorPlant[]=[];
  const z0=CAUSEWAY.z,P=CAUSEWAY_PATH,deck=CAUSEWAY.deckHalf;
@@ -325,7 +323,7 @@ export function buildCoralCay(t:CayTools){
  // ---- The cay: foundation, an uneven sand ring (beach all round) and the lawn. Geometry is built relative to the cay
  // centre and placed there, so the three big surfaces sit in the cay's own chunk (never inflating a main-island batch).
  const C=CAY_CENTER;
- cayBuild.anchor=cayBuild.active?0:null;// the three big surfaces and the shore rings carry their own heights (elevation pilot)
+ unlifted(()=>{// the three big surfaces and the shore rings carry their own heights (elevation.ts)
  {const outline=new T.Shape();CAY_SHORE.forEach((p,i)=>i?outline.lineTo(p.x-C.x,-(p.z-C.z)):outline.moveTo(p.x-C.x,-(p.z-C.z)));outline.closePath();
   const land=flat(put(new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1}),'#dfc99e',C.x,-.82,C.z));land.rotation.x=-Math.PI/2;land.name='coral-cay-foundation';tintGroundMesh(land,'land');}
  {const positions:number[]=[],indices:number[]=[];
@@ -340,10 +338,10 @@ export function buildCoralCay(t:CayTools){
   // ring meets the lawn edge to edge (no overlap), and the beach-court sand sits 3 cm over the lawn (below). No offset.
  }
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
-  const g=cayElevationOn()?buildCayLawnGeometry(0):new T.ShapeGeometry(lawnShape).rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
+  const g=elevationOn()?buildStarTerrain(CAY_LAWN,C,cayGround):new T.ShapeGeometry(lawnShape).rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
  shoreRings(CAY_SHORE,C.x,C.z,-.11,3,true);
- cayBuild.anchor=null;
+ });
 
  // ---- Village: boulevard, plaza and a row of shops facing the road (house() fronts face +z, like the main island).
  CAY_HOUSES.forEach(([x,z,w,d,h,label],i)=>house(x,z,w,d,h,label,[2,0,1,3][i]));
@@ -489,7 +487,7 @@ export function buildCoralCay(t:CayTools){
   // palms of varied heights outside the fence. All very low-poly and static, merged into the spatial batches.
   // Decorative plants are collected (not built here): lib/graphics/farmDecor.ts draws them as four instanced meshes that
   // thin on warm phones. Walk-through (no collisions), so a thinned plant never leaves an invisible obstacle.
-  const plant=(...parts:DecorPart[])=>{farmDecor.push({parts});};
+  const plant=(...parts:DecorPart[])=>{const g=parts.length?cayGround(parts[0].x,parts[0].z):0;if(g)for(const p of parts)p.y+=g;/* elevation: the whole plant stands on the raised ground */farmDecor.push({parts});};
   const blob=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:string,ry=0,rz=0):DecorPart=>({kind:'blob',x,y,z,sx,sy,sz,ry,rz,color});
   const broadLeaf=(x:number,z:number,size:number,yaw:number,color='#4f8a4f')=>blob(x,size*.45+.15,z,size,size*.16,size*.62,color,yaw,.35);
   // Sugar cane clumps along the west fence (clear of the path gate).
@@ -593,7 +591,5 @@ export function buildCoralCay(t:CayTools){
  for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
  [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12)&&!inGashaponView(x,z))palm(x,z,5.4+jitter(i,9)*1.4);});
  for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
- // Elevation pilot: roofs stand on the raised ground (rooftop landing reads these heights).
- if(cayElevationOn())for(const b of buildings.slice(firstBuilding))b.height+=cayGround(b.x,b.z);
  return {lampSites,farmDecor,destinations:[{name:'Coral Cay Plaza',x:CAY_PLAZA.x,z:CAY_PLAZA.z+8},{name:'Beach Soccer Court',x:BEACH_COURT.x,z:BEACH_COURT.z+BEACH_COURT.width/2+2},{name:'Sharks Beach',x:SHARKS_BEACH.x,z:SHARKS_BEACH.z+8},{name:'Coral Cay Farm',x:FARM.crops.x0-1.5,z:FARM.track.z},{name:'Coral Cay Hostel',x:HOSTEL.x,z:HOSTEL_PATHS[0][1]},{name:'Hostel homes',x:HOSTEL_PATHS[2][0],z:-104},{name:'Farm beach gate',x:FARM.beachTrack.x,z:FARM.beachTrack.z1+1},...SANDBARS.map(s=>({name:s.name,x:s.x,z:s.z}))]};
 }

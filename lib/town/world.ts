@@ -9,8 +9,8 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
-import {cayBuild,cayBuildLift,cayElevationOn} from './coralCayElevation';
-import {drapeCayPieces} from './coralCayTerrain';
+import {elevBuild,buildLift,groundLift,anchored,elevationOn} from './elevation';
+import {drapePieces} from './elevationDrape';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
 import {buildStadium} from './stadiumWorld';
@@ -100,7 +100,10 @@ export function* buildTownSteps(scene: T.Scene) {
   const palette = new Map<string,T.MeshStandardMaterial>();
   const nightSigns:T.MeshStandardMaterial[]=[];
   const mat = (color: string) => { if (!palette.has(color)) {const m=new T.MeshStandardMaterial({color,roughness:.85});palette.set(color,m);materials.push(m);}return palette.get(color)!;};
-  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {const cayLift=parent===town?cayBuildLift(x,z):0;if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y+cayLift,z);if(cayBuild.active&&parent===town)cayBuild.pieces.push({mesh:m,lift:cayLift,anchored:cayBuild.anchor!==null});m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
+  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {const lift=parent===town?buildLift(x,z):0;if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y+lift,z);if(elevBuild.active&&parent===town)elevBuild.pieces.push({mesh:m,lift,anchored:elevBuild.anchor!==null});m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
+  // Elevation (?elev=1; lib/town/elevation.ts): from here to the batching pass every piece `put` / `sign` places stands on the raised
+  // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
+  elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.pieces.length=0;
   const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Night glow (machineNightGlow.ts): mark a piece to glow with the night factor, `w` 0…1; warm: a lit-interior white, else its own colour. */
   const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
@@ -113,7 +116,7 @@ export function* buildTownSteps(scene: T.Scene) {
     // Keep the emissive-map shader present in every mode; mode changes only
     // adjust uniforms and reuse the existing sign texture (no extra image).
     const material=new T.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});materials.push(material);nightSigns.push(material);
-    const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);if(propTag)mesh.userData.propTag=propTag;mesh.position.set(x,y+cayBuildLift(x,z),z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
+    const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);if(propTag)mesh.userData.propTag=propTag;mesh.position.set(x,y+buildLift(x,z),z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
   };
 
   // Arcade roof neon. Letters are polylines in a 1.3 m cap height; every tube
@@ -201,7 +204,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // radius plus TRUNK_CLEARANCE, so walkers and rides (their own radius on top) stop at the trunk and slide round it.
   // yaw / ribs (Nov 13 2026, West Beach): turns the palm so its gentle trunk lean points its own way, and ribs=false drops the
   // 56 thin frond midrib cylinders (~2.2k of a palm's ~2.4k triangles) for the West Beach's many palms. Defaults: as before.
-  function palm(x:number,z:number,height=6,yaw=0,ribs=true){prop('palm',()=>palmParts(x,z,height,yaw,ribs));}
+  function palm(x:number,z:number,height=6,yaw=0,ribs=true){prop('palm',()=>anchored(x,z,()=>palmParts(x,z,height,yaw,ribs)));}
   function palmParts(x:number,z:number,height=6,yaw=0,ribs=true){
     // Island Line clearance (Nov 24 2026, owner shot 34: palms through a moving car): every palm keeps its crown out of the train's
     // envelope; one within PALM_LINE_CLEAR m of the line steps straight back from it and its trunk leans away (lineClearSpot).
@@ -279,7 +282,8 @@ export function* buildTownSteps(scene: T.Scene) {
   // Soft silhouettes (lib/town/softHouses.ts): every building with a paint scheme (all but the landmarks) is drawn with rounded
   // corners and one of the curated shapes. Same data as the box recipe: footprint, obstacle, height and roof furniture boxes.
   const pickShape=createShapePicker();
-  function house(x:number,z:number,w:number,d:number,h:number,label:string,index:number){
+  function house(x:number,z:number,w:number,d:number,h:number,label:string,index:number){anchored(x,z,()=>houseParts(x,z,w,d,h,label,index));}
+  function houseParts(x:number,z:number,w:number,d:number,h:number,label:string,index:number){
     const scheme=pickScheme(label),shape=scheme?pickShape(label,buildingRadius(label)):null;
     if(scheme&&shape){
       const radius=buildingRadius(label);
@@ -333,14 +337,14 @@ export function* buildTownSteps(scene: T.Scene) {
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
     const m=new T.Mesh(g,trail);m.position.set(cx,BK_SQUARE.y,cz);m.receiveShadow=true;m.name='beach-kitchen-square';town.add(m);
   }
-  function bench(x:number,z:number){prop('bench',()=>benchParts(x,z));}
+  function bench(x:number,z:number){prop('bench',()=>anchored(x,z,()=>benchParts(x,z)));}
   function benchParts(x:number,z:number){
     assets.push({kind:'bench',x,z,w:2,d:.7});
     box(2,.12,.65,'#a67d55',x,.58,z);box(2,.45,.09,'#a67d55',x,.91,z-.25);
     for(const dx of [-.75,.75])box(.13,.5,.5,'#385a4e',x+dx,.27,z);
     obstacles.push({x,z,w:2,d:.7});
   }
-  function planter(x:number,z:number){prop('planter',()=>planterParts(x,z));}
+  function planter(x:number,z:number){prop('planter',()=>anchored(x,z,()=>planterParts(x,z)));}
   function planterParts(x:number,z:number){
     assets.push({kind:'planter',x,z,w:1.6,d:1.6,visualW:1.9,visualD:1.9});
     box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
@@ -352,14 +356,14 @@ export function* buildTownSteps(scene: T.Scene) {
     cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#5b8c5c',x,3.3,z);
     obstacles.push(trunkCollider(x,z,.18));
   }
-  function table(x:number,z:number){prop('table',()=>tableParts(x,z));}
+  function table(x:number,z:number){prop('table',()=>anchored(x,z,()=>tableParts(x,z)));}
   function tableParts(x:number,z:number){
     assets.push({kind:'table',x,z,w:3.1,d:1.5});
     cylinder(.75,.12,'#a67d55',x,.85,z);cylinder(.08,.78,'#385a4e',x,.4,z);
     for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
-  function districtSign(text:string,x:number,z:number){prop('sign',()=>districtSignParts(text,x,z));}
+  function districtSign(text:string,x:number,z:number){prop('sign',()=>anchored(x,z,()=>districtSignParts(text,x,z)));}
   function districtSignParts(text:string,x:number,z:number){
     // Signs audit (Nov 25 2026, owner: "make sure the poles don't run up into the sign and cover the text"): the posts stand
     // SIGN_POST_SET behind the face (hidden by it from the readable side) and the same mesh and material, turned round (no new
@@ -1452,9 +1456,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Coral Cay, its causeway and the two sandbar stops (lib/town/coralCayWorld.ts). Built before the batching pass below,
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
   yield;
-  // Elevation pilot (?elev=1, coralCayElevation.ts): every piece is placed on the raised ground, then the flat layers are draped.
-  cayBuild.active=cayElevationOn();cayBuild.pieces.length=0;
-  let coralCay:ReturnType<typeof buildCoralCay>;try{coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});if(cayBuild.active)drapeCayPieces();}finally{cayBuild.active=false;cayBuild.anchor=null;cayBuild.pieces.length=0;}
+  const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
   // Café by the Sea + butterfly garden on the cay's east point (seasideCafeWorld.ts, Nov 24 2026): batched; one signs-atlas draw.
   // 'fi-no-cafe' (localStorage '1'): build without the café's scenery, for the gfx-budget before column (GFX_NO_CAFE=1) only.
   const noCafe=(()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi-no-cafe')==='1';}catch{return false;}})();
@@ -1717,6 +1719,13 @@ export function* buildTownSteps(scene: T.Scene) {
   // Island Line (Nov 23 2026, PLAN.md §2): small props within TRACK_CLEAR m of the line (or on a station's platform and house strip)
   // step aside, whole: pieces grouped by their prop tag or their own group, moved by one offset; colliders, assets and lamp pools
   // with them. Build-time only. Buildings, ground patches and anything wider than 3 m stay put.
+  // Elevation: placement ends here. Drape the flat layers over each region's terrain; roofs stand on the raised ground (rooftop landing).
+  // Props built as their own Group (a palm: pieces `put` into the group) stand at the group's spot: lifted here, once. A Group left at
+  // the origin holds pieces at world coordinates: each is lifted at its own spot. `userData.ownHeight` opts a Group out.
+  if(elevBuild.active){drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']);for(const b of buildings)b.height+=groundLift(b.x,b.z);
+   const stand=(o:T.Object3D)=>{const g=groundLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
+   for(const o of town.children)if(o instanceof T.Group&&!o.userData.ownHeight&&!o.userData.train){if(o.position.x===0&&o.position.y===0&&o.position.z===0)o.children.forEach(stand);else stand(o);}}
+  elevBuild.active=false;elevBuild.anchor=null;elevBuild.pieces.length=0;
   if(train){town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
    let moved=0;

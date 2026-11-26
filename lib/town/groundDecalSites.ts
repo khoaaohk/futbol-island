@@ -1,3 +1,4 @@
+import {groundLift} from './elevation';
 import type * as T from 'three';
 import {buildGroundDecals,DECAL_CAPS,MACRO_CAP,edgePoint,insidePoly,planGroundDecals,ringBandPoint,RectIndex,type DecalPlan,type Pt,type Rect,MACRO_DETAIL_ENABLED,MACRO_KINDS_KEPT} from '../graphics/groundDecals';
 import {OPEN_MARGIN,openCoverage,scanOpenSpaces,type OpenKind,type OpenScan} from './openSpaces';
@@ -33,7 +34,7 @@ function setups(w:DecalWorld){
  const trees=w.obstacles.filter(o=>o.w<=4&&o.d<=4);
  const main={bounds:bbox(ISLAND_SHORE),ground:(x:number,z:number):OpenKind|null=>!onIsland(x,z)?null:insidePoly(INTERIOR_GRASS,x,z)?'grass':'sand',ring:ISLAND_SHORE,inside:centroid(ISLAND_SHORE),y:(_x:number,_z:number,k:OpenKind)=>k==='sand'?-.105:-.112,
   trees:trees.filter(t=>onIsland(t.x,t.z)&&insidePoly(INTERIOR_GRASS,t.x,t.z))};
- const cay={bounds:bbox(CAY_SHORE),ground:(x:number,z:number):OpenKind|null=>insidePoly(CAY_LAWN,x,z)?'grass':insidePoly(CAY_SHORE,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120?'sand':null,ring:CAY_SHORE,inside:CAY_CENTER,y:main.y,
+ const cay={bounds:bbox(CAY_SHORE),ground:(x:number,z:number):OpenKind|null=>insidePoly(CAY_LAWN,x,z)?'grass':insidePoly(CAY_SHORE,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120?'sand':null,ring:CAY_SHORE,inside:CAY_CENTER,y:(x:number,z:number,k:OpenKind)=>main.y(x,z,k)+groundLift(x,z),/* elevation.ts: on the raised lawn under ?elev=1 */
   trees:trees.filter(t=>insidePoly(CAY_LAWN,t.x,t.z))};
  const summit={bounds:SUMMIT_BOX,ground:(x:number,z:number):OpenKind|null=>{
    if(!(x>SUMMIT_BOX.minX&&x<SUMMIT_BOX.maxX&&z>SUMMIT_BOX.minZ&&z<SUMMIT_BOX.maxZ)||!onSummitIsle(x,z))return null;
@@ -79,7 +80,7 @@ function planSmallDecals(w:DecalWorld):{main:DecalPlan;cay:DecalPlan;summit:Deca
   sandAt:rng=>{const s=CAY_SAND[Math.floor(rng()*CAY_SAND.length)%CAY_SAND.length],t=.2+rng()*.6;return {x:s.outer.x+(s.inner.x-s.outer.x)*t,z:s.outer.z+(s.inner.z-s.outer.z)*t};},
   grassAt:rng=>edgePoint(cayNear,rng),
   ok:(x,z,k)=>offLine(x,z)&&(k==='grass'?insidePoly(CAY_LAWN,x,z):!insidePoly(CAY_LAWN,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120)&&!blocked.blocked(x,z),
-  y:(_x,_z,k)=>k==='sand'?-.105:-.112});
+  y:(x,z,k)=>(k==='sand'?-.105:-.112)+groundLift(x,z)});
  // ---- Summit Isle: the beach (between the waterline and the dune line); grass a couple of metres off the trails
  const trailPts=SUMMIT_PATHS.flat();
  const summit=planGroundDecals({seed:SEEDS.summit,caps:DECAL_CAPS.summit,
