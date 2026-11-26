@@ -31,7 +31,7 @@ for(const s of spots){
  for(const o of cat.FISH_SPOTS)if(o!==s)ok(Math.hypot(o.x-s.x,o.z-s.z)>60,`${s.id}: 60+ m from ${o.id}`);
  // Clear of the trails' beach ends, the orchards, the pond, the plaza and its flags, the park signs.
  for(const t of W.PARK_TRAILS){const e=t.to==='beach'?t.curve[3]:null;if(e)ok(Math.hypot(e[0]-s.x,e[1]-s.z)>25,`${s.id}: clear of the ${t.id} trail's beach end`);
-  ok(W.segDistance(s.x,s.z,W.pathPoints(t.curve))>W.TRAIL_WIDTH/2+6,`${s.id}: off the ${t.id} trail`);}
+  ok(W.segDistance(s.x,s.z,W.trailPoints(t))>W.TRAIL_WIDTH/2+6,`${s.id}: off the ${t.id} trail`);}
  for(const o of L('lib/town/stadiumOrchard.ts').stadiumOrchardTrees())ok(Math.hypot(o.x-s.x,o.z-s.z)>20,`${s.id}: clear of the orchards`);
  ok(!W.inPond(s.x,s.z,30)&&s.x<W.STADIUM_PLAZA.minX-50,`${s.id}: far from the pond and the plaza flags`);
  for(const [x,z] of W.PARK_SIGNS)ok(Math.hypot(x-s.x,z-s.z)>30,`${s.id}: clear of the park signs`);

@@ -15,7 +15,7 @@
 //  - STAIRS (WEST_STAIRS): straight flights through the wall, a ramp in the height function (the drawn treads sit on it).
 import {INTERIOR_GRASS} from './shoreline';
 import {TRACK} from './trainTrack';
-import {PARK_POND,POND_RIM,pondQ} from './westParkLayout';
+import {PARK_POND,POND_RIM,pondQ,WEST_STAIR_TRAIL} from './westParkLayout';
 import {createRegion,registerRegion,elevationOn,smooth,insidePolygon,ringDistance,padDistance,boxDistance,type Pad,type Region} from './elevation';
 
 export const WEST={terrace:4.2,clear:7.5,railBand:24,pondClear:1,pondBand:20,town:-72/* west of Old Town's last row of buildings (x -71..-57): they stay on the flat */,ramp:55} as const;
@@ -47,13 +47,14 @@ const EDGE={west:WEST_TERRACE.x-WEST_TERRACE.w/2,south:WEST_TERRACE.z+WEST_TERRA
 export const WEST_STAIRS:readonly Stair[]=[
  // West station: off the promenade where the west trail comes down, landing beside the station building's south end (the
  // building stands x -303..-293, z -36..-20; the stair's foot is at x -293.4).
- {id:'station',x:EDGE.west+4,z:-18.5,dx:-1,dz:0,w:9,slope:.5,len:9,inset:4},
+ {id:'station',x:EDGE.west+4,z:WEST_STAIR_TRAIL.z/* -18.5: the west trail's stair route (westParkLayout) */,dx:-1,dz:0,w:9,slope:.5,len:9,inset:4},
  // The pond: off the ring walk's south edge down into the sunken garden.
  {id:'pond',x:-182,z:EDGE.south,dx:0,dz:1,w:5,slope:.42,len:10.5,inset:0},
 ];
-/** The west trail on the terrace: with the terrace it runs straight from the ring walk to the station stair's mouth (the
- *  curve in westParkLayout crossed the flight on a diagonal and met the hedge 2 m off the mouth); drawn by westPark.ts. */
-export const WEST_TRAIL_TOP={x0:-275,x1:WEST_STAIRS[0].x-WEST_STAIRS[0].len,z:WEST_STAIRS[0].z,half:2.25} as const;
+/** The west trail on the terrace: with the terrace it runs straight from the ring walk to the station stair's mouth (the old
+ *  curve crossed the flight on a diagonal and met the hedge 2 m off the mouth). The route itself is westParkLayout WEST_STAIR_TRAIL /
+ *  trailPoints (one source: drawn, mapped and walked); this is the band trees and lamps keep off (nearWestWall). */
+export const WEST_TRAIL_TOP={x0:WEST_STAIR_TRAIL.x0,x1:WEST_STAIRS[0].x-WEST_STAIRS[0].len,z:WEST_STAIRS[0].z,half:2.25} as const;
 /** Along / across a stair's axis. */
 export const stairLocal=(s:Stair,x:number,z:number)=>{const ax=x-s.x,az=z-s.z;return {t:ax*s.dx+az*s.dz,a:-ax*s.dz+az*s.dx};};
 const inNotch=(x:number,z:number)=>{for(const s of WEST_STAIRS){if(!s.inset)continue;const {t,a}=stairLocal(s,x,z);if(t>0&&t<=s.inset&&Math.abs(a)<s.w/2)return true;}return false;};

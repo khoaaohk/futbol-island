@@ -13,7 +13,7 @@ import {elevationOn,groundLift} from './elevation';
 import {surfOn} from './surfaceEdges';
 /** Trail wear (?surf=1): the edge rows this much darker, the middle row lighter, the uphill edge of a climbing trail darker by `cut` more. */
 export const TRAIL_WEAR={edge:.08,centre:.05,cut:.2} as const;
-import {onWestStair,nearWestWall,onWestTerrace,WEST_TRAIL_TOP} from './westElevation';
+import {onWestStair,nearWestWall,onWestTerrace} from './westElevation';
 import {LAWN_TILT} from './westTerrain';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -22,7 +22,7 @@ import {stadiumOrchardTrees,orchardPlanOf,ORCHARD_LEGACY,type StadiumOrchardTree
 import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial,pondSeaDistance} from '../graphics/pondWater';
 
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,POND_BENCH_BEARINGS,POND_DEPTH,POND_JETTY,POND_JETTY_AT,POND_STALL_BEARING,POND_SAND,POND_LOBE_MAX,POND_REED_BEARINGS,POND_WALK_BEARING,PLAZA_LABEL,PARK_SIGNS,TRAIL_WIDTH,
- inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,pondEdge,pondShape,pondInset,pondDepthForInset,onPondJetty,type P} from './westParkLayout';
+ inStadiumFootprint,parkPathLines,pathPoints,trailPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,pondEdge,pondShape,pondInset,pondDepthForInset,onPondJetty,type P} from './westParkLayout';
 export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -156,9 +156,9 @@ export function buildWestPark(t:Tools):WestParkStats{
  const onToRim=(pts:P[])=>{const [ax,az]=pts[pts.length-2],[bx,bz]=pts[pts.length-1],l=Math.hypot(bx-ax,bz-az)||1;pts.push([bx+(bx-ax)/l*.3,bz+(bz-az)/l*.3]);return pts;};
  // (?elev=1, audit Nov 26) the west trail's first half is laid straight along the station stair (ring walk → mouth → foot), then
  // bends back onto its own curve on the forecourt; the layout's curve (map, lamps, the level crossing) is unchanged.
- const westTop=(pts:P[]):P[]=>{const W=WEST_TRAIL_TOP,out:P[]=[];for(let x=W.x0;x>W.x1-.3;x-=1.2)out.push([x,W.z]);const j=Math.ceil(pts.length/2),[jx,jz]=pts[j],ex=W.x1-.3;
-  for(const u of [.25,.5,.75]){const a=u*Math.PI/2;out.push([ex+(jx-ex)*Math.sin(a),W.z+(jz-W.z)*(1-Math.cos(a))]);}return [...out,...pts.slice(j)];};
- for(const tr of PARK_TRAILS){const pts=pathPoints(tr.curve);ribbon(tr.to==='pond'?onToRim(pts):elevationOn()&&tr.id==='west'?westTop(pts):pts,TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});}
+ // One route per trail (westParkLayout trailPoints: with elevation on the west trail comes down the station stair); the map and
+ // onWalkPath read the same points.
+ for(const tr of PARK_TRAILS){const pts=trailPoints(tr);ribbon(tr.to==='pond'?onToRim(pts):pts,TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});}
  ribbon(ringPoints(),BOWL_RING.width,-.045,{verge:false});
  for(const l of PARK_LAWNS)disc(l.x,l.z,l.rx,l.rz,-.075,'#86ad79','grass');
  {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h),SEG=96,tmpE={x:0,z:0},sandK=(a:number)=>{const d=Math.atan2(Math.sin(a-POND_SAND.bearing),Math.cos(a-POND_SAND.bearing));return 1-smooth(POND_SAND.half*.55,POND_SAND.half,Math.abs(d));};

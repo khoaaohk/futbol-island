@@ -17,7 +17,7 @@ import {groundLift} from './elevation';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {Obstacle} from './simulation';
-import {STADIUM_GATE,STADIUM_PLAZA,BOWL_APRON,PARK_TRAILS,PARK_SIGNS,TRAIL_WIDTH,pathPoints,onParkPaving,inPond,POND_RIM,onGrass,inStadiumFootprint,type P} from './westParkLayout';
+import {STADIUM_GATE,STADIUM_PLAZA,BOWL_APRON,PARK_TRAILS,PARK_SIGNS,TRAIL_WIDTH,trailPoints,onParkPaving,inPond,POND_RIM,onGrass,inStadiumFootprint,type P} from './westParkLayout';
 import {onIsland} from './shoreline';
 import {STANDS,ROOF,STAIR_WIDTH,GATE_ARCH_X,standBack,stairEnd,standWorld,type StandDef} from './stadiumSeats';
 import {STADIUM_NIGHT,STADIUM_NIGHT_LIGHTS,patchLampGlow,registerStadiumNightObject,refreshStadiumNightObjects} from './stadiumNight';
@@ -47,7 +47,7 @@ export function stadiumLampCandidates():StadiumLampCandidate[]{
   for(const [sx,sz,a0] of [[a,b,0],[-a,b,Math.PI/2],[-a,-b,Math.PI],[a,-b,Math.PI*1.5]] as const)for(let i=0;i<=16;i++){const t=a0+i/16*Math.PI/2;pts.push([cx+sx+Math.cos(t)*R,cz+sz+Math.sin(t)*R]);}
   pts.push(pts[0]);for(const p of sampleEvery(pts,C.apronEvery,C.apronEvery/2))out.push({x:p.x,z:p.z,kind:'apron'});}
  // Beside the trails, alternating sides.
- for(const t of PARK_TRAILS){let side=1;for(const p of sampleEvery(pathPoints(t.curve),C.trailEvery,C.trailStart)){out.push({x:p.x+p.nx*side*C.trailOut,z:p.z+p.nz*side*C.trailOut,kind:'trail'});side=-side;}}
+ for(const t of PARK_TRAILS){let side=1;for(const p of sampleEvery(trailPoints(t),C.trailEvery,C.trailStart)){out.push({x:p.x+p.nx*side*C.trailOut,z:p.z+p.nz*side*C.trailOut,kind:'trail'});side=-side;}}
  return out;
 }
 function sampleEvery(pts:readonly P[],every:number,start:number){

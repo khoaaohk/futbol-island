@@ -70,7 +70,7 @@ console.log('west stadium phase 1: ok');
 
 // ---- Stadium Park rework (Nov 13 2026, owner A–G): apron, trails, pond, palms, sign, lawns, map -----------------------------------
 {const Q2=load('lib/town/stadiumSeats.ts'),WP=load('lib/town/westPark.ts'),{distanceToShore}=load('lib/town/shoreline.ts');
- const lines=L.parkPathLines(),trailLines=L.PARK_TRAILS.map(t=>L.pathPoints(t.curve)),ring=L.ringPoints();
+ const lines=L.parkPathLines(),trailLines=L.PARK_TRAILS.map(t=>L.trailPoints(t))/* the route as drawn and mapped (with elevation the west trail's stair route) */,ring=L.ringPoints();
  const trailD=(x,z,except=-1)=>Math.min(...lines.map((l,i)=>i===except?Infinity:L.segDistance(x,z,l)));
  // A. One continuous walk from the plaza through the gate to the pitch-level ring: paving at every 0.5 m (three lines across
  // the gate's width), and every back stair's foot and every open corner lands on the apron.
@@ -110,8 +110,20 @@ console.log('west stadium phase 1: ok');
  const WE=load('lib/town/westElevation.ts'),WT=WE.WEST_TRAIL_TOP,isWall=o=>WE.nearWestWall(o.x,o.z,.5)&&!o.kind,walls=world.obstacles.filter(o=>park(o)&&!o.dynamic&&isWall(o));
  assert.equal(walls.length>0,load('lib/town/elevation.ts').elevationOn(),'terrace wall colliders only with elevation on');
  for(const l of L.parkPathLines())for(let i=0;i<l.length-1;i++){const a=l[i],b=l[i+1],ax=a.x??a[0],az=a.z??a[1],bx=b.x??b[0],bz=b.z??b[1],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.5));
-  for(let k=0;k<=n;k++){const x=ax+(bx-ax)*k/n,z=az+(bz-az)*k/n,relaid=walls.length&&x<WT.x0&&x>WT.x1-4&&Math.abs(z-WT.z)<9;/* the west trail's layout curve: drawn straight to the stair instead (westPark.ts westTop), checked below */
-   assert(relaid||!sim.blocked(x,z,walls,.32),`the terrace wall blocks a path's centre line at (${x.toFixed(1)}, ${z.toFixed(1)})`);}}
+  for(let k=0;k<=n;k++){const x=ax+(bx-ax)*k/n,z=az+(bz-az)*k/n;// Nov 26 pre-push: no exemption any more, the layout itself comes down the stair
+   assert(!sim.blocked(x,z,walls,.32),`the terrace wall blocks a path's centre line at (${x.toFixed(1)}, ${z.toFixed(1)})`);}}
+ // ONE west trail (pre-push, Nov 26 2026): the map, onWalkPath and the ribbon read trailPoints; every 0.5 m of it is clear of every
+ // collider (walls, the station, props), its height is continuous (the stair's 0.5 per m at most) and it is on the treads on the flight.
+ {const wt=L.PARK_TRAILS.find(t=>t.id==='west'),pts=L.trailPoints(wt),EL=load('lib/town/elevation.ts'),st=WE.WEST_STAIRS[0];
+  assert.deepEqual(L.parkPathLines()[L.PARK_TRAILS.indexOf(wt)],pts,'the map and onWalkPath read the drawn west trail');
+  assert(/trailPoints\(tr\)/.test(fs.readFileSync(path.join(base,'lib/town/westPark.ts'),'utf8')),'the ribbon is drawn from trailPoints');
+  assert.equal(EL.elevationOn(),JSON.stringify(pts)!==JSON.stringify(L.pathPoints(wt.curve)),'the stair route with elevation on, the old curve with ?elev=0');
+  if(EL.elevationOn())assert(Math.abs(st.z-WT.z)<1e-9&&Math.abs(pts[0][1]-st.z)<1e-9&&Math.abs(WT.x1-(st.x-st.len))<1e-9,'the stair route lies on the station flight');
+  let maxStep=0;for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.5));
+   for(let k=0;k<n;k++){const x=ax+(bx-ax)*k/n,z=az+(bz-az)*k/n,x2=ax+(bx-ax)*(k+1)/n,z2=az+(bz-az)*(k+1)/n;maxStep=Math.max(maxStep,Math.abs(EL.groundLift(x2,z2)-EL.groundLift(x,z))/Math.hypot(x2-x,z2-z));
+    assert(!sim.blocked(x,z,world.obstacles,.32),`the west trail's centre line is blocked at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    if(EL.elevationOn()&&WE.onWestStair(x,z))assert(Math.abs(WE.stairLocal(st,x,z).a)<=st.w/2-L.TRAIL_WIDTH/2,'the west trail stays on the treads at x '+x.toFixed(1));}}
+  assert(maxStep<=st.slope+.01,'the west trail climbs no steeper than the stair ('+maxStep.toFixed(3)+' per m)');}
  for(let x=WT.x0;x>=WT.x1;x-=.5)assert(!sim.blocked(x,WT.z,world.obstacles,.32),'the west trail as drawn on the terrace (straight to the station stair) is clear at x '+x.toFixed(1));
  for(const st of WE.WEST_STAIRS)for(let t=-1;t<=st.len+1;t+=.5)assert(!sim.blocked(st.x+st.dx*t,st.z+st.dz*t,world.obstacles,.32),`the ${st.id} stair's flight is clear ${t} m down`);
  const props=[...world.obstacles.filter(o=>park(o)&&!o.dynamic&&(o.w??0)<30&&!isWall(o)),...world.assets.filter(a=>park(a)&&['tree','palm','bench','planter','lamp','sign'].includes(a.kind))];

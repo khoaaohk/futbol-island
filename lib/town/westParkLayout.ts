@@ -1,6 +1,7 @@
 // West Stadium layout (Nov 12 2026, docs/stadium/PLAN.md): the numbers shared by the 3D build (westPark.ts), the maps and later
 // phases (stands, match venue, sponsor slots). Pure data, no three.js, so the map component can import it cheaply.
 import {onIsland,distanceToShore,INTERIOR_GRASS} from './shoreline';
+import {elevationOn} from './elevation';
 /** The stadium bowl: centre, outer size (x × z) and the full-size pitch inside (long axis north–south). */
 export const STADIUM={x:-205,z:-30,bowlW:124,bowlL:164,pitchW:63,pitchL:100} as const;
 /** The gate on the bowl's east side, facing the plaza. */
@@ -134,13 +135,32 @@ export const POND_BENCHES:readonly P[]=POND_BENCH_BEARINGS.map(a=>{const p=pondE
 const curveLength=(c:Curve)=>{let l=0,p=c[0];for(let i=1;i<=32;i++){const q=bezier(c,i/32);l+=Math.hypot(q[0]-p[0],q[1]-p[1]);p=q;}return l;};
 /** A trail as a polyline, one point every ~1.2 m (smooth at the follow camera's distance; the map draws the same points). */
 export const pathPoints=(curve:Curve,n=Math.max(12,Math.ceil(curveLength(curve)/1.2)))=>Array.from({length:n+1},(_,i)=>bezier(curve,i/n));
+/** Elevation (Nov 26 2026, ships ON): the west terrace's retaining wall stands across the west trail's curve, so with the terrace the
+ *  trail comes down the West station stair (westElevation.ts WEST_STAIRS 'station' is laid on `z`; its flight runs x -285 to -294):
+ *  straight along the flight's axis from the ring walk (x0), a turn that starts on the lowest treads (bend; `lead` / `meet` are the
+ *  join's handles) and the curve itself from t = `rejoin` on, unchanged, so the beach end and the level crossing (trainTrack.ts
+ *  'park-west-trail', t ~0.69) stay where they were; the turn is no sharper than the 9° per 1.2 m rule, the centre line keeps
+ *  2.01 m of the flight's 2.25 m slack on the treads, 2.3 m off the station building (x -303..-293, z -36..-20). ONE route: the ribbon (westPark.ts), the map, onWalkPath (footsteps, props and
+ *  trees keep off it), the lamps along it and the tests all read trailPoints(). `?elev=0`: the curve alone, exactly as before. */
+export const WEST_STAIR_TRAIL={x0:-275,z:-18.5,bend:-289,lead:8,meet:12,rejoin:.62} as const;
+const lerpP=(a:P,b:P,t:number):P=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+/** The part of a cubic from t on (de Casteljau): the same points, so the rejoined tail is the old curve exactly. */
+const curveFrom=([a,b,c,d]:Curve,t:number):Curve=>{const ab=lerpP(a,b,t),bc=lerpP(b,c,t),cd=lerpP(c,d,t),e=lerpP(ab,bc,t),f=lerpP(bc,cd,t);return [lerpP(e,f,t),f,cd,d];};
+function westStairLegs(c:Curve):readonly Curve[]{
+ const W=WEST_STAIR_TRAIL,tail=curveFrom(c,W.rejoin),[m,h]=tail,tx=h[0]-m[0],tz=h[1]-m[1],l=Math.hypot(tx,tz),dx=W.bend-W.x0;
+ return [[[W.x0,W.z],[W.x0+dx/3,W.z],[W.x0+dx*2/3,W.z],[W.bend,W.z]],[[W.bend,W.z],[W.bend-W.lead,W.z],[m[0]-tx/l*W.meet,m[1]-tz/l*W.meet],m],tail];
+}
+/** A trail's route as cubic legs end to end: its curve, or (elevation on) the west trail's stair route. */
+export const trailLegs=(t:Trail):readonly Curve[]=>elevationOn()&&t.id==='west'?westStairLegs(t.curve):[t.curve];
+/** A trail as drawn, mapped and walked: its legs' points end to end (one point every ~1.2 m). */
+export const trailPoints=(t:Trail):P[]=>trailLegs(t).flatMap((c,i)=>i?pathPoints(c).slice(1):pathPoints(c));
 /** The ring as a closed polyline (first point repeated last), 16 points per rounded corner. */
 export const ringPoints=()=>{const {x,z,w,d,r}=BOWL_RING,a=w/2-r,b=d/2-r,pts:P[]=[];
  for(const [cx,cz,a0] of [[a,b,0],[-a,b,Math.PI/2],[-a,-b,Math.PI],[a,-b,Math.PI*1.5]] as const)for(let i=0;i<=16;i++){const t=a0+i/16*Math.PI/2;pts.push([x+cx+Math.cos(t)*r,z+cz+Math.sin(t)*r]);}
  pts.push(pts[0]);return pts;};
 export const segDistance=(x:number,z:number,pts:readonly P[])=>{let best=Infinity;for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz||1)));best=Math.min(best,Math.hypot(x-ax-t*dx,z-az-t*dz));}return best;};
 /** Every park path as a polyline (the trails, then the bowl's ring): the world's ribbons and the map draw these same points. */
-export const parkPathLines=()=>[...PARK_PATHS.map(c=>pathPoints(c)),ringPoints()];
+export const parkPathLines=()=>[...PARK_TRAILS.map(trailPoints),ringPoints()];
 /** Inside the bowl's footprint (+ margin)? */
 export const inStadiumFootprint=(x:number,z:number,margin=0)=>Math.abs(x-STADIUM.x)<STADIUM.bowlW/2+margin&&Math.abs(z-STADIUM.z)<STADIUM.bowlL/2+margin;
 const inPoly=(poly:readonly {x:number;z:number}[],x:number,z:number)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;};
@@ -151,13 +171,13 @@ let grassRing:P[]|null=null;
 export const grassEdgeDistance=(x:number,z:number)=>{grassRing??=[...INTERIOR_GRASS.map(p=>[p.x,p.z] as P),[INTERIOR_GRASS[0].x,INTERIOR_GRASS[0].z]];return segDistance(x,z,grassRing);};
 /** On the beach: land, off the lawn (the dry sand between the grass edge and the waterline). */
 export const onBeach=(x:number,z:number)=>onIsland(x,z)&&!onGrass(x,z)&&distanceToShore(x,z)>=2;
-let lines:P[][]|null=null;
+let lines:P[][]|null=null,linesElev=false;
 /** On a walk path: the bowl's apron, a trail, the ring path or the pond's stone rim (+ margin m), the plaza itself not included.
  *  The "no props on paths" check (tests/west-stadium.cjs) is built on this; a prop's half size goes in `margin`. */
 export function onWalkPath(x:number,z:number,margin=0){
  if(onApron(x,z,margin))return true;
  const q=pondQ(x,z,POND_RIM+margin);if(q<1&&!inPond(x,z,-margin))return true;
- lines??=parkPathLines();for(const l of lines)if(segDistance(x,z,l)<TRAIL_WIDTH/2+margin)return true;return false;
+ if(!lines||linesElev!==elevationOn()){lines=parkPathLines();linesElev=elevationOn();}for(const l of lines)if(segDistance(x,z,l)<TRAIL_WIDTH/2+margin)return true;return false;
 }
 /** On any park paving (the plaza or a walk path)? */
 export function onParkPaving(x:number,z:number,margin=0){
