@@ -64,8 +64,17 @@ ok('sea life: per tier counts, in water, one mesh per kind, off at tier 2 and re
  // Nov 10 2026: over CLEAR_HIGH.close m (jetpack) the window eases shut, the sea opaque; it stays shut until under CLEAR_HIGH.open m.
  const hi=h=>{cam.position.set(5,UW.UW_SURFACE+h,3);cam.lookAt(60,UW.UW_SURFACE,3);cam.updateMatrixWorld(true);for(let i=0;i<60;i++)win.update(1/60,5,3,0,false,cam);};
  hi(CW.CLEAR_HIGH.close+1);assert.equal(win.open,false,'closed high up');assert.equal(group.visible,false);
- hi((CW.CLEAR_HIGH.close+CW.CLEAR_HIGH.open)/2);assert.equal(win.open,false,'hysteresis: still closed between the two heights');
- hi(CW.CLEAR_HIGH.open-1);assert.equal(win.open,true,'open again lower down');
+ // Nov 25 2026 (owner: the coral only showed once swimming): no latch. The walking camera (23 m over a beach, 23.4 m over the water)
+ // sat inside the old 22 / 25 m hysteresis band, so after any flight or walk down from higher ground the window stayed shut until
+ // the swimmer's camera dropped. Now: fully open at the walking height whatever came before, a continuous fade above it.
+ assert(CW.CLEAR_HIGH.open>=23.4+8,'the walking camera, with headroom for a dune or a low flight, is under the fade');
+ hi(23.4);assert.equal(win.open,true,'open at the walking camera height straight after a flight');assert(Math.abs(win.strength-1)<1e-6,'fully open '+win.strength);
+ hi((CW.CLEAR_HIGH.close+CW.CLEAR_HIGH.open)/2);assert(win.open&&win.strength>.3&&win.strength<.7,'half way up the fade: partly open '+win.strength);
+ hi(CW.CLEAR_HIGH.open-1);assert.equal(win.open,true,'open lower down');assert(Math.abs(win.strength-1)<1e-6);
+ // Distance: eases in from the tier's `win` m inland to full by CLEAR_INLAND x win (never a pop at the waterline).
+ {const W=CW.CLEAR_TIERS[0].win,at=x=>{for(let i=0;i<120;i++)win.update(1/60,x,3,0,false,null);return win.strength;},x0=5,d0=field.distance(x0,3);
+  let inl=null;for(let x=x0;Math.abs(x-x0)<400&&!inl;x+=x0<60?-2:2)if(field.distance(x,3)<-W*.8&&field.distance(x,3)>-W*.9)inl=x;
+  if(inl!==null){const s=at(inl);assert(s>0&&s<1,'part way in '+(W*.85|0)+' m inland: '+s);}at(x0);assert(Math.abs(win.strength-1)<1e-6,'full by the shore (d '+d0+')');}
  cam.position.set(5,UW.UW_SURFACE+3,3);cam.updateMatrixWorld(true);win.update(1/60,5,3,0,false,cam);assert(Math.abs(U.w-CW.CLEAR_TIERS[0].win*.7)<1e-6,'smaller radius with a low camera');
  for(let i=0;i<400;i++)win.update(1/60,5,3,0,false,null);
  // Gate off or still path: no creatures.
