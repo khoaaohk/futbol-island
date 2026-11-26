@@ -1847,6 +1847,8 @@ export function* buildTownSteps(scene: T.Scene) {
           const s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z;
           if(s>0){colors[i]=r*f*(1+warm*s);colors[i+2]=b*f*(1-warm*s);}else{colors[i]=r*f;colors[i+2]=b*f*(1-cool*s);}
           colors[i+1]=g*f;}}
+      // A piece's own per-vertex tint (linear rgb, one triple per vertex: the west terrace's coursed stone, westTerrain.ts blockFace), on top of the baked light.
+      {const tint=object.userData.vertexTint as Float32Array|undefined;if(tint&&tint.length===len)for(let i=0;i<len;i++)colors[i]*=tint[i];}
       geom.setAttribute('color',new T.BufferAttribute(colors,3));
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));

@@ -1,4 +1,5 @@
 import {groundLift} from './elevation';
+import {nearWestWall} from './westElevation';
 import './westElevation';
 import type * as T from 'three';
 import {buildGroundDecals,DECAL_CAPS,MACRO_CAP,edgePoint,insidePoly,planGroundDecals,ringBandPoint,RectIndex,type DecalPlan,type Pt,type Rect,MACRO_DETAIL_ENABLED,MACRO_KINDS_KEPT} from '../graphics/groundDecals';
@@ -33,7 +34,7 @@ function setups(w:DecalWorld){
  const wide=new RectIndex(rects,OPEN_MARGIN),macroBlocked=new RectIndex(rects,.9);
  const bbox=(ring:Pt[])=>({minX:Math.min(...ring.map(p=>p.x)),maxX:Math.max(...ring.map(p=>p.x)),minZ:Math.min(...ring.map(p=>p.z)),maxZ:Math.max(...ring.map(p=>p.z))});
  const trees=w.obstacles.filter(o=>o.w<=4&&o.d<=4);
- const main={bounds:bbox(ISLAND_SHORE),ground:(x:number,z:number):OpenKind|null=>!onIsland(x,z)?null:insidePoly(INTERIOR_GRASS,x,z)?'grass':'sand',ring:ISLAND_SHORE,inside:centroid(ISLAND_SHORE),y:(x:number,z:number,k:OpenKind)=>(k==='sand'?-.105:-.112)+groundLift(x,z)/* the west side (?elev=1) */,
+ const main={bounds:bbox(ISLAND_SHORE),ground:(x:number,z:number):OpenKind|null=>!onIsland(x,z)||nearWestWall(x,z,.6)/* (?elev=1) none on the terrace's wall, its stairs or the trail laid to them */?null:insidePoly(INTERIOR_GRASS,x,z)?'grass':'sand',ring:ISLAND_SHORE,inside:centroid(ISLAND_SHORE),y:(x:number,z:number,k:OpenKind)=>(k==='sand'?-.105:-.112)+groundLift(x,z)/* the west side (?elev=1) */,
   trees:trees.filter(t=>onIsland(t.x,t.z)&&insidePoly(INTERIOR_GRASS,t.x,t.z))};
  const cay={bounds:bbox(CAY_SHORE),ground:(x:number,z:number):OpenKind|null=>insidePoly(CAY_LAWN,x,z)?'grass':insidePoly(CAY_SHORE,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120?'sand':null,ring:CAY_SHORE,inside:CAY_CENTER,y:(x:number,z:number,k:OpenKind)=>main.y(x,z,k)+groundLift(x,z),/* elevation.ts: on the raised lawn under ?elev=1 */
   trees:trees.filter(t=>insidePoly(CAY_LAWN,t.x,t.z))};
@@ -73,7 +74,7 @@ function planSmallDecals(w:DecalWorld):{main:DecalPlan;cay:DecalPlan;summit:Deca
  const mainNear=near.filter(r=>onIsland(r.x,r.z)&&insidePoly(INTERIOR_GRASS,r.x,r.z)),shoreMid=centroid(ISLAND_SHORE);
  const main=planGroundDecals({seed:SEEDS.main,caps:DECAL_CAPS.main,
   sandAt:rng=>ringBandPoint(ISLAND_SHORE,shoreSandWidth,shoreMid,rng,.8,true),grassAt:rng=>edgePoint(mainNear,rng),
-  ok:(x,z,k)=>offLine(x,z)&&onIsland(x,z)&&(k==='grass'?insidePoly(INTERIOR_GRASS,x,z):!insidePoly(INTERIOR_GRASS,x,z))&&!blocked.blocked(x,z),
+  ok:(x,z,k)=>offLine(x,z)&&onIsland(x,z)&&(k==='grass'?insidePoly(INTERIOR_GRASS,x,z):!insidePoly(INTERIOR_GRASS,x,z))&&!blocked.blocked(x,z)&&!nearWestWall(x,z,.6),
   y:(x,z,k)=>(k==='sand'?-.105:-.112)+groundLift(x,z)/* the west side's raised lawn (?elev=1) */});
  // ---- Coral Cay: the sand ring (outer edge to inner edge), the lawn beside its buildings and paths
  const cayNear=near.filter(r=>insidePoly(CAY_LAWN,r.x,r.z));
