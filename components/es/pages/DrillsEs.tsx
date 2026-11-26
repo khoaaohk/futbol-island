@@ -138,7 +138,7 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
   </Section>}
   {sections(g.before)}
   <Section id="drills" title={g.picksTitle}>{g.kind==='age'
-   ?<PickCards items={g.picks.map(({drill:d,line},i)=>({path:d.esPath,name:d.name,line,meta:[d.time,d.players],art:<GridDiagram id={`pick${i}`} scene={d.scene} small light/>}))}/>
+   ?<PickCards items={g.picks.map(({drill:d,line},i)=>({path:d.esPath,name:d.name,line,meta:[d.time,d.players],art:<GridDiagram id={`pick${i}`} scene={d.scene} small light desc={gridDescEs(d.scene)}/>}))}/>
    :<EsDrillList items={g.picks}/>}</Section>
   <Section id="diagram" title={`Ejemplo: ${featured.name}`}>
    <EsGridFigure id="s0" scene={featured.scene} image={diagramUrl(featured.picture)}/>

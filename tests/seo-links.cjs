@@ -93,7 +93,10 @@ for(const c of cmp.COMPARISONS){
  for(const l of c.links.slice(0,2))assert(cmp.comparisonsFor(l.path).includes(c),`${l.path} links back to ${c.path}`);
 }
 assert(/FUTSAL_VS_SOCCER/.test(code('app/(site)/learn/soccer-rules/[slug]/page.tsx'))&&/TEAM_SIZES/.test(code('app/(site)/learn/7v7-9v9-11v11/page.tsx')),'the futsal and team-size tables sit on the existing pages');
-assert(!SP.some(x=>/futsal-vs-soccer|7v7-vs|9v9-vs/.test(x.path)),'no separate near-duplicate comparison page for futsal or team sizes');
+/* Nov 26 2026 (owner: "queue 1 and 2"): /learn/futsal-vs-soccer is the one owner-requested exception, a fuller page (16 rows with
+   "what it means for you", the court drawn to scale) aimed at "futsal vs soccer"; the futsal rules page keeps its short table for
+   "futsal rules vs soccer rules" and links to it. Team sizes stay one page. */
+assert(!SP.some(x=>/7v7-vs|9v9-vs/.test(x.path)||(/futsal-vs-soccer/.test(x.path)&&x.path!=='/learn/futsal-vs-soccer')),'no separate near-duplicate comparison page for futsal or team sizes');
 
 // ---- 4. no duplicate canonical ---------------------------------------------------------------------------------------------
 assert.equal(new Set(SP.map(x=>x.path)).size,SP.length,'every sitemap path once');

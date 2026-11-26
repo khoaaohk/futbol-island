@@ -26,7 +26,7 @@ function Block({b,lang}:{b:GapBlock;lang:Lang}){
  switch(b.k){
   case 'pitch':return <VSection id={b.id} title={b.title}>{intro}<PositionPitch spots={b.spots.map(s=>({...s,href:s.href&&L(lang,s.href)}))} title={b.pitchTitle} desc={b.pitchDesc} more={b.more} lang={lang}/></VSection>;
   case 'table':return <VSection id={b.id} title={b.title}>{intro}<DataTable label={b.title} head={b.head} rows={b.rows}/>{b.note&&<p className={site.caption}>{b.note}</p>}</VSection>;
-  case 'drills':return <VSection id={b.id} title={b.title}>{intro}<DrillCards lang={lang} drills={b.drills.map(d=>({...d,link:d.link&&{...d.link,path:L(lang,d.link.path)}}))}/></VSection>;
+  case 'drills':return <VSection id={b.id} title={b.title}>{intro}<DrillCards lang={lang} drills={b.drills.map(d=>({...d,setup:lang==='es'?{...d.setup,players:d.setup.players?.map(([x,y,l])=>[x,y,l==='You'?'Tú':l] as const)}:d.setup,link:d.link&&{...d.link,path:L(lang,d.link.path)}}))}/></VSection>;
   case 'steps':return <VSection id={b.id} title={b.title}>{intro}<IconSteps items={b.items}/></VSection>;
   case 'list':return <VSection id={b.id} title={b.title}>{intro}<ul>{b.items.map(t=><li key={t}>{t}</li>)}</ul></VSection>;
   case 'callout':return <Callout id={b.id} title={b.title} items={b.items} text={b.text} tone={b.tone}/>;

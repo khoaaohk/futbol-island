@@ -40,7 +40,7 @@ export function RefereeCards({lang='en',focus}:{lang?:Lang;focus?:'yellow'|'red'
  const order=focus==='red'?[rows[2],rows[1],rows[0]]:rows;
  return <figure className={v.fig} data-visual="referee-cards">
   <div className={v.cards}>{order.map(r=>{const [t,d]=w[r.k];return <div key={r.k} className={v.cardRow}>
-   <svg viewBox="0 0 72 76" role="img" aria-label={t}><title>{t}</title>{r.art}</svg><div><b>{t}</b><p>{d}</p></div></div>;})}</div>
+   <svg viewBox="0 0 72 76" role="img" aria-label={t}><title>{t}</title><desc>{`${t}. ${d}`}</desc>{r.art}</svg><div><b>{t}</b><p>{d}</p></div></div>;})}</div>
   <figcaption className={v.cap}>{w.desc} {w.src}</figcaption>
  </figure>;
 }
@@ -55,10 +55,10 @@ export function GoalStrip({lang='en'}:{lang?:Lang}){
  const w=GOAL_WORDS[lang];
  return <figure className={v.fig} data-visual="goal-strip">
   <div className={v.goals}>{w.map(([n,name],i)=><div key={n} className={i===2?`${v.goal} ${v.goalHot}`:v.goal}>
-   <svg viewBox="0 0 100 34" role="img" aria-label={`${n}: ${name}`}><title>{`${n}: ${name}`}</title>
+   <svg viewBox="0 0 100 34" role="img" aria-label={`${n}: ${name}`}><title>{`${n}: ${name}`}</title><desc>{lang==='es'?`${n} del mismo jugador en el mismo partido: ${name.toLowerCase()}.`:`${n} by the same player in the same game: ${name.toLowerCase()}.`}</desc>
     {Array.from({length:i+1},(_,j)=><Ball key={j} cx={50+(j-i/2)*30} cy={17}/>)}</svg>
    <b>{name}</b><span>{n}</span></div>)}</div>
-  <figcaption className={v.cap}>{lang==='es'?'Goles de un mismo jugador en un mismo partido. Los penaltis de la tanda no cuentan.':'Goals by one player in one game. Kicks in a penalty shoot-out do not count.'}</figcaption>
+  <figcaption className={v.cap}>{lang==='es'?'Goles de un mismo jugador en un mismo partido. Los penales de la tanda no cuentan.':'Goals by one player in one game. Kicks in a penalty shoot-out do not count.'}</figcaption>
  </figure>;
 }
 
@@ -96,10 +96,11 @@ export function PositionPitch({spots,title,desc,lang='en',more}:{spots:readonly 
  *  (`run` dashed = the player, `ball` solid = the ball). Drawn flat in the pitch palette. */
 export type DrillSpec={cones?:readonly (readonly [number,number])[];players?:readonly (readonly [number,number,string?])[];balls?:readonly (readonly [number,number])[];
  wall?:'top'|'left';goals?:readonly (readonly [number,number])[];arrows?:readonly (readonly [number,number,number,number,'run'|'ball'])[]};
-export function DrillSetup({spec,title}:{spec:DrillSpec;title:string}){
+export function DrillSetup({spec,title,desc}:{spec:DrillSpec;title:string;desc?:string}){
  const W=200,H=140,X=(x:number)=>10+x/100*(W-20),Y=(y:number)=>10+y/70*(H-20);
  const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
- return <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title}><title>{title}</title>
+ const n=(spec.cones?.length??0),pl=(spec.players?.length??0),d=desc??`${title}: ${pl} player${pl===1?'':'s'}${n?`, ${n} cones`:''}${spec.wall?', a wall':''}${spec.goals?.length?', targets':''}; dashed arrows are runs, solid arrows the ball.`;
+ return <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title}><title>{title}</title><desc>{d}</desc>
   <defs><marker id={`ah-${id}`} viewBox="0 0 10 10" refX={8} refY={5} markerWidth={5} markerHeight={5} orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill={PAPER}/></marker></defs>
   <rect x={0} y={0} width={W} height={H} rx={12} fill={GRASS}/>
   {spec.wall==='top'&&<rect x={6} y={4} width={W-12} height={10} rx={3} fill="#c9b48a" stroke={INK} strokeWidth={1.5}/>}
@@ -114,7 +115,7 @@ export function DrillSetup({spec,title}:{spec:DrillSpec;title:string}){
 export type DrillCardData={id:string;name:string;meta:readonly string[];setup:DrillSpec;steps:readonly string[];tip?:string;link?:{path:string;name:string}};
 export function DrillCards({drills,lang='en'}:{drills:readonly DrillCardData[];lang?:Lang}){
  return <ol className={v.drills}>{drills.map(d=><li key={d.id} id={d.id} className={v.drill}>
-  <DrillSetup spec={d.setup} title={`${lang==='es'?'Montaje':'Set-up'}: ${d.name}`}/>
+  <DrillSetup spec={d.setup} title={`${lang==='es'?'Montaje':'Set-up'}: ${d.name}`} desc={lang==='es'?`Montaje: ${d.name}. Las flechas discontinuas son carreras y las continuas, el balón.`:undefined}/>
   <div className={site.section}>
    <h3 className={site.h3}>{d.name}</h3>
    <ul className={v.meta} aria-label={lang==='es'?'Datos del ejercicio':'Drill facts'}>{d.meta.map(m=><li key={m}>{m}</li>)}</ul>
@@ -161,9 +162,9 @@ export const PickCards=({items}:{items:readonly PickCard[]})=><ol className={v.d
 export function CourtInField({caption,lang='en'}:{caption:string;lang?:Lang}){
  const k=3,M=8,FW=105*k,FH=68*k,line={fill:'none',stroke:PAPER,strokeWidth:2,strokeOpacity:.85} as const;
  const cx=M+FW/2,cy=M+FH/2,cw=40*k,ch=20*k;
- const t=lang==='es'?['Campo de fútbol, 105 x 68 m','Pista de futsal, 40 x 20 m']:['Soccer field, 105 x 68 m','Futsal court, 40 x 20 m'];
+ const t=lang==='es'?['Cancha de fútbol, 105 x 68 m','Cancha de futsal, 40 x 20 m']:['Soccer field, 105 x 68 m','Futsal court, 40 x 20 m'];
  return <figure className={v.fig} data-visual="court-in-field">
-  <div className={v.board}><svg viewBox={`0 0 ${FW+2*M} ${FH+2*M}`} role="img" aria-label={`${t[0]}. ${t[1]}`}><title>{`${t[0]}. ${t[1]}`}</title>
+  <div className={v.board}><svg viewBox={`0 0 ${FW+2*M} ${FH+2*M}`} role="img" aria-label={`${t[0]}. ${t[1]}`}><title>{`${t[0]}. ${t[1]}`}</title><desc>{caption}</desc>
    <rect x={0} y={0} width={FW+2*M} height={FH+2*M} rx={12} fill={GRASS}/>
    <rect {...line} x={M} y={M} width={FW} height={FH}/><line {...line} x1={cx} x2={cx} y1={M} y2={M+FH}/><circle {...line} cx={cx} cy={cy} r={9.15*k}/>
    <rect {...line} x={M} y={cy-20.16*k} width={16.5*k} height={40.32*k}/><rect {...line} x={M+FW-16.5*k} y={cy-20.16*k} width={16.5*k} height={40.32*k}/>
