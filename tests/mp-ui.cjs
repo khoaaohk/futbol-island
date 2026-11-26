@@ -239,7 +239,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  });
  t('title screen Join friends (flag-gated, same sheet as Use a different code, reuses CodeBoxes, pending store, no analytics)',()=>{
   const ta=read('components/landing/TitleActions.tsx'),jf=read('components/landing/JoinFriends.tsx'),js=read('components/landing/JoinFriendsSheet.tsx'),cb=read('components/party/CodeBoxes.tsx'),jc=read('components/landing/JoinFriends.module.css');
-  assert(/multiplayerEnabled\(\)&&\(state==='new'\|\|state==='returning'\)&&<JoinFriends/.test(ta),'TitleActions mounts it only behind the flag, on the new / returning cards');
+  assert(/multiplayerEnabled\(\)&&\(state==='new'\|\|state==='returning'(\|\|state==='boot')?\)&&<JoinFriends/.test(ta),'TitleActions mounts it only behind the flag, on the new / returning cards (and reserved, not tappable, while booting: title fixes Nov 25)');
   assert(/multiplayerEnabled\(\)&&multiplayerAllowed\(\)/.test(jf)&&/if\(!on\)return null/.test(jf),'hidden while the grown-up switch is Off');
   assert(/mode:'create'\|'restore'\|'join'/.test(ta)&&/setSheet\(\{mode:'join'/.test(ta)&&/<JoinFriendsSheet/.test(ta)&&/'Join friends'/.test(ta),'opens in the title screen\'s own sheet (same morph as Use a different code)');
   assert(/import CodeBoxes from '..\/party\/CodeBoxes'/.test(js)&&/<CodeBoxes/.test(js)&&/<CodeBoxes/.test(joinCard)&&!/data-code-box/.test(joinCard),'one shared code-box component for JoinParty and the title sheet');

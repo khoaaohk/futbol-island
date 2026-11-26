@@ -8,7 +8,7 @@
  * (components/Town.tsx) owns movement and the rig; this only decides what the water is doing to the player.
  * Tests: tests/water-swim.cjs, tests/heat-water.cjs.
  */
-import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,WADE_FOOT_Y,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
+import {DEPTH_MAX,WATER_LEVEL,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,WADE_FOOT_Y,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
 import type {SwimRigPose,EntryStyle} from '../../graphics/swimPose';
 import {pondDepthAt,POND_DEPTH,POND_Y} from '../westParkLayout';
 import {bankFor,buoyancyRate,climbPitch,diveArcPitch,pitchToward,strokeRate,surfaceBob,wrapAngle} from './swimMotion';
@@ -108,7 +108,28 @@ export type WaterStepInput={
  *  `roomAt` (optional, Nov 13 2026: the park pond): the dive's room at (x, z) where the water is not the sea's (m; NaN = use the
  *  seabed rule), e.g. 0 over the pond's shelf, so Dive greys and a dive surfaces there. The surface height and the wading feet follow
  *  the probe (`level`, `foot`: the sea's or the pond's). */
-export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x:number,z:number)=>number,roomAt?:(x:number,z:number)=>number){
+/**
+ * The beach skirt (Nov 25 2026, owner's shot: the player at the water's edge "buried to the chest in sand"; "the body shouldn't go
+ * that deep in the sand"). The depth model is a made-up shelf, .45 m per metre from the beach outline: waist deep 1.3 m out and
+ * swimming 2.2 m out. But the drawn beach runs on past the outline as a sand skirt that only dips under the sea 1.1 m (main coast)
+ * to 2.9 m (Coral Cay, the sandbars) out, so on the gentle coasts the body sank through sand that is still above the water; the
+ * opaque turquoise strip used to hide it, the clear shallows show it. Now, in the sea:
+ *  - over drawn sand that stands above the water (`skirt(x, z)`, the shore field's height there; only within `reach` m of the
+ *    outline) the depth is capped so the feet stay on that sand (`sink` m into it): ankle deep on the skirt, never a swim pose on it;
+ *  - past it, a WADER's depth grows no faster than `slope` m per metre walked (the made-up shelf jumped to its own value at the
+ *    skirt's end): knee, then waist over the next metres, swimming about 3 m beyond the waterline, where the water has its colour.
+ *    Standing still never sinks; splash-downs, dives and a swimmer coming in are not limited (only the cap applies to them).
+ * No allocation, one field lookup per step while in the water near the shore.
+ */
+export const WADE_SKIRT={reach:4,sink:.12,slope:.22} as const;
+export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x:number,z:number)=>number,roomAt?:(x:number,z:number)=>number,skirt?:(x:number,z:number)=>number){
+ let skX=NaN,skZ=NaN;
+ /** The depth the body uses: the probe's, capped on the skirt and (wading deeper) limited by the distance walked. */
+ const shoreDepth=(raw:number,x:number,z:number,prev:number,wading:boolean)=>{
+  let dep=raw;
+  if(skirt&&!probe.pond&&probe.d<WADE_SKIRT.reach){const g=skirt(x,z);if(g>WATER_LEVEL)dep=Math.min(dep,Math.max(0,WADE_FOOT_Y-g)+WADE_SKIRT.sink);}
+  if(skirt&&wading&&!probe.pond&&dep>prev&&skX===skX)dep=Math.min(dep,prev+WADE_SKIRT.slope*Math.hypot(x-skX,z-skZ));
+  skX=x;skZ=z;return dep;};
  /** The swimming root height here (the sea's SWIM_ROOT_Y, or under the pond's surface) and the wading root at a depth. */
  const swimY=()=>probe.level===undefined?SWIM_ROOT_Y:probe.level-SWIM_ROOT_DEPTH,wadeY=(depth:number)=>(probe.foot??WADE_FOOT_Y)-depth;
  const state={phase:'land' as WaterPhase,zone:'none' as WadeZone,depth:0,rootY:0,fast:false,
@@ -183,7 +204,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
    return events;
   }
   // Wading or swimming: read the depth (the probe asks distanceToLand at most 10× a second) and the zone with hysteresis.
-  state.depth=probe.sample(x,z,dt);
+  state.depth=shoreDepth(probe.sample(x,z,dt),x,z,state.depth,state.phase==='wade');
   const zone=wadeZone(state.depth,state.zone);
   if(zone==='none'){leaveWater();lastLand.x=x;lastLand.z=z;lastLand.y=input.landY;lastLand.yaw=input.yaw;state.rootY=input.landY;return events;}
   if(zone!==state.zone){state.zone=zone;rippleClock=0;}

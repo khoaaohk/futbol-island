@@ -371,7 +371,7 @@ export function* buildTownSteps(scene: T.Scene) {
   function tableParts(x:number,z:number){
     assets.push({kind:'table',x,z,w:3.1,d:1.5});
     cylinder(.75,.12,'#a67d55',x,.85,z);cylinder(.08,.78,'#385a4e',x,.4,z);
-    for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
+    for(const dx of [-1.15,1.15]){const was=elevBuild.anchor;if(elevBuild.active)elevBuild.anchor=groundLift(x+dx,z);/* (?elev=1) each stool stands on its own ground: on a 9-13% pavement one stool's leg hung 11 cm in the air */box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);elevBuild.anchor=was;}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
   function districtSign(text:string,x:number,z:number){signFeet.push({x:x-3.3,z:z-SIGN_POST_SET},{x:x+3.3,z:z-SIGN_POST_SET});prop('sign',()=>seated(x,z,Math.min(4.2,text.length*.275),()=>districtSignParts(text,x,z),.3));}
@@ -1012,6 +1012,9 @@ export function* buildTownSteps(scene: T.Scene) {
     box(.10,.10,3.3,'#fff1d3',gx,2.07,cz);
     for(let y=.15;y<=2.08;y+=.25)box(.022,.022,3.2,'#c3d1b9',back,y,cz).castShadow=false;
     for(let z=cz-1.6;z<=cz+1.61;z+=.25){box(.022,2,.022,'#c3d1b9',back,1.07,z).castShadow=false;box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,2.07,z).castShadow=false;}
+    // Side nets (owner Nov 25: open side frames): cords on both sides, same batch as the back net.
+    for(const z of [cz-1.6,cz+1.6]){for(let y=.15;y<2.05;y+=.25)box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,y,z).castShadow=false;
+     for(let f=.26;f<1.3;f+=.26)box(.022,2,.022,'#c3d1b9',gx+(back-gx)/1.3*f,1.07,z).castShadow=false;}
     for(const z of [cz-2.5,cz+2.5])box(2.5,.014,.07,'#fff1d3',gx-side*1.25,.069,z);
     box(.07,.014,5,'#fff1d3',gx-side*2.5,.069,cz);
    }

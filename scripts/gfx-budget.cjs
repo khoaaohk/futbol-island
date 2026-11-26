@@ -74,6 +74,14 @@ if(process.env.GFX_VIEWS==='swimshore'){const at=(id,o,note)=>({id,note,x:shore.
   (p=>({id:'hill',note:'Summit Isle peak (camera high over the water)',x:p.x,z:p.z,yaw:0}))(load('lib/town/summitIsle.ts').SUMMIT_PEAK),at('inland-15',-15,'15 m up the beach'),at('inland-8',-8,'8 m up the beach'),at('walkin-1',-1,'on the sand'),at('walkin-2',1.5,'at the waterline'),at('walkin-3',3.5,'wading'),at('walkin-4',6,'swimming in'),at('walkin-5',10,'swimming'));
  const SB=load('lib/town/summitIsle.ts').SANDBAR_PATH,bi=SB.reduce((m,q,i)=>Math.abs(q.z+28)<Math.abs(SB[m].z+28)?i:m,0);for(const v of VIEWS)v.probe=true;VIEWS.push({id:'swim-sandbar',note:'swimming 9 m off the sandbar',x:SB[bi].x+9,z:SB[bi].z,yaw:-Math.PI/2,swim:true});
  const cs=load('lib/town/coralCay.ts').CAY_SAND;for(const [id,f] of [['cay-shore-a',.3],['cay-shore-b',.62],['cay-shore-c',.88]]){const c=cs[Math.round(cs.length*f)%cs.length];VIEWS.push({id,note:'Coral Cay sand, 2 m from the water',x:c.outer.x*.85+c.inner.x*.15,z:c.outer.z*.85+c.inner.z*.15,yaw:0});}}
+// The water's edge (Nov 25 2026): GFX_VIEWS=edge, a player walking out from a gentle Coral Cay beach (at the outline, then 1.5 / 3 / 4.5 /
+// 6.5 m out: on the skirt, at the waterline, wading, swimming) and standing at the inside corners where the sandbar and the causeway
+// run onto the cay (the drawn waterline's corners).
+if(process.env.GFX_VIEWS==='edge'){const CC=load('lib/town/coralCay.ts'),SI=load('lib/town/summitIsle.ts'),cs=CC.CAY_SAND,C=CC.CAY_CENTER,c=cs[Math.round(cs.length*.62)%cs.length].outer,l=Math.hypot(c.x-C.x,c.z-C.z),ux=(c.x-C.x)/l,uz=(c.z-C.z)/l;
+ VIEWS.splice(0,VIEWS.length,...[0,1.5,3,4.5,6.5].map((o,i)=>({id:'wade-'+(i+1),note:'Coral Cay beach, '+o+' m past the outline',x:c.x+ux*o,z:c.z+uz*o,yaw:Math.atan2(ux,uz)})));
+ const SB=SI.SANDBAR_PATH,near=p=>cs.reduce((m,q)=>Math.min(m,Math.hypot(q.outer.x-p.x,q.outer.z-p.z)),1e9),k=SB.findIndex(p=>near(p)<1.5),j=k<0?2:k,p=SB[j],q=SB[Math.min(SB.length-1,j+1)],tl=Math.hypot(q.x-p.x,q.z-p.z)||1,nx=(q.z-p.z)/tl,nz=-(q.x-p.x)/tl,w=SI.sandbarHalfWidth(p.s);
+ for(const sgn of [1,-1])VIEWS.push({id:'corner-bar-'+(sgn>0?'a':'b'),note:'where the sandbar runs onto Coral Cay, at the inside corner',x:p.x+nx*sgn*(w+.5),z:p.z+nz*sgn*(w+.5),yaw:0});
+ VIEWS.push({id:'corner-konbini',note:'the cove by the Coral Cay konbini',x:CC.CAY_KONBINI.x-14,z:CC.CAY_KONBINI.front+14,yaw:0});}
 // GFX_ONLY=id,id keeps those views; GFX_FLY=<m> arrives at the first kept view on the jetpack at that height (no teleport after:
 // the high camera, where the clear water window is off) and measures only that view.
 if(process.env.GFX_ONLY){const keep=process.env.GFX_ONLY.split(',');VIEWS.splice(0,VIEWS.length,...VIEWS.filter(v=>keep.includes(v.id)));}
