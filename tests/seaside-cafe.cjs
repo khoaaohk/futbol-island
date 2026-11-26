@@ -1,4 +1,4 @@
-// Half-Time Café + butterfly garden on Coral Cay (Nov 24 2026; lib/town/seasideCafe.ts, seasideCafeWorld.ts, graphics/cafePrompt.ts,
+// Café by the Sea + butterfly garden on Coral Cay (Nov 24 2026; lib/town/seasideCafe.ts, seasideCafeWorld.ts, graphics/cafePrompt.ts,
 // graphics/cafeButterflies.ts). Builds the real island in Node and checks: the Island Line envelope stays ≥ 3 m clear of everything the
 // café adds, the walk surfaces chain (beach → steps → deck, ≤ .35 m a step) and the deck is walkable ground (over the sea too), the
 // swim rules (posts, deck wall, ladder), the moved beach props, one signs draw, Malia's facts all sourced, the map label clear of the

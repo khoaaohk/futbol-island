@@ -69,7 +69,7 @@ October 12, 2026 (local, not deployed). User-approved: "add about 60 townsfolk �
 | Ferry Dock | 1 | 2 | 4 | 6 |
 | Coral Cay + causeway + sandbars | 16 | 16 | 10 | 26 |
 | Homes, parks, Library Square, Junior Club | 21 | 22 | 9 | 31 |
-| Eleven Park sides + Café by the Sea | 5 | 5 | 1 | 6 |
+| Eleven Park sides + Half-Time Café | 5 | 5 | 1 | 6 |
 | West Market | 3 | 3 | 0 | 3 |
 | **Total** | **89** | **89** | **60** | **149** |
 

@@ -35,7 +35,7 @@ export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;jo
 export function netPondDragonfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
  return netIslandBug(POND_DRAGONFLY_ID,'Dragonfly',port,fire);
 }
-/** Nov 24 2026: the Half-Time Café garden's monarchs (seasideCafe.ts CAFE_BUTTERFLY_ID) are netted the same way: the Bug book's
+/** Nov 24 2026: the Café by the Sea garden's monarchs (seasideCafe.ts CAFE_BUTTERFLY_ID) are netted the same way: the Bug book's
  *  Captain Monarch, recorded exactly like a shift catch, and the same toast event (detail.id tells the toast which bug). */
 export function netCafeButterfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
  return netIslandBug('monarch','Monarch',port,fire);

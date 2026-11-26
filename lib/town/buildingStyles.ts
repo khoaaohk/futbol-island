@@ -48,7 +48,7 @@ export const BUILDING_SCHEMES:readonly BuildingScheme[]=[
  * institution, one paint), the hostel and anything with its own story. The museum and the Konbinis don't use house().
  */
 export const LANDMARK_BUILDINGS=new Set([
-  'CAFE BY THE SEA','ROOFTOP KNOCKOUT','ARCADE','PLAYER DEVELOPMENT','CORAL CAY HOSTEL',
+  'HALF-TIME CAFÉ','ROOFTOP KNOCKOUT','ARCADE','PLAYER DEVELOPMENT','CORAL CAY HOSTEL',
   'ARTS WING','CLASSROOMS','DINING HALL','SCHOOL OFFICES','LIBRARY','STUDENT CENTRE',
 ]);
 

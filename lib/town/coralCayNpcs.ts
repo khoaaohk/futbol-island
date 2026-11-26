@@ -98,7 +98,7 @@ export const CORAL_CAY_NPCS:NpcDefinition[]=[
  {id:'home-lina',name:'Lina',role:'Neighbourhood gardener',pursuit:'WATERING THE HIBISCUS',x:569.6,z:-101.9,activity:'watering',workYaw:Math.PI,character:'female',face:'light',clothing:'classic',greeting:'I grow hibiscus and bananas in my garden, and I cheer for every team at the tournaments.',topics:[
   {id:'fans',question:'How should fans behave at a tournament?',answer:'Cheer for good play from both teams, never shout at the referee or players, and say well played at the end. Young players learn best with positive people around them.',followUp:{question:'Can we cheer for both teams?',answer:'Of course! Applauding a great goal or save from the other team shows respect for the game.'}}
  ]},
- // Half-Time Café (Nov 24 2026): Malia, on the deck by the door: match-day food and drink, today's fixtures, the garden (seasideCafe.ts
+ // Café by the Sea (Nov 24 2026): Malia, on the deck by the door: match-day food and drink, today's fixtures, the garden (seasideCafe.ts
  // CAFE_OWNER and CAFE_SOURCES: Better Health Channel, Sports Dietitians Australia, FIFA, Dudley 2002, USDA Forest Service).
  CAFE_OWNER,
 ];

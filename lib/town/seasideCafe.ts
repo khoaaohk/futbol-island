@@ -1,5 +1,5 @@
 /**
- * Half-Time Café (Nov 24 2026, owner: "for this area here, can we add a seaside cafe like this image"): a two-storey timber café on
+ * Café by the Sea (Nov 24 2026, owner: "for this area here, can we add a seaside cafe like this image"): a two-storey timber café on
  * Coral Cay's sandy east point (south of the beach-soccer court, east of the Island Line's landfall curve), with a deck that steps
  * out over the water on posts, a ladder down to the sea, a moored rowboat, stone steps with potted flowers, and (owner add) a small
  * butterfly garden on the slope beside the steps. An original design in the reference's mood (no copied name or sign text).
@@ -17,8 +17,9 @@
 import {registerLandableDeck} from './landableDecks';
 import type {NpcDefinition} from './npcDialogues';
 import type {IslandNewsFeed,IslandNewsItem} from './islandNews';
+import {SUMMIT_CENTER} from './summitIsle';
 
-export const CAFE_NAME='Half-Time Café';
+export const CAFE_NAME='Café by the Sea';
 /** The ground floor (x 702…712, z −102.5…−95.5), its floor (= the deck's top, y .7 over the sand), wall and upper-floor heights. The
  *  front (door, windows, awning) faces +z (south, toward the island camera); the sea is east. */
 export const CAFE={x:707,z:-99,w:10,d:7,floor:.7,wallH:3.2,upperW:8.4,upperD:5.4,upperH:2.6,roofRise:1.9,front:-95.5,door:{x:704.4,w:1.3}} as const;
@@ -45,7 +46,21 @@ export const CAFE_POST_R=.17;
 /** The rowboat moored off the deck's east side (a static, batched prop), its yaw and the mooring post it is tied to. */
 export const CAFE_BOAT={x:722.7,z:-99.4,yaw:.28,len:3.4,beam:1.25} as const;
 /** Outdoor tables on the deck (two chairs each, round top .9 m). */
-export const CAFE_TABLES:readonly {x:number;z:number;chairs:number}[]=[{x:702.8,z:-91,chairs:2},{x:706.8,z:-90.8,chairs:3},{x:710.8,z:-91,chairs:2},{x:716,z:-99.2,chairs:2},{x:716,z:-103.6,chairs:2}];
+/** Nov 25 2026 (owner: "add a table where you can sit and enjoy the view facing the summit"): the front deck's third table moved
+ *  from (710.8, −91) to the deck's south-east corner, chairs: 0: it has the view bench (CAFE_VIEW_SEAT) instead of chairs. */
+export const CAFE_TABLES:readonly {x:number;z:number;chairs:number}[]=[{x:702.8,z:-91,chairs:2},{x:706.8,z:-90.8,chairs:3},{x:712.3,z:-89,chairs:0},{x:716,z:-99.2,chairs:2},{x:716,z:-103.6,chairs:2}];
+/** The view seat (Nov 25 2026): a short bench behind the corner table, facing Summit Isle across the sea (south-south-west from
+ *  here: the deck's south rail is the clearest view; the east deck looks out to open sea). bench: its centre and yaw (its open side
+ *  faces the summit: a rig root at yaw `yaw` faces +z rotated by yaw, like the island benches, npcSeatPose BENCH); sit: where the
+ *  player's root sits (BENCH.rootZ in front of the bench centre), at the deck's height; the camera looks at `look`. */
+export const CAFE_VIEW_SEAT=(()=>{const T=CAFE_TABLES[2],dx=SUMMIT_CENTER.x-T.x,dz=SUMMIT_CENTER.z-T.z,l=Math.hypot(dx,dz),ux=dx/l,uz=dz/l;
+ const bx=T.x-.95*ux,bz=T.z-.95*uz;
+ return {table:{x:T.x,z:T.z},ux,uz,yaw:Math.atan2(ux,uz),bench:{x:bx,z:bz,w:1.3},sit:{x:bx+.05*ux,z:bz+.05*uz,y:CAFE.floor},
+  look:{x:SUMMIT_CENTER.x,y:7,z:SUMMIT_CENTER.z},reach:1.6,key:'cafe-view-seat'} as const;})();
+/** The view seat's colliders: the table (1 m: the sitter's knees fit between it and the bench), the backrest (a strip .3 m behind it, so the way out along the bench stays clear) and the bench’s east
+ *  end (by the rail). The west end stays open: the way in and out. Each one stays ≥ .32 m (the walker's radius) from the sit point. */
+export function cafeViewSeatObstacles(){const V=CAFE_VIEW_SEAT,sx=Math.cos(V.yaw),sz=-Math.sin(V.yaw);// bench's long axis (+x local)
+ return [{x:V.table.x,z:V.table.z,w:1,d:1},{x:V.bench.x-.6*V.ux,z:V.bench.z-.6*V.uz,w:1.3,d:.12},{x:V.bench.x+.72*sx,z:V.bench.z+.72*sz,w:.14,d:.5}];}
 /** The fixtures chalkboard (an A-frame by the steps' foot, facing the beach path) and the garden sign. */
 export const CAFE_CHALKBOARD={x:697.4,z:-87.2,yaw:-.35,w:1.25,h:.95} as const;
 export const CAFE_GARDEN_SIGN={x:690.6,z:-85.6,yaw:.25,w:1.1,h:.55} as const;
@@ -60,7 +75,7 @@ export const inCafeClear=(x:number,z:number)=>x>=CAFE_CLEAR.x0&&x<=CAFE_CLEAR.x1
 /** Hover / tap / walk-up prompt ranges (m): hover counts within HOVER of the café's middle; the button shows within REACH. */
 export const CAFE_PROMPT={reach:9,hover:48,key:'cafe-visit'} as const;
 /** Map pin + label (IslandOverview.tsx, the top label layer). The label sits west of the pin, on the lawn (no other label there). */
-export const CAFE_MAP={x:CAFE.x,z:CAFE.z,labelX:CAFE.x-6,labelZ:CAFE.z+15,label:'HALF-TIME CAFÉ',w:86} as const;
+export const CAFE_MAP={x:CAFE.x,z:CAFE.z,labelX:CAFE.x-6,labelZ:CAFE.z+15,label:'CAFÉ BY THE SEA',w:94} as const;
 
 const inBox=(b:CafeBox,x:number,z:number,pad=0)=>Math.abs(x-b.x)<=b.w/2+pad&&Math.abs(z-b.z)<=b.d/2+pad;
 export const onCafeDeck=(x:number,z:number)=>CAFE_DECKS.some(d=>inBox(d,x,z));
@@ -112,16 +127,16 @@ export const CAFE_FACTS:readonly {id:string;fact:string;source:CafeSourceId}[]=[
 ];
 export const CAFE_OWNER_ID='cay-malia';
 /** Malia stands on the deck by the door (floor: the deck's top). Original character. */
-export const CAFE_OWNER:NpcDefinition={id:CAFE_OWNER_ID,name:'Malia',role:'Half-Time Café owner',pursuit:'SERVING MATCH-DAY SNACKS',x:705.6,z:-94.4,
+export const CAFE_OWNER:NpcDefinition={id:CAFE_OWNER_ID,name:'Malia',role:'Café by the Sea owner',pursuit:'SERVING MATCH-DAY SNACKS',x:705.6,z:-94.4,
  floor:()=>CAFE.floor,activity:'serving',workYaw:0,character:'female',face:'warm',clothing:'sunset',
  news:'scores',newsQuestion:'What’s on the fixtures board today?',newsIntro:'Here’s my chalkboard: games being played right now and today’s fixtures. Pick one and think about how both teams fuelled up for it.',
- greeting:'Welcome to the Half-Time Café! Players stop here before and after the games on the court. Food is fuel for football. Ask me what to eat and drink on match day, or check today’s fixtures on my chalkboard.',
+ greeting:'Welcome to the Café by the Sea! Players stop here before and after the games on the court. Food is fuel for football. Ask me what to eat and drink on match day, or check today’s fixtures on my chalkboard.',
  topics:[
   {id:'before',question:'What should I eat before a match?',answer:'Carbohydrate foods are football’s main fuel: rice, pasta, bread, potatoes or fruit. Have a proper meal about 3 to 4 hours before you play, and a small snack you know well, like a banana or toast, 1 to 2 hours before.',
    followUp:{question:'Why carbohydrate?',answer:'Football is lots of runs, sprints and turns, and carbohydrate is the fuel your muscles use most for that. Try your match-day food at training first, so nothing is new on the day.'}},
   {id:'water',question:'Why does water matter so much?',answer:'You lose water when you sweat, even more on a hot beach. Drink before you play, take sips at every break and drink again afterwards. Don’t wait until you feel really thirsty.',
    followUp:{question:'Do I need a sports drink?',answer:'For most kids’ training and matches, water does the job. If you are not sure about anything else, ask your coach or a grown-up.'}},
-  {id:'halftime',question:'What is good to have at half-time?',answer:'A few sips of water and something small and easy, like orange slices or a piece of banana. It tops up your fluid and gives a little quick carbohydrate for the second half. That is why my café is called Half-Time!',
+  {id:'halftime',question:'What is good to have at half-time?',answer:'A few sips of water and something small and easy, like orange slices or a piece of banana. It tops up your fluid and gives a little quick carbohydrate for the second half. Half-time snacks are so important that the café in town is named after them: the Half-Time Café!',
    followUp:{question:'Why not a big meal at the break?',answer:'Your tummy would still be busy with it when you start running again, so you could feel heavy. Keep the big meal for hours before, and after the game.'}},
   {id:'recover',question:'What helps me recover after a game?',answer:'Refuel with carbohydrate, some protein and plenty to drink: a sandwich, rice and fish, or yoghurt with fruit. It helps your body recover for the next training.',
    followUp:{question:'What does the protein do?',answer:'It helps your muscles repair after all that running. Sleep and rest do the rest of the job.'}},
@@ -159,4 +174,4 @@ export const CAFE_BUTTERFLY_ID='monarch';
  *  at: no Net it prompt, no catch. The Stadium Park pond's dragonflies keep theirs. Flip to true to bring it back. */
 export const CAFE_NET_OPEN=false;
 export const CAFE_BUTTERFLIES={count:[10,8] as const,near:40,flee:2.4,calmSpeed:1.2,curious:.4,net:3,away:40,key:'cafe-net',size:.62} as const;
-export const CAFE_BUTTERFLY_WHERE='Or stand still in the Half-Time Café’s flower garden on Coral Cay: a monarch will flutter close enough to net.';
+export const CAFE_BUTTERFLY_WHERE='Or stand still in the flower garden at the Café by the Sea on Coral Cay: a monarch will flutter close enough to net.';
