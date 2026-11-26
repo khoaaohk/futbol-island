@@ -232,5 +232,23 @@ ok('the splash: its size by drop and entry, the burst from the ring pool, a cue 
  assert(!/splashDown\([^)]*\)\{[^}]*new /.test(fx),'no allocation at the hit');
 });
 
+ok('the beach skirt (Nov 25 2026): feet stay on the drawn sand while it stands over the water, then the wader deepens gradually; standing still never sinks',()=>{
+ // A gentle coast like Coral Cay's: the sand skirt runs 2.9 m past the outline (radius 10), from -0.12 down to the water (-0.43) and under it.
+ const skirt=(x,z)=>{const d=Math.hypot(x,z)-10,y=-.12-.12*d;return d>0&&y>W.WATER_LEVEL?y:-Infinity;},K=S.WADE_SKIRT;
+ const water=S.createWaterState(island(),()=>false,undefined,undefined,skirt),old=S.createWaterState(island(),()=>false);
+ let swimAt=0,oldSwimAt=0,x=9.5;
+ for(let i=0;i<1200&&x<20;i++){x+=1.2/60;const ev=water.step(1/60,x,0,input({stick:1,moving:true,speed:1.2})),d=x-10;old.step(1/60,x,0,input({stick:1,moving:true,speed:1.2}));
+  if(d>.05&&d<2.5){assert.notEqual(water.state.phase,'swim','never a swim pose on the skirt (d '+d.toFixed(2)+')');assert(water.state.depth<=-.12-skirt(x,0)+K.sink+1e-6,'feet on the sand at d '+d.toFixed(2)+': depth '+water.state.depth);}
+  if(!swimAt&&water.state.phase==='swim')swimAt=d;if(!oldSwimAt&&old.state.phase==='swim')oldSwimAt=d;void ev;}
+ assert(oldSwimAt>2&&oldSwimAt<2.6,'without the skirt: swimming from ~2.2 m, over sand that is still above the water ('+oldSwimAt+')');
+ assert(swimAt>4.5&&swimAt<7.5,'with it: swimming a few metres past the waterline, where the water has its colour ('+swimAt+')');
+ // Standing still just past the skirt: the depth does not creep toward the made-up shelf.
+ const still=S.createWaterState(island(),()=>false,undefined,undefined,skirt);let sx=9.5;for(let i=0;i<400&&sx<13.2;i++){sx+=1.2/60;still.step(1/60,sx,0,input({stick:1,moving:true,speed:1.2}));}
+ const d0=still.state.depth;for(let i=0;i<300;i++)still.step(1/60,sx,0,input());assert(Math.abs(still.state.depth-d0)<1e-6&&still.state.phase==='wade','standing still: '+d0+' -> '+still.state.depth);
+ // A splash-down or a swimmer coming in is not held back by the limiter; the pond is untouched (its own profile).
+ {const src=fs.readFileSync('lib/town/water/waterState.ts','utf8');assert(/skirt&&!probe\.pond/.test(src)&&/skirt&&wading&&!probe\.pond/.test(src),'sea only, and only where the game passes the skirt');}
+ assert(/createWaterState\(waterProbe,\(\)=>reduced,[\s\S]{0,700}f\.lift\(x,z\)/.test(fs.readFileSync('components/Town.tsx','utf8')),'Town passes the shore field\'s skirt height');
+});
+
 if(failed){console.log(`WATER_SWIM_FAIL ${failed}`);process.exit(1);}
 console.log('WATER_SWIM_PASS land→wade→swim→out, parked ball, swim+jetpack switcher, Dive tap, splash-downs anywhere + splash/cue, reduced motion, wiring');
