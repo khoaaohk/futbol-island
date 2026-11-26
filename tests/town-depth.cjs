@@ -69,4 +69,12 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
  assert.ok(D.asphaltBand(120.3,-110)&&!D.asphaltBand(120.6,-110)&&!D.asphaltBand(119.9,-110));
  const low=new D.Sink();D.kerbStrips(low,true);assert.ok(low.triangles<sink.triangles*.75,'the lowest tier uses a simpler kerb');
  console.log('  kerb triangles',sink.triangles,'(lowest tier',low.triangles+'), verge',lawn.patch.triangles,'(lowest tier',D.depthLawn(null,true).patch.triangles+'), kerb segments',S.asphalt.segs.length,'holes',lawn.holes.length,'blocks',lawn.blocks.length,'dead ends',S.ends.length,'zebras',crossings.length);}
+// Reviewer pass: a paving sheet laid across a carriageway is a crossing (dropped kerbs); one beside a zebra or along a street is not.
+{const sc=D.sheetCrossings(INPUT.roads,[{x:95,z:-17,w:4,d:10},{x:8,z:-41,w:8,d:3},{x:60,z:-35,w:24,d:4},{x:112,z:-104,w:10,d:3}],crossings);
+ assert.ok(sc.some(k=>k.x===8&&k.z===-37.5&&!k.vertical),'the sheet at (8, -41) comes onto the z = -37.5 street: '+JSON.stringify(sc));assert.ok(!sc.some(k=>k.x===95),'the sheet at (95, -17) leads to the zebra at x = 94: no second crossing');
+ assert.ok(!sc.some(k=>Math.abs(k.x-60)<1),'a path along a street is not a crossing');assert.ok(!sc.some(k=>Math.abs(k.z+104)<1),'a path that stops at the kerb is not a crossing');
+ assert.ok(sc.every(k=>!crossings.some(o=>o.vertical===k.vertical&&Math.hypot(o.x-k.x,o.z-k.z)<5)),'never doubles a zebra');
+ // the kerb stone keeps the pavement's hue (night: a neutral stone read lilac): every stone vertex has r > g > b like the paving
+ const sink=new D.Sink();D.kerbStrips(sink);let stone=0;for(const c of sink.cells.values())for(let i=0;i<c.colors.length;i+=3){const y=c.positions[i+1];if(y>-.02){stone++;assert.ok(c.colors[i]>c.colors[i+1]&&c.colors[i+1]>c.colors[i+2],'warm stone');}}
+ assert.ok(stone>1000);console.log('  sheet crossings',JSON.stringify(sc));}
 console.log('town-depth: ok');

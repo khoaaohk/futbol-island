@@ -11,7 +11,8 @@ import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
 import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
-import {townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {surfOn,setSurfaceInput,surfaceStats} from './surfaceEdges';
+import {sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -102,6 +103,8 @@ export function* buildTownSteps(scene: T.Scene) {
   const obstacles: Obstacle[] = [], textures: T.Texture[] = [], materials: T.Material[] = [];
   const assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[]=[];
   const surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[]=[];
+  /** District sign posts (kerb depth: contact shade at each foot). */
+  const signFeet:{x:number;z:number}[]=[];
   const palette = new Map<string,T.MeshStandardMaterial>();
   const nightSigns:T.MeshStandardMaterial[]=[];
   const mat = (color: string) => { if (!palette.has(color)) {const m=new T.MeshStandardMaterial({color,roughness:.85});palette.set(color,m);materials.push(m);}return palette.get(color)!;};
@@ -371,7 +374,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
-  function districtSign(text:string,x:number,z:number){prop('sign',()=>seated(x,z,Math.min(4.2,text.length*.275),()=>districtSignParts(text,x,z),.3));}
+  function districtSign(text:string,x:number,z:number){signFeet.push({x:x-3.3,z:z-SIGN_POST_SET},{x:x+3.3,z:z-SIGN_POST_SET});prop('sign',()=>seated(x,z,Math.min(4.2,text.length*.275),()=>districtSignParts(text,x,z),.3));}
   function districtSignParts(text:string,x:number,z:number){
     // Signs audit (Nov 25 2026, owner: "make sure the poles don't run up into the sign and cover the text"): the posts stand
     // SIGN_POST_SET behind the face (hidden by it from the readable side) and the same mesh and material, turned round (no new
@@ -1533,6 +1536,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))]});
   if(townDepthOn()){for(const j of roadJunctions)for(const vertical of [true,false])for(const side of [-1,1]){const x=j.x+(vertical?0:side*6),z=j.z+(vertical?side*6:0);
     if(roads.some(r=>r.vertical===vertical&&Math.abs((vertical?r.x:r.z)-(vertical?x:z))<.001&&(vertical?z:x)>(vertical?r.z-r.d/2:r.x-r.w/2)+1&&(vertical?z:x)<(vertical?r.z+r.d/2:r.x+r.w/2)-1))depthCrossings.push({x,z,vertical});}
+   depthCrossings.push(...sheetCrossings(roads,surfaceAreas.filter(a=>a.kind==='path'),depthCrossings));
    registerDepth();}
   const depth=depthStreets();
   function roadSurface(carriageway:boolean){
@@ -1761,6 +1765,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // Town kerb depth (?depth=1): (1) whatever stands ON the sunk carriageway goes down with it (dashes, zebra stripes, a manhole, a
   // cone): one height per prop / group, only things that touch the ground; (2) the kerbs, contact shade and small ground objects
   // join each 50 m chunk's plain-paint batch as one vertex-coloured piece (userData.depthColors, read by the batching pass below).
+  // Surface craft (?surf=1, surfaceEdges.ts): the lawn's lips need every path and whatever covers the lawn (fields.ts builds them).
+  if(surfOn()){const cover=[...roads.map(r=>({x:r.x,z:r.z,w:r.w,d:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12,d:12})),...surfaceAreas.filter(a=>a.kind!=='path'),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6})),...buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))];
+   setSurfaceInput({paths:surfaceAreas.filter(a=>a.kind==='path'),blocked:(x,z)=>{for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;}});void surfaceStats;}
   if(depth){registerDepth();/* again: every path laid since is known to the verge */
    town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();let moved=0;const movedList:number[][]=[];
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train||o.userData.depthOwn||o.parent===ferry)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
@@ -1773,11 +1780,12 @@ export function* buildTownSteps(scene: T.Scene) {
    const round:Record<string,number>={tree:.26,'small-tree':.3,'street-lamp':.2,'terrace-lamp':.2,'traffic-signal':.24,table:.5,palm:.3};
    const objects:GroundedObject[]=[...buildings.filter(inTown).map(b=>({kind:'building',x:b.x,z:b.z,w:b.w,d:b.d})),
     ...assets.filter(a=>inTown(a)&&!a.baseY).flatMap((a):GroundedObject[]=>round[a.kind]?[{kind:a.kind,x:a.x,z:a.z,r:round[a.kind]}]:a.kind==='bench'||a.kind==='planter'?[{kind:a.kind,x:a.x,z:a.z,w:a.visualW??a.w,d:a.visualD??a.d}]:[]),
+    ...signFeet.filter(inTown).map(f=>({kind:'sign',x:f.x,z:f.z,r:.07})),
     ...VENDING_MACHINES.filter(m=>inTown(m)&&!m.y).map(m=>({kind:'vending',x:m.x,z:m.z,w:VENDING_SIZE.w,d:VENDING_SIZE.d,yaw:m.yaw}))];
-   const shades=contactShade(sink,objects),shadeTriangles=sink.triangles-kerbTriangles,small=low?null:smallObjects(sink,assets.filter(a=>a.kind==='tree'&&inTown(a))),lawn=depthLawn(sink,low);
+   const shades=contactShade(sink,objects),shadeTriangles=sink.triangles-kerbTriangles,small=low?null:smallObjects(sink,assets.filter(a=>a.kind==='tree'&&inTown(a)),!surfOn()/* surf: the three-sided pebbles along the verge read as tiny pyramids (audit B5); the soft verge carries the edge instead */),lawn=depthLawn(sink,low);
    for(const c of sink.cells.values()){if(!c.indices.length)continue;const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(c.positions,3));g.setIndex(c.indices);g.computeVertexNormals();
     const m=put(g,'#737c75',c.x,0,c.z);m.userData.depthColors=new Float32Array(c.colors);m.userData.depthOwn=true;m.userData.skipRoofObstacle=true;}
-   depthStats.value={roadTriangles,movedList,holesOk:lawn?.holesOk,moved,kerbTriangles,shades,shadeTriangles,small,soil:lawn?.soil??0,total:sink.triangles,chunks:sink.cells.size,low};
+   depthStats.value={crossings:depth.crossings.length,roadTriangles,movedList,holesOk:lawn?.holesOk,moved,kerbTriangles,shades,shadeTriangles,small,soil:lawn?.soil??0,total:sink.triangles,chunks:sink.cells.size,low};
    town.updateMatrixWorld(true);}
   if(train){town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});

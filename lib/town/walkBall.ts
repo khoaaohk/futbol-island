@@ -1,4 +1,5 @@
 import {groundLift} from './elevation';
+import {townDepthOn} from './townDepth';
 import {pondTouch,pondFloatStep,POND_SKIP,type BallPond} from './pondSkip';
 /** Controlled touches progress up the body, then return to the feet. */
 export type JuggleTouch='foot'|'knee'|'shoulder'|'head'|'around-world';
@@ -384,7 +385,7 @@ export function createWalkBall(){
     state.vy=(finishTarget.y-state.y)/Math.max(.05,duration)+6.5*duration;
    }
    env.strike();}
-  if(state.mode==='return'){const blend=1-Math.exp(-dt*S.returnRate);state.x+=(p.x+Math.sin(p.yaw)*S.lead-state.x)*blend;state.z+=(p.z+Math.cos(p.yaw)*S.lead-state.z)*blend;state.y+=(p.y+S.radius-state.y)*blend;{const g=groundLift(state.x,state.z);if(g>0&&state.y<g+S.radius)state.y=g+S.radius;}/* elevation (elevation.ts): the straight line home may cross a rise; the ball comes back over it, never under the lawn (0 with the flag off) */state.kick=0;if(state.age>S.returnTime)reset(p);return;}
+  if(state.mode==='return'){const blend=1-Math.exp(-dt*S.returnRate);state.x+=(p.x+Math.sin(p.yaw)*S.lead-state.x)*blend;state.z+=(p.z+Math.cos(p.yaw)*S.lead-state.z)*blend;state.y+=(p.y+S.radius-state.y)*blend;{const g=groundLift(state.x,state.z);if((g>0||townDepthOn())&&state.y<g+S.radius)state.y=g+S.radius;}/* kerb depth: coming home up a kerb the ball clears the pavement edge too (reviewer probe at 15 cm: its centre dipped to 7 cm) *//* elevation (elevation.ts): the straight line home may cross a rise; the ball comes back over it, never under the lawn (0 with the flag off) */state.kick=0;if(state.age>S.returnTime)reset(p);return;}
   // Floating in the sea: a slow drift and a small bob, then back to the player (sooner if they walk away). Runs only while wet.
   if(state.floating>0){state.floating+=dt;const damp=Math.exp(-1.6*dt);state.vx*=damp;state.vz*=damp;state.kick=0;
    const x=state.x+state.vx*dt,z=state.z+state.vz*dt;if(env.sea?.(x,z)==='sea'){state.x=x;state.z=z;}else state.vx=state.vz=0;
