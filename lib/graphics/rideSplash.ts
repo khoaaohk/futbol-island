@@ -32,6 +32,9 @@ export const RIDE_SPLASH={
  dropLife:.55,ringLife:.6,wakeLife:.7,
  /** The soft splash sound (islandSound 'splash-soft', low gain): at most once per `soundEvery` s while the local splash is at least `soundMin`. */
  soundEvery:1.3,soundMin:.35,
+ /** Sand spray (Nov 25 2026, lib/town/rideSand.ts): grain colour (a step darker than the dry sand so it reads against it), life
+  *  (s), grains per second per rider at strength 1, gravity (m/s²: sand is heavier than spray, it falls back fast), and the most grains one rider throws per frame. */
+ sandColor:'#ad8650',sandRate:40,sandLife:.5,sandGravity:13,sandMaxPerFrame:4,
 } as const;
 
 /** 0 = off (Battery saver, heat tier >= 3), 1 = foam ring only at half rate (reduced motion), 2 = lite (tier 2: half the droplets), 3 = full. */
@@ -60,29 +63,29 @@ export function nearestRiders(spots:RiderSpots,cx:number,cz:number,count:number,
  return k;
 }
 
-const KIND_DROP=0,KIND_RING=1,KIND_WAKE=2,GRAVITY=9.8;
+const KIND_DROP=0,KIND_RING=1,KIND_WAKE=2,KIND_SAND=3,GRAVITY=9.8;
 
 /** The pooled splash: `begin()`, `rider(...)` for each rider this frame (slot 0 = local, 1.. = friends), then `end(dt)`. */
 export function createRideSplash(field:()=>ShoreField|null){
  const cap=RIDE_SPLASH.cap,R=RIDE_SPLASH.maxRiders;
  const px=new Float32Array(cap),py=new Float32Array(cap),pz=new Float32Array(cap),vx=new Float32Array(cap),vy=new Float32Array(cap),vz=new Float32Array(cap);
  const age=new Float32Array(cap),life=new Float32Array(cap),size=new Float32Array(cap),kind=new Uint8Array(cap),stretch=new Float32Array(cap),angle=new Float32Array(cap),floor=new Float32Array(cap);
- const dropCredit=new Float32Array(R),ringT=new Float32Array(R),wakeT=new Float32Array(R),side=new Uint8Array(R);
+ const dropCredit=new Float32Array(R),sandCredit=new Float32Array(R),ringT=new Float32Array(R),wakeT=new Float32Array(R),side=new Uint8Array(R);
  let cursor=0,alive=0,seed=20261023,mode:RideSplashMode=3,dt=0,emitted=0,wetRiders=0,soundT=0;
  const rand=()=>(seed=(seed*16807)%2147483647)/2147483647;
 
  const geometry=new T.PlaneGeometry(1,1);
  const fx=new T.InstancedBufferAttribute(new Float32Array(cap*3),3);fx.setUsage(T.DynamicDrawUsage);geometry.setAttribute('aFx',fx);
  const material=new T.ShaderMaterial({
-  uniforms:{uDrop:{value:new T.Color(RIDE_SPLASH_DROP)},uFoam:{value:new T.Color(RIDE_SPLASH_FOAM)}},
+  uniforms:{uDrop:{value:new T.Color(RIDE_SPLASH_DROP)},uFoam:{value:new T.Color(RIDE_SPLASH_FOAM)},uSand:{value:new T.Color(RIDE_SPLASH.sandColor)}},
   transparent:true,depthWrite:false,fog:false,lights:false,side:T.DoubleSide,
   vertexShader:/* glsl */`attribute vec3 aFx;varying vec2 vUv;varying vec2 vFx;
 void main(){vUv=uv-.5;vFx=aFx.xy;
  if(aFx.x<.5){vec4 c=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);c.xy+=position.xy*aFx.z;gl_Position=projectionMatrix*c;}
  else gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.);}`,
-  fragmentShader:/* glsl */`uniform vec3 uDrop;uniform vec3 uFoam;varying vec2 vUv;varying vec2 vFx;
+  fragmentShader:/* glsl */`uniform vec3 uDrop;uniform vec3 uFoam;uniform vec3 uSand;varying vec2 vUv;varying vec2 vFx;
 void main(){float r=length(vUv)*2.,a;vec3 col;
- if(vFx.x<.5){a=1.-smoothstep(.35,1.,r);col=uDrop;}
+ if(vFx.x<.5){a=1.-smoothstep(.35,1.,r);col=vFx.x>.12?uSand:uDrop;}
  else{a=smoothstep(.55,.78,r)*(1.-smoothstep(.84,1.,r))+(1.-smoothstep(.2,.8,r))*.12;col=uFoam;}
  a*=vFx.y;if(a<.01)discard;gl_FragColor=vec4(col,a);
  #include <colorspace_fragment>
@@ -148,16 +151,31 @@ void main(){float r=length(vUv)*2.,a;vec3 col;
     spawn(KIND_DROP,x+ux*.06,y+.05,z+uz*.06,ux*o,up*(.7+.6*rand()),uz*o,RIDE_SPLASH.dropLife*(.75+.5*rand()),size*(.7+.6*rand()),1,0,y-.03);}
    return count;
   },
+  /**
+   * `sand` (Nov 25 2026, lib/town/rideSand.ts): grains kicked up behind the rear wheel of a ride on dry sand, `strength` from
+   * rideSand.ts sandSprayStrength (speed, turns and braking; 0 = nothing). Off (mode 0) and for reduced motion (mode 1), half at
+   * lite (mode 2). Same pool, same draw. Returns how many grains were thrown.
+   */
+  sand(slot:number,x:number,y:number,z:number,yaw:number,speed:number,strength:number){
+   if(slot<0||slot>=R)return 0;
+   if(mode<2||dt<=0||!(strength>.02)){sandCredit[slot]=0;return 0;}
+   sandCredit[slot]+=dt*RIDE_SPLASH.sandRate*strength*(mode===2?.5:1);
+   let n=Math.floor(sandCredit[slot]);sandCredit[slot]-=n;if(n>RIDE_SPLASH.sandMaxPerFrame)n=RIDE_SPLASH.sandMaxPerFrame;
+   const fx0=Math.sin(yaw),fz0=Math.cos(yaw),rx=fz0,rz=-fx0,k=Math.min(1,strength);
+   for(let i=0;i<n;i++){const sd=(side[slot]^=1)?1:-1,out=(.4+rand()*.9)*(.5+.7*k),back=(.8+rand()*1.2)*(.5+.6*k),up=(1.4+rand()*1.2)*(.6+.5*k);
+    spawn(KIND_SAND,x-fx0*.6+rx*.1*sd,y+.06,z-fz0*.6+rz*.1*sd,rx*out*sd-fx0*back+fx0*speed*.4,up,rz*out*sd-fz0*back+fz0*speed*.4,RIDE_SPLASH.sandLife*(.7+.4*rand()),(.11+.09*k)*(.7+.6*rand()),1,0,y-.01);}
+   return n;
+  },
   /** Ages the pool and writes the live instances (the only per-frame work, and only while something is alive). */
   end(){
    if(alive===0){if(mesh.visible){mesh.visible=false;mesh.count=0;}return;}
    let v=0;alive=0;
    for(let i=0;i<cap;i++){if(age[i]>=life[i])continue;age[i]+=dt;if(age[i]>=life[i])continue;
     const k=kind[i],t=age[i]/life[i],o=v*16;
-    if(k===KIND_DROP){vy[i]-=GRAVITY*dt;px[i]+=vx[i]*dt;py[i]+=vy[i]*dt;pz[i]+=vz[i]*dt;vx[i]*=1-1.2*dt;vz[i]*=1-1.2*dt;
+    if(k===KIND_DROP||k===KIND_SAND){vy[i]-=(k===KIND_SAND?RIDE_SPLASH.sandGravity:GRAVITY)*dt;px[i]+=vx[i]*dt;py[i]+=vy[i]*dt;pz[i]+=vz[i]*dt;vx[i]*=1-1.2*dt;vz[i]*=1-1.2*dt;
      if(py[i]<floor[i]&&vy[i]<0){age[i]=life[i];continue;}/* back in the water */
      M[o]=1;M[o+1]=0;M[o+2]=0;M[o+3]=0;M[o+4]=0;M[o+5]=1;M[o+6]=0;M[o+7]=0;M[o+8]=0;M[o+9]=0;M[o+10]=1;M[o+11]=0;
-     F[v*3]=0;F[v*3+1]=.9*(1-t*t);F[v*3+2]=size[i]*(1-.4*t);}
+     F[v*3]=k===KIND_SAND?.25:0;F[v*3+1]=(k===KIND_SAND?.95:.9)*(1-t*t);F[v*3+2]=size[i]*(1-.4*t);}
     else{const r=size[i]*(.35+.65*(1-(1-t)*(1-t))),sx=r*stretch[i],sz=r,c=Math.cos(angle[i]),s=Math.sin(angle[i]);
      // A flat quad in the water plane: local x across, local y along `angle` (stretch: the wake's long arm).
      M[o]=sz*c;M[o+1]=0;M[o+2]=-sz*s;M[o+3]=0;M[o+4]=sx*s;M[o+5]=0;M[o+6]=sx*c;M[o+7]=0;M[o+8]=0;M[o+9]=1;M[o+10]=0;M[o+11]=0;
@@ -166,7 +184,7 @@ void main(){float r=length(vUv)*2.,a;vec3 col;
    mesh.count=v;mesh.visible=v>0;
    if(v){mesh.instanceMatrix.clearUpdateRanges();mesh.instanceMatrix.addUpdateRange(0,v*16);mesh.instanceMatrix.needsUpdate=true;fx.clearUpdateRanges();fx.addUpdateRange(0,v*3);fx.needsUpdate=true;}
   },
-  clear(){for(let i=0;i<cap;i++)age[i]=life[i];alive=0;mesh.count=0;mesh.visible=false;dropCredit.fill(0);ringT.fill(0);wakeT.fill(0);},
+  clear(){for(let i=0;i<cap;i++)age[i]=life[i];alive=0;mesh.count=0;mesh.visible=false;dropCredit.fill(0);sandCredit.fill(0);ringT.fill(0);wakeT.fill(0);},
   dispose(){mesh.removeFromParent();geometry.dispose();material.dispose();},
  };
 }

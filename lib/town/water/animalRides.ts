@@ -131,6 +131,16 @@ const rideDt=(dt:number)=>dt>0?Math.min(dt,RIDE_DT_MAX):0;// NaN / negative / In
  *  most RIDE_SHORE_V × its loop speed) for RIDE_SHORE_T s after the last land it sees, then swims back to its loop. */
 export const RIDE_HULL={manta:{bow:1.7,tail:2.4,side:2.8,margin:1},whale:{bow:6.4,tail:6.6,side:2.6,margin:1.8}} as const;
 export const RIDE_SHORE_TOSS=2,RIDE_SHORE_TOSS_V=3,RIDE_SHORE_TURN=1,RIDE_SHORE_V=1.2,RIDE_SHORE_T=.8,RIDE_HULL_YAW=.08;
+/** The escape back to deep water (owner, Nov 25 2026: "when riding the ray to the shore, i hop off but the ray gets stuck and
+ *  shakes"). A ride that ends at the shore leaves the body inside its RIDE_HULL margin (the ride ends at RIDE_SHORE_D from land, the
+ *  manta's flank margin is 3.8 m), where the old shore brake stopped it (speed 0) and flipped its turn side every probe: it sat at
+ *  the waterline jittering left / right. Now, whenever the body is inside the margin, the animal picks ONE seaward heading
+ *  (RET_ESC_DIRS bearings, each weighted by how many of RET_ESC_RINGS rings of body-lengths out are water; the heading is their
+ *  resultant, which points straight out from a shore and out along a corner's bisector), turns to it at RET_TURN while gliding forward (a ray cannot reverse) at RET_ESC_V × its loop speed (at
+ *  least RET_ESC_MIN m/s, slower while facing away), only ever into water at the nose and the centre, and keeps that heading
+ *  (hysteresis: no re-pick unless the nose stays blocked RET_ESC_STALL s; boxed in, it slips seaward at RET_ESC_SLIP m/s) until it has swum RET_ESC_RUN body margins out AND the body
+ *  has been clear for RET_ESC_HOLD s; then the swim back to the loop resumes, re-aimed from where it now is. */
+export const RET_ESC_DIRS=16,RET_ESC_RINGS=4,RET_ESC_V=.9,RET_ESC_MIN=2,RET_ESC_STALL=.5,RET_ESC_RUN=1.5,RET_ESC_HOLD=.5,RET_ESC_SLIP=1;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
 export const RIDE_LESSON={title:'Ride the wave',text:'A counter-attack is fastest when you move with the play, not against it.',kind:'Coaching idea'} as const;
 export const RIDE_LESSON_KEY='fi2-ride-lesson-v1';
@@ -171,10 +181,54 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   /** The hull probe (RIDE_HULL): the host's dry-land test (kept from `step` for the swim back), the time / metres left before the
    *  next probe and the heading it was taken at; the shore brake's turn side (±1, 0 = none), its time left (s) and whether the
    *  last probe still saw land ahead (it turns only then). */
-  land:null as ((x:number,z:number)=>boolean)|null,hullAcc:Infinity,hullBudget:0,hullYaw:0,shoreSide:0,shoreT:0,shoreBlock:false};
+  land:null as ((x:number,z:number)=>boolean)|null,hullAcc:Infinity,hullBudget:0,hullYaw:0,shoreSide:0,shoreT:0,shoreBlock:false,
+  /** The escape (RET_ESC_*): its fixed seaward heading (NaN = not escaping), metres swum out, clear time, nose-stall time, and
+   *  whether the last probe found the body inside the margin; `escapes` counts them (tests). */
+  escYaw:NaN,escRun:0,escClear:0,escStall:0,escIn:false,escBoxed:false,escapes:0};
  const events:RideEvents={grabbed:'',ended:'',kind:'',x:0,z:0,yaw:0,speed:0};
  const clear=()=>{events.grabbed='';events.ended='';};
- function endRet(){const f=state.ret;if(!f)return;f.free=false;f.boost=1;f.bend=0;f.bendYaw=0;state.ret=null;state.retT=0;state.retSettle=-1;}
+ function endRet(){const f=state.ret;if(!f)return;f.free=false;f.boost=1;f.bend=0;f.bendYaw=0;state.ret=null;state.retT=0;state.retSettle=-1;state.escYaw=NaN;state.escBoxed=false;}
+ /** The seaward bearing (RET_ESC_*): the most rings of water out, ties to the one nearest the current heading. Fixed once chosen. */
+ function seawardYaw(f:RideFriend,land:(x:number,z:number)=>boolean){
+  // The openness vector: each bearing weighted by how many rings out (body lengths) are water before the first land. Its direction
+  // points away from the land (square off a straight shore, out along a corner's bisector); the most open bearing is the fallback.
+  const step=RIDE_HULL[f.kind].bow+RIDE_HULL[f.kind].margin;let vx=0,vz=0,best=f.fyaw+Math.PI,bestFree=-1;
+  for(let i=0;i<RET_ESC_DIRS;i++){const a=f.fyaw+i*Math.PI*2/RET_ESC_DIRS,sx=Math.sin(a),sz=Math.cos(a);let free=0;
+   for(let k=1;k<=RET_ESC_RINGS;k++){if(land(f.fx+sx*step*k,f.fz+sz*step*k))break;free++;}
+   vx+=sx*free;vz+=sz*free;if(free>bestFree){bestFree=free;best=a;}}
+  return wrap(Math.hypot(vx,vz)>.5?Math.atan2(vx,vz):best);
+ }
+ /** Which of the body's own points (no margin: nose, shoulders, flanks, tail, centre; RIDE_HULL) at (x, z) heading `yaw` are on
+  *  land, as a bit mask. The escape never puts a point that is in the water onto land (a body already touching only gets clearer). */
+ function bodyLand(f:RideFriend,yaw:number,x:number,z:number,land:(x:number,z:number)=>boolean){
+  const h=RIDE_HULL[f.kind],fx=Math.sin(yaw),fz=Math.cos(yaw),rx=fz,rz=-fx,sa=h.bow*.5,sw=h.side*.8,b=(px:number,pz:number,bit:number)=>land(px,pz)?bit:0;
+  return b(x+fx*h.bow,z+fz*h.bow,1)|b(x+fx*sa+rx*sw,z+fz*sa+rz*sw,2)|b(x+fx*sa-rx*sw,z+fz*sa-rz*sw,4)
+   |b(x+rx*h.side,z+rz*h.side,8)|b(x-rx*h.side,z-rz*h.side,16)|b(x-fx*h.tail,z-fz*h.tail,32)|b(x,z,64);
+ }
+ /** One frame of the escape: turn to the fixed seaward heading, glide forward into water only. Returns the speed to move at. */
+ function escStep(f:RideFriend,dt:number,land:(x:number,z:number)=>boolean){
+  const h=RIDE_HULL[f.kind],err=wrap(state.escYaw-f.fyaw),rate=RET_TURN*dt,y0=f.fyaw;
+  f.fyaw=wrap(f.fyaw+Math.max(-rate,Math.min(rate,err)));
+  // Turning the nose out swings the tail in (and in a corner the nose sweeps the other shore): a turn that would put any of the
+  // body on the sand waits (it glides on, or slips seaward, and turns later).
+  const now=bodyLand(f,y0,f.fx,f.fz,land),held=f.fyaw!==y0&&(bodyLand(f,f.fyaw,f.fx,f.fz,land)&~now)!==0;if(held)f.fyaw=y0;
+  let sp=Math.max(RET_ESC_MIN,f.speed*RET_ESC_V)*Math.max(.35,Math.cos(Math.min(Math.PI/2,Math.abs(err))));
+  const sx=Math.sin(f.fyaw),sz=Math.cos(f.fyaw),ds=sp*dt;
+  const cur=bodyLand(f,f.fyaw,f.fx,f.fz,land);if(ds>0&&(bodyLand(f,f.fyaw,f.fx+sx*ds,f.fz+sz*ds,land)&~cur)!==0||land(f.fx+sx*(ds+h.bow),f.fz+sz*(ds+h.bow)))sp=0;
+  // Boxed in (a turn held, or no water ahead): the wings push the whole body a little seaward (RET_ESC_SLIP m/s along the escape
+  // bearing), which always opens room to turn; only into water at the nose, centre and tail.
+  if(held||sp===0){const ex=Math.sin(state.escYaw)*RET_ESC_SLIP*dt,ez=Math.cos(state.escYaw)*RET_ESC_SLIP*dt,nx=f.fx+ex,nz=f.fz+ez;
+   if((bodyLand(f,f.fyaw,nx,nz,land)&~cur)===0){f.fx=nx;f.fz=nz;state.escRun+=RET_ESC_SLIP*dt*.5;}}
+  state.escStall=sp===0&&Math.abs(err)<.2?state.escStall+dt:0;
+  if(state.escStall>RET_ESC_STALL){state.escYaw=seawardYaw(f,land);state.escStall=0;}// the nose is blocked that way after all: one re-pick
+  state.hullAcc+=dt;
+  if(state.hullAcc>=RIDE_TICK-1e-6){state.hullAcc=0;state.escIn=hullLand(f,f.fyaw,0,land);}
+  state.escRun+=sp*dt;state.escClear=state.escIn?0:state.escClear+dt;
+  if(!state.escIn&&state.escClear>=RET_ESC_HOLD&&state.escRun>=RET_ESC_RUN*(h.bow+h.margin)){
+   // Out: back to the swim home, re-aimed from here (nearest loop point + RET_LEAD), with a fresh hull probe.
+   state.escYaw=NaN;state.hullAcc=Infinity;state.hullBudget=0;state.shoreT=0;state.shoreBlock=false;f.u=(nearestLoopU(f.points,f.lengths,f.fx,f.fz)+RET_LEAD)%f.total;}
+  return sp;
+ }
  function endDart(){const f=state.dart;if(!f)return;f.boost=1;f.bend=0;f.bendYaw=0;state.dart=null;state.dartT=0;}
  /** Any of the body's samples (nose, shoulders, flanks, tail: RIDE_HULL) `look` m further along heading `yaw` is dry land. */
  function hullLand(f:RideFriend,yaw:number,look:number,land:(x:number,z:number)=>boolean){
@@ -223,22 +277,28 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   const t=state.retT+=dt;loopPoint(f.points,f.lengths,f.total,f.u,p);
   const dx=p.x-f.fx,dz=p.z-f.fz,dist=Math.hypot(dx,dz),rate=RET_TURN*dt;
   const y0=f.fyaw;if(!(state.shoreT>0&&state.land))f.fyaw=wrap(f.fyaw+Math.max(-rate,Math.min(rate,wrap(Math.atan2(dx,dz)-f.fyaw))));// (the shore brake steers instead)
+  // Nov 25 2026: a turn never swings the tail (or the nose) onto the sand: it holds this frame's heading instead.
+  const swings=()=>{if(!state.land)return false;const hh=RIDE_HULL[f.kind],l=state.land,on=(y:number,a:number)=>l(f.fx+Math.sin(y)*a,f.fz+Math.cos(y)*a);
+   return (on(f.fyaw,-hh.tail)&&!on(y0,-hh.tail))||(on(f.fyaw,hh.bow)&&!on(y0,hh.bow));};
+  if(f.fyaw!==y0&&swings())f.fyaw=y0;
   let sp=Math.min(Math.max(dartSpeed(t,state.retStart,state.retPeak,f.speed),f.speed*1.4)*(1+t*.12),dist*3+f.speed);
   // Never into land on the way home (RIDE_HULL): a land hit ahead starts / renews the shore brake (slow, turning to the open side).
-  const land=state.land;state.hullAcc+=dt;
-  if(land){
-   if(state.shoreT>0){state.shoreT-=dt;sp=Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));if(state.shoreBlock)f.fyaw=wrap(f.fyaw+state.shoreSide*RET_TURN*RIDE_SHORE_TURN*dt);}// turn until the way ahead is clear (along the shore), then swim on
+  const land=state.land;
+  // Inside the hull margin (a ride ended at the shore): the escape owns the heading and the speed until it is out (RET_ESC_*).
+  if(land&&state.escYaw!==state.escYaw&&(state.escBoxed||(state.hullAcc+dt>=RIDE_TICK-1e-6||!Number.isFinite(state.hullAcc))&&hullLand(f,f.fyaw,0,land))){
+   state.escBoxed=false;state.escYaw=seawardYaw(f,land);state.escRun=0;state.escClear=0;state.escStall=0;state.escIn=true;state.escapes++;state.hullAcc=0;}
+  if(land&&state.escYaw===state.escYaw){f.fyaw=y0;sp=escStep(f,dt,land);}
+  else if(land){state.hullAcc+=dt;
+   if(state.shoreT>0){state.shoreT-=dt;sp=Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));if(state.shoreBlock){const yb=f.fyaw;f.fyaw=wrap(f.fyaw+state.shoreSide*RET_TURN*RIDE_SHORE_TURN*dt);if(swings()){f.fyaw=yb;state.escBoxed=true;}}}// boxed in (the turn would beach the tail / nose): the escape takes over next frame// turn until the way ahead is clear (along the shore), then swim on
    const ds=sp*dt;
    if(hullDue(f.fyaw,ds)){
     const look=Math.max(ds,sp*RIDE_TICK);
     state.shoreBlock=hullLand(f,f.fyaw,look,land);
     if(state.shoreBlock){
      if(state.shoreT<=0)state.shoreSide=openSide(f,land);state.shoreT=RIDE_SHORE_T;
-     // This frame's turn would swing the body (the tail, a flank) into the margin: hold the heading and turn the other way.
-     if(hullLand(f,f.fyaw,0,land)&&!hullLand(f,y0,0,land)){f.fyaw=y0;state.shoreSide=-state.shoreSide;}
-     // Already inside the margin both ways (stopped, turning on the spot): re-read the open side every probe, so a turn that
-     // started towards the land (a headland's curve) swings back out instead of sweeping the nose onto the sand.
-     else if(hullLand(f,f.fyaw,0,land)){const s=openSide(f,land);if(s!==state.shoreSide){state.shoreSide=s;f.fyaw=y0;}}
+     // This frame's turn would swing the body (the tail, a flank) into the margin: hold the heading (the side is NOT flipped: that
+     // flip every probe was the Nov 25 shake). A body already inside the margin is the escape's job (above, next frame).
+     if(hullLand(f,f.fyaw,0,land)&&!hullLand(f,y0,0,land)){f.fyaw=y0;state.escBoxed=true;}// and it is boxed in: the escape takes over
      sp=hullLand(f,f.fyaw,0,land)?0:Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));state.hullBudget=sp>0&&!hullLand(f,f.fyaw,sp*RIDE_TICK,land)?sp*RIDE_TICK:0;
     }else state.hullBudget=look;
     state.hullAcc=0;state.hullYaw=f.fyaw;

@@ -81,7 +81,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   return insideObstacle(x,z,roof,-clearance)&&!blocked(x,z,barriers,.8);
  }
  /** `water` (wading, Oct 15 2026): which water the walker may step into, and the wade speed scale (waterDepth.ts). */
- function update(dt:number,p:{x:number;z:number},v:{x:number;z:number},input:{x:number;z:number;sprint:boolean},mode:TravelMode,water?:{allow:(x:number,z:number)=>boolean;speed:number}){
+ function update(dt:number,p:{x:number;z:number},v:{x:number;z:number},input:{x:number;z:number;sprint:boolean},mode:TravelMode,water?:{allow:(x:number,z:number)=>boolean;speed:number},ground?:{speed:number;accel:number}){
   state.impact=false;state.landImpact=0;
   const jumpHeight=jump.step(dt,p,v);if(jumpHeight!==null){state.height=jumpHeight;if(jump.state.fall)startFall(p,v);return;}
   if(state.recovery>0){state.recovery=Math.max(0,state.recovery-dt);v.x=v.z=0;return;}
@@ -134,7 +134,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // A ride on the lighthouse gallery (a 2 m ring) stays under LIGHTHOUSE.maxRideSpeed (a fast start brakes quickly to it).
   else if(mode!=='jetpack'&&mode!=='walk'&&state.height>LIGHTHOUSE.top-1&&nearLighthouse(p.x,p.z,.5)){slope=LIGHTHOUSE.maxRideSpeed/TRAVEL_MODES[mode].maxSpeed;
    const sp=Math.hypot(v.x,v.z),most=LIGHTHOUSE.maxRideSpeed*1.1;if(sp>most){const k=Math.max(most/sp,Math.exp(-dt*8));v.x*=k;v.z*=k;}}
-  stepPlayer(p,v,steer,dt,barriers,mode,collisionRadius,water?slope*water.speed:slope,coast,mode==='walk'&&water?water.allow:undefined);
+  // `ground` (Nov 25 2026, rideSand.ts): a ride on sand, its eased top-speed and acceleration scales (1 and 1 off the sand).
+  stepPlayer(p,v,steer,dt,barriers,mode,collisionRadius,(water?slope*water.speed:slope)*(ground&&mode!=='walk'&&mode!=='jetpack'?ground.speed:1),coast,mode==='walk'&&water?water.allow:undefined,ground&&mode!=='walk'&&mode!=='jetpack'?ground.accel:1);
   // The lighthouse gallery's railing and lantern wall (lighthouseGallery.ts; a height test anywhere else).
   if(mode!=='jetpack')lighthouseConstrain(fromX,fromZ,p,v,state.height,collisionRadius);
   const floor=surface(p.x,p.z,state.height);

@@ -432,7 +432,11 @@ export function buildSummitIsle(t:SummitTools){
    for(const s2 of [-1,1]){const z=PI.z+s2*gw;bakeRod(SP,V(gx,g0,z),V(gx,g0+gh,z),.05,white,8);bakeRod(SP,V(gx,g0+gh,z),V(back,g0+.2,z),.03,white,6);bakeRod(SP,V(gx,g0+.03,z),V(back,g0+.03,z),.03,white,6);}
    bakeRod(SP,V(gx,g0+gh,PI.z-gw),V(gx,g0+gh,PI.z+gw),.05,white,8);bakeRod(SP,V(back,g0+.03,PI.z-gw),V(back,g0+.03,PI.z+gw),.03,white,6);
    for(let z=-gw+.3;z<gw;z+=.3)bakeRod(SP,V(gx,g0+gh,PI.z+z),V(back,g0+.05,PI.z+z),.012,'#c6d4cc',3);
-   for(let k=1;k<5;k++){const f=k/5,x=gx+(back-gx)*f,y=g0+gh-(gh-.05)*f;bakeRod(SP,V(x,y,PI.z-gw),V(x,y,PI.z+gw),.012,'#c6d4cc',3);}}
+   for(let k=1;k<5;k++){const f=k/5,x=gx+(back-gx)*f,y=g0+gh-(gh-.05)*f;bakeRod(SP,V(x,y,PI.z-gw),V(x,y,PI.z+gw),.012,'#c6d4cc',3);}
+   // Side nets (owner Nov 25: the side triangles were open): cords from each post back to the sloping frame, and uprights up to it.
+   for(const s2 of [-1,1]){const z=PI.z+s2*gw,slopeX=(y:number)=>gx+(back-gx)*Math.min(1,(gh-y)/(gh-.2));
+    for(let y=.3;y<gh-.1;y+=.3)bakeRod(SP,V(gx,g0+y,z),V(slopeX(y),g0+y,z),.012,'#c6d4cc',3);
+    for(let k=1;k<5;k++){const f=k/5;bakeRod(SP,V(gx+(back-gx)*f,g0+.03,z),V(gx+(back-gx)*f,g0+gh-(gh-.2)*f,z),.012,'#c6d4cc',3);}}}
   for(const o of SUMMIT_OBSTACLES)obstacles.push({...o});
   // Floodlights on opposite touchlines: masts baked in; the lens is the island's lamp-lens paint (it glows at night) and a night
   // light pool lights each half of the pitch.

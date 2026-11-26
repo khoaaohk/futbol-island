@@ -243,6 +243,17 @@ Owner: "all of them are the same. give them variety in shape and styles". The Oc
   triangles; dry sand: 0 particles, 0 draws; the pool empties ~1 s after stopping and the mesh hides. Node heap check: < 64 KB over
   30k frames (no per-frame garbage). Reduced work only; **no iPhone thermal measurement**.
 
+## Ride sand spray and sand slowdown (Nov 25 2026, local, not deployed)
+
+- A scooter / bike / moped on dry sand (`lib/town/rideSand.ts`: main beach ring, Coral Cay sand + beach court, the cay sandbars, Summit
+  beach + sandbar; never roads, paths / built surface areas or within 2.6 m of the railway) kicks up sand grains through the SAME
+  ride-splash pool (`rideSplash.ts` `sand()`: a 4th particle kind, one extra colour uniform in the existing shader; no new program,
+  mesh, texture or draw; the pool cap stays 56). Rate 40 grains/s per rider at strength 1, more on turns and hard braking, nothing
+  under 2 m/s, half at tier 2, off for reduced motion, Battery saver and tier 3+. Me + the 2 nearest riding friends.
+- CPU: the sand lookup is cached per rider and only re-run after 0.45 m of travel (a point-in-polygon on the island grass outline,
+  a 16 m road-rect grid, one `trackNearest`); ~20-60 lookups/s at full speed, zero standing still or walking.
+- Top speed ×0.85 and acceleration ×0.8 on sand (`stepPlayer` `accelScale`), eased over 0.3 s; no extra per-frame work off the sand.
+
 ## Friends on the map (Oct 23 2026, local, not deployed)
 
 - Party friends draw as coloured initial dots on the travel map and the corner minimap (`components/FriendMapDots.tsx`, rules in `lib/town/friendMarks.ts`). No protocol / relay change and no new messages: positions are the party store's last island spots (`partyStore.spot(id)`, mutated in place in `store.ts` as poses arrive, never emitted).
