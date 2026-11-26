@@ -7129,3 +7129,16 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
 - **Depth cues cost nothing per pixel:** carried in the lawn's vertex normals (slope exaggerated 1.8x, concave ground leans away from the fixed sun, convex toward it). No colour attribute, shader, program or texture. Timber path risers are shadow-casting plain paint, so they join each chunk's shared paint batch.
 - **Measured (headless desktop Chrome, not a phone):** chunk meshes 1011 → 1010 on the cay build (the farm's two tracks became one sheet), materials 233 = 233, programs and textures equal per view (beach 96 / 81, plaza 99 / 90, phone beach 84, plaza 87). Cay chunk triangles 254.6k → 278.7k (+24.1k: lawn +13.7k, draped layers +8.8k, risers). Battery saver: 253.6k → 272.7k.
 - **Tradeoff:** the plaza view draws about 10 more chunks than flat (158 vs 148 calls on desktop; phone 89 = 89) because the camera stands 3.6 m higher and sees further; no draw was added to the scene. No iPhone temperature was measured.
+
+### West audit pass (Nov 26 2026, still behind `?elev=1`, not pushed)
+
+Build-time only; no new material, texture, program, draw or per-frame work (programs 227 = 227 flag off / on in one session).
+- Retaining wall face is coursed stone: one quad per block (0.44 m courses, 1.1 m blocks, staggered), tinted per block through
+  `userData.vertexTint` in the existing chunk paint batch (world.ts multiplies it into the baked vertex colour; pieces without it
+  are untouched). The six full-length course-line sweeps are gone. Stepped garden walls beside Stadium Plaza (12 level lengths,
+  2 colliders per side). Wall + stairs + garden walls: 6.8k → 10.4k static triangles.
+- Lawn patch: normals lean 2.4x the grade (light and shade on the banks, no colour attribute); T-junctions between 8 / 4 / 2 m
+  cells stitched (same 9.3k triangles). Plaza sheet and trails lean the same way (`userData.drapeLean`, opt-in in `drapePieces`).
+- Frame triangles, flag off → on, desktop: plaza 305k → 335k, pitch 354k → 392k (crowd fill varies), wall side 271k → 292k;
+  phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
+  camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.

@@ -47,6 +47,8 @@ export function drapePieces(skip:string[],terrains:string[]=[]){
   const pos=g.getAttribute('position') as T.BufferAttribute;
   for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i);pos.setY(i,v.y+at(v.x,v.z)-piece.lift+DRAPE_UP);}
   pos.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();draped++;
+  // Opt-in (`userData.drapeLean`, the west plaza's sheet): upward normals lean that much further than the ground, so a gentle paved grade takes light and shade like the lawn beside it (westTerrain.ts LAWN_TILT). Normals only.
+  {const k=m.userData.drapeLean as number|undefined;if(k){const n=g.getAttribute('normal') as T.BufferAttribute;for(let i=0;i<n.count;i++){const y=n.getY(i);if(y<.5)continue;const x=n.getX(i)*k,z=n.getZ(i)*k,l=Math.hypot(x,y,z);n.setXYZ(i,x/l,y/l,z/l);}n.needsUpdate=true;}}
  }
  return {added,draped};
 }

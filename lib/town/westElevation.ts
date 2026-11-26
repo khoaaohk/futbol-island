@@ -51,6 +51,9 @@ export const WEST_STAIRS:readonly Stair[]=[
  // The pond: off the ring walk's south edge down into the sunken garden.
  {id:'pond',x:-182,z:EDGE.south,dx:0,dz:1,w:5,slope:.42,len:10.5,inset:0},
 ];
+/** The west trail on the terrace: with the terrace it runs straight from the ring walk to the station stair's mouth (the
+ *  curve in westParkLayout crossed the flight on a diagonal and met the hedge 2 m off the mouth); drawn by westPark.ts. */
+export const WEST_TRAIL_TOP={x0:-275,x1:WEST_STAIRS[0].x-WEST_STAIRS[0].len,z:WEST_STAIRS[0].z,half:2.25} as const;
 /** Along / across a stair's axis. */
 export const stairLocal=(s:Stair,x:number,z:number)=>{const ax=x-s.x,az=z-s.z;return {t:ax*s.dx+az*s.dz,a:-ax*s.dz+az*s.dx};};
 const inNotch=(x:number,z:number)=>{for(const s of WEST_STAIRS){if(!s.inset)continue;const {t,a}=stairLocal(s,x,z);if(t>0&&t<=s.inset&&Math.abs(a)<s.w/2)return true;}return false;};
@@ -70,10 +73,13 @@ export const WEST_BOX=box;
 const terraceSigned=(x:number,z:number)=>{const p=WEST_TERRACE,r=p.r??0,qx=Math.abs(x-p.x)-(p.w/2-r),qz=Math.abs(z-p.z)-(p.d/2-r);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-r;};
 /** Would something `r` m wide at (x, z) stand in the retaining wall, its hedge or a flight of stairs? Trees, lamp posts and
  *  props keep clear (false with elevation off, so today's layout is unchanged). */
-export function nearWestWall(x:number,z:number,r=0){
+export function nearWestWall(x:number,z:number,r=0,crown=0){
  if(!elevationOn()||x<box.minX||x>box.maxX||z<box.minZ||z>box.maxZ)return false;
- for(const s of WEST_STAIRS){const {t,a}=stairLocal(s,x,z);if(t>-r-1&&t<s.len+r+1&&Math.abs(a)<s.w/2+r+1)return true;}
- const d=terraceSigned(x,z);return d<r+.6&&d>-r-1.3&&WEST.terrace-grid.ground(x,z)>.25;
+ for(const s of WEST_STAIRS){const {t,a}=stairLocal(s,x,z);if(t>-r-1-crown&&t<s.len+r+1+crown&&Math.abs(a)<s.w/2+r+1+crown)return true;}
+ // (audit, Nov 26) the west trail's last stretch on the terrace is laid straight to the station stair's mouth (WEST_TRAIL_TOP)
+ if(Math.abs(z-WEST_TRAIL_TOP.z)<WEST_TRAIL_TOP.half+r+.6&&x>WEST_TRAIL_TOP.x1-r&&x<WEST_TRAIL_TOP.x0+r)return true;
+ // `crown`: a tree's canopy keeps clear too (it stood in the wall's face / hung over the hedge and threw odd shadows on the stone)
+ const d=terraceSigned(x,z);return d<r+.6+crown&&d>-r-1.3-crown&&WEST.terrace-grid.ground(x,z)>.25;
 }
 export const WEST_REGION:Region=registerRegion({...grid,ground:westGround,slope:(x,z)=>Math.hypot(westGround(x+1,z)-westGround(x-1,z),westGround(x,z+1)-westGround(x,z-1))/2,peak:()=>elevationOn()?WEST.terrace:0});
 /** The stadium's base: every absolute height in the bowl (stands, roofs, rails, lights, the pitch) stands this much higher. */
