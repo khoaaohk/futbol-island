@@ -11,6 +11,7 @@ import {GAME_LISTINGS,GAMES_UPDATED} from './games';
 import {FACTS_PATH,FAMILY_CHECKED} from './checked';
 import {COLLECTIONS,COLLECTIONS_UPDATED} from './collections';
 import {COMPARISONS,COMPARISONS_UPDATED} from './comparisons';
+import {GAP_PAGES,GAP_UPDATED} from './gapPages';
 import {BOOKS_PATH,BUILT_BOOKS,bookPath} from './books';
 import {VIDEOS_PATH,VIDEOS_UPDATED,videoSitePaths} from './videos';
 import {pageModified} from './lastmod';
@@ -56,6 +57,7 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
   /* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and out of both sitemaps (NOINDEX_CARD_PATHS below) */...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
   ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */
   ...COMPARISONS.map(c=>({path:c.path,priority:.7,lastmod:COMPARISONS_UPDATED})),/* "A vs B" guides (lib/site/comparisons.ts) */
+  ...GAP_PAGES.map(g=>({path:g.path,priority:.7,lastmod:GAP_UPDATED})),/* Nov 26 2026: the gap pages (lib/site/gapPages.ts) */
   ...videoSitePaths().map(path=>({path,priority:path===VIDEOS_PATH?.7:.6,lastmod:VIDEOS_UPDATED})),/* the video watch pages and their hub (lib/site/videos.ts) */
   {path:BOOKS_PATH,priority:.7,lastmod:U.books},...BUILT_BOOKS.map(id=>({path:bookPath(id),priority:.6,lastmod:U.books}))];/* the pop-up books (lib/site/books.ts) *//* "A vs B" guides (lib/site/comparisons.ts) */
 }

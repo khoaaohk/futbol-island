@@ -31,6 +31,8 @@ import {RULE_PLAY,isRulePlaySlug} from '@/lib/site/rulePlay';
 import {longDate} from '@/lib/site/checked';
 import {ruleCrossLinks} from '@/lib/site/crossLinks';
 import styles from '../../../site.module.css';
+import {PenaltyAreaDiagram,RefereeCards} from '@/components/site/visual/Visuals';
+import {CardHistory} from '@/components/site/visual/TermVisuals';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
 export const dynamic='force-static';
@@ -64,6 +66,8 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(r.bodies?['by-country']:[]),...(futsal?['futsal-vs-soccer']:[])],false,play)} current="#top"/>} onward={onwardFor(r.cta)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
+  {r.slug==='penalty-kick'&&<Section id="measured" title="Penalty kick diagram: the measurements and who stands where"><PenaltyAreaDiagram/></Section>/* Nov 26 2026 (SEO lift: "penalty kick diagram") */}
+  {cards&&<RefereeCards/>}
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}
   <Section id="diagram" title={`${r.name}: diagram`}>
@@ -73,6 +77,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   </Section>
   {r.extra&&<RuleExtraSection x={r.extra}/>}
   {cards&&<CardRulesGame c={CARD_RULES}/>}
+  {cards&&<CardHistory/>/* Nov 26 2026 (SEO lift + visual pass): the cards' history and Try it row, lib/site/visualExtras.ts */}
   {play&&<RulePlayGame c={play}/>}
   <Section id="referee" title="What the referee looks for">
    <Bullets items={r.refs}/>
@@ -93,7 +98,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   {/* Nov 15 2026 (seo-links): "futsal rules vs soccer rules" lands here, so the comparison is a section, not a second page. */}
   {futsal&&<Section id={FUTSAL_VS_SOCCER.id} title={FUTSAL_VS_SOCCER.title}>
    <DataTable label={FUTSAL_VS_SOCCER.title} head={FUTSAL_VS_SOCCER.head} rows={FUTSAL_VS_SOCCER.rows}/>
-   <p className={styles.caption}>{FUTSAL_VS_SOCCER.note}</p>
+   <p className={styles.caption}>{FUTSAL_VS_SOCCER.note} <a href="/learn/soccer-rules/futsal-vs-soccer">Every difference, with a court drawn to scale</a>.</p>
   </Section>}
   {/* visual pass Nov 17 2026: one FAQ per page; the cards page's side questions join this list (not the FAQPage JSON-LD) */}
   <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq} more={cards?CARD_RULES.side.items:undefined}>

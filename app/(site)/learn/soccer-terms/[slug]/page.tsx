@@ -24,6 +24,7 @@ import {abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {TERM_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
+import {TermVisualTop,TermVisualTry} from '@/components/site/visual/TermVisuals';
 
 /** One glossary term with a page of its own (lib/site/terms.ts): the answer, a diagram, the steps, mistakes, FAQ, lessons. */
 export const dynamic='force-static';
@@ -57,6 +58,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
   <GuideIntro top rail={<RailNav rail={guideRail('terms',[...(t.kinds?['types']:[]),...(t.sides?['other-side']:[]),...(t.alsoMeans?['also-means']:[])])} current="#top"/>} onward={onwardFor(t.cta)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
+  <TermVisualTop slug={t.slug}/>{/* Nov 26 2026 (SEO lift + visual pass): the cards / goals picture and its table, lib/site/visualExtras.ts */}
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   {t.extra&&<RuleExtraSection x={t.extra}/>/* Nov 24 2026 (SEO quick wins) */}
@@ -68,6 +70,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   </Section>}
   {t.alsoMeans&&<Section id="also-means" title={`${t.name}: also means`}><p>{t.alsoMeans}</p></Section>}
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal" fold><p>{t.formats}</p></Section>
+  <TermVisualTry slug={t.slug}/>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>

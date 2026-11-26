@@ -1,0 +1,86 @@
+/* Teaching visuals for the guide pages (SEO lift + visual pass, Nov 26 2026; components/site/visual/Visuals.tsx).
+   Site tokens only (app/(site)/site.module.css :root), flat colour, no shadows, no gradients, no thin rules: surfaces are a
+   tone step (--surface / --well / --paper). Nothing animates on its own; the only motion is a short colour/scale change on
+   hover or focus, dropped under prefers-reduced-motion. */
+.fig{margin:0;display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
+.fig svg{display:block;width:100%;height:auto}
+.board{background:var(--surface);border-radius:var(--r-lg);padding:var(--s2)}
+.cap{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft);max-width:var(--measure)}
+
+/* the referee's cards: picture + what each colour means, side by side from 560px */
+.cards{display:grid;gap:var(--s2);grid-template-columns:minmax(0,1fr)}
+.cardRow{display:grid;grid-template-columns:72px minmax(0,1fr);gap:var(--s2);align-items:center;background:var(--paper);border-radius:var(--r-md);padding:12px 14px}
+.cardRow svg{width:72px;height:auto}
+.cardRow b{display:block;font-size:var(--t-h3);line-height:1.2;color:var(--ink)}
+.cardRow p{margin:4px 0 0;font-size:16px;line-height:1.45;color:var(--ink)}
+@media (min-width:640px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cardRow{grid-template-columns:minmax(0,1fr);justify-items:start;align-content:start}}
+
+/* goals strip: 1 goal, 2 a brace, 3 a hat-trick */
+.goals{display:grid;gap:var(--s1);grid-template-columns:repeat(3,minmax(0,1fr))}
+.goal{display:grid;gap:6px;justify-items:center;text-align:center;background:var(--paper);border-radius:var(--r-md);padding:12px 8px}
+.goal svg{width:100%;max-width:120px;height:auto}
+.goal b{font-size:var(--t-h3);line-height:1.2;color:var(--ink)}
+.goal span{font-size:15px;line-height:1.35;color:var(--ink-soft)}
+.goalHot{background:var(--gold)}
+.goalHot span{color:var(--ink)}
+
+/* the positions pitch: each dot is a link to its row (#pos-…); the row lights up with :target. No script. */
+.posWrap{display:grid;gap:var(--s3);max-width:calc(var(--measure) + 2 * var(--s3))}
+@media (min-width:900px){.posWrap{grid-template-columns:minmax(0,300px) minmax(0,1fr);align-items:start}}
+.posSvg{max-width:340px;justify-self:center;width:100%}
+.dot circle{transition:transform .15s ease;transform-box:fill-box;transform-origin:center}
+.dot:hover circle,.dot:focus-visible circle{transform:scale(1.15)}
+.dot:focus-visible{outline:none}
+.dot:focus-visible circle{stroke:var(--ink);stroke-width:3}
+.posList{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s1)!important}
+.posItem{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border-radius:var(--r-md);padding:12px 14px;scroll-margin-top:96px;transition:background-color .15s ease}
+.posItem:target{background:var(--gold)}
+.abbr{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:var(--r-sm);background:var(--ink);color:var(--paper);font-weight:800;font-size:16px;line-height:1;text-align:center;padding:0 6px}
+.posItem b{display:block;font-size:17px;line-height:1.3;color:var(--ink)}
+.posItem p{margin:2px 0 0;font-size:16px;line-height:1.45;color:var(--ink)}
+.posItem small{display:block;margin-top:4px;font-size:15px;line-height:1.4;color:var(--ink-soft)}
+
+/* drill cards: set-up drawing + the steps */
+.drills{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s3)!important;max-width:calc(var(--measure) + 2 * var(--s3))}
+.drill{display:grid;gap:var(--s2);background:var(--surface);border-radius:var(--r-lg);padding:var(--pad-box);scroll-margin-top:96px}
+@media (min-width:720px){.drill{grid-template-columns:minmax(0,220px) minmax(0,1fr);align-items:start}}
+.drill svg{width:100%;max-width:260px;height:auto;justify-self:center}
+.drill h3{margin:0}
+.drill ol,.drill ul{margin:0}
+.meta{display:flex!important;flex-wrap:wrap;gap:8px!important;margin:0;padding:0!important;list-style:none}
+.meta li{flex:none;width:auto;margin:0;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:var(--r-pill);background:var(--paper);font-size:15px;line-height:1;font-weight:700;color:var(--ink)}
+.tipLine{margin:0;font-size:16px;line-height:1.45}
+
+/* steps with a small icon each */
+.steps{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s1)!important;max-width:calc(var(--measure) + 2 * var(--s3))}
+.step{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;align-items:start;background:var(--surface);border-radius:var(--r-md);padding:12px 14px}
+.stepIcon{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--r-sm);background:var(--paper)}
+.step b{display:block;font-size:17px;line-height:1.3}
+.step p{margin:2px 0 0;font-size:16px;line-height:1.45}
+
+/* callouts: common mistakes (well) and the coach's tip (gold) */
+.callout{display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;border-radius:var(--r-lg);padding:var(--pad-box);background:var(--well)}
+.callout ul{margin:0}
+.tip{background:var(--gold)}
+.tip p,.tip li{color:var(--ink)}
+.calloutHead{display:flex;align-items:center;gap:10px;margin:0;font-size:var(--t-h3);line-height:1.2;font-weight:700}
+
+/* Try it in the game */
+.try{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s1)!important;grid-template-columns:minmax(0,1fr);max-width:calc(var(--measure) + 2 * var(--s3))}
+@media (min-width:640px){.try{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tryLink{display:grid;gap:4px;height:100%;box-sizing:border-box;padding:14px 16px;border-radius:var(--r-md);background:var(--link);color:var(--paper)!important;text-decoration:none;transition:background-color .15s ease}
+.tryLink:hover,.tryLink:focus-visible{background:var(--ink)}
+.tryLink b{font-size:17px;line-height:1.3}
+.tryLink span{font-size:15px;line-height:1.4;opacity:.92}
+
+/* terms by topic */
+.topics{display:grid;gap:var(--s2);grid-template-columns:minmax(0,1fr);max-width:calc(var(--measure) + 2 * var(--s3))}
+@media (min-width:640px){.topics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.topic{display:grid;gap:8px;align-content:start;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px}
+.topic h3{display:flex;align-items:center;gap:10px;margin:0}
+.topic ul{list-style:none;margin:0;padding:0!important;display:flex;flex-wrap:wrap;gap:8px}
+.topic a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:var(--r-pill);background:var(--paper);font-size:15px;line-height:1;font-weight:700;text-decoration:none}
+.topic a:hover,.topic a:focus-visible{background:var(--gold)}
+
+@media (prefers-reduced-motion:reduce){.dot circle,.posItem,.tryLink{transition:none}.dot:hover circle,.dot:focus-visible circle{transform:none}}
+@media print{.tryLink{background:none;color:var(--ink)!important}.posItem:target{background:var(--surface)}}

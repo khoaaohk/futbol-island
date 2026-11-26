@@ -8,6 +8,8 @@ import {RULES_HUB} from '@/lib/site/rules';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {abs,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {TopicGrid,TryIt} from '@/components/site/visual/Visuals';
+import {TERM_HUB_TRY,TERM_TOPICS,TERM_TOPICS_TITLE} from '@/lib/site/visualExtras';
 
 /** /learn/soccer-terms: the glossary (lib/site/terms.ts). Every term on one page in A-Z sections, each with its own anchor. */
 export const dynamic='force-static';
@@ -20,7 +22,9 @@ export default function TermsHub(){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={termSetLd}/>
   <JsonLd data={faqLd(HUB.faq)}/>
-  <GuideIntro top rail={<RailNav rail={hubRail('Soccer terms on this page',[{items:GLOSSARY_LETTERS.map(l=>({href:`#letter-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('pages','Terms with a diagram')]}])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  <GuideIntro top rail={<RailNav rail={hubRail('Soccer terms on this page',[{items:GLOSSARY_LETTERS.map(l=>({href:`#letter-${l.letter.toLowerCase()}`,name:l.letter}))},{items:[sec('by-topic','By topic'),sec('pages','Terms with a diagram')]}])} current="#top"/>} crumbs={crumbs} h1={HUB.h1} lead={HUB.lead} more={HUB.more} cta/>
+  {/* Nov 26 2026 (SEO lift + visual pass): the terms with a page by topic, above the A-Z, for "soccer words" searchers */}
+  <Section id="by-topic" title={TERM_TOPICS_TITLE}><TopicGrid groups={TERM_TOPICS}/></Section>
   <Section id="az" title="Jump to a letter">
    <p>{GLOSSARY_LETTERS.map((l,i)=><span key={l.letter}>{i>0&&' · '}<a href={`#letter-${l.letter.toLowerCase()}`}>{l.letter}</a></span>)}</p>
   </Section>
@@ -28,6 +32,7 @@ export default function TermsHub(){
    <ul>{l.terms.map(g=><li key={g.id} id={g.id}><b>{g.term}.</b> {g.def}{g.to&&<> <a href={g.to}>{g.toName}</a>.</>}</li>)}</ul>
   </Section>)}
   <Section id="pages" title="Terms with a diagram"><LinkList ids="term" links={TERM_PAGES.map(t=>({path:t.path,name:t.name,line:t.short}))}/></Section>
+  <TryIt links={TERM_HUB_TRY}/>
   <QA id="faq" title="Questions about soccer words" faq={HUB.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'Every position and the numbers 1 to 11'},
    {path:'/learn/soccer-formations',name:'Soccer formations for kids',line:'Shapes for 7v7, 9v9, 11v11 and futsal'},{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'}]}]}/>

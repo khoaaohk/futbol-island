@@ -1,4 +1,6 @@
 import type {Metadata} from 'next';
+import GapPageView from '@/components/site/visual/GapPageView';
+import {gapEs} from '@/lib/i18n/es/gapPages';
 import {diagramUrl,formationImage,positionImage} from '@/lib/site/guides';
 import {ES_HUBS,esComparison,esFormatGuide,esFormation,esPosition,esRule,esTerm} from '@/lib/i18n/es/registry';
 import {guideByPath} from '@/lib/site/guides';
@@ -29,6 +31,7 @@ const GUIDES:Readonly<Record<string,'7v7'|'8v8'|'9v9'|'11v11'>>={'/learn/7v7-soc
 export function esRoute(enPath:string):EsRoute|null{
  if(enPath==='/learn')return lessonsEsRoute(enPath);/* /es/learn?q= search: noindex, not a sitemap page */
  if(!hasEs(enPath))return null;
+ {const g=gapEs(enPath);if(g)return {meta:()=>esMeta(g.title,g.desc,enPath,{url:g.image,alt:g.imageAlt}),render:()=><GapPageView p={g} lang="es"/>};}/* Nov 26 2026: the gap pages */
  if(enPath==='/')return {meta:()=>esMeta(HOME.title,HOME.desc,'/'),render:()=><HomeEs/>};
  if(enPath==='/about')return {meta:()=>esMeta(ABOUT.title,ABOUT.desc,enPath),render:()=><AboutEs/>};
  if(enPath==='/about/how-we-check-facts')return {meta:()=>esMeta(FACTS.title,FACTS.desc,enPath),render:()=><FactsEs/>};

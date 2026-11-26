@@ -215,6 +215,8 @@
 .footHubs{max-width:var(--col);margin:0 auto var(--s2);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2) var(--s3);text-align:left}
 .footHead{margin:0 0 2px;color:var(--ink);font-size:var(--t-cap);font-weight:700;line-height:1.3}
 .footGroup ul{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+/* the Spanish sections row under the four columns (FooterHubs, Nov 26 2026): full width, links always in a row */
+.footEs{grid-column:1/-1}.footHubs .footEs ul{display:flex}
 @media(min-width:600px){.footHubs{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}.footGroup ul{display:block}}
 @media(min-width:900px){.footHubs{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(min-width:600px) and (pointer:fine){.page .footGroup a{min-height:32px}}

@@ -25,7 +25,7 @@ export default function PlayBar({href,text,lang}:{href:string;text:string;lang?:
  const hide=()=>{setOff(true);try{sessionStorage.setItem(OFF_KEY,'1');}catch{/* private mode */}};
  return <div ref={bar} className={styles.playBar} hidden={!show||off} data-play-bar="">
   <span className={styles.playBarText}>{text}</span>
-  <a className={styles.playBarBtn} href={href}>{lang==='es'?'Juega gratis':'Play free'}</a>
+  <a className={styles.playBarBtn} href={href} rel={/^\/(?:play|arcade)\?/.test(href)?'nofollow':undefined/* game deep links: lib/site/playLinks.ts deepLinkRel */}>{lang==='es'?'Juega gratis':'Play free'}</a>
   <button type="button" className={styles.playBarHide} onClick={hide} aria-label={lang==='es'?'Ocultar la barra de Jugar':'Hide the Play bar'}>
    <span aria-hidden="true" className={styles.playBarX}/>
   </button>

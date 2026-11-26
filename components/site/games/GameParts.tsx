@@ -15,7 +15,7 @@ import lib from '@/components/site/library.module.css';
  * plain lazy <img> with their real size, and every clip box has its poster's aspect ratio, so nothing shifts as media loads.
  */
 /** The gold button: the one way from a game page into that game (the deep link /arcade?game=<id>). Label: UI sans 800 (.cta). */
-export const PlayLink=({game}:{game:GamePage})=><a className={site.cta} href={game.play} data-play={game.id}>Play {game.name}</a>;
+export const PlayLink=({game}:{game:GamePage})=><a className={site.cta} href={game.play} rel="nofollow" data-play={game.id}>Play {game.name}</a>;
 export function GameIntro({crumbs,h1,lead,game}:{crumbs:readonly Crumb[];h1:string;lead:string;game?:GamePage}){
  return <header className={site.intro} id="top" data-games-page="">{/* marks /games and /games/<slug> so the header's Games link is the selected one (site.module.css) */}
   <Breadcrumbs crumbs={crumbs}/>
@@ -32,12 +32,12 @@ export function GameIntro({crumbs,h1,lead,game}:{crumbs:readonly Crumb[];h1:stri
 export function PlayStage({game}:{game:GamePage}){
  const shots=stageShots(game),wide=shots[0].w>shots[0].h;
  return <div className={`${g.stage}${wide?' '+g.stageWide:''}`} data-play-stage={game.id}>
-  <a className={g.stageArt} href={game.play} data-play={game.id} tabIndex={-1} aria-hidden="true" data-n={shots.length}>
+  <a className={g.stageArt} href={game.play} rel="nofollow" data-play={game.id} tabIndex={-1} aria-hidden="true" data-n={shots.length}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
    {shots.map((s,i)=><img key={s.src} src={s.src} alt="" width={s.w} height={s.h} loading="eager" decoding={i?'async':'sync'} {...(i?{}:{fetchpriority:'high'})}/>)}
   </a>
   <div className={g.stageWords}>
-   <a className={`${site.cta} ${g.stageCta}`} href={game.play} data-play={game.id} data-play-now="">{PLAY_NOW}</a>
+   <a className={`${site.cta} ${g.stageCta}`} href={game.play} rel="nofollow" data-play={game.id} data-play-now="">{PLAY_NOW}</a>
    <p className={g.stageHow}>{howToPlay(game)}</p>
    <p className={g.stageWorks}>{PLAY_WORKS}</p>
   </div>
@@ -48,13 +48,13 @@ export function PlayStage({game}:{game:GamePage}){
 export function QuickPlay({games}:{games:readonly GamePage[]}){
  return <ul className={g.quick} aria-label="Play a game now">{games.map((x,i)=>{const s=cardShot(x);
   return <li key={x.id} className={g.quickCard}>
-   <a className={g.quickArt} href={x.play} data-play={x.id} tabIndex={-1} aria-hidden="true">
+   <a className={g.quickArt} href={x.play} rel="nofollow" data-play={x.id} tabIndex={-1} aria-hidden="true">
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={s.src} alt="" width={s.w} height={s.h} loading={i<2?'eager':'lazy'} decoding="async"/>
    </a>
    <h3 className={g.quickName}><a href={x.path}>{x.name}</a></h3>
    <p className={g.quickSkill}>{x.skill}</p>
-   <a className={g.quickPlay} href={x.play} data-play={x.id} aria-label={`Play ${x.name} now`}>Play now</a>
+   <a className={g.quickPlay} href={x.play} rel="nofollow" data-play={x.id} aria-label={`Play ${x.name} now`}>Play now</a>
   </li>;})}</ul>;
 }
 const Shot=({s}:{s:GameShot})=><figure className={g.shot}>
@@ -92,7 +92,7 @@ export function GameFeature({game}:{game:GamePage}){
    <h3 className={g.featureName}><a href={game.path}>{game.name}</a></h3>
    <span className={g.gameKind}>{kind}</span>
    <p>{game.blurb}. It teaches {game.skill[0].toLowerCase()+game.skill.slice(1)}.</p>
-   <span className={g.gameLinks}><a className={g.playNow} href={game.play}>Play {game.name}</a><a href={game.path}>How to play</a></span>
+   <span className={g.gameLinks}><a className={g.playNow} href={game.play} rel="nofollow">Play {game.name}</a><a href={game.path}>How to play</a></span>
   </div>
   {stills.length>0&&<ul className={g.thumbs} aria-label={`More pictures of ${game.name}`}>{stills.map(s=><li key={s.src}>
    {/* eslint-disable-next-line @next/next/no-img-element */}

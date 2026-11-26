@@ -38,6 +38,7 @@ export default function NumbersPage(){
    <DataTable label="Soccer position abbreviations" head={['Letters','Position','What it means']}
     rows={ABBREVIATIONS.map(a=>[a.abbr,a.slug?<a key={a.abbr} href={positionPath(a.slug)}>{a.name}</a>:a.name,a.line])}/>
   </Section>
+  <p>The full list, with a pitch you can tap and the Spanish letters (DFC, MCD, MCO): <a href="/learn/soccer-positions/abbreviations">soccer position abbreviations</a>.</p>
   <Section id="why" title="Why do soccer positions have numbers?"><Bullets items={P.why}/></Section>
   <Section id="small" title="Numbers in 7v7, 9v9 and futsal"><Bullets items={P.small}/></Section>
   <QA id="faq" title="Questions about position numbers" faq={P.faq}/>
