@@ -128,7 +128,8 @@ button.backLink.backLink.backLink.backLink{position:absolute}
 .actions{position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:6px}
 .choices{display:grid;justify-items:center;gap:8px;width:min(340px,100%)}
 /* Nov 25 2026 (title-screen audit F2): one calm line over Start that says what this is, for a new visitor. Static (no motion). */
-.tagline{margin:0 0 2px;max-width:100%;padding:0 8px;color:var(--btn-ink,#0f2a2f);font:700 15px/1.3 var(--btn-font,inherit);letter-spacing:.01em;text-align:center;text-wrap:balance}
+/* A flat cream label (no rim, no shadow: it is not a button), so it reads over the art where the cast stands close (desktop). */
+.tagline{margin:0 0 2px;max-width:100%;padding:4px 12px;border-radius:999px;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--ink);font:700 14px/1.3 var(--btn-font,inherit);letter-spacing:.01em;text-align:center;text-wrap:balance}
 /* Nov 14 2026 (retention): before the save module settles the state ('boot'), both button sets are in the static HTML; the pre-paint
    <html data-title-code> flag (lib/boot/titleCode.ts TITLE_CODE_BOOT) shows the returning Play, otherwise Start. */
 .actions[data-title-state=boot] [data-boot-card=returning],:global(html[data-title-code]) .actions[data-title-state=boot] [data-boot-card=new]{display:none}
