@@ -7214,3 +7214,12 @@ Desktop + phone-viewport headless Chrome only: reduced or equal work is stated, 
 - **Raised west side**: lips and wear run in their own pass on raised ground; raised squares (the plaza) are skipped, so today it adds 0 triangles.
 - Six-view tour, all off -> all on (draws / triangles / programs / textures): desktop town 379 / 382.1k / 72 / 70 -> 389 / 438.7k / 71 / 70; Nursery 178 / 145.6k / 74 / 70 -> 182 / 184.0k / 73 / 70; beach 110 / 147.1k / 82 / 73 -> 114 / 182.1k / 81 / 73; cay plaza 150 / 277.4k / 91 / 83 -> 158 / 299.6k / 91 / 83; west plaza 105 / 304.1k / 101 / 102 -> 107 / 346.1k / 101 / 100; stadium 89 / 364.9k / 102 / 103 -> 84 / 401.3k / 102 / 101. Battery saver (phone viewport): draws 177 -> 177, 92 -> 92, 53 -> 51, 76 -> 78, 52 -> 53, 60 -> 62; triangles +15k to +43k (elevation and kerb depth's lowest-tier meshes); programs one fewer; textures equal.
 - The earlier "+2 / -2 textures, +1 program" between runs: character programs (`bean-body / hair / hat` variants) and lazily created textures depend on who is in view when the tour passes; a census of every scene material's textures is identical on and off.
+
+## Road paint on draped layers, load cost (pre-push, Nov 26 2026)
+
+`lib/town/elevationDrape.ts` drapePieces, the "paint on a draped layer" part (64 markings on Coral Cay's boulevard and roundabout, 67 now that a marking whose corners miss the asphalt's mesh is laid too). Node build of the whole town, this Mac, 5 runs, median:
+- Before: 1988 raycasts against the draped meshes, the pass 15.9 ms, 0.16 % of a 9.8 s town build.
+- After: 0 raycasts; one `top(x, z)` height read per distinct corner (1988 reads: the subdivided sheets have many corners), and only the 2.7k thin pieces (of ~20.8k recorded) whose reach meets the draped layers' joint box are looked at. The pass 6.6 ms, 0.07 % of a 9.6 s build. drapePieces as a whole 129 -> 119 ms.
+- Phone estimate (not measured): at a 6-8x slowdown, 40-53 ms once at load (was ~95-130 ms). The ~2 ms target was not reached: what is left is walking the thin pieces' world matrices and box tests and re-laying 67 small geometries, not the height reads.
+- Clearances are unchanged by construction (a corner now reads the very function the asphalt was laid on); `roundabout-junctions` green (0 stacked / coplanar / below), 77 s with three other tests running beside it.
+- Rigid props on a grade (same commit series, `seatProps`): ~95 groups get their foot carried down at load (vertex moves in ~120 small geometries, no new triangle, draw or material).

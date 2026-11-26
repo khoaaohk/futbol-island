@@ -32,12 +32,13 @@ type Piece={mesh:T.Mesh;lift:number;anchored:boolean};
  *  `skip`: meshes that carry their own heights. Returns the triangles added by the re-cuts (for the heat notes). */
 export function drapePieces(skip:string[],terrains:string[]=[]){
  let added=0,draped=0;const v=new T.Vector3(),size=new T.Vector3(),pieces=elevBuild.pieces as Piece[];
- const laid:{mesh:T.Mesh;top0:number;box:T.Box3}[]=[],done=new Set<T.Mesh>();
+ const laid:{mesh:T.Mesh;top0:number;box:T.Box3}[]=[],done=new Set<T.Mesh>(),thin:Piece[]=[];
  const drawn=pieces.filter(p=>terrains.includes(p.mesh.name)).map(p=>({y:p.mesh.position.y,ground:createDrawnGround(()=>[p.mesh])}));
  const top=(x:number,z:number)=>{let h=groundLift(x,z);for(const d of drawn){const y=d.ground.height(x,z)-d.y;if(y>h)h=y;}return h;};
  for(const piece of pieces){
   const m=piece.mesh;if(piece.anchored||terrains.includes(m.name)||skip.includes(m.name)||Math.abs(m.rotation.x)>1e-4||Math.abs(m.rotation.z)>1e-4)continue;
   let g=m.geometry;if(!g.boundingBox)g.computeBoundingBox();g.boundingBox!.getSize(size);
+  if(size.y<=.05)thin.push(piece);// paint candidates (below): the pass only looks at these
   if(size.y>.3||Math.max(size.x,size.z)<2.5)continue;
   m.updateMatrix();const e=m.matrix.elements,at=(x:number,z:number)=>top(e[0]*x+e[8]*z+e[12],e[2]*x+e[10]*z+e[14]);
   const b=g.boundingBox!;let lo=Infinity,hi=-Infinity;const nx=Math.max(1,Math.ceil(size.x/2)),nz=Math.max(1,Math.ceil(size.z/2));
@@ -57,20 +58,24 @@ export function drapePieces(skip:string[],terrains:string[]=[]){
  // to drape and took one rigid lift at its own centre while the road under it followed the slope and rode DRAPE_UP higher). Every thin
  // piece (<= 5 cm: road paint, a mat) that was not draped itself and lies on a draped layer keeps its DESIGNED clearance over that
  // layer at each of its corners: corner height = its flat height + (the draped surface under the corner - that surface's flat top).
- let marks=0;if(laid.length){const rc=new T.Raycaster(),from=new T.Vector3(),down=new T.Vector3(0,-1,0),w=new T.Vector3(),markBox=new T.Box3();
-  for(const piece of pieces){const m=piece.mesh;if(done.has(m)||piece.anchored||terrains.includes(m.name)||skip.includes(m.name)||Math.abs(m.rotation.x)>1e-4||Math.abs(m.rotation.z)>1e-4)continue;
-   const g0=m.geometry;if(!g0.boundingBox)g0.computeBoundingBox();g0.boundingBox!.getSize(size);if(size.y>.05)continue;
+ // Pre-push (Nov 26 2026): no raycasts. Every draped layer was laid as (its flat top) + top(x, z) + DRAPE_UP, so the surface under a
+ // corner is read straight off the same height function: one top() call per distinct corner (~260 for the 64 markings) instead of a
+ // ray against the draped meshes (docs/performance-guide.md: the pass went from ~16 ms to the number there). A corner past the layer's
+ // edge (a ring's lane line is centred on the island, not on the asphalt) reads the same function, so it needs no fallback.
+ // Only the thin pieces the first loop met (2.7k of ~21k), and of those only the ones whose reach (position +- the bounding box's
+ // largest extent, any yaw) meets the draped layers' joint box are looked at closely.
+ let marks=0,marked=0;const paint0=performance.now();if(laid.length){const w=new T.Vector3(),markBox=new T.Box3(),all=new T.Box3();for(const l of laid)all.union(l.box);
+  for(const piece of thin){const m=piece.mesh;if(done.has(m))continue;
+   const g0=m.geometry,bb=g0.boundingBox!,r=Math.hypot(Math.max(-bb.min.x,bb.max.x),Math.max(-bb.min.z,bb.max.z))*Math.max(m.scale.x,m.scale.z);
+   if(m.position.x+r<all.min.x||m.position.x-r>all.max.x||m.position.z+r<all.min.z||m.position.z-r>all.max.z)continue;/* pieces are recorded only when put straight into the town group (at the origin): position is world */
    m.updateMatrixWorld(true);const mb=markBox.copy(g0.boundingBox!).applyMatrix4(m.matrixWorld),base=mb.min.y-piece.lift;
-   const under=laid.filter(l=>l.mesh!==m&&mb.max.x>=l.box.min.x&&mb.min.x<=l.box.max.x&&mb.max.z>=l.box.min.z&&mb.min.z<=l.box.max.z&&base>=l.top0-.005&&base-l.top0<.06);if(!under.length)continue;
-   const meshes=under.map(l=>l.mesh),hit=(px:number,pz:number)=>{from.set(px,mb.max.y+2,pz);rc.set(from,down);const h=rc.intersectObjects(meshes,false)[0];return h?h.point.y-under[meshes.indexOf(h.object as T.Mesh)].top0:null;};
-   // Each corner once; a corner that hangs off the layer's edge takes the first height found (a ring's lane line is centred on the island, not on the asphalt, so there is no "centre" to ask).
-   const p0=g0.getAttribute('position') as T.BufferAttribute,seen=new Map<string,number|null>(),keys:string[]=[];let any:number|null=null;
-   for(let i=0;i<p0.count;i++){w.fromBufferAttribute(p0,i).applyMatrix4(m.matrixWorld);const key=w.x.toFixed(3)+','+w.z.toFixed(3);keys.push(key);if(!seen.has(key)){const h=hit(w.x,w.z);seen.set(key,h);if(any===null&&h!==null)any=h;}}
-   if(any===null)continue;
+   if(!laid.some(l=>l.mesh!==m&&mb.max.x>=l.box.min.x&&mb.min.x<=l.box.max.x&&mb.max.z>=l.box.min.z&&mb.min.z<=l.box.max.z&&base>=l.top0-.005&&base-l.top0<.06))continue;
+   const p0=g0.getAttribute('position') as T.BufferAttribute,seen=new Map<string,number>(),lift:number[]=[];
+   for(let i=0;i<p0.count;i++){w.fromBufferAttribute(p0,i).applyMatrix4(m.matrixWorld);const key=w.x.toFixed(3)+','+w.z.toFixed(3);let h=seen.get(key);if(h===undefined){h=top(w.x,w.z)+DRAPE_UP;seen.set(key,h);marked++;}lift.push(h);}
    const g=m.geometry=g0.clone(),pos=g.getAttribute('position') as T.BufferAttribute;
-   for(let i=0;i<pos.count;i++)pos.setY(i,pos.getY(i)+(seen.get(keys[i])??any)-piece.lift);
+   for(let i=0;i<pos.count;i++)pos.setY(i,pos.getY(i)+lift[i]-piece.lift);
    pos.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();marks++;}}
- return {added,draped,marks};
+ return {added,draped,marks,paintCorners:marked,paintMs:+(performance.now()-paint0).toFixed(2)};
 }
 
 /** Carry a rigid prop's foot down to the ground (pre-push fix, Nov 26 2026): every vertex within 1 cm of the mesh's lowest point that
