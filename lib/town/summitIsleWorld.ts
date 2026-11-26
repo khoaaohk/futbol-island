@@ -36,7 +36,7 @@ export type SummitTools={
 export type SummitLampSite={x:number;z:number;ground:number;region:'coral-cay';poolWidth?:number;poolDepth?:number};
 
 /** Bearings round the island (1.875° apart) and terrain pieces (angular sectors, each its own 50 m batch and cull bound). */
-const BEARINGS=192,SECTORS=8,SKIRT=2.8,FINE=2.5,FINE_ERR=.25;
+const BEARINGS=192,SECTORS=8,SAND_BANDS=4,SKIRT=2.8,FINE=2.5,FINE_ERR=.25;
 /** Rings per bearing round the peak: the beach (5) and, from the dune line to the summit, rings at even height steps of the
  *  profile (sparse on the flat foothills, dense on the steep upper slopes and the rounded top where the silhouette is). With 192
  *  bearings that is ~2 m across each spur and gully on the slopes. Heat: detail only where it shows. */
@@ -110,7 +110,13 @@ export function buildSummitIsle(t:SummitTools){
  // ONE material for every ground piece (terrain, plateau, pitch, lines, paths, sandbar): vertex colours, no texture, no emissive,
  // so it compiles to the same program as the island's batched palette paint. Ground casts no shadows (it only receives them).
  const groundMat=applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.95}),'mixed');groundMat.name='summit-isle-ground';
- const ground=(piece:Piece,name:string)=>{if(!piece.idx.length)return;const m=new T.Mesh(piece.geometry(),groundMat);m.name=name;m.position.set(piece.ox,0,piece.oz);m.castShadow=false;m.receiveShadow=true;town.add(m);};
+ // Nov 25 2026 (owner: "the sand and beach on the summit island is missing this texture"): `mixed` reads the detail tile as grass
+ // (clumps, no wind ripples), so Summit's sand had none of the ripples Coral Cay and the main beaches show. The sand triangles (the
+ // beach ring below the dune line, the sandbar) are drawn with the `sand` kind instead: the same ripple scale, direction and
+ // strength as every other beach (one world-space tile). Same roughness and vertex colours as the rest of the ground, so nothing
+ // steps at the split. Cost: +1 draw (the beach ring; the sandbar's 3 pieces only change material), no shader change.
+ const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.95}),'sand');sandMat.name='summit-isle-sand';
+ const ground=(piece:Piece,name:string,mat:T.Material=groundMat)=>{if(!piece.idx.length)return;const m=new T.Mesh(piece.geometry(),mat);m.name=name;m.position.set(piece.ox,0,piece.oz);m.castShadow=false;m.receiveShadow=true;town.add(m);};
  const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
  const yAt=(x:number,z:number)=>summitGround(x,z)-DROP;
 
@@ -212,13 +218,20 @@ export function buildSummitIsle(t:SummitTools){
  }
  const per=BEARINGS/SECTORS;
  const sectors:Piece[]=[];
+ // The beach ring (ring bands 0..SAND_BANDS-1: the wet skirt up to the sand's last ring, 7 % of the beach short of the dune line,
+ // where the vertex colours start to turn green): ONE piece with the sand material. Its points are the grid's own (same positions,
+ // colours and smooth normals as the sector pieces along the shared ring), so there is no crack or lighting line at the split.
+ const beach=new Piece(Math.round(PK.x),Math.round(PK.z)),beachIds:number[][]=[];
+ for(let i=0;i<BEARINGS;i++){const row:number[]=[];for(let k=0;k<=SAND_BANDS;k++){const [x,y,z]=pos(i,k);row.push(beach.vertex(x,y,z,CL[i][k],normal(i,k)));}beachIds.push(row);}
  for(let s=0;s<SECTORS;s++){
   // Origin: the sector's middle bearing, halfway up the slope (so it lands in the chunk it mostly covers).
   const mid=Math.round((s+.5)*per)%BEARINGS,o=pos(mid,5+9);const piece=new Piece(Math.round(o[0]),Math.round(o[2]));sectors.push(piece);
   const ids:number[][]=[];
   for(let i=s*per;i<=(s+1)*per;i++){const row:number[]=[];for(let k=0;k<R;k++){const [x,y,z]=pos(i,k);row.push(piece.vertex(x,y,z,CL[i%BEARINGS][k],normal(i,k)));}ids.push(row);}
   // Bearings run anticlockwise seen from above (+x → +z), rings from the sea inward: wind each quad so it faces up.
-  for(let j=0;j<ids.length-1;j++)for(let k=0;k<R-1;k++){if(fine[(s*per+j)%BEARINGS][k])fineQuad(piece,s*per+j,k);else{const a=ids[j][k],b=ids[j+1][k],c=ids[j][k+1],d=ids[j+1][k+1];piece.idx.push(a,c,b,b,c,d);}}
+  for(let j=0;j<ids.length-1;j++)for(let k=0;k<R-1;k++){const bi=(s*per+j)%BEARINGS;
+   if(k<SAND_BANDS){if(fine[bi][k])fineQuad(beach,s*per+j,k);else{const a=beachIds[bi][k],b=beachIds[(bi+1)%BEARINGS][k],c=beachIds[bi][k+1],d=beachIds[(bi+1)%BEARINGS][k+1];beach.idx.push(a,c,b,b,c,d);}continue;}
+   if(fine[bi][k])fineQuad(piece,s*per+j,k);else{const a=ids[j][k],b=ids[j+1][k],c=ids[j][k+1],d=ids[j+1][k+1];piece.idx.push(a,c,b,b,c,d);}}
  }
  // POLISH 4 (owner shots 70 / 76: "the tunnel is green here, this should be dark"): the terrain is cut out of each arch opening's
  // footprint, from in front of the headwall's face (2 m out) to a cell into the hill: a triangle whose middle lies within the opening
@@ -242,7 +255,7 @@ export function buildSummitIsle(t:SummitTools){
     const ids=poly.map(v=>{const ci=v[5]*3;piece.pos.push(v[0]-piece.ox,v[1],v[2]-piece.oz);piece.nor.push(0,1,0);piece.colr.push(piece.colr[ci],piece.colr[ci+1],piece.colr[ci+2]);piece.tree.push(piece.tree[v[5]]??0);return piece.pos.length/3-1;});
     for(let k=1;k<ids.length-1;k++)extra.push(ids[0],ids[k],ids[k+1]);}};
   let extra:number[]=[];
-  for(const piece of sectors){const P=piece.pos,I=piece.idx,keep:number[]=[];extra=[];
+  for(const piece of [...sectors,beach]){const P=piece.pos,I=piece.idx,keep:number[]=[];extra=[];
    for(let q=0;q<I.length;q+=3){const a=I[q]*3,b=I[q+1]*3,c=I[q+2]*3,ya=P[a+1],yb=P[b+1],yc=P[c+1],lo=Math.min(ya,yb,yc),hi=Math.max(ya,yb,yc);
     if(hi>B+.25&&lo<B+2.4&&lo<top){/* a corner below the springing: it reaches into the opening (the hill over the arch's top stays) */const cx=(P[a]+P[b]+P[c])/3+piece.ox,cz=(P[a+2]+P[b+2]+P[c+2])/3+piece.oz;
      minU=0;if(inOpening(cx,cz,false)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)&&minU<-.1){backPart(piece,I[q],I[q+1],I[q+2],cx,cz);continue;}}
@@ -283,7 +296,7 @@ export function buildSummitIsle(t:SummitTools){
    for(let k=0;k<=8;k++){const ang=k/8*Math.PI,ox=Math.cos(ang)*-tz+Math.sin(ang)*tx,oz=Math.cos(ang)*tx+Math.sin(ang)*tz,x=p.x+ox*half,z=p.z+oz*half;rim.push(piece.vertex(x,drape(x,z,tx,tz)+lift,z,PATH.clone().multiplyScalar(.9)));}
    for(let k=0;k<8;k++)piece.idx.push(c,rim[k+1],rim[k]);}
  });
- sectors.forEach((p,i)=>ground(p,'summit-isle-ground-'+i));
+ sectors.forEach((p,i)=>ground(p,'summit-isle-ground-'+i));ground(beach,'summit-isle-ground-beach',sandMat);
 
  // ---- Pitch and lines: one piece on the terrace (the terrace's flat itself is part of the terrain mesh). The pitch's long axis
  // runs east–west, so the striped slab (built along z) is turned a quarter turn.
@@ -343,7 +356,7 @@ export function buildSummitIsle(t:SummitTools){
    {const g=piece.geometry();g.computeVertexNormals();piece.nor=Array.from(g.getAttribute('normal').array as Float32Array);g.dispose();}
    for(let i=Math.max(4,a);i<=Math.min(b,S.length-5);i++){if(i%3)continue;const p=S[i],q=S[i+1],tl=Math.hypot(q.x-p.x,q.z-p.z)||1,nx=(q.z-p.z)/tl,nz=-(q.x-p.x)/tl,d=(i%2?1:-1)*(sandbarHalfWidth(p.s)-.4-jitter(i,2)*1.4),r=.12+jitter(i,5)*.16;
     bake(piece,new T.IcosahedronGeometry(r,0),jitter(i,9)>.5?'#d2bc94':'#c8b9a6',at(p.x+nx*d,-.12,p.z+nz*d,0,i,0,1,.55,1));}
-   ground(piece,'summit-sandbar-'+k);}
+   ground(piece,'summit-sandbar-'+k,sandMat);}
   surfaceAreas.push({kind:'sand',x:611,z:-28,w:22,d:104});
  }
 

@@ -98,7 +98,9 @@ assert(GRID.x0+GRID.cols*GRID.size>=FLIGHT_BOUNDS.maxX&&GRID.z0+GRID.rows*GRID.s
 
 // ---- Wiring and heat: one ground material, its own region gate, shore bake bounds, maps.
 {const src=fs.readFileSync('lib/town/summitIsleWorld.ts','utf8'),world=fs.readFileSync('lib/town/world.ts','utf8'),shore=fs.readFileSync('lib/graphics/islandShore.ts','utf8');
- assert.equal((src.match(/new T\.MeshStandardMaterial/g)||[]).length,2,'two vertex-colour materials: ground (no shadows cast) and baked props');
+ assert.equal((src.match(/new T\.MeshStandardMaterial/g)||[]).length,3,'three vertex-colour materials: ground and its sand (no shadows cast) and baked props');
+ // Nov 25 2026 (owner: Summit's sand had no wind ripples): the beach ring and the sandbar use the `sand` ground kind, like every other beach.
+ assert(/applyGroundTint\(new T\.MeshStandardMaterial\(\{color:'#ffffff',vertexColors:true,roughness:\.95\}\),'sand'\)/.test(src)&&/ground\(beach,'summit-isle-ground-beach',sandMat\)/.test(src)&&/ground\(piece,'summit-sandbar-'\+k,sandMat\)/.test(src),'the beach ring (one piece) and the sandbar are sand');
  assert(/castShadow=false;m\.receiveShadow=true;town\.add\(m\)/.test(src)&&/m\.castShadow=true;m\.receiveShadow=true;town\.add\(m\)/.test(src),'ground receives shadows only; props cast them');
  assert(!/requestAnimationFrame|setInterval|update\(/.test(src),'no per-frame work');
  assert(world.includes('buildSummitIsle(')&&world.includes('isleRegion')&&world.includes('summitIsle.lampSites')&&world.includes('...summitIsle.materials'),'built in buildTown, gated by its own region box, lamps join the night pools');

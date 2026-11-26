@@ -60,7 +60,7 @@ heat.forceHeatTier(3);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier
 heat.forceHeatTier(1);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier(0);assert.equal(tint.GROUND_GRAIN.value,1);heat.forceHeatTier(null);
 // the materials are wired
 assert.ok(/applyGroundTint\(new T\.MeshStandardMaterial\(\{color:INTERIOR_GRASS_COLOR/.test(read('lib/town/fields.ts')),'main lawn tinted');
-assert.ok(/'beach'\)/.test(read('lib/town/fields.ts'))&&/tintGroundMesh\(sand,'sand'\)/.test(read('lib/town/coralCayWorld.ts'))&&/'mixed'\)/.test(read('lib/town/summitIsleWorld.ts')),'sand/cay/summit tinted');
+assert.ok(/'beach'\)/.test(read('lib/town/fields.ts'))&&/tintGroundMesh\(sand,'sand'\)/.test(read('lib/town/coralCayWorld.ts'))&&/'mixed'\)/.test(read('lib/town/summitIsleWorld.ts'))&&/roughness:\.95\}\),'sand'\)/.test(read('lib/town/summitIsleWorld.ts')),'sand/cay/summit tinted (Summit: grass slopes mixed, beach ring and sandbar sand)');
 // the inner sand and the sand-coloured paving are tinted (by source): ribbon, cay ring/shoulders/sandbars/court, paths, plazas, pier sand
 const W=read('lib/town/world.ts'),C=read('lib/town/coralCayWorld.ts');
 assert.ok(/tintGroundMesh\(box\(w,\.035,d,'#eddfbb'[^;]*'path'\)/.test(W),'every path() (beach paths, promenades, cay paths) is tinted');

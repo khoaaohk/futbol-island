@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {SHORE_FOAM_GLSL,SHORE_FOAM_UNIFORMS} from './shoreFoamFx';
-import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
+import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SEA_GLSL,SEA_SHALLOWS,seaSandK,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
 import {onLand} from '../town/landmass';
 import {TRACK,TrackKind} from '../town/trainTrack';
 import {trainLayout} from '../town/trainLayout';
@@ -286,7 +286,7 @@ const STRIP_GLSL=/* glsl */`
  // d: the drawn waterline (the flat sand's edge, + sea); dt: the true one. The strip never climbs a deck, a kerb or a rock (high),
  // and past the true waterline it fades into the ocean, whose depth gradient starts from the same drawn line.
  float t=uWaterTime,d=vVis,dt=vTrue,high=1.-smoothstep(.38,.42,vLift),outA=vBand.x,bandA=vBand.y;// outA / bandA: per vertex (vBand, smooth over 0.6-1.5 m)
- vec3 wetSand=vec3(.5,.36,.17),sheetC=vec3(.1,.72,1.),shallowC=vec3(.02,.5,.78),foamC=vec3(.97,.98,.96);
+ vec3 wetSand=vec3(.5,.36,.17),foamC=vec3(.97,.98,.96);
  vec4 lz=vec4(.5);float lace=.5,e,rush,wet,breaker=0.,mark=0.,markBub=0.,sparkle=0.,cau=0.;
  if(uWaterDetail<.5){
   // Still: the water a little way up the sand, a soft foam band and a damp band behind it.
@@ -322,12 +322,14 @@ const STRIP_GLSL=/* glsl */`
  // Soft, slightly irregular edge (5 m noise + the lace), never a jittery line.
  float u=vBand.w+(lace-.5)*.16,cover=smoothstep(e-.05,e+.07,u),wd=max(u-e,0.);
  // Water: a clear sheet over the sand at its edge, turquoise over the sand slope and out to where the ocean takes over.
- vec3 waterC=mix(sheetC,shallowC,smoothstep(-.1,1.1,max(d,0.)+wd*.4));
- float waterA=mix(.66,.95,smoothstep(0.,.8,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
+ // Nov 25 2026 clear shallows (waterSurface.ts SEA_SHALLOWS): the strip is the ocean's own shallows colour at this distance (so it
+ // is invisible where it lies over the ocean) and thin over the sand skirt: the real sand and its ripples show through the water.
+ float sandK=${seaSandK('max(d,0.)+wd*.4')};vec3 waterC=mix(${SEA_GLSL.shallow}*uWaterNight,${SEA_GLSL.shoreSand},sandK*sandK*${SEA_SHALLOWS.sandMix.toFixed(2)});
+ float waterA=mix(.16,.5,smoothstep(0.,1.4,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
  // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
  waterA*=1.-.35*clearWinMask(vWaterXZ,1.);// Oct 26 2026 tropical water: .55 -> .35, the skirt reads lagoon turquoise, not olive
  wet=max(wet,mark*.8);
- waterC*=uWaterNight;// Nov 10 2026: night water (the ocean's moonlit blue)
+ // (night water: uWaterNight is folded into waterC above, Nov 25 2026)
  vec3 col=mix(wetSand*(1.-.16*mark),waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
  // Foam: a bright soft edge with some body that breaks into lacy patches as the wave slows and slides back (big lace R and the
  // bubbles B), lacy patches with bubble holes trailing behind it, and the bubbles left along the high-water mark.

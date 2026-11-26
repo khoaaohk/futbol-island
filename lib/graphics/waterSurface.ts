@@ -85,8 +85,25 @@ export const SEA_WATER_LOOK={color:'#368eb3',emissive:'#185a94',emissiveIntensit
 // Nov 24 2026 (owner: day "looks too saturated"): the three sea colours moved ~25 % toward their own grey (same brightness), so the
 // sea reads natural rather than neon. Was lagoon [.04,.62,.7], aqua [.02,.44,.64], deep [.015,.2,.47]. Constants only.
 export const SEA_TINT={lagoon:[.04,.62,.7],aqua:[.02,.44,.64],deep:[.015,.2,.47],rippleTint:[.855,.913,1]} as const;// Nov 25: restored (see SEA_WATER_LOOK)
+/**
+ * Clear shallows (Nov 25 2026, owner: "make the water near the shore more transparent so you can see the sand more like a real
+ * ocean ... it should feel like it's fading more naturally", "crystal clear beachy caribbean waters"). The sea had an opaque
+ * saturated band by the sand (the lagoon turquoise over the skirt and the first 3 m, a plateau), then a quick step into the teal.
+ * Now ONE long ramp from the drawn waterline: clear water over sand at the edge (`sand`: the beach's own colour seen through a
+ * little water, slightly cooled; the weight falls with the SQUARE of 1 - smoothstep(0, sandReach)), a luminous pale turquoise
+ * (`shallow`) over the first metres, easing into the open sea's own colour by `reach` m (was 24), where it IS the open-sea colour
+ * (weight 0: no line where the ramp ends). The light net now starts at the waterline instead of 1.5 m out.
+ * Colour only, from the shore distance both programs already have: no depth texture, no render target, no extra draw. The ocean
+ * plane stays opaque where it was; the shore strip (islandShore.ts, already a blended mesh) is thinner over the sand skirt, so the
+ * real sand (and its ripples) shows through the first metres. The sand term is mixed in AFTER the night tint (sand under a
+ * hand's depth of water is lit like the beach beside it, not tinted like the sea).
+ * Cost: the ocean keeps two smoothsteps and two mixes for its depth colour (tests/ground-shader-cost.cjs, water-tropical-cost.cjs).
+ */
+export const SEA_SHALLOWS={shallow:[.13,.68,.76],sand:[.78,.72,.52],sandReach:8,sandMix:.86,from:1,reach:40,mix:.9} as const;
 const v3=(c:readonly number[])=>`vec3(${c.map(v=>v.toFixed(3)).join(',')})`;
-export const SEA_GLSL={lagoon:v3(SEA_TINT.lagoon),aqua:v3(SEA_TINT.aqua),deep:v3(SEA_TINT.deep),rippleTint:v3(SEA_TINT.rippleTint)} as const;
+export const SEA_GLSL={lagoon:v3(SEA_TINT.lagoon),aqua:v3(SEA_TINT.aqua),deep:v3(SEA_TINT.deep),rippleTint:v3(SEA_TINT.rippleTint),shallow:v3(SEA_SHALLOWS.shallow),shoreSand:v3(SEA_SHALLOWS.sand)} as const;
+/** The sand's weight at drawn-waterline distance `d` (GLSL expression; shared by the ocean and the shore strip so they agree). */
+export const seaSandK=(d:string)=>`(1.-smoothstep(0.,${SEA_SHALLOWS.sandReach.toFixed(1)},${d}))`;
 /** The ripple tile's scale on the ocean (texture repeat 44 per 1400 m of UV: waterRipples.ts, world.ts) per world metre, and its drift. */
 export const SEA_RIPPLE_PER_M=44/1400;
 export const WATER_UNIFORMS={
@@ -405,9 +422,9 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     {
      // Depth: pale sandy shallows at the waterline, turquoise over the first metres, back to the open-sea teal by ~24 m.
      // Tropical water (Oct 26 2026): a clearer lagoon turquoise (#3fd8d0-ish) at the edge into a clear aqua, then cerulean (same ops).
-     vec3 shallowC=mix(${SEA_GLSL.lagoon},${SEA_GLSL.aqua},smoothstep(.3,5.,dd));
-     float nearK=1.-smoothstep(3.,24.,dd);
-     diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
+     // Nov 25 2026 clear shallows (SEA_SHALLOWS): one long ramp, the pale turquoise easing into the open sea's own colour.
+     float nearK=1.-smoothstep(${SEA_SHALLOWS.from.toFixed(1)},${SEA_SHALLOWS.reach.toFixed(1)},dd);
+     diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.shallow}*(.92+.08*ripple.r),nearK*${SEA_SHALLOWS.mix.toFixed(2)});
      // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
      // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
      // folded into the open-sea factor so they cost no extra smoothstep.
@@ -415,6 +432,9 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
+     // Clear water over sand at the edge (SEA_SHALLOWS.sand), after the night tint.
+     {float sandK=${seaSandK('d')};// d, not dd: a dive shoal keeps the turquoise (never a sandy patch out at sea)
+     diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.shoreSand},sandK*sandK*${SEA_SHALLOWS.sandMix.toFixed(2)});}
      float crest=0.;
      if(uWaterDetail>.5){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
@@ -442,7 +462,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      // Light streaks (WATER_GLIMMER_GLSL notes): soft ribbons, ALU only (no texture read), one layer on phones / the still path,
      // two on desktop; each fades to its mean sheen before its bands get thinner than ~2 px (no moire out at sea).
      float H=vSeaCam.z,lr=distance(vWaterXZ,vSeaCam.xy),cr=distance(vWaterXZ,cameraPosition.xz);// vSeaCam: per vertex (look point, height)
-     float reachS=smoothstep(1.5,7.,dd)*(1.-smoothstep(.5*H+15.,1.5*H+50.,lr))*(.5+.5*smoothstep(3.,.8*H+8.,cr));
+     float reachS=smoothstep(.1,6.,dd)*(1.-smoothstep(.5*H+15.,1.5*H+50.,lr))*(.5+.5*smoothstep(3.,.8*H+8.,cr));
      if(reachS>0.){float t=uWaterTime,nS=seaN+s.g-.5;waterLobe=waterSunLobe(vWaterXZ);// (Nov 11 2026: lobe + noise only where used)
       float k1=1.-smoothstep(.25,.6,pxS),st=k1*waterRibbon(mat2(.86,.51,-.51,.86)*vWaterXZ,nS,t,1.,pxS)+.04*(1.-k1);
       if(uWaterDetail>1.5){float k2=1.-smoothstep(.4,.9,pxS);st=max(st,.6*k2*waterRibbon(mat2(.93,.37,-.37,.93)*vWaterXZ+vec2(37.,11.),-nS,-t*.8,1.45,pxS));}

@@ -126,7 +126,7 @@ ok('pond life, remote swimmers, the map and the sea look',()=>{
  // The water's look is the sea's: the same material numbers, colour ramp and ripple tile.
  const ws=read('lib/graphics/waterSurface.ts'),pw=read('lib/graphics/pondWater.ts'),world=read('lib/town/world.ts');
  assert(/new T\.MeshStandardMaterial\(\{\.\.\.SEA_WATER_LOOK,map:waterRipples\.texture\}\)/.test(world)&&/seaRipples:waterRipples\.texture/.test(world),'the ocean and the pond share SEA_WATER_LOOK and the ripple tile');
- assert(/\{\.\.\.SEA_WATER_LOOK,transparent:true/.test(pw)&&/SEA_GLSL\.lagoon/.test(pw)&&/SEA_GLSL\.deep/.test(pw)&&/SEA_GLSL\.lagoon/.test(ws)&&/SEA_GLSL\.deep/.test(ws),'one colour ramp for both');
+ assert(/\{\.\.\.SEA_WATER_LOOK,transparent:true/.test(pw)&&/SEA_GLSL\.lagoon/.test(pw)&&/SEA_GLSL\.deep/.test(pw)&&/SEA_GLSL\.shallow/.test(ws)&&/SEA_GLSL\.deep/.test(ws),'the same sea colours (Nov 25 2026: the ocean\'s shallows are the clear-water ramp, SEA_SHALLOWS; the pond keeps the lagoon ramp)');
  const PW=load('lib/graphics/pondWater.ts');assert(PW.pondSeaDistance(L.POND_DEPTH.shelf)<=3&&PW.pondSeaDistance(L.POND_DEPTH.deep)>=24,'the shelf is the sea\'s pale shallows, the middle its teal');
  // Edge detail and the sandy shore (westPark.ts stats; one build in tests/west-stadium.cjs checks the draw budget).
  const wp=read('lib/town/westPark.ts');assert(/stats\.pondRocks\+\+/.test(wp)&&/stats\.pondReeds\+\+/.test(wp)&&/POND_JETTY_AT/.test(wp)&&/sandK\(a\)/.test(wp),'rocks, reeds, the jetty and the sandy shore are built');
