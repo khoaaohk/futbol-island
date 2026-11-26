@@ -165,11 +165,12 @@ export function pushOutOf(position:{x:number;z:number},obstacles:Obstacle[],radi
  *  up a slope, easing down to its climbing speed rather than braking hard at the foot). */
 /** `water` (Oct 15 2026, wading: lib/town/water/waterDepth.ts): a point test for water the walker may step into (the shallows and
  *  the swim zone); without it the coast stops the walker as before. Only ground modes read it. */
-export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1, coast = 0, water?: (x:number,z:number)=>boolean) {
+/** `accelScale` (Nov 25 2026, riding on sand: rideSand.ts RIDE_SAND.accel): scales the acceleration, never the braking; 1 elsewhere. */
+export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1, coast = 0, water?: (x:number,z:number)=>boolean, accelScale = 1) {
   dt = Math.max(0, Math.min(dt, .25));
   const settings = TRAVEL_MODES[mode];
   const length = Math.hypot(input.x, input.z), speed = (mode === 'walk' && input.sprint ? 6 : settings.maxSpeed)*speedScale;
-  const blend = 1-Math.exp(-dt*(length ? settings.acceleration : settings.braking)), was = Math.hypot(velocity.x,velocity.z), before = coast>0&&length ? was : 0;
+  const blend = 1-Math.exp(-dt*(length ? settings.acceleration*accelScale : settings.braking)), was = Math.hypot(velocity.x,velocity.z), before = coast>0&&length ? was : 0;
   velocity.x += ((length ? input.x/Math.max(1,length)*speed : 0)-velocity.x)*blend;
   velocity.z += ((length ? input.z/Math.max(1,length)*speed : 0)-velocity.z)*blend;
   // The gentler rate only for a real excess (a quarter of the top speed and more), blending back to the acceleration's below that.
