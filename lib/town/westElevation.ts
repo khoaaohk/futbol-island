@@ -74,7 +74,7 @@ export const STADIUM_BASE=elevationOn()?WEST.terrace:0;
  *  (x east, z south: the outside is on the right of travel), with each inset stair's notch cut in. */
 export function terraceOutline(step=1){const {x,z,w,d}=WEST_TERRACE,r=WEST_TERRACE.r??0,a=w/2-r,b=d/2-r,n=Math.max(4,Math.ceil(Math.PI/2*r/step)),pts:{x:number;z:number}[]=[];
  for(const [cx,cz,a0] of [[a,b,0],[-a,b,Math.PI/2],[-a,-b,Math.PI],[a,-b,Math.PI*1.5]] as const)for(let i=0;i<=n;i++){const t=a0+i/n*Math.PI/2;pts.push({x:x+cx+Math.cos(t)*r,z:z+cz+Math.sin(t)*r});}
- for(const s of WEST_STAIRS){if(!s.inset)continue;const mx=s.x+s.dx*s.inset,mz=s.z+s.dz*s.inset;
+ for(const s of WEST_STAIRS){const mx=s.x+s.dx*s.inset,mz=s.z+s.dz*s.inset;
   for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length],ex=q.x-p.x,ez=q.z-p.z,l=Math.hypot(ex,ez),u=((mx-p.x)*ex+(mz-p.z)*ez)/(l*l);if(l<s.w||u<0||u>1||Math.hypot(p.x+ex*u-mx,p.z+ez*u-mz)>.01)continue;
-   const tx=ex/l,tz=ez/l,h=s.w/2;pts.splice(i+1,0,{x:mx-tx*h,z:mz-tz*h},{x:s.x-tx*h,z:s.z-tz*h},{x:s.x+tx*h,z:s.z+tz*h},{x:mx+tx*h,z:mz+tz*h});break;}}
+   const tx=ex/l,tz=ez/l,h=s.w/2;if(s.inset)pts.splice(i+1,0,{x:mx-tx*h,z:mz-tz*h},{x:s.x-tx*h,z:s.z-tz*h},{x:s.x+tx*h,z:s.z+tz*h},{x:mx+tx*h,z:mz+tz*h});else pts.splice(i+1,0,{x:mx-tx*h,z:mz-tz*h},{x:mx+tx*h,z:mz+tz*h});/* the mouth's two corners */break;}}
  return pts;}

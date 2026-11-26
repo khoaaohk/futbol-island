@@ -253,7 +253,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  // depth (radius SCREEN_POST.r < half the depth), so they meet it from below and never pass in front of either face. The back
  // face's picture (card / live feed) is stadiumFeed.ts.
  {const z=S.z+SCREEN.z;box(SCREEN_FRAME.w,SCREEN_FRAME.h,SCREEN_FRAME.depth,'#1d2b33',S.x,SCREEN.y,z);box(SCREEN.w,SCREEN.h,.02,'#2b3f48',S.x,SCREEN.y,z-.26);
-  for(const sx of [-1,1]){const q=screenPosts()[sx<0?0:1],p={...q,top:q.top-B};skip(cylinder(SCREEN_POST.r,p.top,STEEL,p.x,p.top/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}}
+  for(const sx of [-1,1]){const p=screenPosts()[sx<0?0:1];skip(cylinder(SCREEN_POST.r,p.top-B,STEEL,p.x,(p.top-B)/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}}
 
  // --- Main gate: arch over the east stand's gap, turnstiles either side of an open middle ------------------------------------------
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;

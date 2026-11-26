@@ -106,7 +106,8 @@ export function buildWestWalls(t:Tools):WestWallStats{
  const kind=(p:WallPt)=>inStair(p)?0:H-p.foot>WALL.low?2:H-p.foot>.012?1:0,n=ring.length;
  let start=0;while(start<n&&kind(ring[start])===kind(ring[(start+n-1)%n]))start++;
  for(let i=0;i<n;){const k=kind(ring[(start+i)%n]);let j=i;while(j<n&&kind(ring[(start+j)%n])===k)j++;
-  if(k){const pts:WallPt[]=[];for(let q=Math.max(0,i-1);q<=Math.min(n,j);q++)pts.push(ring[(start+q)%n]);
+  if(k){const pts:WallPt[]=[],K=(q:number)=>kind(ring[(start+q+n)%n]);// one point on into a neighbouring run (a kerb tapering out of a wall), never into a stair's mouth
+   for(let q=i-(K(i-1)?1:0);q<=j-(K(j)?0:1);q++)pts.push(ring[(start+q+n)%n]);
    stats.triangles+=k===2?wall(t,pts,{hedge:true,buttress:true}):sweep(t,pts,WALL.stone,[[0,'foot',-.3],[0,'top',0]])+sweep(t,pts,WALL.coping,[[.06,'top',-.03],[.06,'top',.06],[-.5,'top',.06],[-.5,'top',-.03]],true);
    if(k===2)for(let q=0;q<pts.length-1;q++){const a=pts[q],b=pts[q+1],l=Math.hypot(b.x-a.x,b.z-a.z);stats.length+=l;stats.tallest=Math.max(stats.tallest,H-a.foot);}
    // Colliders (tall runs): one long box on a straight (axis-aligned) stretch, 1.6 m rounded boxes round the corners.
