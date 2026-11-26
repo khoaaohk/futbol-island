@@ -10,7 +10,7 @@ import {DataTable,GuideEnd,GuideIntro,type Fact} from '@/lib/site/GuideParts';
 import {EsGuideEnd,EsIntro,esLibCrumbs} from '@/components/es/EsParts';
 import {articleLd,breadcrumbLd,faqLd} from '@/lib/site/seo';
 import {guideQuizPart} from '@/lib/site/learningLd';
-import {toEs} from '@/lib/i18n/esPaths';
+import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {GAP_UPDATED,type GapBlock,type GapPage} from '@/lib/site/gapPages';
 import {Callout,CourtInField,DrillCards,IconSteps,PositionPitch,TryIt,VSection} from './Visuals';
 import site from '@/app/(site)/site.module.css';
@@ -20,7 +20,8 @@ import site from '@/app/(site)/site.module.css';
  * FAQ, a 3-question quiz and Keep reading. Server-rendered; the quiz is the shared client island (components/site/GuideQuiz).
  */
 type Lang='en'|'es';
-const L=(lang:Lang,path:string)=>lang==='es'&&path.startsWith('/')&&!/^\/(play|arcade)\b/.test(path)?toEs(path):path;
+/** A link on a Spanish page goes to the Spanish page when there is one (lib/i18n/esPaths.ts), else to the English page. */
+const L=(lang:Lang,path:string)=>{if(lang!=='es'||!path.startsWith('/'))return path;const [p,h]=path.split('#');return hasEs(p)?toEs(p)+(h?`#${h}`:''):path;};
 function Block({b,lang}:{b:GapBlock;lang:Lang}){
  const intro='intro' in b&&b.intro?<p>{b.intro}</p>:null;
  switch(b.k){
