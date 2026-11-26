@@ -75,13 +75,42 @@ function dateOf(files){
  const d=dirty?today:(hit?hit.split(' ')[1]:today);
  memo.set(k,d);return d;
 }
+/**
+ * Per-page content fingerprints (Nov 26 2026, Search Console: 205 "Discovered, not crawled"; every drill, term, rule, position,
+ * formation and book shared ONE sitemap date because one file holds the whole family, so a single drill's edit "changed" all 57).
+ * A page's fingerprint is the data of its OWN entry: every object in the family's data modules (and the Spanish twins in
+ * lib/i18n/es) whose slug / id is the page's last path segment, plus every record value keyed by it (the coach's notes maps).
+ * lib/site/lastmodEntries.json keeps [fingerprint, date] per path: while the fingerprint is unchanged the page keeps its date
+ * even when its family's files changed for a sibling; a new or changed fingerprint takes the family date (the rule above).
+ * A page with no entry of its own (hubs, tools, quizzes built in their route) keeps the family date. Never later than it.
+ */
+const ENTRIES=path.join(root,'lib/site/lastmodEntries.json'),crypto=require('node:crypto');
+const ES_MODS=fs.readdirSync(path.join(root,'lib/i18n/es')).filter(f=>/\.ts$/.test(f)).map(f=>'lib/i18n/es/'+f);
+const modMemo=new Map();
+function mod(rel){if(modMemo.has(rel))return modMemo.get(rel);let m=null;const abs=path.join(root,rel);
+ if(/\.tsx?$/.test(rel)&&fs.existsSync(abs)&&fs.statSync(abs).isFile())try{m=load(abs);}catch{m=null;}modMemo.set(rel,m);return m;}
+const plain=(k,v)=>typeof v==='function'?undefined:v;
+function fingerprint(p,deps){
+ const seg=p.split('/').filter(Boolean).pop();if(!seg)return null;const hits=[];
+ const scan=(v,depth)=>{if(!v||typeof v!=='object'||depth>2)return;
+  if(Array.isArray(v)){for(const o of v)if(o&&typeof o==='object'&&!Array.isArray(o)&&(o.slug===seg||o.id===seg||o.path===p))hits.push(o);return;}
+  if(Object.prototype.hasOwnProperty.call(v,seg)&&typeof v[seg]==='object')hits.push(v[seg]);
+  for(const x of Object.values(v))if(x&&typeof x==='object'&&!Array.isArray(x)&&Object.getPrototypeOf(x)===Object.prototype&&depth<1)scan(x,depth+1);};
+ for(const rel of [...deps,...ES_MODS]){const m=mod(rel);if(m)for(const v of Object.values(m))scan(v,0);}
+ if(!hits.length)return null;
+ return crypto.createHash('sha1').update(JSON.stringify(hits,plain)).digest('hex').slice(0,12);
+}
 function build(){
  const {sitePaths}=load(path.join(root,'lib/site/paths.ts'));
  const out={};
  // Nov 21 2026: a game page built before its game is in the room (lib/site/games.ts ALL_GAME_PAGES) is not in the sitemap, but its
  // date is prepared here so the page's VideoGame dateModified is real and nothing changes when it is listed.
  const unlisted=load(path.join(root,'lib/site/games.ts')).ALL_GAME_PAGES.map(g=>({path:g.path})).filter(g=>!sitePaths().some(x=>x.path===g.path));
- for(const {path:p} of [...sitePaths(),...unlisted]){const deps=(DEPS.find(([re])=>re.test(p))||[,[]])[1];out[p]=dateOf([...routeFiles(p),...deps].sort());}
+ const prev=fs.existsSync(ENTRIES)?JSON.parse(fs.readFileSync(ENTRIES,'utf8')):{},entries={};
+ for(const {path:p} of [...sitePaths(),...unlisted]){const deps=(DEPS.find(([re])=>re.test(p))||[,[]])[1],fam=dateOf([...routeFiles(p),...deps].sort());
+  const h=fingerprint(p,deps);if(!h){out[p]=fam;continue;}
+  const d=prev[p]&&prev[p][0]===h&&prev[p][1]<=fam?prev[p][1]:fam;out[p]=d;entries[p]=[h,d];}
+ build.entries=entries;
  return out;
 }
 module.exports={build,routeFiles};
@@ -89,7 +118,8 @@ if(require.main===module){
  const next=build(),json=JSON.stringify(next,null,0).replace(/,"/g,',\n"')+'\n';
  if(process.argv.includes('--check')){
   const cur=fs.existsSync(OUT)?fs.readFileSync(OUT,'utf8'):'',curTs=fs.existsSync(OUT_TS)?fs.readFileSync(OUT_TS,'utf8'):'';
-  if(cur!==json||curTs!==asTs(json)){console.log('lastmod: lib/site/lastmod.generated.json is out of date (run node scripts/gen-lastmod.cjs)');process.exit(1);}
+  const ent=JSON.stringify(build.entries,null,0).replace(/,"/g,',\n"')+'\n',curEnt=fs.existsSync(ENTRIES)?fs.readFileSync(ENTRIES,'utf8'):'';
+  if(cur!==json||curTs!==asTs(json)||curEnt!==ent){console.log('lastmod: lib/site/lastmod.generated.json is out of date (run node scripts/gen-lastmod.cjs)');process.exit(1);}
   console.log(`lastmod: ${Object.keys(next).length} paths up to date`);
- }else{fs.writeFileSync(OUT,json);fs.writeFileSync(OUT_TS,asTs(json));const days=new Set(Object.values(next));console.log(`lastmod: wrote ${Object.keys(next).length} paths, ${days.size} distinct dates`);}
+ }else{fs.writeFileSync(OUT,json);fs.writeFileSync(OUT_TS,asTs(json));fs.writeFileSync(ENTRIES,JSON.stringify(build.entries,null,0).replace(/,"/g,',\n"')+'\n');const days=new Set(Object.values(next));console.log(`lastmod: wrote ${Object.keys(next).length} paths, ${days.size} distinct dates`);}
 }

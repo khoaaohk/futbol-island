@@ -48,7 +48,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
    <LearnCard lang="en" id={l.id} concept={l.concept} formatLabel={l.formatLabel} difficulty={l.difficulty} questions={l.questions.length} chapter={l.chapter}/>
    <p>{l.title} is a free {formatPhrase(l.formatLabel)} lesson and quiz for kids aged 7 to 12 in Futbol Island, a learning game played in the web browser.</p>
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
-   <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Play this lesson</a>
+   <a className={styles.cta} href={playLessonHref(l.id)} rel="nofollow" data-play-cta="">Play this lesson</a>
   </header>
   <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={`${styles.h2} ${rt.target}`} id="coach">What the coach says</h2>
    <CoachChapters lang="en" id={l.id} format={l.format} formatLabel={l.formatLabel} steps={l.steps}/>

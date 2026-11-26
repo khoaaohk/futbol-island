@@ -13,6 +13,7 @@ import css from '../videos.module.css';
 import tgt from '@/components/site/railTarget.module.css';
 import RailNav from '@/components/site/shell/RailNav';
 import {videoRail} from '@/lib/site/railNavCollections';
+import {deepLinkRel} from '@/lib/site/playLinks';
 
 /**
  * /videos/<slug> (lib/site/videos.ts, Nov 18 2026): one clip's watch page. The video is the page's main content: a native
@@ -57,7 +58,7 @@ export default function WatchPage({params}:{params:{slug:string}}){
    <div className={css.words} id="clip-words">
     <p className={css.facts}><span>{v.seconds} seconds</span><span>No sound</span><span>Added <time dateTime={v.uploadDate}>{videoDateLabel(v)}</time></span></p>
     {v.text.map(x=><p key={x}>{x}</p>)}
-    <p className={css.actions}><a className={site.cta} href={v.play.href}>{v.play.label}</a><a href={v.origin.href}>{v.origin.label}</a></p>
+    <p className={css.actions}><a className={site.cta} href={v.play.href} rel={deepLinkRel(v.play.href)}>{v.play.label}</a><a href={v.origin.href}>{v.origin.label}</a></p>
    </div>
   </article>
   {/* Nov 20 2026 (SEO phase 2): the record of the game or lesson the clip shows, and links to its pages (lib/site/videoPages.ts) */}

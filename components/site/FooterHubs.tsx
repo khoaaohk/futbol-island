@@ -13,5 +13,13 @@ export default function FooterHubs({es=false}:{es?:boolean}){
    <ul>{g.links.map(([href,label])=>{const h=es&&hasEs(href)?toEs(href):href,name=es?FOOTER_ES[href]+(hasEs(href)?'':' (en inglés)'):label;
     return <li key={href}><a href={h}>{name}</a></li>;})}</ul>
   </div>)}
+  {/* Nov 26 2026 (Search Console: Spanish guides "Crawled / Discovered, not indexed"; seo-crawl: every Spanish child page sat 3
+      clicks from /, every English one 2): the English footer names the Spanish sections once, so each Spanish hub is one click
+      from any English page and its pages two. Only sections with a Spanish version (hasEs). */}
+  {!es&&<div className={`${styles.footGroup} ${styles.footEs}`} lang="es">
+   <p className={styles.footHead}>En español</p>
+   <ul><li><a href="/es/library" hrefLang="es">Biblioteca</a></li>{FOOTER_GROUPS.flatMap(g=>g.links).filter(([href])=>hasEs(href)).map(([href])=>
+    <li key={href}><a href={toEs(href)} hrefLang="es">{FOOTER_ES[href]}</a></li>)}</ul>
+  </div>}
  </nav>;
 }

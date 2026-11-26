@@ -11,7 +11,7 @@ import {FACTS_PATH,longDate} from './checked';
 import {SITE_UPDATED} from './updated';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import PlayBar from '@/components/site/PlayBar';
-import {playLessonHref} from './playLinks';
+import {deepLinkRel,playLessonHref} from './playLinks';
 import {FactIcon,type FactIconKind} from '@/components/site/FactIcons';
 import OnThisPage from '@/components/site/OnThisPage';
 import styles from '@/app/(site)/site.module.css';
@@ -30,7 +30,7 @@ import {railId} from '@/lib/site/railId';
  *  `.cta`: the page keeps its one gold Play button at the end (tests/seo-formations-positions.cjs). */
 export type Onward={play:{href:string;label:string};library:{href:string;name:string}};
 export function OnwardRow({o}:{o:Onward}){
- return <p className={styles.onward} data-onward=""><a className={styles.onwardPlay} href={o.play.href}>{o.play.label}</a><a className={styles.onwardLib} href={o.library.href}>{o.library.name}</a></p>;
+ return <p className={styles.onward} data-onward=""><a className={styles.onwardPlay} href={o.play.href} rel={deepLinkRel(o.play.href)}>{o.play.label}</a><a className={styles.onwardLib} href={o.library.href}>{o.library.name}</a></p>;
 }
 /** `top`: the head is #top, the Overview entry of a hub's in-page rail (layout batch 3, Nov 20 2026). */
 export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta,rail,onward,top}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean;rail?:React.ReactNode;onward?:Onward;top?:boolean}){
@@ -123,7 +123,7 @@ export function GuideEnd({cta=true,checked,lesson,sticky=true,path}:{cta?:boolea
 /** The one gold Play button at the end of a detail page (`data-play-cta`), plus the phones' sticky "Play free" bar
  *  (components/site/PlayBar.tsx), which hides itself while this button is on screen. */
 export function PlayEnd({href=PLAY_PATH,label='Play it on the island',bar='Learn it on the island',sticky=true}:{href?:string;label?:string;bar?:string;sticky?:boolean}){
- return <><p className={styles.end}><a className={styles.cta} href={href} data-play-cta="">{label}</a></p>{sticky&&<PlayBar href={href} text={bar}/>}</>;
+ return <><p className={styles.end}><a className={styles.cta} href={href} rel={deepLinkRel(href)} data-play-cta="">{label}</a></p>{sticky&&<PlayBar href={href} text={bar}/>}</>;
 }
 /** "Coach's notes" (lib/site/coachNotes.ts): the item's own coaching point, how it shows up in a match, age-group notes and,
  *  where the page had none, common mistakes. `ages` alone is used on drill pages (they already have points and a game line). */

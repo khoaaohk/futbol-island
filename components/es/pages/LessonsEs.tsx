@@ -112,7 +112,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
    <p>{lessonIntroEs(l)} {ctx?ctx.line:''}</p>
    <p>Es gratis en Futbol Island, un juego para aprender fútbol que se juega en el navegador. El juego está en inglés por ahora; esta página tiene toda la lección en español.</p>
    <ParentsLine/>
-   <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Juega esta lección</a>
+   <a className={styles.cta} href={playLessonHref(l.id)} rel="nofollow" data-play-cta="">Juega esta lección</a>
   </header>
   <EsPrintSheet path={l.esPath} what="hoja de la lección" has="la idea, los pasos y las preguntas"/>
   {keys.length>0&&<section className={styles.section} aria-labelledby="keys"><h2 className={styles.h2} id="keys">Puntos clave de la lección</h2>

@@ -7,7 +7,7 @@ import MotionToggle from '@/components/site/MotionToggle';
 import PlayBar from '@/components/site/PlayBar';
 import PrintButton from '@/components/site/PrintButton';
 import {abs,PLAY_PATH,type Crumb} from '@/lib/site/seo';
-import {playLessonHref} from '@/lib/site/playLinks';
+import {deepLinkRel,playLessonHref} from '@/lib/site/playLinks';
 import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {toEs} from '@/lib/i18n/esPaths';
 import {navSection} from '@/lib/site/navSection';
@@ -62,7 +62,7 @@ export function EsCheckedLine({date}:{date:string}){
  return <p className={styles.caption} data-checked={date}>{ES_UI.lastChecked}: <time dateTime={date}>{longDateEs(date)}</time>. <a href={toEs('/about/how-we-check-facts')}>{ES_UI.howWeCheck}</a>.</p>;
 }
 export function EsPlayEnd({href=PLAY_PATH,label=ES_UI.playIsland,bar=ES_UI.learnIsland,sticky=true}:{href?:string;label?:string;bar?:string;sticky?:boolean}){
- return <><p className={styles.end}><a className={styles.cta} href={href} data-play-cta="">{label}</a></p>{sticky&&<PlayBar href={href} text={bar} lang="es"/>}</>;
+ return <><p className={styles.end}><a className={styles.cta} href={href} rel={deepLinkRel(href)} data-play-cta="">{label}</a></p>{sticky&&<PlayBar href={href} text={bar} lang="es"/>}</>;
 }
 /** The end of a Spanish guide: the about line, "Última revisión", then the gold button (to the page's lesson when it has one). */
 export function EsGuideEnd({cta=true,checked,lessonId}:{cta?:boolean;checked?:string;lessonId?:string}){

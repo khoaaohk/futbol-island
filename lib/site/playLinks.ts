@@ -12,3 +12,10 @@ export function shoreSpot(spotIds:readonly string[]):{id:string;name:string}|nul
 }
 export const playFishHref=(spotId?:string)=>`${PLAY_PATH}?go=fish${spotId?`:${encodeURIComponent(spotId)}`:''}`;
 export const PLAY_PACKS_HREF=`${PLAY_PATH}?store=packs`;
+/**
+ * Nov 26 2026 (Search Console "Alternate page with proper canonical tag": 50 `/play?go=…` URLs; "Excluded by noindex":
+ * `/arcade?game=…`): a game deep link (`/play?…`, `/arcade?…`) opens the client-only game, so its URL has nothing of its own
+ * to index (/play is the canonical; /arcade?game= is noindex). rel="nofollow" asks Google not to spend crawls on them. They
+ * stay crawlable (no robots.txt block: a blocked URL can still be indexed from its links, and its canonical/noindex unseen).
+ */
+export const deepLinkRel=(href:string):'nofollow'|undefined=>/^\/(?:play|arcade)\?/.test(href)?'nofollow':undefined;

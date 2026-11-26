@@ -104,6 +104,16 @@ const cacheStatic = [
   { source: '/:path*', has: [{ type: 'header', key: 'rsc' }], headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/:path*', has: [{ type: 'query', key: '_rsc' }], headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/:file(llms\\.txt|llms-full\\.txt)', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  // Nov 26 2026 (Search Console Nov 22, "Crawled, currently not indexed": 181 `/_next/static/…?dpl=…` scripts / styles / media, 12
+  // /games/clips videos, 9 /voice/books narrations, a web manifest): files that are not pages say so, so they leave the page
+  // reports. The `?dpl=` is Vercel Skew Protection's deployment id (one URL per release); nothing in the repo adds it.
+  //  - Safe for rendering: robots.txt still allows /_next/static (Googlebot fetches and runs these files); noindex only keeps a
+  //    file out of the index. Video/image search is untouched: the clips' .mp4 (the video sitemap's content_loc) and .webp
+  //    (posters, image sitemap) stay indexable; only the .webm twin of each clip and the narration audio are marked.
+  { source: '/_next/static/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/games/clips/:file([a-z0-9-]+\\.webm)', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/:dir(voice|stories|music|lessons|museum)/:file(.+\\.(?:m4a|mp3|ogg|opus|wav))', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/:file(manifest\\.webmanifest)', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
 ];
 // The game is at /play (Nov 3 2026, owner: the feature tour is the home page `/`, the game moved from `/`). /play is prerendered
 // static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum|shop (spawn outside that door,

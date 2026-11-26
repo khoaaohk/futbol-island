@@ -38,16 +38,16 @@ function picWords(game:GamePage,es:GameEs){
  game.shots.forEach((s,i)=>m.set(s.src,es.shots[i]));gameStills(game.id,4).forEach((s,i)=>{if(!m.has(s.src))m.set(s.src,es.stills[i]);});
  return (s:GameShot):GameShot=>({...s,...(m.get(s.src)??{alt:es.name,caption:''})});
 }
-const PlayLinkEs=({game,es}:{game:GamePage;es:GameEs})=><a className={site.cta} href={game.play} data-play={game.id}>Jugar a {es.name}</a>;
+const PlayLinkEs=({game,es}:{game:GamePage;es:GameEs})=><a className={site.cta} href={game.play} rel="nofollow" data-play={game.id}>Jugar a {es.name}</a>;
 function PlayStageEs({game,es}:{game:GamePage;es:GameEs}){
  const shots=stageShots(game),wide=shots[0].w>shots[0].h;
  return <div className={`${g.stage}${wide?' '+g.stageWide:''}`} data-play-stage={game.id}>
-  <a className={g.stageArt} href={game.play} data-play={game.id} tabIndex={-1} aria-hidden="true" data-n={shots.length}>
+  <a className={g.stageArt} href={game.play} rel="nofollow" data-play={game.id} tabIndex={-1} aria-hidden="true" data-n={shots.length}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
    {shots.map((s,i)=><img key={s.src} src={s.src} alt="" width={s.w} height={s.h} loading="eager" decoding={i?'async':'sync'} {...(i?{}:{fetchpriority:'high'})}/>)}
   </a>
   <div className={g.stageWords}>
-   <a className={`${site.cta} ${g.stageCta}`} href={game.play} data-play={game.id} data-play-now="">{esPlayNow}</a>
+   <a className={`${site.cta} ${g.stageCta}`} href={game.play} rel="nofollow" data-play={game.id} data-play-now="">{esPlayNow}</a>
    <p className={g.stageHow}>{esHowToPlay(es)}</p>
    <p className={g.stageWorks}>{esPlayWorks}</p>
   </div>
@@ -138,13 +138,13 @@ export function GameEsPage({game}:{game:GamePage}){
 function QuickPlayEs({games}:{games:readonly GamePage[]}){
  return <ul className={g.quick} aria-label="Juega ahora">{games.map((x,i)=>{const s=cardShot(x),e=words(x);
   return <li key={x.id} className={g.quickCard}>
-   <a className={g.quickArt} href={x.play} data-play={x.id} tabIndex={-1} aria-hidden="true">
+   <a className={g.quickArt} href={x.play} rel="nofollow" data-play={x.id} tabIndex={-1} aria-hidden="true">
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={s.src} alt="" width={s.w} height={s.h} loading={i<2?'eager':'lazy'} decoding="async"/>
    </a>
    <h3 className={g.quickName}><a href={gamePathEs(x)}>{x.name}</a></h3>
    <p className={g.quickSkill}>{e.skill}</p>
-   <a className={g.quickPlay} href={x.play} data-play={x.id} aria-label={`Jugar a ${x.name} ahora`}>Jugar ahora</a>
+   <a className={g.quickPlay} href={x.play} rel="nofollow" data-play={x.id} aria-label={`Jugar a ${x.name} ahora`}>Jugar ahora</a>
   </li>;})}</ul>;
 }
 function GameFeatureEs({game}:{game:GamePage}){
@@ -156,7 +156,7 @@ function GameFeatureEs({game}:{game:GamePage}){
    <h3 className={g.featureName}><a href={gamePathEs(game)}>{game.name}</a></h3>
    <span className={g.gameKind}>{esGameKind(es)}</span>
    <p>{es.blurb}. Enseña: {es.skill[0].toLowerCase()+es.skill.slice(1)}{/[.!?]$/.test(es.skill)?'':'.'}</p>
-   <span className={g.gameLinks}><a className={g.playNow} href={game.play}>Jugar a {game.name}</a><a href={gamePathEs(game)}>Cómo se juega</a></span>
+   <span className={g.gameLinks}><a className={g.playNow} href={game.play} rel="nofollow">Jugar a {game.name}</a><a href={gamePathEs(game)}>Cómo se juega</a></span>
   </div>
   {stills.length>0&&<ul className={g.thumbs} aria-label={`Más imágenes de ${game.name}`}>{stills.map(s=><li key={s.src}>
    {/* eslint-disable-next-line @next/next/no-img-element */}
