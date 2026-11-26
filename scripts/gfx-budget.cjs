@@ -69,12 +69,15 @@ if(process.env.GFX_VIEWS==='sand'){const SI=load('lib/town/summitIsle.ts'),CC=lo
 // Swim view at the shore (Nov 25 2026): GFX_VIEWS=swimshore, swimming 7 m off Palm Coast Beach looking back at the sand (the clear
 // water window + swim disc path), and a five-step walk-in across the waterline (same heading, 2 m up the sand to 9 m out).
 if(process.env.GFX_VIEWS==='swimshore'){const at=(id,o,note)=>({id,note,x:shore.x+shore.ux*o,z:shore.z+shore.uz*o,yaw:shore.yaw+Math.PI});
- VIEWS.splice(0,VIEWS.length,at('swim-near',8,'swimming 7 m off the beach, facing the sand'),at('walkin-1',-1,'on the sand'),at('walkin-2',1.5,'at the waterline'),at('walkin-3',3.5,'wading'),at('walkin-4',6,'swimming in'),at('walkin-5',10,'swimming'));
- const SB=load('lib/town/summitIsle.ts').SANDBAR_PATH,bi=SB.reduce((m,q,i)=>Math.abs(q.z+28)<Math.abs(SB[m].z+28)?i:m,0);for(const v of VIEWS)v.probe=true;VIEWS.push({id:'swim-sandbar',note:'swimming 9 m off the sandbar',x:SB[bi].x+9,z:SB[bi].z,yaw:-Math.PI/2,swim:true});}
+ VIEWS.splice(0,VIEWS.length,at('swim-near',8,'swimming 7 m off the beach, facing the sand'),at('fly-sea',Number(process.env.GFX_FLY_OFF||22),'over the sea off the beach (use with GFX_FLY)'),
+  // a hilltop first (Summit Isle's peak: the camera goes well over the water there), as a walk down from high ground or a landing would
+  (p=>({id:'hill',note:'Summit Isle peak (camera high over the water)',x:p.x,z:p.z,yaw:0}))(load('lib/town/summitIsle.ts').SUMMIT_PEAK),at('inland-15',-15,'15 m up the beach'),at('inland-8',-8,'8 m up the beach'),at('walkin-1',-1,'on the sand'),at('walkin-2',1.5,'at the waterline'),at('walkin-3',3.5,'wading'),at('walkin-4',6,'swimming in'),at('walkin-5',10,'swimming'));
+ const SB=load('lib/town/summitIsle.ts').SANDBAR_PATH,bi=SB.reduce((m,q,i)=>Math.abs(q.z+28)<Math.abs(SB[m].z+28)?i:m,0);for(const v of VIEWS)v.probe=true;VIEWS.push({id:'swim-sandbar',note:'swimming 9 m off the sandbar',x:SB[bi].x+9,z:SB[bi].z,yaw:-Math.PI/2,swim:true});
+ const cs=load('lib/town/coralCay.ts').CAY_SAND;for(const [id,f] of [['cay-shore-a',.3],['cay-shore-b',.62],['cay-shore-c',.88]]){const c=cs[Math.round(cs.length*f)%cs.length];VIEWS.push({id,note:'Coral Cay sand, 2 m from the water',x:c.outer.x*.85+c.inner.x*.15,z:c.outer.z*.85+c.inner.z*.15,yaw:0});}}
 // GFX_ONLY=id,id keeps those views; GFX_FLY=<m> arrives at the first kept view on the jetpack at that height (no teleport after:
 // the high camera, where the clear water window is off) and measures only that view.
 if(process.env.GFX_ONLY){const keep=process.env.GFX_ONLY.split(',');VIEWS.splice(0,VIEWS.length,...VIEWS.filter(v=>keep.includes(v.id)));}
-const FLY=Number(process.env.GFX_FLY||0);if(FLY)VIEWS.length=1;
+const FLY=Number(process.env.GFX_FLY||0);if(FLY&&process.env.GFX_FLY_TP!=='1')VIEWS.length=1;// GFX_FLY_TP=1: arrive flying, then teleport to every view on foot (a landing: the clear window's old height latch)
 const NO_CAFE=process.env.GFX_NO_CAFE==='1';
 const NO_TRAIN=process.env.GFX_NO_TRAIN==='1',SAVER=process.env.GFX_SAVER==='1';// GFX_SAVER=1: Battery saver on before load, so the world BUILDS at the lowest tier (the Island Line's lighter build)
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0;};
@@ -135,12 +138,14 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   if(SHOTS&&v.probe){const pts=[];for(let o=-6;o<=30;o+=.5)pts.push([shore.x+shore.ux*o-shore.uz*4,o<0?.05:-.4,shore.z+shore.uz*o+shore.ux*4,o]);
    const px=await page.evaluate(pts=>{const c=window.__fi2.lessonPass.camera;c.updateMatrixWorld();const v=c.matrixWorldInverse.elements,p=c.projectionMatrix.elements,W=innerWidth,H=innerHeight;
     return pts.map(([x,y,z,o])=>{const ex=v[0]*x+v[4]*y+v[8]*z+v[12],ey=v[1]*x+v[5]*y+v[9]*z+v[13],ez=v[2]*x+v[6]*y+v[10]*z+v[14],cw=-ez;return {o,x:(p[0]*ex+p[8]*ez)/cw*.5*W+W/2,y:H/2-(p[5]*ey+p[9]*ez)/cw*.5*H};});},pts);
-   fs.writeFileSync(path.join(SHOTS,`${process.env.GFX_SHOT_PREFIX||'gfx'}-${v.id}.probe.json`),JSON.stringify({dpr:DPR,px}));}
+   const cw=await page.evaluate(()=>{const w=window.__fi2.clearWin;return w?{strength:+w.strength.toFixed(2),open:w.open}:null;});v.cw=cw;
+   fs.writeFileSync(path.join(SHOTS,`${process.env.GFX_SHOT_PREFIX||'gfx'}-${v.id}.probe.json`),JSON.stringify({dpr:DPR,px,cw}));}
  }
  await browser.close();
  console.log(`gfx-budget${NO_TRAIN?' (no train)':''}${SAVER?' (battery saver build)':''}  ${BASE}  ${DESKTOP?'1440x900 desktop':'390x844'} DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);
  console.log('| view | draw calls (min-max) | triangles | programs | textures | geometries | render ms (CPU) | water phase | ocean blended | frames |');
  console.log('|---|---|---|---|---|---|---|---|---|---|');
+ for(const v of VIEWS)if(v.cw)console.log(`clear window at ${v.id}: strength ${v.cw.strength}, ocean blended ${v.cw.open}`);
  for(const o of out)console.log(`| ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.programs} | ${o.textures} | ${o.geometries} | ${o.renderMs} | ${o.phase}${o.reached?'':' (swim NOT reached)'} | ${o.oceanBlended?'yes':'no'} | ${o.frames} |`);
  if(process.env.GFX_JSON)fs.writeFileSync(process.env.GFX_JSON,JSON.stringify({base:BASE,tier:TIER,time:TIME,views:out},null,1));
  if(errors.length){console.log('page errors:');for(const e of errors.slice(0,5))console.log('  '+e);}
