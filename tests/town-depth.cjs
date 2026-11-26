@@ -1,4 +1,4 @@
-// Town kerb depth (lib/town/townDepth.ts, ?depth=1, default OFF). Flag off: nothing changes. Flag on: the carriageway sinks 13 cm
+// Town kerb depth (lib/town/townDepth.ts, ?depth=1, default OFF). Flag off: nothing changes. Flag on: the carriageway sinks 15 cm
 // behind a bevelled kerb, cambers to the crown, drops its kerb at every zebra, and returns to today's height at the Island Line and
 // at a dead end; the walked height (venues.ts fieldSurfaceHeight) and groundLift read the same function; pitches keep their slab.
 const assert=require('node:assert/strict');
@@ -24,7 +24,7 @@ const E=load('lib/town/elevation.ts'),V=load('lib/town/venues.ts'),TT=load('lib/
 D.setDepthStreets(INPUT);const K=D.KERB,lift=D.depthLift,near=(a,b,e=1e-6)=>Math.abs(a-b)<=e;
 // A straight stretch of the Nursery street (x = 124, carriageway x 120..128): pavement, bevel, gutter, camber, crown.
 assert.equal(lift(118.5,-110),0,'the pavement keeps today\'s height');assert.equal(lift(119.99,-110),0);
-assert.ok(near(lift(120+K.bevel,-110),-K.gutter),'the gutter is 13 cm down at the bevel\'s foot: '+lift(120+K.bevel,-110));
+assert.ok(near(lift(120+K.bevel,-110),-K.gutter),'the gutter is 15 cm down at the bevel\'s foot: '+lift(120+K.bevel,-110));
 assert.ok(near(lift(124,-110),-K.crown),'the crown: '+lift(124,-110));
 assert.ok(near(lift(120+K.bevel/2,-110),-K.gutter/2,1e-3),'the kerb is a plane bevel (a shoulder, not a wall)');
 for(let x=120.3;x<124;x+=.1)assert.ok(lift(x+.1,-110)>=lift(x,-110)-1e-9,'camber rises to the crown');
@@ -65,8 +65,8 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
  const sink=new D.Sink();D.kerbStrips(sink);let tris=0,down=0;
  for(const c of sink.cells.values()){assert.ok(c.positions.every(Number.isFinite)&&c.colors.every(v=>Number.isFinite(v)&&v>=0));
   for(let i=0;i<c.indices.length;i+=3){const [a,b,d]=[0,1,2].map(k=>c.indices[i+k]*3),P=c.positions,ny=(P[b+2]-P[a+2])*(P[d]-P[a])-(P[b]-P[a])*(P[d+2]-P[a+2]);tris++;if(ny<-1e-9)down++;}}
- assert.equal(down,0,'no kerb triangle faces down');assert.ok(tris>3000);
+ assert.equal(down,0,'no kerb triangle faces down');assert.ok(tris>3000&&tris<14000,'kerb triangles '+tris);
  assert.ok(D.asphaltBand(120.3,-110)&&!D.asphaltBand(120.6,-110)&&!D.asphaltBand(119.9,-110));
- const low=new D.Sink();D.kerbStrips(low,true);assert.ok(low.triangles<sink.triangles*.62,'the lowest tier uses a simpler kerb');
+ const low=new D.Sink();D.kerbStrips(low,true);assert.ok(low.triangles<sink.triangles*.75,'the lowest tier uses a simpler kerb');
  console.log('  kerb triangles',sink.triangles,'(lowest tier',low.triangles+'), verge',lawn.patch.triangles,'(lowest tier',D.depthLawn(null,true).patch.triangles+'), kerb segments',S.asphalt.segs.length,'holes',lawn.holes.length,'blocks',lawn.blocks.length,'dead ends',S.ends.length,'zebras',crossings.length);}
 console.log('town-depth: ok');

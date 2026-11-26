@@ -1560,12 +1560,13 @@ export function* buildTownSteps(scene: T.Scene) {
     }
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();
+      roadTriangles[carriageway?'asphalt':'pave']+=chunk.positions.length/9;
       if(depth){const P=chunk.positions,N:number[]=[];for(let i=0;i<P.length;i+=9){const cx=(P[i]+P[i+3]+P[i+6])/3+chunk.x,cz=(P[i+2]+P[i+5]+P[i+8])/3+chunk.z;for(let k=0;k<9;k+=3)depthNormal(P[i+k]+chunk.x,P[i+k+2]+chunk.z,cx,cz,N);}geometry.setAttribute('normal',new T.Float32BufferAttribute(N,3));}// smooth ramps and camber
       const mesh=put(geometry,carriageway?'#737c75':'#eddfbb',chunk.x,0,chunk.z);mesh.castShadow=false;mesh.userData.depthOwn=true;
       tintGroundMesh(mesh,carriageway?'asphalt':'path');// Nov 10 2026: asphalt and sidewalks get the ground mottle/grain (same batch count)
     }
   }
-  const depthKnots=depth?asphaltKnots():null;
+  const depthKnots=depth?asphaltKnots():null,roadTriangles={asphalt:0,pave:0};
   roadSurface(false);roadSurface(true);
 
   // Dashes share a world-space phase and stop before the intersection square.
@@ -1773,7 +1774,7 @@ export function* buildTownSteps(scene: T.Scene) {
    const shades=contactShade(sink,objects),shadeTriangles=sink.triangles-kerbTriangles,small=low?null:smallObjects(sink,assets.filter(a=>a.kind==='tree'&&inTown(a))),lawn=depthLawn(sink,low);
    for(const c of sink.cells.values()){if(!c.indices.length)continue;const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(c.positions,3));g.setIndex(c.indices);g.computeVertexNormals();
     const m=put(g,'#737c75',c.x,0,c.z);m.userData.depthColors=new Float32Array(c.colors);m.userData.depthOwn=true;m.userData.skipRoofObstacle=true;}
-   depthStats.value={movedList,holesOk:lawn?.holesOk,moved,kerbTriangles,shades,shadeTriangles,small,soil:lawn?.soil??0,total:sink.triangles,chunks:sink.cells.size,low};
+   depthStats.value={roadTriangles,movedList,holesOk:lawn?.holesOk,moved,kerbTriangles,shades,shadeTriangles,small,soil:lawn?.soil??0,total:sink.triangles,chunks:sink.cells.size,low};
    town.updateMatrixWorld(true);}
   if(train){town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
@@ -1815,7 +1816,7 @@ export function* buildTownSteps(scene: T.Scene) {
   });
   const canopies=canopyCollector.finish();canopies.push(...stadiumRoofCanopies);// the stadium roofs (own meshes, stadiumWorld.ts): landable slabs
   yield;
-  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[]};
+  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[];depthPiece?:number};
   // Where each tagged prop's pieces go: batch + index in that batch (→ vertex start once merged) + world bounds.
   const gashaponPieces=new Map<string,{batch:Batch;index:number}[]>();
   const propRecords=new Map<PropTag,{pieces:{batch:Batch;index:number}[];bounds:T.Box3}>();
@@ -1896,7 +1897,7 @@ export function* buildTownSteps(scene: T.Scene) {
     // Night glow (Nov 13 2026, machineNightGlow.ts): the Konbini fronts and the gashapon panels carry their weight in the plain paint's uv slot.
     {const glow=object.userData.machineGlow as [number,boolean]|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
-    let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);
+    let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);if(object.userData.depthColors)batch.depthPiece=batch.geometries.length-1;
     const tag=object.userData.propTag as PropTag|undefined;
     const gid=object.userData.gashaponId as string|undefined;if(gid){let list=gashaponPieces.get(gid);if(!list)gashaponPieces.set(gid,list=[]);list.push({batch,index:batch.geometries.length-1});}// gashapon live swap (gashaponStatic)
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
@@ -1913,7 +1914,11 @@ export function* buildTownSteps(scene: T.Scene) {
     const merged=mergeGeometries(geometries);
     // Fishing backdrop (lib/graphics/fishingBackdrop.ts): where each source piece starts in the merged buffer and its prop kind, so the
     // low-detail skyline can drop whole small props (every lamp, bench, sign) instead of half of one. Two small arrays per chunk.
-    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
+    // Kerb depth (townDepth.ts): the chunk's kerb / contact-shade piece is the LAST piece of its paint batch and is left out of the
+    // shadow pass (a 15 cm kerb or a pebble is below the shadow map's resolution; its shade is baked): drawRange for the depth
+    // draw only (three's onBeforeShadow / onAfterShadow), and the phone's merged shadow proxies read userData.shadowCount.
+    const depthIndices=batch.depthPiece===geometries.length-1&&merged?.index?geometries[batch.depthPiece].index!.count:0;
+    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(depthIndices){const count=merged.index!.count-depthIndices;mesh.userData.shadowCount=count;mesh.onBeforeShadow=()=>{merged.setDrawRange(0,count);};mesh.onAfterShadow=()=>{merged.setDrawRange(0,Infinity);};}if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
     if(++merges%12===0)yield;
   }

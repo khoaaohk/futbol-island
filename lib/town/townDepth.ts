@@ -2,8 +2,8 @@
 // paths, roads"). Pure data, no three.js. Built ON TOP of the elevation system: elevation.ts groundLift() adds depthLift(), so the
 // walked height (venues.ts fieldSurfaceHeight: player, rides, ball floor, landing, NPC helpers, camera) and traffic read ONE height.
 //
-// What it is: the CARRIAGEWAY SINKS 13 cm below the pavement (which keeps today's height, so no building, lamp, bench or tree moves):
-//  - a bevelled kerb shoulder (0.22 m run: a slope that lights and shades, not a vertical lip), a 3 cm camber to the crown;
+// What it is: the CARRIAGEWAY SINKS 15 cm below the pavement (which keeps today's height, so no building, lamp, bench or tree moves):
+//  - a bevelled kerb shoulder (0.24 m run: a slope that lights and shades, not a vertical lip), a 3 cm camber to the crown;
 //  - dropped kerbs at every zebra (the pavement ramps down over 1.5 m to a 2 cm upstand);
 //  - pins: the road eases back to today's height at the Island Line (7.5 m clear + 5 m ease) and over the last 7 m of a dead end.
 // The lawn beside a pavement rises 5 cm above it (lawnRise: DRAWN ONLY, grass has thickness: feet and wheels sink into the sward
@@ -23,7 +23,7 @@ export const townDepthOn=()=>enabled;
 /** Lowest tier at world build (Battery saver): simpler kerb, no small objects, coarser verge. */
 export const depthLowTier=()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi2-battery-saver')==='on';}catch{return false;}};
 
-export const KERB={gutter:.13,crown:.10,bevel:.22,camber:3.4,up:.02,ramp:1.5,dropHalf:1.1,dropTaper:.7,channel:.5,stone:.16,railClear:7.5,railEase:5,endEase:7} as const;
+export const KERB={gutter:.15,crown:.12,bevel:.24,camber:3.4,up:.02,ramp:1.5,dropHalf:1.1,dropTaper:.7,channel:.5,stone:.16,railClear:7.5,railEase:5,endEase:7} as const;
 export const VERGE={lip:.05,reach:3.3,flat:1.3} as const;
 /** Drawn heights of today's flat layers (world.ts roadSurface, fields.ts lawn, world.ts path()). */
 export const DRAWN={pave:-.02,asphalt:-.01,lawn:-.112,path:-.0375} as const;
@@ -153,10 +153,12 @@ const mottle=(x:number,z:number)=>Math.sin(x*.31+Math.sin(z*.23)*1.3)*.4+Math.si
 export type GroundSort='asphalt'|'pave'|'lawn';
 const BASE:Record<GroundSort,{c:readonly [number,number,number];amp:number}>={asphalt:{c:lin('#737c75'),amp:.06},pave:{c:lin('#eddfbb'),amp:.09},lawn:{c:lin('#608870'),amp:.12}};
 /** Calibration of a paint-batch colour against the tinted ground material beside it (measured in the page, NOTE.md). */
-export const GROUND_MATCH:Record<GroundSort,number>={asphalt:1,pave:1,lawn:1};
+export const GROUND_MATCH:Record<GroundSort,number>={asphalt:1,pave:1,lawn:.97};
 export function groundColor(sort:GroundSort,x:number,z:number,k=1,out:number[]=[]){const b=BASE[sort],n=mottle(x,z),w=n>0?n:0,f=(1+b.amp*n)*k*GROUND_MATCH[sort];
  out.push(b.c[0]*f*(1+b.amp*.5*w),b.c[1]*f,b.c[2]*f*(1-b.amp*.8*w));return out;}
-const STONE=lin('#d6d0bf'),STONE_EDGE=lin('#ebe6d6'),DUST=lin('#b9ac8c'),SOIL=lin('#4f4b30');
+const STONE=lin('#ddd8c8'),STONE_EDGE=lin('#f3eee0'),DUST=lin('#b9ac8c'),SOIL=lin('#4f4b30');
+/** Why groundAt answers as it does (headless audits). */
+export function depthProbe(x:number,z:number){const s=S;if(!s)return null;return {asphalt:s.asphalt.inside(x,z),foot:s.foot.inside(x,z),solid:(s.solid.get(x,z)??[]).filter(r=>Math.abs(x-r.x)<r.w/2+.05&&Math.abs(z-r.z)<r.d/2+.05),path:rectIn(s.paths.get(x,z),x,z),grass:insidePoly(INTERIOR_GRASS,x,z),weight:depthWeight(x,z)};}
 /** What is drawn at (x, z) and how high: the layer a contact shade or a small object lies on. null: leave it alone. */
 export function groundAt(x:number,z:number):{sort:GroundSort;y:number}|null{
  const s=S;if(!s)return null;
@@ -193,15 +195,16 @@ function rowPoint(s:Seg,len:number,along:number,u:number,first:boolean,last:bool
 /** A: the kerb. Per asphalt edge: stone top, the bevel face, a dark foot, a dusty gutter channel fading into the asphalt colour.
  *  The asphalt mesh itself starts KERB.channel inside the edge (asphaltBand), so nothing here lies on another surface. */
 export function kerbStrips(sink:Sink,low=false){const s=S;if(!s)return;
- const rows=low?[KERB.stone,.02,-KERB.bevel,-KERB.channel]:[KERB.stone,.02,-KERB.bevel,-.33,-KERB.channel];
- for(const seg of s.asphalt.segs){const extra=s.crossings.filter(k=>k.vertical===(seg.nx!==0)).flatMap(k=>{const c=seg.nx?k.z:k.x;return [c-KERB.dropHalf-KERB.dropTaper,c-KERB.dropHalf,c+KERB.dropHalf,c+KERB.dropHalf+KERB.dropTaper];});
-  const {len,knots}=knotsOf(seg,low?6:3,extra);
+ const FACE=-KERB.bevel+.05,rows=low?[KERB.stone,.02,-KERB.bevel,-KERB.channel]:[KERB.stone,.02,FACE,-KERB.bevel,-KERB.channel];
+ for(const seg of s.asphalt.segs){const extra=s.crossings.filter(k=>k.vertical===(seg.nx!==0)).flatMap(k=>{const c=seg.nx?k.z:k.x;return low?[c-KERB.dropHalf-KERB.dropTaper,c,c+KERB.dropHalf+KERB.dropTaper]:[c-KERB.dropHalf-KERB.dropTaper,c-KERB.dropHalf,c+KERB.dropHalf,c+KERB.dropHalf+KERB.dropTaper];});
+  const {len,knots}=knotsOf(seg,low?14:10,extra);
   for(let j=0;j<knots.length-1;j++){const v:number[][]=[];
    const [mx,mz]=rowPoint(seg,len,(knots[j]+knots[j+1])/2,.5,false,false),paved=s.foot.inside(mx,mz);// a dead end has no pavement across it
    for(let r=paved?0:1;r<rows.length;r++)for(const e of [j,j+1]){const u=paved?rows[r]:r===1?0:rows[r],[x,z]=rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1),n=hash(x*3.1+z*7.7),p=[x,0,z],w=depthWeight(x,z);
     if(u>0){p[1]=DRAWN.pave+depthLift(x,z)+.006;const c=r===0?STONE:STONE_EDGE,f=.96+.08*n,g=groundColor('pave',x,z),m=Math.min(1,w*2.5);p.push(g[0]+(c[0]*f-g[0])*m,g[1]+(c[1]*f-g[1])*m,g[2]+(c[2]*f-g[2])*m);}
     else{p[1]=DRAWN.asphalt+depthLift(x,z);const a=groundColor('asphalt',x,z,1);
-     if(u===-KERB.bevel){const f=1-(.5-.12*n)*w;p.push(a[0]*f,a[1]*f,a[2]*f);}// the dark foot of the kerb: baked contact shade + dirt
+     if(u===FACE&&!low){const f=(.8+.06*n);p.push(a[0]+(STONE[0]*f-a[0])*Math.min(1,w*2.5),a[1]+(STONE[1]*f-a[1])*Math.min(1,w*2.5),a[2]+(STONE[2]*f-a[2])*Math.min(1,w*2.5));}// the kerb's face is stone down to its foot
+     else if(u===-KERB.bevel){const f=1-(.46-.12*n)*w,m=(.1+.25*n)*w;p.push((a[0]+(DUST[0]-a[0])*m)*f,(a[1]+(DUST[1]-a[1])*m)*f,(a[2]+(DUST[2]-a[2])*m)*f);}// the dark foot of the kerb: baked contact shade + dirt
      else if(u===-KERB.channel||u===0)p.push(a[0],a[1],a[2]);
      else{const m=(.3+.3*n)*w;p.push(a[0]+(DUST[0]-a[0])*m,a[1]+(DUST[1]-a[1])*m,a[2]+(DUST[2]-a[2])*m);}}
     v.push(p);}
@@ -213,7 +216,7 @@ export function asphaltBand(x:number,z:number){const s=S;if(!s)return false;cons
  return false;}
 /** Knots the asphalt cells are cut on (world.ts roadSurface): the band edge, the camber, and a regular step for the pins' easing. */
 export function asphaltKnots(){const xs:number[]=[],zs:number[]=[],xSeg:Seg[]=[],zSeg:Seg[]=[],s=S;if(!s)return {xs,zs,xSeg,zSeg};
- for(const g of s.asphalt.segs){const e=g.nx?g.ax:g.az,n=-(g.nx||g.nz);for(const o of [KERB.channel,1.5,2.8]){if(g.nx){xs.push(q3(e+n*o));xSeg.push(g);}else{zs.push(q3(e+n*o));zSeg.push(g);}}}
+ for(const g of s.asphalt.segs){const e=g.nx?g.ax:g.az,n=-(g.nx||g.nz);for(const o of [KERB.channel,2.1]){if(g.nx){xs.push(q3(e+n*o));xSeg.push(g);}else{zs.push(q3(e+n*o));zSeg.push(g);}}}
  return {xs,zs,xSeg,zSeg};}
 /** A pavement cell [x0, x1] x [z0, z1]: null when flat, else the triangles (world x, y, z) with the dropped kerb's ramp cut in. */
 export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|null{const s=S;if(!s)return null;
@@ -221,7 +224,7 @@ export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|n
  const cut=(a:number,b:number,edges:number[])=>[...new Set([a,b,...edges.filter(e=>e>a+1e-6&&e<b-1e-6)].map(q3))].sort((p,q)=>p-q);
  const xs=cut(x0,x1,hit.flatMap(l=>[l.x-l.w/2,l.x+l.w/2])),zs=cut(z0,z1,hit.flatMap(l=>[l.z-l.d/2,l.z+l.d/2])),out:number[]=[];
  for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){const a=xs[i],b=xs[i+1],c=zs[j],d=zs[j+1],inside=hit.some(l=>Math.abs((a+b)/2-l.x)<l.w/2&&Math.abs((c+d)/2-l.z)<l.d/2);
-  const nx=inside?Math.max(1,Math.ceil((b-a)/.4)):1,nz=inside?Math.max(1,Math.ceil((d-c)/.4)):1,y=(x:number,z:number)=>DRAWN.pave+(inside?depthLift(x,z):0);
+  const nx=inside?Math.max(1,Math.ceil((b-a)/.7)):1,nz=inside?Math.max(1,Math.ceil((d-c)/.7)):1,y=(x:number,z:number)=>DRAWN.pave+(inside?depthLift(x,z):0);
   for(let p=0;p<nx;p++)for(let q=0;q<nz;q++){const xa=a+(b-a)*p/nx,xb=a+(b-a)*(p+1)/nx,za=c+(d-c)*q/nz,zb=c+(d-c)*(q+1)/nz;
    out.push(xa,y(xa,za),za,xa,y(xa,zb),zb,xb,y(xb,zb),zb,xa,y(xa,za),za,xb,y(xb,zb),zb,xb,y(xb,za),za);}}
  return out;}
@@ -238,7 +241,7 @@ export function depthLawn(sink:Sink|null,low=false){const s=S;if(!s)return null;
   {const lo=Math.min(horizontal?seg.ax:seg.az,horizontal?seg.bx:seg.bz),hi=Math.max(horizontal?seg.ax:seg.az,horizontal?seg.bx:seg.bz),line=horizontal?seg.az:seg.ax;
    for(let t=lo;t<hi;t+=CELL){const l=s.paths.get(horizontal?t:line+ (seg.nx)*1,horizontal?line+seg.nz*1:t);if(!l)continue;
     for(const r of l){const near=horizontal?Math.abs(line-r.z)-r.d/2:Math.abs(line-r.x)-r.w/2;if(near>VERGE.reach)continue;const c=horizontal?r.x:r.z,hw=(horizontal?r.w:r.d)/2;extra.push(c-hw-.5,c-hw,c+hw,c+hw+.5);}}}
-  const {len,knots}=knotsOf(seg,low?6:3,extra),pt=(e:number,u:number)=>rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1);
+  const {len,knots}=knotsOf(seg,low?8:4,extra),pt=(e:number,u:number)=>rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1);
   for(let j=0;j<knots.length-1;j++){
    // a column is drawn only over open lawn (every row point) and where the depth applies
    let open=true;const mid=(knots[j]+knots[j+1])/2;for(const u of [.3,1.2,2.4,VERGE.reach]){const [x,z]=rowPoint(seg,len,mid,u,false,false);if(!isLawn(s,x,z)){open=false;break;}}
@@ -253,9 +256,9 @@ export function depthLawn(sink:Sink|null,low=false){const s=S;if(!s)return null;
    // the darker, slightly irregular lip where grass meets paving: a soil line peeping out under the grass edge
    if(sink&&!low){const [fx,fz]=pt(j,.2),[gx,gz]=pt(j+1,.2);if(!rectIn(s.paths.get(fx,fz),fx,fz,.55)&&!rectIn(s.paths.get(gx,gz),gx,gz,.55)){
      const ov=(x:number,z:number)=>.02+.07*hash(Math.round((seg.nx?z:x)*2)*1.37+seg.ax+seg.az),o0=ov(fx,fz),o1=ov(gx,gz),first=j===0,last=j===knots.length-2,v:number[][]=[];
-     for(const side of [0,1])for(let e=0;e<=2;e++){const t=e/2,along=knots[j]+(knots[j+1]-knots[j])*t,o=o0+(o1-o0)*t,wd=e===1||(!first&&!last)?.012+.05*hash(along*3.7+seg.ax*1.3+seg.az):.012;
+     for(const side of [0,1])for(let e=0;e<=2;e+=2){const t=e/2,along=knots[j]+(knots[j+1]-knots[j])*t,o=o0+(o1-o0)*t,wd=.012+.05*hash(Math.round(along*2)*3.7+seg.ax*1.3+seg.az);
       const [x,z]=rowPoint(seg,len,along,side?-o+.025:-o-wd,first&&e===0,last&&e===2),g=groundColor('lawn',x,z,.5+.12*hash(x*5.3+z*1.9));v.push([x,DRAWN.pave+.006,z,(g[0]+SOIL[0])/2,(g[1]+SOIL[1])/2,(g[2]+SOIL[2])/2]);}
-     sink.grid(2,3,v);soil+=4;}}
+     sink.grid(2,2,v);soil+=2;}}
   }}
  return {holes:ok?loops.filter(l=>!l.block).map(l=>l.pts):[],blocks:ok?loops.filter(l=>l.block).map(l=>l.pts):[],holesOk:ok,patch:{position,index,triangles:index.length/3},soil};
 }
@@ -265,7 +268,7 @@ const RING:Record<string,{spread:number;k:number}>={building:{spread:.6,k:.62},t
 /** C: baked contact shade. A skirt on the ground round each object's foot: the ground's own colour, darkened at the foot and
  *  fading to nothing at the rim (so it needs no blending and no new material). Skipped where the foot stands across two surfaces. */
 export function contactShade(sink:Sink,objects:GroundedObject[]){let made=0;
- for(const o of objects){const spec=RING[o.kind];if(!spec)continue;const round=o.r!==undefined,n=8,cs=Math.cos(o.yaw??0),sn=Math.sin(o.yaw??0);
+ for(const o of objects){const spec=RING[o.kind];if(!spec)continue;const round=o.r!==undefined,n=10,cs=Math.cos(o.yaw??0),sn=Math.sin(o.yaw??0);
   const inner:[number,number][]=[],outer:[number,number][]=[];
   if(round)for(let i=0;i<n;i++){const a=i/n*Math.PI*2+.3,wob=1+.18*(hash(o.x*1.3+o.z*2.1+i)-.5);inner.push([o.x+Math.cos(a)*o.r!,o.z+Math.sin(a)*o.r!]);outer.push([o.x+Math.cos(a)*(o.r!+spec.spread*wob),o.z+Math.sin(a)*(o.r!+spec.spread*wob)]);}
   else{const hw=o.w!/2,hd=o.d!/2,sides=[[-hw,-hd,1,0,0,-1,o.w!],[hw,-hd,0,1,1,0,o.d!],[hw,hd,-1,0,0,1,o.w!],[-hw,hd,0,-1,-1,0,o.d!]];// start corner, direction, outward, length

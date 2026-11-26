@@ -15,9 +15,9 @@ export function createStaticShadowBatches(renderer:T.WebGLRenderer,scene:T.Scene
  for(const members of buckets.values()){
   if(members.length<2)continue;
   let vertexCount=0,indexCount=0;
-  for(const m of members){vertexCount+=m.geometry.getAttribute('position').count;indexCount+=m.geometry.index?.count??m.geometry.getAttribute('position').count;}
+  for(const m of members){vertexCount+=m.geometry.getAttribute('position').count;indexCount+=Math.min(m.geometry.index?.count??m.geometry.getAttribute('position').count,(m.userData.shadowCount as number|undefined)??Infinity);}/* shadowCount: world.ts, the kerb depth piece at the end of a chunk casts no shadow */
   const positions=new Float32Array(vertexCount*3),indices=new Uint32Array(indexCount);let vertex=0,index=0;
-  for(const m of members){const p=m.geometry.getAttribute('position'),idx=m.geometry.index;m.updateMatrixWorld(true);const v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(m.matrixWorld);positions.set(v.toArray(),(vertex+i)*3);}for(let i=0;i<(idx?.count??p.count);i++)indices[index++]=vertex+(idx?idx.getX(i):i);vertex+=p.count;}
+  for(const m of members){const p=m.geometry.getAttribute('position'),idx=m.geometry.index;m.updateMatrixWorld(true);const v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(m.matrixWorld);positions.set(v.toArray(),(vertex+i)*3);}for(let i=0,n=Math.min(idx?.count??p.count,(m.userData.shadowCount as number|undefined)??Infinity);i<n;i++)indices[index++]=vertex+(idx?idx.getX(i):i);vertex+=p.count;}
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(positions,3));geometry.setIndex(new T.BufferAttribute(indices,1));geometry.computeBoundingSphere();
   const material=new T.MeshBasicMaterial({side:members[0].material.side});material.shadowSide=members[0].material.shadowSide;
   const proxy=new T.Mesh(geometry,material);proxy.name='static-shadow-batch';proxy.castShadow=true;proxy.visible=false;proxy.matrixAutoUpdate=false;scene.add(proxy);proxy.updateMatrixWorld(true);proxy.matrixWorldAutoUpdate=false;
