@@ -24,6 +24,7 @@
  ],
  "skip": {
   "tests/summit-harness.cjs": "shared loader for summit-kick/zipline",
+  "tests/layer-flags-helper.cjs": "shared ships-ON / ?x=0 contract for elevation, town-depth and surface-edges",
   "tests/glsl-program-cost.cjs": "CLI helper (needs a shader file arg), required by ground-shader-cost",
   "tests/water-tropical-glslcost.cjs": "CLI helper (needs two file args), required by another test"
  },

@@ -5,9 +5,10 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
 function sandbox(){const loaded=new Map();return function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,Map,Set,Uint8Array,Float32Array,Float64Array,require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});loaded.set(file,mod.exports);return mod.exports;};}
 
-// ---- Flag off (the default): 0 everywhere, the walked height is unchanged, placed records are untouched.
-{const load=sandbox(),E=load('lib/town/elevation.ts'),C=load('lib/town/coralCayElevation.ts'),V=load('lib/town/venues.ts'),B=load('lib/town/coralCayBalls.ts');
- assert.equal(E.ELEVATION_DEFAULT,false,'elevation ships OFF until the owner approves it (one line to flip)');
+// ---- Shipping (Nov 26 2026: the owner approved the layer): on by default, `?elev=0` still switches it off.
+require('./layer-flags-helper.cjs').assertShipsOn(assert,{file:'lib/town/elevation.ts',constant:'ELEVATION_DEFAULT',isOn:'elevationOn',key:'elev',name:'elevation'});
+// ---- Flag off (`?elev=0`): 0 everywhere, the walked height is unchanged, placed records are untouched.
+{const load=require('./layer-flags-helper.cjs').loaderWithQuery('?elev=0'),E=load('lib/town/elevation.ts'),C=load('lib/town/coralCayElevation.ts'),V=load('lib/town/venues.ts'),B=load('lib/town/coralCayBalls.ts');
  assert.equal(E.elevationOn(),false);
  for(const [x,z] of [[591,-159],[556,-120],[630,-111],[612,-160]]){assert.equal(C.cayGround(x,z),0);assert.equal(E.groundLift(x,z),0);assert.equal(V.fieldSurfaceHeight(x,z),0);}
  assert.equal(B.CORAL_CAY_SPOTS.find(s=>s.id==='cay-rest').y,0);

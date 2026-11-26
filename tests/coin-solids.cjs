@@ -24,9 +24,9 @@ for(const mode of ['walk','bike','scooter','moped']){
 }
 {
  const f=fixture(),s=f.q.COIN_QUEST.find(c=>c.wall);assert(s,'wall target exists');const w=s.wall;
- assert(!f.hunt.hit(w.x,w.y,w.z-.15,0,5),'rear approach cannot open front wall target');
- assert(!f.hunt.hit(w.x,w.y,w.z+.15,5,0),'sideways graze cannot open front wall target');
- assert(f.hunt.hit(w.x,w.y,w.z+.15,0,-5),'front kick opens wall target');assert(f.p.readCoinProgress().revealed.includes(s.id));f.hunt.dispose();
+ assert(!f.hunt.hit(w.x,s.y+w.y,w.z-.15,0,5),'rear approach cannot open front wall target');
+ assert(!f.hunt.hit(w.x,s.y+w.y,w.z+.15,5,0),'sideways graze cannot open front wall target');
+ assert(f.hunt.hit(w.x,s.y+w.y,w.z+.15,0,-5),'front kick opens wall target');assert(f.p.readCoinProgress().revealed.includes(s.id));f.hunt.dispose();
 }
 console.log('PASS solid parcels: walk/bike/scooter/moped blocked then clear; safe pad landing opens once and resets live surface; paused hits blocked; wall front-only shots');
 // Hidden trunks are solid too; opened props must not leave zero-size blockers.
@@ -101,8 +101,9 @@ console.log('PASS relocated futsal round targets: high shots clear garage wall, 
 console.log('PASS ten high spacing targets: long charged shots required, no landing shortcut, grounded pickup');
 
 {
+// Nov 26 2026 (elevation ships ON): a wall target hangs at spot.y + wall.y (coinHunt.ts hit), and a ground-level stadium spot now stands on the west terrace, so the test ball flies at that height.
  const f=fixture(),east=f.q.COIN_QUEST.filter(s=>s.wall?.facing==='east');assert.equal(east.length,12);// 9 island / Coral Cay + 3 at DRIP FC Stadium (both gate pillars, the east stand's back wall; stadiumBalls.ts)
- for(const s of east){const w=s.wall;assert(!f.hunt.hit(w.x+.1,w.y,w.z,8,0),'Wrong direction cannot open '+s.id);assert(f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'East approach opens '+s.id);assert(!f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'No duplicate reveal');f.hunt.update(.7,{x:s.x,y:s.y,z:s.z},true,true);assert(f.p.readCoinProgress().collected.includes(s.id),'Ground ball collectible east of wall');}
+ for(const s of east){const w=s.wall;assert(!f.hunt.hit(w.x+.1,s.y+w.y,w.z,8,0),'Wrong direction cannot open '+s.id);assert(f.hunt.hit(w.x+.1,s.y+w.y,w.z,-8,0),'East approach opens '+s.id);assert(!f.hunt.hit(w.x+.1,s.y+w.y,w.z,-8,0),'No duplicate reveal');f.hunt.update(.7,{x:s.x,y:s.y,z:s.z},true,true);assert(f.p.readCoinProgress().collected.includes(s.id),'Ground ball collectible east of wall');}
  f.hunt.dispose();console.log('PASS twelve east targets (incl. the Coral Cay welcome arch and the DRIP FC gate pillars): direction, reveal deduplication and ground collection');
 }
 const aerialFixture=fixture(),aerialSpots=aerialFixture.q.COIN_QUEST.filter(s=>s.parachute);aerialFixture.hunt.dispose();assert.equal(aerialSpots.length,10,"every floating ball (10 since the Oct 13-14 Summit Isle update)");

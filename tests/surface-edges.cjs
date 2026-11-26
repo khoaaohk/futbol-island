@@ -3,7 +3,9 @@
 // the lawn side and 1 on the bare rim, never sit on open lawn with a bare value, and stay a small part of the lawn's triangles.
 const assert=require('node:assert/strict');
 const {createLoader}=require('./summit-harness.cjs');
-{const load=createLoader(),E=load('lib/town/surfaceEdges.ts');assert.equal(E.SURF_DEFAULT,false,'ships OFF until the owner approves it');assert.equal(E.surfOn(),false);
+// Shipping (Nov 26 2026: the owner approved the layer): on by default, `?surf=0` still switches it off; off, nothing is built.
+require('./layer-flags-helper.cjs').assertShipsOn(assert,{file:'lib/town/surfaceEdges.ts',constant:'SURF_DEFAULT',isOn:'surfOn',key:'surf',name:'surface edges'});
+{const load=createLoader(),E=load('lib/town/surfaceEdges.ts');assert.equal(E.SURF_DEFAULT,!require('./layer-flags-helper.cjs').FORCED_OFF);E.setSurfaces(false);assert.equal(E.surfOn(),false);
  E.setSurfaceInput({paths:[{x:0,z:0,w:20,d:3}],blocked:()=>false});assert.equal(E.mainLawnEdges(),null,'nothing with the flag off');}
 const load=createLoader(),E=load('lib/town/surfaceEdges.ts'),S=load('lib/town/shoreline.ts');E.setSurfaces(true);
 const inside=(poly,x,z)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;};

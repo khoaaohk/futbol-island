@@ -1787,8 +1787,9 @@ export function* buildTownSteps(scene: T.Scene) {
   if(surfOn()){// Stadium Park's `path` areas are the bounding boxes of slanted trail runs, the pond and the jetty, not paving: they only block
    const soft=(a:object,i:number)=>i>=westAreas[0]&&i<westAreas[1]&&!rectPaths.has(a),paths=surfaceAreas.filter((a,i)=>a.kind==='path'&&!soft(a,i));
    const cover=[...roads.map(r=>({x:r.x,z:r.z,w:r.w,d:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12,d:12})),...surfaceAreas.filter((a,i)=>a.kind!=='path'||soft(a,i)),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6})),...buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))];
-   const blocked=(x:number,z:number)=>{for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;};
-   setSurfaceInput({paths,blocked});void surfaceStats;
+   const ringPaving=ROUNDABOUT.roadOuter+3.6;/* the roundabout's pavement and arm flares reach roadOuter + 3 m (coralCayWorld.ts Rp); they are paving, not lawn: a path lip laid there sat 1-4 mm from the pavement's top and flickered (ship triage, Nov 26 2026) */
+   const blocked=(x:number,z:number)=>{if(Math.hypot(x-ROUNDABOUT.x,z-ROUNDABOUT.z)<ringPaving)return true;for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;};
+   setSurfaceInput({paths,blocked,paved:(x,z)=>Math.hypot(x-ROUNDABOUT.x,z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+3||(x>ROUNDABOUT.x&&x<CAY_BOULEVARD.x1&&Math.abs(z-CAY_BOULEVARD.z)<CAUSEWAY.deckHalf)/* the boulevard's pavements: the footpaths that leave it start 1.5 m under them */});void surfaceStats;
    // Coral Cay's lawn: its rim onto the sand ring (which lies over the lawn's plane), the lips and the wear along its paths join the
    // lawn's own geometry (after the drape: the paths are final, and the patch is not ground for it). 0 draws, same material.
    const lawn=town.getObjectByName('coral-cay-lawn') as T.Mesh|undefined;

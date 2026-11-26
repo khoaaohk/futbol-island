@@ -13,6 +13,8 @@ function load(name){const file=path.resolve(base,name);if(cache.has(file))return
 
 const {COIN_QUEST,sanitizeCoinProgress,coinRewardEarned,allCostumesEarned,PRE_CORAL_CAY_IDS,costumeEarned,COSTUME_UNLOCK_ORDER,COIN_REWARD_ID}=load('lib/town/coinQuest.ts');
 const {CORAL_CAY_SPOTS}=load('lib/town/coralCayBalls.ts'),{BALL_HUNT_SOURCES}=load('lib/town/ballHuntSources.ts'),{BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,SCENES}=load('lib/town/ballHuntLessons.ts');
+// Nov 26 2026 (elevation ships ON): Coral Cay's interior is raised, and every ground or roof spot carries the ground under it (coralCayBalls.ts onGround), so "on a roof" is a height OVER that ground (the same as y > 0 with ?elev=0).
+const G=load('lib/town/elevation.ts').groundLift,over=s=>s.y-G(s.x,s.z);
 const cay=load('lib/town/coralCay.ts'),{blocked,flightBlocked,insideObstacle}=load('lib/town/simulation.ts'),{onLand}=load('lib/town/landmass.ts');
 const world=load('lib/town/world.ts').buildTown(new T.Scene());
 
@@ -38,7 +40,7 @@ const tally={};for(const s of CORAL_CAY_SPOTS)tally[region(s)]=(tally[region(s)]
 if(CORAL_CAY_SPOTS.some(s=>s.id==='cay-arch'&&region(s)==='cay')){tally.cay--;tally.causeway++;}
 assert(!tally['?'],'every ball is somewhere walkable or flyable: '+JSON.stringify(tally));
 assert(tally.causeway>=7&&tally.causeway<=9&&tally.sandbar>=3&&tally.sandbar<=4&&tally.cay>=8&&tally.cay<=9,'spread '+JSON.stringify(tally));
-const mech=new Set(CORAL_CAY_SPOTS.map(s=>s.manhole?'manhole':s.buoy?'buoy':s.parachute?'sky':s.wall?'wall':s.y>0?'roof':s.kind));
+const mech=new Set(CORAL_CAY_SPOTS.map(s=>s.manhole?'manhole':s.buoy?'buoy':s.parachute?'sky':s.wall?'wall':over(s)>.01?'roof':s.kind));
 for(const m of ['manhole','buoy','sky','wall','roof','hidden','kick','landing'])assert(mech.has(m),'mechanic mix includes '+m);
 console.log('PASS spread',JSON.stringify(tally),'mechanics',[...mech].join(', '));
 
@@ -56,7 +58,7 @@ for(const s of CORAL_CAY_SPOTS){
    const sharks=Math.min(...cay.SHARK_LOOPS.flatMap(l=>l.points).map(q=>Math.hypot(q.x-s.x,q.z-s.z)));assert(sharks>=10,`sharks pass at least 10 m from the buoy (${sharks.toFixed(1)} m)`);}
   else assert(s.y>=60,'high aerial ball');
   continue;}
- if(s.y>0){// Rooftop: on a building roof of exactly this height, clear of its edges and roof props.
+ if(over(s)>.01){// Rooftop: on a building roof of exactly this height, clear of its edges and roof props.
   const b=buildings.find(b=>Math.abs(b.height-s.y)<.05&&Math.abs(s.x-b.x)<b.w/2-1&&Math.abs(s.z-1.35-b.z)<b.d/2-1&&Math.abs(s.z-b.z)<b.d/2-.6);assert(b,`${s.id} sits on a roof at its own height`);
   assert(!roof.some(o=>insideObstacle(s.x,s.z,o,.8)),`${s.id} clear of roof props`);continue;}
  assert(cay.isOnCayLand(s.x,s.z),`${s.id} is on Coral Cay ground (${s.x},${s.z})`);

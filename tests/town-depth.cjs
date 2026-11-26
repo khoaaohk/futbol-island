@@ -11,9 +11,11 @@ const crossings=[];for(const j of JUNCTIONS)for(const vertical of [true,false])f
  if(ROADS.some(r=>r.vertical===vertical&&Math.abs((vertical?r.x:r.z)-(vertical?x:z))<.001&&(vertical?z:x)>(vertical?r.z-r.d/2:r.x-r.w/2)+1&&(vertical?z:x)<(vertical?r.z+r.d/2:r.x+r.w/2)-1))crossings.push({x,z,vertical});}
 const INPUT={roads:ROADS,junctions:JUNCTIONS,crossings,hard:[{kind:'path',x:110,z:-60,w:3,d:16}]};
 
-// ---- Flag off (the default).
-{const load=sandbox(),D=load('lib/town/townDepth.ts'),E=load('lib/town/elevation.ts'),V=load('lib/town/venues.ts');
- assert.equal(D.DEPTH_DEFAULT,false,'kerb depth ships OFF until the owner approves it (one line to flip)');assert.equal(D.townDepthOn(),false);
+// ---- Shipping (Nov 26 2026: the owner approved the layer): on by default, `?depth=0` still switches it off.
+require('./layer-flags-helper.cjs').assertShipsOn(assert,{file:'lib/town/townDepth.ts',constant:'DEPTH_DEFAULT',isOn:'townDepthOn',key:'depth',name:'kerb depth'});
+// ---- Flag off (`?elev=0&depth=0&surf=0`: the flat town).
+{const load=require('./layer-flags-helper.cjs').loaderWithQuery('?elev=0&depth=0&surf=0'),D=load('lib/town/townDepth.ts'),E=load('lib/town/elevation.ts'),V=load('lib/town/venues.ts');
+ assert.equal(D.townDepthOn(),false);
  D.setDepthStreets(INPUT);assert.equal(D.depthStreets(),null,'nothing is registered with the flag off');
  for(const [x,z] of [[124,-100],[120.1,-100],[86,-80],[130,-74]]){assert.equal(D.depthLift(x,z),0);assert.equal(D.lawnRise(x,z),0);assert.equal(E.groundLift(x,z),0);assert.equal(V.fieldSurfaceHeight(x,z),0);}
  assert.equal(D.depthLawn(null),null);assert.equal(D.pavementCell(118,120,-100,-90),null);}

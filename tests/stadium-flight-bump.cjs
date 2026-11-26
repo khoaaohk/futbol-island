@@ -15,6 +15,7 @@ const context=vm.createContext({console,Math,Set,Map,performance,Date,Float32Arr
 function load(name){const file=path.resolve(base,name);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{esModuleInterop:true,module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,id=>id==='react'?{useSyncExternalStore:(_s,get)=>get()}:id==='three'?T:id.includes('BufferGeometryUtils')?utils:id.endsWith('.json')?require(path.resolve(path.dirname(file),id)):id.startsWith('@/')?load(id.slice(2)+'.ts'):id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):req(id));cache.set(file,mod.exports);return mod.exports;}
 const src=f=>fs.readFileSync(path.resolve(base,f),'utf8');
 const Q=load('lib/town/stadiumSeats.ts'),L=load('lib/town/westParkLayout.ts'),SL=load('lib/stadium/sponsors/slots.ts'),LY=load('lib/stadium/sponsors/layout.ts');
+const GLb=load('lib/town/elevation.ts').groundLift;
 const FL=load('lib/town/stadiumFlight.ts'),sim=load('lib/town/simulation.ts'),W=load('lib/town/stadiumWorld.ts'),FD=load('lib/town/stadiumFeed.ts'),PF=load('lib/town/plazaFlags.ts');
 const S=L.STADIUM,R=Q.ROOF;
 
@@ -52,9 +53,12 @@ const S=L.STADIUM,R=Q.ROOF;
  const w=src('lib/town/stadiumWorld.ts');assert(/cylinder\(\.45,28\.6,'#d9d6cc',m\.x-m\.sx\*\.55,14\.3,m\.z-m\.sz\*\.55\)/.test(w)&&/pole\('mast',m\.x-m\.sx\*\.55,m\.z-m\.sz\*\.55,\.45,0,28\.6\)/.test(src('lib/town/stadiumFlight.ts'))&&/box\(6\.4,3\.8,\.3,/.test(w),'mast + head sizes as built');
  const scr=k('screen')[0];assert(Math.abs(scr.hw*2-FD.SCREEN_FRAME.w)<1e-9&&Math.abs(scr.y1-scr.y0-FD.SCREEN_FRAME.h)<1e-9,'screen frame');
  for(const [i,p] of W.screenPosts().entries()){const q=k('screenPost')[i];assert(Math.abs(q.x-p.x)<1e-9&&Math.abs(q.y1-p.top)<1e-9&&q.hw===W.SCREEN_POST.r);}
- const fp=k('flag').filter(q=>q.round);assert(fp.every(q=>Math.abs(q.y1-(PF.FLAG.poleH+PF.FLAG.cap))<.01),'flag pole height');
+ const fp=k('flag').filter(q=>q.round);/* Nov 26 2026 (elevation ships ON): each pole stands on its own ground up the plaza's grade (0 with ?elev=0) */assert(fp.every(q=>Math.abs(q.y1-GLb(q.x,q.z)-(PF.FLAG.poleH+PF.FLAG.cap))<.01),'flag pole height, from its own ground');
  const fs2=k('fascia')[0];assert(Math.abs(fs2.y1-(R.y+R.frameAbove))<1e-9&&Math.abs(fs2.y0-(R.y-R.frameBelow))<1e-9,'fascia collider = the taller frame');}
 
+// Nov 26 2026 (elevation ships ON): the flying heights written as plain numbers below are heights over the stadium's own ground, the west
+// terrace: B = STADIUM_BASE (0 with ?elev=0). Heights read from stadiumSeats.ts (the roof, the screen, the concourse) already include it.
+const B=load('lib/town/westElevation.ts').STADIUM_BASE;
 // 4. Flying into things bounces (stepPlayer jetpack + resolve, as Town.tsx does); flying over or away does not.
 function fly(F,start,dir,y,seconds=1.6){
  const p={x:start.x,z:start.z},v={x:dir.x*34,z:dir.z*34},log={bumps:0,minGap:Infinity,awayAfter:false,firstOut:null};
@@ -64,33 +68,33 @@ function fly(F,start,dir,y,seconds=1.6){
  return {...log,p};}
 {const m=Q.MASTS[0];// north-west corner mast (-1,-1)
  // Below the heads (feet 25 m), straight at the mast's centre: the mast bumps and knocks back west.
- let F=FL.createStadiumFlight();let r=fly(F,{x:m.x-30,z:m.z-m.sz*.55},{x:1,z:0},25,1.4);// the pole stands .55 m behind the head
+ let F=FL.createStadiumFlight();let r=fly(F,{x:m.x-30,z:m.z-m.sz*.55},{x:1,z:0},B+25,1.4);// the pole stands .55 m behind the head
  assert(r.bumps>=1&&r.firstOut.kind==='mast','into a mast: a bump '+JSON.stringify(r.firstOut));assert(r.firstOut.vx<-5,'knocked back away from the mast');assert(r.p.x<m.x,'never through the mast');
  // At cruise height (28 m, the owner's flight) the head panel round the mast's top is hit first: knocked off its face.
- {const G=FL.createStadiumFlight(),q=fly(G,{x:m.x-30,z:m.z},{x:1,z:0},28,1.4);assert(q.bumps>=1&&['head','mast'].includes(q.firstOut.kind),'cruise into a mast top: a bump');
+ {const G=FL.createStadiumFlight(),q=fly(G,{x:m.x-30,z:m.z},{x:1,z:0},B+28,1.4);assert(q.bumps>=1&&['head','mast'].includes(q.firstOut.kind),'cruise into a mast top: a bump');
   assert(q.firstOut.vx*q.firstOut.nx+q.firstOut.vz*q.firstOut.nz>=FL.FLIGHT_BUMP.minOut-1e-6,'leaves outward');}
  assert(F.react.on||F.stats.bumps>=1,'the flyer spin reaction started');
- {const G=FL.createStadiumFlight(),p={x:m.x-5,z:m.z},v={x:30,z:0};G.resolve(p,m.x-5,m.z,28,v);p.x=m.x;G.resolve(p,m.x-5,m.z,28,v);assert(G.react.on&&G.pose&&G.react.kind===3,'friend-bump flyer kind (spin-away)');G.update(.3,false);assert(G.pose.on&&Math.abs(G.pose.yaw)>0,'spin overlay drawn');G.update(1,false);assert(!G.pose.on,'and over in a second');}
+ {const G=FL.createStadiumFlight(),p={x:m.x-5,z:m.z},v={x:30,z:0};G.resolve(p,m.x-5,m.z,B+28,v);p.x=m.x;G.resolve(p,m.x-5,m.z,B+28,v);assert(G.react.on&&G.pose&&G.react.kind===3,'friend-bump flyer kind (spin-away)');G.update(.3,false);assert(G.pose.on&&Math.abs(G.pose.yaw)>0,'spin overlay drawn');G.update(1,false);assert(!G.pose.on,'and over in a second');}
  // The head panel (above the mast's top), across its face.
  const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);F=FL.createStadiumFlight();
- r=fly(F,{x:m.x+fx*20,z:m.z+fz*20},{x:-fx,z:-fz},31,1.2);assert(r.bumps>=1&&r.firstOut.kind==='head','into the head panel: a bump');
+ r=fly(F,{x:m.x+fx*20,z:m.z+fz*20},{x:-fx,z:-fz},B+31,1.2);assert(r.bumps>=1&&r.firstOut.kind==='head','into the head panel: a bump');
  assert(r.firstOut.vx*fx+r.firstOut.vz*fz>5,'knocked back off the lamp face');
  // Over everything: no bump.
- F=FL.createStadiumFlight();r=fly(F,{x:m.x-30,z:m.z},{x:1,z:0},33,1.4);assert.equal(r.bumps,0,'above the mast heads: clear');}
+ F=FL.createStadiumFlight();r=fly(F,{x:m.x-30,z:m.z},{x:1,z:0},B+33,1.4);assert.equal(r.bumps,0,'above the mast heads: clear');}
 {// The west roof: from the park at slab height, then at fascia height above the slab, then over the frame.
  const west=Q.STANDS[0],out=Q.standWorld(west,R.back+20,0),inn=Q.standWorld(west,0,0),d={x:Math.sign(inn.x-out.x),z:0};
- for(const [y,kind] of [[11.5,'fascia'],[13.5,'fascia']]){const F=FL.createStadiumFlight(),r=fly(F,out,d,y,1);assert(r.bumps>=1&&r.firstOut.kind===kind,`roof edge at ${y} m: ${r.firstOut&&r.firstOut.kind}`);assert(r.firstOut.vx*d.x<-5,'knocked back');}
+ for(const [y,kind] of [[B+11.5,'fascia'],[B+13.5,'fascia']]){const F=FL.createStadiumFlight(),r=fly(F,out,d,y,1);assert(r.bumps>=1&&r.firstOut.kind===kind,`roof edge at ${y} m: ${r.firstOut&&r.firstOut.kind}`);assert(r.firstOut.vx*d.x<-5,'knocked back');}
  {const F=FL.createStadiumFlight(),r=fly(F,out,d,R.y+R.frameAbove+.05,1);assert.equal(r.bumps,0,'over the fascia frame: clear');}
  // Under the roof from the pitch side at slab height: the front frame / slab.
- {const F=FL.createStadiumFlight(),st=Q.standWorld(west,20,0),r=fly(F,st,{x:-d.x,z:0},12,1.2);assert(r.bumps>=1&&r.firstOut.kind==='roof','into the roof front');}}
+ {const F=FL.createStadiumFlight(),st=Q.standWorld(west,20,0),r=fly(F,st,{x:-d.x,z:0},B+12,1.2);assert(r.bumps>=1&&r.firstOut.kind==='roof','into the roof front');}}
 {// The big screen from the pitch at 12 m, and its post at 4 m.
- const z=S.z+Q.SCREEN.z;let F=FL.createStadiumFlight(),r=fly(F,{x:S.x+2,z:z-25},{x:0,z:1},12,1.2);assert(r.bumps>=1&&r.firstOut.kind==='screen'&&r.firstOut.vz<-5,'into the big screen: knocked back');
- const post=W.screenPosts()[0];F=FL.createStadiumFlight();r=fly(F,{x:post.x,z:z+20},{x:0,z:-1},4,1.2);assert(r.bumps>=1&&r.firstOut.kind==='screenPost'&&r.firstOut.vz>5,'into a screen post from the park: '+(r.firstOut&&r.firstOut.kind));
+ const z=S.z+Q.SCREEN.z;let F=FL.createStadiumFlight(),r=fly(F,{x:S.x+2,z:z-25},{x:0,z:1},B+12,1.2);assert(r.bumps>=1&&r.firstOut.kind==='screen'&&r.firstOut.vz<-5,'into the big screen: knocked back');
+ const post=W.screenPosts()[0];F=FL.createStadiumFlight();r=fly(F,{x:post.x,z:z+20},{x:0,z:-1},B+4,1.2);assert(r.bumps>=1&&r.firstOut.kind==='screenPost'&&r.firstOut.vz>5,'into a screen post from the park: '+(r.firstOut&&r.firstOut.kind));
  F=FL.createStadiumFlight();r=fly(F,{x:S.x,z:z-25},{x:0,z:1},Q.SCREEN.y+Q.SCREEN.h/2+.6,1.2);assert.equal(r.bumps,0,'over the screen: clear');}
 {// The gate arch / sign from the plaza at 11 m; a plaza flag at 3 m (the flag index comes back for its reaction).
- let F=FL.createStadiumFlight(),r=fly(F,{x:Q.GATE_ARCH_X+25,z:L.STADIUM_GATE.z},{x:-1,z:0},11,1.2);assert(r.bumps>=1&&(r.firstOut.kind==='sign'||r.firstOut.kind==='gate'),'into the gate sign');
+ let F=FL.createStadiumFlight(),r=fly(F,{x:Q.GATE_ARCH_X+25,z:L.STADIUM_GATE.z},{x:-1,z:0},B+11,1.2);assert(r.bumps>=1&&(r.firstOut.kind==='sign'||r.firstOut.kind==='gate'),'into the gate sign');
  const p=Q.plazaFlagPoles()[3];F=FL.createStadiumFlight();const p0={x:p.x,z:p.z-15},v={x:0,z:20};let flag=-1;
- for(let i=0;i<60;i++){const ox=p0.x,oz=p0.z;sim.stepPlayer(p0,v,{x:0,z:1,sprint:false},1/60,[],'jetpack');const rr=F.resolve(p0,ox,oz,3,v);if(rr.fresh){flag=rr.contact.solid.flag;break;}}
+ for(let i=0;i<60;i++){const ox=p0.x,oz=p0.z;sim.stepPlayer(p0,v,{x:0,z:1,sprint:false},1/60,[],'jetpack');const rr=F.resolve(p0,ox,oz,GLb(p.x,p.z)+3,v);if(rr.fresh){flag=rr.contact.solid.flag;break;}}
  assert.equal(flag,3,'into plaza flag 3: its index for the sway');}
 {// Nov 13 2026: the stands' short end walls. Into the north stand's open-corner end at 4 m (beside the back rows): a bump off the end;
  // over the concourse, or just over a row (a landable floor): clear. Walking: the rows reach the end as obstacles, too tall to step.
@@ -98,7 +102,7 @@ function fly(F,start,dir,y,seconds=1.6){
  const east=Q.STANDS.find(q=>q.id==='east');
  for(const [s,a,startA] of [[north,north.from,north.from-20],[north,north.to,north.to+20],[Q.STANDS.find(q=>q.id==='south'),36,56],[east,east.gap[0],0]]){
   const dB=s.inner+(Q.ROWS-1.5)*Q.ROW_DEPTH,start=Q.standWorld(s,dB,startA),end=Q.standWorld(s,dB,a),d0={x:Math.sign(end.x-start.x),z:Math.sign(end.z-start.z)};
-  let F=FL.createStadiumFlight(),r=fly(F,start,d0,4,1.2);assert(r.bumps>=1&&r.firstOut.kind==='standEnd',`${s.id} end at a ${a}: a bump (${r.firstOut&&r.firstOut.kind})`);
+  let F=FL.createStadiumFlight(),r=fly(F,start,d0,B+4,1.2);assert(r.bumps>=1&&r.firstOut.kind==='standEnd',`${s.id} end at a ${a}: a bump (${r.firstOut&&r.firstOut.kind})`);
   assert(r.firstOut.vx*d0.x+r.firstOut.vz*d0.z<-5,'knocked back out of the corner');
   F=FL.createStadiumFlight();r=fly(F,start,d0,Q.CONCOURSE_HEIGHT+.05,1.2);assert.equal(r.bumps,0,`${s.id}: over the concourse, clear`);}
  for(let i=0;i<Q.ROWS;i++){const p=Q.standWorld(north,north.inner+(i+.5)*Q.ROW_DEPTH,north.from+.05),F=FL.createStadiumFlight();
@@ -111,13 +115,13 @@ function fly(F,start,dir,y,seconds=1.6){
    if(g.hit)hits++;if(g.fresh)fresh++;h+=g.lift/60;F.update(1/60,false);assert(!F.test(p.x,p.z,h),`${label}: never inside a solid (${p.x.toFixed(2)}, ${p.z.toFixed(2)}, ${h.toFixed(2)})`);}
   return {hits,fresh,h,arrived:Math.hypot(target.x-p.x,target.z-p.z)<=.1};};
  const west=Q.STANDS[0],p=Q.standWorld(west,Q.standBack(west)+12,6),t=Q.standWorld(west,Q.standBack(west)-2,6);
- let r=glideTo(FL.createStadiumFlight(),{...p},t,3,'wall');assert(r.hits>=1&&r.fresh===1&&r.arrived&&r.h>=Q.CONCOURSE_HEIGHT-.02,'the landing glide meets the back wall, hops it and lands on the concourse '+JSON.stringify(r));
+ let r=glideTo(FL.createStadiumFlight(),{...p},t,B+3,'wall');assert(r.hits>=1&&r.fresh===1&&r.arrived&&r.h>=Q.CONCOURSE_HEIGHT-.02,'the landing glide meets the back wall, hops it and lands on the concourse '+JSON.stringify(r));
  const m=Q.MASTS[0],mp={x:m.x-15,z:m.z},mt={x:m.x+15,z:m.z};
- r=glideTo(FL.createStadiumFlight(),mp,mt,20,'mast');assert(r.hits>=1&&r.arrived&&r.h===20,'the landing glide slides round a mast at the same height '+JSON.stringify(r));
- r=glideTo(FL.createStadiumFlight(),{x:m.x-15,z:m.z+30},{x:m.x+15,z:m.z+30},20,'clear');assert(r.hits===0&&r.arrived,'clear of everything: a straight glide');
+ r=glideTo(FL.createStadiumFlight(),mp,mt,B+20,'mast');assert(r.hits>=1&&r.arrived&&r.h===B+20,'the landing glide slides round a mast at the same height '+JSON.stringify(r));
+ r=glideTo(FL.createStadiumFlight(),{x:m.x-15,z:m.z+30},{x:m.x+15,z:m.z+30},B+20,'clear');assert(r.hits===0&&r.arrived,'clear of everything: a straight glide');
  assert(/const step=Math\.min\(d,dt\*20\),g=stadiumFlight\.glide\(location,target,flight\.height,step,reduced\);if\(g\.fresh\)stadiumBump\(flight\.height\);if\(g\.lift\)flight\.height\+=g\.lift\*dt;/.test(src('components/Town.tsx')),'Town routes the landing glide through the stadium sweep');}
 {// Jet actions: the step test refuses a stadium solid and knock() plays the reaction once per re-arm.
- const F=FL.createStadiumFlight(),m=Q.MASTS[1];assert(F.solid(m.x,m.z,20));assert(F.knock(false)&&F.react.on);assert(!F.solid(m.x,m.z,40),'over the masts');assert(!F.knock(false),'re-arm');}
+ const F=FL.createStadiumFlight(),m=Q.MASTS[1];assert(F.solid(m.x,m.z,B+20));assert(F.knock(false)&&F.react.on);assert(!F.solid(m.x,m.z,B+40),'over the masts');assert(!F.knock(false),'re-arm');}
 {// Far away: one rectangle test, no solid loop; the broad phase covers the bowl and the plaza.
  const F=FL.createStadiumFlight();for(const [x,z] of [[0,0],[100,-50],[-40,-30]])assert(!F.test(x,z,28));assert.equal(F.stats.tests,0,'nothing tested away from the stadium');
  assert(F.bounds.x0<S.x-S.bowlW/2&&F.bounds.x1>Math.max(...Q.plazaFlagPoles().map(p=>p.x)),'bounds take in the bowl and the plaza (to its last flag pole)');}

@@ -15,6 +15,8 @@
  */
 import {STADIUM_PLAZA,PARK_SIGNS,PARK_LAWNS,BOWL_RING,inStadiumFootprint,inPond,onParkPaving,onGrass,grassEdgeDistance,POND_RIM} from './westParkLayout';
 import {onIsland,distanceToShore} from './shoreline';
+import {nearWestWall} from './westElevation';
+import {elevationOn} from './elevation';
 import {trackNearest} from './trainTrack';
 import {FORAGE,localForageDay,sanitizeForage,emptyForage,type ForageSave,type FruitKind} from './summitForage';
 import type {OrchardForm,OrchardPlan} from './summitOrchard';
@@ -37,7 +39,9 @@ export const ORCHARD_CENTRES:readonly {x:number;z:number;forms:readonly OrchardF
  {x:-112,z:99,forms:['lobed','round'],fruit:['guava','lime']},
  {x:-187,z:82,forms:['round','lobed'],fruit:['mango','guava']},
  {x:-180,z:-140,forms:['oval','round'],fruit:['avocado','orange'],n:3},
- {x:-292,z:-40,forms:['round','lobed'],fruit:['lime','mango'],n:3},
+ // West of the bowl. With the west terrace (elevation.ts, ships on) its old centre (-292, -40) is in the retaining wall (x -289) with the
+ // station strip behind it: no clear spot within reach, so the orchard stands on the terrace instead, between the wall's hedge and the ring walk.
+ {...(elevationOn()?{x:-282,z:-46}:{x:-292,z:-40}),forms:['round','lobed'],fruit:['lime','mango'],n:3},
  {x:-235,z:70,forms:['lobed','oval'],fruit:['guava','avocado'],n:4},
  {x:-95,z:-120,forms:['round','oval'],fruit:['orange','lime'],n:3},
  {x:-200,z:105,forms:['lobed','round'],fruit:['mango','guava'],n:3},
@@ -64,6 +68,9 @@ export const ORCHARD_LEGACY:readonly (Omit<StadiumOrchardTree,'form'|'fruit'>&{f
 /** Can an orchard tree (canopy radius r) stand at (x, z)? */
 export function orchardSpotClear(x:number,z:number,r:number=ORCHARD_RULES.canopy){
  if(!onIsland(x,z)||distanceToShore(x,z)<14||!onGrass(x,z)||grassEdgeDistance(x,z)<9)return false;
+ // Nov 26 2026 (ship triage): with the west terrace (?elev) a spot in the retaining wall, its hedge or a stair is not clear either, so a
+ // cluster is planted beside the wall. (Before, westPark.ts dropped such trees after the plan: the station cluster lost all 3, 30 -> 27 trees.)
+ if(nearWestWall(x,z,1.2,1.6))return false;
  if(onParkPaving(x,z,r+1.2)||inStadiumFootprint(x,z,BOWL_RING.width+6))return false;
  const P=STADIUM_PLAZA;if(x>P.minX-10&&x<P.maxX+10&&z>P.minZ-11&&z<P.maxZ+11)return false;// the beds, benches and planters round the plaza
  if(inPond(x,z,POND_RIM+4+r))return false;

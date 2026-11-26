@@ -28,7 +28,9 @@ assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.
 console.log('PASS 129 balls → 129 different concepts, 129 scenes, 129 titles, 387 different steps');
 
 // 2. Levels follow how hard the ball is to find; words follow the age table (docs/quiz-design.md §5: 7v7 → 9v9 → 11v11).
-const expectedLevel=s=>s.parachute||s.ramp||s.id.startsWith('high-')||s.id==='wall-community'?3:s.stadium?(s.y>10?3:2)/* DRIP FC Stadium: in the stands and on the concourse 2, on the roofs 3 */:s.summit?2/* Summit Isle: a far island, found through trees, the telescope, huts, caves and riddles */:(s.y===0&&!s.wall?.high&&!s.manhole&&!s.grass&&s.truck===undefined?1:2);
+// Nov 26 2026 (elevation ships ON): heights are read over the ground under the spot (a ground ball on the raised west side or on Coral Cay is still level 1); 0 / unchanged with ?elev=0.
+const GL=load('lib/town/elevation.ts').groundLift,SB=load('lib/town/westElevation.ts').STADIUM_BASE,onFloor=s=>Math.abs(s.y-GL(s.x,s.z))<1e-6;
+const expectedLevel=s=>s.parachute||s.ramp||s.id.startsWith('high-')||s.id==='wall-community'?3:s.stadium?(s.y-SB>10?3:2)/* DRIP FC Stadium: in the stands and on the concourse 2, on the roofs 3 */:s.summit?2/* Summit Isle: a far island, found through trees, the telescope, huts, caves and riddles */:(onFloor(s)&&!s.wall?.high&&!s.manhole&&!s.grass&&s.truck===undefined?1:2);
 const LIMIT={1:16,2:18,3:22},count={1:0,2:0,3:0};
 for(const s of COIN_QUEST){const l=BALL_HUNT_LESSONS[s.id];count[l.level]++;
  assert.equal(l.level,expectedLevel(s),`${s.id} level matches how hard it is to find`);

@@ -104,7 +104,17 @@ console.log('west stadium phase 1: ok');
  // No props on paths or in the pond (benches, signs, lamps, planters, trees, palms): every park collider and tree outside the
  // bowl and off the plaza is clear of the water (and its rim), every trail, the ring and the apron.
  const park=o=>o.x<-100&&!L.inStadiumFootprint(o.x,o.z,3)&&!(o.x>P.minX-1.5&&o.x<P.maxX+1.5&&o.z>P.minZ-1.5&&o.z<P.maxZ+1.5);
- const props=[...world.obstacles.filter(o=>park(o)&&!o.dynamic&&(o.w??0)<30),...world.assets.filter(a=>park(a)&&['tree','palm','bench','planter','lamp','sign'].includes(a.kind))];
+ // Nov 26 2026 (elevation ships ON): the west terrace's retaining wall (westTerrain.ts buildWestWalls: long 0.9 m boxes and 1.7 m corner
+ // pieces on the terrace's edge) is not a prop. It runs beside the apron and the trails and is opened by a flight of stairs wherever a
+ // trail climbs through it, so the rule for it is: no wall collider stands on a path's centre line (walked every 0.5 m).
+ const WE=load('lib/town/westElevation.ts'),WT=WE.WEST_TRAIL_TOP,isWall=o=>WE.nearWestWall(o.x,o.z,.5)&&!o.kind,walls=world.obstacles.filter(o=>park(o)&&!o.dynamic&&isWall(o));
+ assert.equal(walls.length>0,load('lib/town/elevation.ts').elevationOn(),'terrace wall colliders only with elevation on');
+ for(const l of L.parkPathLines())for(let i=0;i<l.length-1;i++){const a=l[i],b=l[i+1],ax=a.x??a[0],az=a.z??a[1],bx=b.x??b[0],bz=b.z??b[1],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.5));
+  for(let k=0;k<=n;k++){const x=ax+(bx-ax)*k/n,z=az+(bz-az)*k/n,relaid=walls.length&&x<WT.x0&&x>WT.x1-4&&Math.abs(z-WT.z)<9;/* the west trail's layout curve: drawn straight to the stair instead (westPark.ts westTop), checked below */
+   assert(relaid||!sim.blocked(x,z,walls,.32),`the terrace wall blocks a path's centre line at (${x.toFixed(1)}, ${z.toFixed(1)})`);}}
+ for(let x=WT.x0;x>=WT.x1;x-=.5)assert(!sim.blocked(x,WT.z,world.obstacles,.32),'the west trail as drawn on the terrace (straight to the station stair) is clear at x '+x.toFixed(1));
+ for(const st of WE.WEST_STAIRS)for(let t=-1;t<=st.len+1;t+=.5)assert(!sim.blocked(st.x+st.dx*t,st.z+st.dz*t,world.obstacles,.32),`the ${st.id} stair's flight is clear ${t} m down`);
+ const props=[...world.obstacles.filter(o=>park(o)&&!o.dynamic&&(o.w??0)<30&&!isWall(o)),...world.assets.filter(a=>park(a)&&['tree','palm','bench','planter','lamp','sign'].includes(a.kind))];
  let checked=0;for(const o of props){const half=Math.max(o.w??0,o.d??0)/2;checked++;
   assert(L.pondQ(o.x,o.z,L.POND_RIM+half)>=1,`prop at (${o.x.toFixed(1)}, ${o.z.toFixed(1)}) in the pond`);
   assert(!L.onWalkPath(o.x,o.z,half),`prop at (${o.x.toFixed(1)}, ${o.z.toFixed(1)}) on a path (a trail, the ring, the apron or the pond rim)`);}
@@ -151,10 +161,12 @@ function walk(points,mode='walk',secs=40){const t=travel(),p={x:points[0][0],z:p
 const near=(r,x,z,m=.6)=>Math.hypot(r.x-x,r.z-z)<m;
 const W=Q.STANDS[0],E=Q.STANDS[1],N=Q.STANDS[2],SO=Q.STANDS[3],CH=Q.CONCOURSE_HEIGHT,ROOF_TOP=Q.ROOF.y+Q.ROOF.thick/2;
 // The plaza → the gate → the pitch-level ring → the pitch.
-{const r=walk([[G.x+10,G.z],[G.x-1,G.z],[S.x+38,S.z],[S.x+20,S.z+10]]);assert(r.reached&&!r.fell&&r.high<.1,'gate → ring → pitch on the ground '+JSON.stringify({...r,t:0}));}
+// Nov 26 2026 (elevation ships ON): the bowl's own ground is the west terrace, B = STADIUM_BASE over the sea-level town (0 with ?elev=0); the stands' heights (CH, the roof) already include it.
+const B=load('lib/town/westElevation.ts').STADIUM_BASE;
+{const r=walk([[G.x+10,G.z],[G.x-1,G.z],[S.x+38,S.z],[S.x+20,S.z+10]]);assert(r.reached&&!r.fell&&r.high-B<.1&&r.low-B>-.1,'gate → ring → pitch on the ground '+JSON.stringify({...r,t:0}));}
 // Up a west aisle from the ring to the concourse, along it, down a back stair to the park: no falls, no sticking.
 {const z=S.z+13,back=S.x-Q.standBack(W);const r=walk([[S.x-38,z],[S.x-40.5,z],[back+1.2,z],[back+1.2,S.z+26],[back-.5,S.z+26],[S.x-Q.stairEnd(W)-2,S.z+26]]);
- assert(r.reached&&!r.fell&&r.h<.05&&Math.abs(r.high-CH)<.01,'west: aisle up, concourse, back stair down '+JSON.stringify({...r,t:0}));}
+ assert(r.reached&&!r.fell&&r.h-B<.05&&Math.abs(r.high-CH)<.01,'west: aisle up, concourse, back stair down '+JSON.stringify({...r,t:0}));}
 // Every stand: up its first aisle to the concourse (smooth: no fall), then the top row is a step down from it.
 for(const s of Q.STANDS){const a=s.aisles[0],p0=Q.standWorld(s,s.inner-2,a),p1=Q.standWorld(s,s.inner+.2,a),p2=Q.standWorld(s,Q.standBack(s)-1.5,a);
  const r=walk([[p0.x,p0.z],[p1.x,p1.z],[p2.x,p2.z]]);assert(r.reached&&!r.fell&&Math.abs(r.h-CH)<.01,s.id+' aisle to the concourse '+JSON.stringify({...r,t:0}));}
@@ -162,7 +174,7 @@ for(const s of Q.STANDS){const a=s.aisles[0],p0=Q.standWorld(s,s.inner-2,a),p1=Q
 {const t=travel();for(let i=0;i<Q.ROWS;i++){const p=Q.standWorld(W,W.inner+i*Q.ROW_DEPTH+.3,5);assert(Math.abs(t.surface(p.x,p.z,9)-Q.rowHeight(i))<1e-6,'west row '+i+' height');}
  // Nov 12 2026: a walker steps up a row from anywhere (rows carry stepUp 0.55); rides do not (they keep to the aisles).
  const r=walk([[S.x-38,S.z+5],[S.x-Q.standBack(W)+1,S.z+5]],'walk',12);assert(r.reached&&!r.fell&&Math.abs(r.h-CH)<.01,'walking straight up the rows (no aisle) reaches the concourse '+JSON.stringify({...r,t:0}));
- const ride=walk([[S.x-38,S.z+5],[S.x-50,S.z+5]],'scooter',6);assert(ride.high<.05,'a ride cannot climb the rows away from an aisle');}
+ const ride=walk([[S.x-38,S.z+5],[S.x-50,S.z+5]],'scooter',6);assert(ride.high-B<.05,'a ride cannot climb the rows away from an aisle');}
 // Aisles are AISLE_WIDTH (2.2 m) wide, and an off-angle joystick (14° off straight up, kids) still reaches the concourse from the
 // pitch-level ring at every aisle start: no row edge stops a climb.
 assert.equal(Q.AISLE_WIDTH,2.2,'2.2 m aisles');
@@ -185,14 +197,14 @@ for(const [s,i] of [[W,4],[W,9],[N,6],[E,8]]){const p=Q.standWorld(s,s.inner+i*Q
  const backX=Q.standWorld(R,Q.ROOF.back-.12,0);assert(!fell&&Math.abs(t.state.height-top)<.05,'roof walker stays on the roof at the fascia frame');
  assert(Math.hypot(pp.x-p.x,pp.z-p.z)<Math.hypot(backX.x-p.x,backX.z-p.z),'stopped before the banner frame');}
 // Corners are open: from the ring out through each corner gap to the park.
-for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const r=walk([[S.x+sx*37.5,S.z+sz*50],[S.x+sx*38,S.z+sz*55],[S.x+sx*46,S.z+sz*60],[S.x+sx*60,S.z+sz*84]]);assert(r.reached&&!r.fell&&r.high<.1,'corner '+sx+','+sz+' open '+JSON.stringify({...r,t:0}));}
+for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const r=walk([[S.x+sx*37.5,S.z+sz*50],[S.x+sx*38,S.z+sz*55],[S.x+sx*46,S.z+sz*60],[S.x+sx*58,S.z+sz*81]/* was (60, 84): with the terrace that point is in the retaining wall's south-east corner; 58, 81 is past the stands on every corner, 3 m inside the wall */]);assert(r.reached&&!r.fell&&r.high-B<.1,'corner '+sx+','+sz+' open '+JSON.stringify({...r,t:0}));}
 // QA Nov 14 2026: a ride up an aisle cannot turn off along a seat row (it rode through the seated fans); on foot that still works.
 for(const mode of ['scooter','bike']){const z=S.z-39,d=W.inner+4*Q.ROW_DEPTH+.65;const r=walk([[S.x-37,z],[S.x-40.5,z],[S.x-d,z],[S.x-d,S.z-30]],mode,10);
  assert(!r.fell&&!r.reached&&r.z<S.z-39+1.3,mode+' stays in the aisle '+JSON.stringify({...r,t:0}));}
 {const z=S.z-39,d=W.inner+4*Q.ROW_DEPTH+.65;const r=walk([[S.x-37,z],[S.x-40.5,z],[S.x-d,z],[S.x-d,S.z-30]],'walk',14);assert(r.reached,'a walker can go along the row');}
 // Rides go up an aisle and down a back stair too (no wedging, no falls).
 for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);const r=walk([[S.x-37,z],[S.x-40.5,z],[back+1.5,z],[back+1.5,S.z-26],[back-.5,S.z-26],[S.x-Q.stairEnd(W)-2,S.z-26]],mode);
- assert(r.reached&&!r.fell&&r.h<.05,mode+' up an aisle and down a back stair '+JSON.stringify({...r,t:0}));}
+ assert(r.reached&&!r.fell&&r.h-B<.05,mode+' up an aisle and down a back stair '+JSON.stringify({...r,t:0}));}
 // Owner, Nov 13 2026 (a rider stuck on a back stair): walking AND riding UP every back stair of every stand reach the concourse.
 {const bad=[];for(const s of Q.STANDS)for(const c of s.stairs)for(const mode of ['walk','scooter','bike']){
   const a=Q.standWorld(s,Q.stairEnd(s)+2.5,c),b=Q.standWorld(s,Q.standBack(s)+.3,c),d=Q.standWorld(s,Q.standBack(s)-1.2,c);
@@ -214,10 +226,10 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  const view=(x,y,z,cam)=>{for(let i=0;i<30;i++)RF.update(1/30,x,y,z,...(cam??[x+off.x,y+off.y,z+off.z]));return RF.opacity;};
  const at=(s,row,a)=>{const p=Q.standWorld(s,s.inner+row*Q.ROW_DEPTH+.3,a);return [p.x,Q.rowHeight(row),p.z];};
  let o=view(...at(E,7,10));assert(o[1]<.25&&o[0]===1,'east row 7, under the east roof: it fades (the west one does not) '+o);
- o=view(S.x,0,S.z);assert(o[0]===1&&o[1]===1,'back on the pitch: both roofs solid again '+o);
+ o=view(S.x,B,S.z);assert(o[0]===1&&o[1]===1,'back on the pitch: both roofs solid again '+o);
  o=view(...at(W,8,-20));assert(o[0]<.25,'west row 8, under the west roof: it fades '+o);
  o=view(...at(E,1,10));assert(o[1]<.25,'east row 1 (in front of the roof): the camera line crosses it, it fades '+o);
- o=view(S.x+S.pitchW/2,0,S.z+5);assert(o[1]===1,'on the east touchline: the narrower roof hides nothing, stays solid '+o);
+ o=view(S.x+S.pitchW/2,B,S.z+5);assert(o[1]===1,'on the east touchline: the narrower roof hides nothing, stays solid '+o);
  {const [x,y,z]=at(E,7,10);o=view(x,ROOF_TOP+2,z);assert(o[1]===1,'a jetpack above the roof sees it solid (to land on) '+o);}
  {const [x,,z]=at(E,7,10),feet=Q.ROOF.y+Q.ROOF.thick/2;for(const [dx,dz] of [[0,0],[3,-20],[-2,25]]){o=view(x+dx,feet,z+dz);assert(o[1]===1,'standing ON the east roof (landed): it stays solid '+o);}}
  {const seat=Q.nearestSeat(...((p)=>[p.x,p.z])(Q.standWorld(E,E.inner+7*Q.ROW_DEPTH+.3,10)),Q.rowHeight(7)),c=Q.seatView(seat);
@@ -287,7 +299,7 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  assert(v&&v.x===S.x&&v.z===S.z&&v.width===S.pitchW&&v.length===S.pitchL&&v.players===11&&v.goalWidth===7.32&&v.goalHeight===2.44,'the stadium venue: 63 × 100 m at the pitch, 11 a side, full-size goals');
  assert(!V.VENUES.some(x=>x.id==='stadium'),'a live venue only: lessons, quests and coin routes do not move');
  assert.equal(V.simFormat('stadium'),'11v11');assert.equal(V.simFormat('beach'),'beach');
- assert(Math.abs((v.elevation??0)+V.FIELD_SURFACE_Y-V.STADIUM_PITCH_Y)<1e-9,'rigs and goal frames stand on the stadium grass');
+ assert(Math.abs((v.elevation??0)+V.FIELD_SURFACE_Y-V.STADIUM_PITCH_Y-B)<1e-9,'rigs and goal frames stand on the stadium grass (on the terrace)');
  assert.equal(load('lib/town/liveJoin.ts').joinableFormat('stadium'),true,'joinable like the other pitches');
  const P=load('multiplayer/protocol/types.ts'),N=load('lib/town/match/matchNet.ts');
  assert.deepEqual([...P.MATCH_FIELDS],['7v7','futsal','9v9','11v11','beach','stadium'],'field id 5 appended (old ids keep their meaning)');assert.deepEqual([...N.NET_FIELDS],[...P.MATCH_FIELDS]);
@@ -354,7 +366,7 @@ console.log('west stadium phase 3a: ok');
  {const F=U.uClearF.value;assert(Array.isArray(F)&&F.length>=4&&/uClearF/.test(sh.vertexShader),'friends clear too');crowd.update(60,S.x,S.z,false,1/60,false,[{x:S.x-45,z:S.z}]);assert(F[0].z>0&&F[0].x===S.x-45&&F[1].z<0,'a seated friend: the fan in their seat clears');crowd.update(60,S.x,S.z,false,1/60,false,[]);assert(F[0].z<0,'friend stood up: the fan comes back');}crowd.update(60,S.x-45,S.z,true,1/60,false);assert(U.uClear.value.z>0&&U.uClear.value.x===S.x-45,'up in the stands: the fans round me clear');crowd.update(60,S.x,S.z,false,1/60,false);assert(U.uClear.value.z<0,'on the pitch: nobody cleared');
  crowd.update(400,0,0,false,1/60,false);assert(!mesh.visible&&!crowd.flags.visible,'far away: hidden');crowd.dispose();assert(parent.children.length===0);
  // The goal frames stop a free ball (sweepGoalFrame's default list now has the stadium); the mouth stays open.
- const GC=load('lib/town/goalCollisions.ts'),V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium'),hit={},y0=V.STADIUM_PITCH_Y;
+ const GC=load('lib/town/goalCollisions.ts'),V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium'),hit={},y0=V.STADIUM_PITCH_Y+B;
  for(const sz of [-1,1]){const gz=S.z+sz*S.pitchL/2;
   assert(GC.sweepGoalFrame({x:S.x+v.goalWidth/2,y:y0+1,z:gz-sz*2},{x:S.x+v.goalWidth/2,y:y0+1,z:gz+sz*2},.2,hit),'a shot at the post hits it');assert.equal(hit.part,'post');
   assert(GC.sweepGoalFrame({x:S.x,y:y0+v.goalHeight,z:gz-sz*2},{x:S.x,y:y0+v.goalHeight,z:gz+sz*2},.2,hit)&&hit.part==='crossbar','the bar');
@@ -366,13 +378,13 @@ console.log('west stadium phase 3a: ok');
  for(const along of [-30,-8,0,8,30])for(const row of [0,5,9]){const N=Q.STANDS[2],p=Q.standWorld(N,N.inner+row*Q.ROW_DEPTH+.3,along),st=Q.nearestSeat(p.x,p.z,Q.rowHeight(row));assert(st,'a north seat');
   const view=Q.seatView(st,true);for(const ball of [null,{x:S.x-30,z:S.z+48},{x:S.x+30,z:S.z-48},{x:S.x+30,z:S.z+48}]){
    Q.portraitLook(view,st,ball,aspect,out);pc.position.set(view.x,view.y,view.z);pc.lookAt(out.x,out.y,out.z);pc.updateMatrixWorld();
-   const sz=S.z+Q.SCREEN.z;assert(inFrame(S.x,0,S.z),`seat ${st.id} ball ${JSON.stringify(ball)}: centre spot in frame`);
+   const sz=S.z+Q.SCREEN.z;assert(inFrame(S.x,B,S.z),`seat ${st.id} ball ${JSON.stringify(ball)}: centre spot in frame`);
    for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]])assert(inFrame(S.x+dx*Q.SCREEN.w/2,Q.SCREEN.y+dy*Q.SCREEN.h/2,sz),`seat ${st.id}: the big screen in frame`);
    ndc.set(st.x,st.y+1.5,st.z).project(pc);assert(ndc.y< -1||ndc.z>1,'the sitter\'s head is out of frame');}}
  // The south stand has the big screen behind it: the portrait view still looks at the pitch (centre spot in frame, not sky).
  for(const along of [-30,0,30])for(const row of [0,5,9]){const Sn=Q.STANDS[3],p=Q.standWorld(Sn,Sn.inner+row*Q.ROW_DEPTH+.3,along),st=Q.nearestSeat(p.x,p.z,Q.rowHeight(row));assert(st,'a south seat');
   const view=Q.seatView(st,true);for(const ball of [null,{x:S.x+30,z:S.z-48}]){Q.portraitLook(view,st,ball,aspect,out);pc.position.set(view.x,view.y,view.z);pc.lookAt(out.x,out.y,out.z);pc.updateMatrixWorld();
-   assert(inFrame(S.x,0,S.z),`south seat ${st.id}: centre spot in frame`);}}
+   assert(inFrame(S.x,B,S.z),`south seat ${st.id}: centre spot in frame`);}}
  {const sit=load('lib/town/stadiumSit.ts').createStadiumSit({parent:new T.Group(),wake:()=>{}}),N=Q.STANDS[2],p=Q.standWorld(N,N.inner+5*Q.ROW_DEPTH+.3,4),h=Q.rowHeight(5);
   sit.want(p.x,p.z,h,true);sit.press(true);const c=new T.PerspectiveCamera(40,aspect,1,500);sit.applyCamera(c,1/60);assert.equal(c.fov,Q.PORTRAIT_FOV,'seated on a portrait phone: the wider view');
   sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:true});sit.applyCamera(c,1/60);assert.equal(c.fov,40,'standing: the FOV restored');}
@@ -381,10 +393,10 @@ console.log('west stadium phase 3a: ok');
  let goals=0;const sit=load('lib/town/stadiumSit.ts').createStadiumSit({parent:new T.Group(),wake:()=>{},goal:()=>goals++}),M=load('lib/town/stadiumSit.ts');
  const tagEl={textContent:''},actEl={textContent:''},bar={querySelector:q=>q==='[data-bar-tag]'?tagEl:actEl,setAttribute(){}};
  const match={sim:{score:{gold:0,blue:0},clock:5},ball:{position:{x:S.x,z:S.z}},humans:new Map(),puppet:null};
- sit.want(S.x+30,S.z,0,true);sit.match(match,0);sit.bar(bar);assert(sit.exhibition&&/EXHIBITION/.test(tagEl.textContent)&&/watch/.test(actEl.textContent),'all-AI: an exhibition');
+ sit.want(S.x+30,S.z,B,true);sit.match(match,0);sit.bar(bar);assert(sit.exhibition&&/EXHIBITION/.test(tagEl.textContent)&&/watch/.test(actEl.textContent),'all-AI: an exhibition');
  assert(sit.ambience>.9,'by the pitch: the crowd loop at full');match.sim.score.gold=1;sit.match(match,100);assert(goals===1&&sit.crowd.cheering,'a goal: the cheer and the bounce');
  match.humans.set('me',{});sit.match(match,200);sit.bar(bar);assert(!sit.exhibition&&/BIG MATCH/.test(tagEl.textContent),'a player in it: a big match');
- sit.want(S.x+140,S.z,0,true);sit.match(match,300);assert.equal(sit.ambience,0,'far from the pitch: silent');assert.equal(M.ambienceLevel(S.x+S.pitchW/2+59,S.z)>0,true,'within ~60 m of the pitch: audible');
+ sit.want(S.x+140,S.z,B,true);sit.match(match,300);assert.equal(sit.ambience,0,'far from the pitch: silent');assert.equal(M.ambienceLevel(S.x+S.pitchW/2+59,S.z)>0,true,'within ~60 m of the pitch: audible');
  sit.match(null,400);assert.equal(sit.ambience,0,'no match: silent');}
 console.log('west stadium phase 3b: ok');
 // The map draws four stands with open corners.
@@ -415,7 +427,7 @@ console.log('west stadium phase 2: ok');
  assert(m.opacity>=.35&&m.opacity<=.45&&m.color.getHexString()==='ffffff','white paint at 35-45%');
  assert(Math.abs(logo.position.x-S.x)<1e-6&&Math.abs(logo.position.z-S.z)<1e-6&&sz.y<1e-6,'flat on the centre spot');
  assert(Math.abs(sz.z/(2*8.66)-.7)<.02&&sz.x<sz.z,'about 70% of the circle, upright along the pitch (width along the halfway line)');
- assert(logo.position.y>-.034&&logo.position.y<0,'just above the line paint');
+ assert(logo.position.y-B>-.034&&logo.position.y-B<0,'just above the line paint');
  assert(logo.userData.ownDraw&&!logo.castShadow,'its own single draw, no shadow');
  // Roof frames stand proud of the slab (no coplanar faces), and the fascia banner proud of the frame, on both roofs.
  assert(Q.FRAME_PROUD>=.02&&Q.FASCIA_PROUD>=.08);const lay=Q.stadiumSponsorLayout();

@@ -68,7 +68,7 @@ for(const n of cast.filter(n=>n.floor)){const y=n.floor(),c=info[n.id];
  if(c.group==='photographer'){assert(!pitch(n.x,n.z,1.5),n.id+' 1.5 m+ outside the pitch markings');assert(!L.inStadiumFootprint(n.x,n.z,-1)||Math.abs(n.x-S.x)<40&&Math.abs(n.z-S.z)<57.5-1,n.id+' in front of the stands');assert.equal(n.pose,'sit',n.id+' sits');
   const boards=Q.boardColliders(Q.stadiumSponsorLayout());assert(!boards.some(b=>Math.abs(n.x-b.x)<b.w/2+.8&&Math.abs(n.z-b.z)<b.d/2+.8),n.id+' clear of the sponsor boards');
   assert(Math.abs(n.x-S.x)>V.STADIUM_VENUE.goalWidth/2+3||Math.abs(n.z-S.z)<S.pitchL/2,n.id+' beside the goal, not behind its net');}
- else if(c.group==='bench'||c.group==='official'){assert(!pitch(n.x,n.z,.8)&&pitch(n.x,n.z,3),n.id+' at the edge of the pitch, outside the lines');assert.equal(y,V.STADIUM_PITCH_Y);
+ else if(c.group==='bench'||c.group==='official'){assert(!pitch(n.x,n.z,.8)&&pitch(n.x,n.z,3),n.id+' at the edge of the pitch, outside the lines');assert.equal(y,load('lib/town/westElevation.ts').STADIUM_BASE+V.STADIUM_PITCH_Y,n.id+' on the stadium grass (Nov 26 2026: elevation ships ON, the stadium stands on the west terrace; STADIUM_BASE is 0 with ?elev=0)');
   if(c.group==='bench')assert(N.TECH_AREAS.some(a=>n.x>a.x0&&n.x<a.x1&&n.z>Math.min(a.z0,a.z1)&&n.z<Math.max(a.z0,a.z1)),n.id+' inside a technical area');
   const t=N.AR_TRACKS[n.id];if(t){assert(t.min<t.max&&(t.max<=S.z||t.min>=S.z)&&n.z>=t.min&&n.z<=t.max,n.id+' runs one half');assert(Math.abs(Math.abs(n.x-S.x)-S.pitchW/2-1)<.01,n.id+' 1 m outside the touchline');
    for(const a of N.TECH_AREAS)assert(t.min>Math.max(a.z0,a.z1)||t.max<Math.min(a.z0,a.z1)||Math.sign(n.x-S.x)>0,n.id+' track clear of the technical areas');}}

@@ -18,7 +18,7 @@
 // Dev flag `?elev=1` (default OFF: groundLift is 0 after one comparison and nothing is built differently). To ship: make
 // ELEVATION_DEFAULT true (one line); `?elev=0` then switches it off for a before/after.
 import {depthLift} from './townDepth';
-export const ELEVATION_DEFAULT=false;
+export const ELEVATION_DEFAULT=true;// shipped ON (owner approval, Nov 26 2026); `?elev=0` switches it off
 const query=(()=>{try{return typeof window!=='undefined'&&window.location&&typeof window.location.search==='string'?window.location.search:null;}catch{return null;}})();
 let enabled=query===null?ELEVATION_DEFAULT:/[?&]elev=1(&|$)/.test(query)||(ELEVATION_DEFAULT&&!/[?&]elev=0(&|$)/.test(query));
 /** Tests call this (before anything asks for a height); the browser reads the URL once. */
@@ -102,7 +102,7 @@ export function onGround<S extends {x:number;z:number;y:number}>(o:S):S{const g=
 // ---- Build-time placement (world.ts `put` / `sign`). While `active`, every piece a builder places is lifted to the ground at
 // its own spot, or to `anchor` (ONE height for a whole prop: a palm, a house, a table: wrap its builder in anchored()).
 // `pieces` records what was built so the flat layers can be draped afterwards (elevationDrape.ts drapePieces).
-export const elevBuild:{active:boolean;anchor:number|null;pieces:{mesh:unknown;lift:number;anchored:boolean}[];stats?:{added:number;draped:number;westWall?:number;westLawn?:number}}={active:false,anchor:null,pieces:[]};
+export const elevBuild:{active:boolean;anchor:number|null;pieces:{mesh:unknown;lift:number;anchored:boolean}[];stats?:{added:number;draped:number;marks?:number;westWall?:number;westLawn?:number}}={active:false,anchor:null,pieces:[]};
 export const buildLift=(x:number,z:number)=>elevBuild.active?(elevBuild.anchor!==null&&elevBuild.anchor!==elevBuild.anchor/* NaN: rigid() */?(elevBuild.anchor=regionLift(x,z)):elevBuild.anchor??regionLift(x,z)):0;
 export function anchored<R>(x:number,z:number,build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=regionLift(x,z);try{return build();}finally{elevBuild.anchor=null;}}
 /** Pieces that carry their own heights (a terrain mesh, a shore ring): built with no lift. */

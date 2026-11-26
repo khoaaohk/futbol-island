@@ -94,14 +94,24 @@ for(const s of [...plan1.main.stones,...plan1.main.tufts,...plan1.main.flowers])
  assert.ok(c.free[1]>=100&&c.free[0]/c.free[1]>.25,'main stones reach the inner beach band away from the line ('+c.free+')');
  assert.ok(c.line[0]/Math.max(1,c.line[1])>.05,'beside the line the inner band still has stones ('+c.line+')');}
 const stats=n=>n+' '+plan1[n].stones.length+'/'+plan1[n].tufts.length+'/'+plan1[n].flowers.length;
-// the builder makes at most one InstancedMesh per kind, opaque, with no shadows, and disposes
-const parent=new T.Group(),built=sites.buildIslandDecals(parent,world);
-const meshes=[];parent.traverse(o=>{if(o.isInstancedMesh)meshes.push(o);});
-assert.ok(meshes.length<=12&&meshes.length>=3,'<= 1 InstancedMesh per kind per island (stones, tufts, flowers + the macro strips)');
-for(const m of meshes){assert.ok(!m.material.transparent&&!m.castShadow&&!m.receiveShadow,m.name);const g=m.geometry,tris=g.index?g.index.count/3:g.getAttribute('position').count/3;assert.ok(tris<12,m.name+' tris '+tris);}
-assert.equal(built.count,meshes.reduce((a,m)=>a+m.count,0));
-assert.ok(meshes.filter(m=>/strips$/.test(m.name)).length<=3,'the macro strips are the only new mesh: +1 draw per island');
-built.dispose();assert.equal(parent.children.length,0);
+// the builder makes at most one InstancedMesh per kind, opaque, with no shadows, and disposes.
+// Nov 26 2026 (surface edges ship ON): with the layer on, the flowers and bare patches of an island are ONE merged draw (a single
+// instance at the origin: leaf-and-bloom clumps, 6 triangles a flower as before; groundDecals.ts patchGeometry), so that mesh's
+// triangle count is the island's flowers x 6 and its instance count is 1. Both states are built and checked here.
+let drawn=0;
+{const SE=load('lib/town/surfaceEdges.ts'),shipped=SE.surfOn(),KEY={'main-island':'main','coral-cay':'cay','summit-isle':'summit'};assert.equal(shipped,!require('./layer-flags-helper.cjs').FORCED_OFF,'surface edges on by default');
+ for(const surf of [true,false]){SE.setSurfaces(surf);const plan=sites.planIslandDecals(world),parent=new T.Group(),built=sites.buildIslandDecals(parent,world);
+  const meshes=[];parent.traverse(o=>{if(o.isInstancedMesh)meshes.push(o);});let merged=0;
+  assert.ok(meshes.length<=12&&meshes.length>=3,'<= 1 InstancedMesh per kind per island (stones, tufts, flowers + the macro strips)');
+  for(const m of meshes){assert.ok(!m.material.transparent&&!m.castShadow&&!m.receiveShadow,m.name);const g=m.geometry,tris=g.index?g.index.count/3:g.getAttribute('position').count/3;
+   if(surf&&/-flowers$/.test(m.name)){const p=plan[KEY[m.name.replace(/^decals-|-flowers$/g,'')]],flowers=p.flowers.length+p.macro.filter(q=>q.k==='flower').length,mounds=p.macro.filter(q=>D.MACRO_HOST[q.k]==='mounds'&&q.k!=='flower').length;
+    assert.equal(m.count,1,m.name+': one merged patch');assert.ok(tris>=flowers*6&&tris<=flowers*6+mounds*12,m.name+' tris '+tris+' for '+flowers+' flowers, '+mounds+' patches');
+    assert.ok(tris<=D.DECAL_CAPS[KEY[m.name.replace(/^decals-|-flowers$/g,'')]].flowers*6+mounds*12,m.name+' within the island\'s flower cap x 6');merged+=flowers+mounds-1;}
+   else assert.ok(tris<12,m.name+' tris '+tris);}
+  assert.equal(built.count,meshes.reduce((a,m)=>a+m.count,0)+merged,'every planned decal is drawn (surf '+surf+')');
+  assert.ok(meshes.filter(m=>/strips$/.test(m.name)).length<=3,'the macro strips are the only new mesh: +1 draw per island');
+  if(surf)drawn=meshes.length;built.dispose();assert.equal(parent.children.length,0);}
+ SE.setSurfaces(shipped);}
 // 4) open spaces + macro detail (Oct 17 2026)
 const OS=load('lib/town/openSpaces.ts'),scans=sites.scanIslands(world),scans2=sites.scanIslands(world);
 const sig=sc=>JSON.stringify({n:sc.openCells,r:sc.regions.map(r=>[r.kind,r.cells,r.cx,r.cz]),c:sc.cells.map(c=>[c.i,c.j,c.kind])});
@@ -142,4 +152,4 @@ for(const island of ['main','cay','summit']){
 {let prev=-1;for(const n of [1,3,4,8,16,32,64]){const w=OS.regionWeight(n);assert.ok(w>=prev);prev=w;}assert.equal(OS.regionWeight(3),0);assert.equal(OS.regionWeight(32),1);assert.ok(OS.regionWeight(4)<.4);
  for(const sc of Object.values(scans))for(const c of sc.cells)assert.equal(c.w,OS.regionWeight(sc.regions[c.region].cells));}
 console.log(rep.join('\n'));
-console.log('ground-detail ok: grass '+range.grass.map(v=>v.toFixed(3))+' sand '+range.sand.map(v=>v.toFixed(3))+'; decals '+[stats('main'),stats('cay'),stats('summit')].join(', ')+'; '+meshes.length+' instanced meshes');
+console.log('ground-detail ok: grass '+range.grass.map(v=>v.toFixed(3))+' sand '+range.sand.map(v=>v.toFixed(3))+'; decals '+[stats('main'),stats('cay'),stats('summit')].join(', ')+'; '+drawn+' instanced meshes (layers on)');

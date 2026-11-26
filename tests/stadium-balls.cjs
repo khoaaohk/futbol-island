@@ -33,6 +33,8 @@ function load(name){const file=path.resolve(base,name);if(cache.has(file))return
 
 const Q=load('lib/town/coinQuest.ts'),SB=load('lib/town/stadiumBalls.ts'),{COIN_QUEST}=Q,spots=SB.STADIUM_BALL_SPOTS;
 const {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE,SCENES,ballLessonFrames}=load('lib/town/ballHuntLessons.ts'),{BALL_HUNT_SOURCES}=load('lib/town/ballHuntSources.ts');
+// Nov 26 2026 (elevation ships ON): a ground-level spot stands on the west terrace, so "on the ground" is the height function, not y = 0 (with `?elev=0` it is 0 again).
+const EL=load('lib/town/elevation.ts'),onFloor=s=>Math.abs(s.y-EL.groundLift(s.x,s.z))<1e-6;
 const L=load('lib/town/westParkLayout.ts'),S=load('lib/town/stadiumSeats.ts'),sim=load('lib/town/simulation.ts'),{onIsland}=load('lib/town/shoreline.ts');
 
 // ---- 1. Count, ids, order, counted everywhere.
@@ -105,14 +107,14 @@ for(const s of targets){const [nx,nz]=axis(s),w=s.wall,inside=(x,z)=>world.obsta
  assert(!inside(w.x+nx*.2,w.z+nz*.2).length,`${s.id}: on the solid's outer face`);
  if(!s.id.startsWith('stadium-screen'))for(const t of [-.55,.55])assert(inside(w.x-nx*.25+nz*t,w.z-nz*.25+nx*t).length,`${s.id}: the whole target fits on the face`);
  mounts.add(behind[0]);
- assert(Math.hypot(s.x-w.x,s.z-w.z)<=SB.TARGET_DROP+.01,`${s.id}: the ball drops just in front`);assert(s.y===0?!solid(s.x,s.z,.6):!world.roofObstacles.some(o=>o.top>s.y&&o.floor<s.y+1.8&&sim.insideObstacle(s.x,s.z,o,.6)),`${s.id}: the pickup is clear of colliders (rails and props on the concourse)`);
+ assert(Math.hypot(s.x-w.x,s.z-w.z)<=SB.TARGET_DROP+.01,`${s.id}: the ball drops just in front`);assert(onFloor(s)?!solid(s.x,s.z,.6):!world.roofObstacles.some(o=>o.top>s.y&&o.floor<s.y+1.8&&sim.insideObstacle(s.x,s.z,o,.6)),`${s.id}: the pickup is clear of colliders (rails and props on the concourse)`);
  assert(Math.abs(t0.surface(s.x,s.z,s.y+.1)-s.y)<1e-6,`${s.id}: the pickup is on the floor (${s.y})`);
  assert(Math.min(...trees.map(t=>Math.hypot(t.x-s.x,t.z-s.z)),...orchard.map(t=>Math.hypot(t.x-s.x,t.z-s.z)))>=2.5,`${s.id}: clear of trees`);
- if(s.y===0)assert(onIsland(s.x,s.z)&&!L.inPond(s.x,s.z,L.POND_RIM+3),`${s.id}: on the island's ground`);}
+ if(onFloor(s))assert(onIsland(s.x,s.z)&&!L.inPond(s.x,s.z,L.POND_RIM+3),`${s.id}: on the island's ground`);}
 {const posts=SW.screenPosts(),so=S.STANDS.find(q=>q.id==='south');
  for(const [id,i,side] of [['stadium-screen',1,'east'],['stadium-screen-west',0,'west']]){const scr=spots.find(s=>s.id===id),p=S.standLocal(so,scr.x,scr.z);
   assert(Math.abs(posts[i].x-scr.wall.x)<.01&&Math.abs(posts[i].z+SB.SCREEN_POST_R-scr.wall.z)<.01&&scr.wall.facing==='south',`${id}: on the ${side} post's south face`);
-  assert(scr.y+scr.wall.y+.55<posts[i].top,`${id}: below the screen frame`);assert(scr.y===0&&p.d>S.standBack(so),`${id}: its ball drops on the ground behind the south stand`);
+  assert(scr.y+scr.wall.y+.55<posts[i].top,`${id}: below the screen frame`);assert(onFloor(scr)&&p.d>S.standBack(so),`${id}: its ball drops on the ground behind the south stand`);
   for(const q of posts)assert(Math.hypot(q.x-scr.x,q.z-scr.z)>=2,`${id}: clear of the posts`);}
  const [e,w]=['stadium-screen','stadium-screen-west'].map(id=>spots.find(s=>s.id===id));assert(e.wall.y===w.wall.y&&e.wall.z===w.wall.z&&Math.abs(e.wall.x+w.wall.x-2*ST.x)<.01,'the west post target mirrors the east one (same height and facing)');}
 {const gate=['stadium-gate','stadium-plaza-flags'].map(id=>spots.find(s=>s.id===id)),gx=S.GATE_ARCH_X+.8;
@@ -153,7 +155,7 @@ const step=.5,x0=-345,z0=-250,nx=Math.ceil(310/step),nz=Math.ceil(400/step),seen
   if(x>-45||!onIsland(x,z)||hit(x,z))continue;seen[b*nx+a]=1;q.push(a,b);}}
  console.log(`     flood fill from the plaza: ${q.length/2} cells`);}
 const reached=(x,z,r)=>{for(let i=Math.floor((x-r-x0)/step);i<=Math.ceil((x+r-x0)/step);i++)for(let j=Math.floor((z-r-z0)/step);j<=Math.ceil((z+r-z0)/step);j++)if(i>=0&&j>=0&&i<nx&&j<nz&&seen[j*nx+i]&&Math.hypot(x0+i*step-x,z0+j*step-z)<=r)return true;return false;};
-for(const s of targets.filter(s=>s.y===0))assert(reached(s.x,s.z,1),`${s.id}: its ball can be walked to from the plaza`);
+for(const s of targets.filter(s=>onFloor(s)))assert(reached(s.x,s.z,1),`${s.id}: its ball can be walked to from the plaza`);
 // A real walk with the rooftop travel (no falls).
 function walk(points,secs=40){const t=travel(),p={x:points[0][0],z:points[0][1]},v={x:0,z:0};t.reset(p.x,p.z);let fell=false,i=1;
  for(let f=0;f<secs*60&&i<points.length;f++){const [tx,tz]=points[i],dx=tx-p.x,dz=tz-p.z,l=Math.hypot(dx,dz);if(l<.3){i++;continue;}t.update(1/60,p,v,{x:dx/l,z:dz/l,sprint:false},'walk');if(t.state.falling||t.state.recovery>0)fell=true;}
@@ -168,7 +170,7 @@ function hunt(){H.browser();const L2=H.createLoader({three:T}),got=[],near=[];co
 const ballGrid=load('lib/town/obstacleGrid.ts'),obsGrid=ballGrid.createObstacleGrid(world.obstacles),roofGrid=ballGrid.createObstacleGrid(world.roofObstacles);
 const yawOf={east:-Math.PI/2,west:Math.PI/2,south:Math.PI,north:0},shots={};
 for(const s of targets){const [ax,az]=axis(s),w=s.wall,stand=10,px=w.x+ax*stand,pz=w.z+az*stand;
- assert(s.y===0&&reached(px,pz,.6),`${s.id}: the kicker's spot ${stand} m out is on the ground, walkable from the plaza`);
+ assert(onFloor(s)&&reached(px,pz,.6),`${s.id}: the kicker's spot ${stand} m out is on the ground, walkable from the plaza`);
  const tr=travel(px,pz);tr.reset(px,pz,s.y);const ok=[];
  for(let c=0;c<=1.001;c+=.05){const f=hunt(),ball=f.createWalkBall(),player={x:px,y:s.y,z:pz,yaw:yawOf[w.facing]};ball.reset(player);ball.shoot(player,player.yaw,c);
   const env={floor:(x,z)=>tr.surface(x,z,ball.state.y),blocked:(x,z,y)=>{if(f.h.hit(x,y,z,ball.state.vx,ball.state.vz))return false;

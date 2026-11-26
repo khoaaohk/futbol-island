@@ -19,7 +19,7 @@ import {buildOutline,knotsOf,rowPoint,DRAWN,type Rect,type Pt,type Outline} from
 import {CAY_LAWN} from './coralCay';
 import {regionLift} from './elevation';
 
-export const SURF_DEFAULT=false;
+export const SURF_DEFAULT=true;// shipped ON (owner approval, Nov 26 2026); `?surf=0` switches it off
 const query=(()=>{try{return typeof window!=='undefined'&&window.location&&typeof window.location.search==='string'?window.location.search:null;}catch{return null;}})();
 let enabled=query===null?SURF_DEFAULT:/[?&]surf=1(&|$)/.test(query)||(SURF_DEFAULT&&!/[?&]surf=0(&|$)/.test(query));
 /** Tests call this; the browser reads the URL once. */
@@ -52,7 +52,7 @@ const MAIN_ZONE:Zone={poly:INTERIOR_GRASS,ground:null};
 const hash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const insidePoly=(poly:readonly Pt[],x:number,z:number)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;};
 
-export type SurfaceInput={/** flat paths laid on the lawn (world.ts path()) */paths:Rect[];/** true where no lawn shows (road, pavement, building, court, pitch, patio) */blocked:(x:number,z:number)=>boolean};
+export type SurfaceInput={/** flat paths laid on the lawn (world.ts path()) */paths:Rect[];/** paving that is not a path and lies over a path's end (the Coral Cay roundabout's pavement): no wear sheet under it (it sat 1-1.5 cm under that pavement: tests/roundabout-junctions.cjs wants 4 cm) */paved?:(x:number,z:number)=>boolean;/** true where no lawn shows (road, pavement, building, court, pitch, patio) */blocked:(x:number,z:number)=>boolean};
 let input:SurfaceInput|null=null;
 /** world.ts registers the paths once they are final. No-op with the flag off. */
 export function setSurfaceInput(i:SurfaceInput|null){input=enabled?i:null;}
@@ -103,6 +103,7 @@ export function pathLips(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
    return [[-ov,top+.016+proud,1,wearOf(ov)*k-cut],[LIP.thin,top+.03+proud+WEAR.bank*cut,.5*cut,-k-cut],[LIP.reach,0,0,-k-cut]];};
   for(let j=0;j<knots.length-1;j++){const mid=(knots[j]+knots[j+1])/2;let open=true;
    for(const u of [.3,LIP.thin+.1,LIP.reach]){const [x,z]=rowPoint(seg,len,mid,u,false,false);if(!lawn(x,z)){open=false;break;}}
+   if(open&&s.paved)for(const e of [j,j+1])for(const u of [-LIP.over-LIP.overVar,0,LIP.thin,LIP.reach]){const [x,z]=rowPoint(seg,len,knots[e],u,false,false);if(s.paved(x,z))open=false;}/* no lip corner on that paving either */
    if(!open)continue;const base=out.position.length/3,ra=rows(j),rb=rows(j+1);
    for(let r=0;r<ra.length;r++)for(const e of [j,j+1]){const row=(e===j?ra:rb)[r],[x,z]=rowPoint(seg,len,knots[e],row[0],e===0,e===knots.length-1);out.position.push(x,row[1]+g(x,z),z);out.edge.push(row[2],WEAR_BASE+row[3]);}
    quadRows(out,base,ra.length,facesUp(out.position,base));}}
@@ -122,12 +123,15 @@ export function pathWear(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
   const addU=(u:number)=>{if(u>-L/2+.02&&u<L/2-.02)us.add(q(u));},addV=(v:number)=>{if(v>-W/2+.02&&v<W/2-.02)vs.add(q(v));};
   us.add(-L/2);us.add(L/2);vs.add(-W/2);vs.add(W/2);addV(0);addV(-W/2+E);addV(W/2-E);addU(-L/2+E);addU(L/2-E);
   const step=G?WEAR.liftStep:WEAR.step,n=Math.max(1,Math.round(L/step));for(let k=1;k<n;k++)addU(-L/2+L*k/n);
+  const paved=s.paved,pavedAt=(u:number,v:number)=>alongX?paved!(r.x+u,r.z+v):paved!(r.x+v,r.z+u);let clip=false;
+  if(paved)for(const v of [-W/2,0,W/2]){let was=pavedAt(-L/2,v);clip=clip||was;for(let u=-L/2+.1;u<=L/2+1e-6;u+=.1){const now=pavedAt(u,v);if(now!==was){addU(now?u-.1:u);was=now;clip=true;}}}/* a row of cells ends where that paving begins */
   for(let j=0;j<R.length;j++){if(j===i)continue;const t=R[j];if(Math.abs(t.x-r.x)>(t.w+r.w)/2+E||Math.abs(t.z-r.z)>(t.d+r.d)/2+E)continue;
    const du=(alongX?t.x-r.x:t.z-r.z),hu=(alongX?t.w:t.d)/2,dv=(alongX?t.z-r.z:t.x-r.x),hv=(alongX?t.d:t.w)/2;for(const e of [-E,0,E]){addU(du-hu+e);addU(du+hu+e);}addV(dv-hv);addV(dv+hv);}
   const U=[...us].sort((a,b)=>a-b),V=[...vs].sort((a,b)=>a-b),base=out.position.length/3,at=(u:number,v:number)=>alongX?[r.x+u,r.z+v] as const:[r.x+v,r.z+u] as const;
   for(const u of U)for(const v of V){const [x,z]=at(u,v);out.position.push(x,y0+(G?G(x,z):0),z);out.edge.push(1,WEAR_BASE+(open(x,z)?wearOf(o.dist(x,z))*wornAt(s,x,z,false):0));}
   let up:boolean|null=null;
   for(let a=0;a<U.length-1;a++)for(let b=0;b<V.length-1;b++){const [cx,cz]=at((U[a]+U[a+1])/2,(V[b]+V[b+1])/2);if(!open(cx,cz))continue;
+   if(clip&&(paved!(cx,cz)||pavedAt(U[a],V[b])||pavedAt(U[a+1],V[b])||pavedAt(U[a],V[b+1])||pavedAt(U[a+1],V[b+1])))continue;
    let taken=false;for(let j=0;j<R.length&&!taken;j++){if(j===i)continue;const t=R[j],wide=Math.min(t.w,t.d)>WEAR.max;if((wide||j<i)&&within(t,cx,cz))taken=true;}if(taken)continue;
    const p=base+a*V.length+b,k=p+1,m=p+V.length,nn=m+1;
    if(up===null){const P=out.position,ny=(P[k*3+2]-P[p*3+2])*(P[m*3]-P[p*3])-(P[k*3]-P[p*3])*(P[m*3+2]-P[p*3+2]);up=ny>0;}

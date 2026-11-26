@@ -139,8 +139,10 @@ export function createPlazaFlags(poles:readonly {x:number;z:number}[],order:read
  const texture=new T.CanvasTexture(canvas as HTMLCanvasElement);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
  const kick=new Float32Array(n),uTime={value:0},uKick={value:kick};
  // The kick (FLAG_KICK): per flag its age (−1 = none), direction, and the shader's whip level, tilt + direction, and foot.
- const kAge=new Float32Array(n).fill(-1),kDir=new Float32Array(n*2),whip=new Float32Array(n),shake=new Float32Array(n*3),foot=new Float32Array(n*2);
- poles.forEach((p,k)=>{foot[k*2]=p.x;foot[k*2+1]=p.z;});
+ const kAge=new Float32Array(n).fill(-1),kDir=new Float32Array(n*2),whip=new Float32Array(n),shake=new Float32Array(n*3),foot=new Float32Array(n*3);
+ // The foot is where the pole meets ITS ground (Nov 26 2026, ship triage: with the west terrace the poles stand up to 4.2 m above sea level,
+ // and the shake still turned each flag about y = 0, swinging the pole's base sideways; the prop bounds and pivot below were at y 0 too).
+ poles.forEach((p,k)=>{foot[k*3]=p.x;foot[k*3+1]=groundLift(p.x,p.z);foot[k*3+2]=p.z;});
  const uWhip={value:whip},uShake={value:shake},uFoot={value:foot};let kicking=0,kickReduced=false;
  const material=new T.MeshStandardMaterial({map:texture,roughness:.85,side:T.DoubleSide});
  material.onBeforeCompile=sh=>{
@@ -148,22 +150,22 @@ export function createPlazaFlags(poles:readonly {x:number;z:number}[],order:read
   const W=FLAG_WAVE,K=FLAG_KICK,f=(x:number)=>x.toFixed(4);
   sh.uniforms.uWhip=uWhip;sh.uniforms.uShake=uShake;sh.uniforms.uFoot=uFoot;
   sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>
-attribute float aWave;attribute float aFlag;uniform float uTime;uniform float uKick[${n}];uniform float uWhip[${n}];uniform vec3 uShake[${n}];uniform vec2 uFoot[${n}];`)
+attribute float aWave;attribute float aFlag;uniform float uTime;uniform float uKick[${n}];uniform float uWhip[${n}];uniform vec3 uShake[${n}];uniform vec3 uFoot[${n}];`)
    .replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
 int fI=int(aFlag+.5);float fKick=uKick[fI],fWhip=uWhip[fI],fU=max(aWave,0.),fAmp=${f(W.amp)}+${f(W.kickAmp)}*fKick+${f(K.whipAmp)}*fWhip,fArg=fU*${f(W.k)}-uTime*(${f(W.speed)}+${f(W.kickSpeed)}*fKick+${f(K.whipSpeed)}*fWhip)+aFlag*1.7;
 float fWave=fU*fAmp*sin(fArg);
 if(aWave>=0.){float dzdx=(fAmp*sin(fArg)+fU*fAmp*${f(W.k)}*cos(fArg))/${f(FLAG.w)};objectNormal=normalize(vec3(-dzdx,0.,1.));}`)
    .replace('#include <begin_vertex>',`#include <begin_vertex>
 if(aWave>=0.){transformed.z+=fWave;transformed.y+=fU*(.035+${f(K.flap)}*fWhip)*sin(fArg*.7+1.3);transformed.x-=fU*fU*(.04+${f(K.snap)}*fWhip)*(1.-cos(fArg));}
-{vec3 fSh=uShake[fI];if(fSh.x!=0.){vec2 fFt=uFoot[fI];vec3 fR=transformed-vec3(fFt.x,0.,fFt.y);float fAl=fR.x*fSh.y+fR.z*fSh.z,fC=cos(fSh.x),fS=sin(fSh.x),fN=fAl*fC+fR.y*fS-fAl;
- transformed.x+=fN*fSh.y;transformed.z+=fN*fSh.z;transformed.y=fR.y*fC-fAl*fS;}}`);
+{vec3 fSh=uShake[fI];if(fSh.x!=0.){vec3 fFt=uFoot[fI];vec3 fR=transformed-fFt;float fAl=fR.x*fSh.y+fR.z*fSh.z,fC=cos(fSh.x),fS=sin(fSh.x),fN=fAl*fC+fR.y*fS-fAl;
+ transformed.x+=fN*fSh.y;transformed.z+=fN*fSh.z;transformed.y=fFt.y+fR.y*fC-fAl*fS;}}`);
  };
  material.customProgramCacheKey=()=>'plaza-flags-kick-'+n;
  const mesh=new T.Mesh(geometry,material);mesh.name='plaza-flags';mesh.castShadow=false;mesh.receiveShadow=true;
  mesh.userData.ownDraw=true;mesh.userData.skipRoofObstacle=true;mesh.matrixAutoUpdate=false;mesh.updateMatrix();geometry.computeBoundingSphere();
  const position=geometry.getAttribute('position') as T.BufferAttribute;
- const propSpecs:PropSpec[]=poles.map((p,k)=>({kind:'flag',parts:[{attribute:position,start:k*perFlag,count:perFlag}],
-  min:{x:p.x-FLAG.capR,y:0,z:p.z-.6},max:{x:p.x+FLAG.poleR+FLAG.w,y:FLAG.poleH+FLAG.cap,z:p.z+.6},pivot:{x:p.x,y:0,z:p.z}}));
+ const propSpecs:PropSpec[]=poles.map((p,k)=>{const lift=groundLift(p.x,p.z);return {kind:'flag',parts:[{attribute:position,start:k*perFlag,count:perFlag}],
+  min:{x:p.x-FLAG.capR,y:lift,z:p.z-.6},max:{x:p.x+FLAG.poleR+FLAG.w,y:lift+FLAG.poleH+FLAG.cap,z:p.z+.6},pivot:{x:p.x,y:lift,z:p.z}};});
  let live=0,touching=-1;const xs=poles.map(p=>p.x),zs=poles.map(p=>p.z),area={x0:Math.min(...xs)-1,x1:Math.max(...xs)+1,z0:Math.min(...zs)-1,z1:Math.max(...zs)+1};
  const stats={reacts:0,bumps:0,kickUpdates:0,kicks:0};
  return {

@@ -83,19 +83,21 @@ function landAndWalk(x,z,sx,sz,secs,mode='walk'){const r=travel(),p={x,z},v={x:0
 await ok('the Coral Cay Hostel verandah roof: landed on, walked along, walked off; the porch below stays walkable',()=>{
  const H=CC.HOSTEL,vz=H.z+H.d/2+H.verandah.d/2;
  // From the sky onto the tin roof's middle: it stands there (≈ 3.2–3.45 m), not on the porch.
- const s=rt.surface(H.x,vz,Infinity);assert(s>3&&s<3.6,`stands on the verandah roof (${s.toFixed(2)} m)`);
+ // Nov 26 2026 (elevation ships ON): the hostel stands on its terrace (coralCayElevation.ts GREEN_LEVEL), so every height here is measured over the ground under it (0 with `?elev=0`).
+ const G=load('lib/town/elevation.ts').groundLift,g=G(H.x,vz);
+ const s=rt.surface(H.x,vz,Infinity);assert(s-g>3&&s-g<3.6,`stands on the verandah roof (${(s-g).toFixed(2)} m over its ground at ${g.toFixed(2)})`);
  assert(rt.findLanding(H.x,vz)&&Math.abs(rt.surface(rt.findLanding(H.x,vz).x,rt.findLanding(H.x,vz).z,Infinity)-s)<.4,'the landing search keeps the roof');
  // Walk along it (east), it stays up; then off its front edge (south): a drop to the ground, no stun from 3 m.
- const along=landAndWalk(H.x-5,vz,1,0,1.5);assert(!along.fell&&along.end>3,`walks along the roof (${along.end.toFixed(2)} m)`);
+ const along=landAndWalk(H.x-5,vz,1,0,1.5);assert(!along.fell&&along.end-g>3,`walks along the roof (${along.end.toFixed(2)} m)`);
  assert(Math.max(...along.heights)-Math.min(...along.heights)<.4,'level enough to walk (the slope is a few cm a strip)');
- const off=landAndWalk(H.x,vz,0,1,4);assert(off.fell&&off.end<.5&&off.p.z>vz+H.verandah.d/2,`walked off its edge: down to the ground (${off.end.toFixed(2)} m at z ${off.p.z.toFixed(1)})`);
+ const off=landAndWalk(H.x,vz,0,1,4);assert(off.fell&&off.end-G(off.p.x,off.p.z)<.5&&off.p.z>vz+H.verandah.d/2,`walked off its edge: down to the ground (${off.end.toFixed(2)} m at z ${off.p.z.toFixed(1)})`);
  // The porch below: the ground's view (NPCs, balls) and a player walking or riding under it stay at the porch's height.
- assert(rt.surface(H.x,vz)<.4&&rt.canLand(H.x+2,vz),'the NPCs\' view of the porch: ground, walkable');
+ assert(rt.surface(H.x,vz)-g<.4&&rt.canLand(H.x+2,vz),'the NPCs\' view of the porch: ground, walkable');
  for(const mode of ['walk','bike']){const r=travel(),p={x:H.x-H.w/2+1,z:vz},v={x:0,z:0};r.reset(p.x,p.z);let hi=0;
-  for(let i=0;i<240;i++){r.update(1/60,p,v,{x:1,z:0,sprint:false},mode);hi=Math.max(hi,r.state.height);}
+  for(let i=0;i<240;i++){r.update(1/60,p,v,{x:1,z:0,sprint:false},mode);hi=Math.max(hi,r.state.height-G(p.x,p.z));}/* over the ground under the rider: the bike rides on east, up the bank */
   assert(hi<.5&&p.x>H.x,`${mode} under the verandah roof stays on the porch (highest ${hi.toFixed(2)} m, reached x ${p.x.toFixed(1)})`);}
  // The zipline's stair and cable: the stair still lands on the verandah path, and the cable's rider clears every canopy.
- const bottom=Z.ZIP_STAIR.bottom;assert(rt.surface(bottom.x,bottom.z)<.4,'the zipline stair ends on the ground');
+ const bottom=Z.ZIP_STAIR.bottom;assert(rt.surface(bottom.x,bottom.z)-G(bottom.x,bottom.z)<.4,'the zipline stair ends on the ground');
  for(const c of Z.cableSamples(400))for(const k of world.canopies)if(Math.abs(c.x-k.x)<k.w/2+.4&&Math.abs(c.z-k.z)<k.d/2+.4&&c.t<.985)assert(c.feet>k.height+.3,`the zipline rider clears the canopy at ${k.x.toFixed(1)},${k.z.toFixed(1)}`);
 });
 

@@ -14,7 +14,7 @@
 import {TRACK} from './trainTrack';
 import {INTERIOR_GRASS} from './shoreline';
 
-export const DEPTH_DEFAULT=false;
+export const DEPTH_DEFAULT=true;// shipped ON (owner approval, Nov 26 2026); `?depth=0` switches it off
 const query=(()=>{try{return typeof window!=='undefined'&&window.location&&typeof window.location.search==='string'?window.location.search:null;}catch{return null;}})();
 let enabled=query===null?DEPTH_DEFAULT:/[?&]depth=1(&|$)/.test(query)||(DEPTH_DEFAULT&&!/[?&]depth=0(&|$)/.test(query));
 /** Tests call this (before the streets are registered); the browser reads the URL once. */

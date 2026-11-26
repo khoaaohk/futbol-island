@@ -38,6 +38,7 @@ async function buildWorld(){
 
 (async()=>{
 const {T,load,world}=await buildWorld();
+const GL=load('lib/town/elevation.ts').groundLift;
 const Z=load('lib/town/zipline.ts'),ZW=load('lib/town/ziplineWorld.ts'),S=load('lib/town/summitIsle.ts'),CC=load('lib/town/coralCay.ts'),V=load('lib/town/venues.ts'),SIM=load('lib/town/simulation.ts');
 const {createRooftopTravel}=load('lib/town/rooftopTravel.ts');
 const samples=Z.cableSamples(600);
@@ -125,7 +126,7 @@ await ok('walking: up the tower step to the launch, down from the roof deck by t
   assert(Math.abs(rt.state.height-Z.ZIP_DECK.height)<.01,'the landing spot is the deck\'s height (walkable: never under the roof)');
   assert(rt.canLand(L.x,L.z)&&rt.canLand(Z.ZIP_DECK.x,Z.ZIP_DECK.z+1.2)&&rt.canLand(CC.HOSTEL.x-4,CC.HOSTEL.z+3),'the deck and the roof are landable (jetpack, parachute)');
   const r=walk(rt,p,[{x:St.landing.x,z:St.landing.z},{x:St.treads[0].x,z:St.treads[0].z},{x:St.bottom.x,z:St.bottom.z},{x:St.bottom.x+1,z:St.bottom.z+2}]);
-  assert(!r.fell,'down the stair without a fall');assert(rt.state.height<.05&&p.z>St.bottom.z,`down on the ground by the verandah (height ${rt.state.height.toFixed(2)}, z ${p.z.toFixed(1)})`);
+  assert(!r.fell,'down the stair without a fall');/* Nov 26 2026 (elevation ships ON): "the ground" by the hostel is its terrace (elevation.ts groundLift; 0 with ?elev=0) */assert(rt.state.height-GL(p.x,p.z)<.05&&rt.state.height-GL(p.x,p.z)>-.05&&p.z>St.bottom.z,`down on the ground by the verandah (height ${rt.state.height.toFixed(2)}, ground ${GL(p.x,p.z).toFixed(2)}, z ${p.z.toFixed(1)})`);
   // And back up again from the path.
   const back=walk(rt,p,[{x:St.bottom.x,z:St.bottom.z},{x:St.treads[0].x,z:St.treads[0].z},{x:St.landing.x,z:St.landing.z},{x:Z.ZIP_DECK.x,z:Z.ZIP_DECK.z+1}]);
   assert(!back.fell&&Math.abs(rt.state.height-Z.ZIP_DECK.height)<.01,'and back up to the deck');}
@@ -146,7 +147,7 @@ await ok('riding and walking down and up the hostel stair: no stall, no fall, at
    acc+=1/fps;while(acc>=1/60-1e-9){acc-=1/60;rt.update(1/60,p,v,stick,mode);ticks++;if(rt.state.falling||rt.state.recovery>0)fell=true;if(ticks>30&&Math.hypot(v.x,v.z)<.5)slow++;else slow=0;worst=Math.max(worst,slow/60);}}
   return {done:k>=route.length,secs:ticks/60,worst,fell,h:rt.state.height};};
  for(const mode of ['bike','scooter','moped','walk'])for(const fps of [20,30,60]){
-  const d=drive(mode,down,fps);assert(d.done&&!d.fell&&d.h<.05,`${mode} @${fps} fps: down the stair to the path (${d.done?d.secs.toFixed(1)+' s':'stuck'}, height ${d.h.toFixed(2)})`);
+  const d=drive(mode,down,fps),g=GL(down[down.length-1].x,down[down.length-1].z);assert(d.done&&!d.fell&&Math.abs(d.h-g)<.05,`${mode} @${fps} fps: down the stair to the path (${d.done?d.secs.toFixed(1)+' s':'stuck'}, height ${d.h.toFixed(2)})`);
   assert(d.worst<=.25,`${mode} @${fps} fps: never stalls going down (${d.worst.toFixed(2)} s)`);
   const u=drive(mode,[...down].reverse(),fps);assert(u.done&&!u.fell&&Math.abs(u.h-Z.ZIP_DECK.height)<.01,`${mode} @${fps} fps: up the stair to the deck (${u.done?u.secs.toFixed(1)+' s':'stuck'}, height ${u.h.toFixed(2)})`);
   assert(u.worst<=.25,`${mode} @${fps} fps: never stalls going up (${u.worst.toFixed(2)} s)`);}

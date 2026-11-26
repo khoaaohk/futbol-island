@@ -30,6 +30,8 @@ const C=load(path.join(root,'lib/town/vendingCatalog.ts'));
 const {STORE_ITEMS}=load(path.join(root,'lib/town/store.ts'));
 const {VENUES,STORE_DOOR,ARCADE_DOOR,COACHES_DOOR,parkingSurfaceHeight}=load(path.join(root,'lib/town/venues.ts'));
 const {onIsland}=load(path.join(root,'lib/town/shoreline.ts'));
+// Nov 26 2026 (elevation ships ON): a ground-level machine stands on the raised ground under it (vendingCatalog.ts onGround; elevation.ts groundLift is 0 with ?elev=0 and everywhere on the flat).
+const GL=load(path.join(root,'lib/town/elevation.ts')).groundLift;
 const {isOnCayLand}=load(path.join(root,'lib/town/coralCay.ts'));
 const {standsOnCay,cayVendingSpots,summitSnackSpot,standsOnSummit}=load(path.join(root,'lib/town/vendingPlaces.ts'));
 const {PLAYER_BOOKS}=load(path.join(root,'lib/books/catalog.ts'));
@@ -102,9 +104,9 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   // Nov 13 2026: the DRIP FC Stadium's machine, against the south stand's back wall under the big screen (tests/gashapon-data.cjs
   // checks the whole row: flush, 12 cm gaps, clear of the posts, stairs, lights and viewers).
   if(m.id==='stadium'){const SS=load(path.join(root,'lib/town/stadiumShops.ts'));same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(SS.stadiumVendingSpot()),'stadium placed from its wall anchor');
-   assert.equal(m.y,0);assert(Math.abs(m.z-.559-(SS.STADIUM_SHOP_WALL_Z+.03))<.011,'flush to the wall');assert(onIsland(m.x,m.z),'on the island');
+   assert.equal(m.y,GL(m.x,m.z),'on the stadium terrace');assert.equal(m.y,load(path.join(root,'lib/town/westElevation.ts')).STADIUM_BASE,'level with the bowl');assert(Math.abs(m.z-.559-(SS.STADIUM_SHOP_WALL_Z+.03))<.011,'flush to the wall');assert(onIsland(m.x,m.z),'on the island');
    same(C.machineStock('stadium')[1].items.map(i=>i.id),C.machineStock('caykonbini')[1].items.map(i=>i.id),'the Coral Cay Konbini\'s four books (its glass twin)');continue;}
-  if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,0);
+  if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,GL(m.x,m.z),m.id+' on the cay\'s ground, not floating or sunk');
    const s=cayVendingSpots[m.id==='cayplaza'?'cafe':m.id==='caykonbini'?'konbini':m.id]();same([m.x,m.z,m.yaw],[s.x,s.z,s.yaw],m.id+' placed from the Coral Cay anchors');
    assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
   if(SUMMIT_MACHINES.includes(m.id)){assert(onSummitIsle(m.x,m.z)&&(standsOnSummit(m)||load('lib/town/vendingPlaces.ts').standsAtSummitFence(m)),m.id+' stands on flat, walkable ground outside the Summit 5s fence (Nov 10 2026: or in the line against its east fence)');

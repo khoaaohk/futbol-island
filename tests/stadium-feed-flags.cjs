@@ -139,7 +139,12 @@ const PF=load('lib/town/plazaFlags.ts');
  fl.bump(p3.x+3,p3.z);assert.equal(fl.bump(p3.x-.4,p3.z),3,'again after stepping away');
  // A ball hit sways pole and cloth together through propReactions, then restores exactly.
  const R=load('lib/graphics/propReactions.ts'),pr=R.createPropReactions(fl.propSpecs),pos=m.geometry.getAttribute('position'),before=Float32Array.from(pos.array);
- assert.equal(pr.hit(p3.x,1.2,p3.z,12,0),'spring');pr.update(.12);
+ // Nov 26 2026 (elevation ships ON): the pole stands on the plaza's grade, so the ball meets it 1.2 m over ITS ground, and a ball at that height
+ // over sea level (under the pole's foot on the raised plaza) no longer counts (plazaFlags.ts: the prop bounds follow the pole).
+ const g3=load('lib/town/elevation.ts').groundLift(p3.x,p3.z);assert.equal(fl.propSpecs[3].min.y,g3,'the flag\'s bounds start at its own ground');assert.equal(fl.propSpecs[3].pivot.y,g3,'and it sways about its own foot');
+ assert.deepEqual([...fl.uniforms.uFoot.value.slice(9,12)],[p3.x,g3,p3.z].map(Math.fround),'the shader\'s shake foot is the same point');
+ if(g3>1.6)assert.equal(pr.hit(p3.x,1.2,p3.z,12,0),null,'under the raised pole\'s foot: no hit');
+ assert.equal(pr.hit(p3.x,g3+1.2,p3.z,12,0),'spring');pr.update(.12);
  const moved=k=>{let n=0;for(let v=k*fl.perFlag;v<(k+1)*fl.perFlag;v++)if(Math.abs(pos.array[v*3]-before[v*3])>1e-4)n++;return n;};
  assert(moved(3)>fl.perFlag*.5&&moved(2)===0&&moved(4)===0,'only that flag sways, pole and cloth together');
  for(let i=0;i<30;i++)pr.update(.05);assert.deepEqual(Array.from(pos.array),Array.from(before),'exact restore');
