@@ -139,7 +139,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   </Section>
   {futsal&&<Section id="futsal-vs-soccer" title={F.title}>
    <DataTable label={F.title} head={F.head} rows={F.rows}/>
-   <p className={styles.caption}>{F.note}</p>
+   <p className={styles.caption}>{F.note} <a href={toEs('/learn/futsal-vs-soccer')}>Todas las diferencias, con la pista a escala</a>.</p>
   </Section>}
   <QA id="faq" title={`Preguntas sobre: ${r.name.toLowerCase()}`} faq={r.faq} more={cards?CARD_RULES_ES.side.items:undefined}>
    {cards&&<CardRulesSources c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
@@ -228,6 +228,7 @@ export function PositionsHubEsPage(){
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:all.map(p=>({name:p.name,path:p.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
   <EsIntro top rail={<RailNav rail={hubRail('Posiciones en esta página',[{title:'Cada posición',items:all.map(p=>anchor('position',p.esPath,p.name))}],true)} current="#top"/>} crumbs={crumbs} h1={H.h1} lead={H.lead} cta/>
+  <p>Las letras de cada posición (DFC, MCD, MCO, DC…), en un campo que puedes tocar: <a href={toEs('/learn/soccer-positions/abbreviations')}>abreviaturas de las posiciones</a>.</p>
   <Section id="pitch" title="Las once posiciones en una cancha">
    <EsDiagram id="all" format="11v11" lines={full.lines} what="las once posiciones del fútbol en una formación 4-3-3" image={formationImage(full.slug)}/>
    <ul>{H.lines.map(l=><li key={l.name}><b>{l.name}.</b> {l.text}</li>)}</ul>

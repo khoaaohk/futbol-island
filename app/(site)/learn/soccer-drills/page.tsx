@@ -45,7 +45,8 @@ export default function DrillsHub(){
    <p className={styles.caption}>{DRILL_SAFETY_LINE}</p>
   </Section>
   <Section id="guides" title="Guides by skill and practice plans">
-   <LinkList links={[...SKILL_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/>
+   <LinkList links={[...SKILL_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb},
+    /* Nov 26 2026 (SEO lift): the two new drill guides (lib/site/gapPages.ts) */{path:'/learn/soccer-drills/solo-soccer-drills',name:'Soccer drills to do by yourself',line:'9 solo drills with a ball and a wall, by age'},{path:'/learn/soccer-drills/teaching-kids-possession',name:'Teaching kids possession',line:'A coach’s guide: 3 keep-away games and what to say'}]}/>
   </Section>
   <QA id="faq" title="Questions about soccer drills" faq={HUB.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'What each player does'},{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time for every player on game day'},{path:'/tools/soccer-practice-plan-generator',name:'Soccer practice plan generator',line:'A timed practice built from these drills'},{path:'/tools/soccer-beep-test',name:'Soccer beep test for kids',line:'A 20 m shuttle run with gentler kids’ levels'},{path:'/tools/soccer-tournament-schedule-maker',name:'Soccer tournament schedule maker',line:'Round robin fixtures for a festival of short games'},

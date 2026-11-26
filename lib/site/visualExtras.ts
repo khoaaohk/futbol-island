@@ -75,7 +75,7 @@ const g=(icon:TopicGroup['icon'],title:string,slugs:readonly [string,string][])=
 export const TERM_TOPICS:readonly TopicGroup[]=[
  g('whistle','Referee and rules words',[['yellow-card','Yellow card'],['red-card','Red card'],['offside-trap','Offside trap'],['stoppage-time','Stoppage time'],['extra-time','Extra time'],['penalty-shoot-out','Penalty shoot-out'],['set-piece','Set piece']]),
  g('goal','Scoring and results',[['hat-trick','Hat-trick'],['brace','Brace'],['assist','Assist'],['clean-sheet','Clean sheet'],['own-goal','Own goal'],['tap-in','Tap-in']]),
- g('ball','Moves with the ball',[['dribble','Dribble'],['nutmeg','Nutmeg'],['step-over','Step-over'],['chip','Chip'],['volley','Volley'],['first-touch','First touch'],['shielding','Shielding']]),
+ g('ball','Moves with the ball',[['types-of-dribbling','Types of dribbling'],['dribble','Dribble'],['nutmeg','Nutmeg'],['step-over','Step-over'],['chip','Chip'],['volley','Volley'],['first-touch','First touch'],['shielding','Shielding']]),
  g('arrow','Passing and attacking',[['give-and-go','Give-and-go'],['through-ball','Through ball'],['overlap','Overlap'],['cutback','Cutback'],['cross','Cross'],['switching-play','Switch of play'],['two-v-one','2v1']]),
  g('shield','Defending',[['marking','Marking'],['goal-side','Goal-side'],['tackle','Tackle'],['jockeying','Jockeying'],['pressing','Pressing'],['clearance','Clearance'],['low-block','Low block']]),
  g('pennant','Areas and roles',[['penalty-area','Penalty area'],['goal-area','Goal area'],['far-post','Far post'],['false-nine','False 9'],['box-to-box','Box-to-box'],['sweeper-keeper','Sweeper keeper'],['pivot','Pivot']]),

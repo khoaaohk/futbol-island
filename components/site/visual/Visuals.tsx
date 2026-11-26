@@ -155,3 +155,25 @@ export type PickCard={path:string;name:string;line:string;meta:readonly string[]
  *  why it suits this age, and time / players. Same links as the old list, in the same order. */
 export const PickCards=({items}:{items:readonly PickCard[]})=><ol className={v.drills} data-visual="drill-picks">{items.map(p=><li key={p.path} className={v.drill}>
  {p.art}<div className={site.section}><h3 className={site.h3}><a href={p.path}>{p.name}</a></h3><ul className={v.meta}>{p.meta.map(m=><li key={m}>{m}</li>)}</ul><p className={v.tipLine}>{p.line}</p></div></li>)}</ol>;
+
+/* ---------- a futsal court inside a soccer field, to scale ---------- */
+/** 105 x 68 m field with a 40 x 20 m court drawn at the same scale (1 m = 3 px), each with its goals. */
+export function CourtInField({caption,lang='en'}:{caption:string;lang?:Lang}){
+ const k=3,M=8,FW=105*k,FH=68*k,line={fill:'none',stroke:PAPER,strokeWidth:2,strokeOpacity:.85} as const;
+ const cx=M+FW/2,cy=M+FH/2,cw=40*k,ch=20*k;
+ const t=lang==='es'?['Campo de fútbol, 105 x 68 m','Pista de futsal, 40 x 20 m']:['Soccer field, 105 x 68 m','Futsal court, 40 x 20 m'];
+ return <figure className={v.fig} data-visual="court-in-field">
+  <div className={v.board}><svg viewBox={`0 0 ${FW+2*M} ${FH+2*M}`} role="img" aria-label={`${t[0]}. ${t[1]}`}><title>{`${t[0]}. ${t[1]}`}</title>
+   <rect x={0} y={0} width={FW+2*M} height={FH+2*M} rx={12} fill={GRASS}/>
+   <rect {...line} x={M} y={M} width={FW} height={FH}/><line {...line} x1={cx} x2={cx} y1={M} y2={M+FH}/><circle {...line} cx={cx} cy={cy} r={9.15*k}/>
+   <rect {...line} x={M} y={cy-20.16*k} width={16.5*k} height={40.32*k}/><rect {...line} x={M+FW-16.5*k} y={cy-20.16*k} width={16.5*k} height={40.32*k}/>
+   <rect x={M-5} y={cy-3.66*k} width={5} height={7.32*k} fill={PAPER}/><rect x={M+FW} y={cy-3.66*k} width={5} height={7.32*k} fill={PAPER}/>
+   <rect x={cx-cw/2} y={cy-ch/2} width={cw} height={ch} rx={2} fill={GOLD} stroke={INK} strokeWidth={2}/>
+   <line x1={cx} x2={cx} y1={cy-ch/2} y2={cy+ch/2} stroke={INK} strokeWidth={1.5}/>
+   <rect x={cx-cw/2-3} y={cy-1.5*k} width={3} height={3*k} fill={INK}/><rect x={cx+cw/2} y={cy-1.5*k} width={3} height={3*k} fill={INK}/>
+   <text x={M+10} y={M+20} fontSize={13} fontWeight={700} fill={PAPER} fontFamily="system-ui,sans-serif">{t[0]}</text>
+   <text x={cx} y={cy+ch/2+18} textAnchor="middle" fontSize={13} fontWeight={700} fill={PAPER} fontFamily="system-ui,sans-serif">{t[1]}</text>
+  </svg></div>
+  <figcaption className={v.cap}>{caption}</figcaption>
+ </figure>;
+}

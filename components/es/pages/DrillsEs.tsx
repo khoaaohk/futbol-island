@@ -8,6 +8,7 @@ import rt from '@/components/site/railTarget.module.css';
 import {railId} from '@/lib/site/railId';
 import JsonLd from '@/components/seo/JsonLd';
 import GridDiagram from '@/lib/site/GridDiagram';
+import {toEs} from '@/lib/i18n/esPaths';
 import {PickCards} from '@/components/site/visual/Visuals';
 import {AGES,SKILLS,drillsBySkill} from '@/lib/site/drills';
 import {AGE_GUIDES,SKILL_GUIDES,guidesForDrill} from '@/lib/site/drillGuides';
@@ -57,6 +58,7 @@ export function DrillsHubEsPage(){
   <Section id="by-age" title="Ejercicios de fútbol por edad">
    <p>Cada página por edad es una guía corta: qué pueden hacer los jugadores, cómo agruparlos, los mejores ejercicios y qué evitar.</p>
    <LinkList ids="age" links={ages.map(guideLink)}/>
+   <p>Y además: <a href={toEs('/learn/soccer-drills/solo-soccer-drills')}>ejercicios de fútbol para hacer solo</a> y <a href={toEs('/learn/soccer-drills/teaching-kids-possession')}>cómo enseñar la posesión a los niños</a>.</p>
   </Section>
   <Section id="by-skill" title="Ejercicios de fútbol por habilidad">
    <p>Salta a una habilidad en esta página.</p>
