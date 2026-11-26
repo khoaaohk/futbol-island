@@ -35,7 +35,7 @@ function setups(w:DecalWorld){
  const trees=w.obstacles.filter(o=>o.w<=4&&o.d<=4);
  const main={bounds:bbox(ISLAND_SHORE),ground:(x:number,z:number):OpenKind|null=>!onIsland(x,z)?null:insidePoly(INTERIOR_GRASS,x,z)?'grass':'sand',ring:ISLAND_SHORE,inside:centroid(ISLAND_SHORE),y:(x:number,z:number,k:OpenKind)=>(k==='sand'?-.105:-.112)+groundLift(x,z)/* the west side (?elev=1) */,
   trees:trees.filter(t=>onIsland(t.x,t.z)&&insidePoly(INTERIOR_GRASS,t.x,t.z))};
- const cay={bounds:bbox(CAY_SHORE),ground:(x:number,z:number):OpenKind|null=>insidePoly(CAY_LAWN,x,z)?'grass':insidePoly(CAY_SHORE,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120?'sand':null,ring:CAY_SHORE,inside:CAY_CENTER,y:(x:number,z:number,k:OpenKind)=>main.y(x,z,k)+groundLift(x,z),/* elevation.ts: on the raised lawn under ?elev=1 */
+ const cay={bounds:bbox(CAY_SHORE),ground:(x:number,z:number):OpenKind|null=>insidePoly(CAY_LAWN,x,z)?'grass':insidePoly(CAY_SHORE,x,z)&&Math.hypot(x-CAY_CENTER.x,z-CAY_CENTER.z)<120?'sand':null,ring:CAY_SHORE,inside:CAY_CENTER,y:main.y,/* main.y already stands on the raised ground (elevation.ts groundLift covers every region): adding it again floated the cay's tufts, flowers and stones by their own lift after the west merge */
   trees:trees.filter(t=>insidePoly(CAY_LAWN,t.x,t.z))};
  const summit={bounds:SUMMIT_BOX,ground:(x:number,z:number):OpenKind|null=>{
    if(!(x>SUMMIT_BOX.minX&&x<SUMMIT_BOX.maxX&&z>SUMMIT_BOX.minZ&&z<SUMMIT_BOX.maxZ)||!onSummitIsle(x,z))return null;
