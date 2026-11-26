@@ -7,6 +7,7 @@
 // Night lights (Nov 13 2026, owner: "make the stadium look alive at night", stadiumLights.ts): the same patch paints, from the
 // fragment's world position, warm pools on the seats under the two roofs (one per roof lamp), the roof beams' hits along the
 // pitch edge and the uplights' scalloped washes up the stands' outer walls. A few ALU ops behind the same night branch.
+import {STADIUM_BASE} from './westElevation';
 import type * as T from 'three';
 import {STADIUM} from './westParkLayout';
 import {ROOF,STANDS,standBack} from './stadiumSeats';
@@ -34,9 +35,9 @@ const f=(n:number)=>n.toFixed(3);
 function nightLightsGlsl(){
  const L=STADIUM_NIGHT_LIGHTS,long=standBack(STANDS[0]),end=standBack(STANDS[2]),along=STANDS[2].to,[r,g,b]=L.warm;
  const period=(p:number)=>f(Math.PI*2/p);
- return `{vec2 rel=vStadiumW.xz-vec2(${f(STADIUM.x)},${f(STADIUM.z)});float dl=abs(rel.x),al=rel.y,de=abs(rel.y),ae=rel.x,yy=vStadiumW.y,lit=0.;
+ return `{vec2 rel=vStadiumW.xz-vec2(${f(STADIUM.x)},${f(STADIUM.z)});float dl=abs(rel.x),al=rel.y,de=abs(rel.y),ae=rel.x,yy=vStadiumW.y${STADIUM_BASE?'-'+f(STADIUM_BASE):''},lit=0.;
  float inLong=step(abs(al),${f(L.lampSpan+2)});
- lit+=inLong*smoothstep(${f(ROOF.front-2)},${f(ROOF.front)},dl)*(1.-smoothstep(${f(ROOF.back-1.5)},${f(ROOF.back)},dl))*step(yy,${f(ROOF.y-1)})
+ lit+=inLong*smoothstep(${f(ROOF.front-2)},${f(ROOF.front)},dl)*(1.-smoothstep(${f(ROOF.back-1.5)},${f(ROOF.back)},dl))*step(yy,${f(ROOF.y-STADIUM_BASE-1)})
   *(.35+.65*pow(.5+.5*cos(al*${period(L.lampEvery)}),2.))*mix(1.,.55,smoothstep(${f(ROOF.front)},${f(ROOF.back)},dl))*${f(L.roofGain)};
  float hit=(dl-${f(L.beamHit)})/3.;lit+=inLong*exp(-hit*hit)*step(yy,1.5)*pow(.5+.5*cos((al+${f(L.lampSpan)})*${period(L.lampEvery*2)}),3.)*${f(L.beamGain)};
  float washL=step(abs(al),${f(L.lampSpan)})*smoothstep(${f(long-.9)},${f(long-.2)},dl)*(1.-smoothstep(${f(long+.4)},${f(long+1.2)},dl));
@@ -53,7 +54,7 @@ export function patchStadiumNight<M extends T.Material>(material:M,gain:number,o
  material.onBeforeCompile=(shader,renderer)=>{previous.call(material,shader,renderer);
   shader.uniforms.uStadiumNight=STADIUM_NIGHT;
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying float vStadiumY;varying vec3 vStadiumW;')
-   .replace('#include <begin_vertex>','#include <begin_vertex>\nvStadiumY=transformed.y;vStadiumW=(modelMatrix*vec4(transformed,1.)).xyz;');
+   .replace('#include <begin_vertex>','#include <begin_vertex>\nvStadiumY=transformed.y'+(STADIUM_BASE?'-'+STADIUM_BASE.toFixed(3):'')+';vStadiumW=(modelMatrix*vec4(transformed,1.)).xyz;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vStadiumY;varying vec3 vStadiumW;uniform float uStadiumNight;')
    .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
 if(uStadiumNight>0.){vec3 sc=diffuseColor.rgb;float grass=step(vStadiumY,.2),white=step(.72,min(sc.r,min(sc.g,sc.b)))*grass;

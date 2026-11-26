@@ -11,6 +11,9 @@ import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
 import {elevBuild,buildLift,groundLift,anchored,unlifted,rigid,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
+import {STADIUM_BASE} from './westElevation';
+import {buildWestWalls} from './westTerrain';
+import {westLawnTriangles} from './fields';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
 import {buildStadium} from './stadiumWorld';
@@ -320,7 +323,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const carriageway=8,footprint=12;
     roads.push({x,z,w:vertical?footprint:length,d:vertical?length:footprint,carriageway,boulevard,vertical});
   }
-  function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
+  function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});return tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
   /** The Beach Kitchen square (lib/town/beachKitchenSquare.ts, Nov 13 2026): paving from both facades to the grass line, then a
    *  vertex-colour fade into the sand (no straight edge across the beach, no grass strip under the shop fronts). */
   function beachKitchenSquare(){
@@ -1466,7 +1469,11 @@ export function* buildTownSteps(scene: T.Scene) {
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
-  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[];const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign,goalNets:stadiumGoalNets}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>town.add(o),materials,prop});
+  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[],stadiumSurface0=walkSurfaces.length;const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign,goalNets:stadiumGoalNets}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>{if(STADIUM_BASE){o.position.y+=STADIUM_BASE;o.userData.ownHeight=true;if(!o.matrixAutoUpdate)o.updateMatrix();}town.add(o);},materials,prop});
+  // Elevation (?elev=1): the bowl stands on the west terrace (westElevation.ts STADIUM_BASE; `put` lifted its pieces): its walk
+  // surfaces, rails and landable roofs carry absolute heights, so they rise with it. Then the terrace's retaining wall and stairs.
+  if(STADIUM_BASE){for(let i=stadiumSurface0;i<walkSurfaces.length;i++)walkSurfaces[i].height+=STADIUM_BASE;for(const r of stadiumRails){r.floor+=STADIUM_BASE;r.top+=STADIUM_BASE;}for(const c of stadiumRoofCanopies)c.height+=STADIUM_BASE;}
+  const westWalls=unlifted(()=>buildWestWalls({put,obstacles}));
   // Stadium night lights (stadiumLights.ts): lamp posts round the plaza, apron and trails, uplights, bollards, gate lamps (1 draw)
   // and the roof beams / glows (1 additive draw, night only); the posts' pools join the night pools below as one batch.
   const stadiumLights=buildStadiumLights({obstacles,assets,add:o=>town.add(o),materials,roofFade:stadiumRoofs.fade});
@@ -1490,7 +1497,7 @@ export function* buildTownSteps(scene: T.Scene) {
   try{buildPaintEasel({box,cylinder,put,obstacles});}catch(error){console.error('Summit Isle painting easel failed to build',error);}
   // Gashapon capsule machines (lib/town/gashaponWorld.ts, Nov 8 2026): 12 island machines, solid pieces in the paint batches,
   // the globes in one shared glass material; footprints become obstacles.
-  try{buildGashaponProps({put,town,obstacles,materials});}catch(error){console.error('Gashapon machines failed to build',error);}
+  try{unlifted(()=>buildGashaponProps({put,town,obstacles,materials}));/* a machine's y is already on the raised ground (machines.ts onGround) */}catch(error){console.error('Gashapon machines failed to build',error);}
 
   // Canonical centre lines remove offsets and duplicated dash phases. Touching
   // collinear sections become one street before any road surface is generated.
@@ -1711,7 +1718,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Nov 13 2026: warm pools on the pavement in front of the two lit Konbinis and the stadium's machine row (instances in the existing
   // pool batches: the stadium's joins chunk 'stadium').
   lampSites.push({x:ISLAND_SQUARE_KONBINI.x-.3,z:ISLAND_SQUARE_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},{x:CAY_KONBINI.x-.3,z:CAY_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},
-   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+STADIUM_SHOP_POOL.dz,ground:.02,poolWidth:STADIUM_SHOP_POOL.width,poolDepth:STADIUM_SHOP_POOL.depth,chunk:'stadium'});
+   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+STADIUM_SHOP_POOL.dz,ground:.02+STADIUM_BASE,poolWidth:STADIUM_SHOP_POOL.width,poolDepth:STADIUM_SHOP_POOL.depth,chunk:'stadium'});
   const signStates=nightSigns.map(material=>({material,intensity:material.emissiveIntensity}));
 
   // Spatial/material batches preserve culling: a distant city's meshes never share
@@ -1722,7 +1729,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation: placement ends here. Drape the flat layers over each region's terrain; roofs stand on the raised ground (rooftop landing).
   // Props built as their own Group (a palm: pieces `put` into the group) stand at the group's spot: lifted here, once. A Group left at
   // the origin holds pieces at world coordinates: each is lifted at its own spot. `userData.ownHeight` opts a Group out.
-  if(elevBuild.active){elevBuild.stats=drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']);for(const b of buildings)b.height+=groundLift(b.x,b.z);
+  if(elevBuild.active){elevBuild.stats={...drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']),westWall:westWalls.triangles,westLawn:westLawnTriangles};for(const b of buildings)b.height+=groundLift(b.x,b.z);
    const stand=(o:T.Object3D)=>{const g=groundLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
    for(const o of town.children)if(o instanceof T.Group&&!o.userData.ownHeight&&!o.userData.train){if(o.position.x===0&&o.position.y===0&&o.position.z===0)o.children.forEach(stand);else stand(o);}}
   elevBuild.active=false;elevBuild.anchor=null;elevBuild.pieces.length=0;

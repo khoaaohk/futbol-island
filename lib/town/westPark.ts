@@ -9,6 +9,8 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
+import {elevationOn,groundLift} from './elevation';
+import {onWestStair,nearWestWall,onWestTerrace} from './westElevation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
@@ -55,6 +57,11 @@ export function buildWestPark(t:Tools):WestParkStats{
   *  50 m chunk (frustum-culled and behind the west region gate) instead of the island centre's. */
  const flat=(g:T.BufferGeometry,material:T.Material,y:number,name?:string)=>{g.computeBoundingBox();
   // every piece in the trail paving carries aVerge (zeros = no verge), so the batching pass can merge them with the ribbons
+  // Elevation (?elev=1): these meshes carry their own heights, so each vertex is laid on the raised ground at its spot (the trails
+  // 3 cm proud: a 2.25 m paving chord over the lawn's 2 m lattice).
+  if(elevationOn()){const p=g.getAttribute('position') as T.BufferAttribute,up=material===trailMat?.03:0;let any=false;for(let i=0;i<p.count;i++){const h=groundLift(p.getX(i),p.getZ(i));if(h>0){p.setY(i,p.getY(i)+h+(onWestStair(p.getX(i),p.getZ(i),.6)?-.6/* under the treads */:up));any=true;}}if(any){// the paving stops at a flight of stairs (its treads are the surface there): triangles reaching into one are dropped
+    const ix=g.index;if(ix&&material===trailMat){const keep:number[]=[],inStair=(i:number)=>onWestStair(p.getX(i),p.getZ(i),.6);let cut=false;for(let i=0;i<ix.count;i+=3){const a=ix.getX(i),b=ix.getX(i+1),c=ix.getX(i+2);if(inStair(a)||inStair(b)||inStair(c))cut=true;else keep.push(a,b,c);}if(cut)g.setIndex(keep);}
+    p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();}}
   if(material===trailMat&&!g.getAttribute('aVerge'))g.setAttribute('aVerge',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*3),3));const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
   const m=new T.Mesh(g,material);m.position.set(c.x,y,c.z);m.castShadow=false;m.receiveShadow=true;if(name)m.name=name;t.add(m);return m;};
  const paint=(g:T.BufferGeometry,c:T.Color)=>{const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
@@ -63,13 +70,14 @@ export function buildWestPark(t:Tools):WestParkStats{
   *  open ends (the joins: a cap sits inside the paving it meets), and a beach end fades into the sand (TRAIL_BEACH). */
  const ribbon=(pts:readonly P[],width:number,y:number,o:{beach?:boolean;verge?:boolean}={})=>{
   const closed=pts.length>2&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1],n=pts.length;
+  const mid=elevationOn();/* a centre line of vertices on raised ground (the paving follows a crowned bank) */
   const run=o.beach?trailBeachRun(pts):null,pos:number[]=[],col:number[]=[],verge:number[]=[],idx:number[]=[];
   pts.forEach(([x,z],i)=>{const [px,pz]=closed&&i===0?pts[n-2]:pts[Math.max(0,i-1)],[nx,nz]=closed&&i===n-1?pts[1]:pts[Math.min(n-1,i+1)],dx=nx-px,dz=nz-pz,l=Math.hypot(dx,dz)||1;
    const r=run?run[i]:0,k=run?smooth(-1.5,TRAIL_BEACH.blend,r):0,w=width*(1-TRAIL_BEACH.narrow*smooth(1,TRAIL_BEACH.blend+2,r)),ox=-dz/l*w/2,oz=dx/l*w/2,yy=run?TRAIL_BEACH.y*smooth(-1,3,r)+y*(1-smooth(-1,3,r))-y:0;
-   pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
+   if(mid)pos.push(x+ox,yy,z+oz,x,yy,z,x-ox,yy,z-oz);else pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
    // aVerge (groundTint.ts 'trail'): offset from the centre line, half width, and how much the edge breaks into the lawn (none on sand, at an open end, or on the stadium apron).
-   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);
-   if(i)idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);// counter-clockwise from above: faces up
+   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;if(mid)verge.push(w/2,w/2,vk,0,w/2,vk,-w/2,w/2,vk);else verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);if(mid)col.push(tmpC.r,tmpC.g,tmpC.b);
+   if(i){if(mid)for(const k of [0,1]){const a=(i-1)*3+k,b=i*3+k;idx.push(a,b,a+1,a+1,b,b+1);}else idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);}// counter-clockwise from above: faces up
    if(i){const [qx,qz]=pts[i-1];surfaceAreas.push({kind:k>.5?'sand':'path',x:(x+qx)/2,z:(z+qz)/2,w:Math.abs(x-qx)+w,d:Math.abs(z-qz)+w});}});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('aVerge',new T.Float32BufferAttribute(verge,3));g.setIndex(idx);g.computeVertexNormals();
   flat(g,trailMat,y);
@@ -84,7 +92,16 @@ export function buildWestPark(t:Tools):WestParkStats{
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));if(attr)g.setAttribute(attr,new T.Float32BufferAttribute(extra,1));
   g.setIndex(idx);g.computeVertexNormals();return g;};
  const disc=(x:number,z:number,rx:number,rz:number,y:number,color:string,kind:'path'|'grass')=>{
-  const g=new T.CircleGeometry(1,36);g.rotateX(-Math.PI/2);g.scale(rx,1,rz);surfaceAreas.push({kind,x,z,w:rx*2,d:rz*2});
+  let g:T.BufferGeometry=new T.CircleGeometry(1,36);g.rotateX(-Math.PI/2);g.scale(rx,1,rz);surfaceAreas.push({kind,x,z,w:rx*2,d:rz*2});
+  // Elevation (?elev=1): on raised ground the disc is cut in rings about 2.5 m apart so the drape (elevationDrape.ts) lays it on the
+  // banks, and it stops at the terrace's retaining wall (no triangle spans the wall's drop).
+  if(elevationOn()&&groundLift(x,z)+groundLift(x+rx,z)+groundLift(x-rx,z)+groundLift(x,z+rz)+groundLift(x,z-rz)>0){g.dispose();const rings=Math.max(2,Math.ceil(Math.max(rx,rz)/2.5)),seg=48,pos:number[]=[0,0,0],idx:number[]=[];
+   for(let j=1;j<=rings;j++)for(let k=0;k<seg;k++){const a=k/seg*Math.PI*2;pos.push(Math.cos(a)*rx*j/rings,0,Math.sin(a)*rz*j/rings);}
+   const on=(i:number)=>onWestTerrace(x+pos[i*3],z+pos[i*3+2]),tri=(a:number,b:number,c:number)=>{const s=+on(a)+ +on(b)+ +on(c);if(s===0||s===3)idx.push(a,b,c);};
+   for(let k=0;k<seg;k++)tri(0,1+(k+1)%seg,1+k);
+   for(let j=1;j<rings;j++)for(let k=0;k<seg;k++){const a=1+(j-1)*seg+k,b=1+(j-1)*seg+(k+1)%seg,c=a+seg,d=b+seg;tri(a,b,c);tri(b,d,c);}
+   g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+   g.setAttribute('uv',new T.Float32BufferAttribute(pos.flatMap((v,i)=>i%3===0?[v/rx/2+.5]:i%3===2?[v/rz/2+.5]:[]),2));}
   const m=tintGroundMesh(put(g,color,x,y,z),kind);m.castShadow=false;return m;
  };
 
@@ -93,7 +110,8 @@ export function buildWestPark(t:Tools):WestParkStats{
  // The paving runs on east under the x -45 street's west sidewalk (its outer edge x -51, 1.75 cm higher, the same cream and tint),
  // so no grass strip shows between them (Nov 13 2026, owner); STADIUM_PLAZA itself (flags, sponsors, analytics) is unchanged.
  // One even surface: the darker centre band (it stopped short of the street with a square end) is gone.
- {const east=PLAZA_PAVING_EAST;path((P_.minX+east)/2,pcz,east-P_.minX,P_.maxZ-P_.minZ);}
+ {const east=PLAZA_PAVING_EAST,sheet=path((P_.minX+east)/2,pcz,east-P_.minX,P_.maxZ-P_.minZ) as unknown as T.Mesh|undefined;
+  if(sheet?.userData)sheet.userData.drapeCell=4;/* (?elev=1) the plaza is level across and one steady grade along: 4 m cells follow it within 1.5 cm (500 triangles, not 5,000) */}
  for(const side of [-1,1])for(const x of PLAZA_FLAG_X){
   const z=pcz+side*(P_.maxZ-P_.minZ)/2+side*.8;
   // Nov 13 2026 (owner): national flags. The pole, finial and waving cloth are plazaFlags.ts's one mesh (world.ts builds it from
@@ -102,7 +120,10 @@ export function buildWestPark(t:Tools):WestParkStats{
  }
  for(const [x,z] of [[-118,-60],[-96,-60],[-74,-60],[-118,0],[-96,0],[-74,0]] as P[]){
   // Flower beds (sponsor-free): a low kerb and a row of blossoms.
-  prop('planter',()=>{box(12,.32,3,'#d2bc94',x,.16,z);box(11.4,.12,2.4,'#6b5640',x,.34,z);
+  // Elevation (?elev=1): on the hillside a 12 m bed would stand half a metre proud at one end, so it steps down the grade in four
+  // 3 m planters (each on the ground at its own spot, its kerb carried 0.3 m into the ground).
+  prop('planter',()=>{if(elevationOn()&&Math.abs(groundLift(x-6,z)-groundLift(x+6,z))>.1)for(let k=0;k<4;k++){const bx=x-4.5+k*3;box(3,.62,3,'#d2bc94',bx,.01,z);box(2.4,.12,2.4,'#6b5640',bx,.34,z);}
+   else{box(12,.32,3,'#d2bc94',x,.16,z);box(11.4,.12,2.4,'#6b5640',x,.34,z);}
    for(let k=0;k<9;k++)put(new T.IcosahedronGeometry(.42,0),['#e9a3a0','#f4d35e','#f6f1e7'][k%3],x-5+k*1.25,.62,z+(k%2?.45:-.45));});
   obstacles.push({x,z,w:12,d:3});stats.beds++;
  }
@@ -214,7 +235,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  const greens=['#4f7a57','#5e8c62','#6f9d6c','#739568'];
  // --- Fruit orchards (Nov 13 2026, owner; stadiumOrchard.ts): Summit Isle's orchard forms, baked into the chunks like any park tree
  // ('tree' prop: a kicked ball rustles them), each with its trunk collider; planted first so the park's own trees keep clear.
- for(const o of stadiumOrchardTrees()){if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
+ for(const o of stadiumOrchardTrees()){if(nearWestWall(o.x,o.z,1.2))continue;if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
   const plan=orchardPlanOf(o);placed.push([o.x,o.z]);stats.orchard.push(o);
   prop('tree',()=>{assets.push({kind:'tree',x:o.x,z:o.z,w:.4,d:.4,visualW:3.4*o.s,visualD:3.4*o.s,canopyHeight:4.2*o.s});
    for(const part of orchardParts(plan)){const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
@@ -233,6 +254,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   if(convert>0&&++plainSeen%8===0){convert--;placed.push([x,z]);continue;}// its spot stays open lawn
   placed.push([x,z]);stats.trees++;
   const conifer=rnd()<.22,colour=greens[Math.floor(rnd()*greens.length)];
+  if(nearWestWall(x,z,.9*s))continue;// (?elev=1) none standing in the terrace's retaining wall or its stairs (after the dice: the rest of the park is unchanged)
   prop('tree',()=>{
    assets.push({kind:'tree',x,z,w:.45*s,d:.45*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:4.4*s});
    put(new T.CylinderGeometry(.13*s,.2*s,2.4*s,6),'#9d805b',x,1.2*s,z);

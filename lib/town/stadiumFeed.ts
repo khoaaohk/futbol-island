@@ -16,6 +16,7 @@
 // flags, both screen faces (no recursion) and the score bug while it draws. Off, far away or idle: a distance compare per frame.
 // The first feed waits for renderer.compileAsync (the render-target variants of the stadium's programs compile in parallel, no
 // hitch); until then the card shows.
+import {STADIUM_BASE} from './westElevation';
 import * as T from 'three';
 import {STADIUM} from './westParkLayout';
 import {SCREEN} from './stadiumSeats';
@@ -63,8 +64,8 @@ export const feedDue=(mode:FeedMode,inView:boolean,nowMs:number,lastMs:number,in
  *  which stays behind it), tracking along the touchline at 80 % of the ball's run; it looks at the ball. Writes into `pos` / `look`. */
 export function broadcastShot(bx:number,bz:number,pos:{x:number;y:number;z:number},look:{x:number;y:number;z:number}){
  const dz=Math.max(-50,Math.min(50,bz-STADIUM.z));
- pos.x=STADIUM.x+BROADCAST.camX;pos.y=BROADCAST.camY;pos.z=STADIUM.z+dz*BROADCAST.track;
- look.x=Math.max(STADIUM.x-30,Math.min(STADIUM.x+30,bx));look.y=0;look.z=STADIUM.z+dz;
+ pos.x=STADIUM.x+BROADCAST.camX;pos.y=STADIUM_BASE+BROADCAST.camY;pos.z=STADIUM.z+dz*BROADCAST.track;
+ look.x=Math.max(STADIUM.x-30,Math.min(STADIUM.x+30,bx));look.y=STADIUM_BASE;look.z=STADIUM.z+dz;
 }
 /** The fov (degrees) that frames BROADCAST.frameH m at distance d. */
 export const broadcastFov=(d:number)=>Math.max(BROADCAST.minFov,Math.min(BROADCAST.maxFov,2*Math.atan(BROADCAST.frameH/2/Math.max(1,d))*180/Math.PI));

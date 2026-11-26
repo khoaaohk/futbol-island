@@ -11,16 +11,21 @@
 // are a grid computed on demand (no per-seat objects): nearestSeat() snaps to one, facing the pitch.
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X} from './westParkLayout';
 import type {SponsorLayout,SponsorQuad} from '../stadium/sponsors/layout';
+import {STADIUM_BASE} from './westElevation';
+/** Elevation (?elev=1): the bowl stands on the west terrace. EVERY height this file gives (rowHeight, CONCOURSE_HEIGHT, ROOF.y,
+ *  SCREEN.y, the stands' surfaces and rails, a seat's y) is a WORLD height: the stadium's own ground is B, 0 with elevation off.
+ *  stadiumWorld.ts builds in the stadium's own frame (world.ts `put` stands each piece on the terrace): it takes B off again. */
+const B=STADIUM_BASE;
 
 export const ROWS=10,ROW_DEPTH=1.3,RISE=.5,TREAD_RISE=.25,TREAD=.35,CONCOURSE=4,STAIR_WIDTH=3,AISLE_WIDTH=2.2,SEAT_PITCH=.6;
 /** Seat centre from the row's front edge (m), and the sitter's root (BENCH.rootZ = .05 in front of the seat centre). */
 export const SEAT_DEPTH=.95,SEAT_ROOT=.9;
 /** Seat top above its row (npcSeatPose BENCH.seatTop: the seated pose's bottom rests here). */
 export const SEAT_TOP=.64;
-export const rowHeight=(i:number)=>RISE*(i+1);
+export const rowHeight=(i:number)=>B+RISE*(i+1);
 export const CONCOURSE_HEIGHT=rowHeight(ROWS-1)+TREAD_RISE;
 /** Back-stair treads from the concourse to the ground (the last one TREAD_RISE above the grass). */
-export const STAIR_TREADS=Math.round(CONCOURSE_HEIGHT/TREAD_RISE)-1;
+export const STAIR_TREADS=Math.round((CONCOURSE_HEIGHT-B)/TREAD_RISE)-1;
 export const RAIL_TOP=1.1;
 
 export type StandId='west'|'east'|'north'|'south';
@@ -65,7 +70,8 @@ export function standSpans(s:StandDef){
 
 export type StandGeometry={surfaces:Surface[];rails:Rail[];stand:StandDef};
 /** Every walk surface and rail of a stand (world coordinates). */
-export function standGeometry(s:StandDef):StandGeometry{
+/** `base`: the ground the stand is on (world: the terrace; stadiumWorld.ts passes 0 for its own frame). */
+export function standGeometry(s:StandDef,base=B):StandGeometry{const rowHeight=(i:number)=>base+RISE*(i+1),CONCOURSE_HEIGHT=rowHeight(ROWS-1)+TREAD_RISE;
  const surfaces:Surface[]=[],rails:Rail[]=[],{seats,aisles,pieces}=standSpans(s),back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
  for(let i=0;i<ROWS;i++){const d0=s.inner+i*ROW_DEPTH,h=rowHeight(i);
   for(const [a0,a1] of seats)surfaces.push({...standRect(s,d0,d0+ROW_DEPTH,a0,a1),height:h,stepUp:ROW_STEP_UP,noRide:true});// noRide: rides keep to the aisles and the concourse (QA Nov 14 2026)
@@ -80,9 +86,9 @@ export function standGeometry(s:StandDef):StandGeometry{
   for(const [a,b] of openings){if(a>at)rails.push({...standRect(s,back-R,back,at,a),floor:CONCOURSE_HEIGHT-.8,top});at=b;}
   if(p1>at)rails.push({...standRect(s,back-R,back,at,p1),floor:CONCOURSE_HEIGHT-.8,top});
   // The stand's ends (row 0 is only RISE up: stepping off it there is fine).
-  for(const a of [p0,p1])rails.push({...standRect(s,s.inner,back,a-(a===p0?0:R),a+(a===p0?R:0)),floor:.8,top});
+  for(const a of [p0,p1])rails.push({...standRect(s,s.inner,back,a-(a===p0?0:R),a+(a===p0?R:0)),floor:base+.8,top});
  }
- for(const c of s.stairs)for(const side of [-1,1]){const a=c+side*STAIR_WIDTH/2;rails.push({...standRect(s,back,stairEnd(s),a-(side<0?R:0),a+(side>0?R:0)),floor:.8,top});}
+ for(const c of s.stairs)for(const side of [-1,1]){const a=c+side*STAIR_WIDTH/2;rails.push({...standRect(s,back,stairEnd(s),a-(side<0?R:0),a+(side>0?R:0)),floor:base+.8,top});}
  return {surfaces,rails,stand:s};
 }
 export const stadiumGeometry=()=>STANDS.map(standGeometry);
@@ -175,13 +181,13 @@ export function stepSit(m:SitMachine,dt:number,o:{push:number;walk:boolean;away:
 /** Through the gate: inside the east stand's gap, past the gate arch, before the pitch-level ring. */
 export const GATE_ARCH_X=STADIUM.x+standBack(STANDS[1])+3.5;
 export const inGate=(x:number,z:number)=>Math.abs(z-STADIUM_GATE.z)<GATE&&x<GATE_ARCH_X-.5&&x>STADIUM.x+STANDS[1].inner;
-export const SCREEN={z:standBack(STANDS[3])+1.2,y:12.6,w:16,h:9} as const;
+export const SCREEN={z:standBack(STANDS[3])+1.2,y:B+12.6,w:16,h:9} as const;
 /** The long stands' roofs. front 44.5 (Nov 12 2026, was 37, over the boards): the roof covers rows 4–9 and the concourse, so the
  *  follow camera (above and south-east of the player) sees the whole pitch past the east roof's front edge. */
 /** Nov 13 2026 (owner: the adidas banner read too thin): the back fascia frame is 3.3 m tall (was 1.7), grown mostly UP (frameAbove
  *  2.2, was .75; frameBelow 1.1, was .95) so the banner (FASCIA.h, 3.125 m, was 1.6) reads from the plaza, the stands and overhead.
  *  It is behind every seat (the seats face the pitch), so no sightline changes; the front frame (FRONT_FRAME) is untouched. */
-export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:12.4,thick:.45,frameBelow:1.1,frameAbove:2.2} as const;
+export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:B+12.4,thick:.45,frameBelow:1.1,frameAbove:2.2} as const;
 /** The front frame along the roof's pitch-side edge (below / above ROOF.y): the only roof edge in a seated fan's view of the pitch. */
 export const FRONT_FRAME={below:.5,above:.3} as const;
 /** The fascia banner on the back frame: h × 100 m, centred `y` (ROOF.y + .55 = 12.95 m), 0.0875 m inside the frame's top and bottom edges. At the

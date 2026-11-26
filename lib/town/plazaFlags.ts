@@ -7,6 +7,7 @@
 // Interaction: each pole + cloth is a 'flag' PropSpec over this mesh's own position buffer (lib/graphics/propReactions.ts), so a
 // ball hit or the player walking into a pole sways the whole flag about its foot (pole and cloth together), and react() makes that
 // flag's cloth flutter harder for ~1.6 s. Shadows: none of its own (the cloth's wave would need a matching depth material).
+import {groundLift} from './elevation';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {PropSpec} from '../graphics/propReactions';
@@ -113,14 +114,14 @@ export function plazaFlagGeometry(poles:readonly {x:number;z:number}[],order:rea
  const {w:TW,h:TH}=FLAG_CANVAS,parts:T.BufferGeometry[]=[];
  const solid=(g:T.BufferGeometry,s:{x:number;y:number},k:number)=>{const uv=g.getAttribute('uv') as T.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setXY(i,s.x/TW,1-s.y/TH);
   g.setAttribute('aWave',new T.Float32BufferAttribute(new Array(uv.count).fill(-1),1));g.setAttribute('aFlag',new T.Float32BufferAttribute(new Array(uv.count).fill(k),1));return g;};
- poles.forEach((p,k)=>{
-  const pole=new T.CylinderGeometry(FLAG.poleR,FLAG.poleR,FLAG.poleH,8,1);pole.translate(p.x,FLAG.poleH/2,p.z);parts.push(solid(pole,SOLID.pole,k));
-  const cap=new T.CylinderGeometry(FLAG.capR,FLAG.capR,FLAG.cap,8,1);cap.translate(p.x,FLAG.poleH+FLAG.cap/2-.0,p.z);parts.push(solid(cap,SOLID.cap,k));
+ poles.forEach((p,k)=>{const lift=groundLift(p.x,p.z);/* the plaza's verge climbs to the terrace (?elev=1) */
+  const pole=new T.CylinderGeometry(FLAG.poleR,FLAG.poleR,FLAG.poleH,8,1);pole.translate(p.x,lift+FLAG.poleH/2,p.z);parts.push(solid(pole,SOLID.pole,k));
+  const cap=new T.CylinderGeometry(FLAG.capR,FLAG.capR,FLAG.cap,8,1);cap.translate(p.x,lift+FLAG.poleH+FLAG.cap/2-.0,p.z);parts.push(solid(cap,SOLID.cap,k));
   const cloth=new T.PlaneGeometry(FLAG.w,FLAG.h,FLAG.segW,FLAG.segH),cell=flagCell(order[k]),uv=cloth.getAttribute('uv') as T.BufferAttribute,pos=cloth.getAttribute('position') as T.BufferAttribute;
   const wave=new Float32Array(uv.count);
   for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i);wave[i]=(pos.getX(i)+FLAG.w/2)/FLAG.w;
    uv.setXY(i,(cell.x+2+u*(cell.w-4))/TW,1-(cell.y+2+(1-v)*(cell.h-4))/TH);}
-  cloth.translate(p.x+FLAG.poleR*.75+FLAG.w/2,FLAG.y,p.z);
+  cloth.translate(p.x+FLAG.poleR*.75+FLAG.w/2,lift+FLAG.y,p.z);
   cloth.setAttribute('aWave',new T.BufferAttribute(wave,1));cloth.setAttribute('aFlag',new T.Float32BufferAttribute(new Array(uv.count).fill(k),1));parts.push(cloth);
  });
  const perFlag=parts.slice(0,3).reduce((n,g)=>n+g.getAttribute('position').count,0);

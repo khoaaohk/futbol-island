@@ -7,6 +7,7 @@
 //    counted when the player walks in through the gate.
 // Heat: idle = one distance test per frame off the stadium; on it, nearestSeat() (a few dozen comparisons) per frame. No rAF,
 // no timers, nothing allocated per frame; the pose is made once.
+import {STADIUM_BASE} from './westElevation';
 import * as T from 'three';
 import {npcSeatPose} from '../graphics/npcSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
@@ -74,7 +75,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
   want(x:number,z:number,height:number,canSit:boolean):{key:string;distance:number}|null{
    dc=Math.hypot(x-STADIUM.x,z-STADIUM.z);me.x=x;me.z=z;me.h=height;
    if(!sponsorAsked&&dc<SPONSOR_LOAD_RADIUS&&sponsorRetry.ready()){sponsorAsked=true;
-    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;sponsorRetry.fail();});}
+    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,STADIUM_BASE-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;sponsorRetry.fail();});}
    const gate=inGate(x,z);if(gate&&wasOutside)countStadiumVisit();if(gate)wasOutside=false;else if(x>GATE_ARCH_X||dc>140)wasOutside=true;
    if(held())return {key:SIT_KEY,distance:0};
    near=canSit&&dc<110&&height>.2?nearestSeat(x,z,height,remoteSeatsTaken()):null;// phase 5: never a seat another player sits in

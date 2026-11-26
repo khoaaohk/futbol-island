@@ -19,6 +19,7 @@ import {konbiniMachineSpot,summitSnackSpot,ISLAND_SQUARE_KONBINI,KONBINI_FACADE_
 import {CAY_KONBINI,CAY_KONBINI_DOOR} from '../town/coralCay';
 import {summitGround} from '../town/summitIsle';
 import {onGround} from '../town/elevation';
+import '../town/westElevation';
 import '../town/coralCayElevation';
 import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_VENDING_HALF,STADIUM_GASHA_OFFSETS,stadiumShopZ} from '../town/stadiumShops';
 

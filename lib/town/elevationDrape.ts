@@ -42,7 +42,7 @@ export function drapePieces(skip:string[],terrains:string[]=[]){
   const b=g.boundingBox!;let lo=Infinity,hi=-Infinity;const nx=Math.max(1,Math.ceil(size.x/2)),nz=Math.max(1,Math.ceil(size.z/2));
   for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++){const h=at(b.min.x+size.x*i/nx,b.min.z+size.z*j/nz);if(h<lo)lo=h;if(h>hi)hi=h;}
   if(hi-lo<.015)continue;
-  if(g instanceof T.BoxGeometry){const p=g.parameters,before=g.index!.count/3,cell=Math.min(p.width,p.depth)<1?2:1.25/* a rail or kerb: 2 m; a ground sheet: 1.25 m */,sx=Math.max(1,Math.ceil(p.width/cell)),sz=Math.max(1,Math.ceil(p.depth/cell));g.dispose();
+  if(g instanceof T.BoxGeometry){const p=g.parameters,before=g.index!.count/3,cell=(m.userData.drapeCell as number|undefined)??(Math.min(p.width,p.depth)<1?2:1.25)/* a rail or kerb: 2 m; a ground sheet: 1.25 m */,sx=Math.max(1,Math.ceil(p.width/cell)),sz=Math.max(1,Math.ceil(p.depth/cell));g.dispose();
    g=m.geometry=p.height<=.05?new T.PlaneGeometry(p.width,p.depth,sx,sz).rotateX(-Math.PI/2).translate(0,p.height/2,0):new T.BoxGeometry(p.width,p.height,p.depth,sx,1,sz);added+=g.index!.count/3-before;}
   const pos=g.getAttribute('position') as T.BufferAttribute;
   for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i);pos.setY(i,v.y+at(v.x,v.z)-piece.lift+DRAPE_UP);}

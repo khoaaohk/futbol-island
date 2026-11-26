@@ -18,11 +18,17 @@ import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {STADIUM_NAME,DRIP_FC_ART,PITCH_DROP,drawGateSign} from '../stadium/dripfc';
 import {segmentHitsBox} from './walkControl';
 import {SCREEN_FRAME} from './stadiumFeed';
-import {DUGOUTS,GANTRY,GANTRY_CAMERAS,GANTRY_FLOOR,PHOTO_SPOTS,TECH_AREAS,photoLens} from './stadiumNpcs';
+import {DUGOUTS,GANTRY,GANTRY_CAMERAS as GANTRY_CAMERAS_W,GANTRY_FLOOR as GANTRY_FLOOR_W,PHOTO_SPOTS,TECH_AREAS,photoLens as photoLensW} from './stadiumNpcs';
+import {STADIUM_BASE} from './westElevation';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,standYaw,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,FRONT_FRAME,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT as CONCOURSE_W,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,standYaw,boardColliders,stadiumSponsorLayout,MASTS,SCREEN as SCREEN_W,ROOF as ROOF_W,FRONT_FRAME,GATE_ARCH_X,rowHeight as rowHeightW,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
+// Elevation (?elev=1): the BUILD below works in the stadium's own frame (heights above its ground: world.ts `put` stands every piece
+// on the west terrace), so the shared WORLD heights (stadiumSeats.ts, stadiumNpcs.ts) come down by the base here. The runtime half
+// (createRoofFade) compares with the player's world height and uses the world values.
+const B=STADIUM_BASE,CONCOURSE_HEIGHT=CONCOURSE_W-B,ROOF={...ROOF_W,y:ROOF_W.y-B},SCREEN={...SCREEN_W,y:SCREEN_W.y-B},rowHeight=(i:number)=>rowHeightW(i)-B,GANTRY_FLOOR=GANTRY_FLOOR_W-B,
+ GANTRY_CAMERAS=GANTRY_CAMERAS_W.map(c=>({...c,y:c.y-B})),photoLens=(p:{x:number;z:number;yaw:number})=>{const l=photoLensW(p);return {...l,y:l.y-B};};
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
  put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -69,7 +75,8 @@ function pitchLogo(y:number,materials?:T.Material[]){
 }
 /** The big screen's two posts (world): radius, and each post's foot (x, z) and top (the frame's underside). */
 export const SCREEN_POST={r:.22,inset:1.5} as const;
-export function screenPosts(){const z=STADIUM.z+SCREEN.z,top=SCREEN.y-SCREEN_FRAME.h/2;
+/** World heights (flight, balls); the build takes the base off. */
+export function screenPosts(){const z=STADIUM.z+SCREEN_W.z,top=SCREEN_W.y-SCREEN_FRAME.h/2;
  return [-1,1].map(sx=>({x:STADIUM.x+sx*(SCREEN.w/2-SCREEN_POST.inset),z,top}));}
 /** Height above a row of the low seat-back strip's top; the per-seat tops rise from there to 1.13 m. */
 const BACK_SPLIT=.92;
@@ -84,7 +91,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  const rectBox=(r:{x:number;z:number;w:number;d:number},y0:number,y1:number,c:string)=>box(r.w,y1-y0,r.d,c,r.x,(y0+y1)/2,r.z);
 
  for(const s of STANDS){
-  const g=standGeometry(s);
+  const g=standGeometry(s,0);
   for(const surf of g.surfaces){walkSurfaces.push(surf);obstacles.push(surf);surfaces++;}
   rails.push(...g.rails);
   // Rows (solid to the ground), aisle treads, concourse, back stairs.
@@ -246,7 +253,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  // depth (radius SCREEN_POST.r < half the depth), so they meet it from below and never pass in front of either face. The back
  // face's picture (card / live feed) is stadiumFeed.ts.
  {const z=S.z+SCREEN.z;box(SCREEN_FRAME.w,SCREEN_FRAME.h,SCREEN_FRAME.depth,'#1d2b33',S.x,SCREEN.y,z);box(SCREEN.w,SCREEN.h,.02,'#2b3f48',S.x,SCREEN.y,z-.26);
-  for(const sx of [-1,1]){const p=screenPosts()[sx<0?0:1];skip(cylinder(SCREEN_POST.r,p.top,STEEL,p.x,p.top/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}}
+  for(const sx of [-1,1]){const p=screenPosts()[sx<0?0:1];skip(cylinder(SCREEN_POST.r,p.top-B,STEEL,p.x,(p.top-B)/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}}
 
  // --- Main gate: arch over the east stand's gap, turnstiles either side of an open middle ------------------------------------------
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;
@@ -318,7 +325,7 @@ export function createRoofFade(roofs:readonly T.Mesh[]){
    const near=Math.abs(px-STADIUM.x)<STADIUM.bowlW/2+20&&Math.abs(pz-STADIUM.z)<STADIUM.bowlL/2+20;
    // Standing ON a roof (landed on its slab, feet at or above its top): that roof stays solid (owner, Nov 13 2026: the taller fascia
    // frame put the hips inside the roof's box, so landing on the roof turned it see-through under the player's feet).
-   const onRoof=(b:ReturnType<typeof roofBox>)=>py>=ROOF.y+ROOF.thick/2-.25&&Math.abs(px-b.x)<b.w/2+.5&&Math.abs(pz-b.z)<b.d/2+.5;
+   const onRoof=(b:ReturnType<typeof roofBox>)=>py>=ROOF_W.y+ROOF_W.thick/2-.25&&Math.abs(px-b.x)<b.w/2+.5&&Math.abs(pz-b.z)<b.d/2+.5;
    list.forEach((r,i)=>{r.hiding=near&&!onRoof(r.box)&&covers(r.box,px,py,pz,cx,cy,cz);
     const to=r.hiding?ROOF_FADE.min:1;if(r.opacity===to||!r.mesh)return;
     r.opacity=reduced?to:to<r.opacity?Math.max(to,r.opacity-ROOF_FADE.out*dt):Math.min(to,r.opacity+ROOF_FADE.in*dt);

@@ -11,7 +11,6 @@
  * knows each machine's vertex runs (`gashaponStatic.hide/show`): the machine you open is swapped for its animated live copy
  * (lib/graphics/gashaponLive.ts) and folded back when you leave.
  */
-import {buildLift} from './elevation';
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {islandGashaponMachines} from '../gashapon/machines';
@@ -27,7 +26,7 @@ export function buildGashaponProps(t:GashaponWorldTools){
  machines.forEach((m,i)=>{
   for(const piece of gashaponPieces(m,i,b)){
    if(piece.glass){const mesh=new T.Mesh(piece.geometry,glass);mesh.position.set(m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=false;mesh.receiveShadow=false;mesh.name='gashapon-glass';mesh.userData.gashaponId=m.id;t.town.add(mesh);continue;}
-   const mesh=t.put(piece.geometry,piece.color,m.x,m.y-buildLift(m.x,m.z)/* elevation: m.y already stands on the raised ground (machines.ts onGround) and put lifts every piece: once, not twice */,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=true;mesh.userData.gashaponId=m.id;if(piece.glow)mesh.userData.machineGlow=[piece.glow,false];// the front panel glows at night (machineNightGlow.ts)// world.ts keeps its vertex runs (gashaponStatic: the open machine swaps to its live copy)
+   const mesh=t.put(piece.geometry,piece.color,m.x,m.y,m.z);mesh.rotation.y=m.yaw;mesh.castShadow=true;mesh.userData.gashaponId=m.id;if(piece.glow)mesh.userData.machineGlow=[piece.glow,false];// the front panel glows at night (machineNightGlow.ts)// world.ts keeps its vertex runs (gashaponStatic: the open machine swaps to its live copy)
   }
   t.obstacles.push(gashaponFootprint(m));
  });

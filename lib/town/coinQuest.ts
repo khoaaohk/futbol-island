@@ -1,3 +1,5 @@
+import {onGround} from './elevation';
+import './westElevation';
 import type {LearningId} from './learningJourneys';
 import {CORAL_CAY_SPOTS} from './coralCayBalls';
 import {SUMMIT_BALL_SPOTS} from './summitBalls';
@@ -66,7 +68,7 @@ const MANHOLE_SPOTS:CoinSpot[]=[
  manhole('school-offices',182,34,'School Offices','corner','movement',"Take a quick free kick. Right after a foul, many opponents are still walking back. From above you can spot an unmarked teammate; a quick, simple restart can find them before the defence is ready, unless the referee asks you to wait."),
  manhole('history-museum',182,165,'History Museum','corner','support',"Look for a better-placed teammate. Before you shoot from a tight angle, picture the pitch from above: a teammate may have a clear view of the goal. A simple pass to them can be the smartest way to score."),
 ];
-export const COIN_QUEST:CoinSpot[]=[
+const ALL_SPOTS:CoinSpot[]=[
  {id:'store',name:'Store gardens',x:78,y:0,z:-46,kind:'hidden',clue:'Start where island players choose their gear.',detail:'Look beside the small training bag west of the Store entrance.',teaching:"Look before it arrives. Check over your shoulder while the pass is on its way. If you already know where the defender is, you can turn away from them and you have more time on the ball.",lesson:'support'},
  {id:'coaches',name:'Soccer wall · left target',x:150,y:0,z:-27.7,kind:'kick',wall:{x:150,y:1.02,z:-29.27},clue:'A coach has left a target near the practice wall.',detail:'Kick the left target on the soccer practice wall. Then collect the ball in front of it.',teaching:"Pick the open corner. The keeper stands in the middle of the goal, so the corners are the hardest places to reach. A calm, low shot into the far corner beats a hard shot straight at the keeper.",lesson:'support'},
  {id:'garden',name:'Garden entrance',x:208,y:0,z:8,kind:'hidden',clue:'Look where the island grows its greens.',detail:'Check the training bag just south of the community garden entrance.',teaching:"Make the pitch wide. When your team has the ball, spread out toward the sidelines. Defenders have to follow you, and a gap opens in the middle for a forward pass.",lesson:'width'},
@@ -133,6 +135,9 @@ export const COIN_QUEST:CoinSpot[]=[
  // big screen's west post takes it to 129 (stadium-screen-west, the last stadium ball). Appended last.
  ...STADIUM_BALL_SPOTS,
 ];
+// Elevation (?elev=1, elevation.ts): the main island's own spots stand on its raised west side; the other lists place themselves.
+const PLACED=new Set([...CORAL_CAY_SPOTS,...SUMMIT_BALL_SPOTS,...EAST_JETTY_BALL_SPOTS,...STADIUM_BALL_SPOTS].map(s=>s.id));
+export const COIN_QUEST:CoinSpot[]=ALL_SPOTS.map(s=>PLACED.has(s.id)||s.parachute||s.buoy?s:onGround(s));
 const CORAL_CAY_IDS=new Set(CORAL_CAY_SPOTS.map(spot=>spot.id)),SUMMIT_IDS=new Set(SUMMIT_BALL_SPOTS.map(spot=>spot.id)),JETTY_IDS=new Set(EAST_JETTY_BALL_SPOTS.map(spot=>spot.id)),STADIUM_IDS=new Set(STADIUM_BALL_SPOTS.map(spot=>spot.id));
 /**
  * `pendingLesson` (version 8, Oct 26 2026, owner): the found-ball lesson card still open (ball id + the step on screen), so a reload

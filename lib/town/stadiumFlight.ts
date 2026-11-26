@@ -7,6 +7,8 @@
 // Pure data + math (no three.js). Heat: the colliders are built once (about 70 boxes and upright cylinders); a frame away from the
 // stadium costs one rectangle test, near it one squared-distance reject per solid; no allocation per frame (one reused contact).
 // Walking never calls this: only the flight branches in Town.tsx do.
+import {STADIUM_BASE} from './westElevation';
+import {groundLift} from './elevation';
 import {STANDS,ROOF,FRONT_FRAME,ROOF_OVERHANG,FRAME_PROUD,FASCIA_PROUD,MASTS,SCREEN,GATE_ARCH_X,CONCOURSE_HEIGHT,ROWS,ROW_DEPTH,rowHeight,standBack,standRect,standSpans,standWorld,plazaFlagPoles} from './stadiumSeats';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {createBumpReact,createBumpPose,startBump,stepBump,bumpPose,type BumpReact,type BumpPose} from './friendBump';
@@ -27,10 +29,13 @@ export const LAND_GLIDE={hop:7,climb:9} as const;
 /** The stadium's flight colliders (world). Sizes follow stadiumWorld.ts / stadiumFeed.ts / plazaFlags.ts (checked by tests). */
 export function stadiumFlightSolids():FlightSolid[]{
  const out:FlightSolid[]=[];
- const box=(kind:FlightSolidKind,x:number,z:number,w:number,d:number,y0:number,y1:number,yaw=0,flag=-1)=>{
+ // Elevation (?elev=1): the pieces given here from the stadium's own ground (masts and heads, the gate, its sign) stand on the terrace;
+ // the stands, roofs and screen read stadiumSeats.ts's world heights; a flag pole stands on the plaza's own grade.
+ const OWN=STADIUM_BASE?new Set<FlightSolidKind>(['mast','head','gate','sign']):null;
+ const box=(kind:FlightSolidKind,x:number,z:number,w:number,d:number,y0:number,y1:number,yaw=0,flag=-1)=>{if(OWN?.has(kind)){if(y0>0)y0+=STADIUM_BASE;y1+=STADIUM_BASE;}
   const hw=w/2,hd=d/2;out.push({kind,x,z,hw,hd,c:Math.cos(yaw),s:-Math.sin(yaw),y0,y1,round:false,flag,reach:Math.hypot(hw,hd)});};
  const rect=(kind:FlightSolidKind,r:{x:number;z:number;w:number;d:number},y0:number,y1:number)=>box(kind,r.x,r.z,r.w,r.d,y0,y1);
- const pole=(kind:FlightSolidKind,x:number,z:number,r:number,y0:number,y1:number,flag=-1)=>out.push({kind,x,z,hw:r,hd:r,c:1,s:0,y0,y1,round:true,flag,reach:r});
+ const pole=(kind:FlightSolidKind,x:number,z:number,r:number,y0:number,y1:number,flag=-1)=>out.push({kind,x,z,hw:r,hd:r,c:1,s:0,y0,y1:OWN?.has(kind)?y1+STADIUM_BASE:y1,round:true,flag,reach:r});
  // Floodlight masts (r .45, 30 m) and their heads (lamp 6 × 3.4 × .5 and frame 6.4 × 3.8 × .3, 0.2 m behind it, at 30.5 m).
  for(const m of MASTS){const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);pole('mast',m.x-m.sx*.55,m.z-m.sz*.55,.45,0,28.6);
   box('head',m.x+fx*.09,m.z+fz*.09,6.4,.7,30.5-1.9,30.5+1.9,yaw);}
@@ -57,7 +62,7 @@ export function stadiumFlightSolids():FlightSolid[]{
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;for(const sz of [-1,1])box('gate',gx,G.z+sz*(G.halfWidth+.4),1.6,1.6,0,11);
   box('gate',gx,G.z,1.4,G.halfWidth*2+3.2,8.2,10.6);box('sign',gx+.72,G.z,.3,G.halfWidth*2-1,10.6,10.7+2.2);}
  // Plaza flags (plazaFlags.ts FLAG): the pole and finial (7.32 m), and the cloth (1.9 × 1.15 m at 6.4 m, east of the pole).
- plazaFlagPoles().forEach((p,k)=>{pole('flag',p.x,p.z,.14,0,7.32,k);box('flag',p.x+.06+.95,p.z,1.9,.3,6.4-.6,6.4+.6,0,k);});
+ plazaFlagPoles().forEach((p,k)=>{const g=groundLift(p.x,p.z);pole('flag',p.x,p.z,.14,0,g+7.32,k);box('flag',p.x+.06+.95,p.z,1.9,.3,g+6.4-.6,g+6.4+.6,0,k);});
  return out;
 }
 

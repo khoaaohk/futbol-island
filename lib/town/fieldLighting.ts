@@ -1,3 +1,4 @@
+import {STADIUM_BASE} from './westElevation';
 import {fieldLightLayout} from './fieldLightLayout';
 import * as T from 'three';
 import type {PropSpec} from '../graphics/propReactions';
@@ -64,7 +65,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  // merged mesh: 1 draw) and one soft glow per head (4 points, one additive draw, night only) that reads from across the island.
  // The pitch, lines and lower stands take the night blend through STADIUM_NIGHT (stadiumNight.ts); the four pooled real spots
  // move to the mast heads while the player is in or near the bowl (never by camera score: the bowl is huge from afar).
- const stadiumRoot=new T.Group();stadiumRoot.name='stadium-floodlights';scene.add(stadiumRoot);
+ const stadiumRoot=new T.Group();stadiumRoot.name='stadium-floodlights';stadiumRoot.position.y=STADIUM_BASE;/* the west terrace (?elev=1) */scene.add(stadiumRoot);
  const stadiumLenses:T.BufferGeometry[]=[],glowPoints:number[]=[];
  for(const m of MASTS){const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);
   for(let col=0;col<4;col++)for(let row=0;row<3;row++){const g=new T.BoxGeometry(1.25,.85,.08);g.translate((col-1.5)*1.42,(row-1)*1.02,MAST_HEAD.front+.04);g.rotateY(yaw);g.translate(m.x,MAST_HEAD.y,m.z);stadiumLenses.push(g);}

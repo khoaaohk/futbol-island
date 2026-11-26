@@ -48,17 +48,36 @@ assert.equal(B.CORAL_CAY_SPOTS.find(s=>s.parachute).y,90,'sky balls keep their h
 // The generic primitives: a pinned pad and a ribbon in a tiny region.
 {const R=E.createRegion({id:'t',box:{minX:0,maxX:100,minZ:0,maxZ:100},depth:(x,z)=>Math.min(x,z,100-x,100-z),profile:d=>4*E.smooth(d/20),pads:[{x:50,z:50,w:20,d:10,level:1}],ribbons:[{path:[{x:0,z:80},{x:50,z:80}],half:4,blend:4}]});
  assert.equal(R.ground(50,50),1);assert.equal(R.ground(58,53),1);assert.ok(Math.abs(R.ground(20,80)-R.ground(20,83))<.02,'ribbon level across');assert.ok(R.ground(50,20)>3.9);assert.equal(R.ground(0,50),0);assert.equal(R.ground(-5,50),0);}
-// ---- The west side's region (defined, not registered yet): the line and the beaches pinned, the stadium terrace level.
-{const Wt=load('lib/town/westElevation.ts'),L=load('lib/town/westParkLayout.ts'),R=Wt.WEST_REGION,w=R.ground;
- assert.ok(!E.elevationRegions().some(r=>r.id==='west'),'the west region is not registered until its drawn side exists');
- assert.equal(E.groundLift(L.STADIUM.x,L.STADIUM.z),0);
- for(let i=0;i<TT.TRACK.n;i++){const x=TT.TRACK.x[i],z=TT.TRACK.z[i];for(const d of [-5,0,5])assert.ok(w(x+TT.TRACK.tz[i]*d,z-TT.TRACK.tx[i]*d)<.03,'west: the line keeps its height at '+x.toFixed(0)+','+z.toFixed(0));}
- // The bowl itself is level (its ring walk's south edge, 2 m from the pond's rim, is still clipped by the pond pin: NOTE.md, WEST PLAN).
- for(const a of [-1,-.5,0,.5,1])for(const b of [-1,-.5,0,.5,1]){const k=a*a===1&&b*b===1?12:0,x=L.STADIUM.x+a*(L.STADIUM.bowlW/2-k),z=L.STADIUM.z+b*(L.STADIUM.bowlL/2-k);assert.ok(Math.abs(w(x,z)-Wt.WEST.terrace)<.02,'the stadium bowl is level at '+a+','+b+': '+w(x,z));}
- assert.ok(w(L.PARK_POND.x,L.PARK_POND.z)===0&&w(L.PARK_POND.x+L.PARK_POND.rx,L.PARK_POND.z)<.12,'the pond stays in its hollow');
- assert.ok(w(-52,-30)===0&&w(-70,-30)>0&&w(-70,-30)<2.2,'the plaza walks up from the town');
- let steep=0,area=0;for(let x=-316;x<=-58;x+=2)for(let z=-206;z<=130;z+=2){steep=Math.max(steep,R.slope(x,z));if(w(x,z)>.5)area+=4;assert.ok(Math.abs(w(x+1,z)-w(x,z))<.45&&Math.abs(w(x,z+1)-w(x,z))<.45,'west: no step at '+x+','+z);}
- assert.ok(steep<.45,'west steepest '+steep.toFixed(3));console.log('west region: terrace '+Wt.WEST.terrace+' m, peak '+R.peak().toFixed(2)+' m, steepest '+steep.toFixed(3)+', raised '+area+' m2');}
+// ---- The west side (westElevation.ts): the line, the beaches, West station, the pond and the town pinned; the stadium terrace
+// level at WEST.terrace; a retaining wall where the natural ground does not reach it; the plaza a gentle ramp; stairs through the wall.
+{const Wt=load('lib/town/westElevation.ts'),L=load('lib/town/westParkLayout.ts'),S=load('lib/town/shoreline.ts'),w=Wt.westGround,nat=Wt.westNatural,H=Wt.WEST.terrace;
+ assert.ok(E.elevationRegions().some(r=>r.id==='west'),'the west region is registered');assert.ok(H>=4&&H<=4.5,'terrace '+H);
+ assert.equal(E.groundLift(L.STADIUM.x,L.STADIUM.z),H);assert.equal(Wt.STADIUM_BASE,H);
+ assert.equal(V.fieldSurfaceHeight(L.STADIUM.x,L.STADIUM.z),H,'the pitch is walked at the terrace height');assert.ok(Math.abs(V.STADIUM_VENUE.elevation-(H+V.STADIUM_PITCH_Y-V.FIELD_SURFACE_Y))<1e-9,'the live match (rigs, goals) stands on the terrace');
+ for(let i=0;i<TT.TRACK.n;i++){const x=TT.TRACK.x[i],z=TT.TRACK.z[i];for(const d of [-6,-3,0,3,6])assert.ok(w(x+TT.TRACK.tz[i]*d,z-TT.TRACK.tx[i]*d)<.03,'west: the line keeps its height at '+x.toFixed(0)+','+z.toFixed(0));}
+ // The whole apron (bowl, ring walk) and the plaza's top are exactly level.
+ const A=L.BOWL_APRON;for(let x=A.x-A.w/2;x<=A.x+A.w/2;x+=2.5)for(let z=A.z-A.d/2;z<=A.z+A.d/2;z+=2.5)if(L.onApron(x,z))assert.equal(w(x,z),H,'apron level at '+x+','+z);
+ for(const z of [-50,-30,-10])for(let x=-140;x<=-127;x+=1)assert.ok(Math.abs(w(x,z)-H)<.02,'plaza top level at '+x+': '+w(x,z));
+ // The pond: its water and stone rim at today's height, the terrace's wall clear of the rim.
+ for(let a=0;a<6.28;a+=.1){const p=L.pondEdge(a,L.POND_RIM);assert.ok(w(p.x,p.z)<.03,'pond rim pinned at '+a.toFixed(1)+': '+w(p.x,p.z));assert.ok(!Wt.onWestTerrace(p.x,p.z),'the wall stands clear of the pond rim');}
+ assert.equal(w(L.PARK_POND.x,L.PARK_POND.z),0);
+ // The town, the beaches: untouched.
+ assert.ok(w(-52,-30)===0&&w(-71,-30)<.02&&w(-90,-30)>.9&&w(-90,-30)<2&&w(-110,-30)>2.6,'the plaza walks up from the town, west of its last row of buildings');
+ for(let x=-330;x<=-40;x+=3)for(let z=-215;z<=140;z+=3)if(!E.insidePolygon(S.INTERIOR_GRASS,x,z)||x>=-72)assert.ok(w(x,z)<.03,'only the lawn is raised: '+x+','+z);
+ // The plaza: level across, at most a 9.5% grade along it.
+ for(let x=-140;x<=-52;x+=2){const c=w(x,-30);for(const d of [-22,-10,10,22])assert.ok(Math.abs(w(x,-30+d)-c)<.03,'plaza level across at x '+x);assert.ok(Math.abs(w(x+2,-30)-c)/2<.095,'plaza grade at x '+x);}
+ // Natural ground: smooth and walkable everywhere outside the terrace (the terrace's own edge is the wall).
+ let steep=0,area=0,wallMax=0;for(let x=-316;x<=-58;x+=2)for(let z=-206;z<=130;z+=2){const h=nat(x,z);if(w(x,z)>.5)area+=4;const s=Math.hypot(nat(x+1,z)-nat(x-1,z),nat(x,z+1)-nat(x,z-1))/2;if(s>steep)steep=s;
+  assert.ok(h<=H+1e-6&&Math.abs(nat(x+1,z)-h)<.4&&Math.abs(nat(x,z+1)-h)<.4,'west: no step in the natural ground at '+x+','+z);}
+ assert.ok(steep<.36,'west steepest '+steep.toFixed(3));
+ // The wall: tallest by the pond and over West station; none on the north, the east or at the trails' mouths (N, SW, the plaza).
+ const o=Wt.terraceOutline(1);for(const p of o){const d=Math.hypot(p.x-Wt.WEST_TERRACE.x,p.z-Wt.WEST_TERRACE.z),f=nat(p.x+(p.x-Wt.WEST_TERRACE.x)/d*.3,p.z+(p.z-Wt.WEST_TERRACE.z)/d*.3);wallMax=Math.max(wallMax,H-f);}
+ assert.ok(wallMax>3.5,'the wall stands '+wallMax.toFixed(2)+' m at its tallest');
+ for(const [x,z] of [[-205,-128],[-127.5,-30],[-205,64.5],[-127.5,-80]])assert.ok(H-nat(x,z)<.05,'no wall at '+x+','+z+': '+(H-nat(x,z)));
+ assert.ok(H-nat(-289.5,-60)>2.5,'a wall over West station');
+ // Stairs: a steady ramp from the terrace's edge to the ground, no step at either end.
+ for(const s of Wt.WEST_STAIRS){let prev=H,met=false;for(let d=.25;d<=s.len+1;d+=.25){const h=w(s.x+s.dx*d,s.z+s.dz*d);assert.ok(prev-h<s.slope*.25+.03&&h<=prev+1e-6,'stair '+s.id+' steps evenly at '+d+': '+prev+' → '+h);if(h<=nat(s.x+s.dx*d,s.z+s.dz*d)+1e-6)met=true;prev=h;}assert.ok(met,'stair '+s.id+' reaches the ground');}
+ console.log('west: terrace '+H+' m, wall up to '+wallMax.toFixed(2)+' m, steepest bank '+steep.toFixed(3)+', raised '+area+' m2');}
 // ---- The drawn lawn (coralCayTerrain.ts) IS the walked grid: watertight, the outline at the datum, within 1 cm of the walked height
 // (6 cm on the coarse lowest-tier mesh), fewer triangles than stage 1's polar mesh (16.1k).
 {const Tr=load('lib/town/coralCayTerrain.ts'),O=cay.CAY_CENTER;const tris={};
