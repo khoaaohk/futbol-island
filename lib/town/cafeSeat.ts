@@ -16,7 +16,8 @@ export const CAFE_SEAT_KEY=CAFE_VIEW_SEAT.key;
 /** The seat as the sit machine's Seat (stand / row unused here). */
 const SEAT={id:CAFE_VIEW_SEAT.key,stand:'south',row:0,x:CAFE_VIEW_SEAT.sit.x,z:CAFE_VIEW_SEAT.sit.z,y:CAFE_VIEW_SEAT.sit.y,yaw:CAFE_VIEW_SEAT.yaw} as Seat;
 /** The view camera: back / up from the sit point (m); portrait phones sit a little further back and higher (a narrower frame). */
-export const CAFE_VIEW_CAM={back:2.3,up:1.75,portraitBack:3.4,portraitUp:2.3} as const;
+/** side: metres to the bench's west end (over the left shoulder), so the sitter sits low in one corner and the summit fills the frame. */
+export const CAFE_VIEW_CAM={back:2.4,up:2.35,side:1.05,portraitBack:3.3,portraitUp:2.9,portraitSide:.7} as const;
 /** One line per sit, in turn (sources: CAFE_VIEW_SOURCES). Kid-friendly, one line each. */
 export const CAFE_VIEW_NOTES:readonly {text:string;source:keyof typeof CAFE_VIEW_SOURCES}[]=[
  {text:'That pitch up on Summit Isle is the Summit 5s: five a side, so everyone gets plenty of touches of the ball.',source:'island'},
@@ -34,8 +35,9 @@ const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright']
 /** The Sit offer shows within REACH m of the sit point, on the deck (feet at the deck's height). */
 export function cafeSeatNear(x:number,z:number,height:number){const V=CAFE_VIEW_SEAT;return Math.abs(height-V.sit.y)<.25&&(x-V.sit.x)**2+(z-V.sit.z)**2<V.reach*V.reach;}
 /** The camera's seated frame (pure: tests read it). */
-export function cafeViewFrame(portrait:boolean){const V=CAFE_VIEW_SEAT,b=portrait?CAFE_VIEW_CAM.portraitBack:CAFE_VIEW_CAM.back,u=portrait?CAFE_VIEW_CAM.portraitUp:CAFE_VIEW_CAM.up;
- return {x:V.sit.x-V.ux*b,y:V.sit.y+u,z:V.sit.z-V.uz*b,lx:V.look.x,ly:V.look.y,lz:V.look.z};}
+export function cafeViewFrame(portrait:boolean){const V=CAFE_VIEW_SEAT,K=CAFE_VIEW_CAM,b=portrait?K.portraitBack:K.back,u=portrait?K.portraitUp:K.up,sd=portrait?K.portraitSide:K.side;
+ const sx=Math.cos(V.yaw),sz=-Math.sin(V.yaw);// the bench's long axis (+ = east end)
+ return {x:V.sit.x-V.ux*b-sx*sd,y:V.sit.y+u,z:V.sit.z-V.uz*b-sz*sd,lx:V.look.x,ly:V.look.y,lz:V.look.z};}
 
 export function createCafeSeat(ports:{wake:()=>void;note?:(text:string)=>void}){
  const m=createSitMachine(),pose:TrickPose=npcSeatPose('bench');pose.w=0;

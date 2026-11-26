@@ -56,7 +56,7 @@ const base=path.resolve(__dirname,'..');
  assert.notEqual(notes[0],notes[1],'the note rotates');
  // 6. Camera: behind and above the seat, looking at the summit (over the sea: the frame's ground track leaves the deck southward).
  for(const portrait of [false,true]){const f=S.cafeViewFrame(portrait);assert.ok(f.y>C.CAFE.floor+1.5,'eye height');
-  const fx=f.lx-f.x,fz=f.lz-f.z,dir=Math.atan2(fx,fz);assert.ok(Math.abs(Math.atan2(Math.sin(dir-b),Math.cos(dir-b)))<.05,'looks at the summit');}
+  const fx=f.lx-f.x,fz=f.lz-f.z,dir=Math.atan2(fx,fz);assert.ok(Math.abs(Math.atan2(Math.sin(dir-b),Math.cos(dir-b)))<.06,'looks at the summit');}
  // 7. Notes: one line each, every source listed (URL for the Laws).
  for(const n of S.CAFE_VIEW_NOTES){assert.ok(n.text.length<=120&&!/\n/.test(n.text),'one line');const src=S.CAFE_VIEW_SOURCES[n.source];assert.ok(src,'source listed');if(/^law/.test(n.source))assert.match(src.url,/^https:\/\/www\.theifab\.com\//);}
  // 8. Cheap: the sit runtime has no rAF / timer; the bench joins the deck batch (built with the island's box helper).
