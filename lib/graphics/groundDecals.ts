@@ -96,7 +96,11 @@ export function planGroundDecals(input:DecalInput):DecalPlan{
 }
 
 function tuftGeometry(){ // five crossed blades, each one upright triangle (5 tris, 15 vertices)
- const pos:number[]=[];for(let k=0;k<5;k++){const a=k*Math.PI/5,c=Math.cos(a)*.5,s=Math.sin(a)*.5;pos.push(-c,0,-s, c,0,s, c*.1,1,s*.1);}
+ const pos:number[]=[];
+ // Surface craft (?surf=1, audit B4, Nov 27 2026): five full-width triangles meeting at one apex drew a tent. Same five triangles as
+ // a tussock: narrow blades rooted round the centre, each leaning out to its own tip at its own height, so the outline is blades.
+ if(surfOn())for(let k=0;k<5;k++){const a=k*Math.PI*2/5+k*.31,c=Math.cos(a),s=Math.sin(a),w=.12,out=.34+.13*(k%2),h=1-.2*(k%3);pos.push(c*.08+s*w,0,s*.08-c*w, c*.08-s*w,0,s*.08+c*w, c*out,h,s*out);}
+ else for(let k=0;k<5;k++){const a=k*Math.PI/5,c=Math.cos(a)*.5,s=Math.sin(a)*.5;pos.push(-c,0,-s, c,0,s, c*.1,1,s*.1);}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();
  const n=g.getAttribute('normal') as T.BufferAttribute;for(let i=0;i<n.count;i++)n.setXYZ(i,0,1,0); // lit like the ground below
  if(surfOn()){const c:number[]=[];for(let k=0;k<5;k++){const r=SURF_DECALS.tuftRoot,t=SURF_DECALS.tuftTip;c.push(r*.95,r,r*.9, r*.95,r,r*.9, t,t,t*.92);}g.setAttribute('color',new T.Float32BufferAttribute(c,3));}

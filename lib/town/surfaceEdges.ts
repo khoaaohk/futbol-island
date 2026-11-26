@@ -30,7 +30,9 @@ export const surfOn=()=>enabled;
 export const EDGE={inset:.5,minWidth:1.1,maxWidth:2,step:4,lowStep:8,rise:.02,
  /** shader: noise weights (tile A blotches, R clumps), the grass / bare threshold, the damp lip and the soil shadow */
  noise:.9,clump:.85,from:.38,to:.62,damp:.16,soil:.12,soilTo:.95} as const;
-export const LIP={over:.2,overVar:.28,rise:.02,reach:.8,step:4,lowStep:8} as const;
+/** `over`..`over+overVar`: how far the grass creeps onto the path; `thin`: how far back from the path's edge the lawn starts to thin
+ *  (bare, trodden patches in the grass beside the path: a worn verge 0.5 to 1.1 m wide in all, Nov 27 2026: the 0.3 m lip measured as a step). */
+export const LIP={over:.18,overVar:.5,thin:.6,rise:.02,reach:1,step:4,lowStep:8} as const;
 /** Path wear (the lawn's edge program draws it, on a thin sheet over every walkway laid on a lawn): `edge` m of darker, dustier ground
  *  beside the grass, the trodden middle lighter from `centre` m in; `gain` = the brightness swing per unit (shader). Paths wider than
  *  `max` are squares, not walkways: no wear. On raised ground the sheet follows the draped path (`liftStep` cells, `lift` m proud),
@@ -94,9 +96,9 @@ export function pathLips(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
   // rows: [metres out from the path's edge, height over the lawn, edge value, wear]. On a slope the uphill verge is a cut bank.
   const rows=(e:number):[number,number,number,number][]=>{const ov=over(e),[x0,z0]=rowPoint(seg,len,knots[e],0,false,false),[x1,z1]=rowPoint(seg,len,knots[e],LIP.reach,false,false),[xi,zi]=rowPoint(seg,len,knots[e],-ov,false,false);
    const cut=G?Math.max(0,Math.min(1,(g(x1,z1)-g(x0,z0)-WEAR.cutFrom)/WEAR.cutSpan)):0,k=wornAt(s,xi,zi,low);
-   return [[-ov,top+.016+proud,1,wearOf(ov)*k-cut],[.12,top+.03+proud+WEAR.bank*cut,.5*cut,-k-cut],[LIP.reach,0,0,-k-cut]];};
+   return [[-ov,top+.016+proud,1,wearOf(ov)*k-cut],[LIP.thin,top+.03+proud+WEAR.bank*cut,.5*cut,-k-cut],[LIP.reach,0,0,-k-cut]];};
   for(let j=0;j<knots.length-1;j++){const mid=(knots[j]+knots[j+1])/2;let open=true;
-   for(const u of [.3,LIP.reach]){const [x,z]=rowPoint(seg,len,mid,u,false,false);if(!lawn(x,z)){open=false;break;}}
+   for(const u of [.3,LIP.thin+.1,LIP.reach]){const [x,z]=rowPoint(seg,len,mid,u,false,false);if(!lawn(x,z)){open=false;break;}}
    if(!open)continue;const base=out.position.length/3,ra=rows(j),rb=rows(j+1);
    for(let r=0;r<ra.length;r++)for(const e of [j,j+1]){const row=(e===j?ra:rb)[r],[x,z]=rowPoint(seg,len,knots[e],row[0],e===0,e===knots.length-1);out.position.push(x,row[1]+g(x,z),z);out.edge.push(row[2],WEAR_BASE+row[3]);}
    quadRows(out,base,ra.length,facesUp(out.position,base));}}

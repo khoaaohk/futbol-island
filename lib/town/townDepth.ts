@@ -244,7 +244,7 @@ export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|n
 
 /** The lawn: holes where the sunk carriageway (and a dropped kerb's ramp) lies below it, the blocks inside the street network, and
  *  the verge patch (geometry y = rise above the lawn mesh; the soil lip goes to `sink`). null with the flag off. */
-export function depthLawn(sink:Sink|null,low=false,soft=false){const s=S;if(!s)return null;const rim:number[]=[];/* soft (?surf=1, surfaceEdges.ts): the grass creeps 10 to 32 cm over the paving and the lawn shader breaks that rim up (aEdge on the `rim` vertices); no soil strip then */
+export function depthLawn(sink:Sink|null,low=false,soft=false){const s=S;if(!s)return null;const rim:number[]=[];/* soft (?surf=1, surfaceEdges.ts): the grass creeps 15 to 55 cm over the paving (Nov 27 2026: 10 to 32 measured as a step in the mean profile) and the lawn shader breaks that rim up (aEdge on the `rim` vertices); no soil strip then */
  const cut:Rect[]=[...s.asphalt.rects.map(r=>({x:r.x,z:r.z,w:r.w-.2,d:r.d-.2})),...s.crossings.flatMap(k=>[-1,1].map(side=>k.vertical?{x:k.x+side*4.45,z:k.z,w:1.1,d:2*(KERB.dropHalf+KERB.dropTaper)+.6}:{x:k.x,z:k.z+side*4.45,w:2*(KERB.dropHalf+KERB.dropTaper)+.6,d:1.1}))];
  const loops=outlineLoops(buildOutline(cut)),ok=loops.every(l=>l.pts.every(p=>insidePoly(INTERIOR_GRASS,p.x,p.z)));
  const position:number[]=[],index:number[]=[];let soil=0;
@@ -262,7 +262,7 @@ export function depthLawn(sink:Sink|null,low=false,soft=false){const s=S;if(!s)r
    if(!open)continue;
    const base=position.length/3;
    for(let r=0;r<rows.length;r++)for(const e of [j,j+1]){let u=rows[r];const [fx,fz]=pt(e,.2);const onPath=rectIn(s.paths.get(fx,fz),fx,fz,.55);
-    if(r===0){u=onPath?0:-((soft?.1:.02)+(soft?.22:.07)*hash(Math.round((seg.nx?fz:fx)*2)*1.37+seg.ax+seg.az));if(!onPath)rim.push(position.length/3);}// the grass creeps a little over the paving, irregularly
+    if(r===0){u=onPath?0:-((soft?.15:.02)+(soft?.4:.07)*hash(Math.round((seg.nx?fz:fx)*2)*1.37+seg.ax+seg.az));if(!onPath)rim.push(position.length/3);}// the grass creeps a little over the paving, irregularly
     const [x,z]=pt(e,u),w=depthWeight(x,z);position.push(x,r===0?(onPath?lawnRise(x+seg.nx*.01,z+seg.nz*.01):.08*w+.021*Math.min(1,w*4)):r===rows.length-1?0:lawnRise(x,z),z);}
    const A=base*3,up=(position[A+5]-position[A+2])*(position[A+6]-position[A])-(position[A+3]-position[A])*(position[A+8]-position[A+2])>0;
    for(let r=0;r<rows.length-1;r++){const i=base+r*2,k=i+1,m=i+2,n=i+3;if(up)index.push(i,k,m,k,n,m);else index.push(i,m,k,k,m,n);}

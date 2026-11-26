@@ -15,6 +15,7 @@ import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
+import {surfOn} from './surfaceEdges';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Mesh=T.Mesh;
@@ -433,7 +434,9 @@ export function buildCoralCay(t:CayTools){
     // Each row stops either side of the beach track's aisle.
     for(const [a,b] of [[F.crops.x0,F.beachTrack.x-gap],[F.beachTrack.x+gap,F.crops.x1]]){const g=new T.BoxGeometry(b-a,.12,.7);g.translate((a+b)/2-cx,0,z+109);rows.push(g);}}
    const merged=mergeRows(rows);rows.forEach(g=>g.dispose());flat(put(merged,'#8b6a4a',(F.crops.x0+F.crops.x1)/2,-.02,-109));}
-  flatBox(F.orchard.x1-F.orchard.x0+4,F.orchard.z1-F.orchard.z0+4,'#7a9e67',(F.orchard.x0+F.orchard.x1)/2,-.08,(F.orchard.z0+F.orchard.z1)/2);
+  // Audit B2 (Nov 25 2026): this lighter rectangle under the orchard met the cay's lawn in a ruler-straight seam of two greens. Surface
+  // craft (?surf=1): not laid; the orchard stands on the lawn itself (one green, its mottle and clumps running through).
+  if(!surfOn())flatBox(F.orchard.x1-F.orchard.x0+4,F.orchard.z1-F.orchard.z0+4,'#7a9e67',(F.orchard.x0+F.orchard.x1)/2,-.08,(F.orchard.z0+F.orchard.z1)/2);
   flatBox(F.pineapples.x1-F.pineapples.x0+1,F.pineapples.z1-F.pineapples.z0+1,'#8b6a4a',(F.pineapples.x0+F.pineapples.x1)/2,-.07,(F.pineapples.z0+F.pineapples.z1)/2);
   flatBox(F.melons.x1-F.melons.x0+1,F.melons.z1-F.melons.z0+1,'#8b6a4a',(F.melons.x0+F.melons.x1)/2,-.07,(F.melons.z0+F.melons.z1)/2);
   // Dirt tracks: path gate → across the farm, and a branch to the beach gate.

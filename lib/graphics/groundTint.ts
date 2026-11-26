@@ -125,6 +125,7 @@ export const GROUND_SLAB={size:2.4,joint:.03,rects:[
 export const BEACH_WET={from:1.4,to:3.1,noise:1.5,dark:[.2,.17,.11],a2:.14,f0:.065} as const;
 /** The trail verge (m from the ribbon's edge): the paving breaks into the lawn over `blend`, with a worn edging line at `line`. */
 export const TRAIL_EDGE={blend:.42,noise:.5,line:.62,lineWidth:.16,lineDark:.07} as const;
+export const TRAIL_EDGE_SOFT={blend:.85,noise:.85,line:1.05,lineWidth:.2,lineDark:.07} as const;
 /** The lawn's colour under the trails (shoreline.ts INTERIOR_GRASS_COLOR), for the verge blend. */
 const LAWN_COLOR='#608870';
 
@@ -168,7 +169,8 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
  material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'')+(edge?'-edge':'');
  const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':edge?'varying vec2 vEdge;':'';
  const detail=[mr?`${f(grain*mr)}*(gt.r-.5)`:'',mg?`${f(grain*mg)}*(gt.g-.5)`:'',mb?`${f(grain*mb)}*(gt.b-.5)`:''].filter(Boolean).join('+');
- const B=BEACH_WET,E=TRAIL_EDGE,S=GROUND_SLAB;
+ // Surface craft (?surf=1): the trail's verge breaks into the lawn over twice the width, more unevenly (numbers only: same program cost).
+ const B=BEACH_WET,E=surfOn()?TRAIL_EDGE_SOFT:TRAIL_EDGE,S=GROUND_SLAB;
  material.onBeforeCompile=sh=>{
   sh.uniforms.uGroundGrain=GROUND_GRAIN;sh.uniforms.uGroundTime=GROUND_TIME;sh.uniforms.uGroundDetail=GROUND_DETAIL;sh.uniforms.uGroundTile=groundTile();
   if(!pbr){sh.uniforms.uGroundA2={value:ggxA2(material.roughness)};sh.vertexShader=T.ShaderLib.lambert.vertexShader;
