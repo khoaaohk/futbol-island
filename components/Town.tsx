@@ -674,7 +674,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const camera=new T.PerspectiveCamera(40,1,1,500);let swimFovOff=0,swimFovBase=40;/* Oct 27 2026: the Swim fast FOV ease (swimMotion.ts fovKick) */if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
     const hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0);scene.add(hemi);
     const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12*2048/quality.shadowSize;/* bias scales with the texel: 1024² phones would show acne stripes on flat roofs at .12 (heat pass 4) */sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
-    try{const saved=localStorage.getItem('fi2-time-of-day');if(saved==='day'||saved==='sunset'||saved==='night'){timeRef.current=saved;setTimeOfDay(saved);}}catch{}
+    try{const saved=localStorage.getItem('fi2-time-of-day');if(saved==='day'||saved==='sunset'||saved==='night'){const t=saved==='day'?'sunset':saved;/* owner Nov 25 2026: the settings offer Day (the sunset look) and Night only; an old saved 'day' becomes it */timeRef.current=t;setTimeOfDay(t);}}catch{}
     const lighting=createIslandLighting(scene,hemi,sun,renderer);lighting.update(timeRef.current,0,true);
     let wasSettingsOpen=false;
     const learningView=createLearningView();let wasLearning=false;
