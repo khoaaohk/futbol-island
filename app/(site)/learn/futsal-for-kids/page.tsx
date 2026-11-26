@@ -11,7 +11,7 @@ const stars=collectionBySlug('cards','futsal')!;
 /* Nov 15 2026 (seo-links): the futsal rules comparison and the futsal stars' cards, one click from the futsal hub. */
 export default function Page(){return <LessonHub hub={hub} extra={[{href:'#futsal-more',name:'Rules and stars'}]}>
  <Section id="futsal-more" title="Futsal rules and futsal stars">
-  <LinkList links={[{path:'/learn/futsal-vs-soccer',name:'Futsal vs soccer: every difference',line:'Ball, court, clock, kick-ins, fouls and sending-offs, with a court drawn to scale'},{path:'/learn/soccer-rules/futsal-rules#futsal-vs-soccer',name:'Futsal vs soccer: the rules side by side',line:'Kick-ins, four seconds, no offside and team fouls'},
+  <LinkList links={[{path:'/learn/soccer-rules/futsal-vs-soccer',name:'Futsal vs soccer: every difference',line:'Ball, court, clock, kick-ins, fouls and sending-offs, with a court drawn to scale'},{path:'/learn/soccer-rules/futsal-rules#futsal-vs-soccer',name:'Futsal vs soccer: the rules side by side',line:'Kick-ins, four seconds, no offside and team fouls'},
    {path:stars.path,name:stars.h1.replace(/: player cards$/,''),line:stars.blurb},{path:'/learn/soccer-formations/futsal-2-2',name:'Futsal formations',line:'The 2-2, the diamond and the 3-1'}]}/>
  </Section>
 </LessonHub>;}

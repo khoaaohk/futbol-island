@@ -134,7 +134,7 @@ const SOLO:GapPage={key:'solo-drills',path:`${D}/solo-soccer-drills`,hub:{name:'
  sources:'Coaching practice, written for these pages. Ages follow the U6 to U12 stages used on the drills pages.'};
 
 /* 7. Futsal vs soccer ------------------------------------------------------------------------------------------------- */
-const FUTSAL:GapPage={key:'futsal-vs-soccer',path:'/learn/futsal-vs-soccer',hub:{name:'Futsal for kids',path:'/learn/futsal-for-kids'},crumb:'Futsal vs soccer',rail:'Futsal vs soccer',
+const FUTSAL:GapPage={key:'futsal-vs-soccer',path:'/learn/soccer-rules/futsal-vs-soccer',hub:{name:'Futsal for kids',path:'/learn/futsal-for-kids'},crumb:'Futsal vs soccer',rail:'Futsal vs soccer',
  title:'Futsal vs Soccer: the Differences Side by Side, for Kids',
  desc:'Futsal vs soccer for kids: the ball, court, players, clock, kick-ins, fouls and sending-offs side by side, and what each one teaches a young player.',
  h1:'Futsal vs soccer: what is different, side by side',

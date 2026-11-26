@@ -139,7 +139,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   </Section>
   {futsal&&<Section id="futsal-vs-soccer" title={F.title}>
    <DataTable label={F.title} head={F.head} rows={F.rows}/>
-   <p className={styles.caption}>{F.note} <a href={toEs('/learn/futsal-vs-soccer')}>Todas las diferencias, con la pista a escala</a>.</p>
+   <p className={styles.caption}>{F.note} <a href={toEs('/learn/soccer-rules/futsal-vs-soccer')}>Todas las diferencias, con la pista a escala</a>.</p>
   </Section>}
   <QA id="faq" title={`Preguntas sobre: ${r.name.toLowerCase()}`} faq={r.faq} more={cards?CARD_RULES_ES.side.items:undefined}>
    {cards&&<CardRulesSources c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}

@@ -51,7 +51,7 @@ export const ES_QUIZ_PAGES:readonly string[]=[QZ,...Object.keys(ES_QUIZ_SLUGS).m
 export const ES_LIBRARY='/library';
 /** Nov 26 2026 (SEO lift + visual pass): the gap pages (lib/site/gapPages.ts), each with a Spanish slug for the Spanish search. */
 export const ES_GAP_SLUGS:Readonly<Record<string,string>>={'/learn/soccer-positions/abbreviations':'/learn/soccer-positions/abreviaturas',
- '/learn/soccer-drills/solo-soccer-drills':'/learn/soccer-drills/ejercicios-de-futbol-solo','/learn/futsal-vs-soccer':'/learn/futsal-vs-futbol',
+ '/learn/soccer-drills/solo-soccer-drills':'/learn/soccer-drills/ejercicios-de-futbol-solo','/learn/soccer-rules/futsal-vs-soccer':'/learn/soccer-rules/futsal-vs-futbol',
  '/learn/soccer-terms/types-of-dribbling':'/learn/soccer-terms/tipos-de-regate','/learn/soccer-drills/teaching-kids-possession':'/learn/soccer-drills/ensenar-la-posesion'};
 export const ES_PAGES:readonly string[]=['/',...Object.keys(ES_GAP_SLUGS),ES_LIBRARY,'/about','/about/how-we-check-facts',R,...ES_RULE_SLUGS.map(s=>`${R}/${s}`),T,...ES_TERM_SLUGS.map(s=>`${T}/${s}`),P,...ES_POSITION_SLUGS.map(s=>`${P}/${s}`),...ROUND2,...ES_LESSON_PAGES,...ES_HUB_PAGES,...ES_TOOL_PAGES,...ROUNDC,...ROUNDE,...ES_QUIZ_PAGES];
 const SET=new Set(ES_PAGES);

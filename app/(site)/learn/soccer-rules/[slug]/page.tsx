@@ -97,7 +97,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   {/* Nov 15 2026 (seo-links): "futsal rules vs soccer rules" lands here, so the comparison is a section, not a second page. */}
   {futsal&&<Section id={FUTSAL_VS_SOCCER.id} title={FUTSAL_VS_SOCCER.title}>
    <DataTable label={FUTSAL_VS_SOCCER.title} head={FUTSAL_VS_SOCCER.head} rows={FUTSAL_VS_SOCCER.rows}/>
-   <p className={styles.caption}>{FUTSAL_VS_SOCCER.note} <a href="/learn/futsal-vs-soccer">Every difference, with a court drawn to scale</a>.</p>
+   <p className={styles.caption}>{FUTSAL_VS_SOCCER.note} <a href="/learn/soccer-rules/futsal-vs-soccer">Every difference, with a court drawn to scale</a>.</p>
   </Section>}
   {/* visual pass Nov 17 2026: one FAQ per page; the cards page's side questions join this list (not the FAQPage JSON-LD) */}
   <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq} more={cards?CARD_RULES.side.items:undefined}>
