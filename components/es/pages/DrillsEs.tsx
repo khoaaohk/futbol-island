@@ -8,6 +8,7 @@ import rt from '@/components/site/railTarget.module.css';
 import {railId} from '@/lib/site/railId';
 import JsonLd from '@/components/seo/JsonLd';
 import GridDiagram from '@/lib/site/GridDiagram';
+import {PickCards} from '@/components/site/visual/Visuals';
 import {AGES,SKILLS,drillsBySkill} from '@/lib/site/drills';
 import {AGE_GUIDES,SKILL_GUIDES,guidesForDrill} from '@/lib/site/drillGuides';
 import {plansForDrill,clock} from '@/lib/site/plans';
@@ -134,7 +135,9 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
    <p className={styles.caption}>{g.facts.note}</p>
   </Section>}
   {sections(g.before)}
-  <Section id="drills" title={g.picksTitle}><EsDrillList items={g.picks}/></Section>
+  <Section id="drills" title={g.picksTitle}>{g.kind==='age'
+   ?<PickCards items={g.picks.map(({drill:d,line},i)=>({path:d.esPath,name:d.name,line,meta:[d.time,d.players],art:<GridDiagram id={`pick${i}`} scene={d.scene} small light/>}))}/>
+   :<EsDrillList items={g.picks}/>}</Section>
   <Section id="diagram" title={`Ejemplo: ${featured.name}`}>
    <EsGridFigure id="s0" scene={featured.scene} image={diagramUrl(featured.picture)}/>
    <p>{featured.answer} <a href={featured.esPath}>Mira el ejercicio completo</a>.</p>

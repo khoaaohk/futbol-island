@@ -33,6 +33,8 @@ import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
 import {RuleExtraSection} from '@/lib/site/GuideParts';
+import {RefereeCards} from '@/components/site/visual/Visuals';
+import {TermVisualTop,TermVisualTry,CardHistory} from '@/components/site/visual/TermVisuals';
 import {CardRulesGame,CardRulesPages,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import {cardDeckOf} from '@/lib/site/cardRules';
@@ -112,6 +114,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <JsonLd data={faqLd(r.faq)}/>
   <EsIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(futsal?['futsal-vs-soccer']:[])],true,play)} current="#top"/>} onward={onwardFor(r.cta,true)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES_ES}/>:undefined} facts={facts}/>
   <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
+  {cards&&<RefereeCards lang="es"/>}
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   {play&&<RulePlayDeck c={play}/>}
   <Section id="diagram" title={`${r.name}: diagrama`}>
@@ -121,6 +124,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   </Section>
   {r.extra&&<RuleExtraSection x={r.extra}/>}
   {cards&&<CardRulesGame c={CARD_RULES_ES} lang="es"/>}
+  {cards&&<CardHistory lang="es"/>/* Nov 26 2026 (SEO lift + visual pass) */}
   {play&&<RulePlayGame c={play} lang="es"/>}
   <Section id="referee" title="Lo que mira el árbitro">
    <Bullets items={r.refs}/>
@@ -193,11 +197,13 @@ export function TermEsPage({t}:{t:EsTerm}){
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.esPath),inLanguage:'es',inDefinedTermSet:abs(H.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
   <EsIntro top rail={<RailNav rail={guideRail('terms',[],true)} current="#top"/>} onward={onwardFor(t.cta,true)} crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
+  <TermVisualTop slug={t.slug} lang="es"/>
   <Section id="diagram" title={`${t.name}: diagrama`}><EsSceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   {t.extra&&<RuleExtraSection x={t.extra}/>}
   <Section id="mistakes" title="Errores comunes"><Bullets items={t.mistakes}/></Section>
   <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal" fold><p>{t.formats}</p></Section>
+  <TermVisualTry slug={t.slug} lang="es"/>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/><TestYourself enPath={t.path} lang="es"/>

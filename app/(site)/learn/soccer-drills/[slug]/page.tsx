@@ -5,6 +5,8 @@ import {onwardFor} from '@/lib/site/railNav';
 import {drillGuideRail,guideRail} from '@/lib/site/railNavMore';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
+import {PickCards} from '@/components/site/visual/Visuals';
+import GridDiagram from '@/lib/site/GridDiagram';
 import JsonLd from '@/components/seo/JsonLd';
 import PrintSheet from '@/components/site/PrintSheet';
 import {QA} from '@/components/site/LessonHub';
@@ -88,7 +90,10 @@ function GuidePage({g}:{g:DrillGuide}){
    <p className={styles.caption}>{g.facts.note}</p>
   </Section>}
   {sections(g.before)}
-  <Section id="drills" title={g.picksTitle}><DrillList items={g.picks}/></Section>
+  <Section id="drills" title={g.picksTitle}>{g.kind==='age'
+   /* Nov 26 2026 (SEO lift + visual pass): "soccer drills for 6 year olds" wants the drills themselves, so each pick shows its set-up */
+   ?<PickCards items={g.picks.map(({drill:d,line},i)=>({path:d.path,name:d.name,line,meta:[d.time,d.players],art:<GridDiagram id={`pick${i}`} scene={d.scene} small light/>}))}/>
+   :<DrillList items={g.picks}/>}</Section>
   <Section id="diagram" title={`Example: ${featured.name}`}>
    <GridFigure id="s0" scene={featured.scene} image={diagramUrl(featured.picture)}/>
    <p>{featured.answer} <a href={featured.path}>See the full drill</a>.</p>
