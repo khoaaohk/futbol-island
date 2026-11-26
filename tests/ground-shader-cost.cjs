@@ -118,10 +118,10 @@ ok('lighter shadow filter (dev flag, OFF by default): 16 -> 4 / 5 shadow reads p
  assert(/renderer\.toneMapping=T\.ACESFilmicToneMapping;renderer\.toneMappingExposure=1\.0;applyGfxDevSwitches\(renderer\);/.test(town),'Town renderer the same');
  for(const f of ['lib/shop/ballStage.ts','lib/shop/bootScene.ts','lib/arcade/arcadeStage.ts','lib/arcade/arcadeRoomScene.ts','lib/gashapon/toyViewer.ts'])assert(!/gfxDevSwitches|shadowKernel|gfxFlags/.test(src(f)),f+' is not touched by the switches');});
 
-const SURF_EDGE_MAX=66;// measured 64: the neighbour (sand or paving) is reproduced exactly at the rim, which is most of it
+const SURF_EDGE_MAX=59;// measured 59 WITH the path wear (Nov 27 2026; was 64 without it, 73 with it before the trim): the neighbour (sand or paving) is still reproduced exactly at the rim. Re-pinned deliberately: any growth fails
 // Surface craft (?surf=1, lib/town/surfaceEdges.ts, default OFF): the lawn's program gains the soft-edge branch. Flag off: the grass
 // source has no trace of it (the pins above are that program). Flag on: stated here, worst-case pixel (a pixel INSIDE the edge band;
-// every other lawn pixel pays one comparison and one varying), no texture read added. Under the Nov 17 baseline at tier 0; 15 ALU over it on band pixels at tiers 1-4.
+// every other lawn pixel pays one comparison and one varying), no texture read added. Under the Nov 17 baseline at tier 0 (441 < 448) and at tiers 3-4 (400 < 406); 10 ALU over it on band pixels at tiers 1-2 (416 against 406).
 ok('surface edges: flag off = no edge code in any ground program; flag on = the lawn only, no extra texture read, cost stated',()=>{
  const E=load('lib/town/surfaceEdges.ts');assert.equal(E.SURF_DEFAULT,false,'ships OFF until the owner approves it');
  for(const kind of Object.keys(BASE.ground))assert(!/vEdge|aEdge/.test(groundNow(kind).source),kind+': no edge code with the flag off');
@@ -129,7 +129,7 @@ ok('surface edges: flag off = no edge code in any ground program; flag on = the 
  try{const on=groundNow('grass');assert(/vEdge\.x>\.004/.test(on.source),'the lawn carries the edge branch');
   for(const kind of Object.keys(BASE.ground))if(kind!=='grass')assert(!/vEdge/.test(groundNow(kind).source),kind+' is untouched');
   for(const t of ['cool','warm','low']){rows.push(`ground.grass.${t} surf off ${off[t].alu}/${off[t].tex} -> on ${on[t].alu}/${on[t].tex} (+${on[t].alu-off[t].alu} ALU on an edge-band pixel)`);
-   assert.equal(on[t].tex,off[t].tex,'no texture read added');if(t==='cool')assert(on[t].alu<BASE.ground.grass[t].alu,'tier 0: still under the Nov 17 baseline: '+on[t].alu);/* tiers 1-4: an edge-band pixel is 15 ALU OVER that baseline (421 against 406); every other lawn pixel stays 49 under it */assert(on[t].alu-off[t].alu<=SURF_EDGE_MAX,'edge branch '+(on[t].alu-off[t].alu)+' ALU');}
+   assert.equal(on[t].tex,off[t].tex,'no texture read added');if(t==='cool')assert(on[t].alu<BASE.ground.grass[t].alu,'tier 0: still under the Nov 17 baseline: '+on[t].alu);/* tiers 1-2: an edge-band pixel is 10 ALU OVER that baseline (416 against 406), tiers 3-4 6 under it (400); every other lawn pixel stays 49 under it */if(t==='low')assert(on[t].alu<BASE.ground.grass[t].alu,'tiers 3-4: under the Nov 17 baseline: '+on[t].alu);assert(on[t].alu-off[t].alu<=SURF_EDGE_MAX,'edge branch '+(on[t].alu-off[t].alu)+' ALU');}
  }finally{E.setSurfaces(false);}
  console.log('     '+rows.join('\n     '));});
 

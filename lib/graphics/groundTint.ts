@@ -3,7 +3,7 @@ import {effectiveTier,subscribeHeatTier} from './heatTier';
 import {gfxFlag} from './gfxFlags';
 import {sunHighlightGlsl,ggxA2} from './sunHighlight';
 import {STADIUM,STADIUM_PLAZA} from '../town/westParkLayout';
-import {surfOn,EDGE as LAWN_EDGE} from '../town/surfaceEdges';
+import {surfOn,EDGE as LAWN_EDGE,WEAR,WEAR_BASE} from '../town/surfaceEdges';
 
 /**
  * Ground detail (Oct 17 2026; detail tile and surface kinds Nov 17 2026): the island's lawn, sand and land do not read as one flat
@@ -146,12 +146,18 @@ const lin=(hex:string)=>{const c=new T.Color(hex);return `vec3(${c.r.toFixed(4)}
 /** The lawn's soft edge (surfaceEdges.ts): vEdge.x runs 0 (lawn) .. 1 (the bare rim), vEdge.y says what lies beyond (0 sand, 1 paving).
  *  The tile's blotches and clumps break the band up (none at either end: a tent weight), so grass thins to scattered tufts; a damp
  *  lip darkens the grass side, a soil shadow the bare side, and at the rim the colour is the neighbour's own maths (sand / path:
- *  same mottle, warm drift and tile mix), so the band ends without a step. Tiers 3-4 (no tile): a plain soft blend. */
+ *  same mottle, warm drift and tile mix), so the band ends without a step. Tiers 3-4 (no tile): a plain soft blend.
+ *  Path wear (vEdge.y = WEAR_BASE + wear, on the sheet over a walkway and on its lips): the paving's tone, darker and dusty beside
+ *  the grass (-1), a cut bank's soil on a slope (-2), lighter and blotchy where feet fall (+1). */
 export function lawnEdgeGlsl(){const E=LAWN_EDGE,S=GROUND_TINT.sand,P=GROUND_TINT.path,sm=GROUND_DETAIL_MIX.sand,pm=GROUND_DETAIL_MIX.path;
- return `if(vEdge.x>.004){float eu=clamp(vEdge.y,0.,1.),et=vEdge.x+min(vEdge.x,1.-vEdge.x)*2.*((gt.a-.5)*${f(E.noise)}+(gt.r-.5)*${f(E.clump)}),ek=smoothstep(${f(E.from)},${f(E.to)},et);
- vec3 bare=mix(${lin(SAND_HEX)},${lin(PAVE_HEX)},eu)*(1.+${f(S.amp)}*n)*vec3(1.+${f(S.amp*.5)}*w,1.,1.-${f(S.amp*.8)}*w)*(1.+mix(${f(S.grain*sm[0])}*(gt.r-.5)+${f(S.grain*sm[1])}*(gt.g-.5),${f(P.grain*pm[0])}*(gt.r-.5),eu)+${f(S.grain*sm[2])}*(gt.b-.5));
- bare*=1.-${f(E.soil)}*(1.-smoothstep(${f(E.to)},${f(E.soilTo)},et));
- diffuseColor.rgb=mix(diffuseColor.rgb*(1.-${f(E.damp)}*smoothstep(0.,${f(E.from)},et)),bare,ek);}`;}
+ // Cost (Nov 27 2026): one scalar product for the whole tone (mottle x tile grain x soil x wear) and one colour multiply, straight
+ // ramps in place of the three smoothsteps (the band is a noise-broken threshold: the curve's shape does not show), the tile's
+ // rgb read once as a vector. tests/ground-shader-cost.cjs states the number.
+ return `if(vEdge.x>.004){float eu=min(vEdge.y,1.),ew=vEdge.y>1.5?vEdge.y-${f(WEAR_BASE)}:0.;vec3 gc=gt.rgb-.5;
+ float et=vEdge.x+min(vEdge.x,1.-vEdge.x)*((gt.a-.5)*${f(E.noise*2)}+gc.r*${f(E.clump*2)}),ek=clamp((et-${f(E.from)})*${f(1/(E.to-E.from))},0.,1.);
+ vec3 bare=mix(${lin(SAND_HEX)},${lin(PAVE_HEX)},eu)*((1.+${f(S.amp)}*n)*(1.+dot(gc,mix(vec3(${f(S.grain*sm[0])},${f(S.grain*sm[1])},${f(S.grain*sm[2])}),vec3(${f(P.grain*pm[0])},0.,${f(S.grain*sm[2])}),eu)))*(1.-${f(E.soil)}*clamp((${f(E.soilTo)}-et)*${f(1/(E.soilTo-E.to))},0.,1.))*(1.+${f(WEAR.gain)}*ew*(.7+.6*gt.a)));
+ bare.rb*=vec2(1.+${f(S.amp*.5)}*w,1.-${f(S.amp*.8)}*w);
+ diffuseColor.rgb=mix(diffuseColor.rgb*(1.-${f(E.damp)}*clamp(et*${f(1/E.from)},0.,1.)),bare,ek);}`;}
 const SAND_HEX='#f1d6a1',PAVE_HEX='#eddfbb';
 export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kind:GroundKind):M{
  ensureSubscribed();

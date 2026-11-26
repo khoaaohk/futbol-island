@@ -10,6 +10,9 @@ import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
 import {elevationOn,groundLift} from './elevation';
+import {surfOn} from './surfaceEdges';
+/** Trail wear (?surf=1): the edge rows this much darker, the middle row lighter, the uphill edge of a climbing trail darker by `cut` more. */
+export const TRAIL_WEAR={edge:.08,centre:.05,cut:.2} as const;
 import {onWestStair,nearWestWall,onWestTerrace,WEST_TRAIL_TOP} from './westElevation';
 import {LAWN_TILT} from './westTerrain';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
@@ -71,13 +74,19 @@ export function buildWestPark(t:Tools):WestParkStats{
   *  open ends (the joins: a cap sits inside the paving it meets), and a beach end fades into the sand (TRAIL_BEACH). */
  const ribbon=(pts:readonly P[],width:number,y:number,o:{beach?:boolean;verge?:boolean}={})=>{
   const closed=pts.length>2&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1],n=pts.length;
-  const mid=elevationOn();/* a centre line of vertices on raised ground (the paving follows a crowned bank) */
+  const mid=elevationOn()||surfOn();/* a centre line of vertices on raised ground (the paving follows a crowned bank); surface craft (?surf=1): the same row carries the trodden middle */
+  const surf=surfOn(),cutOf=(ex:number,ez:number,ux:number,uz:number)=>{if(!surf||!elevationOn())return 0;const rise=groundLift(ex+ux*1.2,ez+uz*1.2)-groundLift(ex,ez);return Math.max(0,Math.min(1,(rise-.06)/.22));};
   const run=o.beach?trailBeachRun(pts):null,pos:number[]=[],col:number[]=[],verge:number[]=[],idx:number[]=[];
   pts.forEach(([x,z],i)=>{const [px,pz]=closed&&i===0?pts[n-2]:pts[Math.max(0,i-1)],[nx,nz]=closed&&i===n-1?pts[1]:pts[Math.min(n-1,i+1)],dx=nx-px,dz=nz-pz,l=Math.hypot(dx,dz)||1;
    const r=run?run[i]:0,k=run?smooth(-1.5,TRAIL_BEACH.blend,r):0,w=width*(1-TRAIL_BEACH.narrow*smooth(1,TRAIL_BEACH.blend+2,r)),ox=-dz/l*w/2,oz=dx/l*w/2,yy=run?TRAIL_BEACH.y*smooth(-1,3,r)+y*(1-smooth(-1,3,r))-y:0;
    if(mid)pos.push(x+ox,yy,z+oz,x,yy,z,x-ox,yy,z-oz);else pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
    // aVerge (groundTint.ts 'trail'): offset from the centre line, half width, and how much the edge breaks into the lawn (none on sand, at an open end, or on the stadium apron).
-   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;if(mid)verge.push(w/2,w/2,vk,0,w/2,vk,-w/2,w/2,vk);else verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);if(mid)col.push(tmpC.r,tmpC.g,tmpC.b);
+   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;if(mid)verge.push(w/2,w/2,vk,0,w/2,vk,-w/2,w/2,vk);else verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);
+    // Surface craft: worn paving by vertex colour (no shader cost): the trodden middle lighter, the edges darker and dusty, and where
+    // the trail climbs a bank the uphill edge darker still (the shade of the cut it sits in). None where the verge is off (ends, sand).
+    if(surf&&mid){const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k,ul=Math.hypot(ox,oz)||1,ux=ox/ul,uz=oz/ul,e=TRAIL_WEAR;
+     for(const side of [1,0,-1]){const f=side?1-vk*(e.edge+e.cut*cutOf(x+ox*side,z+oz*side,ux*side,uz*side)):1+vk*e.centre;col.push(tmpC.r*f,tmpC.g*f,tmpC.b*f);}}
+    else{col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);if(mid)col.push(tmpC.r,tmpC.g,tmpC.b);}
    if(i){if(mid)for(const k of [0,1]){const a=(i-1)*3+k,b=i*3+k;idx.push(a,b,a+1,a+1,b,b+1);}else idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);}// counter-clockwise from above: faces up
    if(i){const [qx,qz]=pts[i-1];surfaceAreas.push({kind:k>.5?'sand':'path',x:(x+qx)/2,z:(z+qz)/2,w:Math.abs(x-qx)+w,d:Math.abs(z-qz)+w});}});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('aVerge',new T.Float32BufferAttribute(verge,3));g.setIndex(idx);g.computeVertexNormals();

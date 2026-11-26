@@ -11,7 +11,11 @@ import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
 import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
-import {surfOn,setSurfaceInput,surfaceStats} from './surfaceEdges';
+import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
+import {mergeLawnPatch} from './westTerrain';
+import {trackNearest} from './trainTrack';
+import {cayGround} from './coralCayElevation';
+import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
 import {sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
@@ -103,6 +107,8 @@ export function* buildTownSteps(scene: T.Scene) {
   const obstacles: Obstacle[] = [], textures: T.Texture[] = [], materials: T.Material[] = [];
   const assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[]=[];
   const surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[]=[];
+  /** Rectangles laid by path() (surfaceEdges.ts: only these, and the other builders' true rectangles, get lips and wear). */
+  const rectPaths=new Set<object>();let westAreas:[number,number]=[0,0];
   /** District sign posts (kerb depth: contact shade at each foot). */
   const signFeet:{x:number;z:number}[]=[];
   const palette = new Map<string,T.MeshStandardMaterial>();
@@ -328,7 +334,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const carriageway=8,footprint=12;
     roads.push({x,z,w:vertical?footprint:length,d:vertical?length:footprint,carriageway,boulevard,vertical});
   }
-  function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});return tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
+  function path(x:number,z:number,w:number,d:number){const area={kind:'path',x,z,w,d};surfaceAreas.push(area);rectPaths.add(area);return tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
   /** The Beach Kitchen square (lib/town/beachKitchenSquare.ts, Nov 13 2026): paving from both facades to the grass line, then a
    *  vertex-colour fade into the sand (no straight edge across the beach, no grass strip under the shop fronts). */
   function beachKitchenSquare(){
@@ -1476,7 +1482,9 @@ export function* buildTownSteps(scene: T.Scene) {
   const noCafe=(()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi-no-cafe')==='1';}catch{return false;}})();
   let cafe:CafeBuild|null=null;if(!noCafe)try{cafe=buildSeasideCafe({box,cylinder,put,line,lit,town,obstacles,walkSurfaces,buildings,textures,materials,nightSigns,prop});}catch(error){console.error('Café by the Sea failed to build',error);}
   // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park, Stadium Plaza.
+  westAreas[0]=surfaceAreas.length;
   const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop,seaRipples:waterRipples.texture/* the pond's water: the sea's own ripple tile */});
+  westAreas[1]=surfaceAreas.length;
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
@@ -1769,8 +1777,22 @@ export function* buildTownSteps(scene: T.Scene) {
   // cone): one height per prop / group, only things that touch the ground; (2) the kerbs, contact shade and small ground objects
   // join each 50 m chunk's plain-paint batch as one vertex-coloured piece (userData.depthColors, read by the batching pass below).
   // Surface craft (?surf=1, surfaceEdges.ts): the lawn's lips need every path and whatever covers the lawn (fields.ts builds them).
-  if(surfOn()){const cover=[...roads.map(r=>({x:r.x,z:r.z,w:r.w,d:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12,d:12})),...surfaceAreas.filter(a=>a.kind!=='path'),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6})),...buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))];
-   setSurfaceInput({paths:surfaceAreas.filter(a=>a.kind==='path'),blocked:(x,z)=>{for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;}});void surfaceStats;}
+  if(surfOn()){// Stadium Park's `path` areas are the bounding boxes of slanted trail runs, the pond and the jetty, not paving: they only block
+   const soft=(a:object,i:number)=>i>=westAreas[0]&&i<westAreas[1]&&!rectPaths.has(a),paths=surfaceAreas.filter((a,i)=>a.kind==='path'&&!soft(a,i));
+   const cover=[...roads.map(r=>({x:r.x,z:r.z,w:r.w,d:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12,d:12})),...surfaceAreas.filter((a,i)=>a.kind!=='path'||soft(a,i)),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6})),...buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))];
+   const blocked=(x:number,z:number)=>{for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;};
+   setSurfaceInput({paths,blocked});void surfaceStats;
+   // Coral Cay's lawn: its rim onto the sand ring (which lies over the lawn's plane), the lips and the wear along its paths join the
+   // lawn's own geometry (after the drape: the paths are final, and the patch is not ground for it). 0 draws, same material.
+   const lawn=town.getObjectByName('coral-cay-lawn') as T.Mesh|undefined;
+   if(lawn){const P=lawn.position,low=depthLowTier(),R=ROUNDABOUT;
+    const skip=(x:number,z:number)=>blocked(x,z)||(Math.abs(z-CAUSEWAY.z)<CAUSEWAY.deckHalf+7&&x<CAY_BOULEVARD.x1+8)||Math.hypot(x-R.x,z-R.z)<R.walkOuter+3||!!trackNearest(x,z,4.5);
+    const e=cayLawnEdges(low,elevationOn()?cayGround:null,skip,-P.y);
+    if(e&&e.triangles){const g0=lawn.geometry,count=e.position.length/3,base=g0.getAttribute('position').count,pos=e.position.slice(),up=new Array(count*3).fill(0);
+     for(let i=0;i<count;i++){pos[i*3]-=P.x;pos[i*3+2]-=P.z;up[i*3+1]=1;}
+     if(!g0.getAttribute('uv'))g0.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(base*2),2));if(!g0.getAttribute('normal'))g0.computeVertexNormals();
+     const g=mergeLawnPatch(g0,{position:pos,normal:up,uv:new Array(count*2).fill(0),index:e.index,triangles:e.triangles} as Parameters<typeof mergeLawnPatch>[1]);
+     const a=new Float32Array(g.getAttribute('position').count*2);a.set(e.edge,base*2);g.setAttribute('aEdge',new T.Float32BufferAttribute(a,2));g0.dispose();lawn.geometry=g;}}}
   if(depth){registerDepth();/* again: every path laid since is known to the verge */
    town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();let moved=0;const movedList:number[][]=[];
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train||o.userData.depthOwn||o.parent===ferry)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});

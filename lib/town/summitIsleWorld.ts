@@ -10,6 +10,7 @@ import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {surfOn} from './surfaceEdges';
 import {applyGroundTint} from '../graphics/groundTint';
 import {stripePlan,stripedSlabGeometry} from '../graphics/pitchStripes';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -144,6 +145,9 @@ export function buildSummitIsle(t:SummitTools){
    const rock=smoothstep(1.05,1.4,slope)*smoothstep(42,52,h)*smoothstep(.6,.8,shade);
    if(rock>0)c.lerp(ROCK_LIGHT,Math.min(.6,rock));
    if(onTerrace>=1)c.copy(GRASS);
+   // Surface craft (?surf=1): the dune line is not a ring. The grass thins onto the sand unevenly: its first ring takes the sand's
+   // colour by a wandering amount (a smooth noise round the island plus a little per-bearing scatter), the second a trace of it.
+   if(surfOn()&&f<.02){const w=.5+.5*Math.sin(i*.37+1.3)*Math.sin(i*.113+.4),t=Math.max(0,Math.min(1,.2+.7*w+.25*jitter(i,91)));c.lerp(SAND,f<=0?t:.3*t*t);}
    push(r,h-DROP,c);}
   P.push(pr);Y.push(yr);CL.push(cr);}
  // Nov 24 2026 (portal dip): a fine vertex within half a cell of a tunnel portal's mouth plane (trainTrack MOUTH_IN) and across the
@@ -283,7 +287,7 @@ export function buildSummitIsle(t:SummitTools){
   const section=(piece:Piece,i:number)=>{const p=line[i],a=line[Math.max(0,i-2)],b=line[Math.min(n-1,i+2)],ex=b.x-a.x,ez=b.z-a.z,el=Math.hypot(ex,ez)||1,tx=ex/el,tz=ez/el;
    const tone=PATH.clone().multiplyScalar(.95+.07*jitter(Math.floor(i/6),7));
    // The two edge rows a shade darker (a worn verge), so the strip reads as a path, not a decal.
-   return PATH_ACROSS.map(f=>{const x=p.x-tz*half*f,z=p.z+tx*half*f;return piece.vertex(x,drape(x,z,tx,tz)+lift,z,tone.clone().multiplyScalar(Math.abs(f)>.99?.9:1));});};
+   return PATH_ACROSS.map(f=>{const x=p.x-tz*half*f,z=p.z+tx*half*f;return piece.vertex(x,drape(x,z,tx,tz)+lift,z,tone.clone().multiplyScalar(Math.abs(f)>.99?.9:surfOn()&&f===0?1.05:1));});};
   for(let i=0;i<n;i++){const piece=sectorOf(line[i].x,line[i].z);
    // Rows join within one sector piece; at a sector seam the previous row is made again in the new piece (no gap).
    if(prev&&prevPiece!==piece)prev=section(piece,i-1);
