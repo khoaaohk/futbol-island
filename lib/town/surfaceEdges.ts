@@ -29,7 +29,10 @@ export const surfOn=()=>enabled;
 /** The band (m) and how the shader breaks it (groundTint.ts reads these; tests/surface-edges.cjs keeps both in step). */
 export const EDGE={inset:.5,minWidth:1.1,maxWidth:2,step:4,lowStep:8,rise:.02,
  /** shader: noise weights (tile A blotches, R clumps), the grass / bare threshold, the damp lip and the soil shadow */
- noise:.9,clump:.85,from:.38,to:.62,damp:.16,soil:.12,soilTo:.95} as const;
+ noise:.9,clump:.85,from:.38,to:.62,damp:.16,soil:.12,soilTo:.95,
+ /** against PAVING (a path, the town's pavement; Nov 28 2026 review): a true soft blend across the whole band (grass fades into the
+  *  paving's colour through a dusty band), the broken threshold kept only as fine detail: the tile's 20 cm clumps stay, its broad blotches (the torn-paper wobble) drop to `paveNoise`. */
+ paveFrom:.15,paveTo:.85,paveNoise:.25} as const;
 /** `over`..`over+overVar`: how far the grass creeps onto the path; `thin`: how far back from the path's edge the lawn starts to thin
  *  (a worn verge 0.5 to 0.8 m wide in all. Nov 27 2026: tried 0.8 to 1.3 m: the mean profile did not get smoother, since the tile's
  *  blotches only move the threshold by about 0.2 m, and the edge read as torn paper at night; kept tight). */

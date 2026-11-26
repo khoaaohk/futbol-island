@@ -118,7 +118,7 @@ ok('lighter shadow filter (dev flag, OFF by default): 16 -> 4 / 5 shadow reads p
  assert(/renderer\.toneMapping=T\.ACESFilmicToneMapping;renderer\.toneMappingExposure=1\.0;applyGfxDevSwitches\(renderer\);/.test(town),'Town renderer the same');
  for(const f of ['lib/shop/ballStage.ts','lib/shop/bootScene.ts','lib/arcade/arcadeStage.ts','lib/arcade/arcadeRoomScene.ts','lib/gashapon/toyViewer.ts'])assert(!/gfxDevSwitches|shadowKernel|gfxFlags/.test(src(f)),f+' is not touched by the switches');});
 
-const SURF_EDGE_MAX=59;// measured 59 WITH the path wear (Nov 27 2026; was 64 without it, 73 with it before the trim): the neighbour (sand or paving) is still reproduced exactly at the rim. Re-pinned deliberately: any growth fails
+const SURF_EDGE_MAX=56;/* Nov 28 2026 review: 56 with the soft blend against paving (what lies beyond, the wear and the blend's width are worked out per VERTEX: two more varyings, 6 components in all), was 59 */// measured 59 WITH the path wear (Nov 27 2026; was 64 without it, 73 with it before the trim): the neighbour (sand or paving) is still reproduced exactly at the rim. Re-pinned deliberately: any growth fails
 // Surface craft (?surf=1, lib/town/surfaceEdges.ts, default OFF): the lawn's program gains the soft-edge branch. Flag off: the grass
 // source has no trace of it (the pins above are that program). Flag on: stated here, worst-case pixel (a pixel INSIDE the edge band;
 // every other lawn pixel pays one comparison and one varying), no texture read added. Under the Nov 17 baseline at tier 0 (441 < 448) and at tiers 3-4 (400 < 406); 10 ALU over it on band pixels at tiers 1-2 (416 against 406).

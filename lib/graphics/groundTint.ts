@@ -154,12 +154,17 @@ export function lawnEdgeGlsl(){const E=LAWN_EDGE,S=GROUND_TINT.sand,P=GROUND_TIN
  // Cost (Nov 27 2026): one scalar product for the whole tone (mottle x tile grain x soil x wear) and one colour multiply, straight
  // ramps in place of the three smoothsteps (the band is a noise-broken threshold: the curve's shape does not show), the tile's
  // rgb read once as a vector. tests/ground-shader-cost.cjs states the number.
- return `if(vEdge.x>.004){float eu=min(vEdge.y,1.),ew=vEdge.y>1.5?vEdge.y-${f(WEAR_BASE)}:0.;vec3 gc=gt.rgb-.5;
- float et=vEdge.x+min(vEdge.x,1.-vEdge.x)*((gt.a-.5)*${f(E.noise*2)}+gc.r*${f(E.clump*2)}),ek=clamp((et-${f(E.from)})*${f(1/(E.to-E.from))},0.,1.);
+ return `if(vEdge.x>.004){float eu=vEdge.y,ew=vEdge.z;vec3 gc=gt.rgb-.5;
+ float et=vEdge.x+min(vEdge.x,1.-vEdge.x)*((gt.a-.5)*${f(E.noise*2)}*vEdge.w+gc.r*${f(E.clump*2)}),ek=clamp((et-vEdgeR.x)*vEdgeR.y,0.,1.);
  vec3 bare=mix(${lin(SAND_HEX)},${lin(PAVE_HEX)},eu)*((1.+${f(S.amp)}*n)*(1.+dot(gc,mix(vec3(${f(S.grain*sm[0])},${f(S.grain*sm[1])},${f(S.grain*sm[2])}),vec3(${f(P.grain*pm[0])},0.,${f(S.grain*sm[2])}),eu)))*(1.-${f(E.soil)}*clamp((${f(E.soilTo)}-et)*${f(1/(E.soilTo-E.to))},0.,1.))*(1.+${f(WEAR.gain)}*ew*(.7+.6*gt.a)));
  bare.rb*=vec2(1.+${f(S.amp*.5)}*w,1.-${f(S.amp*.8)}*w);
  diffuseColor.rgb=mix(diffuseColor.rgb*(1.-${f(E.damp)}*clamp(et*${f(1/E.from)},0.,1.)),bare,ek);}`;}
 const SAND_HEX='#f1d6a1',PAVE_HEX='#eddfbb';
+/** Per VERTEX (Nov 28 2026 review), so the band pixel pays nothing for it: what lies beyond (0 sand .. 1 paving), the path wear, and
+ *  how the band blends there: against sand a noise-broken threshold (from..to), against paving a soft blend across the whole band
+ *  with the break-up only as fine detail (paveFrom..paveTo, paveNoise). vEdge = (edge, beyond, wear, noise share), vEdgeR = (from, 1/width). */
+const LAWN_EDGE_VERTEX=(()=>{const E=LAWN_EDGE,i0=1/(E.to-E.from),i1=1/(E.paveTo-E.paveFrom);
+ return `{float eu=min(aEdge.y,1.);vEdge=vec4(aEdge.x,eu,aEdge.y>1.5?aEdge.y-${f(WEAR_BASE)}:0.,1.-${f(1-E.paveNoise)}*eu);vEdgeR=vec2(${f(E.from)}+${f(E.paveFrom-E.from)}*eu,${f(i0)}+${f(i1-i0)}*eu);}`;})();
 export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kind:GroundKind):M{
  ensureSubscribed();
  const {amp,grain,wet}=GROUND_TINT[kind],[mr,mg,mb]=GROUND_DETAIL_MIX[kind];
@@ -167,7 +172,7 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
  // without the attribute read 0 = plain lawn). With the flag off the source below is exactly what it was.
  const pbr=gfxFlag('pbr-ground'),beach=kind==='beach',trail=kind==='trail',edge=kind==='grass'&&surfOn();
  material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'')+(edge?'-edge':'');
- const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':edge?'varying vec2 vEdge;':'';
+ const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':edge?'varying vec4 vEdge;varying vec2 vEdgeR;':'';
  const detail=[mr?`${f(grain*mr)}*(gt.r-.5)`:'',mg?`${f(grain*mg)}*(gt.g-.5)`:'',mb?`${f(grain*mb)}*(gt.b-.5)`:''].filter(Boolean).join('+');
  // Surface craft (?surf=1): the trail's verge breaks into the lawn over twice the width, more unevenly (numbers only: same program cost).
  const B=BEACH_WET,E=surfOn()?TRAIL_EDGE_SOFT:TRAIL_EDGE,S=GROUND_SLAB;
@@ -177,7 +182,7 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
    sh.fragmentShader=T.ShaderLib.lambert.fragmentShader.replace('#include <common>','#include <common>\nuniform float uGroundA2;')
     .replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+(beach?sunHighlightGlsl(`mix(uGroundA2,${f(B.a2)},gWet)`,`mix(.04,${f(B.f0)},gWet)`):GROUND_SUN_GLSL));}
   sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;${beach?'attribute float aShore;':trail?'attribute vec3 aVerge;':edge?'attribute vec2 aEdge;':''}${extraVary}`)
-   .replace('#include <project_vertex>',`#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;${beach?'vShore=aShore;':trail?'vVerge=aVerge;':edge?'vEdge=aEdge;':''}`);
+   .replace('#include <project_vertex>',`#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;${beach?'vShore=aShore;':trail?'vVerge=aVerge;':edge?LAWN_EDGE_VERTEX:''}`);
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;${extraVary}uniform float uGroundGrain,uGroundTime,uGroundDetail;uniform sampler2D uGroundTile;\n${GROUND_TINT_GLSL}`)
    .replace('#include <color_fragment>',`#include <color_fragment>
 float gWet=0.;

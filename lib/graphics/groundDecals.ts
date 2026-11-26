@@ -41,7 +41,7 @@ export const TUFT_COLORS=['#5f8d52','#7fae5e','#4a8059','#9fc578'] as const;
 /** Surface craft (?surf=1, audit B4 / B5). Tufts: shorter, lighter, dark root to light tip (vertex colour), same 5 triangles and the
  *  same draw. Stones: a low flat-topped boulder (10 triangles) instead of the half-buried octahedron that read as a pyramid, no
  *  near-white, pink or near-black, 30 % fewer (so fewer triangles in all: 350 x 10 against 500 x 8 on the main island). */
-export const SURF_DECALS={tuftHeight:.62,tuftRoot:.68,tuftTip:1.22,stoneKeep:.7,stoneTris:10,
+export const SURF_DECALS={tuftHeight:.62,tuftRoot:.62,tuftTip:1.08,/* review: both faces are lit now (upLit), so the tip no longer needs the push */stoneKeep:.7,stoneTris:10,
  tufts:['#6f9a5c','#86b068','#63966a','#a4c47c'],stones:['#9b9385','#b3a58b','#8a8377','#c7b795','#bdb09a','#a39683']} as const;
 export const FLOWER_COLORS=['#fff4dc','#f6d56a','#f0a9b8','#c7b6f0','#4f8a58'] as const;
 
@@ -111,6 +111,36 @@ function flowerGeometry(){ // a shallow six-sided cone (6 tris)
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));return g;
 }
 
+/** Surface craft review (?surf=1, Nov 28 2026): the flat hexagons on the lawns read as stickers. With surf the `flowers` draw is ONE
+ *  merged static geometry (same single draw, same Lambert family, colour per vertex, no instancing), which lets each site have its
+ *  own shape at the same six triangles:
+ *   - a flower = a clump: two leaf blades (dark at the root) leaning out and four small tilted blooms in the petal colour (one on each blade's tip, two lower);
+ *   - a bare patch / leaf litter = an irregular blob whose rim fades to the lawn's green (no outline); a dune keeps its colour, irregular rim. */
+/** Both faces lit like the ground under them (surf only): three turns the normal over on a back face, so a blade or a petal seen from
+ *  behind went near-black (the tussocks' dark half, Nov 27 audit "blades are near-black"). One multiply in these two small programs. */
+function upLit<M extends T.Material>(m:M,key:string){const prev=m.onBeforeCompile,pk=m.customProgramCacheKey;
+ m.onBeforeCompile=(s,r)=>{prev.call(m,s,r);s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n#ifdef DOUBLE_SIDED\nnormal*=faceDirection;\n#endif');};
+ m.customProgramCacheKey=()=>pk.call(m)+key;return m;}
+const LAWN_RIM='#608870',LEAF_ROOT='#3c6a3e',LEAF_TIP='#7aa562';
+function patchGeometry(flowers:{x:number;y:number;z:number;r:number;sx:number;sy:number;sz:number;col:string}[],mounds:MacroSite[]){
+ const pos:number[]=[],col:number[]=[],c=new T.Color(),d=new T.Color(),h=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
+ const v=(x:number,y:number,z:number,k:T.Color,m=1)=>{pos.push(x,y,z);col.push(k.r*m,k.g*m,k.b*m);};
+ const root=new T.Color(LEAF_ROOT),tip=new T.Color(LEAF_TIP),lawn=new T.Color(LAWN_RIM);
+ for(const f of flowers){const R=Math.max(.2,f.sx),H=Math.min(.34,Math.max(.14,f.sy*.55)),seed=f.x*3.1+f.z*7.7;c.set(f.col);
+  // two leaf blades leaning out to either side (dark root, light tip), then four small blooms: one at each blade's tip, two lower in the clump
+  const tips:number[][]=[];
+  for(let k=0;k<2;k++){const a=f.r+k*3.3+(h(seed+k)-.5)*.9,ca=Math.cos(a),sa=Math.sin(a),out=R*(.5+.3*h(seed+k+9)),hy=H*(.7+.3*h(seed+k+5)),w=R*.17;
+   v(f.x+ca*R*.06-sa*w,f.y,f.z+sa*R*.06+ca*w,root);v(f.x+ca*R*.06+sa*w,f.y,f.z+sa*R*.06-ca*w,root);v(f.x+ca*out,f.y+hy,f.z+sa*out,tip);
+   tips.push([f.x+ca*out,f.y+hy+.015,f.z+sa*out,a]);const b=a+1.45+h(seed+k+7)*.5,o2=R*(.22+.25*h(seed+k+11));tips.push([f.x+Math.cos(b)*o2,f.y+hy*(.45+.2*h(seed+k+13)),f.z+Math.sin(b)*o2,b]);}
+  // a bloom: a small triangle tilted outward (its outer corner lower), so it shows from the play camera on every side
+  tips.forEach(([bx,by,bz,a],k)=>{const rb=R*(.15+.07*h(seed+k+3)),t=a+.5;for(let q=0;q<3;q++){const b=t+q*2.094,o=Math.cos(b-a);v(bx+Math.cos(b)*rb,by-o*rb*.4,bz+Math.sin(b)*rb,c,q?.92:1.08);}});}
+ for(const m of mounds){const cr=Math.cos(m.r),sr=Math.sin(m.r),seed=m.x*5.3+m.z*2.9,soft=m.k==='bare'||m.k==='litter';c.set(m.col);d.copy(c);if(soft)d.lerp(lawn,.72);
+  const rim=(k:number)=>{const a=k/6*6.283185,q=1+(h(seed+(k%6))-.5)*.5,lx=Math.cos(a)*q*m.sx,lz=Math.sin(a)*q*m.sz;return [m.x+lx*cr+lz*sr,m.z-lx*sr+lz*cr] as const;};
+  for(let k=0;k<6;k++){const [ax,az]=rim(k+1),[bx,bz]=rim(k);v(m.x,m.y+.35*m.sy,m.z,c);v(ax,m.y,az,d);v(bx,m.y,bz,d);}}
+ const g=new T.BufferGeometry(),n=new Float32Array(pos.length);for(let i=1;i<n.length;i+=3)n[i]=1;
+ g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(n,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));return g;
+}
+
 function boulderGeometry(){ // surf: a low, flat-topped, slightly lopsided stone: 4 sides + a tilted top (10 tris, flat shaded)
  const A=[.2,1.7,3.3,4.9],R=[1,.85,1.05,.8],H=[1,.8,.9,.7],b=A.map((a,i)=>[Math.cos(a)*R[i],0,Math.sin(a)*R[i]]),t=A.map((a,i)=>[Math.cos(a+.25)*R[i]*.6+.08,H[i],Math.sin(a+.25)*R[i]*.6-.05]),pos:number[]=[];
  const tri=(p:number[],q:number[],r:number[])=>pos.push(...p,...r,...q);
@@ -135,14 +165,17 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const macro=(h:MacroHost):Inst[]=>plan.macro.filter(m=>MACRO_HOST[m.k]===h);
  const make=(label:string,geo:T.BufferGeometry,insts:Inst[],double=false)=>{
   if(!insts.length){geo.dispose();return;}
-  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide,vertexColors:surf&&label==='tufts'});owned.push(geo,mat);if(label==='tufts')patchTuftWind(mat);/* island wind: blade tips sway (islandWind.ts), same draw */
+  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide,vertexColors:surf&&label==='tufts'});owned.push(geo,mat);if(label==='tufts'){patchTuftWind(mat);if(surf)upLit(mat,'-uplit');}/* island wind: blade tips sway (islandWind.ts), same draw */
   const mesh=new T.InstancedMesh(geo,mat,insts.length),o=new T.Object3D(),col=new T.Color();
   insts.forEach((s,i)=>{o.position.set(s.x,s.y,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.sx,s.sy,s.sz);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);mesh.setColorAt(i,col.set(s.col));});
   mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   mesh.name=name+'-'+label;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;mesh.computeBoundingSphere();group.add(mesh);};
  make('stones',surf?boulderGeometry():new T.OctahedronGeometry(1,0),[...from(plan.stones,surf?SURF_DECALS.stones:STONE_COLORS,true),...macro('stones').map(m=>surf?{...m,y:m.y-m.sy*.5}:m)]);
  make('tufts',tuftGeometry(),[...from(plan.tufts,surf?SURF_DECALS.tufts:TUFT_COLORS,false),...macro('tufts')],true);
- make('flowers',flowerGeometry(),[...from(plan.flowers,FLOWER_COLORS,false),...macro('mounds')]);
+ if(surf){const fl=[...from(plan.flowers,FLOWER_COLORS,false),...plan.macro.filter(m=>m.k==='flower')],mo=plan.macro.filter(m=>MACRO_HOST[m.k]==='mounds'&&m.k!=='flower');
+  if(fl.length+mo.length){const geo=patchGeometry(fl,mo),mat=upLit(new T.MeshLambertMaterial({color:'#ffffff',vertexColors:true,side:T.DoubleSide}),'decal-patch-uplit');owned.push(geo,mat);
+   const mesh=new T.Mesh(geo,mat);mesh.name=name+'-flowers';mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;group.add(mesh);}}
+ else make('flowers',flowerGeometry(),[...from(plan.flowers,FLOWER_COLORS,false),...macro('mounds')]);
  make('strips',stripGeometry(),macro('strips'));
  parent.add(group);
  const macroTris=plan.macro.reduce((a,m)=>a+MACRO_HOST_TRIS[MACRO_HOST[m.k]],0);

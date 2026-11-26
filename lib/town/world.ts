@@ -1122,7 +1122,14 @@ export function* buildTownSteps(scene: T.Scene) {
     if(i%2===0)palm(x-4,z+9,5.5);
     for(let j=0;j<3;j++){const rock=put(new T.IcosahedronGeometry(.22+j*.1,0),'#d2bc94',x-2+j*.65,.1,z-3);rock.scale.y=.5;}
   }
-  for(const x of [-30,45,125,182]){const z=x>160?-199:x>100?-206:-210;tintGroundMesh(box(5,.04,2,'#d6c394',x,-.045,z),'sand');for(let i=0;i<7;i++){const grass=put(new T.ConeGeometry(.09,.5+(i%3)*.1,4),'#8b9e6b',x-2+i*.55,.22,z+Math.sin(i)*.4);grass.rotation.z=Math.sin(i)*.25;}}
+  for(const x of [-30,45,125,182]){const z=x>160?-199:x>100?-206:-210;/* surf: no slab under the tufts (its 4 cm side drew a dark step on the sand) */if(!surfOn())tintGroundMesh(box(5,.04,2,'#d6c394',x,-.045,z),'sand');for(let i=0;i<7;i++){
+   // Surface craft review (?surf=1): the row of seven dark cones read as spikes. Same count and the same eight triangles each, as
+   // marram tufts: four blades (both faces) splayed from one root and leaning downwind, scattered over the mound, lit like the sand.
+   if(surfOn()){const h=.42+(i%3)*.12,pos:number[]=[];for(let k=0;k<4;k++){const a=k*1.571+i*.9,c=Math.cos(a),sn=Math.sin(a),tx=c*h*.3+h*.38,tz=sn*h*.3,w=.035;
+     pos.push(c*.03-sn*w,0,sn*.03+c*w, c*.03+sn*w,0,sn*.03-c*w, tx,h*(.8+.2*((k+i)%2)),tz, c*.03+sn*w,0,sn*.03-c*w, c*.03-sn*w,0,sn*.03+c*w, tx,h*(.8+.2*((k+i)%2)),tz);}
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));const n=new Float32Array(pos.length);for(let q=1;q<n.length;q+=3)n[q]=1;g.setAttribute('normal',new T.BufferAttribute(n,3));g.setAttribute('uv',new T.BufferAttribute(new Float32Array(pos.length/3*2),2));g.setIndex(Array.from({length:pos.length/3},(_,q)=>q));
+    const tuft=put(g,'#8b9e6b',x-2.1+i*.62+Math.sin(i*5.3)*.3,-.07,z+Math.sin(i*2.7)*.75);tuft.rotation.y=Math.sin(i*1.9)*.35;tuft.castShadow=false;continue;}
+   const grass=put(new T.ConeGeometry(.09,.5+(i%3)*.1,4),'#8b9e6b',x-2+i*.55,.22,z+Math.sin(i)*.4);grass.rotation.z=Math.sin(i)*.25;}}
   bench(-40,-211.5);bench(83,-215);districtSign('NORTH BEACH',80,-201);// AAA audit (Nov 24 2026): the sign's arch stood ON the Island Line (z -207 is the rail centre, the north-beach-east crossing) and the bench 2.7 m from it; now the arch spans the path 6 m on the town side, the bench 6 m on the sand
   // Southern boardwalk sits on the extended shoreline, with open ocean beyond.
 
