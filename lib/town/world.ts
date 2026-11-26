@@ -9,7 +9,7 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
-import {elevBuild,buildLift,groundLift,anchored,elevationOn} from './elevation';
+import {elevBuild,buildLift,groundLift,anchored,unlifted,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
@@ -1479,7 +1479,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Summit Isle activities (summitActivitiesWorld.ts): the Summit Kick post (and the Ball Cannon), static and batched.
   try{buildSummitActivityProps({box,cylinder,put,sign,obstacles});}catch(error){console.error('Summit Isle activity props failed to build',error);}
   // The zipline (ziplineWorld.ts): the launch platform, the cable, the hostel roof deck and its outside stair (static, batched).
-  const ziplineRails:ZiplineRail[]=[];try{buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails});}catch(error){console.error('Zipline props failed to build',error);}
+  const ziplineRails:ZiplineRail[]=[];try{unlifted(()=>buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails}));/* its heights are absolute (zipline.ts HOSTEL_BASE) */}catch(error){console.error('Zipline props failed to build',error);}
   // The Island Line (trainWorld.ts, train Phase 1): all static pieces join the paint batches below; the tunnel tube is its own mesh.
   let train:ReturnType<typeof buildTrainWorld>|null=null;
   // A/B switch for heat measurements (localStorage 'fi-no-train' = '1': the island without the line; never set by the game).
@@ -1722,7 +1722,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation: placement ends here. Drape the flat layers over each region's terrain; roofs stand on the raised ground (rooftop landing).
   // Props built as their own Group (a palm: pieces `put` into the group) stand at the group's spot: lifted here, once. A Group left at
   // the origin holds pieces at world coordinates: each is lifted at its own spot. `userData.ownHeight` opts a Group out.
-  if(elevBuild.active){drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']);for(const b of buildings)b.height+=groundLift(b.x,b.z);
+  if(elevBuild.active){elevBuild.stats=drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']);for(const b of buildings)b.height+=groundLift(b.x,b.z);
    const stand=(o:T.Object3D)=>{const g=groundLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
    for(const o of town.children)if(o instanceof T.Group&&!o.userData.ownHeight&&!o.userData.train){if(o.position.x===0&&o.position.y===0&&o.position.z===0)o.children.forEach(stand);else stand(o);}}
   elevBuild.active=false;elevBuild.anchor=null;elevBuild.pieces.length=0;

@@ -20,6 +20,8 @@
  */
 import {SUMMIT_LANDMARKS,summitGround} from './summitIsle';
 import {HOSTEL} from './coralCay';
+import {groundLift} from './elevation';
+import './coralCayElevation';
 import {STICK_WALK_FLOOR} from './walkControl';
 
 export type ZipPoint={x:number;y:number;z:number};
@@ -48,7 +50,9 @@ export const ZIP_TOWER=(()=>{
 
 // ---- The roof landing ---------------------------------------------------------------------------------------------------------
 /** The hostel's roof (world.ts building(): the walkable height is the walls plus the roof slab). */
-export const HOSTEL_ROOF=HOSTEL.h+.23;
+/** Elevation (elevation.ts, ?elev=1): the hostel's terrace height; 0 otherwise. The roof, the deck, the stair and the cable's end rise with it. */
+export const HOSTEL_BASE=groundLift(HOSTEL.x,HOSTEL.z);
+export const HOSTEL_ROOF=HOSTEL.h+.23+HOSTEL_BASE;
 /** The landing deck on the roof's east half, clear of the roof tank (x ≤ 560.6) and the stepped roof room (x ≤ 556.3): one step up. */
 export const ZIP_DECK={x:562.7,z:-122.3,w:3.4,d:5.4,height:HOSTEL_ROOF+ZIP_TREAD_RISE} as const;
 /** Where the rider stops and lets go (the deck's middle, a little south of the anchor mast). */
@@ -57,7 +61,7 @@ export const ZIP_LAND={x:562.7,z:-121.6} as const;
  *  south to the path along the verandah. `rail` is its outer handrail line (x), just inside the kit washing line's post (x 567). */
 export const ZIP_STAIR=(()=>{
  const wall=HOSTEL.x+HOSTEL.w/2,x0=wall-.6,x1=wall+1.6,landing={x:(x0+x1)/2,z:-124.5,w:x1-x0,d:1.8,height:HOSTEL_ROOF};
- const top=landing.z+landing.d/2,n=Math.ceil(HOSTEL_ROOF/ZIP_TREAD_RISE),run=.38,rise=HOSTEL_ROOF/n;
+ const top=landing.z+landing.d/2,n=Math.ceil((HOSTEL_ROOF-HOSTEL_BASE)/ZIP_TREAD_RISE),run=.38,rise=(HOSTEL_ROOF-HOSTEL_BASE)/n;
  const treads:(Box&{height:number})[]=[];
  // Tread i (1 … n-1) at height roof − i·rise; the last one is a single rise above the path.
  for(let i=1;i<n;i++)treads.push({x:wall+.8,z:top+(i-.5)*run,w:1.6,d:run,height:HOSTEL_ROOF-i*rise});
