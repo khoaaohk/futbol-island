@@ -10,7 +10,8 @@ import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
 import {elevationOn,groundLift} from './elevation';
-import {onWestStair,nearWestWall,onWestTerrace} from './westElevation';
+import {onWestStair,nearWestWall,onWestTerrace,WEST_TRAIL_TOP} from './westElevation';
+import {LAWN_TILT} from './westTerrain';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
@@ -61,7 +62,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   // 3 cm proud: a 2.25 m paving chord over the lawn's 2 m lattice).
   if(elevationOn()){const p=g.getAttribute('position') as T.BufferAttribute,up=material===trailMat?.03:0;let any=false;for(let i=0;i<p.count;i++){const h=groundLift(p.getX(i),p.getZ(i));if(h>0){p.setY(i,p.getY(i)+h+(onWestStair(p.getX(i),p.getZ(i),.6)?-.6/* under the treads */:up));any=true;}}if(any){// the paving stops at a flight of stairs (its treads are the surface there): triangles reaching into one are dropped
     const ix=g.index;if(ix&&material===trailMat){const keep:number[]=[],inStair=(i:number)=>onWestStair(p.getX(i),p.getZ(i),.6);let cut=false;for(let i=0;i<ix.count;i+=3){const a=ix.getX(i),b=ix.getX(i+1),c=ix.getX(i+2);if(inStair(a)||inStair(b)||inStair(c))cut=true;else keep.push(a,b,c);}if(cut)g.setIndex(keep);}
-    p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();}}
+    p.needsUpdate=true;g.computeVertexNormals();{const n=g.getAttribute('normal') as T.BufferAttribute;for(let i=0;i<n.count;i++){const y=n.getY(i);if(y<.5)continue;const x=n.getX(i)*LAWN_TILT,z=n.getZ(i)*LAWN_TILT,l=Math.hypot(x,y,z);n.setXYZ(i,x/l,y/l,z/l);}}/* lit like the lawn it lies on (leaned normals) */g.computeBoundingBox();}}
   if(material===trailMat&&!g.getAttribute('aVerge'))g.setAttribute('aVerge',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*3),3));const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
   const m=new T.Mesh(g,material);m.position.set(c.x,y,c.z);m.castShadow=false;m.receiveShadow=true;if(name)m.name=name;t.add(m);return m;};
  const paint=(g:T.BufferGeometry,c:T.Color)=>{const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
@@ -111,7 +112,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  // so no grass strip shows between them (Nov 13 2026, owner); STADIUM_PLAZA itself (flags, sponsors, analytics) is unchanged.
  // One even surface: the darker centre band (it stopped short of the street with a square end) is gone.
  {const east=PLAZA_PAVING_EAST,sheet=path((P_.minX+east)/2,pcz,east-P_.minX,P_.maxZ-P_.minZ) as unknown as T.Mesh|undefined;
-  if(sheet?.userData)sheet.userData.drapeCell=4;/* (?elev=1) the plaza is level across and one steady grade along: 4 m cells follow it within 1.5 cm (500 triangles, not 5,000) */}
+  if(sheet?.userData){sheet.userData.drapeCell=4;sheet.userData.drapeLean=LAWN_TILT;}/* (?elev=1) the plaza is level across and one steady grade along: 4 m cells follow it within 1.5 cm (500 triangles, not 5,000) */}
  for(const side of [-1,1])for(const x of PLAZA_FLAG_X){
   const z=pcz+side*(P_.maxZ-P_.minZ)/2+side*.8;
   // Nov 13 2026 (owner): national flags. The pole, finial and waving cloth are plazaFlags.ts's one mesh (world.ts builds it from
@@ -144,7 +145,11 @@ export function buildWestPark(t:Tools):WestParkStats{
  // A pond walk's square end runs 0.3 m on over the rim sand (its line ends just off the rim so the round caps of the walk mask and
  // the map stop at the waterline): no grass seam between the walk and the rim, and still ~2 m short of the water.
  const onToRim=(pts:P[])=>{const [ax,az]=pts[pts.length-2],[bx,bz]=pts[pts.length-1],l=Math.hypot(bx-ax,bz-az)||1;pts.push([bx+(bx-ax)/l*.3,bz+(bz-az)/l*.3]);return pts;};
- for(const tr of PARK_TRAILS)ribbon(tr.to==='pond'?onToRim(pathPoints(tr.curve)):pathPoints(tr.curve),TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});
+ // (?elev=1, audit Nov 26) the west trail's first half is laid straight along the station stair (ring walk → mouth → foot), then
+ // bends back onto its own curve on the forecourt; the layout's curve (map, lamps, the level crossing) is unchanged.
+ const westTop=(pts:P[]):P[]=>{const W=WEST_TRAIL_TOP,out:P[]=[];for(let x=W.x0;x>W.x1-.3;x-=1.2)out.push([x,W.z]);const j=Math.ceil(pts.length/2),[jx,jz]=pts[j],ex=W.x1-.3;
+  for(const u of [.25,.5,.75]){const a=u*Math.PI/2;out.push([ex+(jx-ex)*Math.sin(a),W.z+(jz-W.z)*(1-Math.cos(a))]);}return [...out,...pts.slice(j)];};
+ for(const tr of PARK_TRAILS){const pts=pathPoints(tr.curve);ribbon(tr.to==='pond'?onToRim(pts):elevationOn()&&tr.id==='west'?westTop(pts):pts,TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});}
  ribbon(ringPoints(),BOWL_RING.width,-.045,{verge:false});
  for(const l of PARK_LAWNS)disc(l.x,l.z,l.rx,l.rz,-.075,'#86ad79','grass');
  {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h),SEG=96,tmpE={x:0,z:0},sandK=(a:number)=>{const d=Math.atan2(Math.sin(a-POND_SAND.bearing),Math.cos(a-POND_SAND.bearing));return 1-smooth(POND_SAND.half*.55,POND_SAND.half,Math.abs(d));};
@@ -235,7 +240,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  const greens=['#4f7a57','#5e8c62','#6f9d6c','#739568'];
  // --- Fruit orchards (Nov 13 2026, owner; stadiumOrchard.ts): Summit Isle's orchard forms, baked into the chunks like any park tree
  // ('tree' prop: a kicked ball rustles them), each with its trunk collider; planted first so the park's own trees keep clear.
- for(const o of stadiumOrchardTrees()){if(nearWestWall(o.x,o.z,1.2))continue;if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
+ for(const o of stadiumOrchardTrees()){if(nearWestWall(o.x,o.z,1.2,1.6))continue;if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
   const plan=orchardPlanOf(o);placed.push([o.x,o.z]);stats.orchard.push(o);
   prop('tree',()=>{assets.push({kind:'tree',x:o.x,z:o.z,w:.4,d:.4,visualW:3.4*o.s,visualD:3.4*o.s,canopyHeight:4.2*o.s});
    for(const part of orchardParts(plan)){const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
@@ -254,7 +259,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   if(convert>0&&++plainSeen%8===0){convert--;placed.push([x,z]);continue;}// its spot stays open lawn
   placed.push([x,z]);stats.trees++;
   const conifer=rnd()<.22,colour=greens[Math.floor(rnd()*greens.length)];
-  if(nearWestWall(x,z,.9*s))continue;// (?elev=1) none standing in the terrace's retaining wall or its stairs (after the dice: the rest of the park is unchanged)
+  if(nearWestWall(x,z,.9*s,2.2*s))continue;// (?elev=1) none standing in the terrace's retaining wall or its stairs (after the dice: the rest of the park is unchanged)
   prop('tree',()=>{
    assets.push({kind:'tree',x,z,w:.45*s,d:.45*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:4.4*s});
    put(new T.CylinderGeometry(.13*s,.2*s,2.4*s,6),'#9d805b',x,1.2*s,z);

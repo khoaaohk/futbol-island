@@ -7146,3 +7146,16 @@ Measured (headless desktop Chrome, depth 0 -> 1; no phone heat test, no thermal 
 - per view: Nursery 145.9k -> 167.7k, a street 111.8k -> 130.4k, town overview 681k -> 716k; phone tier 101.9k -> 117.4k, 87.0k -> 100.0k, 274k -> 293k; Battery saver Nursery 124.0k -> 136.7k;
 - draw calls: Nursery 179 -> 183, street 134 -> 136, phone 97 -> 99 and 92 -> 93, Battery saver 171 -> 175. The +2 to +4 are existing chunk batches whose bounds now span their streets and enter the view more often; scene meshes 1011 -> 1012 (full tier), 1011 = 1011 (lowest tier).
 Checked in the page: walk, scooter, bike, moped across and along kerbs and dropped kerbs (no stall, player on the ground to the millimetre when walking), ball over kerbs (never under the ground), jetpack landing on a kerb edge, traffic on the sunk road. Tests: `tests/town-depth.cjs`. Notes, audit and shots: `.claude/worktrees/_recovery-nov20/town-depth/NOTE.md`.
+
+### West audit pass (Nov 26 2026, still behind `?elev=1`, not pushed)
+
+Build-time only; no new material, texture, program, draw or per-frame work (programs 227 = 227 flag off / on in one session).
+- Retaining wall face is coursed stone: one quad per block (0.44 m courses, 1.1 m blocks, staggered), tinted per block through
+  `userData.vertexTint` in the existing chunk paint batch (world.ts multiplies it into the baked vertex colour; pieces without it
+  are untouched). The six full-length course-line sweeps are gone. Stepped garden walls beside Stadium Plaza (12 level lengths,
+  2 colliders per side). Wall + stairs + garden walls: 6.8k → 10.4k static triangles.
+- Lawn patch: normals lean 2.4x the grade (light and shade on the banks, no colour attribute); T-junctions between 8 / 4 / 2 m
+  cells stitched (same 9.3k triangles). Plaza sheet and trails lean the same way (`userData.drapeLean`, opt-in in `drapePieces`).
+- Frame triangles, flag off → on, desktop: plaza 305k → 335k, pitch 354k → 392k (crowd fill varies), wall side 271k → 292k;
+  phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
+  camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.
