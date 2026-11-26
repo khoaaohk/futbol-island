@@ -7155,3 +7155,17 @@ Build-time only; no new material, texture, program, draw or per-frame work (prog
 - Frame triangles, flag off → on, desktop: plaza 305k → 335k, pitch 354k → 392k (crowd fill varies), wall side 271k → 292k;
   phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
   camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.
+
+### Coral Cay independent audit (Nov 26 2026, still behind `?elev=1`, not pushed)
+
+Reviewer pass on `island-elevation-cay` after the west merge and a merge of `rc-nov25` (9b0ce430). Fixes that touch rendering or per-frame work:
+- **Lawn shading** (`coralCayTerrain.ts`): the centre vertex of a fanned cell takes the mean curvature of its ring (it was 0, which drew a lattice of dark grid lines on every bank's foot and crest). Normals only: no vertex, triangle, material or program change.
+- **Farm track** (`coralCayWorld.ts`, flag on only): the track sheet stands 3 cm higher over the tilled bed. No geometry added.
+- **Townsfolk on raised ground** (`islandNpcs.ts`): with the flag on, each grounded neighbourhood NPC standing on raised ground reads the ground height once per frame (one bilinear grid read; the loop is skipped entirely with the flag off). No allocation.
+- **Table stools** (`world.ts tableParts`): build-time only.
+
+Measured (headless desktop Chrome, 1280 x 800, sunset; calls / triangles, flag off → on): plaza 148 → 158 / 277k → 301k; knoll 94 → 103 / 244k → 263k; farm 189 → 194 / 399k → 417k; hostel 194 = 194 / 297k → 314k; boulevard 119 → 121; dune 56 = 56 / 128k → 142k; beach 225 → 219; station 237 → 220; court 123 → 114. Phone viewport (390 x 844): beach 117 → 111 / 290k → 310k; plaza 88 → 89 / 210k → 236k; knoll 57 → 64 / 174k → 196k. Programs, textures and materials (233) equal in every view.
+- The extra calls on the plaza and the knoll are whole chunks at the far edge of the view: the camera follows the player 3.6 to 5.1 m higher, so its top edge meets the ground about 20 m further out. Left as is: clawing it back means a steeper camera or a nearer far gate on high ground, both of which change the view for 1 to 9 draws on two hilltops; every low view draws the same or fewer.
+- The added triangles are the cost of the whole raised cay (lawn 14.5k, draped paths / soil 9.8k), constant from any cay view.
+- Flag off is identical to `rc-nov25`: in-page census of the cay box, 7,499 of 7,499 static pieces (chunk, kind, vertex count, centroid, height range, colour), 1,243 of 1,243 instances, 1,011 chunks, 797,873 chunk triangles, 233 materials.
+- Not measured: a real phone. No thermal claim.
