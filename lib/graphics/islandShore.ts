@@ -46,6 +46,8 @@ export function laceNoise(){
  *  than `near`, a blend to the flat value, no texture fetch at all past `far` (map view, flight, the far side of a bay). */
 /** The strip's cover over the sand skirt: from `from` m (true shore distance, up the skirt) to `alpha` at the true waterline. */
 export const STRIP_JOIN={from:-1.7,alpha:.96} as const;
+/** Radius (m) the drawn waterline's inside corners are rounded to (buildIslandField). */
+export const SHORE_ROUND=3;
 export const STRIP_FAR={near:45,far:65} as const;
 
 /**
@@ -219,7 +221,17 @@ export function seaExposure(sdf:Float32Array,w:number,h:number,tw:number,tz:numb
 function buildIslandField(renderer:T.WebGLRenderer,scene:T.Scene){
  const lift=sampleIslandHeights(renderer,scene);
  const n=NX*NZ,land=new Uint8Array(n);for(let i=0;i<n;i++)land[i]=lift[i]>SHORE_LAND_LIFT?1:0;
- const {sdf,toWater}=signedDistance(land),vis=signedDistance(visibleLand(lift,toWater)).sdf;smooth121(vis,NX,NZ,2);
+ const {sdf,toWater}=signedDistance(land),vis=signedDistance(visibleLand(lift,toWater)).sdf;
+ // Rounded waterline (Nov 25 2026, owner: "the water is a sharp corner here when it should be more round"): where two beaches meet
+ // (the sandbars and the causeway banks running onto a coast, a cove's inside corner) the flat sand's edge turns a hard angle, and the
+ // foam, the swash and the strip's water followed it into a point. The drawn waterline is now the sea OPENED by SHORE_ROUND m (eroded,
+ // then grown back: a wedge of water narrower than that radius is rounded off, straight and convex shores are unchanged), on the sand
+ // skirt only: past the true waterline (sdf > 0, the ocean plane) the field eases back to the unrounded distance, so open water and
+ // narrow channels read exactly as before. The rounded-off tip is still the skirt's wet sand under a few cm of clear water.
+ // One more distance transform at the bake (once per page); nothing per frame.
+ {const tight=new Uint8Array(n);for(let i=0;i<n;i++)tight[i]=vis[i]<SHORE_ROUND?1:0;const open=signedDistance(tight).sdf;
+  for(let i=0;i<n;i++){const t=Math.min(1,Math.max(0,(sdf[i]+.5)/2)),w=t*t*(3-2*t);vis[i]=Math.min(vis[i],open[i]+SHORE_ROUND+(vis[i]-open[i]-SHORE_ROUND)*w);}}
+ smooth121(vis,NX,NZ,2);
  const hard=new Uint8Array(n);
  // A wall, kerb or deck within 3 m of the water: waves slap, they don't run up.
  for(let i=0;i<n;i++)hard[i]=sdf[i]<=0&&lift[i]>.4&&toWater[i]<=3?1:0;
