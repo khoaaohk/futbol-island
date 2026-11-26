@@ -485,7 +485,7 @@ Retention and costume research is in RETENTION-IDEAS.md. No proposed engagement/
 ### Shared modal headers and southeast waterfront (September 2026)
 - Modal/drawer titles and close controls use ModalShell with a fixed header and independently scrolling content. Removed decorative brand kickers; costume stories preserve list scroll restoration.
 - Seaside Fish Market became History Museum: 30m wide, western extension keeps eastern wall at x183. Large clickable sign, building glow, Enter action, and Coming soon modal.
-- Former rounded museum is Cafe By The Sea, with six outdoor tables, shade umbrellas, plants and a tabletop football pitch. Existing terrace and rooftop stairs remain accessible.
+- Former rounded museum is the Half-Time Café (named Cafe By The Sea until Nov 25 2026), with six outdoor tables, shade umbrellas, plants and a tabletop football pitch. Existing terrace and rooftop stairs remain accessible.
 - Museum/cafe paths connect to the southern boardwalk. Southeast corner is a ferry dock with a level wooden entrance and matching pier planks with a gently bobbing moored Matchday Ferry (scenery; pauses in reduced motion), deck and railings; both maps show the dock.
 - Stair ascent/descent uses quiet synthesized footsteps/wheel clacks, respecting mute/volume. Café furnishings and umbrellas are excluded from flight landing targets while regular rooftop equipment remains landable.
 - Live goal score popup now has a pink background and dark readable text.

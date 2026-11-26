@@ -50,9 +50,9 @@ if(process.env.GFX_VIEWS==='train')VIEWS.splice(0,VIEWS.length,
  {id:'coral-cay',note:'Coral Cay station, from the plaza path',x:590,z:-94,yaw:0},
  // Phase 2 (Nov 23 2026): the worst case, all three trains pinned at the North station (window.__fi2.trains.cluster), looking down the line.
  {id:'trains-near',note:'North station platform, all 3 trains pinned in view',x:186,z:-203.5,yaw:-Math.PI/2,cluster:2534});
-// Half-Time Café (Nov 24 2026): GFX_VIEWS=cafe, the café and its garden from the beach south-west of the steps; GFX_NO_CAFE=1 builds the
+// Café by the Sea (Nov 24 2026): GFX_VIEWS=cafe, the café and its garden from the beach south-west of the steps; GFX_NO_CAFE=1 builds the
 // island without the café's scenery (world.ts 'fi-no-cafe') for the before column.
-if(process.env.GFX_VIEWS==='cafe')VIEWS.splice(0,VIEWS.length,{id:'cafe',note:'Half-Time Café and garden, from the beach',x:698,z:-80,yaw:Math.PI});
+if(process.env.GFX_VIEWS==='cafe')VIEWS.splice(0,VIEWS.length,{id:'cafe',note:'Café by the Sea and garden, from the beach',x:698,z:-80,yaw:Math.PI});
 // Sand and shallows (Nov 25 2026): GFX_VIEWS=sand, the Summit beach (along the sand, waterline to dune line), the sand/grass line,
 // the sandbar, a Coral Cay beach for reference and the main island's shore.
 if(process.env.GFX_VIEWS==='sand'){const SI=load('lib/town/summitIsle.ts'),CC=load('lib/town/coralCay.ts'),PK=SI.SUMMIT_PEAK;

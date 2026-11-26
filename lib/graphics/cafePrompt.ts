@@ -1,5 +1,5 @@
 /**
- * Half-Time Café: the "Visit café" prompt (Nov 24 2026; lib/town/seasideCafe.ts). The station stamp prompt's shape
+ * Café by the Sea: the "Visit café" prompt (Nov 24 2026; lib/town/seasideCafe.ts). The station stamp prompt's shape
  * (stationStampPrompt.ts):
  *  - Desktop: hover(ray) tests the café's box (ground floor to ridge, plus the front deck); while hovered it gets the island's shared
  *    green building outline (buildingGlow.ts 'cafe') and wants the HUD 'enter' slot as explicit intent (distance -1). The pointer

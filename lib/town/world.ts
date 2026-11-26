@@ -231,7 +231,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const softBuildings=new Set(['PARK LIBRARY','COMMUNITY WORKSHOP','BEACH KITCHEN','COAST CAFÉ','ISLAND MARKET',
     'CAFÉ MARÉ','PALM HOUSE','SURF & SOLE','COAST ROOMS','BAKERY',
     'RUA DO SOL','WEST END BOOKS','CASA DO SOL','CORNER DELI','PIER BAKERY']);
-  const buildingRadius=(label:string)=>label==='CAFE BY THE SEA'?4:softBuildings.has(label)?1.5:0;
+  const buildingRadius=(label:string)=>label==='HALF-TIME CAFÉ'?4:softBuildings.has(label)?1.5:0;
   // Paint schemes (lib/town/buildingStyles.ts): recolour only plain palette boxes, which the batching pass folds into the
   // same vertex-colour chunk draws, so varied streets cost no draw call, triangle or texture. Landmarks get null (as before).
   function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657',scheme:BuildingScheme|null=null){
@@ -242,7 +242,7 @@ export function* buildTownSteps(scene: T.Scene) {
     // Nov 10 2026: inset roof deck (a shade darker/cooler than the roof slab), folded into the chunk's paint batch (no draw call).
     if(!knockout){const deck=rounded?roundedBlock(w-.9,.02,d-.9,Math.max(.1,radius-.45),roofDeckColour(roofPaint),x,h+.195,z):box(w-.9,.02,d-.9,roofDeckColour(roofPaint),x,h+.205,z);deck.userData.skipRoofObstacle=true;}
     obstacles.push({x,z,w,d,...(rounded?{cornerRadius:radius}:{})});
-    const floors=Math.min(label==='CAFE BY THE SEA'?2:4,Math.floor(h/2.5)),columns=Math.max(2,Math.min(6,Math.floor(front/2)));
+    const floors=Math.min(label==='HALF-TIME CAFÉ'?2:4,Math.floor(h/2.5)),columns=Math.max(2,Math.min(6,Math.floor(front/2)));
     for(let floor=0;floor<floors;floor++)for(let col=0;col<columns;col++){
       const xx=x-front/2+(col+.5)*front/columns, yy=1.35+floor*2.45;
       // The knockout stair occupies the western 21 m of this facade.
@@ -286,19 +286,19 @@ export function* buildTownSteps(scene: T.Scene) {
       buildings.push({x,z,w,d,height:h+.23,name:label,...(radius?{cornerRadius:radius}:{})});
       return;
     }
-    if(label==='CAFE BY THE SEA'){
+    if(label==='HALF-TIME CAFÉ'){
       building(x,z,w,d,9,warm[index%warm.length],label,'#bd7657');
       buildings.push({x,z,w,d,height:9.23,name:label,cornerRadius:4});
       const northZ=z-10;
       roundedBlock(w,9,20,4,warm[index%warm.length],x,9,northZ);
       roundedBlock(w+.45,.23,20.5,4.2,'#eddfbb',x,17.965,northZ);
-      buildings.push({x,z:northZ,w,d:20,height:18.23,name:'CAFE BY THE SEA NORTH WING',cornerRadius:4});
+      buildings.push({x,z:northZ,w,d:20,height:18.23,name:'HALF-TIME CAFÉ NORTH WING',cornerRadius:4});
       obstacles.push({x,z:northZ,w,d:20,cornerRadius:4});
       return;
     }
     building(x,z,w,d,h,scheme?.wall??warm[index%warm.length],label,index%3?'#bd7657':'#477c6a',scheme);
     buildings.push({x,z,w,d,height:h+.23,name:label,...(buildingRadius(label)?{cornerRadius:buildingRadius(label)}:{})});
-    if(label==='CAFE BY THE SEA'||label==='ROOFTOP KNOCKOUT')return;
+    if(label==='HALF-TIME CAFÉ'||label==='ROOFTOP KNOCKOUT')return;
     // Roof tanks, stepped roof rooms and visible drainpipes vary silhouettes. The straight roof-edge rails are gone (user, Oct 12
     // 2026: "remove these side things on the building"); they were 0.18 m thin, never roof obstacles, so roof walking is unchanged.
     if(index%3===0){cylinder(.75,1.25,'#d2bc94',x-w*.23,h+.8,z-d*.18);cylinder(.82,.12,'#9d805b',x-w*.23,h+1.46,z-d*.18);}
@@ -516,7 +516,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const ex=15,ez=80;
   const eleven:[number,number,number,number,number,string][]=[
     [287,-112,18,15,11,'ARTS WING'],[285,-81,18,15,13,'CLASSROOMS'],[285,-55,18,18,10,'DINING HALL'],
-    [415,-110,18,17,12,'SCHOOL OFFICES'],[415,-84,18,17,10,'LIBRARY'],[415,-55,18,18,13,'STUDENT CENTRE'],[415,-13.5,18,40,18,'CAFE BY THE SEA'],
+    [415,-110,18,17,12,'SCHOOL OFFICES'],[415,-84,18,17,10,'LIBRARY'],[415,-55,18,18,13,'STUDENT CENTRE'],[415,-13.5,18,40,18,'HALF-TIME CAFÉ'],
     [281,-8.25,28,50.5,10,'ROOFTOP KNOCKOUT']
   ];eleven.forEach(([x,z,w,d,h,label],i)=>house(x+ex,z+ez,w,d,h,label,label==='ROOFTOP KNOCKOUT'?44:i+34));
   // One school, five touching volumes: the central hall is the summit and both
@@ -655,9 +655,9 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   // A two-level seaside cafe with open terraces for post-match conversations.
   // Coordinates here precede the campus shift below; keep the old north wall fixed.
-  sign('CAFE BY THE SEA',9.5,1.5,430,6.8,86.62,'#294f43','#f4cc7c');
+  sign('HALF-TIME CAFÉ',9.5,1.5,430,6.8,86.62,'#294f43','#f4cc7c');
   sign('COFFEE, CLUBS & CONVERSATION',9.5,.7,430,5.25,86.64,'#477c6a','#fff0cf');
-  sign('CAFE BY THE SEA',11.5,2.3,420.55,13.9,56.5,'#294f43','#f4cc7c',-Math.PI/2);
+  sign('HALF-TIME CAFÉ',11.5,2.3,420.55,13.9,56.5,'#294f43','#f4cc7c',-Math.PI/2);
   for(const z of [51,61.3,71.7,82]){const h=z<66.5?17.5:8.5;box(.34,h,.6,'#eddfbb',420.85,h/2,z);}
   for(const [z,label] of [[54,'THE GAME'],[66.5,'CLUBS'],[79,'PLAYERS']] as [number,string][]){
     sign(label,6,1.5,420.8,4.1,z,'#bd7657','#fff0cf',-Math.PI/2);
@@ -1451,10 +1451,10 @@ export function* buildTownSteps(scene: T.Scene) {
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
   yield;
   const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
-  // Half-Time Café + butterfly garden on the cay's east point (seasideCafeWorld.ts, Nov 24 2026): batched; one signs-atlas draw.
+  // Café by the Sea + butterfly garden on the cay's east point (seasideCafeWorld.ts, Nov 24 2026): batched; one signs-atlas draw.
   // 'fi-no-cafe' (localStorage '1'): build without the café's scenery, for the gfx-budget before column (GFX_NO_CAFE=1) only.
   const noCafe=(()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi-no-cafe')==='1';}catch{return false;}})();
-  let cafe:CafeBuild|null=null;if(!noCafe)try{cafe=buildSeasideCafe({box,cylinder,put,line,lit,town,obstacles,walkSurfaces,buildings,textures,materials,nightSigns,prop});}catch(error){console.error('Half-Time Café failed to build',error);}
+  let cafe:CafeBuild|null=null;if(!noCafe)try{cafe=buildSeasideCafe({box,cylinder,put,line,lit,town,obstacles,walkSurfaces,buildings,textures,materials,nightSigns,prop});}catch(error){console.error('Café by the Sea failed to build',error);}
   // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park, Stadium Plaza.
   const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop,seaRipples:waterRipples.texture/* the pond's water: the sea's own ripple tile */});
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
@@ -1618,7 +1618,7 @@ export function* buildTownSteps(scene: T.Scene) {
   type LampSite={x:number;z:number;ground:number;region?:'pier'|'north-beach'|'market'|'garden'|'coral-cay'|'east-pier';poolDepth?:number;poolWidth?:number;chunk?:string};
   const lampSites:LampSite[]=[];
   const lampCandidates:LampSite[]=[{x:79,z:-45,ground:.075},{x:108,z:-45,ground:.075},{x:62,z:-28,ground:.075},{x:113,z:-22,ground:.075}];
-  const litVenues=new Set(['COACHES','HISTORY MUSEUM','CAFE BY THE SEA','PARK LIBRARY','COMMUNITY WORKSHOP','COAST CAFÉ','BEACH KITCHEN','ISLAND HIGH SCHOOL']);
+  const litVenues=new Set(['COACHES','HISTORY MUSEUM','HALF-TIME CAFÉ','PARK LIBRARY','COMMUNITY WORKSHOP','COAST CAFÉ','BEACH KITCHEN','ISLAND HIGH SCHOOL']);
   for(const building of buildings)if(litVenues.has(building.name))lampCandidates.push({x:building.x+building.w*.35,z:building.z+building.d/2+2.5,ground:.075});
   // Destination paths need their own sites: road sampling misses the coast and allotments.
   // Poles and their light pools sit on the lawn inland of the boardwalk (z207).

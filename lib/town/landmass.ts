@@ -7,7 +7,7 @@ import {onCayLand,distanceToCayLand} from './coralCay';
 import {onLandableDeck,distanceToLandableDeck} from './landableDecks';
 import {onSummitLand,distanceToSummitLand} from './summitIsle';
 import './eastPier'; // The East Pier's decks count as land (registered once in eastPier.ts).
-import './seasideCafe'; // The Half-Time Café's over-water deck counts as land (registered once in seasideCafe.ts).
+import './seasideCafe'; // The Café by the Sea's over-water deck counts as land (registered once in seasideCafe.ts).
 export const onLand=(x:number,z:number)=>onIsland(x,z)||onFerryBoarding(x,z)||onCayLand(x,z)||onLandableDeck(x,z)||onSummitLand(x,z);
 /** 0 on land; otherwise the distance to the nearest shore of either island, causeway or sandbar. */
 export function distanceToLand(x:number,z:number){

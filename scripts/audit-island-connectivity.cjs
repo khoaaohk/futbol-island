@@ -45,8 +45,8 @@ function md(s,r,before){const L=[];const f=n=>Number(n).toFixed(1);
  L.push('Groups: '+Object.entries(r.landmarks.reduce((m,l)=>{m[l.group]=m[l.group]||[0,0];m[l.group][0]++;if(l.ok)m[l.group][1]++;return m;},{})).map(([g,[n,k]])=>`${g} ${k}/${n}`).join(', ')+'.','');
  L.push('## Fixed in this pass','',
  '| Where | Problem | Fix |','|---|---|---|',
- '| Cafe by the Sea street lane (207.3, 169) | NPC Oren\'s authored lane (z 169.15) walked through a street lamp | street leg moved to z 166.95 / 168.25 (`lib/town/cafeRoutes.ts`) |',
- '| Cafe by the Sea roof (199, 144) | Oren\'s rooftop diagonal clipped a 1.5 m roof post | rooftop corner pulled in to 143.7 + lane × 0.3 |',
+ '| Half-Time Café street lane (207.3, 169) | NPC Oren\'s authored lane (z 169.15) walked through a street lamp | street leg moved to z 166.95 / 168.25 (`lib/town/cafeRoutes.ts`) |',
+ '| Half-Time Café roof (199, 144) | Oren\'s rooftop diagonal clipped a 1.5 m roof post | rooftop corner pulled in to 143.7 + lane × 0.3 |',
  '| Old Town Ground 7v7 entrance walk (11, -48) | vending machine stood in the middle of the 3 m entrance path (0.5 m left either side, too narrow to pass) | machine moved beside the path to (8, -48) (`lib/town/vendingCatalog.ts`) |',
  '| Palm Coast promenade, x -6, z -14 / 9 / 29 / 48 | four palms planted in the middle of the 3 m promenade | palms moved beside it to x -9 (`lib/town/world.ts`) |',
  '| Garage north strip path(11, 43) | a 38 m path ran out through both garage walls: two visible stubs ending at a wall | trimmed to 27.5 m, inside the walls |',

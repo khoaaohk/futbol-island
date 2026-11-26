@@ -30,7 +30,7 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
   {w:width+1.8,d:depth+2.7,h:.34,x:0,y:height+.3,z:0}
  ]:kind==='cafe'?[
-  // Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts; graphics/cafePrompt.ts): origin = the footprint centre at sand level. The
+  // Café by the Sea (Nov 24 2026, lib/town/seasideCafe.ts; graphics/cafePrompt.ts): origin = the footprint centre at sand level. The
   // ground floor on its stone base, the balcony ledge, the upper floor, the gable roof's bounds and the front deck with its awning.
   {w:10.3,d:7.3,h:4.1,x:0,y:2.05,z:0},
   {w:8.6,d:5.6,h:2.75,x:0,y:5.35,z:-.3},

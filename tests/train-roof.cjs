@@ -36,7 +36,7 @@ const R=L('lib/town/trainRoof.ts'),B=L('lib/town/trainBonk.ts'),tt=L('lib/town/t
 {const SP=L('lib/graphics/trainSeatPose.ts'),o=SP.trainSurfPose();assert(o.arms.every(a=>a.sz>1.1&&a.w===1)&&o.pelvisY<.8&&o.legs.every(l=>l.w===1),'arms out, knees bent, feet set');
  SP.surfPose(o,false,.15,false);assert(Math.abs(o.arms[0].sz-o.arms[1].sz)>.2,'the landing wobble moves the arms opposite ways');
  SP.surfPose(o,false,.15,true);assert.equal(o.arms[0].sz,o.arms[1].sz,'reduced motion: no wobble');SP.surfPose(o,true,3,false);assert(o.legs.every(l=>l.w===0)&&o.arms[0].w===1,'walking the roof: the gait legs, the arms stay out');
- const Tn=read('components/Town.tsx');assert(/trainRide\.trick\(\)\?\?stadiumSit\.trick\(\)\?\?roofSurf\(\)/.test(Tn),'the local roof rider wears it');
+ const Tn=read('components/Town.tsx');assert(/trainRide\.trick\(\)\?\?stadiumSit\.trick\(\)(\?\?cafeSeat\.trick\(\))?\?\?roofSurf\(\)/.test(Tn),'the local roof rider wears it');
  assert(/landingPreview=chuteRoof\(dt\)\?roofPreview:jetActions\.state\.target/.test(Tn)&&/roofLanding>=0&&world\.trainRun\)\{world\.trainRun\.standAt\(roofLanding,roofLand\.x,roofLand\.u/.test(Tn),'the ring: predicted under a canopy, on the roof spot while easing down');
  assert(/pose\.roof&&!shield&&\(pose\.train\?\?-1\)>=0\)\{surfPose\(SURF_POSE/.test(read('lib/graphics/remoteAvatars.ts')),'friends on a roof wear it too');}
 console.log('train-roof pure: ok');

@@ -1,5 +1,5 @@
 /**
- * The Half-Time Café garden's butterflies (Nov 24 2026, owner add; lib/town/seasideCafe.ts). Reuses the island's bug pieces, like the
+ * The Café by the Sea garden's butterflies (Nov 24 2026, owner add; lib/town/seasideCafe.ts). Reuses the island's bug pieces, like the
  * Stadium Park pond's dragonflies (parkPond.ts): the Bug book's Captain Monarch model (bugModels.ts createBugModel, species `monarch`)
  * and the bug swarm's flapping material (bugMaterial.ts: wings flap in the vertex shader from per-instance iFlap = rate, amplitude,
  * mid angle, phase), ONE InstancedMesh = one draw. They wander in zigzag loops over the beds, settle on the flowers (slow, closed-up

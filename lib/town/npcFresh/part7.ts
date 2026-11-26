@@ -583,10 +583,10 @@ export const PART_7:Record<string,NpcFresh>={
    'Ah, the one who asked "{topic}" Patience pays off. Here is something fresh.'
   ]
  },
- // Half-Time Café (Nov 24 2026, lib/town/seasideCafe.ts): Malia, the café owner on Coral Cay's east point.
+ // Café by the Sea (Nov 24 2026, lib/town/seasideCafe.ts): Malia, the café owner on Coral Cay's east point.
  'cay-malia':{
   topics:[
-   t7('cafe-name','Why is it called the Half-Time Café?','Because half-time is my favourite part of a match. Players sip water, grab a bite of fruit and listen to the coach, all in a few minutes.','How long is half-time?','In an 11-a-side match it is up to 15 minutes. Youth and small-sided games often have shorter breaks.'),
+   t7('cafe-name','Why is it called the Café by the Sea?','Look down: my deck stands right over the water! Teams come off the beach court, sit in the cool breeze, sip water and talk about the game. I still serve the best half-time snacks on the island.','How long is half-time?','In an 11-a-side match it is up to 15 minutes. Youth and small-sided games often have shorter breaks.'),
    t7('rowboat','Is that your rowboat by the deck?','Yes! I row out at sunrise to watch the beach games from the water. Rowing together needs timing, just like a team pressing.','How is rowing like pressing?','Everyone moves at the same moment. If one player presses alone, the other team just passes round them.'),
    t7('busy-day','When is the café busiest?','Tournament days! Teams come off the court thirsty, so I fill a jug of water for every bench before the first whistle.','Why water before the first whistle?','So nobody starts the game already thirsty. Small sips through the day work better than a big gulp at the end.'),
    t7('chalk-board','Who writes the fixtures on your chalkboard?','I do, every morning, from the scores desk. Players love to talk about the big games while they eat.','Why do players watch other matches?','You learn by watching. Notice where a good midfielder stands before the ball arrives.'),
@@ -602,7 +602,7 @@ export const PART_7:Record<string,NpcFresh>={
    c7('c-recover','The game is over. What helps your body recover?',['Water plus food with carbs and some protein','Just a fizzy drink','Skipping dinner'],0,'Fluids, carbohydrate and some protein help your muscles refuel and repair.','Your body needs real food and water to recover. Try a sandwich, rice and fish, or yoghurt and fruit.')
   ],
   openers:[
-   'Welcome to the Half-Time Café! Pull up a chair on the deck. What would you like to know?',
+   'Welcome to the Café by the Sea! Pull up a chair on the deck. What would you like to know?',
    'I just wiped the chalkboard and wrote today’s games. Who are you cheering for?',
    'Mind the butterflies on your way up the steps! They love the hibiscus. Come and chat.',
    'A jug of water for every bench, done. Now I have time for a football question.'

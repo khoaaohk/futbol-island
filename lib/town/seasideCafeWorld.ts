@@ -1,5 +1,5 @@
 /**
- * Half-Time Café scenery (Nov 24 2026; data and rules: seasideCafe.ts). Built inside buildTown with the island's own helpers
+ * Café by the Sea scenery (Nov 24 2026; data and rules: seasideCafe.ts). Built inside buildTown with the island's own helpers
  * (box / cylinder / put / line / lit), so every piece joins the existing 50 m spatial paint batches: the café, deck, posts, railings,
  * tables, chairs, rowboat, steps, pots and the whole flower garden add NO draw call, material or texture. Windows and the string-light
  * bulbs are marked `lit` (machineNightGlow.ts): they glow warm at night from the shared night factor, emissive only, no light.
@@ -9,7 +9,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {Obstacle} from './simulation';
-import {CAFE,CAFE_BALCONY_Y,CAFE_DECKS,CAFE_STEPS,CAFE_LADDER,CAFE_POSTS,CAFE_POST_R,CAFE_BOAT,CAFE_TABLES,CAFE_CHALKBOARD,CAFE_GARDEN_SIGN,CAFE_GARDEN,CAFE_NAME,cafeWalkSurfaces,type ChalkLine} from './seasideCafe';
+import {CAFE,CAFE_BALCONY_Y,CAFE_DECKS,CAFE_STEPS,CAFE_LADDER,CAFE_POSTS,CAFE_POST_R,CAFE_BOAT,CAFE_TABLES,CAFE_CHALKBOARD,CAFE_GARDEN_SIGN,CAFE_GARDEN,CAFE_NAME,CAFE_VIEW_SEAT,cafeViewSeatObstacles,cafeWalkSurfaces,type ChalkLine} from './seasideCafe';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 
 type Mesh=T.Mesh;
@@ -126,7 +126,12 @@ export function buildSeasideCafe(t:CafeTools):CafeBuild{
   for(let k=0;k<tb.chairs;k++){const a=k*Math.PI*2/tb.chairs+i*.6,cx=tb.x+Math.cos(a)*.72,cz=tb.z+Math.sin(a)*.72,c=k%2?TEAL:CORAL;
    skip(box(.42,.05,.42,c,cx,F+.45,cz));skip(box(.06,.45,.06,'#5a4636',cx,F+.22,cz));
    const back=skip(box(.42,.42,.05,c,cx+Math.cos(a)*.2,F+.68,cz+Math.sin(a)*.2));back.rotation.y=-a+Math.PI/2;}
-  obstacles.push({x:tb.x,z:tb.z,w:1.5,d:1.5});});
+  if(tb.chairs)obstacles.push({x:tb.x,z:tb.z,w:1.5,d:1.5});});
+ // ---- The view seat (Nov 25 2026): a short bench behind the corner table, facing Summit Isle. Island-bench section (npcSeatPose BENCH:
+ // seat top .64 over the floor, backrest at local z −.25) so the bench pose fits; 1.3 m long. Batched like the chairs (no draw call).
+ {const V=CAFE_VIEW_SEAT,B=V.bench,g=new T.Group();g.position.set(B.x,F,B.z);g.rotation.y=V.yaw;town.add(g);
+  skip(box(B.w,.12,.65,'#a67d55',0,.58,0,g));skip(box(B.w,.45,.09,'#a67d55',0,.91,-.25,g));for(const dx of [-.48,.48])skip(box(.12,.5,.5,'#5a4636',dx,.27,0,g));
+  obstacles.push(...cafeViewSeatObstacles());}
  // ---- The rowboat moored off the east deck, tied to a post.
  const BOAT_Y=.05;
  {const B=CAFE_BOAT,g=new T.Group();g.position.set(B.x,BOAT_Y,B.z);g.rotation.y=B.yaw;town.add(g);/* owner shot 83: it sat under the water; now the hull rides on top (waterline ~ a third up) */
@@ -161,8 +166,9 @@ export function buildSeasideCafe(t:CafeTools):CafeBuild{
  const drawSign=()=>{const [x,y,w]=R.sign,cx=x+w/2,cy=y+w/2;ctx.clearRect(x,y,w,w);
   ctx.fillStyle='#d8b24c';ctx.beginPath();ctx.arc(cx,cy,w/2-4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fbf3df';ctx.beginPath();ctx.arc(cx,cy,w/2-26,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#2f5f66';ctx.lineWidth=6;ctx.beginPath();ctx.arc(cx,cy,w/2-44,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='#2f5f66';ctx.textAlign='center';ctx.textBaseline='middle';fit('HALF-TIME',330,96,sans);ctx.fillText('HALF-TIME',cx,cy-58);
-  ctx.fillStyle='#e07a3a';fit('CAFÉ',300,112,sans);ctx.fillText('CAFÉ',cx,cy+50);
+  // Nov 25 2026 (owner: the name swap): CAFÉ / BY THE SEA. Both lines stay inside the inner ring's chord at their height (r 212).
+  ctx.fillStyle='#2f5f66';ctx.textAlign='center';ctx.textBaseline='middle';fit('CAFÉ',300,104,sans);ctx.fillText('CAFÉ',cx,cy-62);
+  ctx.fillStyle='#e07a3a';fit('BY THE SEA',340,78,sans);ctx.fillText('BY THE SEA',cx,cy+52);
   // a little ball between the words
   ctx.fillStyle='#2f5f66';ctx.beginPath();ctx.arc(cx,cy-2,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fbf3df';ctx.beginPath();ctx.arc(cx,cy-2,6,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#2f5f66';fit('EST. ON CORAL CAY',260,26,sans);ctx.fillText('EST. ON CORAL CAY',cx,cy+128);};
