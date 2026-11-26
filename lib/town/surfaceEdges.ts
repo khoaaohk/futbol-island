@@ -31,8 +31,9 @@ export const EDGE={inset:.5,minWidth:1.1,maxWidth:2,step:4,lowStep:8,rise:.02,
  /** shader: noise weights (tile A blotches, R clumps), the grass / bare threshold, the damp lip and the soil shadow */
  noise:.9,clump:.85,from:.38,to:.62,damp:.16,soil:.12,soilTo:.95} as const;
 /** `over`..`over+overVar`: how far the grass creeps onto the path; `thin`: how far back from the path's edge the lawn starts to thin
- *  (bare, trodden patches in the grass beside the path: a worn verge 0.5 to 1.1 m wide in all, Nov 27 2026: the 0.3 m lip measured as a step). */
-export const LIP={over:.18,overVar:.5,thin:.6,rise:.02,reach:1,step:4,lowStep:8} as const;
+ *  (a worn verge 0.5 to 0.8 m wide in all. Nov 27 2026: tried 0.8 to 1.3 m: the mean profile did not get smoother, since the tile's
+ *  blotches only move the threshold by about 0.2 m, and the edge read as torn paper at night; kept tight). */
+export const LIP={over:.2,overVar:.3,thin:.3,rise:.02,reach:1,step:4,lowStep:8} as const;
 /** Path wear (the lawn's edge program draws it, on a thin sheet over every walkway laid on a lawn): `edge` m of darker, dustier ground
  *  beside the grass, the trodden middle lighter from `centre` m in; `gain` = the brightness swing per unit (shader). Paths wider than
  *  `max` are squares, not walkways: no wear. On raised ground the sheet follows the draped path (`liftStep` cells, `lift` m proud),

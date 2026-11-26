@@ -5,7 +5,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const store=new Map(),localStorage={getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)};
 const cache={};
 const load=(path,extra={})=>{if(cache[path])return cache[path];const m={exports:{}};cache[path]=m.exports;
- vm.runInNewContext(ts.transpileModule(read(path),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,localStorage,Math,...extra,require:n=>n==='./heatTier'?load('lib/graphics/heatTier.ts'):n==='three'?require('three'):{}});
+ vm.runInNewContext(ts.transpileModule(read(path),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,localStorage,Math,...extra,require:n=>n==='./heatTier'?load('lib/graphics/heatTier.ts'):n==='three'?require('three'):/surfaceEdges$/.test(n)?{surfOn:()=>false}/* surface craft flag (default off): groundDecals.ts reads it */:{}});
  return cache[path]=m.exports;};
 let failed=0;const ok=(name,fn)=>{try{fn();console.log('ok   '+name);}catch(e){failed++;console.log('FAIL '+name+'\n  '+(e&&e.stack||e));}};
 const H=load('lib/graphics/heatTier.ts');

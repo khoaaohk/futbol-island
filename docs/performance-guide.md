@@ -7194,3 +7194,12 @@ Measured (headless desktop Chrome, 1280 x 800, sunset; calls / triangles, flag o
 - The added triangles are the cost of the whole raised cay (lawn 14.5k, draped paths / soil 9.8k), constant from any cay view.
 - Flag off is identical to `rc-nov25`: in-page census of the cay box, 7,499 of 7,499 static pieces (chunk, kind, vertex count, centroid, height range, colour), 1,243 of 1,243 instances, 1,011 chunks, 797,873 chunk triangles, 233 materials.
 - Not measured: a real phone. No thermal claim.
+
+## Nov 27 2026: surface craft, paths and the layers together (`?surf=1`, default OFF; branch `island-depth`, not deployed)
+
+Not shipped, not pushed. Full audit and per-view counts: `.claude/worktrees/_recovery-nov20/surfaces/NOTE.md` ("LAYERS TOGETHER").
+- Path wear (`surfaceEdges.ts pathWear`): a thin sheet over every walkway laid on a lawn (paths up to 7 m wide), joined to the lawn's ONE mesh and drawn by the lawn's edge program as paving whose tone follows the distance to the walkways' joined outline (dusty and darker beside the grass, lighter where feet fall, straight through junctions). `aEdge.y` = 4 + wear. Not built on Battery saver. On raised ground (`?elev=1`) the sheet and the lips follow the draped path in 1.25 m cells and the uphill verge is a cut bank.
+- Coral Cay: rim onto the sand ring, lips and wear join `coral-cay-lawn` in `world.ts` after the drape (0 draws, same material). Summit Isle: dune line and path middle by vertex colour (0 cost). Stadium Park trails: wear and the uphill shade by vertex colour (one more vertex row across with surf; no shader cost), the verge blend twice as wide (numbers only).
+- Cost: no new draw, texture, material or program. Edge-band pixel 441 ALU at tier 0 (was 446 without the wear; 455 with it before the trim: straight ramps for the three smoothsteps, one scalar product for the tone), 416 at tiers 1-2, 400 at tiers 3-4; +59 over the plain lawn pixel, pinned at 59 in `tests/ground-shader-cost.cjs`. Path pixels on a lawn are drawn twice (the path, then the sheet): paths are a few percent of a view. Triangles: main lawn mesh +8.0k (18.2k -> 26.2k with elev + depth on), Coral Cay lawn +4.6k (14.5k -> 19.1k).
+- Tried and reverted: verges 0.8 to 1.3 m wide (the mean colour profile across the edge did not get smoother, the tile's blotches only move the threshold about 0.2 m, and it read as torn paper at night).
+- Desktop headless only; no phone heat test. Do not claim cooling.
