@@ -44,8 +44,20 @@ export function createCafeSeat(ports:{wake:()=>void;note?:(text:string)=>void}){
  let near=false,sits=0,promptSeated:boolean|null=null;
  const cam=new T.PerspectiveCamera(),camQ=new T.Quaternion(),camP=new T.Vector3(),v=new T.Vector3();let framed:boolean|null=null;
  const held=()=>m.phase==='sitting'||m.phase==='seated';
+ // Owner Nov 25 2026 ("allow panning to the left and right more"): while seated, a drag on the game view turns your head: wide left /
+ // right (LOOK.yaw each way, about 95 degrees) and a little up / down. It stays where you leave it and resets when you stand up.
+ // Listeners are added once and do nothing unless seated; no per-frame work beyond two quaternion multiplies while seated.
+ const LOOK={yaw:1.65,pitch:.22,perPx:.0055} as const;
+ let lookYaw=0,lookPitch=0,drag:{id:number;x:number;y:number}|null=null,listening=false;
+ const qYaw=new T.Quaternion(),qPitch=new T.Quaternion(),qOut=new T.Quaternion(),UP=new T.Vector3(0,1,0),RIGHT=new T.Vector3(1,0,0);
+ const onDown=(e:PointerEvent)=>{if(!held()||(e.target as Element|null)?.tagName!=='CANVAS')return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};};
+ const onMove=(e:PointerEvent)=>{if(!drag||drag.id!==e.pointerId)return;if(!held()){drag=null;return;}
+  lookYaw=T.MathUtils.clamp(lookYaw+(e.clientX-drag.x)*LOOK.perPx,-LOOK.yaw,LOOK.yaw);lookPitch=T.MathUtils.clamp(lookPitch+(e.clientY-drag.y)*LOOK.perPx*.6,-LOOK.pitch,LOOK.pitch);
+  drag.x=e.clientX;drag.y=e.clientY;ports.wake();};
+ const onUp=(e:PointerEvent)=>{if(drag&&drag.id===e.pointerId)drag=null;};
+ const listen=()=>{if(listening||typeof window==='undefined')return;listening=true;window.addEventListener('pointerdown',onDown,true);window.addEventListener('pointermove',onMove,true);window.addEventListener('pointerup',onUp,true);window.addEventListener('pointercancel',onUp,true);};
  return {
-  get seated(){return held();},get seat(){return m.seat;},get yaw(){return SEAT.yaw;},
+  get seated(){return held();},/** Tests: the look-round's limits and its current angles. */get look(){return {yaw:lookYaw,pitch:lookPitch,max:LOOK.yaw};},get seat(){return m.seat;},get yaw(){return SEAT.yaw;},
   trick():TrickPose|undefined{if(m.blend<=0)return undefined;pose.w=m.blend*m.blend*(3-2*m.blend);return pose;},
   /** Each frame: the prompt's offer (null = nothing). canSit: on foot, on the ground, not falling, no menu. */
   want(x:number,z:number,height:number,canSit:boolean):{key:string;distance:number}|null{
@@ -70,9 +82,11 @@ export function createCafeSeat(ports:{wake:()=>void;note?:(text:string)=>void}){
   },
   /** Ease the camera to the view (smoothstep of the sit blend, like the stand view): nothing while standing. */
   applyCamera(camera:T.PerspectiveCamera){
-   if(m.blend<=0)return;const portrait=camera.aspect<1;
+   if(m.blend<=0){lookYaw=lookPitch=0;drag=null;return;}listen();const portrait=camera.aspect<1;
    if(framed!==portrait){framed=portrait;const f=cafeViewFrame(portrait);camP.set(f.x,f.y,f.z);cam.position.copy(camP);cam.lookAt(v.set(f.lx,f.ly,f.lz));camQ.copy(cam.quaternion);}
-   const k=m.blend*m.blend*(3-2*m.blend);camera.position.lerp(camP,k);camera.quaternion.slerp(camQ,k);
+   const k=m.blend*m.blend*(3-2*m.blend);camera.position.lerp(camP,k);
+   // the look-round: yaw about the world's up, then pitch about the camera's own right (drag right = look left, like grabbing the view)
+   qOut.copy(qYaw.setFromAxisAngle(UP,lookYaw)).multiply(camQ).multiply(qPitch.setFromAxisAngle(RIGHT,lookPitch));camera.quaternion.slerp(qOut,k);
   },
   /** Place the Sit / Stand up prompt (Town's placeEntryPrompt): over the bench, or bottom-centre while seated. */
   prompt(el:HTMLButtonElement|null|undefined,show:boolean,camera:T.Camera,width:number,height:number,place:(el:HTMLElement,x:number,y:number)=>void,hide:(el:HTMLElement,hidden:boolean)=>void){
