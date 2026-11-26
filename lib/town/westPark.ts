@@ -9,6 +9,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
+import {elevationOn,groundLift} from './elevation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
@@ -55,6 +56,9 @@ export function buildWestPark(t:Tools):WestParkStats{
   *  50 m chunk (frustum-culled and behind the west region gate) instead of the island centre's. */
  const flat=(g:T.BufferGeometry,material:T.Material,y:number,name?:string)=>{g.computeBoundingBox();
   // every piece in the trail paving carries aVerge (zeros = no verge), so the batching pass can merge them with the ribbons
+  // Elevation (?elev=1): these meshes carry their own heights, so each vertex is laid on the raised ground at its spot (the trails
+  // 3 cm proud: a 2.25 m paving chord over the lawn's 2 m lattice).
+  if(elevationOn()){const p=g.getAttribute('position') as T.BufferAttribute,up=material===trailMat?.03:0;let any=false;for(let i=0;i<p.count;i++){const h=groundLift(p.getX(i),p.getZ(i));if(h>0){p.setY(i,p.getY(i)+h+up);any=true;}}if(any){p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();}}
   if(material===trailMat&&!g.getAttribute('aVerge'))g.setAttribute('aVerge',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*3),3));const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
   const m=new T.Mesh(g,material);m.position.set(c.x,y,c.z);m.castShadow=false;m.receiveShadow=true;if(name)m.name=name;t.add(m);return m;};
  const paint=(g:T.BufferGeometry,c:T.Color)=>{const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
@@ -63,13 +67,14 @@ export function buildWestPark(t:Tools):WestParkStats{
   *  open ends (the joins: a cap sits inside the paving it meets), and a beach end fades into the sand (TRAIL_BEACH). */
  const ribbon=(pts:readonly P[],width:number,y:number,o:{beach?:boolean;verge?:boolean}={})=>{
   const closed=pts.length>2&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1],n=pts.length;
+  const mid=elevationOn();/* a centre line of vertices on raised ground (the paving follows a crowned bank) */
   const run=o.beach?trailBeachRun(pts):null,pos:number[]=[],col:number[]=[],verge:number[]=[],idx:number[]=[];
   pts.forEach(([x,z],i)=>{const [px,pz]=closed&&i===0?pts[n-2]:pts[Math.max(0,i-1)],[nx,nz]=closed&&i===n-1?pts[1]:pts[Math.min(n-1,i+1)],dx=nx-px,dz=nz-pz,l=Math.hypot(dx,dz)||1;
    const r=run?run[i]:0,k=run?smooth(-1.5,TRAIL_BEACH.blend,r):0,w=width*(1-TRAIL_BEACH.narrow*smooth(1,TRAIL_BEACH.blend+2,r)),ox=-dz/l*w/2,oz=dx/l*w/2,yy=run?TRAIL_BEACH.y*smooth(-1,3,r)+y*(1-smooth(-1,3,r))-y:0;
-   pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
+   if(mid)pos.push(x+ox,yy,z+oz,x,yy,z,x-ox,yy,z-oz);else pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
    // aVerge (groundTint.ts 'trail'): offset from the centre line, half width, and how much the edge breaks into the lawn (none on sand, at an open end, or on the stadium apron).
-   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);
-   if(i)idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);// counter-clockwise from above: faces up
+   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;if(mid)verge.push(w/2,w/2,vk,0,w/2,vk,-w/2,w/2,vk);else verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);if(mid)col.push(tmpC.r,tmpC.g,tmpC.b);
+   if(i){if(mid)for(const k of [0,1]){const a=(i-1)*3+k,b=i*3+k;idx.push(a,b,a+1,a+1,b,b+1);}else idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);}// counter-clockwise from above: faces up
    if(i){const [qx,qz]=pts[i-1];surfaceAreas.push({kind:k>.5?'sand':'path',x:(x+qx)/2,z:(z+qz)/2,w:Math.abs(x-qx)+w,d:Math.abs(z-qz)+w});}});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('aVerge',new T.Float32BufferAttribute(verge,3));g.setIndex(idx);g.computeVertexNormals();
   flat(g,trailMat,y);

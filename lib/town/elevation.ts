@@ -97,7 +97,7 @@ export function onGround<S extends {x:number;z:number;y:number;wall?:{y:number}}
 // ---- Build-time placement (world.ts `put` / `sign`). While `active`, every piece a builder places is lifted to the ground at
 // its own spot, or to `anchor` (ONE height for a whole prop: a palm, a house, a table: wrap its builder in anchored()).
 // `pieces` records what was built so the flat layers can be draped afterwards (elevationDrape.ts drapePieces).
-export const elevBuild:{active:boolean;anchor:number|null;pieces:{mesh:unknown;lift:number;anchored:boolean}[];stats?:{added:number;draped:number}}={active:false,anchor:null,pieces:[]};
+export const elevBuild:{active:boolean;anchor:number|null;pieces:{mesh:unknown;lift:number;anchored:boolean}[];stats?:{added:number;draped:number;westWall?:number;westLawn?:number}}={active:false,anchor:null,pieces:[]};
 export const buildLift=(x:number,z:number)=>elevBuild.active?elevBuild.anchor??groundLift(x,z):0;
 export function anchored<R>(x:number,z:number,build:()=>R):R{if(!elevBuild.active||elevBuild.anchor!==null)return build();elevBuild.anchor=groundLift(x,z);try{return build();}finally{elevBuild.anchor=null;}}
 /** Pieces that carry their own heights (a terrain mesh, a shore ring): built with no lift. */

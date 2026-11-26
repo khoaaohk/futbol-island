@@ -1,6 +1,7 @@
 import {BEACH_COURT} from './coralCay';
 import {summitGround} from './summitIsle';
 import {groundLift} from './elevation';
+import {STADIUM_BASE} from './westElevation';
 import './coralCayElevation';// registers the Coral Cay region
 import {STADIUM} from './westParkLayout';
 import {STADIUM_NAME} from '../stadium/dripfc';
@@ -34,7 +35,7 @@ export const BEACH_VENUE:LiveVenue={id:'beach',name:'Sharks Beach Court',x:BEACH
 export const STADIUM_PITCH_Y=-.045;
 /** The DRIP FC Stadium (the west stadium) (westParkLayout STADIUM): 63 × 100 m, full-size 7.32 × 2.44 m goals, long axis north–south. Its
  *  `elevation` puts the rigs (elevation + FIELD_SURFACE_Y) and the goal frames on the stadium grass. */
-export const STADIUM_VENUE:LiveVenue={id:'stadium',name:STADIUM_NAME,x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#7ba476',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */};
+export const STADIUM_VENUE:LiveVenue={id:'stadium',name:STADIUM_NAME,x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#7ba476',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */+STADIUM_BASE/* the west terrace (?elev=1, westElevation.ts): 0 otherwise */};
 export const LIVE_VENUES:readonly LiveVenue[]=[...VENUES,BEACH_VENUE,STADIUM_VENUE];
 /** Sim y (along the court) of the flags just outside the beach court's touchlines: the halfway flag and the 9 m (penalty-area)
  *  flags (coralCayWorld). A sitting-out player's cheering spot keeps clear of them (liveJoin.clearOfFlags). */
