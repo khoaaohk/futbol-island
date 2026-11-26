@@ -323,7 +323,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const carriageway=8,footprint=12;
     roads.push({x,z,w:vertical?footprint:length,d:vertical?length:footprint,carriageway,boulevard,vertical});
   }
-  function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
+  function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});return tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
   /** The Beach Kitchen square (lib/town/beachKitchenSquare.ts, Nov 13 2026): paving from both facades to the grass line, then a
    *  vertex-colour fade into the sand (no straight edge across the beach, no grass strip under the shop fronts). */
   function beachKitchenSquare(){

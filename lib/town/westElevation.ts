@@ -66,6 +66,15 @@ export function westGround(x:number,z:number){
  const g=grid.ground(x,z),s=stairHeight(x,z);return s>g?s:g;
 }
 export const WEST_BOX=box;
+/** Signed distance to the terrace's edge (negative inside), the notches not counted. */
+const terraceSigned=(x:number,z:number)=>{const p=WEST_TERRACE,r=p.r??0,qx=Math.abs(x-p.x)-(p.w/2-r),qz=Math.abs(z-p.z)-(p.d/2-r);return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-r;};
+/** Would something `r` m wide at (x, z) stand in the retaining wall, its hedge or a flight of stairs? Trees, lamp posts and
+ *  props keep clear (false with elevation off, so today's layout is unchanged). */
+export function nearWestWall(x:number,z:number,r=0){
+ if(!elevationOn()||x<box.minX||x>box.maxX||z<box.minZ||z>box.maxZ)return false;
+ for(const s of WEST_STAIRS){const {t,a}=stairLocal(s,x,z);if(t>-r-1&&t<s.len+r+1&&Math.abs(a)<s.w/2+r+1)return true;}
+ const d=terraceSigned(x,z);return d<r+.6&&d>-r-1.3&&WEST.terrace-grid.ground(x,z)>.25;
+}
 export const WEST_REGION:Region=registerRegion({...grid,ground:westGround,slope:(x,z)=>Math.hypot(westGround(x+1,z)-westGround(x-1,z),westGround(x,z+1)-westGround(x,z-1))/2,peak:()=>elevationOn()?WEST.terrace:0});
 /** The stadium's base: every absolute height in the bowl (stands, roofs, rails, lights, the pitch) stands this much higher. */
 export const STADIUM_BASE=elevationOn()?WEST.terrace:0;

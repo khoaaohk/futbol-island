@@ -12,7 +12,7 @@
 //  - The light the lamps throw on the stadium itself (pools on the seats under the roofs, the beam hits at the pitch edge, the
 //    scalloped uplight washes up the outer walls) is a term in the stadium paint's night patch (stadiumNight.ts): 0 draws.
 // Nothing per frame: the night factor and the roof fade are uniform writes made only when they change.
-import {STADIUM_BASE as BASE,STADIUM_BASE} from './westElevation';
+import {STADIUM_BASE as BASE,STADIUM_BASE,nearWestWall} from './westElevation';
 import {groundLift} from './elevation';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -62,7 +62,7 @@ type Clearance={obstacles:readonly Obstacle[];trees:readonly {x:number;z:number;
 export function stadiumLampPosts(c:Clearance){
  const C=STADIUM_LAMPS,kept:StadiumLampCandidate[]=[],local=c.obstacles.filter(o=>o.x<-40),trees=c.trees.filter(o=>o.x<-40);
  for(const p of stadiumLampCandidates()){const {x,z}=p;
-  if(x>-55||!onIsland(x,z)||!onGrass(x,z)||onParkPaving(x,z,C.pavingClear)||inStadiumFootprint(x,z,2)||inPond(x,z,POND_RIM+1.5))continue;
+  if(x>-55||!onIsland(x,z)||!onGrass(x,z)||onParkPaving(x,z,C.pavingClear)||inStadiumFootprint(x,z,2)||inPond(x,z,POND_RIM+1.5)||nearWestWall(x,z,.4))continue;
   if([...PARK_SIGNS,PLAZA_SIGN].some(([sx,sz])=>Math.hypot(x-sx,z-sz)<C.signClear))continue;
   if(local.some(o=>Math.abs(x-o.x)<o.w/2+C.obstacleClear&&Math.abs(z-o.z)<o.d/2+C.obstacleClear))continue;
   if(trees.some(t=>Math.hypot(x-t.x,z-t.z)<(t.visualW??1)/2+C.canopyClear))continue;
