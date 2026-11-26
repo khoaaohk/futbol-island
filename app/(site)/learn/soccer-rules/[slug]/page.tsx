@@ -31,7 +31,7 @@ import {RULE_PLAY,isRulePlaySlug} from '@/lib/site/rulePlay';
 import {longDate} from '@/lib/site/checked';
 import {ruleCrossLinks} from '@/lib/site/crossLinks';
 import styles from '../../../site.module.css';
-import {RefereeCards} from '@/components/site/visual/Visuals';
+import {PenaltyAreaDiagram,RefereeCards} from '@/components/site/visual/Visuals';
 import {CardHistory} from '@/components/site/visual/TermVisuals';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
@@ -66,6 +66,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(r.bodies?['by-country']:[]),...(futsal?['futsal-vs-soccer']:[])],false,play)} current="#top"/>} onward={onwardFor(r.cta)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
+  {r.slug==='penalty-kick'&&<Section id="measured" title="Penalty kick diagram: the measurements and who stands where"><PenaltyAreaDiagram/></Section>/* Nov 26 2026 (SEO lift: "penalty kick diagram") */}
   {cards&&<RefereeCards/>}
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}

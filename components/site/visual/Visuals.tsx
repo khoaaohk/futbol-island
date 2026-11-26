@@ -178,3 +178,35 @@ export function CourtInField({caption,lang='en'}:{caption:string;lang?:Lang}){
   <figcaption className={v.cap}>{caption}</figcaption>
  </figure>;
 }
+
+/* ---------- the penalty area, measured (IFAB Law 1 and Law 14) ---------- */
+const PEN_WORDS={en:{t:'Penalty kick diagram: the penalty area measured',d:'The goal (7.32 m) on the goal line; the goal area 5.5 m deep; the penalty area 16.5 m deep and 40.32 m wide; the penalty mark 11 m out; the arc 9.15 m from the mark. The goalkeeper stands on the goal line, the kicker at the mark, every other player outside the area and the arc, behind the mark.',
+ gk:'Goalkeeper on the line',k:'Kicker',o:'Everyone else: outside the area and the arc, behind the mark',m:['16.5 m','11 m','9.15 m','5.5 m','7.32 m']},
+ es:{t:'Diagrama del penal: el área penal con sus medidas',d:'El arco (7,32 m) en la línea de meta; el área chica de 5,5 m; el área penal de 16,5 m de fondo y 40,32 m de ancho; el punto penal a 11 m; el arco del área a 9,15 m del punto. El portero en la línea de meta, el que patea en el punto y los demás fuera del área y del arco, detrás del punto.',
+ gk:'Portero en la línea',k:'El que patea',o:'Los demás: fuera del área y del arco, detrás del punto',m:['16,5 m','11 m','9,15 m','5,5 m','7,32 m']}} as const;
+export function PenaltyAreaDiagram({lang='en'}:{lang?:Lang}){
+ const w=PEN_WORDS[lang],k=7,M=14,W=56*k,H=30*k,cx=M+W/2,gy=M+8,X=(m:number)=>cx+m*k,Y=(m:number)=>gy+m*k;
+ const line={fill:'none',stroke:PAPER,strokeWidth:2,strokeOpacity:.9} as const,arcR=9.15*k,dy=(16.5-11)*k,dx=Math.sqrt(arcR*arcR-dy*dy);
+ const lab={fontSize:12,fontWeight:700,fill:PAPER,fontFamily:'system-ui,sans-serif'} as const;
+ return <figure className={v.fig} data-visual="penalty-area">
+  <div className={v.board}><svg viewBox={`0 0 ${W+2*M} ${H+2*M}`} role="img" aria-labelledby="pen-t pen-d"><title id="pen-t">{w.t}</title><desc id="pen-d">{w.d}</desc>
+   <rect x={0} y={0} width={W+2*M} height={H+2*M} rx={12} fill={GRASS}/>
+   <line {...line} x1={M} x2={M+W} y1={gy} y2={gy}/>
+   <rect x={X(-3.66)} y={gy-7} width={7.32*k} height={7} fill={PAPER}/>
+   <rect {...line} x={X(-9.16)} y={gy} width={18.32*k} height={5.5*k}/>
+   <rect {...line} x={X(-20.16)} y={gy} width={40.32*k} height={16.5*k}/>
+   <path {...line} d={`M${cx-dx} ${Y(16.5)}A${arcR} ${arcR} 0 0 0 ${cx+dx} ${Y(16.5)}`}/>
+   <circle cx={cx} cy={Y(11)} r={3} fill={PAPER}/>
+   <circle cx={cx} cy={gy+2} r={9} fill={PAPER} stroke={INK} strokeWidth={1.5}/><text x={cx+14} y={gy+20} {...lab}>{w.gk}</text>
+   <circle cx={cx} cy={Y(11)+16} r={9} fill={GOLD} stroke={INK} strokeWidth={1.5}/><text x={cx+14} y={Y(11)+20} {...lab}>{w.k}</text>
+   {[-14,-6,6,14].map(m=><circle key={m} cx={X(m)} cy={Y(20.5)+(Math.abs(m)>10?0:6)} r={8} fill={GOLD} stroke={INK} strokeWidth={1.5}/>)}
+   <text x={cx} y={Y(23.6)+6} textAnchor="middle" {...lab}>{w.o}</text>
+   <text x={X(20.16)+6} y={Y(8.5)} {...lab}>{w.m[0]}</text>
+   <text x={X(-20.16)-6} y={Y(11)+4} textAnchor="end" {...lab}>{`${w.m[1]} →`}</text>
+   <text x={cx-dx-8} y={Y(17.8)} textAnchor="end" {...lab}>{`${w.m[2]}`}</text>
+   <text x={X(9.16)+6} y={Y(3)} {...lab}>{w.m[3]}</text>
+   <text x={X(-3.66)-6} y={gy-1} textAnchor="end" {...lab}>{w.m[4]}</text>
+  </svg></div>
+  <figcaption className={v.cap}>{w.d} {lang==='es'?'Reglas de Juego de la IFAB, Reglas 1 y 14.':'IFAB Laws of the Game, Law 1 and Law 14.'}</figcaption>
+ </figure>;
+}

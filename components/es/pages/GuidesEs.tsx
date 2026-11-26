@@ -33,7 +33,7 @@ import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
 import {RuleExtraSection} from '@/lib/site/GuideParts';
-import {RefereeCards} from '@/components/site/visual/Visuals';
+import {PenaltyAreaDiagram,RefereeCards} from '@/components/site/visual/Visuals';
 import {TermVisualTop,TermVisualTry,CardHistory} from '@/components/site/visual/TermVisuals';
 import {CardRulesGame,CardRulesPages,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
@@ -114,6 +114,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <JsonLd data={faqLd(r.faq)}/>
   <EsIntro top rail={<RailNav rail={guideRail('rules',[...(cards?['cards']:[]),...(futsal?['futsal-vs-soccer']:[])],true,play)} current="#top"/>} onward={onwardFor(r.cta,true)} crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES_ES}/>:undefined} facts={facts}/>
   <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
+  {r.slug==='penalty-kick'&&<Section id="measured" title="Diagrama del penal: medidas y quién se coloca dónde"><PenaltyAreaDiagram lang="es"/></Section>}
   {cards&&<RefereeCards lang="es"/>}
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   {play&&<RulePlayDeck c={play}/>}
