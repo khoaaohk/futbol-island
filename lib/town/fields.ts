@@ -100,7 +100,7 @@ export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  // town's paving join this same geometry with a per-vertex edge value (0 everywhere else); 0 draws, same material and program.
  {const e=mainLawnEdges(depthLowTier());if(e){let g=lawnGeo;const base=g.getAttribute('position').count;
   if(e.triangles){const count=e.position.length/3,up=new Array(count*3).fill(0);for(let i=1;i<up.length;i+=3)up[i]=1;g=mergeLawnPatch(lawnGeo,{position:e.position,normal:up,uv:new Array(count*2).fill(0),index:e.index,triangles:e.triangles} as Parameters<typeof mergeLawnPatch>[1]);lawnGeo.dispose();lawnGeo=g;}
-  const a=new Float32Array(g.getAttribute('position').count*2);a.set(e.edge,base*2);for(const i of softRim){a[i*2]=1;a[i*2+1]=1;}/* the fade runs on into the lawn (paving beyond: the soft blend) */for(const i of softMid){a[i*2]=.4;a[i*2+1]=1;}for(const i of softIn)a[i*2+1]=1;g.setAttribute('aEdge',new T.Float32BufferAttribute(a,2));}}
+  const a=new Float32Array(g.getAttribute('position').count*2);a.set(e.edge,base*2);for(const i of softRim){a[i*2]=1;a[i*2+1]=1;}/* the fade runs on into the lawn (paving beyond: the soft blend) */for(const i of softMid){a[i*2]=.24;a[i*2+1]=1;}for(const i of softIn)a[i*2+1]=1;g.setAttribute('aEdge',new T.Float32BufferAttribute(a,2));}}
  const lawnMat=applyGroundTint(new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94}),'grass');owned.push(lawnGeo,lawnMat);
  const lawn=new T.Mesh(lawnGeo,lawnMat);lawn.name='interior-island-grass';lawn.position.y=-.112;lawn.receiveShadow=true;scene.add(lawn);
 

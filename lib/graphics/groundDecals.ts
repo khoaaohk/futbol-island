@@ -121,6 +121,7 @@ function flowerGeometry(){ // a shallow six-sided cone (6 tris)
 function upLit<M extends T.Material>(m:M,key:string){const prev=m.onBeforeCompile,pk=m.customProgramCacheKey;
  m.onBeforeCompile=(s,r)=>{prev.call(m,s,r);s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n#ifdef DOUBLE_SIDED\nnormal*=faceDirection;\n#endif');};
  m.customProgramCacheKey=()=>pk.call(m)+key;return m;}
+const PATCH_KEY='decal-patch-uplit';
 const LAWN_RIM='#608870',LEAF_ROOT='#3c6a3e',LEAF_TIP='#7aa562';
 function patchGeometry(flowers:{x:number;y:number;z:number;r:number;sx:number;sy:number;sz:number;col:string}[],mounds:MacroSite[]){
  const pos:number[]=[],col:number[]=[],c=new T.Color(),d=new T.Color(),h=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
@@ -146,10 +147,10 @@ function boulderGeometry(){ // surf: a low, flat-topped, slightly lopsided stone
  const tri=(p:number[],q:number[],r:number[])=>pos.push(...p,...r,...q);
  for(let i=0;i<4;i++){const j=(i+1)%4;tri(b[i],b[j],t[j]);tri(b[i],t[j],t[i]);}
  tri(t[0],t[1],t[2]);tri(t[0],t[2],t[3]);
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();g.setAttribute('color',new T.BufferAttribute(new Float32Array(pos.length).fill(1),3));return g;
 }
 function stripGeometry(){ // one flat quad (2 tris), long axis x, facing up
- const g=new T.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);return g;
+ const g=new T.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);if(surfOn())g.setAttribute('color',new T.BufferAttribute(new Float32Array(12).fill(1),3));return g;
 }
 
 /** Builds the instanced meshes under `parent` (call AFTER the static batching pass: it merges every plain Mesh, instanced ones included).
@@ -165,7 +166,8 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const macro=(h:MacroHost):Inst[]=>plan.macro.filter(m=>MACRO_HOST[m.k]===h);
  const make=(label:string,geo:T.BufferGeometry,insts:Inst[],double=false)=>{
   if(!insts.length){geo.dispose();return;}
-  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide,vertexColors:surf&&label==='tufts'});owned.push(geo,mat);if(label==='tufts'){patchTuftWind(mat);if(surf)upLit(mat,'-uplit');}/* island wind: blade tips sway (islandWind.ts), same draw */
+  const patchKin=surf&&label!=='tufts';/* surf: the stones and the flat strips share ONE program with the flower / patch draw below (same switches), so the program count stays what it was */
+  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double||patchKin?T.DoubleSide:T.FrontSide,vertexColors:surf&&(label==='tufts'||patchKin)});owned.push(geo,mat);if(label==='tufts')patchTuftWind(mat);if(surf)upLit(mat,patchKin?PATCH_KEY:'-uplit');/* island wind: blade tips sway (islandWind.ts), same draw */
   const mesh=new T.InstancedMesh(geo,mat,insts.length),o=new T.Object3D(),col=new T.Color();
   insts.forEach((s,i)=>{o.position.set(s.x,s.y,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.sx,s.sy,s.sz);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);mesh.setColorAt(i,col.set(s.col));});
   mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
@@ -173,8 +175,8 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  make('stones',surf?boulderGeometry():new T.OctahedronGeometry(1,0),[...from(plan.stones,surf?SURF_DECALS.stones:STONE_COLORS,true),...macro('stones').map(m=>surf?{...m,y:m.y-m.sy*.5}:m)]);
  make('tufts',tuftGeometry(),[...from(plan.tufts,surf?SURF_DECALS.tufts:TUFT_COLORS,false),...macro('tufts')],true);
  if(surf){const fl=[...from(plan.flowers,FLOWER_COLORS,false),...plan.macro.filter(m=>m.k==='flower')],mo=plan.macro.filter(m=>MACRO_HOST[m.k]==='mounds'&&m.k!=='flower');
-  if(fl.length+mo.length){const geo=patchGeometry(fl,mo),mat=upLit(new T.MeshLambertMaterial({color:'#ffffff',vertexColors:true,side:T.DoubleSide}),'decal-patch-uplit');owned.push(geo,mat);
-   const mesh=new T.Mesh(geo,mat);mesh.name=name+'-flowers';mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;group.add(mesh);}}
+  // one instance at the origin: the merged patch goes through the same InstancedMesh path, so it compiles to the stones' program
+  if(fl.length+mo.length)make('flowers',patchGeometry(fl,mo),[{x:0,y:0,z:0,r:0,sx:1,sy:1,sz:1,col:'#ffffff'}]);}
  else make('flowers',flowerGeometry(),[...from(plan.flowers,FLOWER_COLORS,false),...macro('mounds')]);
  make('strips',stripGeometry(),macro('strips'));
  parent.add(group);
