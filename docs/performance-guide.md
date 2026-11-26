@@ -7173,7 +7173,6 @@ Build-time only; no new material, texture, program, draw or per-frame work (prog
   phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
   camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.
 
-<<<<<<< HEAD
 ## Nov 26 2026: surface edges (`?surf=1`, default OFF) and the kerb-depth review
 
 Not shipped, not pushed (branch `island-depth`). Full audit: `.claude/worktrees/_recovery-nov20/surfaces/NOTE.md`.
@@ -7181,7 +7180,7 @@ Not shipped, not pushed (branch `island-depth`). Full audit: `.claude/worktrees/
 - Rejected: `discard` in the lawn program (alpha-test on the largest surface).
 - Kerb depth: stone in the pavement's hue (night), 5 sheet crossings, sign contact shade, ball return clears the kerb; the +2 to +4 draws per view stay (the kerb needs vertex colours; the batches already in view have none).
 
-=======
+
 ### Coral Cay independent audit (Nov 26 2026, still behind `?elev=1`, not pushed)
 
 Reviewer pass on `island-elevation-cay` after the west merge and a merge of `rc-nov25` (9b0ce430). Fixes that touch rendering or per-frame work:
@@ -7195,4 +7194,3 @@ Measured (headless desktop Chrome, 1280 x 800, sunset; calls / triangles, flag o
 - The added triangles are the cost of the whole raised cay (lawn 14.5k, draped paths / soil 9.8k), constant from any cay view.
 - Flag off is identical to `rc-nov25`: in-page census of the cay box, 7,499 of 7,499 static pieces (chunk, kind, vertex count, centroid, height range, colour), 1,243 of 1,243 instances, 1,011 chunks, 797,873 chunk triangles, 233 materials.
 - Not measured: a real phone. No thermal claim.
->>>>>>> 00b0a868
