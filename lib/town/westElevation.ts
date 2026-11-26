@@ -10,7 +10,7 @@
 //      the Island Line (WEST.clear m either side of the rail; it loops the district just inside the beach), West station and the
 //      three beaches stay at today's height: a green embankment WEST.railBand m wide climbs from them;
 //      the pond stays at its level in a hollow (a sunken garden): banks WEST.pondBand m wide round it, open to the south;
-//      the town (x > WEST.town) is untouched: the whole east side is one long hillside (WEST.ramp m, about 7% with eased ends:
+//      the town (x > WEST.town) is untouched: the whole east side is one long hillside (WEST.ramp m, 7.6% with eased ends, 9% at most:
 //      level across Stadium Plaza because it depends on x alone), so the plaza walks up from the town to the gate.
 //  - STAIRS (WEST_STAIRS): straight flights through the wall, a ramp in the height function (the drawn treads sit on it).
 import {INTERIOR_GRASS} from './shoreline';
@@ -18,7 +18,7 @@ import {TRACK} from './trainTrack';
 import {PARK_POND,POND_RIM,pondQ} from './westParkLayout';
 import {createRegion,registerRegion,elevationOn,smooth,insidePolygon,ringDistance,padDistance,boxDistance,type Pad,type Region} from './elevation';
 
-export const WEST={terrace:4.2,clear:7.5,railBand:24,pondClear:1,pondBand:20,town:-60,ramp:60} as const;
+export const WEST={terrace:4.2,clear:7.5,railBand:24,pondClear:1,pondBand:20,town:-72/* west of Old Town's last row of buildings (x -71..-57): they stay on the flat */,ramp:55} as const;
 /** The terrace's outline: the bowl's apron (x -277.5..-132.5, z -122.5..62.5) plus an 11.5 m promenade on the west, 4.5 m of
  *  verge north and east and 1 m on the south (the ring walk is a balcony over the pond). */
 export const WEST_TERRACE:Pad={x:-208.5,z:-31.75,w:161,d:190.5,r:45};
@@ -29,8 +29,8 @@ const trackNear=(()=>{const out:number[]=[];for(let i=0;i<TRACK.n;i++){const x=T
 function trackDistance(x:number,z:number){let best=Infinity;for(let i=0;i<trackNear.length;i+=2){const d=(trackNear[i]-x)**2+(trackNear[i+1]-z)**2;if(d<best)best=d;}return Math.sqrt(best);}
 /** Metres outside the pond's stone rim (negative inside), along the radius. */
 const pondDistance=(x:number,z:number)=>{const q=pondQ(x,z,POND_RIM);return (q-1)*Math.hypot(x-PARK_POND.x,z-PARK_POND.z)/Math.max(q,1e-6);};
-/** A ramp's ease: constant grade with eased ends (peak 1.25 x the mean). */
-const ease=(t:number)=>{const a=.2;t=Math.max(0,Math.min(1,t));return t<a?t*t/(2*a*(1-a)):t<1-a?(t-a/2)/(1-a):1-(1-t)*(1-t)/(2*a*(1-a));};
+/** A ramp's ease: constant grade with eased ends (peak 1.18 x the mean). */
+const ease=(t:number)=>{const a=.15;t=Math.max(0,Math.min(1,t));return t<a?t*t/(2*a*(1-a)):t<1-a?(t-a/2)/(1-a):1-(1-t)*(1-t)/(2*a*(1-a));};
 /** The ground beside (and, as a smooth extension, under) the terrace. */
 function natural(x:number,z:number){
  if(x>=WEST.town||!insidePolygon(INTERIOR_GRASS,x,z))return 0;

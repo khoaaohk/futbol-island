@@ -54,13 +54,13 @@ assert.equal(B.CORAL_CAY_SPOTS.find(s=>s.parachute).y,90,'sky balls keep their h
  for(let i=0;i<TT.TRACK.n;i++){const x=TT.TRACK.x[i],z=TT.TRACK.z[i];for(const d of [-6,-3,0,3,6])assert.ok(w(x+TT.TRACK.tz[i]*d,z-TT.TRACK.tx[i]*d)<.03,'west: the line keeps its height at '+x.toFixed(0)+','+z.toFixed(0));}
  // The whole apron (bowl, ring walk) and the plaza's top are exactly level.
  const A=L.BOWL_APRON;for(let x=A.x-A.w/2;x<=A.x+A.w/2;x+=2.5)for(let z=A.z-A.d/2;z<=A.z+A.d/2;z+=2.5)if(L.onApron(x,z))assert.equal(w(x,z),H,'apron level at '+x+','+z);
- for(const z of [-50,-30,-10])for(let x=-140;x<=-121;x+=1)assert.ok(Math.abs(w(x,z)-H)<.02,'plaza top level at '+x+': '+w(x,z));
+ for(const z of [-50,-30,-10])for(let x=-140;x<=-127;x+=1)assert.ok(Math.abs(w(x,z)-H)<.02,'plaza top level at '+x+': '+w(x,z));
  // The pond: its water and stone rim at today's height, the terrace's wall clear of the rim.
  for(let a=0;a<6.28;a+=.1){const p=L.pondEdge(a,L.POND_RIM);assert.ok(w(p.x,p.z)<.03,'pond rim pinned at '+a.toFixed(1)+': '+w(p.x,p.z));assert.ok(!Wt.onWestTerrace(p.x,p.z),'the wall stands clear of the pond rim');}
  assert.equal(w(L.PARK_POND.x,L.PARK_POND.z),0);
  // The town, the beaches: untouched.
- assert.ok(w(-52,-30)===0&&w(-59,-30)<.02&&w(-90,-30)>1.5&&w(-90,-30)<2.6,'the plaza walks up from the town');
- for(let x=-330;x<=-40;x+=3)for(let z=-215;z<=140;z+=3)if(!E.insidePolygon(S.INTERIOR_GRASS,x,z)||x>=-58)assert.ok(w(x,z)<.03,'only the lawn is raised: '+x+','+z);
+ assert.ok(w(-52,-30)===0&&w(-71,-30)<.02&&w(-90,-30)>.9&&w(-90,-30)<2&&w(-110,-30)>2.6,'the plaza walks up from the town, west of its last row of buildings');
+ for(let x=-330;x<=-40;x+=3)for(let z=-215;z<=140;z+=3)if(!E.insidePolygon(S.INTERIOR_GRASS,x,z)||x>=-72)assert.ok(w(x,z)<.03,'only the lawn is raised: '+x+','+z);
  // The plaza: level across, at most a 9.5% grade along it.
  for(let x=-140;x<=-52;x+=2){const c=w(x,-30);for(const d of [-22,-10,10,22])assert.ok(Math.abs(w(x,-30+d)-c)<.03,'plaza level across at x '+x);assert.ok(Math.abs(w(x+2,-30)-c)/2<.095,'plaza grade at x '+x);}
  // Natural ground: smooth and walkable everywhere outside the terrace (the terrace's own edge is the wall).

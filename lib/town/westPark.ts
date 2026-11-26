@@ -10,7 +10,7 @@ import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
 import {elevationOn,groundLift} from './elevation';
-import {onWestStair,nearWestWall} from './westElevation';
+import {onWestStair,nearWestWall,onWestTerrace} from './westElevation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
@@ -92,7 +92,16 @@ export function buildWestPark(t:Tools):WestParkStats{
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));if(attr)g.setAttribute(attr,new T.Float32BufferAttribute(extra,1));
   g.setIndex(idx);g.computeVertexNormals();return g;};
  const disc=(x:number,z:number,rx:number,rz:number,y:number,color:string,kind:'path'|'grass')=>{
-  const g=new T.CircleGeometry(1,36);g.rotateX(-Math.PI/2);g.scale(rx,1,rz);surfaceAreas.push({kind,x,z,w:rx*2,d:rz*2});
+  let g:T.BufferGeometry=new T.CircleGeometry(1,36);g.rotateX(-Math.PI/2);g.scale(rx,1,rz);surfaceAreas.push({kind,x,z,w:rx*2,d:rz*2});
+  // Elevation (?elev=1): on raised ground the disc is cut in rings about 2.5 m apart so the drape (elevationDrape.ts) lays it on the
+  // banks, and it stops at the terrace's retaining wall (no triangle spans the wall's drop).
+  if(elevationOn()&&groundLift(x,z)+groundLift(x+rx,z)+groundLift(x-rx,z)+groundLift(x,z+rz)+groundLift(x,z-rz)>0){g.dispose();const rings=Math.max(2,Math.ceil(Math.max(rx,rz)/2.5)),seg=48,pos:number[]=[0,0,0],idx:number[]=[];
+   for(let j=1;j<=rings;j++)for(let k=0;k<seg;k++){const a=k/seg*Math.PI*2;pos.push(Math.cos(a)*rx*j/rings,0,Math.sin(a)*rz*j/rings);}
+   const on=(i:number)=>onWestTerrace(x+pos[i*3],z+pos[i*3+2]),tri=(a:number,b:number,c:number)=>{const s=+on(a)+ +on(b)+ +on(c);if(s===0||s===3)idx.push(a,b,c);};
+   for(let k=0;k<seg;k++)tri(0,1+(k+1)%seg,1+k);
+   for(let j=1;j<rings;j++)for(let k=0;k<seg;k++){const a=1+(j-1)*seg+k,b=1+(j-1)*seg+(k+1)%seg,c=a+seg,d=b+seg;tri(a,b,c);tri(b,d,c);}
+   g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+   g.setAttribute('uv',new T.Float32BufferAttribute(pos.flatMap((v,i)=>i%3===0?[v/rx/2+.5]:i%3===2?[v/rz/2+.5]:[]),2));}
   const m=tintGroundMesh(put(g,color,x,y,z),kind);m.castShadow=false;return m;
  };
 
@@ -111,7 +120,10 @@ export function buildWestPark(t:Tools):WestParkStats{
  }
  for(const [x,z] of [[-118,-60],[-96,-60],[-74,-60],[-118,0],[-96,0],[-74,0]] as P[]){
   // Flower beds (sponsor-free): a low kerb and a row of blossoms.
-  prop('planter',()=>{box(12,.32,3,'#d2bc94',x,.16,z);box(11.4,.12,2.4,'#6b5640',x,.34,z);
+  // Elevation (?elev=1): on the hillside a 12 m bed would stand half a metre proud at one end, so it steps down the grade in four
+  // 3 m planters (each on the ground at its own spot, its kerb carried 0.3 m into the ground).
+  prop('planter',()=>{if(elevationOn()&&Math.abs(groundLift(x-6,z)-groundLift(x+6,z))>.1)for(let k=0;k<4;k++){const bx=x-4.5+k*3;box(3,.62,3,'#d2bc94',bx,.01,z);box(2.4,.12,2.4,'#6b5640',bx,.34,z);}
+   else{box(12,.32,3,'#d2bc94',x,.16,z);box(11.4,.12,2.4,'#6b5640',x,.34,z);}
    for(let k=0;k<9;k++)put(new T.IcosahedronGeometry(.42,0),['#e9a3a0','#f4d35e','#f6f1e7'][k%3],x-5+k*1.25,.62,z+(k%2?.45:-.45));});
   obstacles.push({x,z,w:12,d:3});stats.beds++;
  }
