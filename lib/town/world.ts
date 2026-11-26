@@ -366,7 +366,7 @@ export function* buildTownSteps(scene: T.Scene) {
   function tableParts(x:number,z:number){
     assets.push({kind:'table',x,z,w:3.1,d:1.5});
     cylinder(.75,.12,'#a67d55',x,.85,z);cylinder(.08,.78,'#385a4e',x,.4,z);
-    for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
+    for(const dx of [-1.15,1.15]){const was=elevBuild.anchor;if(elevBuild.active)elevBuild.anchor=groundLift(x+dx,z);/* (?elev=1) each stool stands on its own ground: on a 9-13% pavement one stool's leg hung 11 cm in the air */box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);elevBuild.anchor=was;}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
   function districtSign(text:string,x:number,z:number){prop('sign',()=>seated(x,z,Math.min(4.2,text.length*.275),()=>districtSignParts(text,x,z),.3));}

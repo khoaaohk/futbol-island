@@ -1,5 +1,6 @@
 import {createCourtFreestyle,linkFreestylePair} from './courtFreestyle';
 import {FREESTYLE_PAIRS} from './freestyleRoutine';
+import {elevationOn,groundLift} from '../town/elevation';
 import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
@@ -192,6 +193,10 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   advanceNpcRoutines(fastRoutine,paused?0:dt,canTravel,frozen);
   freestyleClock+=paused?0:dt;poseClock+=paused?0:dt;slowRoutineDt+=paused?0:dt;if(slowRoutineDt>=.1||!slowRoutine.length){if(slowRoutine.length)advanceNpcRoutines(slowRoutine,slowRoutineDt,canTravel,frozen);stats.slowRoutine=slowRoutine.length;slowRoutineDt=0;}
   for(const id of truckWitnesses.keys())if(id!==hoveredId)frozen.delete(id);
+  // Raised ground (?elev=1, lib/town/elevation.ts): a routine walks a straight line between two heights, and a meeting point or a
+  // worker's way home keeps the height it set out from, so on a bank a walker ended up to 0.15 m in or over the grass (Reef by the
+  // Surf Shop read 0.11 low). Grounded townsfolk on raised ground take the ground's own height. Nothing to do on flat ground.
+  if(elevationOn())for(const entry of neighborhood){if(entry.definition.floor||entry.swim||entry.routeTravel||groundLift(entry.position.x,entry.position.z)<=0)continue;const h=placement.heightAt(entry.position.x,entry.position.z);if(Math.abs(h-entry.position.y)<.25)entry.position.y=h;}
   for(const entry of entries){if(frozen.has(entry.id)||heldByFocus(entry))continue;const distance=entry.distance;entry.rig.root.visible=!isThinned(entry)&&distance<(drawLimit??(desktop?96:72));if(entry.ride)entry.ride.root.visible=entry.rig.root.visible&&!entry.stunned;entry.rigElapsed+=paused?0:dt;if(!entry.rig.root.visible&&!entry.stunned)continue;if(camera&&!entry.near&&!entry.stunned){viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=5+Math.max(0,entry.position.y)*1.4;if(!viewFrustum.intersectsSphere(viewSphere)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);if(entry.ride)entry.ride.root.position.copy(entry.rig.root.position);stats.offscreenSkipped++;continue;}}if(entry.seat&&!entry.near&&!entry.stunned&&entry.seatHeld>=2&&(!entry.sm||entry.sm.state==='seated')&&!truckWitnesses.has(entry.id)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);continue;} // a still townsperson holds its solved sit / lie pose (two solves after any wave or bump)
    const bucket=Math.floor((poseClock+entry.poseSlot)*POSE_HZ);if(bucket===entry.poseBucket&&!entry.definition.travel&&!entry.stunned&&!truckWitnesses.has(entry.id)&&(entry.freestyle?distance>32&&entry.routine.mode!=='walk'&&entry.routine.mode!=='approach':distance>FAR_POSE)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);continue;}entry.poseBucket=bucket;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;if(entry.seat)entry.seatHeld=entry.near||entry.stunned||truckWitnesses.has(entry.id)?0:entry.seatHeld+1;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
    let facing=entry.near?Math.atan2(player.x-entry.position.x,player.z-entry.position.z):r.mode==='social'&&partner?Math.atan2(partner.position.x-entry.position.x,partner.position.z-entry.position.z):r.mode==='work'?entry.definition.workYaw:undefined;
