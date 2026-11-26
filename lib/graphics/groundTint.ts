@@ -3,6 +3,7 @@ import {effectiveTier,subscribeHeatTier} from './heatTier';
 import {gfxFlag} from './gfxFlags';
 import {sunHighlightGlsl,ggxA2} from './sunHighlight';
 import {STADIUM,STADIUM_PLAZA} from '../town/westParkLayout';
+import {surfOn,EDGE as LAWN_EDGE} from '../town/surfaceEdges';
 
 /**
  * Ground detail (Oct 17 2026; detail tile and surface kinds Nov 17 2026): the island's lawn, sand and land do not read as one flat
@@ -142,12 +143,24 @@ export const GROUND_SUN_GLSL=sunHighlightGlsl('uGroundA2','.04');
 const f=(v:number)=>v.toFixed(3);
 const lin=(hex:string)=>{const c=new T.Color(hex);return `vec3(${c.r.toFixed(4)},${c.g.toFixed(4)},${c.b.toFixed(4)})`;};
 
+/** The lawn's soft edge (surfaceEdges.ts): vEdge.x runs 0 (lawn) .. 1 (the bare rim), vEdge.y says what lies beyond (0 sand, 1 paving).
+ *  The tile's blotches and clumps break the band up (none at either end: a tent weight), so grass thins to scattered tufts; a damp
+ *  lip darkens the grass side, a soil shadow the bare side, and at the rim the colour is the neighbour's own maths (sand / path:
+ *  same mottle, warm drift and tile mix), so the band ends without a step. Tiers 3-4 (no tile): a plain soft blend. */
+export function lawnEdgeGlsl(){const E=LAWN_EDGE,S=GROUND_TINT.sand,P=GROUND_TINT.path,sm=GROUND_DETAIL_MIX.sand,pm=GROUND_DETAIL_MIX.path;
+ return `if(vEdge.x>.004){float eu=clamp(vEdge.y,0.,1.),et=vEdge.x+min(vEdge.x,1.-vEdge.x)*2.*((gt.a-.5)*${f(E.noise)}+(gt.r-.5)*${f(E.clump)}),ek=smoothstep(${f(E.from)},${f(E.to)},et);
+ vec3 bare=mix(${lin(SAND_HEX)},${lin(PAVE_HEX)},eu)*(1.+${f(S.amp)}*n)*vec3(1.+${f(S.amp*.5)}*w,1.,1.-${f(S.amp*.8)}*w)*(1.+mix(${f(S.grain*sm[0])}*(gt.r-.5)+${f(S.grain*sm[1])}*(gt.g-.5),${f(P.grain*pm[0])}*(gt.r-.5),eu)+${f(S.grain*sm[2])}*(gt.b-.5));
+ bare*=1.-${f(E.soil)}*(1.-smoothstep(${f(E.to)},${f(E.soilTo)},et));
+ diffuseColor.rgb=mix(diffuseColor.rgb*(1.-${f(E.damp)}*smoothstep(0.,${f(E.from)},et)),bare,ek);}`;}
+const SAND_HEX='#f1d6a1',PAVE_HEX='#eddfbb';
 export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kind:GroundKind):M{
  ensureSubscribed();
  const {amp,grain,wet}=GROUND_TINT[kind],[mr,mg,mb]=GROUND_DETAIL_MIX[kind];
- const pbr=gfxFlag('pbr-ground'),beach=kind==='beach',trail=kind==='trail';
- material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'');
- const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':'';
+ // Surface craft (?surf=1, lib/town/surfaceEdges.ts): the lawn's program gains the soft-edge branch (a per-vertex `aEdge`; meshes
+ // without the attribute read 0 = plain lawn). With the flag off the source below is exactly what it was.
+ const pbr=gfxFlag('pbr-ground'),beach=kind==='beach',trail=kind==='trail',edge=kind==='grass'&&surfOn();
+ material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'')+(edge?'-edge':'');
+ const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':edge?'varying vec2 vEdge;':'';
  const detail=[mr?`${f(grain*mr)}*(gt.r-.5)`:'',mg?`${f(grain*mg)}*(gt.g-.5)`:'',mb?`${f(grain*mb)}*(gt.b-.5)`:''].filter(Boolean).join('+');
  const B=BEACH_WET,E=TRAIL_EDGE,S=GROUND_SLAB;
  material.onBeforeCompile=sh=>{
@@ -155,8 +168,8 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
   if(!pbr){sh.uniforms.uGroundA2={value:ggxA2(material.roughness)};sh.vertexShader=T.ShaderLib.lambert.vertexShader;
    sh.fragmentShader=T.ShaderLib.lambert.fragmentShader.replace('#include <common>','#include <common>\nuniform float uGroundA2;')
     .replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+(beach?sunHighlightGlsl(`mix(uGroundA2,${f(B.a2)},gWet)`,`mix(.04,${f(B.f0)},gWet)`):GROUND_SUN_GLSL));}
-  sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;${beach?'attribute float aShore;':trail?'attribute vec3 aVerge;':''}${extraVary}`)
-   .replace('#include <project_vertex>',`#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;${beach?'vShore=aShore;':trail?'vVerge=aVerge;':''}`);
+  sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;${beach?'attribute float aShore;':trail?'attribute vec3 aVerge;':edge?'attribute vec2 aEdge;':''}${extraVary}`)
+   .replace('#include <project_vertex>',`#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;${beach?'vShore=aShore;':trail?'vVerge=aVerge;':edge?'vEdge=aEdge;':''}`);
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;${extraVary}uniform float uGroundGrain,uGroundTime,uGroundDetail;uniform sampler2D uGroundTile;\n${GROUND_TINT_GLSL}`)
    .replace('#include <color_fragment>',`#include <color_fragment>
 float gWet=0.;
@@ -171,6 +184,7 @@ ${trail?`{float ed=vVerge.y>.01?vVerge.y-abs(vVerge.x):9.;if(ed<1.){float ek=smo
  diffuseColor.rgb*=1.-${f(E.lineDark)}*(1.-smoothstep(0.,${f(E.lineWidth)},abs(ed-${f(E.line)})))*ek;
  vec3 lawn=${lin(LAWN_COLOR)}*(1.+.12*n)*vec3(1.+.06*w,1.,1.-.096*w)*mix(vec3(.94,.99,1.03),vec3(1.07,1.05,.9),.5+.5*n);
  diffuseColor.rgb=mix(diffuseColor.rgb,lawn,(1.-ek)*vVerge.z);}}`:''}
+${edge?lawnEdgeGlsl():''}
 ${kind==='path'?`{vec2 sa=abs(vGT.xz-vec2(${f(S.rects[0][0])},${f(S.rects[0][1])}))-vec2(${f(S.rects[0][2])},${f(S.rects[0][3])}),sb=abs(vGT.xz-vec2(${f(S.rects[1][0])},${f(S.rects[1][1])}))-vec2(${f(S.rects[1][2])},${f(S.rects[1][3])});
  if(min(max(sa.x,sa.y),max(sb.x,sb.y))<0.){vec2 sp=vGT.xz*${(1/S.size).toFixed(5)},sc=floor(sp),sf=abs(fract(sp)-.5);
   // joint: distance to the nearest slab edge (m), widened to the pixel's footprint on the ground and faded as it goes under a pixel

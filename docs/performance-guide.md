@@ -7159,3 +7159,11 @@ Build-time only; no new material, texture, program, draw or per-frame work (prog
 - Frame triangles, flag off → on, desktop: plaza 305k → 335k, pitch 354k → 392k (crowd fill varies), wall side 271k → 292k;
   phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
   camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.
+
+## Nov 26 2026: surface edges (`?surf=1`, default OFF) and the kerb-depth review
+
+Not shipped, not pushed (branch `island-depth`). Full audit: `.claude/worktrees/_recovery-nov20/surfaces/NOTE.md`.
+- `lib/town/surfaceEdges.ts`: the lawn's soft rim (sand side), lips along paths and the verge's rim over town paving join the lawn's ONE mesh with a per-vertex `aEdge`; `groundTint.ts lawnEdgeGlsl()` is compiled into the `grass` program only with the flag on. No new draw, texture, material or program count. Lawn mesh +6.1k triangles (always drawn: one mesh). Cost on an edge-band pixel +64 ALU (382 -> 446 tier 0, 357 -> 421 tiers 1-2, 341 -> 405 tiers 3-4; 15 over the Nov 17 baseline at tiers 1-4), no texture read; other lawn pixels one comparison. Pinned in `tests/ground-shader-cost.cjs`. Headless desktop only: no phone heat test.
+- Rejected: `discard` in the lawn program (alpha-test on the largest surface).
+- Kerb depth: stone in the pavement's hue (night), 5 sheet crossings, sign contact shade, ball return clears the kerb; the +2 to +4 draws per view stay (the kerb needs vertex colours; the batches already in view have none).
+

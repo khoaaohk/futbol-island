@@ -26,10 +26,10 @@ export function setSurfaces(on:boolean){enabled=on;}
 export const surfOn=()=>enabled;
 
 /** The band (m) and how the shader breaks it (groundTint.ts reads these; tests/surface-edges.cjs keeps both in step). */
-export const EDGE={inset:.5,minWidth:1.1,maxWidth:2,step:3,lowStep:6,rise:.02,
+export const EDGE={inset:.5,minWidth:1.1,maxWidth:2,step:4,lowStep:8,rise:.02,
  /** shader: noise weights (tile A blotches, R clumps), the grass / bare threshold, the damp lip and the soil shadow */
  noise:.9,clump:.85,from:.38,to:.62,damp:.16,soil:.12,soilTo:.95} as const;
-export const LIP={over:.2,overVar:.28,rise:.02,reach:.8,step:3,lowStep:6} as const;
+export const LIP={over:.2,overVar:.28,rise:.02,reach:.8,step:4,lowStep:8} as const;
 const hash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const insidePoly=(poly:readonly Pt[],x:number,z:number)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;};
 
@@ -54,7 +54,7 @@ export function lawnFringe(poly:readonly Pt[],out:EdgePatch,low=false,under=0,li
  for(let pass=0;pass<3;pass++){const ax=new Float64Array(m),az=new Float64Array(m);for(let i=0;i<m;i++){const p=(i+m-1)%m,q=(i+1)%m,x=nx[p]+2*nx[i]+nx[q],z=nz[p]+2*nz[i]+nz[q],l=Math.hypot(x,z)||1;ax[i]=x/l;az[i]=z/l;}nx=ax;nz=az;}
  // the band's width wanders (a smooth value noise of the distance along the edge, 11 m apart)
  const width=(d:number)=>{const f=d/11,k=Math.floor(f),t=f-k,e=t*t*(3-2*t);return EDGE.minWidth+(EDGE.maxWidth-EDGE.minWidth)*(hash(k*1.7+under*5)*(1-e)+hash((k+1)*1.7+under*5)*e);};
- const es=low?[0,.5,1]:[0,.35,.7,1],start=out.index.length;
+ const es=[0,.5,1],start=out.index.length;
  for(let i=0;i<m;i++){const j=(i+1)%m,a=pts[i],b=pts[j];if(lifted((a.x+b.x)/2,(a.z+b.z)/2))continue;const base=out.position.length/3;
   for(const e of es)for(const k of [i,j]){const p=pts[k],u=-EDGE.inset+e*(width(at[k])+EDGE.inset);out.position.push(p.x+nx[k]*u,e?EDGE.rise:.012,p.z+nz[k]*u);out.edge.push(e,under);}
   quadRows(out,base,es.length,facesUp(out.position,base));}
@@ -66,7 +66,7 @@ export function pathLips(out:EdgePatch,low=false){const s=input;if(!s||!s.paths.
  const lawn=(x:number,z:number)=>insidePoly(INTERIOR_GRASS,x,z)&&!s.blocked(x,z)&&!o.inside(x,z)&&regionLift(x,z)<.004;
  for(const seg of o.segs){const {len,knots}=knotsOf(seg,low?LIP.lowStep:LIP.step);if(len<.6)continue;
   const over=(e:number)=>{const [x,z]=rowPoint(seg,len,knots[e],0,false,false);return LIP.over+LIP.overVar*hash(Math.round((seg.nx?z:x)*2)*1.37+seg.ax*.7+seg.az);};
-  const rows=(e:number):[number,number,number][]=>low?[[-over(e),top+.008,1],[.12,top+.012,0],[LIP.reach,0,0]]:[[-over(e),top+.008,1],[-.06,top+LIP.rise,.5],[.14,top+.012,0],[LIP.reach,0,0]];
+  const rows=(e:number):[number,number,number][]=>[[-over(e),top+.008,1],[.12,top+LIP.rise,0],[LIP.reach,0,0]];
   for(let j=0;j<knots.length-1;j++){const mid=(knots[j]+knots[j+1])/2;let open=true;
    for(const u of [.3,LIP.reach]){const [x,z]=rowPoint(seg,len,mid,u,false,false);if(!lawn(x,z)){open=false;break;}}
    if(!open)continue;const base=out.position.length/3,ra=rows(j),rb=rows(j+1);

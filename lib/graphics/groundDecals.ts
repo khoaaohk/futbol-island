@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {patchTuftWind} from './islandWind';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
+import {surfOn} from '../town/surfaceEdges';
 
 /**
  * Ground decals (Oct 17 2026): static, opaque, low-poly detail on the beaches and beside trails/buildings so the lawn and sand are
@@ -37,6 +38,11 @@ export const DECAL_CAPS={
 export const DECAL_SCALE=1.6;
 export const STONE_COLORS=['#8a847a','#a89a82','#6c6862','#d9c9ae','#fbf0e0','#e3a898'] as const;
 export const TUFT_COLORS=['#5f8d52','#7fae5e','#4a8059','#9fc578'] as const;
+/** Surface craft (?surf=1, audit B4 / B5). Tufts: shorter, lighter, dark root to light tip (vertex colour), same 5 triangles and the
+ *  same draw. Stones: a low flat-topped boulder (10 triangles) instead of the half-buried octahedron that read as a pyramid, no
+ *  near-white, pink or near-black, 30 % fewer (so fewer triangles in all: 350 x 10 against 500 x 8 on the main island). */
+export const SURF_DECALS={tuftHeight:.62,tuftRoot:.68,tuftTip:1.22,stoneKeep:.7,stoneTris:10,
+ tufts:['#6f9a5c','#86b068','#63966a','#a4c47c'],stones:['#9b9385','#b3a58b','#8a8377','#c7b795','#bdb09a','#a39683']} as const;
 export const FLOWER_COLORS=['#fff4dc','#f6d56a','#f0a9b8','#c7b6f0','#4f8a58'] as const;
 
 /** Seeded generator (mulberry32): the same sequence everywhere. */
@@ -83,7 +89,7 @@ export function planGroundDecals(input:DecalInput):DecalPlan{
    for(let j=0;j<group&&list.length<cap;j++){const p=j?{x:base.x+(rng()-.5)*2.6,z:base.z+(rng()-.5)*2.6}:base,m=make();
     if(!input.ok(p.x,p.z,kind))continue;list.push({x:+p.x.toFixed(2),z:+p.z.toFixed(2),y:+input.y(p.x,p.z,kind).toFixed(3),...m});}}};
  // Pebbles are mostly small and grey/tan; about a quarter are pale or pink shells.
- fill(plan.stones,input.caps.stones,'sand',()=>({s:(.08+rng()*rng()*.2)*DECAL_SCALE,r:rng()*6.283,c:Math.floor(rng()*STONE_COLORS.length)}));
+ fill(plan.stones,surfOn()?Math.round(input.caps.stones*SURF_DECALS.stoneKeep):input.caps.stones,'sand',()=>({s:(.08+rng()*rng()*.2)*DECAL_SCALE,r:rng()*6.283,c:Math.floor(rng()*STONE_COLORS.length)}));
  fill(plan.tufts,input.caps.tufts,'grass',()=>({s:(.35+rng()*.35)*DECAL_SCALE,r:rng()*6.283,c:Math.floor(rng()*TUFT_COLORS.length)}));
  fill(plan.flowers,input.caps.flowers,'grass',()=>({s:(.1+rng()*.09)*DECAL_SCALE,r:rng()*6.283,c:Math.floor(rng()*FLOWER_COLORS.length)}));
  return plan;
@@ -92,13 +98,22 @@ export function planGroundDecals(input:DecalInput):DecalPlan{
 function tuftGeometry(){ // five crossed blades, each one upright triangle (5 tris, 15 vertices)
  const pos:number[]=[];for(let k=0;k<5;k++){const a=k*Math.PI/5,c=Math.cos(a)*.5,s=Math.sin(a)*.5;pos.push(-c,0,-s, c,0,s, c*.1,1,s*.1);}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();
- const n=g.getAttribute('normal') as T.BufferAttribute;for(let i=0;i<n.count;i++)n.setXYZ(i,0,1,0);return g; // lit like the ground below
+ const n=g.getAttribute('normal') as T.BufferAttribute;for(let i=0;i<n.count;i++)n.setXYZ(i,0,1,0); // lit like the ground below
+ if(surfOn()){const c:number[]=[];for(let k=0;k<5;k++){const r=SURF_DECALS.tuftRoot,t=SURF_DECALS.tuftTip;c.push(r*.95,r,r*.9, r*.95,r,r*.9, t,t,t*.92);}g.setAttribute('color',new T.Float32BufferAttribute(c,3));}
+ return g;
 }
 function flowerGeometry(){ // a shallow six-sided cone (6 tris)
  const pos:number[]=[],nor:number[]=[];for(let k=0;k<6;k++){const a0=k/6*6.283185,a1=(k+1)/6*6.283185;pos.push(0,.35,0,Math.cos(a1),0,Math.sin(a1),Math.cos(a0),0,Math.sin(a0));nor.push(0,1,0,0,1,0,0,1,0);}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));return g;
 }
 
+function boulderGeometry(){ // surf: a low, flat-topped, slightly lopsided stone: 4 sides + a tilted top (10 tris, flat shaded)
+ const A=[.2,1.7,3.3,4.9],R=[1,.85,1.05,.8],H=[1,.8,.9,.7],b=A.map((a,i)=>[Math.cos(a)*R[i],0,Math.sin(a)*R[i]]),t=A.map((a,i)=>[Math.cos(a+.25)*R[i]*.6+.08,H[i],Math.sin(a+.25)*R[i]*.6-.05]),pos:number[]=[];
+ const tri=(p:number[],q:number[],r:number[])=>pos.push(...p,...r,...q);
+ for(let i=0;i<4;i++){const j=(i+1)%4;tri(b[i],b[j],t[j]);tri(b[i],t[j],t[i]);}
+ tri(t[0],t[1],t[2]);tri(t[0],t[2],t[3]);
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;
+}
 function stripGeometry(){ // one flat quad (2 tris), long axis x, facing up
  const g=new T.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);return g;
 }
@@ -112,22 +127,22 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const group=new T.Group();group.name=name;const owned:{dispose():void}[]=[];
  const syncTier=()=>{group.visible=effectiveTier()<DECALS_OFF_TIER;};syncTier();const unsubscribe=subscribeHeatTier(syncTier);
  type Inst={x:number;y:number;z:number;r:number;sx:number;sy:number;sz:number;col:string};
- const from=(list:Site[],palette:readonly string[],stone:boolean):Inst[]=>list.map(s=>({x:s.x,y:s.y+(stone?s.s*.15:0),z:s.z,r:s.r,sx:s.s,sy:stone?s.s*.45:s.s,sz:stone?s.s*1.3:s.s,col:palette[s.c%palette.length]}));
+ const surf=surfOn(),from=(list:Site[],palette:readonly string[],stone:boolean):Inst[]=>list.map(s=>({x:s.x,y:s.y+(stone?(surf?-s.s*.06:s.s*.15):0),z:s.z,r:s.r,sx:s.s,sy:stone?s.s*(surf?.55:.45):surf?s.s*SURF_DECALS.tuftHeight:s.s,sz:stone?s.s*1.3:s.s,col:palette[s.c%palette.length]}));
  const macro=(h:MacroHost):Inst[]=>plan.macro.filter(m=>MACRO_HOST[m.k]===h);
  const make=(label:string,geo:T.BufferGeometry,insts:Inst[],double=false)=>{
   if(!insts.length){geo.dispose();return;}
-  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide});owned.push(geo,mat);if(label==='tufts')patchTuftWind(mat);/* island wind: blade tips sway (islandWind.ts), same draw */
+  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide,vertexColors:surf&&label==='tufts'});owned.push(geo,mat);if(label==='tufts')patchTuftWind(mat);/* island wind: blade tips sway (islandWind.ts), same draw */
   const mesh=new T.InstancedMesh(geo,mat,insts.length),o=new T.Object3D(),col=new T.Color();
   insts.forEach((s,i)=>{o.position.set(s.x,s.y,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.sx,s.sy,s.sz);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);mesh.setColorAt(i,col.set(s.col));});
   mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   mesh.name=name+'-'+label;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;mesh.computeBoundingSphere();group.add(mesh);};
- make('stones',new T.OctahedronGeometry(1,0),[...from(plan.stones,STONE_COLORS,true),...macro('stones')]);
- make('tufts',tuftGeometry(),[...from(plan.tufts,TUFT_COLORS,false),...macro('tufts')],true);
+ make('stones',surf?boulderGeometry():new T.OctahedronGeometry(1,0),[...from(plan.stones,surf?SURF_DECALS.stones:STONE_COLORS,true),...macro('stones').map(m=>surf?{...m,y:m.y-m.sy*.5}:m)]);
+ make('tufts',tuftGeometry(),[...from(plan.tufts,surf?SURF_DECALS.tufts:TUFT_COLORS,false),...macro('tufts')],true);
  make('flowers',flowerGeometry(),[...from(plan.flowers,FLOWER_COLORS,false),...macro('mounds')]);
  make('strips',stripGeometry(),macro('strips'));
  parent.add(group);
  const macroTris=plan.macro.reduce((a,m)=>a+MACRO_HOST_TRIS[MACRO_HOST[m.k]],0);
  return {group,count:plan.stones.length+plan.tufts.length+plan.flowers.length+plan.macro.length,macroCount:plan.macro.length,macroTriangles:macroTris,
-  triangles:plan.stones.length*DECAL_TRIS.stone+plan.tufts.length*DECAL_TRIS.tuft+plan.flowers.length*DECAL_TRIS.flower+macroTris,
+  triangles:plan.stones.length*(surf?SURF_DECALS.stoneTris:DECAL_TRIS.stone)+plan.tufts.length*DECAL_TRIS.tuft+plan.flowers.length*DECAL_TRIS.flower+macroTris,
   dispose(){unsubscribe();group.removeFromParent();for(const o of owned)o.dispose();}};
 }

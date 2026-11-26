@@ -9,6 +9,7 @@ import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
 import type {PropSpec} from '../graphics/propReactions';
 import {westLawnPatch,mergeLawnPatch} from './westTerrain';
 import {depthLawn,depthLowTier,depthStats} from './townDepth';
+import {surfOn,mainLawnEdges} from './surfaceEdges';
 import {stripePlan,stripedSlabGeometry,type StripePlan} from '../graphics/pitchStripes';
 /** Mowing pattern per ground: about 5 m bands goal to goal, sized so the penalty-area edge sits as close to a band edge as it can
  * (exactly on Eleven Park, whose 5.5 m and 16.5 m box edges both land on band edges). Eleven Park also gets a fainter cross-mown pass (the stadium chequerboard). Futsal (hard court) has none. */
@@ -85,14 +86,21 @@ export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  // Town kerb depth (?depth=1, townDepth.ts; null with the flag off): the sunk carriageway lies BELOW this lawn, so the lawn is cut
  // out under it (the street network is one hole, each city block inside it its own shape), and the raised verge beside every
  // pavement joins the same geometry (0 draws).
- const depth=depthLawn(null,depthLowTier()),ring=(pts:{x:number;z:number}[],into:T.Path)=>{pts.forEach((p,i)=>i?into.lineTo(p.x,-p.z):into.moveTo(p.x,-p.z));into.closePath();return into;};
+ let softRim:number[]=[];
+ const depth=depthLawn(null,depthLowTier(),surfOn()),ring=(pts:{x:number;z:number}[],into:T.Path)=>{pts.forEach((p,i)=>i?into.lineTo(p.x,-p.z):into.moveTo(p.x,-p.z));into.closePath();return into;};
  if(depth)for(const h of depth.holes)lawnShape.holes.push(ring(h,new T.Path()));
  let lawnGeo:T.BufferGeometry=new T.ShapeGeometry(depth&&depth.blocks.length?[lawnShape,...depth.blocks.map(b=>ring(b,new T.Shape()) as T.Shape)]:lawnShape);lawnGeo.rotateX(-Math.PI/2);
  if(depth&&depth.patch.triangles){const p=depth.patch,g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.position,3));g.setIndex(p.index);g.computeVertexNormals();
   const merged=mergeLawnPatch(lawnGeo,{position:p.position,normal:Array.from(g.getAttribute('normal').array),uv:new Array(p.position.length/3*2).fill(0),index:p.index,triangles:p.triangles} as Parameters<typeof mergeLawnPatch>[1]);g.dispose();lawnGeo.dispose();lawnGeo=merged;
-  if(depthStats.value)depthStats.value.verge=p.triangles;}
+  if(depthStats.value)depthStats.value.verge=p.triangles;
+  if(surfOn()){const base=merged.getAttribute('position').count-p.position.length/3;softRim=depth.rim.map(i=>i+base);}}
  // Elevation (?elev=1, westTerrain.ts): the west side's raised ground joins this same geometry (0 draws); the flat lawn stays under it.
  {const patch=westLawnPatch(lawnCell);if(patch){const merged=mergeLawnPatch(lawnGeo,patch);lawnGeo.dispose();lawnGeo=merged;westLawnTriangles=patch.triangles;}}
+ // Surface craft (?surf=1, surfaceEdges.ts): the soft lawn rim (sand side), the lips along the paths and the verge's rim over the
+ // town's paving join this same geometry with a per-vertex edge value (0 everywhere else); 0 draws, same material and program.
+ {const e=mainLawnEdges(depthLowTier());if(e){let g=lawnGeo;const base=g.getAttribute('position').count;
+  if(e.triangles){const count=e.position.length/3,up=new Array(count*3).fill(0);for(let i=1;i<up.length;i+=3)up[i]=1;g=mergeLawnPatch(lawnGeo,{position:e.position,normal:up,uv:new Array(count*2).fill(0),index:e.index,triangles:e.triangles} as Parameters<typeof mergeLawnPatch>[1]);lawnGeo.dispose();lawnGeo=g;}
+  const a=new Float32Array(g.getAttribute('position').count*2);a.set(e.edge,base*2);for(const i of softRim){a[i*2]=1;a[i*2+1]=1;}g.setAttribute('aEdge',new T.Float32BufferAttribute(a,2));}}
  const lawnMat=applyGroundTint(new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94}),'grass');owned.push(lawnGeo,lawnMat);
  const lawn=new T.Mesh(lawnGeo,lawnMat);lawn.name='interior-island-grass';lawn.position.y=-.112;lawn.receiveShadow=true;scene.add(lawn);
 
