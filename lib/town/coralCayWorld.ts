@@ -438,7 +438,7 @@ export function buildCoralCay(t:CayTools){
    // Elevation (Nov 26 2026): the two tracks are ONE sheet sharing the vertices of their join. As two draped boxes on the bank their
    // edges were cut at different spots, so the side face of one showed as a dark seam where they meet.
    const T0=F.track,B=F.beachTrack,zA=T0.z-T0.w/2,zB=T0.z+T0.w/2,xa=B.x-B.w/2,xb=B.x+B.w/2,cx=(T0.x0+T0.x1)/2,cz=T0.z,pos:number[]=[],idx:number[]=[],at=new Map<string,number>();
-   const vtx=(x:number,z:number)=>{const k=x.toFixed(3)+':'+z.toFixed(3);let v=at.get(k);if(v===undefined){v=pos.length/3;pos.push(x-cx,.03,z-cz);at.set(k,v);}return v;};
+   const vtx=(x:number,z:number)=>{const k=x.toFixed(3)+':'+z.toFixed(3);let v=at.get(k);if(v===undefined){v=pos.length/3;pos.push(x-cx,.06/* 4 cm over the tilled bed under it: the two sheets are cut at different spots, and on a twisted bank a 1 cm gap let the bed's dark soil poke through as a wedge */,z-cz);at.set(k,v);}return v;};
    const cuts=(a:number,b:number)=>{const n=Math.max(1,Math.ceil((b-a)/1.3));return Array.from({length:n+1},(_,i)=>a+(b-a)*i/n);};
    const sheet=(xs:number[],zs:number[])=>{for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){const a=vtx(xs[i],zs[j]),b=vtx(xs[i+1],zs[j]),c=vtx(xs[i],zs[j+1]),d=vtx(xs[i+1],zs[j+1]);idx.push(a,c,b,b,c,d);}};
    const xs=[...cuts(T0.x0,xa),...cuts(xa,xb).slice(1),...cuts(xb,T0.x1).slice(1)];sheet(xs,cuts(zA,zB));sheet(cuts(xa,xb),cuts(zB,B.z1));

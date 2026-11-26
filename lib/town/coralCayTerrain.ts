@@ -61,7 +61,10 @@ export function buildGridTerrain(o:{outline:readonly Pt[];centre:Pt;ground:(x:nu
   // quarter of the twist off the walked height.
   const twist=Math.abs(H[j*nx+i]+H[(j+s)*nx+i+s]-H[j*nx+i+s]-H[(j+s)*nx+i]);
   if(keep.length===4&&twist<=(o.coarse?.12:.03)){tri(keep[0],keep[1],keep[2]);tri(keep[0],keep[2],keep[3]);continue;}
-  const mid=pos.length/3,a=H[j*nx+i],b=H[j*nx+i+s],c=H[(j+s)*nx+i],d=H[(j+s)*nx+i+s];pos.push(x0+(i+s/2)*step-C.x,(a+b+c+d)/4,z0+(j+s/2)*step-C.z);lap.push(0);
+  const mid=pos.length/3,a=H[j*nx+i],b=H[j*nx+i+s],c=H[(j+s)*nx+i],d=H[(j+s)*nx+i+s];pos.push(x0+(i+s/2)*step-C.x,(a+b+c+d)/4,z0+(j+s/2)*step-C.z);
+  // The centre takes the mean curvature of its ring: at 0 it stayed unleaned among leaned corners, a bright diamond in every twisted
+  // cell (a lattice of dark grid lines over each bank's foot and crest from the play camera).
+  {let sum=0;for(const v of keep)sum+=lap[v];lap.push(sum/keep.length);}
   for(let k=0;k<keep.length;k++)tri(mid,keep[k],keep[(k+1)%keep.length]);
  }
  const gridTris=idx.length/3;
