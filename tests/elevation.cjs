@@ -45,4 +45,15 @@ assert.equal(B.CORAL_CAY_SPOTS.find(s=>s.parachute).y,90,'sky balls keep their h
 // The generic primitives: a pinned pad and a ribbon in a tiny region.
 {const R=E.createRegion({id:'t',box:{minX:0,maxX:100,minZ:0,maxZ:100},depth:(x,z)=>Math.min(x,z,100-x,100-z),profile:d=>4*E.smooth(d/20),pads:[{x:50,z:50,w:20,d:10,level:1}],ribbons:[{path:[{x:0,z:80},{x:50,z:80}],half:4,blend:4}]});
  assert.equal(R.ground(50,50),1);assert.equal(R.ground(58,53),1);assert.ok(Math.abs(R.ground(20,80)-R.ground(20,83))<.02,'ribbon level across');assert.ok(R.ground(50,20)>3.9);assert.equal(R.ground(0,50),0);assert.equal(R.ground(-5,50),0);}
+// ---- The west side's region (defined, not registered yet): the line and the beaches pinned, the stadium terrace level.
+{const Wt=load('lib/town/westElevation.ts'),L=load('lib/town/westParkLayout.ts'),R=Wt.WEST_REGION,w=R.ground;
+ assert.ok(!E.elevationRegions().some(r=>r.id==='west'),'the west region is not registered until its drawn side exists');
+ assert.equal(E.groundLift(L.STADIUM.x,L.STADIUM.z),0);
+ for(let i=0;i<TT.TRACK.n;i++){const x=TT.TRACK.x[i],z=TT.TRACK.z[i];for(const d of [-5,0,5])assert.ok(w(x+TT.TRACK.tz[i]*d,z-TT.TRACK.tx[i]*d)<.03,'west: the line keeps its height at '+x.toFixed(0)+','+z.toFixed(0));}
+ // The bowl itself is level (its ring walk's south edge, 2 m from the pond's rim, is still clipped by the pond pin: NOTE.md, WEST PLAN).
+ for(const a of [-1,-.5,0,.5,1])for(const b of [-1,-.5,0,.5,1]){const k=a*a===1&&b*b===1?12:0,x=L.STADIUM.x+a*(L.STADIUM.bowlW/2-k),z=L.STADIUM.z+b*(L.STADIUM.bowlL/2-k);assert.ok(Math.abs(w(x,z)-Wt.WEST.terrace)<.02,'the stadium bowl is level at '+a+','+b+': '+w(x,z));}
+ assert.ok(w(L.PARK_POND.x,L.PARK_POND.z)===0&&w(L.PARK_POND.x+L.PARK_POND.rx,L.PARK_POND.z)<.12,'the pond stays in its hollow');
+ assert.ok(w(-52,-30)===0&&w(-70,-30)>0&&w(-70,-30)<2.2,'the plaza walks up from the town');
+ let steep=0,area=0;for(let x=-316;x<=-58;x+=2)for(let z=-206;z<=130;z+=2){steep=Math.max(steep,R.slope(x,z));if(w(x,z)>.5)area+=4;assert.ok(Math.abs(w(x+1,z)-w(x,z))<.45&&Math.abs(w(x,z+1)-w(x,z))<.45,'west: no step at '+x+','+z);}
+ assert.ok(steep<.45,'west steepest '+steep.toFixed(3));console.log('west region: terrace '+Wt.WEST.terrace+' m, peak '+R.peak().toFixed(2)+' m, steepest '+steep.toFixed(3)+', raised '+area+' m2');}
 console.log('elevation ok: peak '+C.cayPeak().toFixed(2)+' m, steepest '+maxSlope.toFixed(3)+', raised '+raised+' m2, track samples '+trackOnCay);

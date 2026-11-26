@@ -26,7 +26,8 @@ export const elevationOn=()=>enabled;
 
 export type Pt={x:number;z:number};
 export type Box={x:number;z:number;w:number;d:number};
-export type Pad=Box&{level?:number};
+/** `r`: corner radius (a stadium's rounded apron). */
+export type Pad=Box&{level?:number;r?:number};
 export type Ribbon={path:readonly Pt[];half:number;blend:number};
 export const smooth=(t:number)=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export function insidePolygon(poly:readonly Pt[],x:number,z:number){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;}
@@ -36,6 +37,8 @@ export function pathNearest(path:readonly Pt[],x:number,z:number,closed=false){l
  return {d:best,x:px,z:pz};}
 export const ringDistance=(poly:readonly Pt[],x:number,z:number)=>pathNearest(poly,x,z,true).d;
 export const boxDistance=(x:number,z:number,b:Box)=>Math.hypot(Math.max(0,Math.abs(x-b.x)-b.w/2),Math.max(0,Math.abs(z-b.z)-b.d/2));
+/** Distance outside a pad (0 inside), with its rounded corners. */
+export const padDistance=(x:number,z:number,p:Pad)=>{if(!p.r)return boxDistance(x,z,p);const qx=Math.abs(x-p.x)-(p.w/2-p.r),qz=Math.abs(z-p.z)-(p.d/2-p.r);return Math.max(0,Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0)-p.r);};
 
 export type RegionSpec={id:string;box:{minX:number;maxX:number;minZ:number;maxZ:number};depth:(x:number,z:number)=>number;profile:(d:number,x:number,z:number)=>number;
  ribbons?:Ribbon[];pads?:Pad[];padBlend?:number;capSlope?:number;step?:number};
@@ -47,7 +50,7 @@ export function createRegion(spec:RegionSpec):Region{
  // on every pin and no bank beside one is steeper than `cap`.
  const cap=spec.capSlope??.3;
  let levels:number[]|null=null;
- const padLevel=(i:number)=>(levels??=(()=>{const rooms:number[]=[],out=pads.map(p=>{const pts=[-1,0,1].flatMap(a=>[-1,0,1].map(b=>[p.x+a*p.w/2,p.z+b*p.d/2])),room=cap*Math.min(...pts.map(([x,z])=>Math.max(0,depth(x,z))));rooms.push(room);
+ const padLevel=(i:number)=>(levels??=(()=>{const rooms:number[]=[],out=pads.map(p=>{const k=(p.r??0)*(1-Math.SQRT1_2),pts=[-1,0,1].flatMap(a=>[-1,0,1].map(b=>[p.x+a*(p.w/2-(a&&b?k:0)),p.z+b*(p.d/2-(a&&b?k:0))])),room=cap*Math.min(...pts.map(([x,z])=>Math.max(0,depth(x,z))));rooms.push(room);
   if(p.level!==undefined)return Math.min(p.level,room);const c=base(p.x,p.z),low=Math.min(...pts.map(([x,z])=>base(x,z)));return Math.min((c+low)/2,room);});
   // Neighbouring pads: touching or overlapping (within 1.5 m) they are ONE terrace (a shop on a plaza's corner); closer than the
   // blend they may differ by at most 0.3 x the gap, so the bank between two terraces stays walkable. The two meet in the middle
@@ -61,7 +64,7 @@ export function createRegion(spec:RegionSpec):Region{
  let inPad=false;
  const padded=(x:number,z:number)=>{inPad=false;
   const d0=depth(x,z);if(d0<=0)return 0;let h=profile(d0,x,z),top=0,sum=0,mix=0;
-  for(let i=0;i<pads.length;i++){const d=boxDistance(x,z,pads[i]);if(d>=blend)continue;
+  for(let i=0;i<pads.length;i++){const d=padDistance(x,z,pads[i]);if(d>=blend)continue;
    if(d<=0){inPad=true;return Math.max(0,Math.min(padLevel(i),cap*d0));}const w=1-smooth(d/blend),p=w/(1-w+1e-6);if(w>top)top=w;sum+=p;mix+=p*padLevel(i);}
   if(sum>0)h+=(mix/sum-h)*top;
   return Math.max(0,Math.min(h,cap*d0));};
