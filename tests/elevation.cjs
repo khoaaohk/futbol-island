@@ -17,9 +17,10 @@ function sandbox(){const loaded=new Map();return function load(file){file=path.r
 const load=sandbox(),E=load('lib/town/elevation.ts');E.setElevation(true);
 const C=load('lib/town/coralCayElevation.ts'),cay=load('lib/town/coralCay.ts'),V=load('lib/town/venues.ts'),TT=load('lib/town/trainTrack.ts'),B=load('lib/town/coralCayBalls.ts');
 const g=C.cayGround,inside=(poly,x,z)=>E.insidePolygon(poly,x,z);
-// The interior is 1.5–3.5 m up; the peak is modest (a cay, not a hill).
-assert.ok(C.cayPeak()>2.4&&C.cayPeak()<3.6,'peak '+C.cayPeak());
-assert.ok(g(cay.CAY_PLAZA.x,cay.CAY_PLAZA.z)>1.8,'the plaza stands on the raised interior');
+// The interior is 3–5 m up (Nov 26 2026: about twice stage 1, which read mostly through shading); the knoll is the top.
+assert.ok(C.cayPeak()>4.6&&C.cayPeak()<5.8,'peak '+C.cayPeak());
+assert.equal(+g(cay.CAY_PLAZA.x,cay.CAY_PLAZA.z).toFixed(3),C.PLAZA_LEVEL,'the plaza stands on its terrace');assert.equal(+g(cay.HOSTEL.x,cay.HOSTEL.z).toFixed(3),C.GREEN_LEVEL,'the hostel green');for(const [x,z,w,d] of cay.HOSTEL_PATHS)for(const t of [-.45,0,.45]){const px=w>d?x+t*w*.9:x,pz=w>d?z:z+t*d;if(px<584)assert.ok(Math.abs(g(px-(w>d?0:1),pz-(w>d?1:0))-g(px+(w>d?0:1),pz+(w>d?1:0)))<.06,'hostel path level across at '+px+','+pz);}
+assert.ok(g(C.KNOLL.x,C.KNOLL.z)>C.PLAZA_LEVEL+1,'the knoll stands over the plaza');
 // Sea level: the whole beach ring, the court and its sand, the roundabout, the Konbini, every track sample and the station.
 for(const s of cay.CAY_SAND){assert.ok(g(s.outer.x,s.outer.z)<.03);const mx=(s.outer.x+s.inner.x)/2,mz=(s.outer.z+s.inner.z)/2;assert.ok(g(mx,mz)<.02,'beach at '+mx+','+mz+' '+g(mx,mz));}
 const K=cay.BEACH_COURT;for(let x=K.x-K.length/2-3;x<=K.x+K.length/2+3;x+=3)for(let z=K.z-K.width/2-3;z<=K.z+K.width/2+3;z+=3)assert.ok(g(x,z)<.03,'court flat at '+x+','+z+': '+g(x,z));
@@ -29,15 +30,17 @@ let trackOnCay=0;for(let i=0;i<TT.TRACK.n;i++){const x=TT.TRACK.x[i],z=TT.TRACK.
  for(const d of [-4,-2,0,2,4]){const px=x+TT.TRACK.tz[i]*d,pz=z-TT.TRACK.tx[i]*d;assert.ok(g(px,pz)<.03,'the line keeps its height at '+px.toFixed(1)+','+pz.toFixed(1)+': '+g(px,pz));}}
 assert.ok(trackOnCay>60,'track samples on the cay: '+trackOnCay);
 const ST=TT.TRAIN_STATIONS.find(s=>s.id==='cay');if(ST){const p=TT.trackAt(ST.s);for(const d of [-6,-3,0,3,6])assert.ok(g(p.x+p.tz*d,p.z-p.tx*d)<.03,'station platform level');}
+{const Hs=C.CAY_STATION_HOUSE;assert.ok(Hs&&inside(cay.CAY_LAWN,Hs.x,Hs.z),'the station house is on the lawn side');for(const a of [-1,0,1])for(const b of [-1,0,1])assert.ok(g(Hs.x+a*Hs.w/2,Hs.z+b*Hs.d/2)<.03,'the station house stands on the datum');}
 // Terraces: level under every pad.
 C.CAY_PADS.forEach((p,i)=>{const h=g(p.x,p.z);for(const a of [-1,0,1])for(const b of [-1,0,1])assert.ok(Math.abs(g(p.x+a*(p.w/2-1),p.z+b*(p.d/2-1))-h)<.06,'pad '+i+' is level');});
 // Slopes: walkable everywhere (well under Summit Isle's trails), no step between neighbouring samples.
-let maxSlope=0,raised=0;const X=C.CAY_ELEVATION_BOX;for(let x=X.minX;x<=X.maxX;x+=1)for(let z=X.minZ;z<=X.maxZ;z+=1){const s=C.caySlope(x,z);if(s>maxSlope)maxSlope=s;const h=g(x,z);if(h>0){raised++;assert.ok(inside(cay.CAY_LAWN,x,z)||h<.05,'raised ground only on the lawn');}
- assert.ok(Math.abs(g(x+.5,z)-h)<.25&&Math.abs(g(x,z+.5)-h)<.25,'no step at '+x+','+z);}
-assert.ok(maxSlope<.5,'steepest slope '+maxSlope.toFixed(3));assert.ok(raised>18000,'raised area m2 '+raised);
-// The boulevard: level across the carriageway, at most a 9% grade along it.
+let maxSlope=0,raised=0,steep=0;const X=C.CAY_ELEVATION_BOX;for(let x=X.minX;x<=X.maxX;x+=1)for(let z=X.minZ;z<=X.maxZ;z+=1){const s=C.caySlope(x,z);if(s>maxSlope)maxSlope=s;if(s>.42)steep++;const h=g(x,z);if(h>0){raised++;assert.ok(inside(cay.CAY_LAWN,x,z)||h<.05,'raised ground only on the lawn');}
+ assert.ok(Math.abs(g(x+.5,z)-h)<.36&&Math.abs(g(x,z+.5)-h)<.36,'no step at '+x+','+z);}
+// Open ground stays under 0.42 (the dune is 0.31); only the short retaining banks between neighbouring terraces are steeper.
+assert.ok(maxSlope<.68,'steepest slope '+maxSlope.toFixed(3));assert.ok(steep<420,'m2 steeper than 0.42: '+steep);assert.ok(raised>17000,'raised area m2 '+raised);
+// The boulevard: level across the carriageway, at most a 13% grade along it (a near-straight ramp to the plaza's terrace).
 for(let x=cay.WELCOME_ARCH.x;x<cay.CAY_PLAZA.x-cay.CAY_PLAZA.w/2;x+=2){const c=g(x,cay.CAY_BOULEVARD.z);for(const d of [-6,-3,3,6])assert.ok(Math.abs(g(x,cay.CAY_BOULEVARD.z+d)-c)<.04,'carriageway level across at x '+x);
- assert.ok(Math.abs(g(x+2,cay.CAY_BOULEVARD.z)-c)/2<.09,'grade at x '+x+': '+(Math.abs(g(x+2,cay.CAY_BOULEVARD.z)-c)/2).toFixed(3));}
+ assert.ok(Math.abs(g(x+2,cay.CAY_BOULEVARD.z)-c)/2<.13,'grade at x '+x+': '+(Math.abs(g(x+2,cay.CAY_BOULEVARD.z)-c)/2).toFixed(3));}
 // One function: the walked height, the placed records.
 for(const [x,z] of [[591,-159],[556,-120],[630,-111],[570,-159]])assert.equal(V.fieldSurfaceHeight(x,z),g(x,z));
 const rest=B.CORAL_CAY_SPOTS.find(s=>s.id==='cay-rest');assert.ok(Math.abs(rest.y-g(rest.x,rest.z))<1e-6&&rest.y>1,'the hostel ball stands on the raised ground');
@@ -56,4 +59,17 @@ assert.equal(B.CORAL_CAY_SPOTS.find(s=>s.parachute).y,90,'sky balls keep their h
  assert.ok(w(-52,-30)===0&&w(-70,-30)>0&&w(-70,-30)<2.2,'the plaza walks up from the town');
  let steep=0,area=0;for(let x=-316;x<=-58;x+=2)for(let z=-206;z<=130;z+=2){steep=Math.max(steep,R.slope(x,z));if(w(x,z)>.5)area+=4;assert.ok(Math.abs(w(x+1,z)-w(x,z))<.45&&Math.abs(w(x,z+1)-w(x,z))<.45,'west: no step at '+x+','+z);}
  assert.ok(steep<.45,'west steepest '+steep.toFixed(3));console.log('west region: terrace '+Wt.WEST.terrace+' m, peak '+R.peak().toFixed(2)+' m, steepest '+steep.toFixed(3)+', raised '+area+' m2');}
+// ---- The drawn lawn (coralCayTerrain.ts) IS the walked grid: watertight, the outline at the datum, within 1 cm of the walked height
+// (6 cm on the coarse lowest-tier mesh), fewer triangles than stage 1's polar mesh (16.1k).
+{const Tr=load('lib/town/coralCayTerrain.ts'),O=cay.CAY_CENTER;const tris={};
+ for(const coarse of [false,true]){const r=Tr.buildGridTerrain({outline:cay.CAY_LAWN,centre:O,ground:g,box:C.CAY_ELEVATION_BOX,coarse,sun:[-288,252,198]}),p=r.geometry.getAttribute('position'),n=r.geometry.getAttribute('normal'),idx=r.geometry.index,edges=new Map();let worst=0,area=0;
+  for(let i=0;i<idx.count;i+=3){const v=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];let cx=0,cy=0,cz=0;for(const k of v){cx+=p.getX(k);cy+=p.getY(k);cz+=p.getZ(k);}worst=Math.max(worst,Math.abs(g(cx/3+O.x,cz/3+O.z)-cy/3));
+   const a=((p.getZ(v[1])-p.getZ(v[0]))*(p.getX(v[2])-p.getX(v[0]))-(p.getX(v[1])-p.getX(v[0]))*(p.getZ(v[2])-p.getZ(v[0])))/2;assert.ok(a>1e-9,'every triangle faces up');area+=a;
+   for(let e=0;e<3;e++){const k=Math.min(v[e],v[(e+1)%3])+':'+Math.max(v[e],v[(e+1)%3]);edges.set(k,(edges.get(k)||0)+1);}}
+  let open=0;for(const c of edges.values()){assert.ok(c<=2,'no edge shared by three triangles');if(c===1)open++;}
+  assert.equal(open,cay.CAY_LAWN.length,'watertight: the only open edges are the outline');
+  let poly=0;const L=cay.CAY_LAWN;for(let i=0;i<L.length;i++){const a=L[i],b=L[(i+1)%L.length];poly+=a.x*b.z-b.x*a.z;}assert.ok(Math.abs(area-Math.abs(poly/2))<1,'covers the lawn exactly once');
+  assert.ok(worst<(coarse?.06:.01),'drawn vs walked '+worst);for(let i=0;i<n.count;i++)assert.ok(n.getY(i)>=.2,'normals stay up');
+  tris[coarse?'coarse':'full']=r.stats.triangles;}
+ assert.ok(tris.full<16100&&tris.coarse<tris.full*.72,'lawn triangles '+JSON.stringify(tris));console.log('cay lawn triangles: full '+tris.full+', lowest tier '+tris.coarse);}
 console.log('elevation ok: peak '+C.cayPeak().toFixed(2)+' m, steepest '+maxSlope.toFixed(3)+', raised '+raised+' m2, track samples '+trackOnCay);

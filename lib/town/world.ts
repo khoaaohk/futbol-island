@@ -9,7 +9,7 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
-import {elevBuild,buildLift,groundLift,anchored,unlifted,elevationOn} from './elevation';
+import {elevBuild,buildLift,groundLift,anchored,unlifted,rigid,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
@@ -90,7 +90,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Kick reactions (lib/graphics/propReactions.ts): meshes built inside prop(kind,…) carry a tag through the batching
   // pass below, which records where each prop's vertices land in the merged chunk buffers. Build-time only.
   type PropTag={kind:PropReactionKind};let propTag:PropTag|null=null;
-  const prop=<R,>(kind:PropReactionKind,build:()=>R):R=>{if(propTag)return build();propTag={kind};try{return build();}finally{propTag=null;}};
+  const prop=<R,>(kind:PropReactionKind,build:()=>R):R=>{if(propTag)return build();propTag={kind};try{return rigid(build);/* elevation: a prop is one rigid object on a slope */}finally{propTag=null;}};
   const museumRails:(Obstacle&{floor:number;top:number})[]=[];
   const walkSurfaces:(Obstacle&{height:number})[]=[];
   const landingExclusions:Obstacle[]=[];

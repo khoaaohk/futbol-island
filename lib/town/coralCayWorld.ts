@@ -8,8 +8,10 @@ import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import {unlifted,elevationOn} from './elevation';
-import {cayGround} from './coralCayElevation';
-import {buildStarTerrain} from './elevationDrape';
+import {cayGround,CAY_ELEVATION_BOX} from './coralCayElevation';
+import {buildGridTerrain} from './coralCayTerrain';
+import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
+import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
@@ -62,6 +64,14 @@ export function buildCoralCay(t:CayTools){
  const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
 
  const lampSites:CayLampSite[]=[];
+ // Elevation (Nov 26 2026): where a path climbs, timber risers cross it every STEP.rise of height (trail steps: the walked surface
+ // stays the smooth ramp, each riser stands 4 cm proud). From the play camera they are the clearest sign that the ground is rising:
+ // close together on a steep climb, none on the level. Plain paint in the cay's own chunks: no material, draw or texture.
+ const STEP={rise:.17,minSlope:.12,proud:.04,tread:.16,color:'#9d805b'} as const;
+ const cayPath=(x:number,z:number,w:number,d:number)=>{path(x,z,w,d);if(!elevationOn())return;
+  const alongZ=d>w,len=alongZ?d:w,across=(alongZ?w:d)+.2,h=(t:number)=>alongZ?cayGround(x,z-d/2+t):cayGround(x-w/2+t,z);
+  let last=h(0);for(let t=.25;t<len-.2;t+=.25){const y=h(t),slope=Math.abs(h(t+.5)-h(t-.5));if(slope<STEP.minSlope){last=y;continue;}if(Math.abs(y-last)<STEP.rise)continue;last=y;
+   const px=alongZ?x:x-w/2+t,pz=alongZ?z-d/2+t:z;box(alongZ?across:STEP.tread,.11,alongZ?STEP.tread:across,STEP.color,px,-.0375+STEP.proud-.055,pz).castShadow=true;/* a shadow caster joins its chunk's shared paint batch (world.ts batchObject): no new draw */}};
  const farmDecor:DecorPlant[]=[];
  const z0=CAUSEWAY.z,P=CAUSEWAY_PATH,deck=CAUSEWAY.deckHalf;
  const flat=(m:Mesh)=>{m.castShadow=false;return m;};
@@ -338,7 +348,7 @@ export function buildCoralCay(t:CayTools){
   // ring meets the lawn edge to edge (no overlap), and the beach-court sand sits 3 cm over the lawn (below). No offset.
  }
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
-  const g=elevationOn()?buildStarTerrain(CAY_LAWN,C,cayGround):new T.ShapeGeometry(lawnShape).rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
+  const g=elevationOn()?buildGridTerrain({outline:CAY_LAWN,centre:C,ground:cayGround,box:CAY_ELEVATION_BOX,coarse:effectiveTier()===LOWEST_TIER/* Battery saver at load: coralCayTerrain.ts */,sun:ISLAND_SUN_POSITION}).geometry:new T.ShapeGeometry(lawnShape).rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
  shoreRings(CAY_SHORE,C.x,C.z,-.11,3,true);
  });
@@ -361,7 +371,7 @@ export function buildCoralCay(t:CayTools){
  {const [sx,sz,,sd]=CAY_HOUSES[1];['#589aa0','#f4cc7c','#bd7657'].forEach((c,i)=>{const board=box(.62,2.1,.09,c,sx+3+i*.85,1.02,sz+sd/2+.35);/* 2.1 m (was 2.3): the tips reached into SURF SHOP's words (signs audit, Nov 25 2026) */board.rotation.x=-.18;board.rotation.z=(i-1)*.05;});obstacles.push({x:sx+3.85,z:sz+sd/2+.45,w:2.6,d:.6});}
  // Paths: plaza → court, road → huts, plaza → south beach. The first hut's path starts under the roundabout's pavement
  // (z -145.5), not under its asphalt (Oct 15 2026: it ran 1.6 m into the ring, 3 cm under the carriageway).
- path(628,z0,48,3);path(CAY_HUTS[1].x,-146.5,3,13);path(CAY_HUTS[0].x,-143.5,3,4);path(CAY_HUTS[2].x,-147,3,11);path(CAY_PLAZA.x,-117,3,54);
+ cayPath(628,z0,48,3);cayPath(CAY_HUTS[1].x,-146.5,3,13);cayPath(CAY_HUTS[0].x,-143.5,3,4);cayPath(CAY_HUTS[2].x,-147,3,11);cayPath(CAY_PLAZA.x,-117,3,54);
  // Thatched huts: stucco drum, dark door, straw cone roof. Obstacles only (the cone is not a landing roof).
  CAY_HUTS.forEach((h,i)=>{
   cylinder(CAY_HUT_RADIUS-.35,2.6,i%2?'#e2c69a':'#d6b58a',h.x,1.3,h.z);box(1.05,1.9,.12,'#365b56',h.x,.95,h.z+CAY_HUT_RADIUS-.37);
@@ -424,8 +434,19 @@ export function buildCoralCay(t:CayTools){
   flatBox(F.pineapples.x1-F.pineapples.x0+1,F.pineapples.z1-F.pineapples.z0+1,'#8b6a4a',(F.pineapples.x0+F.pineapples.x1)/2,-.07,(F.pineapples.z0+F.pineapples.z1)/2);
   flatBox(F.melons.x1-F.melons.x0+1,F.melons.z1-F.melons.z0+1,'#8b6a4a',(F.melons.x0+F.melons.x1)/2,-.07,(F.melons.z0+F.melons.z1)/2);
   // Dirt tracks: path gate → across the farm, and a branch to the beach gate.
-  flatBox(F.track.x1-F.track.x0,F.track.w,'#c9a878',(F.track.x0+F.track.x1)/2,-.06,F.track.z);
-  flatBox(F.beachTrack.w,F.beachTrack.z1-F.beachTrack.z0,'#c9a878',F.beachTrack.x,-.06,(F.beachTrack.z0+F.beachTrack.z1)/2);
+  if(elevationOn()){
+   // Elevation (Nov 26 2026): the two tracks are ONE sheet sharing the vertices of their join. As two draped boxes on the bank their
+   // edges were cut at different spots, so the side face of one showed as a dark seam where they meet.
+   const T0=F.track,B=F.beachTrack,zA=T0.z-T0.w/2,zB=T0.z+T0.w/2,xa=B.x-B.w/2,xb=B.x+B.w/2,cx=(T0.x0+T0.x1)/2,cz=T0.z,pos:number[]=[],idx:number[]=[],at=new Map<string,number>();
+   const vtx=(x:number,z:number)=>{const k=x.toFixed(3)+':'+z.toFixed(3);let v=at.get(k);if(v===undefined){v=pos.length/3;pos.push(x-cx,.03,z-cz);at.set(k,v);}return v;};
+   const cuts=(a:number,b:number)=>{const n=Math.max(1,Math.ceil((b-a)/1.3));return Array.from({length:n+1},(_,i)=>a+(b-a)*i/n);};
+   const sheet=(xs:number[],zs:number[])=>{for(let i=0;i<xs.length-1;i++)for(let j=0;j<zs.length-1;j++){const a=vtx(xs[i],zs[j]),b=vtx(xs[i+1],zs[j]),c=vtx(xs[i],zs[j+1]),d=vtx(xs[i+1],zs[j+1]);idx.push(a,c,b,b,c,d);}};
+   const xs=[...cuts(T0.x0,xa),...cuts(xa,xb).slice(1),...cuts(xb,T0.x1).slice(1)];sheet(xs,cuts(zA,zB));sheet(cuts(xa,xb),cuts(zB,B.z1));
+   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();flat(put(g,'#c9a878',cx,-.06,cz));
+  }else{
+   flatBox(F.track.x1-F.track.x0,F.track.w,'#c9a878',(F.track.x0+F.track.x1)/2,-.06,F.track.z);
+   flatBox(F.beachTrack.w,F.beachTrack.z1-F.beachTrack.z0,'#c9a878',F.beachTrack.x,-.06,(F.beachTrack.z0+F.beachTrack.z1)/2);
+  }
   surfaceAreas.push({kind:'farm',x:(F.fence[0].x+F.fence[1].x)/2,z:-109,w:F.fence[1].x-F.fence[0].x,d:40});
   // Row crops, each at a different growth stage. Rows run east–west; the band z order teaches a rotation.
   const rowsIn=(z0:number,z1:number)=>{const out:number[]=[];for(let z=-127.2;z<=-90.6;z+=1.4)if(z>=z0&&z<=z1&&Math.abs(z-F.track.z)>=1.6)out.push(z);return out;};
@@ -540,7 +561,7 @@ export function buildCoralCay(t:CayTools){
    ['#477c6a','#d9534a','#4a8bb0','#f4cc7c','#477c6a','#d9534a'].forEach((c,i)=>{const x=x0+.8+i*1.35;box(.62,.62,.05,c,x,1.62,z);box(.9,.2,.05,c,x,1.82,z);box(.22,.18,.06,'#fff0cf',x,1.62,z+.02);});}
   lamp(H.x-H.w/2-1.2,-113.2,-.05);lamp(573,-101.9,-.05);
  }
- for(const [x,z,w,d] of HOSTEL_PATHS)path(x,z,w,d);
+ for(const [x,z,w,d] of HOSTEL_PATHS)cayPath(x,z,w,d);
  CAY_HOMES.forEach((h,i)=>{
   const porchZ=h.z+2.9;
   if(h.style==='hut'){cylinder(2.2,2.5,h.color,h.x,1.25,h.z);box(1,1.85,.12,'#365b56',h.x,.93,h.z+2.15);cylinder(2.7,.2,'#b9955a',h.x,2.52,h.z);put(new T.ConeGeometry(2.95,1.8,10),h.roof,h.x,3.5,h.z);
