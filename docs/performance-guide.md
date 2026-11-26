@@ -7121,3 +7121,16 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
 - **Not done for the lowest tier:** a coarser lawn (`buildFormatFields(scene, 4)`: about 3.5k instead of 9.3k) is wired but OFF: at 4 m cells the lawn stands up to ~9 cm off the walked height on the banks' crests and would poke through the trails. Worth it only with the trails draped against the drawn lawn.
 - **Stadium heights are world heights** (`stadiumSeats.ts` adds `STADIUM_BASE`; `stadiumWorld.ts` builds in its own frame and `put` stands each piece on the terrace): no per-frame cost, the night shader subtracts the base in its two height tests.
 - Not measured on a real iPhone. Two pre-existing failures on this branch are unrelated: `tests/field-light-collisions.cjs` (22 vs 20 lights) and `tests/night-atmosphere.cjs` ("bounded pool size") fail the same way at 34dbc284.
+
+### West audit pass (Nov 26 2026, still behind `?elev=1`, not pushed)
+
+Build-time only; no new material, texture, program, draw or per-frame work (programs 227 = 227 flag off / on in one session).
+- Retaining wall face is coursed stone: one quad per block (0.44 m courses, 1.1 m blocks, staggered), tinted per block through
+  `userData.vertexTint` in the existing chunk paint batch (world.ts multiplies it into the baked vertex colour; pieces without it
+  are untouched). The six full-length course-line sweeps are gone. Stepped garden walls beside Stadium Plaza (12 level lengths,
+  2 colliders per side). Wall + stairs + garden walls: 6.8k → 10.4k static triangles.
+- Lawn patch: normals lean 2.4x the grade (light and shade on the banks, no colour attribute); T-junctions between 8 / 4 / 2 m
+  cells stitched (same 9.3k triangles). Plaza sheet and trails lean the same way (`userData.drapeLean`, opt-in in `drapePieces`).
+- Frame triangles, flag off → on, desktop: plaza 305k → 335k, pitch 354k → 392k (crowd fill varies), wall side 271k → 292k;
+  phone tier: plaza 196k → 209k, pitch 253k → 285k, wall side 206k → 218k. Draw calls within ±8 of flag off per view (the higher
+  camera sees a different set of chunks). No real-phone heat test: reduced work is not claimed, added work is the triangles above.

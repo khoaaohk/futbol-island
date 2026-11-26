@@ -24,7 +24,8 @@ export function westLawnPatch(fine:2|4=2):LawnPatch|null{
  const vert=(x:number,z:number)=>{const key=Math.round((z-B.minZ)/2)*nx+Math.round((x-B.minX)/2);let i=ids.get(key);if(i!==undefined)return i;
   const h=westNatural(x,z),gx=(westNatural(x+1,z)-westNatural(x-1,z))/2*LAWN_TILT,gz=(westNatural(x,z+1)-westNatural(x,z-1))/2*LAWN_TILT,l=Math.hypot(gx,1,gz);
   i=position.length/3;position.push(x,h>.02?h:-.03,z);normal.push(-gx/l,1/l,-gz/l);uv.push(x,-z);ids.set(key,i);return i;};
- const quad=(x:number,z:number,s:number)=>{const a=vert(x,z),b=vert(x+s,z),c=vert(x,z+s),d=vert(x+s,z+s);index.push(a,c,b,b,c,d);};
+ const coarse:[number,number,number][]=[];
+ const quad=(x:number,z:number,s:number)=>{const a=vert(x,z),b=vert(x+s,z),c=vert(x,z+s),d=vert(x+s,z+s);index.push(a,c,b,b,c,d);if(s>2)coarse.push([x,z,s]);};
  /** Is the s-metre block at (x, z) a plane (its 2 m samples within 1.2 cm of its corners' bilinear patch)? */
  const planar=(x:number,z:number,s:number)=>{const a=westNatural(x,z),b=westNatural(x+s,z),c=westNatural(x,z+s),d=westNatural(x+s,z+s);
   for(let i=0;i<=s;i+=2)for(let j=0;j<=s;j+=2){const u=i/s,v=j/s;if(Math.abs(westNatural(x+i,z+j)-((a+(b-a)*u)*(1-v)+(c+(d-c)*u)*v))>.012)return false;}return true;};
@@ -33,6 +34,15 @@ export function westLawnPatch(fine:2|4=2):LawnPatch|null{
   if(skip(x,z,8))continue;if(planar(x,z,8)){quad(x,z,8);continue;}
   for(const ox of [0,4])for(const oz of [0,4]){const qx=x+ox,qz=z+oz;if(skip(qx,qz,4))continue;if(fine===4||planar(qx,qz,4)){quad(qx,qz,4);continue;}
    for(const px of [0,2])for(const pz of [0,2])if(!skip(qx+px,qz+pz,2))quad(qx+px,qz+pz,2);}}
+ // No T-junctions (audit, Nov 26 2026): where an 8 m or 4 m cell meets finer ones, the finer cells' vertices ON its edge take the
+ // edge's own height and normal (≤ 1.2 cm, the `planar` tolerance), so no hairline opens onto the flat lawn underneath and the
+ // light does not step along the edge. 8 m cells first: a 4 m cell's corner may itself sit on an 8 m edge.
+ {const at=(x:number,z:number)=>ids.get(Math.round((z-B.minZ)/2)*nx+Math.round((x-B.minX)/2));
+  for(const size of [8,4])for(const [x,z,s] of coarse){if(s!==size)continue;
+   for(const [ax,az,bx,bz] of [[x,z,x+s,z],[x,z+s,x+s,z+s],[x,z,x,z+s],[x+s,z,x+s,z+s]]){const a=at(ax,az)!,b=at(bx,bz)!;
+    for(let d=2;d<s;d+=2){const u=d/s,i=at(ax+(bx-ax)*u,az+(bz-az)*u);if(i===undefined)continue;
+     position[i*3+1]=position[a*3+1]*(1-u)+position[b*3+1]*u;
+     const n0=normal[a*3]*(1-u)+normal[b*3]*u,n1=normal[a*3+1]*(1-u)+normal[b*3+1]*u,n2=normal[a*3+2]*(1-u)+normal[b*3+2]*u,l=Math.hypot(n0,n1,n2)||1;normal[i*3]=n0/l;normal[i*3+1]=n1/l;normal[i*3+2]=n2/l;}}}}
  // The terrace's top: a fan (the outline is convex).
  {const o=terraceOutline(2),c=position.length/3;position.push(WEST_TERRACE.x,H,WEST_TERRACE.z);normal.push(0,1,0);uv.push(WEST_TERRACE.x,-WEST_TERRACE.z);
   for(const p of o){position.push(p.x,H,p.z);normal.push(0,1,0);uv.push(p.x,-p.z);}

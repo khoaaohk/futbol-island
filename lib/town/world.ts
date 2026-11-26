@@ -369,7 +369,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
-  function districtSign(text:string,x:number,z:number){prop('sign',()=>seated(x,z,Math.min(4.2,1+text.length*.27),()=>districtSignParts(text,x,z),.3));}
+  function districtSign(text:string,x:number,z:number){prop('sign',()=>seated(x,z,Math.min(4.2,text.length*.275),()=>districtSignParts(text,x,z),.3));}
   function districtSignParts(text:string,x:number,z:number){
     // Signs audit (Nov 25 2026, owner: "make sure the poles don't run up into the sign and cover the text"): the posts stand
     // SIGN_POST_SET behind the face (hidden by it from the readable side) and the same mesh and material, turned round (no new
