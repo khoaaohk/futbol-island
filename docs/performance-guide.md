@@ -7107,3 +7107,7 @@ A fast football shooting gallery (docs/arcade-aaa/popup-direction.md) that will 
   (no draw added).
 - Validation: `tests/island-stamps.cjs` (art size and structure, stand pick/reach, sign mesh count), `scripts/check-island-stamps.cjs`
   (desktop + phone). No device measurement (the change adds no per-frame work beyond the checks above).
+
+## Island elevation (Nov 25 2026; `?elev=1`, default off)
+
+`lib/town/elevation.ts` (regions of terraces + slopes; `groundLift` joins `fieldSurfaceHeight`) and `lib/town/elevationDrape.ts` (drawn side). Build-time only: no per-frame work beyond `groundLift` (one comparison with the flag off; a box test plus one bilinear grid read per query with it on; street traffic adds three reads per drawn vehicle on raised ground). Coral Cay measured on desktop Chrome with the flag on vs off, same spot: island chunks 1011 = 1011 (no new draw), materials 233 = 233, programs 64 = 64, textures 47 = 47; triangles +27.7k across the cay's own chunks (raised lawn 224 x 36 rings = +16.1k replacing the flat lawn; +12.0k from 75 flat pieces re-cut to drape: paths, kerbs, fence rails). The height grid (2 m, about 9.8k samples) is sampled once on the first query. Not done: a coarser lawn on the lowest tier (the lawn is built before the tier is known; `buildStarTerrain` takes a ring count). No phone heat measurement was made; this is reduced-work accounting from desktop only.
