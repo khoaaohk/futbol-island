@@ -32,6 +32,7 @@ export const CAFE_VIEW_SOURCES={
  tip:{title:'Coaching tip (scanning before receiving), no factual claim',url:''},
 } as const;
 const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'] as const;
+const STAND_KEYS=['w','a','s','d','arrowup','arrowdown'] as const;// while seated, left / right arrows look round instead
 /** The Sit offer shows within REACH m of the sit point, on the deck (feet at the deck's height). */
 export function cafeSeatNear(x:number,z:number,height:number){const V=CAFE_VIEW_SEAT;return Math.abs(height-V.sit.y)<.25&&(x-V.sit.x)**2+(z-V.sit.z)**2<V.reach*V.reach;}
 /** The camera's seated frame (pure: tests read it). */
@@ -47,7 +48,7 @@ export function createCafeSeat(ports:{wake:()=>void;note?:(text:string)=>void}){
  // Owner Nov 25 2026 ("allow panning to the left and right more"): while seated, a drag on the game view turns your head: wide left /
  // right (LOOK.yaw each way, about 95 degrees) and a little up / down. It stays where you leave it and resets when you stand up.
  // Listeners are added once and do nothing unless seated; no per-frame work beyond two quaternion multiplies while seated.
- const LOOK={yaw:1.65,pitch:.22,perPx:.0055} as const;
+ const LOOK={yaw:1.65,pitch:.22,perPx:.0055,keyRate:1.5} as const;// keyRate: rad/s while an arrow key is held (full sweep in about 2 s)
  let lookYaw=0,lookPitch=0,drag:{id:number;x:number;y:number}|null=null,listening=false;
  const qYaw=new T.Quaternion(),qPitch=new T.Quaternion(),qOut=new T.Quaternion(),UP=new T.Vector3(0,1,0),RIGHT=new T.Vector3(1,0,0);
  const onDown=(e:PointerEvent)=>{if(!held()||(e.target as Element|null)?.tagName!=='CANVAS')return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};};
@@ -75,6 +76,10 @@ export function createCafeSeat(ports:{wake:()=>void;note?:(text:string)=>void}){
   holdPlayer(dt:number,input:{x:number;z:number},keys:ReadonlySet<string>,o:{walk:boolean;x:number;z:number;reduced:boolean}){
    if(m.phase==='standing')return false;
    let push=Math.hypot(input.x,input.z);for(const k of MOVE_KEYS)if(keys.has(k))push=1;
+   // Owner Nov 26 2026: on desktop the left / right arrow keys look round while seated (the same limits as a drag) instead of
+   // standing you up. Any other move key (W A S D, up, down) or the stick still gets up.
+   if(held()){const l=keys.has('arrowleft'),r=keys.has('arrowright');let other=false;for(const k of STAND_KEYS)if(keys.has(k))other=true;
+    if((l||r)&&!other){push=0;if(l!==r){lookYaw=T.MathUtils.clamp(lookYaw+(l?1:-1)*LOOK.keyRate*dt,-LOOK.yaw,LOOK.yaw);ports.wake();}}}
    const away=Math.hypot(o.x-SEAT.x,o.z-SEAT.z)>.6;
    const hold=stepSit(m,dt,{push,walk:o.walk,away,reduced:o.reduced});
    if((m.phase as string)!=='standing')ports.wake();
