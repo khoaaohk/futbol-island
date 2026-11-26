@@ -340,14 +340,17 @@ export function* buildTownSteps(scene: T.Scene) {
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
     const m=new T.Mesh(g,trail);m.position.set(cx,BK_SQUARE.y,cz);m.receiveShadow=true;m.name='beach-kitchen-square';town.add(m);
   }
-  function bench(x:number,z:number){prop('bench',()=>anchored(x,z,()=>benchParts(x,z)));}
+  // (?elev=1, west audit Nov 26) a rigid prop on a grade is SEATED: anchored at the lowest ground under its footprint (r m either way), so no leg or post
+  // floats at the downhill end (the uphill end stands a few cm into the ground instead). On level ground this is anchored(x, z).
+  const seated=<R,>(x:number,z:number,r:number,build:()=>R,rz=r):R=>{if(!elevBuild.active)return build();let bx=x,bz=z,low=groundLift(x,z);for(const [ox,oz] of [[r,0],[-r,0],[0,rz],[0,-rz]]){const h=groundLift(x+ox,z+oz);if(h<low){low=h;bx=x+ox;bz=z+oz;}}return anchored(bx,bz,build);};
+  function bench(x:number,z:number){prop('bench',()=>seated(x,z,1.1,()=>benchParts(x,z)));}
   function benchParts(x:number,z:number){
     assets.push({kind:'bench',x,z,w:2,d:.7});
     box(2,.12,.65,'#a67d55',x,.58,z);box(2,.45,.09,'#a67d55',x,.91,z-.25);
     for(const dx of [-.75,.75])box(.13,.5,.5,'#385a4e',x+dx,.27,z);
     obstacles.push({x,z,w:2,d:.7});
   }
-  function planter(x:number,z:number){prop('planter',()=>anchored(x,z,()=>planterParts(x,z)));}
+  function planter(x:number,z:number){prop('planter',()=>seated(x,z,.8,()=>planterParts(x,z)));}
   function planterParts(x:number,z:number){
     assets.push({kind:'planter',x,z,w:1.6,d:1.6,visualW:1.9,visualD:1.9});
     box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
@@ -366,7 +369,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const dx of [-1.15,1.15]){box(.6,.12,.6,'#a67d55',x+dx,.5,z);box(.12,.5,.55,'#385a4e',x+dx,.25,z);}
     obstacles.push({x,z,w:3.1,d:1.5});
   }
-  function districtSign(text:string,x:number,z:number){prop('sign',()=>anchored(x,z,()=>districtSignParts(text,x,z)));}
+  function districtSign(text:string,x:number,z:number){prop('sign',()=>seated(x,z,Math.min(4.2,1+text.length*.27),()=>districtSignParts(text,x,z),.3));}
   function districtSignParts(text:string,x:number,z:number){
     // Signs audit (Nov 25 2026, owner: "make sure the poles don't run up into the sign and cover the text"): the posts stand
     // SIGN_POST_SET behind the face (hidden by it from the readable side) and the same mesh and material, turned round (no new
