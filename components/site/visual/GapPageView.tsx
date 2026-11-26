@@ -23,7 +23,14 @@ type Lang='en'|'es';
 /** A link on a Spanish page goes to the Spanish page when there is one (lib/i18n/esPaths.ts), else to the English page. */
 const L=(lang:Lang,path:string)=>{if(lang!=='es'||!path.startsWith('/'))return path;const [p,h]=path.split('#');return hasEs(p)?toEs(p)+(h?`#${h}`:''):path;};
 /** A rail label: the title before any colon, cut at a word to 26 characters. */
-const short=(t:string)=>{const s=t.replace(/:.*$/,'');if(s.length<=26)return s;const c=s.slice(0,26);return c.slice(0,c.lastIndexOf(' '));};
+// Side-menu labels (owner rule: whole, short labels; a title cut mid-phrase read "Tap a position to see its"): a short name per
+// block id where the title is long; anything else falls back to the title before its colon, cut at a word.
+const NAV:Record<string,[en:string,es:string]>={pitch:['Tap a position','Toca una posición'],'all-letters':['All the letters','Todas las letras'],spanish:['In Spanish','En español'],
+ numbers:['Center back numbers','Dorsales del central'],drills:['The 9 drills','Los 9 ejercicios'],'by-age':['By age','Por edad'],'safe-spot':['A safe spot','Un sitio seguro'],
+ 'to-scale':['To scale','A escala'],differences:['Every difference','Las diferencias'],'what-it-teaches':['What futsal teaches','Qué enseña el futsal'],switching:['Switching','Cambiar de uno a otro'],
+ moves:['Moves by type','Movimientos por tipo'],when:['Which type when','Cuál usar y cuándo'],'what-to-say':['What to say','Qué decir'],games:['3 possession games','3 juegos de posesión'],
+ 'try-at-practice':['Try it at practice','En el entrenamiento']};
+const short=(t:string,id?:string,es=false)=>{const n=id?NAV[id]:undefined;if(n)return n[es?1:0];const s=t.replace(/:.*$/,'');if(s.length<=26)return s;const c=s.slice(0,26);return c.slice(0,c.lastIndexOf(' '));};
 function Block({b,lang}:{b:GapBlock;lang:Lang}){
  const intro='intro' in b&&b.intro?<p>{b.intro}</p>:null;
  switch(b.k){
@@ -41,7 +48,7 @@ export default function GapPageView({p,lang='en'}:{p:GapPage;lang?:Lang}){
  const crumbs=es?esLibCrumbs({name:p.hub.name,path:toEs(p.hub.path)},{name:p.crumb,path}):guideCrumbs({name:p.hub.name,path:p.hub.path},{name:p.crumb,path:p.path});
  const facts:Fact[]=p.facts.map(f=>({...f,href:f.href}));
  const quizName=p.quizName,quizTitle=es?'Pon a prueba lo que sabes':'Check yourself';
- const rail=pageRail(p.rail,{href:L(lang,p.hub.path),name:p.hub.name},[...p.blocks.filter(b=>b.k!=='callout'||b.tone==='tip').map(b=>sec(b.id,short(b.title))),
+ const rail=pageRail(p.rail,{href:L(lang,p.hub.path),name:p.hub.name},[...p.blocks.filter(b=>b.k!=='callout'||b.tone==='tip').map(b=>sec(b.id,short(b.title,b.id,es))),
   sec('try-it',es?'Pruébalo':'Try it'),sec('faq',es?'Preguntas':'Questions'),sec('quiz','Quiz'),sec('keep-reading',es?'Sigue leyendo':'Keep reading')],es);
  const links=p.links.map(l=>({...l,path:L(lang,l.path)}));
  return <>
