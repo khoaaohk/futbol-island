@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {SHORE_FOAM_GLSL,SHORE_FOAM_UNIFORMS} from './shoreFoamFx';
-import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SEA_GLSL,SEA_SHALLOWS,seaSandK,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
+import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SEA_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
 import {onLand} from '../town/landmass';
 import {TRACK,TrackKind} from '../town/trainTrack';
 import {trainLayout} from '../town/trainLayout';
@@ -44,6 +44,8 @@ export function laceNoise(){
 }
 /** View depth (m) over which the strip stops reading the lace noise (it mips to flat grey that far out anyway): full detail nearer
  *  than `near`, a blend to the flat value, no texture fetch at all past `far` (map view, flight, the far side of a bay). */
+/** The strip's cover over the sand skirt: from `from` m (true shore distance, up the skirt) to `alpha` at the true waterline. */
+export const STRIP_JOIN={from:-1.7,alpha:.96} as const;
 export const STRIP_FAR={near:45,far:65} as const;
 
 /**
@@ -324,10 +326,14 @@ const STRIP_GLSL=/* glsl */`
  // Water: a clear sheet over the sand at its edge, turquoise over the sand slope and out to where the ocean takes over.
  // Nov 25 2026 clear shallows (waterSurface.ts SEA_SHALLOWS): the strip is the ocean's own shallows colour at this distance (so it
  // is invisible where it lies over the ocean) and thin over the sand skirt: the real sand and its ripples show through the water.
- float sandK=${seaSandK('max(d,0.)+wd*.4')};vec3 waterC=mix(${SEA_GLSL.shallow}*uWaterNight,${SEA_GLSL.shoreSand},sandK*sandK*${SEA_SHALLOWS.sandMix.toFixed(2)});
- float waterA=mix(.16,.5,smoothstep(0.,1.4,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
- // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
- waterA*=1.-.35*clearWinMask(vWaterXZ,1.);// Oct 26 2026 tropical water: .55 -> .35, the skirt reads lagoon turquoise, not olive
+ vec3 waterC=mix(${SEA_GLSL.shallow}*uWaterNight,${SEA_GLSL.shoreSand},seaSandW(max(d,0.)+wd*.4));
+ // The join (Nov 25 2026, owner's close-up: "the line is still harsh, needs to fade out"): the sand skirt dips under the ocean plane at
+ // the TRUE waterline (dt = 0), a straight mesh edge where the lit sand met the sea's colour in one step. The strip is what crosses
+ // that edge, so it carries the fade: thin at the top of the skirt (the real sand shows), rising to ~opaque AT the true waterline
+ // (STRIP_JOIN), where it is the sea's own ramp colour, then fading out over the ocean (outA, 0.2-1.7 m past it), which draws that
+ // same ramp underneath. The transition is inside the strip's width; nothing changes at a mesh edge. Inside the clear water window
+ // only the thin sheet thins further (was the whole alpha), the join stays covered.
+ float waterA=max(mix(.16,.5,min(wd*.7,1.))*(1.-.35*clearWinMask(vWaterXZ,1.)),vJoin)*outA*mix(high,1.,smoothstep(-.2,.3,dt));
  wet=max(wet,mark*.8);
  // (night water: uWaterNight is folded into waterC above, Nov 25 2026)
  vec3 col=mix(wetSand*(1.-.16*mark),waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
@@ -409,9 +415,9 @@ export function createIslandShore(group:T.Group){
    const waterNoise=noise;
    material.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,SHORE_FOAM_UNIFORMS,{uWaterNoise:{value:waterNoise}});
-    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open,beach;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;'+SHORE_GLSL+SHORE_PULL_GLSL+STRIP_VERT_GLSL)
-     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);{vec4 sh=isleSample(vWaterXZ);vSh=vec4(sh.gba,1.-uShore*shoreEdge(vWaterXZ));vBand=vec4(1.-smoothstep(.2,1.7,shore),1.-smoothstep(1.9,2.5,shore),mix(.3,1.5*(.75+.5*sh.b)*(.55+.6*sh.a),beach),vis+(sh.b-.5)*.32);swashVertex(sh,vBand.z*(1.-smoothstep(.38,.42,lift)),beach);}');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;uniform sampler2D uWaterNoise;uniform float uSunGlitter;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open,beach;varying float vLift,vOpen,vVis,vTrue,vFar,vJoin;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;'+SHORE_GLSL+SHORE_PULL_GLSL+STRIP_VERT_GLSL)
+     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vJoin='+STRIP_JOIN.alpha.toFixed(2)+'*smoothstep('+STRIP_JOIN.from.toFixed(1)+',0.,shore);/* per vertex (1 m grid): the cover over the skirt, see STRIP_GLSL */vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);{vec4 sh=isleSample(vWaterXZ);vSh=vec4(sh.gba,1.-uShore*shoreEdge(vWaterXZ));vBand=vec4(1.-smoothstep(.2,1.7,shore),1.-smoothstep(1.9,2.5,shore),mix(.3,1.5*(.75+.5*sh.b)*(.55+.6*sh.a),beach),vis+(sh.b-.5)*.32);swashVertex(sh,vBand.z*(1.-smoothstep(.38,.42,lift)),beach);}');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar,vJoin;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;uniform sampler2D uWaterNoise;uniform float uSunGlitter;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
      .replace('#include <map_fragment>',STRIP_GLSL)
      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
    };

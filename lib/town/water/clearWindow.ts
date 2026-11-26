@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {CLEAR_WIN,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SHORE_GLSL,WATER_UNIFORMS,clearWinK,clearWinNoise} from '../../graphics/waterSurface';
+import {CLEAR_WIN,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SHORE_GLSL,SEA_GLSL,SEA_SHALLOWS,WATER_UNIFORMS,clearWinK,clearWinNoise} from '../../graphics/waterSurface';
 import {createOceanBlend} from '../../graphics/swimClear';
 import type {IsleCpuField} from '../../graphics/islandShore';
 import {CLEAR_CORAL,CLEAR_LOOK,CLEAR_SHARE,UNDERWATER_GLSL,UW_LIGHT_GLSL,UW_SURFACE,UW_UNIFORMS,clearReefKit,coralFamily,uwDepthAt,type ClearReefKind} from '../fishing/underwater';
@@ -29,6 +29,8 @@ import {FISH_SPOTS} from '../fishing/fishSpots';
  * state is restored exactly (the shared createOceanBlend count), every mesh hidden, the uniform's strength 0: today's opaque sea.
  * Per frame: one field lookup, one Vector4 write; the scatter runs only on a 16 m snap or a tier change. No allocation per frame.
  */
+/** The seabed's turquoise is the sea's shallow colour times this (the water over it adds its own tint). */
+export const CLEAR_BED_TINT=.9;
 export const CLEAR_BED={cell:4,half:116,snap:20,floor:4.2} as const;// floor = underwater.ts CLEAR_LOOK.floor (the fishing catch and schools use it when the window serves)
 /**
  * Per heat tier (Oct 19 2026, "see more coral" from the high jetpack view): the window's radius (m, shrinks with a low camera),
@@ -201,8 +203,11 @@ float cwWh=min(max(0.,${UW_SURFACE.toFixed(3)}-vCwPos.y),2.5);if(cwWh>0.&&uWater
     ?`#include <color_fragment>\ndiffuseColor.rgb=mix(vec3(.72,.68,.52),vec3(.86,.82,.66),smoothstep(.3,.75,vCwN.x*.6+vCwN.y*.5));
     // Past the shallows (the swim disc can show this floor out at sea) the sand sinks into the dark sea: no pale patch.
     // Sand at the beach, teal over the first metres, deep blue by ~12-24 m, and a gentle darkening toward the window's outer edge.
-    {float cwD=clearWinD(vCwPos.xz,isleSample(vCwPos.xz).r);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.2,.5,.52),smoothstep(1.5,9.,cwD)*.75);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.08,.36,.42),smoothstep(9.,24.,cwD));
-     diffuseColor.rgb*=1.-.45*smoothstep(.7,1.,distance(vCwPos.xz,uClearWin.xy)/max(uClearWin.w,1.));}`
+    {float cwD=clearWinD(vCwPos.xz,isleSample(vCwPos.xz).r);// Nov 25 2026 (swim view = walking view): the floor follows the sea's own shore ramp (waterSurface.ts SEA_SHALLOWS: sand at the edge by
+     // seaSandW, the pale turquoise over the first metres), so what shows through the window is the colour the opaque sea draws there
+     // and the window's rim does not read (the darkening toward the rim is .2, was .45).
+     diffuseColor.rgb=mix(${SEA_GLSL.shallow}*${CLEAR_BED_TINT.toFixed(2)},diffuseColor.rgb,seaSandW(cwD));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.08,.36,.42),smoothstep(12.,${SEA_SHALLOWS.reach.toFixed(1)},cwD));
+     diffuseColor.rgb*=1.-.2*smoothstep(.7,1.,distance(vCwPos.xz,uClearWin.xy)/max(uClearWin.w,1.));}`
     :'#include <color_fragment>')
    .replace('#include <opaque_fragment>',(kind==='bed'||kind==='shoal'?CLEAR_UNDER(.7,1.5,'1.,.7',.25,1):kind==='reef'?CLEAR_UNDER(.3,.8,'1.15,.85',.4,.35)/* Oct 19 2026 audit: less absorb / desat / surface-over so the coral keeps its colour */:CLEAR_UNDER(.4,.6,'1.,.7',.35,.4))+'\n#include <opaque_fragment>');
  };

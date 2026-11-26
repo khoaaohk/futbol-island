@@ -66,6 +66,11 @@ if(process.env.GFX_VIEWS==='sand'){const SI=load('lib/town/summitIsle.ts'),CC=lo
   {id:'sandbar',note:'the sandbar, along it',x:bm.x,z:bm.z,yaw:Math.atan2(bn.x-bm.x,bn.z-bm.z)},
   {id:'cay-beach',note:'Coral Cay beach, along the sand',x:c0.outer.x*.45+c0.inner.x*.55,z:c0.outer.z*.45+c0.inner.z*.55,yaw:Math.atan2(c1.outer.x-c0.outer.x,c1.outer.z-c0.outer.z)},
   {id:'shore',note:'Palm Coast Beach waterline, facing the sea',x:shore.x,z:shore.z,yaw:shore.yaw});}
+// Swim view at the shore (Nov 25 2026): GFX_VIEWS=swimshore, swimming 7 m off Palm Coast Beach looking back at the sand (the clear
+// water window + swim disc path), and a five-step walk-in across the waterline (same heading, 2 m up the sand to 9 m out).
+if(process.env.GFX_VIEWS==='swimshore'){const at=(id,o,note)=>({id,note,x:shore.x+shore.ux*o,z:shore.z+shore.uz*o,yaw:shore.yaw+Math.PI});
+ VIEWS.splice(0,VIEWS.length,at('swim-near',8,'swimming 7 m off the beach, facing the sand'),at('walkin-1',-1,'on the sand'),at('walkin-2',1.5,'at the waterline'),at('walkin-3',3.5,'wading'),at('walkin-4',6,'swimming in'),at('walkin-5',10,'swimming'));
+ const SB=load('lib/town/summitIsle.ts').SANDBAR_PATH,bi=SB.reduce((m,q,i)=>Math.abs(q.z+28)<Math.abs(SB[m].z+28)?i:m,0);for(const v of VIEWS)v.probe=true;VIEWS.push({id:'swim-sandbar',note:'swimming 9 m off the sandbar',x:SB[bi].x+9,z:SB[bi].z,yaw:-Math.PI/2,swim:true});}
 // GFX_ONLY=id,id keeps those views; GFX_FLY=<m> arrives at the first kept view on the jetpack at that height (no teleport after:
 // the high camera, where the clear water window is off) and measures only that view.
 if(process.env.GFX_ONLY){const keep=process.env.GFX_ONLY.split(',');VIEWS.splice(0,VIEWS.length,...VIEWS.filter(v=>keep.includes(v.id)));}
@@ -77,7 +82,8 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  // GFX_VIEWPORT=desktop (Nov 23 2026, Island Line): a 1440x900 desktop window instead of the phone.
  const DESKTOP=process.env.GFX_VIEWPORT==='desktop';
- const ctx=await browser.newContext(DESKTOP?{viewport:{width:1440,height:900},deviceScaleFactor:1}:{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
+ const DPR=Number(process.env.GFX_DPR||1);// GFX_DPR=2: sharper shots for close-up crops (the counts are the same)
+ const ctx=await browser.newContext(DESKTOP?{viewport:{width:1440,height:900},deviceScaleFactor:DPR}:{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:DPR});
  const page=await ctx.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('pageerror: '+e.message.slice(0,300)));
  await page.addInitScript(({x,z,time,seed,noTrain,saver,noCafe,fly,yaw})=>{
@@ -124,6 +130,12 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   out.push({view:v.id,note:v.note,frames:r.rows.length,calls:median(calls),callsMin:Math.min(...calls),callsMax:Math.max(...calls),triangles:median(tris),
    programs:r.programs,textures:r.textures,geometries:r.geometries,renderMs:+median(ms).toFixed(2),phase:r.phase,reached,oceanBlended:r.oceanBlended,dpr:r.dpr,at:r.at});
   if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,`${process.env.GFX_SHOT_PREFIX||'gfx'}-${v.id}.png`)});}
+  // Shore probe (Nov 25 2026): the screen positions (CSS px) of a world line crossing the shore (6 m up the sand to 30 m out, every
+  // 0.5 m, 4 m along the beach from the player), written beside the shot; scripts/shore-steps.py samples the shot along it.
+  if(SHOTS&&v.probe){const pts=[];for(let o=-6;o<=30;o+=.5)pts.push([shore.x+shore.ux*o-shore.uz*4,o<0?.05:-.4,shore.z+shore.uz*o+shore.ux*4,o]);
+   const px=await page.evaluate(pts=>{const c=window.__fi2.lessonPass.camera;c.updateMatrixWorld();const v=c.matrixWorldInverse.elements,p=c.projectionMatrix.elements,W=innerWidth,H=innerHeight;
+    return pts.map(([x,y,z,o])=>{const ex=v[0]*x+v[4]*y+v[8]*z+v[12],ey=v[1]*x+v[5]*y+v[9]*z+v[13],ez=v[2]*x+v[6]*y+v[10]*z+v[14],cw=-ez;return {o,x:(p[0]*ex+p[8]*ez)/cw*.5*W+W/2,y:H/2-(p[5]*ey+p[9]*ez)/cw*.5*H};});},pts);
+   fs.writeFileSync(path.join(SHOTS,`${process.env.GFX_SHOT_PREFIX||'gfx'}-${v.id}.probe.json`),JSON.stringify({dpr:DPR,px}));}
  }
  await browser.close();
  console.log(`gfx-budget${NO_TRAIN?' (no train)':''}${SAVER?' (battery saver build)':''}  ${BASE}  ${DESKTOP?'1440x900 desktop':'390x844'} DPR 1  tier ${TIER}  ${TIME}  SwiftShader (counts exact; render ms = CPU submit on this machine, NOT GPU cost or heat)`);

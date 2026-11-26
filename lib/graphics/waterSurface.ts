@@ -90,7 +90,7 @@ export const SEA_TINT={lagoon:[.04,.62,.7],aqua:[.02,.44,.64],deep:[.015,.2,.47]
  * ocean ... it should feel like it's fading more naturally", "crystal clear beachy caribbean waters"). The sea had an opaque
  * saturated band by the sand (the lagoon turquoise over the skirt and the first 3 m, a plateau), then a quick step into the teal.
  * Now ONE long ramp from the drawn waterline: clear water over sand at the edge (`sand`: the beach's own colour seen through a
- * little water, slightly cooled; the weight falls with the SQUARE of 1 - smoothstep(0, sandReach)), a luminous pale turquoise
+ * little water, slightly cooled; the weight is seaSandW below: sandMix x (1 - d / sandReach)^2), a luminous pale turquoise
  * (`shallow`) over the first metres, easing into the open sea's own colour by `reach` m (was 24), where it IS the open-sea colour
  * (weight 0: no line where the ramp ends). The light net now starts at the waterline instead of 1.5 m out.
  * Colour only, from the shore distance both programs already have: no depth texture, no render target, no extra draw. The ocean
@@ -99,11 +99,13 @@ export const SEA_TINT={lagoon:[.04,.62,.7],aqua:[.02,.44,.64],deep:[.015,.2,.47]
  * hand's depth of water is lit like the beach beside it, not tinted like the sea).
  * Cost: the ocean keeps two smoothsteps and two mixes for its depth colour (tests/ground-shader-cost.cjs, water-tropical-cost.cjs).
  */
-export const SEA_SHALLOWS={shallow:[.13,.68,.76],sand:[.78,.72,.52],sandReach:8,sandMix:.86,from:1,reach:40,mix:.9} as const;
+export const SEA_SHALLOWS={shallow:[.13,.68,.76],sand:[.78,.72,.52],sandReach:9,sandMix:.86,from:1,reach:40,mix:.9} as const;
 const v3=(c:readonly number[])=>`vec3(${c.map(v=>v.toFixed(3)).join(',')})`;
 export const SEA_GLSL={lagoon:v3(SEA_TINT.lagoon),aqua:v3(SEA_TINT.aqua),deep:v3(SEA_TINT.deep),rippleTint:v3(SEA_TINT.rippleTint),shallow:v3(SEA_SHALLOWS.shallow),shoreSand:v3(SEA_SHALLOWS.sand)} as const;
-/** The sand's weight at drawn-waterline distance `d` (GLSL expression; shared by the ocean and the shore strip so they agree). */
-export const seaSandK=(d:string)=>`(1.-smoothstep(0.,${SEA_SHALLOWS.sandReach.toFixed(1)},${d}))`;
+/** The sand's weight at drawn-waterline distance d (GLSL `seaSandW`, in SHORE_GLSL: shared by the ocean, the shore strip, the clear
+ *  window's seabed and the swim disc's floor so every path draws the same shore). sandMix x (1 - d / sandReach)^2: it falls from the
+ *  very edge (no flat sandy band) with a long soft tail. Swim view (Nov 25 2026, owner: "the water needs to match when swimming"). */
+export const seaSandW=(d:number)=>{const t=Math.min(1,Math.max(0,1-d/SEA_SHALLOWS.sandReach));return t*t*SEA_SHALLOWS.sandMix;};
 /** The ripple tile's scale on the ocean (texture repeat 44 per 1400 m of UV: waterRipples.ts, world.ts) per world metre, and its drift. */
 export const SEA_RIPPLE_PER_M=44/1400;
 export const WATER_UNIFORMS={
@@ -154,6 +156,7 @@ export function setShore(texture:T.Texture|null,box:T.Vector4|null,strength:numb
 export const SHORE_GLSL=/* glsl */`
 uniform float uWaterTime,uSwashClock,uWaterDetail,uShore,uIsle;uniform vec3 uWaterNight;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
 const float SWASH_P=${SWASH_PERIOD.toFixed(2)},SWELL_L=${SWELL_LENGTH.toFixed(2)};const vec2 SWELL_SKEW_V=vec2(${SEA_STATE.skewV.map(v=>v.toFixed(5)).join(',')});
+float seaSandW(float d){float t=clamp(${Math.sqrt(SEA_SHALLOWS.sandMix).toFixed(4)}-d*${(Math.sqrt(SEA_SHALLOWS.sandMix)/SEA_SHALLOWS.sandReach).toFixed(5)},0.,1.);return t*t;}// sandMix folded into t
 vec4 shoreSample(vec2 xz){return texture2D(uShoreTex,clamp((xz-uShoreBox.xy)/uShoreBox.zw,0.,1.));}
 /** 0 outside the box, rising to 1 a little inside it (no hard edge where the box ends). */
 float shoreEdge(vec2 xz){vec2 uv=(xz-uShoreBox.xy)/uShoreBox.zw;return smoothstep(0.,.14,min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y)));}
@@ -433,8 +436,8 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
      // Clear water over sand at the edge (SEA_SHALLOWS.sand), after the night tint.
-     {float sandK=${seaSandK('d')};// d, not dd: a dive shoal keeps the turquoise (never a sandy patch out at sea)
-     diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.shoreSand},sandK*sandK*${SEA_SHALLOWS.sandMix.toFixed(2)});}
+     // d, not dd: a dive shoal keeps the turquoise (never a sandy patch out at sea)
+     diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.shoreSand},seaSandW(d));
      float crest=0.;
      if(uWaterDetail>.5){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each

@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {SHORE_GLSL,SWIM_CLEAR,SWIM_CLEAR_UNIFORMS,WATER_UNIFORMS} from './waterSurface';
+import {SHORE_GLSL,SEA_GLSL,SEA_SHALLOWS,SWIM_CLEAR,SWIM_CLEAR_UNIFORMS,WATER_UNIFORMS} from './waterSurface';
 
 /**
  * The swimmer's clear water (Oct 19 2026, docs/water-look-research.md §4, phase 1; docs/performance-guide.md "Swimmer clear disc").
@@ -64,10 +64,12 @@ export function createSwimClear(scene:T.Scene){
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vBedP,vBedXZ;').replace('#include <project_vertex>','#include <project_vertex>\nvBedP=position.xz;vBedXZ=(modelMatrix*vec4(transformed,1.)).xz;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vBedP,vBedXZ;uniform float uSwimShadow;\n'+SHORE_GLSL)
    .replace('#include <color_fragment>',`#include <color_fragment>
-   {float d=isleSample(vBedXZ).r;vec3 shallowC=mix(vec3(.17,.56,.57),vec3(.05,.42,.53),smoothstep(.3,5.,d));
-    diffuseColor.rgb=mix(diffuseColor.rgb*.95,shallowC,(1.-smoothstep(3.,24.,d))*.85)*${SWIM_BED.deep.toFixed(2)};
+   // Nov 25 2026: the sea's own shore ramp (waterSurface.ts SEA_SHALLOWS), so the disc shows what the opaque sea draws there.
+   {float d=isleSample(vBedXZ).r;
+    diffuseColor.rgb=mix(diffuseColor.rgb*.95,${SEA_GLSL.shallow},(1.-smoothstep(${SEA_SHALLOWS.from.toFixed(1)},${SEA_SHALLOWS.reach.toFixed(1)},d))*${SEA_SHALLOWS.mix.toFixed(2)})*${SWIM_BED.deep.toFixed(2)};
+    diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.shoreSand},seaSandW(d));
     // Out past the shallows the floor sinks into the dark sea (no pale patch): darker and bluer with the shore distance.
-    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.1,.4,.46),smoothstep(6.,24.,d)*.6);
+    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.1,.4,.46),smoothstep(10.,30.,d)*.6);
     float e=length(vBedP/vec2(${SWIM_BED.shadowR[0].toFixed(2)},${SWIM_BED.shadowR[1].toFixed(2)}));diffuseColor.rgb*=1.-uSwimShadow*(1.-smoothstep(.35,1.,e));}`);
  };
  bedMat.customProgramCacheKey=()=>'swim-bed-v2';
