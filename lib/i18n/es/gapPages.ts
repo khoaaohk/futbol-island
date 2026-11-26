@@ -26,11 +26,11 @@ const ES:Record<string,Words>={
     more:'Cada letra lleva a su fila de abajo. Entre paréntesis, la letra en inglés.',
     spots:{gk:{abbr:'POR',name:'Portero',job:'Para los tiros y empieza los ataques. El único que puede usar las manos, dentro de su área penal.',also:'Dorsal 1. En inglés: GK (goalkeeper).'},
      cb:{abbr:'DFC',name:'Defensa central',job:'Defiende el centro delante de la arco: despeja de cabeza, bloquea tiros y marca al delantero. Suelen ser dos.',also:'Dorsales 4 y 5. En inglés: CB (center back).'},cb2:{abbr:'DFC',name:'Defensa central',job:''},
-     lb:{abbr:'LI',name:'Lateral izquierdo',job:'Defiende la banda izquierda y sube para ayudar en ataque. LD es el mismo trabajo a la derecha.',also:'Dorsal 3 (LD: 2). En inglés: LB y RB.'},rb:{abbr:'LD',name:'Lateral derecho',job:''},
+     lb:{abbr:'LI',name:'Lateral izquierdo (LI) y derecho (LD)',job:'Defiende la banda izquierda y sube para ayudar en ataque. LD es el mismo trabajo a la derecha.',also:'Dorsal 3 (LD: 2). En inglés: LB y RB.'},rb:{abbr:'LD',name:'Lateral derecho',job:''},
      cdm:{abbr:'MCD',name:'Mediocampista defensivo',job:'Se coloca delante de los defensas, recupera el balón y lo pasa fácil. También se le llama pivote.',also:'Dorsal 6. En inglés: CDM o DM.'},
      cm:{abbr:'MC',name:'Mediocampista central',job:'Une la defensa y el ataque: pide el balón, pasa y corre de área a área.',also:'Dorsal 8. En inglés: CM.'},
      cam:{abbr:'MCO',name:'Mediocampista ofensivo',job:'Juega justo detrás del delantero: da el último pase y tira desde la frontal. También se le llama mediapunta.',also:'Dorsal 10. En inglés: CAM o AM.'},
-     lw:{abbr:'EI',name:'Extremo izquierdo',job:'Ataca por la izquierda: regatea, centra y se va hacia dentro para tirar. ED es la banda derecha.',also:'Dorsal 11 (ED: 7). En inglés: LW y RW.'},rw:{abbr:'ED',name:'Extremo derecho',job:''},
+     lw:{abbr:'EI',name:'Extremo izquierdo (EI) y derecho (ED)',job:'Ataca por la izquierda: regatea, centra y se va hacia dentro para tirar. ED es la banda derecha.',also:'Dorsal 11 (ED: 7). En inglés: LW y RW.'},rw:{abbr:'ED',name:'Extremo derecho',job:''},
      st:{abbr:'DC',name:'Delantero centro',job:'El jugador más adelantado: marca goles, aguanta el balón y presiona a los defensas.',also:'Dorsal 9. En inglés: ST o CF.'}}},
    'all-letters':{title:'Todas las letras de las posiciones (en inglés)',head:['Letras','Significa','Dónde juega'],rows:[
     ['GK','Portero','En la arco'],['CB','Defensa central','El centro de la defensa'],['LCB / RCB','Central izquierdo / derecho','Los dos centrales'],['SW','Líbero','Un defensa libre detrás (poco común hoy)'],

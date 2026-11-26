@@ -22,6 +22,8 @@ import site from '@/app/(site)/site.module.css';
 type Lang='en'|'es';
 /** A link on a Spanish page goes to the Spanish page when there is one (lib/i18n/esPaths.ts), else to the English page. */
 const L=(lang:Lang,path:string)=>{if(lang!=='es'||!path.startsWith('/'))return path;const [p,h]=path.split('#');return hasEs(p)?toEs(p)+(h?`#${h}`:''):path;};
+/** A rail label: the title before any colon, cut at a word to 26 characters. */
+const short=(t:string)=>{const s=t.replace(/:.*$/,'');if(s.length<=26)return s;const c=s.slice(0,26);return c.slice(0,c.lastIndexOf(' '));};
 function Block({b,lang}:{b:GapBlock;lang:Lang}){
  const intro='intro' in b&&b.intro?<p>{b.intro}</p>:null;
  switch(b.k){
@@ -39,7 +41,7 @@ export default function GapPageView({p,lang='en'}:{p:GapPage;lang?:Lang}){
  const crumbs=es?esLibCrumbs({name:p.hub.name,path:toEs(p.hub.path)},{name:p.crumb,path}):guideCrumbs({name:p.hub.name,path:p.hub.path},{name:p.crumb,path:p.path});
  const facts:Fact[]=p.facts.map(f=>({...f,href:f.href}));
  const quizName=p.quizName,quizTitle=es?'Pon a prueba lo que sabes':'Check yourself';
- const rail=pageRail(p.rail,{href:L(lang,p.hub.path),name:p.hub.name},[...p.blocks.filter(b=>b.k!=='callout'||b.tone==='tip').map(b=>sec(b.id,b.title.replace(/:.*$/,'').slice(0,28))),
+ const rail=pageRail(p.rail,{href:L(lang,p.hub.path),name:p.hub.name},[...p.blocks.filter(b=>b.k!=='callout'||b.tone==='tip').map(b=>sec(b.id,short(b.title))),
   sec('try-it',es?'Pruébalo':'Try it'),sec('faq',es?'Preguntas':'Questions'),sec('quiz','Quiz'),sec('keep-reading',es?'Sigue leyendo':'Keep reading')],es);
  const links=p.links.map(l=>({...l,path:L(lang,l.path)}));
  return <>

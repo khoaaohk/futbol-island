@@ -63,7 +63,7 @@ export function GoalStrip({lang='en'}:{lang?:Lang}){
 }
 
 /* ---------- the positions pitch ---------- */
-export type PitchSpot={id:string;abbr:string;name:string;job:string;x:number;y:number;also?:string;href?:string};
+export type PitchSpot={id:string;abbr:string;name:string;job:string;x:number;y:number;also?:string;href?:string;/** a twin dot (the second CB, RB, RW) links to this row instead of having its own */to?:string};
 /** An 11v11 pitch (attacking up) with one dot per position. Each dot links to its row below (#pos-<id>), which lights up
  *  (CSS :target): tap a position to see its job. Without CSS or with a screen reader it is a list of links and a list. */
 export function PositionPitch({spots,title,desc,lang='en',more}:{spots:readonly PitchSpot[];title:string;desc:string;lang?:Lang;more?:string}){
@@ -77,14 +77,14 @@ export function PositionPitch({spots,title,desc,lang='en',more}:{spots:readonly 
    <line {...line} x1={M} x2={W-M} y1={H/2} y2={H/2}/><circle {...line} cx={cx} cy={H/2} r={28}/>
    <rect {...line} x={cx-62} y={M} width={124} height={50}/><rect {...line} x={cx-62} y={H-M-50} width={124} height={50}/>
    <rect {...line} x={cx-26} y={M} width={52} height={18}/><rect {...line} x={cx-26} y={H-M-18} width={52} height={18}/>
-   {spots.map(s=><a key={s.id} href={`#pos-${s.id}`} className={v.dot} aria-label={`${s.abbr}: ${s.name}`}>
+   {spots.map(s=><a key={s.id} href={`#pos-${s.to??s.id}`} className={v.dot} aria-label={`${s.abbr}: ${s.name}`}>
     <circle cx={X(s.x)} cy={Y(s.y)} r={17} fill={s.id==='gk'?PAPER:GOLD} stroke={INK} strokeWidth={1.5}/>
     <text x={X(s.x)} y={Y(s.y)} dy=".35em" textAnchor="middle" fontSize={s.abbr.length>3?9.5:11.5} fontWeight={800} fill={INK} fontFamily="system-ui,-apple-system,sans-serif">{s.abbr}</text>
    </a>)}
   </svg>
   <div>
    {more&&<p className={v.cap}>{more}</p>}
-   <ul className={v.posList}>{spots.map(s=><li key={s.id} id={`pos-${s.id}`} className={v.posItem}>
+   <ul className={v.posList}>{spots.filter(s=>!s.to).map(s=><li key={s.id} id={`pos-${s.id}`} className={v.posItem}>
     <span className={v.abbr}>{s.abbr}</span>
     <div><b>{s.href?<a href={s.href}>{s.name}</a>:s.name}</b><p>{s.job}</p>{s.also&&<small>{s.also}</small>}</div></li>)}</ul>
   </div>
@@ -172,8 +172,8 @@ export function CourtInField({caption,lang='en'}:{caption:string;lang?:Lang}){
    <rect x={cx-cw/2} y={cy-ch/2} width={cw} height={ch} rx={2} fill={GOLD} stroke={INK} strokeWidth={2}/>
    <line x1={cx} x2={cx} y1={cy-ch/2} y2={cy+ch/2} stroke={INK} strokeWidth={1.5}/>
    <rect x={cx-cw/2-3} y={cy-1.5*k} width={3} height={3*k} fill={INK}/><rect x={cx+cw/2} y={cy-1.5*k} width={3} height={3*k} fill={INK}/>
-   <text x={M+10} y={M+20} fontSize={13} fontWeight={700} fill={PAPER} fontFamily="system-ui,sans-serif">{t[0]}</text>
-   <text x={cx} y={cy+ch/2+18} textAnchor="middle" fontSize={13} fontWeight={700} fill={PAPER} fontFamily="system-ui,sans-serif">{t[1]}</text>
+   <text x={M+10} y={M+20} fontSize={13} fontWeight={700} fill={PAPER} stroke={GRASS} strokeWidth={4} paintOrder="stroke" fontFamily="system-ui,sans-serif">{t[0]}</text>
+   <text x={cx} y={cy+ch/2+18} textAnchor="middle" fontSize={13} fontWeight={700} fill={PAPER} stroke={GRASS} strokeWidth={4} paintOrder="stroke" fontFamily="system-ui,sans-serif">{t[1]}</text>
   </svg></div>
   <figcaption className={v.cap}>{caption}</figcaption>
  </figure>;
@@ -187,7 +187,7 @@ const PEN_WORDS={en:{t:'Penalty kick diagram: the penalty area measured',d:'The 
 export function PenaltyAreaDiagram({lang='en'}:{lang?:Lang}){
  const w=PEN_WORDS[lang],k=7,M=14,W=56*k,H=30*k,cx=M+W/2,gy=M+8,X=(m:number)=>cx+m*k,Y=(m:number)=>gy+m*k;
  const line={fill:'none',stroke:PAPER,strokeWidth:2,strokeOpacity:.9} as const,arcR=9.15*k,dy=(16.5-11)*k,dx=Math.sqrt(arcR*arcR-dy*dy);
- const lab={fontSize:12,fontWeight:700,fill:PAPER,fontFamily:'system-ui,sans-serif'} as const;
+ const lab={fontSize:12,fontWeight:700,fill:PAPER,stroke:GRASS,strokeWidth:4,paintOrder:'stroke',fontFamily:'system-ui,sans-serif'} as const;
  return <figure className={v.fig} data-visual="penalty-area">
   <div className={v.board}><svg viewBox={`0 0 ${W+2*M} ${H+2*M}`} role="img" aria-labelledby="pen-t pen-d"><title id="pen-t">{w.t}</title><desc id="pen-d">{w.d}</desc>
    <rect x={0} y={0} width={W+2*M} height={H+2*M} rx={12} fill={GRASS}/>
