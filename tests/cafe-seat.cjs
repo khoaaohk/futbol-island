@@ -50,6 +50,13 @@ const base=path.resolve(__dirname,'..');
  const got=seat.press(false);assert.ok(got&&Math.abs(got.x-V.sit.x)<1e-9,'sits');assert.equal(notes.length,1,'one view note');
  const keys=new Set();for(let i=0;i<40;i++)assert.ok(seat.holdPlayer(1/60,{x:0,z:0},keys,{walk:true,x:V.sit.x,z:V.sit.z,reduced:false}));
  assert.ok(seat.trick()&&seat.trick().w>.99,'seated pose fully on');
+ // Owner Nov 26 2026: left / right arrow keys look round while seated (same limits as a drag) and do not stand you up; other move keys do.
+ {const o={walk:true,x:V.sit.x,z:V.sit.z,reduced:false},L=new Set(['arrowleft']),R=new Set(['arrowright']);
+  for(let i=0;i<30;i++)assert.ok(seat.holdPlayer(1/60,{x:-1,z:0},L,o),'left arrow keeps the seat');
+  assert.ok(seat.seated&&seat.look.yaw>.6,'left arrow looks left: '+seat.look.yaw);
+  for(let i=0;i<300;i++)seat.holdPlayer(1/60,{x:-1,z:0},L,o);assert.ok(Math.abs(seat.look.yaw-seat.look.max)<1e-9,'clamped at the drag limit');
+  for(let i=0;i<600;i++)seat.holdPlayer(1/60,{x:1,z:0},R,o);assert.ok(seat.seated&&Math.abs(seat.look.yaw+seat.look.max)<1e-9,'right arrow sweeps to the other limit');
+  const before=seat.look.yaw;seat.holdPlayer(1/60,{x:0,z:0},new Set(['arrowleft','arrowright']),o);assert.equal(seat.look.yaw,before,'both arrows hold still');assert.ok(seat.seated);}
  seat.holdPlayer(1/60,{x:1,z:0},keys,{walk:true,x:V.sit.x,z:V.sit.z,reduced:false});for(let i=0;i<40;i++)seat.holdPlayer(1/60,{x:0,z:0},keys,{walk:true,x:V.sit.x,z:V.sit.z,reduced:false});
  assert.ok(!seat.seated&&seat.trick()===undefined,'the stick gets up');
  seat.want(V.sit.x-.8,V.sit.z,C.CAFE.floor,true);seat.press(true);assert.ok(seat.seated&&seat.trick().w===1,'reduced: snaps in');seat.press(true);assert.ok(!seat.seated&&seat.trick()===undefined,'reduced: snaps out');
