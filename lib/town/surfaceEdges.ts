@@ -47,7 +47,7 @@ export const WEAR_BASE=4;
 export const wearOf=(d:number)=>d<WEAR.edge?d/WEAR.edge-1:WEAR.light*Math.min(1,(d-WEAR.edge)/(WEAR.centre-WEAR.edge));
 /** A lawn and how its edges are built: `ground` = the drawn lawn's height over its flat plane (a raised lawn: the edges are laid on
  *  it), or null = flat lawn only (raised ground is skipped). */
-export type Zone={poly:readonly Pt[];ground:((x:number,z:number)=>number)|null};
+export type Zone={poly:readonly Pt[];ground:((x:number,z:number)=>number)|null;/** only where this holds (the main island's raised west side: its own pass) */only?:(x:number,z:number)=>boolean};
 const MAIN_ZONE:Zone={poly:INTERIOR_GRASS,ground:null};
 const hash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const insidePoly=(poly:readonly Pt[],x:number,z:number)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)c=!c;}return c;};
@@ -93,7 +93,7 @@ const wornAt=(s:SurfaceInput,x:number,z:number,low:boolean)=>{if(low)return 0;le
 /** The lawn's lip along every path outline with open lawn beside it. Returns the triangles added. */
 export function pathLips(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=input;if(!s||!s.paths.length)return 0;const G=zone.ground;if(G&&low)return 0;
  const o=outlineOf(s),top=DRAWN.path-DRAWN.lawn,start=out.index.length,g=(x:number,z:number)=>G?G(x,z):0,proud=G?WEAR.lift:0;
- const lawn=(x:number,z:number)=>insidePoly(zone.poly,x,z)&&!s.blocked(x,z)&&!o.inside(x,z)&&(G!==null||regionLift(x,z)<.004);
+ const lawn=(x:number,z:number)=>insidePoly(zone.poly,x,z)&&!s.blocked(x,z)&&!o.inside(x,z)&&(G!==null||regionLift(x,z)<.004)&&(!zone.only||zone.only(x,z));
  for(const seg of o.segs){const {len,knots}=knotsOf(seg,G?WEAR.liftStep:low?LIP.lowStep:LIP.step);if(len<.6)continue;
   if(!insidePoly(zone.poly,(seg.ax+seg.bx)/2,(seg.az+seg.bz)/2)&&!insidePoly(zone.poly,seg.ax,seg.az)&&!insidePoly(zone.poly,seg.bx,seg.bz))continue;
   const over=(e:number)=>{const [x,z]=rowPoint(seg,len,knots[e],0,false,false);return LIP.over+LIP.overVar*hash(Math.round((seg.nx?z:x)*2)*1.37+seg.ax*.7+seg.az);};
@@ -114,7 +114,7 @@ export function pathLips(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
  *  Not built on the simpler (lowest tier) edge. Returns the triangles added. */
 export function pathWear(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=input;if(!s||low||!s.paths.length)return 0;
  const o=outlineOf(s),G=zone.ground,y0=DRAWN.path-DRAWN.lawn+.008+(G?WEAR.lift:0),start=out.index.length,R=s.paths,E=WEAR.edge;
- const open=(x:number,z:number)=>insidePoly(zone.poly,x,z)&&(G!==null||regionLift(x,z)<.004);
+ const open=(x:number,z:number)=>insidePoly(zone.poly,x,z)&&(G!==null||regionLift(x,z)<.004)&&(!zone.only||zone.only(x,z));
  const within=(r:Rect,x:number,z:number,m=0)=>Math.abs(x-r.x)<r.w/2+m&&Math.abs(z-r.z)<r.d/2+m;
  for(let i=0;i<R.length;i++){const r=R[i];if(Math.min(r.w,r.d)>WEAR.max)continue;
   if(![[0,0],[-1,-1],[1,-1],[-1,1],[1,1]].some(([a,b])=>insidePoly(zone.poly,r.x+a*r.w/2,r.z+b*r.d/2)))continue;
@@ -137,7 +137,10 @@ export function pathWear(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
 /** Everything the main island's lawn gains (fields.ts joins it to the lawn mesh). null with the flag off. */
 export function mainLawnEdges(low=false){if(!enabled)return null;const out:EdgePatch={position:[],index:[],edge:[]};
  const fringe=lawnFringe(INTERIOR_GRASS,out,low,0,(x,z)=>regionLift(x,z)>.004),lips=pathLips(out,low),wear=pathWear(out,low);
- surfaceStats.value={...(surfaceStats.value??{}),fringe,lips,wear,low:low?1:0};return {...out,fringe,lips,wear,triangles:out.index.length/3};}
+ // Review (Nov 28 2026): the raised west side (?elev=1) gets the same lips and wear, laid on its ground (as on Coral Cay); not on the simpler edge.
+ const wide=(input?.paths??[]).filter(r=>Math.min(r.w,r.d)>WEAR.max),square=(x:number,z:number)=>wide.some(r=>Math.abs(x-r.x)<r.w/2+1.6&&Math.abs(z-r.z)<r.d/2+1.6);// a raised square (the stadium plaza) keeps a crisp edge: its border course (groundTint PLAZA_CREST), no grass lip under its garden walls
+ const west:Zone={poly:INTERIOR_GRASS,ground:regionLift,only:(x,z)=>regionLift(x,z)>=.004&&!square(x,z)},at=out.position.length,westLips=low?0:pathLips(out,low,west),westWear=low?0:pathWear(out,low,west);
+ surfaceStats.value={...(surfaceStats.value??{}),fringe,lips,wear,westLips,westWear,westAt:westLips+westWear?[out.position[at],out.position[at+2]]as unknown as number:0,low:low?1:0};return {...out,fringe,lips,wear,triangles:out.index.length/3};}
 /** Coral Cay's lawn (world.ts joins it to `coral-cay-lawn` after the drape): the rim onto the sand ring, which lies `sandTop` m over
  *  the lawn's plane, the lips and the wear along its paths; laid on `ground` when the cay is raised (?elev=1). `skip`: where the
  *  lawn's outline is not sand (the boulevard, the roundabout, the railway). null with the flag off. */

@@ -160,6 +160,12 @@ export function lawnEdgeGlsl(){const E=LAWN_EDGE,S=GROUND_TINT.sand,P=GROUND_TIN
  bare.rb*=vec2(1.+${f(S.amp*.5)}*w,1.-${f(S.amp*.8)}*w);
  diffuseColor.rgb=mix(diffuseColor.rgb*(1.-${f(E.damp)}*clamp(et*${f(1/E.from)},0.,1.)),bare,ek);}`;}
 const SAND_HEX='#f1d6a1',PAVE_HEX='#eddfbb';
+/** The stadium plaza's edge (?surf=1, review Nov 28 2026): from the play camera the raised plaza had no crest line where it meets the
+ *  lawn, the garden walls and the stadium. Heights untouched; in the slab branch of the `path` program (plaza and concourse pixels only; the distance to the slab area's edge is the one that branch already tests): a border
+ *  course `course` m wide (the garden walls stand on its outer half), `line` darker, its inner edge a `soft` m ramp so it does not
+ *  crawl. No tone gradient toward the edge: tried (7 to 11 % over 3 to 4.5 m), and the trail's rounded end, which lies on the plaza
+ *  in another program, then showed as a pale disc. Cost stated by tests/ground-shader-cost.cjs. */
+export const PLAZA_CREST={course:.85,soft:.1,line:.13} as const;
 /** Per VERTEX (Nov 28 2026 review), so the band pixel pays nothing for it: what lies beyond (0 sand .. 1 paving), the path wear, and
  *  how the band blends there: against sand a noise-broken threshold (from..to), against paving a soft blend across the whole band
  *  with the break-up only as fine detail (paveFrom..paveTo, paveNoise). vEdge = (edge, beyond, wear, noise share), vEdgeR = (from, 1/width). */
@@ -170,8 +176,8 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
  const {amp,grain,wet}=GROUND_TINT[kind],[mr,mg,mb]=GROUND_DETAIL_MIX[kind];
  // Surface craft (?surf=1, lib/town/surfaceEdges.ts): the lawn's program gains the soft-edge branch (a per-vertex `aEdge`; meshes
  // without the attribute read 0 = plain lawn). With the flag off the source below is exactly what it was.
- const pbr=gfxFlag('pbr-ground'),beach=kind==='beach',trail=kind==='trail',edge=kind==='grass'&&surfOn();
- material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'')+(edge?'-edge':'');
+ const pbr=gfxFlag('pbr-ground'),beach=kind==='beach',trail=kind==='trail',edge=kind==='grass'&&surfOn(),crest=kind==='path'&&surfOn(),C=PLAZA_CREST;
+ material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'')+(edge?'-edge':'')+(crest?'-crest':'');
  const extraVary=beach?'varying float vShore;':trail?'varying vec3 vVerge;':edge?'varying vec4 vEdge;varying vec2 vEdgeR;':'';
  const detail=[mr?`${f(grain*mr)}*(gt.r-.5)`:'',mg?`${f(grain*mg)}*(gt.g-.5)`:'',mb?`${f(grain*mb)}*(gt.b-.5)`:''].filter(Boolean).join('+');
  // Surface craft (?surf=1): the trail's verge breaks into the lawn over twice the width, more unevenly (numbers only: same program cost).
@@ -199,11 +205,12 @@ ${trail?`{float ed=vVerge.y>.01?vVerge.y-abs(vVerge.x):9.;if(ed<1.){float ek=smo
  diffuseColor.rgb=mix(diffuseColor.rgb,lawn,(1.-ek)*vVerge.z);}}`:''}
 ${edge?lawnEdgeGlsl():''}
 ${kind==='path'?`{vec2 sa=abs(vGT.xz-vec2(${f(S.rects[0][0])},${f(S.rects[0][1])}))-vec2(${f(S.rects[0][2])},${f(S.rects[0][3])}),sb=abs(vGT.xz-vec2(${f(S.rects[1][0])},${f(S.rects[1][1])}))-vec2(${f(S.rects[1][2])},${f(S.rects[1][3])});
- if(min(max(sa.x,sa.y),max(sb.x,sb.y))<0.){vec2 sp=vGT.xz*${(1/S.size).toFixed(5)},sc=floor(sp),sf=abs(fract(sp)-.5);
+ ${crest?'float sd=min(max(sa.x,sa.y),max(sb.x,sb.y));if(sd<0.)':'if(min(max(sa.x,sa.y),max(sb.x,sb.y))<0.)'}{vec2 sp=vGT.xz*${(1/S.size).toFixed(5)},sc=floor(sp),sf=abs(fract(sp)-.5);
   // joint: distance to the nearest slab edge (m), widened to the pixel's footprint on the ground and faded as it goes under a pixel
   // per-slab tone: a low-discrepancy sequence of the slab index (no sin hash), ±2.5 %
   float px=.0011/gl_FragCoord.w,dj=(.5-max(sf.x,sf.y))*${f(S.size)},jl=(1.-smoothstep(0.,max(px,${f(S.joint)})*1.5,dj))*min(1.,${f(S.joint*2)}/px);
-  diffuseColor.rgb*=(1.+.05*(fract(dot(sc,vec2(.754877,.569840)))-.5))*(1.-.16*jl);}}`:''}
+  diffuseColor.rgb*=(1.+.05*(fract(dot(sc,vec2(.754877,.569840)))-.5))*(1.-.16*jl);
+  ${crest?`{diffuseColor.rgb*=1.-${f(C.line)}*clamp(sd*${f(1/C.soft)}+${f(C.course/C.soft)},0.,1.);}`:''}}}`:''}
 if(uGroundGrain>0.){vec2 q=vGT.xz;diffuseColor.rgb*=1.-.07*smoothstep(.35,.8,sin(q.x*.013+uGroundTime*.02+sin(q.y*.011)*1.5)*.5+.5);}}`);
  };
  return material;
