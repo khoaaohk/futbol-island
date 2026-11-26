@@ -1,5 +1,6 @@
 import {BEACH_COURT} from './coralCay';
 import {summitGround} from './summitIsle';
+import {cayGround} from './coralCayElevation';
 import {STADIUM} from './westParkLayout';
 import {STADIUM_NAME} from '../stadium/dripfc';
 export type Format='futsal'|'7v7'|'9v9'|'11v11';
@@ -75,7 +76,7 @@ export function parkingSurfaceHeight(x:number,z:number){
 export function fieldSurfaceHeight(x:number,z:number,margin=0){
  const v=VENUES.find(v=>Math.abs(x-v.x)<=v.width/2+3+margin&&Math.abs(z-v.z)<=v.length/2+3+margin);
  // Summit Isle's mountain (summitIsle.ts, Oct 12 2026): 0 outside its box after four comparisons.
- return v?(v.elevation??0)+FIELD_SURFACE_Y:parkingSurfaceHeight(x,z)||summitGround(x,z);
+ return v?(v.elevation??0)+FIELD_SURFACE_Y:parkingSurfaceHeight(x,z)||summitGround(x,z)||cayGround(x,z);// (Coral Cay's raised interior: ?elev=1 pilot, 0 otherwise)
 }
 
 export const ISLAND_SQUARE={x:95,z:-35};

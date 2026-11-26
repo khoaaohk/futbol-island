@@ -9,6 +9,8 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
+import {cayBuild,cayBuildLift,cayElevationOn} from './coralCayElevation';
+import {drapeCayPieces} from './coralCayTerrain';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
 import {buildStadium} from './stadiumWorld';
@@ -98,7 +100,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const palette = new Map<string,T.MeshStandardMaterial>();
   const nightSigns:T.MeshStandardMaterial[]=[];
   const mat = (color: string) => { if (!palette.has(color)) {const m=new T.MeshStandardMaterial({color,roughness:.85});palette.set(color,m);materials.push(m);}return palette.get(color)!;};
-  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y,z);m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
+  const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {const cayLift=parent===town?cayBuildLift(x,z):0;if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));if(propTag)m.userData.propTag=propTag;m.position.set(x,y+cayLift,z);if(cayBuild.active&&parent===town)cayBuild.pieces.push({mesh:m,lift:cayLift,anchored:cayBuild.anchor!==null});m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
   const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Night glow (machineNightGlow.ts): mark a piece to glow with the night factor, `w` 0…1; warm: a lit-interior white, else its own colour. */
   const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
@@ -111,7 +113,7 @@ export function* buildTownSteps(scene: T.Scene) {
     // Keep the emissive-map shader present in every mode; mode changes only
     // adjust uniforms and reuse the existing sign texture (no extra image).
     const material=new T.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});materials.push(material);nightSigns.push(material);
-    const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);if(propTag)mesh.userData.propTag=propTag;mesh.position.set(x,y,z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
+    const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);if(propTag)mesh.userData.propTag=propTag;mesh.position.set(x,y+cayBuildLift(x,z),z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
   };
 
   // Arcade roof neon. Letters are polylines in a 1.3 m cap height; every tube
@@ -1450,7 +1452,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // Coral Cay, its causeway and the two sandbar stops (lib/town/coralCayWorld.ts). Built before the batching pass below,
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
   yield;
-  const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
+  // Elevation pilot (?elev=1, coralCayElevation.ts): every piece is placed on the raised ground, then the flat layers are draped.
+  cayBuild.active=cayElevationOn();cayBuild.pieces.length=0;
+  let coralCay:ReturnType<typeof buildCoralCay>;try{coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});if(cayBuild.active)drapeCayPieces();}finally{cayBuild.active=false;cayBuild.anchor=null;cayBuild.pieces.length=0;}
   // Café by the Sea + butterfly garden on the cay's east point (seasideCafeWorld.ts, Nov 24 2026): batched; one signs-atlas draw.
   // 'fi-no-cafe' (localStorage '1'): build without the café's scenery, for the gfx-budget before column (GFX_NO_CAFE=1) only.
   const noCafe=(()=>{try{return typeof localStorage!=='undefined'&&localStorage.getItem('fi-no-cafe')==='1';}catch{return false;}})();

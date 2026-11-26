@@ -7,6 +7,8 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {cayAnchored,cayBuild,cayElevationOn,cayGround} from './coralCayElevation';
+import {buildCayLawnGeometry} from './coralCayTerrain';
 import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
@@ -56,7 +58,11 @@ const GASHA_VIEW_DIR={x:16/Math.hypot(16,33),z:33/Math.hypot(16,33)};
 export function inGashaponView(x:number,z:number){return CAY_GASHAPON_VIEWS.some(m=>{const dx=x-m.x,dz=z-m.z,along=dx*GASHA_VIEW_DIR.x+dz*GASHA_VIEW_DIR.z,perp=dx*GASHA_VIEW_DIR.z-dz*GASHA_VIEW_DIR.x;return along>-2&&along<20&&Math.abs(perp)<6;});}
 
 export function buildCoralCay(t:CayTools){
- const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
+ const {box,cylinder,put,line,sign,path,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
+ // Elevation pilot (?elev=1): whole props stand at one height (their own spot's ground); identity with the flag off.
+ const palm:CayTools['palm']=(x,z,h)=>cayAnchored(x,z,()=>t.palm(x,z,h)),house:CayTools['house']=(x,z,w,d,h,label,i)=>cayAnchored(x,z,()=>t.house(x,z,w,d,h,label,i)),
+  table:CayTools['table']=(x,z)=>cayAnchored(x,z,()=>t.table(x,z)),planter:CayTools['planter']=(x,z)=>cayAnchored(x,z,()=>t.planter(x,z)),districtSign:CayTools['districtSign']=(text,x,z)=>cayAnchored(x,z,()=>t.districtSign(text,x,z));
+ const firstBuilding=buildings.length;
  const lampSites:CayLampSite[]=[];
  const farmDecor:DecorPlant[]=[];
  const z0=CAUSEWAY.z,P=CAUSEWAY_PATH,deck=CAUSEWAY.deckHalf;
@@ -142,7 +148,7 @@ export function buildCoralCay(t:CayTools){
   prop('lamp',()=>{cylinder(.19,.22,'#384443',x,ground+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,ground+2.1,z).castShadow=false;
   box(.62,.12,.62,'#384443',x,ground+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z).castShadow=false;});
   obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'cay-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
-  lampSites.push({x,z,ground:ground+.005,region:'coral-cay',poolWidth:9,poolDepth:9});
+  lampSites.push({x,z,ground:ground+.005+cayGround(x,z),region:'coral-cay',poolWidth:9,poolDepth:9});
  };
  for(let s=CAUSEWAY.sWater0+8,k=0;s<CAUSEWAY.sWater1-6;s+=24,k++){const p=P[Math.round(s/P[last].s*last)],side=(k%2?1:-1) as RoadSide;
   if(SANDBARS.some(b=>b.side===side&&Math.abs(p.s-b.spur.s)<5))continue;const q=offsetPoint(p,side*6.65);lamp(q.x,q.z,-.02);}
@@ -319,6 +325,7 @@ export function buildCoralCay(t:CayTools){
  // ---- The cay: foundation, an uneven sand ring (beach all round) and the lawn. Geometry is built relative to the cay
  // centre and placed there, so the three big surfaces sit in the cay's own chunk (never inflating a main-island batch).
  const C=CAY_CENTER;
+ cayBuild.anchor=cayBuild.active?0:null;// the three big surfaces and the shore rings carry their own heights (elevation pilot)
  {const outline=new T.Shape();CAY_SHORE.forEach((p,i)=>i?outline.lineTo(p.x-C.x,-(p.z-C.z)):outline.moveTo(p.x-C.x,-(p.z-C.z)));outline.closePath();
   const land=flat(put(new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1}),'#dfc99e',C.x,-.82,C.z));land.rotation.x=-Math.PI/2;land.name='coral-cay-foundation';tintGroundMesh(land,'land');}
  {const positions:number[]=[],indices:number[]=[];
@@ -333,9 +340,10 @@ export function buildCoralCay(t:CayTools){
   // ring meets the lawn edge to edge (no overlap), and the beach-court sand sits 3 cm over the lawn (below). No offset.
  }
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
-  const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
+  const g=cayElevationOn()?buildCayLawnGeometry(0):new T.ShapeGeometry(lawnShape).rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
  shoreRings(CAY_SHORE,C.x,C.z,-.11,3,true);
+ cayBuild.anchor=null;
 
  // ---- Village: boulevard, plaza and a row of shops facing the road (house() fronts face +z, like the main island).
  CAY_HOUSES.forEach(([x,z,w,d,h,label],i)=>house(x,z,w,d,h,label,[2,0,1,3][i]));
@@ -585,5 +593,7 @@ export function buildCoralCay(t:CayTools){
  for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
  [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12)&&!inGashaponView(x,z))palm(x,z,5.4+jitter(i,9)*1.4);});
  for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
+ // Elevation pilot: roofs stand on the raised ground (rooftop landing reads these heights).
+ if(cayElevationOn())for(const b of buildings.slice(firstBuilding))b.height+=cayGround(b.x,b.z);
  return {lampSites,farmDecor,destinations:[{name:'Coral Cay Plaza',x:CAY_PLAZA.x,z:CAY_PLAZA.z+8},{name:'Beach Soccer Court',x:BEACH_COURT.x,z:BEACH_COURT.z+BEACH_COURT.width/2+2},{name:'Sharks Beach',x:SHARKS_BEACH.x,z:SHARKS_BEACH.z+8},{name:'Coral Cay Farm',x:FARM.crops.x0-1.5,z:FARM.track.z},{name:'Coral Cay Hostel',x:HOSTEL.x,z:HOSTEL_PATHS[0][1]},{name:'Hostel homes',x:HOSTEL_PATHS[2][0],z:-104},{name:'Farm beach gate',x:FARM.beachTrack.x,z:FARM.beachTrack.z1+1},...SANDBARS.map(s=>({name:s.name,x:s.x,z:s.z}))]};
 }
