@@ -8,6 +8,7 @@ import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
 import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
 import type {PropSpec} from '../graphics/propReactions';
 import {westLawnPatch,mergeLawnPatch} from './westTerrain';
+import {depthLawn,depthLowTier,depthStats} from './townDepth';
 import {stripePlan,stripedSlabGeometry,type StripePlan} from '../graphics/pitchStripes';
 /** Mowing pattern per ground: about 5 m bands goal to goal, sized so the penalty-area edge sits as close to a band edge as it can
  * (exactly on Eleven Park, whose 5.5 m and 16.5 m box edges both land on band edges). Eleven Park also gets a fainter cross-mown pass (the stadium chequerboard). Futsal (hard court) has none. */
@@ -81,7 +82,15 @@ export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  // Keep 6.8 cm between the lawn and foundation top: the former 8 mm gap
  // was vulnerable to depth fighting at shallow flight angles. Roads/sand stay in place.
  const lawnShape=new T.Shape();INTERIOR_GRASS.forEach((p,i)=>i?lawnShape.lineTo(p.x,-p.z):lawnShape.moveTo(p.x,-p.z));lawnShape.closePath();
- let lawnGeo:T.BufferGeometry=new T.ShapeGeometry(lawnShape);lawnGeo.rotateX(-Math.PI/2);
+ // Town kerb depth (?depth=1, townDepth.ts; null with the flag off): the sunk carriageway lies BELOW this lawn, so the lawn is cut
+ // out under it (the street network is one hole, each city block inside it its own shape), and the raised verge beside every
+ // pavement joins the same geometry (0 draws).
+ const depth=depthLawn(null,depthLowTier()),ring=(pts:{x:number;z:number}[],into:T.Path)=>{pts.forEach((p,i)=>i?into.lineTo(p.x,-p.z):into.moveTo(p.x,-p.z));into.closePath();return into;};
+ if(depth)for(const h of depth.holes)lawnShape.holes.push(ring(h,new T.Path()));
+ let lawnGeo:T.BufferGeometry=new T.ShapeGeometry(depth&&depth.blocks.length?[lawnShape,...depth.blocks.map(b=>ring(b,new T.Shape()) as T.Shape)]:lawnShape);lawnGeo.rotateX(-Math.PI/2);
+ if(depth&&depth.patch.triangles){const p=depth.patch,g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.position,3));g.setIndex(p.index);g.computeVertexNormals();
+  const merged=mergeLawnPatch(lawnGeo,{position:p.position,normal:Array.from(g.getAttribute('normal').array),uv:new Array(p.position.length/3*2).fill(0),index:p.index,triangles:p.triangles} as Parameters<typeof mergeLawnPatch>[1]);g.dispose();lawnGeo.dispose();lawnGeo=merged;
+  if(depthStats.value)depthStats.value.verge=p.triangles;}
  // Elevation (?elev=1, westTerrain.ts): the west side's raised ground joins this same geometry (0 draws); the flat lawn stays under it.
  {const patch=westLawnPatch(lawnCell);if(patch){const merged=mergeLawnPatch(lawnGeo,patch);lawnGeo.dispose();lawnGeo=merged;westLawnTriangles=patch.triangles;}}
  const lawnMat=applyGroundTint(new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94}),'grass');owned.push(lawnGeo,lawnMat);

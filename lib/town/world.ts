@@ -9,8 +9,10 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
-import {elevBuild,buildLift,groundLift,anchored,unlifted,rigid,elevationOn} from './elevation';
+import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn} from './elevation';
 import {drapePieces} from './elevationDrape';
+import {townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
 import {westLawnTriangles} from './fields';
@@ -1522,6 +1524,14 @@ export function* buildTownSteps(scene: T.Scene) {
   // junctions used to shimmer from above; each layer now contains each cell once.
   function roadRects(carriageway:boolean){return [...roads.map(r=>({x:r.x,z:r.z,w:carriageway&&r.vertical?r.carriageway:r.w,d:carriageway&&!r.vertical?r.carriageway:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:carriageway?8:12,d:carriageway?8:12}))];}
   const asphaltRects=roadRects(true);
+  // Town kerb depth (?depth=1, lib/town/townDepth.ts; default off = nothing below changes). The streets are final here: register
+  // them (the height function every mover reads), then the layers below are cut to it. Same chunks and materials: no new draw.
+  const depthCrossings:Crossing[]=[];
+  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))]});
+  if(townDepthOn()){for(const j of roadJunctions)for(const vertical of [true,false])for(const side of [-1,1]){const x=j.x+(vertical?0:side*6),z=j.z+(vertical?side*6:0);
+    if(roads.some(r=>r.vertical===vertical&&Math.abs((vertical?r.x:r.z)-(vertical?x:z))<.001&&(vertical?z:x)>(vertical?r.z-r.d/2:r.x-r.w/2)+1&&(vertical?z:x)<(vertical?r.z+r.d/2:r.x+r.w/2)-1))depthCrossings.push({x,z,vertical});}
+   registerDepth();}
+  const depth=depthStreets();
   function roadSurface(carriageway:boolean){
     const rects=carriageway?asphaltRects:roadRects(false);
     // Cut the sidewalk around the asphalt instead of layering nearly coplanar
@@ -1537,14 +1547,25 @@ export function* buildTownSteps(scene: T.Scene) {
       const ox=Math.floor(x/50)*50,oz=Math.floor(z/50)*50,key=ox+':'+oz;
       let chunk=chunks.get(key);if(!chunk){chunk={x:ox,z:oz,positions:[]};chunks.set(key,chunk);}
       const a=xs[ix]-ox,b=xs[ix+1]-ox,c=zs[iz]-oz,d=zs[iz+1]-oz,y=carriageway?-.01:-.02;
+      if(depth){// kerb depth: the carriageway is cut on the camber's knots and laid on the height function (the kerb strips own the
+       // first half metre: asphaltBand); a pavement cell with a dropped kerb gets its ramp.
+       if(carriageway){const x0=xs[ix],x1=xs[ix+1],z0=zs[iz],z1=zs[iz+1],vary=[[x0,z0],[x1,z0],[x0,z1],[x1,z1],[x,z]].some(p=>depthWeight(p[0],p[1])<.999);
+        const local=(lo:number,hi:number,list:number[],step:boolean)=>{const k=[lo,hi,...list.filter(v=>v>lo+.01&&v<hi-.01)];if(step&&vary)for(let v=Math.ceil(lo/5)*5;v<hi;v+=5)if(v>lo+.01&&!k.some(q=>Math.abs(q-v)<.01))k.push(v);return [...new Set(k)].sort((p,q)=>p-q);};
+        const kx=local(x0,x1,depthKnots!.xs.filter((_,i)=>{const g=depthKnots!.xSeg[i];return g.bz>z0-.6&&g.az<z1+.6;}),true),kz=local(z0,z1,depthKnots!.zs.filter((_,i)=>{const g=depthKnots!.zSeg[i];return g.bx>x0-.6&&g.ax<x1+.6;}),true);
+        for(let i=0;i<kx.length-1;i++)for(let k=0;k<kz.length-1;k++){const xa=kx[i],xb=kx[i+1],za=kz[k],zb=kz[k+1];if(asphaltBand((xa+xb)/2,(za+zb)/2))continue;
+         const h=(px:number,pz:number)=>DRAWN.asphalt+depthLift(px,pz);chunk.positions.push(xa-ox,h(xa,za),za-oz,xa-ox,h(xa,zb),zb-oz,xb-ox,h(xb,zb),zb-oz,xa-ox,h(xa,za),za-oz,xb-ox,h(xb,zb),zb-oz,xb-ox,h(xb,za),za-oz);}
+        continue;}
+       const cut=pavementCell(xs[ix],xs[ix+1],zs[iz],zs[iz+1]);if(cut){for(let i=0;i<cut.length;i+=3)chunk.positions.push(cut[i]-ox,cut[i+1],cut[i+2]-oz);continue;}}
       chunk.positions.push(a,y,c,a,y,d,b,y,d,a,y,c,b,y,d,b,y,c);
     }
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();
-      const mesh=put(geometry,carriageway?'#737c75':'#eddfbb',chunk.x,0,chunk.z);mesh.castShadow=false;
+      if(depth){const P=chunk.positions,N:number[]=[];for(let i=0;i<P.length;i+=9){const cx=(P[i]+P[i+3]+P[i+6])/3+chunk.x,cz=(P[i+2]+P[i+5]+P[i+8])/3+chunk.z;for(let k=0;k<9;k+=3)depthNormal(P[i+k]+chunk.x,P[i+k+2]+chunk.z,cx,cz,N);}geometry.setAttribute('normal',new T.Float32BufferAttribute(N,3));}// smooth ramps and camber
+      const mesh=put(geometry,carriageway?'#737c75':'#eddfbb',chunk.x,0,chunk.z);mesh.castShadow=false;mesh.userData.depthOwn=true;
       tintGroundMesh(mesh,carriageway?'asphalt':'path');// Nov 10 2026: asphalt and sidewalks get the ground mottle/grain (same batch count)
     }
   }
+  const depthKnots=depth?asphaltKnots():null;
   roadSurface(false);roadSurface(true);
 
   // Dashes share a world-space phase and stop before the intersection square.
@@ -1729,10 +1750,31 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation: placement ends here. Drape the flat layers over each region's terrain; roofs stand on the raised ground (rooftop landing).
   // Props built as their own Group (a palm: pieces `put` into the group) stand at the group's spot: lifted here, once. A Group left at
   // the origin holds pieces at world coordinates: each is lifted at its own spot. `userData.ownHeight` opts a Group out.
-  if(elevBuild.active){elevBuild.stats={...drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']),westWall:westWalls.triangles,westLawn:westLawnTriangles};for(const b of buildings)b.height+=groundLift(b.x,b.z);
-   const stand=(o:T.Object3D)=>{const g=groundLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
+  if(elevBuild.active){elevBuild.stats={...drapePieces(['coral-cay-foundation','coral-cay-sand'],['coral-cay-lawn']),westWall:westWalls.triangles,westLawn:westLawnTriangles};for(const b of buildings)b.height+=regionLift(b.x,b.z);
+   const stand=(o:T.Object3D)=>{const g=regionLift(o.position.x,o.position.z);if(g)o.position.y+=g;};
    for(const o of town.children)if(o instanceof T.Group&&!o.userData.ownHeight&&!o.userData.train){if(o.position.x===0&&o.position.y===0&&o.position.z===0)o.children.forEach(stand);else stand(o);}}
   elevBuild.active=false;elevBuild.anchor=null;elevBuild.pieces.length=0;
+  // Town kerb depth (?depth=1): (1) whatever stands ON the sunk carriageway goes down with it (dashes, zebra stripes, a manhole, a
+  // cone): one height per prop / group, only things that touch the ground; (2) the kerbs, contact shade and small ground objects
+  // join each 50 m chunk's plain-paint batch as one vertex-coloured piece (userData.depthColors, read by the batching pass below).
+  if(depth){registerDepth();/* again: every path laid since is known to the verge */
+   town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();let moved=0;const movedList:number[][]=[];
+   town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train||o.userData.depthOwn||o.parent===ferry)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
+   for(const [k,list] of groups){gb.makeEmpty();for(const m of list){bb.setFromObject(m);gb.union(bb);}
+    if(gb.min.y>.12||gb.min.y<-.2||gb.max.x-gb.min.x>14||gb.max.z-gb.min.z>14)continue;const lift=depthLift((gb.min.x+gb.max.x)/2,(gb.min.z+gb.max.z)/2);if(lift>-.004)continue;moved++;if(movedList.length<400)movedList.push([+((gb.min.x+gb.max.x)/2).toFixed(1),+((gb.min.z+gb.max.z)/2).toFixed(1),+(gb.max.x-gb.min.x).toFixed(2),+(gb.max.z-gb.min.z).toFixed(2),+gb.max.y.toFixed(2),+lift.toFixed(3)]);
+    const roots=k instanceof T.Object3D&&!(k instanceof T.Mesh)&&k!==town?[k]:list;for(const r of roots){r.getWorldPosition(v);v.y+=lift;r.parent!.worldToLocal(v);r.position.copy(v);}}
+   town.updateMatrixWorld(true);
+   const low=depthLowTier(),sink=new Sink(),inTown=(o:{x:number;z:number})=>o.x>depth.box.minX&&o.x<depth.box.maxX&&o.z>depth.box.minZ&&o.z<depth.box.maxZ;
+   kerbStrips(sink,low);const kerbTriangles=sink.triangles;
+   const round:Record<string,number>={tree:.26,'small-tree':.3,'street-lamp':.2,'terrace-lamp':.2,'traffic-signal':.24,table:.5,palm:.3};
+   const objects:GroundedObject[]=[...buildings.filter(inTown).map(b=>({kind:'building',x:b.x,z:b.z,w:b.w,d:b.d})),
+    ...assets.filter(a=>inTown(a)&&!a.baseY).flatMap((a):GroundedObject[]=>round[a.kind]?[{kind:a.kind,x:a.x,z:a.z,r:round[a.kind]}]:a.kind==='bench'||a.kind==='planter'?[{kind:a.kind,x:a.x,z:a.z,w:a.visualW??a.w,d:a.visualD??a.d}]:[]),
+    ...VENDING_MACHINES.filter(m=>inTown(m)&&!m.y).map(m=>({kind:'vending',x:m.x,z:m.z,w:VENDING_SIZE.w,d:VENDING_SIZE.d,yaw:m.yaw}))];
+   const shades=contactShade(sink,objects),shadeTriangles=sink.triangles-kerbTriangles,small=low?null:smallObjects(sink,assets.filter(a=>a.kind==='tree'&&inTown(a))),lawn=depthLawn(sink,low);
+   for(const c of sink.cells.values()){if(!c.indices.length)continue;const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(c.positions,3));g.setIndex(c.indices);g.computeVertexNormals();
+    const m=put(g,'#737c75',c.x,0,c.z);m.userData.depthColors=new Float32Array(c.colors);m.userData.depthOwn=true;m.userData.skipRoofObstacle=true;}
+   depthStats.value={movedList,holesOk:lawn?.holesOk,moved,kerbTriangles,shades,shadeTriangles,small,soil:lawn?.soil??0,total:sink.triangles,chunks:sink.cells.size,low};
+   town.updateMatrixWorld(true);}
   if(train){town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
    let moved=0;
@@ -1835,7 +1877,8 @@ export function* buildTownSteps(scene: T.Scene) {
       const pane=paint===windowPaint&&gh<1.7,canopy=!pane&&object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
       const home=pane||canopy||stadiumPiece?-1:buildingAt(position.x,position.z),jv=home<0?1:1+BAKE.jitterValue*bakeHash(home),jw=home<0?1:1+BAKE.jitterWarmth*bakeHash(home+.5);
       const P=bakeArray(pos),N=nrm&&bakeArray(nrm),cr=color.r,cg=color.g,cb=color.b,len=colors.length;
-      if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
+      const own=object.userData.depthColors as Float32Array|undefined;// kerb depth pieces carry their own baked colours (townDepth.ts)
+      if(own)colors.set(own);else if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
         for(let i=0;i<len;i+=3){const t=(P[i+1]-gy)*ih,k=BAKE.paneSkyMix*t*t,d=BAKE.paneFoot+(1-BAKE.paneFoot)*t;colors[i]=(cr+(sky.r-cr)*k)*d;colors[i+1]=(cg+(sky.g-cg)*k)*d;colors[i+2]=(cb+(sky.b-cb)*k)*d;}}
       else if(!N){const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;for(let i=0;i<len;i+=3){colors[i]=r;colors[i+1]=g;colors[i+2]=b;}}
       else if(canopy){const ih=.5/gh,span=BAKE.canopyHigh-BAKE.canopyLow;

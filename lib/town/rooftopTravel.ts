@@ -56,7 +56,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  const nearSteps=(x:number,z:number)=>{for(const r of surfaceGrid.query(x,z,.8))if(r.stepAccess&&Math.max(r.w,r.d)<=NARROW_STAIR&&insideObstacle(x,z,r,.8))return true;return false;};
  // Registered floating decks (landableDecks.ts, e.g. a moored boat) are floors too; 0 when none are registered.
  // The East Jetty lighthouse's gallery (lighthouseGallery.ts): a floor only from its own height or the sky (-Infinity elsewhere).
- const surface=(x:number,z:number,from=-Infinity)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z,from)?.height??0,extraSurface(x,z),landableDeckHeight(x,z),lighthouseFloor(x,z,from));
+ const surface=(x:number,z:number,from=-Infinity)=>{const ground=fieldSurfaceHeight(x,z),built=Math.max(roofAt(x,z,from)?.height??0,extraSurface(x,z),landableDeckHeight(x,z),lighthouseFloor(x,z,from));return built>0?Math.max(ground,built):ground;/* the ground may be BELOW the datum (townDepth.ts: the sunk carriageway); 0 = nothing built here */};
  function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();hop.reset();ladder.cancel();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false,air:false,landImpact:0});}
  function canLand(x:number,z:number,from=-Infinity){
   // Glazed interiors remain walkable through doors, but are never aerial destinations.

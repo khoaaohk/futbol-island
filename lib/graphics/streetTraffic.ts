@@ -18,6 +18,7 @@ import {signalLight,signalStop,signalledNodes,type SignalHead,type SignalAxis} f
 import {buildVehicleGeometry,createVehicleMaterial,CAR_STYLES,WHEEL_RADIUS} from './trafficVehicles';
 import {createTrafficSignalLamps} from './trafficSignalLamps';
 import {elevationOn,groundLift} from '../town/elevation';
+import {townDepthOn} from '../town/townDepth';
 /** A townsperson the traffic stops for: anything with a position (islandNpcs.entries). */
 export type TrafficPerson={position:{x:number;y:number;z:number}};
 /** Stop line: STOP_ZONE metres before a route's end. Routes end TURN_MARGIN short of the node, so a waiting vehicle's centre is
@@ -280,7 +281,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   }else if(car.pitch!==0||car.roll!==0)car.pitch=car.pitchV=car.roll=0;
   rotation.x=car.look.wheel.z=car.pitch;rotation.z=car.look.lamp.w=car.roll+wobble;position.y=lift;
   // Elevation (lib/town/elevation.ts; 0 after one comparison with the flag off): the vehicle stands on the raised road and tips to its grade.
-  if(elevationOn()){const g=groundLift(position.x,position.z);if(g>0){const sx=Math.sin(rotation.y)*1.6,sz=Math.cos(rotation.y)*1.6;position.y+=g;rotation.x-=Math.atan2(groundLift(position.x+sx,position.z+sz)-groundLift(position.x-sx,position.z-sz),3.2);}}
+  if(elevationOn()||townDepthOn()/* the sunk carriageway (townDepth.ts) */){const g=groundLift(position.x,position.z);if(g!==0){const sx=Math.sin(rotation.y)*1.6,sz=Math.cos(rotation.y)*1.6;position.y+=g;rotation.x-=Math.atan2(groundLift(position.x+sx,position.z+sz)-groundLift(position.x-sx,position.z-sz),3.2);}}
   car.speech.visible=car.crashAge<4.5;const data=car.group.userData;data.controlled=false;data.waiting=car.v<.05||visitor||junctionWaiting;data.roadFrom=car.from;data.roadTo=car.to;
  }}
  /** Day, sunset or night (Town calls it beside world.updateTrafficSignals): headlamps and tail lamps come on. Emissive only. */

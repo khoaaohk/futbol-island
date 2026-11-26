@@ -3,7 +3,7 @@
 // has run, drapePieces() lays the flat layers it placed (paths, paving, kerbs, soil rows, road ribbons, fence rails) over the
 // same height function (never below the drawn terrain), so no two ground layers ever cross.
 import * as T from 'three';
-import {groundLift,elevBuild,type Pt} from './elevation';
+import {regionLift as groundLift,elevBuild,type Pt} from './elevation';
 import {createDrawnGround} from './drawnGround';
 
 export const TERRAIN_RINGS=36;
