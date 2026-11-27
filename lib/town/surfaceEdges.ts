@@ -44,7 +44,13 @@ export const LIP={over:.2,overVar:.3,thin:.3,rise:.02,reach:1,step:4,lowStep:8} 
 export const WEAR={edge:.9,centre:1.4,max:7,step:5,liftStep:1.25,lift:.014,gain:.14,light:.5,taper:1.5,cutFrom:.05,cutSpan:.15,bank:.05} as const;
 /** aEdge.y for a path vertex: 4 + wear (-2 the cut bank's soil .. -1 the dusty edge .. 0 plain paving .. `light` the trodden middle: the paving is pale already, so it darkens further than it lightens). Plain rims keep 0 (sand) / 1 (paving). */
 export const WEAR_BASE=4;
-export const wearOf=(d:number)=>d<WEAR.edge?d/WEAR.edge-1:WEAR.light*Math.min(1,(d-WEAR.edge)/(WEAR.centre-WEAR.edge));
+/** The tone across a walkway, from its outline (d = 0) to `centre` m in: one smooth curve (owner, Nov 26 2026: "faded in some areas but
+ *  there's clearly still a line"). It was two straight ramps meeting at `edge` m, and the sheet's lattice had a row there: the slope
+ *  changed at one straight row the length of every path, which the eye reads as a ruled line (a Mach band) inside the soft edge.
+ *  Now C1 (no slope step anywhere) and sampled on WEAR_ROWS so the per-vertex interpolation stays close to the curve. */
+export const wearOf=(d:number)=>{const t=Math.min(1,Math.max(0,d/WEAR.centre)),s=t*t*(3-2*t);return -1+(1+WEAR.light)*s;};
+/** Rows of the wear lattice, metres in from each long edge (and from each end). */
+export const WEAR_ROWS=[.3,.65,1,1.4] as const;
 /** A lawn and how its edges are built: `ground` = the drawn lawn's height over its flat plane (a raised lawn: the edges are laid on
  *  it), or null = flat lawn only (raised ground is skipped). */
 export type Zone={poly:readonly Pt[];ground:((x:number,z:number)=>number)|null;/** only where this holds (the main island's raised west side: its own pass) */only?:(x:number,z:number)=>boolean};
@@ -121,7 +127,7 @@ export function pathWear(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
   if(![[0,0],[-1,-1],[1,-1],[-1,1],[1,1]].some(([a,b])=>insidePoly(zone.poly,r.x+a*r.w/2,r.z+b*r.d/2)))continue;
   const alongX=r.w>=r.d,L=alongX?r.w:r.d,W=alongX?r.d:r.w,us=new Set<number>(),vs=new Set<number>(),q=(v:number)=>Math.round(v*1000)/1000;
   const addU=(u:number)=>{if(u>-L/2+.02&&u<L/2-.02)us.add(q(u));},addV=(v:number)=>{if(v>-W/2+.02&&v<W/2-.02)vs.add(q(v));};
-  us.add(-L/2);us.add(L/2);vs.add(-W/2);vs.add(W/2);addV(0);addV(-W/2+E);addV(W/2-E);addU(-L/2+E);addU(L/2-E);
+  us.add(-L/2);us.add(L/2);vs.add(-W/2);vs.add(W/2);addV(0);for(const d of WEAR_ROWS){addV(-W/2+d);addV(W/2-d);addU(-L/2+d);addU(L/2-d);}
   const step=G?WEAR.liftStep:WEAR.step,n=Math.max(1,Math.round(L/step));for(let k=1;k<n;k++)addU(-L/2+L*k/n);
   const paved=s.paved,pavedAt=(u:number,v:number)=>alongX?paved!(r.x+u,r.z+v):paved!(r.x+v,r.z+u);let clip=false;
   if(paved)for(const v of [-W/2,0,W/2]){let was=pavedAt(-L/2,v);clip=clip||was;for(let u=-L/2+.1;u<=L/2+1e-6;u+=.1){const now=pavedAt(u,v);if(now!==was){addU(now?u-.1:u);was=now;clip=true;}}}/* a row of cells ends where that paving begins */
