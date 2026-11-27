@@ -5,6 +5,7 @@ import {stepGroundTime} from './groundTint';
 import {SWIM_FX} from './swimFx';
 import {gfxFlag} from './gfxFlags';
 import {sunHighlightGlsl,ggxA2} from './sunHighlight';
+import {skyOn} from './skySwitch';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
 // Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
 // the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
@@ -363,10 +364,40 @@ void oceanVaryings(vec2 p){float t=uWaterTime;
  vDiveHit=p+(p-cameraPosition.xz)*(${DIVE_SEE.depth.toFixed(1)}/max(cameraPosition.y-(${WATER_LEVEL_GLSL}),.05));}
 `;
 /** Patch the island ocean material (MeshStandardMaterial with the ripple tile as `map`). Safe to call once per material. */
+/**
+ * The far sea (Nov 26 2026, owner shot 129: "make the ocean more visually appealing instead of being so flat"; with the sky dome,
+ * lib/graphics/skyDome.ts; `?sky=0` compiles none of it). Only from ~40 m out (the approved clear shallows, the swash, the swim
+ * view and the reef window are untouched: everything is weighted by (1 - nearK) and the camera distance):
+ *  - albedo (SKY_SEA_ALBEDO): broad deep blue-green patches and lighter shoal streaks (two warped sines, ~300 m), long low swell
+ *    bands (~40 m, drifting on uWaterTime, faded out before a band gets under ~2 px: no shimmer);
+ *  - after the fog (SKY_SEA_FAR, the same sRGB space as the fog and the dome's horizon): a slightly deeper band at 120-260 m, then
+ *    the haze lightening into the horizon colour, and the glitter road toward the sun's azimuth (the sun's / moon's colour from the
+ *    dome, uSkyGlow): a soft road on every tier, its moving sparkle only where the sea's glitter runs (uSunGlitter: off at heat
+ *    tier >= 2, Battery saver, slow, reduced motion). ~45 ALU on far-sea pixels, no texture reads.
+ */
+export const SKY_SEA_UNIFORMS={uSkyGlow:{value:new T.Vector3(1,.85,.65)}};
+/** The dome hands its glow colour (sRGB) over once; the uniform then follows it by reference. */
+export function setSkySeaGlow(v:T.Vector3){SKY_SEA_UNIFORMS.uSkyGlow.value=v;}
+const SKY_SEA_ALBEDO=/* glsl */`
+     {float fr=smoothstep(40.,150.,distance(vWaterXZ,cameraPosition.xz))*(1.-nearK);
+      if(fr>0.){vec2 q=vWaterXZ;float pn=sin(q.x*.0071+1.3*sin(q.y*.0053))*sin(q.y*.0064+1.1*sin(q.x*.0047+uWaterTime*.004));
+       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.012,.2,.3),fr*smoothstep(.15,.85,pn)*.5);// deep blue-green patches
+       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.1,.46,.52),fr*smoothstep(.5,.95,-pn)*.28);// lighter shoal streaks
+       float sb=sin(dot(q,vec2(.096,.128))+1.4*sin(q.x*.011+q.y*.006)-uWaterTime*.5);
+       diffuseColor.rgb*=1.+fr*.1*sb*(1.-smoothstep(1.2,4.,pxS));}}`;
+const SKY_SEA_FAR=/* glsl */`
+    {vec3 dv=vec3(vWaterXZ.x,${WATER_LEVEL_GLSL},vWaterXZ.y)-cameraPosition;float dist=length(dv),skyPx=max(length(dFdx(vWaterXZ)),length(dFdy(vWaterXZ)));// footprint outside the branch (derivatives)
+     if(dist>60.){vec2 sa=normalize(uSunDir.xz);float az=max(dot(dv.xz/max(length(dv.xz),1e-3),sa),0.),hz=smoothstep(230.,480.,dist);
+      gl_FragColor.rgb*=1.-.07*smoothstep(110.,250.,dist)*(1.-hz);// a deeper band before the haze
+      float road=pow(az,36.)*smoothstep(60.,220.,dist)*(1.-hz*.6);
+      float sp=.55;if(uSunGlitter>0.&&uWaterDetail>.5){vec2 q=vWaterXZ;float w=sin(q.x*.9+uWaterTime*1.9+sin(q.y*.7))*sin(q.y*1.1-uWaterTime*1.5+sin(q.x*.6));
+       sp=mix(.55,.35+smoothstep(.55,.95,w)*1.1,1.-smoothstep(.25,1.,skyPx));}
+      gl_FragColor.rgb+=uSkyGlow*road*.32*sp;
+      gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,hz*.5);}}`;
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
- const pbr=gfxFlag('pbr-ocean');
+ const pbr=gfxFlag('pbr-ocean'),sky=skyOn();
  material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);
+  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);if(sky)Object.assign(shader.uniforms,SKY_SEA_UNIFORMS);
   // Nov 17 2026 (plan W1): the ocean program is three's LAMBERT source + the same GGX sun highlight (sunHighlight.ts) instead of the
   // full physical light loop; SEA_WATER_LOOK's roughness and 2 % metalness are folded in as constants. `?gfx=pbr-ocean` (dev) keeps the old one.
   if(!pbr){shader.vertexShader=T.ShaderLib.lambert.vertexShader;
@@ -374,7 +405,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     .replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+sunHighlightGlsl(ggxA2(SEA_WATER_LOOK.roughness).toFixed(5),'seaF0'));}
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+OCEAN_VERT_GLSL)
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;oceanVaryings(vWaterXZ);');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+(sky?'uniform vec3 uSkyGlow;\n':'')+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
    .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
@@ -433,7 +464,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
      // folded into the open-sea factor so they cost no extra smoothstep.
      {float sea=smoothstep(25.,110.,dd);
-      diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
+      diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}${sky?SKY_SEA_ALBEDO:''}
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
      // Clear water over sand at the edge (SEA_SHALLOWS.sand), after the night tint.
@@ -503,8 +534,9 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #else
     {float ga=diffuseColor.a,a2=ga+(1.-ga)*clamp(dot(waterGlim,vec3(.3,.59,.11)),0.,1.);outgoingLight=(outgoingLight*ga+waterGlim)/max(a2,.001);diffuseColor.a=a2;}
     #endif
-    #include <opaque_fragment>`);
+    #include <opaque_fragment>`)
+   .replace('#include <fog_fragment>','#include <fog_fragment>'+(sky?'\n#ifdef USE_FOG'+SKY_SEA_FAR+'\n#endif':''));
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v12'+(pbr?'-pbr':'');
+ material.customProgramCacheKey=()=>'island-ocean-water-v12'+(pbr?'-pbr':'')+(sky?'-sky':'');
  material.needsUpdate=true;
 }
