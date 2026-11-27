@@ -22,7 +22,7 @@ import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
 import {groundingOn,buildGrounding} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -1636,7 +1636,7 @@ export function* buildTownSteps(scene: T.Scene) {
        for(let i=0;i<cut.length;i+=3)chunk.positions.push(cut[i]-ox,cut[i+1],cut[i+2]-oz);continue;}
       chunk.positions.push(a,y,c,a,y,d,b,y,d,a,y,c,b,y,d,b,y,c);
     }
-    if(depth&&carriageway)for(const c of asphaltCorners(cornerPts)){const ox=Math.floor(c.x/50)*50,oz=Math.floor(c.z/50)*50,key=ox+':'+oz;
+    if(depth)for(const c of carriageway?asphaltCorners(cornerPts):pavementCorners()){const ox=Math.floor(c.x/50)*50,oz=Math.floor(c.z/50)*50,key=ox+':'+oz;
       let chunk=chunks.get(key);if(!chunk){chunk={x:ox,z:oz,positions:[]};chunks.set(key,chunk);}for(let i=0;i<c.tris.length;i+=3)chunk.positions.push(c.tris[i]-ox,c.tris[i+1],c.tris[i+2]-oz);}
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();

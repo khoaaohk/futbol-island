@@ -116,4 +116,20 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
  assert.ok(F.length===44&&F.every(f=>f.r>=2),'radii with poles '+JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));
  for(const k of keep){assert.ok(!S.asphalt.inside(k.x,k.z)&&S.asphalt.dist(k.x,k.z)>=.5+.25,'pole clear of the kerb at '+k.x+','+k.z+': '+S.asphalt.dist(k.x,k.z).toFixed(2));}
  console.log('  with poles: radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));D.setDepthStreets(INPUT);}
+// ---- Inner (lawn-side) corners (Leftovers B, Nov 26 2026 night): the pavement's back edge rounds about the kerb curve's centre,
+// so the 2 m band reads even round the bend (1 m at the 3 m corners, 1 m minimum at the 2.25 m pole corners); the gained corner is
+// paving (walked + drawn), the verge follows the curve, and a corner with something standing in it stays square.
+{const keep=JUNCTIONS.flatMap(j=>[[-5.3,-5.3],[5.3,5.3]].map(([dx,dz])=>({x:j.x+dx,z:j.z+dz,w:.5,d:.5})));D.setDepthStreets({...INPUT,keep});const S=D.depthStreets(),A=S.asphalt.fillets,F=S.foot.fillets,N=D.FILLET_STEPS;
+ assert.equal(F.length,A.length,'every rounded kerb has a rounded back edge: '+F.length+' / '+A.length);
+ for(const f of F){const a=A.find(a=>Math.hypot(a.vx+2*a.bx-f.vx,a.vz+2*a.az-f.vz)<1e-6);assert.ok(a,'inner corner pairs with a kerb corner at '+f.vx+','+f.vz);
+  assert.ok(f.r>=1-1e-9&&f.r<=1.5,'inner radius '+f.r);if(a.r===3)assert.ok(Math.abs(f.cx-a.cx)<1e-6&&Math.abs(f.cz-a.cz)<1e-6,'concentric at a 3 m corner');
+  for(let k=0;k<=N;k++){const [x,z]=D.filletPoint(f,k,f.r),[kx,kz]=D.filletPoint(a,k,a.r),band=Math.hypot(x-kx,z-kz);assert.ok(band>1.95&&band<2.45,'band '+band.toFixed(2)+' at '+f.vx+','+f.vz);}
+  // the corner it gains: paving, at the pavement's height; just past the curve the verge (lawn) starts
+  const [gx,gz]=[f.vx+(f.bx+f.ax)*f.r*.15,f.vz+(f.bz+f.az)*f.r*.15];assert.ok(S.foot.inside(gx,gz)&&D.groundAt(gx,gz).sort==='pave'&&D.lawnRise(gx,gz)===0,'gained corner is paving');
+  const [ox,oz]=D.filletPoint(f,N/2,f.r-.3);assert.ok(!S.foot.inside(ox,oz),'past the curve is lawn');}
+ const pts=D.pavementCorners();assert.equal(pts.length,F.length);for(const c of pts){assert.equal(c.tris.length,9*N);for(let i=0;i<c.tris.length;i+=9){const t=c.tris;assert.ok((t[i+5]-t[i+2])*(t[i+6]-t[i])-(t[i+3]-t[i])*(t[i+8]-t[i+2])>=0,'upward winding');}}
+ const lawn=D.depthLawn(null,false,true);assert.ok(lawn.patch.position.length>0);
+ // something standing in a block corner keeps it square
+ const f0=F[0];D.setDepthStreets({...INPUT,keep,hard:[...INPUT.hard,{kind:'building',x:f0.vx+(f0.bx+f0.ax)*.8,z:f0.vz+(f0.bz+f0.az)*.8,w:1.2,d:1.2}]});assert.equal(D.depthStreets().foot.fillets.length,F.length-1,'a corner with a building stays square');
+ console.log('  inner corners',F.length,'radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})),'+'+pts.length*N+' paving tris');D.setDepthStreets(INPUT);}
 console.log('town-depth: ok');
