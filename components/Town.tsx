@@ -50,7 +50,7 @@ import {frameCapSlot,FRAME_DT_MAX} from '@/lib/town/frameCap';
 import {createIdleRide,IDLE_FOOT_AFTER_MS} from '@/lib/town/idleRide';
 import {createIslandHeat} from '@/lib/graphics/islandHeat';
 import {createFocusMode} from '@/lib/graphics/focusMode';
-import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,setWaterDetail,setSunGlitter,sunGlitterLevel} from '@/lib/graphics/waterSurface';
+import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,setWaterDetail,setSunGlitter,sunGlitterLevel,setSkySeaGlow} from '@/lib/graphics/waterSurface';
 import {heatOptions,batterySaverOn,effectiveTier} from '@/lib/graphics/heatTier';import {withScoreFanBubbles} from '@/lib/town/stadiumScoreBubbles';import {createNpcChatter,createChatterOut,type ChatterActor} from '@/lib/town/npcChatter';import {THOUGHTS} from '@/lib/town/npcThoughts';import {createChatterBubbles} from '@/lib/graphics/chatterBubbles';
 import {applyLambertScenery,sharpenSceneTextures} from '@/lib/graphics/lambertScenery';
 import {applyGfxDevSwitches} from '@/lib/graphics/gfxDevSwitches';
@@ -205,6 +205,8 @@ import {createLandingDust} from '@/lib/graphics/landingDust';// Summit Isle hop 
 import {createParachuteTrail} from '@/lib/graphics/parachuteTrail';
 import {createParachute} from '@/lib/graphics/parachute';
 import {attachHorizonHaze,updateHorizonHaze} from '@/lib/graphics/horizonHaze';
+import {createSkyDome} from '@/lib/graphics/skyDome';
+import {skyOn} from '@/lib/graphics/skySwitch';
 import {flightRenderHeight} from '@/lib/town/flightRender';
 import {createKnockdownFace,knockdownLift} from '@/lib/graphics/knockdown';
 import {planRoofRamps,planRideRamps,rampSurface,createRampMotion} from '@/lib/town/rideRamps';
@@ -679,6 +681,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12*2048/quality.shadowSize;/* bias scales with the texel: 1024² phones would show acne stripes on flat roofs at .12 (heat pass 4) */sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
     try{const saved=localStorage.getItem('fi2-time-of-day');if(saved==='day'||saved==='sunset'||saved==='night'){const t=saved==='day'?'sunset':saved;/* owner Nov 25 2026: the settings offer Day (the sunset look) and Night only; an old saved 'day' becomes it */timeRef.current=t;setTimeOfDay(t);}}catch{}
     const lighting=createIslandLighting(scene,hemi,sun,renderer);lighting.update(timeRef.current,0,true);
+    // Sky dome, clouds, far islets (Nov 26 2026; lib/graphics/skyDome.ts; `?sky=0` = the flat background as before). One draw on layer 1.
+    const skyDome=skyOn()?createSkyDome(scene.background as T.Color):null;if(skyDome){scene.add(skyDome.mesh);camera.layers.enable(1);setSkySeaGlow(skyDome.glow);skyDome.update(camera,timeRef.current,0,false);disposers.add(()=>skyDome.dispose());}
     let wasSettingsOpen=false;
     const learningView=createLearningView();let wasLearning=false;
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
@@ -2736,6 +2740,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const viewMoved=camera.position.distanceToSquared(lastCameraPosition)>1e-6||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-9||camera.zoom!==lastCameraZoom;
       const resolution=motionResolution.update(now,viewMoved||Math.hypot(velocity.x,velocity.z)>.1||Boolean(learning&&!quiz?.quiz),paused||Boolean(quiz?.quiz)||aimWaiting,idleFrame>0);// a rest of 8 s+ on a phone: the moving ratio (REST_SOFT_MS)
       updateHorizonHaze(scene,camera);// the camera is final for this frame (lib/graphics/horizonHaze.ts)
+      skyDome?.update(camera,timeRef.current,dt,WATER_UNIFORMS.uSunGlitter.value>0&&!reduced);// drift frozen with the glitter (heat tier >= 2, saver, slow, reduced motion)
       // Near-camera fade (owner, Nov 24 2026; lib/town/trainRide.ts nearHide): riding, a body the camera is in or nearly in (a side
       // view pulled in by the spring arm, a close zoom) is not drawn this frame: me and Conductor Kenji (hysteresis, no allocation).
       if(trainRide.active||trainRide.blend>0){const c=camera.position,pr=player.root.position;meNearHid=nearHide(meNearHid,bodyDist(c.x,c.y,c.z,pr.x,pr.y,pr.z));if(meNearHid)player.root.visible=false;
