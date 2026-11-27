@@ -96,9 +96,27 @@ export class VGeo{
   const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]];
   const N=(k:number):V=>{const t=k/sides*Math.PI*2,c=Math.cos(t),sn=Math.sin(t);return [s1[0]*c+s2[0]*sn,s1[1]*c+s2[1]*sn,s1[2]*c+s2[2]*sn];},P=(e:V,n:V):V=>[e[0]+n[0]*r,e[1]+n[1]*r,e[2]+n[2]*r];
   for(let k=0;k<sides;k++){const n0=N(k),n1=N(k+1);this.triN([P(a,n0),P(b,n0),P(b,n1)],[n0,n0,n1],color,part,ctr);this.triN([P(a,n0),P(b,n1),P(a,n1)],[n0,n1,n1],color,part,ctr);}}
- /** A ring (torus-like loop of round beams) in the plane spanned by u and v round centre c: strap handles. */
- ring(c:V,u:V,v:V,R:number,r:number,color:string,part=0,ctr?:V,seg=8,sides=5){const at=(k:number):V=>{const t=k/seg*Math.PI*2;return [c[0]+(u[0]*Math.cos(t)+v[0]*Math.sin(t))*R,c[1]+(u[1]*Math.cos(t)+v[1]*Math.sin(t))*R,c[2]+(u[2]*Math.cos(t)+v[2]*Math.sin(t))*R];};
-  for(let k=0;k<seg;k++)this.rbeam(at(k),at(k+1),r,color,part,ctr,sides);}
+ /** A continuous round tube swept along a path (Rail + beach props, Nov 27: owner shot 188, the strap loop was 8 separate open
+  *  beams with notches at every joint). Cross-sections are SHARED between neighbours (parallel-transported frame, smooth normals),
+  *  so bends and closed loops have no seams or gaps. closed: the last point joins the first (a ring). */
+ tube(pts:V[],r:number,color:string,part=0,ctr?:V,sides=8,closed=false){const n=pts.length,T:V[]=[];
+  const sub=(a:V,b:V):V=>[b[0]-a[0],b[1]-a[1],b[2]-a[2]],nrm=(a:V):V=>{const l=Math.hypot(a[0],a[1],a[2])||1e-9;return [a[0]/l,a[1]/l,a[2]/l];},cr=(a:V,b:V):V=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  for(let i=0;i<n;i++){const p=closed?pts[(i-1+n)%n]:pts[Math.max(0,i-1)],q=closed?pts[(i+1)%n]:pts[Math.min(n-1,i+1)];T.push(nrm(sub(p,q)));}
+  let N0=nrm(cr(T[0],Math.abs(T[0][1])>.9?[1,0,0]:[0,1,0]));const F:[V,V][]=[];
+  for(let i=0;i<n;i++){const t=T[i],d=N0[0]*t[0]+N0[1]*t[1]+N0[2]*t[2];N0=nrm([N0[0]-t[0]*d,N0[1]-t[1]*d,N0[2]-t[2]*d]);F.push([N0,cr(t,N0)]);}
+  const ring=(i:number)=>{const [a,b]=F[i],o:[V,V][]=[];for(let k=0;k<=sides;k++){const th=k/sides*Math.PI*2,c=Math.cos(th),s=Math.sin(th),d:V=[a[0]*c+b[0]*s,a[1]*c+b[1]*s,a[2]*c+b[2]*s];o.push([[pts[i][0]+d[0]*r,pts[i][1]+d[1]*r,pts[i][2]+d[2]*r],d]);}return o;};
+  const R=pts.map((_,i)=>ring(i)),m=closed?n:n-1;
+  for(let i=0;i<m;i++){const A=R[i],B=R[(i+1)%n];for(let k=0;k<sides;k++){this.triN([A[k][0],B[k][0],B[k+1][0]],[A[k][1],B[k][1],B[k+1][1]],color,part,ctr);this.triN([A[k][0],B[k+1][0],A[k+1][0]],[A[k][1],B[k+1][1],A[k+1][1]],color,part,ctr);}}}
+ /** A round bead round a vertical pole (lathe, smooth normals, no open ends showing): pole collars. */
+ bead(x:number,y:number,z:number,r0:number,r1:number,h:number,color:string,sides=10,steps=4){const pr:[number,number][]=[];
+  for(let j=0;j<=steps;j++){const a=-Math.PI/2+j/steps*Math.PI;pr.push([r0+(r1-r0)*Math.cos(a),h*Math.sin(a)]);}
+  for(let j=0;j<steps;j++){const [ra,ya]=pr[j],[rb,yb]=pr[j+1],a=-Math.PI/2+j/steps*Math.PI,b=-Math.PI/2+(j+1)/steps*Math.PI,
+   na=[Math.cos(a)*h,Math.sin(a)*(r1-r0)],nb=[Math.cos(b)*h,Math.sin(b)*(r1-r0)];
+   for(let k=0;k<sides;k++){const t0=k/sides*Math.PI*2,t1=(k+1)/sides*Math.PI*2,P=(rr:number,yy:number,t:number):V=>[x+Math.cos(t)*rr,y+yy,z+Math.sin(t)*rr],
+    Nn=(n:number[],t:number):V=>{const l=Math.hypot(n[0],n[1])||1;return [Math.cos(t)*n[0]/l,n[1]/l,Math.sin(t)*n[0]/l];};
+    this.triN([P(ra,ya,t0),P(rb,yb,t0),P(rb,yb,t1)],[Nn(na,t0),Nn(nb,t0),Nn(nb,t1)],color);this.triN([P(ra,ya,t0),P(rb,yb,t1),P(ra,ya,t1)],[Nn(na,t0),Nn(nb,t1),Nn(na,t1)],color);}}}
+ /** Points on a circular arc (centre c, in-plane unit axes u, v, radius R, angles a0..a1, steps+1 points). */
+ static arc(c:V,u:V,v:V,R:number,a0:number,a1:number,steps:number):V[]{const o:V[]=[];for(let k=0;k<=steps;k++){const t=a0+(a1-a0)*k/steps,co=Math.cos(t),si=Math.sin(t);o.push([c[0]+(u[0]*co+v[0]*si)*R,c[1]+(u[1]*co+v[1]*si)*R,c[2]+(u[2]*co+v[2]*si)*R]);}return o;}
  beam(a:V,b:V,r:number,color:string,part=0,ctr?:V){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
   const up=Math.abs(d[1])>.9?[1,0,0]:[0,1,0],s1=[d[1]*up[2]-d[2]*up[1],d[2]*up[0]-d[0]*up[2],d[0]*up[1]-d[1]*up[0]],l1=Math.hypot(s1[0],s1[1],s1[2]);for(let i=0;i<3;i++)s1[i]/=l1;
   const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]],c:V=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2];
@@ -382,11 +400,13 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
     else{g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}}// luggage rack over the bench
   // grab poles at the door bays (bench ends), the strap rail
   // Train interior (Nov 27): round poles (10 sides near, 6 far) with soft collars where they meet the floor and the ceiling
-  const SIDES=SOFT?10:6,pole=SOFT?(a:V,b:V,r:number,c:string)=>g.rbeam(a,b,r,c,0,undefined,SIDES):g.beam.bind(g),knob=(x:number,y:number,z:number,r:number)=>{const d=y<2?1:-1;g.rbeam([x,y-d*.03,z],[x,y+d*.04,z],r*.8,K.pole,0,undefined,SIDES);};// a soft collar
+  const SIDES=SOFT?10:6,pole=SOFT?(a:V,b:V,r:number,c:string)=>g.rbeam(a,b,r,c,0,undefined,SIDES):g.beam.bind(g),knob=(x:number,y:number,z:number,r:number)=>g.bead(x,y+(y<2?.005:-.005),z,.024,r,.035,K.pole,8,2);// a soft round collar (a lathe bead: no open ends)
   if(SOFT_ON)g.shade=.8;
   for(const zc of DOORS)for(const d of [-1,1]){const z=zc+d*(DOOR_HALF+.12);pole([s*.78,F,z],[s*.78,CEIL_Y,z],.024,K.pole);if(SOFT){knob(s*.78,F+.03,z,.045);knob(s*.78,CEIL_Y-.03,z,.04);}}
-  pole([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.02,K.pole);
-  if(SOFT)for(const z of [-5.7,CAB_Z-.15]){pole([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.02,K.pole);}// the rail's ends bend up into the ceiling
+  if(SOFT){// the rail and its ends bending up into the ceiling: ONE swept tube with round elbows (no notch at the corners)
+   const x=s*STRAP_X,Y=STRAP_RAIL_Y,z0=-5.7,z1=CAB_Z-.15,E=.09,A=VGeo.arc;
+   g.tube([[x,CEIL_Y,z0],...A([x,Y+E,z0+E],[0,0,-1],[0,-1,0],E,0,Math.PI/2,4),...A([x,Y+E,z1-E],[0,-1,0],[0,0,1],E,0,Math.PI/2,4),[x,CEIL_Y,z1]],.02,K.pole,0,undefined,SIDES);}
+  else pole([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.02,K.pole);
   g.shade=0;
   if(closeUp){
    // hangers and strap handles (a strap and a triangular grip), over the bench fronts
@@ -395,7 +415,7 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    // after starts / stops (trafficVehicles.ts uSway). No per-strap CPU work; rigid with prefers-reduced-motion.
    for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1,P:V=[x,STRAP_RAIL_Y,z],S=PART.strap;
     if(SOFT){g.shade=.8;g.rbeam(P,[x,yb+.005,z],.012,'#e9e4d6',S,P,6);// a short round stem and a fat round loop handle
-     g.ring([x,(yb+STRAP_GRIP_Y)/2-.01,z],[0,1,0],[0,0,1],(yb-STRAP_GRIP_Y)/2+.02,.016,'#f2efe6',S,P,8,4);g.shade=0;}
+     g.tube(VGeo.arc([x,(yb+STRAP_GRIP_Y)/2-.01,z],[0,1,0],[0,0,1],(yb-STRAP_GRIP_Y)/2+.02,0,Math.PI*2*(1-1/12),11),.016,'#f2efe6',S,P,5,true);g.shade=0;}// one continuous torus (owner 188: no notches)
     else g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);
     if(!SOFT){g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
