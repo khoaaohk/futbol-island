@@ -525,12 +525,12 @@ export function buildTrainWorld(tools:TrainTools){
    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
 uniform float uTubeIn;varying vec3 vTubeW;
 uniform mat4 projectionMatrix;
-// Seen from outside, through the arch: the fragment's depth is pulled to just behind the mouth plane (keeping its order among the
+// Seen from outside, through the arch: the fragment's depth is pulled to 1.2 m in front of the mouth plane (inside the headwall's hole) (keeping its order among the
 // tube's own faces), so a bit of the hill mesh that crosses the bore just inside the portal (the curved west one) never covers it.
 float tubeDepth(vec3 X){vec4 c=projectionMatrix*viewMatrix*vec4(X,1.);float dx=c.z/c.w*.5+.5;return dx+(gl_FragCoord.z-dx)*.02;}
 bool tubeThru(vec3 P,vec2 n,inout float fd){float dc=dot((cameraPosition-P).xz,n),df=dot((vTubeW-P).xz,n);if(df<.4)return true;if(dc>0.)return false;
  vec3 X=cameraPosition+(vTubeW-cameraPosition)*(-dc/(df-dc));float lat=abs(dot((X-P).xz,vec2(n.y,-n.x)));
- if(lat<${HW.toFixed(2)}&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(${(HW*HW).toFixed(3)}-lat*lat,0.))){fd=tubeDepth(X);return true;}return false;}`)
+ if(lat<${HW.toFixed(2)}&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(${(HW*HW).toFixed(3)}-lat*lat,0.))){fd=tubeDepth(X-normalize(X-cameraPosition)*min(1.2,.5*distance(X,cameraPosition)));return true;}return false;}`)
     .replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\nfloat tubeFd=gl_FragCoord.z;if(uTubeIn<.5&&!tubeThru(${mouthGl(W,1)},tubeFd)&&!tubeThru(${mouthGl(E,-1)},tubeFd))discard;gl_FragDepth=tubeFd;`);};
   mat.customProgramCacheKey=()=>'train-tunnel-lit';
   const m=new T.Mesh(g,mat);m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
