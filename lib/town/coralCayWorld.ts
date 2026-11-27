@@ -2,6 +2,8 @@
 // irregular tropical cay with its beach-soccer court. Built inside buildTown with the island's own helpers
 // (box/palm/house/sign…), so every mesh joins the existing 50 m spatial paint batches: no new materials beyond palette
 // colours, no animation, no per-frame work. Shapes come from coralCay.ts, which movement, flight and the maps also read.
+import {groundingOn} from './grounding';
+import {lampPost} from './lampPost';
 import * as T from 'three';
 import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang} from './canopyHang';
@@ -154,7 +156,7 @@ export function buildCoralCay(t:CayTools){
  // Warm lamps every 24 m, alternating sides on the sidewalk edge. Same pieces as the street lamps, so the shared lamp
  // lens material and the night pool batches light them.
  const lamp=(x:number,z:number,ground:number)=>{
-  prop('lamp',()=>{cylinder(.19,.22,'#384443',x,ground+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,ground+2.1,z).castShadow=false;
+  prop('lamp',()=>{if(groundingOn()){lampPost(put,x,z,ground,'beach');return;}cylinder(.19,.22,'#384443',x,ground+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,ground+2.1,z).castShadow=false;
   box(.62,.12,.62,'#384443',x,ground+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z).castShadow=false;});
   obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'cay-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
   lampSites.push({x,z,ground:ground+.005+cayGround(x,z),region:'coral-cay',poolWidth:9,poolDepth:9});
