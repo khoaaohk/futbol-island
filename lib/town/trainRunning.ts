@@ -144,7 +144,9 @@ function buildCrossing(ci:number,obstacles:Obstacle[]|null){const XSOFT=softOn()
  const look=createVehicleMaterial(),mesh=new T.Mesh(g.build(),look.material);mesh.name='train-crossing-'+c.id;mesh.matrixAutoUpdate=false;mesh.castShadow=false;mesh.receiveShadow=false;
  const z=new T.Vector3(a.tx,0,a.tz),y=new T.Vector3(0,1,0),x=new T.Vector3().crossVectors(y,z);mesh.matrix.makeBasis(x,y,z).setPosition(a.x,bed,a.z);mesh.matrixWorldNeedsUpdate=true;
  mesh.visible=false;look.lamp.set(0,0,0,0);look.wheel.set(Math.cos(1.55),-Math.sin(1.55),0,0);
- return {mesh,look,x:a.x,z:a.z,show:c.ped?XING_SHOW_PED:XING_SHOW,lamps:false,arm:0,target:0,moving:false,flash:0};
+ /* Nov 27 2026 (owner 204): the twin lamps' world spots per post ([left, right] × 2 posts) for their glow (trainNightGlow.signal) */
+ const lampAt:number[][]=[];for(const v of [-3.1,3.1]){const u0=uBase+(c.skew??0)*v;for(const dz of [-.12,.12]){const u=u0+dz;lampAt.push([a.x+x.x*v+a.tx*u,bed+lampY,a.z+x.z*v+a.tz*u]);}}
+ return {mesh,look,x:a.x,z:a.z,show:c.ped?XING_SHOW_PED:XING_SHOW,lamps:false,arm:0,target:0,moving:false,flash:0,lampAt,bed};
 }
 
 // ---------------------------------------------------------------- departure boards (one canvas: a row per station; the board material's program)
@@ -255,7 +257,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
  const doorLook=createVehicleMaterial(),DOOR_LEAVES=TRAIN_CARS*DOORS.length*4,doors=new T.InstancedMesh(leaf,doorLook.material,TRAIN_COUNT*DOOR_LEAVES);
  doors.name='train-doors';doors.instanceMatrix.setUsage(T.DynamicDrawUsage);doors.castShadow=false;doors.receiveShadow=false;doors.frustumCulled=false;doors.visible=false;doors.count=0;root.add(doors);
  const glass=createTrainGlass(TRAIN_COUNT*TRAIN_CARS,TRAIN_COUNT*DOOR_LEAVES);root.add(glass.mesh);// train visuals (Nov 24): every pane + the soft shadows, one draw
- const nightGlow=createTrainNightGlow(TRAIN_COUNT);root.add(nightGlow.mesh);// POLISH 3: the night lights, one additive draw (trainNightGlow.ts)
+ const nightGlow=createTrainNightGlow(TRAIN_COUNT,TRAIN_CROSSINGS.length*6);root.add(nightGlow.mesh);// POLISH 3: the night lights, one additive draw (trainNightGlow.ts)
  const gp={x:0,z:0,tx:1,tz:0};
  const crossings=TRAIN_CROSSINGS.map((_,ci)=>buildCrossing(ci,obstacles));for(const x of crossings)root.add(x.mesh);
  const boards=buildBoards(obstacles);for(const b of boards.meshes)root.add(b.mesh);
@@ -462,7 +464,7 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
    for(let ci=0;ci<crossings.length;ci++){const x=crossings[ci],show=Math.hypot(x.x-cam.x,x.z-cam.z)<x.show;if(x.mesh.visible!==show)x.mesh.visible=show;
     if(tick){let lamps=false,arm=0;if(!cluster)for(let i=0;i<TRAIN_COUNT;i++){crossingFor(ci,runner.t[i],xs);if(xs.lamps)lamps=true;if(xs.arm>arm)arm=xs.arm;}
      x.target=arm>.01?1:0;if(lamps!==x.lamps){x.lamps=lamps;x.flash=0;if(!lamps)x.look.lamp.z=0;}if(x.target!==x.arm)x.moving=true;}
-    if(x.lamps){x.flash-=dt;if(x.flash<=0){x.flash=.5;x.look.lamp.z=x.look.lamp.z>0?-1.8:1.8;}const dp=Math.hypot(x.x-f.player.x,x.z-f.player.z);if(dp<bellX)bellX=dp;}
+    if(x.lamps){x.flash-=dt;if(x.flash<=0){x.flash=.5;x.look.lamp.z=x.look.lamp.z>0?-2.4:2.4;/* Nov 27 2026 (owner 204): a brighter lens (was 1.8) */}const dp=Math.hypot(x.x-f.player.x,x.z-f.player.z);if(dp<bellX)bellX=dp;}
     if(x.moving){x.arm+=Math.sign(x.target-x.arm)*Math.min(Math.abs(x.target-x.arm),dt/3);if(x.arm===x.target)x.moving=false;
      const e=x.arm*x.arm*(3-2*x.arm),a=(1-e)*1.55;x.look.wheel.x=Math.cos(a);x.look.wheel.y=-Math.sin(a);}}// Phase 4: eased (smoothstep), never a snap
    bellWait-=dt;if(bellX<BELL_RANGE&&bellWait<=0){bellWait=.55;cue('train-bell',Math.max(.15,1-bellX/BELL_RANGE));}
@@ -488,6 +490,8 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
     depWas[i]=dep;}
    // ---- draw: on screen and within HIDE_RANGE m; the box tier past LOD_RANGE m; wheels and doors move within ANIMATE_RANGE m
    let nd=0,np=0;glass.begin();wraps.begin();/* WRAPS */const glow=nightGlow.begin(night,cam)&&!api.glowOff;
+   // Nov 27 2026 (owner 204: "these lights need a glow"): the lit lamp of each flashing crossing's pair, on both posts (left: lamp.z > 0)
+   if(!api.glowOff)for(const x of crossings){if(!x.lamps||!x.mesh.visible||x.look.lamp.z===0)continue;const o=x.look.lamp.z>0?0:1;for(const k of [o,o+2]){const l=x.lampAt[k];nightGlow.signal(l[0],l[1],l[2],x.bed);}}
    for(let i=0;i<TRAIN_COUNT;i++){const st=states[i],tr=trains[i];trackAt(st.s-TRAIN_LENGTH/2,pc);const d=Math.hypot(pc.x-cam.x,pc.z-cam.z);
     sphere.center.set(pc.x,bedAt(L.profile,st.s-TRAIN_LENGTH/2)+2,pc.z);sphere.radius=TRAIN_LENGTH/2+3;
     const show=i===riding||d<HIDE_RANGE&&frustum.intersectsSphere(sphere);/* the train I ride: always drawn */if(tr.mesh.visible!==show)tr.mesh.visible=show;if(!show)continue;

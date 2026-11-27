@@ -18,17 +18,17 @@ const WIN_IN=.1;
 /** Instances per train: windows (4 × 2 sides × 2 cars) + spill (2 × 2) + head 2 + tail 2 + boards 2 + beam 8 + tunnel walls 8. */
 export const GLOW_PER_TRAIN=4*2*2+4+2+2+2+8+8+1;// Nov 27 2026: one beam of 8 overlapping pools (was 3 apart), walls on 4 of them (×2 sides)// AAA 4: + the pantograph spark
 /** Colours (linear, before the night factor; additive, so > 1 saturates toward white in the halo's core). */
-const C={win:[1.3,.8,.38],spill:[.95,.66,.36],platform:[1.1,.76,.42],head:[2.6,2.35,1.9],spark:[2.2,2.6,3.4],beam:[1.25,1.1,.85],wall:[1.05,.92,.7],tail:[2.4,.18,.1],board:[1.4,.8,.25]} as const;
+const C={win:[1.3,.8,.38],spill:[.95,.66,.36],platform:[1.1,.76,.42],head:[2.6,2.35,1.9],spark:[2.2,2.6,3.4],beam:[1.25,1.1,.85],wall:[1.05,.92,.7],tail:[2.4,.18,.1],signal:[2.2,.22,.12],board:[1.4,.8,.25]} as const;
 const Y_UP=new T.Vector3(0,1,0);
 
-export function createTrainNightGlow(trains:number){
- const cap=trains*GLOW_PER_TRAIN,geo=new T.PlaneGeometry(1,1);geo.rotateX(-Math.PI/2);
+export function createTrainNightGlow(trains:number,extra=0){
+ const cap=trains*GLOW_PER_TRAIN+extra,geo=new T.PlaneGeometry(1,1);geo.rotateX(-Math.PI/2);
  const mesh=new T.InstancedMesh<T.PlaneGeometry,T.Material>(geo,new T.MeshBasicMaterial({visible:false}),cap);mesh.name='train-night-glow';
  mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.instanceColor=new T.InstancedBufferAttribute(new Float32Array(cap*3),3).setUsage(T.DynamicDrawUsage);
  mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;mesh.visible=false;mesh.count=0;mesh.renderOrder=3;
  let n=0,k=0,ready=false;const cam=new T.Vector3(),m=new T.Matrix4(),l=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),s=new T.Vector3(),d=new T.Vector3(),ax=new T.Vector3();
  const col=mesh.instanceColor.array as Float32Array;
- const put=(mat:T.Matrix4,c:readonly number[],w:number)=>{if(n>=cap||w<=.003)return;mesh.setMatrixAt(n,mat);const o=n*3,f=k*w;col[o]=c[0]*f;col[o+1]=c[1]*f;col[o+2]=c[2]*f;n++;};
+ const put=(mat:T.Matrix4,c:readonly number[],w:number,abs=false)=>{const f=abs?w:k*w;if(n>=cap||f<=.003)return;mesh.setMatrixAt(n,mat);const o=n*3;col[o]=c[0]*f;col[o+1]=c[1]*f;col[o+2]=c[2]*f;n++;};
  /** Rotation taking the plane's normal (+y) to the car-local side x = sg. */
  const SIDE=[new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),-Math.PI/2),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),Math.PI/2)];
  /** A halo facing the camera at car-local (x, y, z), pulled 0.35 m toward the camera (never through the cab face); `face`: how much the
@@ -58,6 +58,12 @@ export function createTrainNightGlow(trains:number){
   },
   /** AAA 4: a pantograph spark on the wire: a small blue-white halo at car-local (x, y, z) (size m, strength w). */
   spark(cm:T.Matrix4,x:number,y:number,z:number,size:number,w:number){halo2(cm,x,y,z,size,C.spark,w);},
+  /** Nov 27 2026 (owner 204: "these lights need a glow"): a level-crossing lamp that is lit (world x, y, z): a red halo turned to the
+   *  camera (by day too: dimmer), and at night a faint red spill on the ground under it (groundY). Drawn whether or not it is night
+   *  (begin's result only gates the trains' night lights); by day only lit crossing lamps add instances (none: 0 draws). */
+  signal(x:number,y:number,z:number,groundY:number){if(!ready)return;p.set(x,y,z);d.subVectors(cam,p);const dist=d.length();if(dist<.5)return;d.multiplyScalar(1/dist);
+   p.addScaledVector(d,.3);q.setFromUnitVectors(Y_UP,d);s.set(2.1,1,2.1);m.compose(p,q,s);put(m,C.signal,.45+.55*k,true);put(m.compose(p,q,s.set(.75,1,.75)),C.signal,.5+.5*k,true);
+   if(k>.05){m.compose(p.set(x,groundY+.04,z),q.identity(),s.set(2.6,1,2.6));put(m,C.signal,.28*k,true);}},
   /** The beam pool on the track ahead (world x, y, z, tangent tx, tz), weight w (nearer = brighter). */
   beam(x:number,y:number,z:number,tx:number,tz:number,w:number,width=3.4,len=7.5){q.setFromAxisAngle(Y_UP,Math.atan2(tx,tz));m.compose(p.set(x,y+.06,z),q,s.set(width,1,len));put(m,C.beam,w);},
   /** The beam on a tunnel wall: a vertical wash at lateral offset v (signed, m) from the centre line at (x, z), floor height y. */
