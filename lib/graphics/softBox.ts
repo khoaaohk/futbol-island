@@ -61,7 +61,7 @@ export type SoftOpts = {
   radius?: number;
   /** 0 chamfer, 1, 2 (default 1). */
   seg?: number;
-  /** Top dome height (m), default 0. */
+  /** Top dome height (m), default 0 (the puff adds its own); negative = a flat top even when puffed. */
   dome?: number;
   /** Inflate pass strength (0..2): per-axis radii (puffRadii), a domed top and the puff shading key. 0 / absent = the sweep's box. */
   puff?: number;
@@ -89,7 +89,7 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
   const pf = o.puff ?? 0;
   // per-axis radii: the sweep rounds every axis by r; the inflate pass by puffRadii (never less than the sweep's r)
   const R = pf > 0 ? puffRadii(w, h, d, pf).map((v, k) => Math.max(0.0005, Math.min(H[k] * .98, o.maxR?.[k] ?? Infinity, Math.max(v, Math.min(r, H[k] * .98))))) : [r, r, r].map(v => Math.max(v, 0.0005));
-  const dome = Math.max(0, o.dome ?? 0, pf > 0 ? Math.min(.35 * h, .09 * Math.min(w, d)) * Math.min(1.4, pf) : 0);
+  const dome = (o.dome ?? 0) < 0 ? 0 : Math.max(0, o.dome ?? 0, pf > 0 ? Math.min(.35 * h, .09 * Math.min(w, d)) * Math.min(1.4, pf) : 0);// dome < 0: a flat top (a roof slab)
   const I = H.map((v, k) => v - R[k]);
   const pos: number[] = [], nrm: number[] = [], uv: number[] = [], idx: number[] = [];
   const groups: [number, number][] = [];
