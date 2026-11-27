@@ -218,7 +218,6 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
    if(!I.low&&g.kind==='tree'&&base===undefined&&colour&&r<.45&&!I.keepClear(x,z)){const l0=I.lift?I.lift(x,z):0;rootFlare(P,x,z,gy,r,colour,(px,pz)=>gy+(I.lift?clampLift(I.lift(px,pz)-l0):0));}}
   else if(g.kind==='post'){const long=Math.max(hw,hd)>2.2*Math.min(hw,hd);push(long?{kind:'post',x,z,hw:Math.max(hw,.06),hd:Math.max(hd,.06),fill:true,base}:{kind:'post',x,z,hw:Math.max(.07,Math.min(hw,hd)),hd:Math.max(.07,Math.min(hw,hd)),round:true,base});}
   else push({kind:'prop',x,z,hw,hd,fill:true,base});}
- const tA=performance.now();
  // 2. Vending machines (their own meshes, Town.tsx): a pad on the ground, a ring round it.
  for(const m of I.machines){const hw=I.machineSize.w/2,hd=I.machineSize.d/2,gy=I.ground(m.x,m.z),on=m.y===undefined||m.y<gy+.25;
   push({kind:'machine',x:m.x,z:m.z,hw,hd,yaw:m.yaw,fill:true,base:on?undefined:m.y});
@@ -246,7 +245,6 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
    for(const [r0,r1] of runs){if(r1-r0<.5)continue;const mx=ax+ux*(r0+r1)/2+ox*.012,mz=az+uz*(r0+r1)/2+oz*.012,hl=(r1-r0)/2,yaw=Math.atan2(-uz,ux),g0=I.ground(mx,mz);
     slab(P,mx,mz,hl,.035,yaw,g0-.06,g0+.24+.03*spotHash(b.x,b.z,20),GROUND_COLOURS.stone,'skirting',1|2|8);// outward is always local -z here
     spans.push({s:{a:[ax+ux*r0+ox*.047,az+uz*r0+oz*.047],b:[ax+ux*r1+ox*.047,az+uz*r1+oz*.047],o:[ox,oz]},what:'wall'});}}}
- const tB=performance.now();
  // 4. Stations: the house (back and ends) and the platform (back past the house, and both ends) on the beach / lawn.
  for(const st of I.stations){const south=st.id==='south',v0=1.45,v1=south?8.1:5.45,sg=st.side,nx=st.tz*sg,nz=-st.tx*sg,yaw=Math.atan2(-st.tz,st.tx);
   const P2=(u:number,vv:number):[number,number]=>[st.x+st.tx*u+nx*vv,st.z+st.tz*u+nz*vv];
@@ -270,13 +268,11 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
     for(let i=0;i<n;i++){const at=t+run*spotHash(mx+i,mz,26),out=.06+.22*spotHash(mx,mz+i,27),x=s.a[0]+ux*at+s.o[0]*out,z=s.a[1]+uz*at+s.o[1]*out,gy=I.ground(x,z);
      if(spotHash(x,z,28)<.72)tuft(P,x,z,gy,spotHash(x,z,29)<.5?GROUND_COLOURS.grass:GROUND_COLOURS.grassLight,.8+.5*spotHash(z,x,30));else stone(P,x,z,gy,spotHash(x,z,31)<.5?GROUND_COLOURS.stone:GROUND_COLOURS.stoneLight);}}
    t+=run+.3+1.2*spotHash(s.a[0],s.a[1]+t,32);}}
- const tC=performance.now();
  // 6. Build: the one decal mesh, and the detail pieces as plain-paint meshes per colour and 50 m cell (the caller's batching merges them).
  const d=contactDecal(feet,{y:I.ground,lift:I.lift,covered:I.covered,sun:I.sun}),decal=d.triangles?decalMesh(d):null;
  for(const c of P.cells.values()){if(!c.pos.length)continue;const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(c.pos,3));g.computeVertexNormals();
   const m=I.put(g,c.colour,c.x,0,c.z);m.userData.skipRoofObstacle=true;m.userData.groundDetail=true;if(c.tint.some(t=>t!==1))m.userData.vertexTint=new Float32Array(c.tint);}
  const stats:GroundingStats={feet:d.feet,decalTriangles:d.triangles,skipped:d.skipped,detailTriangles:P.triangles,pieces:P.counts,ms:Math.round(((typeof performance!=='undefined'?performance.now():0)-t0)*10)/10,byKind};
- (stats as unknown as {split:number[]}).split=[tA-t0,tB-tA,tC-tB,performance.now()-tC].map(Math.round);
  groundingStats.value=stats;groundingStats.feet=feet;groundingStats.spans=spans.map(q=>({kind:q.what,x:(q.s.a[0]+q.s.b[0])/2,z:(q.s.a[1]+q.s.b[1])/2}));
  return {decal,stats};
 }
