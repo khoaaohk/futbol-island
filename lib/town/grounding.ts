@@ -95,7 +95,7 @@ export function contactDecal(feet:readonly Foot[],g:GroundQuery):DecalData{
 
 /** The one material: dst * src (no colour of its own), no fog, no tone mapping, under the other transparents, never z-fights. */
 export function groundingMaterial(){
- return new T.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,fog:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4,
+ return new T.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,fog:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:0,polygonOffsetUnits:-4,// Nov 26 2026: constant units only (DECAL_LIFT does the rest); a slope factor outranked the paving above (tests/roundabout-junctions.cjs)
   blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.ZeroFactor,blendDst:T.SrcColorFactor,
   vertexShader:'varying vec3 vC;void main(){vC=color;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
   fragmentShader:'varying vec3 vC;void main(){gl_FragColor=vec4(vC,1.0);}'});
