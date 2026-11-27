@@ -42,8 +42,20 @@ const hash=(n:number)=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math
 
 // ---- Outline of a union of axis-aligned rectangles: boundary segments + a binned distance query --------------------------------
 const CELL=8,CAP=4.6;
-export type Outline={rects:Rect[];segs:Seg[];inside(x:number,z:number):boolean;dist(x:number,z:number):number};
-export function buildOutline(rects:Rect[]):Outline{
+/** Rounded street corner (owner, Nov 26 2026: "we need to round the corners on the street corners"). At a concave corner of the
+ *  asphalt (a pavement corner sticking out into the road) the kerb follows a quarter circle: V the old square corner, (ax, az) the
+ *  outward normal of the kerb along x (0, +-1 in z), (bx, bz) the one along z (+-1, 0); centre (cx, cz) = V + r (a + b), on the
+ *  pavement. The asphalt fills the square [V, C] outside the circle; the two kerb segments start at the tangent points. */
+export type Fillet={vx:number;vz:number;ax:number;az:number;bx:number;bz:number;r:number;cx:number;cz:number};
+/** Quarter-circle steps of a rounded corner (the kerb, the asphalt patch and the pavement's cut all use these same angles). */
+export const FILLET_STEPS=8;
+export type Outline={rects:Rect[];segs:Seg[];fillets:Fillet[];inside(x:number,z:number):boolean;dist(x:number,z:number):number};
+/** Point on a fillet's circle at step k (0: the tangent point on the kerb along x; FILLET_STEPS: the one on the kerb along z), `rho` from the centre. */
+export function filletPoint(f:Fillet,k:number,rho:number){const t=k/FILLET_STEPS*Math.PI/2,s=Math.sin(t),c=Math.cos(t);return [f.cx-(s*f.bx+c*f.ax)*rho,f.cz-(s*f.bz+c*f.az)*rho] as const;}
+const inFillet=(f:Fillet,x:number,z:number)=>{const u=(x-f.vx)*f.bx+(z-f.vz)*f.bz,w=(x-f.vx)*f.ax+(z-f.vz)*f.az;return u>=-1e-9&&w>=-1e-9&&u<f.r&&w<f.r&&Math.hypot(x-f.cx,z-f.cz)>f.r;};
+/** Radius chooser for buildOutline: the corner V, the outward normal of the kerb along x (z component), of the kerb along z (x component), and the two kerbs' lengths. 0: keep it square. */
+export type FilletRadius=(v:Pt,nz:number,nx:number,lenX:number,lenZ:number)=>number;
+export function buildOutline(rects:Rect[],radius?:FilletRadius):Outline{
  const inside=(x:number,z:number)=>{for(let i=0;i<rects.length;i++){const r=rects[i];if(Math.abs(x-r.x)<r.w/2&&Math.abs(z-r.z)<r.d/2)return true;}return false;};
  const E=1e-4,uniq=(a:number[])=>[...new Set(a.map(q3))].sort((p,q)=>p-q),xs=uniq(rects.flatMap(r=>[r.x-r.w/2,r.x+r.w/2])),zs=uniq(rects.flatMap(r=>[r.z-r.d/2,r.z+r.d/2])),segs:Seg[]=[];
  for(const along of [false,true]){const lines=along?zs:xs,knots=along?xs:zs;// along: segments run along x on a line z = e
@@ -56,11 +68,26 @@ export function buildOutline(rects:Rect[]):Outline{
  for(const s of segs)for(const end of [0,1] as const){const k=end?key(s.bx,s.bz):key(s.ax,s.az),l=ends.get(k);if(l)l.push({s,end});else ends.set(k,[{s,end}]);}
  for(const s of segs)for(const end of [0,1] as const){const o=(ends.get(end?key(s.bx,s.bz):key(s.ax,s.az))??[]).find(o=>o.s!==s&&(o.s.nx!==0)!==(s.nx!==0));if(!o)continue;
   const dx=(o.end?o.s.ax-o.s.bx:o.s.bx-o.s.ax),dz=(o.end?o.s.az-o.s.bz:o.s.bz-o.s.az),type=dx*s.nx+dz*s.nz<0?1:-1;if(end)s.s1=type;else s.s0=type;}
+ const fillets:Fillet[]=[];
+ if(radius)for(const s of segs)if(s.nz)for(const end of [0,1] as const){if((end?s.s1:s.s0)!==-1)continue;
+  const vx=end?s.bx:s.ax,vz=end?s.bz:s.az,o=(ends.get(key(vx,vz))??[]).find(q=>q.s!==s&&q.s.nx!==0);if(!o)continue;
+  const r=radius({x:vx,z:vz},s.nz,o.s.nx,Math.abs(s.bx-s.ax),Math.abs(o.s.bz-o.s.az));if(!(r>0))continue;
+  fillets.push({vx,vz,ax:0,az:s.nz,bx:o.s.nx,bz:0,r,cx:vx+r*o.s.nx,cz:vz+r*s.nz});
+  if(end){s.bx+=r*o.s.nx;s.s1=0;}else{s.ax+=r*o.s.nx;s.s0=0;}
+  if(o.end){o.s.bz+=r*s.nz;o.s.s1=0;}else{o.s.az+=r*s.nz;o.s.s0=0;}}
+ const fBins=new Map<number,Fillet[]>();
  const bins=new Map<number,Seg[]>(),bk=(cx:number,cz:number)=>(cx+2048)*4096+(cz+2048);
+ for(const f of fillets){const x0=Math.min(f.vx,f.cx),x1=Math.max(f.vx,f.cx),z0=Math.min(f.vz,f.cz),z1=Math.max(f.vz,f.cz);
+  for(let cx=Math.floor((x0-CAP)/CELL);cx<=Math.floor((x1+CAP)/CELL);cx++)for(let cz=Math.floor((z0-CAP)/CELL);cz<=Math.floor((z1+CAP)/CELL);cz++){const k=bk(cx,cz),l=fBins.get(k);if(l)l.push(f);else fBins.set(k,[f]);}}
  for(const s of segs)for(let cx=Math.floor((Math.min(s.ax,s.bx)-CAP)/CELL);cx<=Math.floor((Math.max(s.ax,s.bx)+CAP)/CELL);cx++)for(let cz=Math.floor((Math.min(s.az,s.bz)-CAP)/CELL);cz<=Math.floor((Math.max(s.az,s.bz)+CAP)/CELL);cz++){const k=bk(cx,cz),l=bins.get(k);if(l)l.push(s);else bins.set(k,[s]);}
  const dist=(x:number,z:number)=>{const l=bins.get(bk(Math.floor(x/CELL),Math.floor(z/CELL)));if(!l)return CAP;let best=CAP;
-  for(let i=0;i<l.length;i++){const s=l[i],d=s.nx?Math.hypot(x-s.ax,z<s.az?s.az-z:z>s.bz?z-s.bz:0):Math.hypot(z-s.az,x<s.ax?s.ax-x:x>s.bx?x-s.bx:0);if(d<best)best=d;}return best;};
- return {rects,segs,inside,dist};
+  for(let i=0;i<l.length;i++){const s=l[i],d=s.nx?Math.hypot(x-s.ax,z<s.az?s.az-z:z>s.bz?z-s.bz:0):Math.hypot(z-s.az,x<s.ax?s.ax-x:x>s.bx?x-s.bx:0);if(d<best)best=d;}
+  const fl=fillets.length?fBins.get(bk(Math.floor(x/CELL),Math.floor(z/CELL))):undefined;
+  if(fl)for(let i=0;i<fl.length;i++){const f=fl[i],px=x-f.cx,pz=z-f.cz;if(px*f.ax+pz*f.az>0||px*f.bx+pz*f.bz>0)continue;const d=Math.abs(Math.hypot(px,pz)-f.r);if(d<best)best=d;}
+  return best;};
+ const insideRects=inside,insideAll=(x:number,z:number)=>{if(insideRects(x,z))return true;const fl=fillets.length?fBins.get(bk(Math.floor(x/CELL),Math.floor(z/CELL))):undefined;
+  if(fl)for(let i=0;i<fl.length;i++)if(inFillet(fl[i],x,z))return true;return false;};
+ return {rects,segs,fillets,inside:insideAll,dist};
 }
 /** Closed loops of an outline. `block`: the loop encloses ground OUTSIDE the union (a city block inside the street network). */
 export function outlineLoops(o:Outline){
@@ -86,7 +113,12 @@ export const depthStreets=()=>S;
 export const depthStats:{value:Record<string,unknown>|null}={value:null};
 export type StreetInput={roads:(Rect&{vertical:boolean;carriageway:number})[];junctions:Pt[];crossings:Crossing[];
  /** Flat surfaces laid on the lawn: `path` (the lawn dips under it), anything else (sand, court, pitch, patio: no verge there). */
- hard:HardArea[]};
+ hard:HardArea[];
+ /** Small things standing on the pavement (signal poles, lamps, benches): a rounded corner keeps its kerb 45 cm clear of them. */
+ keep?:Rect[]};
+/** Rounded street corners: the radius on an 8 m carriageway (scaled with the carriageway), the one beside a zebra (the junction's
+ *  zebras are 2 m off the corner: a 3 m curve would carry their dropped kerb round the bend), and the smallest worth drawing. */
+export const CORNER={radius:3,zebra:2,zebraNear:6,min:1,clear:.45} as const;
 /** Paving sheets laid ACROSS a carriageway (a path that comes over a kerb at least 1.5 m onto the asphalt, at most 14 m along the street) are crossings too:
  *  each gets dropped kerbs like a zebra (reviewer pass: two of them met a full kerb). Skips one within 5 m of a known crossing. */
 export function sheetCrossings(roads:StreetInput['roads'],paths:Rect[],known:Crossing[]){const out:Crossing[]=[];
@@ -132,7 +164,16 @@ export function setDepthStreets(input:StreetInput|null){
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const v=smooth((Math.hypot(wx0+i-tx[n],wz0+j-tz[n])-KERB.railClear-1/* the 2 m sample spacing */)/KERB.railEase);if(v<w[j*wnx+i])w[j*wnx+i]=v;}}
  for(const e of ends){const i0=Math.max(0,Math.floor(e.x-e.w/2-9-wx0)),i1=Math.min(wnx-1,Math.ceil(e.x+e.w/2+9-wx0)),j0=Math.max(0,Math.floor(e.z-e.d/2-9-wz0)),j1=Math.min(wnz-1,Math.ceil(e.z+e.d/2+9-wz0));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const v=smooth((boxDist(wx0+i,wz0+j,e)-1)/KERB.endEase);if(v<w[j*wnx+i])w[j*wnx+i]=v;}}
- S={asphalt:buildOutline(asphaltRects),foot:buildOutline(footRects),crossings:input.crossings,landings,paths:binRects(input.hard.filter(h=>h.kind==='path'),1),solid:binRects(input.hard.filter(h=>h.kind!=='path'),1),solidAll:input.hard.filter(h=>h.kind!=='path'),
+ const footIn=(x:number,z:number)=>footRects.some(r=>Math.abs(x-r.x)<r.w/2&&Math.abs(z-r.z)<r.d/2),solids=input.hard.filter(h=>h.kind!=='path'),keep=input.keep??[];
+ const radius:FilletRadius=(v,nz,nx,lenX,lenZ)=>{const near=input.roads.filter(r=>Math.abs(v.x-r.x)<r.w/2+.01&&Math.abs(v.z-r.z)<r.d/2+.01),cw=near.length?Math.min(...near.map(r=>r.carriageway)):8;
+  let r=Math.min((input.crossings.some(k=>Math.hypot(k.x-v.x,k.z-v.z)<CORNER.zebraNear)?CORNER.zebra:CORNER.radius)*cw/8,lenX/2-.1,lenZ/2-.1);
+  for(;r>=CORNER.min-1e-9;r-=.25){const cx=v.x+r*nx,cz=v.z+r*nz,f={vx:v.x,vz:v.z,ax:0,az:nz,bx:nx,bz:0,r,cx,cz};let ok=true;
+   for(let i=0;i<=6&&ok;i++)for(let j=0;j<=6&&ok;j++){const x=v.x+nx*r*(i+.5)/7.5,z=v.z+nz*r*(j+.5)/7.5;if(!inFillet(f,x,z))continue;if(!footIn(x,z)||solids.some(h=>Math.abs(x-h.x)<h.w/2&&Math.abs(z-h.z)<h.d/2))ok=false;}
+   for(const k of keep){if(!ok)break;for(const [px,pz] of [[k.x,k.z],[k.x-k.w/2,k.z-k.d/2],[k.x+k.w/2,k.z-k.d/2],[k.x-k.w/2,k.z+k.d/2],[k.x+k.w/2,k.z+k.d/2]]){const u=(px-v.x)*nx,w=(pz-v.z)*nz;
+    if(u>-CORNER.clear&&w>-CORNER.clear&&u<r+CORNER.clear&&w<r+CORNER.clear&&Math.hypot(px-cx,pz-cz)>r-CORNER.clear){ok=false;break;}}}
+   if(ok)return r;}
+  return 0;};
+ S={asphalt:buildOutline(asphaltRects,radius),foot:buildOutline(footRects),crossings:input.crossings,landings,paths:binRects(input.hard.filter(h=>h.kind==='path'),1),solid:binRects(input.hard.filter(h=>h.kind!=='path'),1),solidAll:input.hard.filter(h=>h.kind!=='path'),
   box:{minX,maxX,minZ,maxZ},wx0,wz0,wnx,wnz,w,ends};
 }
 /** 0 on pinned ground (rails, dead ends, outside the town), 1 where the full depth applies. */
@@ -230,24 +271,59 @@ export function kerbStrips(sink:Sink,low=false){const s=S;if(!s)return;
   const {len,knots}=knotsOf(seg,low?14:10,extra);
   for(let j=0;j<knots.length-1;j++){const v:number[][]=[];
    const [mx,mz]=rowPoint(seg,len,(knots[j]+knots[j+1])/2,.5,false,false),paved=s.foot.inside(mx,mz);// a dead end has no pavement across it
-   for(let r=paved?0:1;r<rows.length;r++)for(const e of [j,j+1]){const u=paved?rows[r]:r===1?0:rows[r],[x,z]=rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1),n=hash(x*3.1+z*7.7),p=[x,0,z],w=depthWeight(x,z);
+   for(let r=paved?0:1;r<rows.length;r++)for(const e of [j,j+1]){const u=paved?rows[r]:r===1?0:rows[r],[x,z]=rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1);v.push(vert(x,z,u,r));}
+   sink.grid(paved?rows.length:rows.length-1,2,v);}}
+ // Rounded corners: the same rows round the quarter circle (FILLET_STEPS columns; u is toward the centre, on the pavement).
+ for(const f of s.asphalt.fillets){const v:number[][]=[];for(let r=0;r<rows.length;r++)for(let k=0;k<=FILLET_STEPS;k++){const [x,z]=filletPoint(f,k,f.r-rows[r]);v.push(vert(x,z,rows[r],r));}
+  sink.grid(rows.length,FILLET_STEPS+1,v);}
+ function vert(x:number,z:number,u:number,r:number){const n=hash(x*3.1+z*7.7),p=[x,0,z],w=depthWeight(x,z);
     if(u>0){p[1]=DRAWN.pave+depthLift(x,z)+.006;const c=r===0?STONE:STONE_EDGE,f=(.96+.08*n)*(r===0?KERB_READ.joint:1),g=groundColor('pave',x,z),m=Math.min(1,w*2.5);p.push(g[0]+(c[0]*f-g[0])*m,g[1]+(c[1]*f-g[1])*m,g[2]+(c[2]*f-g[2])*m);}
     else{p[1]=DRAWN.asphalt+depthLift(x,z);const a=groundColor('asphalt',x,z,1);
      if(u===FACE&&!low){const f=(KERB_READ.face+.06*n);p.push(a[0]+(STONE[0]*f-a[0])*Math.min(1,w*2.5),a[1]+(STONE[1]*f-a[1])*Math.min(1,w*2.5),a[2]+(STONE[2]*f-a[2])*Math.min(1,w*2.5));}// the kerb's face is stone down to its foot
      else if(u===-KERB.bevel){const f=1-(KERB_READ.foot-.12*n)*w,m=(.1+.25*n)*w;p.push((a[0]+(DUST[0]-a[0])*m)*f,(a[1]+(DUST[1]-a[1])*m)*f,(a[2]+(DUST[2]-a[2])*m)*f);}// the dark foot of the kerb: baked contact shade + dirt
      else if(u===-KERB.channel||u===0)p.push(a[0],a[1],a[2]);
      else{const m=(KERB_READ.dust+.3*n)*w;p.push(a[0]+(DUST[0]-a[0])*m,a[1]+(DUST[1]-a[1])*m,a[2]+(DUST[2]-a[2])*m);}}
-    v.push(p);}
-   sink.grid(paved?rows.length:rows.length-1,2,v);}}
+    return p;}
 }
 /** True where the kerb strips cover the asphalt (the asphalt mesh leaves these cells out). */
 export function asphaltBand(x:number,z:number){const s=S;if(!s)return false;const B=KERB.channel-1e-4;
+ for(const f of s.asphalt.fillets){const u=(x-f.vx)*f.bx+(z-f.vz)*f.bz,w=(x-f.vx)*f.ax+(z-f.vz)*f.az;if(u>-B&&w>-B&&u<f.r&&w<f.r)return true;}// the corner patch (asphaltCorners)
  for(const g of s.asphalt.segs){const perp=g.nx?(g.ax-x)*g.nx:(g.az-z)*g.nz;if(perp<=0||perp>=B)continue;const t=g.nx?z-g.az:x-g.ax,len=g.nx?g.bz-g.az:g.bx-g.ax;if(t>-(g.s0<0?B:0)&&t<len+(g.s1<0?B:0))return true;}
  return false;}
 /** Knots the asphalt cells are cut on (world.ts roadSurface): the band edge, the camber, and a regular step for the pins' easing. */
 export function asphaltKnots(){const xs:number[]=[],zs:number[]=[],xSeg:Seg[]=[],zSeg:Seg[]=[],s=S;if(!s)return {xs,zs,xSeg,zSeg};
  for(const g of s.asphalt.segs){const e=g.nx?g.ax:g.az,n=-(g.nx||g.nz);for(const o of [KERB.channel,2.1]){if(g.nx){xs.push(q3(e+n*o));xSeg.push(g);}else{zs.push(q3(e+n*o));zSeg.push(g);}}}
+ // a rounded corner's patch square [V - channel, V + r] on both axes: its edges are cut lines too (a pseudo segment spans its extent)
+ for(const f of s.asphalt.fillets){const B=KERB.channel,x0=Math.min(f.vx-f.bx*B,f.cx),x1=Math.max(f.vx-f.bx*B,f.cx),z0=Math.min(f.vz-f.az*B,f.cz),z1=Math.max(f.vz-f.az*B,f.cz),g:Seg={ax:x0,az:z0,bx:x1,bz:z1,nx:0,nz:0,s0:0,s1:0};
+  for(const x of [x0,x1]){xs.push(q3(x));xSeg.push(g);}for(const z of [z0,z1]){zs.push(q3(z));zSeg.push(g);}}
  return {xs,zs,xSeg,zSeg};}
+/** Rounded corners: the asphalt of each corner's patch square that the kerb strip leaves (beyond the channel), as world triangles
+ *  [x, y, z, ...] on the height function, facing up. Two rings from the patch's outer corner to the channel's arc. */
+export function asphaltCorners():{x:number;z:number;tris:number[]}[]{const s=S;if(!s)return [];const out:{x:number;z:number;tris:number[]}[]=[],B=KERB.channel;
+ for(const f of s.asphalt.fillets){const t:number[]=[],ox=f.vx-(f.bx+f.ax)*B,oz=f.vz-(f.bz+f.az)*B,arc:number[][]=[],mid:number[][]=[];
+  for(let k=0;k<=FILLET_STEPS;k++){const [x,z]=filletPoint(f,k,f.r+B);arc.push([x,z]);mid.push([(x+ox)/2,(z+oz)/2]);}
+  const tri=(a:number[],b:number[],c:number[])=>{if((b[1]-a[1])*(c[0]-a[0])-(b[0]-a[0])*(c[1]-a[1])<0){const q=b;b=c;c=q;}for(const p of [a,b,c])t.push(p[0],DRAWN.asphalt+depthLift(p[0],p[1]),p[1]);};
+  for(let k=0;k<FILLET_STEPS;k++){tri(arc[k],arc[k+1],mid[k+1]);tri(arc[k],mid[k+1],mid[k]);tri([ox,oz],mid[k],mid[k+1]);}
+  out.push({x:(f.vx+f.cx)/2,z:(f.vz+f.cz)/2,tris:t});}
+ return out;}
+/** Rounded corners: a pavement cell's triangles (world [x, y, z, ...]) less every rounded corner's asphalt (the square [V, C] outside
+ *  the circle, cut on the kerb's own chords). Returns the input when no corner touches the cell. */
+export function pavementTrim(x0:number,x1:number,z0:number,z1:number,tris:number[]):number[]{const s=S;if(!s)return tris;
+ const hit=s.asphalt.fillets.filter(f=>Math.min(f.vx,f.cx)<x1-1e-6&&Math.max(f.vx,f.cx)>x0+1e-6&&Math.min(f.vz,f.cz)<z1-1e-6&&Math.max(f.vz,f.cz)>z0+1e-6);if(!hit.length)return tris;
+ type P3=[number,number,number];
+ const clip=(poly:P3[],a:number,b:number,c:number)=>{const o:P3[]=[];for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],dp=a*p[0]+b*p[2]+c,dq=a*q[0]+b*q[2]+c;
+  if(dp>=0)o.push(p);if((dp>=0)!==(dq>=0)){const t=dp/(dp-dq);o.push([p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t,p[2]+(q[2]-p[2])*t]);}}return o;};
+ let polys:P3[][]=[];for(let i=0;i<tris.length;i+=9)polys.push([[tris[i],tris[i+1],tris[i+2]],[tris[i+3],tris[i+4],tris[i+5]],[tris[i+6],tris[i+7],tris[i+8]]]);
+ for(const f of hit){const next:P3[][]=[];
+  for(const p of polys){// u = (x - V).b <= r and w = (x - V).a <= r: the corner square (the pavement only lies at u, w >= 0 here)
+   const cu=f.r+f.vx*f.bx+f.vz*f.bz,cw=f.r+f.vx*f.ax+f.vz*f.az,outU=clip(p,f.bx,f.bz,-cu),inU=clip(p,-f.bx,-f.bz,cu);if(outU.length>2)next.push(outU);
+   const outW=clip(inU,f.ax,f.az,-cw),inW=clip(inU,-f.ax,-f.az,cw);if(outW.length>2)next.push(outW);
+   let disc=inW;for(let k=0;k<4*FILLET_STEPS&&disc.length>2;k++){const t=(k+.5)/FILLET_STEPS*Math.PI/2,h=f.r*Math.cos(Math.PI/4/FILLET_STEPS),nx=Math.cos(t),nz=Math.sin(t);
+    disc=clip(disc,-nx,-nz,h+nx*f.cx+nz*f.cz);}// the 4N-gon whose vertices are the kerb's: half-planes n.(p - C) <= r cos(pi / 4N), n at the mid angles
+   if(disc.length>2)next.push(disc);}
+  polys=next;}
+ const out:number[]=[];for(const p of polys)for(let i=1;i+1<p.length;i++){let a=p[0],b=p[i],c=p[i+1];if((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2])<0){const q=b;b=c;c=q;}if(Math.abs((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]))<1e-9)continue;out.push(...a,...b,...c);}
+ return out;}
 /** A pavement cell [x0, x1] x [z0, z1]: null when flat, else the triangles (world x, y, z) with the dropped kerb's ramp cut in. */
 export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|null{const s=S;if(!s)return null;
  const hit=s.landings.filter(l=>l.x-l.w/2<x1-1e-6&&l.x+l.w/2>x0+1e-6&&l.z-l.d/2<z1-1e-6&&l.z+l.d/2>z0+1e-6);if(!hit.length)return null;

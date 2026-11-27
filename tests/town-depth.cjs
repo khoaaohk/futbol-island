@@ -79,4 +79,29 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
  // the kerb stone keeps the pavement's hue (night: a neutral stone read lilac): every stone vertex has r > g > b like the paving
  const sink=new D.Sink();D.kerbStrips(sink);let stone=0;for(const c of sink.cells.values())for(let i=0;i<c.colors.length;i+=3){const y=c.positions[i+1];if(y>-.02){stone++;assert.ok(c.colors[i]>c.colors[i+1]&&c.colors[i+1]>c.colors[i+2],'warm stone');}}
  assert.ok(stone>1000);console.log('  sheet crossings',JSON.stringify(sc));}
+// Rounded street corners (owner, Nov 26 2026: "we need to round the corners on the street corners"): every convex pavement corner at a
+// junction (a concave corner of the asphalt) follows a quarter circle: the kerb strip round it is continuous with the straight kerbs,
+// the pavement gives up exactly the corner's asphalt (nothing paved over the road), the asphalt patch fills it, and no cliff.
+{const S=D.depthStreets(),F=S.asphalt.fillets,K=D.KERB,C=D.CORNER,N=D.FILLET_STEPS;
+ assert.ok(!S.asphalt.segs.some(g=>g.s0===-1||g.s1===-1),'no square convex pavement corner is left');assert.ok(F.length>=40,'rounded corners '+F.length);
+ assert.ok(F.every(f=>f.r>=C.min&&f.r<=C.radius),'radii '+[...new Set(F.map(f=>f.r))]);
+ const near=(a,b,e=1e-6)=>Math.abs(a-b)<e,ends=S.asphalt.segs.flatMap(g=>[[g.ax,g.az],[g.bx,g.bz]]);
+ for(const f of F){for(const k of [0,N]){const [x,z]=D.filletPoint(f,k,f.r);assert.ok(ends.some(e=>near(e[0],x)&&near(e[1],z)),'kerb continuous at '+x+','+z);}
+  // walking round the curve: asphalt just outside, pavement just inside, the kerb's height step on the curve
+  for(let k=0;k<=N;k++){const [ax,az]=D.filletPoint(f,k,f.r+.35),[px,pz]=D.filletPoint(f,k,f.r-.3);assert.ok(S.asphalt.inside(ax,az)&&!S.asphalt.inside(px,pz),'sides at corner '+f.vx+','+f.vz);
+   assert.equal(D.groundAt(ax,az).sort,'asphalt');assert.equal(D.groundAt(px,pz).sort,'pave');assert.ok(D.depthLift(ax,az)<-.1&&D.depthLift(px,pz)>D.depthLift(ax,az)+.03,'step '+k);}
+  // no cliff along the diagonal through the corner
+  let worst=0;for(let t=-1;t<f.r*1.5;t+=.01){const p=t*Math.SQRT1_2,q=p+.01*Math.SQRT1_2,x0=f.vx+(f.bx+f.ax)*p,z0=f.vz+(f.bz+f.az)*p,x1=f.vx+(f.bx+f.ax)*q,z1=f.vz+(f.bz+f.az)*q;worst=Math.max(worst,Math.abs(D.depthLift(x1,z1)-D.depthLift(x0,z0))/.01);}
+  assert.ok(worst<=K.gutter/K.bevel+.05,'grade across the corner '+worst);
+  // the pavement over the corner square loses exactly the corner's asphalt (cut on the kerb's chords), nothing paved on the road
+  const x0=Math.min(f.vx,f.cx),x1=Math.max(f.vx,f.cx),z0=Math.min(f.vz,f.cz),z1=Math.max(f.vz,f.cz),y=-.02,tris=D.pavementTrim(x0,x1,z0,z1,[x0,y,z0,x0,y,z1,x1,y,z1,x0,y,z0,x1,y,z1,x1,y,z0]);
+  let area=0;for(let i=0;i<tris.length;i+=9){const cx=(tris[i]+tris[i+3]+tris[i+6])/3,cz=(tris[i+2]+tris[i+5]+tris[i+8])/3,a=((tris[i+5]-tris[i+2])*(tris[i+6]-tris[i])-(tris[i+3]-tris[i])*(tris[i+8]-tris[i+2]))/2;
+   assert.ok(a>0,'pavement faces up');area+=a;assert.ok(!S.asphalt.inside(cx,cz)||Math.hypot(cx-f.cx,cz-f.cz)>f.r*.97,'no pavement on the asphalt');}
+  const poly=4*N/2*f.r*f.r*Math.sin(Math.PI/2/N)/4;// the quarter of the kerb's 4N-gon
+  assert.ok(near(area,poly,1e-6),'pavement area '+area+' vs '+poly);
+  // the asphalt patch: inside the asphalt, outside the kerb's channel, area of the square [V - channel, V + r] less the channel's arc
+  const patch=D.asphaltCorners().find(c=>near(c.x,(f.vx+f.cx)/2)&&near(c.z,(f.vz+f.cz)/2)).tris;let pa=0;const R=f.r+K.channel;
+  for(let i=0;i<patch.length;i+=9){const cx=(patch[i]+patch[i+3]+patch[i+6])/3,cz=(patch[i+2]+patch[i+5]+patch[i+8])/3,a=((patch[i+5]-patch[i+2])*(patch[i+6]-patch[i])-(patch[i+3]-patch[i])*(patch[i+8]-patch[i+2]))/2;assert.ok(a>0&&S.asphalt.inside(cx,cz)&&D.asphaltBand(cx,cz));pa+=a;}
+  assert.ok(near(pa,R*R-N/2*R*R*Math.sin(Math.PI/2/N),1e-6),'asphalt patch area '+pa);}
+ console.log('  rounded corners',F.length,'radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));}
 console.log('town-depth: ok');

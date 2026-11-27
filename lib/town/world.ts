@@ -18,7 +18,7 @@ import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
 import {groundingOn,buildGrounding} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -1564,7 +1564,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // Town kerb depth (?depth=1, lib/town/townDepth.ts; default off = nothing below changes). The streets are final here: register
   // them (the height function every mover reads), then the layers below are cut to it. Same chunks and materials: no new draw.
   const depthCrossings:Crossing[]=[];
-  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))]});
+  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))],
+   // a rounded corner keeps its kerb clear of the corner signal poles (placed below at +-5.3 m) and of small things already standing
+   keep:[...roadJunctions.flatMap(j=>[[-5.3,-5.3],[5.3,5.3]].map(([dx,dz])=>({x:j.x+dx,z:j.z+dz,w:.5,d:.5}))),...obstacles.filter(o=>o.w<4&&o.d<4)]});
   if(townDepthOn()){for(const j of roadJunctions)for(const vertical of [true,false])for(const side of [-1,1]){const x=j.x+(vertical?0:side*6),z=j.z+(vertical?side*6:0);
     if(roads.some(r=>r.vertical===vertical&&Math.abs((vertical?r.x:r.z)-(vertical?x:z))<.001&&(vertical?z:x)>(vertical?r.z-r.d/2:r.x-r.w/2)+1&&(vertical?z:x)<(vertical?r.z+r.d/2:r.x+r.w/2)-1))depthCrossings.push({x,z,vertical});}
    depthCrossings.push(...sheetCrossings(roads,surfaceAreas.filter(a=>a.kind==='path'),depthCrossings));
@@ -1593,9 +1595,13 @@ export function* buildTownSteps(scene: T.Scene) {
         for(let i=0;i<kx.length-1;i++)for(let k=0;k<kz.length-1;k++){const xa=kx[i],xb=kx[i+1],za=kz[k],zb=kz[k+1];if(asphaltBand((xa+xb)/2,(za+zb)/2))continue;
          const h=(px:number,pz:number)=>DRAWN.asphalt+depthLift(px,pz);chunk.positions.push(xa-ox,h(xa,za),za-oz,xa-ox,h(xa,zb),zb-oz,xb-ox,h(xb,zb),zb-oz,xa-ox,h(xa,za),za-oz,xb-ox,h(xb,zb),zb-oz,xb-ox,h(xb,za),za-oz);}
         continue;}
-       const cut=pavementCell(xs[ix],xs[ix+1],zs[iz],zs[iz+1]);if(cut){for(let i=0;i<cut.length;i+=3)chunk.positions.push(cut[i]-ox,cut[i+1],cut[i+2]-oz);continue;}}
+       // rounded street corners (Nov 26 2026): the pavement gives the corner's curve to the asphalt (pavementTrim; asphaltCorners below)
+       const x0=xs[ix],x1=xs[ix+1],z0=zs[iz],z1=zs[iz+1],cut=pavementTrim(x0,x1,z0,z1,pavementCell(x0,x1,z0,z1)??[x0,y,z0,x0,y,z1,x1,y,z1,x0,y,z0,x1,y,z1,x1,y,z0]);
+       for(let i=0;i<cut.length;i+=3)chunk.positions.push(cut[i]-ox,cut[i+1],cut[i+2]-oz);continue;}
       chunk.positions.push(a,y,c,a,y,d,b,y,d,a,y,c,b,y,d,b,y,c);
     }
+    if(depth&&carriageway)for(const c of asphaltCorners()){const ox=Math.floor(c.x/50)*50,oz=Math.floor(c.z/50)*50,key=ox+':'+oz;
+      let chunk=chunks.get(key);if(!chunk){chunk={x:ox,z:oz,positions:[]};chunks.set(key,chunk);}for(let i=0;i<c.tris.length;i+=3)chunk.positions.push(c.tris[i]-ox,c.tris[i+1],c.tris[i+2]-oz);}
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();
       roadTriangles[carriageway?'asphalt':'pave']+=chunk.positions.length/9;
