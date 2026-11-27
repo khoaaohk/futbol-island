@@ -153,6 +153,10 @@ function wheel(g:VGeo,x:number,az:number,full:boolean){const N=full?WHEEL_SIDES:
  if(full){const xf=xi-s*FLANGE_W,rf=WHEEL_R+FLANGE_R;// the flange: its rim and the step out to it (seen as a thin dark lip round the tread)
   for(let k=0;k<N;k++){g.quad(rot(k,xf,rf),rot(k+1,xf,rf),rot(k+1,xi,rf),rot(k,xi,rf),FLANGE_SHINE,ctr,PART.rearWheel,ctr);// AAA 4: the rim polished bright by the rail
    g.quad(rot(k,xi,WHEEL_R),rot(k+1,xi,WHEEL_R),rot(k+1,xi,rf),rot(k,xi,rf),K.spring,[xi-s,WHEEL_R,az],PART.rearWheel,ctr);}}
+ // Nov 26 2026 (owner, from the café seat under the bridge: "the train wheels are missing on one side"): the wheel's face was on
+ // its OUTER side only, so the far side's wheels, seen from below and across the track, showed their open inner side (nothing but
+ // the tread edge-on): the water showed through. Each wheel now has an inner face too (on the flange in the full tier), N - 2 tris.
+ {const xd=full?xi-s*FLANGE_W:xi,rd=full?WHEEL_R+FLANGE_R:WHEEL_R;for(let k=1;k<N-1;k++)g.tri(rot(0,xd,rd),rot(k,xd,rd),rot(k+1,xd,rd),K.wheel,[xo,WHEEL_R,az],PART.rearWheel,ctr);}
  // the hub: a dark square boss centred on the axle (4 tris; its corners show the spin like the old off-centre plate did)
  const xh=xo+s*.004,hb=.12;for(let k=0;k<4;k++){const a=k/4*Math.PI*2,b=(k+1)/4*Math.PI*2;g.tri([xh+s*.03,WHEEL_R,az],[xh,WHEEL_R+Math.cos(a)*hb,az+Math.sin(a)*hb],[xh,WHEEL_R+Math.cos(b)*hb,az+Math.sin(b)*hb],K.spring,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
 function coveQuad(g:VGeo,s:number,u0:number,u1:number,z0:number,z1:number,off:number,color:string){
@@ -257,7 +261,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  for(const bz of [-BOGIE_HALF,BOGIE_HALF]){
   for(const s of [-1,1]){g.box(s*.84,.62,bz,.06,.11,1.35,K.bogie);for(const az of [bz-1.05,bz+1.05])g.box(s*.86,WHEEL_R,az,.07,.09,.12,K.spring);
    g.box(s*.8,.9,bz,.13,.11,.2,K.spring);for(const az of [bz-.55,bz+.55])g.box(s*.86,.62,az,.05,.15,.06,K.under2);}
-  g.box(0,.72,bz,.8,.08,.25,K.bogie);for(const az of [bz-1.05,bz+1.05])for(const x of [-.68,.68])wheel(g,x,az,closeUp);}
+  g.box(0,.72,bz,.8,.08,.25,K.bogie);for(const az of [bz-1.05,bz+1.05]){for(const x of [-.68,.68])wheel(g,x,az,closeUp);g.box(0,WHEEL_R,az,.6,.045,.045,K.spring,PART.rearWheel,[0,WHEEL_R,az]);}}// Nov 26 2026: an axle between each pair (a wheelset; 8 tris)
  // ---- roof: two air-conditioner units (a raised chamfered lid, side grilles, a fan) and a single-arm pantograph on insulators
  for(const z of [-2.7,1.7]){const y=ROOF_TOP-.02;g.box(0,y+.11,z,.6,.11,.82,K.roofUnit);
   const t=y+.3,P=(x:number,yy:number,zz:number):V=>[x,yy,z+zz];

@@ -19,7 +19,8 @@ const R=L('lib/town/trainRunning.ts'),J=R.JOLT;
  assert(/Math\.PI\*2\*k\*k\*\(3-2\*k\)/.test(Rn)&&/st\.s\/WHEEL_R\+slip\[i\]/.test(Rn),'the wheel slip: one extra turn (no jump after)');
  assert(/cue\('train-depart'/.test(Rn)&&/cue\('train-halt'/.test(Rn)&&/case 'train-depart'/.test(read('lib/audio/islandSound.ts')),'the pull-out hiss + clunk and the arrival sigh, in earshot');}
 {const M=L('lib/town/trainCarModel.ts'),LV=L('lib/town/trainLiveries.ts').LIVERIES;assert(M.WHEEL_SIDES>=16&&M.WHEEL_SIDES<=20&&M.WHEEL_SIDES_FAR>=8&&M.WHEEL_SIDES_FAR<=10,'wheel sides');
- const d=M.buildCarGeometry(LV[0],false).triangles,o=M.buildCarGeometry(LV[0],true).triangles;assert(d<=2500&&o<4500,`per-car triangles: normal ${d}, open ${o}`);
+ const d=M.buildCarGeometry(LV[0],false).triangles,o=M.buildCarGeometry(LV[0],true).triangles;// Nov 26 2026: +~96 (inner wheel faces + 4 axles, owner: far-side wheels missing from the café seat): was d<=2500, o<4500; measured 2589 / 4575
+ assert(d<=2600&&o<4600,`per-car triangles: normal ${d}, open ${o}`);
  console.log(`train-looks2: per car ${d} tris (normal tier), ${o} (open / close-up)`);}
 {const W=read('lib/town/trainWorld.ts');assert(/m\.name='train-catenary'/.test(W)&&/CAT_FADE_NEAR=4.5,CAT_FADE_FAR=8/.test(W)&&/discard/.test(W),'the catenary: its own mesh, faded near the camera');
  assert(!/wire\.beam\(/.test(W)&&/let A=ring\(0\);for\(let i=0;i<n;i\+\+\)/.test(W),'one continuous wire round the loop (a ring per row, no per-chunk pieces)');}
