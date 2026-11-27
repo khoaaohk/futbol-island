@@ -18,6 +18,8 @@ import {inCafeClear} from './seasideCafe';
 import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
 import {surfOn} from './surfaceEdges';
+import {broadleafTreesOn,broadleafBush,CAY_PAIR_LOBES,CAY_TRIO_LOBES} from './broadleafTrees';
+import {depthLowTier} from './townDepth';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Mesh=T.Mesh;
@@ -621,8 +623,8 @@ export function buildCoralCay(t:CayTools){
  // The farm (FARM fence, plus a metre) keeps its own planting: no lawn palms or shrub clumps inside it.
  const inFarm=(x:number,z:number)=>x>FARM.fence[0].x-1.5&&x<FARM.fence[1].x+1.5&&z>FARM.fence[0].z-1.5&&z<FARM.fence[5].z+1.5;
  const inland=(x:number,z:number,margin:number)=>onCay(x,z)&&distanceToCayShore(x,z)>margin&&!inFarm(x,z)&&!inHostelArea(x,z)&&!onCourtBeach(x,z);
- for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
+ for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{if(broadleafTreesOn()){const b=broadleafBush(x,z,1,{soft:true,low:depthLowTier(),lobes:CAY_PAIR_LOBES});put(b.leaves,'#5b895e',x,.45,z).userData.leafShade=b.shade;return;}for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
  [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12)&&!inGashaponView(x,z))palm(x,z,5.4+jitter(i,9)*1.4);});
- for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
+ for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{if(broadleafTreesOn()){const b=broadleafBush(x,z,1,{soft:true,low:depthLowTier(),lobes:CAY_TRIO_LOBES});put(b.leaves,'#6a9662',x,.4,z).userData.leafShade=b.shade;return;}for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
  return {lampSites,farmDecor,destinations:[{name:'Coral Cay Plaza',x:CAY_PLAZA.x,z:CAY_PLAZA.z+8},{name:'Beach Soccer Court',x:BEACH_COURT.x,z:BEACH_COURT.z+BEACH_COURT.width/2+2},{name:'Sharks Beach',x:SHARKS_BEACH.x,z:SHARKS_BEACH.z+8},{name:'Coral Cay Farm',x:FARM.crops.x0-1.5,z:FARM.track.z},{name:'Coral Cay Hostel',x:HOSTEL.x,z:HOSTEL_PATHS[0][1]},{name:'Hostel homes',x:HOSTEL_PATHS[2][0],z:-104},{name:'Farm beach gate',x:FARM.beachTrack.x,z:FARM.beachTrack.z1+1},...SANDBARS.map(s=>({name:s.name,x:s.x,z:s.z}))]};
 }

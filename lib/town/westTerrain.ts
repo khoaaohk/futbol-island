@@ -8,6 +8,7 @@
 //    Pieces go through world.ts `put`, so they merge into the chunk's paint batch and take its baked light (walls darken to the foot).
 import * as T from 'three';
 import {elevationOn} from './elevation';
+import {broadleafTreesOn,hedgeClump} from './broadleafTrees';
 import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,westGround,onWestTerrace,terraceOutline,stairLocal,type Stair} from './westElevation';
 import {STADIUM_PLAZA} from './westParkLayout';
 import type {Obstacle} from './simulation';
@@ -69,18 +70,20 @@ type WallPt={x:number;z:number;top:number;foot:number};
 type Tools={put:(g:T.BufferGeometry,color:string,x:number,y:number,z:number)=>T.Mesh;obstacles:Obstacle[]};
 /** A strip swept along `pts` (≤ WALL.piece m per mesh): `profile` = [offset outward, height above/below (`from`: the wall's top
  *  or foot), min clearance over the foot] points, listed bottom-outer → up → inward so every face looks out or up. */
-function sweep(t:Tools,pts:readonly WallPt[],color:string,profile:readonly (readonly [number,'top'|'foot',number,number?])[],caps=false){
+function sweep(t:Tools,pts:readonly WallPt[],color:string,profile:readonly (readonly [number,'top'|'foot',number,number?,number?])[],caps=false){
  let tris=0;
  for(let s=0;s<pts.length-1;){let e=s,len=0;while(e<pts.length-1&&len<WALL.piece){len+=Math.hypot(pts[e+1].x-pts[e].x,pts[e+1].z-pts[e].z);e++;}
   const cx=(pts[s].x+pts[e].x)/2,cz=(pts[s].z+pts[e].z)/2,pos:number[]=[],idx:number[]=[],m=profile.length;
   for(let i=s;i<=e;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],tx=b.x-a.x,tz=b.z-a.z,l=Math.hypot(tx,tz)||1,nx=tz/l,nz=-tx/l,p=pts[i];
-   for(const [off,from,dy,floor] of profile){let y=(from==='top'?p.top:p.foot)+dy;if(floor!==undefined&&y<p.foot+floor)y=p.foot+floor;pos.push(p.x+nx*off-cx,y,p.z+nz*off-cz);}}
+   for(const [off,from,dy,floor,wob] of profile){let y=(from==='top'?p.top:p.foot)+dy+(wob?wob*hedgeWobble(p.x,p.z):0);if(floor!==undefined&&y<p.foot+floor)y=p.foot+floor;pos.push(p.x+nx*off-cx,y,p.z+nz*off-cz);}}
   for(let i=0;i<e-s;i++)for(let j=0;j<m-1;j++){const a=i*m+j,b=a+1,c=a+m,d=c+1;idx.push(a,b,c,b,d,c);}
   if(caps&&m>2){for(const [row,flip] of [[0,false],[e-s,true]] as const)for(let j=1;j<m-1;j++){const a=row*m,b=row*m+j,c=row*m+j+1;if(flip)idx.push(a,b,c);else idx.push(a,c,b);}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);const flat=g.toNonIndexed();g.dispose();flat.computeVertexNormals();
   t.put(flat,color,cx,0,cz);tris+=idx.length/3;s=e;}
  return tris;
 }
+/** A clipped hedge's uneven top (Leftovers B): a smooth -1..1 wobble along the run (no per-point noise: the points are ~1 m apart). */
+const hedgeWobble=(x:number,z:number)=>.55*Math.sin(x*1.37+z*.71)+.45*Math.sin(x*.53-z*1.19+2.1);
 const hash=(a:number,b:number)=>{const v=Math.sin(a*127.1+b*311.7+74.7)*43758.5453;return v-Math.floor(v);};
 /** The wall's face as coursed stone: level courses WALL.course tall counted down from the top, blocks WALL.block long with the
  *  joints of alternate courses half a block apart (and a joint at every corner), one quad per block. Each block's linear tint goes
@@ -115,7 +118,15 @@ function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},s
  // The plinth: two heavier courses standing 9 cm proud, with a weathered (sloped) top.
  tris+=sweep(t,pts,WALL.plinth,[[.09,'foot',-.5],[.09,'foot',.46],[0,'foot',.56]]);
  tris+=sweep(t,pts,WALL.coping,[[.12,'top',-.04],[.12,'top',WALL.copingH],[-.75,'top',WALL.copingH],[-.75,'top',-.04]],true);
- if(o.hedge)tris+=sweep(t,pts,WALL.hedge,[[-.1,'top',WALL.copingH],[-.1,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH]],true);
+ if(o.hedge&&broadleafTreesOn()){// Leftovers B (Nov 26 2026 night): a rounded, uneven top (shoulders and crown wobble along the run) and
+  // soft low swells standing proud, so the hedge's top edge is no longer one ruled line.
+  const H=WALL.copingH+WALL.hedgeH,Wd=WALL.hedgeW;
+  tris+=sweep(t,pts,WALL.hedge,[[-.1,'top',WALL.copingH],[-.1,'top',H-.1,undefined,.04],[-.1-Wd/2,'top',H+.04,undefined,.09],[-.1-Wd,'top',H-.1,undefined,.04],[-.1-Wd,'top',WALL.copingH]],true);// 5 points (2 more tris a step than the box): the west stadium's triangle budget
+  // long, low swells along the run (aligned with it, half sunk into the top) at an uneven 1.6-3.4 m spacing: growth, not a row of pebbles
+  let run=1.1,next=2;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b.x-a.x,b.z-a.z);if(l<1e-6)continue;run+=l;if(run<next)continue;run=0;next=1.6+1.8*hash(b.x*.7+seed,b.z*1.3);
+   const nx=(b.z-a.z)/l,nz=-(b.x-a.x)/l,k=hash(b.x+seed,b.z),r=.36+.24*k,off=-.1-Wd*(.38+.24*hash(b.z,b.x+seed));
+   tris+=8;const c=t.put(hedgeClump(b.x*3.1+b.z),WALL.hedge,b.x+nx*off,b.top+H-.03+hedgeWobble(b.x,b.z)*.05,b.z+nz*off);c.scale.set(r*2.1,r*.42,r*.95);c.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x);}}
+ else if(o.hedge)tris+=sweep(t,pts,WALL.hedge,[[-.1,'top',WALL.copingH],[-.1,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH]],true);
  // Buttresses (where the wall stands 1.4 m or more): a pilaster on its own darker base, a capstone over the coping.
  if(o.buttress){let run=WALL.buttress/2;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b.x-a.x,b.z-a.z);run+=l;if(run<WALL.buttress||b.top-b.foot<1.4)continue;run=0;
    const h=b.top-b.foot+.5+WALL.copingH+.06,nx=(b.z-a.z)/l,nz=-(b.x-a.x)/l,ry=Math.atan2(-nz,nx),m=t.put(new T.BoxGeometry(.34,h,1),WALL.pilaster,b.x+nx*.15,b.foot-.5+h/2,b.z+nz*.15);m.rotation.y=ry;

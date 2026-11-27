@@ -21,6 +21,20 @@
   (inner wheel faces + axles, tests/train-looks2.cjs pin 2500 -> 2600), no draws.
 - Lab: phone profile, 4x CPU throttle, rAF median 16.7 ms before and after at West Beach top-down, the train's West Beach view and the
   tunnel (vsync-capped: no CPU regression visible; GPU cost not measurable here). Shots + NOTE: `.claude/worktrees/_recovery-nov20/sky/`.
+## Leftovers B: inner pavement corners, spur openings, bushes / pines / hedges / Summit trees (Nov 26 2026 night, branch `leftovers-b`, not deployed)
+- Inner corners (`townDepth.ts` foot outline fillets, `pavementCorners()` into the existing pavement chunks, verge arcs in `depthLawn`):
+  43 of the 44 block corners round (1 m, concentric with the kerb curve); +352 pavement tris + ~40 verge quads town-wide, 0 draws,
+  build time only. Spur boulders (`coralCayWorld.ts`): moved, 0 tris.
+- Foliage (`broadleafTrees.ts`; all behind `?trees=0`, all baked into the existing chunk paint batches / Summit prop pieces, so
+  scene meshes 4374 = 4374, no material, program, texture or per-frame work): soft bushes (3 detail-1 clumps, smooth normals, 240 tris:
+  ramp 160 -> 240, plaza planters 240 = 240, Coral Cay pairs 160 -> 240, trios 240 = 240, cafe hibiscus 20 -> 240); pines 3 six-sided tiers
+  (16 -> 36 tris); terrace hedge 5-point rounded profile + an 8-tri octahedron swell every 1.6-3.4 m (west chunks 113,200 -> 114,862,
+  under tests/west-stadium.cjs's 115k budget); Summit round trees = the broadleaf kit
+  (~52 -> ~153 tris with the forked trunk). Battery saver (`depthLowTier`): detail-0 bush clumps (60 tris), 2-tier pines, 3-clump
+  Summit crowns. Measured: whole scene 3,959,144 (`?trees=0`) -> 3,971,990 tris, of which ~7.3k are the earlier broadleaf trees and
+  ~5k NPC shadow noise, so this pass is roughly +10k static (+0.25 %); phone play camera at the West Park grove 302,683 -> 307,125.
+  No distance LOD (static chunks); the low tier is the cheap version. Tests: `tests/broadleaf-trees.cjs` (new kinds foliage-tagged,
+  deterministic, low tier cheaper, envelopes), `tests/town-depth.cjs`, `tests/path-on-road.cjs`.
 ## Broadleaf trees with volume (Nov 26 2026, branch `island-trees`, not deployed; `?trees=0` = the old trees)
 - Owner: the round trees were "too round with gradient and looks flat". Before: each park / street tree was one
   `IcosahedronGeometry(1.8, 1)` (80 triangles, smooth normals) painted by the batching pass's canopy branch as one foot-to-crown gradient.

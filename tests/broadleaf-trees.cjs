@@ -25,6 +25,20 @@ for(let i=0;i<400;i++){const x=-330+(i*37.13)%240,z=-230+(i*53.71)%360,s=.85+(i%
 assert.equal(shapes.size,B.BROADLEAF_SHAPES.length,'every shape of the kit is planted');
 assert(maxTri<=160,`at most 160 triangles a tree (was 104-120), got ${maxTri}`);
 const bush=B.broadleafBush(3,4,.95);assert.equal(bush.shade.length,bush.leaves.getAttribute('position').count*3);
+// Leftovers B (Nov 26 2026 night): soft bushes, pine tiers and hedge clumps: tagged foliage (roof-landing / canopySurfaces NOT_ROOF reads
+// 'Icosahedron' in the type), the same at the same spot, occlusion per vertex, the cheap low tier, and inside the old envelopes.
+const NOT_ROOF=/Sphere|Icosahedron|Dodecahedron|Octahedron|Tetrahedron|Torus|Tube|Plane|Circle|Ring|Capsule|Lathe/,same=(a,b)=>assert.deepEqual(Array.from(a.getAttribute('position').array),Array.from(b.getAttribute('position').array),'same spot, same shape');
+const kinds={bush:(x,z,o)=>B.broadleafBush(x,z,.95,{soft:true,...o}),planter:(x,z,o)=>B.broadleafBush(x,z,1,{soft:true,lobes:B.PLANTER_LOBES,...o}),ramp:(x,z,o)=>B.broadleafBush(x,z,.7,{soft:true,lobes:B.RAMP_BUSH_LOBES,stretch:[.85,1.9,.95],...o}),
+ cayPair:(x,z,o)=>B.broadleafBush(x,z,1,{soft:true,lobes:B.CAY_PAIR_LOBES,...o}),cayTrio:(x,z,o)=>B.broadleafBush(x,z,1,{soft:true,lobes:B.CAY_TRIO_LOBES,...o}),pine:(x,z,o)=>B.pineTiers(x,z,1.1,o)};
+const tri={};for(const [k,f] of Object.entries(kinds))for(let i=0;i<40;i++){const x=-300+i*13.7,z=-100+i*9.1,a=f(x,z,{}),b=f(x,z,{}),lo=f(x,z,{low:true});
+ assert.match(a.leaves.type,NOT_ROOF,k+' is foliage to the landing code');assert.match(lo.leaves.type,NOT_ROOF);same(a.leaves,b.leaves);
+ assert.equal(a.shade.length,a.leaves.getAttribute('position').count*3,k+' occlusion per vertex');assert(a.shade.every(v=>v>.3&&v<1.2),k+' occlusion range');
+ assert(lo.triangles<a.triangles,k+' low tier is cheaper');tri[k]=a.triangles;}
+{const p=B.pineTiers(5,6,1);p.leaves.computeBoundingBox();const b=p.leaves.boundingBox;assert(b.min.y>=1.85&&b.max.y<=6.15&&Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=1.85,'pine inside the old cone (r 1.6, y 1.9..6.1)');
+ assert(p.triangles<=48,'pine: at most 48 triangles, got '+p.triangles);}
+{const r=B.broadleafBush(55,-20,.7,{soft:true,lobes:B.RAMP_BUSH_LOBES,stretch:[.85,1.9,.95]});r.leaves.computeBoundingBox();const b=r.leaves.boundingBox;assert(b.max.y+1.55<=3.2&&b.min.y+1.55>=-.1&&b.max.x-b.min.x<=1.6,'ramp bush keeps its envelope (the jump clears it)');}
+{const h=B.hedgeClump(3),h2=B.hedgeClump(3);assert.match(h.type,NOT_ROOF);same(h,h2);assert.equal(h.getAttribute('position').count/3,8);}
+console.log('  new kinds (tris):',JSON.stringify(tri));
 B.setBroadleafTrees(false);assert.equal(B.broadleafTreesOn(),false);
 console.log(`broadleaf trees ok: ${shapes.size} shapes, ${(sum/n).toFixed(0)} triangles a tree on average (max ${maxTri}), bush ${bush.leaves.getAttribute('position').count/3}`);
 })().catch(e=>{console.error(e);process.exit(1);});

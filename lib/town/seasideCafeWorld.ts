@@ -11,6 +11,8 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {Obstacle} from './simulation';
 import {CAFE,CAFE_BALCONY_Y,CAFE_DECKS,CAFE_STEPS,CAFE_LADDER,CAFE_POSTS,CAFE_POST_R,CAFE_BOAT,CAFE_TABLES,CAFE_CHALKBOARD,CAFE_GARDEN_SIGN,CAFE_GARDEN,CAFE_NAME,CAFE_VIEW_SEAT,cafeViewSeatObstacles,cafeWalkSurfaces,type ChalkLine} from './seasideCafe';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
+import {broadleafTreesOn,broadleafBush} from './broadleafTrees';
+import {depthLowTier} from './townDepth';
 
 type Mesh=T.Mesh;
 export type CafeTools={
@@ -150,7 +152,7 @@ export function buildSeasideCafe(t:CafeTools):CafeBuild{
  CAFE_GARDEN.forEach((bed,bi)=>{const {x,z,w,d}=bed;
   skip(box(w,.1,d,SOIL,x,.05,z));for(const [ex,ez,ew,ed] of [[x,z-d/2,w+.2,.16],[x,z+d/2,w+.2,.16],[x-w/2,z,.16,d],[x+w/2,z,.16,d]])skip(box(ew,.16,ed,'#c4bdb0',ex,.08,ez));
   if(bed.kind==='hibiscus'){for(let i=0;i<6;i++){const px=x-w/2+.6+jit(i,bi)*(w-1.2),pz=z-d/2+.6+jit(i,bi+3)*(d-1.2);
-    prop('bush',()=>{const s=skip(put(new T.IcosahedronGeometry(.42,0),i%2?LEAF:LEAF_D,px,.42,pz));s.scale.y=.85;
+    prop('bush',()=>{if(broadleafTreesOn()){const b=broadleafBush(px,pz,.45,{soft:true,low:depthLowTier()});skip(put(b.leaves,i%2?LEAF:LEAF_D,px,.42,pz)).userData.leafShade=b.shade;}else{const s=skip(put(new T.IcosahedronGeometry(.42,0),i%2?LEAF:LEAF_D,px,.42,pz));s.scale.y=.85;}
      for(let k=0;k<4;k++){const a=k*1.6+i;const f=skip(put(new T.IcosahedronGeometry(.11,0),k%2?RED:'#f07aa0',px+Math.cos(a)*.34,.55+jit(k,i)*.2,pz+Math.sin(a)*.34));f.scale.y=.6;}});}}
   else if(bed.kind==='daisy'){const n=Math.round(w*d*2.4);for(let i=0;i<n;i++){const px=x-w/2+.2+jit(i,bi+5)*(w-.4),pz=z-d/2+.2+jit(i,bi+9)*(d-.4);
     skip(put(new T.ConeGeometry(.09,.22,4),LEAF,px,.2,pz));const f=skip(put(new T.IcosahedronGeometry(.07,0),i%5===0?YEL:i%7===0?'#b98ae0':WHITE,px,.33,pz));f.scale.y=.5;}}
