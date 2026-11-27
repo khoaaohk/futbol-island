@@ -17,8 +17,7 @@ import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
 import {groundingOn,buildGrounding} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
-import {groundAt as depthGroundAt,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
