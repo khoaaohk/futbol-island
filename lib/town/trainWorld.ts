@@ -57,7 +57,7 @@ export const TUNNEL_TRAIN_LAMP={value:new T.Vector4(0,0,0,0)};
 export const POLE_PORTAL_CLEAR=8;
 /** Nov 27 2026: the station boards' solid footprint cells (x, z pairs; headless checks: tests/station-sign-landing.cjs). */
 export const STATION_SIGN_FEET:number[]=[];
-export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
+export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=0;// wing walls removed Nov 27 2026 (owner 155)
 export const TUBE_SHOW=110,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
 export const WIRE_R=.014,CAT_FADE_NEAR=4.5,CAT_FADE_FAR=8;// POLISH 3 (owner: the wire read thick from a roof camera 3-6 m off): thinner (2.8 cm), faded out to 4.5 m and dithered in by 8 m
@@ -437,7 +437,10 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Arch ring (voussoirs) on the leaning face, and the wing walls along the banks.
   const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
   for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
-  for(const sg of [-1,1]){const v0=sg*(R+.6),v1=sg*(R+1.4),inside=P(sg*(R+1),3,-2);let prev:number[][]|null=null;
+  // Nov 27 2026 (owner 155: "a dark brown wedge / flap poking out of the hillside left of the portal"): the wing walls are gone. Their
+  // top took the bank's lowest ground, so on the drawn (coarser) hill they lay as a dark blade along the cutting from the play camera's
+  // angle (picked: the stoneDark wing, 5 m out of the west mouth). The 13 m headwall alone meets the carved banks.
+  if(WING_LENGTH>0)for(const sg of [-1,1]){const v0=sg*(R+.6),v1=sg*(R+1.4),inside=P(sg*(R+1),3,-2);let prev:number[][]|null=null;
    for(let u=depth-.1;u<=depth+WING_LENGTH+1e-6;u+=.75){const top=Math.max(.3,Math.min(lowAt(v1+sg*.3,u)-.05,1.5));/* low, on the bank behind it (no fins) */const cur=[P(v0,u,-.4),P(v0,u,top),P(v1,u,top),P(v1,u,-.4)];
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
@@ -625,7 +628,7 @@ gl_FragColor.rgb*=1.-.45*tubeOut;`);};
   // The headwall either side of the arch (the arch itself stays open; the hill behind it is too steep to walk).
   for(let v=TUNNEL_HALF_WIDTH+.6;v<=half;v+=1.2)for(const sgn of [-1,1])out.push({x:x+a.x*v*sgn+o.x*.75,z:z+a.z*v*sgn+o.z*.75,w:1.3,d:1.3});
   // The wing walls along the banks (their outer, bank side is ground level near the top; the inner face is the cutting's wall).
-  for(let u=2;u<=1.5+WING_LENGTH;u+=1.2)for(const sgn of [-1,1]){const v=(TUNNEL_HALF_WIDTH+1)*sgn;out.push({x:x+a.x*v+o.x*u,z:z+a.z*v+o.z*u,w:1.1,d:1.1});}return out;}
+  if(WING_LENGTH>0)for(let u=2;u<=1.5+WING_LENGTH;u+=1.2)for(const sgn of [-1,1]){const v=(TUNNEL_HALF_WIDTH+1)*sgn;out.push({x:x+a.x*v+o.x*u,z:z+a.z*v+o.z*u,w:1.1,d:1.1});}return out;}
 }
 
 // ---- The board atlas: 1024 × 1024. Rows 0-4: one station each, its name board's two faces (x 0-512 front, 512-1024 back, the
