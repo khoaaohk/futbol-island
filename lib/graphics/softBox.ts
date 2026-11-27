@@ -181,7 +181,8 @@ export function softBoxGeometry(w: number, h: number, d: number, opts: SoftOpts 
 export function propBox(w: number, h: number, d: number, opts: SoftOpts & { maxDim?: number } = {}, low = false): T.BoxGeometry {
   const min = Math.min(w, h, d), max = Math.max(w, h, d);
   if (!softOn() || min < 0.02 || max > (opts.maxDim ?? 8)) return new T.BoxGeometry(w, h, d);
-  const seg = Math.max(0, (opts.seg ?? 1) - (low ? 1 : 0));
+  // thin pieces (legs, slats, rails, boards: under 15 cm) take the smooth-shaded chamfer (44 tris); chunkier ones the 2-step arc
+  const seg = Math.max(0, (opts.seg ?? (min < .15 ? 0 : 1)) - (low ? 1 : 0));
   return new SoftBoxGeometry(w, h, d, { ...opts, seg });
 }
 
@@ -212,4 +213,18 @@ export function softPatchGeometry(rx: number, rz: number, seed: number, yTop: nu
   g.setAttribute('uv', new T.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2));
   g.setIndex(idx);
   return { geometry: g, tint: new Float32Array(tint) };
+}
+
+/**
+ * A smooth pebble / boulder (soft sweep: beach rocks were 20-facet crystals): a detail-1 icosahedron (80 faces; detail 0 on the low
+ * tier), corners pushed in / out up to 9 % by direction (shared corners stay shut), smooth normals. Unit-agnostic: radius r.
+ */
+export function pebbleGeometry(r: number, seed: number, low = false) {
+  const g = new T.IcosahedronGeometry(r, low ? 0 : 1), p = g.getAttribute('position') as T.BufferAttribute, n = g.getAttribute('normal') as T.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), v = Math.sin((x * 7.1 + seed) * 12.9898 + (z * 5.3 + y * 3.7) * 78.233) * 43758.5453, k = 1 + .09 * ((v - Math.floor(v)) * 2 - 1);
+    p.setXYZ(i, x * k, y * k, z * k);
+  }
+  if (low) for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), l = Math.hypot(x, y, z) || 1; n.setXYZ(i, x / l, y / l, z / l); }// detail 0 but smooth: a pebble, not a crystal
+  return g;
 }

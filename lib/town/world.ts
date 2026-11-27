@@ -63,7 +63,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, softLow, softOn, softPatchGeometry, SoftBoxGeometry, type SoftOpts } from '../graphics/softBox';
+import { propBox, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -1163,7 +1163,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const dx of [-1.1,1.1]){umbrellaTargets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const bk=loungerBack(z+SET_LOUNGER.padDz-SET_LOUNGER.padLen/2,SET_LOUNGER.top),back=box(.8,.1,LOUNGER.backLen,i%2?'#589aa0':'#c8734f',x+dx,bk.y,bk.z);back.rotation.x=LOUNGER.backTilt;/* Nov 13 2026: the backrest rises toward the head end (it leaned over the pad) */umbrellaTargets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
     const towel=box(1.1,.015,1.7,i%2?'#d69b61':'#8b9e6b',x+3,.008,z+1);towel.rotation.y=.15*i;umbrellaTargets.push(towel);
     if(i%2===0)palm(x-4,z+9,5.5);
-    for(let j=0;j<3;j++){const rock=put(new T.IcosahedronGeometry(.22+j*.1,0),'#d2bc94',x-2+j*.65,.1,z-3);rock.scale.y=.5;}
+    for(let j=0;j<3;j++){const rock=put(softOn()?pebbleGeometry(.22+j*.1,x+j,softLowTier):new T.IcosahedronGeometry(.22+j*.1,0),'#d2bc94',x-2+j*.65,.1,z-3);rock.scale.y=.5;}
   }
   for(const x of [-30,45,125,182]){const z=x>160?-199:x>100?-206:-210;/* surf: no slab under the tufts (its 4 cm side drew a dark step on the sand) */if(!surfOn())tintGroundMesh(box(5,.04,2,'#d6c394',x,-.045,z),'sand');for(let i=0;i<7;i++){
    // Surface craft review (?surf=1): the row of seven dark cones read as spikes. Same count and the same eight triangles each, as
@@ -1737,7 +1737,7 @@ export function* buildTownSteps(scene: T.Scene) {
       cylinder(.06,.35,'#384443',hx,6.725,hz);}
       const head=new T.Group();head.position.set(hx,5.5,hz);head.rotation.y=axis==='x'?face*Math.PI/2:face<0?Math.PI:0;town.add(head);
       const soft=softOn();
-      if(soft){put(new SoftBoxGeometry(.87,2.22,.35,{radius:.16,seg:softLowTier?1:2}),'#d6a944',0,0,0,head);put(new SoftBoxGeometry(.71,2.06,.08,{radius:.035,seg:softLowTier?0:1}),'#202c2b',0,0,.21,head);}
+      if(soft){put(new SoftBoxGeometry(.87,2.22,.35,{radius:.16,seg:softLowTier?0:1}),'#d6a944',0,0,0,head);put(new SoftBoxGeometry(.71,2.06,.08,{radius:.035,seg:0}),'#202c2b',0,0,.21,head);}
       else{box(.87,2.22,.35,'#d6a944',0,0,0,head);box(.71,2.06,.08,'#202c2b',0,0,.21,head);}
       signalHeads.push({x:hx,y:5.5,z:hz,yaw:head.rotation.y,jx:junction.x,jz:junction.z,axis});
       for(let i=0;i<3;i++){

@@ -19,7 +19,7 @@ import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
 import {surfOn} from './surfaceEdges';
 import {broadleafTreesOn,broadleafBush,spotHash,CAY_PAIR_LOBES,CAY_TRIO_LOBES} from './broadleafTrees';
-import {softOn} from '../graphics/softBox';
+import {softOn,softLow,pebbleGeometry} from '../graphics/softBox';
 import {depthLowTier} from './townDepth';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -621,7 +621,7 @@ export function buildCoralCay(t:CayTools){
  // Tide-line rocks never sit on the roundabout or the causeway's paving (Oct 15 2026: the cay's west shore runs under the
  // ring's west half, and pebbles poked up through the asphalt and the zebra).
  const onPaving=(p:{x:number;z:number})=>Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+5.5||P.some(q=>Math.hypot(q.x-p.x,q.z-p.z)<deck+1.5);
- for(let i=0;i<n;i+=3){const p=inward(i,.08+jitter(i,4)*.06);if(onPaving(p))continue;const rock=put(new T.IcosahedronGeometry(.22+jitter(i,6)*.3,0),'#d2bc94',p.x,-.1,p.z);rock.scale.y=.5;}
+ for(let i=0;i<n;i+=3){const p=inward(i,.08+jitter(i,4)*.06);if(onPaving(p))continue;const rr=.22+jitter(i,6)*.3,rock=put(softOn()?pebbleGeometry(rr,i,true)/* detail 0, smooth: hundreds of them (+0 triangles) */:new T.IcosahedronGeometry(rr,0),'#d2bc94',p.x,-.1,p.z);rock.scale.y=.5;}
  {let best=0;for(let i=0;i<n;i++)if(CAY_SHORE[i].x>CAY_SHORE[best].x)best=i;const p=inward(best,.45);lifeguardChair(p.x,p.z);}
  // Grove palms and shrub clumps on the open lawn: kept only where they stand well inside the (irregular) coast.
  // The farm (FARM fence, plus a metre) keeps its own planting: no lawn palms or shrub clumps inside it.
