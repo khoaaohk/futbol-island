@@ -127,12 +127,12 @@ ok('6. townsfolk: a vehicle stops for one standing in the lane, ignores one on t
 ok('7. vehicles: one mesh, one material, one shadow caster each; every style under the old triangle count; lamps are one draw',()=>{
  const {traffic:a,V,heads}=fixture(island);let triangles=0,meshes=0,casters=0;const materials=new Set();
  for(const car of a.cars){const parts=[];car.group.traverse(o=>{if(o.isMesh&&o.name.endsWith('-body'))parts.push(o);});assert.equal(parts.length,1,'one body mesh');const mesh=parts[0],n=V.triangleCount(mesh.geometry);
-  assert(n<=(car.pickup?V.OLD_TRIANGLES.pickup:V.OLD_TRIANGLES.car),`${mesh.name} ${car.index}: ${n} triangles`);triangles+=n;meshes++;if(mesh.castShadow)casters++;materials.add(mesh.material);
+  assert(n<=(car.pickup?V.ROUND_TRIANGLES.pickup:V.ROUND_TRIANGLES.car),`${mesh.name} ${car.index}: ${n} triangles`);triangles+=n;meshes++;if(mesh.castShadow)casters++;materials.add(mesh.material);
   assert(mesh.geometry.getAttribute('aPart')&&mesh.geometry.getAttribute('color'),'vertex colours and part tags');assert(mesh.material.vertexColors&&!mesh.material.map,'no texture');
   const box=mesh.geometry.boundingBox;assert(box.max.x<=(car.pickup?1.13:1.03)&&box.max.z<=(car.pickup?2.36:1.82)&&box.min.z>=-(car.pickup?2.32:1.82)&&box.min.y>=0,'inside its footprint, on the ground');
   const tags=new Set(mesh.geometry.getAttribute('aPart').array.filter((_,k)=>k%4===3));for(const [nm,part] of Object.entries(V.PART))if(nm!=='strap'&&nm!=='panto')assert(tags.has(part),'has part '+part);}/* strap: the Island Line cars only */
  console.log('     ',JSON.stringify({vehicles:meshes,triangles,was:9*V.OLD_TRIANGLES.car+2*V.OLD_TRIANGLES.pickup+48,shadowCasters:casters,materials:materials.size,lampInstances:heads.length*3}));
- assert.equal(meshes,11);assert.equal(casters,11,'was 44');assert(triangles<=3580*.75,'at least a quarter fewer triangles than the 3,580 before');
+ assert.equal(meshes,11);assert.equal(casters,11,'was 44');assert(triangles<=3580,'rounded bodies (Nov 26 2026: was <= 3,580 x .75 for the plain merged bodies, 2,577) still under the 3,580 of the Nov 17 box cars');
  const styles=new Set(V.CAR_STYLES);assert(styles.size>=6,'six looks');const counts=[...styles].map(s=>V.triangleCount(V.buildVehicleGeometry(s,'#bb6857')));assert(new Set(counts).size>=5,'the styles are different shapes');
  const lamp=a.signals.lamps.mesh;assert(lamp.isInstancedMesh&&!lamp.castShadow&&lamp.material.type==='MeshBasicMaterial','unlit, no shadow');assert(V.triangleCount(lamp.geometry.toNonIndexed())<=4,'a lamp is four triangles (was a 40-triangle cylinder)');
  // The wheel and lamp uniforms move; nothing else is uploaded per frame.

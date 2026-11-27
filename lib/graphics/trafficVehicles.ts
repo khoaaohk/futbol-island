@@ -5,6 +5,7 @@
 // costs a draw call, a texture or a buffer upload. Faces nobody can see (undersides, faces pressed against another part, the inner
 // wheel caps) are not built: each style comes in under the triangle count of the plain box car it replaces (tests/traffic-vehicles.cjs).
 import * as T from 'three';
+import {vehiclesOn} from './vehicleSwitch';
 export type VehicleStyle='sedan'|'hatch'|'van'|'wagon'|'jeep'|'taxi'|'pickup';
 /** Ordinary cars by traffic index (the two pickups are indices 7 and 8). */
 export const CAR_STYLES:readonly VehicleStyle[]=['sedan','hatch','taxi','wagon','van','hatch','jeep','pickup','pickup','van','wagon'];
@@ -20,6 +21,9 @@ let reducedMotion:MediaQueryList|null|undefined;
 const motionOk=()=>{if(reducedMotion===undefined)reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;return !reducedMotion?.matches;};
 /** Triangles of the box vehicles these replace (Nov 17 2026 build): the budget a style must not exceed. */
 export const OLD_TRIANGLES={car:276,pickup:524} as const;
+/** Rounded vehicles (Nov 26 2026, `?vehicles=0` = the box bodies above): bevelled bodies and cabins, wheel arches. The cap a rounded
+ *  style must stay under (tests/traffic-signals.cjs): about +120 triangles a car, +90 a pickup (no draw, material or texture added). */
+export const ROUND_TRIANGLES={car:330,pickup:370} as const;
 export const WHEEL_RADIUS=.32;
 const TRIM='#2b3534',TYRE='#262e2e',HUB='#c9cfc9',GLASS='#6f9a97',CREAM='#efe1bd',HEAD='#fff1c2',TAIL='#c93a2c',AMBER='#ffa52b',CHROME='#b9c2c0';
 type V=[number,number,number];
@@ -43,6 +47,26 @@ function builder(){
   if(faces.includes('f'))quad(D,C,G,H,color,inside);if(faces.includes('b'))quad(A,B,F,E,color,inside);
   if(faces.includes('l'))quad(B,C,G,F,color,inside);if(faces.includes('r'))quad(A,D,H,E,color,inside);
  };
+ /** ROUNDED (Nov 26 2026): a box with its four vertical edges chamfered in plan (`c`) and its top edge bevelled (`ct`): an octagon
+  *  ring at the foot, the same taper as hull() up to y+h-ct, then a bevel ring inset by ct to the top cap. So everything placed on
+  *  the sides below y+h-ct sits exactly where it did on the box. 38 triangles with a top (16 sides, 16 bevel, 6 cap); `top` paints the
+  *  bevel and cap (a painted roof over a glass cabin); `cap:false` leaves the top open (the pickup's body under its bed). */
+ const rhull=(x:number,y:number,z:number,w0:number,d0:number,h:number,color:string,o:{w1?:number;d1?:number;shift?:number;c?:number;ct?:number;top?:string;cap?:boolean}={})=>{
+  const w1=o.w1??w0,d1=o.d1??d0,s=o.shift??0,c=o.c??.12,ct=o.ct??.08,inside:V=[x,y+h/2,z+s/2],roof=o.top??color,k=(h-ct)/h;
+  const ring=(hw:number,hd:number,cc:number,yy:number,zz:number):V[]=>[[x-hw+cc,yy,zz-hd],[x+hw-cc,yy,zz-hd],[x+hw,yy,zz-hd+cc],[x+hw,yy,zz+hd-cc],[x+hw-cc,yy,zz+hd],[x-hw+cc,yy,zz+hd],[x-hw,yy,zz+hd-cc],[x-hw,yy,zz-hd+cc]];
+  const wm=w0+(w1-w0)*k,dm=d0+(d1-d0)*k,A=ring(w0/2,d0/2,c,y,z),M=ring(wm/2,dm/2,c,y+h-ct,z+s*k);
+  for(let i=0;i<8;i++)quad(A[i],A[(i+1)%8],M[(i+1)%8],M[i],color,inside);
+  if(o.cap===false)return;
+  const Tt=ct>0?ring(w1/2-ct,d1/2-ct,Math.max(.02,c*.7),y+h,z+s):M;
+  if(ct>0)for(let i=0;i<8;i++)quad(M[i],M[(i+1)%8],Tt[(i+1)%8],Tt[i],roof,inside);
+  for(let i=1;i<7;i++)tri(Tt[0],Tt[i],Tt[i+1],roof,[x,y,z+s],NONE);
+ };
+ /** ROUNDED: a dark wheel-arch band on a body side (x side ±1) round the wheel centre (y, z), 4 segments over the top half; `xAt`
+  *  gives the body side's x at a height (the body tapers), so the band hugs it 6 mm proud. 8 triangles. */
+ const arch=(side:number,y:number,z:number,xAt:(y:number)=>number,r0=.38,r1=.45)=>{
+  const P=(t:number,r:number):V=>{const yy=y+Math.sin(t)*r;return [side*(xAt(yy)+.006),yy,z+Math.cos(t)*r];};
+  for(let k=0;k<4;k++){const a=k/4*Math.PI,b=(k+1)/4*Math.PI;quad(P(a,r0),P(b,r0),P(b,r1),P(a,r1),TRIM,[0,y,z]);}
+ };
  /** A flat panel facing along z (dir ±1) at depth z: lamps, grilles, plates, windows. */
  const panelZ=(x:number,y:number,z:number,w:number,h:number,dir:number,color:string,kind=0)=>quad([x-w/2,y-h/2,z],[x+w/2,y-h/2,z],[x+w/2,y+h/2,z],[x-w/2,y+h/2,z],color,[x,y,z-dir],[0,0,0,kind]);
  /** A flat panel facing along x (dir ±1): side windows, stripes. z0/z1 at the bottom edge, top edge shifted by `lean`. */
@@ -56,15 +80,17 @@ function builder(){
   const xh=xo+side*.012,u=r*.66,v=r*.2;quad([xh,y-u,z-v],[xh,y-u,z+v],[xh,y+u,z+v],[xh,y+u,z-v],HUB,inside,tag);
  };
  const done=()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('aPart',new T.Float32BufferAttribute(part,4));g.computeBoundingSphere();g.computeBoundingBox();return g;};
- return {hull,quad,panelZ,panelX,wheel,done};
+ return {hull,rhull,arch,quad,panelZ,panelX,wheel,done};
 }
 type B=ReturnType<typeof builder>;
 /** Bumpers, grille, plates, lamps and mirrors shared by every style. `nose`/`tail`: z of the front and rear faces; `y`: lamp height. */
 function fittings(b:B,o:{w:number;nose:number;tail:number;y:number;mirrorY:number;mirrorZ:number;mirrorX:number;bumper?:string}){
- const {w,nose,tail,y}=o,bumper=o.bumper??TRIM;
- b.hull(0,.3,nose+.03,w+.04,.14,.17,bumper,{faces:'tflr'});b.hull(0,.3,tail-.03,w+.04,.14,.17,bumper,{faces:'tblr'});
+ const {w,nose,tail,y}=o,bumper=o.bumper??TRIM,R=vehiclesOn();
+ // ROUNDED: the bumpers wrap the chamfered corners (narrower, chamfered ends) and the lamps sit on the flat of the nose.
+ if(R){b.rhull(0,.3,nose+.03,w-.04,.14,.17,bumper,{c:.06,ct:0});b.rhull(0,.3,tail-.03,w-.04,.14,.17,bumper,{c:.06,ct:0});}
+ else{b.hull(0,.3,nose+.03,w+.04,.14,.17,bumper,{faces:'tflr'});b.hull(0,.3,tail-.03,w+.04,.14,.17,bumper,{faces:'tblr'});}
  b.panelZ(0,y-.02,nose+.012,w*.42,.2,1,TRIM);b.panelZ(0,y-.2,nose+.105,.44,.11,1,CREAM);b.panelZ(0,y-.2,tail-.105,.44,.11,-1,CREAM);
- for(const side of [-1,1]){const lamp=w/2-.2,blink=side>0?PART.left:PART.right;
+ for(const side of [-1,1]){const lamp=w/2-(R?.27:.2),blink=side>0?PART.left:PART.right;
   b.panelZ(side*lamp,y,nose+.012,.26,.16,1,HEAD,PART.head);b.panelZ(side*(lamp+.01),y-.17,nose+.012,.22,.07,1,AMBER,blink);
   b.panelZ(side*lamp,y,tail-.012,.26,.14,-1,TAIL,PART.brake);b.panelZ(side*(lamp+.01),y-.15,tail-.012,.22,.07,-1,AMBER,blink);
   b.hull(side*o.mirrorX,o.mirrorY,o.mirrorZ,.16,.09,.12,TRIM,{faces:side>0?'tfbl':'tfbr'});}
@@ -72,41 +98,55 @@ function fittings(b:B,o:{w:number;nose:number;tail:number;y:number;mirrorY:numbe
 function wheels(b:B,track:number,z:number){for(const side of [-1,1]){b.wheel(side*track,.31,z,true);b.wheel(side*track,.31,-z,false);}}
 /** A car: lower body, a tapered glass cabin with a painted roof, and whatever makes the style its own. */
 function car(style:Exclude<VehicleStyle,'pickup'>,paint:string){
- const b=builder();
+ const b=builder(),R=vehiclesOn();
+ /** A body box: rounded (chamfered corners, bevelled top) or the old box. `ct` the top bevel, `c` the corner chamfer. */
+ const body=(x:number,y:number,z:number,w0:number,d0:number,h:number,color:string,o:{w1?:number;d1?:number;shift?:number;faces?:string;top?:string;c?:number;ct?:number}={})=>
+  R?b.rhull(x,y,z,w0,d0,h,color,o):b.hull(x,y,z,w0,d0,h,color,o);
+ /** Wheel arches over the four wheels of a body w0 at the foot (y .3), w1 at its top (y .3+h). */
+ const arches=(w0:number,w1:number,h:number,z:number)=>{if(!R)return;const xAt=(y:number)=>(w0+(w1-w0)*Math.min(1,Math.max(0,(y-.3)/h)))/2;for(const side of [-1,1])for(const zz of [z,-z])b.arch(side,.31,zz,xAt);};
  if(style==='van'){
-  // Tall box van: short bonnet, high roof, a roof rack with two crates.
-  b.hull(0,.3,0,1.74,3.4,.62,paint,{w1:1.7,d1:3.34});b.hull(0,.92,-.28,1.7,2.78,.78,paint,{w1:1.56,d1:2.5,shift:-.08});
+  // Tall box van: short bonnet, high roof, a roof rack with two crates. ROUNDED: chamfered corners, a rounded roof edge.
+  body(0,.3,0,1.74,3.4,.62,paint,{w1:1.7,d1:3.34,c:.16,ct:.06});body(0,.92,-.28,1.7,2.78,.78,paint,{w1:1.56,d1:2.5,shift:-.08,c:.18,ct:.08});
   b.quad([-.72,1.1,1.073],[.72,1.1,1.073],[.68,1.62,.927],[-.68,1.62,.927],GLASS,[0,1.3,0]);
   for(const side of [-1,1]){b.panelX(side*.845,1.33,.52,.7,.44,side,GLASS,-.03,.035);b.panelX(side*.845,1.33,-.75,1.3,.44,side,GLASS,0,.035);}
   for(const z of [-.95,.05])b.hull(0,1.7,z-.3,1.3,.06,.1,TRIM,{faces:'tfb'});b.hull(.2,1.8,-.95,.7,.6,.3,'#b98a5a');b.hull(-.3,1.8,-.15,.55,.5,.22,'#7f9c8b');
+  arches(1.74,1.7,.62,1.05);
   fittings(b,{w:1.74,nose:1.7,tail:-1.7,y:.72,mirrorY:1.12,mirrorZ:1,mirrorX:.93});wheels(b,.83,1.05);return b.done();}
  if(style==='jeep'){
-  // Boxy open-country car: upright cabin, flat bonnet, roof rails, a spare wheel cover on the back.
-  b.hull(0,.36,0,1.74,3.3,.56,paint,{w1:1.7,d1:3.26});b.hull(0,.92,-.42,1.64,2.1,.62,GLASS,{w1:1.56,d1:1.9,faces:'tfblr',top:paint});
-  for(const side of [-1,1]){b.hull(side*.66,1.54,-.42,.07,1.7,.07,TRIM,{faces:'tfb'+(side>0?'l':'r')});b.panelX(side*.83,1.23,-.42,.12,.62,side,paint,0,.04);}
+  // Boxy open-country car: upright cabin, flat bonnet, roof rails, a spare wheel cover on the back. ROUNDED: small chamfers only (it stays a jeep).
+  body(0,.36,0,1.74,3.3,.56,paint,{w1:1.7,d1:3.26,c:.12,ct:.05});body(0,.92,-.42,1.64,2.1,.62,GLASS,{w1:1.56,d1:1.9,faces:'tfblr',top:paint,c:.1,ct:.07});
+  for(const side of [-1,1]){b.hull(side*.66,1.54,-.42,.07,1.7,.07,TRIM,{faces:'tfb'+(side>0?'l':'r')});b.panelX(side*.83,1.23,-.42,.12,R?.56:.62,side,paint,0,.04);}
   b.hull(0,.62,-1.72,.62,.16,.62,TYRE,{faces:'tblr'});b.hull(0,.92,1.08,1.2,.5,.05,TRIM,{faces:'t'});
+  if(R){const xAt=(y:number)=>.87-.02*Math.min(1,Math.max(0,(y-.36)/.56));for(const side of [-1,1])for(const zz of [1.05,-1.05])b.arch(side,.31,zz,xAt,.4,.47);}
   fittings(b,{w:1.74,nose:1.65,tail:-1.65,y:.76,mirrorY:1.02,mirrorZ:.62,mirrorX:.93,bumper:CHROME});wheels(b,.83,1.05);return b.done();}
- // Sedan, taxi, hatchback, wagon: one lower body, cabins of different lengths.
+ // Sedan, taxi, hatchback, wagon: one lower body, cabins of different lengths. ROUNDED: a chamfered body with a rounded bonnet and
+ // boot edge, a cabin that rounds over into a painted roof (the roofline curves instead of a hard glass-to-roof corner).
  const long=style==='wagon',short=style==='hatch',len=short?3.2:3.4,half=len/2;
- b.hull(0,.3,0,1.7,len,.54,paint,{w1:1.62,d1:len-.1});
+ body(0,.3,0,1.7,len,.54,paint,{w1:1.62,d1:len-.1,c:.16,ct:.09});
  const cz=long?-.38:short?-.3:-.12,d0=long?2.3:short?1.95:2,d1=long?1.85:short?1.4:1.1,shift=long?-.1:short?-.18:-.06;
- b.hull(0,.84,cz,1.52,d0,.5,GLASS,{w1:1.3,d1,shift,top:paint});
- for(const side of [-1,1])b.panelX(side*.772,1.09,cz+shift*.5+(long?.2:0),.11,.5,side,paint,0,.11);// the door pillar
+ body(0,.84,cz,1.52,d0,.5,GLASS,{w1:1.3,d1,shift,top:paint,c:.14,ct:.1});
+ // the door pillar (ROUNDED: it stops where the roof's bevel starts, leaning in with the glass)
+ for(const side of [-1,1])R?b.panelX(side*.772,1.04,cz+shift*.4+(long?.2:0),.11,.4,side,paint,0,.088):b.panelX(side*.772,1.09,cz+shift*.5+(long?.2:0),.11,.5,side,paint,0,.11);
  if(long){// Estate with a roof rack and a surfboard: this is an island.
   for(const z of [-.95,-.05])b.hull(0,1.34,cz+shift+.5+z,1.2,.06,.07,TRIM,{faces:'tfb'});b.hull(.12,1.41,cz+shift,.46,1.9,.07,'#f2efe2',{w1:.4,d1:1.7,top:'#8fd0c4'});}
  if(style==='taxi'){b.hull(0,1.34,cz+shift,.5,.2,.16,'#fff6d8',{w1:.42,d1:.16});for(const side of [-1,1])b.panelX(side*.842,.6,0,1.5,.1,side,TRIM,0,.008);}
- if(style==='sedan')b.hull(0,.84,-half+.14,1.5,.12,.09,paint,{faces:'tfblr'});// boot lip spoiler
- if(short)for(const side of [-1,1])b.panelX(side*.846,.5,0,2.1,.08,side,CREAM,0,.004);// side stripe
+ if(style==='sedan')b.hull(0,.84,-half+.14+(R?.06:0),R?1.36:1.5,.12,.09,paint,{faces:'tfblr'});// boot lip spoiler
+ if(short)for(const side of [-1,1])b.panelX(side*.846,.5,0,R?1.4:2.1,.08,side,CREAM,0,.004);// side stripe (ROUNDED: between the arches)
+ arches(1.7,1.62,.54,short?1:1.05);
  fittings(b,{w:1.7,nose:half,tail:-half,y:.66,mirrorY:.9,mirrorZ:cz+d0/2-.28,mirrorX:.9});wheels(b,.83,short?1:1.05);return b.done();
 }
 /** The collectible pickup: same bed (floor, walls, landing ring, rider seat) as before, a real cab and trim. `bedY` is the bed-floor
  *  box centre (lower for bean riders, who also get the cooler seat); `variant` 0 has a roof light bar, 1 a bull bar. */
 function pickup(paint:string,bedY:number,coolerSeat:boolean,variant:number){
- const b=builder(),floor=bedY+.06;
+ const b=builder(),floor=bedY+.06,R=vehiclesOn();
  // POLISH 3 (owner shot 61, bed z-fighting): the lower body's top (y .86) was the bean bed floor's height exactly (bedY .8 + .06), so
  // the two fought across the bed. The body's top is now only drawn ahead of the bed (under the cab and bonnet); the bed floor, walls,
  // tailgate and cab back close the box above it. The landing ring stands 2 cm over the floor (was 1.2 cm: it shimmered far off).
- b.hull(0,.38,0,2,4.4,.48,paint,{w1:1.96,d1:4.36,faces:'fblr'});b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,2.18],[-.98,.86,2.18],paint,[0,0,1.2]);
+ // ROUNDED: the body's corners chamfered (open top, as before), arches over the wheels, the cab rounding over into its roof.
+ if(R){b.rhull(0,.38,0,2,4.4,.48,paint,{w1:1.96,d1:4.36,c:.2,ct:0,cap:false});const xAt=(y:number)=>1-.02*Math.min(1,Math.max(0,(y-.38)/.48));for(const side of [-1,1])for(const zz of [1.05,-1.05])b.arch(side,.31,zz,xAt,.4,.47);}
+ else b.hull(0,.38,0,2,4.4,.48,paint,{w1:1.96,d1:4.36,faces:'fblr'});
+ if(R){b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,1.98],[-.98,.86,1.98],paint,[0,0,1.2]);b.quad([-.98,.86,1.98],[.98,.86,1.98],[.78,.86,2.18],[-.78,.86,2.18],paint,[0,0,1.2]);}// the bonnet follows the chamfered nose
+ else b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,2.18],[-.98,.86,2.18],paint,[0,0,1.2]);
  b.quad([-.95,floor,-2.05],[.95,floor,-2.05],[.95,floor,.17],[-.95,floor,.17],CREAM,[0,0,-.95]);
  for(const side of [-1,1])b.hull(side*.94,.84,-.95,.14,2.4,.54,paint,{faces:'tfblr'});
  b.hull(0,.84,-2.12,2,.14,.54,paint,{faces:'tfb'});
@@ -114,9 +154,10 @@ function pickup(paint:string,bedY:number,coolerSeat:boolean,variant:number){
  for(let k=0;k<12;k++){const t0=k/12*Math.PI*2,t1=(k+1)/12*Math.PI*2,y=floor+.02,p=(t:number,r:number):V=>[Math.cos(t)*r,y,-.95+Math.sin(t)*r];b.quad(p(t0,.43),p(t1,.43),p(t1,.53),p(t0,.53),paint,[0,0,-.95]);}
  if(coolerSeat){b.hull(0,.86,-1.25,.7,.46,.43,'#5f8f9c',{faces:'fblr'});b.hull(0,1.27,-1.25,.72,.48,.04,CREAM);}
  // Cab: painted doors, tapered glass, a roof with a small overhang.
- b.hull(0,.86,.8,1.9,1.3,.36,paint);b.hull(0,1.22,.8,1.82,1.3,.46,GLASS,{w1:1.66,d1:1.05,shift:-.04,faces:'fblr'});
- b.hull(0,1.68,.76,1.78,1.22,.09,paint);
- for(const side of [-1,1])b.panelX(side*.922,1.44,.74,.1,.46,side,paint,-.04,.08);
+ b.hull(0,.86,.8,1.9,1.3,.36,paint);
+ if(R)b.rhull(0,1.22,.8,1.82,1.3,.55,GLASS,{w1:1.7,d1:1.12,shift:-.04,top:paint,c:.14,ct:.12});
+ else{b.hull(0,1.22,.8,1.82,1.3,.46,GLASS,{w1:1.66,d1:1.05,shift:-.04,faces:'fblr'});b.hull(0,1.68,.76,1.78,1.22,.09,paint);}
+ for(const side of [-1,1])R?b.panelX(side*.922,1.395,.74,.1,.35,side,paint,-.03,.07):b.panelX(side*.922,1.44,.74,.1,.46,side,paint,-.04,.08);
  if(variant===0){b.hull(0,1.77,.62,.9,.14,.1,TRIM);for(const side of [-1,1])b.panelZ(side*.26,1.82,.692,.28,.07,1,AMBER);}
  else{b.hull(0,.5,2.3,1.5,.07,.5,CHROME,{faces:'tflr'});}
  fittings(b,{w:2,nose:2.2,tail:-2.2,y:.68,mirrorY:1.2,mirrorZ:1.2,mirrorX:1.04,bumper:variant?CHROME:TRIM});wheels(b,.83,1.05);
