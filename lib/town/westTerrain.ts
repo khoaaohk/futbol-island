@@ -178,6 +178,13 @@ function stairs(t:Tools,s:Stair){
  // Treads: each a block from under the ground to its tread (the walked ramp passes through every nosing).
  for(let k=0;k<n;k++){const d0=k*run,top=WEST.terrace-s.slope*(d0+run*.5)+.01,mx=s.x+s.dx*(d0+run/2),mz=s.z+s.dz*(d0+run/2),foot=Math.min(westNatural(mx,mz),top)-.3,h=top-foot;
   {const g=new T.BoxGeometry(s.dx?run+.03:s.w,h,s.dx?s.w:run+.03);t.put(g,WALL.tread,mx,foot+h/2,mz).userData.vertexTint=stairTint(g,s.dx,s.dz,k);}tris+=12;}// lit nosing / shaded back + riser (stairShade.ts, owner 206)
+ // Leftovers A2 (paths NOTE 174: the station flight's foot did not visibly join the west trail; the trail ribbon is cut round the
+ // flight and the lawn stood over it): a paved apron, one quad draped 6 cm over the natural ground from under the last tread 2.4 m
+ // out, the flight's full width, so the walk visibly reaches the stairs. 2 triangles (the west stadium cap's headroom), batched.
+ if(s.id==='station'){const t0=L-.1,t1=L+2.4,h=s.w/2+.1,pos:number[]=[];
+  for(const [t,a] of [[t0,-h],[t1,-h],[t1,h],[t0,-h],[t1,h],[t0,h]]){const x=s.x+s.dx*t+px*a,z=s.z+s.dz*t+pz*a;pos.push(x-s.x,westNatural(x,z)+.06,z-s.z);}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();if(g.getAttribute('normal').getY(0)<0){const q=pos.slice();for(let i=0;i<6;i+=3)for(let c=0;c<3;c++){const k=(i+1)*3+c,m=(i+2)*3+c;q[k]=pos[m];q[m]=pos[k];}g.setAttribute('position',new T.Float32BufferAttribute(q,3));g.computeVertexNormals();}
+  t.put(g,WALL.tread,s.x,0,s.z);tris+=2;}
  // Cheek walls with a low parapet either side, and piers at the mouth (on the terrace's edge) and the foot.
  for(const side of [-1,1]){const pts:WallPt[]=[];for(let d=s.inset;d<=L+.001;d+=(L-s.inset)/Math.ceil(L-s.inset)){const x=s.x+s.dx*d+px*side*(s.w/2+.25),z=s.z+s.dz*d+pz*side*(s.w/2+.25);pts.push({x,z,top:WEST.terrace-s.slope*d+.75,foot:westNatural(x,z)});}
   const out=pts;// a closed prism: both faces and the top are wound right whichever way it runs
