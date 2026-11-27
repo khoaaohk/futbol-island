@@ -103,6 +103,11 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
   // the asphalt patch: inside the asphalt, outside the kerb's channel, area of the square [V - channel, V + r] less the channel's arc
   const patch=D.asphaltCorners().find(c=>near(c.x,(f.vx+f.cx)/2)&&near(c.z,(f.vz+f.cz)/2)).tris;let pa=0;const R=f.r+K.channel;
   for(let i=0;i<patch.length;i+=9){const cx=(patch[i]+patch[i+3]+patch[i+6])/3,cz=(patch[i+2]+patch[i+5]+patch[i+8])/3,a=((patch[i+5]-patch[i+2])*(patch[i+6]-patch[i])-(patch[i+3]-patch[i])*(patch[i+8]-patch[i+2]))/2;assert.ok(a>0&&S.asphalt.inside(cx,cz)&&D.asphaltBand(cx,cz));pa+=a;}
-  assert.ok(near(pa,R*R-N/2*R*R*Math.sin(Math.PI/2/N),1e-6),'asphalt patch area '+pa);}
+  assert.ok(near(pa,R*R-N/2*R*R*Math.sin(Math.PI/2/N),1e-6),'asphalt patch area '+pa);
+  // the same patch threaded with the neighbouring cells' vertices on its straight edges (world.ts passes them: no T-junction) keeps its area
+  const ox=f.vx-(f.bx+f.ax)*K.channel,oz=f.vz-(f.bz+f.az)*K.channel,CP=[f.vx,oz,f.vx+f.bx*1.3,oz,ox,f.vz,ox,f.vz+f.az*2.2,ox,f.vz+f.az*.4];
+  const p2=D.asphaltCorners(CP).find(c=>near(c.x,(f.vx+f.cx)/2)&&near(c.z,(f.vz+f.cz)/2)).tris;let pb=0;const used=new Set();
+  for(let i=0;i<p2.length;i+=9){pb+=((p2[i+5]-p2[i+2])*(p2[i+6]-p2[i])-(p2[i+3]-p2[i])*(p2[i+8]-p2[i+2]))/2;for(let k=0;k<9;k+=3)used.add(p2[i+k].toFixed(4)+','+p2[i+k+2].toFixed(4));}
+  assert.ok(near(pb,pa,1e-6),'threaded patch area '+pb+' vs '+pa);for(let k=0;k<CP.length;k+=2)assert.ok(used.has(CP[k].toFixed(4)+','+CP[k+1].toFixed(4)),'seam vertex used');}
  console.log('  rounded corners',F.length,'radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));}
 console.log('town-depth: ok');

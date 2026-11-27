@@ -300,18 +300,33 @@ export function asphaltBand(x:number,z:number){const s=S;if(!s)return false;cons
  return false;}
 /** Knots the asphalt cells are cut on (world.ts roadSurface): the band edge, the camber, and a regular step for the pins' easing. */
 export function asphaltKnots(){const xs:number[]=[],zs:number[]=[],xSeg:Seg[]=[],zSeg:Seg[]=[],s=S;if(!s)return {xs,zs,xSeg,zSeg};
- for(const g of s.asphalt.segs){const e=g.nx?g.ax:g.az,n=-(g.nx||g.nz);for(const o of [KERB.channel,2.1]){if(g.nx){xs.push(q3(e+n*o));xSeg.push(g);}else{zs.push(q3(e+n*o));zSeg.push(g);}}}
+ // a kerb shortened by a rounded corner still lends its knots to the cells it reached before (else a cell beside it lacks them and
+ // its shared edge gets a T-junction: hairline cracks across the junction box, Nov 26 2026)
+ const P=CORNER.radius+KERB.channel+.1;
+ for(const g0 of s.asphalt.segs){const g:Seg=g0.nx?{...g0,az:g0.az-P,bz:g0.bz+P}:{...g0,ax:g0.ax-P,bx:g0.bx+P},e=g.nx?g.ax:g.az,n=-(g.nx||g.nz);for(const o of [KERB.channel,2.1]){if(g.nx){xs.push(q3(e+n*o));xSeg.push(g);}else{zs.push(q3(e+n*o));zSeg.push(g);}}}
  // a rounded corner's patch square [V - channel, V + r] on both axes: its edges are cut lines too (a pseudo segment spans its extent)
  for(const f of s.asphalt.fillets){const B=KERB.channel,x0=Math.min(f.vx-f.bx*B,f.cx),x1=Math.max(f.vx-f.bx*B,f.cx),z0=Math.min(f.vz-f.az*B,f.cz),z1=Math.max(f.vz-f.az*B,f.cz),g:Seg={ax:x0,az:z0,bx:x1,bz:z1,nx:0,nz:0,s0:0,s1:0};
   for(const x of [x0,x1]){xs.push(q3(x));xSeg.push(g);}for(const z of [z0,z1]){zs.push(q3(z));zSeg.push(g);}}
  return {xs,zs,xSeg,zSeg};}
-/** Rounded corners: the asphalt of each corner's patch square that the kerb strip leaves (beyond the channel), as world triangles
- *  [x, y, z, ...] on the height function, facing up. Two rings from the patch's outer corner to the channel's arc. */
-export function asphaltCorners():{x:number;z:number;tris:number[]}[]{const s=S;if(!s)return [];const out:{x:number;z:number;tris:number[]}[]=[],B=KERB.channel;
- for(const f of s.asphalt.fillets){const t:number[]=[],ox=f.vx-(f.bx+f.ax)*B,oz=f.vz-(f.bz+f.az)*B,arc:number[][]=[],mid:number[][]=[];
-  for(let k=0;k<=FILLET_STEPS;k++){const [x,z]=filletPoint(f,k,f.r+B);arc.push([x,z]);mid.push([(x+ox)/2,(z+oz)/2]);}
-  const tri=(a:number[],b:number[],c:number[])=>{if((b[1]-a[1])*(c[0]-a[0])-(b[0]-a[0])*(c[1]-a[1])<0){const q=b;b=c;c=q;}for(const p of [a,b,c])t.push(p[0],DRAWN.asphalt+depthLift(p[0],p[1]),p[1]);};
-  for(let k=0;k<FILLET_STEPS;k++){tri(arc[k],arc[k+1],mid[k+1]);tri(arc[k],mid[k+1],mid[k]);tri([ox,oz],mid[k],mid[k+1]);}
+/** Rounded corners: the asphalt of each corner's patch square [V - channel, C] that the kerb strip leaves (outside the channel's arc),
+ *  as world triangles [x, y, z, ...] on the height function, facing up. `cellPts` (flat x, z): the vertices of the asphalt cells
+ *  around it; those lying on the patch's two straight edges become patch vertices too, so the patch and the cells share every
+ *  vertex along their seam (no T-junction, no hairline crack). Triangulated as a strip between the L of straight edges and the arc,
+ *  merged by angle round the corner's centre. */
+export function asphaltCorners(cellPts:ArrayLike<number>=[]):{x:number;z:number;tris:number[]}[]{const s=S;if(!s)return [];const out:{x:number;z:number;tris:number[]}[]=[],B=KERB.channel,E=1e-4;
+ for(const f of s.asphalt.fillets){const t:number[]=[],R=f.r+B,ox=f.vx-(f.bx+f.ax)*B,oz=f.vz-(f.bz+f.az)*B,arc:number[][]=[];
+  for(let k=0;k<=FILLET_STEPS;k++){const [x,z]=filletPoint(f,k,R);arc.push([x,z]);}
+  // edge 1 runs from arc[0] to o along the line z = oz (it is parallel to a), edge 2 from o to arc[N] along x = ox
+  const e1:number[][]=[],e2:number[][]=[],a0=arc[0],aN=arc[FILLET_STEPS];
+  for(let i=0;i+1<cellPts.length;i+=2){const x=cellPts[i],z=cellPts[i+1];
+   if(Math.abs(z-oz)<E&&(x-a0[0])*(x-ox)<-E)e1.push([x,z]);else if(Math.abs(x-ox)<E&&(z-aN[1])*(z-oz)<-E)e2.push([x,z]);}
+  const uniq=(l:number[][],from:number[])=>{l.sort((p,q)=>Math.hypot(p[0]-from[0],p[1]-from[1])-Math.hypot(q[0]-from[0],q[1]-from[1]));return l.filter((p,i)=>!i||Math.hypot(p[0]-l[i-1][0],p[1]-l[i-1][1])>E);};
+  const outer=[a0,...uniq(e1,a0),[ox,oz],...uniq(e2,[ox,oz]),aN],ang=(p:number[])=>Math.atan2(p[1]-f.cz,p[0]-f.cx),a00=ang(a0);
+  const rel=(p:number[])=>{let v=ang(p)-a00;while(v>Math.PI)v-=2*Math.PI;while(v<-Math.PI)v+=2*Math.PI;return Math.abs(v);};
+  const tri=(a:number[],b:number[],c:number[])=>{const cr=(b[1]-a[1])*(c[0]-a[0])-(b[0]-a[0])*(c[1]-a[1]);if(Math.abs(cr)<1e-9)return;if(cr<0){const q=b;b=c;c=q;}for(const p of [a,b,c])t.push(p[0],DRAWN.asphalt+depthLift(p[0],p[1]),p[1]);};
+  // the strip starts on the edge's first point off the arc (a0 itself lies on the arc: a fan from it would fold into the kerb)
+  const L=outer.length-2,N=FILLET_STEPS;let i=1,j=0;
+  while(i<L||j<N){if(j>=N||(i<L&&rel(outer[i+1])<=rel(arc[j+1]))){tri(outer[i],arc[j],outer[i+1]);i++;}else{tri(outer[i],arc[j],arc[j+1]);j++;}}
   out.push({x:(f.vx+f.cx)/2,z:(f.vz+f.cz)/2,tris:t});}
  return out;}
 /** Rounded corners: a pavement cell's triangles (world [x, y, z, ...]) less every rounded corner's asphalt (the square [V, C] outside
@@ -347,6 +362,11 @@ export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|n
  *  the verge patch (geometry y = rise above the lawn mesh; the soil lip goes to `sink`). null with the flag off. */
 export function depthLawn(sink:Sink|null,low=false,soft=false){const s=S;if(!s)return null;const rim:number[]=[],rimMid:number[]=[],rimIn:number[]=[];/* soft (?surf=1, surfaceEdges.ts): the grass creeps 12 to 42 cm over the paving and the lawn shader breaks that rim up (aEdge on the `rim` vertices); no soil strip then */
  const cut:Rect[]=[...s.asphalt.rects.map(r=>({x:r.x,z:r.z,w:r.w-.2,d:r.d-.2})),...s.crossings.flatMap(k=>[-1,1].map(side=>k.vertical?{x:k.x+side*4.45,z:k.z,w:1.1,d:2*(KERB.dropHalf+KERB.dropTaper)+.6}:{x:k.x,z:k.z+side*4.45,w:2*(KERB.dropHalf+KERB.dropTaper)+.6,d:1.1}))];
+ // rounded corners: the corner's new asphalt and the dropped kerb's ramp round the curve (pavement below the lawn's plane within
+ // 0.35 m of the kerb) need the hole too (the lawn showed as a dark triangle behind the kerb). Three boxes in the corner's own frame
+ // (u along b, w along a, from V): two strips along the kerbs and the nook; they start 0.2 m out on the road to merge with the cut.
+ for(const f of s.asphalt.fillets)for(const [u1,w1] of [[.9,f.r],[f.r,.9],[f.r*.54,f.r*.54]]){const p0=[f.vx-(f.bx+f.ax)*.2,f.vz-(f.bz+f.az)*.2],p1=[f.vx+f.bx*u1+f.ax*w1,f.vz+f.bz*u1+f.az*w1];
+  cut.push({x:(p0[0]+p1[0])/2,z:(p0[1]+p1[1])/2,w:Math.abs(p1[0]-p0[0]),d:Math.abs(p1[1]-p0[1])});}
  const loops=outlineLoops(buildOutline(cut)),ok=loops.every(l=>l.pts.every(p=>insidePoly(INTERIOR_GRASS,p.x,p.z)));
  const position:number[]=[],index:number[]=[];let soil=0;
  const rows=low?[-.04,.14,.34,VERGE.reach]:[-.04,.14,.34,VERGE.flat,VERGE.reach];

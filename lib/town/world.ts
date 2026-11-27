@@ -18,7 +18,7 @@ import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
 import {groundingOn,buildGrounding} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -1589,6 +1589,9 @@ export function* buildTownSteps(scene: T.Scene) {
     const xs=[...new Set(boundaries.flatMap(r=>[r.x-r.w/2,r.x+r.w/2]))].sort((a,b)=>a-b);
     const zs=[...new Set(boundaries.flatMap(r=>[r.z-r.d/2,r.z+r.d/2]))].sort((a,b)=>a-b);
     const chunks=new Map<string,{x:number;z:number;positions:number[]}>();
+    // rounded street corners: the cell vertices beside each corner's asphalt patch (asphaltCorners threads them into its seams)
+    const cornerPts:number[]=[],fl=depth?.asphalt.fillets??[],cornerSquare=(x0:number,x1:number,z0:number,z1:number)=>fl.some(f=>{const B=KERB.channel+.01;
+     return x1>=Math.min(f.vx-f.bx*B,f.cx)-.01&&x0<=Math.max(f.vx-f.bx*B,f.cx)+.01&&z1>=Math.min(f.vz-f.az*B,f.cz)-.01&&z0<=Math.max(f.vz-f.az*B,f.cz)+.01;});
     for(let ix=0;ix<xs.length-1;ix++)for(let iz=0;iz<zs.length-1;iz++){
       const x=(xs[ix]+xs[ix+1])/2,z=(zs[iz]+zs[iz+1])/2;
       if(!rects.some(r=>Math.abs(x-r.x)<r.w/2+1e-7&&Math.abs(z-r.z)<r.d/2+1e-7))continue;
@@ -1602,6 +1605,7 @@ export function* buildTownSteps(scene: T.Scene) {
         const local=(lo:number,hi:number,list:number[],step:boolean)=>{const k=[lo,hi,...list.filter(v=>v>lo+.01&&v<hi-.01)];if(step&&vary)for(let v=Math.ceil(lo/5)*5;v<hi;v+=5)if(v>lo+.01&&!k.some(q=>Math.abs(q-v)<.01))k.push(v);return [...new Set(k)].sort((p,q)=>p-q);};
         const kx=local(x0,x1,depthKnots!.xs.filter((_,i)=>{const g=depthKnots!.xSeg[i];return g.bz>z0-.6&&g.az<z1+.6;}),true),kz=local(z0,z1,depthKnots!.zs.filter((_,i)=>{const g=depthKnots!.zSeg[i];return g.bx>x0-.6&&g.ax<x1+.6;}),true);
         for(let i=0;i<kx.length-1;i++)for(let k=0;k<kz.length-1;k++){const xa=kx[i],xb=kx[i+1],za=kz[k],zb=kz[k+1];if(asphaltBand((xa+xb)/2,(za+zb)/2))continue;
+         if(cornerSquare(xa,xb,za,zb))cornerPts.push(xa,za,xa,zb,xb,za,xb,zb);
          const h=(px:number,pz:number)=>DRAWN.asphalt+depthLift(px,pz);chunk.positions.push(xa-ox,h(xa,za),za-oz,xa-ox,h(xa,zb),zb-oz,xb-ox,h(xb,zb),zb-oz,xa-ox,h(xa,za),za-oz,xb-ox,h(xb,zb),zb-oz,xb-ox,h(xb,za),za-oz);}
         continue;}
        // rounded street corners (Nov 26 2026): the pavement gives the corner's curve to the asphalt (pavementTrim; asphaltCorners below)
@@ -1609,7 +1613,7 @@ export function* buildTownSteps(scene: T.Scene) {
        for(let i=0;i<cut.length;i+=3)chunk.positions.push(cut[i]-ox,cut[i+1],cut[i+2]-oz);continue;}
       chunk.positions.push(a,y,c,a,y,d,b,y,d,a,y,c,b,y,d,b,y,c);
     }
-    if(depth&&carriageway)for(const c of asphaltCorners()){const ox=Math.floor(c.x/50)*50,oz=Math.floor(c.z/50)*50,key=ox+':'+oz;
+    if(depth&&carriageway)for(const c of asphaltCorners(cornerPts)){const ox=Math.floor(c.x/50)*50,oz=Math.floor(c.z/50)*50,key=ox+':'+oz;
       let chunk=chunks.get(key);if(!chunk){chunk={x:ox,z:oz,positions:[]};chunks.set(key,chunk);}for(let i=0;i<c.tris.length;i+=3)chunk.positions.push(c.tris[i]-ox,c.tris[i+1],c.tris[i+2]-oz);}
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();
