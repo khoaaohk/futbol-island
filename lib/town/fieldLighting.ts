@@ -13,7 +13,7 @@ import {createPitchVisibility} from './pitchVisibility';
 import {SoftBoxGeometry,puffLevel,softLow} from '../graphics/softBox';
 /** Inflate pass 2 (owner shot 180: "make all the lights more rounded too instead of sharp corners"): floodlight banks, arms, bases
  *  and lens panels are puffed soft boxes (same sizes / positions / glow; same merged meshes: 0 draws). `?soft=0` = the old boxes. */
-const lightBox=(w:number,h:number,d:number,maxR?:[number,number,number])=>{const p=puffLevel();return p>0?new SoftBoxGeometry(w,h,d,{puff:p,seg:Math.min(w,h,d)<.15||softLow()?0:1,maxR}):new T.BoxGeometry(w,h,d);};
+const lightBox=(w:number,h:number,d:number,maxR?:[number,number,number])=>{const p=puffLevel();return p>0?new SoftBoxGeometry(w,h,d,{puff:p,seg:Math.min(w,h,d)<.15||softLow()?0:1,maxR,dome:maxR?-1:undefined/* flat faces where lenses lie */}):new T.BoxGeometry(w,h,d);};
 /** Flat lens panels keep flat faces (round corners only), so they lie on the bank's faces instead of curling off as chips. */
 const PANEL:[number,number,number]=[.08,.015,.08];
 
