@@ -1246,7 +1246,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Path to deck (owner, Nov 26 2026: "connect the path to the walking board area"): the 4 m path ended at z 209 beside the boardwalk's
   // west end, 1 m short of it across grass, with the end rail closed (the boardwalk moved 6 m east for the Island Line on Nov 23). It now
   // runs on to z 213 and a 1 m piece meets the deck's edge (x 49) over the same 4 m; the end rail opens there (BOARDWALK_WEST_GATE).
-  path(46,152.5,4,121);path(BW_GATE_PATH.x,BW_GATE_PATH.z,BW_GATE_PATH.w,BW_GATE_PATH.d);path(90,188,88,4);path(135,190,5,40);
+  path(46,152.5,4,121);path(BW_GATE_PATH.x,BW_GATE_PATH.z,BW_GATE_PATH.w,BW_GATE_PATH.d).userData.batchCell='0:3';/* joins the path's own batch: no new draw */path(90,188,88,4);path(135,190,5,40);
   // Nov 23 2026 (Island Line): the boardwalk starts 6 m further east (x 49, was 43) so the line's SW curve clears it, and its south
   // rail opens either side of the South station house (SOUTH_STATION_RAIL_GAPS) onto the platform.
   const BW0=49,railOpen=(x:number)=>SOUTH_STATION_RAIL_GAPS.some(([a,b])=>x>a&&x<b);
@@ -1317,7 +1317,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const x of [99,118]){path(x,196,15,15);table(x-2,195);bench(x+4,200);}
   // Path to deck sweep (Nov 26 2026): these two picnic patios stopped 3.5 m short of the boardwalk's open north edge across grass; a
   // 4 m walk joins each to it like the museum's and the café's (the first one west of the pier lamp at x 100).
-  path(95,205.25,4,3.5);path(118,205.25,4,3.5);
+  path(95,205.25,4,3.5).userData.batchCell='1:3';path(118,205.25,4,3.5).userData.batchCell='2:3';// in their patios' batches (cell z 150-200): no new draw
   path(203.25,196,13.5,15);table(200,195);bench(207,200);
   // The museum plaza (museumExterior.ts) keeps a clear central route to the pier.
   path(168,205.25,4,3.5);
@@ -1974,7 +1974,8 @@ export function* buildTownSteps(scene: T.Scene) {
     const stadiumPiece=object.userData.stadiumPaint===true;
     const paint=stadiumPiece?stadiumPaintFor(object.material):object.castShadow?paintMaterials.get(object.material):undefined;
     const material=paint??object.material;
-    const key=`${stadiumPiece&&paint?STADIUM_CELL:`${Math.floor(position.x/50)}:${Math.floor(position.z/50)}`}:${material.uuid}:${object.castShadow}`;
+    // userData.batchCell (Nov 26 2026): a small piece that sits just over a cell border joins its neighbour's batch (no batch of its own)
+    const key=`${stadiumPiece&&paint?STADIUM_CELL:(object.userData.batchCell as string|undefined)??`${Math.floor(position.x/50)}:${Math.floor(position.z/50)}`}:${material.uuid}:${object.castShadow}`;
     const geom=object.geometry.clone().applyMatrix4(object.matrixWorld);
     if(paint){
       const color=(object.material as T.MeshStandardMaterial).color;
