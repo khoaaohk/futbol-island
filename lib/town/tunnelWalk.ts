@@ -36,8 +36,10 @@ export const CHASE={back:4.8,up:2.9,ahead:3,lookUp:.75} as const;
 export const TRACK_HIT=1.4+.35;
 /** Warn a walker on the track (inside WARN_D m of the centre) when a train is under WARN_ETA s away. */
 export const WARN_D=2.2,WARN_ETA=4.5;
+/** The bump starts HIT_LEAD s before the nose reaches them (so the squash plays as it shoves them, not inside the car). */
+export const HIT_LEAD=.12;
 /** The bump: squash (s), push across (s), pop / wobble ends (s), all done + control back (s); reduced motion: slide (s), done (s). */
-export const BUMP={squash:.3,push:.5,pop:.8,done:1.5,slideR:.4,doneR:.75,dizzy:.7} as const;
+export const BUMP={squash:.3,push:.5,pop:.8,done:1.5,slideR:.4,doneR:.75,dizzy:.7} as const;// dizzy: the stars from `pop` to `done`
 
 // ---- the floor across the bore (m over TUNNEL_BED), as buildLitTube draws it (sleepers / rails / ballast / gutter / walkway)
 const RAIL_V=.68,SLEEPER=.22,RAIL=.36;
@@ -71,7 +73,7 @@ export const TUNNEL_MODE_NOTE=['Only walking and riding in the tunnel','Walk or 
 
 type TrainLike={s:number;v:number};
 export function createTunnelWalk(){
- const state={active:false,k:0,camYaw:NaN,height:TUNNEL_BED+WALKWAY_TOP,mode:'walk'};
+ const state={active:false,k:0,camYaw:NaN,height:TUNNEL_BED+WALKWAY_TOP,mode:'walk',/** the chase camera's lean to one walkway while a train is near (-1 … 1) */camSide:0,/** Town: a train is in / near the bore by the walker; its side (±1), 0 none */trainSide:0,/** Town: the train-coming nudge (look back at it) */scan:false};
  const bump={active:false,age:0,reduced:false,x0:0,z0:0,x1:0,z1:0,h0:0,h1:0,side:1,tx:1,tz:0,dizzy:false};
  const bumpPose={flat:0,roll:0,wobble:0,hop:0};
  const warnOut={train:-1,gap:Infinity,eta:Infinity};
@@ -97,13 +99,20 @@ export function createTunnelWalk(){
   *  bore's axis behind them (never orbiting out through the lining: owner 156). */
  function chase(x:number,y:number,z:number,yaw:number,dt:number,reduced:boolean,cam:{x:number;y:number;z:number},look:{x:number;y:number;z:number}){
   const f=tunnelSpot(x,z);if(!f)return false;
-  const fx=Math.sin(yaw),fz=Math.cos(yaw),dir=fx*f.tx+fz*f.tz>=0?1:-1,want=Math.atan2(f.tx*dir,f.tz*dir);
-  if(state.camYaw!==state.camYaw||reduced)state.camYaw=want;else{let dy=want-state.camYaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));state.camYaw+=dy*(1-Math.exp(-dt*3.2));}
+  // a train near: the camera moves over to the walker's walkway (beside the train, never inside a car: owner Nov 27 bump strip)
+  const ws=state.trainSide;state.camSide+=(ws-state.camSide)*(reduced?1:1-Math.exp(-dt*5));
+  const fx=Math.sin(yaw),fz=Math.cos(yaw),dir=state.scan?-1:fx*f.tx+fz*f.tz>=0?1:-1,want=Math.atan2(f.tx*dir,f.tz*dir);// scan: the train-coming nudge turns the view to look back down the bore at it (trains run +s)
+  // a turn to the other way along the bore is a cut (owner 156: a swing round put the camera sideways, through the lining); the
+  // eased part only follows the bore's own bend
+  let dy=want-state.camYaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));if(state.camYaw!==state.camYaw||reduced||Math.abs(dy)>Math.PI/2)state.camYaw=want;else state.camYaw+=dy*(1-Math.exp(-dt*3.2));
   // back along the bore (the eased heading), then pulled onto the axis: a turn swings it round through the bore's middle
   const bx=-Math.sin(state.camYaw),bz=-Math.cos(state.camYaw);let px=x+bx*CHASE.back,pz=z+bz*CHASE.back;
-  const g=tunnelSpot(px,pz,TUNNEL_HALF_WIDTH+CHASE.back+1);if(g){const n=leftNormal(g.tx,g.tz),dd=Math.min(TUNNEL_HALF_WIDTH-CAM_PAD-.1,g.d*.4);px=g.cx+n.x*dd*g.side;pz=g.cz+n.z*dd*g.side;}
+  const g=tunnelSpot(px,pz,TUNNEL_HALF_WIDTH+CHASE.back+1);if(g){const n=leftNormal(g.tx,g.tz),lim=TUNNEL_HALF_WIDTH-CAM_PAD-.1,v0=Math.min(lim,g.d*.4)*g.side,cs=Math.abs(state.camSide),v=v0+(Math.sign(state.camSide)*lim-v0)*cs;px=g.cx+n.x*v;pz=g.cz+n.z*v;}
   cam.x=px;cam.y=Math.min(y+CHASE.up,TUNNEL_BED+SPRING+TUNNEL_HALF_WIDTH-.9);cam.z=pz;
-  look.x=x-bx*CHASE.ahead;look.y=y+CHASE.lookUp;look.z=z-bz*CHASE.ahead;clampCam(cam);return true;}
+  look.x=x-bx*CHASE.ahead;look.y=y+CHASE.lookUp;look.z=z-bz*CHASE.ahead;
+  // leaning over: the look point swings the other way a little (the walker stays mid-frame, not at its edge)
+  if(g&&state.camSide){const lk=-.35;look.x+=(cam.x-(x+bx*CHASE.back))*lk;look.z+=(cam.z-(z+bz*CHASE.back))*lk;}
+  clampCam(cam);return true;}
  /** Holds a camera point inside the bore cylinder (lateral ≤ half width − CAM_PAD, between the floor and the arch less CAM_PAD) when it
   *  is inside the bore's length (or within 1 m of a mouth). True when it moved it. A few float ops. */
  function clampCam(c:{x:number;y:number;z:number}){const g=tunnelSpot(c.x,c.z,TUNNEL_HALF_WIDTH+12);if(!g||g.u< -1)return false;
@@ -116,7 +125,7 @@ export function createTunnelWalk(){
   for(let i=0;i<trains.length;i++){const t=trains[i],gap=wrapS(s-t.s);if(gap>80)continue;const eta=gap/Math.max(t.v,.5);if(eta<warnOut.eta){warnOut.train=i;warnOut.gap=gap;warnOut.eta=eta;}}return warnOut;}
  /** The bump test: a walker / ride on the track (d < TRACK_HIT), the train's front at or just past them (it reaches them this frame). */
  function hit(trains:ArrayLike<TrainLike>,s:number,d:number,len:number){if(d>=TRACK_HIT||bump.active)return -1;
-  for(let i=0;i<trains.length;i++){const t=trains[i];if(t.v<.5)continue;const past=wrapS(t.s-s);if(past<len&&past>=0)return i;}return -1;}
+  for(let i=0;i<trains.length;i++){const t=trains[i];if(t.v<.5)continue;const pre=Math.max(1,t.v*HIT_LEAD),past=wrapS(t.s-s+pre);if(past<len+pre)return i;}return -1;}
  /** Starts the bump at p: across to the nearer walkway lane at the same s. */
  function bumpStart(p:{x:number;z:number},reduced:boolean){const f=tunnelSpot(p.x,p.z);if(!f)return false;const n=leftNormal(f.tx,f.tz),dd=LANE_MIN+.25;
   Object.assign(bump,{active:true,age:0,reduced,x0:p.x,z0:p.z,x1:f.cx+n.x*dd*f.side,z1:f.cz+n.z*dd*f.side,h0:state.height,h1:TUNNEL_BED+WALKWAY_TOP,side:f.side,tx:f.tx,tz:f.tz,dizzy:false});return true;}
