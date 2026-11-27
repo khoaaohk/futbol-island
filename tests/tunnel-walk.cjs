@@ -77,5 +77,6 @@ const ROOT=path.join(__dirname,'..');
  assert(/toggleAttribute\('data-no-fly',inTunnelRef\.current\)/.test(town)&&/className="travel-nofly"/.test(town),'the ride button greys the jetpack in the tunnel');
  assert(/\.filter\(m=>!inTunnelRef\.current\|\|tunnelMode\(m\)\)/.test(town),'the ride cycle skips the jetpack in the tunnel (moped -> walk)');
  const css=fs.readFileSync(path.join(ROOT,'app/globals.css'),'utf8');assert(/\.travel-mode\[data-no-fly\] \.travel-nofly\{display:grid/.test(css),'no-fly badge style');
+ for(const k of ['bonkBubble.follow(0,pr.x,bubbleY(','emoteBubbles.follow(0,me.x,bubbleY(','kenjiBubble.follow(0,tr.cabX,bubbleY('])assert(town.includes(k),'bubble kept in view: '+k);
  console.log('tunnel-walk: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
