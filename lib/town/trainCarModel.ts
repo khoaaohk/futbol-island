@@ -6,6 +6,10 @@
 import * as T from 'three';
 import {PART,createVehicleMaterial} from '../graphics/trafficVehicles';
 import type {Livery} from './trainLiveries';
+import {softOn,SoftBoxGeometry} from '../graphics/softBox';
+/** Soft sweep (owner Nov 27 2026: "check for blockyness inside the train too"; `?soft=0` = before): cushioned benches, round poles
+ *  and rails, ring straps, rounded fittings. Same VGeo, same material, same draws per car. */
+const SOFT_ON=softOn();
 
 /** Track geometry the cars sit on (trainWorld.ts values: rail top above the bed, ballast top). */
 export const RAIL_TOP=.34,BALLAST_TOP=.12;
@@ -51,6 +55,24 @@ export class VGeo{
  /** A wheel on the x axis (tread + outer cap), spinning about its own centre (PART.rearWheel, pivot in aPart). */
  wheel(x:number,az:number,color:string){const N=8,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],R=(k:number,px:number):V=>{const t=(k+.5)/N*Math.PI*2;return [px,WHEEL_R+Math.cos(t)*WHEEL_R,az+Math.sin(t)*WHEEL_R];};
   for(let k=0;k<N;k++){this.quad(R(k,xi),R(k+1,xi),R(k+1,xo),R(k,xo),color,ctr,PART.rearWheel,ctr);if(k>0&&k<N-1)this.tri(R(0,xo),R(k,xo),R(k+1,xo),color,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
+ /** One triangle with its own vertex normals (smooth shading; the bend still applies). */
+ triN(v:[V,V,V],nn:[V,V,V],color:string|((v:V)=>T.Color),part=0,ctr:V=[0,0,0]){if(typeof color==='string')this.col.set(color);
+  for(let i=0;i<3;i++){let [nx,ny,nz]=nn[i];if(this.bend>0){const b=this.bend;nx*=1-b;ny=ny*(1-b)+b;nz*=1-b;const m=Math.hypot(nx,ny,nz)||1;nx/=m;ny/=m;nz/=m;}
+   const c=typeof color==='string'?this.col:color(v[i]);this.p.push(v[i][0],v[i][1],v[i][2]);this.n.push(nx,ny,nz);this.c.push(c.r,c.g,c.b);this.a.push(ctr[0],ctr[1],ctr[2],part||this.defPart);}}
+ /** A rounded box (lib/graphics/softBox.ts) with smooth edge normals: centre, half sizes, corner radius, 0 chamfer / 1 / 2 segments. */
+ rbox(x:number,y:number,z:number,hx:number,hy:number,hz:number,color:string|((v:V)=>T.Color),r:number,seg=1,part=0,ctr?:V,dome=0){
+  const g=new SoftBoxGeometry(hx*2,hy*2,hz*2,{radius:r,seg,dome}),P=g.getAttribute('position'),N=g.getAttribute('normal'),I=g.index!.array;
+  const pv=(i:number):V=>[x+P.getX(i),y+P.getY(i),z+P.getZ(i)],nv=(i:number):V=>[N.getX(i),N.getY(i),N.getZ(i)];
+  for(let k=0;k<I.length;k+=3)this.triN([pv(I[k]),pv(I[k+1]),pv(I[k+2])],[nv(I[k]),nv(I[k+1]),nv(I[k+2])],color,part,ctr);g.dispose();}
+ /** A round beam (`sides` around, smooth normals), open ends: poles, rails, strap loops. */
+ rbeam(a:V,b:V,r:number,color:string,part=0,ctr?:V,sides=8){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
+  const up=Math.abs(d[1])>.9?[1,0,0]:[0,1,0],s1=[d[1]*up[2]-d[2]*up[1],d[2]*up[0]-d[0]*up[2],d[0]*up[1]-d[1]*up[0]],l1=Math.hypot(s1[0],s1[1],s1[2]);for(let i=0;i<3;i++)s1[i]/=l1;
+  const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]];
+  const N=(k:number):V=>{const t=k/sides*Math.PI*2,c=Math.cos(t),sn=Math.sin(t);return [s1[0]*c+s2[0]*sn,s1[1]*c+s2[1]*sn,s1[2]*c+s2[2]*sn];},P=(e:V,n:V):V=>[e[0]+n[0]*r,e[1]+n[1]*r,e[2]+n[2]*r];
+  for(let k=0;k<sides;k++){const n0=N(k),n1=N(k+1);this.triN([P(a,n0),P(b,n0),P(b,n1)],[n0,n0,n1],color,part,ctr);this.triN([P(a,n0),P(b,n1),P(a,n1)],[n0,n1,n1],color,part,ctr);}}
+ /** A ring (torus-like loop of round beams) in the plane spanned by u and v round centre c: strap handles. */
+ ring(c:V,u:V,v:V,R:number,r:number,color:string,part=0,ctr?:V,seg=8,sides=5){const at=(k:number):V=>{const t=k/seg*Math.PI*2;return [c[0]+(u[0]*Math.cos(t)+v[0]*Math.sin(t))*R,c[1]+(u[1]*Math.cos(t)+v[1]*Math.sin(t))*R,c[2]+(u[2]*Math.cos(t)+v[2]*Math.sin(t))*R];};
+  for(let k=0;k<seg;k++)this.rbeam(at(k),at(k+1),r,color,part,ctr,sides);}
  beam(a:V,b:V,r:number,color:string,part=0,ctr?:V){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
   const up=Math.abs(d[1])>.9?[1,0,0]:[0,1,0],s1=[d[1]*up[2]-d[2]*up[1],d[2]*up[0]-d[0]*up[2],d[0]*up[1]-d[1]*up[0]],l1=Math.hypot(s1[0],s1[1],s1[2]);for(let i=0;i<3;i++)s1[i]/=l1;
   const s2=[d[1]*s1[2]-d[2]*s1[1],d[2]*s1[0]-d[0]*s1[2],d[0]*s1[1]-d[1]*s1[0]],c:V=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2];
@@ -284,6 +306,7 @@ const CAR_GAP_HALF=.2,INNER_BEND=.65;
 export const INTERIOR_GLOW=.48;
 /** The cream interior (all trains) and, closeUp, its detail. Faces face the aisle: they are seen through the glass and doorways. */
 function interior(g:VGeo,lv:Livery,closeUp:boolean){
+ const SOFT=SOFT_ON&&closeUp;// the rounded interior is the close-up car's (the one ridden or stood beside): far cars keep their cheap boxes
  const F=CAR_FLOOR_Y,seat=moquette(lv),seatDark=col(seat,.78).getStyle(),seatLite=col(seat,1.12).getStyle();
  // floor: lighter in the aisle, darker by the walls; a darker patch under each bench (occlusion)
  const SEGS=[[ZI0,Z1,1,1],[Z1,ZI1,1,CAB_K]] as const;// the straight part, then the cab end (narrowing with the body)
@@ -297,7 +320,8 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    g.quad([A(x0),CEIL_Y,za],[A(x1),CEIL_Y,za],[B(x1),CEIL_Y,zb],[B(x0),CEIL_Y,zb],c,[0,CEIL_Y+1,0]);}
   for(const s of [-1,1])g.quad([s*IW*ka,SIDE_TOP,za],[s*COVE_X*ka,CEIL_Y,za],[s*COVE_X*kb,CEIL_Y,zb],[s*IW*kb,SIDE_TOP,zb],ramp(K.ceil,SIDE_TOP,CEIL_Y,.9),[s*3,5,(za+zb)/2]);}
  for(const s of [-1,1]){
-  g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
+  if(SOFT)g.rbox(s*.58,CEIL_Y-.02,(-5.6+CAB_Z-.2)/2,.12,.025,(CAB_Z-.2+5.6)/2,K.light,.024,0,PART.head);// a rounded diffuser
+  else g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
  // the cab partition (cream on the passenger side, grey in the cab) with its window, the cab desk
  {const hs=PART_WINS;wallCells(-IW,IW,[F,SIDE_TOP],hs,(a,b,y0,y1)=>{endQuad(g,CAB_Z,-1,a,b,y0,y1,ramp(K.wall,F,F+1.1,.74));endQuad(g,CAB_Z+.05,1,a,b,y0,y1,K.cab);});
   for(const s of [-1,1]){g.quad([s*IW,SIDE_TOP,CAB_Z],[s*COVE_X,CEIL_Y,CAB_Z],[0,CEIL_Y,CAB_Z],[0,SIDE_TOP,CAB_Z],K.wall,[0,3.2,CAB_Z+1]);}
@@ -307,22 +331,29 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
   // benches: stainless kick panel, a moquette cushion (lighter top, darker sides) and a two-tone backrest
   for(const [a,b] of BENCHES){const zc=(a+b)/2,hz=(b-a)/2;
    g.box(s*1.06,F+.26,zc,.28,.26,hz,ramp(K.kick,F,F+.5,.7));
-   g.box(s*(BENCH_FRONT+.31),F+.575,zc,.31,.065,hz,seatDark);g.quad([s*(BENCH_FRONT+.03),F+.642,a+.02],[s*(IW-.02),F+.642,a+.02],[s*(IW-.02),F+.642,b-.02],[s*(BENCH_FRONT+.03),F+.642,b-.02],seat,[0,F,zc]);
-   g.box(s*(BENCH_BACK+.07),F+.74,zc,.07,.1,hz,seatDark);g.box(s*(BENCH_BACK+.07),F+.94,zc,.07,.1,hz,seat);
-   if(closeUp){g.quad([s*BENCH_FRONT,F+.6,a],[s*(BENCH_FRONT+.04),F+.642,a],[s*(BENCH_FRONT+.04),F+.642,b],[s*BENCH_FRONT,F+.6,b],seatLite,[0,F+.3,zc]);// a bevel on the cushion's front edge
-    for(const ze of [a,b])g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
+   if(SOFT){// cushioned seat: a pillowed moquette cushion per bench, seams between the slots, a rounded two-part backrest
+    {const n=Math.max(1,SEAT_SLOTS_Z.filter(sz=>sz>a&&sz<b).length),w=(b-a)/n;for(let k=0;k<n;k++)g.rbox(s*(BENCH_FRONT+.31),F+.575,a+w*(k+.5),.31,.07,w/2-.012,seat,.06,0,0,undefined,.025);}// one cushion per seat: soft seams
+    g.rbox(s*(BENCH_BACK+.07),F+.75,zc,.075,.11,hz-.01,seatDark,.06,0);g.rbox(s*(BENCH_BACK+.07),F+.95,zc,.075,.11,hz-.01,seat,.06,0,0,undefined,.015);}
+   else{g.box(s*(BENCH_FRONT+.31),F+.575,zc,.31,.065,hz,seatDark);g.quad([s*(BENCH_FRONT+.03),F+.642,a+.02],[s*(IW-.02),F+.642,a+.02],[s*(IW-.02),F+.642,b-.02],[s*(BENCH_FRONT+.03),F+.642,b-.02],seat,[0,F,zc]);
+   g.box(s*(BENCH_BACK+.07),F+.74,zc,.07,.1,hz,seatDark);g.box(s*(BENCH_BACK+.07),F+.94,zc,.07,.1,hz,seat);}
+   if(closeUp){if(!SOFT)g.quad([s*BENCH_FRONT,F+.6,a],[s*(BENCH_FRONT+.04),F+.642,a],[s*(BENCH_FRONT+.04),F+.642,b],[s*BENCH_FRONT,F+.6,b],seatLite,[0,F+.3,zc]);// a bevel on the cushion's front edge
+    for(const ze of [a,b])SOFT?g.rbox(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.014,K.pole,.013,0):g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
     // POLISH 3 (owner shot 68: "remove this divider bar between seats, it's weird just sticking out"): no upright posts between slots
-    g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}// luggage rack over the bench
+    if(SOFT){g.rbox(s*1.17,3.06,zc,.17,.012,hz,K.rack,.011,0);g.rbeam([s*1.0,3.04,a],[s*1.0,3.04,b],.014,K.pole);}
+    else{g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}}// luggage rack over the bench
   // grab poles at the door bays (bench ends), the strap rail
-  for(const zc of DOORS)for(const d of [-1,1])g.beam([s*.78,F,zc+d*(DOOR_HALF+.12)],[s*.78,CEIL_Y,zc+d*(DOOR_HALF+.12)],.022,K.pole);
-  g.beam([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.018,K.pole);
+  const pole=SOFT?g.rbeam.bind(g):g.beam.bind(g);
+  for(const zc of DOORS)for(const d of [-1,1])pole([s*.78,F,zc+d*(DOOR_HALF+.12)],[s*.78,CEIL_Y,zc+d*(DOOR_HALF+.12)],.022,K.pole);
+  pole([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.018,K.pole);
   if(closeUp){
    // hangers and strap handles (a strap and a triangular grip), over the bench fronts
-   for(const z of [-5.5,-2.5,0,2.5,4.4])g.beam([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.01,K.pole);
+   for(const z of [-5.5,-2.5,0,2.5,4.4])pole([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.01,K.pole);
    // the straps swing about the rail in the vehicle shader (PART.strap, pivot in aPart): with the car's curve lean and a soft pendulum
    // after starts / stops (trafficVehicles.ts uSway). No per-strap CPU work; rigid with prefers-reduced-motion.
    for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1,P:V=[x,STRAP_RAIL_Y,z],S=PART.strap;
-    g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}
+    g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);
+    if(SOFT)g.ring([x,(yb+STRAP_GRIP_Y)/2,z],[0,1,0],[0,0,1],(yb-STRAP_GRIP_Y)/2+.012,.011,'#f2efe6',S,P,6,3);// a round loop handle
+    else{g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
    for(const ps of POSTERS)if(ps.s===s)poster(g,s,ps.z0,ps.z1,ps.kind);
    for(const zc of DOORS){g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);
