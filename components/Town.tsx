@@ -101,6 +101,7 @@ import {recordExploreActivity,recordExploreKnockover,exploreActivityNow} from '@
 import {createExploreZones} from '@/lib/town/exploreZones';
 import {recordQuestVisit} from '@/lib/town/questProgress';
 import {createIslandNpcs} from '@/lib/graphics/islandNpcs';
+import {createTagOcclusion,tagOccluderSolids} from '@/lib/town/tagOcclusion';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
 import {equippedActions} from '@/lib/town/equipmentActions';
@@ -1022,6 +1023,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     stadiumSitActions.current=()=>{const seat=stadiumSit.press(window.matchMedia('(prefers-reduced-motion: reduce)').matches);if(seat){location.x=seat.x;location.z=seat.z;rooftop.reset(seat.x,seat.z,seat.y);velocity.x=velocity.z=0;player.root.rotation.y=seat.yaw;}tapHaptic();sound.ui('click');};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
     disposers.add(()=>islandNpcs.dispose());
+    islandNpcs.setTagOcclusion(createTagOcclusion(tagOccluderSolids(world.buildings)));// name tags hide behind buildings and the stadium (owner shot 139)
     shadowVisibility.addDynamicRoots([islandNpcs.root,streetTraffic.root]);npcShadows.addRoots([islandNpcs.root]);
     // Heat audit Sep 30 2026 ("only what's in view"): for each render, hide static chunks and units whose sun-swept volume misses the view (pixel-identical).
     const viewGate=createViewGate(renderer,scene,sun);viewGate.addUnitRoots([islandNpcs.root,streetTraffic.root,coinHunt.root]);
