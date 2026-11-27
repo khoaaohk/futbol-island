@@ -392,13 +392,14 @@ export function buildSummitIsle(t:SummitTools){
   piece.tid=0;
   obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz},tid,rig:palmRig(x,z,y,{x:tx,y:ty,z:tz})});}
  function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
+  let drawn:Parameters<typeof roundTreeRig>[5];
   if(broadleafTreesOn()){// Leftovers B (Nov 26 2026 night): the main island's broadleaf kit (clumps, forked trunk, per-vertex occlusion)
-   const t=broadleafTree(x,z,s,{trunkFoot:.2,trunkTop:.13,sides:6,low:depthLowTier()});bake(piece,t.bark,'#8a6a48',at(x,y,z));bakeShaded(piece,t.leaves,i%3?'#5b895e':'#4f7f55',t.shade,at(x,y,z));}
+   const t=broadleafTree(x,z,s,{trunkFoot:.2,trunkTop:.13,sides:6,low:depthLowTier()});drawn={leaves:t.leaves.clone(),crown:t.crown};bake(piece,t.bark,'#8a6a48',at(x,y,z));bakeShaded(piece,t.leaves,i%3?'#5b895e':'#4f7f55',t.shade,at(x,y,z));}
   else{bake(piece,new T.CylinderGeometry(.2*s,.2*s,2.2*s,6),'#8a6a48',at(x,y+1.1*s,z));
   bake(piece,new T.IcosahedronGeometry(1.7*s,0),i%3?'#5b895e':'#4f7f55',at(x,y+2.9*s,z,0,i));
   bake(piece,new T.IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2));}
   piece.tid=0;
-  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s,i)});}
+  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:drawn?y+drawn.crown.max.y:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:drawn?y+drawn.crown.max.y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s,i,drawn)});drawn?.leaves.dispose();}
  function rock(x:number,z:number,r:number,i:number,piece=propsAt(x,z)){const y=yAt(x,z),sx=1+jitter(i,3)*.4,sy=.55+jitter(i,8)*.3,sz=1+jitter(i,4)*.3;
   bake(piece,new T.IcosahedronGeometry(r,0),['#9b9e90','#878b7e','#b1b3a6'][i%3],at(x,y+r*.25,z,0,jitter(i,5)*6,0,sx,sy,sz));
   // Solid to the size it shows (Oct 15 2026, user: "fix running through rocks"): a round collider out to the rock's widest reach

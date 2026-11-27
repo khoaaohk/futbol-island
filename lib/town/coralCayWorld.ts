@@ -510,7 +510,9 @@ export function buildCoralCay(t:CayTools){
   trees.forEach(([x,z,kind],i)=>{prop('tree',()=>{
    if(kind==='papaya'){cylinder(.12,3.2,'#9d805b',x,1.6,z);for(let k=0;k<6;k++){const leaf=box(1.3,.04,.3,'#739568',x+Math.cos(k)*.55,3.25,z+Math.sin(k)*.55);leaf.rotation.y=-k;leaf.rotation.z=.25;}for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.16,0),'#e8be71',x+Math.cos(k*1.6)*.18,2.8,z+Math.sin(k*1.6)*.18);}
    else{const f=orchardScale(x,z);cylinder(.16,1.6*f,'#9d805b',x,.8*f,z);const c=put(canopyLobe((kind==='mango'?1.55:1.3)*f,CAY_LOBE_DETAIL(),softOn()),kind==='mango'?'#5b895e':'#739568',x,2.4*f,z);c.scale.y=.85;
-    for(const f of coralTreeFruit(x,z,kind,i))put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',f.x,f.y,f.z);}});
+    /* polish Nov 27 (owner shot 195, fruit in the sky): coralTreeFruit is in WORLD height (it adds cayGround for the test), but put() lifts
+    every piece of this prop to the ground again (elevation.ts buildLift): the fruit stood a whole hill too high. Place it relative. */
+    const g0=cayGround(x,z);for(const f of coralTreeFruit(x,z,kind,i))put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',f.x,f.y-g0,f.z);}});
    obstacles.push(trunkCollider(x,z,kind==='papaya'?.12:.16));assets.push({kind:'fruit-tree',x,z,w:.5,d:.5,visualW:3.2,visualD:3.2,canopyHeight:3.4});
   });
   for(let z=-127;z<=-116;z+=2.8){const x=687;prop('bush',()=>{cylinder(.16,1.8,'#8baa69',x,.9,z);for(let k=0;k<5;k++){const leaf=box(1.5,.03,.38,'#7a9e67',x+Math.cos(k*1.25)*.55,1.95,z+Math.sin(k*1.25)*.55);leaf.rotation.y=-k*1.25;leaf.rotation.z=-.35;}put(new T.IcosahedronGeometry(.2,0),'#e8d25a',x+.2,1.4,z);});obstacles.push({x,z,w:.4,d:.4});}
