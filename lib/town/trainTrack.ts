@@ -71,7 +71,11 @@ export function sNear(x:number,z:number){let b=0,bd=Infinity;for(let i=0;i<TRACK
 // ---- The tunnel through Summit Isle's summit (owner ruling: straight through). Portals sit where the hill above clears the tube
 // roof by ≥ 1.5 m; the east one 6 m out from the Phase 0 spot so the climb trail (which crosses there) runs over the tunnel roof.
 export const TUNNEL_BED=2.2,TUNNEL_HALF_WIDTH=3.6,TUNNEL_HEIGHT=5.6;
-export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:670.5,z:43.1,s:sNear(670.5,43.1)}} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
+/** Rail fixes (Nov 26 2026, owner 153: "sky is leaking through" at the west portal): a portal stands ON the line, at the table row
+ *  nearest its plan spot. The west spot (538.5, 169.5) was 0.83 m off the centreline, so the headwall's arch sat 0.83 m to one side
+ *  of the lining (which follows the line): a gap down one side of the mouth showed the sky and the hill. */
+const portalOn=(x:number,z:number)=>{const s=sNear(x,z),q=trackAt(s);return {x:q.x,z:q.z,s};};
+export const TUNNEL={west:portalOn(538.5,169.5),east:portalOn(670.5,43.1)} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
 export const inTunnelS=(s:number)=>s>TUNNEL.west.s&&s<TUNNEL.east.s;
 
 // ---- Summit Isle's track bed: piecewise linear in s (beach → station flat → west portal; east portal → north beach).
