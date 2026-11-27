@@ -223,6 +223,8 @@ export type GroundingInput={
  lift?:(x:number,z:number)=>number;
  /** catenary poles (trainWorld.ts catenaryFeet): a contact shade, and a sand mound round the footing on the beach */
  masts?:readonly {x:number;z:number;r:number}[];
+ /** beach umbrella poles (untagged): a contact shade and a sand mound where the pole goes in */
+ umbrellas?:readonly {x:number;z:number}[];
  sun:readonly [number,number];
  /** lowest heat tier: contact shade only */
  low:boolean;
@@ -275,6 +277,8 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
  // 1b. Catenary poles (train meshes are skipped above): the footing's shade, a sand mound on the beach.
  for(const m of I.masts??[]){const gy=I.ground(m.x,m.z);if(gy>m.r+5)continue;push({kind:'post',x:m.x,z:m.z,hw:m.r,hd:m.r,round:true});
   if(I.surface(m.x,m.z)==='sand'&&!I.keepClear(m.x,m.z)){sandMound(m.x,m.z,gy,m.r*1.3,.62,.07,8);P.counts.mound=(P.counts.mound??0)+1;}}
+ for(const u of I.umbrellas??[]){const gy=I.ground(u.x,u.z);push({kind:'post',x:u.x,z:u.z,hw:.07,hd:.07,round:true});
+  if(I.surface(u.x,u.z)==='sand'&&!I.keepClear(u.x,u.z)){sandMound(u.x,u.z,gy,.06,.36,.05,7);P.counts.mound=(P.counts.mound??0)+1;}}
  // 2. Vending machines (their own meshes, Town.tsx): a pad on the ground, a ring round it.
  for(const m of I.machines){const hw=I.machineSize.w/2,hd=I.machineSize.d/2,gy=I.ground(m.x,m.z),on=m.y===undefined||m.y<gy+.25;
   push({kind:'machine',x:m.x,z:m.z,hw,hd,yaw:m.yaw,fill:true,base:on?undefined:m.y});

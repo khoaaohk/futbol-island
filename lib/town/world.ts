@@ -229,12 +229,12 @@ export function* buildTownSteps(scene: T.Scene) {
     assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:6.5,visualD:6.5,canopyHeight:height});
     const group=new T.Group();group.position.set(x,0,z);group.rotation.y=yaw;town.add(group);
     // Grounding 2 (owner, Nov 26: "palm trees and poles ... not look like it's floating"; ?ground=0 keeps the old trunk): the trunk
-    // carries on 0.35 m into the sand (no flat cut on top of it), its foot swells into a 9-sided flare with two growth-ring scars
-    // above it (same paint batch, ~60 tris). The sand mound / lawn ring round it come from grounding.ts.
+    // carries on 0.35 m into the sand (no flat cut on top of it), its foot swells into a 9-sided flare with a growth-ring scar
+    // above it (same paint batch, +36 tris). The sand mound / lawn ring round it come from grounding.ts.
     const sunk=groundingOn()?.35:0,trunk=put(new T.CylinderGeometry(.11,.22+sunk*.04,height+sunk,9),'#9d805b',0,(height-sunk)/2,0,group);trunk.rotation.z=-.07;
     if(sunk){const c=(height-sunk)/2,ax=(y:number)=>Math.sin(.07)*(y-c);// the leaning trunk's axis at height y
       put(new T.CylinderGeometry(.215,.33,.3,9,1,true),'#8c7150',ax(.02),.02,0,group).rotation.z=-.07;
-      for(const [y,r] of [[.42,.212],[.78,.2]] as const){const scar=put(new T.CylinderGeometry(r,r+.012,.045,9,1,true),'#7f6547',ax(y),y,0,group);scar.rotation.z=-.07;}}
+      for(const [y,r] of [[.55,.21]] as const){const scar=put(new T.CylinderGeometry(r,r+.012,.045,9,1,true),'#7f6547',ax(y),y,0,group);scar.rotation.z=-.07;}}
     for(let i=0;i<7;i++){
       const angle=i/7*Math.PI*2, points:T.Vector3[]=[];
       const positions:number[]=[],indices:number[]=[];
@@ -1871,6 +1871,7 @@ export function* buildTownSteps(scene: T.Scene) {
    const sunL=Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
    const g=buildGrounding({town,buildings,machines:VENDING_MACHINES,machineSize:VENDING_SIZE,
     masts:train?catenaryFeet:[],
+    umbrellas:assets.filter(a=>a.kind==='beach-umbrella'),
     stations:train?TRAIN_STATIONS.filter(s=>s.id!=='summit').map(s=>{const c=trackAt(s.s);return {id:s.id,x:c.x,z:c.z,tx:c.tx,tz:c.tz,side:s.side,at:(u:number)=>trackAt(s.s+u)};}):[],
     ground:(x,z)=>{const t=townGround(x,z);if(t)return t.y;const l=groundLift(x,z);return l+(inRects(x,z)?DRAWN.path:grass(x,z)?DRAWN.lawn:-.105);},
     surface:(x,z)=>{const t=townGround(x,z);if(t)return t.sort==='lawn'?'lawn':'other';if(x>=450||!onIsland(x,z))return 'other';return grass(x,z)?'lawn':'sand';},
