@@ -411,7 +411,7 @@ function sourceChecks(){
  assert(!/kind:'store'/.test(town)&&!/\['store',nearStore/.test(town),'the Store building is no longer highlighted or enterable');
  assert.match(town,/data-vending-go[\s\S]{0,300}?>Go<\/button>/,'Go prompt');
  assert.match(town,/const machine=vending\.pick\(characterRay\);if\(machine\)/,'tap on a machine opens it (touch works like buildings)');
- assert.match(town,/camera\.lookAt\(lookAt\);\n\s*if\(!learningFormat\.current\)\{?vending\.applyCamera\(camera,dt,reduced\)/,'zoom blends after the follow camera');
+ assert.match(town,/camera\.lookAt\(lookAt\);[^\n]*\n(?:(?![^\n]*applyCamera)[^\n]*\n){0,6}?\s*if\(!learningFormat\.current\)\{?vending\.applyCamera\(camera,dt,reduced\)/,'zoom blends after the follow camera (and after the tunnel chase camera)');
  assert.match(town,/const openStore=\(itemId\?:string\)=>openVending\(undefined,itemId\)/,'old Store links open the nearest machine');
  assert.match(town,/const store=url\.searchParams\.get\('store'\);if\(store===null\)return;[\s\S]{0,180}openStore\(/,'?store= URLs redirect to the nearest machine');
  assert.match(town,/enforceVendingOwnership\(enforceRideUnlocks\(/,'only owned gear can be worn');
