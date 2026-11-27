@@ -60,9 +60,10 @@ function checkPaths(a){const out=[];for(const p of a.world.surfaceAreas.filter(s
   if(n&&covered/n>.5){out.push({x:p.x,z:p.z,w:p.w,d:p.d,cells:n,reached:r,share:r/n,ends:[],pinch:null,hidden:true});continue;}
   const along=p.w>=p.d?'x':'z',ends=[];
   for(const s of [-1,1]){const ex=along==='x'?p.x+s*(p.w/2+.75):p.x,ez=along==='z'?p.z+s*(p.d/2+.75):p.z,half=(along==='x'?p.d:p.w)/2;let open=0,k=0,cause=new Set();
-   for(let u=-half+.25;u<half;u+=.5){k++;const x=along==='x'?ex:ex+u,z=along==='z'?ez:ez+u,c=a.idx(x,z);if(c>=0&&a.reach[c])open++;else if(c<0||!a.land[c])cause.add('water');else if(a.clutter[c]){const o=a.clutterBy.get(c);cause.add('collider '+o.w.toFixed(2)+'x'+o.d.toFixed(2)+' @'+o.x.toFixed(1)+','+o.z.toFixed(1));}else if(a.wallH[c]>a.floor[c]+.35||a.wallH[c]>-1e8&&a.floor[c]>=a.wallH[c]-.01)cause.add('building');else cause.add('unreached');}
-   // A path ending at a building or a hut / house collider (4 m and wider) is a doorstep, not a dead end.
-   const doorstep=!open&&[...cause].every(c=>c==='building'||/^collider (\d+\.\d+)x(\d+\.\d+)/.test(c)&&Math.min(...c.match(/(\d+\.\d+)x(\d+\.\d+)/).slice(1).map(Number))>=4);
+   for(let u=-half+.25;u<half;u+=.5){k++;const x=along==='x'?ex:ex+u,z=along==='z'?ez:ez+u,c=a.idx(x,z);if(c>=0&&a.reach[c])open++;else if(c<0||!a.land[c])cause.add('water');else if(a.clutter[c]){const o=a.clutterBy.get(c);if(o.door){cause.add('door');continue;}cause.add('collider '+o.w.toFixed(2)+'x'+o.d.toFixed(2)+' @'+o.x.toFixed(1)+','+o.z.toFixed(1));}else if(a.wallH[c]>a.floor[c]+.35||a.wallH[c]>-1e8&&a.floor[c]>=a.wallH[c]-.01)cause.add('building');else cause.add('unreached');}
+   // A path ending at a building or a hut / house collider (4 m and wider) is a doorstep, not a dead end; so is one ending at a
+   // closed door across a doorway (Obstacle.door: the parking garage's barrier arm, Nov 27 2026; the garage's driveway apron).
+   const doorstep=!open&&[...cause].every(c=>c==='building'||c==='door'||/^collider (\d+\.\d+)x(\d+\.\d+)/.test(c)&&Math.min(...c.match(/(\d+\.\d+)x(\d+\.\d+)/).slice(1).map(Number))>=4);
    ends.push({x:+ex.toFixed(2),z:+ez.toFixed(2),open,of:k,cause:[...cause].slice(0,3),doorstep});}
   // Pinches: along the strip, every 0.5 m cross-section's widest run of reachable ground (a prop in the middle of a walkway).
   const width=along==='x'?p.d:p.w,len=along==='x'?p.w:p.d;let pinch=null;

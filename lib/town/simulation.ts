@@ -29,7 +29,7 @@ export function flightBlocked(x:number,z:number){
  return (x-cx)**2+(z-cz)**2>r*r;
 }
 export type District = 'coast' | 'oldtown' | 'lights';
-export type Obstacle = { x: number; z: number; w: number; d: number; cornerRadius?:number; stepAccess?:boolean; /** a walker may step up onto this surface from this far below (default .35; the stadium's 0.5 m rows) */ stepUp?:number; /** rides never roll onto it (the stadium's seat rows, QA Nov 14 2026: bikes rode along a row through the fans) */ noRide?:boolean; dynamic?:boolean };
+export type Obstacle = { x: number; z: number; w: number; d: number; /** a closed door across a building's doorway (the parking garage's barrier arm): blocks like any wall; the island audit counts a path ending at it as a doorstep (Nov 27 2026) */ door?:boolean; cornerRadius?:number; stepAccess?:boolean; /** a walker may step up onto this surface from this far below (default .35; the stadium's 0.5 m rows) */ stepUp?:number; /** rides never roll onto it (the stadium's seat rows, QA Nov 14 2026: bikes rode along a row through the fans) */ noRide?:boolean; dynamic?:boolean };
 export const DISTRICTS = {
   coast: { name: 'Palm Coast', subtitle: 'SALT IN THE AIR. BALL AT YOUR FEET.', x: -7, z: 14 },
   oldtown: { name: 'Old Town', subtitle: 'EVERY WALL HAS A STORY.', x: -6, z: -10 },

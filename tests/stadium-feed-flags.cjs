@@ -98,7 +98,9 @@ const S=L.STADIUM;
  const sit=src('lib/town/stadiumSit.ts'),town=src('components/Town.tsx');
  assert(/feed\.update\(renderer,scene,camera,nowMs,dc,live\?ball:null,tier,ports\.phone\?\[screen\.mesh,crowd\.mesh,crowd\.flags\]:\[screen\.mesh\],live\?score:null\)/.test(sit),'stadiumSit feeds dc, the live ball, the hide list (phones: the crowd and flags too) and the score');
  assert(/frustum\.intersectsSphere\(sphere\)\|\|!!broadcastView\.frustum\?\.intersectsSphere\(sphere\)/.test(src('lib/town/fieldRuntime.ts'))&&/\|\|!!broadcastView\.frustum\?\.intersectsSphere\(playerView\)/.test(src('lib/town/fieldRuntime.ts')),'the matches draw for the feed camera too (no empty pitch)');
- assert(/stadiumSit\.feed\(renderer,scene,camera,now,heat\.tier\);[^\n]*\n([^\n]*\n){0,6}?[^\n]*?if\(meTumble/.test(town),'Town calls it right before the main render');
+ // Nov 27 2026 (release-nov27): the tunnel's draw-frame block (bore camera clamp, lamp light, bump pose; all restored after the
+ // render, no render of its own) now sits between the feed and the main render, so up to 14 lines may follow, none of them a render.
+ assert(/stadiumSit\.feed\(renderer,scene,camera,now,heat\.tier\);[^\n]*\n((?![^\n]*\.render\()[^\n]*\n){0,14}?[^\n]*?if\(meTumble/.test(town),'Town calls it right before the main render');
  assert(/disposers\.add\(\(\)=>stadiumSit\.dispose\(\)\)/.test(town),'and disposes it');}
 
 // 4. Plaza flags: the twelve nations, alternating, never two alike side by side or across the walk.

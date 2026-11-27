@@ -1638,8 +1638,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       flight.takeoffTime=Math.min(1.05,flight.takeoffTime+dt);flight.height=jetpackTakeoffHeight(flight.startHeight,top,flight.takeoffTime,reduced);
     }
     let landCheck=false;// Nov 27 2026 (owner 164): a landing this frame: resolve it out of any prop collider (landingSpot below)
-    function landingImpact(height:number){landCheck=true;
-      coinHunt.land({x:location.x,y:height,z:location.z},true);
+    function landingImpact(height:number){
+      coinHunt.land({x:location.x,y:height,z:location.z},true);landCheck=true;// the landing push-out (owner 164) rides this one landing path
       const nearby:BallHitTarget[]=[...islandNpcs.entries.map(e=>({id:'npc:'+e.id,...e.position})),...volleyballGame.entries.filter(()=>volleyballGame.root.visible).map(e=>({id:'npc:'+e.id,...e.position})),...coachPractice.entries.map(e=>({id:'npc:'+e.id,...e.position})),...games.entries.flatMap(e=>Array.from(e.rigs.entries()).filter(([,rig])=>e.root.visible&&rig.root.visible).map(([id,rig])=>({id:'field:'+e.venue.id+':'+id,x:rig.root.position.x,y:rig.root.position.y,z:rig.root.position.z})))];
       let hit=false;for(const p of nearby){const dx=p.x-location.x,dz=p.z-location.z;if(Math.abs(p.y-height)>.8||Math.hypot(dx,dz)>4)continue;const yaw=Math.hypot(dx,dz)>.05?Math.atan2(dx,dz):player.root.rotation.y;hit=ballReactions.hit(p,Math.sin(yaw)*14,Math.cos(yaw)*14)||hit;}
       if(hit){sound.impact();tapHaptic();}
@@ -1758,8 +1758,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         {const was=flight.height;liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,lookTakeoff?ix*lookTakeoff:velocity.x,lookTakeoff?iz*lookTakeoff:velocity.z,flight.height,dt,flight.cruiseHeight);flight.height=Math.min(flight.height,Math.max(was,roofCeiling(location.x,location.z,was)));}/* QA Nov 14 2026: held under a stand roof (stadiumFlight.ts roofCeiling) */
         if(flight.takeoffTime<1.05){velocity.x=velocity.z=0;return;}
         if(len>.01){const nx=ix/len,nz=iz/len;if(flightBlocked(location.x+nx*1.2,location.z+nz*1.2)){sound.boundary();boundaryFeedback.hit(location.x+nx*.8,flight.height,location.z+nz*.8,-nx,-nz,Math.max(.7,Math.hypot(velocity.x,velocity.z)/25));}}
-        {const ox=location.x,oz=location.z;stepPlayer(location,velocity,{x:ix,z:iz,sprint:false},dt,[],'jetpack');if(nearSummit(location.x,location.z)&&tunnelBlocksFlight(location.x,location.z,flight.height)){location.x=ox;location.z=oz;velocity.x=velocity.z=0;}/* Nov 27 2026: no flying into the tunnel (solid like a wall) */
-          if(stadiumFlight.resolve(location,ox,oz,flight.height,velocity,reduced).fresh)stadiumBump(flight.height);}/* masts, roofs, screen, stands, gate, flags: knocked back */
+        {const ox=location.x,oz=location.z;stepPlayer(location,velocity,{x:ix,z:iz,sprint:false},dt,[],'jetpack');if(stadiumFlight.resolve(location,ox,oz,flight.height,velocity,reduced).fresh)stadiumBump(flight.height);/* masts, roofs, screen, stands, gate, flags: knocked back */
+          if(nearSummit(location.x,location.z)&&tunnelBlocksFlight(location.x,location.z,flight.height)){location.x=ox;location.z=oz;velocity.x=velocity.z=0;}/* Nov 27 2026: no flying into the tunnel (solid like a wall; after the stadium sweep so that stays the step's first resolve) */}
         orb.x=location.x+.7;orb.z=location.z;return;
       }
 
@@ -2559,13 +2559,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Rail fixes (Nov 26 2026): in the Summit tunnel the follow camera blends (by how far in the walker is, tunnelWalk.state.k) to a
       // chase view behind and above them along the bore; out of it, the follow's own ease brings it back (no snap either way).
       if(!tunnelWalk.state.active)tunnelWalk.approach(visualLocation.x,visualLocation.z,tunnelMode(rideRef.current)&&!water.inWater&&nearSummit(visualLocation.x,visualLocation.z));inTunnelRef.current=tunnelWalk.state.active||tunnelWalk.state.k>0;
-      // Nov 27 2026 (owner: "only walking and riding in the tunnel"): the ride button shows flying is off in here: a greyed, struck-out
-      // jetpack badge (globals.css .travel-nofly) and the reason in its title. A DOM attribute from the frame (no React render).
-      {const b=uiElement<HTMLButtonElement>('.travel-actions button.travel-mode:not([data-job-onfoot])');if(b&&b.hasAttribute('data-no-fly')!==inTunnelRef.current){b.toggleAttribute('data-no-fly',inTunnelRef.current);if(inTunnelRef.current)b.title=TUNNEL_MODE_NOTE[0];else b.removeAttribute('title');}}
       if(tunnelWalk.state.k>0&&!learningFormat.current&&tunnelWalk.chase(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,dt,reduced,tunnelCam,tunnelLook)){const k=tunnelWalk.state.k;
        camera.position.set(camera.position.x+(tunnelCam.x-camera.position.x)*k,camera.position.y+(tunnelCam.y-camera.position.y)*k,camera.position.z+(tunnelCam.z-camera.position.z)*k);
        camera.lookAt(lookAt.x+(tunnelLook.x-lookAt.x)*k,lookAt.y+(tunnelLook.y-lookAt.y)*k,lookAt.z+(tunnelLook.z-lookAt.z)*k);}
       if(!learningFormat.current){vending.applyCamera(camera,dt,reduced);gashaPrompt.applyCamera(camera,dt,reduced);fishing.applyCamera(camera,dt,reduced);}
+      // Nov 27 2026 (owner: "only walking and riding in the tunnel"): the ride button shows flying is off in here: a greyed, struck-out
+      // jetpack badge (globals.css .travel-nofly) and the reason in its title. A DOM attribute from the frame (no React render).
+      {const b=uiElement<HTMLButtonElement>('.travel-actions button.travel-mode:not([data-job-onfoot])');if(b&&b.hasAttribute('data-no-fly')!==inTunnelRef.current){b.toggleAttribute('data-no-fly',inTunnelRef.current);if(inTunnelRef.current)b.title=TUNNEL_MODE_NOTE[0];else b.removeAttribute('title');}}
       // Live match: the camera button's angle (Broadcast = this view; Behind you / Wide / Close ease in over it). Free at rest.
       if(!learningFormat.current){liveJoin.cameraApply(camera,active?dt:0,reduced);practice.cameraApply(camera,active?dt:0,reduced);}
       if(!learningFormat.current){if(emoteCam.active){const pv=player.root.position,n=emoteNpc,close=n&&(n.fx.kind>=0||n.ix!==null)&&Math.hypot(n.position.x-pv.x,n.position.z-pv.z)<(rideScript.s?EMOTE_BOUNDS.pairMaxGap:ecsRide()?7:12);emoteCam.track(rideScript.s?location.x:pv.x,pv.y,rideScript.s?location.z:pv.z,ctxOn()&&ctxFx.script!.ctx==='fly'?((ctxFx.friendD=nearestFlyingFriend(pv,friendsNow(),friendFly))>=0&&ctxFx.friendD<=FLY_CAMERA_PAIR_RANGE?friendFly:null):close?n!.position:passAirOn&&emoteFx.kind===EMOTE.PassBall?passAir:null);}emoteCam.apply(camera,dt,emoteCamSync(),reduced);{const pv=player.root.position;moveNudge.apply(camera,dt,moveFx.s?moveNudgeGoal({reduced,zooming:emoteCam.active,speed:Math.hypot(velocity.x,velocity.z),age:moveFx.age,end:moveFx.end}):0,pv.x,pv.y+1.2,pv.z);}/* a moving emote: no zoom, only a gentle eased nudge (emoteCameraMath.ts moveNudgeGoal) */}
