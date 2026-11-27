@@ -27,7 +27,7 @@ import {islandArch,ARCH_LANTERN_COLOR} from './islandArch';
 /** Polish Nov 27 2026: the welcome arch's paper lanterns (x, centre y, z, road height) for world.ts's night glows. */
 export const CAY_ARCH_LANTERNS:{x:number;y:number;z:number;floor:number}[]=[];
 const m0Lift=(x:number,z:number)=>cayGround(x,z);
-import {seawallX} from './eastCoast';
+import {seawallX,seawallPier} from './eastCoast';
 import {depthLowTier} from './townDepth';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -147,7 +147,7 @@ export function buildCoralCay(t:CayTools){
  for(const [x0,x1,half] of [[CAUSEWAY.roadStart,206,6.13],[206,210,6.5],[210,MAIN_SHORE_X,deck]] as const)surfaceAreas.push({kind:'path',x:(x0+x1)/2,z:z0,w:x1-x0,d:half*2});
  // Gate piers close both cut ends of the seawall (the road is still straight at the coast).
  const pierBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>{const g=puffGeo(w,h,d,{openBottom:true,dome:h<.5?.06:0});return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};// inflate pass: soft gate piers (owner shot 175)
- for(const side of [-1,1]){const z=z0+side*(deck+.55),px=softOn()?seawallX(z)??MAIN_SHORE_X-2.6:MAIN_SHORE_X-2.6;/* on the wall's line (owner shot 178: no gap) */pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);obstacles.push({x:px,z,w:1,d:1});}
+ for(const side of [-1,1]){const z=z0+side*(deck+.55),px=softOn()?seawallX(z)??MAIN_SHORE_X-2.6:MAIN_SHORE_X-2.6;/* on the wall's line (owner shot 178: no gap) */if(!softOn()||!seawallPier(put,px,z)){pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);}/* leftovers A2: one body with the wall */obstacles.push({x:px,z,w:1,d:1});}
  districtSign('CORAL CAY CAUSEWAY',215,-170.5);
 
  // ---- Beach shoulders: sand banks outside the deck in irregular stretches, sloping into the sea (coralCay.ts widths).

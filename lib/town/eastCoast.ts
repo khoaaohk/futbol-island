@@ -16,6 +16,17 @@ export function seawallX(z:number):number|null{
   if(Math.min(a.x,b.x)<220||(a.z+b.z)/2>=189||a.z===b.z)continue;const t=(z-a.z)/(b.z-a.z);if(t<0||t>1)continue;return a.x+(b.x-a.x)*t-2.6;}
  return null;
 }
+/** Leftovers A2 (soft-sweep "Inflate pass 2": the gate pier read as a separate "sack" on the wall): a seawall gate pier is now a
+ *  short, taller length of the SAME swept wall (puffRun: one body, the same coping roll, crown and puff shading, the coping tint),
+ *  1.2 m along the wall's own line at (x, z), standing 0.26 m over the run with a 0.1 m wider body: a pilaster, not a pillow.
+ *  Puff off: null (callers keep their boxes). ~110 triangles (the old two puffed boxes: ~150). */
+export const SEAWALL_PIER={len:1.2,top:1.42,half:.43} as const;
+export function seawallPier(put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh,x:number,z:number):boolean{
+ if(puffLevel()<=0)return false;const a=seawallX(z-.6),b=seawallX(z+.6);let dx=0,dz=1;if(a!==null&&b!==null){dx=b-a;dz=1.2;const l=Math.hypot(dx,dz);dx/=l;dz/=l;}
+ const h=SEAWALL_PIER.len/2,run=[{x:x-dx*h,z:z-dz*h,top:SEAWALL_PIER.top,foot:-.3},{x:x+dx*h,z:z+dz*h,top:SEAWALL_PIER.top,foot:-.3}];
+ for(const p of puffRun(run,{half:SEAWALL_PIER.half,lip:.12,capH:.22,dome:.05,belly:.03,capTint:tintFromTo('#bca987','#eddfbb'),ends:[true,true]}))put(p.geo,'#bca987',p.cx,0,p.cz).userData.vertexTint=p.tint;
+ return true;
+}
 export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
  const pbox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,o:Parameters<typeof puffGeo>[3]={})=>{const g=puffGeo(w,h,d,o);return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};
  // Continue the south pier north beneath the existing market stalls.
@@ -50,7 +61,7 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   // Nov 23 2026 (Island Line, owner: "track blocked by the wall"): where the line leaves the north-east corner onto its trestle the
   // wall is cut TRAIN_GAP m either side of the centre line, and each cut end gets a gate pier like the causeway's (collider too).
   const runs:[number,number][]=[],at=(t:number)=>({x:shoreA.x+(shoreB.x-shoreA.x)*t-2.6,z:shoreA.z+(shoreB.z-shoreA.z)*t});
-  const gate=(t:number)=>{const p=at(t);pbox(1,1.5,1,'#bca987',p.x,.55,p.z,{openBottom:true});pbox(1.25,.24,1.25,'#eddfbb',p.x,1.4,p.z,{openBottom:true,dome:.06});obstacles.push({x:p.x,z:p.z,w:1,d:1});};
+  const gate=(t:number)=>{const p=at(t);if(!seawallPier(put,p.x,p.z)){pbox(1,1.5,1,'#bca987',p.x,.55,p.z,{openBottom:true});pbox(1.25,.24,1.25,'#eddfbb',p.x,1.4,p.z,{openBottom:true,dome:.06});}obstacles.push({x:p.x,z:p.z,w:1,d:1});};
   for(const [t0,t1] of pieces){const steps=Math.max(1,Math.ceil(Math.hypot(shoreB.x-shoreA.x,shoreB.z-shoreA.z)*(t1-t0)/.3));let start=-1,last=t0;
    for(let k=0;k<=steps;k++){const t=t0+(t1-t0)*k/steps,p=at(t),hit=trackNearest(p.x,p.z,TRAIN_GAP+1),clear=!hit||hit.d>TRAIN_GAP||inTunnelS(hit.s);
     if(clear){if(start<0){start=t;if(k>0)gate(t);}last=t;}
