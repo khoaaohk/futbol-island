@@ -161,7 +161,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const meshes=[];v.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
  assert.equal(meshes.length,24,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all twenty-four share one material');
  const atlasMaps=new Set(meshes.map(m=>m.material.map));assert.equal(atlasMaps.size,1,'one shared atlas texture, no new textures for the book machines');
- assert(meshes.every(m=>m.frustumCulled&&m.geometry.boundingSphere),'frustum-culled with bounds');assert(meshes.every(m=>m.geometry.getAttribute('position').count<800),'low-poly');
+ assert(meshes.every(m=>m.frustumCulled&&m.geometry.boundingSphere),'frustum-culled with bounds');{const n=Math.max(...meshes.map(m=>m.geometry.getAttribute('position').count));/* soft sweep 2 (Nov 27 2026): the rounded shell (cabinet arc + chamfered cap and plinth) adds ~480 vertices a machine, 24 machines */assert(n<1300,'low-poly ('+n+' vertices)');}
  assert.equal(v.obstacles.length,24);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines, Summit Isle or the stadium pair');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
  // Nov 13 2026 (owner: "the vending machines look dark at night"): the shared material's printed face brightens and the cabinet
  // self-lights with the shared night factor (lib/graphics/machineNightGlow.ts); 0 by day, so the day look is unchanged.

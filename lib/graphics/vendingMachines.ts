@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {groundLift} from '../town/elevation';
+import {softOn,SoftBoxGeometry} from './softBox';
 import {footToGround} from '../town/elevationDrape';
 import {createBuildingGlow} from './buildingGlow';
 import {patchVendingNight} from './machineNightGlow';
@@ -273,12 +274,15 @@ function atlasUV(geometry:T.BufferGeometry,[x,y,w,h]:number[]){const uv=geometry
 function paint(geometry:T.BufferGeometry,color:string){const c=new T.Color(color),n=geometry.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)c.toArray(a,i*3);geometry.setAttribute('color',new T.BufferAttribute(a,3));return geometry;}
 function buildMachineGeometry(m:VendingMachine,index:number){
  const {w,d,h}=VENDING_SIZE,front=d/2,parts:T.BufferGeometry[]=[],dark=new T.Color(m.color).multiplyScalar(.62).getStyle();
- const box=(bw:number,bh:number,bd:number,x:number,y:number,z:number,color:string)=>parts.push(paint(atlasUV(new T.BoxGeometry(bw,bh,bd).translate(x,y,z),R.white),color));
+ // Soft sweep 2 (Nov 27 2026, owner: "less blocky"): the outer shell is rounded (the cabinet's edges a 2-step arc, the cap and plinth
+ // smooth-shaded chamfers); the face, glass, rails, bezels and buttons stay flat and readable. ?soft=0: boxes.
+ const soft=softOn(),R6=.055;
+ const box=(bw:number,bh:number,bd:number,x:number,y:number,z:number,color:string,o?:{radius:number;seg:number})=>parts.push(paint(atlasUV((soft&&o?new SoftBoxGeometry(bw,bh,bd,o):new T.BoxGeometry(bw,bh,bd)).translate(x,y,z),R.white),color));
  const panel=(pw:number,ph:number,x:number,y:number,rect:number[],z=front+.006)=>parts.push(paint(atlasUV(new T.PlaneGeometry(pw,ph).translate(x,y,z),rect),'#ffffff'));
  /** A face panel placed by its VENDING_FACE_LAYOUT rect (fractions of the face, y from the top). */
  const facePanel=(r:{x:number;y:number;w:number;h:number},rect:number[],z?:number)=>{const F=VENDING_FACE;panel(r.w*FACE_SIZE.w,r.h*FACE_SIZE.h,F.x0+(r.x+r.w/2)*FACE_SIZE.w,F.y1-(r.y+r.h/2)*FACE_SIZE.h,rect,z);};
- box(w,h-.16,d,0,.08+(h-.16)/2,0,m.color);                     // cabinet
- box(w+.04,.07,d+.04,0,h-.045,0,dark);                         // top cap
+ box(w,h-.16,d,0,.08+(h-.16)/2,0,m.color,{radius:R6,seg:1});      // cabinet
+ box(w+.04,.07,d+.04,0,h-.045,0,dark,{radius:.03,seg:0});       // top cap
  // Side trim, slim metal face rails and two stable rubber feet. The trims stand OUTSIDE the face (from the glass bezel's outer
  // edge outward) and their fronts are flush with the face plane (VENDING_FACE.z = FRAME): nothing of the cabinet stands in front of
  // the face or overlaps it, so the in-use HTML face (always drawn over the canvas) registers with the frame from any angle
@@ -288,8 +292,8 @@ function buildMachineGeometry(m:VendingMachine,index:number){
  box(trimW,h-.34,FRAME+.005,trimIn+trimW/2,h/2,front+(FRAME-.005)/2,m.light);
  box(.24,.07,d*.72,-w*.3,.02,0,'#182b2e');box(.24,.07,d*.72,w*.3,.02,0,'#182b2e');
  for(let i=0;i<2;i++)box(.26,.022,.009,w*.28,.26+i*.10,-d/2-.006,dark);
- box(w-.02,.08,d-.02,0,.04,0,'#2c3036');                       // plinth
- box(w+.012,.06,d+.012,0,.12,0,m.light);                       // accent band (under the face)
+ box(w-.02,.08,d-.02,0,.04,0,'#2c3036',{radius:.035,seg:0});     // plinth
+ box(w+.012,.06,d+.012,0,.12,0,m.light);    // accent band (under the face)
  // Stepped metal bezel around the printed glass, its front flush with the face plane (FRAME); all details stay in
  // this same merged mesh/material, including the recessed service-panel surrounds.
  const surround=(r:{x:number;y:number;w:number;h:number},depth:number)=>{
@@ -314,7 +318,9 @@ function buildMachineGeometry(m:VendingMachine,index:number){
  const merged=mergeGeometries(flat)!;parts.forEach(g=>g.dispose());flat.forEach(g=>g.dispose());merged.computeBoundingSphere();merged.computeBoundingBox();
  // The close-up cuts these away (collapses them) to open the real bay: the cabinet box's front face (+z, vertices 24–29 of the
  // first part) and the printed glass panel.
- merged.userData.cut=[[24,6],[start(glassPart),6]];return merged;
+ // Soft cabinet: its +z face group (BoxGeometry face order; the index start is the non-indexed vertex start).
+ const front0=soft?parts[0].groups[4]:{start:24,count:6};
+ merged.userData.cut=[[front0.start,front0.count],[start(glassPart),6]];return merged;
 }
 
 export type VendingUpdate={now:number;dt:number;reduced:boolean;hoverRay:T.Raycaster|null;canEnter:boolean;flying:boolean;flightHeight:number;
