@@ -147,6 +147,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  // vending close-up rule, a truck protest, or the tagged townsperson being off screen). Labels change visibility only on change.
  type Entry=typeof entries[number];
  let tagFocus:Entry|null=null,shownTag:Entry|null=null,labelOwner:Entry|null=null;
+ let tagOcclusion:{update(dt:number,who:unknown,ax:number,ay:number,az:number,cx:number,cy:number,cz:number):boolean}|null=null;const tagCam=new T.Vector3();
  const tagEligible=(entry:Entry)=>!entry.stunned&&!isThinned(entry)&&entry.distance<(drawLimit??Infinity);
  // Talk targets the tagged townsperson while it is in Talk range, so the tag always names the one "Talk to …" opens.
  const nearest=(player:Position,maxDistance=6)=>{if(tagFocus&&!reactions?.get('npc:'+tagFocus.id)&&!isThinned(tagFocus)&&Math.hypot(tagFocus.position.x-player.x,tagFocus.position.z-player.z,tagFocus.position.y-player.y)<maxDistance)return tagFocus.definition;let best:NpcDefinition|null=null,distance=maxDistance;for(const entry of entries){if(reactions?.get('npc:'+entry.id)||isThinned(entry))continue;const d=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);if(d<distance){distance=d;best=entry.definition;}}return best;};
@@ -241,6 +242,9 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   let show=tagFocus;
   if(show&&(hideTags||truckWitnesses.has(show.id)||!show.rig.root.visible))show=null;
   if(show&&camera){viewSphere.center.set(show.position.x,show.position.y+2.5,show.position.z);viewSphere.radius=2;if(!viewFrustum.intersectsSphere(viewSphere))show=null;}
+  // Nov 26 2026 (owner shot 139): hidden while a big solid (a building, the stadium's big screen, stands, roofs) sits between its
+  // anchor and the camera (lib/town/tagOcclusion.ts: throttled, the shown tag only).
+  if(show&&camera&&tagOcclusion){tagCam.setFromMatrixPosition(camera.matrixWorld);if(tagOcclusion.update(dt,show,show.position.x,show.position.y+2.5*show.rig.profileScale,show.position.z,tagCam.x,tagCam.y,tagCam.z))show=null;}
   if(show!==shownTag){if(shownTag){shownTag.label.visible=false;shownTag.label.material.opacity=1;}shownTag=show;if(show)show.label.visible=true;}
   if(shownTag&&shownTag!==labelOwner){labelOwner=shownTag;shownTag.labelStatus='';}// the shared tag canvas now names this townsperson
   if(shownTag){const m=shownTag.label.material,want=camera&&tagOverPlayer(shownTag,player,camera)?TAG_FADE:1;if(m.opacity!==want)m.opacity=reduced?want:Math.abs(want-m.opacity)<.02?want:m.opacity+(want-m.opacity)*Math.min(1,dt*10);}
@@ -283,5 +287,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
 
  /** The swimmers (npcSwim.ts) for Town's swim ripples: their loop state, distance to the player and visibility. */
  const swimmers=entries.filter(e=>e.swim);
- return {swimmers,react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,setAway(id:string,on:boolean){if(on)away.add(id);else away.delete(id);},isAway:(id:string)=>away.has(id),stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {swimmers,react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,setAway(id:string,on:boolean){if(on)away.add(id);else away.delete(id);},isAway:(id:string)=>away.has(id),stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},/** Name tags hide behind these solids (lib/town/tagOcclusion.ts createTagOcclusion); null: never. */setTagOcclusion(o:typeof tagOcclusion){tagOcclusion=o;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }
