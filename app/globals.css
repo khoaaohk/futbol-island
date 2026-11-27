@@ -1089,3 +1089,9 @@ html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,
 .town-app:is([data-practice],[data-train-riding]) [data-job-wallet]{visibility:hidden;pointer-events:none}
 .town-app[data-train-riding] nav[data-hud-triggers]>button[data-tour=quests]{visibility:hidden;pointer-events:none}
 .town-app[data-train-riding] nav[data-hud-triggers]>button[aria-label=Settings]{display:none}
+/* Nov 27 2026 (owner: "only walking and riding in the tunnel"): in the Summit tunnel the ride button carries a greyed, struck-out jetpack
+   badge (Town.tsx sets data-no-fly from the frame; the cycle skips the jetpack there). */
+.travel-mode .travel-iconwrap{position:relative;display:inline-block;line-height:0}.travel-mode .travel-nofly{display:none}
+.travel-mode[data-no-fly] .travel-nofly{display:grid;place-items:center;position:absolute;right:-18px;top:-14px;width:24px;height:24px;border-radius:50%;background:#dcd7cb;color:#77736b;border:2px solid #f6e5bd;box-shadow:0 2px 0 #173e3459;pointer-events:none}
+.travel-mode[data-no-fly] .travel-nofly::after{content:'';position:absolute;left:3px;right:3px;top:calc(50% - 1px);height:2.5px;border-radius:2px;background:#c4473a;transform:rotate(-45deg)}
+.tunnel-fade{position:absolute;inset:0;z-index:1;background:#14100c;opacity:0;pointer-events:none}

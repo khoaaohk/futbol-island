@@ -75,6 +75,14 @@ export function clearSpotNear(x:number,z:number,obstacles:Obstacle[],radius=.5,m
  *  and the other's name tag sat over your own avatar. A spot on a 1.5-4 m ring round (x, z) at the angle and distance picked by
  *  `rand` (0..1 twice); the first of 12 turns round the ring that is on land and clear of colliders (blocked(): no water, no
  *  building). Falls back to (x, z). Called once at boot, only in a public world. */
+/** Nov 27 2026 (owner 164: landed inside a station sign, stuck): a landing spot inside a collider (centre within its outline + radius)
+ *  moves to the nearest spot clear of every collider given, on rings 0.25 m apart out to `maxRadius`; true when moved. Obstacles only
+ *  (no land / sea test: the landing already chose its ground). Called once per landing, never per frame. */
+export function landingSpot(p:{x:number;z:number},obstacles:Obstacle[],radius=.34,maxRadius=3){
+  const hit=(x:number,z:number)=>obstacles.some(o=>insideObstacle(x,z,o,radius));if(!hit(p.x,p.z))return false;
+  for(let r=.25;r<=maxRadius+1e-6;r+=.25){const n=Math.max(8,Math.ceil(r*2*Math.PI/.25));for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=p.x+Math.cos(a)*r,z=p.z+Math.sin(a)*r;if(!hit(x,z)){p.x=x;p.z=z;return true;}}}
+  return false;
+}
 export function publicArrivalSpot(x:number,z:number,obstacles:Obstacle[],rand:()=>number=Math.random,radius=.5):{x:number;z:number}{
   const a0=rand()*2*Math.PI,r=1.5+rand()*2.5;
   for(let i=0;i<12;i++){const a=a0+i*Math.PI/6;for(const d of [r,1.5]){const nx=x+Math.cos(a)*d,nz=z+Math.sin(a)*d;if(!blocked(nx,nz,obstacles,radius))return {x:nx,z:nz};}}

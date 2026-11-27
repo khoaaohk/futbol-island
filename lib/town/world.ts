@@ -26,6 +26,7 @@ import {groundColor,groundAt as depthGroundAt,clipToStreets,pathClips,sheetCross
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
+import {buildParkingGarage,GARAGE_ENTRANCE,GARAGE_BARRIER} from './parkingGarage';
 import {westLawnTriangles} from './fields';
 import {buildSeasideCafe,type CafeBuild} from './seasideCafeWorld';
 import {buildWestPark} from './westPark';
@@ -463,20 +464,24 @@ export function* buildTownSteps(scene: T.Scene) {
   // Parent ground support uses exactly this deck/ramp/bridge geometry.
   box(28,.35,56,'#d2bc94',11,5.825,18);
   box(12,.25,5,'#d2bc94',28,5.875,-7.5);
+  // Parking garage under the court (Nov 27 2026, owner: "should be a parking garage with cars"; lib/town/parkingGarage.ts): the
+  // timber frame stays outside (posts, base and top beams); the blank panels and the mid rail are gone, so you see in over low
+  // concrete parapets; the street-side posts frame the door at x 2.75..9.05 (GARAGE_ENTRANCE).
   for(const x of [-3,25]){
     for(const z of [-9,4,17,30,45])box(.7,5.8,.7,'#d6b58a',x,2.9,z);
-    for(const y of [.3,2.9,5.5])box(.45,.48,56,'#d6b58a',x,y,18);
-    // Dark recessed openings and narrow vertical mullions read as parking levels.
-    for(const z of [-3,10,23,36])for(const y of [1.6,4.15])box(.09,1.9,10,'#365b56',x+(x<0?.23:-.23),y,z);
+    for(const y of [.3,5.5])box(.45,.48,56,'#d6b58a',x,y,18);
   }
   for(const z of [-10,46]){
-    for(const x of [-2,5,12,19,24])box(.7,5.8,.7,'#d6b58a',x,2.9,z);
-    for(const y of [.3,2.9,5.5])box(28,.48,.45,'#d6b58a',11,y,z);
-    box(26,2,.08,'#365b56',11,1.7,z+(z<0?.22:-.22));
+    for(const x of z<0?[-2,5,12,19,24]:[-2.6,2.4,9.4,17,24.6])box(.7,5.8,.7,'#d6b58a',x,2.9,z);
+    box(28,.48,.45,'#d6b58a',11,5.5,z);
+    if(z<0)box(28,.48,.45,'#d6b58a',11,.3,z);else{box(5.75,.48,.45,'#d6b58a',-.125,.3,z);box(15.95,.48,.45,'#d6b58a',17.025,.3,z);}
   }
   sign('P',1.5,1.6,23,2,46.65,'#477c6a');
-  // Continuous perimeter collisions are walls at ground level and guards on the roof.
-  for(const o of [{x:-3,z:18,w:.25,d:56},{x:25,z:20.5,w:.25,d:51},{x:11,z:-10,w:28,d:.25},{x:11,z:46,w:28,d:.25}])obstacles.push(o);
+  {const g=buildParkingGarage({doc:document,textures,materials,nightSigns});town.add(g.root);
+   surfaceAreas.push({kind:'garage',x:11,z:18,w:28,d:56});path(GARAGE_ENTRANCE.x,(46.2+GARAGE_ENTRANCE.apronTo)/2,GARAGE_ENTRANCE.w,GARAGE_ENTRANCE.apronTo-46.2);}
+  // Continuous perimeter collisions are walls at ground level and guards on the roof; the street side is two walls and the
+  // barrier arm across the door (see-in only: the deck above is the court, venues.ts parkingSurfaceHeight).
+  for(const o of [{x:-3,z:18,w:.25,d:56},{x:25,z:20.5,w:.25,d:51},{x:11,z:-10,w:28,d:.25},{x:-.15,z:46,w:5.8,d:.25},{x:17.15,z:46,w:16.2,d:.25},{x:GARAGE_BARRIER.x,z:GARAGE_BARRIER.z,w:GARAGE_ENTRANCE.w,d:.3}])obstacles.push(o);
   function roofRail(x:number,z:number,length:number,vertical:boolean,y=6){
     box(vertical?.1:length,.08,vertical?length:.1,'#477c6a',x,y+1.05,z);
     for(let t=-length/2;t<=length/2;t+=3)box(.08,1.05,.08,'#477c6a',x+(vertical?0:t),y+.53,z+(vertical?t:0));

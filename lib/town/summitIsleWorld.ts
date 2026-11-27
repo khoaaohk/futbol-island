@@ -267,7 +267,11 @@ export function buildSummitIsle(t:SummitTools){
   for(const piece of [...sectors,beach]){const P=piece.pos,I=piece.idx,keep:number[]=[];extra=[];
    for(let q=0;q<I.length;q+=3){const a=I[q]*3,b=I[q+1]*3,c=I[q+2]*3,ya=P[a+1],yb=P[b+1],yc=P[c+1],lo=Math.min(ya,yb,yc),hi=Math.max(ya,yb,yc);
     if(hi>B+.25&&lo<B+2.4&&lo<top){/* a corner below the springing: it reaches into the opening (the hill over the arch's top stays) */const cx=(P[a]+P[b]+P[c])/3+piece.ox,cz=(P[a+2]+P[b+2]+P[c+2])/3+piece.oz;
-     minU=0;if(inOpening(cx,cz,true)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)){/* Rail fixes (Nov 26 2026, owner 150: hill inside the bore): every such triangle, not only one with a corner out in front: the drawn cliff at the mouth plane stood across the bore (the tube's 1.2 m depth pull hid it, and hid a walker or train in the bore too) */backPart(piece,I[q],I[q+1],I[q+2],cx,cz,minU<-.1);continue;}}
+     minU=0;if(inOpening(cx,cz,true)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)){/* Rail fixes (Nov 26 2026, owner 150: hill inside the bore): every such triangle, not only one with a corner out in front: the drawn cliff at the mouth plane stood across the bore (the tube's 1.2 m depth pull hid it, and hid a walker or train in the bore too) */backPart(piece,I[q],I[q+1],I[q+2],cx,cz,minU<-.1);continue;}
+     // Nov 27 2026 (owner 155: "a green hill slab passing across the right side of the arch opening"): a bank triangle whose middle is in
+     // the opening but with a corner out past it (the west mouth: floor inside the arch to 7 m up the bank beside it) was kept whole and
+     // crossed the arch from the play camera's side angle. Its part inside the tube's box is cut away (beside / over the crown stays).
+     else if(inOpening(cx,cz,true)){backPart(piece,I[q],I[q+1],I[q+2],cx,cz,false);continue;}}
     keep.push(I[q],I[q+1],I[q+2]);}
    piece.idx=keep.concat(extra);}}
  const sectorOf=(x:number,z:number)=>{let a=Math.atan2(z-PK.z,x-PK.x);if(a<0)a+=Math.PI*2;return sectors[Math.min(SECTORS-1,Math.floor(a/(Math.PI*2)*SECTORS))];};
