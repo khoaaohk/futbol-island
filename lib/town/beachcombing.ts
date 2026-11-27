@@ -17,6 +17,7 @@ import {SHORE_SAND,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland,distanceToSh
 import {CAY_SAND,CAY_HUTS,CAY_HUT_RADIUS,onCay,onCourtBeach,onCauseway,distanceToCayShore} from './coralCay';
 import {SUMMIT_CENTER,SUMMIT_PATHS,SUMMIT_PATH_WIDTH,SUMMIT_VISUAL_DROP,SANDBAR_PATH,sandbarHalfWidth,beachPoint,summitGround,summitSlope,onSummitIsle,onSummitSandbar,distanceToSummitShore,type IslePoint} from './summitIsle';
 import {FISH_SPOTS} from './fishing/fishSpots';
+import {trackNearest,inTunnelS} from './trainTrack';
 import {beachFindValue} from '../economy';
 import {count} from '../analytics/tracker';
 
@@ -185,7 +186,12 @@ export function onBeachSand(c:Pick<BeachCandidate,'zone'|'x'|'z'>):boolean{
  }
  return false;
 }
-export function spotOk(c:BeachCandidate,w:BeachWorld):boolean{return onBeachSand(c)&&!w.blocked(c.x,c.z,.7)&&!w.paved(c.x,c.z,1);}
+/** Owner Nov 27 (shots 210 / 211: a find's sparkle hanging over the Island Line's ballast): a find stays this far from the track's
+ *  centre line (ballast 1.45 m + its sand shoulder ~1.5 m + 2 m clear, the ground decals' LINE_CLEAR) and 2 m clear of every laid
+ *  path, road, court or patio. */
+export const FIND_LINE_CLEAR=4.9,FIND_PAVED_CLEAR=2;
+export function nearLine(x:number,z:number):boolean{const h=trackNearest(x,z,FIND_LINE_CLEAR);return !!h&&h.d<FIND_LINE_CLEAR&&!inTunnelS(h.s);}
+export function spotOk(c:BeachCandidate,w:BeachWorld):boolean{return onBeachSand(c)&&!nearLine(c.x,c.z)&&!w.blocked(c.x,c.z,.7)&&!w.paved(c.x,c.z,FIND_PAVED_CLEAR);}
 
 // ---- The daily rotation (deterministic per local day: the same finds on every device, new places tomorrow) ----
 /** FNV-1a 32-bit. */
