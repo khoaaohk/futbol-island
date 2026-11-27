@@ -339,7 +339,7 @@ export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeome
   const outer: Row[] = [[h, p => p.foot, 0, 0, o.courses ? () => [.74, .8, .7] : undefined]];// courses: a damp, mossy foot
   const nc = o.courses ?? 0;
   if (nc) for (let k = 1; k <= nc; k++) { const f = k / (nc + 1), sway = bel * Math.sin(Math.PI * f);
-    outer.push([h + sway, p => p.foot + (p.top - capH - p.foot) * f, 0, 0, i => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, r = v - Math.floor(v), d = k % 2 ? .97 + .1 * r : .76 + .06 * r; return [d * 1.02, d, d * .96]; }]); }// odd rows: a block's face (each a little lighter / darker), even: the bed line between courses
+    outer.push([h + sway, p => p.foot + (p.top - capH - p.foot) * f, 0, 0, i => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, r = v - Math.floor(v), d = k % 2 ? .98 + .2 * r : .5 + .06 * r; return k % 2 ? [d * 1.03, d, d * .95] : [d * .96, d, d * 1.02]; }]); }// leftovers B: bed lines .5 (were .76) cool mortar grey, block faces .98-1.18 warm (each a little different): bands read at the play camera// odd rows: a block's face (each a little lighter / darker), even: the bed line between courses
   else if (bel > 0) outer.push([h + bel, p => (p.foot + p.top - capH) / 2, 0, 0]);
   outer.push([h, p => p.top - capH, 0, 0, o.courses ? () => [.8, .8, .8] : undefined], [h + lip, p => p.top - capH * .55, 1, 0], [h + lip * .55, p => p.top - capH * .04, 1, .25],
     [h * .5, p => p.top + dome * .75, 1, .7], [0, p => p.top + dome, 1, 1]);
