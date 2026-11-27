@@ -86,6 +86,15 @@ const ROOT=path.join(__dirname,'..');
 
  // 7. Tunnel controls (Nov 27 2026, owner: "the keyboard arrows are hard to use in the tunnel"; "zoom out more"; "make it easier to go
  // in all directions and go on the track and sides"; "riding in the tunnel is very slow"; "match the other island speeds")
+ // Leftovers A2 (owner 214 / 215): walking / riding into the wall at many angles keeps the body >= its radius (0.44 m walking, 0.72 m
+ // riding) off the lining; standing beside the walkway's ledge never puts the feet in its face (auto-step onto the walkway)
+ {let worst=0;for(const [mode,rad,sp] of [['walk',.44,4],['bike',.72,9]])for(const v0 of [-3,-1,1,3])for(let a=5;a<180;a+=12){const w=tw.createTunnelWalk(),s0=W.s+40,p=at(s0,v0);w.tryEnter(p,B+.3,mode);
+   for(let t=0;t<2;t+=1/30){const g=tw.tunnelSpot(p.x,p.z),n=tt.leftNormal(g.tx,g.tz),out=Math.sign(v0),r=a*Math.PI/180,vel={x:(g.tx*Math.cos(r)+n.x*out*Math.sin(r))*sp,z:(g.tz*Math.cos(r)+n.z*out*Math.sin(r))*sp};
+    p.x+=vel.x/30;p.z+=vel.z/30;w.constrain(p,vel,1/30,false,mode);const h=tw.tunnelSpot(p.x,p.z);worst=Math.max(worst,h.d+rad-HW);assert(h.d+rad<=HW+.005,`${mode} at ${a} deg: body ${(HW-h.d).toFixed(2)} m off the lining`);}}
+  console.log('     body off the lining: worst',worst.toFixed(3));}
+ for(let d=1.9;d<=2.6;d+=.02){const w=tw.createTunnelWalk(),p=at(W.s+30,d);w.tryEnter(p,B+.05,'walk');for(let i=0;i<60;i++)w.constrain(p,{x:0,z:0},1/30,false,'walk');
+  const up=w.state.height-B>=tw.WALKWAY_TOP-.01;assert(up||d+tw.FOOT_R<=tw.WALKWAY_KERB+1e-6,`standing at ${d.toFixed(2)}: the feet are in the ledge (height ${(w.state.height-B).toFixed(2)})`);}
+
  {const sim=L('lib/town/simulation.ts'),TM=L('lib/town/travelModes.ts').TRAVEL_MODES,DT=1/60;
   // a Town frame: raw keys (sx right +, sy down +) -> the island's screen mapping -> tunnel steer -> the tunnel step -> the chase camera
   const run=(w,p,v,mode,keys,secs,each)=>{const out={x:0,z:0},cam={x:0,y:0,z:0},look={x:0,y:0,z:0};for(let t=0;t<secs;t+=DT){const [sx,sy,sprint]=keys(t);

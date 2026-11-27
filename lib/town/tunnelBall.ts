@@ -10,7 +10,7 @@
 //  - the train: a free ball on the track as a train's front reaches it is knocked on ahead and off to the nearer walkway (cartoon).
 // Pure maths, no allocation (pooled outputs). Out of the mouths the island's own floor / solids take over (the hill face is summitSolid).
 import {TUNNEL_BED,TUNNEL_HALF_WIDTH,leftNormal,wrapS} from './trainTrack';
-import {floorAt,tunnelSpot,SPRING} from './tunnelWalk';
+import {floorAt,tunnelSpot,SPRING,WALKWAY_KERB,WALKWAY_TOP} from './tunnelWalk';
 
 /** The ball's radius (ISLAND_SHOT.radius); the lining's restitution (ISLAND_SHOT.wallBounce: the island's wall bounce). */
 export const BALL_R=.2,LINING_E=.78;
@@ -49,6 +49,19 @@ export function boreSweep(from:{x:number;y:number;z:number},to:{x:number;y:numbe
  const cv=ox*R,ch=hit.part==='wall'?Math.min(h,SPRING):SPRING+oy*R;
  hit.x=b.cx+sx*cv;hit.z=b.cz+sz*cv;hit.y=TUNNEL_BED+Math.max(ch,floorAt(Math.min(R,cv))+BALL_R);hit.nx=nx;hit.ny=ny;hit.nz=nz;hit.e=LINING_E;hit.t=1;return hit;}
 
+/** Leftovers A2 (owner 214 / 215, Nov 27 2026: "don't allow going through the wall for body and ball", "same with the ledge"): after
+ *  every ball step (free or dribbled) a ball in the bore is held out of the lining (its centre ≥ BALL_R inside the wall / arch) and
+ *  out of the walkway's kerb face (a ball under the walkway's top stays BALL_R clear of the kerb on the track side), its velocity into
+ *  the face reflected (the island's wall bounce). Returns true when it moved the ball. A few float ops, near the Summit only. */
+export function boreResolve(b:{x:number;y:number;z:number;vx:number;vy?:number;vz:number}):boolean{
+ const f=tunnelSpot(b.x,b.z,TUNNEL_HALF_WIDTH+1);if(!f||f.u<SLEEVE_U)return false;const h=b.y-TUNNEL_BED;if(h<-1||h>TOP)return false;
+ let d=f.d;const kerbIn=WALKWAY_KERB-BALL_R;
+ if(h-BALL_R<WALKWAY_TOP-.02&&d>kerbIn&&d<WALKWAY_KERB+.05)d=kerbIn;// under the walkway's top: in front of the kerb face, never in it
+ let lim=R;if(h>SPRING){const k=h-SPRING;lim=k<R?Math.sqrt(R*R-k*k):0;}if(d>lim)d=lim;// the lining at the ball's own height
+ if(Math.abs(d-f.d)<1e-6)return false;
+ const n=leftNormal(f.tx,f.tz),sx=n.x*f.side,sz=n.z*f.side;b.x=f.cx+sx*d;b.z=f.cz+sz*d;
+ const out=b.vx*sx+b.vz*sz,inward=d<f.d;if(inward&&out>0){const k=(1+LINING_E)*out;b.vx-=k*sx;b.vz-=k*sz;}else if(!inward&&out<0){const k=(1+LINING_E)*out;b.vx-=k*sx;b.vz-=k*sz;}
+ return true;}
 /** The train knock: a free ball on the track (lateral under KNOCK_D, under the roof) as a train's front reaches it. Trains run +s. */
 export const KNOCK_D=1.4+BALL_R+.1,KNOCK_TOP=4.9,KNOCK_LEAD=.08;
 const knock={vx:0,vy:0,vz:0,train:-1};

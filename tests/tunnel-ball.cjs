@@ -75,5 +75,17 @@ const ROOT=path.join(__dirname,'..');
   assert(/bound:\(from,to\)=>nearSummit\(from\.x,from\.z\)\?boreSweep\(from,to\)/.test(t),'the lining is the ball\'s bound');
   assert(/inBore\(x,walkBall\.state\.y,z\)/.test(t),'the ball\'s floor in the bore');assert(/inBore\(x,y,z\)\)return boreStep/.test(t),'the kerb, and the hill is not a solid in the bore');
   assert(/trainKnock\(world\.trainRun\.states/.test(t),'the train knock');assert(/tunnelWalk\.state\.active&&!walkingBall\)ball\.position\.y/.test(t),'the walked ball is drawn at its own height');}
+
+ // Leftovers A2 (owner 214 / 215): boreResolve after every step: over a seeded dribble / kick run toward the wall and the ledge the
+ // ball never overlaps the lining or the kerb face (centre >= BALL_R off either, at rest or moving)
+ {let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;const K=tw.WALKWAY_KERB,T=tw.WALKWAY_TOP,r=tb.BALL_R;let n=0;
+  const ok=(st,why)=>{const f=tw.tunnelSpot(st.x,st.z,HW+1);if(!f||f.u<tb.SLEEVE_U+.5)return;const h=st.y-B;n++;
+   const lim=h<=SP?R:Math.sqrt(Math.max(0,R*R-(h-SP)**2));assert(f.d<=lim+.003,why+': in the lining '+f.d.toFixed(3));
+   assert(!(h-r<T-.02&&f.d>K-r+.003&&f.d<K+.05),why+': in the kerb face d '+f.d.toFixed(3)+' h '+h.toFixed(3));};
+  for(let k=0;k<40;k++){const s0=W.s+20+k*3,v0=(rnd()-.5)*5,p=at(s0,v0),side=rnd()<.5?-1:1,b=wb.createWalkBall(),yaw=Math.atan2(p.tx,p.tz)+side*(.4+rnd()*1.1),
+    pl={x:p.x,y:B+tw.floorAt(Math.abs(v0)),z:p.z,yaw};b.reset(pl);if(k%2)b.shoot(pl,yaw,rnd());
+   for(let i=0;i<180;i++){if(b.state.mode==='attached'){const lv=Math.max(-tw.LANE_MAX,Math.min(tw.LANE_MAX,v0+side*i*.03)),q=at(s0+i*.03,lv);Object.assign(pl,{x:q.x,z:q.z,y:B+tw.floorAt(Math.abs(lv))});/* the walker is held in the lane */}
+    b.update(1/60,pl,{...env,moving:true});tb.boreResolve(b.state);ok(b.state,`run ${k} frame ${i}`);}}
+  console.log('     ball vs lining / ledge: '+n+' frames checked');}
  console.log('tunnel-ball: all passed');
 })().catch(e=>{console.error(e);process.exit(1);});
