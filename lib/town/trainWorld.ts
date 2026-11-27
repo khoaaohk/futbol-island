@@ -110,6 +110,22 @@ class Geo{
   const P=(e:number[],i:number,j:number)=>[e[0]+(s1[0]*i+s2[0]*j)*r,e[1]+(s1[1]*i+s2[1]*j)*r,e[2]+(s1[2]*i+s2[2]*j)*r];
   // diamond: corners on the axes, so no face is level (wires, arms, ridges: nothing to land on from the air).
   for(const [i,j,k,m] of diamond?[[1,0,0,-1],[0,-1,-1,0],[-1,0,0,1],[0,1,1,0]]:[[1,1,1,-1],[1,-1,-1,-1],[-1,-1,-1,1],[-1,1,1,1]])this.quad(P(a,i,j),P(b,i,j),P(b,k,m),P(a,k,m),c);}
+ /** Triangle with its own vertex normals, wound to face along them (Rail + beach props, Nov 27). */
+ triO(a:number[],b:number[],c:number[],na:number[],nb:number[],nc:number[]){const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+  if((uy*vz-uz*vy)*(na[0]+nb[0]+nc[0])+(uz*vx-ux*vz)*(na[1]+nb[1]+nc[1])+(ux*vy-uy*vx)*(na[2]+nb[2]+nc[2])<0)this.triN(a,c,b,na,nc,nb);else this.triN(a,b,c,na,nb,nc);}
+ /** Rail + beach props (Nov 27, owner 184): a solid of revolution round the vertical axis at (cx, cz): profile [radius, y] from the
+  *  foot up (radius 0 at the end = a closed round cap); smooth normals. 2·sides per profile step. */
+ lathe(cx:number,cz:number,prof:[number,number][],sides:number){const n=prof.length,N:number[][]=[];
+  for(let i=0;i<n;i++){const a=prof[Math.max(0,i-1)],b=prof[Math.min(n-1,i+1)],dr=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dr,dy)||1;N.push([dy/l,-dr/l]);}
+  const P=(i:number,k:number)=>{const t=k/sides*Math.PI*2;return [cx+Math.cos(t)*prof[i][0],prof[i][1],cz+Math.sin(t)*prof[i][0]];},Q=(i:number,k:number)=>{const t=k/sides*Math.PI*2;return [Math.cos(t)*N[i][0],N[i][1],Math.sin(t)*N[i][0]];};
+  for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){if(prof[i+1][0]>1e-5)this.triO(P(i,k),P(i+1,k),P(i+1,k+1),Q(i,k),Q(i+1,k),Q(i+1,k+1));if(prof[i][0]>1e-5)this.triO(P(i,k),P(i+1,k+1),P(i,k+1),Q(i,k),Q(i+1,k+1),Q(i,k+1));}}
+ /** A round tube along a path (parallel-transported frame, shared sections: no seams), radius r0 at the start to r1 at the end; open ends. */
+ tube(pts:number[][],rad:number[],sides:number){const n=pts.length,nrm=(v:number[])=>{const l=Math.hypot(v[0],v[1],v[2])||1e-9;return [v[0]/l,v[1]/l,v[2]/l];};
+  const T_=pts.map((_,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];return nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);});
+  const cr=(a:number[],b:number[])=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];let A=nrm(cr(T_[0],Math.abs(T_[0][1])>.9?[1,0,0]:[0,1,0]));
+  const R:{p:number[];n:number[]}[][]=[];for(let i=0;i<n;i++){const t=T_[i],d=A[0]*t[0]+A[1]*t[1]+A[2]*t[2];A=nrm([A[0]-t[0]*d,A[1]-t[1]*d,A[2]-t[2]*d]);const B=cr(t,A),r=rad[i]??rad[rad.length-1],o=[];
+   for(let k=0;k<=sides;k++){const th=k/sides*Math.PI*2,c=Math.cos(th),sn=Math.sin(th),q=[A[0]*c+B[0]*sn,A[1]*c+B[1]*sn,A[2]*c+B[2]*sn];o.push({p:[pts[i][0]+q[0]*r,pts[i][1]+q[1]*r,pts[i][2]+q[2]*r],n:q});}R.push(o);}
+  for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){const a=R[i][k],b=R[i+1][k],c=R[i+1][k+1],d=R[i][k+1];this.triO(a.p,b.p,c.p,a.n,b.n,c.n);this.triO(a.p,c.p,d.p,a.n,c.n,d.n);}}
  get empty(){return this.p.length===0;}
  build(ox:number,oz:number){const g=new T.BufferGeometry(),p=new Float32Array(this.p);for(let i=0;i<p.length;i+=3){p[i]-=ox;p[i+2]-=oz;}
   g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(this.n),3));return g;}
@@ -291,11 +307,22 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     // Grounding 2 (owner shot 141, Nov 26: the square post ended in a clean cut on top of the sand): on land the pole runs on 0.9 m
     // into the ground and stands in a stepped concrete footing (0.34 m, then a 0.27 m cap, ~20 tris, in the wall paint: 0 draws).
     const sea=a.kind===TrackKind.Sea,ground2=groundingOn()&&!sea,base=sea?a.bed-.8:ground2?a.bed-.9:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
-    if(ground2){footings.box(P[0],a.bed-.5,P[2],a.tx,a.tz,.17,.17,.56);footings.box(P[0],a.bed+.1,P[2],a.tx,a.tz,.135,.135,.05);catenaryFeet.push({x:P[0],z:P[2],r:.17});}
+    // Rail + beach props (Nov 27, owner 184: "more rounded and less blocky"): a tapered ROUND pole with a domed top in a round,
+    // shoulder-rounded plinth sunk into the ground (lathes, smooth normals; 8 sides, 6 on the lowest tier); the arm a gently bowed
+    // round tube to the same wire point, the brace a curved round strut. Same spots, colliders and wire attach. `?soft=0`: the boxes.
+    const SOFTP=softOn(),WEST=P[0]<-100,PS=lite||WEST?5:8;// west of x -100 (the stadium budget: tests/west-stadium.cjs, ~80 tris spare): 5 sides, 2-step profiles = ~+5 tris a mast
+    if(ground2){if(SOFTP)footings.lathe(P[0],P[2],WEST?[[.24,a.bed-.6],[.13,a.bed+.15]]:[[.2,a.bed-.6],[.2,a.bed+.03],[.19,a.bed+.09],[.165,a.bed+.135],[.13,a.bed+.15]],PS);
+     else{footings.box(P[0],a.bed-.5,P[2],a.tx,a.tz,.17,.17,.56);footings.box(P[0],a.bed+.1,P[2],a.tx,a.tz,.135,.135,.05);}catenaryFeet.push({x:P[0],z:P[2],r:.17});}
     if(sea){const q=off(a,-2.25,a.bed-.63);piers.box(q[0],q[1],q[2],a.tx,a.tz,.28,.7,.16,false);}// (top 5 cm under the cap's: never coplanar)
-    poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
+    if(SOFTP)poles.lathe(P[0],P[2],WEST?[[.125,base],[.08,top-.02],[0,top+.04]]:[[.125,base],[.115,a.bed+1.5],[.09,top-.1],[.075,top-.03],[.045,top+.01],[0,top+.03]],PS);
+    else poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
     // Looks 2 (Nov 24 2026): the thin arm, brace and dropper go in the catenary mesh (near-camera fade); lite keeps the arm here.
     if(lite)poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);
+    else if(SOFTP){const Y=a.bed+WIRE_Y,arm:number[][]=[],br:number[][]=[];
+     for(let k=0;k<=6;k++){const u=k/6;arm.push(off(a,-2.75+3.0*u,Y+.4+.1*Math.sin(Math.PI*Math.min(1,u*1.1))));}// bowed up mid-span, back to Y+.4 by the dropper
+     const e=arm[6],e2=off(a,.29,Y+.4),e3=off(a,.305,Y+.4);catArm.tube([...arm,e2,e3],[.05,.05,.05,.05,.05,.048,.045,.032,0],6);
+     for(let k=0;k<=6;k++){const u=k/6,v=-2.66+2.42*u,h=Y-.3+.68*u-.22*Math.sin(Math.PI*u);br.push(off(a,v,h));}catArm.tube(br,[.04,.035,.035,.035,.035,.035,.03],5);void e;
+     catArm.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     else{catArm.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);catArm.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
      catArm.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
