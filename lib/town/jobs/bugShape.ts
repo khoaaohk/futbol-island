@@ -8,8 +8,13 @@ import * as T from 'three';
 /** Merge coloured parts into one non-indexed geometry with vertex colours. */
 export function mergeColoured(parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]){
  const pos:number[]=[],nor:number[]=[],col:number[]=[],c=new T.Color();
- for(const p of parts){const g=(p.geometry.index?p.geometry.toNonIndexed():p.geometry.clone()).applyMatrix4(p.matrix);c.set(p.color);const a=g.getAttribute('position'),n=g.getAttribute('normal');
-  for(let i=0;i<a.count;i++){pos.push(a.getX(i),a.getY(i),a.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));col.push(c.r,c.g,c.b);}g.dispose();}
+ for(const p of parts){const src=p.geometry.index?p.geometry.toNonIndexed():p.geometry.clone();c.set(p.color);
+  // Leftovers B (Nov 27 2026): a puffed soft box (softBox.ts, userData.puff) takes a pool-float light in its colour: darker belly
+  // toward its foot, lit crown, so a crate reads soft and inflated (the island bake's look, simplified). Others: flat colour.
+  const puffed=!!p.geometry.userData?.puff,ly=src.getAttribute('position');let y0=0,ih=0;
+  if(puffed){src.computeBoundingBox();const bb=src.boundingBox!;y0=bb.min.y;ih=1/Math.max(bb.max.y-bb.min.y,1e-3);}
+  const g=src.applyMatrix4(p.matrix),a=g.getAttribute('position'),n=g.getAttribute('normal');
+  for(let i=0;i<a.count;i++){const f=puffed?.74+.3*(ly.getY(i)-y0)*ih+.08*Math.max(0,n.getY(i)):1;pos.push(a.getX(i),a.getY(i),a.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));col.push(c.r*f,c.g*f,c.b*f);}g.dispose();}
  const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(pos,3));out.setAttribute('normal',new T.Float32BufferAttribute(nor,3));out.setAttribute('color',new T.Float32BufferAttribute(col,3));out.computeBoundingSphere();return out;
 }
 
