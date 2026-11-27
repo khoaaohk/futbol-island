@@ -661,8 +661,9 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
    if(LSOFT){// Rail + beach props (Nov 27, owner 187: "still a box + white square"): a round bracket arm, a domed round housing with a
     // rolled rim and a glass dome lens under it (lathes; tone baked from the normal: the tube is unlit). Same spots, same light pools.
     bracket.tube([P2(HW+.01,2.2),P2(HW-.1,2.2),P2(HW-.17,2.19),P2(HW-.2,2.17)],[.026],6);
-    {const c=P2(HW-.2,0);hood.lathe(c[0],c[2],[[.14,2.065],[.148,2.08],[.142,2.11],[.12,2.145],[.075,2.175],[0,2.185]],10);
-     lamp.lathe(c[0],c[2],[[0,1.955],[.06,1.962],[.1,1.985],[.12,2.03],[.125,2.07]],10);}}
+    {const c=P2(HW-.2,0),Y=(pr:[number,number][])=>pr.map(([r,y])=>[r,B+y] as [number,number]);// (profile heights over the bore's bed)
+     hood.lathe(c[0],c[2],Y([[.14,2.065],[.148,2.08],[.142,2.11],[.12,2.145],[.075,2.175],[0,2.185]]),10);
+     lamp.lathe(c[0],c[2],Y([[0,1.955],[.06,1.962],[.1,1.985],[.12,2.03],[.125,2.07]]),10);}}
    else{{const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
    {const c=P2(HW-.2,2.13);hood.box(c[0],c[1],c[2],q.tx,q.tz,.15,.11,.04,false);}
    {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}}
