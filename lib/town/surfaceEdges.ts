@@ -52,9 +52,9 @@ export const wearOf=(d:number)=>{const t=Math.min(1,Math.max(0,d/WEAR.centre)),s
 /** Rows of the wear lattice, metres in from each long edge (and from each end). */
 /** paths-junctions (owner shot 173, Nov 27 2026: "a faint hard seam line inside the path ~1/4 in from each edge"): with 4 rows the
  *  tone was piecewise linear with its last kink where the trodden middle went flat (1.4 m in), a ruled Mach band along every path. The
- *  curve now rises over 2.1 m (most walkways are 4-5 m: the middle is the only flat part) and is sampled on 8 rows, so the kinks are
- *  under 2 % of the swing. */
-export const WEAR_ROWS=[.15,.32,.52,.75,1,1.28,1.62,2.1] as const;
+ *  curve now rises over 2.1 m (most walkways are 4-5 m: the middle is the only flat part) and is sampled on 5 rows (8 cost +24-36k
+ *  triangles a view on the one lawn mesh: phone heat). */
+export const WEAR_ROWS=[.3,.7,1.15,1.6,2.1] as const;
 /** A lawn and how its edges are built: `ground` = the drawn lawn's height over its flat plane (a raised lawn: the edges are laid on
  *  it), or null = flat lawn only (raised ground is skipped). */
 export type Zone={poly:readonly Pt[];ground:((x:number,z:number)=>number)|null;/** only where this holds (the main island's raised west side: its own pass) */only?:(x:number,z:number)=>boolean};

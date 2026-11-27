@@ -58,7 +58,7 @@ console.log('stadium build:',JSON.stringify(world.stadium));// Nov 13 2026 (owne
 // + the machine row (screen-shops) 59 / 96,338; both together 65 / 99,788. Budget 98k → 102k (~2% margin).
 // Nov 23 2026 (Island Line, measured): the line's west leg, its trestle and the West Beach station add 1 chunk and ~13k triangles
 // to the west batches (99,790 → 112,782; PLAN.md §7 allows +40k near a station). Budget 102k → 115k.
-assert(chunks.length<=75&&tris<=117500,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k; the rounded hedge swells, paths-junctions Nov 27 2026: +12 triangles a swell, 115.9k)');
+assert(chunks.length<=75&&tris<=115000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
