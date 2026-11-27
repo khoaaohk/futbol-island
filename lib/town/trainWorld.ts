@@ -639,12 +639,20 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Wall lamps (Nov 27 2026, owner 157: "the lighting is not complete": a flat white square on a faceted glow patch). Now a fixture
   // per lamp (a bracket, a dark cage hood, a warm bulb: 3 small boxes, in this one mesh: no new draw) at TUNNEL_LAMPS (tunnelWalk.ts);
   // the light itself is the shader's (below): a soft round pool on the wall, the walkway, the track and the far wall, from the same list.
-  const bracket=new Geo(),hood=new Geo();
+  const bracket=new Geo(),hood=new Geo(),LSOFT=softOn();
+  /** add() with a tone baked from each vertex normal (top-lit, darker underneath): the round fittings read round in the unlit tube. */
+  const addLit=(g:Geo,color:string,shade:number,span=.45)=>{for(let k=0;k<g.p.length;k+=3){const ny=g.n[k+1];tmp.set(color).multiplyScalar(shade*(1-span*.5+span*.5*ny));put3([g.p[k],g.p[k+1],g.p[k+2]],tmp);}};
   for(const l of TUNNEL_LAMPS){const q=trackAt(l.s),sd=l.side,P2=(v:number,y:number)=>A(l.s,sd*v,y);
-   {const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
+   if(LSOFT){// Rail + beach props (Nov 27, owner 187: "still a box + white square"): a round bracket arm, a domed round housing with a
+    // rolled rim and a glass dome lens under it (lathes; tone baked from the normal: the tube is unlit). Same spots, same light pools.
+    bracket.tube([P2(HW+.01,2.2),P2(HW-.1,2.2),P2(HW-.17,2.19),P2(HW-.2,2.17)],[.026],6);
+    {const c=P2(HW-.2,0);hood.lathe(c[0],c[2],[[.14,2.065],[.148,2.08],[.142,2.11],[.12,2.145],[.075,2.175],[0,2.185]],10);
+     lamp.lathe(c[0],c[2],[[0,1.955],[.06,1.962],[.1,1.985],[.12,2.03],[.125,2.07]],10);}}
+   else{{const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
    {const c=P2(HW-.2,2.13);hood.box(c[0],c[1],c[2],q.tx,q.tz,.15,.11,.04,false);}
-   {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}
-  add(bracket,'#2e2a26',1,true);add(hood,'#3a342d',1,true);add(lamp,'#fff0c8',1,true);
+   {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}}
+  if(LSOFT){addLit(bracket,'#2e2a26',1);addLit(hood,'#3a342d',1);addLit(lamp,'#fff0c8',1,.12);}
+  else{add(bracket,'#2e2a26',1,true);add(hood,'#3a342d',1,true);add(lamp,'#fff0c8',1,true);}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.computeBoundingSphere();
   const mat=new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}),tubeIn={value:0};mat.userData.tubeIn=tubeIn;
   const mouthGl=(p:{x:number;z:number;s:number},inward:number)=>{const t=trackAt(p.s),nx=t.tx*inward,nz=t.tz*inward;return `vec3(${(p.x-nx*.12).toFixed(3)},${B.toFixed(3)},${(p.z-nz*.12).toFixed(3)}),vec2(${nx.toFixed(5)},${nz.toFixed(5)})`;};
