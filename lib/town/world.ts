@@ -1561,7 +1561,8 @@ export function* buildTownSteps(scene: T.Scene) {
   path(202,19,3.8,24);destinations.push({name:'Community Greenhouse',x:202,z:29.3});
 
   yield;
-  destinations.push(buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads,prop}));
+  // Soft sweep 2: every market stall (not only Rosa's tagged one) takes the stall's rounding (counters, crates, fascia, posts).
+  destinations.push(softly(softOn()?SOFT_KINDS.stall??null:null,()=>buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads,prop})));
 
   buildEastCoast({box,put,obstacles,prop});
   // East Jetty (eastPierWorld.ts): static pieces join the same batches; its lamps join the night pools below.
