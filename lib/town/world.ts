@@ -2267,9 +2267,12 @@ export function* buildTownSteps(scene: T.Scene) {
   // A station lantern hangs 0.7 m in front of the house wall: its halo is a soft disc just behind it (never over the lit paper) and a
   // warm wash on the wall; a lantern in the open (the arch) has two crossed discs, each both ways round (the glow is front-sided).
   {type Spot={x:number;y:number;z:number;floor:number;r:number;wx?:number;wz?:number};const spots:Spot[]=STATION_LANTERNS.map(l=>({...l,r:1}));for(const a of CAY_ARCH_LANTERNS)spots.push({...a,r:.8});
-   const n=spots.reduce((s,l)=>s+(l.wx!==undefined?3:5),0);
+   const n=spots.reduce((s,l)=>s+(l.wx!==undefined?4:6),0);
    if(spots.length){const glows=new T.InstancedMesh(poolGeometry,lanternGlowMaterial,n);glows.name='lantern-glows';const q=new T.Quaternion(),yawQ=new T.Quaternion(),up=new T.Vector3(0,1,0),out=new T.Vector3();let k=0;
-    for(const l of spots){poolPosition.set(l.x,l.floor+.03,l.z);poolScale.set(2.8*l.r,1,2.8*l.r);poolMatrix.compose(poolPosition,poolRotation,poolScale);glows.setMatrixAt(k++,poolMatrix);
+    // Leftovers B (Nov 27, "the platform pool is faint"): the floor pool is two stacked discs of the same glow, a wide soft falloff
+    // (3.4 m) plus a tight warm core (1.5 m) right under the lantern: the centre reads ~2x, the edge stays soft (not a brighter flat
+    // disc; the lantern's own emission stays as it was, no peach). +2 triangles a lantern, same draw.
+    for(const l of spots){for(const [size,lift] of [[3.4,.03],[1.5,.035]] as const){poolPosition.set(l.x,l.floor+lift,l.z);poolScale.set(size*l.r,1,size*l.r);poolMatrix.compose(poolPosition,poolRotation,poolScale);glows.setMatrixAt(k++,poolMatrix);}
      if(l.wx!==undefined&&l.wz!==undefined){q.setFromUnitVectors(up,out.set(-l.wx,0,-l.wz));
       for(const [back,size,dy] of [[.3,1.25,0],[.66,2.1,-.25]] as const){poolPosition.set(l.x+l.wx*back,l.y+dy,l.z+l.wz*back);poolScale.set(size,1,size);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}continue;}
      for(const [yaw,tilt] of [[Math.PI/4,1],[-Math.PI/4,1],[Math.PI/4,-1],[-Math.PI/4,-1]]){q.setFromAxisAngle(new T.Vector3(1,0,0),tilt*Math.PI/2);yawQ.setFromAxisAngle(up,yaw);q.premultiply(yawQ);poolPosition.set(l.x,l.y,l.z);poolScale.set(1.35*l.r,1,1.35*l.r);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}}
