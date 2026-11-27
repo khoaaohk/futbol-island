@@ -53,6 +53,8 @@ export function distanceToShore(x:number,z:number){
  return Math.sqrt(squared);
 }
 
+/** The Palm Coast promenade (world.ts path()): the footpath between the south lawn and the beach. */
+export const PALM_COAST_PROMENADE={x:2.75,z:90,w:104.5,d:4} as const;
 /** Southern lawn meets the coastal sand and pier; northern beach keeps its setback. */
 export const INTERIOR_GRASS_COLOR='#608870';// Nov 21 2026: was '#6e9678', the same green as every pitch; lawn a step darker and cooler, pitches '#7ba476' (lib/town/venues.ts)
 /** West of x -100 the lawn keeps a fixed 8 m of dry sand behind the beach ribbon (West Beach, 17 m of sand in all) instead of the
@@ -63,4 +65,7 @@ export const INTERIOR_GRASS=SHORE_SAND.map(({outer,inner})=>{
  if(!west)return scaled;
  const dx=inner.x-outer.x,dz=inner.z-outer.z,length=Math.hypot(dx,dz)||1,set={x:inner.x+dx/length*8,z:inner.z+dz/length*8};
  return {x:scaled.x+(set.x-scaled.x)*west,z:scaled.z+(set.z-scaled.z)*west};
-});
+}).map(p=>{const r=PALM_COAST_PROMENADE;/* sand in the grass (owner, Nov 26 2026): over the cove (-16,121) the scaled inner edge dipped up to 9 m inland of
+ the Palm Coast promenade, so beach sand filled the south of the lawn block behind it (torn edge with ?surf=1). The lawn reaches the promenade's
+ centre line along its whole length; the sand begins on its beach side (tests/path-on-road.cjs). */
+ return Math.abs(p.x-r.x)<=r.w/2&&p.z<r.z&&p.z>r.z-12?{x:p.x,z:r.z}:p;});

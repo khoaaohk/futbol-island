@@ -27,7 +27,7 @@ const check=(p,label)=>{assert.ok(p.position.every(Number.isFinite)&&p.edge.ever
  {const wear={position:[],index:[],edge:[]},t=E.pathWear(wear);check(wear,'wear');assert.ok(t>20&&t<400,'wear triangles '+t);let lo=9,hi=-9;
   for(let i=0;i<wear.edge.length/2;i++){const x=wear.position[i*3],z=wear.position[i*3+2],w=wear.edge[i*2+1]-E.WEAR_BASE;assert.equal(wear.edge[i*2],1);assert.ok(Math.abs(x-path.x)<=path.w/2+1e-6&&Math.abs(z-path.z)<=path.d/2+1e-6,'on the walkway');
    const d=Math.min(path.w/2-Math.abs(x-path.x),path.d/2-Math.abs(z-path.z));assert.ok(Math.abs(w-E.wearOf(d))<1e-6,'wear follows the distance to the outline');lo=Math.min(lo,w);hi=Math.max(hi,w);}
-  assert.ok(lo===-1&&hi===E.WEAR.light,'dusty edge to trodden middle: '+lo+' .. '+hi);assert.equal(E.wearOf(0),-1);assert.equal(E.wearOf(E.WEAR.edge),0);assert.equal(E.wearOf(9),E.WEAR.light);
+  assert.ok(lo===-1&&hi===E.WEAR.light,'dusty edge to trodden middle: '+lo+' .. '+hi);assert.equal(E.wearOf(0),-1);for(let d=0;d<2;d+=.05)assert.ok(E.wearOf(d+.05)>=E.wearOf(d)-1e-12&&E.wearOf(d+.05)-E.wearOf(d)<.12,'one smooth rise, no step');/* Nov 26 2026: one C1 curve (no ruled line at a row) */assert.equal(E.wearOf(9),E.WEAR.light);
   assert.equal(E.pathWear({position:[],index:[],edge:[]},true),0,'no wear on the simpler edge');
   const area=p=>{let a=0;for(let i=0;i<p.index.length;i+=3){const [A,B,C]=[0,1,2].map(k=>p.index[i+k]*3),P=p.position;a+=Math.abs((P[B]-P[A])*(P[C+2]-P[A+2])-(P[C]-P[A])*(P[B+2]-P[A+2]))/2;}return a;};
   assert.ok(Math.abs(area(wear)-path.w*path.d)<1e-6,'the sheet covers the walkway once: '+area(wear));

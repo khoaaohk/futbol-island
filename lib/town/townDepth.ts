@@ -95,6 +95,23 @@ export function sheetCrossings(roads:StreetInput['roads'],paths:Rect[],known:Cro
   if(!(across0<c-h-.3&&across1>c-h+1.5)&&!(across1>c+h+.3&&across0<c+h-1.5)||alongLen>14||alongLen<2.2||along<lo+3||along>hi-3)continue;
   const k={x:v?r.x:along,z:v?along:r.z,vertical:v};if([...known,...out].some(o=>o.vertical===v&&Math.hypot(o.x-k.x,o.z-k.z)<5))continue;out.push(k);}
  return out;}
+/** Path into the street (owner, Nov 26 2026: "fix this going into the street"): a footpath ENDS where it meets a street. Several path
+ *  slabs were laid a few metres past the pavement onto the carriageway; flat, the road (1-3 cm higher) hid that end, but with the
+ *  carriageway sunk 12-15 cm (and the pavement dropped at a crossing) the slab's end showed as a pale tongue out on the asphalt.
+ *  Returns the part of `r` that is off every `cover` rectangle (the streets: carriageway + pavements, junction squares): a cover
+ *  that spans the slab's width and holds one of its ends trims that end back to the cover's edge. `whole` false: nothing is left;
+ *  `stuck` true: a cover lies across the slab's middle or over a corner only (left as it is; tests/path-on-road.cjs reports it). */
+/** The path slabs world.ts trimmed on the last build: [x, z, w, d] of the area and what is left (0 0: hidden). */
+export const pathClips:{value:number[][]}={value:[]};
+export function clipToStreets(r:Rect,cover:readonly Rect[],eps=.03){let x0=r.x-r.w/2,x1=r.x+r.w/2,z0=r.z-r.d/2,z1=r.z+r.d/2,stuck=false,changed=true;
+ for(let pass=0;changed&&pass<8;pass++){changed=false;
+  for(const c of cover){const cx0=c.x-c.w/2,cx1=c.x+c.w/2,cz0=c.z-c.d/2,cz1=c.z+c.d/2;
+   if(Math.min(x1,cx1)-Math.max(x0,cx0)<=eps||Math.min(z1,cz1)-Math.max(z0,cz0)<=eps||x1-x0<=eps||z1-z0<=eps)continue;
+   const spanZ=cz0<=z0+eps&&cz1>=z1-eps,spanX=cx0<=x0+eps&&cx1>=x1-eps;
+   if(spanZ&&cx0<=x0+eps){x0=Math.max(x0,cx1);changed=true;}else if(spanZ&&cx1>=x1-eps){x1=Math.min(x1,cx0);changed=true;}
+   else if(spanX&&cz0<=z0+eps){z0=Math.max(z0,cz1);changed=true;}else if(spanX&&cz1>=z1-eps){z1=Math.min(z1,cz0);changed=true;}
+   else stuck=true;}}
+ const whole=x1-x0>eps&&z1-z0>eps;return {x:(x0+x1)/2,z:(z0+z1)/2,w:Math.max(0,x1-x0),d:Math.max(0,z1-z0),whole,stuck,trimmed:Math.abs(x1-x0-r.w)>1e-6||Math.abs(z1-z0-r.d)>1e-6};}
 /** world.ts calls this once the streets are final (before any height is asked for in play). No-op with the flag off. */
 export function setDepthStreets(input:StreetInput|null){
  if(!enabled||!input){S=null;return;}

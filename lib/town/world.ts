@@ -16,7 +16,7 @@ import {mergeLawnPatch} from './westTerrain';
 import {trackNearest} from './trainTrack';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -59,7 +59,7 @@ import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
-import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from './shoreline';
+import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,PALM_COAST_PROMENADE,onIsland} from './shoreline';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {createTrailMaterial} from '../graphics/pondWater';
 import {BK_SQUARE,squareEdge,squareSurfaces} from './beachKitchenSquare';
@@ -335,7 +335,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const carriageway=8,footprint=12;
     roads.push({x,z,w:vertical?footprint:length,d:vertical?length:footprint,carriageway,boulevard,vertical});
   }
-  function path(x:number,z:number,w:number,d:number){const area={kind:'path',x,z,w,d};surfaceAreas.push(area);rectPaths.add(area);return tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
+  function path(x:number,z:number,w:number,d:number){const area={kind:'path',x,z,w,d};surfaceAreas.push(area);rectPaths.add(area);const m=tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');m.userData.pathSlab=area;return m;}
   /** The Beach Kitchen square (lib/town/beachKitchenSquare.ts, Nov 13 2026): paving from both facades to the grass line, then a
    *  vertex-colour fade into the sand (no straight edge across the beach, no grass strip under the shop fronts). */
   function beachKitchenSquare(){
@@ -1103,7 +1103,7 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   // Palm Coast beach opens south of the garage; static shoreline costs no animation.
 
-  path(11,79,5,22);path(2.75,90,104.5,4);path(53,79.5,4,17);
+  path(11,79,5,22);path(PALM_COAST_PROMENADE.x,PALM_COAST_PROMENADE.z,PALM_COAST_PROMENADE.w,PALM_COAST_PROMENADE.d);path(53,79.5,4,17);
   // The coast's edge is the sand ribbon's own rounded slope into the sea (fields.ts); the old row of 160 pale cylinders here
   // read as a segmented pipe with gaps at every joint (Oct 12 2026).
   for(const [x,z] of [[-29,80],[-12,94],[35,96],[51,119],[51,138]])palm(x,z,5.5);
@@ -1796,7 +1796,8 @@ export function* buildTownSteps(scene: T.Scene) {
    const cover=[...roads.map(r=>({x:r.x,z:r.z,w:r.w,d:r.d})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12,d:12})),...surfaceAreas.filter((a,i)=>a.kind!=='path'||soft(a,i)),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6})),...buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))];
    const ringPaving=ROUNDABOUT.roadOuter+3.6;/* the roundabout's pavement and arm flares reach roadOuter + 3 m (coralCayWorld.ts Rp); they are paving, not lawn: a path lip laid there sat 1-4 mm from the pavement's top and flickered (ship triage, Nov 26 2026) */
    const blocked=(x:number,z:number)=>{if(Math.hypot(x-ROUNDABOUT.x,z-ROUNDABOUT.z)<ringPaving)return true;for(let i=0;i<cover.length;i++){const r=cover[i];if(Math.abs(x-r.x)<r.w/2+.25&&Math.abs(z-r.z)<r.d/2+.25)return true;}return false;};
-   setSurfaceInput({paths,blocked,paved:(x,z)=>Math.hypot(x-ROUNDABOUT.x,z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+3||(x>ROUNDABOUT.x&&x<CAY_BOULEVARD.x1&&Math.abs(z-CAY_BOULEVARD.z)<CAUSEWAY.deckHalf)/* the boulevard's pavements: the footpaths that leave it start 1.5 m under them */});void surfaceStats;
+   const street=roadRects(false),onStreet=(x:number,z:number)=>street.some(r=>Math.abs(x-r.x)<r.w/2&&Math.abs(z-r.z)<r.d/2);/* path into the street (Nov 26 2026): no wear sheet or lip corner past the pavement's back edge (the slab ends there with ?depth=1) */
+   setSurfaceInput({paths,blocked,paved:(x,z)=>onStreet(x,z)||Math.hypot(x-ROUNDABOUT.x,z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+3||(x>ROUNDABOUT.x&&x<CAY_BOULEVARD.x1&&Math.abs(z-CAY_BOULEVARD.z)<CAUSEWAY.deckHalf)/* the boulevard's pavements: the footpaths that leave it start 1.5 m under them */});void surfaceStats;
    // Coral Cay's lawn: its rim onto the sand ring (which lies over the lawn's plane), the lips and the wear along its paths join the
    // lawn's own geometry (after the drape: the paths are final, and the patch is not ground for it). 0 draws, same material.
    const lawn=town.getObjectByName('coral-cay-lawn') as T.Mesh|undefined;
@@ -1809,6 +1810,15 @@ export function* buildTownSteps(scene: T.Scene) {
      const g=mergeLawnPatch(g0,{position:pos,normal:up,uv:new Array(count*2).fill(0),index:e.index,triangles:e.triangles} as Parameters<typeof mergeLawnPatch>[1]);
      const a=new Float32Array(g.getAttribute('position').count*2);a.set(e.edge,base*2);g.setAttribute('aEdge',new T.Float32BufferAttribute(a,2));g0.dispose();lawn.geometry=g;}}}
   if(depth){registerDepth();/* again: every path laid since is known to the verge */
+   // Path into the street (owner, Nov 26 2026): a path slab that ran on past the pavement onto the carriageway showed as a pale tongue on the sunk asphalt
+   // (and, at a dropped kerb, through the lowered pavement). Each slab now ends where the street (carriageway + pavement) begins; its area stays as laid
+   // (walking, the minimap, the dropped kerbs of sheetCrossings and the verge read the areas). Flat (?depth=0) the road hid that end: nothing changes there.
+   {const streets=roadRects(false),clips:number[][]=[],gone:T.Object3D[]=[];for(const o of town.children){const a=o.userData.pathSlab as {x:number;z:number;w:number;d:number}|undefined;if(!a||!(o instanceof T.Mesh))continue;
+    const c=clipToStreets(a,streets);if(!c.trimmed)continue;if(!c.whole){gone.push(o);clips.push([a.x,a.z,0,0]);continue;}
+    const g=o.geometry as T.BufferGeometry,P=g.getAttribute('position') as T.BufferAttribute,ox=o.position.x,oz=o.position.z;
+    for(let i=0;i<P.count;i++){P.setX(i,Math.min(c.x+c.w/2-ox,Math.max(c.x-c.w/2-ox,P.getX(i))));P.setZ(i,Math.min(c.z+c.d/2-oz,Math.max(c.z-c.d/2-oz,P.getZ(i))));}
+    P.needsUpdate=true;g.computeBoundingBox();g.computeBoundingSphere();clips.push([a.x,a.z,+c.w.toFixed(2),+c.d.toFixed(2)]);}
+    for(const o of gone)o.removeFromParent();/* wholly under the street: the batching pass ignores `visible` */pathClips.value=clips;}
    town.updateMatrixWorld(true);const groups=new Map<unknown,T.Mesh[]>(),bb=new T.Box3(),gb=new T.Box3(),v=new T.Vector3();let moved=0;const movedList:number[][]=[];
    town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train||o.userData.depthOwn||o.parent===ferry)return;const k=o.userData.propTag??(o.parent&&o.parent!==town?o.parent:o);const l=groups.get(k);if(l)l.push(o);else groups.set(k,[o]);});
    for(const [k,list] of groups){gb.makeEmpty();for(const m of list){bb.setFromObject(m);gb.union(bb);}
