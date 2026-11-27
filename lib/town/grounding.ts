@@ -187,16 +187,22 @@ export function frond(P:Pieces,x:number,z:number,y:number,a:number,colour:string
  const s0=pt(0,0),l1=pt(.35,.16),r1=pt(.35,-.12),l2=pt(.75,.1),r2=pt(.75,-.08),tip=pt(1,0),tris=[s0,l1,r1,l1,l2,r1,r1,l2,r2,l2,tip,r2];
  const both:number[][]=[];for(let i=0;i<tris.length;i+=3)both.push(tris[i],tris[i+1],tris[i+2],tris[i],tris[i+2],tris[i+1]);P.add(colour,both,null,'frond');
 }
+/** Root tips stay within this many metres of the trunk's centre (min, max; seeded per tree). Leftovers A, Nov 26. */
+export const ROOT_REACH=[.6,.9] as const;
+const mixHex=(a:string,b:string,t:number)=>'#'+new T.Color(a).lerp(new T.Color(b),t).getHexString();
 /** A root flare round a trunk of radius r at (x, z): a 7-sided skirt widening into the ground plus 2-3 roots running out (~26 tris). */
 export function rootFlare(P:Pieces,x:number,z:number,y:number,r:number,colour:string,at:(x:number,z:number)=>number=()=>y){
- const n=7,top=.32+.12*spotHash(x,z,14),R=r*1.75,tris:number[][]=[];
+ // Leftovers A (owner, Nov 26 night): on large trees the flare + roots spread 1-2 m like a dark starfish. The skirt now reaches at
+ // most 0.22 m past the bark, every root tip stays within ROOT_REACH (0.6-0.9 m) of the trunk's centre, and the roots are lower,
+ // narrower and shaded a step toward the soil so they read as bark going into the ground, not dark arms on the lawn.
+ const n=7,top=.32+.12*spotHash(x,z,14),R=Math.min(r*1.75,r+.22),tris:number[][]=[],reach=ROOT_REACH[0]+(ROOT_REACH[1]-ROOT_REACH[0])*spotHash(z,x,19),rootColour=mixHex(colour,GROUND_COLOURS.soil,.35);
  for(let k=0;k<n;k++){const a0=k/n*Math.PI*2,a1=(k+1)/n*Math.PI*2,p=(a:number,q:number,h:number)=>{const px=x+Math.cos(a)*q,pz=z+Math.sin(a)*q;return [px,(h<0?at(px,pz):y)+h,pz];};
   tris.push(p(a0,r*.98,top),p(a1,r*.98,top),p(a1,R,-.03),p(a0,r*.98,top),p(a1,R,-.03),p(a0,R,-.03));}
  P.add(colour,tris,[x,y+top*.4,z],'flare');
  const roots=2+Math.floor(spotHash(x,z,15)*2);
- for(let i=0;i<roots;i++){const a=spotHash(x,z,16+i)*Math.PI*2,len=.45+.45*spotHash(z,x,17+i),w=r*.42,cx=Math.cos(a),cz=Math.sin(a),px=-cz,pz=cx,h=.14+.06*spotHash(x+i,z,18);
+ for(let i=0;i<roots;i++){const a=spotHash(x,z,16+i)*Math.PI*2,len=Math.max(.12,Math.min(.45+.45*spotHash(z,x,17+i),reach-r)),w=r*.3,cx=Math.cos(a),cz=Math.sin(a),px=-cz,pz=cx,h=.08+.04*spotHash(x+i,z,18);
   const tx=x+cx*(r+len),tz=z+cz*(r+len),s0=[x+cx*r*.9+px*w,y-.02,z+cz*r*.9+pz*w],s1=[x+cx*r*.9-px*w,y-.02,z+cz*r*.9-pz*w],ridge=[x+cx*r*.95,y+h,z+cz*r*.95],tip=[tx,Math.min(y,at(tx,tz))-.03,tz];
-  P.add(colour,[s0,ridge,tip,ridge,s1,tip],[x+cx*(r+len*.3),y-.3,z+cz*(r+len*.3)],'root');}
+  P.add(rootColour,[s0,ridge,tip,ridge,s1,tip],[x+cx*(r+len*.3),y-.3,z+cz*(r+len*.3)],'root');}
 }
 /** A thin slab (pad / skirting course): an axis box turned by yaw, outer faces + top only (no bottom; 10 triangles). */
 export function slab(P:Pieces,cx:number,cz:number,hw:number,hd:number,yaw:number,y0:number,y1:number,colour:string,what:string,faces=15){
