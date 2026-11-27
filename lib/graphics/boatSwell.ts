@@ -41,5 +41,5 @@ export const BOAT_RING_GLSL=/* glsl */`
      if(uWaterDetail>.5){for(int i=0;i<${BOAT_RING_SLOTS};i++){vec4 bs=uBoatRingS[i];vec4 br=uBoatRing[i];vec2 dq=vWaterXZ-br.xy;
       if(bs.z>0.&&dot(dq,dq)<bs.w){vec2 bq=abs(vec2(dq.x*br.z-dq.y*br.w,dq.x*br.w+dq.y*br.z));
        float dm=length(max(bq-vec2(bs.x-bs.y,0.),0.))-bs.y;// metres outside the hull's stadium outline
-       float k=1.-smoothstep(-.3,2.6,dm),f=k*k*k;// the foam hugs the hull, the ripples fade out by ~2.5 m
-       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.86,.95,.94),min((f*.5+(.5+.5*sin(dm*6.-uWaterTime*2.6))*k*.14)*bs.z,.5));}}}`;
+       float k=1.-smoothstep(-.3,2.8,dm),f=k*k;f*=f;// the foam hugs the hull, the ripples fade out by ~2.5 m
+       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.86,.95,.94),min((f*.38+(.5+.5*sin(dm*5.-uWaterTime*2.6))*k*.22)*bs.z,.5));}}}`;
