@@ -177,7 +177,8 @@ async function hunt(){const b=browser();const T2=require('three');const L2=creat
    h.update(.1,{x:s.x+1,y:s.y+1,z:s.z},true,false,null,true,true);assert(got.includes(s.id),`${s.id}: an open parachute collects it`);}
   {const {h:h2,got:g2}=await hunt(),s=spots.find(s=>s.perch);assert.deepEqual(spots.filter(s=>s.perch).map(s=>s.id),['summit-hut-roof']);
    for(let i=0;i<8;i++)h2.update(.1,{x:s.x+.4,y:s.y-.08,z:s.z},true,false);assert(g2.includes(s.id),'standing on the hut roof (landed, not parachuting) collects the roof ball');h2.dispose();}
-  const buoys=h.buoyScenery;assert(buoys.children.length===1,'every buoy (Coral Cay\'s and the whale-shark one) is still one packed draw');h.dispose();}
+  const buoys=h.buoyScenery;// Nov 27 2026 (owner 196: buoys rock on the swell, each with its own phase): one packed draw PER buoy (2), documented in polish/NOTE.md.
+  assert(buoys.children.length===2,'each buoy (Coral Cay\'s and the whale-shark one) is one packed draw that rocks on its own');h.dispose();}
  // Heat: no colliders for the new balls, nothing animates far away.
  {const {h}=await hunt();const props=[],obs=[];h.connectCollisions(obs,props);const ids=new Set(SB.SUMMIT_BALL_IDS);assert(!props.some(p=>spots.some(s=>(s.loose||s.reveal)&&s.x===p.x&&Math.abs(s.z-p.z)<.3)),'loose and event balls add no colliders');assert.equal(props.filter(p=>spots.some(s=>s.x===p.x&&s.z===p.z)).length,1,'only the landing crate is solid');
   h.update(.1,{x:-200,y:0,z:0},true,false);assert(!spots.some(s=>{const g=h.root.getObjectByName('coin-spot-'+s.id);return g.children[1].scale.x!==1&&!s.parachute;}),'no twinkle when far');void ids;h.dispose();}
