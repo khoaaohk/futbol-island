@@ -241,9 +241,9 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
     ['U13 and up','En 11v11 una tarjeta roja muchas veces trae también una suspensión para el siguiente partido. Tu liga fija la regla.']]}},
  // ---- back-pass rule -----------------------------------------------------------------------------------------------------
  'back-pass-rule':{name:'Regla del pase atrás',law:'Regla 12',
-  title:'Pase atrás en el fútbol: ¿el portero lo puede agarrar?',h1:'¿Qué es la regla del pase atrás en el fútbol?',
-  desc:'La regla del pase atrás en el fútbol: cuándo el portero no puede agarrar el pase de un compañero, qué sí se permite y el tiro libre indirecto.',
-  answer:'La regla del pase atrás en el fútbol dice que el portero no puede tocar el balón con las manos cuando un compañero se lo patea a propósito o se lo lanza en un saque de banda. El portero tiene que jugarlo con los pies, y si lo agarra, el otro equipo recibe un tiro libre indirecto.',
+  title:'Cesión al portero: la regla del pase atrás en el fútbol',h1:'¿Qué es una cesión (la regla del pase atrás) en el fútbol?',
+  desc:'Qué es una cesión en el fútbol: cuándo el portero no puede agarrar el pase atrás de un compañero, qué sí se permite y el tiro libre indirecto.',
+  answer:'La regla del pase atrás, o de la cesión, en el fútbol dice que el portero no puede tocar el balón con las manos cuando un compañero se lo patea a propósito o se lo lanza en un saque de banda. El portero tiene que jugarlo con los pies, y si lo agarra, el otro equipo recibe un tiro libre indirecto.',
   scenes:[{title:'Un pase atrás al portero',
    caption:'El defensa número 4 está presionado y pasa hacia atrás con el pie. El portero no puede agarrar este balón, ni siquiera dentro del área penal sombreada, así que lo juega con los pies al defensa libre, el número 5.'}],
   refs:['¿El balón se pateó con el pie? La regla es sobre una patada, y sobre un saque de banda.','¿Fue a propósito y era para el portero? Una mala patada o un desvío no es pase atrás.',
