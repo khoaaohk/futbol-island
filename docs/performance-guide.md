@@ -7330,3 +7330,21 @@ Switch: `lib/graphics/vehicleSwitch.ts` (read once per page; picks geometry, con
 - Palm mounds: 40 -> 4n tris each (10 sides: 40 tris), smooth normals, in the sand mesh (0 draws). Lawn edge: no new geometry (patch vertices dive,
   fringe on 12 more coast stretches: + a few hundred tris in the existing lawn-edge mesh).
 - No phone perf run this pass (no thermal claim): the costs are build-time geometry plus the per-chunk range pick.
+
+## Soft island sweep (Nov 27 2026, branch `soft-sweep`, `?soft=0` = before)
+
+Owner: "make these boxes look more like inflatable rounded shapes ... make this world look less blocky". `lib/graphics/softBox.ts`:
+`SoftBoxGeometry` (extends `T.BoxGeometry`, so `instanceof` / `.parameters` readers are unchanged; indexed position + normal + uv, 6
+groups, smooth edge normals; seg 0 = smooth chamfer 44 tris, seg 1 = 108, seg 2 = 300; optional dome), `propBox` (pieces < 15 cm take
+the chamfer; Battery saver or heat tier >= 2 at world build drops one step), `softPatchGeometry` (round irregular lawn patch, 54 tris,
+rim tinted to `groundColor('lawn')`), `pebbleGeometry` (smooth rocks). World boxes built inside tagged props (bench, table, planter,
+sign, fence, post, crate, stall, bollard, signal, net, goal, pole) round automatically (`world.ts` SOFT_KINDS).
+- Draws: static island meshes 1,126 -> 1,105 (headless build, all chunks): tree pits leave the per-chunk non-shadow lawn-tile batch,
+  the potting table is gone. No new material, texture, program or pass. The café rowboat rocks through the island wind's per-vertex
+  sway (`userData.swayRock`, 0 draws, stops with the wind on still tiers).
+- Triangles (static, whole build, headless): 1,007,033 -> 1,073,403 (+66k, +6.6 %); biggest cells: town 50:-50 +4.9k, Coral Cay
+  +4.9k, town -50:-50 +4.0k. Rendered (desktop 1280x800, sunset; varies with trains / traffic in view): flag garden cam 307k -> 317k,
+  town street play 313k -> 309k, west park play 346k -> 360k, island overview 1.04M -> 1.14M (shadow pass included).
+- Cars: 14-sided wheels + rounded pickup bed: 11 cars 3,474 -> 4,446 tris (test cap 4,500). Train: close-up car only (the one ridden /
+  stood beside) gets the rounded interior: 4,575 -> 7,039 tris; far cars unchanged (2,589). Pines: 3 lathe tiers, 72 tris (was 48).
+- Traffic signal lamps: 14-triangle round discs (were 4-triangle hexagons), still one instanced draw.
