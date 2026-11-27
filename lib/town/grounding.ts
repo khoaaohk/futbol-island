@@ -238,8 +238,9 @@ export const uprights:{list:Upright[]}={list:[]};
 export function registerUpright(u:Upright){if(enabled)uprights.list.push(u);}
 /** How far uprights sink (tests read it): masts 0.15 (under their base block), goal posts 0.12, fence posts 0.15, zip legs 0.15. */
 export const UPRIGHT_SINK={mast:.15,goal:.12,fence:.15,zip:.15} as const;
-/** Bench / table legs run this far on under the ground (they stood ON it). */
-export const LEG_SINK=.12;
+/** Bench / table legs run this far on under the ground the island pass reads (they stood ON it; the drawn lawn under a seat can sit
+ *  up to ~15 cm lower than that on the town's slopes, so they run deep: the hidden part costs nothing). */
+export const LEG_SINK=.25;
 
 // ---- The island pass (world.ts calls it once, after every prop has moved and before the batching pass) ----------------------------
 type Rect={x:number;z:number;w:number;d:number};
