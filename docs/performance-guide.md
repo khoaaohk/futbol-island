@@ -7282,3 +7282,26 @@ Desktop + phone-viewport headless Chrome only: reduced or equal work is stated, 
 - Measured (phone 390x844@2, 4x CPU, 6 s, sunset), new vs `?ground=0` (so both grounding passes): station 16.7/16.7 ms med/p90 both, calls 61 vs 65,
   tris 167k vs 140k; town 16.7 both, calls 121 vs 126, 221k vs 186k; palm beach (-229,-196) 16.7 both, calls 47 vs 46 (the pass-1 decal), 165k vs 133k.
   Vsync-capped on the M-series dev Mac: no iPhone thermal claim.
+
+## Rounded vehicles and boats rocking in place (Nov 26 2026, branch `vehicles-round`, `?vehicles=0` = before; not deployed)
+Owner shots 149 / 152 ("round this boat more and also the other cars"; the boats at sea "feel so flat and static": rock in place, no travelling).
+Switch: `lib/graphics/vehicleSwitch.ts` (read once per page; picks geometry, constants and the ocean program variant).
+- Matchday Ferry (`lib/town/ferryModel.ts`, wired in `world.ts`): ONE vertex-coloured merged body with the deep-sea boats' material
+  (same program: `deepSeaBoat.ts` foamMaterial, waterline collar pinned to the sea in the vertex shader). It replaces 16 box meshes
+  (hull, deck, cabin, roof, 8 windows, front window, 4 floating rail bars): 16 draws -> 1, 16 shadow-pass draws -> 1. Triangles ~200 -> 1,752.
+  Measured at the pier (headless desktop, owner's play view): 201 -> 180 draws; top-down 132 -> 111. Colliders, deck height, gangway unchanged.
+  Moored rocking: `boatSwell.ts` swellPose with SWELL_AMP.moored (heave 3.5 cm, roll 0.7 deg), surge cut to 4 / 7 cm; one group write a frame (as before).
+- Deep-sea boats: rounded hull lines (lofted V boot, curved bow, tapered stern, sheer, rounded wheelhouse, cambered roof, fenders both
+  sides): 1,788 -> 3,362 and 1,916 -> 3,490 triangles, still one draw each, no shadow cast. Rocking: swellPose (the far sea's ~39 m swell
+  band, the same phase the shader draws) added to boatMotion's 5.6 s bob, clamped to ROCK_LIMITS (16 cm, 4 deg); ~30 float ops a frame
+  only while built, within BOB_RANGE and on screen (unchanged gate), no allocation (tests). The deck's `heightAt` (landableDecks.ts) makes
+  the whole deck follow the pose: one call per walker per frame on the deck, ~10 float ops. Reduced motion: the old tiny heave only.
+- Water rings (`boatSwell.ts` BOAT_RING_GLSL in the ocean program): three slots (ferry, two boats), a stadium SDF round each hull: soft
+  foam + lapping ripples. Gated on uWaterDetail > .5, so OFF on the still path (reduced motion, Battery saver, static-ambience heat tiers,
+  governor slow). Static worst case +145 ALU (ocean.far 1,291 -> 1,436; tests/ground-shader-cost.cjs BOAT_RING_ALU); a pixel away from
+  every boat ~15 ALU (three rejects), a ring pixel ~+50. No texture read, no draw. NOT measured on a phone.
+- Street cars (`trafficVehicles.ts`): `rhull` (chamfered corners + bevelled top, 38 tris) for bodies, cabins and bumpers, wheel arches
+  (8 tris each). Same mesh / material / shadow caster per vehicle. Sedan 184 -> 300, hatch 178 -> 294, taxi 188 -> 304, wagon 196 -> 312,
+  van 212 -> 328, jeep 200 -> 316, pickups 258 / 270 -> 348 / 360 (cap ROUND_TRIANGLES 330 / 370); all 11: ~2,400 -> 3,474 (x2 with the
+  shadow pass), still under the Nov 17 box cars' 3,580. Busiest street view: 120 draws both, +306 triangles.
+- Tests: tests/vehicles-round.cjs (new, in the chain), traffic-signals (caps), boat-hull, fishing-fight (source pins), ground-shader-cost.
