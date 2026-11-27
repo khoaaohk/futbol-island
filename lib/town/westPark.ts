@@ -192,7 +192,7 @@ export function buildWestPark(t:Tools):WestParkStats{
    const ramp=[[0,c('#b3a57a')],[.35,c('#8e8a63')],[POND_DEPTH.shelf,c('#5f6f4c')],[1.4,c('#3a5440')],[2.4,c('#29412f')],[POND_DEPTH.deep,c('#1d3127')]] as const;
    const bedAt=(d:number,a:number)=>{let k=0;while(k<ramp.length-2&&d>ramp[k+1][0])k++;const [d0,c0]=ramp[k],[d1,c1]=ramp[k+1];tc.copy(c0).lerp(c1,Math.min(1,Math.max(0,(d-d0)/(d1-d0))));
     return tc.lerp(sandRimC,sandK(a)*.7*(1-smooth(.2,1.2,d))).clone();};
-   const g=rings([{out:.05},{out:-.8},{out:-2},{out:-3.2},{out:-5},{out:-7},{out:-9},{out:-12},{f:.35},{f:0}],(px,pz,a)=>({c:bedAt(pondDepthForInset(Math.max(0,pondInset(px,pz))),a)}));flat(g,bedMat,-.085,'park-pond-bed');}
+   const g=rings([{out:.05},{out:-.8},{out:-2},{out:-3.2},{out:-5},{out:-7},{out:-9},{out:-12},{f:.35},{f:0}],(px,pz,a)=>{const d=pondDepthForInset(Math.max(0,pondInset(px,pz)));return {c:bedAt(d,a),v:d};},'aBedDepth');flat(g,bedMat,-.085,'park-pond-bed');}// aBedDepth: the bed shader's pebbles / weed / caustics / fish fade with it (pondWater.ts)
   // The water: the sea's own look (pondWater.ts, Nov 13 2026 owner: "tie it to the ocean so the water is the same colour"): aEdge fades
   // it into the bank, aSea is the depth as the sea's shore distance (the shelf reads as the sea's pale shallows, the middle its teal).
   {const water=createPondWaterMaterial(t.seaRipples);materials.push(water);
