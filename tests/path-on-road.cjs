@@ -69,6 +69,19 @@ const inRect=(r,x,z,m=0)=>Math.abs(x-r.x)<r.w/2-m&&Math.abs(z-r.z)<r.d/2-m;
   const KNOWN=['main path 221,100 side x-'];
   assert.deepEqual(notches.filter(n=>!KNOWN.some(k=>n.startsWith(k))),[],label+': the lawn stops short of a path (sand in the grass)');
   const clips=D.pathClips.value;if(depth)assert.ok(clips.length>=8,'path slabs trimmed at the street: '+clips.length);
+  // 4. hard lawn corners on the beach (owner shot 142, Nov 26 night, (-233,-187)): (a) the raised west side's lawn patch never stands
+  //    over the sand outside the lawn (its 2 m cells straddle the coast: a row of them laid a straight edge and grass points on the
+  //    beach); (b) every stretch of the main lawn's coast carries the soft torn fringe (the lift lattice's 1 cm bleed had cut it).
+  if(elev&&surf){const W=load(base+'/lib/town/westTerrain.ts'),patch=W.westLawnPatch(2),PP=patch.position,G=S.INTERIOR_GRASS,EL2=EL;let pts=0;const hard=[];
+   for(let t=0;t<patch.index.length;t+=3){const a=patch.index[t]*3,b=patch.index[t+1]*3,c=patch.index[t+2]*3;
+    for(const [u,v] of [[1/3,1/3],[.8,.1],[.1,.8],[.1,.1],[.45,.45],[.45,.1],[.1,.45]]){const w=1-u-v,x=PP[a]*u+PP[b]*v+PP[c]*w,y=PP[a+1]*u+PP[b+1]*v+PP[c+1]*w-.112,z=PP[a+2]*u+PP[b+2]*v+PP[c+2]*w;pts++;
+     if(y>-.105&&!insidePoly(G,x,z)&&EL2.ringDistance(G,x,z)>.35)hard.push(`${x.toFixed(1)},${z.toFixed(1)} y ${y.toFixed(3)}`);}}
+   assert.ok(pts>1000,'patch samples '+pts);assert.deepEqual(hard.slice(0,6),[],label+': lawn patch over the beach sand');
+   SE.setSurfaceInput(surfIn);const e=SE.mainLawnEdges(),EP=e.position,cells=new Map();for(let i=0;i<EP.length;i+=3){const k=Math.floor(EP[i]/4)+':'+Math.floor(EP[i+2]/4);cells.set(k,(cells.get(k)??0)+1);}
+   const near=(x,z)=>{for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)if(cells.has((Math.floor(x/4)+i)+':'+(Math.floor(z/4)+j)))return true;return false;},bare=[];
+   for(let i=0;i<G.length;i++){const p=G[i],q=G[(i+1)%G.length],mx=(p.x+q.x)/2,mz=(p.z+q.z)/2;if(mx>=450||EL.regionLift(mx,mz)>SE.FRINGE_LIFT)continue;if(!near(mx,mz))bare.push(`${mx.toFixed(0)},${mz.toFixed(0)}`);}
+   assert.deepEqual(bare,[],label+': coast stretches without the torn fringe (hard lawn edge on the sand)');
+   report.push(`${label}: ${pts} lawn-patch samples off the sand, fringe on every coast stretch`);}
   report.push(`${label}: ${probes} probes, ${edgeTris} lip/wear triangles, ${depth?clips.length:0} slabs trimmed`);
  }
  // the clip itself: an end on the street is trimmed back to it; a street across the middle is reported, not guessed

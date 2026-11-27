@@ -10,12 +10,20 @@ import * as T from 'three';
 import {elevationOn} from './elevation';
 import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,westGround,onWestTerrace,terraceOutline,stairLocal,type Stair} from './westElevation';
 import {STADIUM_PLAZA} from './westParkLayout';
+import {INTERIOR_GRASS} from './shoreline';
+import {insidePolygon} from './elevation';
 import type {Obstacle} from './simulation';
 
 /** The lawn's normals lean this much further than the ground does (Nov 26 2026, audit): an 8% hillside and a 30% bank lit as
  *  the level lawn read as a flat ramp; leaned, the sunward banks are lighter and the ones turned away darker. Eased to 0 with the
  *  slope at every join (the grade itself is eased), so no seam; normals only: no colour attribute, no shader change. */
 export const LAWN_TILT=2.4;
+/** A patch vertex OFF the lawn (on the beach) drops this far under the mesh (lawn at -0.112, so ~0.7 m under the sand). Leftovers A
+ *  (owner shot 142, Nov 26 night): the patch's 2 m cells straddle the coast; a vertex just inside the lawn sits a few cm up the bank
+ *  and the one on the sand sat at -0.03, so the cell's triangles crossed the sand's level half way out: a row of cells laid a hard
+ *  straight lawn edge and sharp grass points onto the beach at (-233, -187), over the lawn's own torn fringe. Dropped steeply, the
+ *  patch dives under the sand within ~7 % of the cell and the main lawn's soft edge is what shows (tests/path-on-road.cjs part 4). */
+export const PATCH_UNDER=-.6;
 export type LawnPatch={position:number[];normal:number[];uv:number[];index:number[];triangles:number};
 /** `fine`: the smallest cell (2 m = the walked lattice; 4 m on the lowest tier: a coarser slope, ≤ ~6 cm off the walked height). */
 export function westLawnPatch(fine:2|4=2):LawnPatch|null{
@@ -23,7 +31,7 @@ export function westLawnPatch(fine:2|4=2):LawnPatch|null{
  const position:number[]=[],normal:number[]=[],uv:number[]=[],index:number[]=[],ids=new Map<number,number>(),B=WEST_BOX,H=WEST.terrace,nx=Math.round((B.maxX-B.minX)/2)+1;
  const vert=(x:number,z:number)=>{const key=Math.round((z-B.minZ)/2)*nx+Math.round((x-B.minX)/2);let i=ids.get(key);if(i!==undefined)return i;
   const h=westNatural(x,z),gx=(westNatural(x+1,z)-westNatural(x-1,z))/2*LAWN_TILT,gz=(westNatural(x,z+1)-westNatural(x,z-1))/2*LAWN_TILT,l=Math.hypot(gx,1,gz);
-  i=position.length/3;position.push(x,h>.02?h:-.03,z);normal.push(-gx/l,1/l,-gz/l);uv.push(x,-z);ids.set(key,i);return i;};
+  i=position.length/3;position.push(x,h>.02?h:insidePolygon(INTERIOR_GRASS,x,z)?-.03:PATCH_UNDER,z);normal.push(-gx/l,1/l,-gz/l);uv.push(x,-z);ids.set(key,i);return i;};
  const coarse:[number,number,number][]=[];
  const quad=(x:number,z:number,s:number)=>{const a=vert(x,z),b=vert(x+s,z),c=vert(x,z+s),d=vert(x+s,z+s);index.push(a,c,b,b,c,d);if(s>2)coarse.push([x,z,s]);};
  /** Is the s-metre block at (x, z) a plane (its 2 m samples within 1.2 cm of its corners' bilinear patch)? */
