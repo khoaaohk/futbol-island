@@ -7,6 +7,9 @@
 import {groundingOn} from './grounding';
 import {lampPost} from './lampPost';
 import * as T from 'three';
+import {puffGeo,softOn,softLow} from '../graphics/softBox';
+import {islandArch} from './islandArch';
+import {seawallX} from './eastCoast';
 import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
@@ -109,13 +112,17 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   obstacles.push({x:h.x,z:h.z,w:h.w+.2,d:h.d+.2});assets.push({kind:'keeper-hut',x:h.x,z:h.z,w:h.w,d:h.d});}
  // ---- Gate piers close the two cut ends of the seawall (eastCoast.ts gap), like the causeway's; short kerb footprints on the
  // island strip stop walkers stepping round the kerb ends (out over the water the walkway edge itself holds).
- for(const s of [-1,1]){const z=P.z+s*(P.railHalf+.55);box(1,1.5,1,'#bca987',P.wallX,.55,z);box(1.25,.2,1.25,'#eddfbb',P.wallX,1.4,z);obstacles.push({x:P.wallX,z,w:1,d:1});
+ const pierBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>{const g=puffGeo(w,h,d,{openBottom:true,dome:h<.5?.06:0});return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};// inflate pass: soft gate piers (owner shot 175)
+ for(const s of [-1,1]){const z=P.z+s*(P.railHalf+.55),px=softOn()?seawallX(z)??P.wallX:P.wallX;/* on the wall's line (owner shot 178) */pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);obstacles.push({x:px,z,w:1,d:1});
   for(let x=P.wallX+.6;x<=P.shoreX+.6;x+=.5)obstacles.push({x,z:P.z+s*(P.railHalf+.15),w:.55,d:.3});}
  // ---- "EAST JETTY" arch just past the seawall, signed both ways (market-green boards).
- {const x=P.wallX+1.4,pz=P.railHalf+.35;for(const s of [-1,1]){box(.34,4.3,.34,POST,x,2.15,P.z+s*pz);obstacles.push({x,z:P.z+s*pz,w:.34,d:.34});}
-  box(.5,.7,pz*2+.8,'#477c6a',x,4.1,P.z);box(.62,.12,pz*2+1.1,'#eddfbb',x,4.5,P.z);
-  sign('EAST JETTY',5.6,.62,x-.26,4.1,P.z,'#294f43','#f4cc7c',-Math.PI/2);
-  sign('FARMERS MARKET',5.6,.62,x+.26,4.1,P.z,'#294f43','#f4cc7c',Math.PI/2);}
+ {const x=P.wallX+1.4,pz=P.railHalf+.35,isle=softOn();
+  // Inflate pass: the same island gateway as the Coral Cay welcome arch (islandArch.ts), at this arch's size.
+  if(isle)for(const p of islandArch({half:pz,postR:.2,postTop:4.45,plankY:4.1,plankH:.72,plankW:pz*2+1,plankT:.5,low:softLow()})){const m=put(p.geo,p.color,x,0,P.z);if(p.tint)m.userData.vertexTint=p.tint;}
+  for(const s of [-1,1]){if(!isle)box(.34,4.3,.34,POST,x,2.15,P.z+s*pz);obstacles.push({x,z:P.z+s*pz,w:.34,d:.34});}
+  if(!isle){box(.5,.7,pz*2+.8,'#477c6a',x,4.1,P.z);box(.62,.12,pz*2+1.1,'#eddfbb',x,4.5,P.z);}
+  sign('EAST JETTY',5.6,.62,x-.26,4.1,P.z,isle?'#c99f6b':'#294f43',isle?'#3b2a1a':'#f4cc7c',-Math.PI/2);
+  sign('FARMERS MARKET',5.6,.62,x+.26,4.1,P.z,isle?'#c99f6b':'#294f43',isle?'#3b2a1a':'#f4cc7c',Math.PI/2);}
  // ---- Lamps every 20 m of walkway, alternating sides, standing on the kerb (outside the walkable width).
  const lamp=(x:number,z:number,ground:number)=>{
   prop('lamp',()=>{if(groundingOn()){lampPost(put,x,z,ground,'beach');return;}cylinder(.19,.22,IRON,x,ground+.11,z);cylinder(.065,4.2,IRON,x,ground+2.1,z);box(.62,.12,.62,IRON,x,ground+4.22,z);box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z);});

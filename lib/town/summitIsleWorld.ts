@@ -6,6 +6,8 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
+import {hutWall,thatchRoof,hutDoor,onDrum} from './thatchHut';
+import {softOn,softLow} from '../graphics/softBox';
 import {broadleafTreesOn,broadleafTree} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
 import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,TUNNEL_BED,MOUTH_IN,drawnPlane} from './trainTrack';
@@ -502,13 +504,20 @@ export function buildSummitIsle(t:SummitTools){
    for(let a=0;a<16;a++){const y=yAt(h.x+Math.cos(a/16*Math.PI*2)*R,h.z+Math.sin(a/16*Math.PI*2)*R);lo=Math.min(lo,y);hi=Math.max(hi,y);}hi=Math.max(hi,hutGroundTop(h));
    // A stucco drum sunk into the slope, an eave ring and a straw cone (Coral Cay's thatched huts, a little smaller).
    const base=lo-.35,top=hi+HUT_WALL;
-   bake(piece,new T.CylinderGeometry(R,R,top-base,16),h.id==='beach'?'#e7cfa4':h.id==='rest'?'#d6b58a':h.id==='sunset'?'#e2c69a':'#cdb48c',at(h.x,(base+top)/2,h.z));
-   bake(piece,new T.CylinderGeometry(R+.5,R+.5,.2,16),'#b9955a',at(h.x,top+.05,h.z));
-   bake(piece,new T.ConeGeometry(R+.75,HUT_CONE,12),h.id==='fisher'?'#c99a5b':h.id==='sunset'?'#d69b61':'#d7ad62',at(h.x,top+HUT_CONE_LIFT,h.z));
-   // The doorway: a dark opening proud of the wall under a timber lintel.
+   const wallC=h.id==='beach'?'#e7cfa4':h.id==='rest'?'#d6b58a':h.id==='sunset'?'#e2c69a':'#cdb48c',roofC=h.id==='fisher'?'#c99a5b':h.id==='sunset'?'#d69b61':'#d7ad62';
    const dg=yAt(h.x+h.door.x*R,h.z+h.door.z*R);
+   if(softOn()){// thatchHut.ts (owner shot 170): textured drum, thatch skirts on the same cone envelope (roof landing unchanged), door, window
+    const low=softLow(),seed=h.x*.37+h.z*.11,tin=(t:Float32Array)=>t.map(v=>v*.86);// bakeShaded lifts lit faces ~1.14x
+    const w=hutWall(R,top-base,seed,low);bakeShaded(piece,w.geo,wallC,tin(w.tint),at(h.x,base,h.z));
+    const r=thatchRoof(R+.75,HUT_CONE,seed,low);bakeShaded(piece,r.geo,roofC,tin(r.tint),at(h.x,top+HUT_CONE_LIFT-HUT_CONE/2,h.z));
+    for(const p of onDrum(hutDoor(1.05,1.9,low),0,R-.03))bake(piece,p.geo,p.color,at(h.x,dg,h.z,0,yaw(h.door),0));
+   }else{
+   bake(piece,new T.CylinderGeometry(R,R,top-base,16),wallC,at(h.x,(base+top)/2,h.z));
+   bake(piece,new T.CylinderGeometry(R+.5,R+.5,.2,16),'#b9955a',at(h.x,top+.05,h.z));
+   bake(piece,new T.ConeGeometry(R+.75,HUT_CONE,12),roofC,at(h.x,top+HUT_CONE_LIFT,h.z));
+   // The doorway: a dark opening proud of the wall under a timber lintel.
    bakeBox(piece,1.05,1.9,.16,'#2c302e',h.x+h.door.x*(R-.02),dg+.95,h.z+h.door.z*(R-.02),0,yaw(h.door),0);
-   bakeBox(piece,1.3,.13,.22,'#8a6a48',h.x+h.door.x*(R+.03),dg+1.95,h.z+h.door.z*(R+.03),0,yaw(h.door),0);
+   bakeBox(piece,1.3,.13,.22,'#8a6a48',h.x+h.door.x*(R+.03),dg+1.95,h.z+h.door.z*(R+.03),0,yaw(h.door),0);}
    obstacles.push({x:h.x,z:h.z,w:HUT_DRUM_W,d:HUT_DRUM_W,cornerRadius:HUT_DRUM_W/2});// the outer roof step's footprint (rooftopTravel.ts)
    const side={x:-h.door.z,z:h.door.x},out=(k:number,s2=0)=>({x:h.x+h.door.x*k+side.x*s2,z:h.z+h.door.z*k+side.z*s2});
    if(h.window){// The beach hut: a window on the sea side with a shelf below it (the ball sits on the shelf).

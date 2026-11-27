@@ -72,7 +72,10 @@ export function buildKitShopExterior(k:KitShopExteriorKit){
  const bay=6.8,pier=1,niches=[{x0:west+pier,x1:x-bay/2},{x0:x+bay/2,x1:east-pier}];
  for(const [px,pw] of [[west+pier/2,pier],[x,bay],[east-pier/2,pier]] as const)k.box(pw,GROUND,RECESS,C.wall,px,GROUND/2,F-RECESS/2);
  // Slim canopy line along the whole shopfront (the upper volume's lip) and the deep entrance canopy with its orange LED edge.
- k.box(w+.3,.14,.7,C.roof,x,GROUND+.05,F+.35);
+ // Nov 27 2026 (owner shot 179: the line flickered across the red fin): it butts against the fin's faces instead of running through it
+ // (the fin is as deep as the line, so their front faces were coplanar).
+ {const a=west-.15,b=east+.15,f0=SHOP_FIN.x-SHOP_FIN.w/2,f1=SHOP_FIN.x+SHOP_FIN.w/2;
+  for(const [l,r] of [[a,Math.min(b,f0)],[Math.max(a,f1),b]])if(r-l>.01)k.box(r-l,.14,.7,C.roof,(l+r)/2,GROUND+.05,F+.35);}
  const cw=SHOP_CANOPY.x1-SHOP_CANOPY.x0,ccx=(SHOP_CANOPY.x0+SHOP_CANOPY.x1)/2;
  k.box(cw,SHOP_CANOPY.t,SHOP_CANOPY.depth,C.roof,ccx,SHOP_CANOPY.y,F+SHOP_CANOPY.depth/2);
  k.box(cw,.07,.07,C.frame,ccx,SHOP_CANOPY.y-SHOP_CANOPY.t/2-.02,F+SHOP_CANOPY.depth-.04);

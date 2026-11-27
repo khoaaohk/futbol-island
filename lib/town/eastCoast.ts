@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {puffGeo,puffBall,puffLevel} from '../graphics/softBox';
 import {ISLAND_SHORE,onIsland} from './shoreline';
 import {CAUSEWAY} from './coralCay';
 import {EAST_PIER} from './eastPier';
@@ -8,7 +9,15 @@ import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Tools={box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;obstacles:Obstacle[];prop?:PropTagger};
 /** Half width (m) of the cut in the seawall where the Island Line crosses it (the line's centre to each gate pier's face). */
 export const TRAIN_GAP=3.4;
+/** The seawall's centre line x at z (the wall stands 2.6 m inland of the shore), or null off its run. Gate piers at the wall's cut
+ *  ends stand ON this line (owner shot 178, Nov 27 2026: a pier set 0.5 m off the wall line stood beside the wall end with a gap). */
+export function seawallX(z:number):number|null{
+ for(let i=0;i<ISLAND_SHORE.length;i++){const a=ISLAND_SHORE[i],b=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length];
+  if(Math.min(a.x,b.x)<220||(a.z+b.z)/2>=189||a.z===b.z)continue;const t=(z-a.z)/(b.z-a.z);if(t<0||t>1)continue;return a.x+(b.x-a.x)*t-2.6;}
+ return null;
+}
 export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
+ const pbox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,o:Parameters<typeof puffGeo>[3]={})=>{const g=puffGeo(w,h,d,o);return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};
  // Continue the south pier north beneath the existing market stalls.
  // Same wood, plank spacing and ground level as the ferry dock; no new collisions.
  box(28,.2,160,'#b98f62',224,-.1,110);
@@ -17,8 +26,9 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
 
  for(let z=19;z<190;z+=22){
   if(obstacles.some(o=>Math.abs(215-o.x)<o.w/2+1.7&&Math.abs(z-o.z)<o.d/2+2))continue;
-  prop('planter',()=>{box(2.3,.25,4,'#d2bc94',215,.125,z);
-  for(const dz of [-1.2,0,1.2])put(new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);});
+  // inflate pass (owner shot 180): a rounded tub and soft round shrub clumps
+  prop('planter',()=>{pbox(2.3,.25,4,'#d2bc94',215,.125,z,{openBottom:true});
+  for(const dz of [-1.2,0,1.2]){const ball=puffLevel()>0;const m=put(ball?puffBall(.6):new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);if(ball)m.scale.set(1,.82,1);}});
   obstacles.push({x:215,z,w:2.3,d:4});
  }
  // Short joined segments trace the rounded coast, rather than a straight barrier.
@@ -39,7 +49,7 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   // Nov 23 2026 (Island Line, owner: "track blocked by the wall"): where the line leaves the north-east corner onto its trestle the
   // wall is cut TRAIN_GAP m either side of the centre line, and each cut end gets a gate pier like the causeway's (collider too).
   const runs:[number,number][]=[],at=(t:number)=>({x:shoreA.x+(shoreB.x-shoreA.x)*t-2.6,z:shoreA.z+(shoreB.z-shoreA.z)*t});
-  const gate=(t:number)=>{const p=at(t);box(1,1.5,1,'#bca987',p.x,.55,p.z);box(1.25,.2,1.25,'#eddfbb',p.x,1.4,p.z);obstacles.push({x:p.x,z:p.z,w:1,d:1});};
+  const gate=(t:number)=>{const p=at(t);pbox(1,1.5,1,'#bca987',p.x,.55,p.z,{openBottom:true});pbox(1.25,.24,1.25,'#eddfbb',p.x,1.4,p.z,{openBottom:true,dome:.06});obstacles.push({x:p.x,z:p.z,w:1,d:1});};
   for(const [t0,t1] of pieces){const steps=Math.max(1,Math.ceil(Math.hypot(shoreB.x-shoreA.x,shoreB.z-shoreA.z)*(t1-t0)/.3));let start=-1,last=t0;
    for(let k=0;k<=steps;k++){const t=t0+(t1-t0)*k/steps,p=at(t),hit=trackNearest(p.x,p.z,TRAIN_GAP+1),clear=!hit||hit.d>TRAIN_GAP||inTunnelS(hit.s);
     if(clear){if(start<0){start=t;if(k>0)gate(t);}last=t;}
@@ -50,8 +60,9 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   const a={x:shoreA.x+(shoreB.x-shoreA.x)*t0,z:shoreA.z+(shoreB.z-shoreA.z)*t0},b={x:shoreA.x+(shoreB.x-shoreA.x)*t1,z:shoreA.z+(shoreB.z-shoreA.z)*t1};
   const x=(a.x+b.x)/2-2.6,z=(a.z+b.z)/2;
   const length=Math.hypot(b.x-a.x,b.z-a.z)+.08,yaw=Math.atan2(b.x-a.x,b.z-a.z);
-  const wall=box(.65,1.05,length,'#bca987',x,.475,z);wall.rotation.y=yaw;
-  const cap=box(.9,.16,length+.06,'#eddfbb',x,1.08,z);cap.rotation.y=yaw;
+  // inflate pass (owner shot 175): a pillowy coping and soft wall edges; the long axis keeps a tight radius so runs meet without a pinch
+  const wall=pbox(.65,1.05,length,'#bca987',x,.475,z,{seg:0,openBottom:true,maxR:[.3,.3,.004]});wall.rotation.y=yaw;
+  const cap=pbox(.9,.2,length+.06,'#eddfbb',x,1.08,z,{seg:0,openBottom:true,maxR:[.4,.09,.004]});// runs overlap and meet square: one continuous pillowy coping, no joint notchescap.rotation.y=yaw;
   // Axis-aligned collision segments tightly follow the same visible wall.
   const count=Math.ceil(length/.6);
   for(let j=0;j<count;j++){

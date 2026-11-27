@@ -5,6 +5,7 @@
 import {groundingOn,registerUpright,UPRIGHT_SINK} from './grounding';
 import {lampPost} from './lampPost';
 import * as T from 'three';
+import {puffGeo} from '../graphics/softBox';
 import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang,canopyLobe} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
@@ -20,6 +21,9 @@ import {tintGroundMesh} from '../graphics/groundTint';
 import {surfOn} from './surfaceEdges';
 import {broadleafTreesOn,broadleafBush,spotHash,CAY_PAIR_LOBES,CAY_TRIO_LOBES} from './broadleafTrees';
 import {softOn,softLow,pebbleGeometry} from '../graphics/softBox';
+import {hutWall,thatchRoof,hutDoor,hutWindow,onDrum,type HutPart} from './thatchHut';
+import {islandArch} from './islandArch';
+import {seawallX} from './eastCoast';
 import {depthLowTier} from './townDepth';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -132,7 +136,8 @@ export function buildCoralCay(t:CayTools){
  // Lamps must stay off this paving on the main island, like every other street.
  surfaceAreas.push({kind:'path',x:(CAUSEWAY.roadStart+MAIN_SHORE_X)/2,z:z0,w:MAIN_SHORE_X-CAUSEWAY.roadStart,d:12});
  // Gate piers close both cut ends of the seawall (the road is still straight at the coast).
- for(const side of [-1,1]){const z=z0+side*(deck+.55);box(1,1.5,1,'#bca987',MAIN_SHORE_X-2.6,.55,z);box(1.25,.2,1.25,'#eddfbb',MAIN_SHORE_X-2.6,1.4,z);obstacles.push({x:MAIN_SHORE_X-2.6,z,w:1,d:1});}
+ const pierBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>{const g=puffGeo(w,h,d,{openBottom:true,dome:h<.5?.06:0});return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};// inflate pass: soft gate piers (owner shot 175)
+ for(const side of [-1,1]){const z=z0+side*(deck+.55),px=softOn()?seawallX(z)??MAIN_SHORE_X-2.6:MAIN_SHORE_X-2.6;/* on the wall's line (owner shot 178: no gap) */pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);obstacles.push({x:px,z,w:1,d:1});}
  districtSign('CORAL CAY CAUSEWAY',215,-170.5);
 
  // ---- Beach shoulders: sand banks outside the deck in irregular stretches, sloping into the sea (coralCay.ts widths).
@@ -173,12 +178,23 @@ export function buildCoralCay(t:CayTools){
  };
  for(let s=CAUSEWAY.sWater0+8,k=0;s<CAUSEWAY.sWater1-6;s+=24,k++){const p=P[Math.round(s/P[last].s*last)],side=(k%2?1:-1) as RoadSide;
   if(SANDBARS.some(b=>b.side===side&&Math.abs(p.s-b.spur.s)<5))continue;const q=offsetPoint(p,side*6.65);lamp(q.x,q.z,-.02);}
+ /** Thatched hut (thatchHut.ts, owner shot 170: "feels very flat"): textured drum, thatch skirts on the old cone envelope, door, window. */
+ function thatchHutAt(x:number,z:number,wallR:number,wallH:number,roofR:number,roofBase:number,roofH:number,seed:number,wallColor:string,roofColor:string){
+  const low=softLow(),tinted=(p:HutPart)=>{const m=put(p.geo,p.color,x,0,z);if(p.tint)m.userData.vertexTint=p.tint;return m;};
+  const w=hutWall(wallR,wallH+.3,seed,low);w.geo.translate(0,-.3,0);tinted({geo:w.geo,color:wallColor,tint:w.tint});
+  const r=thatchRoof(roofR,roofH,seed,low);r.geo.translate(0,roofBase,0);tinted({geo:r.geo,color:roofColor,tint:r.tint}).castShadow=true;
+  for(const p of onDrum(hutDoor(1.05,1.9,low),0,wallR-.03))tinted(p);
+  for(const p of onDrum(hutWindow(1.5),Math.PI*.62,wallR-.02))tinted(p);
+ }
  // Welcome arch where the road straightens on the cay: two stucco piers and a beam over the road, signed both ways.
  // The piers stand on the pavement (between the 4 m kerb and the 7 m deck edge), clear of the carriageway and the zebra.
- {const x=WELCOME_ARCH.x,pz=WELCOME_ARCH.pierOffset,pw=WELCOME_ARCH.pierWidth;for(const side of [-1,1]){box(pw,6.2,pw,'#d6b58a',x,3.1,z0+side*pz);box(pw+.3,.3,pw+.3,'#eddfbb',x,6.3,z0+side*pz);obstacles.push({x,z:z0+side*pz,w:pw,d:pw});}
-  box(1.1,.9,pz*2+1.4,'#477c6a',x,6.1,z0);box(1.3,.18,pz*2+1.8,'#eddfbb',x,6.63,z0);
-  sign('WELCOME TO CORAL CAY',11,.8,x-.57,6.1,z0,'#294f43','#f4cc7c',-Math.PI/2);
-  sign('CAUSEWAY · MAIN ISLAND',11,.8,x+.57,6.1,z0,'#294f43','#f4cc7c',Math.PI/2);}
+ {const x=WELCOME_ARCH.x,pz=WELCOME_ARCH.pierOffset,pw=WELCOME_ARCH.pierWidth,isle=softOn();
+  // Inflate pass (owner shot 171: "make this more island feel"): palm-trunk posts, driftwood plank and lintel, thatch, lanterns, ferns (islandArch.ts).
+  if(isle)for(const p of islandArch({half:pz,postR:pw/2,postTop:6.55,plankY:6.1,plankH:.95,plankW:pz*2+1.6,plankT:1.1,low:softLow()})){const m=put(p.geo,p.color,x,0,z0);if(p.tint)m.userData.vertexTint=p.tint;}
+  for(const side of [-1,1]){if(!isle){box(pw,6.2,pw,'#d6b58a',x,3.1,z0+side*pz);box(pw+.3,.3,pw+.3,'#eddfbb',x,6.3,z0+side*pz);}obstacles.push({x,z:z0+side*pz,w:pw,d:pw});}
+  if(!isle){box(1.1,.9,pz*2+1.4,'#477c6a',x,6.1,z0);box(1.3,.18,pz*2+1.8,'#eddfbb',x,6.63,z0);}
+  sign('WELCOME TO CORAL CAY',11,.8,x-.57,6.1,z0,isle?'#c99f6b':'#294f43',isle?'#3b2a1a':'#f4cc7c',-Math.PI/2);
+  sign('CAUSEWAY · MAIN ISLAND',11,.8,x+.57,6.1,z0,isle?'#c99f6b':'#294f43',isle?'#3b2a1a':'#f4cc7c',Math.PI/2);}
 
  // ---- Roundabout (Sep 29 2026): one-way, anticlockwise on the map, where the causeway reaches the cay. Cars follow
  // lib/town/cayTraffic.ts. Asphalt ring, painted lane edges, give-way lines and zebra crossings on both arms, and a kerbed
@@ -268,6 +284,9 @@ export function buildCoralCay(t:CayTools){
    sign('WATER + FRUIT',.6,.34,cx,.62,cz+.33,'#384443','#fff4dc');});obstacles.push({x:cx,z:cz,w:.8,d:.6});}
   // Surfboard rack against the west wall.
   {const rx=x-K.w/2-.55,rz=front-2.6;box(.14,1.1,3.2,'#9d805b',rx-.3,.55,rz);for(let i=0;i<3;i++){const b=box(.08,2.2,.58,['#8fcfc0','#f0b49a','#f4d98f'][i],rx,1.1,rz-1+i*1);b.rotation.z=-.16;}obstacles.push({x:rx-.1,z:rz,w:.9,d:3.2});}
+  // Nov 27 2026 (owner shot 172: "these are floating"): where the sand falls away behind the store its ledge hung over a gap; a sandstone
+  // foundation carries the walls 1.2 m down into the sand (inside the old footprint + 5 cm, so the collider and machine spot are unchanged).
+  if(softOn())box(K.w+.1,1.3,K.d+.1,'#b49d78',x,-.55,z).userData.skipRoofObstacle=true;
   buildings.push({x,z,w:K.w,d:K.d,height:4.52,name:'CORAL CAY KONBINI'});obstacles.push({x,z,w:K.w,d:K.d});}
  // ---- Shared beach props.
  function umbrella(x:number,z:number,i:number){
@@ -387,8 +406,9 @@ export function buildCoralCay(t:CayTools){
  cayPath(628,z0,48,3);cayPath(CAY_HUTS[1].x,-146.5,3,13);cayPath(CAY_HUTS[0].x,-143.5,3,4);cayPath(CAY_HUTS[2].x,-147,3,11);cayPath(CAY_PLAZA.x,-117,3,54);
  // Thatched huts: stucco drum, dark door, straw cone roof. Obstacles only (the cone is not a landing roof).
  CAY_HUTS.forEach((h,i)=>{
+  if(softOn())thatchHutAt(h.x,h.z,CAY_HUT_RADIUS-.35,2.6,CAY_HUT_RADIUS+.75,2.7,1.9,i*3.7+1,i%2?'#e2c69a':'#d6b58a',i%2?'#d7ad62':'#d69b61');else{
   cylinder(CAY_HUT_RADIUS-.35,2.6,i%2?'#e2c69a':'#d6b58a',h.x,1.3,h.z);box(1.05,1.9,.12,'#365b56',h.x,.95,h.z+CAY_HUT_RADIUS-.37);
-  cylinder(CAY_HUT_RADIUS+.55,.22,'#b9955a',h.x,2.62,h.z);put(new T.ConeGeometry(CAY_HUT_RADIUS+.75,1.9,10),i%2?'#d7ad62':'#d69b61',h.x,3.65,h.z);
+  cylinder(CAY_HUT_RADIUS+.55,.22,'#b9955a',h.x,2.62,h.z);put(new T.ConeGeometry(CAY_HUT_RADIUS+.75,1.9,10),i%2?'#d7ad62':'#d69b61',h.x,3.65,h.z);}
   obstacles.push({x:h.x,z:h.z,w:CAY_HUT_RADIUS*2-.5,d:CAY_HUT_RADIUS*2-.5,cornerRadius:CAY_HUT_RADIUS-.25});
   assets.push({kind:'hut',x:h.x,z:h.z,w:CAY_HUT_RADIUS*2-.5,d:CAY_HUT_RADIUS*2-.5,visualW:CAY_HUT_RADIUS*2+1.5,visualD:CAY_HUT_RADIUS*2+1.5,canopyHeight:4.6});
  });
@@ -583,7 +603,7 @@ export function buildCoralCay(t:CayTools){
  for(const [x,z,w,d] of HOSTEL_PATHS)cayPath(x,z,w,d);
  CAY_HOMES.forEach((h,i)=>{
   const porchZ=h.z+2.9;
-  if(h.style==='hut'){cylinder(2.2,2.5,h.color,h.x,1.25,h.z);box(1,1.85,.12,'#365b56',h.x,.93,h.z+2.15);cylinder(2.7,.2,'#b9955a',h.x,2.52,h.z);put(new T.ConeGeometry(2.95,1.8,10),h.roof,h.x,3.5,h.z);
+  if(h.style==='hut'){if(softOn())thatchHutAt(h.x,h.z,2.2,2.5,2.95,2.6,1.8,h.x*.37+h.z*.11,h.color,h.roof);else{cylinder(2.2,2.5,h.color,h.x,1.25,h.z);box(1,1.85,.12,'#365b56',h.x,.93,h.z+2.15);cylinder(2.7,.2,'#b9955a',h.x,2.52,h.z);put(new T.ConeGeometry(2.95,1.8,10),h.roof,h.x,3.5,h.z);}
    box(2.6,.16,1.3,'#a67d55',h.x,.08,h.z+2.75);for(const dx of [-1.1,1.1])cylinder(.06,1.9,'#9d805b',h.x+dx,.95,h.z+3.3);
    obstacles.push({x:h.x,z:h.z,w:4.2,d:4.2,cornerRadius:2});}
   else{const stilt=h.style==='stilt',floor=stilt?1.2:.35,wall=2.5,w=stilt?4.8:5.4,d=stilt?4.2:4.6;
