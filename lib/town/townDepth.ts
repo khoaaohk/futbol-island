@@ -49,7 +49,9 @@ const CELL=8,CAP=4.6;
 export type Fillet={vx:number;vz:number;ax:number;az:number;bx:number;bz:number;r:number;cx:number;cz:number};
 /** Quarter-circle steps of a rounded corner (the kerb, the asphalt patch and the pavement's cut all use these same angles). */
 export const FILLET_STEPS=8;
-export type Outline={rects:Rect[];segs:Seg[];fillets:Fillet[];inside(x:number,z:number):boolean;dist(x:number,z:number):number};
+export type Outline={rects:Rect[];segs:Seg[];fillets:Fillet[];inside(x:number,z:number):boolean;dist(x:number,z:number):number;
+ /** The rounded corner whose curve is the nearest kerb to (x, z) (the point lies in its quarter, within 2 m of the curve), else undefined. */
+ arcAt(x:number,z:number):Fillet|undefined};
 /** Point on a fillet's circle at step k (0: the tangent point on the kerb along x; FILLET_STEPS: the one on the kerb along z), `rho` from the centre. */
 export function filletPoint(f:Fillet,k:number,rho:number){const t=k/FILLET_STEPS*Math.PI/2,s=Math.sin(t),c=Math.cos(t);return [f.cx-(s*f.bx+c*f.ax)*rho,f.cz-(s*f.bz+c*f.az)*rho] as const;}
 const inFillet=(f:Fillet,x:number,z:number)=>{const u=(x-f.vx)*f.bx+(z-f.vz)*f.bz,w=(x-f.vx)*f.ax+(z-f.vz)*f.az;return u>=-1e-9&&w>=-1e-9&&u<f.r&&w<f.r&&Math.hypot(x-f.cx,z-f.cz)>f.r;};
@@ -87,7 +89,9 @@ export function buildOutline(rects:Rect[],radius?:FilletRadius):Outline{
   return best;};
  const insideRects=inside,insideAll=(x:number,z:number)=>{if(insideRects(x,z))return true;const fl=fillets.length?fBins.get(bk(Math.floor(x/CELL),Math.floor(z/CELL))):undefined;
   if(fl)for(let i=0;i<fl.length;i++)if(inFillet(fl[i],x,z))return true;return false;};
- return {rects,segs,fillets,inside:insideAll,dist};
+ const arcAt=(x:number,z:number)=>{const fl=fillets.length?fBins.get(bk(Math.floor(x/CELL),Math.floor(z/CELL))):undefined;if(!fl)return undefined;
+  for(let i=0;i<fl.length;i++){const f=fl[i],px=x-f.cx,pz=z-f.cz;if(px*f.ax+pz*f.az>0||px*f.bx+pz*f.bz>0)continue;if(Math.abs(Math.hypot(px,pz)-f.r)<2)return f;}return undefined;};
+ return {rects,segs,fillets,inside:insideAll,dist,arcAt};
 }
 /** Closed loops of an outline. `block`: the loop encloses ground OUTSIDE the union (a city block inside the street network). */
 export function outlineLoops(o:Outline){
@@ -117,8 +121,10 @@ export type StreetInput={roads:(Rect&{vertical:boolean;carriageway:number})[];ju
  /** Small things standing on the pavement (signal poles, lamps, benches): a rounded corner keeps its kerb 45 cm clear of them. */
  keep?:Rect[]};
 /** Rounded street corners: the radius on an 8 m carriageway (scaled with the carriageway), the one beside a zebra (the junction's
- *  zebras are 2 m off the corner: a 3 m curve would carry their dropped kerb round the bend), and the smallest worth drawing. */
-export const CORNER={radius:3,zebra:2,zebraNear:6,min:1,clear:.45} as const;
+ *  zebras are 2 m off the corner and their dropped kerbs already meet at it, so the curve is one long dropped kerb: the stripes end
+ *  0.7 m short of the kerb and the curve only moves the kerb back from them), and the smallest worth drawing. A corner shrinks in
+ *  0.25 m steps until it clears its signal pole / lamp / bench (`clear`) and stays on paving. */
+export const CORNER={radius:3,zebra:3,zebraNear:6,min:1,clear:.45} as const;
 /** Paving sheets laid ACROSS a carriageway (a path that comes over a kerb at least 1.5 m onto the asphalt, at most 14 m along the street) are crossings too:
  *  each gets dropped kerbs like a zebra (reviewer pass: two of them met a full kerb). Skips one within 5 m of a known crossing. */
 export function sheetCrossings(roads:StreetInput['roads'],paths:Rect[],known:Crossing[]){const out:Crossing[]=[];
@@ -185,6 +191,8 @@ export function depthWeight(x:number,z:number){const s=S;if(!s||x<=s.box.minX||x
  const tx=fx-i,tz=fz-j,o=j*s.wnx+i,a=s.w[o],b=s.w[o+1],c=s.w[o+s.wnx],d=s.w[o+s.wnx+1];return (a+(b-a)*tx)*(1-tz)+(c+(d-c)*tx)*tz;}
 /** 0..1: how far the kerb is dropped at (x, z) (1 on a zebra's landing, tapering along the kerb). */
 function dropAt(s:Streets,x:number,z:number){let best=0;
+ // round a rounded corner, the drop is the one at the nearest point of the curved kerb (the dropped kerb and its ramp follow the bend)
+ const f=s.asphalt.fillets.length?s.asphalt.arcAt(x,z):undefined;if(f){const px=x-f.cx,pz=z-f.cz,l=Math.hypot(px,pz)||1;x=f.cx+px*f.r/l;z=f.cz+pz*f.r/l;}
  for(let i=0;i<s.crossings.length;i++){const k=s.crossings[i],along=Math.abs(k.vertical?z-k.z:x-k.x);if(along>=KERB.dropHalf+KERB.dropTaper)continue;const across=Math.abs(k.vertical?x-k.x:z-k.z);if(across<3.4||across>4.2+KERB.ramp)continue;
   const v=1-smooth((along-KERB.dropHalf)/KERB.dropTaper);if(v>best)best=v;}
  return best;}

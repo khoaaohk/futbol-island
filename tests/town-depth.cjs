@@ -36,9 +36,10 @@ assert.ok(near(lift(127.9,-110),lift(120.1,-110),1e-6),'both kerbs alike');
  assert.ok(worst<=K.gutter/K.bevel+.02,'steepest grade is the kerb bevel ('+(K.gutter/K.bevel).toFixed(2)+'): '+worst.toFixed(3));}
 // The Nursery crossing (junction 124, -80): the zebra on its north arm is at z = -86; people step off at x = 120 and 128.
 assert.ok(crossings.some(k=>k.x===124&&k.z===-86&&k.vertical));
-assert.ok(near(lift(119.99,-86),-(K.gutter-K.up),2e-3),'dropped kerb: the pavement is down to a 2 cm upstand at the zebra: '+lift(119.99,-86));
-assert.ok(lift(119.2,-86)<-.02&&lift(119.2,-86)>-(K.gutter-K.up),'the ramp');assert.equal(lift(120-K.ramp-.01,-86),0,'the ramp ends 1.5 m back');
-assert.equal(lift(119.9,-86-K.dropHalf-K.dropTaper-.05),0,'full kerb again beside the drop');
+// (rounded corners, Nov 26 2026: the east kerb's 3 m curve ends at z = -87, so the step-off is probed there, 0.1 m short of the zebra's middle)
+assert.ok(near(lift(128.01,-86.9),-(K.gutter-K.up),2e-3),'dropped kerb: the pavement is down to a 2 cm upstand at the zebra: '+lift(128.01,-86.9));
+assert.ok(lift(128.8,-86.9)<-.02&&lift(128.8,-86.9)>-(K.gutter-K.up),'the ramp');assert.equal(lift(128+K.ramp+.02,-86.9),0,'the ramp ends 1.5 m back');
+assert.equal(lift(128.1,-86-K.dropHalf-K.dropTaper-.05),0,'full kerb again beside the drop');
 assert.ok(near(lift(124,-86),-K.crown),'the zebra itself rides the crown');
 // The junction box is all carriageway.
 assert.ok(lift(124,-80)<=-K.crown+1e-6&&lift(121,-77)<-K.crown+.001);
