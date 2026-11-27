@@ -71,6 +71,7 @@ import {CAY_KONBINI} from './coralCay';
 import {STADIUM_SHOP_X,STADIUM_SHOP_WALL_Z,STADIUM_SHOP_POOL} from './stadiumShops';
 import { Obstacle, trunkCollider } from './simulation';
 import {createNeonFlicker,NEON_FLICKER_DISTANCE} from './arcadeNeonFlicker';
+import {broadleafTreesOn,broadleafTree,broadleafBush,spotHash,TREE_GREENS} from './broadleafTrees';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
 /** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
@@ -364,13 +365,16 @@ export function* buildTownSteps(scene: T.Scene) {
   function planter(x:number,z:number){prop('planter',()=>seated(x,z,.8,()=>planterParts(x,z)));}
   function planterParts(x:number,z:number){
     assets.push({kind:'planter',x,z,w:1.6,d:1.6,visualW:1.9,visualD:1.9});
-    box(1.6,.55,1.6,'#d2bc94',x,.3,z);put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
+    box(1.6,.55,1.6,'#d2bc94',x,.3,z);
+    if(broadleafTreesOn()){const b=broadleafBush(x,z,.95);put(b.leaves,'#5b8c5c',x,1,z).userData.leafShade=b.shade;}// broadleafTrees.ts: 3 clumps, not one ball
+    else put(new T.IcosahedronGeometry(.95,0),'#5b8c5c',x,1,z);
     obstacles.push({x,z,w:1.6,d:1.6});
   }
   function tree(x:number,z:number){prop('tree',()=>treeParts(x,z));}
   function treeParts(x:number,z:number){
-    assets.push({kind:'tree',x,z,w:.45,d:.45,visualW:3.6,visualD:3.6,canopyHeight:4.4});
-    cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#5b8c5c',x,3.3,z);
+    if(broadleafTreesOn()){// broadleafTrees.ts (Nov 26 2026): clumped canopy, one of 7 shapes, forked trunk; same pieces, same batches
+      const t=broadleafTree(x,z,1,{trunkFoot:.2,trunkTop:.13,sides:7});assets.push({kind:'tree',x,z,w:.45,d:.45,visualW:2*t.reach,visualD:2*t.reach,canopyHeight:t.top-.7});put(t.bark,'#9d805b',x,0,z);put(t.leaves,TREE_GREENS[Math.floor(spotHash(x,z,11)*TREE_GREENS.length)],x,0,z).userData.leafShade=t.shade;}
+    else{assets.push({kind:'tree',x,z,w:.45,d:.45,visualW:3.6,visualD:3.6,canopyHeight:4.4});cylinder(.18,2.4,'#9d805b',x,1.18,z);put(new T.IcosahedronGeometry(1.8,1),'#5b8c5c',x,3.3,z);}
     obstacles.push(trunkCollider(x,z,.18));
   }
   function table(x:number,z:number){prop('table',()=>anchored(x,z,()=>tableParts(x,z)));}
@@ -800,7 +804,8 @@ export function* buildTownSteps(scene: T.Scene) {
     assets.push({kind:'small-tree',x,z,w:.9,d:.9,visualW:1.5,visualD:1.5,baseY:y,canopyHeight:y+2.55});
     box(.9,.65,.9,'#bd7657',x,y+.325,z);
     cylinder(.06,1.4,'#9d805b',x,y+1,z);
-    put(new T.IcosahedronGeometry(.75,1),'#477c6a',x,y+1.65,z);
+    if(broadleafTreesOn()){const b=broadleafBush(x,z,.75);put(b.leaves,'#477c6a',x,y+1.65,z).userData.leafShade=b.shade;}
+    else put(new T.IcosahedronGeometry(.75,1),'#477c6a',x,y+1.65,z);
     put(new T.IcosahedronGeometry(.5,1),'#8baa69',x+.25,y+2.05,z);
   }
   for(const z of [73,79.5])roofCafeTable(432,z,9.23,z===73);
@@ -1893,7 +1898,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // The sun never moves (islandLighting.ts ISLAND_SUN_POSITION), so walls turned to it take a small warm tint and walls turned away a
   // cool one; each building gets a few percent of its own value and warmth so neighbours differ. Multipliers are in linear colour.
   const BAKE_SUN_X=ISLAND_SUN_POSITION[0]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]),BAKE_SUN_Z=ISLAND_SUN_POSITION[2]/Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
-  const BAKE={warm:.12,cool:.06,jitterValue:.07,jitterWarmth:.04,canopyLow:.9,canopyHigh:1.24,paneSky:new T.Color('#9cc8e6'),paneSkyMix:.55,paneFoot:.5} as const;
+  const BAKE={warm:.12,cool:.06,jitterValue:.07,jitterWarmth:.04,canopyLow:.9,canopyHigh:1.24,leafUnder:.74,leafTop:1.22,paneSky:new T.Color('#9cc8e6'),paneSkyMix:.55,paneFoot:.5} as const;
   const bakeCells=new Map<string,number[]>();
   buildings.forEach((b,i)=>{for(let cx=Math.floor((b.x-b.w/2-.7)/16);cx<=Math.floor((b.x+b.w/2+.7)/16);cx++)for(let cz=Math.floor((b.z-b.d/2-.7)/16);cz<=Math.floor((b.z+b.d/2+.7)/16);cz++){const k=cx+':'+cz,list=bakeCells.get(k);if(list)list.push(i);else bakeCells.set(k,[i]);}});
   const buildingAt=(x:number,z:number)=>{const list=bakeCells.get(Math.floor(x/16)+':'+Math.floor(z/16));if(list)for(const i of list){const b=buildings[i];if(Math.abs(x-b.x)<=b.w/2+.7&&Math.abs(z-b.z)<=b.d/2+.7)return i;}return -1;};
@@ -1925,7 +1930,12 @@ export function* buildTownSteps(scene: T.Scene) {
       const home=pane||canopy||stadiumPiece?-1:buildingAt(position.x,position.z),jv=home<0?1:1+BAKE.jitterValue*bakeHash(home),jw=home<0?1:1+BAKE.jitterWarmth*bakeHash(home+.5);
       const P=bakeArray(pos),N=nrm&&bakeArray(nrm),cr=color.r,cg=color.g,cb=color.b,len=colors.length;
       const own=object.userData.depthColors as Float32Array|undefined;// kerb depth pieces carry their own baked colours (townDepth.ts)
-      if(own)colors.set(own);else if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
+      const leafShade=object.userData.leafShade as Float32Array|undefined;// broadleafTrees.ts: clumped canopies carry their own occlusion
+      if(own)colors.set(own);else if(leafShade&&N&&leafShade.length===len){const lo=BAKE.leafUnder,hi=BAKE.leafTop;
+        // per facet (flat normals): lit tops, shaded undersides, warm sun side, cool far side, on top of the baked occlusion
+        for(let i=0;i<len;i+=3){const ny=N[i+1],f=ny>=0?1+(hi-1)*ny:1+(1-lo)*ny,s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z,w=s>0?BAKE.warm*1.3*s:0;
+          colors[i]=cr*f*leafShade[i]*(1+w);colors[i+1]=cg*f*leafShade[i+1];colors[i+2]=cb*f*leafShade[i+2]*(s>0?1-w:1-BAKE.cool*s);}}
+      else if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
         for(let i=0;i<len;i+=3){const t=(P[i+1]-gy)*ih,k=BAKE.paneSkyMix*t*t,d=BAKE.paneFoot+(1-BAKE.paneFoot)*t;colors[i]=(cr+(sky.r-cr)*k)*d;colors[i+1]=(cg+(sky.g-cg)*k)*d;colors[i+2]=(cb+(sky.b-cb)*k)*d;}}
       else if(!N){const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;for(let i=0;i<len;i+=3){colors[i]=r;colors[i+1]=g;colors[i+2]=b;}}
       else if(canopy){const ih=.5/gh,span=BAKE.canopyHigh-BAKE.canopyLow;

@@ -21,6 +21,23 @@
   (inner wheel faces + axles, tests/train-looks2.cjs pin 2500 -> 2600), no draws.
 - Lab: phone profile, 4x CPU throttle, rAF median 16.7 ms before and after at West Beach top-down, the train's West Beach view and the
   tunnel (vsync-capped: no CPU regression visible; GPU cost not measurable here). Shots + NOTE: `.claude/worktrees/_recovery-nov20/sky/`.
+## Broadleaf trees with volume (Nov 26 2026, branch `island-trees`, not deployed; `?trees=0` = the old trees)
+- Owner: the round trees were "too round with gradient and looks flat". Before: each park / street tree was one
+  `IcosahedronGeometry(1.8, 1)` (80 triangles, smooth normals) painted by the batching pass's canopy branch as one foot-to-crown gradient.
+- Now (`lib/town/broadleafTrees.ts`; wired in `world.ts` `treeParts` / `planterParts` / `roofCafePlantParts` and `westPark.ts`): a kit of
+  7 canopy shapes (round-clump, tall-oval, umbrella, lopsided, tiered, columnar, spreading) of 4-5 overlapping clumps (first a
+  dodecahedron, the rest icosahedra, corners jittered, FLAT normals), chosen and posed (yaw, squash, lean, shade) by a hash of the tree's
+  position (no dice: the park's seeded placement is unchanged); trunk forks into 2-3 open branches. Per-vertex occlusion (core, underside,
+  creases between clumps) travels as `userData.leafShade` into the existing vertex-colour bake (world.ts batching pass, `BAKE.leafUnder` /
+  `leafTop` per facet + the sun-side warm tint). Planters and roof-cafe plants: 3 clumps instead of one ball.
+- Cost: same pieces per tree (bark + leaves) in the same chunk paint batches: island chunks 1007 -> 1007, 0 materials / textures / passes /
+  per-frame work. Triangles per tree 104 (park) / 120 (street) -> 138-158 (avg 153); battery saver plants the 3 big clumps without
+  branches. All static chunk triangles 863,639 -> 870,979 (+0.85 %); on screen at the densest grove (phone, play camera) ~254k -> ~264k
+  (+4 %), island overview ~315k -> ~300-327k (run noise > the change). Frame time at 4x CPU throttle (390x844 @2x, headless Chrome on a
+  loaded Mac): median 16.7 ms both ways at grove / owner spot / overview; p90 spikes appeared in both arms (machine load), none tied to the
+  trees. Load-time: ~210 small merges more in the town build (ms-scale). No iPhone heat claim.
+- Tree assets (leaf-debris hit test) are sized from the canopy (`top - 0.7`, `2 x reach`); colliders, kicks (prop records), wind sway
+  (`markSway` by prop bounds), fruit / orchards (untouched) work as before. Test: `tests/broadleaf-trees.cjs`.
 
 ## Reading pages: phone-sized posters on the home reel and the /games hero (Nov 23 2026, branch `seo-ai-speed-nov23`, not deployed)
 - Home "See it in action" reel: all 11 posters `loading="lazy"` (the first two were eager 1920 px stills, ~180 KB, below the fold) and a
