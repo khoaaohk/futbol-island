@@ -128,8 +128,8 @@ export const CHARTS:readonly ChartPage[]=[
   picture:'soccer-field-size-by-age-chart.png',pictureTitle:'Soccer field size by age',pictureSub:'4v4, 7v7, 9v9 and 11v11 fields in yards'},
 
  {slug:'soccer-age-groups',path:AGES.path,crumb:'Age groups',blurb:'U6 to U19 explained: birth dates for each group and which game it plays',
-  title:`Soccer Age Groups by Birth Year: U6 to U19 Chart (${SIZES_SEASON})`,h1:'Soccer age groups explained: U6 to U19',
-  description:`What U8, U10 or U12 means in youth soccer: a ${SIZES_SEASON} age group chart from U6 to U19 with birth dates, game format, ball size and game length.`,
+  title:`Soccer Age Groups: What U8, U12 and U19 Mean (${SIZES_SEASON})`,h1:'Soccer age groups explained: U6 to U19',
+  description:`What does U12 or U19 mean in soccer? U means under: a ${SIZES_SEASON} age group chart from U6 to U19 with birth years, game format, ball size and length.`,
   lead:'In youth soccer, “U” means “under”, so a U10 team is for players aged 10 and under. Each age group has its own game: 4v4 up to U8, 7v7 at U9 and U10, 9v9 at U11 and U12, and 11v11 from U13.',
   more:`Which group a child joins depends on their date of birth and on the cut-off date their league uses. For the ${SIZES_SEASON} season the biggest US youth organizations moved the cut-off from January 1 to August 1.`,
   tables:[
