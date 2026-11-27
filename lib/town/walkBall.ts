@@ -122,7 +122,13 @@ export const BALL_SEA_LEVEL=-.43,BALL_FLOAT_TIME=2.1;
 type Environment={
  /** The Stadium Park pond (lib/town/pondSkip.ts): a fast low shot skips across it, a slow one floats to the bank. */
  pond?:BallPond;pondSplash?:(kind:'skip'|'float'|'out',x:number,z:number,strength:number,skip:number)=>void;
- sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
+ sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null;
+ /** An enclosing shell (Tunnel ball, Nov 27 2026: the Summit tunnel's lining, lib/town/tunnelBall.ts): a step that leaves it returns the
+  *  contact (ball centre), the inward normal and its restitution `e`; the shot / drop / sky flight reflects off it. */
+ bound?:(from:FramePoint,to:FramePoint)=>BoundHit|null};
+export type BoundHit=FramePoint&{nx:number;ny:number;nz:number;e:number};
+/** Reflects a velocity off a BoundHit (only when heading into it). */
+const reflect=(v:{vx:number;vy:number;vz:number},h:BoundHit)=>{const dot=v.vx*h.nx+v.vy*h.ny+v.vz*h.nz;if(dot>=0)return;const k=(1+h.e)*dot;v.vx-=k*h.nx;v.vy-=k*h.ny;v.vz-=k*h.nz;};
 export function createWalkBall(){
  const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle'|'drop'|'sky',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
   /** Seconds a shot has been floating in the sea (0 = not in the water). The ball stays in 'shot' mode while it floats. */
@@ -281,6 +287,8 @@ export function createWalkBall(){
    let x=state.x+state.vx*dt,z=state.z+state.vz*dt;const y=state.y+state.vy*dt-g/2*dt*dt;state.vy-=g*dt;
    // A wall / building in the way (up or down): it rebounds like a shot off a wall, the run keeps going and the mark moves to the
    // rebound's landing (re-predicted once per hit, not per frame).
+   if(env.bound){frameFrom.x=state.x;frameFrom.y=state.y;frameFrom.z=state.z;frameTo.x=x;frameTo.y=y;frameTo.z=z;const b=env.bound(frameFrom,frameTo);
+    if(b){reflect(state,b);state.x=b.x;state.y=b.y;state.z=b.z;impact();predictSky(env);return;}}// the tunnel's lining: a sky kick bounces off the crown
    if(state.vx||state.vz){let hit=false;if(env.blocked(x,state.z,y)){state.vx*=-S.wallBounce;x=state.x;hit=true;}if(env.blocked(x,z,y)){state.vz*=-S.wallBounce;z=state.z;hit=true;}
     if(hit){state.x=x;state.z=z;state.y=y;impact();predictSky(env);}}
    state.x=x;state.z=z;state.y=y;state.skyLeft=Math.max(0,state.skyLeft-dt);
@@ -407,6 +415,9 @@ export function createWalkBall(){
      state.x=hit.x;state.y=hit.y;state.z=hit.z;finishTarget=undefined;impact();continue;
     }
    }
+   if(env.bound){frameFrom.x=state.x;frameFrom.y=state.y;frameFrom.z=state.z;
+    frameTo.x=state.x+state.vx*step;frameTo.y=state.y+(state.vy-S.gravity*step)*step;frameTo.z=state.z+state.vz*step;
+    const hit=env.bound(frameFrom,frameTo);if(hit){reflect(state,hit);state.x=hit.x;state.y=hit.y;state.z=hit.z;finishTarget=undefined;impact();continue;}}
    const x=state.x+state.vx*step;if(env.blocked(x,state.z,state.y)){state.vx*=-S.wallBounce;impact();}else state.x=x;
    const z=state.z+state.vz*step;if(env.blocked(state.x,z,state.y)){state.vz*=-S.wallBounce;impact();}else state.z=z;
    if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){state.vx*=-S.hitBounce;state.vz*=-S.hitBounce;state.vy=S.hitLift;impact();}
@@ -425,5 +436,7 @@ export function createWalkBall(){
   if(shotAge>(state.charge>0?S.chargedAge:S.tapAge)+(state.pondSkipsLeft>=0?POND_SKIP.floatMax:0)||Math.hypot(state.x-p.x,state.z-p.z)>(state.charge>0?360:65)||Math.hypot(state.vx,state.vz)<S.restSpeed&&state.y<=env.floor(state.x,state.z)+S.restHeight&&!(env.pond&&env.pond.q(state.x,state.z)<1))recall();
  }
  const syncDribble=(p:Player,contact:{x:number;z:number},floor:Environment['floor'])=>{if(state.mode==='attached')attach(p,floor,contact);};
- return {state,reset,beginCharge,shoot,juggle,keepUp,keepUpRelease,get keepUpHeld(){return pressing;},updateWallTarget,recall,update,syncDribble};
+ /** Knocked loose (Tunnel ball, Nov 27 2026: a passing train): a free flight from where it is with this velocity, the shot physics after. */
+ const knock=(vx:number,vy:number,vz:number)=>{endRun();state.mode='shot';shotAge=0;state.age=0;state.charge=0;finishTarget=undefined;state.wallTarget=null;nextWall=undefined;state.kick=state.jugglePhase=0;state.floating=0;state.pondFloat=0;state.pondSkipsLeft=-1;state.vx=vx;state.vy=vy;state.vz=vz;};
+ return {state,reset,knock,beginCharge,shoot,juggle,keepUp,keepUpRelease,get keepUpHeld(){return pressing;},updateWallTarget,recall,update,syncDribble};
 }

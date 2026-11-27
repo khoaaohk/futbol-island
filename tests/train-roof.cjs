@@ -80,6 +80,13 @@ console.log('train-roof pure: ok');
     const top=at(.8,1.9);assert(TL.trainWalkHeight(top.x,top.z)>=h.bed-.43&&TL.headTop(top.x,top.z)>0,'the bearing seat beside the deck is a floor');assert(LM.onLand(top.x,top.z),'the abutment top is land (landable deck)');
     const rock=at(2,2.8);assert(TL.trainSwimBlocked(rock.x,rock.z),'the rip-rap is a wall to a swimmer');const far=at(2,6);assert(!TL.trainSwimBlocked(far.x,far.z),'open sea past the rocks');}
    assert(/ix=p\.tx\*dir\*il\+n\.x\*pull;iz=p\.tz\*dir\*il\+n\.z\*pull/.test(read('components/Town.tsx')),'Town: the assist follows the line');}
+  // Nov 27 2026 (owner 191: "unable to walk and ride on this section of the track. when landing on this, it treats it like water"):
+  // the land approach to every bridge head is a deck too (the track's own walk top), so the water system never reads the line as sea
+  // there; beside the bank (off the track) it is not.
+  {let checked=0;for(const h of TL.bridgeHeads())for(let u=-TL.APPROACH+2;u<=1;u+=1.5){const x=h.x+h.tx*u,z=h.z+h.tz*u;if(TL.trainWalkHeight(x,z)<=0)continue;checked++;
+    assert(D.onLandableDeck(x,z),`the approach to the head at ${h.x.toFixed(0)},${h.z.toFixed(0)} (${u} m) is a deck`);
+    const n=TT.leftNormal(h.tx,h.tz),bx=x+n.x*9,bz=z+n.z*9;if(TL.trainWalkHeight(bx,bz)===0)assert(!D.landableDeckAt(bx,bz)||!D.landableDeckAt(bx,bz).id.startsWith('trestle-approach'),'9 m beside the line is not the approach deck');}
+   assert(checked>40,'approach rows checked ('+checked+')');}
   off.forEach(f=>f());}
  console.log('train-roof trestle: ok');
  if(k<0){console.log('train-roof live: skipped (no train at speed now)');return;}

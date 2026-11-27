@@ -147,14 +147,28 @@ export function swimDeckBlocked(x:number,z:number,waterY:number){
 /** Nov 24 2026: the trestle / bridge decks as landable decks (landableDecks.ts: walkable ground for simulation.blocked, land for the
  *  landing search and the water system), one per sea run: its bounding box (the cheap first test) and trainDeckAt (the real shape).
  *  `floating`: no wading shelf beside them (the sea beside a trestle is deep). Height 0: the floor itself is trainWalkHeight. */
+/** The land approach to each trestle run treated as a deck (m along the line from its bridge head). */
+export const APPROACH=24;
 export function trestleDecks():LandableDeck[]{
  const P=trainLayout().profile,out:LandableDeck[]=[];let a=-1;
  const flush=(b:number)=>{let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let j=a;j<=b;j++){const i=j%TRACK.n;x0=Math.min(x0,TRACK.x[i]);x1=Math.max(x1,TRACK.x[i]);z0=Math.min(z0,TRACK.z[i]);z1=Math.max(z1,TRACK.z[i]);}
   const pad=HEAD_HW+1.5;out.push({id:'trestle-'+out.length,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0+pad*2,d:z1-z0+pad*2,yaw:0,height:0,floating:true,contains:(x:number,z:number)=>trainDeckAt(x,z)||headTop(x,z)>0/* POLISH 4: the abutment top too */,
    distance:(x:number,z:number)=>{const h=trackNearest(x,z,12);return h&&(P.kind[h.i]===TrackKind.Sea)?Math.max(0,h.d-DECK_HALF):12;}});};
+ // Nov 27 2026 (owner 191: "unable to walk and ride on this section of the track. when landing on this, it treats it like water"): the
+ // land rows that carry the line from the beach out to a bridge head (an embankment / a beach-level head's approach over the wet sand)
+ // were not a deck, so where the water system reads the sand there as sea the walker / ride / a landing dropped into the water on the
+ // track itself. Each sea run's two approaches (APPROACH m of land rows) are fixed decks too: the track's own walk top (trainWalkHeight,
+ // the ballast + its banks), nothing beside it (off the bank the sea is the sea).
+ const approach=(i0:number,i1:number)=>{let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;for(let j=i0;j<=i1;j++){const i=((j%TRACK.n)+TRACK.n)%TRACK.n;x0=Math.min(x0,TRACK.x[i]);x1=Math.max(x1,TRACK.x[i]);z0=Math.min(z0,TRACK.z[i]);z1=Math.max(z1,TRACK.z[i]);}
+  const pad=4,lo=i0*TRACK_DS,hi=i1*TRACK_DS,inS=(sv:number)=>{const a=wrapS(sv-lo),b=wrapS(hi-lo);return a<=b+TRACK_DS;};
+  out.push({id:'trestle-approach-'+out.length,x:(x0+x1)/2,z:(z0+z1)/2,w:x1-x0+pad*2,d:z1-z0+pad*2,yaw:0,height:0,
+   contains:(x:number,z:number)=>{const h=trackNearest(x,z,4);return !!h&&inS(h.s)&&trainWalkHeight(x,z)>0;},
+   distance:(x:number,z:number)=>{const h=trackNearest(x,z,12);return h&&inS(h.s)?Math.max(0,h.d-1.45):12;}});};
+ const runEnds:[number,number][]=[];
  // walk the loop from a non-sea row so a run never wraps unseen
  let start=0;while(start<TRACK.n&&P.kind[start]===TrackKind.Sea)start++;
- for(let j=start;j<start+TRACK.n;j++){const sea=P.kind[j%TRACK.n]===TrackKind.Sea;if(sea&&a<0)a=j-1;else if(!sea&&a>=0){flush(j);a=-1;}}
+ for(let j=start;j<start+TRACK.n;j++){const sea=P.kind[j%TRACK.n]===TrackKind.Sea;if(sea&&a<0)a=j-1;else if(!sea&&a>=0){runEnds.push([a,j]);flush(j);a=-1;}}
+ const EXT=Math.round(APPROACH/TRACK_DS);for(const [a0,b0] of runEnds){approach(a0-EXT,a0+1);approach(b0-1,b0+EXT);}
  return out;
 }
 

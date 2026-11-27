@@ -69,10 +69,14 @@ export function floorTopNear(d:number,r:number){let m=-1;for(let i=-4;i<=4;i++)m
 export const LAMP_STEP=12,LAMP_Y=2.05,LAMP_V=TUNNEL_HALF_WIDTH-.2;
 export const TUNNEL_LAMPS:{s:number;x:number;y:number;z:number;side:number}[]=[];
 {let side=1;for(let s=TUNNEL.west.s+6;s<TUNNEL.east.s-4;s+=LAMP_STEP,side=-side){const q=trackAt(s),n=leftNormal(q.tx,q.tz);TUNNEL_LAMPS.push({s,x:q.x+n.x*side*LAMP_V,y:TUNNEL_BED+LAMP_Y,z:q.z+n.z*side*LAMP_V,side});}}
-/** The lamps' light at a point (0 … ~1): the same soft falloff as the shader (exp(−d²/LAMP_R2)), the three nearest lamps. */
-export const LAMP_R2=9;
+/** The lamps' light at a point (0 … ~1.2): the same falloff as the shader, the nearest lamps. Nov 27 2026 (owner 199: "the light
+ *  circles need to be more gradients and not so harsh of a circle"): two gaussians per lamp, a small warm bloom at the bulb
+ *  (LAMP_CORE) over a wide soft pool (LAMP_POOL) with no edge, eased toward white by lampTone (a soft knee, never a flat clipped disc). */
+export const LAMP_R2=16,LAMP_CORE={k:.5,r2:1.6},LAMP_POOL={k:.8,r2:LAMP_R2};
+export const lampFall=(d2:number)=>LAMP_CORE.k*Math.exp(-d2/LAMP_CORE.r2)+LAMP_POOL.k*Math.exp(-d2/LAMP_POOL.r2);
+export const lampTone=(L:number)=>L/(1+.45*L);
 export function lampLight(x:number,y:number,z:number,s:number){const k=Math.round((s-TUNNEL.west.s-6)/LAMP_STEP);let L=0;
- for(let j=k-1;j<=k+1;j++){if(j<0||j>=TUNNEL_LAMPS.length)continue;const l=TUNNEL_LAMPS[j],d2=(x-l.x)**2+(y-l.y)**2+(z-l.z)**2;L+=Math.exp(-d2/LAMP_R2);}return Math.min(1.2,L);}
+ for(let j=k-2;j<=k+2;j++){if(j<0||j>=TUNNEL_LAMPS.length)continue;const l=TUNNEL_LAMPS[j],d2=(x-l.x)**2+(y-l.y)**2+(z-l.z)**2;L+=lampFall(d2);}return Math.min(1.2,lampTone(L)*1.45);}
 
 export type TunnelSpot={s:number;d:number;side:number;u:number;tx:number;tz:number;cx:number;cz:number};
 const W=TUNNEL.west,E=TUNNEL.east,spot:TunnelSpot={s:0,d:0,side:1,u:0,tx:1,tz:0,cx:0,cz:0},q={x:0,z:0,tx:1,tz:0},cq={x:0,z:0,tx:1,tz:0};
