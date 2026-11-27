@@ -117,6 +117,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // BoxGeometry parameters, same batches, 0 draws). `softly(opts, fn)` does the same for builders that are not tagged props.
   const SOFT_KINDS:Partial<Record<PropReactionKind,SoftOpts&{maxDim?:number}>>={bench:{r:.32},table:{r:.32},planter:{r:.24,maxDim:14},sign:{r:.3},fence:{r:.4},post:{r:.28},crate:{r:.22},stall:{r:.2},bollard:{r:.4},signal:{r:.3},net:{r:.4},goal:{r:.4},pole:{r:.35}};
   let softBoxOpts:(SoftOpts&{maxDim?:number})|null=null;const softLowTier=softLow();
+  // Soft sweep 2: the west park's props (benches, signs, bins) take one rounding step less (the smooth-shaded chamfer): the whole west
+  // region draws at once from the stadium, inside its triangle budget (tests/west-stadium.cjs).
+  let softFar=false;
   const softly=<R,>(o:(SoftOpts&{maxDim?:number})|null,fn:()=>R):R=>{const was=softBoxOpts;softBoxOpts=o;try{return fn();}finally{softBoxOpts=was;}};
   const prop=<R,>(kind:PropReactionKind,build:()=>R):R=>{if(propTag)return build();propTag={kind};const was=softBoxOpts;softBoxOpts=was??SOFT_KINDS[kind]??null;try{return rigid(build);/* elevation: a prop is one rigid object on a slope */}finally{propTag=null;softBoxOpts=was;}};
   const museumRails:(Obstacle&{floor:number;top:number})[]=[];
@@ -136,7 +139,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation (?elev=1; lib/town/elevation.ts): from here to the batching pass every piece `put` / `sign` places stands on the raised
   // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
   elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.group=0;elevBuild.pieces.length=0;
-  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,softBoxOpts,softLowTier):new T.BoxGeometry(w,h,d),c,x,y,z,p);
+  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,softBoxOpts,softLowTier||softFar):new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Tree pit (soft sweep, owner shot 163): a round irregular lawn patch fading into the lawn instead of a square tile; `?soft=0` = the tile. */
   const PIT_LIN=new T.Color('#7a9e67');
   const treePit=(x:number,z:number,w:number,d:number)=>{if(!softOn())return box(w,.018,d,'#7a9e67',x,-.065,z);
@@ -264,10 +267,13 @@ export function* buildTownSteps(scene: T.Scene) {
     if(sunk){const c=(height-sunk)/2,ax=(y:number)=>Math.sin(.07)*(y-c);// the leaning trunk's axis at height y
       put(new T.CylinderGeometry(.215,.33,.3,9,1,true),'#8c7150',ax(.02),.02,0,group).rotation.z=-.07;
       for(const [y,r] of [[.55,.21]] as const){const scar=put(new T.CylinderGeometry(r,r+.012,.045,9,1,true),'#7f6547',ax(y),y,0,group);scar.rotation.z=-.07;}}
+    // Soft sweep 2 (west-stadium triangle budget): the rib-less palms (the West Beach's many, seen from the stadium) bend each frond in 6
+    // steps, not 8 (its back face doubles every step): 56 triangles less a palm, the same arc at beach distance.
+    const FS=ribs||!softOn()?8:6;
     for(let i=0;i<7;i++){
       const angle=i/7*Math.PI*2, points:T.Vector3[]=[];
       const positions:number[]=[],indices:number[]=[];
-      for(let j=0;j<=8;j++){const t=j/8,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r,y,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<8){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
+      for(let j=0;j<=FS;j++){const t=j/FS,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r,y,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<FS){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
       // Without ribs the frond carries its own back face (a mirrored copy) in a one-step-off palette shade, so it joins the chunk's
       // ordinary front-sided paint batch instead of adding the double-sided one to every West Beach chunk (a draw call each).
       if(!ribs){const n=positions.length/3;positions.push(...positions);for(let k=0,m=indices.length;k<m;k+=3)indices.push(indices[k]+n,indices[k+2]+n,indices[k+1]+n);}
@@ -1566,7 +1572,9 @@ export function* buildTownSteps(scene: T.Scene) {
   let cafe:CafeBuild|null=null;if(!noCafe)try{cafe=buildSeasideCafe({box,cylinder,put,line,lit,town,obstacles,walkSurfaces,buildings,textures,materials,nightSigns,prop});}catch(error){console.error('Café by the Sea failed to build',error);}
   // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park, Stadium Plaza.
   westAreas[0]=surfaceAreas.length;
+  softFar=true;
   const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop,seaRipples:waterRipples.texture/* the pond's water: the sea's own ripple tile */});
+  softFar=false;
   westAreas[1]=surfaceAreas.length;
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);

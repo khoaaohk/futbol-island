@@ -5,7 +5,7 @@
 // west region is hidden by one frustum-box test when it is out of view (world.ts, westRegion). No per-frame work, no new texture.
 import * as T from 'three';
 import {behindSign} from './signPosts';
-import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {mergeGeometries,mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {onIsland,distanceToShore} from './shoreline';
 import {trackNearest} from './trainTrack';// Nov 23 2026: the Island Line's west leg (trainTrack.ts is import-free)
 import {trunkCollider,type Obstacle} from './simulation';
@@ -136,11 +136,15 @@ export function buildWestPark(t:Tools):WestParkStats{
   // Elevation (?elev=1): on the hillside a 12 m bed would stand half a metre proud at one end, so it steps down the grade in four
   // 3 m planters (each on the ground at its own spot, its kerb carried 0.3 m into the ground).
   // Soft sweep (Nov 27 2026, owner shot 160): rounded rims and a pillowed soil bed with rounded corners; round blooms, not gems.
-  const soft=softOn(),low=softLow(),bed=(w:number,d:number,bx:number,y:number)=>soft?put(new SoftBoxGeometry(w,.12,d,{radius:.055,seg:low?0:1,dome:.05}),'#6b5640',bx,y,z):box(w,.12,d,'#6b5640',bx,y,z);
-  const rim=(w:number,h:number,bx:number,y:number)=>soft?put(new SoftBoxGeometry(w,h,3,{radius:Math.min(.2,h*.45),seg:low?0:1,dome:0}),'#d2bc94',bx,y,z):box(w,h,3,'#d2bc94',bx,y,z);
-  prop('planter',()=>{if(elevationOn()&&Math.abs(groundLift(x-6,z)-groundLift(x+6,z))>.1)for(let k=0;k<4;k++){const bx=x-4.5+k*3;rim(3,.62,bx,.01);bed(2.4,2.4,bx,.34);}
+  const soft=softOn(),low=softLow(),bed=(w:number,d:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,.12,d,{radius:.055,seg:low?0:seg,dome:.05}),'#6b5640',bx,y,z):box(w,.12,d,'#6b5640',bx,y,z);
+  const rim=(w:number,h:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,h,3,{radius:Math.min(.2,h*.45),seg:low?0:seg,dome:0}),'#d2bc94',bx,y,z):box(w,h,3,'#d2bc94',bx,y,z);
+  // Soft sweep 2 (west-stadium triangle budget): a bloom is a smooth-shaded 20-triangle ball (welded icosahedron, vertex normals),
+  // not the 80-triangle detail-1 one: the same round read at park distance, 540 triangles less a planter.
+  const softBloom=()=>{const g=mergeVertices(new T.IcosahedronGeometry(.37,0));g.computeVertexNormals();return g;};
+  // On the hillside the bed is four short planters (8 soft pieces): those take the smooth-shaded chamfer (seg 0, 44 tris), budget.
+  prop('planter',()=>{if(elevationOn()&&Math.abs(groundLift(x-6,z)-groundLift(x+6,z))>.1)for(let k=0;k<4;k++){const bx=x-4.5+k*3;rim(3,.62,bx,.01,0);bed(2.4,2.4,bx,.34,0);}
    else{rim(12,.32,x,.16);bed(11.4,2.4,x,.34);}
-   for(let k=0;k<9;k++){const b=put(soft?new T.IcosahedronGeometry(.36,1):new T.IcosahedronGeometry(.42,0),['#e9a3a0','#f4d35e','#f6f1e7'][k%3],x-5+k*1.25,soft?.6:.62,z+(k%2?.45:-.45));if(soft)b.scale.set(1,.78,1);}});
+   for(let k=0;k<9;k++){const b=put(soft?softBloom():new T.IcosahedronGeometry(.42,0),['#e9a3a0','#f4d35e','#f6f1e7'][k%3],x-5+k*1.25,soft?.6:.62,z+(k%2?.45:-.45));if(soft)b.scale.set(1,.78,1);}});
   obstacles.push({x,z,w:12,d:3});stats.beds++;
  }
  // The benches keep clear of the two trail mouths at x -106 (Nov 13 2026).
