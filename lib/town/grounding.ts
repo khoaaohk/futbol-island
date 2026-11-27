@@ -36,6 +36,8 @@ export const SHADOW_SIDE_KEEP=.5;
 const SOIL_TINT=[1,.9,.72] as const;
 /** The decal rides this far over the drawn layer (above the sand / lawn at -0.105 / -0.112 and the paths at -0.0375, under a foot). */
 export const DECAL_LIFT=.025;
+/** A foot's ring / roots follow the slope at most this far (a terrace wall's drop is not a slope: the ring stops there). */
+export const clampLift=(d:number)=>Math.max(-.25,Math.min(.25,d));
 
 export type GroundQuery={
  /** drawn ground height at (x, z) (the layer a decal or a drift lies on) */
@@ -69,7 +71,7 @@ export function contactDecal(feet:readonly Foot[],g:GroundQuery):DecalData{
  const positions:number[]=[],colors:number[]=[],indices:number[]=[];let triangles=0,made=0,skipped=0;
  for(const f of feet){const spec=CONTACT[f.kind];if(!spec)continue;const L=loop(f),n=L.length,mask=f.sides??15,base0=positions.length/3;
   // one ground query per foot (the layered ground is costly to ask); the slope comes from the cheap lift function
-  const y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>(g.lift&&f.base===undefined?y0+g.lift(x,z)-l0:y0)+(f.base===undefined&&sandDrifts.list.length?driftLift(x,z):0);
+  const y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>(g.lift&&f.base===undefined?y0+clampLift(g.lift(x,z)-l0):y0)+(f.base===undefined&&sandDrifts.list.length?driftLift(x,z):0);
   // three rings: at the foot (k), 30 % out (40 % of the shade left), the rim (none). Soil: the litter tint fades with the shade.
   const ring=(i:number,t:number,keep:number)=>{const q=L[i],x=q.p[0]+q.o[0]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5)),z=q.p[1]+q.o[1]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5));
    const away=-(q.o[0]*g.sun[0]+q.o[1]*g.sun[1]),sunK=away>0?1-(1-SHADOW_SIDE_KEEP)*away:1,d=(1-spec.k)*keep*sunK;
@@ -148,14 +150,14 @@ export function stone(P:Pieces,x:number,z:number,y:number,colour:string){
  const tris:number[][]=[];for(let k=0;k<5;k++)tris.push(pts[k],pts[(k+1)%5],top);P.add(colour,tris,[x,y-.5,z],'stone');
 }
 /** A root flare round a trunk of radius r at (x, z): a 7-sided skirt widening into the ground plus 2-3 roots running out (~26 tris). */
-export function rootFlare(P:Pieces,x:number,z:number,y:number,r:number,colour:string){
+export function rootFlare(P:Pieces,x:number,z:number,y:number,r:number,colour:string,at:(x:number,z:number)=>number=()=>y){
  const n=7,top=.32+.12*spotHash(x,z,14),R=r*1.75,tris:number[][]=[];
- for(let k=0;k<n;k++){const a0=k/n*Math.PI*2,a1=(k+1)/n*Math.PI*2,p=(a:number,q:number,h:number)=>[x+Math.cos(a)*q,y+h,z+Math.sin(a)*q];
+ for(let k=0;k<n;k++){const a0=k/n*Math.PI*2,a1=(k+1)/n*Math.PI*2,p=(a:number,q:number,h:number)=>{const px=x+Math.cos(a)*q,pz=z+Math.sin(a)*q;return [px,(h<0?at(px,pz):y)+h,pz];};
   tris.push(p(a0,r*.98,top),p(a1,r*.98,top),p(a1,R,-.03),p(a0,r*.98,top),p(a1,R,-.03),p(a0,R,-.03));}
  P.add(colour,tris,[x,y+top*.4,z],'flare');
  const roots=2+Math.floor(spotHash(x,z,15)*2);
  for(let i=0;i<roots;i++){const a=spotHash(x,z,16+i)*Math.PI*2,len=.45+.45*spotHash(z,x,17+i),w=r*.42,cx=Math.cos(a),cz=Math.sin(a),px=-cz,pz=cx,h=.14+.06*spotHash(x+i,z,18);
-  const s0=[x+cx*r*.9+px*w,y-.02,z+cz*r*.9+pz*w],s1=[x+cx*r*.9-px*w,y-.02,z+cz*r*.9-pz*w],ridge=[x+cx*r*.95,y+h,z+cz*r*.95],tip=[x+cx*(r+len),y-.03,z+cz*(r+len)];
+  const tx=x+cx*(r+len),tz=z+cz*(r+len),s0=[x+cx*r*.9+px*w,y-.02,z+cz*r*.9+pz*w],s1=[x+cx*r*.9-px*w,y-.02,z+cz*r*.9-pz*w],ridge=[x+cx*r*.95,y+h,z+cz*r*.95],tip=[tx,Math.min(y,at(tx,tz))-.03,tz];
   P.add(colour,[s0,ridge,tip,ridge,s1,tip],[x+cx*(r+len*.3),y-.3,z+cz*(r+len*.3)],'root');}
 }
 /** A thin slab (pad / skirting course): an axis box turned by yaw, outer faces + top only (no bottom; 10 triangles). */
@@ -213,7 +215,7 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
   if(minY>gy+1.2||minY<gy-1)continue;// on a roof or under a deck: not ground
   const base=minY>gy+.25?minY:undefined;// on a deck or a pier: the ring lies on the deck
   if(g.kind==='tree'||g.kind==='palm'||g.kind==='bush'){const r=Math.max(.12,Math.min(hw,hd,.6));push({kind:g.kind,x,z,hw:r,hd:r,round:true,base});
-   if(!I.low&&g.kind==='tree'&&base===undefined&&colour&&r<.45&&!I.keepClear(x,z))rootFlare(P,x,z,gy,r,colour);}
+   if(!I.low&&g.kind==='tree'&&base===undefined&&colour&&r<.45&&!I.keepClear(x,z)){const l0=I.lift?I.lift(x,z):0;rootFlare(P,x,z,gy,r,colour,(px,pz)=>gy+(I.lift?clampLift(I.lift(px,pz)-l0):0));}}
   else if(g.kind==='post'){const long=Math.max(hw,hd)>2.2*Math.min(hw,hd);push(long?{kind:'post',x,z,hw:Math.max(hw,.06),hd:Math.max(hd,.06),fill:true,base}:{kind:'post',x,z,hw:Math.max(.07,Math.min(hw,hd)),hd:Math.max(.07,Math.min(hw,hd)),round:true,base});}
   else push({kind:'prop',x,z,hw,hd,fill:true,base});}
  const tA=performance.now();
