@@ -91,9 +91,10 @@ ok('splash-downs, rides and map travel at the pond',()=>{
 });
 
 ok('props, paths and the beach clear of the bigger pond',()=>{
- const lines=L.parkPathLines(),pondWalk=L.PARK_TRAILS.findIndex(t=>t.id==='pond');
+ // Nov 27 2026: trails that END at the pond (the pond walk, and the new pond-stair walk from the stair foot) meet the rim by design.
+ const lines=L.parkPathLines(),toPond=new Set(L.PARK_TRAILS.map((t,i)=>t.id==='pond'||t.to==='pond'?i:-1).filter(i=>i>=0));
  for(let d=0;d<360;d+=2){const a=d*Math.PI/180,r=L.pondEdge(a,L.POND_RIM);
-  assert(lines.every((l,i)=>i===pondWalk||L.segDistance(r.x,r.z,l)>L.TRAIL_WIDTH/2+1),'trails clear of the rim at '+d);
+  assert(lines.every((l,i)=>toPond.has(i)||L.segDistance(r.x,r.z,l)>L.TRAIL_WIDTH/2+1),'trails clear of the rim at '+d);
   assert(L.onGrass(r.x,r.z)&&!L.PARK_LAWNS.some(l=>Math.hypot((r.x-l.x)/l.rx,(r.z-l.z)/l.rz)<1.1),'the rim on grass, off the lawns');}
  // Nov 13 2026 (owner: "the pathway is overlapping into the pond"): no trail, round ends and half-width included, reaches the water.
  for(let d=0;d<360;d+=.5){const e=L.pondEdge(d*Math.PI/180,0);lines.forEach((l,i)=>assert(L.segDistance(e.x,e.z,l)>=L.TRAIL_WIDTH/2-.005,`path ${i} (${L.PARK_TRAILS[i]?.id??"ring"}) reaches into the water at ${d}° (${L.segDistance(e.x,e.z,l).toFixed(3)} m from its centreline)`));}
