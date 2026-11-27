@@ -262,8 +262,8 @@ export function buildWestPark(t:Tools):WestParkStats{
  for(const o of stadiumOrchardTrees()){if(nearWestWall(o.x,o.z,1.2,1.6))continue;if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
   const plan=orchardPlanOf(o);placed.push([o.x,o.z]);stats.orchard.push(o);
   prop('tree',()=>{assets.push({kind:'tree',x:o.x,z:o.z,w:.4,d:.4,visualW:3.4*o.s,visualD:3.4*o.s,canopyHeight:4.2*o.s});
-   for(const part of orchardParts(plan)){const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
-  obstacles.push(trunkCollider(o.x,o.z,orchardRig(plan).baseR));}
+   for(const part of orchardParts(plan,0)){/* detail 0: the west triangle budget */const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
+  obstacles.push(trunkCollider(o.x,o.z,orchardRig(plan,0).baseR));}
  // Nov 13 2026 (owner: more fruit trees): every orchard tree past the first 14 takes the place of a plain park tree (every 8th
  // broadleaf spot is left to the orchards until they are paid for), so the park's tree triangles stay about flat.
  let convert=Math.max(0,stats.orchard.length-ORCHARD_LEGACY.length),plainSeen=0;

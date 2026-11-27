@@ -193,7 +193,7 @@ export function hangPoint(t:FruitTree,k:number,day=''):T.Vector3{
  if(c.hang==='under'){const a=cam+(k-1)*1.1+j*1.2;return new T.Vector3(c.x+Math.cos(a)*(c.rx+.3*(t.kind==='palm'?0:.4)),c.y-(k%2)*c.ry,c.z+Math.sin(a)*(c.rx+.3*(t.kind==='palm'?0:.4)));}
  const a=cam+(k-1)*.95+j*1.4,el=[-.18,.22,-.45][(k+Math.floor((j+.5)*3))%3];
  const d=new T.Vector3(Math.cos(el)*Math.cos(a),Math.sin(el),Math.cos(el)*Math.sin(a));
- if(t.rig.lobes){const proud=.3*FRUIT_LOOK[t.fruit].r;for(let n=0;n<6;n++){const p=canopyHang(t.rig.lobes,c,d,proud);if(p)return p;d.applyAxisAngle(Y_AXIS,.5);}}
+ if(t.rig.lobes){const proud=.3*FRUIT_LOOK[t.fruit].r;for(let n=0;n<6;n++){const p=canopyHang(t.rig.lobes,c,d,proud,t.rig.lobeDetail??0);if(p)return p;d.applyAxisAngle(Y_AXIS,.5);}}
  return new T.Vector3(c.x+d.x*c.rx*.8,c.y+d.y*c.ry*.8,c.z+d.z*c.rx*.8);
 }
 const Y_AXIS=new T.Vector3(0,1,0);

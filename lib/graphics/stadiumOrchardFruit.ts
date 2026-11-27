@@ -27,7 +27,7 @@ export function createStadiumOrchard(scene:T.Scene,ports:Ports){
  const now=ports.now??(()=>Date.now()),trees=ports.trees,PER=ORCHARD_RULES.perTree,N=Math.max(1,trees.length*PER);
  const note=(text:string,tip=false)=>{const v=forageStore.get();forageStore.set({note:text,notes:v.notes+1,tip});};
  // Each tree as Summit Isle's runtime sees one (for hangPoint): the rig from the same plan the chunks baked.
- const sites:FruitTree[]=trees.map((o,i)=>{const lift=groundLift(o.x,o.z)/* raised ground (?elev=1) */,rig=orchardRig({...orchardPlanOf(o),y:lift});return {kind:'tree',x:o.x,z:o.z,y:lift,size:o.s,seed:o.seed,top:{x:rig.crown.x,y:rig.crown.y,z:rig.crown.z},tid:-1-i,rig,form:o.form,fruit:o.fruit,id:o.id,stand:{x:o.x,z:o.z},sides:[]};});
+ const sites:FruitTree[]=trees.map((o,i)=>{const lift=groundLift(o.x,o.z)/* raised ground (?elev=1) */,rig=orchardRig({...orchardPlanOf(o),y:lift},0);return {kind:'tree',x:o.x,z:o.z,y:lift,size:o.s,seed:o.seed,top:{x:rig.crown.x,y:rig.crown.y,z:rig.crown.z},tid:-1-i,rig,form:o.form,fruit:o.fruit,id:o.id,stand:{x:o.x,z:o.z},sides:[]};});
  const hang=sites.flatMap(s=>Array.from({length:PER},(_,k)=>hangPoint(s,k,'')));
  const geo=new T.SphereGeometry(1,7,6),form=new Float32Array(N*4),pat=new Float32Array(N);
  trees.forEach((o,i)=>{const L=FRUIT_LOOK[o.fruit];for(let k=0;k<PER;k++){form.set([L.elong,L.width,L.bend,L.taper],(i*PER+k)*4);pat[i*PER+k]=L.pattern;}});

@@ -27,15 +27,16 @@ function load(file){
 const T=require('three');
 const W=load('lib/town/summitIsleWorld.ts'),F=load('lib/town/summitForage.ts'),O=load('lib/town/summitOrchard.ts'),RT=load('lib/graphics/fruitTrees.ts');
 
-// ---- The unit icosahedron (three's IcosahedronGeometry(1,0)): face normals and the inscribed radius.
-const ICO=(()=>{const g=new T.IcosahedronGeometry(1,0),p=g.getAttribute('position'),n=[];let rin=1;
+// ---- The unit icosahedron (three's IcosahedronGeometry(1,detail)): face planes (soft sweep 2, Nov 27 2026: a soft crown's main
+// clump is detail 1, whose faces sit at different depths, so each face keeps its own offset; a lobe matrix carries .detail).
+const ICOS=new Map();const ICO=d=>{if(ICOS.has(d))return ICOS.get(d);const g=new T.IcosahedronGeometry(1,d),p=g.getAttribute('position'),n=[],off=[];
  for(let f=0;f<p.count;f+=3){const a=new T.Vector3().fromBufferAttribute(p,f),b=new T.Vector3().fromBufferAttribute(p,f+1),c=new T.Vector3().fromBufferAttribute(p,f+2);
-  const m=b.clone().sub(a).cross(c.clone().sub(a)).normalize();if(m.dot(a)<0)m.negate();n.push(m);rin=Math.min(rin,m.dot(a));}
- return {n,rin};})();
-const reach=u=>{let b=0;for(const m of ICO.n)b=Math.max(b,m.dot(u));return ICO.rin/b;};
+  const m=b.clone().sub(a).cross(c.clone().sub(a)).normalize();if(m.dot(a)<0)m.negate();n.push(m);off.push(m.dot(a));}
+ const e={n,off};ICOS.set(d,e);return e;};
+const reach=(u,d=0)=>{const {n,off}=ICO(d);let t=Infinity;for(let i=0;i<n.length;i++){const k=n[i].dot(u);if(k>1e-6)t=Math.min(t,off[i]/k);}return t;};
 /** Signed distance (m, + outside) from world point q to a lobe (world matrix of a unit icosahedron), measured along its radial ray. */
 function lobeGap(L,q){const inv=L.clone().invert(),l=q.clone().applyMatrix4(inv),len=l.length();if(len<1e-9)return -1;const u=l.clone().divideScalar(len);
- const lin=new T.Matrix3().setFromMatrix4(L),s=u.clone().applyMatrix3(lin).length();return (len-reach(u))*s;}
+ const lin=new T.Matrix3().setFromMatrix4(L),s=u.clone().applyMatrix3(lin).length();return (len-reach(u,L.detail??0))*s;}
 const canopyGap=(lobes,q)=>Math.min(...lobes.map(L=>lobeGap(L,q)));
 /** Distance from q to segment a→b and the fraction along it. */
 function segDist(q,a,b){const ab=b.clone().sub(a),f=Math.max(0,Math.min(1,q.clone().sub(a).dot(ab)/ab.lengthSq()));return {d:q.distanceTo(a.clone().addScaledVector(ab,f)),f};}
@@ -58,7 +59,7 @@ const bump=(k,ok,v,msg)=>{count[k]=(count[k]||0)+1;if(!ok){fails[k]=(fails[k]||0
 function orchardTruth(p){const parts=O.orchardParts(p),lobes=[];let trunk=null,stalk=null;
  parts.forEach((part,i)=>{const g=part.geo(),P=g.parameters;
   if(i===0){const h=P.height;trunk={a:new T.Vector3(0,-h/2,0).applyMatrix4(part.matrix),b:new T.Vector3(0,h/2,0).applyMatrix4(part.matrix),r0:P.radiusBottom,r1:P.radiusTop};}
-  else if(g.type==='IcosahedronGeometry'&&P.detail===0&&part.color!=='#7a3d5a'&&part.color!=='#5f8a48')lobes.push(part.matrix.clone().multiply(new T.Matrix4().makeScale(P.radius,P.radius,P.radius)));
+  else if(g.type==='IcosahedronGeometry'&&P.detail<=1&&part.color!=='#7a3d5a'&&part.color!=='#5f8a48'){const L=part.matrix.clone().multiply(new T.Matrix4().makeScale(P.radius,P.radius,P.radius));L.detail=P.detail;lobes.push(L);}
   else if(g.type==='CylinderGeometry'&&Math.abs(P.height-.7)<1e-6)stalk={a:new T.Vector3(0,-.35,0).applyMatrix4(part.matrix),b:new T.Vector3(0,.35,0).applyMatrix4(part.matrix)};
   g.dispose();});
  return {lobes,trunk,stalk};}
@@ -87,7 +88,7 @@ for(const p of plans){const rig=O.orchardRig(p);for(const fruit of O.FORM_FRUIT[
 
 // ---- Coral Cay's farm orchard (decorative fruit, coralCayWorld.ts): every little fruit touches its canopy.
 {const C=load('lib/town/coralCayWorld.ts');if(typeof C.coralOrchardFruit==='function')for(const tr of C.coralOrchardFruit()){
-  const L=new T.Matrix4().compose(new T.Vector3(tr.x,tr.cy,tr.z),new T.Quaternion(),new T.Vector3(tr.r,tr.r*.85,tr.r));
+  const L=new T.Matrix4().compose(new T.Vector3(tr.x,tr.cy,tr.z),new T.Quaternion(),new T.Vector3(tr.r,tr.r*.85,tr.r));L.detail=tr.detail??0;
   for(const f of tr.fruit){const g=lobeGap(L,new T.Vector3(f.x,f.y,f.z));bump('coral cay canopy',g>=-.15*.13&&g<=.6*.13,g/.13,`coral ${tr.kind} ${g.toFixed(3)}`);}}
  else{fails['coral cay canopy (no coralOrchardFruit export)']=1;count['coral cay canopy (no coralOrchardFruit export)']=1;}}
 

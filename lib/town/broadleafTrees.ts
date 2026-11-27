@@ -23,7 +23,7 @@ export function setBroadleafTrees(on:boolean){enabled=on;}
 export const broadleafTreesOn=()=>enabled;
 /** The soft sweep's `?soft=0` switch (lib/graphics/softBox.ts softOn), read here without an import: tests load this file on its own. */
 let softCached:boolean|null=null;
-const softOn=()=>softCached??=(()=>{try{return typeof window==='undefined'||new URLSearchParams(window.location.search).get('soft')!=='0';}catch{return true;}})();
+export const softOn=()=>softCached??=(()=>{try{return typeof window==='undefined'||new URLSearchParams(window.location.search).get('soft')!=='0';}catch{return true;}})();
 
 /** Town street trees were all #5b8c5c: now one of the park's leaf greens each (all fold into the same paint batch). */
 export const TREE_GREENS=['#5b8c5c','#4f7a57','#5e8c62','#6f9d6c'];
