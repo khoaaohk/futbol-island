@@ -72,5 +72,10 @@ const ROOT=path.join(__dirname,'..');
  assert(/tunnelWalk\.chase\(visualLocation\.x,groundY/.test(town)&&/tunnelWalk\.clampCam\(camera\.position\)/.test(town),'the chase camera, held in the bore before the render');
  assert(/if\(tunnelWalk\.state\.active\)tunnelTrain\(\);else if\(tr\.knock/.test(town)&&/tunnelWalk\.hit\(st,f\.s,f\.d,TRAIN_LENGTH\)>=0&&tunnelWalk\.bumpStart\(location,reduced\)/.test(town),'the bump in the tunnel (not the throw)');
  assert(/Train coming: step aside!/.test(town),'the hint');
+ // Follow-ups (Nov 27 2026): the ride button shows flying is off in the bore and the cycle skips the jetpack there; bubbles stay in the
+ // low chase view; reduced motion gets a short dim instead of the squash.
+ assert(/toggleAttribute\('data-no-fly',inTunnelRef\.current\)/.test(town)&&/className="travel-nofly"/.test(town),'the ride button greys the jetpack in the tunnel');
+ assert(/\.filter\(m=>!inTunnelRef\.current\|\|tunnelMode\(m\)\)/.test(town),'the ride cycle skips the jetpack in the tunnel (moped -> walk)');
+ const css=fs.readFileSync(path.join(ROOT,'app/globals.css'),'utf8');assert(/\.travel-mode\[data-no-fly\] \.travel-nofly\{display:grid/.test(css),'no-fly badge style');
  console.log('tunnel-walk: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
