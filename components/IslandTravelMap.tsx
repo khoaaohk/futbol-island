@@ -115,7 +115,10 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  // Owner Nov 25 2026 ("unable to transport" from the train, phone): an edge chip can sit over a place's pin that is on screen (the map
  // can pan no further, e.g. the Arcade under "‹ West Beach"); a tap there travels to that place, as tapping the pin would.
  const pinUnder=(x:number,y:number)=>{for(const el of document.elementsFromPoint(x,y)){const d=el.closest('.map-destination');if(d&&!d.closest('button'))return d;}return null;};
- const chips=!scale||size.fit?[]:(()=>{const out:{id:string;name:string;side:'left'|'right'|'top'|'bottom';at:number;px:number;py:number}[]=[],M=14;
+ // Nov 27 2026 (owner: "remove the north west beach, summit isle, and coral indicator with the arrows. keep the map simpler"): the
+ // off-screen station chips are off; the pan arrows already move the map. (The builder is kept, unused, behind SHOW_STATION_CHIPS.)
+ const SHOW_STATION_CHIPS=false;
+ const chips=!SHOW_STATION_CHIPS||!scale||size.fit?[]:(()=>{const out:{id:string;name:string;side:'left'|'right'|'top'|'bottom';at:number;px:number;py:number}[]=[],M=14;
   for(const p of TRAIN_PINS){const px=(p.x-MAP_X)*scale+offX,py=(p.z-MAP_Z)*scale+offY,sx=px-pan.x,sy=py-pan.y;
    if(sx>M&&sx<size.w-M&&sy>M&&sy<size.h-M)continue;
    const side=sx<=M?'left':sx>=size.w-M?'right':sy<=M?'top':'bottom';out.push({id:p.st.id,name:p.st.name,side,at:side==='left'||side==='right'?sy:sx,px,py});}
