@@ -138,6 +138,13 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
  const emit=(g:Geo,color:string,ox:number,oz:number,y=0)=>{if(g.empty)return null;return skip(put(g.build(ox,oz),color,ox,y,oz));};
  const stationAt=(s:number)=>TRAIN_STATIONS.find(st=>Math.abs(wrapS(s-st.s+TRACK.length/2)-TRACK.length/2)<STATION_HALF+1);
  const crossingAt=(s:number,pad=0)=>TRAIN_CROSSINGS.find(c=>Math.abs(wrapS(s-c.s+TRACK.length/2)-TRACK.length/2)<c.width/2+pad);
+ /** A track row (from point a, TRACK_DS long) cut at a crossing deck's two ends: [from, to, the deck's ends or null] parts. */
+ const xingParts=(a:ReturnType<typeof pt>,b:ReturnType<typeof pt>)=>{type P=ReturnType<typeof pt>;type X={s0:number;s1:number}|null;const aE=a.s+TRACK_DS;
+  const at=(s:number):P=>{const f=(s-a.s)/TRACK_DS;return {...a,x:a.x+(b.x-a.x)*f,z:a.z+(b.z-a.z)*f,bed:a.bed+(b.bed-a.bed)*f,s};};
+  for(const c of TRAIN_CROSSINGS){const m=a.s+wrapS(c.s-a.s+TRACK.length/2)-TRACK.length/2,s0=m-c.width/2,s1=m+c.width/2;if(s1<=a.s+1e-4||s0>=aE-1e-4)continue;
+   const p0=s0>a.s+1e-4?at(s0):a,p1=s1<aE-1e-4?at(s1):b,out:[P,P,X][]=[];
+   if(p0!==a)out.push([a,p0,null]);out.push([p0,p1,{s0,s1:p1===b?s1+b.s-aE:s1}/* b.s wraps to 0 on the loop's last row */]);if(p1!==b)out.push([p1,b,null]);return out;}
+  return [[a,b,null]] as [P,P,X][];};
  const isTunnel=(i:number)=>K[i]===TrackKind.Tunnel;
  const pt=(i:number)=>({x:TRACK.x[i%n],z:TRACK.z[i%n],tx:TRACK.tx[i%n],tz:TRACK.tz[i%n],bed:BED[i%n],kind:K[i%n],s:(i%n)*TRACK_DS});
  const off=(p:{x:number;z:number;tx:number;tz:number},v:number,y:number)=>[p.x+p.tz*v,y,p.z-p.tx*v];
@@ -214,7 +221,11 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     railTops.quad(A0,B0,B1,A1,[A0[0],A0[1]-1,A0[2]]);
     const a0=off(a,v-w,a.bed+SLEEPER_TOP),a1=off(a,v+w,a.bed+SLEEPER_TOP),b0=off(b,v-w,b.bed+SLEEPER_TOP),b1=off(b,v+w,b.bed+SLEEPER_TOP),mid=off(a,v,a.bed+.27);
     rails.quad(a0,b0,B0,A0,mid);rails.quad(a1,b1,B1,A1,mid);}
-   const xing=crossingAt(a.s);
+   // Rail fixes (Nov 26 2026, owner 151: "this brown part on the track needs to be shifted ... to match with the path"): a crossing deck
+   // covers exactly [c.s - width/2, c.s + width/2] (c.s is the path's centreline: trainTrack.ts). It used to cover the whole 2 m rows
+   // whose START lay in that range: every deck sat ~1 m forward of its path and a 3 m beach path got a 2 m deck. A row the deck edge
+   // falls in is split: ballast and sleepers on its open part, the deck on the rest.
+   {const ra=a,rb=b;for(const [a,b,xing] of xingParts(ra,rb)){
    if(xing){// The crossing deck (Nov 23 2026, owner: flush): a dark top just under the rail heads between and beside the rails, then
     // sloping down to the ground on both sides (to XING_FOOT, just past the ballast), so it reads as part of the road, not a slab.
     const yt=RAIL_TOP-.03,inside=off(a,0,a.bed-1),gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0;
@@ -222,13 +233,13 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*XING_FOOT,gy(b)+.01),off(a,side*XING_FOOT,gy(a)+.01),inside);
     // Nov 24 2026 (owner 13.png, "skewed slab" at West Beach): the deck's two ends are closed down to the ground (it was a thin
     // sheet with open ends over the cut ballast, reading as a plank lying askew); the end faces also cap the ballast's section.
-    for(const [p,q,first] of [[a,b,!crossingAt(pt(i-1).s)],[b,a,!crossingAt(b.s)]] as const){if(!first)continue;
+    for(const [p,q,first] of [[a,b,Math.abs(a.s-xing.s0)<1e-4],[b,a,Math.abs(b.s-xing.s1)<1e-4]] as const){if(!first)continue;
      const g=gy(p)-.06,inn=[p.x+(q.x-p.x)*.5,p.bed,p.z+(q.z-p.z)*.5];
      xdeck.quad(off(p,-1,p.bed+yt),off(p,1,p.bed+yt),off(p,1,g),off(p,-1,g),inn);
      for(const side of [-1,1])xdeck.quad(off(p,side,p.bed+yt),off(p,side*XING_FOOT,gy(p)+.01),off(p,side*XING_FOOT,g),off(p,side,g),inn);}}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
    if(lite&&!xing){if(a.kind===TrackKind.Sea||b.kind===TrackKind.Sea)sleepers.quad(off(a,-1.15,a.bed+SLEEPER_TOP),off(b,-1.15,b.bed+SLEEPER_TOP),off(b,1.15,b.bed+SLEEPER_TOP),off(a,1.15,a.bed+SLEEPER_TOP),off(a,0,a.bed-1));}
-   else for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
+   else for(const f of [.25,.75]){const sf=ra.s+TRACK_DS*f;if(sf<a.s||sf>=(b===rb?ra.s+TRACK_DS:b.s))continue;/* this part of the row only */const x=ra.x+(rb.x-ra.x)*f,z=ra.z+(rb.z-ra.z)*f,y=ra.bed+(rb.bed-ra.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
    if(a.kind!==TrackKind.Sea&&b.kind!==TrackKind.Sea&&!xing){// Ballast: one continuous trapezoid strip on every land row (Nov 23 2026: was broken into
     // slabs round the crossings); it stops only under a crossing deck. On the bridge-head embankment (bed above the ground, trackProfile
     // RAMP_LAND) its sides run on down to the ground, widening as they go.
@@ -236,6 +247,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     const bt=lite?SLEEPER_TOP:BALLAST_TOP,t0=off(a,-1.45,a.bed+bt),t1=off(a,1.45,a.bed+bt),u0=off(b,-1.45,b.bed+bt),u1=off(b,1.45,b.bed+bt),
      f0=off(a,-fa,gy(a)-.06),f1=off(a,fa,gy(a)-.06),g0=off(b,-fb,gy(b)-.06),g1=off(b,fb,gy(b)-.06),inside=off(a,0,a.bed-1);
     (lite?bedTop:ballast).quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
+   }}
    if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea)bridgeHead(a,b);
    if(a.kind===TrackKind.Wall){// The sea wall: a stone top and two faces down into the water (Enoden-style).
     const h=SEA_WALL_HALF,top=-.02,foot=-2.6,inside=off(a,0,-1);
