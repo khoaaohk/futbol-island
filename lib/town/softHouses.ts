@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {awningColour,type BuildingScheme} from './buildingStyles';
 import {softPrism,softBlock,barrelStrip,archSlab,corners,type BuildingShape,type Corner,type Corners,type Ring} from './buildingShapes';
+import {SoftBoxGeometry,puffLevel} from '../graphics/softBox';
 
 /** Roof deck paint (Nov 10 2026): the scheme's roof colour ~8% darker and slightly cooler ('#eddfbb' -> about '#d8ccb0'; linear-space factors). */
 export function roofDeckColour(roof:string){const c=new T.Color(roof);return '#'+new T.Color(c.r*.82,c.g*.83,c.b*.875).getHexString();}
@@ -34,6 +35,12 @@ export type SoftHouse={x:number;z:number;w:number;d:number;h:number;label:string
   /** Collision corner radius from world.ts (0 = square collision): the visual corners never get tighter than this. */ dataRadius:number;
   /** Wall colour (the scheme's wall). */ wall:string;};
 
+/** Inflate pass 2 (owner: "less blocky", part 1 item 3): the square roof slab's edge rolls round (a puffed soft box whose radii are
+ *  capped at the slab's own thickness: flat top for roof walkers, same box parameters for the roof-landing / obstacle readers). */
+export function roofSlab(put:SoftKit['put'],box:SoftKit['box'],w:number,h:number,d:number,c:string,x:number,y:number,z:number){
+  const p=puffLevel();if(p<=0)return box(w,h,d,c,x,y,z);
+  return put(new SoftBoxGeometry(w,h,d,{puff:p,seg:1,maxR:[h*.55,h*.48,h*.55],dome:-1}),c,x,y,z);
+}
 const GLASS='#365b56',SIDE_GLASS='#3d625c',SHOP_GLASS='#274c48',PLINTH='#d2bc94',BALCONY='#e9cfa5',RAIL='#526b5e',BALUSTER='#647169';
 const C=(r:number,seg?:number):Corner=>({r,seg:seg??(r>=1.4?3:2)});
 
@@ -58,12 +65,12 @@ export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
   // ---- Body. Crisp: the old box wall, plinth and square cornice slab. Others: soft plinth, wall and a pillowy cornice whose
   // top is the roof seen from the play camera (same top height, h+0.195).
   if(crisp&&!crispR){
-    deco(box(w+.15,.35,d+.16,PLINTH,x,.18,z));deco(box(w,h,d,o.wall,x,h/2,z));deco(box(w+.45,.23,d+.5,scheme.roof,x,h+.08,z));
+    deco(box(w+.15,.35,d+.16,PLINTH,x,.18,z));deco(box(w,h,d,o.wall,x,h/2,z));deco(roofSlab(put,box,w+.45,.23,d+.5,scheme.roof,x,h+.08,z));
     deco(box(w-.9,.02,d-.9,roofDeckColour(scheme.roof),x,h+.205,z));// Nov 10 2026 roof deck (batched, no draw)
   }else{
     deco(put(softPrism(w,d,[{o:.08,y:.005},{o:.08,y:.24},{o:0,y:.4}],cs),PLINTH,x,0,z));
     deco(put(softPrism(w,d,[{o:0,y:0},{o:0,y:h}],cs),o.wall,x,0,z));
-    const cornice:Ring[]=crisp?[{o:0,y:h-.035},{o:.24,y:h-.035},{o:.24,y:h+.195}]:[{o:0,y:h-.12},{o:.24,y:h-.01},{o:.26,y:h+.1},{o:.18,y:h+.195}];
+    const cornice:Ring[]=crisp?(puffLevel()>0?[{o:0,y:h-.035},{o:.17,y:h-.03},{o:.245,y:h+.04},{o:.24,y:h+.13},{o:.17,y:h+.195}]/* inflate pass 2: a rolled eave */:[{o:0,y:h-.035},{o:.24,y:h-.035},{o:.24,y:h+.195}]):[{o:0,y:h-.12},{o:.24,y:h-.01},{o:.26,y:h+.1},{o:.18,y:h+.195}];
     deco(put(softPrism(w,d,cornice,cs,{top:true}),scheme.roof,x,0,z));
     // Nov 10 2026: an inset roof deck 0.45 m in from the wall, a shade darker and cooler, so the roof reads as a surface with an edge.
     deco(put(softPrism(w-.9,d-.9,[{o:0,y:h+.195},{o:0,y:h+.215}],cs.map(c=>({...c,r:Math.max(0,c.r-.45)})) as Corners,{top:true}),roofDeckColour(scheme.roof),x,0,z));

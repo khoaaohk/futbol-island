@@ -16,6 +16,7 @@ import {STADIUM_BASE as BASE,STADIUM_BASE,nearWestWall} from './westElevation';
 import {groundLift} from './elevation';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {SoftBoxGeometry,puffLevel,roundCyl} from '../graphics/softBox';
 import type {Obstacle} from './simulation';
 import {STADIUM_GATE,STADIUM_PLAZA,BOWL_APRON,PARK_TRAILS,PARK_SIGNS,TRAIL_WIDTH,trailPoints,onParkPaving,inPond,POND_RIM,onGrass,inStadiumFootprint,type P} from './westParkLayout';
 import {onIsland} from './shoreline';
@@ -123,8 +124,10 @@ export type StadiumLampSite={x:number;z:number;ground:number;poolWidth:number;po
 export function buildStadiumLights(t:StadiumLightsTools){
  const parts:Part[]=[],glow:{pos:number[];uv:number[];tint:number[];shape:number[];idx:number[]}={pos:[],uv:[],tint:[],shape:[],idx:[]};
  let verts=0;const push=(g:Part)=>{parts.push(g);verts+=g.getAttribute('position').count;};
- const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.BoxGeometry(w,h,d);g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
- const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.CylinderGeometry(r,r,h,8);g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
+ // Inflate pass 2 (owner shot 180): rounded heads, caps, bollards and uplights (same sizes, spots, glow and one merged mesh). ?soft=0 = boxes.
+ const P=puffLevel();
+ const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=P>0&&h>.05?new SoftBoxGeometry(w,h,d,{puff:P,seg:0,openBottom:true}):new T.BoxGeometry(w,h,d);/* thin lenses stay flat */g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
+ const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=P>0&&h<.1?roundCyl(r,r,h,8,undefined,true):new T.CylinderGeometry(r,r,h,8);/* the bollard's cap rolls round */g.translate(x,y+groundLift(x,z),z);push(tag(g,colour,lit));};
  const W=STADIUM_NIGHT_LIGHTS.warm;
  /** A glow quad: corners (bl, br, tr, tl) with v=1 along the top edge (tl-tr) — the bright end of a gradient. */
  const quad=(c:readonly T.Vector3[],strength:number,soft:number,mode:0|1,roof:0|1|2)=>{const o=glow.pos.length/3;

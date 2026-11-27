@@ -53,7 +53,7 @@ export function buildMuseumExterior(k:MuseumExteriorKit){
 
  // ---- Deep-set glass entrance at the door anchor: a dark portal frame standing 0.6 m proud, glass set back inside it.
  const door=MUSEUM_DOOR.x,pw=5.2,ph=4,pd=.6;
- k.box(pw,.4,pd,C.frame,door,ph-.2,front+pd/2);
+ k.box(pw-.8,.4,pd,C.frame,door,ph-.2,front+pd/2);// inflate pass 2 trim sweep: between the jambs (it ran through them, coplanar fronts)
  for(const side of [-1,1]){k.box(.4,ph,pd,C.frame,door+side*(pw/2-.2),ph/2,front+pd/2);k.obstacles.push({x:door+side*(pw/2-.2),z:front+pd/2,w:.4,d:pd});}
  // POLISH 3 (owner shot 57, the entrance flicker): the glass's front face sat at front + .1, exactly on the plinth's front face (the
  // shared shell's plinth is .1 m proud of the wall): the two z-fought across the door's bottom .35 m ("///" stripes). The glass now

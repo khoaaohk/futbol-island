@@ -58,7 +58,7 @@ for(const t of pier.PIER_TARGET_SPOTS)assert(!flightBlocked(t.x,t.z-10),'flyable
  assert(cay.SHARK_LOOPS.every(l=>l.points.every(p=>near(p.x,p.z)>100)),'sharks patrol nowhere near the pier');}
 
 // ---- Seawall gap: no wall collision across the pier mouth; walls continue either side; gate piers close the ends.
-{const T=require('three'),obstacles=[];const fake=()=>({rotation:{y:0}});load('lib/town/eastCoast.ts').buildEastCoast({box:fake,put:fake,obstacles});
+{const T=require('three'),obstacles=[];const fake=()=>({rotation:{y:0},scale:{set(){}},userData:{}});load('lib/town/eastCoast.ts').buildEastCoast({box:fake,put:fake,obstacles});
  const wall=obstacles.filter(o=>o.w===.75&&o.d===.75&&o.x>230);
  assert(!wall.some(o=>Math.abs(o.z-P.z)<P.railHalf+.3),'the seawall opens for the pier');
  assert(wall.some(o=>o.z>P.z+4&&o.z<P.z+8)&&wall.some(o=>o.z<P.z-4&&o.z>P.z-8),'the seawall continues either side');

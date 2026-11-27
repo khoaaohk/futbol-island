@@ -38,5 +38,26 @@ const E=load('lib/town/eastCoast.ts'),C=load('lib/town/coralCay.ts'),EP=load('li
 for(const [z0,gap,off] of [[C.CAUSEWAY.z,C.CAUSEWAY.deckHalf+.6,C.CAUSEWAY.deckHalf+.55],[EP.EAST_PIER.z,EP.EAST_PIER.railHalf+.6,EP.EAST_PIER.railHalf+.55]])for(const s of [-1,1]){
  const pz=z0+s*off,px=E.seawallX(pz),end=z0+s*gap,wx=E.seawallX(end);assert.ok(px!==null&&wx!==null,'pier on the seawall run '+pz);
  assert.ok(Math.abs(wx-px)<.17&&Math.abs(end-pz)<.5,`wall end (${wx.toFixed(2)}, ${end.toFixed(2)}) inside the pier at (${px.toFixed(2)}, ${pz.toFixed(2)})`);}
+// Inflate pass 2: ONE swept pillowy run round a corner (no joints), smooth finite normals, crown + coping tint keys, pieces <= 12 m.
+{const run=[{x:0,z:0,top:1,foot:-.3},{x:6,z:0,top:1,foot:-.3},{x:6,z:20,top:1,foot:-.3}],ps=S.puffRun(run,{half:.3,belly:.03,capTint:[1.5,1.5,1.5]});
+ assert.ok(ps.length===2,'cut into <= 12 m pieces: '+ps.length);let tris=0;
+ for(const p of ps){const g=p.geo,N=g.getAttribute('normal');tris+=g.index.count/3;for(let i=0;i<N.count;i++)assert.ok(Number.isFinite(N.getX(i))&&Math.abs(Math.hypot(N.getX(i),N.getY(i),N.getZ(i))-1)<1e-3,'unit normals');
+  assert.equal(p.tint.length,g.getAttribute('position').count*3,'tint per vertex');assert.equal(g.userData.puff.crown.length,g.getAttribute('position').count,'crown per vertex');}
+ const A=ps[0].geo.getAttribute('position'),B=ps[1].geo.getAttribute('position');let shared=0;// the cut ring is in both pieces at the same world spot
+ for(let i=0;i<A.count;i++)for(let j=0;j<B.count;j++)if(Math.abs(A.getX(i)+ps[0].cx-B.getX(j)-ps[1].cx)<1e-4&&Math.abs(A.getY(i)-B.getY(j))<1e-4&&Math.abs(A.getZ(i)+ps[0].cz-B.getZ(j)-ps[1].cz)<1e-4)shared++;
+ assert.ok(shared>=11,'pieces share their cut ring (no gap): '+shared);console.log('puff run tris',tris);assert.ok(tris<=3*24+2*40,'puff run budget');}
+// Inflate pass 2: every swept wall's end lies inside a pier's footprint (plaza garden walls, stair cheek walls), and the seawall is
+// one continuous run per stretch (no per-segment boxes left).
+{const W=load('lib/town/westTerrain.ts'),puts=[],obstacles=[];
+ W.buildWestWalls({put:(g,c,x,y,z)=>{const m=new T.Mesh(g);m.position.set(x,y,z);puts.push({g,x,y,z});return m;},obstacles});
+ const runs=puts.filter(p=>p.g.userData.puff&&!(p.g instanceof T.BoxGeometry)),piers=puts.filter(p=>p.g instanceof T.BoxGeometry&&p.g.parameters.height>.5&&Math.abs(p.g.parameters.width-p.g.parameters.depth)<1e-6);
+ assert.ok(runs.length>20&&piers.length>10,'swept runs + piers built: '+runs.length+' / '+piers.length);
+ let ends=0;for(const r of runs){r.g.computeBoundingBox();const b=r.g.boundingBox,dx=b.max.x-b.min.x,dz=b.max.z-b.min.z;if(dz>1.2||dx<2||b.min.x+r.x<-126||b.max.x+r.x>-72)continue;// the plaza's straight x runs
+  for(const x of [b.min.x+r.x,b.max.x+r.x]){const z=(b.min.z+b.max.z)/2+r.z,hit=piers.some(p=>Math.abs(p.x-x)<p.g.parameters.width/2&&Math.abs(p.z-z)<p.g.parameters.depth/2);
+   assert.ok(hit,`plaza wall end (${x.toFixed(2)}, ${z.toFixed(2)}) inside a pier`);ends++;}}
+ assert.ok(ends>=24,'plaza wall ends checked: '+ends);
+ const E2=load('lib/town/eastCoast.ts'),eput=[];E2.buildEastCoast({box:(w,h,d)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d));eput.push(m.geometry);return m;},put:(g)=>{eput.push(g);return new T.Mesh(g);},obstacles:[]});
+ const swept=eput.filter(g=>g.userData.puff&&!(g instanceof T.BoxGeometry)),long=eput.filter(g=>g instanceof T.BoxGeometry&&g.parameters.depth>3&&g.parameters.height>.9);
+ assert.ok(swept.length>=3&&long.length===0,'seawall = swept runs, no box segments: '+swept.length+' / '+long.length);}
 console.log('inflate pass: ok');
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -61,7 +61,7 @@ export type SoftOpts = {
   radius?: number;
   /** 0 chamfer, 1, 2 (default 1). */
   seg?: number;
-  /** Top dome height (m), default 0. */
+  /** Top dome height (m), default 0 (the puff adds its own); negative = a flat top even when puffed. */
   dome?: number;
   /** Inflate pass strength (0..2): per-axis radii (puffRadii), a domed top and the puff shading key. 0 / absent = the sweep's box. */
   puff?: number;
@@ -89,7 +89,7 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
   const pf = o.puff ?? 0;
   // per-axis radii: the sweep rounds every axis by r; the inflate pass by puffRadii (never less than the sweep's r)
   const R = pf > 0 ? puffRadii(w, h, d, pf).map((v, k) => Math.max(0.0005, Math.min(H[k] * .98, o.maxR?.[k] ?? Infinity, Math.max(v, Math.min(r, H[k] * .98))))) : [r, r, r].map(v => Math.max(v, 0.0005));
-  const dome = Math.max(0, o.dome ?? 0, pf > 0 ? Math.min(.35 * h, .09 * Math.min(w, d)) * Math.min(1.4, pf) : 0);
+  const dome = (o.dome ?? 0) < 0 ? 0 : Math.max(0, o.dome ?? 0, pf > 0 ? Math.min(.35 * h, .09 * Math.min(w, d)) * Math.min(1.4, pf) : 0);// dome < 0: a flat top (a roof slab)
   const I = H.map((v, k) => v - R[k]);
   const pos: number[] = [], nrm: number[] = [], uv: number[] = [], idx: number[] = [];
   const groups: [number, number][] = [];
@@ -307,4 +307,103 @@ export function puffBall(r: number, detail = 0) {
   const crown = new Float32Array(pos.length / 3); for (let i = 0; i < crown.length; i++) crown[i] = Math.max(0, (pos[i * 3 + 1] / r - .55) / .45);
   g.userData.puff = { s: puffLevel() || PUFF_DEFAULT, crown };
   return g;
+}
+
+/** A point on a puffed wall run: plan position, the top of the wall (under the coping's crown) and its foot (bottom of the face). */
+export type RunPt = { x: number; z: number; top: number; foot: number };
+export type RunOpts = {
+  /** Half thickness of the wall body (m). */ half: number;
+  /** How far the coping roll stands proud of the face (m), its height and the crown's dome. */ lip?: number; capH?: number; dome?: number;
+  /** Linear rgb multiplier turning the body colour into the coping colour (1 = one colour). */ capTint?: readonly [number, number, number];
+  /** A soft outward belly half way up the face (m; 0 = none, saves 4 triangles a step). */ belly?: number;
+  /** The back face only reaches this far under the top (a retaining wall: the terrace hides the rest); default = down to the foot. */ back?: number;
+  /** Rounded (domed) ends: [start, end]. Ends buried in a pier can stay open. */ ends?: readonly [boolean, boolean];
+  /** Longest mesh (m) so the batching pass can keep pieces in their own 50 m cells. */ piece?: number;
+  /** Lateral shift of the whole profile (m, + = the right of the direction of travel): -half puts the outer face on the line. */ shift?: number;
+};
+/**
+ * Inflate pass 2 (Nov 27 2026, owner shots 175 / 178: "make it seamless", "also do that for the other walls too"): ONE swept, pillowy
+ * wall along a polyline: a slightly bellied face, a coping roll standing proud on both sides and a domed crown, mitred round every
+ * corner (no joints, notches or gaps between segments) and smooth normals across the whole run (pieces are cut AFTER the normals, so
+ * piece borders do not show). Carries the puff shading key (lit crown, highlight band, shaded belly: world.ts batching) and a per-vertex
+ * tint for the coping colour. 2 * (profile points - 1) triangles a step (16-24) + ~30 a rounded end. Returns local pieces (y absolute).
+ */
+export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeometry; cx: number; cz: number; tint: Float32Array }[] {
+  if (pts.length < 2) return [];
+  const lip = o.lip ?? .08, capH = o.capH ?? .2, dome = o.dome ?? .05, h = o.half, bel = o.belly ?? 0, ct = o.capTint ?? [1, 1, 1];
+  // half profile, outer foot -> crown: [lateral offset, y(p), cap?, crown]
+  type Row = [number, (p: RunPt) => number, number, number];
+  const outer: Row[] = [[h, p => p.foot, 0, 0]];
+  if (bel > 0) outer.push([h + bel, p => (p.foot + p.top - capH) / 2, 0, 0]);
+  outer.push([h, p => p.top - capH, 0, 0], [h + lip, p => p.top - capH * .55, 1, 0], [h + lip * .55, p => p.top - capH * .04, 1, .25],
+    [h * .5, p => p.top + dome * .75, 1, .7], [0, p => p.top + dome, 1, 1]);
+  const prof: Row[] = [...outer];
+  if (o.back !== undefined) prof.push([-h * .5, p => p.top + dome * .75, 1, .7], [-h, p => p.top - capH * .3, 1, 0], [-h, p => p.top - o.back!, 1, 0]);// a retaining wall: the hidden back is plain
+  else for (let i = outer.length - 2; i >= 0; i--) { const [off, y, c, k] = outer[i]; prof.push([-off, y, c, k]); }
+  const m = prof.length, n = pts.length, pos: number[] = [], tint: number[] = [], crown: number[] = [], idx: number[] = [];
+  const dirs = pts.slice(1).map((b, i) => { const a = pts[i], l = Math.hypot(b.x - a.x, b.z - a.z) || 1; return [(b.x - a.x) / l, (b.z - a.z) / l]; });
+  for (let i = 0; i < n; i++) {
+    const d0 = dirs[Math.max(0, i - 1)], d1 = dirs[Math.min(n - 2, i)], tx = d0[0] + d1[0], tz = d0[1] + d1[1], tl = Math.hypot(tx, tz) || 1;
+    let nx = tz / tl, nz = -tx / tl; const mit = 1 / Math.max(.5, nx * d1[1] - nz * d1[0]); nx *= mit; nz *= mit;// mitre: keep the thickness round a corner
+    const p = pts[i];
+    const sh = o.shift ?? 0;
+    for (const [off0, y, c, k] of prof) { const off = off0 + sh; pos.push(p.x + nx * off, y(p), p.z + nz * off); tint.push(...(c ? ct : [1, 1, 1])); crown.push(k); }
+  }
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < m - 1; j++) { const a = i * m + j, b = a + 1, c = a + m, d = c + 1; idx.push(a, c, b, b, c, d); }
+  // rounded ends: one ring pushed out along the run and drawn in, then a fan to its centre
+  const endRows: number[][] = [];
+  (o.ends ?? [true, true]).forEach((on, e) => {
+    if (!on) return; const i = e ? n - 1 : 0, d = dirs[e ? n - 2 : 0], s = e ? 1 : -1, p = pts[i], base = i * m, ring = pos.length / 3;
+    let cx = 0, cy = 0, cz = 0;
+    for (let j = 0; j < m; j++) { const X = pos[(base + j) * 3], Y = pos[(base + j) * 3 + 1], Z = pos[(base + j) * 3 + 2], lx = X - p.x, lz = Z - p.z;
+      const yy = Math.max(p.foot, p.top - (p.top - Y) * 1.0 - (Y > p.top - capH ? capH * .25 : 0));
+      pos.push(p.x + lx * .62 + d[0] * s * h * .55, yy, p.z + lz * .62 + d[1] * s * h * .55); tint.push(tint[(base + j) * 3], tint[(base + j) * 3 + 1], tint[(base + j) * 3 + 2]); crown.push(crown[base + j] * .6);
+      cx += p.x + d[0] * s * h * .75; cy += yy; cz += p.z + d[1] * s * h * .75; }
+    const tip = pos.length / 3; pos.push(cx / m, Math.min(cy / m + capH * .3, p.top), cz / m); tint.push(...ct); crown.push(.3);
+    for (let j = 0; j < m - 1; j++) { const a = base + j, b = a + 1, c = ring + j, dd = c + 1; if (e) idx.push(a, c, b, b, c, dd); else idx.push(a, b, c, b, dd, c); }
+    for (let j = 0; j < m - 1; j++) if (e) idx.push(ring + j, tip, ring + j + 1); else idx.push(ring + j, ring + j + 1, tip);
+    endRows[e] = [ring, tip];
+  });
+  const all = new T.BufferGeometry(); all.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); all.setIndex(idx); all.computeVertexNormals();
+  const N = all.getAttribute('normal').array as Float32Array, P = pos;
+  // cut into pieces of <= o.piece m along the run (shared normals: no seam at a cut)
+  const S = [0]; for (let i = 1; i < n; i++) S.push(S[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z));
+  const out: { geo: T.BufferGeometry; cx: number; cz: number; tint: Float32Array }[] = [], piece = o.piece ?? 12;
+  for (let s = 0; s < n - 1;) {
+    let e = s + 1; while (e < n - 1 && S[e + 1] - S[s] <= piece) e++;
+    const cx = (pts[s].x + pts[e].x) / 2, cz = (pts[s].z + pts[e].z) / 2, map = new Map<number, number>(), lp: number[] = [], ln: number[] = [], lt: number[] = [], lc: number[] = [], li: number[] = [];
+    const v = (g: number) => { let k = map.get(g); if (k === undefined) { k = lp.length / 3; map.set(g, k); lp.push(P[g * 3] - cx, P[g * 3 + 1], P[g * 3 + 2] - cz); ln.push(N[g * 3], N[g * 3 + 1], N[g * 3 + 2]); lt.push(tint[g * 3], tint[g * 3 + 1], tint[g * 3 + 2]); lc.push(crown[g]); } return k; };
+    for (let t = 0; t < idx.length; t += 3) {
+      const tri = [idx[t], idx[t + 1], idx[t + 2]], rows = tri.map(g => g < n * m ? Math.floor(g / m) : -1);
+      const ext = rows.some(r => r < 0), lo = Math.min(...rows.filter(r => r >= 0)), hi = Math.max(...rows.filter(r => r >= 0));
+      const mine = ext ? (lo === 0 && s === 0 && tri.some(g => g >= n * m && endRows[0] && g <= endRows[0][1])) || (hi === n - 1 && e === n - 1 && tri.some(g => endRows[1] && g >= endRows[1][0])) : lo >= s && hi <= e;
+      if (mine) li.push(...tri.map(v));
+    }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(lp, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(ln, 3));
+    g.setAttribute('uv', new T.Float32BufferAttribute(new Float32Array(lp.length / 3 * 2), 2)); g.setIndex(li); g.computeBoundingBox(); g.computeBoundingSphere();
+    g.userData.puff = { s: puffLevel() || PUFF_DEFAULT, crown: new Float32Array(lc) };
+    out.push({ geo: g, cx, cz, tint: new Float32Array(lt) }); s = e;
+  }
+  return out;
+}
+/** Linear rgb multiplier that turns colour `a` into colour `b` (for RunOpts.capTint). */
+export function tintFromTo(a: string, b: string): [number, number, number] {
+  const A = new T.Color(a), B = new T.Color(b); return [B.r / Math.max(A.r, 1e-3), B.g / Math.max(A.g, 1e-3), B.b / Math.max(A.b, 1e-3)];
+}
+/**
+ * Inflate pass 2 (owner shot 180, lights): a cylinder whose top rim is rolled round (the edge the high play camera sees) and whose top
+ * pillows up a little (a lathe), radius `rt` at the top and `rb` at the foot, centred like T.CylinderGeometry. `e` = roll radius (m).
+ * Smooth normals across the roll. `openBottom` leaves the underside out. Triangles: n * (closed 10 | open 8) (n 8: 80 / 64).
+ */
+export function roundCyl(rt: number, rb: number, h: number, n = 8, e = Math.min(rt, rb, h / 2) * .5, openBottom = false) {
+  const y0 = -h / 2, y1 = h / 2, pts: T.Vector2[] = [];
+  if (!openBottom) pts.push(new T.Vector2(0, y0));
+  pts.push(new T.Vector2(rb, y0), new T.Vector2(rt, y1 - e), new T.Vector2(rt - e * .32, y1 - e * .32), new T.Vector2(rt - e, y1), new T.Vector2(0, y1 + e * .15));
+  const g = new T.LatheGeometry(pts, n); g.computeVertexNormals();
+  return g;
+}
+/** A round domed cap (a lathe: eave radius `r` at y 0 rising to a soft crown at `h`), open underneath. 8 * n triangles. */
+export function domeCap(r: number, h: number, n = 8) {
+  const pts = [new T.Vector2(r, 0), new T.Vector2(r * .86, h * .42), new T.Vector2(r * .55, h * .82), new T.Vector2(r * .2, h * .98), new T.Vector2(0, h)];
+  const g = new T.LatheGeometry(pts.reverse(), n); g.computeVertexNormals(); return g;
 }

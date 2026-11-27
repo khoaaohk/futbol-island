@@ -83,7 +83,7 @@ export function buildKitShopExterior(k:KitShopExteriorKit){
 
  // ---- Central double door: graphite portal, glass leaves and sidelights (the shared window glass: warm glow at night).
  const door=SHOP_DOOR.x;
- k.box(4.6,.3,.3,C.frame,door,3.55,F+.12);
+ k.box(4.18,.3,.3,C.frame,door,3.55,F+.12);// inflate pass 2 trim sweep: the head sits BETWEEN the jambs (it ran through them, coplanar fronts)
  for(const s of [-1,1])k.box(.22,3.7,.3,C.frame,door+s*2.2,1.85,F+.12);
  k.box(4.2,3.35,.06,C.glass,door,1.95,F+.04);
  for(const dx of [-.85,0,.85])k.box(dx?.05:.07,3.35,.1,C.frame,door+dx,1.95,F+.08);

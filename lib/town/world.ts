@@ -61,10 +61,10 @@ import {patchOceanMaterial,stepWaterTime,setWaterNight,SEA_WATER_LOOK,WATER_UNIF
 import {createIslandShore} from '../graphics/islandShore';
 import {createSchemePicker,awningColour,type BuildingScheme} from './buildingStyles';
 import {createShapePicker} from './buildingShapes';
-import {buildSoftHouse,roofDeckColour} from './softHouses';
+import {buildSoftHouse,roofDeckColour,roofSlab} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, type SoftOpts } from '../graphics/softBox';
+import { propBox, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -309,7 +309,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
     const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
     if(rounded){roundedBlock(w,h,d,radius,color,x,0,z);roundedBlock(w+.45,.23,d+.5,radius+.2,roofPaint,x,h-.035,z);roundedBlock(w+.15,.35,d+.16,radius+.1,plinth,x,.005,z);}
-    else{box(w,h,d,color,x,h/2,z);box(w+.45,.23,d+.5,roofPaint,x,h+.08,z);box(w+.15,.35,d+.16,plinth,x,.18,z);}
+    else{box(w,h,d,color,x,h/2,z);roofSlab(put,box,w+.45,.23,d+.5,roofPaint,x,h+.08,z);/* inflate pass 2: rolled roof edge */box(w+.15,.35,d+.16,plinth,x,.18,z);}
     // Nov 10 2026: inset roof deck (a shade darker/cooler than the roof slab), folded into the chunk's paint batch (no draw call).
     if(!knockout){const deck=rounded?roundedBlock(w-.9,.02,d-.9,Math.max(.1,radius-.45),roofDeckColour(roofPaint),x,h+.195,z):box(w-.9,.02,d-.9,roofDeckColour(roofPaint),x,h+.205,z);deck.userData.skipRoofObstacle=true;}
     obstacles.push({x,z,w,d,...(rounded?{cornerRadius:radius}:{})});
@@ -681,7 +681,7 @@ export function* buildTownSteps(scene: T.Scene) {
   box(8.5,7.8,.18,'#eddfbb',schoolX,4.1,-56.55);
   box(7.6,6.5,.16,'#365b56',schoolX,3.7,-56.39);
   for(const x of [schoolX-2.5,schoolX,schoolX+2.5])box(.16,6.5,.18,'#d2bc94',x,3.7,-56.25);
-  box(7.6,.18,.18,'#d2bc94',schoolX,3.1,-56.25);
+  box(7.6,.18,.13,'#d2bc94',schoolX,3.1,-56.275);// inflate pass 2 trim sweep: the transom sits behind the mullions' faces (was coplanar: z-fight)
   box(12,.45,3,'#eddfbb',schoolX,4.1,-55.5);
   sign('ISLAND HIGH SCHOOL',20,1.35,schoolX,10,-56.65,'#477c6a');// 12 cm out (was -56.77): the top window row's mullions stood 5 cm proud of it (signs audit, Nov 25 2026)
   sign('LEARN THE GAME · PLAY TOGETHER',13,.65,schoolX,8.35,-56.5,'#bd7657');
@@ -1080,11 +1080,15 @@ export function* buildTownSteps(scene: T.Scene) {
     // Solid side nets and back (filled to the cage wall so nothing slips behind); the mouth stays open for the ball.
     for(const o of [{x:(gx+back)/2,z:cz-1.6,w:1.4,d:.12},{x:(gx+back)/2,z:cz+1.6,w:1.4,d:.12},{x:(back+wall)/2,z:cz,w:Math.abs(wall-back)+.1,d:3.32}]){obstacles.push(o);arenaRails.push({...o,floor:0,top:2.1});}
     for(const z of [cz-1.6,cz+1.6]){
+     if(puffLevel()>0){// inflate pass 2 (goal frame joints): round posts, bars and a knuckle at each corner, no box ends crossing
+      put(new T.CylinderGeometry(.055,.055,2.04,8,1,true),'#fff1d3',gx,1.05,z);put(puffBall(.075),'#fff1d3',gx,2.07,z);
+      for(const y of [2.07,.12]){const g=new T.CylinderGeometry(.038,.038,1.3,6,1,true);g.rotateZ(Math.PI/2);put(g,'#fff1d3',(gx+back)/2,y,z);}continue;}
      box(.10,2,.10,'#fff1d3',gx,1.07,z);
      box(1.3,.07,.07,'#fff1d3',(gx+back)/2,2.07,z);
      box(1.3,.07,.07,'#fff1d3',(gx+back)/2,.12,z);
     }
-    box(.10,.10,3.3,'#fff1d3',gx,2.07,cz);
+    if(puffLevel()>0){const g=new T.CylinderGeometry(.055,.055,3.2,8,1,true);g.rotateX(Math.PI/2);put(g,'#fff1d3',gx,2.07,cz);}
+    else box(.10,.10,3.3,'#fff1d3',gx,2.07,cz);
     for(let y=.15;y<=2.08;y+=.25)box(.022,.022,3.2,'#c3d1b9',back,y,cz).castShadow=false;
     for(let z=cz-1.6;z<=cz+1.61;z+=.25){box(.022,2,.022,'#c3d1b9',back,1.07,z).castShadow=false;box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,2.07,z).castShadow=false;}
     // Side nets (owner Nov 25: open side frames): cords on both sides, same batch as the back net.
@@ -1510,9 +1514,9 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const x of [194,210]){
       box(12,.65,.28,'#b88472',x,.425,gh.z+side*9);
       box(12,.15,.42,'#eddfbb',x,.82,gh.z+side*9);
-      box(12,.13,.16,'#477c6a',x,2.35,gh.z+side*9);
+      box(12,.13,.12,'#477c6a',x,2.35,gh.z+side*9);// inflate pass 2 trim sweep: 3 cm behind the posts' faces (was 1 cm: shimmer)
     }
-    box(28.25,.13,.16,'#477c6a',gh.x,gh.eave,gh.z+side*9);
+    box(28.25,.13,.12,'#477c6a',gh.x,gh.eave,gh.z+side*9);// inflate pass 2 trim sweep: behind the posts' faces
     box(28.6,.22,.36,'#477c6a',gh.x,gh.eave+.03,gh.z+side*9.08);
     for(let bay=0;bay<7;bay++){
       const x0=-14+bay*4,x1=x0+4;

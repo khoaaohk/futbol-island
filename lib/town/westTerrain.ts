@@ -7,7 +7,7 @@
 //    plinth, coursed blocks, coping, buttresses, a clipped hedge on top), the two flights of stairs through it and their colliders.
 //    Pieces go through world.ts `put`, so they merge into the chunk's paint batch and take its baked light (walls darken to the foot).
 import * as T from 'three';
-import {softOn,puffLevel,SoftBoxGeometry} from '../graphics/softBox';
+import {softOn,puffLevel,SoftBoxGeometry,puffRun,tintFromTo,type RunPt,type RunOpts} from '../graphics/softBox';
 /** Inflate pass (Nov 27 2026): wall copings, piers and caps as pillowed chamfer pieces (`?puff=0` = the boxes). */
 const pbox=(w:number,h:number,d:number):T.BufferGeometry=>{const p=puffLevel();return p>0?new SoftBoxGeometry(w,h,d,{seg:0,puff:p,openBottom:true}):new T.BoxGeometry(w,h,d);};
 import {elevationOn} from './elevation';
@@ -78,6 +78,13 @@ export const WALL={stone:'#98a0a9',plinth:'#6b737a',coping:'#ccd2d5',hedge:'#5d8
  /** Below this the terrace's edge is a kerb you step over (no hedge, no collider). */
  low:.32,hedgeH:.85,hedgeW:.7,copingH:.2,piece:12,buttress:9,course:.44,block:1.1} as const;
 type WallPt={x:number;z:number;top:number;foot:number};
+/** Inflate pass 2 (owner shots 175 / 178, "make it seamless ... also do that for the other walls too"): with the puff on, the terrace's
+ *  retaining wall, its kerbs, the stair cheek walls and the plaza's garden walls are ONE swept pillowy body each (softBox.ts puffRun:
+ *  bellied face, a coping roll standing proud, a domed crown, mitred round corners, no joints), in place of the coursed block face,
+ *  the plinth strip and the square coping. Cheaper than the block face (one row of quads a 1.5 m step, not one quad a block), which
+ *  pays for the rounding inside the west stadium's triangle cap. `?puff=0` / `?soft=0` = the coursed stone. */
+const COPE_TINT=tintFromTo(WALL.stone,WALL.coping);
+function runWall(t:Tools,pts:readonly WallPt[],o:RunOpts){let tris=0;for(const p of puffRun(pts as RunPt[],{capTint:COPE_TINT,...o})){t.put(p.geo,WALL.stone,p.cx,0,p.cz).userData.vertexTint=p.tint;tris+=p.geo.index!.count/3;}return tris;}
 type Tools={put:(g:T.BufferGeometry,color:string,x:number,y:number,z:number)=>T.Mesh;obstacles:Obstacle[]};
 /** A strip swept along `pts` (≤ WALL.piece m per mesh): `profile` = [offset outward, height above/below (`from`: the wall's top
  *  or foot), min clearance over the foot] points, listed bottom-outer → up → inward so every face looks out or up. */
@@ -126,10 +133,12 @@ function blockFace(t:Tools,pts:readonly WallPt[],color:string,out=0,below=.5,see
 }
 /** One wall along `pts` (its face on the right of the direction of travel): coursed face, plinth, coping, buttresses, hedge. */
 function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},seed=0){
- let tris=blockFace(t,pts,WALL.stone,0,.5,seed);
+ let tris=0;
+ if(puffLevel()>0)tris+=runWall(t,pts.map(p=>({x:p.x,z:p.z,top:p.top+WALL.copingH,foot:p.foot-.5})),{half:.42,shift:-.42,lip:.13,capH:.3,dome:.04,belly:.07,back:.4,ends:[true,true]});
+ else{tris+=blockFace(t,pts,WALL.stone,0,.5,seed);
  // The plinth: two heavier courses standing 9 cm proud, with a weathered (sloped) top.
  tris+=sweep(t,pts,WALL.plinth,[[.09,'foot',-.5],[.09,'foot',.46],[0,'foot',.56]]);
- tris+=sweep(t,pts,WALL.coping,[[.12,'top',-.04],[.12,'top',WALL.copingH],[-.75,'top',WALL.copingH],[-.75,'top',-.04]],true);
+ tris+=sweep(t,pts,WALL.coping,[[.12,'top',-.04],[.12,'top',WALL.copingH],[-.75,'top',WALL.copingH],[-.75,'top',-.04]],true);}
  if(o.hedge&&broadleafTreesOn()){// Leftovers B (Nov 26 2026 night): a rounded, uneven top (shoulders and crown wobble along the run) and
   // soft low swells standing proud, so the hedge's top edge is no longer one ruled line.
   const H=WALL.copingH+WALL.hedgeH,Wd=WALL.hedgeW;
@@ -141,9 +150,9 @@ function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},s
  else if(o.hedge)tris+=sweep(t,pts,WALL.hedge,[[-.1,'top',WALL.copingH],[-.1,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH]],true);
  // Buttresses (where the wall stands 1.4 m or more): a pilaster on its own darker base, a capstone over the coping.
  if(o.buttress){let run=WALL.buttress/2;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b.x-a.x,b.z-a.z);run+=l;if(run<WALL.buttress||b.top-b.foot<1.4)continue;run=0;
-   const h=b.top-b.foot+.5+WALL.copingH+.06,nx=(b.z-a.z)/l,nz=-(b.x-a.x)/l,ry=Math.atan2(-nz,nx),m=t.put(new T.BoxGeometry(.34,h,1),WALL.pilaster,b.x+nx*.15,b.foot-.5+h/2,b.z+nz*.15);m.rotation.y=ry;
-   const base=t.put(new T.BoxGeometry(.5,1.2,1.16),WALL.plinth,b.x+nx*.17,b.foot+.1,b.z+nz*.17);base.rotation.y=ry;
-   const cap=t.put(new T.BoxGeometry(.52,.16,1.18),WALL.coping,b.x+nx*.15,b.foot-.5+h+.08,b.z+nz*.15);cap.rotation.y=ry;tris+=36;}}
+   const h=b.top-b.foot+.5+WALL.copingH+.06,nx=(b.z-a.z)/l,nz=-(b.x-a.x)/l,ry=Math.atan2(-nz,nx),m=t.put(puffLevel()>0?new SoftBoxGeometry(.34,h,1,{seg:0,puff:puffLevel(),openBottom:true}):new T.BoxGeometry(.34,h,1),WALL.pilaster,b.x+nx*.15,b.foot-.5+h/2,b.z+nz*.15);m.rotation.y=ry;
+   const base=t.put(pbox(.5,1.2,1.16),WALL.plinth,b.x+nx*.17,b.foot+.1,b.z+nz*.17);base.rotation.y=ry;
+   const cap=t.put(pbox(.52,.16,1.18),WALL.coping,b.x+nx*.15,b.foot-.5+h+.08,b.z+nz*.15);cap.rotation.y=ry;tris+=36;}}
  return tris;
 }
 /** A pier (the end of a wall, the sides of a stair's mouth): a square post with a cap, from below the ground at its spot. */
@@ -157,7 +166,8 @@ function stairs(t:Tools,s:Stair){
  // Cheek walls with a low parapet either side, and piers at the mouth (on the terrace's edge) and the foot.
  for(const side of [-1,1]){const pts:WallPt[]=[];for(let d=s.inset;d<=L+.001;d+=(L-s.inset)/Math.ceil(L-s.inset)){const x=s.x+s.dx*d+px*side*(s.w/2+.25),z=s.z+s.dz*d+pz*side*(s.w/2+.25);pts.push({x,z,top:WEST.terrace-s.slope*d+.75,foot:westNatural(x,z)});}
   const out=pts;// a closed prism: both faces and the top are wound right whichever way it runs
-  tris+=sweep(t,out,WALL.stone,[[.25,'foot',-.5],[.25,'top',0],[-.25,'top',0],[-.25,'foot',-.5]]);tris+=sweep(t,out,WALL.coping,[[.31,'top',-.03],[.31,'top',.12],[-.31,'top',.12],[-.31,'top',-.03]],true);
+  if(puffLevel()>0)tris+=runWall(t,out.map(p=>({x:p.x,z:p.z,top:p.top+.12,foot:p.foot-.5})),{half:.25,lip:.07,capH:.17,dome:.03,belly:.03});
+  else{tris+=sweep(t,out,WALL.stone,[[.25,'foot',-.5],[.25,'top',0],[-.25,'top',0],[-.25,'foot',-.5]]);tris+=sweep(t,out,WALL.coping,[[.31,'top',-.03],[.31,'top',.12],[-.31,'top',.12],[-.31,'top',-.03]],true);}
   const mx=s.x+s.dx*(L+s.inset)/2+px*side*(s.w/2+.25),mz=s.z+s.dz*(L+s.inset)/2+pz*side*(s.w/2+.25);t.obstacles.push({x:mx,z:mz,w:s.dx?L-s.inset:.5,d:s.dx?.5:L-s.inset});
   tris+=pier(t,s.x+s.dx*(s.inset-.5)+px*side*(s.w/2+.5),s.z+s.dz*(s.inset-.5)+pz*side*(s.w/2+.5),WEST.terrace+WALL.copingH+WALL.hedgeH+.12);
   tris+=pier(t,s.x+s.dx*(L+.3)+px*side*(s.w/2+.25),s.z+s.dz*(L+.3)+pz*side*(s.w/2+.25),westNatural(s.x+s.dx*L,s.z+s.dz*L)+1);}
@@ -172,8 +182,9 @@ function plazaWalls(t:Tools){
  for(const side of [-1,1]){const z=(side<0?STADIUM_PLAZA.minZ:STADIUM_PLAZA.maxZ)+side*PLAZA_WALL.out,h=PLAZA_WALL.thick/2;
   for(const [x0,x1,n] of PLAZA_WALL.runs){const len=(x1-x0)/n;
    for(let k=0;k<n;k++){const a=x0+k*len,b=a+len,top=westGround(a,z)+PLAZA_WALL.rise,fa=westGround(a,z),fb=westGround(b,z);
-    tris+=blockFace(t,[{x:a,z:z-h,top,foot:fa},{x:b,z:z-h,top,foot:fb}],WALL.stone,0,.3,k+side*5+x0);tris+=blockFace(t,[{x:b,z:z+h,top,foot:fb},{x:a,z:z+h,top,foot:fa}],WALL.stone,0,.3,k+side*7+x0+1);
-    t.put(pbox(len,.12,PLAZA_WALL.thick+.14),WALL.coping,(a+b)/2,top+.06,z);tris+=12;
+    if(puffLevel()>0)tris+=runWall(t,[{x:a-.2,z,top:top+.12,foot:Math.min(fa,fb)-.3},{x:b+.2,z,top:top+.12,foot:Math.min(fa,fb)-.3}],{half:h,lip:.07,capH:.16,dome:.03,belly:.03,ends:[false,false]});// ends inside the piers
+    else{tris+=blockFace(t,[{x:a,z:z-h,top,foot:fa},{x:b,z:z-h,top,foot:fb}],WALL.stone,0,.3,k+side*5+x0);tris+=blockFace(t,[{x:b,z:z+h,top,foot:fb},{x:a,z:z+h,top,foot:fa}],WALL.stone,0,.3,k+side*7+x0+1);
+    t.put(pbox(len,.12,PLAZA_WALL.thick+.14),WALL.coping,(a+b)/2,top+.06,z);tris+=12;}
     // the pier at the segment's lower end (and one at the run's top): the step happens behind it
     for(const px of k?[b]:[a,b]){const g=westGround(px,z),ph=top+.22-g+.3;t.put(pbox(.66,ph,.66),WALL.pilaster,px,g-.3+ph/2,z);t.put(pbox(.8,.16,.8),WALL.coping,px,top+.3,z);tris+=24;}}
    t.obstacles.push({x:(x0+x1)/2,z,w:x1-x0+.6,d:.6});}}
@@ -195,7 +206,7 @@ export function buildWestWalls(t:Tools):WestWallStats{
  for(let i=0;i<n;){const k=kind(ring[(start+i)%n]);let j=i;while(j<n&&kind(ring[(start+j)%n])===k)j++;
   if(k){const pts:WallPt[]=[],K=(q:number)=>kind(ring[(start+q+n)%n]);// one point on into a neighbouring run (a kerb tapering out of a wall), never into a stair's mouth
    for(let q=i-(K(i-1)?1:0);q<=j-(K(j)?0:1);q++)pts.push(ring[(start+q+n)%n]);
-   stats.triangles+=k===2?wall(t,pts,{hedge:true,buttress:true},i):sweep(t,pts,WALL.stone,[[0,'foot',-.3],[0,'top',0]])+sweep(t,pts,WALL.coping,[[.06,'top',-.03],[.06,'top',.06],[-.5,'top',.06],[-.5,'top',-.03]],true);
+   stats.triangles+=k===2?wall(t,pts,{hedge:true,buttress:true},i):sweep(t,pts,WALL.stone,[[0,'foot',-.3],[0,'top',0]])+sweep(t,pts,WALL.coping,puffLevel()>0?[[.06,'top',-.03],[.08,'top',.025],[.02,'top',.075],[-.48,'top',.075],[-.53,'top',.025],[-.5,'top',-.03]]:[[.06,'top',-.03],[.06,'top',.06],[-.5,'top',.06],[-.5,'top',-.03]],true);// inflate pass 2: a rolled kerb coping
    if(k===2)for(let q=0;q<pts.length-1;q++){const a=pts[q],b=pts[q+1],l=Math.hypot(b.x-a.x,b.z-a.z);stats.length+=l;stats.tallest=Math.max(stats.tallest,H-a.foot);}
    // Colliders (tall runs): one long box on a straight (axis-aligned) stretch, 1.6 m rounded boxes round the corners.
    if(k===2){let q=0;while(q<pts.length-1){let e=q+1;const ax=Math.abs(pts[e].x-pts[q].x)<1e-6,az=Math.abs(pts[e].z-pts[q].z)<1e-6;

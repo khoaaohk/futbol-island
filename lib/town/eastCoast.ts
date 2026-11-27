@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {puffGeo,puffBall,puffLevel} from '../graphics/softBox';
+import {puffGeo,puffBall,puffLevel,puffRun,tintFromTo,type RunPt} from '../graphics/softBox';
 import {ISLAND_SHORE,onIsland} from './shoreline';
 import {CAUSEWAY} from './coralCay';
 import {EAST_PIER} from './eastPier';
@@ -32,6 +32,7 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   obstacles.push({x:215,z,w:2.3,d:4});
  }
  // Short joined segments trace the rounded coast, rather than a straight barrier.
+ const runs2:RunPt[][]=[];
  for(let i=0;i<ISLAND_SHORE.length;i++){
   const shoreA=ISLAND_SHORE[i],shoreB=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length];
   if(Math.min(shoreA.x,shoreB.x)<220)continue;
@@ -60,9 +61,10 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   const a={x:shoreA.x+(shoreB.x-shoreA.x)*t0,z:shoreA.z+(shoreB.z-shoreA.z)*t0},b={x:shoreA.x+(shoreB.x-shoreA.x)*t1,z:shoreA.z+(shoreB.z-shoreA.z)*t1};
   const x=(a.x+b.x)/2-2.6,z=(a.z+b.z)/2;
   const length=Math.hypot(b.x-a.x,b.z-a.z)+.08,yaw=Math.atan2(b.x-a.x,b.z-a.z);
-  // inflate pass (owner shot 175): a pillowy coping and soft wall edges; the long axis keeps a tight radius so runs meet without a pinch
-  const wall=pbox(.65,1.05,length,'#bca987',x,.475,z,{seg:0,openBottom:true,maxR:[.3,.3,.004]});wall.rotation.y=yaw;
-  const cap=pbox(.9,.2,length+.06,'#eddfbb',x,1.08,z,{seg:0,openBottom:true,maxR:[.4,.09,.004]});// runs overlap and meet square: one continuous pillowy coping, no joint notchescap.rotation.y=yaw;
+  if(puffLevel()>0){// inflate pass 2 (owner shots 175 / 178: "make it seamless"): the run joins the previous one into ONE swept pillowy wall
+   const A={x:a.x-2.6,z:a.z,top:1.16,foot:-.3},B={x:b.x-2.6,z:b.z,top:1.16,foot:-.3},last=runs2[runs2.length-1];
+   if(Math.hypot(B.x-A.x,B.z-A.z)<.02){/* a sliver: nothing to draw */}else if(last&&Math.hypot(last[last.length-1].x-A.x,last[last.length-1].z-A.z)<.05)last.push(B);else runs2.push([A,B]);}
+  else{const wall=box(.65,1.05,length,'#bca987',x,.475,z);wall.rotation.y=yaw;const cap=box(.9,.2,length+.06,'#eddfbb',x,1.08,z);cap.rotation.y=yaw;}
   // Axis-aligned collision segments tightly follow the same visible wall.
   const count=Math.ceil(length/.6);
   for(let j=0;j<count;j++){
@@ -71,4 +73,5 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   }
   }
  }
+ for(const run of runs2)for(const p of puffRun(run,{half:.33,lip:.12,capH:.22,dome:.05,belly:.03,capTint:tintFromTo('#bca987','#eddfbb')}))put(p.geo,'#bca987',p.cx,0,p.cz).userData.vertexTint=p.tint;
 }
