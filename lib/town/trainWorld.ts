@@ -489,7 +489,16 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   skip(put(wallG,C.stone,p.x,TUNNEL_BED,p.z));// its top lies on the hill now, so no roof floor (a diagonal wall's bounding-box roof blocked rides)
   // Arch ring (voussoirs) on the leaning face, and the wing walls along the banks.
   const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
-  for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
+  // Rail + beach props (Nov 27, owner 189: "square blocks stuck on the arch"): the arch ring is 11 WEDGE voussoirs following the
+  // curve (r R+.08 .. R+.62, a ~6 cm mortar line of the wall's own stone between them), each a low pillow: flush with the leaning
+  // face at its edges, 3.5 cm proud in the middle, smooth normals (soft rounded edges). `?soft=0`: the old square tiles.
+  if(softOn()){const r0=R+.08,r1=R+.62,D=Math.PI/10,gap=.012,NA=4,NR=3,S=(th:number,r:number,f:number)=>{const x0=Math.cos(th)*r,y0=2.4+Math.sin(th)*r;return P(x0,depth-y0*lean+.004+f,y0);};
+   for(let k=0;k<=10;k++){const t0=Math.max(-D/2,D*k-D/2+gap),t1=Math.min(Math.PI+D/2,D*k+D/2-gap),pill=(fa:number,fr:number)=>.035*Math.pow(Math.sin(Math.PI*fa)*Math.sin(Math.PI*fr),.45);
+    const at=(i:number,j:number)=>{const fa=i/NA,fr=j/NR,th=t0+(t1-t0)*fa,r=r0+(r1-r0)*fr,e=.02,pp=S(th,r,pill(fa,fr)),
+      pa=S(th+e/r,r,pill(Math.min(1,fa+.05),fr)),pr=S(th,r+e,pill(fa,Math.min(1,fr+.05))),u=[pa[0]-pp[0],pa[1]-pp[1],pa[2]-pp[2]],v=[pr[0]-pp[0],pr[1]-pp[1],pr[2]-pp[2]];
+      let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n[0]*o.x+n[2]*o.z<0)n=[-n[0],-n[1],-n[2]];const l=Math.hypot(n[0],n[1],n[2])||1;return {p:pp,n:[n[0]/l,n[1]/l,n[2]/l]};};
+    for(let i=0;i<NA;i++)for(let j=0;j<NR;j++){const A0=at(i,j),A1=at(i+1,j),B1=at(i+1,j+1),B0=at(i,j+1);gd.triO(A0.p,A1.p,B1.p,A0.n,A1.n,B1.n);gd.triO(A0.p,B1.p,B0.p,A0.n,B1.n,B0.n);}}}
+  else for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
   // Nov 27 2026 (owner 155: "a dark brown wedge / flap poking out of the hillside left of the portal"): the wing walls are gone. Their
   // top took the bank's lowest ground, so on the drawn (coarser) hill they lay as a dark blade along the cutting from the play camera's
   // angle (picked: the stoneDark wing, 5 m out of the west mouth). The 13 m headwall alone meets the carved banks.
