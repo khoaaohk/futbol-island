@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {puffLevel} from './softBox';
 import {patchTuftWind} from './islandWind';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
 import {surfOn} from '../town/surfaceEdges';
@@ -147,7 +148,12 @@ function boulderGeometry(){ // surf: a low, flat-topped, slightly lopsided stone
  const tri=(p:number[],q:number[],r:number[])=>pos.push(...p,...r,...q);
  for(let i=0;i<4;i++){const j=(i+1)%4;tri(b[i],b[j],t[j]);tri(b[i],t[j],t[i]);}
  tri(t[0],t[1],t[2]);tri(t[0],t[2],t[3]);
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();g.setAttribute('color',new T.BufferAttribute(new Float32Array(pos.length).fill(1),3));return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+ // Inflate pass (Nov 27 2026, owner shot 175: faceted pebbles at a wall's foot): the same 10 triangles with smooth, rounded normals
+ // (sides lean out and up, the top domes from its centre), so a stone shades like a smooth pebble, not a cut gem. `?puff=0` = facets.
+ if(puffLevel()>0){const n=g.getAttribute('normal') as T.BufferAttribute,P=g.getAttribute('position') as T.BufferAttribute;
+  for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),top=y>.5,k=top?.55:1.25,ny=top?1:.35,l=Math.hypot(x*k,ny,z*k)||1;n.setXYZ(i,x*k/l,ny/l,z*k/l);}}
+ g.setAttribute('color',new T.BufferAttribute(new Float32Array(pos.length).fill(1),3));return g;
 }
 function stripGeometry(){ // one flat quad (2 tris), long axis x, facing up
  const g=new T.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);if(surfOn())g.setAttribute('color',new T.BufferAttribute(new Float32Array(12).fill(1),3));return g;

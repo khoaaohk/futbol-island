@@ -7,7 +7,9 @@
 //    plinth, coursed blocks, coping, buttresses, a clipped hedge on top), the two flights of stairs through it and their colliders.
 //    Pieces go through world.ts `put`, so they merge into the chunk's paint batch and take its baked light (walls darken to the foot).
 import * as T from 'three';
-import {softOn} from '../graphics/softBox';
+import {softOn,puffLevel,SoftBoxGeometry} from '../graphics/softBox';
+/** Inflate pass (Nov 27 2026): wall copings, piers and caps as pillowed chamfer pieces (`?puff=0` = the boxes). */
+const pbox=(w:number,h:number,d:number):T.BufferGeometry=>{const p=puffLevel();return p>0?new SoftBoxGeometry(w,h,d,{seg:0,puff:p,openBottom:true}):new T.BoxGeometry(w,h,d);};
 import {elevationOn} from './elevation';
 import {broadleafTreesOn,hedgeClump} from './broadleafTrees';
 import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,westGround,onWestTerrace,terraceOutline,stairLocal,type Stair} from './westElevation';
@@ -111,6 +113,7 @@ function blockFace(t:Tools,pts:readonly WallPt[],color:string,out=0,below=.5,see
     const joints=[S[s]];for(let j=Math.ceil((S[s]-off)/WALL.block+.25);j*WALL.block+off<S[e]-WALL.block*.25;j++)joints.push(j*WALL.block+off);joints.push(S[e]);
     let seg=s;for(let j=0;j<joints.length-1;j++){const sa=joints[j],sb=joints[j+1];while(seg<e-1&&S[seg+1]<=sa+1e-6)seg++;let sg=seg;while(sg<e-1&&S[sg+1]<sb-1e-6)sg++;
      const A=at(sa,seg),B=at(sb,sg),foot=Math.min(A.foot,B.foot),yb=Math.max(y0,foot-below);if(y1-yb<.02)continue;
+     if(puffLevel()>0&&y1<foot-.04)continue;// inflate pass budget trade: a block wholly under the ground at both ends is never seen
      pos.push(A.x-cx,yb,A.z-cz,A.x-cx,y1,A.z-cz,B.x-cx,yb,B.z-cz,A.x-cx,y1,A.z-cz,B.x-cx,y1,B.z-cz,B.x-cx,yb,B.z-cz);
      // The block's own tint: value ± 8% (one in nine a darker stone), a little warmer or cooler; damp and green toward the foot.
      const id=Math.round(sa*8)+seed*977,h1=hash(id,k),h2=hash(id+.5,k+7),v=(hash(id+.25,k+3)<.11?.84:.93+.15*h1),w=(h2-.5)*.07,hh=(y0+y1)/2-Math.max(A.foot,B.foot),damp=hh<.55?1:hh<1.5?1-(hh-.55)/.95:0;
@@ -144,7 +147,7 @@ function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},s
  return tris;
 }
 /** A pier (the end of a wall, the sides of a stair's mouth): a square post with a cap, from below the ground at its spot. */
-function pier(t:Tools,x:number,z:number,top:number){const foot=Math.min(westNatural(x,z),top)-.5,h=top-foot;t.put(new T.BoxGeometry(1,h,1),WALL.stone,x,foot+h/2,z);t.put(new T.BoxGeometry(1.2,.16,1.2),WALL.coping,x,top+.08,z);t.obstacles.push({x,z,w:1,d:1});return 24;}
+function pier(t:Tools,x:number,z:number,top:number){const foot=Math.min(westNatural(x,z),top)-.5,h=top-foot;t.put(pbox(1,h,1),WALL.stone,x,foot+h/2,z);t.put(pbox(1.2,.16,1.2),WALL.coping,x,top+.08,z);t.obstacles.push({x,z,w:1,d:1});return 24;}
 const stairLength=(s:Stair)=>{for(let d=s.inset+.25;d<s.len;d+=.25)if(WEST.terrace-s.slope*d<=westNatural(s.x+s.dx*d,s.z+s.dz*d)+.02)return d;return s.len;};
 function stairs(t:Tools,s:Stair){
  const L=stairLength(s),rise=.14,run=rise/s.slope,n=Math.ceil(L/run),px=-s.dz,pz=s.dx;let tris=0;
@@ -170,9 +173,9 @@ function plazaWalls(t:Tools){
   for(const [x0,x1,n] of PLAZA_WALL.runs){const len=(x1-x0)/n;
    for(let k=0;k<n;k++){const a=x0+k*len,b=a+len,top=westGround(a,z)+PLAZA_WALL.rise,fa=westGround(a,z),fb=westGround(b,z);
     tris+=blockFace(t,[{x:a,z:z-h,top,foot:fa},{x:b,z:z-h,top,foot:fb}],WALL.stone,0,.3,k+side*5+x0);tris+=blockFace(t,[{x:b,z:z+h,top,foot:fb},{x:a,z:z+h,top,foot:fa}],WALL.stone,0,.3,k+side*7+x0+1);
-    t.put(new T.BoxGeometry(len,.12,PLAZA_WALL.thick+.14),WALL.coping,(a+b)/2,top+.06,z);tris+=12;
+    t.put(pbox(len,.12,PLAZA_WALL.thick+.14),WALL.coping,(a+b)/2,top+.06,z);tris+=12;
     // the pier at the segment's lower end (and one at the run's top): the step happens behind it
-    for(const px of k?[b]:[a,b]){const g=westGround(px,z),ph=top+.22-g+.3;t.put(new T.BoxGeometry(.66,ph,.66),WALL.pilaster,px,g-.3+ph/2,z);t.put(new T.BoxGeometry(.8,.12,.8),WALL.coping,px,top+.28,z);tris+=24;}}
+    for(const px of k?[b]:[a,b]){const g=westGround(px,z),ph=top+.22-g+.3;t.put(pbox(.66,ph,.66),WALL.pilaster,px,g-.3+ph/2,z);t.put(pbox(.8,.16,.8),WALL.coping,px,top+.3,z);tris+=24;}}
    t.obstacles.push({x:(x0+x1)/2,z,w:x1-x0+.6,d:.6});}}
  return tris;
 }

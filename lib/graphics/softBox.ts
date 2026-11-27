@@ -22,6 +22,33 @@ export function softOn(): boolean {
   try { cached = new URLSearchParams(window.location.search).get('soft') !== '0'; } catch { cached = true; }
   return cached;
 }
+/**
+ * Inflate pass (Nov 27 2026, owner on the sweep: "i don't see the inflatable?"): from the play camera the sweep's 5-10 cm bevels did
+ * not read. `?puff=0..2` sets how inflated the soft props are: 0 = the sweep's shapes (for comparison), default PUFF_DEFAULT. With
+ * puff > 0 a soft box rounds EACH axis by its own radius (ellipsoid corners: a bench seat becomes a pillow with fat rounded ends in
+ * plan, a coping a pill, a board gets round corners in its own plane), the top pillows up, and the geometry carries a puff shading
+ * key (`userData.puff`) the batching pass bakes into vertex colour: a lit crown, a soft highlight band on the upper curve, a shaded
+ * belly toward the ground (pool-float / bouncy-castle read). Same triangle counts as the sweep (+2 for the dome), 0 draws.
+ */
+export const PUFF_DEFAULT=1.4;
+let puffCached: number | null = null;
+export function puffLevel(): number {
+  if (!softOn()) return 0;
+  if (typeof window === 'undefined') return PUFF_DEFAULT;
+  if (puffCached !== null) return puffCached;
+  try { const q = new URLSearchParams(window.location.search).get('puff'); const v = q === null ? PUFF_DEFAULT : Number(q); puffCached = Number.isFinite(v) ? Math.max(0, Math.min(2, v)) : PUFF_DEFAULT; } catch { puffCached = PUFF_DEFAULT; }
+  return puffCached;
+}
+/** Puff radii (m) per axis for a w x h x d box at strength p: each axis rounds by a fraction of min(its size, the middle size). */
+export function puffRadii(w: number, h: number, d: number, p: number): [number, number, number] {
+  const dims = [w, h, d], mid = [...dims].sort((a, b) => a - b)[1], f = Math.min(.47, .2 + .14 * p);
+  return dims.map(v => f * Math.min(v, mid)) as [number, number, number];
+}
+/** Inflate pass helper: a puffed soft box (seg 1 near / chamfer on the low tier) when the puff is on, else null (the caller's plain box). */
+export function puffGeo(w: number, h: number, d: number, o: SoftOpts = {}): SoftBoxGeometry | null {
+  const p = puffLevel(); if (p <= 0) return null;
+  return new SoftBoxGeometry(w, h, d, { puff: p, ...o, seg: Math.max(0, (o.seg ?? 1) - (softLow() ? 1 : 0)) });
+}
 /** Build-time low tier: Battery saver, or the heat governor already at tier 2+ when the world is built. */
 export function softLow(): boolean {
   try { return batterySaverOn() || effectiveTier() >= 2; } catch { return false; }
@@ -36,6 +63,12 @@ export type SoftOpts = {
   seg?: number;
   /** Top dome height (m), default 0. */
   dome?: number;
+  /** Inflate pass strength (0..2): per-axis radii (puffRadii), a domed top and the puff shading key. 0 / absent = the sweep's box. */
+  puff?: number;
+  /** Leave out the faces looking down (a buried foot, a cap on a post, a coping on a wall): never seen, ~a third of a chamfer's triangles. */
+  openBottom?: boolean;
+  /** Per-axis radius caps (m) for the puff radii: e.g. a wall run's long axis kept tight so runs meet without a pinch. */
+  maxR?: [number, number, number];
 };
 
 export function softBoxTriangles(seg: number, dome = 0) {
@@ -53,8 +86,11 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
   let r = o.radius ?? (o.r ?? 0.25) * min;
   r = Math.max(0, Math.min(r, min * 0.499));
   const seg = Math.max(0, Math.min(3, Math.round(o.seg ?? 1)));
-  const dome = Math.max(0, o.dome ?? 0);
-  const I = H.map(v => v - r);
+  const pf = o.puff ?? 0;
+  // per-axis radii: the sweep rounds every axis by r; the inflate pass by puffRadii (never less than the sweep's r)
+  const R = pf > 0 ? puffRadii(w, h, d, pf).map((v, k) => Math.max(0.0005, Math.min(H[k] * .98, o.maxR?.[k] ?? Infinity, Math.max(v, Math.min(r, H[k] * .98))))) : [r, r, r].map(v => Math.max(v, 0.0005));
+  const dome = Math.max(0, o.dome ?? 0, pf > 0 ? Math.min(.35 * h, .09 * Math.min(w, d)) * Math.min(1.4, pf) : 0);
+  const I = H.map((v, k) => v - R[k]);
   const pos: number[] = [], nrm: number[] = [], uv: number[] = [], idx: number[] = [];
   const groups: [number, number][] = [];
   const p = [0, 0, 0], q = [0, 0, 0];
@@ -82,7 +118,9 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
       const vs: number[] = [];
       for (const [su, sv] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
         p[a] = s * H[a]; p[ua] = su * I[ua]; p[va] = sv * I[va];
-        const vi = push(p, n, (su + 1) / 2, (sv + 1) / 2); corner.set(`${a}:${s}:${ua}:${su}:${va}:${sv}`, vi); vs.push(vi);
+        // inflate pass: the inset corners lean their normals out over the chamfer (pillow shading on a 44-tri piece)
+        const bn = pf > 0 ? [0, 0, 0] : n; if (pf > 0) { bn[a] = s; bn[ua] = su * .55; bn[va] = sv * .55; const l = Math.hypot(bn[0], bn[1], bn[2]); bn[0] /= l; bn[1] /= l; bn[2] /= l; }
+        const vi = push(p, bn, (su + 1) / 2, (sv + 1) / 2); corner.set(`${a}:${s}:${ua}:${su}:${va}:${sv}`, vi); vs.push(vi);
       }
       if (topDome(f)) {
         p[a] = s * H[a] + dome; p[ua] = 0; p[va] = 0; const c = push(p, n, .5, .5);
@@ -110,8 +148,8 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
     // Grid per face: sample positions on the face plane chosen so the projection onto the rounded edge gives equal angles.
     const samples = (a: number) => {
       const out: number[] = [];
-      for (let j = seg; j >= 0; j--) out.push(-(I[a] + r * Math.tan((Math.PI / 4) * j / seg)));
-      for (let j = 0; j <= seg; j++) out.push(I[a] + r * Math.tan((Math.PI / 4) * j / seg));
+      for (let j = seg; j >= 0; j--) out.push(-(I[a] + R[a] * Math.tan((Math.PI / 4) * j / seg)));
+      for (let j = 0; j <= seg; j++) out.push(I[a] + R[a] * Math.tan((Math.PI / 4) * j / seg));
       return out;
     };
     for (let f = 0; f < 6; f++) {
@@ -122,10 +160,12 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
       for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
         p[a] = s * H[a]; p[ua] = U[i]; p[va] = V[j];
         for (let k = 0; k < 3; k++) q[k] = Math.max(-I[k], Math.min(I[k], p[k]));
-        let dx = p[0] - q[0], dy = p[1] - q[1], dz = p[2] - q[2];
+        // ellipsoid corner (radii R): unit direction in the corner's scaled frame, point on the ellipsoid, its true normal
+        let dx = (p[0] - q[0]) / R[0], dy = (p[1] - q[1]) / R[1], dz = (p[2] - q[2]) / R[2];
         const l = Math.hypot(dx, dy, dz) || 1; dx /= l; dy /= l; dz /= l;
-        const pt = [q[0] + r * dx, q[1] + r * dy, q[2] + r * dz];
-        grid.push(push(pt, [dx, dy, dz], (U[i] / H[ua] + 1) / 2, (V[j] / H[va] + 1) / 2));
+        const pt = [q[0] + R[0] * dx, q[1] + R[1] * dy, q[2] + R[2] * dz];
+        let nx = dx / R[0], ny = dy / R[1], nz = dz / R[2]; const ln = Math.hypot(nx, ny, nz) || 1; nx /= ln; ny /= ln; nz /= ln;
+        grid.push(push(pt, [nx, ny, nz], (U[i] / H[ua] + 1) / 2, (V[j] / H[va] + 1) / 2));
       }
       const mid = seg; // the centre cell (between -I and I)
       for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) {
@@ -135,7 +175,7 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
           const c = push(p, nn, .5, .5);
           tri(v00, v10, c); tri(v10, v11, c); tri(v11, v01, c); tri(v01, v00, c);
           // tilt the four inner corners' normals outward a touch so the pillow shades round
-          const k = Math.min(.6, 2 * dome / Math.max(r, .01));
+          const k = Math.min(pf > 0 ? .9 : .6, 2 * dome / Math.max(Math.min(R[0], R[2]), .01));
           for (const vi of [v00, v10, v11, v01]) {
             const nx = pos[vi * 3] / H[0] * k, nz = pos[vi * 3 + 2] / H[2] * k, l = Math.hypot(nx, 1, nz);
             nrm[vi * 3] = nx / l; nrm[vi * 3 + 1] = 1 / l; nrm[vi * 3 + 2] = nz / l;
@@ -145,7 +185,25 @@ function build(w: number, h: number, d: number, o: SoftOpts) {
       groups.push([start, idx.length - start]);
     }
   }
-  return { pos, nrm, uv, idx, groups };
+  if (o.openBottom) {
+    // drop every triangle whose geometric normal looks down (the -y face, its edge strips and corners); groups shrink to match
+    const out: number[] = [];
+    for (const g of groups) { const st = out.length;
+      for (let t = g[0]; t < g[0] + g[1]; t += 3) { const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+        const e1x = pos[b] - pos[a], e1z = pos[b + 2] - pos[a + 2], e2x = pos[c] - pos[a], e2z = pos[c + 2] - pos[a + 2];
+        const e1y = pos[b + 1] - pos[a + 1], e2y = pos[c + 1] - pos[a + 1];
+        const nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz = e1x * e2y - e1y * e2x;
+        if (ny < -.3 * Math.hypot(nx, ny, nz)) continue; out.push(idx[t], idx[t + 1], idx[t + 2]); }
+      g[0] = st; g[1] = out.length - st; }
+    idx.length = 0; idx.push(...out);
+  }
+  // Puff shading key (inflate pass): 1 at the dome's crown, 0 elsewhere; the batching pass turns it + the normal into the baked light.
+  let crown: Float32Array | null = null;
+  if (pf > 0) {
+    crown = new Float32Array(pos.length / 3);
+    for (let i = 0; i < crown.length; i++) if (pos[i * 3 + 1] > H[1] + 1e-5) crown[i] = 1;
+  }
+  return { pos, nrm, uv, idx, groups, crown, pf };
 }
 
 /** A rounded / pillowed box that still IS a T.BoxGeometry (parameters, instanceof) for every reader of boxes. */
@@ -161,6 +219,7 @@ export class SoftBoxGeometry extends T.BoxGeometry {
     this.setAttribute('uv', new T.Float32BufferAttribute(b.uv, 2));
     this.clearGroups();
     b.groups.forEach(([s, c], i) => this.addGroup(s, c, i));
+    if (b.crown) this.userData.puff = { s: b.pf, crown: b.crown };
     this.computeBoundingBox(); this.computeBoundingSphere();
   }
 }
@@ -168,7 +227,7 @@ export class SoftBoxGeometry extends T.BoxGeometry {
 const cache = new Map<string, SoftBoxGeometry>();
 /** Shared (cached) geometry per size key, for InstancedMesh / shared-geometry users. Never dispose the result per mesh. */
 export function softBoxGeometry(w: number, h: number, d: number, opts: SoftOpts = {}) {
-  const k = `${w.toFixed(3)}|${h.toFixed(3)}|${d.toFixed(3)}|${opts.r ?? ''}|${opts.radius ?? ''}|${opts.seg ?? 1}|${opts.dome ?? 0}`;
+  const k = `${w.toFixed(3)}|${h.toFixed(3)}|${d.toFixed(3)}|${opts.r ?? ''}|${opts.radius ?? ''}|${opts.seg ?? 1}|${opts.dome ?? 0}|${opts.puff ?? 0}`;
   let g = cache.get(k);
   if (!g) { g = new SoftBoxGeometry(w, h, d, opts); cache.set(k, g); }
   return g;
@@ -183,7 +242,7 @@ export function propBox(w: number, h: number, d: number, opts: SoftOpts & { maxD
   if (!softOn() || min < 0.02 || max > (opts.maxDim ?? 8)) return new T.BoxGeometry(w, h, d);
   // thin pieces (legs, slats, rails, boards: under 15 cm) take the smooth-shaded chamfer (44 tris); chunkier ones the 2-step arc
   const seg = Math.max(0, (opts.seg ?? (min < .15 ? 0 : 1)) - (low ? 1 : 0));
-  return new SoftBoxGeometry(w, h, d, { ...opts, seg });
+  return new SoftBoxGeometry(w, h, d, { puff: puffLevel(), ...opts, seg });
 }
 
 /**
@@ -226,5 +285,26 @@ export function pebbleGeometry(r: number, seed: number, low = false) {
     p.setXYZ(i, x * k, y * k, z * k);
   }
   if (low) for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), l = Math.hypot(x, y, z) || 1; n.setXYZ(i, x / l, y / l, z / l); }// detail 0 but smooth: a pebble, not a crystal
+  return g;
+}
+
+/**
+ * Inflate pass: a 20-triangle puff ball (welded icosahedron, a vertex at the top, sphere normals) carrying the puff shading key with
+ * its crown on the top vertex, so a bloom / knob reads as a lit round puff, not a faceted gem. Same triangles as the sweep's ball.
+ */
+export function puffBall(r: number, detail = 0) {
+  const g0 = new T.IcosahedronGeometry(r, detail); g0.rotateZ(-Math.atan(1 / ((1 + Math.sqrt(5)) / 2)));
+  g0.deleteAttribute('normal'); g0.deleteAttribute('uv');
+  const src = g0.getAttribute('position') as T.BufferAttribute, map = new Map<string, number>(), pos: number[] = [], idx: number[] = [];
+  for (let i = 0; i < src.count; i++) {
+    const k = `${src.getX(i).toFixed(4)},${src.getY(i).toFixed(4)},${src.getZ(i).toFixed(4)}`;
+    let v = map.get(k); if (v === undefined) { v = pos.length / 3; map.set(k, v); pos.push(src.getX(i), src.getY(i), src.getZ(i)); }
+    idx.push(v);
+  }
+  const g = new T.BufferGeometry(), n = pos.map((v, i) => v / Math.hypot(pos[i - i % 3], pos[i - i % 3 + 1], pos[i - i % 3 + 2]));
+  g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(n, 3));
+  g.setAttribute('uv', new T.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2)); g.setIndex(idx);
+  const crown = new Float32Array(pos.length / 3); for (let i = 0; i < crown.length; i++) crown[i] = Math.max(0, (pos[i * 3 + 1] / r - .55) / .45);
+  g.userData.puff = { s: puffLevel() || PUFF_DEFAULT, crown };
   return g;
 }

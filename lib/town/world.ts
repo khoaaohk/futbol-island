@@ -64,7 +64,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, type SoftOpts } from '../graphics/softBox';
+import { propBox, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -116,7 +116,8 @@ export function* buildTownSteps(scene: T.Scene) {
   type PropTag={kind:PropReactionKind};let propTag:PropTag|null=null;
   // Soft sweep (Nov 27 2026, lib/graphics/softBox.ts, `?soft=0` = before): boxes built inside these props come out rounded (same
   // BoxGeometry parameters, same batches, 0 draws). `softly(opts, fn)` does the same for builders that are not tagged props.
-  const SOFT_KINDS:Partial<Record<PropReactionKind,SoftOpts&{maxDim?:number}>>={bench:{r:.32},table:{r:.32},planter:{r:.24,maxDim:14},sign:{r:.3},fence:{r:.4},post:{r:.28},crate:{r:.22},stall:{r:.2},bollard:{r:.4},signal:{r:.3},net:{r:.4},goal:{r:.4},pole:{r:.35}};
+  const SOFT_KINDS:Partial<Record<PropReactionKind,SoftOpts&{maxDim?:number}>>={bench:{r:.32},table:{r:.32},planter:{r:.24,maxDim:14},sign:{r:.3},fence:{r:.4},post:{r:.28},crate:{r:.22},stall:{r:.2},bollard:{r:.4},signal:{r:.3},net:{r:.4},goal:{r:.4},pole:{r:.35},
+    /* inflate pass (owner shot 180: "make all the lights more rounded"): box-built lamp heads, lenses and caps */lamp:{r:.4}};
   let softBoxOpts:(SoftOpts&{maxDim?:number})|null=null;const softLowTier=softLow();
   // Soft sweep 2: the west park's props (benches, signs, bins) take one rounding step less (the smooth-shaded chamfer): the whole west
   // region draws at once from the stadium, inside its triangle budget (tests/west-stadium.cjs).
@@ -140,7 +141,8 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation (?elev=1; lib/town/elevation.ts): from here to the batching pass every piece `put` / `sign` places stands on the raised
   // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
   elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.group=0;elevBuild.pieces.length=0;
-  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,softBoxOpts,softLowTier||softFar):new T.BoxGeometry(w,h,d),c,x,y,z,p);
+  // inflate pass: a soft piece standing on the ground (foot within 3 cm of it) leaves out its never-seen underside (budget for the puff)
+  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,p===town&&y-h/2<.03&&!softBoxOpts.openBottom?{...softBoxOpts,openBottom:true}:softBoxOpts,softLowTier||softFar):new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Tree pit (soft sweep, owner shot 163): a round irregular lawn patch fading into the lawn instead of a square tile; `?soft=0` = the tile. */
   const PIT_LIN=new T.Color('#7a9e67');
   const treePit=(x:number,z:number,w:number,d:number)=>{if(!softOn())return box(w,.018,d,'#7a9e67',x,-.065,z);
@@ -1781,6 +1783,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const lampLens=mat('#ffe8ae');lampLens.emissive.set('#ffd294');lampLens.emissiveIntensity=0;
   // Four inward-facing floodlights fixed to the shop/arcade walls.
   // Shared emissive lenses and baked floor washes avoid shadow-casting lights.
+  softly(puffLevel()>0?{r:.4}:null,()=>{// inflate pass: rounded floodlight housings (owner shot 180)
   for(const side of [-1,1])for(const z of [-61.6,-56.4]){
    const wall=side<0?76:96,x=wall-side*.48,y=side<0?4.05:4.8;
    box(.12,.52,.34,'#384443',wall-side*.04,y,z);
@@ -1789,7 +1792,7 @@ export function* buildTownSteps(scene: T.Scene) {
    box(.22,.55,1.04,'#384443',0,0,0,fixture);
    const lens=box(.025,.39,.88,'#ffe8ae',-side*.125,0,0,fixture);lens.material=lampLens;lens.castShadow=false;
    for(const dz of [-.24,0,.24])box(.03,.39,.018,'#d7ded7',-side*.145,0,dz,fixture).castShadow=false;
-  }
+  }});
   type LampSite={x:number;z:number;ground:number;region?:'pier'|'north-beach'|'market'|'garden'|'coral-cay'|'east-pier';poolDepth?:number;poolWidth?:number;chunk?:string};
   const lampSites:LampSite[]=[];
   const lampCandidates:LampSite[]=[{x:79,z:-45,ground:.075},{x:108,z:-45,ground:.075},{x:62,z:-28,ground:.075},{x:113,z:-22,ground:.075}];
@@ -1871,11 +1874,11 @@ export function* buildTownSteps(scene: T.Scene) {
     obstacles.push({x,z:-8.6,w:.3,d:.3});assets.push({kind:'practice-light',x,z:-8.6,w:.3,d:.3,visualW:1.5,visualD:.5});
   }
   // Low bed stakes sit inside existing bed obstacles, never narrowing paths.
-  for(let row=0;row<3;row++)for(let col=0;col<4;col++){
+  softly(puffLevel()>0?{r:.45}:null,()=>{for(let row=0;row<3;row++)for(let col=0;col<4;col++){// inflate pass: round stake-light caps
     const x=192+col*10,z=-28+row*11;
     cylinder(.035,.5,'#384443',x+2.35,.86,z+2.35).castShadow=false;
     box(.22,.12,.22,'#ffe8ae',x+2.35,1.12,z+2.35).castShadow=false;
-  }
+  }});
   lampSites.push(...coralCay.lampSites,...eastPier.lampSites);
   lampSites.push(...summitIsle.lampSites);
   lampSites.push(...stadiumLights.lampSites);// one pool batch for the whole stadium area (chunk 'stadium'), not one per 50 m cell
@@ -2068,7 +2071,9 @@ export function* buildTownSteps(scene: T.Scene) {
       // Nov 20 2026: sun-side warm / far-side cool tint on walls, a per-building jitter, tree and bush canopies on one smooth
       // foot-to-crown gradient (cooler below, yellower above) in place of the three steps, and window panes sky-blue at the top
       // fading to dark at the sill.
-      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,gh=gb.max.y-gy,nrm=gh>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
+      // Inflate pass (Nov 27 2026, softBox.ts puffLevel): a puffed soft box carries {s, crown} and takes the pool-float light below, at any height.
+      const puff=object.geometry.userData.puff as {s:number;crown:Float32Array}|undefined;
+      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,gh=gb.max.y-gy,nrm=gh>=.15||puff?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
       // Nov 21 2026 (verifier): doors and tall glass (1.7 m and up, e.g. the Arcade's double door) keep their solid colour; the sky
       // gradient read as pale blue-grey metal on them. Windows and shopfronts (up to 1.65 m) keep the gradient.
       const pane=paint===windowPaint&&gh<1.7,canopy=!pane&&object.geometry instanceof T.IcosahedronGeometry&&color.g>color.r&&color.g>color.b;
@@ -2082,6 +2087,11 @@ export function* buildTownSteps(scene: T.Scene) {
           colors[i]=cr*f*leafShade[i]*(1+w);colors[i+1]=cg*f*leafShade[i+1];colors[i+2]=cb*f*leafShade[i+2]*(s>0?1-w:1-BAKE.cool*s);}}
       else if(pane){const sky=BAKE.paneSky,ih=1/Math.max(gh,.01);
         for(let i=0;i<len;i+=3){const t=(P[i+1]-gy)*ih,k=BAKE.paneSkyMix*t*t,d=BAKE.paneFoot+(1-BAKE.paneFoot)*t;colors[i]=(cr+(sky.r-cr)*k)*d;colors[i+1]=(cg+(sky.g-cg)*k)*d;colors[i+2]=(cb+(sky.b-cb)*k)*d;}}
+      else if(puff&&N&&puff.crown.length*3===len){const k=Math.min(1.3,puff.s/1.4),C=puff.crown,ih=1/Math.max(gh,.01),r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;
+        // lit crown, a soft highlight band on the upper curve, a shaded belly and a darker foot: reads round from the high play camera
+        for(let i=0,v=0;i<len;i+=3,v++){const ny=N[i+1],t=(ny+1)/2,f=(.6+.48*Math.pow(t,1.25))*(.84+.16*Math.min(1,(P[i+1]-gy)*ih*1.6)),
+          e=(ny-.6)/.22,gl=k*(.3*C[v]+.2*Math.exp(-e*e)),s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z,wm=s>0?BAKE.warm*s:0,cl=s<0?-BAKE.cool*s:0;
+          colors[i]=r*f*(1+wm)*(1-gl)+gl*.98;colors[i+1]=g*f*(1-gl)+gl*.95;colors[i+2]=b*f*(1-wm)*(1+cl)*(1-gl)+gl*.88;}}
       else if(!N){const r=cr*jv*jw,g=cg*jv,b=cb*jv/jw;for(let i=0;i<len;i+=3){colors[i]=r;colors[i+1]=g;colors[i+2]=b;}}
       else if(canopy){const ih=.5/gh,span=BAKE.canopyHigh-BAKE.canopyLow;
         for(let i=0;i<len;i+=3){const u=(P[i+1]-gy)*ih+.25*(N[i+1]+1),e=u*u*(3-2*u),f=BAKE.canopyLow+span*e,s=N[i]*BAKE_SUN_X+N[i+2]*BAKE_SUN_Z,w=s>0?BAKE.warm*s:0;

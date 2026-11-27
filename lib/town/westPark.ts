@@ -20,7 +20,7 @@ import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
 import {broadleafTreesOn,broadleafTree,pineTiers} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
-import {softOn,softLow,SoftBoxGeometry} from '../graphics/softBox';
+import {softOn,softLow,SoftBoxGeometry,puffLevel,puffBall} from '../graphics/softBox';
 import {stadiumOrchardTrees,orchardPlanOf,ORCHARD_LEGACY,type StadiumOrchardTree} from './stadiumOrchard';
 import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial,pondSeaDistance} from '../graphics/pondWater';
 
@@ -136,11 +136,11 @@ export function buildWestPark(t:Tools):WestParkStats{
   // Elevation (?elev=1): on the hillside a 12 m bed would stand half a metre proud at one end, so it steps down the grade in four
   // 3 m planters (each on the ground at its own spot, its kerb carried 0.3 m into the ground).
   // Soft sweep (Nov 27 2026, owner shot 160): rounded rims and a pillowed soil bed with rounded corners; round blooms, not gems.
-  const soft=softOn(),low=softLow(),bed=(w:number,d:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,.12,d,{radius:.055,seg:low?0:seg,dome:.05}),'#6b5640',bx,y,z):box(w,.12,d,'#6b5640',bx,y,z);
-  const rim=(w:number,h:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,h,3,{radius:Math.min(.2,h*.45),seg:low?0:seg,dome:0}),'#d2bc94',bx,y,z):box(w,h,3,'#d2bc94',bx,y,z);
+  const soft=softOn(),low=softLow(),bed=(w:number,d:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,.12,d,{radius:.055,seg:low?0:seg,dome:.05,puff:puffLevel()}),'#6b5640',bx,y,z):box(w,.12,d,'#6b5640',bx,y,z);
+  const rim=(w:number,h:number,bx:number,y:number,seg=1)=>soft?put(new SoftBoxGeometry(w,h,3,{radius:Math.min(.2,h*.45),seg:low?0:seg,dome:0,puff:puffLevel()}),'#d2bc94',bx,y,z):box(w,h,3,'#d2bc94',bx,y,z);
   // Soft sweep 2 (west-stadium triangle budget): a bloom is a smooth-shaded 20-triangle ball (welded icosahedron, vertex normals),
   // not the 80-triangle detail-1 one: the same round read at park distance, 540 triangles less a planter.
-  const softBloom=()=>{const g=mergeVertices(new T.IcosahedronGeometry(.37,0));g.computeVertexNormals();return g;};
+  const softBloom=()=>puffLevel()>0?puffBall(.37):(()=>{const g=mergeVertices(new T.IcosahedronGeometry(.37,0));g.computeVertexNormals();return g;})();
   // On the hillside the bed is four short planters (8 soft pieces): those take the smooth-shaded chamfer (seg 0, 44 tris), budget.
   prop('planter',()=>{if(elevationOn()&&Math.abs(groundLift(x-6,z)-groundLift(x+6,z))>.1)for(let k=0;k<4;k++){const bx=x-4.5+k*3;rim(3,.62,bx,.01,0);bed(2.4,2.4,bx,.34,0);}
    else{rim(12,.32,x,.16);bed(11.4,2.4,x,.34);}
