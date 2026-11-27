@@ -9,7 +9,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.join(__dirname,'..');
 let failed=0;const ok=async(name,fn)=>{try{await fn();console.log('ok   '+name);}catch(e){failed++;console.log('FAIL '+name+'\n  '+(e&&e.stack||e));}};
-const TRIANGLE_BUDGET=21000;
+// Nov 27 2026: 21,002 measured after merging the soft sweep (its 14-sided car wheels + rounded pickup bed reach the 7 parked cars); budget 22k.
+const TRIANGLE_BUDGET=22000;
 async function buildWorld(){
  const req=require('node:module').createRequire(ROOT+'/package.json'),T=req('three');
  const utils=await import(ROOT+'/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js');
