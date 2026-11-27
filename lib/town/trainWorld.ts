@@ -386,6 +386,12 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // The station house behind the platform (South: on it, back to the boardwalk): 8 m along the line, cream walls, dark timber.
   const hd=south?3.8:4.6,hv0=south?v1-hd:v1,hv1=hv0+hd,hm=(hv0+hv1)/2,H=2.9,y0=top;
   const hc=P(0,hm,0);deck.box(hc[0],y0+.05,hc[2],c.tx,c.tz,4.3,hd/2+.3,.05);
+  // Rail + beach props (Nov 27, owner 172: the house's floor ledge floated over the sand where the beach falls away behind it): a
+  // rounded plinth in the platform footing's paint under the whole house, from the deck down past the lowest ground round it
+  // (inset 12 cm under the ledge, so the ledge still reads as a step). Not the South house (it stands on the platform). 44 tris, 0 draws.
+  if(!south&&softOn()){const cs=[P(-4.1,hv0-.1,0),P(4.1,hv0-.1,0),P(-4.1,hv1+.15,0),P(4.1,hv1+.15,0),hc];let low=bed;
+   for(const q of cs)low=Math.min(low,onSummitTrackS(st.s)?summitGround(q[0],q[2]):0);const yb=Math.min(low,bed)-.9,yt=y0+.02;
+   if(hc[0]<-100)footing.box(hc[0],(yb+yt)/2,hc[2],c.tx,c.tz,4.18,hd/2+.18,(yt-yb)/2);/* west budget: a plain 10-tri box */else footing.sbox(hc[0],(yb+yt)/2,hc[2],c.tx,c.tz,4.18,hd/2+.18,(yt-yb)/2,.07);}
   // Walls: back and two ends solid; the platform side open in the middle (ticket window and doorway) with posts and a lintel.
   const wall=(u0:number,u1:number,v:number,y1:number,y2:number,thick=.09)=>{const m=P((u0+u1)/2,v,0);plaster.box(m[0],(y1+y2)/2,m[2],c.tx,c.tz,(u1-u0)/2,thick,(y2-y1)/2);};
   wall(-4,4,hv1-.09,y0+.1,y0+H);
