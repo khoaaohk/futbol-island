@@ -13,7 +13,7 @@ import {vehiclesOn} from '../graphics/vehicleSwitch';
 import {SWELL_AMP,setBoatRing,swellPose} from '../graphics/boatSwell';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
-import {buildCoralCay} from './coralCayWorld';
+import {buildCoralCay,CAY_ARCH_LANTERNS} from './coralCayWorld';
 import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn,insidePolygon} from './elevation';
 import {drapePieces,seatProps} from './elevationDrape';
 import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
@@ -39,7 +39,7 @@ import {STADIUM} from './westParkLayout';
 import {buildSummitIsle} from './summitIsleWorld';
 import {buildSummitActivityProps} from './summitActivitiesWorld';
 import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';
-import {buildTrainWorld,catenaryFeet} from './trainWorld';import {createTrainRunning,type TrainRunning,type TrainFrame,type TrainFrameResult} from './trainRunning';// The Island Line (train Phase 1, Nov 23 2026): track, trestles, tunnel, stations, crossings
+import {buildTrainWorld,catenaryFeet,STATION_LANTERNS} from './trainWorld';import {createTrainRunning,type TrainRunning,type TrainFrame,type TrainFrameResult} from './trainRunning';// The Island Line (train Phase 1, Nov 23 2026): track, trestles, tunnel, stations, crossings
 import {trackPushOut,lineClearSpot} from './trainLayout';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {buildPaintEasel} from './paintEaselWorld';
 import {buildGashaponProps} from './gashaponWorld';
@@ -150,7 +150,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const tint=(lx:number,lz:number)=>{const g=groundColor('lawn',x+lx,z+lz);return [g[0]/(PIT_LIN.r*1.03),g[1]/(PIT_LIN.g*1.03),g[2]/(PIT_LIN.b*1.03)] as const;};
     const p=softPatchGeometry(w*.42,d*.42,x*7.13+z*3.71,-.075,-.108,tint);const m=put(p.geometry,'#7a9e67',x,0,z);m.userData.vertexTint=p.tint;m.userData.skipRoofObstacle=true;return m;};
   /** Night glow (machineNightGlow.ts): mark a piece to glow with the night factor, `w` 0…1; warm: a lit-interior white, else its own colour. */
-  const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
+  const lit=(m:T.Mesh,w:number,warm:boolean|'lantern'=false)=>{m.userData.machineGlow=[w,warm];return m;};
   /** Rail audit (soft sweep, owner shot 162: a rail ended in mid-air): every rail line and post built inside a 'fence' prop (tests/soft-sweep.cjs). */
   const railAudit:{rails:[number,number,number,number,number][];posts:[number,number,number][]}={rails:[],posts:[]};
   const cylinder=(r:number,h:number,c:string,x:number,y:number,z:number,p=town)=>{if(propTag?.kind==='fence'&&p===town&&h>=.5)railAudit.posts.push([x,z,y+h/2]);return put(new T.CylinderGeometry(r,r,h,10),c,x,y,z,p);};
@@ -1592,6 +1592,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Coral Cay, its causeway and the two sandbar stops (lib/town/coralCayWorld.ts). Built before the batching pass below,
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
   yield;
+  CAY_ARCH_LANTERNS.length=0;STATION_LANTERNS.length=0;// filled by the builds below (polish Nov 27: lantern night glows)
   const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
   // Café by the Sea + butterfly garden on the cay's east point (seasideCafeWorld.ts, Nov 24 2026): batched; one signs-atlas draw.
   // 'fi-no-cafe' (localStorage '1'): build without the café's scenery, for the gfx-budget before column (GFX_NO_CAFE=1) only.
@@ -2123,7 +2124,7 @@ export function* buildTownSteps(scene: T.Scene) {
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
     // Night glow (Nov 13 2026, machineNightGlow.ts): the Konbini fronts and the gashapon panels carry their weight in the plain paint's uv slot.
-    {const glow=object.userData.machineGlow as [number,boolean]|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
+    {const glow=object.userData.machineGlow as [number,boolean|'lantern']|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
     {const rock=object.userData.swayRock as [number,number,number]|undefined;if(rock&&paint)markSway(geom,rock[0],rock[1],rock[2]);}// soft sweep: the café rowboat rocks with the island wind (0 draws)
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);if(object.userData.depthColors)batch.depthPiece=batch.geometries.length-1;
@@ -2232,6 +2233,21 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   practicePools.computeBoundingSphere();practicePools.matrixAutoUpdate=false;detailPools.add(practicePools);
   nightRoot.userData.detailPoolCount=16;
+  // Polish Nov 27 2026 (owner shot 198, night: "the station lanterns needs light"): every paper lantern (the stations' and the Coral
+  // Cay arch's) gets, at night only (this group), a warm pool on the floor under it and a soft halo round it (two crossed vertical
+  // quads of the same additive glow, each both ways round): ONE instanced draw island-wide on the lamp pools' material (no new program, texture or light),
+  // 2 triangles an instance. The lanterns themselves glow from inside (machineNightGlow.ts lantern flag).
+  const lanternGlowMaterial=poolMaterial.clone();lanternGlowMaterial.opacity=.8;materials.push(lanternGlowMaterial);// same program (a clone), a softer halo over the lit paper
+  // A station lantern hangs 0.7 m in front of the house wall: its halo is a soft disc just behind it (never over the lit paper) and a
+  // warm wash on the wall; a lantern in the open (the arch) has two crossed discs, each both ways round (the glow is front-sided).
+  {type Spot={x:number;y:number;z:number;floor:number;r:number;wx?:number;wz?:number};const spots:Spot[]=STATION_LANTERNS.map(l=>({...l,r:1}));for(const a of CAY_ARCH_LANTERNS)spots.push({...a,r:.8});
+   const n=spots.reduce((s,l)=>s+(l.wx!==undefined?3:5),0);
+   if(spots.length){const glows=new T.InstancedMesh(poolGeometry,lanternGlowMaterial,n);glows.name='lantern-glows';const q=new T.Quaternion(),yawQ=new T.Quaternion(),up=new T.Vector3(0,1,0),out=new T.Vector3();let k=0;
+    for(const l of spots){poolPosition.set(l.x,l.floor+.03,l.z);poolScale.set(2.8*l.r,1,2.8*l.r);poolMatrix.compose(poolPosition,poolRotation,poolScale);glows.setMatrixAt(k++,poolMatrix);
+     if(l.wx!==undefined&&l.wz!==undefined){q.setFromUnitVectors(up,out.set(-l.wx,0,-l.wz));
+      for(const [back,size,dy] of [[.3,1.25,0],[.66,2.1,-.25]] as const){poolPosition.set(l.x+l.wx*back,l.y+dy,l.z+l.wz*back);poolScale.set(size,1,size);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}continue;}
+     for(const [yaw,tilt] of [[Math.PI/4,1],[-Math.PI/4,1],[Math.PI/4,-1],[-Math.PI/4,-1]]){q.setFromAxisAngle(new T.Vector3(1,0,0),tilt*Math.PI/2);yawQ.setFromAxisAngle(up,yaw);q.premultiply(yawQ);poolPosition.set(l.x,l.y,l.z);poolScale.set(1.35*l.r,1,1.35*l.r);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}}
+    glows.instanceMatrix.needsUpdate=true;glows.computeBoundingSphere();glows.matrixAutoUpdate=false;nightPools.add(glows);nightRoot.userData.lanternGlows=spots.length;}}
   // Kick reactions: each tagged prop's coalesced vertex runs in the merged chunk buffers, and a lamp's night pool instance.
   const propSpecs:PropSpec[]=[];
   for(const [tag,{pieces,bounds}] of propRecords){

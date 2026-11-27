@@ -55,6 +55,8 @@ export function islandArch(s:ArchSpec):HutPart[]{
   // two lanterns hanging under the lintel, between the posts and the road
   const under=s.plankY-s.plankH/2;
   for(const e of [-1,1]){const zz=e*(s.half-1.4),cord=new T.CylinderGeometry(.015,.015,.4,4,1,true);cord.translate(0,under-.18,zz);parts.push({geo:cord,color:'#3a2f25'});
-   const lt=puffBall(.17);lt.scale(1,1.25,1);lt.translate(0,under-.5,zz);parts.push({geo:lt,color:'#ffd27a'});}}
+   const lt=puffBall(.17);lt.scale(1,1.25,1);lt.translate(0,under-.5,zz);parts.push({geo:lt,color:ARCH_LANTERN_COLOR});}}
  return parts;
 }
+/** The arch's paper lantern paint (coralCayWorld.ts lights it at night). */
+export const ARCH_LANTERN_COLOR='#ffd27a';

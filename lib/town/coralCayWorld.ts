@@ -23,7 +23,10 @@ import {surfOn} from './surfaceEdges';
 import {broadleafTreesOn,broadleafBush,spotHash,CAY_PAIR_LOBES,CAY_TRIO_LOBES} from './broadleafTrees';
 import {softOn,softLow,pebbleGeometry} from '../graphics/softBox';
 import {hutWall,thatchRoof,hutDoor,hutWindow,onDrum,type HutPart} from './thatchHut';
-import {islandArch} from './islandArch';
+import {islandArch,ARCH_LANTERN_COLOR} from './islandArch';
+/** Polish Nov 27 2026: the welcome arch's paper lanterns (x, centre y, z, road height) for world.ts's night glows. */
+export const CAY_ARCH_LANTERNS:{x:number;y:number;z:number;floor:number}[]=[];
+const m0Lift=(x:number,z:number)=>cayGround(x,z);
 import {seawallX} from './eastCoast';
 import {depthLowTier} from './townDepth';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
@@ -197,7 +200,11 @@ export function buildCoralCay(t:CayTools){
  // The piers stand on the pavement (between the 4 m kerb and the 7 m deck edge), clear of the carriageway and the zebra.
  {const x=WELCOME_ARCH.x,pz=WELCOME_ARCH.pierOffset,pw=WELCOME_ARCH.pierWidth,isle=softOn();
   // Inflate pass (owner shot 171: "make this more island feel"): palm-trunk posts, driftwood plank and lintel, thatch, lanterns, ferns (islandArch.ts).
-  if(isle)for(const p of islandArch({half:pz,postR:pw/2,postTop:6.55,plankY:6.1,plankH:.95,plankW:pz*2+1.6,plankT:1.1,low:softLow()})){const m=put(p.geo,p.color,x,0,z0);if(p.tint)m.userData.vertexTint=p.tint;}
+  if(isle)for(const p of islandArch({half:pz,postR:pw/2,postTop:6.55,plankY:6.1,plankH:.95,plankW:pz*2+1.6,plankT:1.1,low:softLow()})){const m=put(p.geo,p.color,x,0,z0);if(p.tint)m.userData.vertexTint=p.tint;
+   if(p.color===ARCH_LANTERN_COLOR)m.userData.machineGlow=[.45,'lantern'];}// polish Nov 27 2026: lit from inside at night (machineNightGlow.ts)
+  // Polish Nov 27 2026 (owner shot 198, every paper lantern lit): the two lanterns under the lintel (islandArch.ts: under the plank,
+  // 1.4 m in from each post) get world.ts's night halo and road pool.
+  if(isle){const g=m0Lift(x,z0),under=6.1-.95/2;for(const e of [-1,1])CAY_ARCH_LANTERNS.push({x,y:g+under-.5,z:z0+e*(pz-1.4),floor:g+.02});}
   for(const side of [-1,1]){if(!isle){box(pw,6.2,pw,'#d6b58a',x,3.1,z0+side*pz);box(pw+.3,.3,pw+.3,'#eddfbb',x,6.3,z0+side*pz);}obstacles.push({x,z:z0+side*pz,w:pw,d:pw});}
   if(!isle){box(1.1,.9,pz*2+1.4,'#477c6a',x,6.1,z0);box(1.3,.18,pz*2+1.8,'#eddfbb',x,6.63,z0);}
   sign('WELCOME TO CORAL CAY',11,.8,x-.57,6.1,z0,isle?'#c99f6b':'#294f43',isle?'#3b2a1a':'#f4cc7c',-Math.PI/2);
