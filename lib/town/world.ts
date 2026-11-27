@@ -1166,9 +1166,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // The coast's edge is the sand ribbon's own rounded slope into the sea (fields.ts); the old row of 160 pale cylinders here
   // read as a segmented pipe with gaps at every joint (Oct 12 2026).
   for(const [x,z] of [[-29,80],[-12,94],[35,96],[51,119],[51,138]])palm(x,z,5.5);
-  const lPad=(w:number,h:number,len:number,c:string,x:number,y:number,z:number):T.Mesh[]=>{const L=loungerPad(w,h,len,y);if(!L)return [box(w,h,len,c,x,y,z)];return [put(L.base.g,LOUNGER_WOOD,x,L.base.y,z),put(L.cushion.g,c,x,L.cushion.y,z)];},
+  const lPad=(w:number,h:number,len:number,c:string,x:number,y:number,z:number):T.Mesh[]=>{const L=loungerPad(w,h,len,y);if(!L)return [box(w,h,len,c,x,y,z)];const sh=!(h<=.2&&y<.2),bm=put(L.base.g,LOUNGER_WOOD,x,L.base.y,z),cm=put(L.cushion.g,c,x,L.cushion.y,z);bm.castShadow=true;cm.castShadow=sh;/* batch keys as before: the base joins the umbrella pole's batch, the cushion the old pad's */return [bm,cm];},
    lBack=(w:number,h:number,len:number,c:string,x:number,y:number,z:number)=>{const g=loungerBackGeo(w,h,len);return g?put(g,c,x,y,z):box(w,h,len,c,x,y,z);},
-   lTowel=(w:number,d:number,c:string,x:number,z:number)=>{const t=towelGeo(w,d);return t?put(t.g,c,x,t.y,z):box(w,.015,d,c,x,.008,z);};// Rail + beach props (owner 185): puffy cushions on rounded bases, padded backrests, puffy mats
+   lTowel=(w:number,d:number,c:string,x:number,z:number)=>{const t=towelGeo(w,d);if(!t)return box(w,.015,d,c,x,.008,z);const m=put(t.g,c,x,t.y,z);m.castShadow=false;return m;};// Rail + beach props (owner 185): puffy cushions on rounded bases, padded backrests, puffy mats
   for(const {x,z} of PALM_COAST_UMBRELLAS){
     cylinder(.045,2.5,'#9d805b',x,1.25,z);
     const umbrella=put(new T.ConeGeometry(2,.65,8),'#bd7657',x,2.6,z);umbrella.castShadow=true;

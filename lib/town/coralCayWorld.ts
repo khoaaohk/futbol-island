@@ -291,9 +291,9 @@ export function buildCoralCay(t:CayTools){
   buildings.push({x,z,w:K.w,d:K.d,height:4.52,name:'CORAL CAY KONBINI'});obstacles.push({x,z,w:K.w,d:K.d});}
  // ---- Shared beach props.
  function umbrella(x:number,z:number,i:number){
-  const lPad=(w:number,h:number,len:number,c:string,x:number,y:number,z:number):Mesh[]=>{const L=loungerPad(w,h,len,y);if(!L)return [box(w,h,len,c,x,y,z)];return [put(L.base.g,LOUNGER_WOOD,x,L.base.y,z),put(L.cushion.g,c,x,L.cushion.y,z)];},
+  const lPad=(w:number,h:number,len:number,c:string,x:number,y:number,z:number):Mesh[]=>{const L=loungerPad(w,h,len,y);if(!L)return [box(w,h,len,c,x,y,z)];const sh=!(h<=.2&&y<.2),bm=put(L.base.g,LOUNGER_WOOD,x,L.base.y,z),cm=put(L.cushion.g,c,x,L.cushion.y,z);bm.castShadow=true;cm.castShadow=sh;/* batch keys as before: the base joins the umbrella pole's batch, the cushion the old pad's */return [bm,cm];},
    lBack=(w:number,h:number,len:number,c:string,x:number,y:number,z:number)=>{const g=loungerBackGeo(w,h,len);return g?put(g,c,x,y,z):box(w,h,len,c,x,y,z);},
-   lTowel=(w:number,d:number,c:string,x:number,z:number)=>{const t=towelGeo(w,d);return t?put(t.g,c,x,t.y,z):box(w,.015,d,c,x,.008,z);};// Rail + beach props (owner 185): puffy cushions on rounded bases, padded backrests, puffy mats
+   lTowel=(w:number,d:number,c:string,x:number,z:number)=>{const t=towelGeo(w,d);if(!t)return box(w,.015,d,c,x,.008,z);const m=put(t.g,c,x,t.y,z);m.castShadow=false;return m;};// Rail + beach props (owner 185): puffy cushions on rounded bases, padded backrests, puffy mats
   assets.push({kind:'beach-umbrella',x,z,w:.25,d:.25,visualW:4.2,visualD:4.2});
   cylinder(.055,2.7,'#9d805b',x,1.35,z);const canopy=put(new T.ConeGeometry(2.1,.7,10),i%2?'#477c6a':'#bd7657',x,2.8,z);canopy.rotation.y=i*.4;
   const targets:Mesh[]=[];canopy.userData.umbrellaTargets=targets;obstacles.push({x,z,w:.25,d:.25});
