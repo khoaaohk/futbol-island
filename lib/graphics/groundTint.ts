@@ -169,8 +169,13 @@ export const PLAZA_CREST={course:.85,soft:.1,line:.13} as const;
 /** Per VERTEX (Nov 28 2026 review), so the band pixel pays nothing for it: what lies beyond (0 sand .. 1 paving), the path wear, and
  *  how the band blends there: against sand a noise-broken threshold (from..to), against paving a soft blend across the whole band
  *  with the break-up only as fine detail (paveFrom..paveTo, paveNoise). vEdge = (edge, beyond, wear, noise share), vEdgeR = (from, 1/width). */
-const LAWN_EDGE_VERTEX=(()=>{const E=LAWN_EDGE,i0=1/(E.to-E.from),i1=1/(E.paveTo-E.paveFrom);
- return `{float eu=min(aEdge.y,1.);vEdge=vec4(aEdge.x,eu,aEdge.y>1.5?aEdge.y-${f(WEAR_BASE)}:0.,1.-${f(1-E.paveNoise)}*eu);vEdgeR=vec2(${f(E.from)}+${f(E.paveFrom-E.from)}*eu,${f(i0)}+${f(i1-i0)}*eu);}`;})();
+/** paths-junctions (owner shot 173, Nov 27 2026: "the line for the grass is still very sharp"): a dirt / sand walkway's lip (aEdge.y =
+ *  WEAR_BASE + wear) took the PAVING blend (a soft straight band). It now takes the sand edge's broken threshold, a little softer
+ *  (LIP_BLEND): the tile's blotches wander the grass line, its clumps leave tufts on the path and bare patches in the verge. Per
+ *  vertex: the band pixel's cost is unchanged. The town's pavements (aEdge.y = 1, the kerb verge) keep the paving blend. */
+export const LIP_BLEND={from:.3,to:.7,noise:1} as const;
+const LAWN_EDGE_VERTEX=(()=>{const E=LAWN_EDGE,i0=1/(E.to-E.from),i1=1/(E.paveTo-E.paveFrom),iL=1/(LIP_BLEND.to-LIP_BLEND.from);
+ return `{float eu=min(aEdge.y,1.),el=step(1.5,aEdge.y);vEdge=vec4(aEdge.x,eu,el*(aEdge.y-${f(WEAR_BASE)}),mix(1.-${f(1-E.paveNoise)}*eu,${f(LIP_BLEND.noise)},el));vEdgeR=mix(vec2(${f(E.from)}+${f(E.paveFrom-E.from)}*eu,${f(i0)}+${f(i1-i0)}*eu),vec2(${f(LIP_BLEND.from)},${f(iL)}),el);}`;})();
 export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kind:GroundKind):M{
  ensureSubscribed();
  const {amp,grain,wet}=GROUND_TINT[kind],[mr,mg,mb]=GROUND_DETAIL_MIX[kind];

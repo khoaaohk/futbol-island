@@ -109,11 +109,15 @@ export function buildCoralCay(t:CayTools){
  // overlap (performance guide: coplanar layers flicker at parachute distance).
  // The roundabout replaces the straight road where the causeway reaches the cay: the road stops at its outer edge.
  // The road ribbons stop where each roundabout arm flares out (5 m outside the ring); the flare shapes below meet their end edges exactly.
+ // paths-junctions (owner shots 176 / 177, Nov 27 2026: a pavement jog and grass notches where the causeway meets the Club Grounds
+ // junction): the main island's pavement is 2 m (to 6 m off the centre line), the causeway's 3 m (to 7 m). It keeps the junction's 6 m to
+ // the junction's edge (s 2) and widens smoothly to 7 m by s 14, so the kerb line runs on without a step.
+ const paveHalf=(p:PathSample)=>{const t=Math.min(1,Math.max(0,(p.s-2)/12));return 6+(deck-6)*t*t*(3-2*t);};
  const ARM_END=ROUNDABOUT.roadOuter+5,inRing=(p:{x:number;z:number})=>Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ARM_END;
  const iW=P.findIndex(inRing),iE=P.length-1-[...P].reverse().findIndex(inRing);
  for(const [a,b] of [[0,iW],[iE,last]] as [number,number][]){
   strip(a,b,()=>-4,()=>4,-.01,-.01,'#737c75',false,12,'asphalt');// Nov 10 2026: tinted like the main island's carriageways
-  for(const side of [-1,1])strip(a,b,()=>side*4,()=>side*deck,-.02,-.02,'#eddfbb',false,12,'path');
+  for(const side of [-1,1])strip(a,b,()=>side*4,p=>side*paveHalf(p),-.02,-.02,'#eddfbb',false,12,'path');
  }
  // Over the water the embankment slopes gently into the sea (no vertical cliff): a stone skirt, then — wherever sand or
  // stone meets the sea — a soft foam line (the main coast's pale waterline colour) and two shallow-water tints.
@@ -135,7 +139,9 @@ export function buildCoralCay(t:CayTools){
  // Centre dashes share a 6 m rhythm along the curve, turned to the road's heading.
  for(let s=8;s<P[last].s-4;s+=6){const p=P[Math.round(s/P[last].s*last)];if(Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ARM_END+2)continue;const d=box(2,.008,.12,'#e6d7b5',p.x,.008,p.z);d.rotation.y=-Math.atan2(p.tz,p.tx);}
  // Lamps must stay off this paving on the main island, like every other street.
- surfaceAreas.push({kind:'path',x:(CAUSEWAY.roadStart+MAIN_SHORE_X)/2,z:z0,w:MAIN_SHORE_X-CAUSEWAY.roadStart,d:12});
+ // paths-junctions: the area follows the pavement's outer edge (it was 12 m wide under a 14 m deck, so the lawn's lip ran across the
+ // pavement 1 m in: the grass slivers and notches of owner shot 177); three steps follow the widening (within 26 cm of it).
+ for(const [x0,x1,half] of [[CAUSEWAY.roadStart,206,6.13],[206,210,6.5],[210,MAIN_SHORE_X,deck]] as const)surfaceAreas.push({kind:'path',x:(x0+x1)/2,z:z0,w:x1-x0,d:half*2});
  // Gate piers close both cut ends of the seawall (the road is still straight at the coast).
  const pierBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>{const g=puffGeo(w,h,d,{openBottom:true,dome:h<.5?.06:0});return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};// inflate pass: soft gate piers (owner shot 175)
  for(const side of [-1,1]){const z=z0+side*(deck+.55),px=softOn()?seawallX(z)??MAIN_SHORE_X-2.6:MAIN_SHORE_X-2.6;/* on the wall's line (owner shot 178: no gap) */pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);obstacles.push({x:px,z,w:1,d:1});}

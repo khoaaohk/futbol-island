@@ -3,7 +3,7 @@ import {lampPost,lampStyleFor,lampNear2} from './lampPost';
 import {SIGN_POST_SET} from './signPosts';
 import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
-import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
+import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF,KNOCKOUT_STAIR_RAILS} from '../games/rooftopKnockout';
 import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
 import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
@@ -872,13 +872,14 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const z of [79.25,79.75])box(.8,.012,.018,'#fff0cf',432,10.18,z);
   street(318,19.5,131);street(412,19.5,131);street(365,-46,94,false);street(365,85,94,false);
   path(365,78,4,13);path(365,76,42,3);
+  path(439.5,85.75,7,3.9);// paths-junctions (Nov 27 2026): the south-east stair's foot (x 440..443, z 84) joins the walk at x 436
   for(const x of [325,405])for(const z of [-34,-10,16,41,65]){if(x===405&&z===16)continue;tree(x,z);bench(x,z+4);}
   // Signs audit (Nov 25 2026): over the gate path between the fences (was at x 390, 1 m behind the east gate pillar and fence,
   // which stood in front of its words).
   districtSign('ISLAND HIGH SCHOOL',365,78);
 
   // A continuous shaded frontage joins the terraces to the central entrance.
-  path(365,-54.5,73,5);
+  path(365,-54.5,78.4,5);// paths-junctions (Nov 27 2026): 78.4 m (was 73): the two ground flights' feet (x 365 +-37.5) land on it, not 1 m short on the grass
   for(const side of [-1,1])arcadeWalk(365+side*23,-55,26);
   for(let row=0;row<3;row++){
     box(.9,.4+row*.4,18,'#d2bc94',402+row,(.4+row*.4)/2,10);
@@ -959,10 +960,16 @@ export function* buildTownSteps(scene: T.Scene) {
   for(let i=0;i<=40;i++){const height=i===0?ar.height:ar.height*(41-i)/41,x=i===0?55:57+(i-.5)*.4,z=i===0?178.2:179,w=i===0?4:.4,d=i===0?5.4:4;
     const mesh=box(w,height,d,'#d2bc94',x,height/2,z);mesh.userData.skipRoofObstacle=true;
     walkSurfaces.push({x,z,w,d,height,stepAccess:true});obstacles.push({x,z,w,d});
-    if(i>0)for(const rz of [177,181]){box(.07,1.15,.07,'#315b50',x,height+.575,rz);line(new T.Vector3(x-.2,height+1.15,rz),new T.Vector3(x+.2,height+1.15-ar.height/41,rz),.04,'#315b50');}
+    if(i>0)for(const rz of KNOCKOUT_STAIR_RAILS){box(.07,1.15,.07,'#315b50',x,height+.575,rz);line(new T.Vector3(x-.2,height+1.15,rz),new T.Vector3(x+.2,height+1.15-ar.height/41,rz),.04,'#315b50');}
   }
+  // paths-junctions (owner shot 181, Nov 27 2026: "fix this railing going through the wall"): the wall-side handrail stood at z 177, the
+  // building's own south face, so its posts were half inside the facade and near the top it ran through the roof's coping. It now stands
+  // on the treads 35 cm off the wall, and each handrail ends on a stouter capped newel post at the top tread (the landing's own guard takes
+  // over) and at the foot. The foot lands on a path down to the beach walk (x 72.8..76.8, z 177..186.2).
+  for(const rz of KNOCKOUT_STAIR_RAILS)for(const [nx,nh] of [[57.2,ar.height*40/41],[72.8,ar.height/41]]){box(.12,1.25,.12,'#315b50',nx,nh+.625,rz);box(.16,.06,.16,'#315b50',nx,nh+1.28,rz);}
+  path(74.8,181.6,4,9.2);
   // Continuous side barriers cannot activate around a rider halfway up a tread.
-  for(const z of [177,181])arenaRails.push({x:65,z,w:16,d:.12,floor:0,top:ar.height+1.3});
+  for(const z of KNOCKOUT_STAIR_RAILS)arenaRails.push({x:65,z,w:16,d:.12,floor:0,top:ar.height+1.3});
   // Guard the exposed top landing edges, leaving the north cage gate and east stairs open.
   for(const edge of [{x:53,z:178.2,w:.12,d:5.4},{x:55,z:180.9,w:4,d:.12}]){
     arenaRails.push({...edge,floor:ar.height-.3,top:ar.height+1.3});
@@ -1651,7 +1658,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Town kerb depth (?depth=1, lib/town/townDepth.ts; default off = nothing below changes). The streets are final here: register
   // them (the height function every mover reads), then the layers below are cut to it. Same chunks and materials: no new draw.
   const depthCrossings:Crossing[]=[];
-  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))],
+  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,joins:[{x:CAUSEWAY.roadStart,z:CAUSEWAY.z}],hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))],
    // a rounded corner keeps its kerb clear of the corner signal poles (placed below at +-5.3 m) and of small things already standing
    keep:[...roadJunctions.flatMap(j=>[[-5.3,-5.3],[5.3,5.3]].map(([dx,dz])=>({x:j.x+dx,z:j.z+dz,w:.5,d:.5}))),...obstacles.filter(o=>o.w<4&&o.d<4)]});
   if(townDepthOn()){for(const j of roadJunctions)for(const vertical of [true,false])for(const side of [-1,1]){const x=j.x+(vertical?0:side*6),z=j.z+(vertical?side*6:0);

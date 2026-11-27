@@ -144,7 +144,7 @@ export function broadleafBush(x:number,z:number,r:number,o:{soft?:boolean;low?:b
  return {leaves,shade,triangles};
 }
 /** A soft clump: detail-1 icosahedron (80 faces), corners pushed in / out 4 % by direction (shared corners stay shut), smooth normals. */
-function softClump(seed:number){const ico=new T.IcosahedronGeometry(1,1);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
+function softClump(seed:number){const ico=new T.IcosahedronGeometry(1,1);const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=1+.04*(spotHash(x*7.1+seed,z*5.3+y*3.7,seed)*2-1);p.setXYZ(i,x*k,y*k,z*k);}
  g.computeVertexNormals();const flat=g.toNonIndexed();g.dispose();return flat;}// non-indexed like every polyhedron (smooth normals kept)
 
@@ -177,6 +177,8 @@ export function pineTiers(x:number,z:number,s:number,o:{low?:boolean;base?:numbe
 
 /** A hedge-top swell (Leftovers B): an octahedron (8 faces: the west stadium's triangle budget), corners jittered 6 %, smooth normals
  *  (flattened and stretched along the hedge it reads as a soft swell, not a rock). Unit radius. */
-export function hedgeClump(seed:number){const ico=new T.OctahedronGeometry(1,0);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
+/** paths-junctions (owner shot 174, Nov 27 2026: hedge swells "end in sharp spike / wedge tips"): a six-sided pyramid (6 triangles; its
+ *  lower half was sunk in the hedge anyway), not an octahedron (8): stretched along the run its ends are blunt 120 degree noses, not spikes. */
+export function hedgeClump(seed:number){const ico=new T.BufferGeometry(),pv=[0,1,0];for(let k=0;k<6;k++)pv.push(Math.cos(k*Math.PI/3),0,-Math.sin(k*Math.PI/3));ico.setAttribute('position',new T.Float32BufferAttribute(pv,3));ico.setIndex([1,2,0,2,3,0,3,4,0,4,5,0,5,6,0,6,1,0]);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=1+.06*(spotHash(x*7.1+seed,z*5.3+y*3.7,seed)*2-1);p.setXYZ(i,x*k,y*k,z*k);}
  g.computeVertexNormals();const flat=g.toNonIndexed();g.dispose();(flat as unknown as {type:string}).type=FOLIAGE_TYPE;return flat;}

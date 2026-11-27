@@ -24,17 +24,17 @@ const check=(p,label)=>{assert.ok(p.position.every(Number.isFinite)&&p.edge.ever
  for(let i=0;i<lip.edge.length/2;i++){const x=lip.position[i*3],z=lip.position[i*3+2],on=Math.abs(x-path.x)<path.w/2+1e-6&&Math.abs(z-path.z)<path.d/2+1e-6;if(lip.edge[i*2]===1)assert.ok(on,'a bare lip vertex lies on the path');assert.ok(x<cx+5+4.1,'no lip beside covered ground');const y=lip.edge[i*2+1];assert.ok(y>=E.WEAR_BASE-2-1e-9&&y<=E.WEAR_BASE+1+1e-9,'paving beyond, with its wear: '+y);}
  // wear: a sheet over the walkway only, paving everywhere (edge 1), dusty at the outline (-1), trodden in the middle (+1), every
  // triangle up; a second walkway crossing it is cut in, never laid twice; a square (wider than WEAR.max) gets none; none on the lowest tier
- {const wear={position:[],index:[],edge:[]},t=E.pathWear(wear);check(wear,'wear');assert.ok(t>20&&t<400,'wear triangles '+t);let lo=9,hi=-9;
+ {const wear={position:[],index:[],edge:[]},t=E.pathWear(wear);check(wear,'wear');assert.ok(t>20&&t<900,'wear triangles '+t);/* 8 wear rows (paths-junctions: no Mach band), was 4 */let lo=9,hi=-9;
   for(let i=0;i<wear.edge.length/2;i++){const x=wear.position[i*3],z=wear.position[i*3+2],w=wear.edge[i*2+1]-E.WEAR_BASE;assert.equal(wear.edge[i*2],1);assert.ok(Math.abs(x-path.x)<=path.w/2+1e-6&&Math.abs(z-path.z)<=path.d/2+1e-6,'on the walkway');
    const d=Math.min(path.w/2-Math.abs(x-path.x),path.d/2-Math.abs(z-path.z));assert.ok(Math.abs(w-E.wearOf(d))<1e-6,'wear follows the distance to the outline');lo=Math.min(lo,w);hi=Math.max(hi,w);}
-  assert.ok(lo===-1&&hi===E.WEAR.light,'dusty edge to trodden middle: '+lo+' .. '+hi);assert.equal(E.wearOf(0),-1);for(let d=0;d<2;d+=.05)assert.ok(E.wearOf(d+.05)>=E.wearOf(d)-1e-12&&E.wearOf(d+.05)-E.wearOf(d)<.12,'one smooth rise, no step');/* Nov 26 2026: one C1 curve (no ruled line at a row) */assert.equal(E.wearOf(9),E.WEAR.light);
+  assert.ok(lo===-1&&hi>0&&hi<=E.WEAR.light,'dusty edge to trodden middle: '+lo+' .. '+hi);/* a narrow walkway's middle stops short of WEAR.light (the curve rises over 2.1 m: paths-junctions) */assert.equal(E.wearOf(0),-1);for(let d=0;d<2;d+=.05)assert.ok(E.wearOf(d+.05)>=E.wearOf(d)-1e-12&&E.wearOf(d+.05)-E.wearOf(d)<.12,'one smooth rise, no step');/* Nov 26 2026: one C1 curve (no ruled line at a row) */assert.equal(E.wearOf(9),E.WEAR.light);
   assert.equal(E.pathWear({position:[],index:[],edge:[]},true),0,'no wear on the simpler edge');
   const area=p=>{let a=0;for(let i=0;i<p.index.length;i+=3){const [A,B,C]=[0,1,2].map(k=>p.index[i+k]*3),P=p.position;a+=Math.abs((P[B]-P[A])*(P[C+2]-P[A+2])-(P[C]-P[A])*(P[B+2]-P[A+2]))/2;}return a;};
   assert.ok(Math.abs(area(wear)-path.w*path.d)<1e-6,'the sheet covers the walkway once: '+area(wear));
   const cross={x:cx-6,z:cz+4,w:3,d:14},square={x:cx-40,z:cz,w:20,d:20};E.setSurfaceInput({paths:[path,cross,square],blocked:()=>false});
   const two={position:[],index:[],edge:[]};E.pathWear(two);check(two,'wear at a junction');assert.ok(Math.abs(area(two)-(path.w*path.d+cross.w*cross.d-3*3))<1e-6,'a junction is covered once, a square not at all: '+area(two));
   // straight through the junction: on the first walkway's centre line, inside the crossing, the tone stays the trodden middle
-  let mid=0;for(let i=0;i<two.edge.length/2;i++){const x=two.position[i*3],z=two.position[i*3+2];if(Math.abs(z-cz)<1e-6&&Math.abs(x-cross.x)<1.6){assert.ok(two.edge[i*2+1]-E.WEAR_BASE>E.WEAR.light-.01,'trodden through the junction');mid++;}}assert.ok(mid>=3);
+  let mid=0;for(let i=0;i<two.edge.length/2;i++){const x=two.position[i*3],z=two.position[i*3+2];if(Math.abs(z-cz)<1e-6&&Math.abs(x-cross.x)<1.6){assert.ok(two.edge[i*2+1]-E.WEAR_BASE>0,'trodden through the junction');mid++;}}assert.ok(mid>=3);
   E.setSurfaceInput({paths:[path],blocked:(x,z)=>x>cx+5});}
  // Coral Cay: the rim climbs onto the sand ring (which lies over the lawn), skipped where told; lips and wear laid on the raised ground
  {const C=load('lib/town/coralCay.ts'),hx=C.HOSTEL_PATHS[0];E.setSurfaceInput({paths:C.HOSTEL_PATHS.map(([x,z,w,d])=>({x,z,w,d})),blocked:()=>false});

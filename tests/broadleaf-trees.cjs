@@ -37,7 +37,7 @@ const tri={};for(const [k,f] of Object.entries(kinds))for(let i=0;i<40;i++){cons
 {const p=B.pineTiers(5,6,1),sz=B.treeSize(5,6);p.leaves.computeBoundingBox();const b=p.leaves.boundingBox;assert(b.min.y>=1.6*sz.height&&b.max.y<=6.15*sz.height&&Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=1.95*sz.height*sz.crown,'pine inside the old cone (r 1.6, y 1.9..6.1) at its own size (soft sweep: rim droop to 1.6)');
  assert(p.triangles<=72,'pine: at most 72 triangles (soft sweep Nov 27 2026: rounded tiers, 3 x 24; was 48), got '+p.triangles);}
 {const r=B.broadleafBush(55,-20,.7,{soft:true,lobes:B.RAMP_BUSH_LOBES,stretch:[.85,1.9,.95]});r.leaves.computeBoundingBox();const b=r.leaves.boundingBox;assert(b.max.y+1.55<=3.2&&b.min.y+1.55>=-.1&&b.max.x-b.min.x<=1.6,'ramp bush keeps its envelope (the jump clears it)');}
-{const h=B.hedgeClump(3),h2=B.hedgeClump(3);assert.match(h.type,NOT_ROOF);same(h,h2);assert.equal(h.getAttribute('position').count/3,8);}
+{const h=B.hedgeClump(3),h2=B.hedgeClump(3);assert.match(h.type,NOT_ROOF);same(h,h2);assert.equal(h.getAttribute('position').count/3,6);/* six-sided pyramid: blunt swells (paths-junctions) */}
 console.log('  new kinds (tris):',JSON.stringify(tri));
 B.setBroadleafTrees(false);assert.equal(B.broadleafTreesOn(),false);
 console.log(`broadleaf trees ok: ${shapes.size} shapes, ${(sum/n).toFixed(0)} triangles a tree on average (max ${maxTri}), bush ${bush.leaves.getAttribute('position').count/3}`);

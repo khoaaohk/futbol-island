@@ -92,7 +92,7 @@ export function onApron(x:number,z:number,margin=0){const {w,d,r}=BOWL_APRON,ax=
 export const TRAIL_WIDTH=4.5;
 /** Where a trail starts and ends: 'ring' / 'plaza' / 'pond' (on that paving), 'trail' (on another trail's centreline: a junction)
  *  or 'beach' (it runs on onto the sand, its paving blending into the beach). */
-export type TrailEnd='ring'|'plaza'|'pond'|'trail'|'beach';
+export type TrailEnd='ring'|'plaza'|'pond'|'trail'|'beach'|'stair';
 export type Trail={id:string;curve:Curve;from:TrailEnd;to:TrailEnd};
 // Winding gravel trails (Nov 13 2026 rework, owner: no kinks, no stubs, every coast-bound trail runs onto the beach). Each is one
 // cubic Bézier that leaves the ring (on a straight side) or the plaza edge square to it, so the join is tangent-smooth.
@@ -110,6 +110,8 @@ let walkBearing=0;const POND_WALK_END=(()=>{let lo=-.7,hi=.7;for(let k=0;k<40;k+
 const POND_WALK_IN=(()=>{const a=pondEdge(walkBearing-.01,POND_WALK_OUT),b=pondEdge(walkBearing+.01,POND_WALK_OUT),tx=b.x-a.x,tz=b.z-a.z,l=Math.hypot(tx,tz);return {x:tz/l,z:-tx/l};})();
 /** The bearing (rad, the pondEdge angle) where the pond walk meets the rim (edge detail keeps clear of it). */
 export const POND_WALK_BEARING=walkBearing;
+const POND_STAIR_WALK:Curve=(()=>{const fx=-182,fz=72.6;/* the flight ends at z 72.75 */let best=0,d=Infinity;for(let k=0;k<720;k++){const a=-Math.PI+k*Math.PI/360,e=pondEdge(a,POND_WALK_OUT),l=Math.hypot(e.x-fx,e.z-fz);if(l<d){d=l;best=a;}}
+ const e=pondEdge(best,POND_WALK_OUT);return [[fx,fz],[fx+(e.x-fx)/3,fz+(e.z-fz)/3],[fx+(e.x-fx)*2/3,fz+(e.z-fz)*2/3],[e.x,e.z]];})();/* straight: the rim is ~4 m from the foot */
 export const PARK_TRAILS:readonly Trail[]=[
  {id:'north',curve:[[-205,-120],[-205,-152],[-168,-165],[-152,-200]],from:'ring',to:'beach'},
  {id:'south-west',curve:[[-205,60],[-205,88],[-242,94],[-261,119]],from:'ring',to:'beach'},
@@ -117,6 +119,9 @@ export const PARK_TRAILS:readonly Trail[]=[
  {id:'north-east',curve:[[-106,-51.5],[-106,-100],[-100,-150],[-99,-193]],from:'plaza',to:'beach'},
  {id:'south-east',curve:T_SOUTH_EAST,from:'plaza',to:'beach'},
  // The pond walk: off the south-east trail to the pond's east rim (its benches and sign).
+ // paths-junctions (Nov 27 2026): the pond stair (westElevation.ts WEST_STAIRS 'pond', x -182, from the ring walk at z 63.5) came down onto
+ // the grass 4 m short of the pond's rim: this short straight walk carries on from its foot to the rim.
+ {id:'pond-stair',curve:POND_STAIR_WALK,from:'stair',to:'pond'},
  {id:'pond',curve:[spurStart,[spurStart[0]-5,spurStart[1]],[POND_WALK_END.x+POND_WALK_IN.x*5,POND_WALK_END.z+POND_WALK_IN.z*5],[POND_WALK_END.x,POND_WALK_END.z]],from:'trail',to:'pond'},
 ];
 /** The trails' curves (the older name; the map and tests read either). */
