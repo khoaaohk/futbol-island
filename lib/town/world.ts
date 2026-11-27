@@ -1196,8 +1196,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // foam collar; same deck, colliders, gangway opening and name board. 16 box meshes -> 1 draw.
   const ferryRound=vehiclesOn();
   if(ferryRound){const fm=foamMaterial();materials.push(fm);const body=new T.Mesh(buildFerryGeometry(),fm);body.name='matchday-ferry-body';body.castShadow=body.receiveShadow=true;body.position.set(246,0,199);ferry.add(body);
-   // the name board on the transom face, below the deck (it stood on the old box's stern at the same height)
-   ferry.attach(sign('MATCHDAY FERRY',5.4,.6,246,.85,199+FERRY_SHAPE.transomZ+.02,'#294f43','#f4cc7c'));}
+   // the name board on the transom face, below the deck (it stood on the old box's stern at the same height); 5 cm proud of the
+   // transom so the hull face sits behind the words (island-signs: a face 2 cm back is on the POST_GAP line)
+   ferry.attach(sign('MATCHDAY FERRY',5.4,.6,246,.85,199+FERRY_SHAPE.transomZ+.05,'#294f43','#f4cc7c'));}
   else{
   box(8,1.6,17,'#477c6a',246,.5,199,ferry);box(8.3,.2,17.3,'#eddfbb',246,1.4,199,ferry);
   box(6,3,10,'#fff0cf',246,3,199,ferry);box(6.5,.22,10.5,'#bd7657',246,4.6,199,ferry);
