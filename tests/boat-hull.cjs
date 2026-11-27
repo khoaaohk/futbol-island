@@ -65,6 +65,6 @@ ok('beside a boat the sea is deep (swim), the swim range still counts the deck, 
 ok('heat: no allocation-heavy calls, gated near a boat in Town',()=>{const src=fs.readFileSync(path.resolve(__dirname,'../lib/town/fishing/boatHull.ts'),'utf8'),town=fs.readFileSync(path.resolve(__dirname,'../components/Town.tsx'),'utf8');
  assert.doesNotMatch(src,/setInterval|setTimeout|requestAnimationFrame|new Array|\.map\(|\.filter\(/);
  assert.match(town,/if\(rideRef\.current==='walk'&&!rooftop\.state\.falling&&!rooftop\.jump\.active&&!animalRides\.riding&&nearBoat\(location\.x,location\.z\)\)\{const hr=resolveBoatHull\(location,rampBefore,onLandableDeck,performance\.now\(\)\/1000\);/);
- assert.match(fs.readFileSync(path.resolve(__dirname,'../lib/town/fishing/deepSeaBoat.ts'),'utf8'),/const deck=\{\.\.\.boat\.deck,floating:true\};/);});
+ assert.match(fs.readFileSync(path.resolve(__dirname,'../lib/town/fishing/deepSeaBoat.ts'),'utf8'),/const deck:LandableDeck=\{\.\.\.boat\.deck,floating:true\};/);});
 unreg.forEach(u=>u());
 if(failed){console.log(failed+' failed');process.exit(1);}console.log('boat-hull ok');

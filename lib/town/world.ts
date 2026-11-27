@@ -7,6 +7,10 @@ import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout'
 import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
 import {ISLAND_SUN_POSITION} from '../graphics/islandLighting';
 import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
+import {buildFerryGeometry,FERRY_SHAPE} from './ferryModel';
+import {foamMaterial} from './fishing/deepSeaBoat';
+import {vehiclesOn} from '../graphics/vehicleSwitch';
+import {SWELL_AMP,setBoatRing,swellPose} from '../graphics/boatSwell';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
@@ -52,7 +56,7 @@ import {MUSEUM_WING} from '../museum/museumDoors';
 import {buildMuseumExterior,MUSEUM_CANOPY,MUSEUM_ACCENT} from './museumExterior';
 import {buildKitShopExterior} from './kitShopExterior';
 import {createWaterRipples} from '../graphics/waterRipples';
-import {patchOceanMaterial,stepWaterTime,setWaterNight,SEA_WATER_LOOK} from '../graphics/waterSurface';
+import {patchOceanMaterial,stepWaterTime,setWaterNight,SEA_WATER_LOOK,WATER_UNIFORMS} from '../graphics/waterSurface';
 import {createIslandShore} from '../graphics/islandShore';
 import {createSchemePicker,awningColour,type BuildingScheme} from './buildingStyles';
 import {createShapePicker} from './buildingShapes';
@@ -1183,11 +1187,18 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const z of [196,202]){bench(213,z);planter(216,z);}
   // Moored passenger ferry, animated by the existing island frame loop.
   const ferry=new T.Group();ferry.name='southeast-ferry';town.add(ferry);
+  // Nov 26 2026 (owner shot 149, `?vehicles=0` = the boxes below): ONE rounded, vertex-coloured body (ferryModel.ts) with a waterline
+  // foam collar; same deck, colliders, gangway opening and name board. 16 box meshes -> 1 draw.
+  const ferryRound=vehiclesOn();
+  if(ferryRound){const fm=foamMaterial();materials.push(fm);const body=new T.Mesh(buildFerryGeometry(),fm);body.name='matchday-ferry-body';body.castShadow=body.receiveShadow=true;body.position.set(246,0,199);ferry.add(body);
+   // the name board on the transom face, below the deck (it stood on the old box's stern at the same height)
+   ferry.attach(sign('MATCHDAY FERRY',5.4,.6,246,.85,199+FERRY_SHAPE.transomZ+.02,'#294f43','#f4cc7c'));}
+  else{
   box(8,1.6,17,'#477c6a',246,.5,199,ferry);box(8.3,.2,17.3,'#eddfbb',246,1.4,199,ferry);
   box(6,3,10,'#fff0cf',246,3,199,ferry);box(6.5,.22,10.5,'#bd7657',246,4.6,199,ferry);
   for(const z of [195.5,198,200.5,203])for(const x of [242.95,249.05])box(.06,1,1.6,'#365b56',x,3.3,z,ferry);
   box(5,1.1,.08,'#365b56',246,3.3,193.95,ferry);
-  ferry.attach(sign('MATCHDAY FERRY',6,.6,246,2,207.56,'#294f43','#f4cc7c'));
+  ferry.attach(sign('MATCHDAY FERRY',6,.6,246,2,207.56,'#294f43','#f4cc7c'));}
   for(const child of ferry.children){child.position.x-=246;child.position.z-=199;}
   ferry.position.set(246,0,199);
   // A broad gangway crosses the open dock rail and reaches the aft passenger deck.
@@ -1208,7 +1219,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // The cabin's collider matches its drawn 6 m walls (was 6.6: the deck strips beside it were too narrow to walk; ferryBoarding.ts).
   museumRails.push({...FERRY_CABIN});
   for(const {x,z,w,d} of FERRY_RAILS){
-    box(w,.07,d,'#eddfbb',x,2.55,z,ferry); // World placement is attached below.
+    if(!ferryRound)box(w,.07,d,'#eddfbb',x,2.55,z,ferry); // World placement is attached below. (Rounded: the rails with posts are in the body.)
     museumRails.push({x,z,w,d,floor:1.35,top:2.6});
   }
   // Newly added rails are converted to the ferry's local coordinates.
@@ -1229,7 +1240,9 @@ export function* buildTownSteps(scene: T.Scene) {
     vertexShader:'uniform float time; varying float alpha; void main(){float angle=time*.65+position.y*1.570796;float radius=2.6+.25*sin(position.y*3.0);vec3 p=vec3(cos(angle)*radius,.5+sin(angle+position.y)*1.5,sin(angle)*radius);alpha=.65;vec4 mv=modelViewMatrix*vec4(p,1.0);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(130.0/max(1.0,-mv.z),2.5,8.0);}',
     fragmentShader:'uniform vec3 tint; varying float alpha; void main(){float r=length(gl_PointCoord-.5);if(r>.5)discard;gl_FragColor=vec4(tint,alpha*(1.0-smoothstep(.12,.5,r)));}'});materials.push(lockParticleMaterial);
   const lockParticles=new T.Points(lockParticleGeometry,lockParticleMaterial);lockParticles.name='ferry-lock-particles';lockParticles.position.copy(ferryLock.position);ferry.add(lockParticles);
-  let ferryTime=0,lockReduced=false;
+  let ferryTime=0,lockReduced=false;const ferrySwell={heave:0,pitch:0,roll:0};
+  // its water ring (foam + lapping ripples round the hull, the ocean shader's slot 0): the hull's plan centre and half sizes
+  if(ferryRound)setBoatRing(0,246,199+(FERRY_SHAPE.noseZ+FERRY_SHAPE.transomZ)/2,Math.PI/2,(FERRY_SHAPE.transomZ-FERRY_SHAPE.noseZ)/2,FERRY_SHAPE.hb*.96,1);
   lockParticles.onBeforeRender=()=>{lockParticleMaterial.uniforms.time.value=ferryTime;};
   // Renderer calls this only for a visible marker; no second animation loop or frustum scan.
   ferryLock.onBeforeRender=()=>{if(lockReduced)return;const angle=ferryTime*.45;if(ferryLock.rotation.y!==angle){ferryLock.rotation.y=angle;ferryLock.updateMatrixWorld(true);}};
@@ -1237,8 +1250,15 @@ export function* buildTownSteps(scene: T.Scene) {
     lockParticles.visible=!reduced&&ferryLock.visible;lockReduced=reduced;if(reduced&&ferryLock.rotation.y!==0){ferryLock.rotation.y=0;ferryLock.updateMatrix();}
     if(reduced){ferryDeckSurface.height=1.5;ferry.position.set(246,0,199);ferry.rotation.set(0,0,0);return;}
     ferryTime+=Math.min(dt,.05);
+    if(ferryRound){// Nov 26 2026: tied at the pier it rocks with the same long swell as the boats at sea (boatSwell.ts), much less;
+      // a few cm of surge on its lines. Bow -z = yaw pi/2 in the swell's frame (bow = local +x there): pitch about x, roll about z here.
+      swellPose(246,199,WATER_UNIFORMS.uWaterTime.value,Math.PI/2,SWELL_AMP.moored,ferrySwell);
+      const bob=Math.sin(ferryTime*.85)*.02;
+      ferry.position.set(246+Math.sin(ferryTime*.38)*.04,ferrySwell.heave+bob,199+Math.sin(ferryTime*.46)*.07);
+      ferry.rotation.set(ferrySwell.pitch,Math.sin(ferryTime*.32)*.003,-ferrySwell.roll,'XYZ');
+    }else{
     ferry.position.set(246+Math.sin(ferryTime*.38)*.12,Math.sin(ferryTime*.85)*.10,199+Math.sin(ferryTime*.46)*.22);
-    ferry.rotation.set(Math.sin(ferryTime*.57)*.012,Math.sin(ferryTime*.32)*.008,Math.sin(ferryTime*.71)*.016);
+    ferry.rotation.set(Math.sin(ferryTime*.57)*.012,Math.sin(ferryTime*.32)*.008,Math.sin(ferryTime*.71)*.016);}
     ferryDeckSurface.height=1.5+ferry.position.y;
   }
   for(const z of [193,205])line(new T.Vector3(237,.7,z),new T.Vector3(242,1,z),.045,'#9d805b');
