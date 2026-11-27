@@ -55,10 +55,14 @@ ok('ground: every kind, every tier path, costs less than before (ALU, worst-case
 // the far-sea block adds at most SKY_SEA_ALU (static worst case: every branch counted; measured +206 on every path (far 1085 -> 1291, nearPhone 1551 -> 1757 by the same block), from
 // the release dddf9316) and no texture read; `?sky=0` compiles without it. The Lambert swap's saving is still pinned on top of it.
 const SKY_SEA_ALU=210;
+// Nov 26 2026 (rounded vehicles: the boats' water rings, lib/graphics/boatSwell.ts BOAT_RING_GLSL; `?vehicles=0` compiles without it): static
+// worst case +145 (far 1291 -> 1436: all three slots lit and every branch counted). A pixel away from every boat pays the detail test and
+// three slot rejects (~15 ALU); a ring pixel ~+50. Off on the still path (uWaterDetail < .5). No texture read.
+const BOAT_RING_ALU=150;
 ok('ocean: every phone path costs less than before, same texture reads',()=>{
  const now=oceanNow(),rows=[];
  for(const p of Object.keys(BASE.ocean)){const a=BASE.ocean[p],b=now[p];rows.push(`ocean.${p} ${a.alu}/${a.tex} -> ${b.alu}/${b.tex}`);
-  assert(b.alu-SKY_SEA_ALU<=a.alu-40,`ocean.${p}: ALU ${b.alu} (less the far-sea block's ${SKY_SEA_ALU}) is not at least 40 under ${a.alu}`);assert(b.tex<=a.tex,`ocean.${p}: texture reads`);}
+  assert(b.alu-SKY_SEA_ALU-BOAT_RING_ALU<=a.alu-40,`ocean.${p}: ALU ${b.alu} (less the far-sea block's ${SKY_SEA_ALU} and the boat rings' ${BOAT_RING_ALU}) is not at least 40 under ${a.alu}`);assert(b.tex<=a.tex,`ocean.${p}: texture reads`);}
  console.log('     '+rows.join('\n     '));});
 
 ok('both are three\'s lambert program + the GGX sun highlight; the material objects stay MeshStandardMaterial; nothing new on the GPU',()=>{

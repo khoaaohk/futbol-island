@@ -1,3 +1,5 @@
+import {vehiclesOn} from './vehicleSwitch';
+import {BOAT_RING_GLSL,BOAT_RING_SLOTS,BOAT_RING_UNIFORMS} from './boatSwell';
 import * as T from 'three';
 import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
 import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
@@ -395,9 +397,9 @@ const SKY_SEA_FAR=/* glsl */`
       gl_FragColor.rgb+=uSkyGlow*road*.32*sp;
       gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,hz*.5);}}`;
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
- const pbr=gfxFlag('pbr-ocean'),sky=skyOn();
+ const pbr=gfxFlag('pbr-ocean'),sky=skyOn(),rings=vehiclesOn();
  material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);if(sky)Object.assign(shader.uniforms,SKY_SEA_UNIFORMS);
+  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);if(sky)Object.assign(shader.uniforms,SKY_SEA_UNIFORMS);if(rings)Object.assign(shader.uniforms,BOAT_RING_UNIFORMS);
   // Nov 17 2026 (plan W1): the ocean program is three's LAMBERT source + the same GGX sun highlight (sunHighlight.ts) instead of the
   // full physical light loop; SEA_WATER_LOOK's roughness and 2 % metalness are folded in as constants. `?gfx=pbr-ocean` (dev) keeps the old one.
   if(!pbr){shader.vertexShader=T.ShaderLib.lambert.vertexShader;
@@ -405,7 +407,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     .replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+sunHighlightGlsl(ggxA2(SEA_WATER_LOOK.roughness).toFixed(5),'seaF0'));}
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+OCEAN_VERT_GLSL)
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;oceanVaryings(vWaterXZ);');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+(sky?'uniform vec3 uSkyGlow;\n':'')+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+(sky?'uniform vec3 uSkyGlow;\n':'')+(rings?`uniform vec4 uBoatRing[${BOAT_RING_SLOTS}],uBoatRingS[${BOAT_RING_SLOTS}];\n`:'')+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
    .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
@@ -464,7 +466,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
      // folded into the open-sea factor so they cost no extra smoothstep.
      {float sea=smoothstep(25.,110.,dd);
-      diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}${sky?SKY_SEA_ALBEDO:''}
+      diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}${sky?SKY_SEA_ALBEDO:''}${rings?BOAT_RING_GLSL:''}
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
      // Clear water over sand at the edge (SEA_SHALLOWS.sand), after the night tint.
@@ -537,6 +539,6 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #include <opaque_fragment>`)
    .replace('#include <fog_fragment>','#include <fog_fragment>'+(sky?'\n#ifdef USE_FOG'+SKY_SEA_FAR+'\n#endif':''));
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v12'+(pbr?'-pbr':'')+(sky?'-sky':'');
+ material.customProgramCacheKey=()=>'island-ocean-water-v12'+(pbr?'-pbr':'')+(sky?'-sky':'')+(rings?'-rings':'');
  material.needsUpdate=true;
 }

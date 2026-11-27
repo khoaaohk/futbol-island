@@ -8,7 +8,9 @@
  *  stays the cheap first test and the bound used by distanceToLandableDeck (a lower bound, fine for landing searches). */
 /** `floating` (Nov 11 2026, the deep-sea boats): a deck moored out in deep water. It is land for walking, landing and the swim range,
  *  but it makes no shelf: the sea beside it is deep (waterDepth.ts), so nobody wades on the open sea beside a boat. */
-export type LandableDeck={id:string;x:number;z:number;w:number;d:number;yaw:number;height:number;contains?:(x:number,z:number)=>boolean;distance?:(x:number,z:number)=>number;floating?:boolean};
+export type LandableDeck={id:string;x:number;z:number;w:number;d:number;yaw:number;height:number;contains?:(x:number,z:number)=>boolean;distance?:(x:number,z:number)=>number;floating?:boolean;
+ /** Nov 26 2026 (rocking boats): the floor height at a point when the deck tilts (else `height` everywhere). */
+ heightAt?:(x:number,z:number)=>number};
 const decks:LandableDeck[]=[];
 /** Register a deck; returns an unregister function. Registering the same id again replaces the old entry. */
 export function registerLandableDeck(deck:LandableDeck){
@@ -28,7 +30,7 @@ export function landableDeckAt(x:number,z:number):LandableDeck|null{
 }
 export const onLandableDeck=(x:number,z:number)=>decks.length>0&&landableDeckAt(x,z)!==null;
 /** Deck floor height at x/z (0 when none). */
-export const landableDeckHeight=(x:number,z:number)=>{const deck=decks.length?landableDeckAt(x,z):null;return deck?deck.height:0;};
+export const landableDeckHeight=(x:number,z:number)=>{const deck=decks.length?landableDeckAt(x,z):null;return deck?deck.heightAt?deck.heightAt(x,z):deck.height:0;};
 /** Distance to the nearest deck edge (Infinity when none; 0 on a deck). `floating`: only floating decks (true), only fixed ones
  *  (false), or all (null, the default). */
 export function distanceToLandableDeck(x:number,z:number,floating:boolean|null=null){
