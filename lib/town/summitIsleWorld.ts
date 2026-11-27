@@ -7,6 +7,7 @@
 // Shapes: summitIsle.ts.
 import * as T from 'three';
 import {hutWall,thatchRoof,hutDoor,onDrum} from './thatchHut';
+import {PALM_CROWNS} from './palmCrown';
 import {softOn,softLow,puffGeo,type SoftOpts} from '../graphics/softBox';
 import {broadleafTreesOn,broadleafTree} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
@@ -393,10 +394,12 @@ export function buildSummitIsle(t:SummitTools){
  const F=SUMMIT_FENCE,PI=SUMMIT_PITCH;
  const nearPitch=(x:number,z:number,r:number)=>Math.abs(x-PI.x)<F.halfX+r&&Math.abs(z-PI.z)<F.halfZ+r;
  function palm(x:number,z:number,h:number,i:number){const y=yAt(x,z),lean=.12+jitter(i,4)*.12,yaw=jitter(i,6)*Math.PI*2,piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
-  bake(piece,new T.CylinderGeometry(.11,.21,h,6),'#9d805b',at(x+Math.cos(yaw)*lean*h/2,y+h/2,z+Math.sin(yaw)*lean*h/2,Math.sin(yaw)*lean,0,-Math.cos(yaw)*lean));
-  const tx=x+Math.cos(yaw)*lean*h,tz=z+Math.sin(yaw)*lean*h,ty=y+h;
+  // Owner shot 212 (Nov 27): the crown hangs from the trunk's REAL tip (its own matrix), not the small-angle estimate (~9 cm low).
+  const TM=at(x+Math.cos(yaw)*lean*h/2,y+h/2,z+Math.sin(yaw)*lean*h/2,Math.sin(yaw)*lean,0,-Math.cos(yaw)*lean),TIP=new T.Vector3(0,h/2,0).applyMatrix4(TM);
+  bake(piece,new T.CylinderGeometry(.11,.21,h,6),'#9d805b',TM);
+  const tx=TIP.x,tz=TIP.z,ty=TIP.y;PALM_CROWNS.push({x,z,where:'summit',gap:0});
   for(let k=0;k<6;k++){const a=k/6*Math.PI*2+i;bakeBox(piece,2.6,.06,.5,k%2?'#5b895e':'#3f7a4f',tx+Math.cos(a)*1.15,ty-.25,tz+Math.sin(a)*1.15,0,-a,-.42);}
-  bake(piece,new T.IcosahedronGeometry(.28,0),'#7a5a3a',at(tx,ty-.35,tz));
+  bake(piece,new T.IcosahedronGeometry(.28,0),'#7a5a3a',at(tx,ty-.14,tz));// the knob covers the trunk's tip
   piece.tid=0;
   obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz},tid,rig:palmRig(x,z,y,{x:tx,y:ty,z:tz})});}
  function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;

@@ -64,6 +64,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour,roofSlab} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {PALM_CROWNS,PALM_KNOB_COLOR} from './palmCrown';
 import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, sillGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
@@ -274,14 +275,21 @@ export function* buildTownSteps(scene: T.Scene) {
     // Soft sweep 2 (west-stadium triangle budget): the rib-less palms (the West Beach's many, seen from the stadium) bend each frond in 6
     // steps, not 8 (its back face doubles every step): 56 triangles less a palm, the same arc at beach distance.
     const FS=ribs||!softOn()?8:6;
+    // Owner shot 212 (Nov 27): the crown hangs from the trunk's REAL tip (the leaning cylinder's top centre: up to ~0.3 m off the axis
+    // on the taller palms), with a knob over the joint; was hung on the axis at y = height (palmCrown.ts, tests/palm-crown.cjs).
+    const tipY=(height+sunk)/2,tip=new T.Vector3(0,tipY,0).applyEuler(trunk.rotation).add(trunk.position),hubX=tip.x,hubY=tip.y-height;
+    // knob: 20 / 8 tris; none on the West Beach's rib-less palms west of x -100 (the west stadium's 115k cap is full; there the
+    // fronds' roots meet over the tip on their own now)
+    if(ribs||x>=-100)put(ribs?new T.IcosahedronGeometry(.17,0):new T.OctahedronGeometry(.16,0),PALM_KNOB_COLOR,tip.x,tip.y-.02,0,group).scale.y=.75;
     for(let i=0;i<7;i++){
       const angle=i/7*Math.PI*2, points:T.Vector3[]=[];
       const positions:number[]=[],indices:number[]=[];
-      for(let j=0;j<=FS;j++){const t=j/FS,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r,y,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<FS){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
+      for(let j=0;j<=FS;j++){const t=j/FS,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r+hubX,y+hubY,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<FS){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
       // Without ribs the frond carries its own back face (a mirrored copy) in a one-step-off palette shade, so it joins the chunk's
       // ordinary front-sided paint batch instead of adding the double-sided one to every West Beach chunk (a draw call each).
       if(!ribs){const n=positions.length/3;positions.push(...positions);for(let k=0,m=indices.length;k<m;k+=3)indices.push(indices[k]+n,indices[k+2]+n,indices[k+1]+n);}
-      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();(geo as unknown as {type:string}).type=PALM_FROND_TYPE;const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),0,0,0,group);if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
+      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();(geo as unknown as {type:string}).type=PALM_FROND_TYPE;const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),hubX,hubY,0,group);
+      if(i===0){group.updateMatrixWorld(true);const hub=new T.Vector3(0,height,0).applyMatrix4(m.matrixWorld),tw=tip.clone().applyMatrix4(group.matrixWorld);PALM_CROWNS.push({x,z,where:'world',gap:hub.distanceTo(tw)});}if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
       if(ribs)for(let j=0;j<points.length-1;j++)line(points[j],points[j+1],.019,'#a1ac6d',group);
     }
     obstacles.push(trunkCollider(x,z,.22));
