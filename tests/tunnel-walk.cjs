@@ -76,7 +76,10 @@ const ROOT=path.join(__dirname,'..');
  // low chase view; reduced motion gets a short dim instead of the squash.
  assert(/toggleAttribute\('data-no-fly',inTunnelRef\.current\)/.test(town)&&/className="travel-nofly"/.test(town),'the ride button greys the jetpack in the tunnel');
  assert(/\.filter\(m=>!inTunnelRef\.current\|\|tunnelMode\(m\)\)/.test(town),'the ride cycle skips the jetpack in the tunnel (moped -> walk)');
- const css=fs.readFileSync(path.join(ROOT,'app/globals.css'),'utf8');assert(/\.travel-mode\[data-no-fly\] \.travel-nofly\{display:grid/.test(css),'no-fly badge style');
+ const css=fs.readFileSync(path.join(ROOT,'app/globals.css'),'utf8');assert(/\.travel-mode\[data-no-fly\] \.travel-nofly\{display:grid/.test(css)&&/\.tunnel-fade\{/.test(css),'no-fly badge + fade layer styles');
  for(const k of ['bonkBubble.follow(0,pr.x,bubbleY(','emoteBubbles.follow(0,me.x,bubbleY(','kenjiBubble.follow(0,tr.cabX,bubbleY('])assert(town.includes(k),'bubble kept in view: '+k);
+ assert.equal(tw.bumpFade(-1),0);assert.equal(tw.bumpFade(tw.BUMP.doneR),0);assert(Math.abs(tw.bumpFade(.2)-tw.BUMP_FADE)<1e-9,'held through the slide');
+ assert(tw.bumpFade(.06)>0&&tw.bumpFade(.06)<tw.BUMP_FADE&&tw.bumpFade(.6)>0&&tw.bumpFade(.6)<tw.BUMP_FADE,'eased in and out');
+ assert(/bumpFade\(tunnelWalk\.bump\.age\)/.test(town)&&/data-tunnel-fade=""/.test(town),'Town dims the view for a reduced-motion bump');
  console.log('tunnel-walk: ok');
 })().catch(e=>{console.error(e);process.exit(1);});

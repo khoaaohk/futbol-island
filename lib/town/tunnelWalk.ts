@@ -40,6 +40,10 @@ export const WARN_D=2.2,WARN_ETA=4.5;
 export const HIT_LEAD=.12;
 /** The bump: squash (s), push across (s), pop / wobble ends (s), all done + control back (s); reduced motion: slide (s), done (s). */
 export const BUMP={squash:.3,push:.5,pop:.8,done:1.5,slideR:.4,doneR:.75,dizzy:.7} as const;// dizzy: the stars from `pop` to `done`
+/** Nov 27 2026: reduced motion swaps the squash / tumble for a short dim of the view (Town's [data-tunnel-fade]): up in 0.12 s, held
+ *  through the 0.4 s slide, gone by the end (0.75 s). Opacity of a dark layer, 0 … BUMP_FADE. */
+export const BUMP_FADE=.55;
+export const bumpFade=(age:number)=>age<0||age>=BUMP.doneR?0:BUMP_FADE*(age<.12?age/.12:age<BUMP.slideR?1:1-(age-BUMP.slideR)/(BUMP.doneR-BUMP.slideR));
 
 // ---- the floor across the bore (m over TUNNEL_BED), as buildLitTube draws it (sleepers / rails / ballast / gutter / walkway)
 const RAIL_V=.68,SLEEPER=.22,RAIL=.36;
