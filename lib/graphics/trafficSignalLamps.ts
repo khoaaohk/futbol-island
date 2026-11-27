@@ -7,11 +7,12 @@
 // go darker so the lit one stands out. A kicked signal sways for under a second (lib/graphics/propReactions.ts): its three lamps
 // follow through `sway` (three instance positions re-uploaded per frame of the sway, nothing otherwise).
 import * as T from 'three';
+import {softOn} from './softBox';
 import {RED,YELLOW,GREEN,type SignalHead,type SignalLight} from '../town/trafficSignals';
 const LIT=['#ff3b2f','#ffc21f','#2ff27c'],DIM=.13,DIM_NIGHT=.055;
 export function createTrafficSignalLamps(scene:T.Scene,heads:readonly SignalHead[]){
  const shape=new T.Shape();for(let k=0;k<6;k++){const t=k/6*Math.PI*2;if(k)shape.lineTo(Math.cos(t)*.215,Math.sin(t)*.215);else shape.moveTo(.215,0);}
- const geometry=new T.ShapeGeometry(shape),material=new T.MeshBasicMaterial({toneMapped:false,fog:false}),mesh=new T.InstancedMesh(geometry,material,Math.max(1,heads.length*3));
+ const geometry=softOn()?new T.CircleGeometry(.215,14):new T.ShapeGeometry(shape),material=new T.MeshBasicMaterial({toneMapped:false,fog:false}),mesh=new T.InstancedMesh(geometry,material,Math.max(1,heads.length*3));
  mesh.name='traffic-signal-lamps';mesh.count=heads.length*3;mesh.castShadow=mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;
  const lit=LIT.map(c=>new T.Color(c)),dim=lit.map(c=>c.clone().multiplyScalar(DIM)),base=new Float32Array(heads.length*9),moved={x:0,y:0,z:0},m=new T.Matrix4(),q=new T.Quaternion(),p=new T.Vector3(),one=new T.Vector3(1,1,1),up=new T.Vector3(0,1,0);
  /** What each head shows: RED / YELLOW / GREEN, or -1 for all dark (the off half of a flashing yellow). */

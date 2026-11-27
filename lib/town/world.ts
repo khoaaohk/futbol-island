@@ -22,7 +22,7 @@ import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
 import {groundingOn,buildGrounding,registerUpright,UPRIGHT_SINK} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
-import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundColor,groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -63,6 +63,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { propBox, softLow, softOn, softPatchGeometry, SoftBoxGeometry, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -112,7 +113,12 @@ export function* buildTownSteps(scene: T.Scene) {
   // Kick reactions (lib/graphics/propReactions.ts): meshes built inside prop(kind,…) carry a tag through the batching
   // pass below, which records where each prop's vertices land in the merged chunk buffers. Build-time only.
   type PropTag={kind:PropReactionKind};let propTag:PropTag|null=null;
-  const prop=<R,>(kind:PropReactionKind,build:()=>R):R=>{if(propTag)return build();propTag={kind};try{return rigid(build);/* elevation: a prop is one rigid object on a slope */}finally{propTag=null;}};
+  // Soft sweep (Nov 27 2026, lib/graphics/softBox.ts, `?soft=0` = before): boxes built inside these props come out rounded (same
+  // BoxGeometry parameters, same batches, 0 draws). `softly(opts, fn)` does the same for builders that are not tagged props.
+  const SOFT_KINDS:Partial<Record<PropReactionKind,SoftOpts&{maxDim?:number}>>={bench:{r:.32},table:{r:.32},planter:{r:.24,maxDim:14},sign:{r:.3},fence:{r:.4},post:{r:.28},crate:{r:.22},stall:{r:.2},bollard:{r:.4},signal:{r:.3},net:{r:.4},goal:{r:.4},pole:{r:.35}};
+  let softBoxOpts:(SoftOpts&{maxDim?:number})|null=null;const softLowTier=softLow();
+  const softly=<R,>(o:(SoftOpts&{maxDim?:number})|null,fn:()=>R):R=>{const was=softBoxOpts;softBoxOpts=o;try{return fn();}finally{softBoxOpts=was;}};
+  const prop=<R,>(kind:PropReactionKind,build:()=>R):R=>{if(propTag)return build();propTag={kind};const was=softBoxOpts;softBoxOpts=was??SOFT_KINDS[kind]??null;try{return rigid(build);/* elevation: a prop is one rigid object on a slope */}finally{propTag=null;softBoxOpts=was;}};
   const museumRails:(Obstacle&{floor:number;top:number})[]=[];
   const walkSurfaces:(Obstacle&{height:number})[]=[];
   const landingExclusions:Obstacle[]=[];
@@ -130,7 +136,12 @@ export function* buildTownSteps(scene: T.Scene) {
   // Elevation (?elev=1; lib/town/elevation.ts): from here to the batching pass every piece `put` / `sign` places stands on the raised
   // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
   elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.group=0;elevBuild.pieces.length=0;
-  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.BoxGeometry(w,h,d),c,x,y,z,p);
+  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,softBoxOpts,softLowTier):new T.BoxGeometry(w,h,d),c,x,y,z,p);
+  /** Tree pit (soft sweep, owner shot 163): a round irregular lawn patch fading into the lawn instead of a square tile; `?soft=0` = the tile. */
+  const PIT_LIN=new T.Color('#7a9e67');
+  const treePit=(x:number,z:number,w:number,d:number)=>{if(!softOn())return box(w,.018,d,'#7a9e67',x,-.065,z);
+    const tint=(lx:number,lz:number)=>{const g=groundColor('lawn',x+lx,z+lz);return [g[0]/(PIT_LIN.r*1.03),g[1]/(PIT_LIN.g*1.03),g[2]/(PIT_LIN.b*1.03)] as const;};
+    const p=softPatchGeometry(w*.42,d*.42,x*7.13+z*3.71,-.075,-.108,tint);const m=put(p.geometry,'#7a9e67',x,0,z);m.userData.vertexTint=p.tint;m.userData.skipRoofObstacle=true;return m;};
   /** Night glow (machineNightGlow.ts): mark a piece to glow with the night factor, `w` 0…1; warm: a lit-interior white, else its own colour. */
   const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
   const cylinder=(r:number,h:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.CylinderGeometry(r,r,h,10),c,x,y,z,p);
@@ -1120,7 +1131,7 @@ export function* buildTownSteps(scene: T.Scene) {
   sign('ISLAND SHUTTLE',5,.65,72,2.45,-26.82,'#477c6a');});
   for(const x of [69,75])obstacles.push({x,z:-27,w:.2,d:.2});
   for(const [x,z] of [[64,-70],[114,-87],[138,-47],[211,-45]]){
-    box(4,.018,5,'#7a9e67',x,-.065,z);tree(x,z);
+    treePit(x,z,4,5);tree(x,z);
   }
   // Palm Coast beach opens south of the garage; static shoreline costs no animation.
 
@@ -1703,16 +1714,27 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const axis of axes){
       const face=axis==='x'?-Math.sign(dx):-Math.sign(dz);
       const hx=axis==='z'?junction.x-Math.sign(dz)*2:x,hz=axis==='x'?junction.z+Math.sign(dx)*2:z;
-      line(new T.Vector3(x,6.9,z),new T.Vector3(hx,6.9,hz),.1,'#384443');
+      if(softOn()){// soft sweep (owner shot 158): a rounded cap on the pole, the arm sweeping down into the hanger through a curved elbow
+       const R=.22,len=Math.hypot(hx-x,hz-z),ux=(hx-x)/len,uz=(hz-z)/len;
+       line(new T.Vector3(x,6.9,z),new T.Vector3(hx-ux*R,6.9,hz-uz*R),.1,'#384443');put(new T.SphereGeometry(.13,10,6),'#384443',x,7.0,z);
+       const elbow=put(new T.TorusGeometry(R,.075,6,8,Math.PI/2),'#384443',hx-ux*R,6.9-R,hz-uz*R);
+       const d=new T.Vector3(ux,0,uz),up=new T.Vector3(0,1,0);elbow.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(d,up,d.clone().cross(up)));
+       cylinder(.06,6.9-R-6.6,'#384443',hx,(6.9-R+6.6)/2,hz);
+       line(new T.Vector3(x,5.8,z),new T.Vector3(x+(hx-x)*.4,6.9,z+(hz-z)*.4),.045,'#384443');}
+      else{line(new T.Vector3(x,6.9,z),new T.Vector3(hx,6.9,hz),.1,'#384443');
       line(new T.Vector3(x,5.8,z),new T.Vector3(x+(hx-x)*.4,6.9,z+(hz-z)*.4),.045,'#384443');
-      cylinder(.06,.35,'#384443',hx,6.725,hz);
+      cylinder(.06,.35,'#384443',hx,6.725,hz);}
       const head=new T.Group();head.position.set(hx,5.5,hz);head.rotation.y=axis==='x'?face*Math.PI/2:face<0?Math.PI:0;town.add(head);
-      box(.87,2.22,.35,'#d6a944',0,0,0,head);signalHeads.push({x:hx,y:5.5,z:hz,yaw:head.rotation.y,jx:junction.x,jz:junction.z,axis});
-      box(.71,2.06,.08,'#202c2b',0,0,.21,head);
+      const soft=softOn();
+      if(soft){put(new SoftBoxGeometry(.87,2.22,.35,{radius:.16,seg:softLowTier?1:2}),'#d6a944',0,0,0,head);put(new SoftBoxGeometry(.71,2.06,.08,{radius:.035,seg:softLowTier?0:1}),'#202c2b',0,0,.21,head);}
+      else{box(.87,2.22,.35,'#d6a944',0,0,0,head);box(.71,2.06,.08,'#202c2b',0,0,.21,head);}
+      signalHeads.push({x:hx,y:5.5,z:hz,yaw:head.rotation.y,jx:junction.x,jz:junction.z,axis});
       for(let i=0;i<3;i++){
         const y=.64-i*.64;
-        const rim=cylinder(.285,.09,'#131e1d',0,y,.28,head);rim.rotation.x=Math.PI/2;
-        box(.58,.055,.29,'#202c2b',0,y+.28,.35,head);
+        const rim=soft?put(new T.CylinderGeometry(.285,.285,.09,14),'#131e1d',0,y,.28,head):cylinder(.285,.09,'#131e1d',0,y,.28,head);rim.rotation.x=Math.PI/2;
+        // soft: a curved half-round visor over each lens (a solid half cylinder, flattened), not a flat slab
+        if(soft){const hood=new T.Shape();hood.absarc(0,0,.29,0,Math.PI,false);hood.absarc(0,0,.245,Math.PI,0,true);put(new T.ExtrudeGeometry(hood,{depth:.2,bevelEnabled:false,curveSegments:5}),'#202c2b',0,y,.33,head);}
+        else box(.58,.055,.29,'#202c2b',0,y+.28,.35,head);
       }
     }});
     obstacles.push({x,z,w:.45,d:.45});
