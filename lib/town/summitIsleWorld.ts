@@ -539,7 +539,8 @@ export function buildSummitIsle(t:SummitTools){
    for(let j=0;j<4;j++){const p=P(-1.2-j*.6,(j%2?1:-1)*(CAVE_SIDE+.6));bake(piece,new T.IcosahedronGeometry(.45+jitter(j,c.z)*.3,0),tone[j%3],at(p.x,gTop+2.2+j*.12,p.z,0,j,0));}}
   // The riddle board at the sandbar landing: two posts, a little roof and three paper notes (the riddles show in the hunt hint).
   {const B=RIDDLE_BOARD,y=yAt(B.x,B.z),ax={x:Math.cos(B.yaw),z:-Math.sin(B.yaw)},n={x:Math.sin(B.yaw),z:Math.cos(B.yaw)},piece=propsAt(B.x,B.z);
-   for(const s2 of [-1.05,1.05]){const p={x:B.x+ax.x*s2,z:B.z+ax.z*s2};bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,y+2.45,p.z),.07,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.22,d:.22});}
+   for(const s2 of [-1.05,1.05]){const p={x:B.x+ax.x*s2,z:B.z+ax.z*s2};bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,y+2.45,p.z),.07,'#8a6a48',6);}
+   for(let k=0;k<=4;k++){const s2=-1.05+2.1*k/4;obstacles.push({x:B.x+ax.x*s2,z:B.z+ax.z*s2,w:.5,d:.5});}// Nov 27 2026 (owner 164): one solid footprint post to post (the board's foot is 1 m up: no hollow to land in)
    bakeBox(piece,2.3,1.25,.1,'#7a5a3a',B.x,y+1.65,B.z,0,B.yaw,0);bakeBox(piece,2.6,.1,.6,'#b9955a',B.x,y+2.45,B.z,0,B.yaw,0);
    for(const [s2,dy,tilt] of [[-.68,.1,.06],[0,-.08,-.04],[.68,.12,.05]] as [number,number,number][])bakeBox(piece,.55,.7,.02,'#f6ecd2',B.x+ax.x*s2+n.x*.06,y+1.65+dy,B.z+ax.z*s2+n.z*.06,0,B.yaw,tilt);
    bake(piece,new T.IcosahedronGeometry(.13,0),'#f4f1e6',at(B.x+n.x*.12,y+2.1,B.z+n.z*.12));}}

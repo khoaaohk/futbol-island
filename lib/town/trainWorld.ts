@@ -54,6 +54,9 @@ const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 /** Summit portals: headwall half width, its batter (m back per m up) and the wing walls' run out along the banks. */
 /** Nov 27 2026: the coming train's headlight in the bore (x, z of its front, gap m, intensity 0 … 1), set by Town; the lit tube's shader. */
 export const TUNNEL_TRAIN_LAMP={value:new T.Vector4(0,0,0,0)};
+export const POLE_PORTAL_CLEAR=8;
+/** Nov 27 2026: the station boards' solid footprint cells (x, z pairs; headless checks: tests/station-sign-landing.cjs). */
+export const STATION_SIGN_FEET:number[]=[];
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
 export const TUBE_SHOW=110,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
@@ -261,7 +264,8 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
      girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v-w,topB),off(a,v-w,top),inside);girders.quad(off(a,v+w,bot),off(b,v+w,botB),off(b,v+w,topB),off(a,v+w,top),inside);girders.quad(off(a,v-w,bot),off(b,v-w,botB),off(b,v+w,botB),off(a,v+w,bot),inside);}}
    // Catenary: a pole with its cantilever arm every ~POLE_STEP m (right side; platforms are all on the left), not at crossings.
    // (and never on a west-park trail: the pole slides along to the next row clear of it)
-   if(a.s>=poleNext&&(a.kind!==TrackKind.Sea||pierRows.has(i%n))&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
+   // Nov 27 2026 (owner 155: a mast stood in the tunnel mouth): none within POLE_PORTAL_CLEAR m of a portal (or inside)
+   if(a.s>=poleNext&&!(a.s>TUNNEL.west.s-POLE_PORTAL_CLEAR&&a.s<TUNNEL.east.s+POLE_PORTAL_CLEAR)&&(a.kind!==TrackKind.Sea||pierRows.has(i%n))&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
     // (Nov 24 2026: over the sea a pole stands only on a pier, on a bracket off the cap beam's end: it floated beside the deck)
     // Grounding 2 (owner shot 141, Nov 26: the square post ended in a clean cut on top of the sand): on land the pole runs on 0.9 m
     // into the ground and stands in a stepped concrete footing (0.34 m, then a 0.27 m cap, ~20 tris, in the wall paint: 0 draws).
@@ -399,8 +403,11 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Signs audit (Nov 25 2026, owner shots 78/79: the line board's one post ran up through "ISLAND LINE", the name board's posts
   // crossed its words and arrows): both boards stand on two posts just past their END edges (1 cm clear), between the faces'
   // planes, so no post crosses either face (scripts/sign-posts-scan.cjs).
-  {const posts=new Geo();for(const u of [9.5-1.52,9.5+1.52]){const a=P(u,v0+2.12,0);posts.box(a[0],top+1.2,a[2],c.tx,c.tz,.06,.06,1.2);solid({x:a[0],z:a[2],w:.3,d:.3});}
-   for(const u of [-12.5-1.01,-12.5+1.01]){const a=P(u,v0+2.12,0);posts.box(a[0],top+.9,a[2],c.tx,c.tz,.05,.05,.9);solid({x:a[0],z:a[2],w:.3,d:.3});}
+  {const posts=new Geo();for(const u of [9.5-1.52,9.5+1.52]){const a=P(u,v0+2.12,0);posts.box(a[0],top+1.2,a[2],c.tx,c.tz,.06,.06,1.2);}
+   for(const u of [-12.5-1.01,-12.5+1.01]){const a=P(u,v0+2.12,0);posts.box(a[0],top+.9,a[2],c.tx,c.tz,.05,.05,.9);}
+   // Nov 27 2026 (owner 164: a bike landed inside the line board, stuck between its posts): each board is ONE solid footprint from post to
+   // post (its bottom edge, ~1.45 m, is too low to pass under), 0.4 m deep, in 0.5 m cells (no hollow to land or get trapped in).
+   for(const [u0,u1] of [[9.5-1.52,9.5+1.52],[-12.5-1.01,-12.5+1.01]]){const nCell=Math.ceil((u1-u0)/.5);for(let k=0;k<=nCell;k++){const a=P(u0+(u1-u0)*k/nCell,v0+2.12,0);solid({x:a[0],z:a[2],w:.45,d:.45});STATION_SIGN_FEET.push(a[0],a[2]);}}
    emit(posts,C.timber,ox,oz);}
   board(-12.5,v0+2.08,top+1.75,1.9,.54,1,[0,LINE_ROW0/1024,.5,1]);board(-12.5,v0+2.16,top+1.75,1.9,.54,-1,[0,LINE_ROW0/1024,.5,1]);
  }
@@ -437,7 +444,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
   if(!tunnelOn()){const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x+o.x*.12,TUNNEL_BED,p.z+o.z*.12));}/* Nov 26 2026: with the lit tunnel the mouth is open (no black cap): the tube shows through it */// POLISH 4 (owner shot 70): 0.12 m out from the headwall's back, inside its arched hole, so it is in front of the drawn hill's cliff at the plane (the summit grid snaps it to ±0.03 m; on the curved west portal a cliff triangle at +0.03 stood in front of the old cap at +0.05 in and showed as a green band inside the arch)
   // POLISH 4: a dark floor through the headwall's arched hole (the summit terrain is cut out of the opening: summitIsleWorld)
-  {const fl=new Geo(),R2=TUNNEL_HALF_WIDTH;fl.quad(P(-R2,-.15,-.02),P(R2,-.15,-.02),P(R2,depth+.4,-.02),P(-R2,depth+.4,-.02),P(0,1,-2));emit(fl,tunnelOn()?'#6f6a62':C.mouth,ox,oz);}
+  {const fl=new Geo(),R2=TUNNEL_HALF_WIDTH;fl.quad(P(-R2,-.15,-.02),P(R2,-.15,-.02),P(R2,depth+.4,-.02),P(-R2,depth+.4,-.02),P(0,1,-2));emit(fl,tunnelOn()?'#4f4840':C.mouth,ox,oz);}/* Nov 27 2026 (owner 155: a pale grey slab at the mouth): the sunlit paint read pale; now the bore floor's dark ballast */
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3(),tW=trackAt(W.s),tE=trackAt(E.s);

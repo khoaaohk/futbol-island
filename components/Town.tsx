@@ -227,7 +227,7 @@ import {KNOCKOUT_EXIT} from '@/lib/games/rooftopKnockout';
 import { DEFAULT_PLAYER_NUMBER } from '@/lib/graphics/shirtNumbers';
 import { graphicsQuality, FrameBudget, MotionResolution, dynamicResolutionEnabled } from '@/lib/graphics/quality';
 import { buildTown } from '@/lib/town/world';
-import { District, DISTRICTS, districtAt, stepPlayer, blocked, groundBlocked, flightBlocked, ISLAND_BOUNDS, insideObstacle, clearSpotNear, publicArrivalSpot } from '@/lib/town/simulation';
+import { District, DISTRICTS, districtAt, stepPlayer, blocked, groundBlocked, flightBlocked, ISLAND_BOUNDS, insideObstacle, clearSpotNear, publicArrivalSpot, landingSpot } from '@/lib/town/simulation';
 import {ballGround,OUT_OF_PLAY_NOTE} from '@/lib/town/ballSea';
 import {createPierTarget} from '@/lib/town/eastPierChallenge';
 import {CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
@@ -1570,6 +1570,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(line){bonkBubble.show(0,line,BUBBLE_S);bonkShown=true;}knockWords.show('Bonk!',location.x,y0+2.7,location.z,reduced);
       velocity.x=velocity.z=0;walkBall.reset({x:spot.x,y:spot.y,z:spot.z,yaw:player.root.rotation.y});wakeLoop();return true;};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.trainBonk=trainBonk;
+    (window as unknown as {__fi2:Record<string,unknown>}).__fi2.tunnelWalk=tunnelWalk;/* headless checks: the tunnel walk / bump */
     // Tunnel ride + track + train bump (Nov 27 2026, owner: "if train comes by. add animation to get flatten and pushed to the sides";
     // lib/town/tunnelWalk.ts). In the bore the throw above has nowhere to land, so a train that reaches someone on the track squashes
     // them flat, pushes / tumbles them to the nearer walkway, they pop back with a wobble and the dizzy stars, ~1.5 s (reduced motion:
@@ -1629,7 +1630,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const top=flight.takeoffTime<1.05?summitCruiseHeight(location.x,location.z,flight.cruiseHeight):flight.cruiseHeight;
       flight.takeoffTime=Math.min(1.05,flight.takeoffTime+dt);flight.height=jetpackTakeoffHeight(flight.startHeight,top,flight.takeoffTime,reduced);
     }
-    function landingImpact(height:number){
+    let landCheck=false;// Nov 27 2026 (owner 164): a landing this frame: resolve it out of any prop collider (landingSpot below)
+    function landingImpact(height:number){landCheck=true;
       coinHunt.land({x:location.x,y:height,z:location.z},true);
       const nearby:BallHitTarget[]=[...islandNpcs.entries.map(e=>({id:'npc:'+e.id,...e.position})),...volleyballGame.entries.filter(()=>volleyballGame.root.visible).map(e=>({id:'npc:'+e.id,...e.position})),...coachPractice.entries.map(e=>({id:'npc:'+e.id,...e.position})),...games.entries.flatMap(e=>Array.from(e.rigs.entries()).filter(([,rig])=>e.root.visible&&rig.root.visible).map(([id,rig])=>({id:'field:'+e.venue.id+':'+id,x:rig.root.position.x,y:rig.root.position.y,z:rig.root.position.z})))];
       let hit=false;for(const p of nearby){const dx=p.x-location.x,dz=p.z-location.z;if(Math.abs(p.y-height)>.8||Math.hypot(dx,dz)>4)continue;const yaw=Math.hypot(dx,dz)>.05?Math.atan2(dx,dz):player.root.rotation.y;hit=ballReactions.hit(p,Math.sin(yaw)*14,Math.cos(yaw)*14)||hit;}
@@ -1872,6 +1874,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&nearBoat(location.x,location.z)){const hr=resolveBoatHull(location,rampBefore,onLandableDeck,performance.now()/1000);if(hr==='board'||hr==='hop'){velocity.x=velocity.z=0;}if(boatUnstick(dt,location,moveLength>.3&&!holdStill,onLandableDeck(location.x,location.z)))velocity.x=velocity.z=0;}
       // The ferry deck (live QA Nov 12 2026: stuck beside the cabin after a jetpack landing or a climb from the sea; ferryBoarding.ts): out of a cabin/rail collider at once, and a push that goes nowhere for 1.5 s is freed, like the boats.
       if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&!water.swimming&&rooftop.state.height>1.2&&nearFerryDeck(location.x,location.z)&&ferryUnstick(dt,location,moveLength>.3&&!holdStill))velocity.x=velocity.z=0;
+      // Nov 27 2026 (owner 164: a bike landed inside the station's line board and was stuck): any landing (a fall, a jump, a jetpack
+      // touchdown) that ends inside a prop collider is moved to the nearest free spot (simulation.ts landingSpot; within 3 m).
+      if(landCheck||wasFalling&&!rooftop.state.falling){landCheck=false;if(!tunnelWalk.state.active&&landingSpot(location,ballObstacleGrid.query(location.x,location.z,3.5),rideRef.current==='walk'?.34:.6)){visualLocation.x=location.x;visualLocation.z=location.z;velocity.x=velocity.z=0;}}
       // A fall, a rooftop jump or a ride launch that ends over splashable water (decision 4): a water landing, not a knockdown.
       if(rooftop.jump.fall)launchFall=true;
       if(wasFalling&&!rooftop.state.falling&&canSplashDown(location.x,location.z)){const src:SplashSource=launchFall?'launch':'roof';rooftop.state.impact=false;rooftop.state.recovery=0;rooftop.state.landImpact=0;splashInto(src,rooftop.state.dropStart);}
