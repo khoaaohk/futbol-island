@@ -31,10 +31,17 @@ for(let i=0;i<col.length;i++)assert.ok(col[i]>=.3&&col[i]<=1,'multiplier in rang
 for(let t=0;t<idx.length;t+=3){const a=idx[t]*3,b=idx[t+1]*3,c=idx[t+2]*3,ny=(pos[b+2]-pos[a+2])*(pos[c]-pos[a])-(pos[b]-pos[a])*(pos[c+2]-pos[a+2]);assert.ok(ny>=-1e-9,'faces up');}
 assert.ok(s.decalTriangles<32000,'decal budget '+s.decalTriangles);assert.ok(s.detailTriangles<6000,'detail budget '+s.detailTriangles);
 // drifts: never on the track bed, never in front of a machine
-const track=load('lib/town/trainTrack.ts');
+const track=load('lib/town/trainTrack.ts'),SP=load('lib/graphics/islandLighting.ts').ISLAND_SUN_POSITION,SL=Math.hypot(SP[0],SP[2]),SUN=[SP[0]/SL,SP[2]/SL];
 for(const d of A.G.sandDrifts.list)for(const t of [0,.5,1]){const x=d.ax+d.ux*d.len*t+d.ox*d.w*.5,z=d.az+d.uz*d.len*t+d.oz*d.w*.5;
  assert.ok(!track.trackNearest(x,z,1.6),'drift off the track bed '+x.toFixed(1)+','+z.toFixed(1));
  for(const m of VM)assert.ok(Math.hypot(x-(m.x+Math.sin(m.yaw)*.7),z-(m.z+Math.cos(m.yaw)*.7))>.8,'drift clear of '+m.id+"'s use spot");}
+// platforms (owner shot 143, Nov 26): the shade starts AT the wall on every station, following the curve (Coral Cay bends 1.2 m):
+// a ring from the buried footing's edge left an undarkened pale strip on the shaded side. Every back / end point lies on the wall.
+for(const f of feet.filter(f=>f.kind==='platform')){assert.ok(f.path&&f.path.length>20,'platform has its own perimeter');
+ for(const q of f.path){const n=track.trackNearest(q.p[0],q.p[1],12);assert.ok(n,'platform edge near the line '+q.p.map(v=>v.toFixed(1)));const d=n.dist??n.d??Math.sqrt(n.d2??0);
+  if(q.side===4)assert.ok(Math.abs(d-5.45)<.08||Math.abs(d-8.1)<.08,'back edge on the wall: '+d.toFixed(2));}}
+// drifts: only on sides turned to the sun (a drift on a shaded side glows: the shadow map's normal offset lights it)
+for(const d of A.G.sandDrifts.list)assert.ok(d.ox*SUN[0]+d.oz*SUN[1]>A.G.DRIFT_SUN-1e-6,'drift faces the sun');
 // deterministic
 const B=build(true);assert.deepEqual(Array.from(B.decal.geometry.getAttribute('position').array),Array.from(pos),'same decal every build');
 assert.equal(JSON.stringify(B.G.groundingStats.value.pieces),JSON.stringify(s.pieces),'same detail every build');

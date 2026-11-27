@@ -1861,7 +1861,7 @@ export function* buildTownSteps(scene: T.Scene) {
    const grass=(x:number,z:number)=>x<450&&insidePolygon(INTERIOR_GRASS,x,z);
    const sunL=Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
    const g=buildGrounding({town,buildings,machines:VENDING_MACHINES,machineSize:VENDING_SIZE,
-    stations:train?TRAIN_STATIONS.filter(s=>s.id!=='summit').map(s=>{const c=trackAt(s.s);return {id:s.id,x:c.x,z:c.z,tx:c.tx,tz:c.tz,side:s.side};}):[],
+    stations:train?TRAIN_STATIONS.filter(s=>s.id!=='summit').map(s=>{const c=trackAt(s.s);return {id:s.id,x:c.x,z:c.z,tx:c.tx,tz:c.tz,side:s.side,at:(u:number)=>trackAt(s.s+u)};}):[],
     ground:(x,z)=>{const t=townGround(x,z);if(t)return t.y;const l=groundLift(x,z);return l+(inRects(x,z)?DRAWN.path:grass(x,z)?DRAWN.lawn:-.105);},
     surface:(x,z)=>{const t=townGround(x,z);if(t)return t.sort==='lawn'?'lawn':'other';if(x>=450||!onIsland(x,z))return 'other';return grass(x,z)?'lawn':'sand';},
     keepClear:(x,z)=>inRects(x,z)||townGround(x,z)?.sort==='asphalt'||!!trackNearest(x,z,2.4),
