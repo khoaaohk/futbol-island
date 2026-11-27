@@ -33,6 +33,7 @@ import {onWalkPath} from './westParkLayout';
 import {onLand} from './landmass';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
 import {stampById} from './islandStamps';
+import {groundingOn} from './grounding';
 
 type Surface=Obstacle&{height:number};
 export type TrainTools={
@@ -104,7 +105,27 @@ function bridgeTruss(profile:ReturnType<typeof trainLayout>['profile']):Geo{
   for(let k=1;k<N-1;k++)k<N/2?g.beam(t(k),b(k+1),.08):g.beam(b(k),t(k+1),.08);}
  return g;}
 
-export function buildTrainWorld(tools:TrainTools){
+/** A lathe round a vertical axis at (cx, cy, cz): profile [radius, y offset] bottom to top, n sides, every face turned out (open ends). */
+function lathe(g:Geo,cx:number,cy:number,cz:number,prof:readonly (readonly [number,number])[],n:number,turn=0){
+ for(let i=0;i+1<prof.length;i++){const [r0,y0]=prof[i],[r1,y1]=prof[i+1],mid=[cx,cy+(y0+y1)/2,cz];
+  for(let k=0;k<n;k++){const a=turn+k/n*Math.PI*2,b=turn+(k+1)/n*Math.PI*2,P=(r:number,y:number,t:number)=>[cx+Math.cos(t)*r,cy+y,cz+Math.sin(t)*r];
+   g.quad(P(r0,y0,a),P(r0,y0,b),P(r1,y1,b),P(r1,y1,a),mid);}}
+}
+/** A disc (top / bottom of a rim) at height cy, facing up (dir 1) or down (-1). */
+function disc(g:Geo,cx:number,cy:number,cz:number,r:number,n:number,dir:number){for(let k=0;k<n;k++){const a=k/n*Math.PI*2,b=(k+1)/n*Math.PI*2;g.tri([cx,cy,cz],[cx+Math.cos(a)*r,cy,cz+Math.sin(a)*r],[cx+Math.cos(b)*r,cy,cz+Math.sin(b)*r],[cx,cy-dir,cz]);}}
+/** Paper lantern (owner shot 146, Nov 26 2026: "more rounded and less blocky"): an 8-sided barrel with a gentle bulge whose
+ *  facet steps read as the paper's ribs, two thin dark rib bands, round black rims top and bottom, a short cord tassel. ~180 tris. */
+const LANTERN_PROFILE=[[.1,-.27],[.165,-.21],[.2,-.12],[.212,-.04],[.212,.04],[.2,.12],[.165,.21],[.1,.27]] as const;
+function paperLantern(body:Geo,dark:Geo,x:number,y:number,z:number){
+ lathe(body,x,y,z,LANTERN_PROFILE,8,.39);
+ for(const ry of [-.12,.12])lathe(dark,x,y+ry,z,[[.204,-.009],[.204,.009]],8,.39);
+ for(const [ry,d] of [[.27,1],[-.27,-1]] as const){lathe(dark,x,y+ry,z,[[.11,-.03],[.11,.03]],8,.39);disc(dark,x,y+ry+.03*d,z,.11,8,d);}
+ dark.beam([x,y-.3,z],[x,y-.44,z],.014);dark.beam([x,y-.44,z],[x,y-.47,z],.028);
+}
+/** Grounding 2 (grounding.ts): every catenary pole on land (x, z, the plinth's half width); the island's contact shade and the beach's
+ *  sand mounds read this after the line is built. Refilled on every build. */
+export const catenaryFeet:{x:number;z:number;r:number}[]=[];
+export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
  const {put,lit,town,obstacles,walkSurfaces}=tools;
  // Lowest heat tier at build (the world builds once; Battery saver forces tier 4 from the first frame): no contact wire (poles keep
  // the post and arm, and their colliders), sleepers as ONE flat strip per row in a sleeper-over-ballast colour (on land it is the
@@ -183,7 +204,7 @@ export function buildTrainWorld(tools:TrainTools){
  const perChunk=Math.round(CHUNK_LENGTH/TRACK_DS);
  for(let c0=0;c0<n;c0+=perChunk){
   const c1=Math.min(n,c0+perChunk),mid=pt((c0+c1)>>1),ox=Math.round(mid.x),oz=Math.round(mid.z);
-  const rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),xdeck=new Geo(),bedTop=new Geo();
+  const footings=new Geo(),rails=new Geo(),railTops=new Geo(),sleepers=new Geo(),ballast=new Geo(),girders=new Geo(),piers=new Geo(),wall=new Geo(),wallTop=new Geo(),poles=new Geo(),xdeck=new Geo(),bedTop=new Geo();
   const rocks=new Geo();G={wall,wallTop,girders,ballast,rocks};
   for(let i=c0;i<c1;i++){
    const a=pt(i),b=pt(i+1);if(isTunnel(i)||isTunnel(i+1))continue;
@@ -227,7 +248,10 @@ export function buildTrainWorld(tools:TrainTools){
    // (and never on a west-park trail: the pole slides along to the next row clear of it)
    if(a.s>=poleNext&&(a.kind!==TrackKind.Sea||pierRows.has(i%n))&&!crossingAt(a.s,2)&&!(a.x<-100&&onWalkPath(off(a,-2.7,0)[0],off(a,-2.7,0)[2],.4))&&!POLE_KEEP_CLEAR.some(([kx,kz])=>Math.hypot(off(a,-2.7,0)[0]-kx,off(a,-2.7,0)[2]-kz)<3)){poleNext=a.s+POLE_STEP;
     // (Nov 24 2026: over the sea a pole stands only on a pier, on a bracket off the cap beam's end: it floated beside the deck)
-    const sea=a.kind===TrackKind.Sea,base=sea?a.bed-.8:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
+    // Grounding 2 (owner shot 141, Nov 26: the square post ended in a clean cut on top of the sand): on land the pole runs on 0.9 m
+    // into the ground and stands in a stepped concrete footing (0.34 m, then a 0.27 m cap, ~20 tris, in the wall paint: 0 draws).
+    const sea=a.kind===TrackKind.Sea,ground2=groundingOn()&&!sea,base=sea?a.bed-.8:ground2?a.bed-.9:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
+    if(ground2){footings.box(P[0],a.bed-.5,P[2],a.tx,a.tz,.17,.17,.56);footings.box(P[0],a.bed+.1,P[2],a.tx,a.tz,.135,.135,.05);catenaryFeet.push({x:P[0],z:P[2],r:.17});}
     if(sea){const q=off(a,-2.25,a.bed-.63);piers.box(q[0],q[1],q[2],a.tx,a.tz,.28,.7,.16,false);}// (top 5 cm under the cap's: never coplanar)
     poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
     // Looks 2 (Nov 24 2026): the thin arm, brace and dropper go in the catenary mesh (near-camera fade); lite keeps the arm here.
@@ -249,7 +273,7 @@ export function buildTrainWorld(tools:TrainTools){
   // merged into the rails' paint (same grey steel, no new paint or draw). Built once, in the chunk that holds the span's middle.
   {const mi=Math.round(SOUTH_BRIDGE.mid/TRACK_DS);if(mi>=c0&&mi<c1){const t=bridgeTruss(L.profile);rails.p.push(...t.p);rails.n.push(...t.n);}}
   emit(rails,C.rail,ox,oz);emit(railTops,C.railTop,ox,oz);emit(sleepers,C.sleeper,ox,oz);emit(ballast,C.ballast,ox,oz);emit(girders,C.girder,ox,oz);emit(piers,C.pier,ox,oz);
-  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);emit(rocks,C.wall,ox,oz);/* the abutments' own stone paint: same batch, no new draw */
+  emit(wall,C.wall,ox,oz);emit(wallTop,C.wallTop,ox,oz);emit(poles,C.pole,ox,oz);emit(xdeck,C.crossDeck,ox,oz);emit(bedTop,C.sleeperBed,ox,oz);emit(rocks,C.wall,ox,oz);emit(footings,C.wall,ox,oz);/* the abutments' own stone paint: same batch, no new draw */
  }
 
  // Level crossings: the deck is in the row loop above; poles, crossbuck, lamps, arms, bell and colliders are Phase 2's crossing
@@ -312,7 +336,7 @@ export function buildTrainWorld(tools:TrainTools){
    // Tile courses: three thin darker bands across each long slope.
    if(!lite)for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025,true);}
    // Four paper lanterns under the front eave.
-   if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
+   if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);if(groundingOn())paperLantern(lantern,cap,a[0],ry-.75,a[2]);else{lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);}cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
   // A bench on the platform, by the house's down-line end.
   // Phase 4 (Nov 23 2026): the island bench's own sizes (lib/graphics/npcSeatPose.ts BENCH: seat top .64, half depth .325, back face
   // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.

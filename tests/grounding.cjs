@@ -42,6 +42,14 @@ for(const f of feet.filter(f=>f.kind==='platform')){assert.ok(f.path&&f.path.len
   if(q.side===4)assert.ok(Math.abs(d-5.45)<.08||Math.abs(d-8.1)<.08,'back edge on the wall: '+d.toFixed(2));}}
 // drifts: only on sides turned to the sun (a drift on a shaded side glows: the shadow map's normal offset lights it)
 for(const d of A.G.sandDrifts.list)assert.ok(d.ox*SUN[0]+d.oz*SUN[1]>A.G.DRIFT_SUN-1e-6,'drift faces the sun');
+// Grounding 2 (uprights, Nov 26): palms sink into the ground (no flat cut on top), each on sand has a mound, on lawn a soil ring;
+// every catenary pole on land has a footing foot; decorative coconuts / fronds stay off roads, paths and the track bed.
+{const palms=feet.filter(f=>f.kind==='palm'&&f.base===undefined);assert.ok(palms.length>=100,'palms '+palms.length);
+ const sunk=palms.filter(f=>f.sink>=.2).length;assert.ok(sunk>=palms.length*.97,'palms sunk '+sunk+'/'+palms.length);
+ const masts=load('lib/town/trainWorld.ts').catenaryFeet;assert.ok(masts.length>=30,'catenary poles on land '+masts.length);
+ for(const m of masts)assert.ok(feet.some(f=>f.kind==='post'&&Math.hypot(f.x-m.x,f.z-m.z)<.01),'pole foot '+m.x.toFixed(1));
+ assert.ok((s.pieces.mound??0)>=40&&(s.pieces.soil??0)>=10,'mounds / soil rings '+s.pieces.mound+' / '+s.pieces.soil);
+ for(const m of A.G.sandDrifts.mounds)assert.ok(!track.trackNearest(m.x,m.z,1.9),'mound off the ballast '+m.x.toFixed(1)+','+m.z.toFixed(1));}
 // deterministic
 const B=build(true);assert.deepEqual(Array.from(B.decal.geometry.getAttribute('position').array),Array.from(pos),'same decal every build');
 assert.equal(JSON.stringify(B.G.groundingStats.value.pieces),JSON.stringify(s.pieces),'same detail every build');
