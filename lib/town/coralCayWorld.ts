@@ -149,7 +149,10 @@ export function buildCoralCay(t:CayTools){
   for(let i=a;i<=b;i+=2){const p=offsetPoint(P[i],side*CAUSEWAY.railHalf);cylinder(.065,1.05,'#9d805b',p.x,.525,p.z);}
   // Finished rail ends: a stouter capped post with a couple of boulders tucked at its foot, never a cut-off rail.
   for(const [i,dir] of [[a,-1],[b,1]] as [number,number][]){const p=offsetPoint(P[i],side*CAUSEWAY.railHalf);cylinder(.12,1.25,'#9d805b',p.x,.625,p.z);put(new T.SphereGeometry(.15,8,6),'#eddfbb',p.x,1.3,p.z);
-   for(let k=0;k<2;k++){const q=offsetPoint(P[Math.max(0,Math.min(last,i+dir*(1+k)))],side*(CAUSEWAY.railHalf+.45+k*.2)),rock=put(new T.IcosahedronGeometry(.32-k*.08,0),'#d2bc94',q.x,-.02+.12,q.z);rock.scale.y=.6;}}
+   // Leftovers B (Nov 26 2026 night): at a sandbar spur's opening the boulders went 1-2 m INTO the gap and sat on the boardwalk's
+   // entrance; there they tuck in beside the rail run instead (the opening stays clear across the spur's full 4 m).
+   const spurEnd=SANDBARS.some(sb=>sb.side===side&&Math.abs(P[i].s-sb.spur.s)<sb.spur.half+3),out=spurEnd?-dir:dir;
+   for(let k=0;k<2;k++){const q=offsetPoint(P[Math.max(0,Math.min(last,i+out*(1+k)))],side*(CAUSEWAY.railHalf+.45+k*.2)),rock=put(new T.IcosahedronGeometry(.32-k*.08,0),'#d2bc94',q.x,-.02+.12,q.z);rock.scale.y=.6;}}
   // Riprap boulders at the waterline where the flank meets the sea.
   for(let i=a+1;i<b;i+=2){const r=.55+jitter(i,side)*.5,p=offsetPoint(P[i],side*(deck+1.4+jitter(i,side+7)*.6)),rock=put(new T.IcosahedronGeometry(r*.8,0),jitter(i,side+3)>.5?'#d2bc94':'#bca987',p.x,-.38,p.z);rock.scale.y=.55;rock.rotation.y=i;}
  }
