@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {takeSandDrifts} from './grounding';
+import {takeSandDrifts,takeSandNormals} from './grounding';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,SHORE_SAND,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
@@ -54,7 +54,7 @@ function withSandDrifts(g:T.BufferGeometry){const d=takeSandDrifts();if(!d.lengt
  const out=new T.BufferGeometry();out.setAttribute('position',new T.BufferAttribute(pos,3));out.setAttribute('aShore',new T.BufferAttribute(shore,1));out.setIndex(idx);out.computeVertexNormals();
  // drift normals lean only a little off vertical: the shadow map's normal offset (2 texels, ~0.5-1 m here) pushed a sloped drift's
  // lookup out of the eave / wall shadow and the drift glowed as a pale apron (shots/north-close-a3); near-up normals keep the shadow
- {const nr=out.getAttribute('normal') as T.BufferAttribute;for(let i=base;i<base+n;i++){const x=nr.getX(i)*.3,y=nr.getY(i)*.3+.7,z=nr.getZ(i)*.3,l=Math.hypot(x,y,z);nr.setXYZ(i,x/l,y/l,z/l);}}
+ {const nr=out.getAttribute('normal') as T.BufferAttribute,own=takeSandNormals();for(let i=base;i<base+n;i++){const j=(i-base)*3;if(own.length>j+2&&(own[j]||own[j+1]||own[j+2])){nr.setXYZ(i,own[j],own[j+1],own[j+2]);continue;}/* palm / post mounds: their own smooth normals (grounding.ts sandMound) */const x=nr.getX(i)*.3,y=nr.getY(i)*.3+.7,z=nr.getZ(i)*.3,l=Math.hypot(x,y,z);nr.setXYZ(i,x/l,y/l,z/l);}}
  g.dispose();return out;}
 export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  const roots=new Map<string,T.Group>(),goalSpecs:PropSpec[]=[];const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];

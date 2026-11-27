@@ -128,9 +128,12 @@ export const DRIFT_SUN=.3;
 /** Sand drifts are drawn with the beach's OWN material (fields.ts merges them into the sand ribbon: same ripples, mottle, light and
  *  shadow; 0 draws). A plain-paint drift read as a pale block against the shader sand (shots/north-close-a2). World-space triangles. */
 export const sandDrifts:{positions:number[];list:{ax:number;az:number;ux:number;uz:number;ox:number;oz:number;len:number;h0:number;h1:number;w:number;e:number}[];
- /** round sand mounds at the foot of palms and posts on the beach (grounding 2) */mounds:{x:number;z:number;r:number;h:number}[]}={positions:[],list:[],mounds:[]};
+ /** round sand mounds at the foot of palms and posts on the beach (grounding 2) */mounds:{x:number;z:number;r:number;h:number}[];
+ /** per vertex, parallel to positions: an analytic normal (mounds), or 0,0,0 = the geometry's own normal leaned near up (wall drifts) */normals:number[]}={positions:[],list:[],mounds:[],normals:[]};
 /** Hand the drifts to the beach mesh once (fields.ts); empty when grounding is off or on the lowest tier. */
 export function takeSandDrifts(){const p=sandDrifts.positions;sandDrifts.positions=[];return p;}
+/** The normals that go with takeSandDrifts (same order; call right after it). */
+export function takeSandNormals(){const p=sandDrifts.normals;sandDrifts.normals=[];return p;}
 /** How high a drift lifts the ground at (x, z) (the contact shade rides over it). */
 export function driftLift(x:number,z:number){let best=0;for(const m of sandDrifts.mounds){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r){const h=m.h*Math.min(1,(m.r-d)/(m.r*.55));if(h>best)best=h;}}for(const d of sandDrifts.list){const px=x-d.ax,pz=z-d.az,t=px*d.ux+pz*d.uz,o=px*d.ox+pz*d.oz;if(t<0||t>d.len||o<-.05||o>d.w)continue;
  const along=t<d.e?t/d.e:t>d.len-d.e?(d.len-t)/d.e:1,h=(d.h0+(d.h1-d.h0)*t/d.len)*Math.max(0,1-Math.max(0,o)/d.w)*along;if(h>best)best=h;}return best;}
@@ -141,7 +144,7 @@ export function drift(s:Span,y:(x:number,z:number)=>number){
  const A0=at(e,-.03,h),B0=at(len-e,-.03,h1),A1=at(e*.6,w,-.02),B1=at(len-e*.6,w*(.8+.3*h0),-.02),Ae=at(0,-.03,-.02),Be=at(len,-.03,-.02);
  const tris=[A0,B0,B1,A0,B1,A1,A0,A1,Ae,B0,Be,B1],inside=at(len/2,-.6,-.4);
  for(let i=0;i<tris.length;i+=3){let a=tris[i],b=tris[i+1],d=tris[i+2];const ux2=b[0]-a[0],uy=b[1]-a[1],uz2=b[2]-a[2],vx=d[0]-a[0],vy=d[1]-a[1],vz=d[2]-a[2],nx=uy*vz-uz2*vy,ny=uz2*vx-ux2*vz,nz=ux2*vy-uy*vx;
-  if(nx*((a[0]+b[0]+d[0])/3-inside[0])+ny*((a[1]+b[1]+d[1])/3-inside[1])+nz*((a[2]+b[2]+d[2])/3-inside[2])<0){const q=b;b=d;d=q;}sandDrifts.positions.push(...a,...b,...d);}
+  if(nx*((a[0]+b[0]+d[0])/3-inside[0])+ny*((a[1]+b[1]+d[1])/3-inside[1])+nz*((a[2]+b[2]+d[2])/3-inside[2])<0){const q=b;b=d;d=q;}sandDrifts.positions.push(...a,...b,...d);sandDrifts.normals.push(0,0,0,0,0,0,0,0,0);}
  sandDrifts.list.push({ax:s.a[0],az:s.a[1],ux,uz,ox:s.o[0],oz:s.o[1],len,h0:h,h1,w,e});
 }
 /** A grass tuft: three thin blades from one root, leaning out (6 triangles, both faces). */
@@ -157,13 +160,22 @@ export function stone(P:Pieces,x:number,z:number,y:number,colour:string){
  const tris:number[][]=[];for(let k=0;k<5;k++)tris.push(pts[k],pts[(k+1)%5],top);P.add(colour,tris,[x,y-.5,z],'stone');
 }
 /** Grounding 2: a low round mound of beach sand round a trunk / post (r: the trunk, R: the rim; in the sand's own material, 0 draws).
- *  Two rings (rim just under the sand, a shoulder at 75 %) and a collar hugging the trunk: 3n triangles, all facing up. */
+ *  Leftovers A (Nov 26 night: "the mounds read too faint"): two full bands (rim just under the sand -> shoulder at 45 % -> a collar
+ *  hugging the trunk) and SMOOTH analytic normals that keep most of the real slope (sandDrifts.normals; the wall drifts keep their
+ *  near-up normals), so the sun side lights and the far side shades like the dunes' own sand instead of a flat pale disc. 4n tris. */
 export function sandMound(x:number,z:number,y:number,r:number,R:number,h:number,n=8){
- const tw=spotHash(x,z,40)*6.28,ring=(q:number,up:number,k:number)=>{const a=tw+k/n*Math.PI*2,j=q*(1+.12*(spotHash(x+k,z,41)-.5));return [x+Math.cos(a)*j,y+up,z+Math.sin(a)*j];};
- const tri=(a:number[],b:number[],d:number[])=>{const ux=b[0]-a[0],uz=b[2]-a[2],vx=d[0]-a[0],vz=d[2]-a[2];if(uz*vx-ux*vz<0)sandDrifts.positions.push(...a,...d,...b);else sandDrifts.positions.push(...a,...b,...d);};
- for(let k=0;k<n;k++){const k1=(k+1)%n,a0=ring(R,-.025,k),a1=ring(R,-.025,k1),b0=ring(r+(R-r)*.45,h*.72,k),b1=ring(r+(R-r)*.45,h*.72,k1),c0=ring(r*.92,h,k),c1=ring(r*.92,h,k1);
-  tri(a0,a1,b1);tri(a0,b1,b0);tri(b0,b1,c1);}
+ const tw=spotHash(x,z,40)*6.28,q1=r+(R-r)*.45,y1=h*.72,s1=(y1+.025)/Math.max(.05,R-q1),s2=(h-y1)/Math.max(.05,q1-r*.92);
+ const ring=(q:number,up:number,k:number,slope:number)=>{const a=tw+k/n*Math.PI*2,j=q*(1+.12*(spotHash(x+(k%n),z,41)-.5)),ux=Math.cos(a),uz=Math.sin(a),l=Math.hypot(slope,1);
+  return {p:[x+ux*j,y+up,z+uz*j],n:[ux*slope/l,1/l,uz*slope/l]};};
+ type V=ReturnType<typeof ring>;
+ const tri=(a:V,b:V,d:V)=>{const ux=b.p[0]-a.p[0],uz=b.p[2]-a.p[2],vx=d.p[0]-a.p[0],vz=d.p[2]-a.p[2],o=uz*vx-ux*vz<0?[a,d,b]:[a,b,d];for(const v of o){sandDrifts.positions.push(...v.p);sandDrifts.normals.push(...v.n);}};
+ for(let k=0;k<n;k++){const k1=k+1,a0=ring(R,-.025,k,s1*.35),a1=ring(R,-.025,k1,s1*.35),b0=ring(q1,y1,k,(s1+s2)/2),b1=ring(q1,y1,k1,(s1+s2)/2),c0=ring(r*.92,h,k,s2*.6),c1=ring(r*.92,h,k1,s2*.6);
+  tri(a0,a1,b1);tri(a0,b1,b0);tri(b0,b1,c1);tri(b0,c1,c0);}
  sandDrifts.mounds.push({x,z,r:R,h});
+}
+/** The biggest rim (<= R, >= 0.45 m) a mound at (x, z) can take with its rim off every road / path / track / use spot (8 rim probes). */
+export function moundRim(x:number,z:number,R:number,clear:(x:number,z:number)=>boolean){
+ for(let q=R;q>=.45;q-=.1){let ok=true;for(let k=0;k<8&&ok;k++){const a=k/8*Math.PI*2;ok=clear(x+Math.cos(a)*q,z+Math.sin(a)*q);}if(ok)return q;}return 0;
 }
 /** A collar round a post's foot on paving / lawn: a short 7-sided frustum (concrete), r..r*1.45, 9 cm proud (14 triangles). */
 export function collar(P:Pieces,x:number,z:number,y:number,r:number,colour:string,h=.09){
@@ -246,7 +258,7 @@ export const groundingStats:{value:GroundingStats|null;feet:Foot[];spans:{kind:s
 export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:GroundingStats}{
  const t0=typeof performance!=='undefined'?performance.now():0,feet:Foot[]=[],byKind:Record<string,number>={},P=new Pieces(),bb=new T.Box3(),v=new T.Vector3();
  const push=(f:Foot)=>{feet.push(f);byKind[f.kind]=(byKind[f.kind]??0)+1;};
- const spans:{s:Span;what:'wall'|'platform'}[]=[],gaps:Rect[]=[];sandDrifts.positions=[];sandDrifts.list=[];sandDrifts.mounds=[];
+ const spans:{s:Span;what:'wall'|'platform'}[]=[],gaps:Rect[]=[];sandDrifts.positions=[];sandDrifts.normals=[];sandDrifts.list=[];sandDrifts.mounds=[];
  // Things that must stay clear of detail: every machine's front (its use spot) and body.
  for(const m of I.machines){const fx=Math.sin(m.yaw),fz=Math.cos(m.yaw);gaps.push({x:m.x+fx*.7,z:m.z+fz*.7,w:2.2,d:2.2});}
  // 1. Props (tagged groups), after every move: the lowest 35 cm of each group is its foot.
@@ -267,7 +279,9 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
    // Grounding 2 (palms): a low sand mound on the beach, a ring of bare soil on the lawn; now and then a coconut or a fallen frond
    // (decorative: the lowest tier drops them first). The trunk itself sinks and flares in world.ts palmParts.
    if(g.kind==='palm'&&base===undefined&&!I.keepClear(x,z)){const kind=I.surface(x,z);
-    if(kind==='sand'){sandMound(x,z,gy,.2,.62+.18*spotHash(x,z,46),.085+.03*spotHash(z,x,47));P.counts.mound=(P.counts.mound??0)+1;}
+    // Leftovers A: 14-19 cm high (was 8.5-11.5), rim 0.75-0.95 m pulled in off any path / track / use spot, 10 sides
+    if(kind==='sand'){const R=moundRim(x,z,.75+.2*spotHash(x,z,46),(px,pz)=>!I.keepClear(px,pz)&&!gaps.some(g=>Math.abs(px-g.x)<g.w/2&&Math.abs(pz-g.z)<g.d/2));
+     if(R){sandMound(x,z,gy,.2,R,(.14+.05*spotHash(z,x,47))*Math.min(1,R/.75),10);P.counts.mound=(P.counts.mound??0)+1;}}
     else if(kind==='lawn')soilRing(P,x,z,gy,.5+.12*spotHash(x,z,46),GROUND_COLOURS.soil);
     if(!I.low&&kind!=='other'){const h=spotHash(x,z,48),ga=spotHash(z,x,49)*6.28;
      const spot=(a:number,d:number):[number,number]|null=>{const px=x+Math.cos(a)*d,pz=z+Math.sin(a)*d;return I.keepClear(px,pz)?null:[px,pz];};
