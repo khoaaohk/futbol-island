@@ -25,6 +25,8 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
+import {skyOn,tunnelOn} from '../graphics/skySwitch';
+import {WATER_UNIFORMS} from '../graphics/waterSurface';
 import {TRACK,TRACK_DS,TrackKind,onSummitTrackS,SOUTH_BRIDGE,bedAt,TRAIN_STATIONS,TRAIN_CROSSINGS,TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,STATION_HALF,STATION_PLATFORM_Y,trackAt,leftNormal,wrapS,type TrainStation} from './trainTrack';
 import {trainLayout,STAMP_STAND_U,STAMP_STAND_BACK,stationHouseFront,PIER_COLUMN_OFFSET,PIER_COLUMN_HALF,MAIN_COLUMN_HALF,SEA_WALL_HALF,XING_FOOT} from './trainLayout';
 import {onWalkPath} from './westParkLayout';
@@ -394,13 +396,13 @@ export function buildTrainWorld(tools:TrainTools){
     if(prev){g.quad(prev[0],cur[0],cur[1],prev[1],inside);g.quad(prev[1],cur[1],cur[2],prev[2],inside);g.quad(prev[2],cur[2],cur[3],prev[3],inside);}prev=cur;}
    if(prev)g.quad(prev[0],prev[1],prev[2],prev[3],P(sg*(R+1),0,-2));}
   const ox=Math.round(p.x),oz=Math.round(p.z);emit(g,C.stoneDark,ox,oz);emit(gd,C.stoneDark,ox,oz);
-  const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x+o.x*.12,TUNNEL_BED,p.z+o.z*.12));// POLISH 4 (owner shot 70): 0.12 m out from the headwall's back, inside its arched hole, so it is in front of the drawn hill's cliff at the plane (the summit grid snaps it to ±0.03 m; on the curved west portal a cliff triangle at +0.03 stood in front of the old cap at +0.05 in and showed as a green band inside the arch)
+  if(!tunnelOn()){const mouth=new T.ShapeGeometry(portalArch(),10);mouth.applyMatrix4(basis);skip(put(mouth,C.mouth,p.x+o.x*.12,TUNNEL_BED,p.z+o.z*.12));}/* Nov 26 2026: with the lit tunnel the mouth is open (no black cap): the tube shows through it */// POLISH 4 (owner shot 70): 0.12 m out from the headwall's back, inside its arched hole, so it is in front of the drawn hill's cliff at the plane (the summit grid snaps it to ±0.03 m; on the curved west portal a cliff triangle at +0.03 stood in front of the old cap at +0.05 in and showed as a green band inside the arch)
   // POLISH 4: a dark floor through the headwall's arched hole (the summit terrain is cut out of the opening: summitIsleWorld)
-  {const fl=new Geo(),R2=TUNNEL_HALF_WIDTH;fl.quad(P(-R2,-.15,-.02),P(R2,-.15,-.02),P(R2,depth+.4,-.02),P(-R2,depth+.4,-.02),P(0,1,-2));emit(fl,C.mouth,ox,oz);}
+  {const fl=new Geo(),R2=TUNNEL_HALF_WIDTH;fl.quad(P(-R2,-.15,-.02),P(R2,-.15,-.02),P(R2,depth+.4,-.02),P(-R2,depth+.4,-.02),P(0,1,-2));emit(fl,tunnelOn()?'#6f6a62':C.mouth,ox,oz);}
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3(),tW=trackAt(W.s),tE=trackAt(E.s);
- const tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=buildTube();tubeRoot.add(tube);
+ const litTube=tunnelOn(),tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=litTube?buildLitTube():buildTube();tubeRoot.add(tube);const tubeIn=(tube.material as T.Material).userData.tubeIn as {value:number}|undefined;
  const cat=catArm.empty&&catWire.empty?null:buildCatenary();if(cat)tubeRoot.add(cat);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
  return {
   /** Added to the scene after the batching pass (its own mesh, never merged). */
@@ -413,19 +415,30 @@ export function buildTrainWorld(tools:TrainTools){
    if(Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW||insideTunnel(cam.x,cam.z)){
     const inW=(cam.x-W.x)*tW.tx+(cam.z-W.z)*tW.tz,inE=-((cam.x-E.x)*tE.tx+(cam.z-E.z)*tE.tz);
     inside=inW>-.3&&inE>-.3&&insideTunnel(cam.x,cam.z)&&cam.y<TUNNEL_BED+2.4+TUNNEL_HALF_WIDTH+1.5;}
-   if(inside!==tube.visible)tube.visible=inside;},
+   // Nov 26 2026 (lit tunnel, owner: "make the tunnel see through to the other side"): the lit tube shows from outside too, within
+   // TUBE_SHOW m of a portal; its shader keeps only what is seen THROUGH a mouth from outside (buildLitTube), so the crown never
+   // shows through the hill's grid (the POLISH 4 wedge).
+   const show=litTube?inside||Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW:inside;
+   if(tubeIn){tubeIn.value=inside?1:0;// night: the baked interior dims (it is unlit), so the bore glows warm instead of glaring beige
+    const nk=Math.min(1,Math.max(0,((1-WATER_UNIFORMS.uWaterNight.value.y)/.45-.35)/.65));(tube.material as T.MeshBasicMaterial).color.setScalar(1-.45*nk);}
+   if(show!==tube.visible)tube.visible=show;},
   dispose(){tube.geometry.dispose();(tube.material as T.Material).dispose();if(cat){cat.geometry.dispose();(cat.material as T.Material).dispose();}tubeRoot.removeFromParent();},
  };
  /** The catenary mesh (wire + thin arms) in vertex colours, with the near-camera fade (see the catenary section above). */
  function buildCatenary(){
-  const pos:number[]=[],nor:number[]=[],col:number[]=[],tmp=new T.Color();
-  for(const [g,c] of [[catWire,C.wire],[catArm,C.pole]] as const){tmp.set(c);pos.push(...g.p);nor.push(...g.n);for(let k=0;k<g.p.length;k+=3)col.push(tmp.r,tmp.g,tmp.b);}
-  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new T.Float32BufferAttribute(nor,3));geo.setAttribute('color',new T.Float32BufferAttribute(col,3));geo.computeBoundingSphere();
+  const pos:number[]=[],nor:number[]=[],col:number[]=[],wire:number[]=[],tmp=new T.Color(),up=skyOn();
+  for(const [g,c] of [[catWire,C.wire],[catArm,C.pole]] as const){tmp.set(c);pos.push(...g.p);nor.push(...g.n);for(let k=0;k<g.p.length;k+=3){col.push(tmp.r,tmp.g,tmp.b);wire.push(g===catWire?1:0);}}
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('normal',new T.Float32BufferAttribute(nor,3));geo.setAttribute('color',new T.Float32BufferAttribute(col,3));
+  if(up)geo.setAttribute('catWire',new T.Float32BufferAttribute(wire,1));geo.computeBoundingSphere();
   const mat=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});
-  mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;').replace('#include <project_vertex>','#include <project_vertex>\nvCatW=(modelMatrix*vec4(transformed,1.0)).xyz;');
-   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;').replace('#include <clipping_planes_fragment>',
-    `#include <clipping_planes_fragment>\n{float cd=distance(vCatW,cameraPosition),ck=clamp((cd-${CAT_FADE_NEAR.toFixed(2)})/${(CAT_FADE_FAR-CAT_FADE_NEAR).toFixed(2)},0.,1.);if(ck<1.&&fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453)>=ck)discard;}`);};
-  mat.customProgramCacheKey=()=>'train-catenary-fade';
+  // Nov 26 2026 (owner shots 129 / 132 / 133: "a black line shoots up into the sky"): it was the contact wire itself, seen from the
+  // cab right under it: a wire 2 m over the camera runs from the vanishing point straight up off the top of the screen. The wire
+  // (not the arms) now also fades out where it is seen steeply ABOVE the camera (elevation over ~6 deg, gone by ~11 deg), so from a
+  // ride view it leads into the distance and stops a few degrees over the track; from above (the play camera) nothing changes.
+  mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;'+(up?'attribute float catWire;varying float vCatWire;':'')).replace('#include <project_vertex>','#include <project_vertex>\nvCatW=(modelMatrix*vec4(transformed,1.0)).xyz;'+(up?'vCatWire=catWire;':''));
+   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vCatW;'+(up?'varying float vCatWire;':'')).replace('#include <clipping_planes_fragment>',
+    `#include <clipping_planes_fragment>\n{float cd=distance(vCatW,cameraPosition),ck=clamp((cd-${CAT_FADE_NEAR.toFixed(2)})/${(CAT_FADE_FAR-CAT_FADE_NEAR).toFixed(2)},0.,1.);${up?'if(vCatWire>.5)ck*=smoothstep(.19,.1,(vCatW.y-cameraPosition.y)/max(cd,.01));':''}if(ck<1.&&fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453)>=ck)discard;}`);};
+  mat.customProgramCacheKey=()=>'train-catenary-fade'+(up?'-sky':'');
   const m=new T.Mesh(geo,mat);m.name='train-catenary';m.matrixAutoUpdate=false;m.castShadow=false;m.receiveShadow=false;m.userData.train=true;m.userData.ownDraw=true;return m;}
  function insideTunnel(x:number,z:number){const t=trackAt(W.s),dx=E.x-W.x,dz=E.z-W.z,l2=dx*dx+dz*dz,f=((x-W.x)*dx+(z-W.z)*dz)/l2;void t;if(f<0||f>1)return false;return Math.abs((x-W.x)*dz-(z-W.z)*dx)/Math.sqrt(l2)<TUNNEL_HALF_WIDTH+2;}
  function buildTube(){
@@ -444,6 +457,83 @@ export function buildTrainWorld(tools:TrainTools){
   add(floor,C.ballast,.3);add(sl,C.sleeper,.35);add(rl,C.railTop,.55);
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeBoundingSphere();
   const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true}));m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
+ }
+ /** The lit, see-through tunnel (Nov 26 2026, owner shots 132 / 133: "make the tunnel see through to the other side and if not,
+  *  make it light and not dark"; "fix the ground inside the tunnel and give more details"). ONE mesh, ONE draw, unlit vertex colours
+  *  (no lights, no textures, no passes), ~5k triangles, built once:
+  *  - a lined bore: stone courses on the walls, the arch in voussoir bands, a dark ring joint every 3 m, a clean springing line;
+  *    even light that falls a little toward the crown and toward the middle of the bore, daylight-warm over the last ~8 m at each end;
+  *  - the track bed: a ballast shoulder under the sleepers, a dark drain gutter each side, a kerbed walkway up to the wall;
+  *  - wall lamps every 12 m (alternate sides) with a soft glow patch, a cable conduit on brackets, distance plates every 25 m.
+  *  From outside the shader keeps only fragments seen THROUGH a portal's arch (two plane tests, ~30 ALU, tunnel pixels only), so the
+  *  bore shows through the open mouth and never through the hill; inside (uTubeIn, set per frame by update) everything draws. */
+ function buildLitTube(){
+  const HW=TUNNEL_HALF_WIDTH,B=TUNNEL_BED,SPR=2.4,len=E.s-W.s,pos:number[]=[],col:number[]=[],tmp=new T.Color(),c2=new T.Color();
+  const A=(s:number,v:number,y:number)=>{const q=trackAt(s);return [q.x+q.tz*v,B+y,q.z-q.tx*v];};
+  const put3=(p:number[],c:T.Color)=>{pos.push(p[0],p[1],p[2]);col.push(c.r,c.g,c.b);};
+  const quad=(a:number[],b:number[],c:number[],d:number[],ca:T.Color,cb=ca,cc=ca,cd=ca)=>{put3(a,ca);put3(b,cb);put3(c,cc);put3(a,ca);put3(c,cc);put3(d,cd);};
+  const hash=(a:number,b:number)=>{const h=Math.sin(a*12.9898+b*78.233)*43758.5453;return h-Math.floor(h);};
+  const STONE=new T.Color('#9d8058'),DAY=new T.Color('#c9b089'),endK=(s:number)=>Math.max(Math.exp(-Math.max(0,s-W.s)/7),Math.exp(-Math.max(0,E.s-s)/7));
+  /** The wall's colour at (s, height y): even light, a touch darker at the crown and mid-bore, daylight at the ends. */
+  const wallAt=(s:number,y:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(STONE).multiplyScalar(shade*(.8+.2*e)*(1-.2*Math.min(1,Math.max(0,(y-2.6)/3.4)))).lerp(DAY,.4*e);};
+  // Profile (lateral v, height y): walkway top, three wall courses, then the arch in 10 voussoir bands.
+  const prof:[number,number][]=[[-HW,.3],[-HW,1],[-HW,1.7],[-HW,SPR]];for(let k=1;k<10;k++){const a=Math.PI-Math.PI*k/10;prof.push([Math.cos(a)*HW,SPR+Math.sin(a)*HW]);}
+  prof.push([HW,SPR],[HW,1.7],[HW,1],[HW,.3]);
+  const RING=3,JOINT=.16,ca=new T.Color(),cb=new T.Color(),cc=new T.Color(),cd=new T.Color();
+  for(let s0=W.s-.3;s0<E.s+.3;s0+=RING){const s1=Math.min(E.s+.3,s0+RING),sj=Math.max(s0,s1-JOINT),ri=Math.round(s0/RING);
+   for(let k=0;k<prof.length-1;k++){const [v0,y0]=prof[k],[v1,y1]=prof[k+1],sh=(k%2?.95:1.04)*(.96+.08*hash(ri,k)),spring=k===2||k===prof.length-4?.9:1;
+    quad(A(s0,v0,y0),A(sj,v0,y0),A(sj,v1,y1),A(s0,v1,y1),wallAt(s0,y0,sh*spring,ca),wallAt(sj,y0,sh*spring,cb),wallAt(sj,y1,sh,cc),wallAt(s0,y1,sh,cd));
+    if(sj<s1)quad(A(sj,v0,y0),A(s1,v0,y0),A(s1,v1,y1),A(sj,v1,y1),wallAt(sj,y0,.62,ca),wallAt(s1,y0,.62,cb),wallAt(s1,y1,.62,cc),wallAt(s1,y1,.62,cd));}}
+  // The track bed, in 3 m strips: ballast top and shoulders, gutters, kerbs and walkways (all lit like the wall foot).
+  const BAL=new T.Color('#9a948a'),GUT=new T.Color('#4d4740'),WALK=new T.Color('#a69d8c'),flat=(c:T.Color,s:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(c).multiplyScalar(shade*(.8+.2*e)).lerp(DAY,.4*e);};
+  for(let s0=W.s-.3;s0<E.s+.3;s0+=3){const s1=Math.min(E.s+.3,s0+3),j=.9+.14*hash(s0,3);
+   quad(A(s0,-1.45,.12),A(s1,-1.45,.12),A(s1,1.45,.12),A(s0,1.45,.12),flat(BAL,s0,.85*j,ca),flat(BAL,s1,.85*j,cb),flat(BAL,s1,.85*j,cc),flat(BAL,s0,.85*j,cd));
+   for(const sg of [-1,1]){
+    quad(A(s0,sg*1.45,.12),A(s1,sg*1.45,.12),A(s1,sg*2.05,-.04),A(s0,sg*2.05,-.04),flat(BAL,s0,.7*j,ca),flat(BAL,s1,.7*j,cb),flat(BAL,s1,.62*j,cc),flat(BAL,s0,.62*j,cd));
+    quad(A(s0,sg*2.05,-.04),A(s1,sg*2.05,-.04),A(s1,sg*2.45,-.06),A(s0,sg*2.45,-.06),flat(GUT,s0,1,ca),flat(GUT,s1,1,cb),flat(GUT,s1,1,cc),flat(GUT,s0,1,cd));
+    quad(A(s0,sg*2.45,-.06),A(s1,sg*2.45,-.06),A(s1,sg*2.45,.3),A(s0,sg*2.45,.3),flat(WALK,s0,.72,ca),flat(WALK,s1,.72,cb),flat(WALK,s1,.8,cc),flat(WALK,s0,.8,cd));
+    quad(A(s0,sg*2.45,.3),A(s1,sg*2.45,.3),A(s1,sg*HW,.3),A(s0,sg*HW,.3),flat(WALK,s0,.9,ca),flat(WALK,s1,.9,cb),flat(WALK,s1,.82,cc),flat(WALK,s0,.82,cd));}}
+  // End caps: the bed's cross-section closed down to 0.3 m under the floor at both mouths (an open walkway end showed a white hole).
+  {const sec:[number,number][]=[[-HW,.3],[-2.45,.3],[-2.45,-.06],[-2.05,-.04],[-1.45,.12],[1.45,.12],[2.05,-.04],[2.45,-.06],[2.45,.3],[HW,.3]],cap=new T.Color('#6f6a62').multiplyScalar(.85);
+   for(const se of [W.s-.3,E.s+.3])for(let k=0;k<sec.length-1;k++)quad(A(se,sec[k][0],sec[k][1]),A(se,sec[k+1][0],sec[k+1][1]),A(se,sec[k+1][0],-.3),A(se,sec[k][0],-.3),cap);}
+  // Sleepers and rails on the ballast (as outside), and the small parts, in Geo soups coloured per part.
+  const add=(g:Geo,color:string,shade:number,glow=false)=>{for(let k=0;k<g.p.length;k+=3){const s=nearS(g.p[k],g.p[k+2]);if(glow)tmp.set(color).multiplyScalar(shade);else flat(c2.set(color),s,shade,tmp);put3([g.p[k],g.p[k+1],g.p[k+2]],tmp);}};
+  const nearS=(x:number,z:number)=>{const dx=E.x-W.x,dz=E.z-W.z,f=((x-W.x)*dx+(z-W.z)*dz)/(dx*dx+dz*dz);return W.s+f*len;};
+  const sl=new Geo(),rl=new Geo(),rs=new Geo(),cable=new Geo(),lamp=new Geo(),plate=new Geo(),plateMark=new Geo(),Q=(s:number,v:number,y:number)=>A(s,v,y);
+  for(let s=W.s-.3;s<E.s+.3;s+=TRACK_DS){const a=trackAt(s),b=trackAt(s+TRACK_DS);
+   for(const f of [.25,.75]){const u=s+TRACK_DS*f;sl.quad(Q(u-.13,-1.15,SLEEPER_TOP),Q(u+.13,-1.15,SLEEPER_TOP),Q(u+.13,1.15,SLEEPER_TOP),Q(u-.13,1.15,SLEEPER_TOP));}// top face only (as outside: Nov 23 heat rule)
+   for(const v of [-RAIL_HALF_GAUGE,RAIL_HALF_GAUGE]){rl.quad(Q(s,v-.055,RAIL_TOP),Q(s+TRACK_DS,v-.055,RAIL_TOP),Q(s+TRACK_DS,v+.055,RAIL_TOP),Q(s,v+.055,RAIL_TOP),Q(s,v,-1));
+    for(const w of [-.055,.055])rs.quad(Q(s,v+w,SLEEPER_TOP),Q(s+TRACK_DS,v+w,SLEEPER_TOP),Q(s+TRACK_DS,v+w,RAIL_TOP),Q(s,v+w,RAIL_TOP));}}
+  // Cable conduit on the left wall (two faces) on a bracket every 3 m.
+  for(let s=W.s+1;s<E.s-1;s+=3){const e=Math.min(E.s-1,s+3),v=-(HW-.09);cable.quad(Q(s,v,1.62),Q(e,v,1.62),Q(e,v,1.54),Q(s,v,1.54),Q(s,0,1.58));cable.quad(Q(s,v,1.62),Q(e,v,1.62),Q(e,-HW+.01,1.62),Q(s,-HW+.01,1.62),Q(s,-HW,1));
+   const p=Q(s+.2,-(HW-.06),1.5),q=trackAt(s+.2);cable.box(p[0],p[1],p[2],q.tx,q.tz,.04,.06,.09,false,true);}
+  // Distance plates every 25 m on the right wall (white plate, a dark bar).
+  for(let s=W.s+12.5;s<E.s-6;s+=25){const v=HW-.015;plate.quad(Q(s-.18,v,1.25),Q(s+.18,v,1.25),Q(s+.18,v,1.01),Q(s-.18,v,1.01),Q(s,0,1.1));plateMark.quad(Q(s-.12,v-.005,1.16),Q(s+.12,v-.005,1.16),Q(s+.12,v-.005,1.1),Q(s-.12,v-.005,1.1),Q(s,0,1.1));}
+  add(sl,C.sleeper,.62);add(rl,C.railTop,.95);add(rs,C.rail,.7);add(cable,'#3e3b37',1);add(plate,'#efe9dc',1);add(plateMark,'#2f3a46',1);
+  // Wall lamps every 12 m, alternate sides: a bright housing and a soft glow patch (a fan: warm centre, rim = the wall's own colour).
+  let side=1;for(let s=W.s+6;s<E.s-4;s+=12,side=-side){const v=side*(HW-.012),y=1.95;
+   const ctr=Q(s,v,y),cC=new T.Color('#e9c690'),n=12;
+   for(let k=0;k<n;k++){const a0=k/n*Math.PI*2,a1=(k+1)/n*Math.PI*2,rim=(a:number)=>{const ds=Math.cos(a)*1.5,dy=Math.max(.32-y,Math.sin(a)*.85);return {s:s+ds,y:y+dy};},r0=rim(a0),r1=rim(a1);
+    pos.push(...ctr,...Q(r0.s,v,r0.y),...Q(r1.s,v,r1.y));col.push(cC.r,cC.g,cC.b);wallAt(r0.s,r0.y,1,ca);col.push(ca.r,ca.g,ca.b);wallAt(r1.s,r1.y,1,cb);col.push(cb.r,cb.g,cb.b);}
+   const vv=side*(HW-.03);lamp.quad(Q(s-.2,vv,2.06),Q(s+.2,vv,2.06),Q(s+.2,vv,1.86),Q(s-.2,vv,1.86),Q(s,0,2));}
+  add(lamp,'#fff1cf',1.25,true);
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.computeBoundingSphere();
+  const mat=new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}),tubeIn={value:0};mat.userData.tubeIn=tubeIn;
+  const mouthGl=(p:{x:number;z:number;s:number},inward:number)=>{const t=trackAt(p.s),nx=t.tx*inward,nz=t.tz*inward;return `vec3(${(p.x-nx*.12).toFixed(3)},${B.toFixed(3)},${(p.z-nz*.12).toFixed(3)}),vec2(${nx.toFixed(5)},${nz.toFixed(5)})`;};
+  mat.onBeforeCompile=sh=>{sh.uniforms.uTubeIn=tubeIn;
+   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vTubeW;').replace('#include <project_vertex>','#include <project_vertex>\nvTubeW=(modelMatrix*vec4(transformed,1.)).xyz;');
+   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+uniform float uTubeIn;varying vec3 vTubeW;
+uniform mat4 projectionMatrix;
+// Seen from outside, through the arch: the fragment's depth is pulled to just behind the mouth plane (keeping its order among the
+// tube's own faces), so a bit of the hill mesh that crosses the bore just inside the portal (the curved west one) never covers it.
+float tubeDepth(vec3 X){vec4 c=projectionMatrix*viewMatrix*vec4(X,1.);float dx=c.z/c.w*.5+.5;return dx+(gl_FragCoord.z-dx)*.02;}
+bool tubeThru(vec3 P,vec2 n,inout float fd){float dc=dot((cameraPosition-P).xz,n),df=dot((vTubeW-P).xz,n);if(df<.4)return true;if(dc>0.)return false;
+ vec3 X=cameraPosition+(vTubeW-cameraPosition)*(-dc/(df-dc));float lat=abs(dot((X-P).xz,vec2(n.y,-n.x)));
+ if(lat<${HW.toFixed(2)}&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(${(HW*HW).toFixed(3)}-lat*lat,0.))){fd=tubeDepth(X);return true;}return false;}`)
+    .replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\nfloat tubeFd=gl_FragCoord.z;if(uTubeIn<.5&&!tubeThru(${mouthGl(W,1)},tubeFd)&&!tubeThru(${mouthGl(E,-1)},tubeFd))discard;gl_FragDepth=tubeFd;`);};
+  mat.customProgramCacheKey=()=>'train-tunnel-lit';
+  const m=new T.Mesh(g,mat);m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
  }
  function portalColliders(x:number,z:number,o:{x:number;z:number},a:{x:number;z:number},half:number){const out:Obstacle[]=[];
   // The headwall either side of the arch (the arch itself stays open; the hill behind it is too steep to walk).
