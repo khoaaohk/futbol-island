@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {puffLevel} from '../graphics/softBox';
 import {takeSandDrifts,takeSandNormals,groundingOn,UPRIGHT_SINK} from './grounding';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
@@ -37,6 +38,8 @@ export function goalGeometry(v:Pick<Venue,'goalWidth'|'goalHeight'|'length'>&{id
  }
  tube([-gw,h,z],[gw,h,z],radius);tube([-gw,base+.035,back],[gw,base+.035,back],.035);
  tube([-gw,h-.12,back],[gw,h-.12,back],.035);
+ // Inflate pass 2 (owner: goal frame joints): a round knuckle where each post meets the crossbar (the two flat tube ends no longer show a notch).
+ if(puffLevel()>0)for(const x of [-gw,gw]){const k=new T.SphereGeometry(radius*1.12,10,6);k.translate(x,h,z);tubes.push(k);}
  const cols=Math.ceil(v.goalWidth/.25),rows=Math.ceil(v.goalHeight/.25);
  for(let i=0;i<=cols;i++){const x=-gw+i*v.goalWidth/cols;line([x,base,back],[x,h-.12,back]);line([x,h,z],[x,h-.12,back]);}
  for(let i=0;i<=rows;i++){const y=base+i*v.goalHeight/rows;line([-gw,Math.min(y,h-.12),back],[gw,Math.min(y,h-.12),back]);for(const x of [-gw,gw])line([x,y,z],[x,Math.min(y,h-.12),back]);}
