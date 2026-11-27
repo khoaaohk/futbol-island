@@ -79,7 +79,7 @@ import {CAY_KONBINI} from './coralCay';
 import {STADIUM_SHOP_X,STADIUM_SHOP_WALL_Z,STADIUM_SHOP_POOL} from './stadiumShops';
 import { Obstacle, trunkCollider } from './simulation';
 import {createNeonFlicker,NEON_FLICKER_DISTANCE} from './arcadeNeonFlicker';
-import {broadleafTreesOn,broadleafTree,broadleafBush,spotHash,TREE_GREENS,PLANTER_LOBES,RAMP_BUSH_LOBES} from './broadleafTrees';
+import {broadleafTreesOn,broadleafTree,broadleafBush,spotHash,treeSize,TREE_GREENS,PLANTER_LOBES,RAMP_BUSH_LOBES} from './broadleafTrees';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
 /** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
@@ -243,7 +243,11 @@ export function* buildTownSteps(scene: T.Scene) {
   // radius plus TRUNK_CLEARANCE, so walkers and rides (their own radius on top) stop at the trunk and slide round it.
   // yaw / ribs (Nov 13 2026, West Beach): turns the palm so its gentle trunk lean points its own way, and ribs=false drops the
   // 56 thin frond midrib cylinders (~2.2k of a palm's ~2.4k triangles) for the West Beach's many palms. Defaults: as before.
-  function palm(x:number,z:number,height=6,yaw=0,ribs=true){prop('palm',()=>anchored(x,z,()=>palmParts(x,z,height,yaw,ribs)));}
+  function palm(x:number,z:number,height=6,yaw=0,ribs=true){
+    // Soft sweep (owner Nov 27 2026: "many are the same. some need to be taller than others"): height ~0.75x-1.35x by spot, a few
+    // taller heroes to ~1.5x, and palms left at the default yaw lean their own way (the line-clearance step still wins in palmParts).
+    if(softOn()){const sz=treeSize(x,z,{hero:.25});height*=sz.height;if(yaw===0)yaw=spotHash(x,z,95)*Math.PI*2;}
+    prop('palm',()=>anchored(x,z,()=>palmParts(x,z,height,yaw,ribs)));}
   function palmParts(x:number,z:number,height=6,yaw=0,ribs=true){
     // Island Line clearance (Nov 24 2026, owner shot 34: palms through a moving car): every palm keeps its crown out of the train's
     // envelope; one within PALM_LINE_CLEAR m of the line steps straight back from it and its trunk leans away (lineClearSpot).

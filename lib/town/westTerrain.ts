@@ -7,6 +7,7 @@
 //    plinth, coursed blocks, coping, buttresses, a clipped hedge on top), the two flights of stairs through it and their colliders.
 //    Pieces go through world.ts `put`, so they merge into the chunk's paint batch and take its baked light (walls darken to the foot).
 import * as T from 'three';
+import {softOn} from '../graphics/softBox';
 import {elevationOn} from './elevation';
 import {broadleafTreesOn,hedgeClump} from './broadleafTrees';
 import {WEST,WEST_BOX,WEST_TERRACE,WEST_STAIRS,westNatural,westGround,onWestTerrace,terraceOutline,stairLocal,type Stair} from './westElevation';
@@ -133,7 +134,7 @@ function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},s
   // long, low swells along the run (aligned with it, half sunk into the top) at an uneven 1.6-3.4 m spacing: growth, not a row of pebbles
   let run=1.1,next=2;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b.x-a.x,b.z-a.z);if(l<1e-6)continue;run+=l;if(run<next)continue;run=0;next=1.6+1.8*hash(b.x*.7+seed,b.z*1.3);
    const nx=(b.z-a.z)/l,nz=-(b.x-a.x)/l,k=hash(b.x+seed,b.z),r=.36+.24*k,off=-.1-Wd*(.38+.24*hash(b.z,b.x+seed));
-   tris+=8;const c=t.put(hedgeClump(b.x*3.1+b.z),WALL.hedge,b.x+nx*off,b.top+H-.03+hedgeWobble(b.x,b.z)*.05,b.z+nz*off);c.scale.set(r*2.1,r*.42,r*.95);c.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x);}}
+   tris+=8;const c=t.put(hedgeClump(b.x*3.1+b.z),WALL.hedge,b.x+nx*off,b.top+H-.03+hedgeWobble(b.x,b.z)*.05,b.z+nz*off);if(softOn()){/* soft sweep (owner Nov 27 2026: hedge swells less regular from above): length, width, height and a turn vary by position */const q=hash(b.z*1.7+seed,b.x*.9),w=hash(b.x*2.3,b.z*1.1+seed);c.scale.set(r*(1.5+1.3*q),r*(.34+.16*w),r*(.75+.45*w));c.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x)+(q-.5)*.7;}else{c.scale.set(r*2.1,r*.42,r*.95);c.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x);}}}
  else if(o.hedge)tris+=sweep(t,pts,WALL.hedge,[[-.1,'top',WALL.copingH],[-.1,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH+WALL.hedgeH],[-.1-WALL.hedgeW,'top',WALL.copingH]],true);
  // Buttresses (where the wall stands 1.4 m or more): a pilaster on its own darker base, a capstone over the coping.
  if(o.buttress){let run=WALL.buttress/2;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b.x-a.x,b.z-a.z);run+=l;if(run<WALL.buttress||b.top-b.foot<1.4)continue;run=0;

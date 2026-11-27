@@ -14,12 +14,16 @@
 import * as T from 'three';
 import {mergeGeometries,mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
+
 export const TREES_DEFAULT=true;// `?trees=0` switches the new trees off (before / after)
 const query=(()=>{try{return typeof window!=='undefined'&&window.location&&typeof window.location.search==='string'?window.location.search:null;}catch{return null;}})();
 let enabled=query===null?TREES_DEFAULT:/[?&]trees=1(&|$)/.test(query)||(TREES_DEFAULT&&!/[?&]trees=0(&|$)/.test(query));
 /** Tests call this; the browser reads the URL once. */
 export function setBroadleafTrees(on:boolean){enabled=on;}
 export const broadleafTreesOn=()=>enabled;
+/** The soft sweep's `?soft=0` switch (lib/graphics/softBox.ts softOn), read here without an import: tests load this file on its own. */
+let softCached:boolean|null=null;
+const softOn=()=>softCached??=(()=>{try{return typeof window==='undefined'||new URLSearchParams(window.location.search).get('soft')!=='0';}catch{return true;}})();
 
 /** Town street trees were all #5b8c5c: now one of the park's leaf greens each (all fold into the same paint batch). */
 export const TREE_GREENS=['#5b8c5c','#4f7a57','#5e8c62','#6f9d6c'];
@@ -54,10 +58,21 @@ function clump(seed:number,jag:number,round=false){const g=round?new T.Dodecahed
  return g;}
 
 /** One broadleaf tree in tree space (trunk foot at the origin), scale s. `low`: the battery-saver tier (the 3 big clumps, no branches). */
+/** Tree size variety (soft sweep, owner Nov 27 2026: "fix the heights of trees. many are the same. some need to be taller than others"):
+ *  a deterministic height factor per spot, ~0.75x-1.35x, with about one tree in eight a taller "hero" (to ~1.45x; `hero` widens that
+ *  for palms to ~1.5x), and an independent crown factor 0.88-1.14. 1 / 1 with `?soft=0`. Colliders do not change (trunk radius). */
+export function treeSize(x:number,z:number,o:{hero?:number;range?:number}={}):{height:number;crown:number}{
+ if(!softOn())return {height:1,crown:1};
+ const a=spotHash(x,z,91),b=spotHash(x,z,92),c=spotHash(x,z,93),range=o.range??1;
+ // a smooth-ish bell between 0.75 and 1.2 (two hashes averaged), a hero bump for the top eighth
+ let height=.75+.45*((a+b)/2)*range+(1-range)*.225;if(c>.875)height=1.25+(o.hero??.2)*(c-.875)/.125;
+ return {height,crown:.88+.26*spotHash(x,z,94)};
+}
 export function broadleafTree(x:number,z:number,s:number,o:{trunkTop?:number;trunkFoot?:number;sides?:number;low?:boolean}={}):BroadleafTree{
  const h=(k:number)=>spotHash(x,z,k),shape=BROADLEAF_SHAPES[Math.floor(h(1)*BROADLEAF_SHAPES.length)%BROADLEAF_SHAPES.length];
  // The tree's own pose: a yaw, a squash (wider or taller), a lean of up to ~4 degrees, all applied to clumps, branches and trunk alike.
- const yaw=h(2)*Math.PI*2,sx=s*(.92+.16*h(3)),sy=s*(.9+.2*h(4)),lean=(h(5)-.5)*.14,leanDir=h(6)*Math.PI*2;
+ const size=treeSize(x,z);s*=size.height;
+ const yaw=h(2)*Math.PI*2,sx=s*(.92+.16*h(3))*size.crown,sy=s*(.9+.2*h(4)),lean=(h(5)-.5)*.14,leanDir=h(6)*Math.PI*2;
  const pose=new T.Matrix4().compose(new T.Vector3(),new T.Quaternion().setFromEuler(new T.Euler(Math.cos(leanDir)*lean,yaw,Math.sin(leanDir)*lean,'YXZ')),new T.Vector3(sx,sy,sx));
  const lobes=o.low?shape.lobes.slice(0,3):shape.lobes,parts:T.BufferGeometry[]=[],centres:{c:T.Vector3;r:number}[]=[];
  lobes.forEach(([lx,ly,lz,r,sqy=1,sqxz=1],k)=>{const g=clump(k*13+Math.floor(h(7)*97),.09,k===0);r*=LOBE_GROW;
@@ -109,8 +124,13 @@ export const RAMP_BUSH_LOBES:Lobe[]=[[0,-.35,0,.95,.9],[.2,.45,.12,.78,.9],[-.15
 /** A Coral Cay shrub pair / trio (r 1; the old balls were 0.6-0.8 m, squashed 0.75 tall). */
 export const CAY_PAIR_LOBES:Lobe[]=[[-.6,0,0,.7,.75],[.5,-.03,.05,.6,.75],[-.05,.12,-.2,.5,.8]];
 export const CAY_TRIO_LOBES:Lobe[]=[[-.9,0,0,.55,.75],[0,0,.5,.67,.75],[.9,0,0,.79,.75]];
+/** Soft sweep (owner Nov 27 2026: planter shrubs "not one soft loaf"): 2-4 distinct clumps of different sizes along the planter, with
+ *  small gaps and heights that differ, picked per spot. */
+function planterClumps(x:number,z:number):Lobe[]{const h=(k:number)=>spotHash(x,z,70+k),n=2+Math.floor(h(0)*2.999),out:Lobe[]=[];
+ for(let i=0;i<n;i++){const t=n===1?0:i/(n-1)-.5,r=(n>3?.42:n>2?.5:.6)*(.8+.4*h(1+i));out.push([t*(n>2?1.55:1.1)+(h(10+i)-.5)*.15,(h(20+i)-.5)*.18,(h(30+i)-.5)*.2,r,.78+.18*h(40+i)]);}
+ return out;}
 export function broadleafBush(x:number,z:number,r:number,o:{soft?:boolean;low?:boolean;lobes?:Lobe[];stretch?:readonly [number,number,number]}={}):{leaves:T.BufferGeometry;shade:Float32Array;triangles:number}{
- const h=(k:number)=>spotHash(x,z,40+k),parts:T.BufferGeometry[]=[],yaw=o.lobes?0:h(0)*6.28,L=o.lobes??BUSH_LOBES,soft=!!o.soft&&!o.low,st=o.stretch??[1,1,1],centres:{c:T.Vector3;r:number}[]=[];
+ const h=(k:number)=>spotHash(x,z,40+k),parts:T.BufferGeometry[]=[],yaw=o.lobes?0:h(0)*6.28,L=o.lobes===PLANTER_LOBES&&softOn()?planterClumps(x,z):o.lobes??BUSH_LOBES,soft=!!o.soft&&!o.low,st=o.stretch??[1,1,1],centres:{c:T.Vector3;r:number}[]=[];
  for(const [k,[lx,ly,lz,lr,sqy=.9,sqxz=1]] of L.entries()){const g=soft?softClump(k*7+Math.floor(h(1)*50)):clump(k*7+Math.floor(h(1)*50),.09,k===0);
   const c=new T.Vector3(lx*r*st[0],ly*r*st[1],lz*r*st[2]).applyAxisAngle(up,yaw),q=1+.12*(h(12+k)-.5);
   g.applyMatrix4(new T.Matrix4().compose(c,new T.Quaternion().setFromEuler(new T.Euler(soft?0:h(2+k),h(5+k)*6.28,0)),new T.Vector3(lr*r*sqxz*st[0]*q,lr*r*sqy*st[1]*q,lr*r*sqxz*st[2]*q)));parts.push(g);
@@ -132,12 +152,23 @@ function softClump(seed:number){const ico=new T.IcosahedronGeometry(1,1);ico.del
  *  narrower going up, with a dark underside and the lit tip (per-vertex shade). Tree space: trunk foot at 0; `s` = the old cone's
  *  scale (radius 1.6 s, 4.2 s tall from 1.9 s), so the silhouette's envelope, the asset and the collider stay where they were. */
 export function pineTiers(x:number,z:number,s:number,o:{low?:boolean;base?:number}={}):{leaves:T.BufferGeometry;shade:Float32Array;triangles:number;top:number}{
- const h=(k:number)=>spotHash(x,z,60+k),base=(o.base??1.9)*s,parts:T.BufferGeometry[]=[];
+ const h=(k:number)=>spotHash(x,z,60+k),size=treeSize(x,z),parts:T.BufferGeometry[]=[];s*=size.height;const base=(o.base??1.9)*s;
  // [bottom (above base), height, radius] in units of s: the tiers overlap by ~40 % so no trunk shows between them
  const tiers:[number,number,number][]=o.low?[[0,2.4,1.6],[1.6,2.6,1.05]]:[[0,1.9,1.62],[1.05,1.75,1.25],[2.05,2.15,.85]];
- tiers.forEach(([b,ht,rr],k)=>{const g=new T.ConeGeometry(rr*s*(.94+.12*h(k)),ht*s,6,1,false).toNonIndexed();const ox=(h(10+k)-.5)*.22*s*(k?1:0),oz=(h(20+k)-.5)*.22*s*(k?1:0);
-  g.rotateY(h(30+k)*6.28);g.rotateZ((h(40+k)-.5)*.06);g.translate(ox,base+b*s+ht*s/2,oz);parts.push(g);});
- const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
+ // Soft sweep (owner Nov 27 2026: "pines less Christmas tree"): each tier a rounded skirt (a lathe: tucked underside, a soft rounded
+ // rim that droops in 3-4 scallops, a convex shoulder up to the tip; smooth normals) instead of a straight 6-sided cone, tiers a bit
+ // less regular. 6 sides x 3 profile steps = 24 triangles a tier (the cone was 12 + its 6-triangle base).
+ const softTier=softOn()&&!o.low;
+ tiers.forEach(([b,ht,rr],k)=>{const R=rr*s*(.94+.12*h(k))*size.crown*(softTier?.97+.1*h(50+k):1),H=ht*s*(softTier?.9+.16*h(55+k):1);let g:T.BufferGeometry;
+  if(softTier){const prof=[new T.Vector2(0,H*.28),new T.Vector2(R,0),new T.Vector2(R*.6,H*.42),new T.Vector2(0,H)];
+   const lathe=new T.LatheGeometry(prof,6);lathe.deleteAttribute('uv');lathe.deleteAttribute('normal');const ix=mergeVertices(lathe,1e-4),P=ix.getAttribute('position') as T.BufferAttribute,sc=3+Math.floor(h(60+k)*2),ph=h(65+k)*6.28;
+   for(let i=0;i<P.count;i++){const px=P.getX(i),pz=P.getZ(i),rad=Math.hypot(px,pz);if(rad>R*.95){const a=Math.atan2(pz,px);P.setY(i,P.getY(i)-H*(.05+.06*(.5+.5*Math.sin(sc*a+ph))));}}
+   {const I=ix.index!.array,keep:number[]=[];for(let i=0;i<I.length;i+=3)if(I[i]!==I[i+1]&&I[i+1]!==I[i+2]&&I[i]!==I[i+2])keep.push(I[i],I[i+1],I[i+2]);ix.setIndex(keep);}// the lathe's axis triangles are degenerate
+   ix.computeVertexNormals();g=ix.toNonIndexed();ix.dispose();lathe.dispose();g.translate(0,-H/2,0);}
+  else g=new T.ConeGeometry(R,H,6,1,false).toNonIndexed();
+  const ox=(h(10+k)-.5)*.22*s*(k?1:0),oz=(h(20+k)-.5)*.22*s*(k?1:0);
+  g.rotateY(h(30+k)*6.28);g.rotateZ((h(40+k)-.5)*(softTier?.1:.06));g.translate(ox,base+b*s+ht*s/2,oz);parts.push(g);});
+ const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());if(!softTier)leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
  const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3),value=.95+.1*h(9),N=leaves.getAttribute('normal') as T.BufferAttribute;
  leaves.computeBoundingBox();const bb=leaves.boundingBox!,hy=Math.max(.01,bb.max.y-bb.min.y);
  for(let i=0;i<n;i++){const t=(P.getY(i)-bb.min.y)/hy,under=N.getY(i)<-.5;let f=(.74+.3*t)*value;if(under)f*=.62;shade[i*3]=f*1.02;shade[i*3+1]=f;shade[i*3+2]=f*.98;}

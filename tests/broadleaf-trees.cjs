@@ -15,9 +15,9 @@ for(let i=0;i<400;i++){const x=-330+(i*37.13)%240,z=-230+(i*53.71)%360,s=.85+(i%
  assert.equal(t.shade.length,t.leaves.getAttribute('position').count*3,'one occlusion triple per vertex');
  assert(t.shade.every(v=>v>.35&&v<1.2),'occlusion in range');
  t.leaves.computeBoundingBox();const b=t.leaves.boundingBox;
- assert(Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=2.7*s,'canopy reach under 2.7 m a unit of scale (the ball: 1.8)');
- assert(Math.abs(t.top-b.max.y)<1e-6&&t.reach<=2.7*s,'top / reach size the tree asset');
- assert(b.max.y<=6.4*s&&b.min.y>=1.1*s,`canopy height ${b.min.y.toFixed(2)}..${b.max.y.toFixed(2)} (s ${s})`);
+ const sz=B.treeSize(x,z);/* soft sweep Nov 27 2026: per-spot height / crown variety */assert(Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=2.7*s*sz.height*sz.crown,'canopy reach under 2.7 m a unit of scale (the ball: 1.8)');
+ assert(Math.abs(t.top-b.max.y)<1e-6&&t.reach<=2.7*s*sz.height*sz.crown,'top / reach size the tree asset');
+ assert(b.max.y<=6.4*s*sz.height&&b.min.y>=1.1*s*sz.height,`canopy height ${b.min.y.toFixed(2)}..${b.max.y.toFixed(2)} (s ${s})`);
  // flat facets: the three normals of every triangle agree
  const N=t.leaves.getAttribute('normal').array;for(let k=0;k<N.length;k+=9)assert(Math.abs(N[k]-N[k+3])+Math.abs(N[k+1]-N[k+4])+Math.abs(N[k+2]-N[k+5])<1e-5,'flat normals');
  const low=B.broadleafTree(x,z,s,{low:true});assert(low.triangles<t.triangles,'low tier is cheaper');
@@ -34,8 +34,8 @@ const tri={};for(const [k,f] of Object.entries(kinds))for(let i=0;i<40;i++){cons
  assert.match(a.leaves.type,NOT_ROOF,k+' is foliage to the landing code');assert.match(lo.leaves.type,NOT_ROOF);same(a.leaves,b.leaves);
  assert.equal(a.shade.length,a.leaves.getAttribute('position').count*3,k+' occlusion per vertex');assert(a.shade.every(v=>v>.3&&v<1.2),k+' occlusion range');
  assert(lo.triangles<a.triangles,k+' low tier is cheaper');tri[k]=a.triangles;}
-{const p=B.pineTiers(5,6,1);p.leaves.computeBoundingBox();const b=p.leaves.boundingBox;assert(b.min.y>=1.85&&b.max.y<=6.15&&Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=1.85,'pine inside the old cone (r 1.6, y 1.9..6.1)');
- assert(p.triangles<=48,'pine: at most 48 triangles, got '+p.triangles);}
+{const p=B.pineTiers(5,6,1),sz=B.treeSize(5,6);p.leaves.computeBoundingBox();const b=p.leaves.boundingBox;assert(b.min.y>=1.6*sz.height&&b.max.y<=6.15*sz.height&&Math.max(-b.min.x,b.max.x,-b.min.z,b.max.z)<=1.95*sz.height*sz.crown,'pine inside the old cone (r 1.6, y 1.9..6.1) at its own size (soft sweep: rim droop to 1.6)');
+ assert(p.triangles<=72,'pine: at most 72 triangles (soft sweep Nov 27 2026: rounded tiers, 3 x 24; was 48), got '+p.triangles);}
 {const r=B.broadleafBush(55,-20,.7,{soft:true,lobes:B.RAMP_BUSH_LOBES,stretch:[.85,1.9,.95]});r.leaves.computeBoundingBox();const b=r.leaves.boundingBox;assert(b.max.y+1.55<=3.2&&b.min.y+1.55>=-.1&&b.max.x-b.min.x<=1.6,'ramp bush keeps its envelope (the jump clears it)');}
 {const h=B.hedgeClump(3),h2=B.hedgeClump(3);assert.match(h.type,NOT_ROOF);same(h,h2);assert.equal(h.getAttribute('position').count/3,8);}
 console.log('  new kinds (tris):',JSON.stringify(tri));
