@@ -64,7 +64,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour,roofSlab} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
+import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -953,7 +953,18 @@ export function* buildTownSteps(scene: T.Scene) {
    for(let dz=-24.25;dz<=24.3;dz+=.5)box(.035,5,.035,'#315b50',x,ar.height+2.5,ar.z+dz);
    for(let dx=side===1?-9:-13;dx<=13;dx+=.5)box(.035,5,.035,'#315b50',ar.x+dx,ar.height+2.5,z);
   }
-  for(const b of ARENA_BLOCKS){box(b.w,1.4,b.d,'#d4ab68',ar.x+b.x,ar.height+.7,ar.z+b.z);box(b.w+.08,.12,b.d+.08,'#f0d291',ar.x+b.x,ar.height+1.46,ar.z+b.z);}
+  // Arena inflatables (Nov 27 2026, owner shot 190: "these boxes are still not rounded inflatables?"): each cover block is a bouncy-castle
+  // block: a fat puffed base (radii ~47% of its height), a white piped bumper tube round the waist seam, a domed sunny top pillow and a
+  // darker turf footprint. Visual only: the game's solids are ARENA_BLOCKS rectangles (rooftopKnockout.ts), unchanged; same top height
+  // (1.52 m); puffed pieces carry the pool-float bake (batched, 0 draws); low tier / Battery saver drop one rounding step (puffGeo).
+  // `?soft=0` = the old two boxes.
+  for(const b of ARENA_BLOCKS){const x=ar.x+b.x,z=ar.z+b.z,y=ar.height,low=softLow(),R=.72,body=puffGeo(b.w,1.5,b.d,{puff:2,openBottom:true,dome:.1,seg:2,maxR:[R,R,R]});
+   if(!body){box(b.w,1.4,b.d,'#d4ab68',x,y+.7,z);box(b.w+.08,.12,b.d+.08,'#f0d291',x,y+1.46,z);continue;}
+   // the base sits squashed into the turf (its lower curve under the deck), so the flank stands up and bulges like a pumped block
+   const foot=puffGeo(b.w+.3,.02,b.d+.3,{puff:2,openBottom:true,dome:-1,seg:low?1:2,maxR:[R+.15,1,R+.15]});if(foot)put(foot,'#5a8552',x,y+.048,z);
+   put(body,'#e5673a',x,y+.35,z);
+   put(puffGeo(b.w-.06,.13,b.d-.06,{puff:2,openBottom:true,seg:2,maxR:[R-.03,1,R-.03]})!,'#fff3dc',x,y+1.02,z);
+   put(puffGeo(b.w-.34,.42,b.d-.34,{puff:2,openBottom:true,dome:.14,seg:2,maxR:[R-.17,1,R-.17]})!,'#f7c64a',x,y+1.25,z);}
   const queueFloorMaterial=new T.MeshStandardMaterial({color:'#bb6266',roughness:.85,transparent:true,opacity:.28,depthWrite:false});materials.push(queueFloorMaterial);
   for(const q of ARENA_QUEUES){const floor=new T.Mesh(new T.PlaneGeometry(q.w,q.d),queueFloorMaterial);floor.rotation.x=-Math.PI/2;floor.position.set(ar.x+q.x,ar.height+.065,ar.z+q.z);floor.receiveShadow=true;town.add(floor);}
   // South stair runs parallel to the facade, rising west into the cage landing.
