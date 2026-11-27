@@ -1315,6 +1315,9 @@ export function* buildTownSteps(scene: T.Scene) {
   path(190.75,190,30.5,4);path(204,177,4,30);path(204,205.25,4,3.5);
   path(200,169,12,4);
   for(const x of [99,118]){path(x,196,15,15);table(x-2,195);bench(x+4,200);}
+  // Path to deck sweep (Nov 26 2026): these two picnic patios stopped 3.5 m short of the boardwalk's open north edge across grass; a
+  // 4 m walk joins each to it like the museum's and the café's (the first one west of the pier lamp at x 100).
+  path(95,205.25,4,3.5);path(118,205.25,4,3.5);
   path(203.25,196,13.5,15);table(200,195);bench(207,200);
   // The museum plaza (museumExterior.ts) keeps a clear central route to the pier.
   path(168,205.25,4,3.5);

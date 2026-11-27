@@ -110,4 +110,10 @@ assert.ok(D.DRAWN.lawn+D.lawnRise(110,-67)<D.DRAWN.path,'the lawn stays under a 
   for(let i=0;i<p2.length;i+=9){pb+=((p2[i+5]-p2[i+2])*(p2[i+6]-p2[i])-(p2[i+3]-p2[i])*(p2[i+8]-p2[i+2]))/2;for(let k=0;k<9;k+=3)used.add(p2[i+k].toFixed(4)+','+p2[i+k+2].toFixed(4));}
   assert.ok(near(pb,pa,1e-6),'threaded patch area '+pb+' vs '+pa);for(let k=0;k<CP.length;k+=2)assert.ok(used.has(CP[k].toFixed(4)+','+CP[k+1].toFixed(4)),'seam vertex used');}
  console.log('  rounded corners',F.length,'radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));}
+// ... and with the corner signal poles standing (world.ts passes them as `keep`): every corner still rounds, at least 2 m (town streets),
+// and no pole's footing (0.25 m base + 0.26 m contact ring) is cut by the curve: each stays on the pavement 0.5 m or more from the kerb
+{const keep=JUNCTIONS.flatMap(j=>[[-5.3,-5.3],[5.3,5.3]].map(([dx,dz])=>({x:j.x+dx,z:j.z+dz,w:.5,d:.5})));D.setDepthStreets({...INPUT,keep});const S=D.depthStreets(),F=S.asphalt.fillets;
+ assert.ok(F.length===44&&F.every(f=>f.r>=2),'radii with poles '+JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));
+ for(const k of keep){assert.ok(!S.asphalt.inside(k.x,k.z)&&S.asphalt.dist(k.x,k.z)>=.5+.25,'pole clear of the kerb at '+k.x+','+k.z+': '+S.asphalt.dist(k.x,k.z).toFixed(2));}
+ console.log('  with poles: radii',JSON.stringify(F.reduce((h,f)=>(h[f.r]=(h[f.r]||0)+1,h),{})));D.setDepthStreets(INPUT);}
 console.log('town-depth: ok');

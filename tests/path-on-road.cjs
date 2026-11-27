@@ -19,7 +19,7 @@ const inRect=(r,x,z,m=0)=>Math.abs(x-r.x)<r.w/2-m&&Math.abs(z-r.z)<r.d/2-m;
   const EL=load(base+'/lib/town/elevation.ts'),D=load(base+'/lib/town/townDepth.ts'),SE=load(base+'/lib/town/surfaceEdges.ts'),DR=load(base+'/lib/town/elevationDrape.ts');
   EL.setElevation(!!elev);D.setTownDepth(!!depth);SE.setSurfaces(!!surf);
   let input=null,surfIn=null;const sd=D.setDepthStreets;D.setDepthStreets=i=>{input=i;return sd(i);};const si=SE.setSurfaceInput;SE.setSurfaceInput=i=>{surfIn=i;return si(i);};
-  const scene=new T.Scene();load(base+'/lib/town/world.ts').buildTown(scene);scene.updateMatrixWorld(true);
+  const scene=new T.Scene(),world=load(base+'/lib/town/world.ts').buildTown(scene);scene.updateMatrixWorld(true);
   if(input)streets={roads:input.roads,junctions:input.junctions,paths:input.hard.filter(h=>h.kind==='path')};
   assert.ok(streets,'the first build (depth on) records the streets');
   const asphalt=[...streets.roads.map(r=>({x:r.x,z:r.z,w:r.vertical?r.carriageway:r.w,d:r.vertical?r.d:r.carriageway})),...streets.junctions.map(j=>({x:j.x,z:j.z,w:8,d:8}))];
@@ -36,6 +36,20 @@ const inRect=(r,x,z,m=0)=>Math.abs(x-r.x)<r.w/2-m&&Math.abs(z-r.z)<r.d/2-m;
     if(onAsphalt?top.point.y>want+.03:Math.abs(top.point.y-slab)<.006&&top.point.y>want+.03){const k=`${p.x},${p.z} (${p.w}x${p.d})`;if(!bad.has(k))bad.set(k,`${x.toFixed(1)},${z.toFixed(1)} ${onAsphalt?'asphalt':'pavement'} top ${top.point.y.toFixed(3)} street ${want.toFixed(3)}`);}}}
   assert.ok(probes>300,'probes over path / street overlaps: '+probes);
   assert.equal(bad.size,0,label+': path slab over a street at\n  '+[...bad].map(([k,v])=>k+': '+v).join('\n  '));
+  // 1b. rounded street corners (owner, Nov 26 2026): over each corner's new asphalt the top surface is the asphalt (no pavement, path or
+  //     lawn left over it, no hole); just inside the curve it is the pavement (or its dropped-kerb ramp), never a hole down to the lawn
+  if(depth){let cp=0;const cbad=[];for(const f of D.depthStreets().asphalt.fillets){for(let k=.5;k<8;k+=1)for(const [rho,on] of [[f.r+.9,'asphalt'],[f.r+1.6,'asphalt'],[f.r-.6,'pave'],[f.r-1.2,'pave']]){
+    const [x,z]=D.filletPoint(f,k,rho);if(on==='asphalt'&&!((x-f.vx)*f.bx+(z-f.vz)*f.bz>-.5&&(x-f.vx)*f.ax+(z-f.vz)*f.az>-.5))continue;
+    rc.set(new T.Vector3(x,5,z),down);const top=rc.intersectObjects(meshes,false).find(h=>h.point.y<.1);cp++;
+    const want=(on==='asphalt'?D.DRAWN.asphalt:D.DRAWN.pave)+D.depthLift(x,z)+EL.regionLift(x,z)+(EL.regionLift(x,z)>0?up:0);
+    if(!top||Math.abs(top.point.y-want)>.03)cbad.push(`${on} at ${x.toFixed(2)},${z.toFixed(2)}: top ${top?top.point.y.toFixed(3):'none'} want ${want.toFixed(3)}`);}}
+   assert.ok(cp>600,'rounded-corner probes '+cp);assert.deepEqual(cbad.slice(0,6),[],label+': rounded corners');
+   // path to deck (owner, Nov 26 2026): the South Pier boardwalk's west end and the two picnic patios meet the deck (paved to its edge, no rail across)
+   const pathAt=(x,z)=>streets.paths.some(p=>inRect(p,x,z,-.01));
+   for(const [x,z] of [[48.9,209.2],[48.9,212.8],[46,212.5],[95,206.9],[118,206.9],[95,203.7],[118,203.7]])assert.ok(pathAt(x,z),'paved up to the deck at '+x+','+z);
+   for(let z=209.1;z<213;z+=.2)assert.ok(!world.obstacles.some(o=>Math.abs(49-o.x)<o.w/2+.2&&Math.abs(z-o.z)<o.d/2),'the boardwalk west rail is open at z '+z.toFixed(1));
+   assert.ok(world.obstacles.some(o=>Math.abs(49-o.x)<.1&&Math.abs(208-o.z)<.1)&&world.obstacles.some(o=>Math.abs(49-o.x)<.1&&o.z>213),'the rest of the west rail still blocks');
+   report.push(label+': '+cp+' rounded-corner probes');}
   // 2. the lawn's wear sheets and lips stay off the streets
   let edgeTris=0,onStreet=0;if(surf&&surfIn){SE.setSurfaceInput(surfIn);const e=SE.mainLawnEdges();const P=e.position;
    for(let i=0;i<e.index.length;i+=3){const a=e.index[i]*3,b=e.index[i+1]*3,c=e.index[i+2]*3,cx=(P[a]+P[b]+P[c])/3,cz=(P[a+2]+P[b+2]+P[c+2])/3;if(e.edge[e.index[i]*2+1]<1.5)continue;/* the rim (no wear code): its bare side lies under the street by design */
