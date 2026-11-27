@@ -25,13 +25,18 @@ export type FootKind='building'|'house'|'platform'|'tree'|'palm'|'bush'|'prop'|'
 /** A footprint in its own frame: half sizes along local x / z, turned by yaw (world = centre + R(yaw) local, as townDepth.ts).
  *  sides: which sides shade (bit 1 = local -z, 2 = +x, 4 = +z, 8 = -x; default all). fill: shade under it too (open props). */
 export type Foot={kind:FootKind;x:number;z:number;hw:number;hd:number;yaw?:number;round?:boolean;sides?:number;fill?:boolean;
- /** a flat base height (decks, platforms): the ring lies there instead of on the ground */base?:number};
+ /** a flat base height (decks, platforms): the ring lies there instead of on the ground */base?:number;
+ /** metres the thing runs on under the drawn ground (tests: uprights sink, never sit on top) */sink?:number;
+ /** a perimeter of its own (curved platforms): replaces the rectangle; same shape as loop() returns */path?:Edge[]};
+export type Edge={p:[number,number];o:[number,number];side:number};
 /** spread: metres of soft shade beyond the foot; k: the multiplier at the foot (1 = none); soil: the tree's leaf-litter tint. */
 export const CONTACT:Record<FootKind,{spread:number;k:number;soil?:boolean}>={
  building:{spread:.95,k:.6},house:{spread:.9,k:.6},platform:{spread:.75,k:.62},tree:{spread:1.25,k:.66,soil:true},palm:{spread:.7,k:.72},
  bush:{spread:.45,k:.7},prop:{spread:.38,k:.66},machine:{spread:.42,k:.6},post:{spread:.26,k:.7}};
 /** How much of the shade a side keeps when it faces away from the sun (it is in the real shadow already). */
 export const SHADOW_SIDE_KEEP=.5;
+/** A station platform's half length to its wall (trainWorld.ts: 5 m pieces, 2.53 m half boxes, STATION_HALF 15). */
+export const PLATFORM_HW=15.03;
 /** Leaf litter / soil under broadleaf trees: the multiplier's tint at the trunk (warm brown, so grass reads as soil, sand as damp). */
 const SOIL_TINT=[1,.9,.72] as const;
 /** The decal rides this far over the drawn layer (above the sand / lawn at -0.105 / -0.112 and the paths at -0.0375, under a foot). */
@@ -54,7 +59,8 @@ const frame=(f:Foot)=>{const a=f.yaw??0,cs=Math.cos(a),sn=Math.sin(a);return (lx
 const rot=(f:Foot,dx:number,dz:number):[number,number]=>{const a=f.yaw??0,cs=Math.cos(a),sn=Math.sin(a);return [dx*cs+dz*sn,-dx*sn+dz*cs];};
 
 /** The perimeter of a foot as a loop of {inner point, outward unit (world), side bit}. Rect corners get three outward steps (rounded). */
-function loop(f:Foot):{p:[number,number];o:[number,number];side:number}[]{
+function loop(f:Foot):Edge[]{
+ if(f.path)return f.path;
  const W=frame(f),out:{p:[number,number];o:[number,number];side:number}[]=[];
  if(f.round){const r=Math.max(f.hw,f.hd),n=r>.5?10:r>.2?8:6;for(let i=0;i<n;i++){const a=i/n*Math.PI*2+.35,c=Math.cos(a),s=Math.sin(a);out.push({p:W(c*r,s*r),o:rot(f,c,s),side:15});}return out;}
  const hw=f.hw,hd=f.hd,S:[number,number,number,number,number,number,number,number][]=[[-hw,-hd,1,0,0,-1,2*hw,1],[hw,-hd,0,1,1,0,2*hd,2],[hw,hd,-1,0,0,1,2*hw,4],[-hw,hd,0,-1,-1,0,2*hd,8]];
@@ -71,7 +77,7 @@ export function contactDecal(feet:readonly Foot[],g:GroundQuery):DecalData{
  const positions:number[]=[],colors:number[]=[],indices:number[]=[];let triangles=0,made=0,skipped=0;
  for(const f of feet){const spec=CONTACT[f.kind];if(!spec)continue;const L=loop(f),n=L.length,mask=f.sides??15,base0=positions.length/3;
   // one ground query per foot (the layered ground is costly to ask); the slope comes from the cheap lift function
-  const y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>(g.lift&&f.base===undefined?y0+clampLift(g.lift(x,z)-l0):y0)+(f.base===undefined&&sandDrifts.list.length?driftLift(x,z):0);
+  const y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>(g.lift&&f.base===undefined?y0+clampLift(g.lift(x,z)-l0):y0)+(f.base===undefined&&(sandDrifts.list.length||sandDrifts.mounds.length)?driftLift(x,z):0);
   // three rings: at the foot (k), 30 % out (40 % of the shade left), the rim (none). Soil: the litter tint fades with the shade.
   const ring=(i:number,t:number,keep:number)=>{const q=L[i],x=q.p[0]+q.o[0]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5)),z=q.p[1]+q.o[1]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5));
    const away=-(q.o[0]*g.sun[0]+q.o[1]*g.sun[1]),sunK=away>0?1-(1-SHADOW_SIDE_KEEP)*away:1,d=(1-spec.k)*keep*sunK;
@@ -121,11 +127,12 @@ export type Span={a:[number,number];b:[number,number];o:[number,number]};// a wa
 export const DRIFT_SUN=.3;
 /** Sand drifts are drawn with the beach's OWN material (fields.ts merges them into the sand ribbon: same ripples, mottle, light and
  *  shadow; 0 draws). A plain-paint drift read as a pale block against the shader sand (shots/north-close-a2). World-space triangles. */
-export const sandDrifts:{positions:number[];list:{ax:number;az:number;ux:number;uz:number;ox:number;oz:number;len:number;h0:number;h1:number;w:number;e:number}[]}={positions:[],list:[]};
+export const sandDrifts:{positions:number[];list:{ax:number;az:number;ux:number;uz:number;ox:number;oz:number;len:number;h0:number;h1:number;w:number;e:number}[];
+ /** round sand mounds at the foot of palms and posts on the beach (grounding 2) */mounds:{x:number;z:number;r:number;h:number}[]}={positions:[],list:[],mounds:[]};
 /** Hand the drifts to the beach mesh once (fields.ts); empty when grounding is off or on the lowest tier. */
 export function takeSandDrifts(){const p=sandDrifts.positions;sandDrifts.positions=[];return p;}
 /** How high a drift lifts the ground at (x, z) (the contact shade rides over it). */
-export function driftLift(x:number,z:number){let best=0;for(const d of sandDrifts.list){const px=x-d.ax,pz=z-d.az,t=px*d.ux+pz*d.uz,o=px*d.ox+pz*d.oz;if(t<0||t>d.len||o<-.05||o>d.w)continue;
+export function driftLift(x:number,z:number){let best=0;for(const m of sandDrifts.mounds){const d=Math.hypot(x-m.x,z-m.z);if(d<m.r){const h=m.h*Math.min(1,(m.r-d)/(m.r*.55));if(h>best)best=h;}}for(const d of sandDrifts.list){const px=x-d.ax,pz=z-d.az,t=px*d.ux+pz*d.uz,o=px*d.ox+pz*d.oz;if(t<0||t>d.len||o<-.05||o>d.w)continue;
  const along=t<d.e?t/d.e:t>d.len-d.e?(d.len-t)/d.e:1,h=(d.h0+(d.h1-d.h0)*t/d.len)*Math.max(0,1-Math.max(0,o)/d.w)*along;if(h>best)best=h;}return best;}
 /** A drift of sand along a wall's foot: a low wedge against the wall, tapered at both ends (4 triangles, facing up / out). */
 export function drift(s:Span,y:(x:number,z:number)=>number){
@@ -148,6 +155,37 @@ export function tuft(P:Pieces,x:number,z:number,y:number,colour:string,scale=1){
 export function stone(P:Pieces,x:number,z:number,y:number,colour:string){
  const r=.06+.06*spotHash(x,z,10),h=r*(.55+.4*spotHash(z,x,11)),yaw=spotHash(x,z,12)*6.28,pts=[0,1,2,3,4].map(k=>{const a=yaw+k*1.2566,q=r*(.8+.4*spotHash(x+k,z,13));return [x+Math.cos(a)*q,y-.015,z+Math.sin(a)*q];}),top=[x,y+h,z];
  const tris:number[][]=[];for(let k=0;k<5;k++)tris.push(pts[k],pts[(k+1)%5],top);P.add(colour,tris,[x,y-.5,z],'stone');
+}
+/** Grounding 2: a low round mound of beach sand round a trunk / post (r: the trunk, R: the rim; in the sand's own material, 0 draws).
+ *  Two rings (rim just under the sand, a shoulder at 75 %) and a collar hugging the trunk: 3n triangles, all facing up. */
+export function sandMound(x:number,z:number,y:number,r:number,R:number,h:number,n=8){
+ const tw=spotHash(x,z,40)*6.28,ring=(q:number,up:number,k:number)=>{const a=tw+k/n*Math.PI*2,j=q*(1+.12*(spotHash(x+k,z,41)-.5));return [x+Math.cos(a)*j,y+up,z+Math.sin(a)*j];};
+ const tri=(a:number[],b:number[],d:number[])=>{const ux=b[0]-a[0],uz=b[2]-a[2],vx=d[0]-a[0],vz=d[2]-a[2];if(uz*vx-ux*vz<0)sandDrifts.positions.push(...a,...d,...b);else sandDrifts.positions.push(...a,...b,...d);};
+ for(let k=0;k<n;k++){const k1=(k+1)%n,a0=ring(R,-.025,k),a1=ring(R,-.025,k1),b0=ring(r+(R-r)*.45,h*.72,k),b1=ring(r+(R-r)*.45,h*.72,k1),c0=ring(r*.92,h,k),c1=ring(r*.92,h,k1);
+  tri(a0,a1,b1);tri(a0,b1,b0);tri(b0,b1,c1);}
+ sandDrifts.mounds.push({x,z,r:R,h});
+}
+/** A collar round a post's foot on paving / lawn: a short 7-sided frustum (concrete), r..r*1.45, 9 cm proud (14 triangles). */
+export function collar(P:Pieces,x:number,z:number,y:number,r:number,colour:string,h=.09){
+ const n=7,tris:number[][]=[],p=(k:number,q:number,up:number)=>{const a=k/n*Math.PI*2+.3;return [x+Math.cos(a)*q,y+up,z+Math.sin(a)*q];};
+ for(let k=0;k<n;k++){tris.push(p(k,r*1.45,-.04),p(k+1,r*1.45,-.04),p(k+1,r*1.12,h),p(k,r*1.45,-.04),p(k+1,r*1.12,h),p(k,r*1.12,h));}
+ P.add(colour,tris,[x,y-.3,z],'collar');
+}
+/** A ring of bare soil round a palm on the lawn (a jagged flat 8-gon, 8 triangles). */
+export function soilRing(P:Pieces,x:number,z:number,y:number,R:number,colour:string){
+ const n=8,c=[x,y+.012,z],tris:number[][]=[],p=(k:number)=>{const a=k/n*Math.PI*2,q=R*(.82+.3*spotHash(x+k,z,42));return [x+Math.cos(a)*q,y+.006,z+Math.sin(a)*q];};
+ for(let k=0;k<n;k++)tris.push(c,p(k),p(k+1));P.add(colour,tris,[x,y-1,z],'soil');
+}
+/** A coconut lying in the sand / grass (an 8-face octahedron, squashed; decorative: dropped first on battery saver). */
+export function coconut(P:Pieces,x:number,z:number,y:number,colour:string){
+ const r=.085+.02*spotHash(x,z,43),c:[number,number,number]=[x,y+r*.55,z],tw=spotHash(z,x,44)*6.28,eq=[0,1,2,3].map(k=>[x+Math.cos(tw+k*1.5708)*r,y+r*.55,z+Math.sin(tw+k*1.5708)*r]),top=[x,y+r*1.35,z],bot=[x,y-.02,z],tris:number[][]=[];
+ for(let k=0;k<4;k++){tris.push(eq[k],eq[(k+1)%4],top,eq[(k+1)%4],eq[k],bot);}P.add(colour,tris,c,'coconut');
+}
+/** A fallen dry frond lying flat: a tapered blade with a slight curl (6 triangles, both faces; decorative). */
+export function frond(P:Pieces,x:number,z:number,y:number,a:number,colour:string){
+ const L=1.1+.5*spotHash(x,z,45),cx=Math.cos(a),cz=Math.sin(a),px=-cz,pz=cx,pt=(t:number,w:number)=>[x+cx*L*t+px*w,y+.018+.05*Math.sin(t*3.1),z+cz*L*t+pz*w];
+ const s0=pt(0,0),l1=pt(.35,.16),r1=pt(.35,-.12),l2=pt(.75,.1),r2=pt(.75,-.08),tip=pt(1,0),tris=[s0,l1,r1,l1,l2,r1,r1,l2,r2,l2,tip,r2];
+ const both:number[][]=[];for(let i=0;i<tris.length;i+=3)both.push(tris[i],tris[i+1],tris[i+2],tris[i],tris[i+2],tris[i+1]);P.add(colour,both,null,'frond');
 }
 /** A root flare round a trunk of radius r at (x, z): a 7-sided skirt widening into the ground plus 2-3 roots running out (~26 tris). */
 export function rootFlare(P:Pieces,x:number,z:number,y:number,r:number,colour:string,at:(x:number,z:number)=>number=()=>y){
@@ -174,7 +212,7 @@ export type GroundingInput={
  town:T.Object3D;
  buildings:readonly (Rect&{height:number;name:string;cornerRadius?:number})[];
  machines:readonly {x:number;z:number;y?:number;yaw:number;station?:boolean}[];machineSize:{w:number;d:number};
- stations:readonly {id:string;x:number;z:number;tx:number;tz:number;side:number}[];
+ stations:readonly {id:string;x:number;z:number;tx:number;tz:number;side:number;/** the line at u m along from the station's centre (curved platforms) */at?:(u:number)=>{x:number;z:number;tx:number;tz:number}}[];
  /** the drawn ground's height (the town's layered paving where it has one) */
  ground:(x:number,z:number)=>number;
  /** what the ground is: sand gets drifts, lawn tufts / stones, the rest neither */
@@ -183,6 +221,10 @@ export type GroundingInput={
  keepClear:(x:number,z:number)=>boolean;
  covered?:GroundQuery['covered'];
  lift?:(x:number,z:number)=>number;
+ /** catenary poles (trainWorld.ts catenaryFeet): a contact shade, and a sand mound round the footing on the beach */
+ masts?:readonly {x:number;z:number;r:number}[];
+ /** beach umbrella poles (untagged): a contact shade and a sand mound where the pole goes in */
+ umbrellas?:readonly {x:number;z:number}[];
  sun:readonly [number,number];
  /** lowest heat tier: contact shade only */
  low:boolean;
@@ -191,20 +233,20 @@ export type GroundingInput={
 type Kind='tree'|'palm'|'bush'|'prop'|'post'|null;
 const KIND:Record<string,Kind>={tree:'tree',palm:'palm',bush:'bush',bench:'prop',table:'prop',planter:'prop',stall:'prop',gashapon:'prop',crate:'prop',
  lamp:'post',pole:'post',signal:'post',flag:'post',sign:'post',post:'post',bollard:'post',lifebuoy:'post'};
-export const GROUND_COLOURS={sand:'#d9b06c',stone:'#8f877a',stoneLight:'#a79f90',grass:'#5d7f4a',grassLight:'#7c9a57',pad:'#b9b1a2'} as const;
+export const GROUND_COLOURS={sand:'#d9b06c',stone:'#8f877a',stoneLight:'#a79f90',grass:'#5d7f4a',grassLight:'#7c9a57',pad:'#b9b1a2',soil:'#6f5b41',coconut:'#6b4a2b',frond:'#a8915a'} as const;
 export type GroundingStats={feet:number;decalTriangles:number;skipped:number;detailTriangles:number;pieces:Record<string,number>;ms:number;byKind:Record<string,number>};
 export const groundingStats:{value:GroundingStats|null;feet:Foot[];spans:{kind:string;x:number;z:number}[]}={value:null,feet:[],spans:[]};
 
 export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:GroundingStats}{
  const t0=typeof performance!=='undefined'?performance.now():0,feet:Foot[]=[],byKind:Record<string,number>={},P=new Pieces(),bb=new T.Box3(),v=new T.Vector3();
  const push=(f:Foot)=>{feet.push(f);byKind[f.kind]=(byKind[f.kind]??0)+1;};
- const spans:{s:Span;what:'wall'|'platform'}[]=[],gaps:Rect[]=[];sandDrifts.positions=[];sandDrifts.list=[];
+ const spans:{s:Span;what:'wall'|'platform'}[]=[],gaps:Rect[]=[];sandDrifts.positions=[];sandDrifts.list=[];sandDrifts.mounds=[];
  // Things that must stay clear of detail: every machine's front (its use spot) and body.
  for(const m of I.machines){const fx=Math.sin(m.yaw),fz=Math.cos(m.yaw);gaps.push({x:m.x+fx*.7,z:m.z+fz*.7,w:2.2,d:2.2});}
  // 1. Props (tagged groups), after every move: the lowest 35 cm of each group is its foot.
- const groups=new Map<unknown,{kind:Kind;meshes:T.Mesh[]}>();
+ const groups=new Map<unknown,{kind:Kind;tag:string;meshes:T.Mesh[]}>();
  I.town.traverse(o=>{if(!(o instanceof T.Mesh)||o.userData.train||o.userData.depthOwn)return;const tag=o.userData.propTag as {kind:string}|undefined;if(!tag)return;const kind=KIND[tag.kind]??null;if(!kind)return;
-  let g=groups.get(tag);if(!g)groups.set(tag,g={kind,meshes:[]});g.meshes.push(o);});
+  let g=groups.get(tag);if(!g)groups.set(tag,g={kind,tag:tag.kind,meshes:[]});g.meshes.push(o);});
  for(const [,g] of groups){let minY=Infinity;for(const m of g.meshes){bb.setFromObject(m);if(bb.min.y<minY)minY=bb.min.y;}
   const foot=new T.Box3();let colour:string|null=null,lowest=Infinity;
   for(const m of g.meshes){bb.setFromObject(m);if(bb.min.y>minY+.35)continue;
@@ -214,10 +256,29 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
   if(foot.isEmpty())continue;const x=(foot.min.x+foot.max.x)/2,z=(foot.min.z+foot.max.z)/2,hw=(foot.max.x-foot.min.x)/2,hd=(foot.max.z-foot.min.z)/2,gy=I.ground(x,z);
   if(minY>gy+1.2||minY<gy-1)continue;// on a roof or under a deck: not ground
   const base=minY>gy+.25?minY:undefined;// on a deck or a pier: the ring lies on the deck
-  if(g.kind==='tree'||g.kind==='palm'||g.kind==='bush'){const r=Math.max(.12,Math.min(hw,hd,.6));push({kind:g.kind,x,z,hw:r,hd:r,round:true,base});
-   if(!I.low&&g.kind==='tree'&&base===undefined&&colour&&r<.45&&!I.keepClear(x,z)){const l0=I.lift?I.lift(x,z):0;rootFlare(P,x,z,gy,r,colour,(px,pz)=>gy+(I.lift?clampLift(I.lift(px,pz)-l0):0));}}
-  else if(g.kind==='post'){const long=Math.max(hw,hd)>2.2*Math.min(hw,hd);push(long?{kind:'post',x,z,hw:Math.max(hw,.06),hd:Math.max(hd,.06),fill:true,base}:{kind:'post',x,z,hw:Math.max(.07,Math.min(hw,hd)),hd:Math.max(.07,Math.min(hw,hd)),round:true,base});}
+  if(g.kind==='tree'||g.kind==='palm'||g.kind==='bush'){const r=Math.max(.12,Math.min(hw,hd,.6));push({kind:g.kind,x,z,hw:r,hd:r,round:true,base,sink:gy-minY});
+   if(!I.low&&g.kind==='tree'&&base===undefined&&colour&&r<.45&&!I.keepClear(x,z)){const l0=I.lift?I.lift(x,z):0;rootFlare(P,x,z,gy,r,colour,(px,pz)=>gy+(I.lift?clampLift(I.lift(px,pz)-l0):0));}
+   // Grounding 2 (palms): a low sand mound on the beach, a ring of bare soil on the lawn; now and then a coconut or a fallen frond
+   // (decorative: the lowest tier drops them first). The trunk itself sinks and flares in world.ts palmParts.
+   if(g.kind==='palm'&&base===undefined&&!I.keepClear(x,z)){const kind=I.surface(x,z);
+    if(kind==='sand'){sandMound(x,z,gy,.2,.62+.18*spotHash(x,z,46),.085+.03*spotHash(z,x,47));P.counts.mound=(P.counts.mound??0)+1;}
+    else if(kind==='lawn')soilRing(P,x,z,gy,.5+.12*spotHash(x,z,46),GROUND_COLOURS.soil);
+    if(!I.low&&kind!=='other'){const h=spotHash(x,z,48),ga=spotHash(z,x,49)*6.28;
+     const spot=(a:number,d:number):[number,number]|null=>{const px=x+Math.cos(a)*d,pz=z+Math.sin(a)*d;return I.keepClear(px,pz)?null:[px,pz];};
+     if(h<.3)for(let i=0;i<1+(h<.1?1:0);i++){const q=spot(ga+i*.9,.5+.45*spotHash(x+i,z,50));if(q)coconut(P,q[0],q[1],I.ground(q[0],q[1])+driftLift(q[0],q[1]),GROUND_COLOURS.coconut);}
+     if(h>.82){const a=ga+2.4,q=spot(a,.35);if(q&&spot(a,1.5))frond(P,q[0],q[1],I.ground(q[0],q[1]),a,GROUND_COLOURS.frond);}}}}
+  else if(g.kind==='post'){const long=Math.max(hw,hd)>2.2*Math.min(hw,hd);push(long?{kind:'post',x,z,hw:Math.max(hw,.06),hd:Math.max(hd,.06),fill:true,base}:{kind:'post',x,z,hw:Math.max(.07,Math.min(hw,hd)),hd:Math.max(.07,Math.min(hw,hd)),round:true,base});
+   // Grounding 2: a single post (not a two-legged sign or a rail run) gets a sand mound on the beach or a concrete collar elsewhere
+   // (lamps carry their own stepped plinth in world.ts; flags / signals on decks keep theirs).
+   if(!long&&base===undefined&&g.tag!=='lamp'){const r=Math.max(.04,Math.min(hw,hd,.16)),kind=I.surface(x,z);
+    if(kind==='sand'&&!I.keepClear(x,z)){sandMound(x,z,gy,r,Math.min(.5,r*2.6+.14),.055,7);P.counts.mound=(P.counts.mound??0)+1;}
+    else if(!I.low)collar(P,x,z,gy,r,GROUND_COLOURS.pad);}}
   else push({kind:'prop',x,z,hw,hd,fill:true,base});}
+ // 1b. Catenary poles (train meshes are skipped above): the footing's shade, a sand mound on the beach.
+ for(const m of I.masts??[]){const gy=I.ground(m.x,m.z);if(gy>m.r+5)continue;push({kind:'post',x:m.x,z:m.z,hw:m.r,hd:m.r,round:true});
+  if(I.surface(m.x,m.z)==='sand'&&!I.keepClear(m.x,m.z)){sandMound(m.x,m.z,gy,m.r*1.3,.62,.07,8);P.counts.mound=(P.counts.mound??0)+1;}}
+ for(const u of I.umbrellas??[]){const gy=I.ground(u.x,u.z);push({kind:'post',x:u.x,z:u.z,hw:.07,hd:.07,round:true});
+  if(I.surface(u.x,u.z)==='sand'&&!I.keepClear(u.x,u.z)){sandMound(u.x,u.z,gy,.06,.36,.05,7);P.counts.mound=(P.counts.mound??0)+1;}}
  // 2. Vending machines (their own meshes, Town.tsx): a pad on the ground, a ring round it.
  for(const m of I.machines){const hw=I.machineSize.w/2,hd=I.machineSize.d/2,gy=I.ground(m.x,m.z),on=m.y===undefined||m.y<gy+.25;
   push({kind:'machine',x:m.x,z:m.z,hw,hd,yaw:m.yaw,fill:true,base:on?undefined:m.y});
@@ -247,13 +308,29 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
     spans.push({s:{a:[ax+ux*r0+ox*.047,az+uz*r0+oz*.047],b:[ax+ux*r1+ox*.047,az+uz*r1+oz*.047],o:[ox,oz]},what:'wall'});}}}
  // 4. Stations: the house (back and ends) and the platform (back past the house, and both ends) on the beach / lawn.
  for(const st of I.stations){const south=st.id==='south',v0=1.45,v1=south?8.1:5.45,sg=st.side,nx=st.tz*sg,nz=-st.tx*sg,yaw=Math.atan2(-st.tz,st.tx);
-  const P2=(u:number,vv:number):[number,number]=>[st.x+st.tx*u+nx*vv,st.z+st.tz*u+nz*vv];
+  // on the curve (the house, spans and drifts follow a bending platform: Coral Cay's ends sit 1.2 m off its centre's straight line)
+  const P2=(u:number,vv:number):[number,number]=>{if(!st.at)return [st.x+st.tx*u+nx*vv,st.z+st.tz*u+nz*vv];const f=st.at(u);return [f.x+f.tz*sg*vv,f.z-f.tx*sg*vv];};
   // local +z is (-tz, tx) = -sg * outward: the back (far from the line) is local -z when sg = 1
   const back=sg>0?1:4;
-  {const c=P2(0,(v0+v1+.42)/2);push({kind:'platform',x:c[0],z:c[1],hw:15.42,hd:(v1+.42-v0)/2,yaw,sides:south?2|8:back|2|8});}
+  // The ring starts AT the platform's wall (v1, the 5 m pieces end at +-15.03), not at the buried footing's outer edge 0.42 m out:
+  // a ring from there left an undarkened band between the wall and the shade, which read as a pale strip on the shaded side (owner
+  // shot 143, Nov 26). The footing slope lies inside the ring now and darkens with it.
+  // The perimeter follows the line (Coral Cay's platform bends 1.2 m over its length: a straight box left a pale gap at its ends).
+  {const at=st.at??((u:number)=>({x:st.x+st.tx*u,z:st.z+st.tz*u,tx:st.tx,tz:st.tz})),H=PLATFORM_HW,path:Edge[]=[];
+   const Q=(u:number,vv:number):{p:[number,number];t:[number,number];n:[number,number]}=>{const f=at(u),n:[number,number]=[f.tz*sg,-f.tx*sg];return {p:[f.x+n[0]*vv,f.z+n[1]*vv],t:[f.tx,f.tz],n};};
+   const corner=(q:{p:[number,number]},a:[number,number],b:[number,number],sa:number,sb:number)=>{const l=Math.hypot(a[0]+b[0],a[1]+b[1])||1;
+    path.push({p:q.p,o:a,side:sa|sb},{p:q.p,o:[(a[0]+b[0])/l,(a[1]+b[1])/l],side:sa|sb});};
+   const N=12;// front (track side, bit 1, never shaded), +u end (2), back (4), -u end (8)
+   {const q=Q(-H,v0);corner(q,[-q.t[0],-q.t[1]],[-q.n[0],-q.n[1]],8,1);}
+   for(let i=0;i<N;i++){const q=Q(-H+2*H*i/N,v0);path.push({p:q.p,o:[-q.n[0],-q.n[1]],side:1});}
+   {const q=Q(H,v0);corner(q,[-q.n[0],-q.n[1]],q.t,1,2);path.push({p:q.p,o:q.t,side:2});}
+   {const q=Q(H,v1);corner(q,q.t,q.n,2,4);}
+   for(let i=0;i<N;i++){const q=Q(H-2*H*i/N,v1);path.push({p:q.p,o:q.n,side:4});}
+   {const q=Q(-H,v1);corner(q,q.n,[-q.t[0],-q.t[1]],4,8);path.push({p:q.p,o:[-q.t[0],-q.t[1]],side:8});}
+   const c=P2(0,(v0+v1)/2);push({kind:'platform',x:c[0],z:c[1],hw:H,hd:(v1-v0)/2,yaw,sides:south?2|8:4|2|8,path});}
   if(!south){const hv0=v1-.3,hv1=v1+4.6+.3,c=P2(0,(hv0+hv1)/2);push({kind:'house',x:c[0],z:c[1],hw:4.3,hd:(hv1-hv0)/2,yaw,sides:back|2|8,fill:true});// fill: the sand seen under the raised deck's edge is in its shade
    const sp=(u0:number,va:number,u1:number,vb:number,o:[number,number],what:'wall'|'platform')=>spans.push({s:{a:P2(u0,va),b:P2(u1,vb),o},what});
-   const out:[number,number]=[nx,nz],along:[number,number]=[st.tx,st.tz],back2:[number,number]=[-st.tx,-st.tz];
+   const out:[number,number]=[nx,nz],ta=st.at?st.at(15):st,tb=st.at?st.at(-15):st,along:[number,number]=[ta.tx,ta.tz],back2:[number,number]=[-tb.tx,-tb.tz];
    sp(-4.3,hv1+.02,-.95,hv1+.02,out,'wall');sp(.95,hv1+.02,4.3,hv1+.02,out,'wall');// the machine stands at the back's middle
    sp(4.32,hv1,4.32,hv0+.3,along,'wall');sp(-4.32,hv0+.3,-4.32,hv1,back2,'wall');
    sp(-15,v1+.44,-4.6,v1+.44,out,'platform');sp(4.6,v1+.44,15,v1+.44,out,'platform');

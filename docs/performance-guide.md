@@ -7268,3 +7268,17 @@ Desktop + phone-viewport headless Chrome only: reduced or equal work is stated, 
 - Contact shade: ONE mesh for the island (`island-grounding`, +1 draw, never culled), vertex colours = a screen multiplier (CustomBlending dst*src, ShaderMaterial, no texture, no fog, no tone map, depthWrite off, polygonOffset, renderOrder -1, no shadow cast/receive). 794 feet, 26.7k triangles (always submitted; tiny shader, fill only near feet). Skipped where the town's baked kerb shade (townDepth contactShade) already covers.
 - Detail: root flares + roots (188 trees), machine pads (14), skirting (2 runs: most buildings already have a 34 cm base course), lawn tufts / stones (13), 3.8k triangles merged into the existing 50 m paint batches (0 draws, in the shadow pass). Sand drifts (13) are merged into the beach sand mesh (`fields.ts withSandDrifts`, 0 draws). Battery saver (`depthLowTier`): no detail, contact shade kept.
 - Measured (phone 390x844@2, 4x CPU throttle, 6 s): station / town street / grove median 16.7 ms both arms (vsync-capped), p90 16.7; triangles in view +20k..+34k (station 123k -> 157k, town 177k -> 203k, grove 265k -> 285k); draws within train/NPC noise (+1 expected). Load: +~170 ms in node (the build pass; ~0.7-1.4 s phone estimate at 4-8x). No iPhone thermal claim.
+
+## Grounding 2: uprights, lamps, paper lanterns (Nov 26 2026, branch island-grounding-2, `?ground=0` = off)
+- Platform contact shade now starts at the wall and follows the curve (Coral Cay bends 1.2 m): fixes the pale strip at the foot (owner 143). Same mesh.
+- Palms (192): trunk sunk 0.35 m, 9-sided flare + 1 ring scar (+36 tris each, ~7k total, chunk paint batches). Sand mounds (24 tris) go INTO the beach
+  sand mesh (0 draws); lawn soil rings 8 tris; coconuts (8) / fallen fronds (24) are decorative and dropped on the lowest tier.
+- Catenary poles on land (55): sunk 0.9 m into a stepped concrete footing (20 tris, wall paint), contact shade + sand mound. Single posts: mound or
+  7-sided collar (14 tris). Beach umbrellas: shade + mound.
+- Lamps (lampPost.ts, ~122): ~225-240 tris each (was ~104), +15k tris island-wide; the body now CASTS a shadow so it joins the shared paint batch
+  (the old castShadow=false '#384443' per-cell batch is gone: draws went DOWN 4-5 at the station / town); the lens is still the shared emissive lamp lens.
+- Station paper lanterns (12): 8-sided lathe + rib bands + rims + tassel, ~210 tris each (+2.2k), same lantern / cap Geos (glow unchanged).
+- Decal: 794 -> 871 feet, 26.8k -> 29.9k tris. Detail 3.9k -> 5.3k tris.
+- Measured (phone 390x844@2, 4x CPU, 6 s, sunset), new vs `?ground=0` (so both grounding passes): station 16.7/16.7 ms med/p90 both, calls 61 vs 65,
+  tris 167k vs 140k; town 16.7 both, calls 121 vs 126, 221k vs 186k; palm beach (-229,-196) 16.7 both, calls 47 vs 46 (the pass-1 decal), 165k vs 133k.
+  Vsync-capped on the M-series dev Mac: no iPhone thermal claim.

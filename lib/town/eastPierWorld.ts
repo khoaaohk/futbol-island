@@ -4,6 +4,8 @@
 // sign canvases and the shared shallows material. No animation, no per-frame work. The causeway's look is reused on purpose:
 // the same stone skirt, pale foam line, riprap boulders and fading shallows (coralCayWorld.ts). Lamps reuse the street-lamp
 // pieces: the '#ffe8ae' lens is the shared emissive lamp lens and each lamp adds a site to the night light-pool batch.
+import {groundingOn} from './grounding';
+import {lampPost} from './lampPost';
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -116,7 +118,7 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   sign('FARMERS MARKET',5.6,.62,x+.26,4.1,P.z,'#294f43','#f4cc7c',Math.PI/2);}
  // ---- Lamps every 20 m of walkway, alternating sides, standing on the kerb (outside the walkable width).
  const lamp=(x:number,z:number,ground:number)=>{
-  prop('lamp',()=>{cylinder(.19,.22,IRON,x,ground+.11,z);cylinder(.065,4.2,IRON,x,ground+2.1,z);box(.62,.12,.62,IRON,x,ground+4.22,z);box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z);});
+  prop('lamp',()=>{if(groundingOn()){lampPost(put,x,z,ground,'beach');return;}cylinder(.19,.22,IRON,x,ground+.11,z);cylinder(.065,4.2,IRON,x,ground+2.1,z);box(.62,.12,.62,IRON,x,ground+4.22,z);box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z);});
   // Kerb props stand outside the walkable width (walkHalf 2.4; the kerb line is 2.75 off the centre line), so a footprint
   // stops the ball (it used to pass through) without narrowing the walkway (Oct 3 2026, kick reactions).
   obstacles.push({x,z,w:.38,d:.38});
