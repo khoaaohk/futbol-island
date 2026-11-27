@@ -222,8 +222,8 @@ export const NUMBERS:readonly {n:number;name:string;slug:string;line:string}[]=[
  {n:11,name:'Left winger',slug:'winger',line:'Attacks wide on the left.'},
 ];
 export const POSITIONS_HUB={path:POSITIONS_HUB_PATH,crumb:'Soccer positions',blurb:`${POSITIONS.length} positions and the numbers 1 to 11 explained, each with a diagram`,
- title:'Soccer Positions Explained: All 11 Positions and Numbers',
- description:'Soccer positions explained for kids and parents: what all 11 positions do, from goalkeeper to striker, the numbers 1 to 11, a field diagram, 7v7 and 9v9.',
+ title:'Soccer Positions Explained: The 11 Positions by Number',
+ description:'What are the 11 positions in soccer? Each one explained for kids and parents, goalkeeper to striker, by number 1 to 11, with a field diagram, 7v7 and 9v9.',
  h1:'Soccer positions explained for kids',
  lessons:pick(['learn7_roles','learn9_shape','learn11_shape','learnf_roles31']),
  lead:'A soccer team has 11 positions on the field: one goalkeeper, then defenders, midfielders and forwards, each with its own job. This guide shows all eleven positions on one field, explains the numbers 1 to 11, and shows how the positions change in 7v7 and 9v9.',

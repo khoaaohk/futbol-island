@@ -448,7 +448,7 @@ export const RULES:readonly Rule[]=([
     {place:'England',body:'The FA (training)',says:'U7 to U11: heading should not be introduced in training sessions. U12 and U13: at most one session a week, with light balls and at most five headers. U14 to U16: at most one session a week and 10 headers per player in a session.',
      source:'England Football: Heading in Football',url:'https://www.englandfootball.com/learn/Brain-Health/Heading-in-Football'}]},law:'U.S. Soccer and US Youth Soccer rules',lawPage:'general-modifications/',
   title:'Heading Rules in Youth Soccer: No Heading at 10 and Under',h1:'Heading rules in youth soccer: at what age can kids head the ball?',
-  desc:'Heading rules in youth soccer: no heading at 10 and under in the US, the U11 and U12 limits, rules by country, what the referee gives, no-heading drills.',
+  desc:'What age can you head the ball in soccer? In the US, not at 10 and under; from 11 with limits at U11 and U12. Rules by country and no-heading drills.',
   answer:'In US youth soccer, players aged 10 and under do not head the ball, in games or in practice. Under US Youth Soccer rules, heading is allowed in games from age 11, with a limit of 25 headers a week for players aged 11 and 12.',
   scenes:[{format:'7v7',title:'After a deliberate header in a 7v7 game',who:'8@44,56 9@50,74 7@82,62 3@24,34 !6@52,60 !4@40,76 !5@62,78 !G@50,96',ball:[45,58],zone:[38,58,52,70],
    caption:'An under-10 player deliberately heads the ball in midfield. The referee stops play and gives the other team an indirect free kick from that spot. Here gold number 8 takes it, and the opponents give space in front of the ball.'}],
