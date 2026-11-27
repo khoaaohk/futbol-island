@@ -243,12 +243,15 @@ export function* buildTownSteps(scene: T.Scene) {
   // radius plus TRUNK_CLEARANCE, so walkers and rides (their own radius on top) stop at the trunk and slide round it.
   // yaw / ribs (Nov 13 2026, West Beach): turns the palm so its gentle trunk lean points its own way, and ribs=false drops the
   // 56 thin frond midrib cylinders (~2.2k of a palm's ~2.4k triangles) for the West Beach's many palms. Defaults: as before.
+  const PALM_FROND_TYPE='PalmFrondPlane';
   function palm(x:number,z:number,height=6,yaw=0,ribs=true){
     // Soft sweep (owner Nov 27 2026: "many are the same. some need to be taller than others"): height ~0.75x-1.35x by spot, a few
     // taller heroes to ~1.5x, and palms left at the default yaw lean their own way (the line-clearance step still wins in palmParts).
     if(softOn()){const sz=treeSize(x,z,{hero:.25});height*=sz.height;if(yaw===0)yaw=spotHash(x,z,95)*Math.PI*2;}
     prop('palm',()=>anchored(x,z,()=>palmParts(x,z,height,yaw,ribs)));}
   function palmParts(x:number,z:number,height=6,yaw=0,ribs=true){
+    // Soft sweep 2 (Nov 27 2026): a frond is a leaf sheet, never a roof: its geometry type carries 'Plane' so the canopy collector
+    // (canopySurfaces.ts NOT_ROOF) and tests/roof-landing.cjs read it as foliage, whatever height the size variety gives the palm.
     // Island Line clearance (Nov 24 2026, owner shot 34: palms through a moving car): every palm keeps its crown out of the train's
     // envelope; one within PALM_LINE_CLEAR m of the line steps straight back from it and its trunk leans away (lineClearSpot).
     {const c=lineClearSpot(x,z);if(c){x=c.x;z=c.z;yaw=Math.atan2(-c.uz,c.ux);}}
@@ -268,7 +271,7 @@ export function* buildTownSteps(scene: T.Scene) {
       // Without ribs the frond carries its own back face (a mirrored copy) in a one-step-off palette shade, so it joins the chunk's
       // ordinary front-sided paint batch instead of adding the double-sided one to every West Beach chunk (a draw call each).
       if(!ribs){const n=positions.length/3;positions.push(...positions);for(let k=0,m=indices.length;k<m;k+=3)indices.push(indices[k]+n,indices[k+2]+n,indices[k+1]+n);}
-      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),0,0,0,group);if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
+      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();(geo as unknown as {type:string}).type=PALM_FROND_TYPE;const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),0,0,0,group);if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
       if(ribs)for(let j=0;j<points.length-1;j++)line(points[j],points[j+1],.019,'#a1ac6d',group);
     }
     obstacles.push(trunkCollider(x,z,.22));
