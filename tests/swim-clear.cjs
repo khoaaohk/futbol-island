@@ -40,7 +40,9 @@ ok('shaders: the disc runs only in the blended ocean program; the bean gate is a
  {const g=WS.WATER_GLIMMER_GLSL;assert(!/texture2D|texture\(/.test(g),'glimmer: no texture reads');assert.match(g,/directionalLights\[0\]\.color/);assert.match(g,/if\(uWaterDetail<\.5\)return vec3\(0\.\);/,'still path: no glitter');assert.match(sh.fragmentShader,/waterStreak=st\*reachS\*[^;]*\(uWaterDetail<\.5\?\.55:1\.\);/,'still path: faint static streaks');assert(!/texture2D\(map,p[12]/.test(sh.fragmentShader)&&/waterRibbon\(mat2/.test(sh.fragmentShader),'streaks: ALU ribbons, no texture read');assert(!/waterGlint|totalEmissiveRadiance\+=/.test(sh.fragmentShader),'the old ripple-crossing glint is gone');}
  assert.equal(sh.uniforms.uSwimClear,U.uSwimClear);// Nov 26 2026 (island-sky, owner shot 129): the far-sea sky look compiles in by default (`?sky=0` drops it), so the key gains '-sky';
  // the disc / blend assertions above are unchanged.
- assert.equal(mat.customProgramCacheKey(),'island-ocean-water-v12-sky');
+ // Nov 26 2026 (vehicles-round): the boat foam / lapping rings (boatSwell.ts BOAT_RING_GLSL) compile into this SAME ocean
+ // program by default (`?vehicles=0` drops them), so the key gains '-rings'; still one ocean program, the disc stays only here.
+ assert.equal(mat.customProgramCacheKey(),'island-ocean-water-v12-sky-rings');
  // Diving in deep water clears the disc further (0.86 -> 0.36), one more float uniform.
  assert.match(sh.fragmentShader,/mix\(0\.86,0\.36,uSwimDive\)/);assert.equal(sh.uniforms.uSwimDive,U.uSwimDive);
  const B=load('lib/graphics/beanSkin.ts'),m1=new B.BeanMaterial('body'),m2=m1.clone();
