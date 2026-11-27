@@ -71,7 +71,11 @@ export function sNear(x:number,z:number){let b=0,bd=Infinity;for(let i=0;i<TRACK
 // ---- The tunnel through Summit Isle's summit (owner ruling: straight through). Portals sit where the hill above clears the tube
 // roof by ≥ 1.5 m; the east one 6 m out from the Phase 0 spot so the climb trail (which crosses there) runs over the tunnel roof.
 export const TUNNEL_BED=2.2,TUNNEL_HALF_WIDTH=3.6,TUNNEL_HEIGHT=5.6;
-export const TUNNEL={west:{x:538.5,z:169.5,s:sNear(538.5,169.5)},east:{x:670.5,z:43.1,s:sNear(670.5,43.1)}} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
+/** Rail fixes (Nov 26 2026, owner 153: "sky is leaking through" at the west portal): a portal stands ON the line, at the table row
+ *  nearest its plan spot. The west spot (538.5, 169.5) was 0.83 m off the centreline, so the headwall's arch sat 0.83 m to one side
+ *  of the lining (which follows the line): a gap down one side of the mouth showed the sky and the hill. */
+const portalOn=(x:number,z:number)=>{const s=sNear(x,z),q=trackAt(s);return {x:q.x,z:q.z,s};};
+export const TUNNEL={west:portalOn(538.5,169.5),east:portalOn(670.5,43.1)} as const;// east portal 2.5 m out from the PLAN spot (668.5,45.5): the climb trail crosses the hill just behind it
 export const inTunnelS=(s:number)=>s>TUNNEL.west.s&&s<TUNNEL.east.s;
 
 // ---- Summit Isle's track bed: piecewise linear in s (beach → station flat → west portal; east portal → north beach).
@@ -229,17 +233,20 @@ export const TRAIN_STATIONS:readonly TrainStation[]=[
 ];
 /** `ped`: a footpath crossing (train Phase 4): the same machine, smaller (shorter posts, arms at hip height). `width`: the deck along the line. */
 export type TrainCrossing={id:string;s:number;width:number;ped?:boolean;/** a footpath meeting the line at an angle: its centre moves `skew` m along the line per m across (the machine's posts follow it) */skew?:number};
+/** Rail fixes (Nov 26 2026, owner 151): a crossing's s is the exact foot of its path point on the line (sNear snapped it to the 2 m
+ *  table, up to 1 m off the path; the deck and the machine centre on c.s). */
+const sOn=(x:number,z:number)=>trackNearest(x,z)?.s??sNear(x,z);
 export const TRAIN_CROSSINGS:readonly TrainCrossing[]=[
- {id:'north-beach-west',s:sNear(-45,-205),width:3.4,ped:true},
- {id:'north-beach-east',s:sNear(80,-207),width:3.4,ped:true},
- {id:'west-beach',s:sNear(-305,-52),width:3,ped:true},
- {id:'cay-beach',s:sNear(562,-76),width:3,ped:true},
- {id:'causeway',s:sNear(492.4,-142.2),width:16},// Nov 23 2026: centred on the road and the full skewed width of its 14 m deck (was 9 m at 494,-148: ballast stood on the road edges)
+ {id:'north-beach-west',s:sOn(-45,-205),width:3.4,ped:true},
+ {id:'north-beach-east',s:sOn(80,-207),width:3.4,ped:true},
+ {id:'west-beach',s:sOn(-305,-52),width:3,ped:true},
+ {id:'cay-beach',s:sOn(562,-76),width:3,ped:true},
+ {id:'causeway',s:sOn(492.4,-142.2),width:16},// Nov 23 2026: centred on the road and the full skewed width of its 14 m deck (was 9 m at 494,-148: ballast stood on the road edges)
  // Phase 4 (Nov 23 2026, owner: "every path that meets the line gets a way across"): the west park's three beach trails and the
  // Beach Kitchen square's walk down to the sand (westParkLayout PARK_TRAILS 'west' / 'south-west' / 'south-east', TRAIL_WIDTH 4.5,
  // and beachKitchenSquare.ts). Width = the trail's footprint along the line (4.5 m / sin of the crossing angle) + a little.
- {id:'park-west-trail',s:sNear(-304.6,5.5),width:9.6,ped:true,skew:-1.43},// meets the line at 34° (8.1 m along it; its paving boxes reach 9.6 m)
- {id:'park-south-west-trail',s:sNear(-248.7,107.2),width:5.4,ped:true,skew:.4},
- {id:'park-south-east-trail',s:sNear(-99.1,114.8),width:5,ped:true,skew:.24},
- {id:'beach-kitchen-square',s:sNear(-59.5,104.4),width:6.6,ped:true},// the square's middle 6.6 m column, in line with its vending machine
+ {id:'park-west-trail',s:sOn(-304.6,5.5),width:9.6,ped:true,skew:-1.43},// meets the line at 34° (8.1 m along it; its paving boxes reach 9.6 m)
+ {id:'park-south-west-trail',s:sOn(-249.11,106.97),width:5.4,ped:true,skew:.4},
+ {id:'park-south-east-trail',s:sOn(-99.36,114.87),width:5,ped:true,skew:.24},
+ {id:'beach-kitchen-square',s:sOn(-59.5,104.4),width:6.6,ped:true},// the square's middle 6.6 m column, in line with its vending machine
 ];

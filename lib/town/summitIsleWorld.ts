@@ -249,20 +249,23 @@ export function buildSummitIsle(t:SummitTools){
   // from the floor in front of the mouth up to the hill behind the headwall left a hole behind the wall's top. Its part behind the
   // headwall's back plane (0.05 m in) is put back (clipped there), except inside the tube's box (|lateral| < half width + 0.1 m,
   // under the crown + 0.3 m: it would show in the tunnel's mouth from inside). Hidden from the front by the headwall and the mouth cap.
-  const backPart=(piece:Piece,ia:number,ib:number,ic:number,cx:number,cz:number)=>{let e=snapT[0],bd=Infinity;for(const s of snapT){const d=Math.hypot(cx-s.p.x,cz-s.p.z);if(d<bd){bd=d;e=s;}}
+  const backPart=(piece:Piece,ia:number,ib:number,ic:number,cx:number,cz:number,front=true)=>{let e=snapT[0],bd=Infinity;for(const s of snapT){const d=Math.hypot(cx-s.p.x,cz-s.p.z);if(d<bd){bd=d;e=s;}}
    // vertex: x, y, z (world), u (in from the plane), v (straight-frame lateral), source vertex (its colour)
    const P=piece.pos,src=[ia,ib,ic].map(i=>{const x=P[i*3]+piece.ox,z=P[i*3+2]+piece.oz;return [x,P[i*3+1],z,((x-e.p.x)*e.t.tx+(z-e.p.z)*e.t.tz)*e.w,(x-e.p.x)*e.t.tz-(z-e.p.z)*e.t.tx,i];});
    const clip=(poly:number[][],f:(v:number[])=>number)=>{const out:number[][]=[];for(let k=0;k<poly.length;k++){const A=poly[k],Bv=poly[(k+1)%poly.length],fa=f(A),fb=f(Bv);if(fa>=0)out.push(A);if((fa>=0)!==(fb>=0)){const g=fa/(fa-fb);out.push([0,1,2,3,4].map(n=>A[n]+(Bv[n]-A[n])*g).concat(A[5]));}}return out;};
    // behind the headwall's back plane; beside the tube's box, or over its crown (never inside the tunnel's mouth, seen from inside)
-   const W2=TUNNEL_HALF_WIDTH+.1,base=clip(src,v=>v[3]-.05);if(base.length<3)return;
-   for(const poly of [clip(base,v=>v[4]-W2),clip(base,v=>-W2-v[4]),clip(clip(clip(base,v=>W2-v[4]),v=>v[4]+W2),v=>v[1]-(B+2.4+TUNNEL_HALF_WIDTH+.3))]){if(poly.length<3)continue;
+   const W2=TUNNEL_HALF_WIDTH+.1,base=front?clip(src,v=>v[3]-.05):src;/* a triangle wholly behind the plane (Rail fixes) keeps its parts beside / over the box as they are */if(base.length<3)return;
+   // Rail fixes (Nov 26 2026): over the bore the kept part follows the ROUND arch (six bands, each above the arch's highest point in
+   // it, + 0.3 m), not a box to the crown: a box left holes in the hill above the arch's shoulders (seen white from above).
+   const bands:number[][][]=[];for(let k=0;k<6;k++){const e0=-W2+k*W2/3,e1=e0+W2/3,m=Math.min(Math.abs(e0),Math.abs(e1))*(e0<0&&e1>0?0:1);bands.push(clip(clip(clip(base,v=>v[4]-e0),v=>e1-v[4]),v=>v[1]-(B+2.4+Math.sqrt(Math.max(0,W2*W2-m*m))+.3)));}
+   for(const poly of [clip(base,v=>v[4]-W2),clip(base,v=>-W2-v[4]),...bands]){if(poly.length<3)continue;
     const ids=poly.map(v=>{const ci=v[5]*3;piece.pos.push(v[0]-piece.ox,v[1],v[2]-piece.oz);piece.nor.push(0,1,0);piece.colr.push(piece.colr[ci],piece.colr[ci+1],piece.colr[ci+2]);piece.tree.push(piece.tree[v[5]]??0);return piece.pos.length/3-1;});
     for(let k=1;k<ids.length-1;k++)extra.push(ids[0],ids[k],ids[k+1]);}};
   let extra:number[]=[];
   for(const piece of [...sectors,beach]){const P=piece.pos,I=piece.idx,keep:number[]=[];extra=[];
    for(let q=0;q<I.length;q+=3){const a=I[q]*3,b=I[q+1]*3,c=I[q+2]*3,ya=P[a+1],yb=P[b+1],yc=P[c+1],lo=Math.min(ya,yb,yc),hi=Math.max(ya,yb,yc);
     if(hi>B+.25&&lo<B+2.4&&lo<top){/* a corner below the springing: it reaches into the opening (the hill over the arch's top stays) */const cx=(P[a]+P[b]+P[c])/3+piece.ox,cz=(P[a+2]+P[b+2]+P[c+2])/3+piece.oz;
-     minU=0;if(inOpening(cx,cz,false)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)&&minU<-.1){backPart(piece,I[q],I[q+1],I[q+2],cx,cz);continue;}}
+     minU=0;if(inOpening(cx,cz,true)&&inOpening(P[a]+piece.ox,P[a+2]+piece.oz,true)&&inOpening(P[b]+piece.ox,P[b+2]+piece.oz,true)&&inOpening(P[c]+piece.ox,P[c+2]+piece.oz,true)){/* Rail fixes (Nov 26 2026, owner 150: hill inside the bore): every such triangle, not only one with a corner out in front: the drawn cliff at the mouth plane stood across the bore (the tube's 1.2 m depth pull hid it, and hid a walker or train in the bore too) */backPart(piece,I[q],I[q+1],I[q+2],cx,cz,minU<-.1);continue;}}
     keep.push(I[q],I[q+1],I[q+2]);}
    piece.idx=keep.concat(extra);}}
  const sectorOf=(x:number,z:number)=>{let a=Math.atan2(z-PK.z,x-PK.x);if(a<0)a+=Math.PI*2;return sectors[Math.min(SECTORS-1,Math.floor(a/(Math.PI*2)*SECTORS))];};

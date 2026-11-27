@@ -82,5 +82,20 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
   // (c) the sand ribbon never folds over itself (coplanar layers flickered at the South beach's SE corner)
   const Q=S.SHORE_SAND;for(let i=0;i<Q.length;i++){const a=Q[i],b=Q[(i+1)%Q.length];assert((b.outer.x-a.outer.x)*(b.inner.x-a.inner.x)+(b.outer.z-a.outer.z)*(b.inner.z-a.inner.z)>0,`sand ribbon folds at ${a.outer.x.toFixed(0)},${a.outer.z.toFixed(0)}`);}}
  assert(!/requestAnimationFrame|setInterval|setTimeout/.test(read('lib/town/trainWorld.ts')+read('lib/town/trainTrack.ts')+read('lib/town/trainLayout.ts')),'nothing animates');
+ // 6. Rail fixes (Nov 26 2026, owner 151: a crossing deck sat ~1 m off its path): every deck is centred on its path's centreline
+ // (within 0.3 m) and at least as wide along the line as the path. The deck covers exactly c.s ± width/2 (trainWorld xingParts).
+ {const tw=read('lib/town/trainWorld.ts');assert(/xingParts\(ra,rb\)/.test(tw)&&!/const xing=crossingAt\(a\.s\);/.test(tw),'the deck is cut to the crossing\'s exact span, not whole rows');
+  const wp=L('lib/town/westParkLayout.ts'),cc=L('lib/town/coralCay.ts'),areas=world.surfaceAreas.filter(r=>r.kind==='path'),inR=(x,z,r)=>Math.abs(x-r.x)<=r.w/2&&Math.abs(z-r.z)<=r.d/2;
+  const roadD=(x,z)=>{let m=1e9;for(const q of cc.CAUSEWAY_PATH)m=Math.min(m,Math.hypot(q.x-x,q.z-z));return m;};
+  const rows=[],bad=[];
+  for(const c of tt.TRAIN_CROSSINGS){const p=tt.trackAt(c.s);
+   // the path feature under the line at the crossing: one paving rect, a west-park trail, or the causeway road (|d| <= its 14 m deck / 2)
+   const rect=areas.find(r=>inR(p.x,p.z,r)),on=wp.onWalkPath(p.x,p.z,0)?(x,z)=>wp.onWalkPath(x,z,0):rect?(x,z)=>inR(x,z,rect):roadD(p.x,p.z)<7?(x,z)=>roadD(x,z)<=7:null;
+   if(!on){rows.push(`${c.id}: open beach (no drawn path)`);continue;}
+   let lo=0,hi=0;while(lo>-30&&on(...(q=>[q.x,q.z])(tt.trackAt(c.s+lo-.05))))lo-=.05;while(hi<30&&on(...(q=>[q.x,q.z])(tt.trackAt(c.s+hi+.05))))hi+=.05;
+   const mid=(lo+hi)/2,w=hi-lo;rows.push(`${c.id}: path ${w.toFixed(1)} m, off ${mid.toFixed(2)}`);
+   if(w>2*c.width+4)continue;// a plaza (the Beach Kitchen square's paving is one sheet of columns): the deck only has to lie on it
+   if(Math.abs(mid)>.3)bad.push(`${c.id}: deck centre ${mid.toFixed(2)} m from its path's centreline`);if(c.width<w-.1)bad.push(`${c.id}: deck ${c.width} m < path ${w.toFixed(2)} m`);}
+  if(process.env.XING_LIST)console.log(rows.join('\n'));assert.deepEqual(bad,[],'crossing decks on their paths');}
  console.log('train-track: ok');
 })().catch(e=>{console.error(e);process.exit(1);});

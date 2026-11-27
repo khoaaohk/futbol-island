@@ -237,7 +237,7 @@ import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit
 import SummitKickHud from './SummitKickHud';
 import {createSummitPractice} from '@/lib/graphics/summitPractice';// Summit 5s practice area (Nov 24 2026)
 import SummitPracticeHud from './SummitPracticeHud';
-import {trainSwimBlocked,swimDeckBlocked,trainWalkHeight,trainDeckAt,trestleDecks,DECK_HALF,trainLayout} from '@/lib/town/trainLayout';import {trackNearest,trackAt as trainTrackAt,leftNormal as trainLeftNormal,TRACK as TRAIN_TRACK,TRACK_DS as TRAIN_DS,TrackKind as TrainKind} from '@/lib/town/trainTrack';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
+import {createTunnelWalk} from '@/lib/town/tunnelWalk';import {trainSwimBlocked,swimDeckBlocked,trainWalkHeight,trainDeckAt,trestleDecks,DECK_HALF,trainLayout} from '@/lib/town/trainLayout';import {trackNearest,trackAt as trainTrackAt,leftNormal as trainLeftNormal,TRACK as TRAIN_TRACK,TRACK_DS as TRAIN_DS,TrackKind as TrainKind} from '@/lib/town/trainTrack';// Island Line (Nov 23 2026): swimmers meet the piers and the sea wall
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';import TrainRideHud from './TrainRideHud';import {createTrainRide,trainRideStore,trainRideActions,trainButtons,platformSpot,STATION_ARRIVAL_DU,TRAIN_BOARD_KEY,type TrainActionId,canBoardFrom,nearHide,bodyDist} from '@/lib/town/trainRide';import {TRAIN_STATIONS,TRAIN_CROSSINGS,trackAt} from '@/lib/town/trainTrack';import {TRAIN_COUNT} from '@/lib/town/trainSchedule';import {trainClockSec,trainFrameClock} from '@/lib/town/trainSchedule';import {TRAIN_SEATS} from '@/lib/town/trainRunning';import {createStationLife} from '@/lib/town/stationLife';// Island Line riding (train Phase 3, Nov 23 2026)// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createStadiumMedia} from '@/lib/graphics/stadiumMedia';import {STADIUM_GESTURERS,STADIUM_GESTURES,STADIUM_MASCOT_ID,STADIUM_VIEWERS} from '@/lib/town/stadiumNpcs';// DRIP FC Stadium media + public viewing (Nov 13 2026)
 import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY,sitYieldsToTalk} from '@/lib/town/stadiumSit';import {createCafeSeat,CAFE_SEAT_KEY} from '@/lib/town/cafeSeat';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
@@ -916,6 +916,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // A kicked signal sways (propReactions): its lamps, drawn by the traffic's one instanced mesh, follow the head.
     {const lamps=streetTraffic.signals.lamps;if(lamps)world.signalHeads.forEach((h,i)=>propReactions.follow('signal',h.x,h.z,move=>lamps.sway(i,move)));}
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>Math.max(rampSurface(rideRamps,x,z),trainWalkHeight(x,z))/* Island Line: feet on the sleepers and crossing decks (trainLayout.ts) */,world.landingExclusions,world.canopies);
+    const tunnelWalk=createTunnelWalk(),tunnelCam={x:0,y:0,z:0},tunnelLook={x:0,y:0,z:0};// Rail fixes: the Summit tunnel's walkways (lib/town/tunnelWalk.ts)
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     // Roof riding (lib/town/trainRoof.ts, Nov 24 2026): a moving train's roof is a floor from the sky (falls, parachute, the landing ring).
     const skyRoof={k:-1,x:0,u:0,y:0};
@@ -1836,7 +1837,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         swimEdgeHold=water.state.phase==='swim'&&!holdStill&&swimEdgePush(location.x,location.z,{x:mx,z:mz},waterWalk.allow,swimLand)?swimEdgeHold+dt:0;swimEdgeQuiet=Math.max(0,swimEdgeQuiet-dt);if(swimEdgeHold>1&&swimEdgeQuiet===0){swimEdgeQuiet=20;fuelStore.say(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE);}
       }else if(!rampStep.owns){waterWalk.speed=water.speedScale;
         {const rm=rideRef.current;sandEase.step(dt,location.x,location.z,(rm==='scooter'||rm==='bike'||rm==='moped')&&!rooftop.state.falling&&!rooftop.state.air&&rooftop.state.height<fieldSurfaceHeight(location.x,location.z)+.3);}/* riding on sand: eased speed / acceleration scales (rideSand.ts) */
-        rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined,sandEase.out);
+        // Rail fixes (Nov 26 2026): the Summit tunnel's walkways (lib/town/tunnelWalk.ts). Inside, the walk step skips the hill's
+        // ground and obstacles over the bore: the walker stays on the nearer walkway at its height until they leave by a mouth.
+        if(tunnelWalk.state.active){const sprint=(input.current.sprint||keys.has('shift'))&&fuelCanSprint();stepPlayer(location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint},dt,[],'walk');
+         if(tunnelWalk.constrain(location,velocity,dt,reduced)==='exit')rooftop.reset(location.x,location.z);else{rooftop.state.height=tunnelWalk.state.height;rooftop.state.falling=false;rooftop.state.air=false;}}
+        else{rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined,sandEase.out);
+         if(nearSummit(location.x,location.z)&&rideRef.current==='walk'&&!water.inWater&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&tunnelWalk.tryEnter(location,rooftop.state.height,true))rooftop.state.height=tunnelWalk.state.height;}
         // A fall or jump (off a bridge, a rooftop, the zipline) that crosses a moving train's roof lands on it (trainRoof.ts).
         if(rideRef.current==='walk'&&(wasFalling||rooftop.state.falling||rooftop.jump.active)&&stairBefore>rooftop.state.height+.05&&world.trainRun?.roofAt(location.x,location.z,roofO,.15)&&stairBefore>=roofO.y-.25&&rooftop.state.height<=roofO.y+.3){roofAttach(roofO);roofPose();}}
       // The boats' hulls are solid (Nov 11 2026, owner: "getting stuck here with the boat"; lib/town/fishing/boatHull.ts): from the water beside the open deck you climb aboard, off the deck's side you hop into the sea, the wheelhouse and bow push you back out, and a push that goes nowhere for 1.5 s beside a boat frees you. A box test when away from the boats; also frees a restored save inside a hull on the first frame.
@@ -2378,7 +2384,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         player.dribbleContact(airBallFrom);dribblePlayer.x=visualLocation.x;dribblePlayer.z=visualLocation.z;dribblePlayer.y=groundY;dribblePlayer.yaw=player.root.rotation.y;
         walkBall.syncDribble(dribblePlayer,airBallFrom,rooftop.surface);orb.x=walkBall.state.x;orb.z=walkBall.state.z;
       }
-      ball.position.set(orb.x,walkingBall?walkBall.state.y:.25+fieldSurfaceHeight(orb.x,orb.z),orb.z);
+      ball.position.set(orb.x,walkingBall?walkBall.state.y:.25+fieldSurfaceHeight(orb.x,orb.z),orb.z);if(tunnelWalk.state.active)ball.position.y=tunnelWalk.state.height+.25;/* in the tunnel: at the walker's feet (the hill's ground is overhead) */
       if(walkingBall&&jobFrame.ball){ball.position.set(jobFrame.ball.x,jobFrame.ball.y,jobFrame.ball.z);orb.x=jobFrame.ball.x;orb.z=jobFrame.ball.z;}
       if(passOnBall&&walkingBall&&emoteFx.kind>=0){ball.position.set(passOut.x,passOut.y,passOut.z);ball.rotation.x=emoteFx.age*8;}// Pass it / Juggle with me move THE player's ball (no second ball); normal dribble resumes at the feet when it ends
       if(airJuggling){player.ballContact(airJuggleSide,airBallFrom);player.ballContact(airJuggleSide===1?-1:1,airBallTo);ball.position.lerpVectors(airBallFrom,airBallTo,airJugglePhase);ball.position.y+=.19+4*airJugglePhase*(1-airJugglePhase)*(reduced?.3:.7);ball.rotation.x+=active?dt*4:0;}
@@ -2511,6 +2517,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Keep the viewing direction constant even while the follow position eases.
       lookAt.set(camera.position.x-16,camera.position.y-23,camera.position.z-33);
       if(!learningFormat.current)camera.lookAt(lookAt);
+      // Rail fixes (Nov 26 2026): in the Summit tunnel the follow camera blends (by how far in the walker is, tunnelWalk.state.k) to a
+      // chase view behind and above them along the bore; out of it, the follow's own ease brings it back (no snap either way).
+      if(!tunnelWalk.state.active)tunnelWalk.approach(visualLocation.x,visualLocation.z,rideRef.current==='walk'&&!water.inWater&&nearSummit(visualLocation.x,visualLocation.z));
+      if(tunnelWalk.state.k>0&&!learningFormat.current&&tunnelWalk.chase(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,dt,reduced,tunnelCam,tunnelLook)){const k=tunnelWalk.state.k;
+       camera.position.set(camera.position.x+(tunnelCam.x-camera.position.x)*k,camera.position.y+(tunnelCam.y-camera.position.y)*k,camera.position.z+(tunnelCam.z-camera.position.z)*k);
+       camera.lookAt(lookAt.x+(tunnelLook.x-lookAt.x)*k,lookAt.y+(tunnelLook.y-lookAt.y)*k,lookAt.z+(tunnelLook.z-lookAt.z)*k);}
       if(!learningFormat.current){vending.applyCamera(camera,dt,reduced);gashaPrompt.applyCamera(camera,dt,reduced);fishing.applyCamera(camera,dt,reduced);}
       // Live match: the camera button's angle (Broadcast = this view; Behind you / Wide / Close ease in over it). Free at rest.
       if(!learningFormat.current){liveJoin.cameraApply(camera,active?dt:0,reduced);practice.cameraApply(camera,active?dt:0,reduced);}

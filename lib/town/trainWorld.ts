@@ -52,7 +52,7 @@ const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',sleeperBed:'#897c6e'
 const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 /** Summit portals: headwall half width, its batter (m back per m up) and the wing walls' run out along the banks. */
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
-export const TUBE_SHOW=60,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
+export const TUBE_SHOW=110,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
 export const WIRE_R=.014,CAT_FADE_NEAR=4.5,CAT_FADE_FAR=8;// POLISH 3 (owner: the wire read thick from a roof camera 3-6 m off): thinner (2.8 cm), faded out to 4.5 m and dithered in by 8 m
 
@@ -138,6 +138,13 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
  const emit=(g:Geo,color:string,ox:number,oz:number,y=0)=>{if(g.empty)return null;return skip(put(g.build(ox,oz),color,ox,y,oz));};
  const stationAt=(s:number)=>TRAIN_STATIONS.find(st=>Math.abs(wrapS(s-st.s+TRACK.length/2)-TRACK.length/2)<STATION_HALF+1);
  const crossingAt=(s:number,pad=0)=>TRAIN_CROSSINGS.find(c=>Math.abs(wrapS(s-c.s+TRACK.length/2)-TRACK.length/2)<c.width/2+pad);
+ /** A track row (from point a, TRACK_DS long) cut at a crossing deck's two ends: [from, to, the deck's ends or null] parts. */
+ const xingParts=(a:ReturnType<typeof pt>,b:ReturnType<typeof pt>)=>{type P=ReturnType<typeof pt>;type X={s0:number;s1:number}|null;const aE=a.s+TRACK_DS;
+  const at=(s:number):P=>{const f=(s-a.s)/TRACK_DS;return {...a,x:a.x+(b.x-a.x)*f,z:a.z+(b.z-a.z)*f,bed:a.bed+(b.bed-a.bed)*f,s};};
+  for(const c of TRAIN_CROSSINGS){const m=a.s+wrapS(c.s-a.s+TRACK.length/2)-TRACK.length/2,s0=m-c.width/2,s1=m+c.width/2;if(s1<=a.s+1e-4||s0>=aE-1e-4)continue;
+   const p0=s0>a.s+1e-4?at(s0):a,p1=s1<aE-1e-4?at(s1):b,out:[P,P,X][]=[];
+   if(p0!==a)out.push([a,p0,null]);out.push([p0,p1,{s0,s1:p1===b?s1+b.s-aE:s1}/* b.s wraps to 0 on the loop's last row */]);if(p1!==b)out.push([p1,b,null]);return out;}
+  return [[a,b,null]] as [P,P,X][];};
  const isTunnel=(i:number)=>K[i]===TrackKind.Tunnel;
  const pt=(i:number)=>({x:TRACK.x[i%n],z:TRACK.z[i%n],tx:TRACK.tx[i%n],tz:TRACK.tz[i%n],bed:BED[i%n],kind:K[i%n],s:(i%n)*TRACK_DS});
  const off=(p:{x:number;z:number;tx:number;tz:number},v:number,y:number)=>[p.x+p.tz*v,y,p.z-p.tx*v];
@@ -214,7 +221,11 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     railTops.quad(A0,B0,B1,A1,[A0[0],A0[1]-1,A0[2]]);
     const a0=off(a,v-w,a.bed+SLEEPER_TOP),a1=off(a,v+w,a.bed+SLEEPER_TOP),b0=off(b,v-w,b.bed+SLEEPER_TOP),b1=off(b,v+w,b.bed+SLEEPER_TOP),mid=off(a,v,a.bed+.27);
     rails.quad(a0,b0,B0,A0,mid);rails.quad(a1,b1,B1,A1,mid);}
-   const xing=crossingAt(a.s);
+   // Rail fixes (Nov 26 2026, owner 151: "this brown part on the track needs to be shifted ... to match with the path"): a crossing deck
+   // covers exactly [c.s - width/2, c.s + width/2] (c.s is the path's centreline: trainTrack.ts). It used to cover the whole 2 m rows
+   // whose START lay in that range: every deck sat ~1 m forward of its path and a 3 m beach path got a 2 m deck. A row the deck edge
+   // falls in is split: ballast and sleepers on its open part, the deck on the rest.
+   {const ra=a,rb=b;for(const [a,b,xing] of xingParts(ra,rb)){
    if(xing){// The crossing deck (Nov 23 2026, owner: flush): a dark top just under the rail heads between and beside the rails, then
     // sloping down to the ground on both sides (to XING_FOOT, just past the ballast), so it reads as part of the road, not a slab.
     const yt=RAIL_TOP-.03,inside=off(a,0,a.bed-1),gy=(p:typeof a)=>onSummitTrackS(p.s)?p.bed:0;
@@ -222,13 +233,13 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     for(const side of [-1,1])xdeck.quad(off(a,side,a.bed+yt),off(b,side,b.bed+yt),off(b,side*XING_FOOT,gy(b)+.01),off(a,side*XING_FOOT,gy(a)+.01),inside);
     // Nov 24 2026 (owner 13.png, "skewed slab" at West Beach): the deck's two ends are closed down to the ground (it was a thin
     // sheet with open ends over the cut ballast, reading as a plank lying askew); the end faces also cap the ballast's section.
-    for(const [p,q,first] of [[a,b,!crossingAt(pt(i-1).s)],[b,a,!crossingAt(b.s)]] as const){if(!first)continue;
+    for(const [p,q,first] of [[a,b,Math.abs(a.s-xing.s0)<1e-4],[b,a,Math.abs(b.s-xing.s1)<1e-4]] as const){if(!first)continue;
      const g=gy(p)-.06,inn=[p.x+(q.x-p.x)*.5,p.bed,p.z+(q.z-p.z)*.5];
      xdeck.quad(off(p,-1,p.bed+yt),off(p,1,p.bed+yt),off(p,1,g),off(p,-1,g),inn);
      for(const side of [-1,1])xdeck.quad(off(p,side,p.bed+yt),off(p,side*XING_FOOT,gy(p)+.01),off(p,side*XING_FOOT,g),off(p,side,g),inn);}}
    // Sleepers every 1 m (two per row) on ballast; the sea wall and the trestle carry them too.
    if(lite&&!xing){if(a.kind===TrackKind.Sea||b.kind===TrackKind.Sea)sleepers.quad(off(a,-1.15,a.bed+SLEEPER_TOP),off(b,-1.15,b.bed+SLEEPER_TOP),off(b,1.15,b.bed+SLEEPER_TOP),off(a,1.15,a.bed+SLEEPER_TOP),off(a,0,a.bed-1));}
-   else for(const f of [.25,.75]){const x=a.x+(b.x-a.x)*f,z=a.z+(b.z-a.z)*f,y=a.bed+(b.bed-a.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
+   else for(const f of [.25,.75]){const sf=ra.s+TRACK_DS*f;if(sf<a.s||sf>=(b===rb?ra.s+TRACK_DS:b.s))continue;/* this part of the row only */const x=ra.x+(rb.x-ra.x)*f,z=ra.z+(rb.z-ra.z)*f,y=ra.bed+(rb.bed-ra.bed)*f;if(!xing){/* Nov 23 2026 (heat): the top face only (2 tris, was 6): the 0.1 m sides never read from the game's camera. */const T0=[x-a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13-a.tx*1.15],T1=[x+a.tx*.13+a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13-a.tx*1.15],T2=[x+a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z+a.tz*.13+a.tx*1.15],T3=[x-a.tx*.13-a.tz*1.15,y+SLEEPER_TOP,z-a.tz*.13+a.tx*1.15];sleepers.quad(T0,T1,T2,T3,[x,y,z]);}}
    if(a.kind!==TrackKind.Sea&&b.kind!==TrackKind.Sea&&!xing){// Ballast: one continuous trapezoid strip on every land row (Nov 23 2026: was broken into
     // slabs round the crossings); it stops only under a crossing deck. On the bridge-head embankment (bed above the ground, trackProfile
     // RAMP_LAND) its sides run on down to the ground, widening as they go.
@@ -236,6 +247,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     const bt=lite?SLEEPER_TOP:BALLAST_TOP,t0=off(a,-1.45,a.bed+bt),t1=off(a,1.45,a.bed+bt),u0=off(b,-1.45,b.bed+bt),u1=off(b,1.45,b.bed+bt),
      f0=off(a,-fa,gy(a)-.06),f1=off(a,fa,gy(a)-.06),g0=off(b,-fb,gy(b)-.06),g1=off(b,fb,gy(b)-.06),inside=off(a,0,a.bed-1);
     (lite?bedTop:ballast).quad(t0,u0,u1,t1,inside);ballast.quad(f0,g0,u0,t0,inside);ballast.quad(t1,u1,g1,f1,inside);}
+   }}
    if(a.kind!==TrackKind.Sea&&b.kind===TrackKind.Sea||a.kind===TrackKind.Sea&&b.kind!==TrackKind.Sea)bridgeHead(a,b);
    if(a.kind===TrackKind.Wall){// The sea wall: a stone top and two faces down into the water (Enoden-style).
     const h=SEA_WALL_HALF,top=-.02,foot=-2.6,inside=off(a,0,-1);
@@ -497,9 +509,12 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   const put3=(p:number[],c:T.Color)=>{pos.push(p[0],p[1],p[2]);col.push(c.r,c.g,c.b);};
   const quad=(a:number[],b:number[],c:number[],d:number[],ca:T.Color,cb=ca,cc=ca,cd=ca)=>{put3(a,ca);put3(b,cb);put3(c,cc);put3(a,ca);put3(c,cc);put3(d,cd);};
   const hash=(a:number,b:number)=>{const h=Math.sin(a*12.9898+b*78.233)*43758.5453;return h-Math.floor(h);};
-  const STONE=new T.Color('#9d8058'),DAY=new T.Color('#c9b089'),endK=(s:number)=>Math.max(Math.exp(-Math.max(0,s-W.s)/7),Math.exp(-Math.max(0,E.s-s)/7));
+  // Rail fixes (Nov 26 2026, owner 150: "this white doesn't look right for the tunnel"): from outside the bore read as one flat pale
+  // sheet (the daylight end ran ~8 m in at 0.8-1.0 light). Now the light falls off from the mouth (DEEP: the mid-bore level, the
+  // daylight end 5 m) so the bore reads as depth, the lamps' warm pools carry the middle and the far mouth is a small bright disc.
+  const STONE=new T.Color('#977650'),DAY=new T.Color('#c9b089'),DEEP=.36,endK=(s:number)=>Math.max(Math.exp(-Math.max(0,s-W.s)/5),Math.exp(-Math.max(0,E.s-s)/5));
   /** The wall's colour at (s, height y): even light, a touch darker at the crown and mid-bore, daylight at the ends. */
-  const wallAt=(s:number,y:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(STONE).multiplyScalar(shade*(.8+.2*e)*(1-.2*Math.min(1,Math.max(0,(y-2.6)/3.4)))).lerp(DAY,.4*e);};
+  const wallAt=(s:number,y:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(STONE).multiplyScalar(shade*(DEEP+(1-DEEP)*e)*(1-.25*Math.min(1,Math.max(0,(y-2.6)/3.4)))).lerp(DAY,.3*e);};
   // Profile (lateral v, height y): walkway top, three wall courses, then the arch in 10 voussoir bands.
   const prof:[number,number][]=[[-HW,.3],[-HW,1],[-HW,1.7],[-HW,SPR]];for(let k=1;k<10;k++){const a=Math.PI-Math.PI*k/10;prof.push([Math.cos(a)*HW,SPR+Math.sin(a)*HW]);}
   prof.push([HW,SPR],[HW,1.7],[HW,1],[HW,.3]);
@@ -509,7 +524,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     quad(A(s0,v0,y0),A(sj,v0,y0),A(sj,v1,y1),A(s0,v1,y1),wallAt(s0,y0,sh*spring,ca),wallAt(sj,y0,sh*spring,cb),wallAt(sj,y1,sh,cc),wallAt(s0,y1,sh,cd));
     if(sj<s1)quad(A(sj,v0,y0),A(s1,v0,y0),A(s1,v1,y1),A(sj,v1,y1),wallAt(sj,y0,.62,ca),wallAt(s1,y0,.62,cb),wallAt(s1,y1,.62,cc),wallAt(s1,y1,.62,cd));}}
   // The track bed, in 3 m strips: ballast top and shoulders, gutters, kerbs and walkways (all lit like the wall foot).
-  const BAL=new T.Color('#9a948a'),GUT=new T.Color('#4d4740'),WALK=new T.Color('#a69d8c'),flat=(c:T.Color,s:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(c).multiplyScalar(shade*(.8+.2*e)).lerp(DAY,.4*e);};
+  const BAL=new T.Color('#7d776d'),GUT=new T.Color('#4d4740'),WALK=new T.Color('#877e6e'),flat=(c:T.Color,s:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(c).multiplyScalar(shade*(DEEP+(1-DEEP)*e)).lerp(DAY,.15*e);};
   for(let s0=W.s-.3;s0<E.s+.3;s0+=3){const s1=Math.min(E.s+.3,s0+3),j=.9+.14*hash(s0,3);
    quad(A(s0,-1.45,.12),A(s1,-1.45,.12),A(s1,1.45,.12),A(s0,1.45,.12),flat(BAL,s0,.85*j,ca),flat(BAL,s1,.85*j,cb),flat(BAL,s1,.85*j,cc),flat(BAL,s0,.85*j,cd));
    for(const sg of [-1,1]){
@@ -520,6 +535,18 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // End caps: the bed's cross-section closed down to 0.3 m under the floor at both mouths (an open walkway end showed a white hole).
   {const sec:[number,number][]=[[-HW,.3],[-2.45,.3],[-2.45,-.06],[-2.05,-.04],[-1.45,.12],[1.45,.12],[2.05,-.04],[2.45,-.06],[2.45,.3],[HW,.3]],cap=new T.Color('#6f6a62').multiplyScalar(.85);
    for(const se of [W.s-.3,E.s+.3])for(let k=0;k<sec.length-1;k++)quad(A(se,sec[k][0],sec[k][1]),A(se,sec[k+1][0],sec[k+1][1]),A(se,sec[k+1][0],-.3),A(se,sec[k][0],-.3),cap);}
+  // Rail fixes (Nov 26 2026, owner 153: "sky is leaking through" between the portal's ring and the lining): a stone sleeve at each
+  // mouth, straight along the portal's own frame (the west portal stands on a curve, so the lining that follows the line drifted off
+  // the headwall's arched hole), 3 cm inside the lining's radius, from 1 m inside the mouth plane out to the headwall's leaning
+  // face. It lines the whole hole, so no gap shows at any angle; its walkways run on to the face too (the walk out is one step down).
+  for(const p of [W,E]){const t=trackAt(p.s),w=p===W?1:-1,ox=-t.tx*w,oz=-t.tz*w,ax=oz,az=-ox,k=(HW-.03)/HW;
+   const S=(u:number,v:number,y:number)=>[p.x+ax*v+ox*u,B+y,p.z+az*v+oz*u],uEnd=(y:number)=>1.5-Math.max(0,y)*PORTAL_LEAN-.03;// the headwall: 1.5 m deep, PORTAL_LEAN back per m up
+   const sv=prof.map(([v,y])=>[v*k,y<=SPR?y:SPR+(y-SPR)*k] as [number,number]),lit=(y:number,u:number,out:T.Color)=>out.copy(STONE).multiplyScalar((.78+.1*Math.min(1,Math.max(0,u)/1.5))*(1-.15*Math.min(1,Math.max(0,(y-2.6)/3.4)))).lerp(DAY,.35);
+   for(let j=0;j<sv.length-1;j++){const [v0,y0]=sv[j],[v1,y1]=sv[j+1],u0=-1;/* TUNNEL.*.s is snapped to the 2 m table: the lining can start up to 1 m in from the true mouth */quad(S(u0,v0,y0),S(uEnd(y0),v0,y0),S(uEnd(y1),v1,y1),S(u0,v1,y1),lit(y0,u0,ca),lit(y0,1.5,cb),lit(y1,1.5,cc),lit(y1,u0,cd));}
+   for(const sg of [-1,1]){const u0=.28,u1=uEnd(.3);/* from the lining walkway's end (it stops 0.3 m out) */
+    quad(S(u0,sg*2.45,.3),S(u1,sg*2.45,.3),S(u1,sg*HW*k,.3),S(u0,sg*HW*k,.3),flat(WALK,p.s,.9,ca),flat(WALK,p.s,.9,cb),flat(WALK,p.s,.82,cc),flat(WALK,p.s,.82,cd));
+    quad(S(u0,sg*2.45,-.06),S(u1,sg*2.45,-.06),S(u1,sg*2.45,.3),S(u0,sg*2.45,.3),flat(WALK,p.s,.72,ca),flat(WALK,p.s,.72,cb),flat(WALK,p.s,.8,cc),flat(WALK,p.s,.8,cd));
+    quad(S(u1,sg*2.45,.3),S(u1,sg*HW*k,.3),S(u1,sg*HW*k,-.06),S(u1,sg*2.45,-.06),flat(WALK,p.s,.7,ca));}}// the walkway's end at the face
   // Sleepers and rails on the ballast (as outside), and the small parts, in Geo soups coloured per part.
   const add=(g:Geo,color:string,shade:number,glow=false)=>{for(let k=0;k<g.p.length;k+=3){const s=nearS(g.p[k],g.p[k+2]);if(glow)tmp.set(color).multiplyScalar(shade);else flat(c2.set(color),s,shade,tmp);put3([g.p[k],g.p[k+1],g.p[k+2]],tmp);}};
   const nearS=(x:number,z:number)=>{const dx=E.x-W.x,dz=E.z-W.z,f=((x-W.x)*dx+(z-W.z)*dz)/(dx*dx+dz*dz);return W.s+f*len;};
@@ -547,15 +574,18 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   mat.onBeforeCompile=sh=>{sh.uniforms.uTubeIn=tubeIn;
    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vTubeW;').replace('#include <project_vertex>','#include <project_vertex>\nvTubeW=(modelMatrix*vec4(transformed,1.)).xyz;');
    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uTubeIn;varying vec3 vTubeW;
-uniform mat4 projectionMatrix;
-// Seen from outside, through the arch: the fragment's depth is pulled to 1.2 m in front of the mouth plane (inside the headwall's hole) (keeping its order among the
-// tube's own faces), so a bit of the hill mesh that crosses the bore just inside the portal (the curved west one) never covers it.
-float tubeDepth(vec3 X){vec4 c=projectionMatrix*viewMatrix*vec4(X,1.);float dx=c.z/c.w*.5+.5;return dx+(gl_FragCoord.z-dx)*.02;}
-bool tubeThru(vec3 P,vec2 n,inout float fd){float dc=dot((cameraPosition-P).xz,n),df=dot((vTubeW-P).xz,n);if(df<.4)return true;if(dc>0.)return false;
+uniform float uTubeIn;varying vec3 vTubeW;float tubeNear=0.;
+// Rail fixes (Nov 26 2026): no depth pull any more (it was 1.2 m toward the camera so a hill triangle crossing the bore by the off-centre
+// west portal never covered it; the portals now stand on the line, so none does). With the pull the bore drew OVER whatever was in it
+// (a walker, a train) seen from the cutting; and without gl_FragDepth the tube keeps early depth testing.
+bool tubeThru(vec3 P,vec2 n){float dc=dot((cameraPosition-P).xz,n),df=dot((vTubeW-P).xz,n);if(df<.4)return true;if(dc>0.)return false;tubeNear=max(tubeNear,step(df,2.9));
  vec3 X=cameraPosition+(vTubeW-cameraPosition)*(-dc/(df-dc));float lat=abs(dot((X-P).xz,vec2(n.y,-n.x)));
- if(lat<${HW.toFixed(2)}&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(${(HW*HW).toFixed(3)}-lat*lat,0.))){fd=tubeDepth(X-normalize(X-cameraPosition)*min(1.2,.5*distance(X,cameraPosition)));return true;}return false;}`)
-    .replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\nfloat tubeFd=gl_FragCoord.z;if(uTubeIn<.5&&!tubeThru(${mouthGl(W,1)},tubeFd)&&!tubeThru(${mouthGl(E,-1)},tubeFd))discard;gl_FragDepth=tubeFd;`);};
+// the arch and a 0.6 m band round it (the headwall hides the band where it stands: it only closes any sliver at the ring)
+float R2=${HW.toFixed(2)}+.6;return lat<R2&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(R2*R2-lat*lat,0.));}`)
+    .replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\nfloat tubeOut=0.;if(uTubeIn<.5&&!tubeThru(${mouthGl(W,1)})&&!tubeThru(${mouthGl(E,-1)})){if(tubeNear<.5)discard;tubeOut=1.;}`)
+    // Rail fixes (owner 150): the hill is cut out of the first ~2.6 m behind each portal (summitIsleWorld), so from above that hole
+    // showed the sky (the vault there was discarded: not seen through the arch). The vault's first 2.9 m now draws there, in shade.
+    .replace('#include <dithering_fragment>','#include <dithering_fragment>\ngl_FragColor.rgb*=1.-.45*tubeOut;');};
   mat.customProgramCacheKey=()=>'train-tunnel-lit';
   const m=new T.Mesh(g,mat);m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
  }
