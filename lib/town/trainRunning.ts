@@ -96,6 +96,7 @@ export const TRAIN_SEATS=PLAYER_SEATS.length;
 export type SeatPose={x:number;y:number;z:number;yaw:number;/** SeatSpot.lean (riding poses) */lean?:number};
 
 import {LIVERIES} from './trainLiveries';
+import {softOn} from '../graphics/softBox';
 import {ROOF_HALF,ROOF_END_PAD,roofY,roofLift} from './trainRoof';
 import {KENJI,kenjiWarn,KENJI_SEAT} from './trainConductor';
 import {createTrainNightGlow} from './trainNightGlow';
@@ -105,7 +106,7 @@ export const PLAYER_R=.35;
 export {LIVERIES};
 export {buildCarGeometry,buildCarBox};
 // ---------------------------------------------------------------- crossings (one mesh each; arms = "wheels", lamps = indicators)
-function buildCrossing(ci:number,obstacles:Obstacle[]|null){
+function buildCrossing(ci:number,obstacles:Obstacle[]|null){const XSOFT=softOn();
  const L=trainLayout(),c=TRAIN_CROSSINGS[ci],a=trackAt(c.s),i=Math.round(wrapS(c.s)/TRACK_DS)%TRACK.n,bed=L.profile.bed[i],g=new VGeo();
  // local frame: +z along the line (the arms lie along it, across the path), +x left of travel, y up from the bed
  const uBase=-(c.width/2+.5),len=c.width+.6;
@@ -114,12 +115,29 @@ function buildCrossing(ci:number,obstacles:Obstacle[]|null){
  // A skewed footpath (c.skew: metres along the line per metre across it) shifts each side's post and arm with the path, so the
  // post stands beside the path on both sides and the arm spans it.
  for(const v of [-3.1,3.1]){const u0=uBase+(c.skew??0)*v;
+  const pv:V=[v-Math.sign(v)*.2,armY,u0],seg=Math.max(4,Math.round(len/.6));
+  if(XSOFT){// Rail + beach props (Nov 27, owner 186: "more rounded and less blocky"): a round striped pole with a ball cap on a rounded
+   // foot, round lamp housings (lens front and back, little visors), a rounded lamp bar, motor box and counterweight, and a round
+   // striped arm with a rounded tip. Same parts (lamps PART.left / right, the arm PART.rearWheel about pv): timing and logic unchanged.
+   g.shade=.7;g.bead(v,.02,u0,.07,.13,.07,COL.metal,10,3);
+   for(let k=0;k<bands;k++)g.rbeam([v,k?.04+k*.32:0,u0],[v,.36+k*.32,u0],.072,k%2?COL.post:COL.yellow,0,undefined,10);
+   g.bead(v,.36+(bands-1)*.32,u0,0,.072,.05,COL.yellow,10,2);
+   g.rbox(v,barY,u0,.05,.04,.3,COL.post,.035,1);
+   for(const [dz,P] of [[-.12,PART.left],[.12,PART.right]] as const){const zc=u0+dz;g.rbeam([v,lampY,zc-.06],[v,lampY,zc+.06],.125,COL.post,0,undefined,12);// the round housing
+    for(const f of [-1,1]){const zf=zc+f*.061;for(let k=0;k<12;k++){const t0=k/12*Math.PI*2,t1=(k+1)/12*Math.PI*2,r=.105;g.tri([v,lampY,zf],[v+Math.cos(t0)*r,lampY+Math.sin(t0)*r,zf],[v+Math.cos(t1)*r,lampY+Math.sin(t1)*r,zf],COL.lamp,[v,lampY,zf-f],P);}// lens
+     for(let k=0;k<6;k++){const t0=k/6*Math.PI,t1=(k+1)/6*Math.PI,r=.13,A:V=[v+Math.cos(t0)*r,lampY+Math.sin(t0)*r,zf],B:V=[v+Math.cos(t1)*r,lampY+Math.sin(t1)*r,zf],C:V=[B[0],B[1],zf+f*.07],D:V=[A[0],A[1],zf+f*.07];
+      g.quad(A,B,C,D,COL.post,[v,lampY,zf+f*.035]);g.quad(A,D,C,B,COL.post,[v,lampY+1,zf+f*.035]);}}}// the visor (both sides seen)
+   g.rbox(pv[0],pv[1],pv[2],.12,.18,.14,COL.post,.06,1);// the arm's motor box (still)
+   for(let s=0;s<seg;s++){const z0=u0+s/seg*len,z1=u0+(s+1)/seg*len;g.rbeam([pv[0],pv[1],z0],[pv[0],pv[1],z1],.048,s%2?COL.post:COL.yellow,PART.rearWheel,pv,8);}
+   g.rbox(pv[0],pv[1],u0+len,.048,.048,.048,(seg-1)%2?COL.post:COL.yellow,.046,1,PART.rearWheel,pv);// the arm's round tip
+   g.rbox(pv[0],pv[1],u0-.35,.07,.09,.25,COL.metal,.06,1,PART.rearWheel,pv);g.shade=0;}// counterweight
+  else{
   for(let k=0;k<bands;k++)g.box(v,.2+k*.32,u0,.075,.16,.075,k%2?COL.post:COL.yellow);// the machine's striped post
   g.box(v,lampY,u0-.12,.13,.13,.06,COL.lamp,PART.left);g.box(v,lampY,u0+.12,.13,.13,.06,COL.lamp,PART.right);// twin lamps, flashing in turn
   g.box(v,barY,u0,.05,.04,.3,COL.post);
-  const pv:V=[v-Math.sign(v)*.2,armY,u0];g.box(pv[0],pv[1],pv[2],.12,.18,.14,COL.post);// the arm's motor box (still)
-  const seg=Math.max(4,Math.round(len/.6));for(let s=0;s<seg;s++){const z=u0+(s+.5)/seg*len;g.box(pv[0],pv[1],z,.04,.05,len/seg/2,s%2?COL.post:COL.yellow,PART.rearWheel,pv);}
-  g.box(pv[0],pv[1],u0-.35,.07,.09,.25,COL.metal,PART.rearWheel,pv);// counterweight
+  g.box(pv[0],pv[1],pv[2],.12,.18,.14,COL.post);// the arm's motor box (still)
+  for(let s=0;s<seg;s++){const z=u0+(s+.5)/seg*len;g.box(pv[0],pv[1],z,.04,.05,len/seg/2,s%2?COL.post:COL.yellow,PART.rearWheel,pv);}
+  g.box(pv[0],pv[1],u0-.35,.07,.09,.25,COL.metal,PART.rearWheel,pv);}// counterweight
   if(obstacles&&L.profile.kind[i]!==TrackKind.Sea)obstacles.push({x:a.x+a.tz*v+a.tx*u0,z:a.z-a.tx*v+a.tz*u0,w:.3,d:.3,train:true} as Obstacle);}
  const look=createVehicleMaterial(),mesh=new T.Mesh(g.build(),look.material);mesh.name='train-crossing-'+c.id;mesh.matrixAutoUpdate=false;mesh.castShadow=false;mesh.receiveShadow=false;
  const z=new T.Vector3(a.tx,0,a.tz),y=new T.Vector3(0,1,0),x=new T.Vector3().crossVectors(y,z);mesh.matrix.makeBasis(x,y,z).setPosition(a.x,bed,a.z);mesh.matrixWorldNeedsUpdate=true;

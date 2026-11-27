@@ -110,6 +110,22 @@ class Geo{
   const P=(e:number[],i:number,j:number)=>[e[0]+(s1[0]*i+s2[0]*j)*r,e[1]+(s1[1]*i+s2[1]*j)*r,e[2]+(s1[2]*i+s2[2]*j)*r];
   // diamond: corners on the axes, so no face is level (wires, arms, ridges: nothing to land on from the air).
   for(const [i,j,k,m] of diamond?[[1,0,0,-1],[0,-1,-1,0],[-1,0,0,1],[0,1,1,0]]:[[1,1,1,-1],[1,-1,-1,-1],[-1,-1,-1,1],[-1,1,1,1]])this.quad(P(a,i,j),P(b,i,j),P(b,k,m),P(a,k,m),c);}
+ /** Triangle with its own vertex normals, wound to face along them (Rail + beach props, Nov 27). */
+ triO(a:number[],b:number[],c:number[],na:number[],nb:number[],nc:number[]){const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+  if((uy*vz-uz*vy)*(na[0]+nb[0]+nc[0])+(uz*vx-ux*vz)*(na[1]+nb[1]+nc[1])+(ux*vy-uy*vx)*(na[2]+nb[2]+nc[2])<0)this.triN(a,c,b,na,nc,nb);else this.triN(a,b,c,na,nb,nc);}
+ /** Rail + beach props (Nov 27, owner 184): a solid of revolution round the vertical axis at (cx, cz): profile [radius, y] from the
+  *  foot up (radius 0 at the end = a closed round cap); smooth normals. 2·sides per profile step. */
+ lathe(cx:number,cz:number,prof:[number,number][],sides:number){const n=prof.length,N:number[][]=[];
+  for(let i=0;i<n;i++){const a=prof[Math.max(0,i-1)],b=prof[Math.min(n-1,i+1)],dr=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dr,dy)||1;N.push([dy/l,-dr/l]);}
+  const P=(i:number,k:number)=>{const t=k/sides*Math.PI*2;return [cx+Math.cos(t)*prof[i][0],prof[i][1],cz+Math.sin(t)*prof[i][0]];},Q=(i:number,k:number)=>{const t=k/sides*Math.PI*2;return [Math.cos(t)*N[i][0],N[i][1],Math.sin(t)*N[i][0]];};
+  for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){if(prof[i+1][0]>1e-5)this.triO(P(i,k),P(i+1,k),P(i+1,k+1),Q(i,k),Q(i+1,k),Q(i+1,k+1));if(prof[i][0]>1e-5)this.triO(P(i,k),P(i+1,k+1),P(i,k+1),Q(i,k),Q(i+1,k+1),Q(i,k+1));}}
+ /** A round tube along a path (parallel-transported frame, shared sections: no seams), radius r0 at the start to r1 at the end; open ends. */
+ tube(pts:number[][],rad:number[],sides:number){const n=pts.length,nrm=(v:number[])=>{const l=Math.hypot(v[0],v[1],v[2])||1e-9;return [v[0]/l,v[1]/l,v[2]/l];};
+  const T_=pts.map((_,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];return nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);});
+  const cr=(a:number[],b:number[])=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];let A=nrm(cr(T_[0],Math.abs(T_[0][1])>.9?[1,0,0]:[0,1,0]));
+  const R:{p:number[];n:number[]}[][]=[];for(let i=0;i<n;i++){const t=T_[i],d=A[0]*t[0]+A[1]*t[1]+A[2]*t[2];A=nrm([A[0]-t[0]*d,A[1]-t[1]*d,A[2]-t[2]*d]);const B=cr(t,A),r=rad[i]??rad[rad.length-1],o=[];
+   for(let k=0;k<=sides;k++){const th=k/sides*Math.PI*2,c=Math.cos(th),sn=Math.sin(th),q=[A[0]*c+B[0]*sn,A[1]*c+B[1]*sn,A[2]*c+B[2]*sn];o.push({p:[pts[i][0]+q[0]*r,pts[i][1]+q[1]*r,pts[i][2]+q[2]*r],n:q});}R.push(o);}
+  for(let i=0;i<n-1;i++)for(let k=0;k<sides;k++){const a=R[i][k],b=R[i+1][k],c=R[i+1][k+1],d=R[i][k+1];this.triO(a.p,b.p,c.p,a.n,b.n,c.n);this.triO(a.p,c.p,d.p,a.n,c.n,d.n);}}
  get empty(){return this.p.length===0;}
  build(ox:number,oz:number){const g=new T.BufferGeometry(),p=new Float32Array(this.p);for(let i=0;i<p.length;i+=3){p[i]-=ox;p[i+2]-=oz;}
   g.setAttribute('position',new T.BufferAttribute(p,3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(this.n),3));return g;}
@@ -291,11 +307,22 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     // Grounding 2 (owner shot 141, Nov 26: the square post ended in a clean cut on top of the sand): on land the pole runs on 0.9 m
     // into the ground and stands in a stepped concrete footing (0.34 m, then a 0.27 m cap, ~20 tris, in the wall paint: 0 draws).
     const sea=a.kind===TrackKind.Sea,ground2=groundingOn()&&!sea,base=sea?a.bed-.8:ground2?a.bed-.9:a.bed,top=a.bed+WIRE_Y+.55,P=off(a,-2.7,0),r=.11;
-    if(ground2){footings.box(P[0],a.bed-.5,P[2],a.tx,a.tz,.17,.17,.56);footings.box(P[0],a.bed+.1,P[2],a.tx,a.tz,.135,.135,.05);catenaryFeet.push({x:P[0],z:P[2],r:.17});}
+    // Rail + beach props (Nov 27, owner 184: "more rounded and less blocky"): a tapered ROUND pole with a domed top in a round,
+    // shoulder-rounded plinth sunk into the ground (lathes, smooth normals; 8 sides, 6 on the lowest tier); the arm a gently bowed
+    // round tube to the same wire point, the brace a curved round strut. Same spots, colliders and wire attach. `?soft=0`: the boxes.
+    const SOFTP=softOn(),WEST=P[0]<-100,PS=lite||WEST?5:8;// west of x -100 (the stadium budget: tests/west-stadium.cjs, ~80 tris spare): 5 sides, 2-step profiles = ~+5 tris a mast
+    if(ground2){if(SOFTP)footings.lathe(P[0],P[2],WEST?[[.24,a.bed-.6],[.13,a.bed+.15]]:[[.2,a.bed-.6],[.2,a.bed+.03],[.19,a.bed+.09],[.165,a.bed+.135],[.13,a.bed+.15]],PS);
+     else{footings.box(P[0],a.bed-.5,P[2],a.tx,a.tz,.17,.17,.56);footings.box(P[0],a.bed+.1,P[2],a.tx,a.tz,.135,.135,.05);}catenaryFeet.push({x:P[0],z:P[2],r:.17});}
     if(sea){const q=off(a,-2.25,a.bed-.63);piers.box(q[0],q[1],q[2],a.tx,a.tz,.28,.7,.16,false);}// (top 5 cm under the cap's: never coplanar)
-    poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
+    if(SOFTP)poles.lathe(P[0],P[2],WEST?[[.125,base],[.08,top-.02],[0,top+.04]]:[[.125,base],[.115,a.bed+1.5],[.09,top-.1],[.075,top-.03],[.045,top+.01],[0,top+.03]],PS);
+    else poles.box(P[0],(base+top)/2,P[2],a.tx,a.tz,r,r,(top-base)/2);
     // Looks 2 (Nov 24 2026): the thin arm, brace and dropper go in the catenary mesh (near-camera fade); lite keeps the arm here.
     if(lite)poles.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);
+    else if(SOFTP){const Y=a.bed+WIRE_Y,arm:number[][]=[],br:number[][]=[];
+     for(let k=0;k<=6;k++){const u=k/6;arm.push(off(a,-2.75+3.0*u,Y+.4+.1*Math.sin(Math.PI*Math.min(1,u*1.1))));}// bowed up mid-span, back to Y+.4 by the dropper
+     const e=arm[6],e2=off(a,.29,Y+.4),e3=off(a,.305,Y+.4);catArm.tube([...arm,e2,e3],[.05,.05,.05,.05,.05,.048,.045,.032,0],6);
+     for(let k=0;k<=6;k++){const u=k/6,v=-2.66+2.42*u,h=Y-.3+.68*u-.22*Math.sin(Math.PI*u);br.push(off(a,v,h));}catArm.tube(br,[.04,.035,.035,.035,.035,.035,.03],5);void e;
+     catArm.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     else{catArm.beam([P[0],a.bed+WIRE_Y+.4,P[2]],off(a,.25,a.bed+WIRE_Y+.4),.05,true);catArm.beam(off(a,-2.6,a.bed+WIRE_Y-.3),off(a,-.2,a.bed+WIRE_Y+.38),.035,true);
      catArm.beam(off(a,0,a.bed+WIRE_Y+.4),off(a,0,a.bed+WIRE_Y),.025,true);}
     if(a.kind!==TrackKind.Sea)solid({x:P[0],z:P[2],w:.4,d:.4});}
@@ -359,6 +386,12 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // The station house behind the platform (South: on it, back to the boardwalk): 8 m along the line, cream walls, dark timber.
   const hd=south?3.8:4.6,hv0=south?v1-hd:v1,hv1=hv0+hd,hm=(hv0+hv1)/2,H=2.9,y0=top;
   const hc=P(0,hm,0);deck.box(hc[0],y0+.05,hc[2],c.tx,c.tz,4.3,hd/2+.3,.05);
+  // Rail + beach props (Nov 27, owner 172: the house's floor ledge floated over the sand where the beach falls away behind it): a
+  // rounded plinth in the platform footing's paint under the whole house, from the deck down past the lowest ground round it
+  // (inset 12 cm under the ledge, so the ledge still reads as a step). Not the South house (it stands on the platform). 44 tris, 0 draws.
+  if(!south&&softOn()){const cs=[P(-4.1,hv0-.1,0),P(4.1,hv0-.1,0),P(-4.1,hv1+.15,0),P(4.1,hv1+.15,0),hc];let low=bed;
+   for(const q of cs)low=Math.min(low,onSummitTrackS(st.s)?summitGround(q[0],q[2]):0);const yb=Math.min(low,bed)-.9,yt=y0+.02;
+   if(hc[0]<-100)footing.box(hc[0],(yb+yt)/2,hc[2],c.tx,c.tz,4.18,hd/2+.18,(yt-yb)/2);/* west budget: a plain 10-tri box */else footing.sbox(hc[0],(yb+yt)/2,hc[2],c.tx,c.tz,4.18,hd/2+.18,(yt-yb)/2,.07);}
   // Walls: back and two ends solid; the platform side open in the middle (ticket window and doorway) with posts and a lintel.
   const wall=(u0:number,u1:number,v:number,y1:number,y2:number,thick=.09)=>{const m=P((u0+u1)/2,v,0);plaster.box(m[0],(y1+y2)/2,m[2],c.tx,c.tz,(u1-u0)/2,thick,(y2-y1)/2);};
   wall(-4,4,hv1-.09,y0+.1,y0+H);
@@ -462,7 +495,16 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   skip(put(wallG,C.stone,p.x,TUNNEL_BED,p.z));// its top lies on the hill now, so no roof floor (a diagonal wall's bounding-box roof blocked rides)
   // Arch ring (voussoirs) on the leaning face, and the wing walls along the banks.
   const g=new Geo(),gd=new Geo(),B=TUNNEL_BED,P=(v:number,u:number,y:number)=>[p.x+a.x*v+o.x*u,B+y,p.z+a.z*v+o.z*u];
-  for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
+  // Rail + beach props (Nov 27, owner 189: "square blocks stuck on the arch"): the arch ring is 11 WEDGE voussoirs following the
+  // curve (r R+.08 .. R+.62, a ~6 cm mortar line of the wall's own stone between them), each a low pillow: flush with the leaning
+  // face at its edges, 3.5 cm proud in the middle, smooth normals (soft rounded edges). `?soft=0`: the old square tiles.
+  if(softOn()){const r0=R+.08,r1=R+.62,D=Math.PI/10,gap=.012,NA=4,NR=3,S=(th:number,r:number,f:number)=>{const x0=Math.cos(th)*r,y0=2.4+Math.sin(th)*r;return P(x0,depth-y0*lean+.004+f,y0);};
+   for(let k=0;k<=10;k++){const t0=Math.max(-D/2,D*k-D/2+gap),t1=Math.min(Math.PI+D/2,D*k+D/2-gap),pill=(fa:number,fr:number)=>.035*Math.pow(Math.sin(Math.PI*fa)*Math.sin(Math.PI*fr),.45);
+    const at=(i:number,j:number)=>{const fa=i/NA,fr=j/NR,th=t0+(t1-t0)*fa,r=r0+(r1-r0)*fr,e=.02,pp=S(th,r,pill(fa,fr)),
+      pa=S(th+e/r,r,pill(Math.min(1,fa+.05),fr)),pr=S(th,r+e,pill(fa,Math.min(1,fr+.05))),u=[pa[0]-pp[0],pa[1]-pp[1],pa[2]-pp[2]],v=[pr[0]-pp[0],pr[1]-pp[1],pr[2]-pp[2]];
+      let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n[0]*o.x+n[2]*o.z<0)n=[-n[0],-n[1],-n[2]];const l=Math.hypot(n[0],n[1],n[2])||1;return {p:pp,n:[n[0]/l,n[1]/l,n[2]/l]};};
+    for(let i=0;i<NA;i++)for(let j=0;j<NR;j++){const A0=at(i,j),A1=at(i+1,j),B1=at(i+1,j+1),B0=at(i,j+1);gd.triO(A0.p,A1.p,B1.p,A0.n,A1.n,B1.n);gd.triO(A0.p,B1.p,B0.p,A0.n,B1.n,B0.n);}}}
+  else for(let k=0;k<=10;k++){const ang=Math.PI*k/10,x0=Math.cos(ang)*(R+.25),y0=2.4+Math.sin(ang)*(R+.25),u=depth-y0*lean+.02;gd.box(p.x+a.x*x0+o.x*u,B+y0,p.z+a.z*x0+o.z*u,a.x,a.z,.32,.04,.32);}
   // Nov 27 2026 (owner 155: "a dark brown wedge / flap poking out of the hillside left of the portal"): the wing walls are gone. Their
   // top took the bank's lowest ground, so on the drawn (coarser) hill they lay as a dark blade along the cutting from the play camera's
   // angle (picked: the stoneDark wing, 5 m out of the west mouth). The 13 m headwall alone meets the carved banks.
@@ -612,12 +654,21 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Wall lamps (Nov 27 2026, owner 157: "the lighting is not complete": a flat white square on a faceted glow patch). Now a fixture
   // per lamp (a bracket, a dark cage hood, a warm bulb: 3 small boxes, in this one mesh: no new draw) at TUNNEL_LAMPS (tunnelWalk.ts);
   // the light itself is the shader's (below): a soft round pool on the wall, the walkway, the track and the far wall, from the same list.
-  const bracket=new Geo(),hood=new Geo();
+  const bracket=new Geo(),hood=new Geo(),LSOFT=softOn();
+  /** add() with a tone baked from each vertex normal (top-lit, darker underneath): the round fittings read round in the unlit tube. */
+  const addLit=(g:Geo,color:string,shade:number,span=.45)=>{for(let k=0;k<g.p.length;k+=3){const ny=g.n[k+1];tmp.set(color).multiplyScalar(shade*(1-span*.5+span*.5*ny));put3([g.p[k],g.p[k+1],g.p[k+2]],tmp);}};
   for(const l of TUNNEL_LAMPS){const q=trackAt(l.s),sd=l.side,P2=(v:number,y:number)=>A(l.s,sd*v,y);
-   {const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
+   if(LSOFT){// Rail + beach props (Nov 27, owner 187: "still a box + white square"): a round bracket arm, a domed round housing with a
+    // rolled rim and a glass dome lens under it (lathes; tone baked from the normal: the tube is unlit). Same spots, same light pools.
+    bracket.tube([P2(HW+.01,2.2),P2(HW-.1,2.2),P2(HW-.17,2.19),P2(HW-.2,2.17)],[.026],6);
+    {const c=P2(HW-.2,0),Y=(pr:[number,number][])=>pr.map(([r,y])=>[r,B+y] as [number,number]);// (profile heights over the bore's bed)
+     hood.lathe(c[0],c[2],Y([[.14,2.065],[.148,2.08],[.142,2.11],[.12,2.145],[.075,2.175],[0,2.185]]),10);
+     lamp.lathe(c[0],c[2],Y([[0,1.955],[.06,1.962],[.1,1.985],[.12,2.03],[.125,2.07]]),10);}}
+   else{{const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
    {const c=P2(HW-.2,2.13);hood.box(c[0],c[1],c[2],q.tx,q.tz,.15,.11,.04,false);}
-   {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}
-  add(bracket,'#2e2a26',1,true);add(hood,'#3a342d',1,true);add(lamp,'#fff0c8',1,true);
+   {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}}
+  if(LSOFT){addLit(bracket,'#2e2a26',1);addLit(hood,'#3a342d',1);addLit(lamp,'#fff0c8',1,.12);}
+  else{add(bracket,'#2e2a26',1,true);add(hood,'#3a342d',1,true);add(lamp,'#fff0c8',1,true);}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.computeBoundingSphere();
   const mat=new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}),tubeIn={value:0};mat.userData.tubeIn=tubeIn;
   const mouthGl=(p:{x:number;z:number;s:number},inward:number)=>{const t=trackAt(p.s),nx=t.tx*inward,nz=t.tz*inward;return `vec3(${(p.x-nx*.12).toFixed(3)},${B.toFixed(3)},${(p.z-nz*.12).toFixed(3)}),vec2(${nx.toFixed(5)},${nz.toFixed(5)})`;};
