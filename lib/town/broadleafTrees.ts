@@ -177,6 +177,8 @@ export function pineTiers(x:number,z:number,s:number,o:{low?:boolean;base?:numbe
 
 /** A hedge-top swell (Leftovers B): an octahedron (8 faces: the west stadium's triangle budget), corners jittered 6 %, smooth normals
  *  (flattened and stretched along the hedge it reads as a soft swell, not a rock). Unit radius. */
-export function hedgeClump(seed:number){const ico=new T.OctahedronGeometry(1,0);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
+/** paths-junctions (owner shot 174, Nov 27 2026: hedge swells "end in sharp spike / wedge tips"): an icosahedron (20 triangles), not an
+ *  octahedron (8): stretched along the run its ends are rounded noses instead of four-sided spikes. */
+export function hedgeClump(seed:number){const ico=new T.IcosahedronGeometry(1,0);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=1+.06*(spotHash(x*7.1+seed,z*5.3+y*3.7,seed)*2-1);p.setXYZ(i,x*k,y*k,z*k);}
  g.computeVertexNormals();const flat=g.toNonIndexed();g.dispose();(flat as unknown as {type:string}).type=FOLIAGE_TYPE;return flat;}

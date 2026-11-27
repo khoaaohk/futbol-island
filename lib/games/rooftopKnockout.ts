@@ -1,5 +1,7 @@
 import {HIT_RECOVERY,SHIELD_DURATION} from './knockoutAnimation';
 export const KNOCKOUT_ROOF={x:66,z:151.75,w:28,d:50.5,height:10.23};
+/** The south stair's two handrails (z): the wall side stands 35 cm off the building's south face (z 177, KNOCKOUT_ROOF.z + d / 2), the outer on the treads' edge. */
+export const KNOCKOUT_STAIR_RAILS=[177.35,181] as const;
 export const ARENA={w:26,d:48.5};
 /** Where the round's Leave button sets you down (QA Nov 14 2026): the street at the foot of the south stair, facing east. */
 export const KNOCKOUT_EXIT={x:75,z:179,yaw:Math.PI/2};

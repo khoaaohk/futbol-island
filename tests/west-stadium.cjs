@@ -58,7 +58,7 @@ console.log('stadium build:',JSON.stringify(world.stadium));// Nov 13 2026 (owne
 // + the machine row (screen-shops) 59 / 96,338; both together 65 / 99,788. Budget 98k → 102k (~2% margin).
 // Nov 23 2026 (Island Line, measured): the line's west leg, its trestle and the West Beach station add 1 chunk and ~13k triangles
 // to the west batches (99,790 → 112,782; PLAN.md §7 allows +40k near a station). Budget 102k → 115k.
-assert(chunks.length<=75&&tris<=115000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k)');
+assert(chunks.length<=75&&tris<=117500,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k; the rounded hedge swells, paths-junctions Nov 27 2026: +12 triangles a swell, 115.9k)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
@@ -89,11 +89,11 @@ console.log('west stadium phase 1: ok');
   for(let k=1;k<pts.length-1;k++){const a=Math.atan2(pts[k][1]-pts[k-1][1],pts[k][0]-pts[k-1][0]),b=Math.atan2(pts[k+1][1]-pts[k][1],pts[k+1][0]-pts[k][0]);assert(Math.abs(Math.atan2(Math.sin(b-a),Math.cos(b-a)))<9*Math.PI/180,t.id+' smooth at point '+k);}
   for(const [end,kind] of [[pts[0],t.from],[pts[pts.length-1],t.to]]){const [x,z]=end;ends.push([t.id,kind,x,z]);
    const ok=kind==='beach'?L.onBeach(x,z)&&L.trailBeachRun(pts).at(-1)>=5:kind==='ring'?L.segDistance(x,z,ring)<.3:kind==='plaza'?x>=P.minX&&x<=P.maxX&&z>=P.minZ&&z<=P.maxZ:
-    kind==='trail'?Math.min(...trailLines.map((l,j)=>j===i?Infinity:L.segDistance(x,z,l)))<.3:kind==='pond'?L.pondQ(x,z,L.POND_RIM+.2)<1&&!L.inPond(x,z,L.TRAIL_WIDTH/2-.01):false;// on the rim's outer edge, its cap clear of the water
+    kind==='trail'?Math.min(...trailLines.map((l,j)=>j===i?Infinity:L.segDistance(x,z,l)))<.3:kind==='pond'?L.pondQ(x,z,L.POND_RIM+.2)<1&&!L.inPond(x,z,L.TRAIL_WIDTH/2-.01):kind==='stair'?(!load('lib/town/elevation.ts').elevationOn()||load('lib/town/westElevation.ts').onWestStair(x,z,.05)):false;/* a walk from a terrace flight's foot (paths-junctions) */// on the rim's outer edge, its cap clear of the water
    assert(ok,`${t.id} ends at ${kind} (${x.toFixed(1)}, ${z.toFixed(1)})`);}
   assert(!pts.some(([x,z])=>L.inPond(x,z,1)),t.id+' keeps out of the water');});
  // Every trail heading for the coast (its far end within 35 m of the sea) runs onto the beach; the beach ends blend to sand.
- for(const t of L.PARK_TRAILS){const e=t.curve[3];if(distanceToShore(e[0],e[1])<35)assert.equal(t.to,'beach',t.id+' heads for the coast and reaches the beach');}
+ for(const t of L.PARK_TRAILS){const e=t.curve[3];if(distanceToShore(e[0],e[1])<35&&t.from!=='stair'/* a few metres from a flight's foot into a trail: not a coast-bound trail */)assert.equal(t.to,'beach',t.id+' heads for the coast and reaches the beach');}
  assert(L.PARK_TRAILS.filter(t=>t.to==='beach').length>=5&&WP.TRAIL_BEACH.blend>=5,'the coast-bound trails blend into the sand');
  assert(/strokeWidth=\{TRAIL_WIDTH\}/.test(map)&&/parkPathLines\(\)/.test(map)&&/data-west-stadium="apron"/.test(map),'the map draws the world\'s own trail points, width and the apron');
  // C. The pond: bigger (grown south, toward the coast), its rim clear of the apron, the plaza and the beach.
