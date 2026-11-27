@@ -33,7 +33,7 @@ ok('deep-sea boat: rocks with the swell inside ROCK_LIMITS, the whole deck follo
  assert(boat.motion.roll===0&&boat.motion.pitch===0&&Math.abs(boat.motion.heave)<=.013,'reduced motion: no rocking');
  assert.equal(S.BOAT_RING_UNIFORMS.uBoatRingS.value[1].z,1,'its water ring is lit while built');boat.dispose();assert.equal(S.BOAT_RING_UNIFORMS.uBoatRingS.value[1].z,0,'and off when dropped');});
 ok('water ring: gated to the moving-water path (Battery saver / low heat tiers / reduced motion drop it), compiled only with the switch on',()=>{
- assert(/^\s*if\(uWaterDetail>\.5\)/.test(S.BOAT_RING_GLSL.trimStart())&&S.BOAT_RING_SLOTS===3);
+ assert(/^\s*if\(uWaterDetail>\.5\)/.test(S.BOAT_RING_GLSL.trimStart())&&S.BOAT_RING_SLOTS===4);// 3 boats + the nearest buoy (polish Nov 27 2026)
  const w=src('lib/graphics/waterSurface.ts');assert(/\$\{rings\?BOAT_RING_GLSL:''\}/.test(w)&&/\(rings\?'-rings':''\)/.test(w));});
 ok('street vehicles: rounded and still under their caps (one mesh, one material each: unchanged)',()=>{
  for(const s of ['sedan','hatch','taxi','wagon','van','jeep']){const n=V.triangleCount(V.buildVehicleGeometry(s,'#bb6857'));assert(n<=V.ROUND_TRIANGLES.car&&n>V.OLD_TRIANGLES.car-120,s+' '+n);}

@@ -40,7 +40,7 @@ import {softOn,SoftBoxGeometry} from '../graphics/softBox';
 type Surface=Obstacle&{height:number};
 export type TrainTools={
  put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;
- lit:(m:T.Mesh,w:number,warm?:boolean)=>T.Mesh;
+ lit:(m:T.Mesh,w:number,warm?:boolean|'lantern')=>T.Mesh;
  /** A textured board material registered with the island's sign list (disposal, night emissive). */
  boardMaterial:(canvas:HTMLCanvasElement)=>T.Material;
  town:T.Group;obstacles:Obstacle[];walkSurfaces:Surface[];
@@ -58,6 +58,9 @@ export const TUNNEL_TRAIN_LAMP={value:new T.Vector4(0,0,0,0)};
 export const POLE_PORTAL_CLEAR=8;
 /** Nov 27 2026: the station boards' solid footprint cells (x, z pairs; headless checks: tests/station-sign-landing.cjs). */
 export const STATION_SIGN_FEET:number[]=[];
+/** Polish Nov 27 2026 (owner shot 198: "the station lanterns needs light"): every station paper lantern (x, body centre y, z, platform
+ *  height): world.ts lights a soft halo round each and a warm pool on the platform under it at night (no real-time light). */
+export const STATION_LANTERNS:{x:number;y:number;z:number;floor:number;wx:number;wz:number}[]=[];/* (wx, wz): toward the house wall behind it */
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=0;// wing walls removed Nov 27 2026 (owner 155)
 export const TUBE_SHOW=110,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
@@ -414,7 +417,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
    // Tile courses: three thin darker bands across each long slope.
    if(!lite)for(const k of [.3,.55,.8])for(const t of [-1,1]){const y=ry+rh*k,v=t*ed*(1-k),u=ew-(ew-ridgeL)*k;ridge.beam(R(-u,v,y+.02),R(u,v,y+.02),.025,true);}
    // Four paper lanterns under the front eave.
-   if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);if(groundingOn())paperLantern(lantern,cap,a[0],ry-.75,a[2]);else{lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);}cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
+   if(!lite)for(const u of [-3.3,-1.1,1.1,3.3]){const a=R(u,-ed+.55,0);{const b=R(u,0,0),l=Math.hypot(b[0]-a[0],b[2]-a[2])||1;STATION_LANTERNS.push({x:a[0],y:ry-.75,z:a[2],floor:y0,wx:(b[0]-a[0])/l,wz:(b[2]-a[2])/l});}if(groundingOn())paperLantern(lantern,cap,a[0],ry-.75,a[2]);else{lantern.box(a[0],ry-.75,a[2],c.tx,c.tz,.21,.21,.24);cap.box(a[0],ry-.48,a[2],c.tx,c.tz,.14,.14,.03);cap.box(a[0],ry-1.02,a[2],c.tx,c.tz,.14,.14,.03);}cap.beam([a[0],ry-.45,a[2]],[a[0],ry,a[2]],.012);}}
   // A bench on the platform, by the house's down-line end.
   // Phase 4 (Nov 23 2026): the island bench's own sizes (lib/graphics/npcSeatPose.ts BENCH: seat top .64, half depth .325, back face
   // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.
@@ -445,7 +448,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
    solid(sq0?{x:sc[0],z:sc[2],w:1.08*ax+.62*az,d:1.08*az+.62*ax}:{x:sc[0],z:sc[2],w:.95,d:.95});}
   emit(plat,C.platform,ox,oz);emit(footing,C.footing,ox,oz);emit(platSide,C.platformSide,ox,oz);emit(edge,C.edge,ox,oz);emit(plaster,C.plaster,ox,oz);emit(timber,C.timber,ox,oz);emit(deck,C.deck,ox,oz);
   emit(roof,C.roof,ox,oz);emit(ridge,C.ridge,ox,oz);emit(cap,C.cap,ox,oz);emit(bench,lite?C.timber:C.bench,ox,oz);/* lite: in the timber batch (no new paint on the lowest tier) */
-  {const m=emit(pane,C.pane,ox,oz);if(m)lit(m,.9,true);}{const m=emit(lantern,C.lantern,ox,oz);if(m)lit(m,1);}
+  {const m=emit(pane,C.pane,ox,oz);if(m)lit(m,.9,true);}{const m=emit(lantern,C.lantern,ox,oz);if(m)lit(m,.42,'lantern');}/* polish Nov 27: lit from inside (machineNightGlow.ts lantern flag) */
   // Colliders: the house (axis-aligned stations one box; the diagonal Summit one a ring of 1.2 m tiles round its walls).
   // Within ~12° of the axes the house's own bounding box (a few cm larger than the house).
   const sq=Math.min(Math.abs(c.tx),Math.abs(c.tz))<.2;

@@ -20,14 +20,16 @@ import {STADIUM_NIGHT} from '../town/stadiumNight';
 
 /** uv.y flags (the island wind uses −1000): 1000 = glow in the piece's own colour, 2000 = glow warm white (a lit interior). */
 export const MACHINE_GLOW_FLAG=1000,MACHINE_GLOW_WARM_FLAG=2000;
+/** Polish Nov 27 2026: 3000 = a paper lantern lit from inside: its own colour pulled 20 % toward the warm white (a hot orange-red). */
+export const MACHINE_GLOW_LANTERN_FLAG=3000,LANTERN_WARM_MIX=.2;
 /** The warm interior white (linear) and how strongly each kind of machine glows at full night. */
 export const MACHINE_GLOW={warm:[1,.82,.58],vendingFace:.3,vendingCabinet:.32,gashaGlass:.5,gashaGlassOpacity:.48} as const;
 /** The shared night factor (0 by day): the same object every patch binds as its uniform. */
 export const MACHINE_NIGHT=STADIUM_NIGHT;
 
 /** Mark a world-space piece (with a uv attribute) as glowing at night, `weight` 0…1; warm: a lit-interior white, else its own colour. */
-export function markMachineGlow(g:T.BufferGeometry,weight:number,warm=false){
- const uv=g.getAttribute('uv');if(!uv)return;const flag=warm?MACHINE_GLOW_WARM_FLAG:MACHINE_GLOW_FLAG;
+export function markMachineGlow(g:T.BufferGeometry,weight:number,warm:boolean|'lantern'=false){
+ const uv=g.getAttribute('uv');if(!uv)return;const flag=warm==='lantern'?MACHINE_GLOW_LANTERN_FLAG:warm?MACHINE_GLOW_WARM_FLAG:MACHINE_GLOW_FLAG;
  for(let i=0;i<uv.count;i++)uv.setXY(i,weight,flag);uv.needsUpdate=true;
 }
 const f=(n:number)=>n.toFixed(3);
@@ -41,9 +43,9 @@ function chain(m:T.Material,key:string,fn:(s:T.WebGLProgramParametersWithUniform
 /** The merged chunks' plain paint (world.ts): marked vertices glow with the night factor. */
 export function patchMachineGlowPaint<M extends T.Material>(m:M):M{
  const [r,g,b]=MACHINE_GLOW.warm;
- return chain(m,'machine-glow-paint-v1',s=>{
+ return chain(m,'machine-glow-paint-v2',s=>{
   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vMachineGlow;')
-   .replace('#include <begin_vertex>',`#include <begin_vertex>\nvMachineGlow=uv.y>${f(MACHINE_GLOW_FLAG/2)}?vec2(uv.x,uv.y>${f((MACHINE_GLOW_FLAG+MACHINE_GLOW_WARM_FLAG)/2)}?1.:0.):vec2(0.);`);
+   .replace('#include <begin_vertex>',`#include <begin_vertex>\nvMachineGlow=uv.y>${f(MACHINE_GLOW_FLAG/2)}?vec2(uv.x,uv.y>${f((MACHINE_GLOW_WARM_FLAG+MACHINE_GLOW_LANTERN_FLAG)/2)}?${f(LANTERN_WARM_MIX)}:uv.y>${f((MACHINE_GLOW_FLAG+MACHINE_GLOW_WARM_FLAG)/2)}?1.:0.):vec2(0.);`);
   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vMachineGlow;uniform float uMachineNight;')
    .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>\nif(vMachineGlow.x>0.&&uMachineNight>0.)totalEmissiveRadiance+=mix(diffuseColor.rgb,vec3(${f(r)},${f(g)},${f(b)}),vMachineGlow.y)*vMachineGlow.x*uMachineNight;`);
  }) as M;

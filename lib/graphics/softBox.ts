@@ -320,6 +320,9 @@ export type RunOpts = {
   /** Rounded (domed) ends: [start, end]. Ends buried in a pier can stay open. */ ends?: readonly [boolean, boolean];
   /** Longest mesh (m) so the batching pass can keep pieces in their own 50 m cells. */ piece?: number;
   /** Lateral shift of the whole profile (m, + = the right of the direction of travel): -half puts the outer face on the line. */ shift?: number;
+  /** Polish Nov 27 2026 (owner shot 193: the terrace wall read as a plain face): `courses` rows across the outer face (in place of the
+   *  belly) shaded as soft stone courses: a darker bed line, each block a little lighter / darker along the run, a damp mossy foot
+   *  and the coping's shadow. Colour only (2 triangles a step a row). */ courses?: number;
 };
 /**
  * Inflate pass 2 (Nov 27 2026, owner shots 175 / 178: "make it seamless", "also do that for the other walls too"): ONE swept, pillowy
@@ -332,14 +335,17 @@ export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeome
   if (pts.length < 2) return [];
   const lip = o.lip ?? .08, capH = o.capH ?? .2, dome = o.dome ?? .05, h = o.half, bel = o.belly ?? 0, ct = o.capTint ?? [1, 1, 1];
   // half profile, outer foot -> crown: [lateral offset, y(p), cap?, crown]
-  type Row = [number, (p: RunPt) => number, number, number];
-  const outer: Row[] = [[h, p => p.foot, 0, 0]];
-  if (bel > 0) outer.push([h + bel, p => (p.foot + p.top - capH) / 2, 0, 0]);
-  outer.push([h, p => p.top - capH, 0, 0], [h + lip, p => p.top - capH * .55, 1, 0], [h + lip * .55, p => p.top - capH * .04, 1, .25],
+  type Row = [number, (p: RunPt) => number, number, number, ((i: number) => readonly [number, number, number])?];
+  const outer: Row[] = [[h, p => p.foot, 0, 0, o.courses ? () => [.74, .8, .7] : undefined]];// courses: a damp, mossy foot
+  const nc = o.courses ?? 0;
+  if (nc) for (let k = 1; k <= nc; k++) { const f = k / (nc + 1), sway = bel * Math.sin(Math.PI * f);
+    outer.push([h + sway, p => p.foot + (p.top - capH - p.foot) * f, 0, 0, i => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, r = v - Math.floor(v), d = k % 2 ? .97 + .1 * r : .76 + .06 * r; return [d * 1.02, d, d * .96]; }]); }// odd rows: a block's face (each a little lighter / darker), even: the bed line between courses
+  else if (bel > 0) outer.push([h + bel, p => (p.foot + p.top - capH) / 2, 0, 0]);
+  outer.push([h, p => p.top - capH, 0, 0, o.courses ? () => [.8, .8, .8] : undefined], [h + lip, p => p.top - capH * .55, 1, 0], [h + lip * .55, p => p.top - capH * .04, 1, .25],
     [h * .5, p => p.top + dome * .75, 1, .7], [0, p => p.top + dome, 1, 1]);
   const prof: Row[] = [...outer];
   if (o.back !== undefined) prof.push([-h * .5, p => p.top + dome * .75, 1, .7], [-h, p => p.top - capH * .3, 1, 0], [-h, p => p.top - o.back!, 1, 0]);// a retaining wall: the hidden back is plain
-  else for (let i = outer.length - 2; i >= 0; i--) { const [off, y, c, k] = outer[i]; prof.push([-off, y, c, k]); }
+  else for (let i = outer.length - 2; i >= 0; i--) { const [off, y, c, k, tf] = outer[i]; prof.push([-off, y, c, k, tf]); }
   const m = prof.length, n = pts.length, pos: number[] = [], tint: number[] = [], crown: number[] = [], idx: number[] = [];
   const dirs = pts.slice(1).map((b, i) => { const a = pts[i], l = Math.hypot(b.x - a.x, b.z - a.z) || 1; return [(b.x - a.x) / l, (b.z - a.z) / l]; });
   for (let i = 0; i < n; i++) {
@@ -347,7 +353,7 @@ export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeome
     let nx = tz / tl, nz = -tx / tl; const mit = 1 / Math.max(.5, nx * d1[1] - nz * d1[0]); nx *= mit; nz *= mit;// mitre: keep the thickness round a corner
     const p = pts[i];
     const sh = o.shift ?? 0;
-    for (const [off0, y, c, k] of prof) { const off = off0 + sh; pos.push(p.x + nx * off, y(p), p.z + nz * off); tint.push(...(c ? ct : [1, 1, 1])); crown.push(k); }
+    for (const [off0, y, c, k, tf] of prof) { const off = off0 + sh; pos.push(p.x + nx * off, y(p), p.z + nz * off); tint.push(...(c ? ct : tf ? tf(i) : [1, 1, 1])); crown.push(k); }
   }
   for (let i = 0; i < n - 1; i++) for (let j = 0; j < m - 1; j++) { const a = i * m + j, b = a + 1, c = a + m, d = c + 1; idx.push(a, c, b, b, c, d); }
   // rounded ends: one ring pushed out along the run and drawn in, then a fan to its centre
@@ -364,6 +370,14 @@ export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeome
     for (let j = 0; j < m - 1; j++) if (e) idx.push(ring + j, tip, ring + j + 1); else idx.push(ring + j, ring + j + 1, tip);
     endRows[e] = [ring, tip];
   });
+  // Polish Nov 27 2026 (owner shots 193 / 200: the west terrace wall "has no base", a slab hanging in the air): the quads above are
+  // wound for one direction of travel only; run the other way (the terrace ring, the plaza walls) every face was inside-out, so the
+  // wall's long outer face was culled and you saw through it to the short back. Wind every run so its faces look out (the crown up).
+  { const j = prof.findIndex(r => r[3] === 1), i0 = Math.floor((n - 1) / 2), a = (i0 * m + j - 1) * 3, b = (i0 * m + j) * 3, c = ((i0 + 1) * m + j) * 3;
+    const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+    // the quad (row j-1 -> j, step i0 -> i0+1) is wound (a, c, b): its normal is (c - a) x (b - a); the crown's must point up
+    const ny = vz * ux - vx * uz; void uy; void vy;
+    if (ny < 0) for (let t = 0; t < idx.length; t += 3) { const k = idx[t + 1]; idx[t + 1] = idx[t + 2]; idx[t + 2] = k; } }
   const all = new T.BufferGeometry(); all.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); all.setIndex(idx); all.computeVertexNormals();
   const N = all.getAttribute('normal').array as Float32Array, P = pos;
   // cut into pieces of <= o.piece m along the run (shared normals: no seam at a cut)

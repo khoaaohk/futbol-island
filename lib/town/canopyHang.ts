@@ -38,3 +38,20 @@ export function canopyHang(lobes:readonly T.Matrix4[],c:{x:number;y:number;z:num
 export function canopyLobe(r:number,detail:number,smooth:boolean):T.BufferGeometry{const g=new T.IcosahedronGeometry(r,detail);if(!smooth)return g;
  const P=g.getAttribute('position') as T.BufferAttribute,N=g.getAttribute('normal') as T.BufferAttribute,v=new T.Vector3();
  for(let i=0;i<P.count;i++){v.fromBufferAttribute(P,i).normalize();N.setXYZ(i,v.x,v.y,v.z);}N.needsUpdate=true;return g;}
+
+/**
+ * Polish Nov 27 2026 (owner shot 195, "the fruits on the tree are floating in the sky"): a tree drawn from the broadleaf kit
+ * (jittered clumps, size variety, lean, low-tier clump count) has no icosahedron formula, so its fruit hangs on the leaves it really
+ * has: `surface` = the crown's triangles in world space (non-indexed xyz). From the crown's centre along d: the OUTERMOST hit (the
+ * leaves you see from outside), pushed `proud` out along that facet's normal. null if the ray misses (it never does from inside).
+ */
+const SA=new T.Vector3(),SB=new T.Vector3(),SC=new T.Vector3(),E1=new T.Vector3(),E2=new T.Vector3(),PV=new T.Vector3(),TV=new T.Vector3(),QV=new T.Vector3();
+export function surfaceHit(surface:ArrayLike<number>,o:{x:number;y:number;z:number},d:T.Vector3):{t:number;n:T.Vector3}|null{
+ const O=new T.Vector3(o.x,o.y,o.z);let best=-Infinity,bn:T.Vector3|null=null;
+ for(let i=0;i+8<surface.length;i+=9){SA.set(surface[i],surface[i+1],surface[i+2]);SB.set(surface[i+3],surface[i+4],surface[i+5]);SC.set(surface[i+6],surface[i+7],surface[i+8]);
+  E1.subVectors(SB,SA);E2.subVectors(SC,SA);PV.crossVectors(d,E2);const det=E1.dot(PV);if(Math.abs(det)<1e-9)continue;const inv=1/det;
+  TV.subVectors(O,SA);const u=TV.dot(PV)*inv;if(u<0||u>1)continue;QV.crossVectors(TV,E1);const v=d.dot(QV)*inv;if(v<0||u+v>1)continue;
+  const t=E2.dot(QV)*inv;if(t>1e-4&&t>best){best=t;bn=new T.Vector3().crossVectors(E1,E2).normalize();if(bn.dot(d)<0)bn.negate();}}
+ return bn?{t:best,n:bn}:null;}
+export function surfaceHang(surface:ArrayLike<number>,c:{x:number;y:number;z:number},d:T.Vector3,proud:number):T.Vector3|null{
+ const h=surfaceHit(surface,c,d);if(!h)return null;return new T.Vector3(c.x,c.y,c.z).addScaledVector(d,h.t).addScaledVector(h.n,proud);}

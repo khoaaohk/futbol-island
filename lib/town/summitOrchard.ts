@@ -58,6 +58,9 @@ export type TreeRig={
  lobes?:T.Matrix4[];
  /** The lobes' IcosahedronGeometry detail, one a lobe (default 0; 1 = the soft crown's main clump, soft sweep 2). */
  lobeDetail?:number[];
+ /** Broadleaf-kit crowns (polish Nov 27 2026): the drawn leaves' triangles in world space (non-indexed xyz); the fruit hangs on them
+  *  (canopyHang.ts surfaceHang) and `crown` is their box. Wins over `lobes`. */
+ surface?:Float32Array;
 };
 
 /** Clear zones: nothing planted within r metres of these (the lookout and the zipline tower get ≥ 4 m of open grass). */
@@ -211,7 +214,13 @@ export function orchardRig(p:OrchardPlan,detail=orchardDetail()):TreeRig{
  return {grip:{x:g.x,y:g.y,z:g.z,r:rGrip},baseR:t.r,crown:crown!,sway:{h:h!,bend},...stalk?{stalk}:{},...lobes.length?{lobes,lobeDetail:lobes.map((_,k)=>k?0:detail)}:{}};
 }
 /** Rig of the island's own round trees (summitIsleWorld.ts tree(): trunk r 0.2 s, canopy centre 2.9 s up, r 1.7 s). */
-export function roundTreeRig(x:number,z:number,y:number,s:number,i:number):TreeRig{
+export function roundTreeRig(x:number,z:number,y:number,s:number,i:number,drawn?:{leaves:T.BufferGeometry;crown:{min:T.Vector3;max:T.Vector3}}):TreeRig{
+ // Polish Nov 27 2026: the island's round trees are drawn with the broadleaf kit (size variety, lean, clumps); the old two-ball rig
+ // hung their fruit in the air or inside the leaves. With the drawn crown, the fruit hangs on its real leaves.
+ if(drawn){const P=drawn.leaves.getAttribute('position'),src=(drawn.leaves.index?drawn.leaves.toNonIndexed():drawn.leaves).getAttribute('position'),surface=new Float32Array(src.count*3);void P;
+  for(let k=0;k<src.count;k++){surface[k*3]=src.getX(k)+x;surface[k*3+1]=src.getY(k)+y;surface[k*3+2]=src.getZ(k)+z;}
+  const lo=drawn.crown.min,hi=drawn.crown.max;
+  return {grip:{x,y:y+GRIP_HEIGHT,z,r:.2*s},baseR:.2*s,crown:{x:x+(lo.x+hi.x)/2,y:y+(lo.y+hi.y)/2,z:z+(lo.z+hi.z)/2,rx:Math.max(hi.x-lo.x,hi.z-lo.z)/2,ry:(hi.y-lo.y)/2,hang:'canopy'},sway:{h:hi.y,bend:1},surface};}
  const lobe=(cx:number,cy:number,cz:number,r:number,spin:number)=>new T.Matrix4().compose(new T.Vector3(cx,cy,cz),new T.Quaternion().setFromAxisAngle(UP,spin),new T.Vector3(r,r,r));
  return {grip:{x,y:y+GRIP_HEIGHT,z,r:.2*s},baseR:.2*s,crown:{x,y:y+2.9*s,z,rx:1.7*s,ry:1.7*s,hang:'canopy'},sway:{h:5*s,bend:1},
   lobes:[lobe(x,y+2.9*s,z,1.7*s,i),lobe(x+.6*s,y+3.9*s,z-.3*s,1.15*s,i*2)]};}

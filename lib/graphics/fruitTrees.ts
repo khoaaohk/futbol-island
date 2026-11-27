@@ -43,6 +43,7 @@ import {FORAGE,FRUIT_LOOK,FORAGE_TIP,FOLLOW_CAMERA,fruitTreeSteps,hangingNow,cap
  localForageDay,fruitingToday,fruitToday,dayHash,contactAt,type FruitLook,type FruitTree,type ForageSave,type TreeSite} from '../town/summitForage';
 import {SUMMIT_TREE_SITES,SUMMIT_TREE_SWAY,swayWeight} from '../town/summitIsleWorld';
 import {canopyHang} from '../town/summitOrchard';
+import {surfaceHang} from '../town/canopyHang';
 import {countFruitShake} from '../analytics/summitEvents';
 import {SUMMIT_BOX,SUMMIT_PATHS,SUMMIT_LANDMARKS,SUMMIT_CENTER,SUMMIT_VISUAL_DROP,summitGround,onSummitIsle,beachPoint,summitCameraPull} from '../town/summitIsle';
 import {insideObstacle,type Obstacle} from '../town/simulation';
@@ -193,6 +194,7 @@ export function hangPoint(t:FruitTree,k:number,day=''):T.Vector3{
  if(c.hang==='under'){const a=cam+(k-1)*1.1+j*1.2;return new T.Vector3(c.x+Math.cos(a)*(c.rx+.3*(t.kind==='palm'?0:.4)),c.y-(k%2)*c.ry,c.z+Math.sin(a)*(c.rx+.3*(t.kind==='palm'?0:.4)));}
  const a=cam+(k-1)*.95+j*1.4,el=[-.18,.22,-.45][(k+Math.floor((j+.5)*3))%3];
  const d=new T.Vector3(Math.cos(el)*Math.cos(a),Math.sin(el),Math.cos(el)*Math.sin(a));
+ if(t.rig.surface){const proud=.3*FRUIT_LOOK[t.fruit].r;for(let n=0;n<6;n++){const p=surfaceHang(t.rig.surface,c,d,proud);if(p)return p;d.applyAxisAngle(Y_AXIS,.5);}}// polish Nov 27: the broadleaf crown's real leaves
  if(t.rig.lobes){const proud=.3*FRUIT_LOOK[t.fruit].r;for(let n=0;n<6;n++){const p=canopyHang(t.rig.lobes,c,d,proud,t.rig.lobeDetail??0);if(p)return p;d.applyAxisAngle(Y_AXIS,.5);}}
  return new T.Vector3(c.x+d.x*c.rx*.8,c.y+d.y*c.ry*.8,c.z+d.z*c.rx*.8);
 }

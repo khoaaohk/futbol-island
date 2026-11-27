@@ -30,8 +30,13 @@ export function swellPose(x:number,z:number,t:number,yaw:number,amp:SwellAmp,out
  out.roll=-amp.roll*(c*across*.6+Math.sin(ph+.7)*.4);
  return out;
 }
-export const BOAT_RING_SLOTS=3;
-/** Slot i: (x, z, cos yaw, sin yaw) and (half length, half beam, strength 0..1, reach squared). Slot 0 the ferry, 1-2 the deep-sea boats. */
+export const BOAT_RING_SLOTS=4;
+/** Polish Nov 27 2026 (owner shot 196: the marker buoy "sits rigid and flat"): slot 3 is the nearest floating marker buoy
+ *  (coinHunt.ts), a round 0.6 m "hull". Floating props ride the same swell as the boats: BUOY_SWELL (more heave and roll than a boat:
+ *  a light float), each at its own spot's phase. */
+export const BUOY_RING_SLOT=3;
+export const BUOY_SWELL:SwellAmp={heave:.09,pitch:.07,roll:.09};
+/** Slot i: (x, z, cos yaw, sin yaw) and (half length, half beam, strength 0..1, reach squared). Slot 0 the ferry, 1-2 the deep-sea boats, 3 a buoy. */
 export const BOAT_RING_UNIFORMS={uBoatRing:{value:Array.from({length:BOAT_RING_SLOTS},()=>new T.Vector4())},uBoatRingS:{value:Array.from({length:BOAT_RING_SLOTS},()=>new T.Vector4())}};
 export function setBoatRing(slot:number,x:number,z:number,yaw:number,halfLength:number,halfBeam:number,strength:number){
  BOAT_RING_UNIFORMS.uBoatRing.value[slot].set(x,z,Math.cos(yaw),Math.sin(yaw));BOAT_RING_UNIFORMS.uBoatRingS.value[slot].set(halfLength,halfBeam,strength,(halfLength+3)*(halfLength+3));

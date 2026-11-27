@@ -131,10 +131,24 @@ function blockFace(t:Tools,pts:readonly WallPt[],color:string,out=0,below=.5,see
   c0=c1;}
  return tris;
 }
+/** Fewer points on straight runs whose foot follows a straight grade (within `tol` m), spans <= `span` m; ends and corners kept. */
+export function decimateRun<P extends WallPt>(pts:readonly P[],tol=.06,span=4.5):P[]{
+ if(pts.length<3)return pts.slice();const out:P[]=[pts[0]];let a=0;
+ while(a<pts.length-1){let b=a+1;
+  for(let c=a+2;c<pts.length;c++){const A=pts[a],C=pts[c],L=Math.hypot(C.x-A.x,C.z-A.z);if(L>span)break;let ok=true;
+   for(let q=a+1;q<c&&ok;q++){const Q=pts[q],u=((Q.x-A.x)*(C.x-A.x)+(Q.z-A.z)*(C.z-A.z))/(L*L||1),off=Math.abs((Q.x-A.x)*(C.z-A.z)-(Q.z-A.z)*(C.x-A.x))/(L||1);
+    if(off>.02||Math.abs(Q.foot-(A.foot+(C.foot-A.foot)*u))>tol||Math.abs(Q.top-(A.top+(C.top-A.top)*u))>.01)ok=false;}
+   if(!ok)break;b=c;}
+  out.push(pts[b]);a=b;}
+ return out;}
 /** One wall along `pts` (its face on the right of the direction of travel): coursed face, plinth, coping, buttresses, hedge. */
 function wall(t:Tools,pts:readonly WallPt[],o:{hedge:boolean;buttress:boolean},seed=0){
  let tris=0;
- if(puffLevel()>0)tris+=runWall(t,pts.map(p=>({x:p.x,z:p.z,top:p.top+WALL.copingH,foot:p.foot-.5})),{half:.42,shift:-.42,lip:.13,capH:.3,dome:.04,belly:.07,back:.4,ends:[true,true]});
+ // Polish Nov 27 2026 (owner shots 193 / 200): soft stone courses on the face (colour only: puffRun `courses`), a mossy foot, the
+ // coping's shadow; the face now really reaches 0.5 m into the lawn (puffRun winding fix). The wall body steps every <= 4.5 m on
+ // straight, evenly sloped stretches (decimated: the foot stays within 6 cm of the 1.5 m ring) to pay for the course rows inside
+ // the west stadium's triangle cap; corners keep every point.
+ if(puffLevel()>0)tris+=runWall(t,decimateRun(pts).map(p=>({x:p.x,z:p.z,top:p.top+WALL.copingH,foot:p.foot-.5})),{half:.42,shift:-.42,lip:.13,capH:.3,dome:.04,belly:.05,back:.4,ends:[true,true],courses:5});
  else{tris+=blockFace(t,pts,WALL.stone,0,.5,seed);
  // The plinth: two heavier courses standing 9 cm proud, with a weathered (sloped) top.
  tris+=sweep(t,pts,WALL.plinth,[[.09,'foot',-.5],[.09,'foot',.46],[0,'foot',.56]]);

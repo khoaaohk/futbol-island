@@ -50,7 +50,9 @@ export const LOBE_GROW=1.17;
 /** top / reach: the canopy's highest point and widest half-width (tree space): the tree's asset (leaf debris hit test) is sized from them. */
 /** The merged canopy's geometry type: keeps 'Icosahedron' in it, so every foliage test (NOT_ROOF) still reads it as a crown. */
 export const FOLIAGE_TYPE='BroadleafIcosahedronClumps';
-export type BroadleafTree={leaves:T.BufferGeometry;shade:Float32Array;bark:T.BufferGeometry;shape:string;triangles:number;top:number;reach:number};
+/** `lobes`: each clump's matrix in tree space (a unit icosahedron / dodecahedron, corners jittered +-9 %) and `crown` the leaves' box
+ *  (polish Nov 27 2026: fruit rigs hang their fruit on the clumps the tree really has, whatever size variety / lean / tier made). */
+export type BroadleafTree={leaves:T.BufferGeometry;shade:Float32Array;bark:T.BufferGeometry;shape:string;triangles:number;top:number;reach:number;lobes:T.Matrix4[];crown:{min:T.Vector3;max:T.Vector3}};
 const up=new T.Vector3(0,1,0);
 /** A low-poly clump: icosahedron corners pushed in / out by up to `jag` (a hash of the corner's direction, so shared corners stay shut). */
 function clump(seed:number,jag:number,round=false){const g=round?new T.DodecahedronGeometry(1,0):new T.IcosahedronGeometry(1,0),p=g.getAttribute('position') as T.BufferAttribute;
@@ -75,9 +77,10 @@ export function broadleafTree(x:number,z:number,s:number,o:{trunkTop?:number;tru
  const yaw=h(2)*Math.PI*2,sx=s*(.92+.16*h(3))*size.crown,sy=s*(.9+.2*h(4)),lean=(h(5)-.5)*.14,leanDir=h(6)*Math.PI*2;
  const pose=new T.Matrix4().compose(new T.Vector3(),new T.Quaternion().setFromEuler(new T.Euler(Math.cos(leanDir)*lean,yaw,Math.sin(leanDir)*lean,'YXZ')),new T.Vector3(sx,sy,sx));
  const lobes=o.low?shape.lobes.slice(0,3):shape.lobes,parts:T.BufferGeometry[]=[],centres:{c:T.Vector3;r:number}[]=[];
+ const lobeMats:T.Matrix4[]=[];
  lobes.forEach(([lx,ly,lz,r,sqy=1,sqxz=1],k)=>{const g=clump(k*13+Math.floor(h(7)*97),.09,k===0);r*=LOBE_GROW;
   const m=new T.Matrix4().compose(new T.Vector3(lx,ly,lz),new T.Quaternion().setFromEuler(new T.Euler(h(10+k)*.6,h(20+k)*6.28,h(30+k)*.6)),new T.Vector3(r*sqxz,r*sqy,r*sqxz));
-  g.applyMatrix4(m.premultiply(pose));parts.push(g);
+  g.applyMatrix4(m.premultiply(pose));parts.push(g);lobeMats.push(m.clone());
   const c=new T.Vector3(lx,ly,lz).applyMatrix4(pose);centres.push({c,r:r*Math.max(sqy,sqxz)*(sx+sy)/2});});
  const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();
  // Nov 26 2026: still foliage to the landing code (canopySurfaces.ts / tests/roof-landing.cjs NOT_ROOF match 'Icosahedron', as the old single
@@ -109,7 +112,7 @@ export function broadleafTree(x:number,z:number,s:number,o:{trunkTop?:number;tru
    b.applyMatrix4(new T.Matrix4().makeRotationFromQuaternion(new T.Quaternion().setFromUnitVectors(up,dir.normalize())));b.translate(forkAt.x,forkAt.y-.05*s,forkAt.z);bark.push(b);}}
  const barkGeo=mergeGeometries(bark)!;bark.forEach(g=>g.dispose());
  const tri=(g:T.BufferGeometry)=>(g.index?g.index.count:g.getAttribute('position').count)/3;
- return {leaves,shade,bark:barkGeo,shape:shape.name,triangles:tri(leaves)+tri(barkGeo),top:bb.max.y,reach:rad};
+ return {leaves,shade,bark:barkGeo,shape:shape.name,triangles:tri(leaves)+tri(barkGeo),top:bb.max.y,reach:rad,lobes:lobeMats,crown:{min:bb.min.clone(),max:bb.max.clone()}};
 }
 
 /** A round bush / planter shrub: 3 overlapping clumps in place of one ball (radius r, centre height y0 above its foot).

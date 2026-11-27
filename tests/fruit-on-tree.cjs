@@ -76,13 +76,16 @@ function checkTree(site,fruits,truth,label){
     bump('coconut on palm',gap<=.3*r&&gap>=-r,gap/r,`${label} k${k} gap ${(gap/r).toFixed(2)} r`);continue;}
    if(site.form==='papaya'){const {d,f}=segDist(h,truth.trunk.a,truth.trunk.b),tr=truth.trunk.r0+(truth.trunk.r1-truth.trunk.r0)*f,gap=d-tr-r*L.width;
     bump('papaya on trunk',gap<=.3*r&&gap>=-r,gap/r,`${label} k${k} gap ${(gap/r).toFixed(2)} r`);continue;}
+   if(truth.surface){const S=truth.surface,tr=new T.Triangle(),cp=new T.Vector3();let d=Infinity;// polish Nov 27: the drawn broadleaf crown (tests/fruit-crown-bounds.cjs)
+    for(let v=0;v+8<S.length;v+=9){tr.a.set(S[v],S[v+1],S[v+2]);tr.b.set(S[v+3],S[v+4],S[v+5]);tr.c.set(S[v+6],S[v+7],S[v+8]);tr.closestPointToPoint(h,cp);d=Math.min(d,cp.distanceTo(h));}
+    bump('island round canopy (drawn crown)',d<=.6*r,d/r,`${label} ${fruit} k${k} ${day} ${(d/r).toFixed(2)} r from the leaves`);continue;}
    const g=canopyGap(truth.lobes,h);// centre just outside the faceted leaves: touching, never floating, never buried
    bump(`${site.form??'island round'} canopy`,g>=-.15*r&&g<=.6*r,g/r,`${label} ${fruit} k${k} ${day} centre ${(g/r).toFixed(2)} r from the leaves`);}}
 }
 for(const s of sites){
  if(s.kind==='palm'){const top=new T.Vector3(s.top.x,s.top.y,s.top.z);checkTree(s,['coconut'],{nut:top.clone().add(new T.Vector3(0,-.35,0)),trunk:{a:new T.Vector3(s.x,s.y,s.z),b:top}},`palm ${s.seed}`);continue;}
  if(s.form)continue;// the orchard's plants: checked from their plans below (the same planOrchard → orchardRig/orchardParts)
- checkTree(s,F.ROUND_TREE_FRUIT,roundTruth(s),`round ${s.seed}`);}
+ checkTree(s,F.ROUND_TREE_FRUIT,s.rig.surface?{surface:s.rig.surface}:roundTruth(s),`round ${s.seed}`);}
 // Every form across many more seeds (the plan list without the island's clear zones), each with every fruit its form can bear.
 for(const p of plans){const rig=O.orchardRig(p);for(const fruit of O.FORM_FRUIT[p.form])checkTree({kind:'tree',x:p.x,z:p.z,y:p.y,size:p.s,seed:p.seed,form:p.form,fruit,rig},[fruit],orchardTruth(p),`plan ${p.form} ${p.seed}`);}
 

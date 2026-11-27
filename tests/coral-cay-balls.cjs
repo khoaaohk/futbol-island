@@ -81,13 +81,14 @@ for(const s of CORAL_CAY_SPOTS){
  const make=()=>{cache.clear();const got=[],h=load('lib/graphics/coinHunt.ts').createCoinHunt(new T.Scene(),s=>got.push(s.id),()=>{});return {h,got};};
  {const {h}=make(),g=h.root.getObjectByName('coin-spot-'+b.id);g.updateWorldMatrix(true,true);const parcel=g.children[0],coin=g.children[1];
   const top=new T.Box3().setFromObject(parcel,true);/* the buoy top directly under the ball (the gold rim around it is a cup, not the top) */
-  const pos=h.buoyScenery.children[0].geometry.getAttribute('position');let collar=-Infinity;for(let i=0;i<pos.count;i++){if(Math.hypot(pos.getX(i)-b.x,pos.getZ(i)-b.z)<.3)collar=Math.max(collar,pos.getY(i));}
+  // polish Nov 27 2026: each buoy is its own floating group (one packed mesh in it, local coordinates; coinHunt.ts floatBuoys)
+  h.buoyScenery.updateWorldMatrix(true,true);let collar=-Infinity;const v=new T.Vector3();h.buoyScenery.traverse(o=>{if(!o.isMesh)return;const pos=o.geometry.getAttribute('position');for(let i=0;i<pos.count;i++){v.fromBufferAttribute(pos,i).applyMatrix4(o.matrixWorld);if(Math.hypot(v.x-b.x,v.z-b.z)<.3)collar=Math.max(collar,v.y);}});
   const ballBottom=coin.getWorldPosition(new T.Vector3()).y-.34;assert(ballBottom-collar>=0&&ballBottom-collar<=.5,`the ball sits on the buoy top (gap ${(ballBottom-collar).toFixed(2)} m)`);
   assert(Math.hypot(coin.getWorldPosition(new T.Vector3()).x-b.x,coin.getWorldPosition(new T.Vector3()).z-b.z)<.01,'the ball is centred on the buoy');void top;h.dispose();}
  // Kick: the ball flies out over the sea (ballSea.ts), so a shot that reaches the buoy collects it; a wide one does not.
  // Full flight from the chalk mark with the real walking ball is in tests/ball-sea.cjs.
  const dx=b.x-k.x,dz=b.z-k.z,l=Math.hypot(dx,dz);
- {const {h,got}=make();const scenery=h.buoyScenery;assert(scenery.parent&&scenery.visible&&scenery.children.length===1,'the buoy is persistent scenery (one packed draw) before collection');
+ {const {h,got}=make();const scenery=h.buoyScenery;assert(scenery.parent&&scenery.visible&&scenery.children.every(g=>g.children.length===1),'the buoy is persistent scenery (one packed draw a buoy, floating: polish Nov 27 2026) before collection');
   assert(h.aim({x:k.x,y:0,z:k.z},Math.atan2(dx,dz)+.9,()=>false)!==null&&h.aim({x:k.x,y:0,z:k.z},Math.atan2(dx,dz)+1.3,()=>false)===null,'kick assist turns a shot within ±60° toward the buoy, not one facing away');
   h.update(.1,{x:k.x,y:0,z:k.z},true,true);assert(!h.hit(b.x+3.5,.3,b.z,dx/l*14,dz/l*14),'a shot 3.5 m wide of the buoy misses');assert(!got.length);
   assert(h.hit(b.x-dx/l*1.5,.4,b.z-dz/l*1.5,dx/l*14,dz/l*14),'a shot reaching the buoy collects it');assert.deepEqual([...got],[b.id]);
