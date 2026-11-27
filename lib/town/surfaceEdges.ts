@@ -41,7 +41,7 @@ export const LIP={over:.2,overVar:.3,thin:.3,rise:.02,reach:1,step:4,lowStep:8} 
  *  beside the grass, the trodden middle lighter from `centre` m in; `gain` = the brightness swing per unit (shader). Paths wider than
  *  `max` are squares, not walkways: no wear. On raised ground the sheet follows the draped path (`liftStep` cells, `lift` m proud),
  *  and the uphill verge is a cut bank: bare soil reaching `cut`-deep into the grass, the lawn standing `bank` m over the path. */
-export const WEAR={edge:.9,centre:1.4,max:7,step:5,liftStep:1.25,lift:.014,gain:.14,light:.5,taper:1.5,cutFrom:.05,cutSpan:.15,bank:.05} as const;
+export const WEAR={edge:.9,centre:2.1,max:7,step:5,liftStep:1.25,lift:.014,gain:.14,light:.5,taper:1.5,cutFrom:.05,cutSpan:.15,bank:.05} as const;
 /** aEdge.y for a path vertex: 4 + wear (-2 the cut bank's soil .. -1 the dusty edge .. 0 plain paving .. `light` the trodden middle: the paving is pale already, so it darkens further than it lightens). Plain rims keep 0 (sand) / 1 (paving). */
 export const WEAR_BASE=4;
 /** The tone across a walkway, from its outline (d = 0) to `centre` m in: one smooth curve (owner, Nov 26 2026: "faded in some areas but
@@ -50,7 +50,11 @@ export const WEAR_BASE=4;
  *  Now C1 (no slope step anywhere) and sampled on WEAR_ROWS so the per-vertex interpolation stays close to the curve. */
 export const wearOf=(d:number)=>{const t=Math.min(1,Math.max(0,d/WEAR.centre)),s=t*t*(3-2*t);return -1+(1+WEAR.light)*s;};
 /** Rows of the wear lattice, metres in from each long edge (and from each end). */
-export const WEAR_ROWS=[.3,.65,1,1.4] as const;
+/** paths-junctions (owner shot 173, Nov 27 2026: "a faint hard seam line inside the path ~1/4 in from each edge"): with 4 rows the
+ *  tone was piecewise linear with its last kink where the trodden middle went flat (1.4 m in), a ruled Mach band along every path. The
+ *  curve now rises over 2.1 m (most walkways are 4-5 m: the middle is the only flat part) and is sampled on 8 rows, so the kinks are
+ *  under 2 % of the swing. */
+export const WEAR_ROWS=[.15,.32,.52,.75,1,1.28,1.62,2.1] as const;
 /** A lawn and how its edges are built: `ground` = the drawn lawn's height over its flat plane (a raised lawn: the edges are laid on
  *  it), or null = flat lawn only (raised ground is skipped). */
 export type Zone={poly:readonly Pt[];ground:((x:number,z:number)=>number)|null;/** only where this holds (the main island's raised west side: its own pass) */only?:(x:number,z:number)=>boolean};
