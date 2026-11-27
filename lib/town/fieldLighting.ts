@@ -10,6 +10,12 @@ import {STADIUM} from './westParkLayout';
 import {STADIUM_NIGHT,setStadiumNight} from './stadiumNight';
 import {KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {createPitchVisibility} from './pitchVisibility';
+import {SoftBoxGeometry,puffLevel,softLow} from '../graphics/softBox';
+/** Inflate pass 2 (owner shot 180: "make all the lights more rounded too instead of sharp corners"): floodlight banks, arms, bases
+ *  and lens panels are puffed soft boxes (same sizes / positions / glow; same merged meshes: 0 draws). `?soft=0` = the old boxes. */
+const lightBox=(w:number,h:number,d:number,maxR?:[number,number,number])=>{const p=puffLevel();return p>0?new SoftBoxGeometry(w,h,d,{puff:p,seg:Math.min(w,h,d)<.15||softLow()?0:1,maxR}):new T.BoxGeometry(w,h,d);};
+/** Flat lens panels keep flat faces (round corners only), so they lie on the bank's faces instead of curling off as chips. */
+const PANEL:[number,number,number]=[.08,.015,.08];
 
 type LightingVenue=Omit<Venue,'id'>&{id:Format|'knockout'|'stadium'};
 /** reach: the pooled spots' corner offsets from the pitch centre (x across, z along). */
@@ -34,7 +40,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  for(const v of [...VENUES,roofVenue]){
   const root=v.id==='knockout'?roofRoot:roots.get(v.id)!,body:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[];
   const {height,side,posts}=fieldLightLayout(v);
-  const box=(list:T.BufferGeometry[],w:number,h:number,d:number,x:number,y:number,z:number,tilt=0)=>{const g=new T.BoxGeometry(w,h,d);g.rotateZ(tilt);g.translate(x,y,z);list.push(g);};
+  const box=(list:T.BufferGeometry[],w:number,h:number,d:number,x:number,y:number,z:number,tilt=0)=>{const g=lightBox(w,h,d,list===glass?PANEL:h>.5&&w>1.5?[.24,.13,.13]:undefined);g.rotateZ(tilt);g.translate(x,y,z);list.push(g);};
   const postPieces:{body:[number,number];glass:[number,number]}[]=[];
   for(const {x,z,hand} of posts){const body0=body.length,glass0=glass.length;
    const pole=new T.CylinderGeometry(.13,.22,height,8);pole.translate(x,FIELD_SURFACE_Y+height/2,z);body.push(pole);
@@ -45,7 +51,8 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
    // The bank tilts inward; its pale lower face visibly explains pitch illumination.
    const tilt=hand*.22,bankX=x-hand*.7;
    box(body,2.05,.55,.52,bankX,height,z,tilt);
-   for(let panel=0;panel<3;panel++){box(glass,.52,.12,.44,bankX+(panel-1)*.61,height-.3,z,tilt);box(glass,.52,.045,.44,bankX+(panel-1)*.61,height+.3,z,tilt);}
+   const pf=puffLevel()>0;// puffed: the panels sit inside the bank's flat faces (no chips over the rounded edges)
+   for(let panel=0;panel<3;panel++){box(glass,pf?.46:.52,.12,pf?.3:.44,bankX+(panel-1)*.61,height-(pf?.25:.3),z,tilt);box(glass,pf?.46:.52,.045,pf?.3:.44,bankX+(panel-1)*.61,height+(pf?.27:.3),z,tilt);}
    postPieces.push({body:[body0,body.length],glass:[glass0,glass.length]});
   }
   // Vertex start of every piece once merged (mergeGeometries concatenates in order), and each post's bounds.
