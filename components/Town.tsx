@@ -2104,7 +2104,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const backgroundFrozen=focus.active||matchFocus.active,live=matchFocus.active?MATCH_FOCUS_LIVE:focusLive,heldDt=matchFocus.dt;
       coinHunt.update(heldDt,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},active&&!fieldMenu.current&&!lessonRef.current&&!matchFocus.active/* coins never count in a match (match focus) */,reduced,rampMotion.state.phase==='air'?rampMotion.state.ramp?.id??null:null,jetActions.state.phase==='parachute',rideRef.current==='jetpack');
       jobs.setPlayer(player.root.rotation.y,rideRef.current,water.inWater);
-      jobs.setBadgesHidden(liveJoin.joined);jobs.update(dt,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},rideRef.current==='walk'?walkBall.state:null,active&&!fieldMenu.current&&!lessonRef.current,!fieldMenu.current&&!lessonRef.current,reduced);
+      jobs.setBadgesHidden(liveJoin.joined||trainRideStore.get().riding);jobs.update(dt,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},rideRef.current==='walk'?walkBall.state:null,active&&!fieldMenu.current&&!lessonRef.current,!fieldMenu.current&&!lessonRef.current,reduced);
       world.umbrellaReaction.update(active&&!fieldMenu.current?dt:0,reduced);
       treeDebris.update(active&&!fieldMenu.current?dt:0,!fieldMenu.current&&!lessonRef.current,reduced);
       // Stadium Plaza flags: walking into a pole sways it like a ball hit (a soft one) and the cloth flutters; the wave's clock.
