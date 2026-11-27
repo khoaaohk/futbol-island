@@ -32,6 +32,7 @@ import {trainLayout,STAMP_STAND_U,STAMP_STAND_BACK,stationHouseFront,PIER_COLUMN
 import {onWalkPath} from './westParkLayout';
 import {onLand} from './landmass';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
+import {TUNNEL_LAMPS,LAMP_R2} from './tunnelWalk';
 import {stampById} from './islandStamps';
 import {groundingOn} from './grounding';
 
@@ -51,6 +52,8 @@ const C={rail:'#5d6166',railTop:'#a7abae',sleeper:'#6f5843',sleeperBed:'#897c6e'
 /** Spots a catenary pole must not stand on (it slides to the next row): the Starfish sandbar's hidden ball (coralCayBalls.ts cay-barefoot). */
 const POLE_KEEP_CLEAR:readonly (readonly [number,number])[]=[[340.3,-214.85]];
 /** Summit portals: headwall half width, its batter (m back per m up) and the wing walls' run out along the banks. */
+/** Nov 27 2026: the coming train's headlight in the bore (x, z of its front, gap m, intensity 0 … 1), set by Town; the lit tube's shader. */
+export const TUNNEL_TRAIN_LAMP={value:new T.Vector4(0,0,0,0)};
 export const PORTAL_HALF=6.6,PORTAL_LEAN=.16,WING_LENGTH=4;
 export const TUBE_SHOW=110,CHUNK_LENGTH=100,POLE_STEP=30,RAIL_HALF_GAUGE=.68,BALLAST_TOP=.12,SLEEPER_TOP=.2,RAIL_TOP=.34,WIRE_Y=5.15;
 /** The contact wire's half section (m: a 3.6 cm diamond) and the catenary's near-camera fade: gone within CAT_FADE_NEAR m, dithered in by CAT_FADE_FAR m. */
@@ -438,7 +441,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   solid(...portalColliders(p.x,p.z,o,a,half));
  }
  const W=TUNNEL.west,E=TUNNEL.east,cam=new T.Vector3(),tW=trackAt(W.s),tE=trackAt(E.s);
- const litTube=tunnelOn(),tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=litTube?buildLitTube():buildTube();tubeRoot.add(tube);const tubeIn=(tube.material as T.Material).userData.tubeIn as {value:number}|undefined;
+ const litTube=tunnelOn(),tubeRoot=new T.Group();tubeRoot.name='train-tunnel';const tube=litTube?buildLitTube():buildTube();tubeRoot.add(tube);const plug=litTube?buildPlug():null;if(plug)tubeRoot.add(plug);const tubeIn=(tube.material as T.Material).userData.tubeIn as {value:number}|undefined;
  const cat=catArm.empty&&catWire.empty?null:buildCatenary();if(cat)tubeRoot.add(cat);// starts visible so the load-time compileAsync (islandWarm.ts) builds its program; update() hides it on the first frame
  return {
   /** Added to the scene after the batching pass (its own mesh, never merged). */
@@ -457,8 +460,8 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
    const show=litTube?inside||Math.hypot(cam.x-W.x,cam.z-W.z)<TUBE_SHOW||Math.hypot(cam.x-E.x,cam.z-E.z)<TUBE_SHOW:inside;
    if(tubeIn){tubeIn.value=inside?1:0;// night: the baked interior dims (it is unlit), so the bore glows warm instead of glaring beige
     const nk=Math.min(1,Math.max(0,((1-WATER_UNIFORMS.uWaterNight.value.y)/.45-.35)/.65));(tube.material as T.MeshBasicMaterial).color.setScalar(1-.45*nk);}
-   if(show!==tube.visible)tube.visible=show;},
-  dispose(){tube.geometry.dispose();(tube.material as T.Material).dispose();if(cat){cat.geometry.dispose();(cat.material as T.Material).dispose();}tubeRoot.removeFromParent();},
+   if(show!==tube.visible)tube.visible=show;if(plug&&plug.visible===show)plug.visible=!show;},
+  dispose(){if(plug){plug.geometry.dispose();(plug.material as T.Material).dispose();}tube.geometry.dispose();(tube.material as T.Material).dispose();if(cat){cat.geometry.dispose();(cat.material as T.Material).dispose();}tubeRoot.removeFromParent();},
  };
  /** The catenary mesh (wire + thin arms) in vertex colours, with the near-camera fade (see the catenary section above). */
  function buildCatenary(){
@@ -476,6 +479,15 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
     `#include <clipping_planes_fragment>\n{float cd=distance(vCatW,cameraPosition),ck=clamp((cd-${CAT_FADE_NEAR.toFixed(2)})/${(CAT_FADE_FAR-CAT_FADE_NEAR).toFixed(2)},0.,1.);${up?'if(vCatWire>.5)ck*=smoothstep(.19,.1,(vCatW.y-cameraPosition.y)/max(cd,.01));':''}if(ck<1.&&fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453)>=ck)discard;}`);};
   mat.customProgramCacheKey=()=>'train-catenary-fade'+(up?'-sky':'');
   const m=new T.Mesh(geo,mat);m.name='train-catenary';m.matrixAutoUpdate=false;m.castShadow=false;m.receiveShadow=false;m.userData.train=true;m.userData.ownDraw=true;return m;}
+ /** Nov 27 2026 (owner 159: "from far away the tunnel is white"): past TUBE_SHOW the bore is not drawn and the open arch showed the
+  *  sky through the hill's cut. A dark plug instead (one arch-shaped fan per portal, 2.6 m in, warm-dark centre to the lining's shade
+  *  at the rim, ~40 tris, one draw only while the tube is NOT drawn: they swap at TUBE_SHOW, so the far view costs no more). */
+ function buildPlug(){const pos:number[]=[],col:number[]=[],c0=new T.Color('#241d17'),c1=new T.Color('#5d4b37'),R=TUNNEL_HALF_WIDTH-.02,SP=2.4;
+  const rim:[number,number][]=[[-R,-.1],[-R,SP]];for(let k=1;k<12;k++){const a=Math.PI-Math.PI*k/12;rim.push([Math.cos(a)*R,SP+Math.sin(a)*R]);}rim.push([R,SP],[R,-.1]);
+  for(const p of [W,E]){const t=trackAt(p.s),w=p===W?1:-1,ix=t.tx*w,iz=t.tz*w,ax=t.tz,az=-t.tx,u=2.6,P=(v:number,y:number)=>[p.x+ax*v+ix*u,TUNNEL_BED+y,p.z+az*v+iz*u];
+   const c=P(0,1.7);for(let k=0;k<rim.length;k++){const a=rim[k],b=rim[(k+1)%rim.length];pos.push(...c,...P(a[0],a[1]),...P(b[0],b[1]));col.push(c0.r,c0.g,c0.b,c1.r,c1.g,c1.b,c1.r,c1.g,c1.b);}}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.computeBoundingSphere();
+  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}));m.name='train-tunnel-plug';m.matrixAutoUpdate=false;m.userData.ownDraw=true;m.visible=false;return m;}
  function insideTunnel(x:number,z:number){const t=trackAt(W.s),dx=E.x-W.x,dz=E.z-W.z,l2=dx*dx+dz*dz,f=((x-W.x)*dx+(z-W.z)*dz)/l2;void t;if(f<0||f>1)return false;return Math.abs((x-W.x)*dz-(z-W.z)*dx)/Math.sqrt(l2)<TUNNEL_HALF_WIDTH+2;}
  function buildTube(){
   const pos:number[]=[],col:number[]=[],idx:number[]=[],prof:[number,number][]=[[-TUNNEL_HALF_WIDTH,0],[-TUNNEL_HALF_WIDTH,2.4]];for(let k=1;k<10;k++){const a=Math.PI-Math.PI*k/10;prof.push([Math.cos(a)*TUNNEL_HALF_WIDTH,2.4+Math.sin(a)*TUNNEL_HALF_WIDTH]);}prof.push([TUNNEL_HALF_WIDTH,2.4],[TUNNEL_HALF_WIDTH,0]);
@@ -561,20 +573,26 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Distance plates every 25 m on the right wall (white plate, a dark bar).
   for(let s=W.s+12.5;s<E.s-6;s+=25){const v=HW-.015;plate.quad(Q(s-.18,v,1.25),Q(s+.18,v,1.25),Q(s+.18,v,1.01),Q(s-.18,v,1.01),Q(s,0,1.1));plateMark.quad(Q(s-.12,v-.005,1.16),Q(s+.12,v-.005,1.16),Q(s+.12,v-.005,1.1),Q(s-.12,v-.005,1.1),Q(s,0,1.1));}
   add(sl,C.sleeper,.62);add(rl,C.railTop,.95);add(rs,C.rail,.7);add(cable,'#3e3b37',1);add(plate,'#efe9dc',1);add(plateMark,'#2f3a46',1);
-  // Wall lamps every 12 m, alternate sides: a bright housing and a soft glow patch (a fan: warm centre, rim = the wall's own colour).
-  let side=1;for(let s=W.s+6;s<E.s-4;s+=12,side=-side){const v=side*(HW-.012),y=1.95;
-   const ctr=Q(s,v,y),cC=new T.Color('#e9c690'),n=12;
-   for(let k=0;k<n;k++){const a0=k/n*Math.PI*2,a1=(k+1)/n*Math.PI*2,rim=(a:number)=>{const ds=Math.cos(a)*1.5,dy=Math.max(.32-y,Math.sin(a)*.85);return {s:s+ds,y:y+dy};},r0=rim(a0),r1=rim(a1);
-    pos.push(...ctr,...Q(r0.s,v,r0.y),...Q(r1.s,v,r1.y));col.push(cC.r,cC.g,cC.b);wallAt(r0.s,r0.y,1,ca);col.push(ca.r,ca.g,ca.b);wallAt(r1.s,r1.y,1,cb);col.push(cb.r,cb.g,cb.b);}
-   const vv=side*(HW-.03);lamp.quad(Q(s-.2,vv,2.06),Q(s+.2,vv,2.06),Q(s+.2,vv,1.86),Q(s-.2,vv,1.86),Q(s,0,2));}
-  add(lamp,'#fff1cf',1.25,true);
+  // Wall lamps (Nov 27 2026, owner 157: "the lighting is not complete": a flat white square on a faceted glow patch). Now a fixture
+  // per lamp (a bracket, a dark cage hood, a warm bulb: 3 small boxes, in this one mesh: no new draw) at TUNNEL_LAMPS (tunnelWalk.ts);
+  // the light itself is the shader's (below): a soft round pool on the wall, the walkway, the track and the far wall, from the same list.
+  const bracket=new Geo(),hood=new Geo();
+  for(const l of TUNNEL_LAMPS){const q=trackAt(l.s),sd=l.side,P2=(v:number,y:number)=>A(l.s,sd*v,y);
+   {const c=P2(HW-.1,2.2);bracket.box(c[0],c[1],c[2],q.tx,q.tz,.035,.1,.03);}
+   {const c=P2(HW-.2,2.13);hood.box(c[0],c[1],c[2],q.tx,q.tz,.15,.11,.04,false);}
+   {const c=P2(HW-.2,2.03);lamp.box(c[0],c[1],c[2],q.tx,q.tz,.11,.075,.06,false);}}
+  add(bracket,'#2e2a26',1,true);add(hood,'#3a342d',1,true);add(lamp,'#fff0c8',1,true);
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.computeBoundingSphere();
   const mat=new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}),tubeIn={value:0};mat.userData.tubeIn=tubeIn;
   const mouthGl=(p:{x:number;z:number;s:number},inward:number)=>{const t=trackAt(p.s),nx=t.tx*inward,nz=t.tz*inward;return `vec3(${(p.x-nx*.12).toFixed(3)},${B.toFixed(3)},${(p.z-nz*.12).toFixed(3)}),vec2(${nx.toFixed(5)},${nz.toFixed(5)})`;};
-  mat.onBeforeCompile=sh=>{sh.uniforms.uTubeIn=tubeIn;
+  // Nov 27 2026: the lamps' light, per fragment from a fixed list (TUNNEL_LAMPS: ~15 vec4; the 3 nearest by the fragment's place
+  // along the bore's chord): exp(-d²/LAMP_R2), warm, over a gentle dimming between lamps (none in the last 8 m: the daylight ends
+  // stay), and the coming train's headlight (TUNNEL_TRAIN_LAMP). ~3 exp + a dozen ALU per tube pixel; no lights, no passes.
+  const lampU={value:TUNNEL_LAMPS.map(l=>new T.Vector4(l.x,l.y,l.z,l.side))},chordL=Math.hypot(E.x-W.x,E.z-W.z),NL=TUNNEL_LAMPS.length;
+  mat.onBeforeCompile=sh=>{sh.uniforms.uTubeIn=tubeIn;sh.uniforms.uLamp=lampU;sh.uniforms.uTrainLamp=TUNNEL_TRAIN_LAMP;
    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vTubeW;').replace('#include <project_vertex>','#include <project_vertex>\nvTubeW=(modelMatrix*vec4(transformed,1.)).xyz;');
    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uTubeIn;varying vec3 vTubeW;float tubeNear=0.;
+uniform float uTubeIn;varying vec3 vTubeW;float tubeNear=0.;uniform vec4 uLamp[${NL}];uniform vec4 uTrainLamp;
 // Rail fixes (Nov 26 2026): no depth pull any more (it was 1.2 m toward the camera so a hill triangle crossing the bore by the off-centre
 // west portal never covered it; the portals now stand on the line, so none does). With the pull the bore drew OVER whatever was in it
 // (a walker, a train) seen from the cutting; and without gl_FragDepth the tube keeps early depth testing.
@@ -585,7 +603,14 @@ float R2=${HW.toFixed(2)}+.6;return lat<R2&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(R
     .replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\nfloat tubeOut=0.;if(uTubeIn<.5&&!tubeThru(${mouthGl(W,1)})&&!tubeThru(${mouthGl(E,-1)})){if(tubeNear<.5)discard;tubeOut=1.;}`)
     // Rail fixes (owner 150): the hill is cut out of the first ~2.6 m behind each portal (summitIsleWorld), so from above that hole
     // showed the sky (the vault there was discarded: not seen through the arch). The vault's first 2.9 m now draws there, in shade.
-    .replace('#include <dithering_fragment>','#include <dithering_fragment>\ngl_FragColor.rgb*=1.-.45*tubeOut;');};
+    .replace('#include <dithering_fragment>',`#include <dithering_fragment>
+{vec2 D=vec2(${((E.x-W.x)/chordL).toFixed(5)},${((E.z-W.z)/chordL).toFixed(5)});float a=dot(vTubeW.xz-vec2(${W.x.toFixed(3)},${W.z.toFixed(3)}),D);
+ int k=int(floor((a-${(TUNNEL_LAMPS[0].s-W.s).toFixed(2)})/${(TUNNEL_LAMPS.length>1?TUNNEL_LAMPS[1].s-TUNNEL_LAMPS[0].s:12).toFixed(2)}+.5));float L=0.;
+ for(int j=-1;j<=1;j++){vec3 d=vTubeW-uLamp[clamp(k+j,0,${NL-1})].xyz;L+=exp(-dot(d,d)/${LAMP_R2.toFixed(1)});}
+ float m=clamp(min(a,${chordL.toFixed(2)}-a)/8.,0.,1.);
+ vec2 td=vTubeW.xz-uTrainLamp.xy;float tl=uTrainLamp.w*exp(-dot(td,td)/45.);
+ gl_FragColor.rgb=gl_FragColor.rgb*(mix(1.,.74,m)+L*1.35*vec3(1.,.8,.55))+vec3(1.,.93,.74)*tl*.55;}
+gl_FragColor.rgb*=1.-.45*tubeOut;`);};
   mat.customProgramCacheKey=()=>'train-tunnel-lit';
   const m=new T.Mesh(g,mat);m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
  }
