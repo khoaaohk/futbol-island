@@ -1645,7 +1645,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Town kerb depth (?depth=1, lib/town/townDepth.ts; default off = nothing below changes). The streets are final here: register
   // them (the height function every mover reads), then the layers below are cut to it. Same chunks and materials: no new draw.
   const depthCrossings:Crossing[]=[];
-  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))],
+  const registerDepth=()=>setDepthStreets({roads,junctions:roadJunctions,crossings:depthCrossings,joins:[{x:CAUSEWAY.roadStart,z:CAUSEWAY.z}],hard:[...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass'),...VENUES.map(v=>({kind:'pitch',x:v.x,z:v.z,w:v.width+6,d:v.length+6}))],
    // a rounded corner keeps its kerb clear of the corner signal poles (placed below at +-5.3 m) and of small things already standing
    keep:[...roadJunctions.flatMap(j=>[[-5.3,-5.3],[5.3,5.3]].map(([dx,dz])=>({x:j.x+dx,z:j.z+dz,w:.5,d:.5}))),...obstacles.filter(o=>o.w<4&&o.d<4)]});
   if(townDepthOn()){for(const j of roadJunctions)for(const vertical of [true,false])for(const side of [-1,1]){const x=j.x+(vertical?0:side*6),z=j.z+(vertical?side*6:0);

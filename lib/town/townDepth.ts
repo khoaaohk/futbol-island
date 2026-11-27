@@ -118,6 +118,8 @@ export const depthStats:{value:Record<string,unknown>|null}={value:null};
 export type StreetInput={roads:(Rect&{vertical:boolean;carriageway:number})[];junctions:Pt[];crossings:Crossing[];
  /** Flat surfaces laid on the lawn: `path` (the lawn dips under it), anything else (sand, court, pitch, patio: no verge there). */
  hard:HardArea[];
+ /** Where another road's asphalt carries on from a junction's open side (the Coral Cay causeway at x 200): that side eases to today's height. */
+ joins?:Pt[];
  /** Small things standing on the pavement (signal poles, lamps, benches): a rounded corner keeps its kerb 45 cm clear of them. */
  keep?:Rect[]};
 /** Rounded street corners: the radius on an 8 m carriageway (scaled with the carriageway), the one beside a zebra (the junction's
@@ -162,6 +164,12 @@ export function setDepthStreets(input:StreetInput|null){
  for(const r of input.roads)for(const side of [-1,1]){const ex=r.vertical?r.x:r.x+side*r.w/2,ez=r.vertical?r.z+side*r.d/2:r.z;
   if(input.roads.some(o=>o!==r&&Math.abs(ex-o.x)<o.w/2+.01&&Math.abs(ez-o.z)<o.d/2+.01)||input.junctions.some(j=>Math.abs(ex-j.x)<6.01&&Math.abs(ez-j.z)<6.01))continue;
   ends.push({x:ex,z:ez,w:r.vertical?r.w:0,d:r.vertical?0:r.d});void half;}
+ // A junction side with no street beyond it (paths-junctions, owner shot 176, Nov 27 2026: "a little drop when cars drive over"): the
+ // Coral Cay causeway's flat asphalt (coralCayWorld.ts, -0.01) began at the junction's open east edge, where the sunk carriageway still
+ // stood 15 cm down behind a kerb across the road. Such a side (`joins`) is a dead end too: it eases back to today's height at the asphalt's edge.
+ for(const j of input.junctions)for(const [sx,sz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+  if(!(input.joins??[]).some(p=>Math.abs(p.x-(j.x+sx*4))<2.5&&Math.abs(p.z-(j.z+sz*4))<2.5))continue;/* a T's open side keeps its kerb */
+  ends.push({x:j.x+sx*4,z:j.z+sz*4,w:sx?0:12,d:sx?12:0});}
  const landings=input.crossings.flatMap(k=>[-1,1].map(side=>k.vertical?{x:k.x+side*5,z:k.z,w:2,d:2*(KERB.dropHalf+KERB.dropTaper)+.2}:{x:k.x,z:k.z+side*5,w:2*(KERB.dropHalf+KERB.dropTaper)+.2,d:2}));
  const minX=Math.min(...footRects.map(r=>r.x-r.w/2))-8,maxX=Math.max(...footRects.map(r=>r.x+r.w/2))+8,minZ=Math.min(...footRects.map(r=>r.z-r.d/2))-8,maxZ=Math.max(...footRects.map(r=>r.z+r.d/2))+8;
  const wx0=Math.floor(minX),wz0=Math.floor(minZ),wnx=Math.ceil(maxX-wx0)+2,wnz=Math.ceil(maxZ-wz0)+2,w=new Float32Array(wnx*wnz).fill(1);
@@ -289,7 +297,7 @@ export function kerbStrips(sink:Sink,low=false){const s=S;if(!s)return;
  for(const seg of s.asphalt.segs){const extra=s.crossings.filter(k=>k.vertical===(seg.nx!==0)).flatMap(k=>{const c=seg.nx?k.z:k.x;return low?[c-KERB.dropHalf-KERB.dropTaper,c,c+KERB.dropHalf+KERB.dropTaper]:[c-KERB.dropHalf-KERB.dropTaper,c-KERB.dropHalf,c+KERB.dropHalf,c+KERB.dropHalf+KERB.dropTaper];});
   const {len,knots}=knotsOf(seg,low?14:10,extra);
   for(let j=0;j<knots.length-1;j++){const v:number[][]=[];
-   const [mx,mz]=rowPoint(seg,len,(knots[j]+knots[j+1])/2,.5,false,false),paved=s.foot.inside(mx,mz);// a dead end has no pavement across it
+   const [mx,mz]=rowPoint(seg,len,(knots[j]+knots[j+1])/2,.5,false,false),paved=s.foot.inside(mx,mz)&&!s.ends.some(e=>boxDist(mx,mz,e)<.8);// a dead end has no pavement across it (nor a junction's side where another road's asphalt carries on: no stone across the causeway's start, owner shot 176)
    for(let r=paved?0:1;r<rows.length;r++)for(const e of [j,j+1]){const u=paved?rows[r]:r===1?0:rows[r],[x,z]=rowPoint(seg,len,knots[e],u,e===0,e===knots.length-1);v.push(vert(x,z,u,r));}
    sink.grid(paved?rows.length:rows.length-1,2,v);}}
  // Rounded corners: the same rows round the quarter circle (FILLET_STEPS columns; u is toward the centre, on the pavement).
