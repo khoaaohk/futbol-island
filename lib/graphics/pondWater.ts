@@ -103,21 +103,24 @@ export function createPondBedMaterial(){
   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nuniform float uWaterTime;uniform vec3 uWaterNight;varying float vBedDepth;varying vec2 vBedXZ;')
    .replace(BED_HOOK(s.fragmentShader),`${BED_HOOK(s.fragmentShader)}
 {float dep=vBedDepth,t=uWaterTime;vec2 p=vBedXZ;
- float near=1.-smoothstep(.25,2.,dep);
- vec2 ce=floor(p*2.2),fc=fract(p*2.2)-.5;float h=fract(sin(dot(ce,vec2(127.1,311.7)))*43758.55);vec2 o=vec2(fract(h*13.1),fract(h*7.7))-.5;
- float st=smoothstep(.2+.12*h,.1,length((fc-o*.45)*vec2(1.,1.35)))*step(.48,h);
- diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*(.62+.6*fract(h*5.3)),st*near*.85);
- float w=sin(p.x*.9+1.7*sin(p.y*.63))*sin(p.y*.81+1.3*sin(p.x*.47));float weed=smoothstep(.45,.8,w)*smoothstep(.15,.7,dep)*(1.-smoothstep(1.6,2.8,dep));
- weed*=.6+.4*sin(p.x*7.+p.y*3.+sin(t*.8+p.y)*.6);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.16,.3,.15),weed*.6);
+ float near=1.-smoothstep(.5,2.6,dep);
+ vec2 ce=floor(p*1.35),fc=fract(p*1.35)-.5;float h=fract(sin(dot(ce,vec2(127.1,311.7)))*43758.55);vec2 o=vec2(fract(h*13.1),fract(h*7.7))-.5;
+ vec2 sd=(fc-o*.4)*vec2(1.,1.3);float sl=length(sd),sr=.2+.14*h,st=smoothstep(sr,sr-.07,sl)*step(.4,h);
+ // leftovers B: bigger (0.74 m cells), more contrasted stones with a lit top-left rim and a dark contact edge: read at the play camera
+ float lit=clamp(dot(sd/max(sl,1e-3),vec2(-.7,-.7)),0.,1.)*smoothstep(sr-.12,sr-.03,sl);
+ diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*(.45+.75*fract(h*5.3))*(1.+.55*lit),st*near*.95);
+ diffuseColor.rgb*=1.-.35*near*smoothstep(sr+.06,sr,sl)*(1.-st)*step(.4,h);
+ float w=sin(p.x*.9+1.7*sin(p.y*.63))*sin(p.y*.81+1.3*sin(p.x*.47));float weed=smoothstep(.35,.7,w)*smoothstep(.05,.45,dep)*(1.-smoothstep(1.8,3.,dep));
+ weed*=.6+.4*sin(p.x*7.+p.y*3.+sin(t*.8+p.y)*.6);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.1,.24,.1),weed*.82);
  for(int i=0;i<${POND_FISH};i++){float fi=float(i),sp=.11+.035*fi,ph=fi*2.1+t*sp*(mod(fi,2.)>.5?-1.:1.);
   vec2 rad=vec2(${F(P.rx)},${F(P.rz)})*(.22+.12*fi),c=vec2(${F(P.x)},${F(P.z)})+vec2(cos(ph),sin(ph*1.)+.25*sin(ph*2.))*rad;
   vec2 dir=normalize(vec2(-sin(ph),cos(ph)+.5*cos(ph*2.))*rad*(mod(fi,2.)>.5?-1.:1.)),d=p-c;float a=dot(d,dir),b=dot(d,vec2(-dir.y,dir.x))+.05*sin(t*6.+fi)*a;
-  float body=smoothstep(1.,.55,length(vec2(a/.42,b/.13)))+smoothstep(1.,.4,length(vec2((a+.48)/.14,b/(.06+.12*clamp(-(a+.4)/.2,0.,1.)))));
-  diffuseColor.rgb*=1.-.42*clamp(body,0.,1.)*smoothstep(.5,1.4,dep);}
+  float body=smoothstep(1.,.55,length(vec2(a/.55,b/.17)))+smoothstep(1.,.4,length(vec2((a+.62)/.18,b/(.08+.15*clamp(-(a+.52)/.25,0.,1.)))));
+  diffuseColor.rgb*=1.-.62*clamp(body,0.,1.)*smoothstep(.3,1.1,dep);}
  vec2 q=p*.95;q+=.45*vec2(sin(q.y*1.3+t*.7),sin(q.x*1.2-t*.6));q+=.25*vec2(sin(q.y*2.7-t*.9),sin(q.x*2.5+t*.8));
  float ca=pow(1.-.5*abs(sin(q.x*2.4)+sin(q.y*2.4)),9.);float day=smoothstep(.55,.95,dot(uWaterNight,vec3(.3333)));
  diffuseColor.rgb+=vec3(.95,1.,.86)*ca*day*(.03+.3*(1.-smoothstep(.3,2.2,dep)))*smoothstep(.02,.25,dep);}`);};
- m.customProgramCacheKey=()=>key.call(m)+'-pondbed-v1';
+ m.customProgramCacheKey=()=>key.call(m)+'-pondbed-v2';
  return m;}
 /** The trails' paving: vertex colours (the cream path, blending to the beach sand where a trail runs onto the beach). */
 export function createTrailMaterial(){return applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85}),'trail');}
