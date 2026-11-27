@@ -62,8 +62,12 @@ export function createTrainNightGlow(trains:number,extra=0){
    *  camera (by day too: dimmer), and at night a faint red spill on the ground under it (groundY). Drawn whether or not it is night
    *  (begin's result only gates the trains' night lights); by day only lit crossing lamps add instances (none: 0 draws). */
   signal(x:number,y:number,z:number,groundY:number){if(!ready)return;p.set(x,y,z);d.subVectors(cam,p);const dist=d.length();if(dist<.5)return;d.multiplyScalar(1/dist);
-   p.addScaledVector(d,.3);q.setFromUnitVectors(Y_UP,d);s.set(2.1,1,2.1);m.compose(p,q,s);put(m,C.signal,.45+.55*k,true);put(m.compose(p,q,s.set(.75,1,.75)),C.signal,.5+.5*k,true);
-   if(k>.05){m.compose(p.set(x,groundY+.04,z),q.identity(),s.set(2.6,1,2.6));put(m,C.signal,.28*k,true);}},
+   // Leftovers A2 (owner 207, Nov 27 2026: "reduce glow brightness for the day mode"): by day only a tight glow on the lens (0.6 m,
+   // dim); the wide halo grows in and the ground spill starts only from dusk (night factor > 0.35), full at night.
+   const dusk=Math.max(0,(k-.35)/.65);p.addScaledVector(d,.3);q.setFromUnitVectors(Y_UP,d);
+   if(k>.15){const w=Math.min(1,(k-.15)/.6);s.set(.9+1.2*w,1,.9+1.2*w);m.compose(p,q,s);put(m,C.signal,(.2+.8*k)*w,true);}
+   put(m.compose(p,q,s.set(.55+.2*k,1,.55+.2*k)),C.signal,.3+.7*k,true);
+   if(dusk>0){m.compose(p.set(x,groundY+.04,z),q.identity(),s.set(2.6,1,2.6));put(m,C.signal,.28*dusk,true);}},
   /** The beam pool on the track ahead (world x, y, z, tangent tx, tz), weight w (nearer = brighter). */
   beam(x:number,y:number,z:number,tx:number,tz:number,w:number,width=3.4,len=7.5){q.setFromAxisAngle(Y_UP,Math.atan2(tx,tz));m.compose(p.set(x,y+.06,z),q,s.set(width,1,len));put(m,C.beam,w);},
   /** The beam on a tunnel wall: a vertical wash at lateral offset v (signed, m) from the centre line at (x, z), floor height y. */

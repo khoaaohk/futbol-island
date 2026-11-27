@@ -611,7 +611,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Rail fixes (Nov 26 2026, owner 150: "this white doesn't look right for the tunnel"): from outside the bore read as one flat pale
   // sheet (the daylight end ran ~8 m in at 0.8-1.0 light). Now the light falls off from the mouth (DEEP: the mid-bore level, the
   // daylight end 5 m) so the bore reads as depth, the lamps' warm pools carry the middle and the far mouth is a small bright disc.
-  const STONE=new T.Color('#977650'),DAY=new T.Color('#c9b089'),DEEP=.36,endK=(s:number)=>Math.max(Math.exp(-Math.max(0,s-W.s)/5),Math.exp(-Math.max(0,E.s-s)/5));
+  const STONE=new T.Color('#977650'),DAY=new T.Color('#bdb2a2')/* Leftovers A2 (owner 208): a neutral daylight fade from the mouth (was warm #c9b089) */,DEEP=.36,endK=(s:number)=>Math.max(Math.exp(-Math.max(0,s-W.s)/5),Math.exp(-Math.max(0,E.s-s)/5));
   /** The wall's colour at (s, height y): even light, a touch darker at the crown and mid-bore, daylight at the ends. */
   const wallAt=(s:number,y:number,shade:number,out:T.Color)=>{const e=endK(s);return out.copy(STONE).multiplyScalar(shade*(DEEP+(1-DEEP)*e)*(1-.25*Math.min(1,Math.max(0,(y-2.6)/3.4)))).lerp(DAY,.3*e);};
   // Profile (lateral v, height y): walkway top, three wall courses, then the arch in 10 voussoir bands.
@@ -711,9 +711,12 @@ float R2=${HW.toFixed(2)}+.6;return lat<R2&&X.y-P.y<${SPR.toFixed(2)}+sqrt(max(R
  // Nov 27 2026 (owner 202: "this beginning light is way brighter than the others"): the lining's daylight near each mouth (baked: endK
  // in the vertex colours, and the undimmed first 8 m) is by day only; at night it is taken back out, so the first lamp at each end
  // lights the same deep stone as every other lamp.
- {float e=max(exp(-a/5.),exp(-(${chordL.toFixed(2)}-a)/5.));gl_FragColor.rgb*=mix(1.,.36/(.36+.64*e),uTubeNight);m=max(m,uTubeNight);}
+ // Leftovers A2 (owner 208, by day: "this first light is way stronger than the others"): a lamp's pool is now ADDED light on the deep
+ // stone (lk: the lining's colour with the mouth's daylight taken out), never a multiple of the daylit lining near a mouth, so every
+ // pool (the first at each end included) is equally strong at any time of day; the daylight stays a plain fade from the opening.
+ float lk;{float e=max(exp(-a/5.),exp(-(${chordL.toFixed(2)}-a)/5.)),dk=.36/(.36+.64*e);gl_FragColor.rgb*=mix(1.,dk,uTubeNight);m=max(m,uTubeNight);lk=mix(dk,1.,uTubeNight);}
  vec2 td=vTubeW.xz-uTrainLamp.xy;float tl=uTrainLamp.w*exp(-dot(td,td)/45.);
- gl_FragColor.rgb=gl_FragColor.rgb*(mix(1.,.62,m)+L*1.45*vec3(1.,.8,.55))+vec3(1.,.93,.74)*tl*.55;}
+ gl_FragColor.rgb=gl_FragColor.rgb*(mix(1.,.62,m)+lk*L*1.45*vec3(1.,.8,.55))+vec3(1.,.93,.74)*tl*.55;}
 gl_FragColor.rgb*=1.-.45*tubeOut;`);};
   mat.customProgramCacheKey=()=>'train-tunnel-lit';
   const m=new T.Mesh(g,mat);m.name='train-tunnel-tube';m.matrixAutoUpdate=false;m.userData.ownDraw=true;return m;
