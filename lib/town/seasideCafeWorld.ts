@@ -13,6 +13,7 @@ import {CAFE,CAFE_BALCONY_Y,CAFE_DECKS,CAFE_STEPS,CAFE_LADDER,CAFE_POSTS,CAFE_PO
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {broadleafTreesOn,broadleafBush} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
+import {softOn,SoftBoxGeometry} from '../graphics/softBox';
 
 type Mesh=T.Mesh;
 export type CafeTools={
@@ -137,9 +138,17 @@ export function buildSeasideCafe(t:CafeTools):CafeBuild{
  // ---- The rowboat moored off the east deck, tied to a post.
  const BOAT_Y=.05;
  {const B=CAFE_BOAT,g=new T.Group();g.position.set(B.x,BOAT_Y,B.z);g.rotation.y=B.yaw;town.add(g);/* owner shot 83: it sat under the water; now the hull rides on top (waterline ~ a third up) */
-  box(B.len*.72,.42,B.beam,HULL,-.2,0,0,g);const bow=box(B.beam*.71,.42,B.beam*.71,HULL,B.len*.36-.2,0,0,g);bow.rotation.y=Math.PI/4;
+  if(softOn()){// soft sweep (Nov 27 2026): one rounded hull tapering to a soft bow (no rotated-box bow), a pillowed floor, rounded thwarts;
+   // it rocks gently in place through the island wind's vertex sway (userData.swayRock, world.ts batching: 0 draws, the same clock).
+   const L=B.len*.92,hl=L/2,taper=(geo:T.BufferGeometry,ox:number)=>{const P=geo.getAttribute('position');for(let i=0;i<P.count;i++){const u=(P.getX(i)+ox)/hl;if(u>0)P.setZ(i,P.getZ(i)*(1-.72*Math.pow(Math.min(1,u),2.2)));else P.setZ(i,P.getZ(i)*(1-.16*u*u));}P.needsUpdate=true;return geo;};
+   const rock=[BOAT_Y-.2,.7,.35];
+   for(const [geo,c,x,y] of [[taper(new SoftBoxGeometry(L,.42,B.beam,{radius:.2,seg:2}),0),HULL,0,0],[taper(new SoftBoxGeometry(L-.3,.1,B.beam-.22,{radius:.05,seg:1,dome:.02}),0),HULL_D,0,.17],
+    [new SoftBoxGeometry(.24,.06,B.beam-.3,{radius:.03,seg:1}),CREAM,-.1,.24],[new SoftBoxGeometry(.24,.06,B.beam-.26,{radius:.03,seg:1}),CREAM,-1,.24]] as [T.BufferGeometry,string,number,number][])
+    put(geo,c,x,y,0,g).userData.swayRock=rock;
+   for(const sd of [-1,1])put(taper(new T.CylinderGeometry(.04,.04,L-.1,8).rotateZ(Math.PI/2).translate(0,0,sd*(B.beam/2-.02)),0),TRIM,0,.22,0,g).userData.swayRock=rock;}
+  else{box(B.len*.72,.42,B.beam,HULL,-.2,0,0,g);const bow=box(B.beam*.71,.42,B.beam*.71,HULL,B.len*.36-.2,0,0,g);bow.rotation.y=Math.PI/4;
   box(B.len*.68,.1,B.beam-.22,HULL_D,-.2,.17,0,g);box(.24,.06,B.beam-.18,CREAM,-.1,.24,0,g);box(.24,.06,B.beam-.18,CREAM,-1,.24,0,g);
-  box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,B.beam/2,g);box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,-B.beam/2,g);
+  box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,B.beam/2,g);box(B.len*.72+.04,.06,.06,TRIM,-.2,.2,-B.beam/2,g);}
   for(const s of [-1,1]){const oar=line(V(B.x-.3,BOAT_Y+.3,B.z+s*.5),V(B.x-1.5,BOAT_Y+.4,B.z+s*.85),.03,WOOD);oar.userData.skipRoofObstacle=true;}
   skip(line(V(B.x-1.5,BOAT_Y+.25,B.z-.3),V(718.7,F-.3,-100.5),.015,ROPE));
   obstacles.push({x:B.x,z:B.z,w:B.len,d:B.beam+.6});}

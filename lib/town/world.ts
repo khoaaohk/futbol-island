@@ -2074,6 +2074,7 @@ export function* buildTownSteps(scene: T.Scene) {
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
     // Night glow (Nov 13 2026, machineNightGlow.ts): the Konbini fronts and the gashapon panels carry their weight in the plain paint's uv slot.
     {const glow=object.userData.machineGlow as [number,boolean]|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
+    {const rock=object.userData.swayRock as [number,number,number]|undefined;if(rock&&paint)markSway(geom,rock[0],rock[1],rock[2]);}// soft sweep: the café rowboat rocks with the island wind (0 draws)
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);if(object.userData.depthColors)batch.depthPiece=batch.geometries.length-1;
     {const far=object.userData.lampFar as number[]|undefined,near=object.userData.lampNear as number[]|undefined,lod=far?1:near?2:0;if(lod||batch.lod){batch.lod??=new Array(batch.geometries.length-1).fill(0);batch.lod.push(lod);}

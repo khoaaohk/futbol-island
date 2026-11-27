@@ -6,6 +6,7 @@
 // wheel caps) are not built: each style comes in under the triangle count of the plain box car it replaces (tests/traffic-vehicles.cjs).
 import * as T from 'three';
 import {vehiclesOn} from './vehicleSwitch';
+import {softOn} from './softBox';
 export type VehicleStyle='sedan'|'hatch'|'van'|'wagon'|'jeep'|'taxi'|'pickup';
 /** Ordinary cars by traffic index (the two pickups are indices 7 and 8). */
 export const CAR_STYLES:readonly VehicleStyle[]=['sedan','hatch','taxi','wagon','van','hatch','jeep','pickup','pickup','van','wagon'];
@@ -23,7 +24,9 @@ const motionOk=()=>{if(reducedMotion===undefined)reducedMotion=typeof matchMedia
 export const OLD_TRIANGLES={car:276,pickup:524} as const;
 /** Rounded vehicles (Nov 26 2026, `?vehicles=0` = the box bodies above): bevelled bodies and cabins, wheel arches. The cap a rounded
  *  style must stay under (tests/traffic-signals.cjs): about +120 triangles a car, +90 a pickup (no draw, material or texture added). */
-export const ROUND_TRIANGLES={car:330,pickup:370} as const;
+/** Soft sweep (Nov 27 2026, `?soft=0` = before): 14-sided wheels (were 8: +18 triangles a wheel) and a rounded pickup bed. */
+const SOFT_WHEEL=softOn();
+export const ROUND_TRIANGLES={car:330+72,pickup:370+72+90} as const;
 export const WHEEL_RADIUS=.32;
 const TRIM='#2b3534',TYRE='#262e2e',HUB='#c9cfc9',GLASS='#6f9a97',CREAM='#efe1bd',HEAD='#fff1c2',TAIL='#c93a2c',AMBER='#ffa52b',CHROME='#b9c2c0';
 type V=[number,number,number];
@@ -73,8 +76,9 @@ function builder(){
  const panelX=(x:number,y:number,z:number,d:number,h:number,dir:number,color:string,lean=0,inset=0)=>quad([x,y-h/2,z-d/2],[x,y-h/2,z+d/2],[x-dir*inset,y+h/2,z+d/2+lean],[x-dir*inset,y+h/2,z-d/2+lean],color,[x-dir,y,z]);
  /** An eight-sided wheel on the x axis: tread, outer cap and a hub bar that makes the spin readable. No inner cap (never seen). */
  const wheel=(x:number,y:number,z:number,front:boolean,r=WHEEL_RADIUS,width=.22)=>{
-  const side=Math.sign(x),xo=x+side*width/2,xi=x-side*width/2,tag=[x,y,z,front?PART.frontWheel:PART.rearWheel],N=8,inside:V=[xi,y,z];
-  const ring=(k:number,px:number):V=>{const t=k/N*Math.PI*2+Math.PI/N;return [px,y+Math.cos(t)*r,z+Math.sin(t)*r];};
+  const side=Math.sign(x),xo=x+side*width/2,xi=x-side*width/2,tag=[x,y,z,front?PART.frontWheel:PART.rearWheel],N=SOFT_WHEEL?14:8,inside:V=[xi,y,z];
+  const rr=SOFT_WHEEL?r*Math.cos(Math.PI/8):r;/* the round wheel spans what the octagon's flats did (same footprint, never under the road) */
+  const ring=(k:number,px:number):V=>{const t=k/N*Math.PI*2+Math.PI/N;return [px,y+Math.cos(t)*rr,z+Math.sin(t)*rr];};
   for(let k=0;k<N;k++)quad(ring(k,xi),ring(k+1,xi),ring(k+1,xo),ring(k,xo),TYRE,[x,y,z],tag);
   for(let k=1;k<N-1;k++)tri(ring(0,xo),ring(k,xo),ring(k+1,xo),TYRE,inside,tag);
   const xh=xo+side*.012,u=r*.66,v=r*.2;quad([xh,y-u,z-v],[xh,y-u,z+v],[xh,y+u,z+v],[xh,y+u,z-v],HUB,inside,tag);
@@ -148,8 +152,9 @@ function pickup(paint:string,bedY:number,coolerSeat:boolean,variant:number){
  if(R){b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,1.98],[-.98,.86,1.98],paint,[0,0,1.2]);b.quad([-.98,.86,1.98],[.98,.86,1.98],[.78,.86,2.18],[-.78,.86,2.18],paint,[0,0,1.2]);}// the bonnet follows the chamfered nose
  else b.quad([-.98,.86,.17],[.98,.86,.17],[.98,.86,2.18],[-.98,.86,2.18],paint,[0,0,1.2]);
  b.quad([-.95,floor,-2.05],[.95,floor,-2.05],[.95,floor,.17],[-.95,floor,.17],CREAM,[0,0,-.95]);
- for(const side of [-1,1])b.hull(side*.94,.84,-.95,.14,2.4,.54,paint,{faces:'tfblr'});
- b.hull(0,.84,-2.12,2,.14,.54,paint,{faces:'tfb'});
+ if(R&&SOFT_WHEEL){for(const side of [-1,1])b.rhull(side*.94,.84,-.95,.14,2.4,.54,paint,{c:.06,ct:.05});b.rhull(0,.84,-2.12,2,.14,.54,paint,{c:.06,ct:.05});}// soft sweep: rounded bed walls and tailgate
+ else{for(const side of [-1,1])b.hull(side*.94,.84,-.95,.14,2.4,.54,paint,{faces:'tfblr'});
+ b.hull(0,.84,-2.12,2,.14,.54,paint,{faces:'tfb'});}
  // Landing ring on the bed floor (it was a 200-triangle torus): a flat twelve-sided band.
  for(let k=0;k<12;k++){const t0=k/12*Math.PI*2,t1=(k+1)/12*Math.PI*2,y=floor+.02,p=(t:number,r:number):V=>[Math.cos(t)*r,y,-.95+Math.sin(t)*r];b.quad(p(t0,.43),p(t1,.43),p(t1,.53),p(t0,.53),paint,[0,0,-.95]);}
  if(coolerSeat){b.hull(0,.86,-1.25,.7,.46,.43,'#5f8f9c',{faces:'fblr'});b.hull(0,1.27,-1.25,.72,.48,.04,CREAM);}

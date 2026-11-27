@@ -10,6 +10,7 @@
  * floor) and adds a rounded bow point forward of the bow rail and rounded stern quarters behind the stern rail.
  */
 import * as T from 'three';
+import {softOn} from '../graphics/softBox';
 type V3=[number,number,number];
 /** Plan outline: half-beam at local z (bow -z). Max HB; stern quarters round off to the transom; the bow curves to a rounded point. */
 export const FERRY_SHAPE={hb:4.15,transomZ:9.1,transomHB:3.4,quarterFrom:8.0,bowFrom:-7,noseZ:-11.6,deckY:1.5,keelY:-.9} as const;
@@ -19,16 +20,22 @@ export function ferryHalfBeam(z:number){
  if(z>=S.bowFrom)return S.hb;
  const t=Math.min(1,(S.bowFrom-z)/(S.bowFrom-S.noseZ));return S.hb*Math.pow(Math.max(0,1-Math.pow(t,2.5)),.5);
 }
+/** Soft sweep (Nov 27 2026, owner: "soften the straight middle sides"): a gentle plan bulge amidships (0 at the bow and quarter joins,
+ *  zero slope there, 0.28 m at z 0.5) on top of ferryHalfBeam, full at the waterline and easing in toward the deck (tumblehome). */
+export const FERRY_BULGE=.28;
+export function ferryBulge(z:number){const S=FERRY_SHAPE;if(z<=S.bowFrom||z>=S.quarterFrom)return 0;const v=Math.sin(Math.PI*(z-S.bowFrom)/(S.quarterFrom-S.bowFrom));return FERRY_BULGE*v*v;}
 const STATIONS=(()=>{const S=FERRY_SHAPE,zs:number[]=[];
  for(let i=0;i<=8;i++){const u=i/8;zs.push(S.noseZ+(S.bowFrom-S.noseZ)*(1-Math.pow(1-u,1.7)));}// dense at the nose
- for(const z of [-3,1,5])zs.push(z);
+ for(const z of softOn()?[-5,-3,-1,1,3,5,6.6]:[-3,1,5])zs.push(z);// soft sweep: denser amidships so the bulge reads as a curve (the old -3, 1, 5 are kept)
  for(let i=0;i<=4;i++)zs.push(S.quarterFrom+(S.transomZ-S.quarterFrom)*i/4);
  return zs;})();
 const HULL='#477c6a',BOOT='#2f5a4d',STRIPE='#eddfbb',CAP='#eddfbb',DECK='#e6d6ae',CABIN='#fff0cf',BAND='#477c6a',ROOF='#bd7657',ROOF_EDGE='#a9654a',
  GLASS='#365b56',RAIL='#eddfbb',POST='#9d805b',FENDER='#e0513f',DOOR='#8a5a3c';
-export function buildFerryGeometry(){
- const pos:number[]=[],col:number[]=[],foam:number[]=[],c=new T.Color();
- const tri=(a:V3,b:V3,d:V3,color:string,f=0)=>{c.set(color);for(const v of [a,b,d]){pos.push(v[0],v[1],v[2]);col.push(c.r,c.g,c.b);foam.push(f);}};
+export function buildFerryGeometry(soft=softOn()){
+ const pos:number[]=[],col:number[]=[],foam:number[]=[],nrm:number[]=[],c=new T.Color();let nOver=false;
+ const tri=(a:V3,b:V3,d:V3,color:string,f=0)=>{c.set(color);for(const v of [a,b,d]){pos.push(v[0],v[1],v[2]);col.push(c.r,c.g,c.b);foam.push(f);const n=nOver?smoothN(v):null;if(n)nrm.push(n[0],n[1],n[2]);else nrm.push(NaN,0,0);}};
+ /** Soft roof: an analytic normal per vertex (set while a cambered top is drawn), so the barrel roof shades smooth with no fan creases. */
+ let smoothN:(v:V3)=>V3|null=()=>null;
  /** A quad wound so its normal points away from `inside`. */
  const quad=(a:V3,b:V3,d:V3,e:V3,color:string,inside:V3,f=0)=>{
   const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=d[0]-a[0],vy=d[1]-a[1],vz=d[2]-a[2],nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
@@ -38,7 +45,8 @@ export function buildFerryGeometry(){
  const triOut=(a:V3,b:V3,d:V3,color:string,inside:V3)=>{const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=d[0]-a[0],vy=d[1]-a[1],vz=d[2]-a[2];
   const out=(uy*vz-uz*vy)*(a[0]-inside[0])+(uz*vx-ux*vz)*(a[1]-inside[1])+(ux*vy-uy*vx)*(a[2]-inside[2])>=0;if(out)tri(a,b,d,color);else tri(a,d,b,color);};
  /** The outline ring at height y, half-beam x k (+ an offset), starboard (+x) side bow to stern then port back to the bow. */
- const ring=(y:number,k:number,off=0):V3[]=>{const r:V3[]=[];for(const z of STATIONS)r.push([ferryHalfBeam(z)*k+off,y,z]);for(let i=STATIONS.length-1;i>=0;i--)r.push([-(ferryHalfBeam(STATIONS[i])*k+off),y,STATIONS[i]]);return r;};
+ const hbAt=(z:number,bw:number)=>ferryHalfBeam(z)+(soft?bw*ferryBulge(z):0);
+ const ring=(y:number,k:number,off=0,bw=1):V3[]=>{const r:V3[]=[];for(const z of STATIONS)r.push([hbAt(z,bw)*k+off,y,z]);for(let i=STATIONS.length-1;i>=0;i--)r.push([-(hbAt(STATIONS[i],bw)*k+off),y,STATIONS[i]]);return r;};
  /** Sides between two rings; colour picked per band. Inside point: the centre line at that station's height. */
  const band=(a:V3[],b:V3[],color:string,f=0)=>{for(let i=0;i<a.length;i++){const j=(i+1)%a.length;const zc=(a[i][2]+a[j][2])/2,yc=(a[i][1]+b[i][1])/2;
   // the nose and transom: the inside point moves along the axis so those faces wind outward too
@@ -57,18 +65,25 @@ export function buildFerryGeometry(){
   for(const [sx,sz,a0] of [[1,-1,-Math.PI/2],[1,1,0],[-1,1,Math.PI/2],[-1,-1,Math.PI]] as const)for(let k=0;k<=3;k++){const a=a0+k/3*Math.PI/2;pts.push([sx*(hx-r)+Math.cos(a)*r,cz+sz*(hz-r)+Math.sin(a)*r]);}
   const yt=(x:number)=>y1+(o.camber??0)*(1-(x/hx)*(x/hx)),m:V3=[0,(y0+y1)/2,cz];
   for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];quad([ax,y0,az],[bx,y0,bz],[bx,yt(bx),bz],[ax,yt(ax),az],color,m);}
-  // top: a fan from the centre (domed by the camber)
-  const ctr:V3=[0,yt(0),cz];for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];triOut(ctr,[ax,yt(ax),az],[bx,yt(bx),bz],o.top??color,[0,y0-5,cz]);}
+  // top: a fan from the centre (domed by the camber). Soft sweep (owner: "remove the faint cross on the roof seen from above"): a cambered
+  // top is laid in strips along z instead (the camber varies with x only, so each strip is exactly planar) with analytic smooth normals.
+  if(soft&&o.camber){const cam=o.camber,xs=[...new Set(pts.map(p=>+p[0].toFixed(5)))].sort((a,b)=>a-b),flat=xs.filter(x=>Math.abs(x)<hx-r-1e-4);
+   for(let k=1;k<=4;k++){const x=-(hx-r)+2*(hx-r)*k/5;if(!flat.some(f=>Math.abs(f-x)<1e-3))xs.push(x);}xs.sort((a,b)=>a-b);
+   const ze=(x:number)=>{const ax=Math.abs(x);return ax<=hx-r?hz:hz-r+Math.sqrt(Math.max(0,r*r-(ax-(hx-r))*(ax-(hx-r))));};
+   smoothN=v=>{const sl=-2*cam*v[0]/(hx*hx),l=Math.hypot(sl,1);return [-sl/l,1/l,0];};nOver=true;
+   for(let i=0;i+1<xs.length;i++){const xa=xs[i],xb=xs[i+1],za=ze(xa),zb=ze(xb);quad([xa,yt(xa),cz-za],[xb,yt(xb),cz-zb],[xb,yt(xb),cz+zb],[xa,yt(xa),cz+za],o.top??color,[0,y0-5,cz]);}
+   nOver=false;}
+  else{const ctr:V3=[0,yt(0),cz];for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];triOut(ctr,[ax,yt(ax),az],[bx,yt(bx),bz],o.top??color,[0,y0-5,cz]);}}
   if(o.under)for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];triOut([0,y0,cz],[ax,y0,az],[bx,y0,bz],o.top??color,[0,y0+5,cz]);}
  };
  const S=FERRY_SHAPE,D=S.deckY;
  // ---- Hull: a slight V keel, rounded bilge, near-vertical topsides with a cream sheer stripe; deck flush at 1.5.
- const rings:[number,number,string][]=[[S.keelY,.32,BOOT],[-.65,.66,BOOT],[-.38,.86,BOOT],[-.1,.95,HULL],[.35,1,HULL],[1.05,1,STRIPE],[1.22,1,HULL],[D-.08,1,CAP],[D,1,CAP]];
- for(let i=0;i+1<rings.length;i++)band(ring(rings[i][0],rings[i][1]),ring(rings[i+1][0],rings[i+1][1]),rings[i][2]);
- cap(ring(S.keelY,.32),BOOT,-1);
- cap(ring(D,.985),DECK);
+ const rings:[number,number,string,number][]=[[S.keelY,.32,BOOT,.4],[-.65,.66,BOOT,.7],[-.38,.86,BOOT,.9],[-.1,.95,HULL,1],[.35,1,HULL,1],[1.05,1,STRIPE,.85],[1.22,1,HULL,.72],[D-.08,1,CAP,.5],[D,1,CAP,.5]];
+ for(let i=0;i+1<rings.length;i++)band(ring(rings[i][0],rings[i][1],0,rings[i][3]),ring(rings[i+1][0],rings[i+1][1],0,rings[i+1][3]),rings[i][2]);
+ cap(ring(S.keelY,.32,0,.4),BOOT,-1);
+ cap(ring(D,.985,0,.5),DECK);
  // Waterline foam collar (pinned to the sea by the material; a thin flat band just outside the hull at the waterline).
- {const a=ring(-.43,.88,.06),b=ring(-.43,.88,.42);for(let i=0;i<a.length;i++){const j=(i+1)%a.length;if(Math.abs(a[i][0])<.01&&Math.abs(a[j][0])<.01)continue;quad(a[i],a[j],b[j],b[i],'#e8f7f2',[a[i][0],-5,a[i][2]],1);}}
+ {const a=ring(-.43,.88,.06,.85),b=ring(-.43,.88,.42,.85);for(let i=0;i<a.length;i++){const j=(i+1)%a.length;if(Math.abs(a[i][0])<.01&&Math.abs(a[j][0])<.01)continue;quad(a[i],a[j],b[j],b[i],'#e8f7f2',[a[i][0],-5,a[i][2]],1);}}
  // ---- The foredeck forward of the bow rail: a bulwark that follows the outline and rises toward the stem (the sheer), cream cap.
  {const zs=STATIONS.filter(z=>z<=-8.4);for(const s of [-1,1])for(let i=0;i+1<zs.length;i++){const za=zs[i],zb=zs[i+1],xa=s*(ferryHalfBeam(za)-.08),xb=s*(ferryHalfBeam(zb)-.08);
    const ha=D+.35+.75*Math.pow(Math.max(0,(-8.4-za)/(-8.4-S.noseZ)),1.4),hb=D+.35+.75*Math.pow(Math.max(0,(-8.4-zb)/(-8.4-S.noseZ)),1.4);
@@ -102,7 +117,8 @@ export function buildFerryGeometry(){
   quad(P(a0,.7-h,r),P(a1,.7-h,r),P(a1,.7+h,r),P(a0,.7+h,r),FENDER,[x,.7,z]);
   quad(P(a0,.7+h,r),P(a1,.7+h,r),P(a1,.7+h+.1,r*.5),P(a0,.7+h+.1,r*.5),FENDER,[x,.7,z]);
   quad(P(a0,.7-h,r),P(a1,.7-h,r),P(a1,.7-h-.1,r*.5),P(a0,.7-h-.1,r*.5),FENDER,[x,.7,z]);}};
- for(const z of [-5.5,-2,1.5])for(const s of [-1,1])fender(s*(S.hb+.17),z);fender(S.hb+.17,5);
+ for(const z of [-5.5,-2,1.5])for(const s of [-1,1])fender(s*(hbAt(z,.95)+.17),z);fender(hbAt(5,.95)+.17,5);
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));
- g.setAttribute('foam',new T.Float32BufferAttribute(foam,1));g.computeVertexNormals();g.computeBoundingSphere();g.computeBoundingBox();return g;
+ g.setAttribute('foam',new T.Float32BufferAttribute(foam,1));g.computeVertexNormals();
+ {const N=g.getAttribute('normal');for(let i=0;i<N.count;i++)if(!Number.isNaN(nrm[i*3]))N.setXYZ(i,nrm[i*3],nrm[i*3+1],nrm[i*3+2]);}g.computeBoundingSphere();g.computeBoundingBox();return g;
 }
