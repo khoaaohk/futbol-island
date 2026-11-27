@@ -1,5 +1,22 @@
 # Performance reference for future Futbol Island updates
 
+## Tunnel ride + track + train bump, lamps, far plug, sign landings (Nov 27 2026, branch `tunnel-ride-track`, local, not deployed, no phone test)
+- Walk / ride step in the bore (`lib/town/tunnelWalk.ts`): the same stepPlayer call as before with no obstacles, a lateral clamp and an
+  eased floor height (floorAt: a few compares). No allocation. Rides use rideSurfacePose with a floor sampler (two samples per wheel).
+- Train in the bore (Town tunnelTrain, only while the walker is in the tunnel): per train a wrapS and a divide (warn), a compare (hit),
+  a near test (camera lean). The bump is pure maths; its pose is applied to the drawn frame only (scale / roll, restored after render).
+  The hint reuses fuelStore.say; the stars reuse the existing dizzy-stars group; the word reuses knockWords; the line reuses bonkBubble.
+- Lamps (buildLitTube): the faceted fan glow patches are gone; each lamp is 3 small boxes in the same mesh (0 new draws, ~+300 tris).
+  The light is in the tube's fragment shader: 3 exp() of the nearest lamps (uniform vec4[~15], index from the chord position), a
+  dimming between lamps, and the coming train's headlight (TUNNEL_TRAIN_LAMP: 1 exp). ~20 ALU per tunnel pixel. No lights, no passes.
+- Walker light in the tunnel: the sun / hemisphere intensity and the hemi colour are set for the drawn frame from lampLight (3 exp on
+  the CPU) and restored after the render: no new lights, no shader recompiles.
+- Camera: clampCam (a trackNearest and a few float ops) once per frame while the chase blend is on.
+- Far plug (`train-tunnel-plug`): ~60 tris, ONE draw only while the tube is NOT drawn (past TUBE_SHOW); they swap, so no frame draws both.
+- Landings (`simulation.ts landingSpot`): run once per landing (an obstacle grid query + rings), never per frame.
+- Validation: tests/tunnel-walk.cjs, tests/station-sign-landing.cjs, desktop headless shots only (`.claude/worktrees/_recovery-nov20/sky/tunnel2/`).
+  GPU cost of the shader lamps on a phone is not measured.
+
 ## Sky dome + clouds, far sea, lit see-through tunnel, wire and wheel fixes (Nov 26 2026, branch `island-sky`, local, not deployed, no phone test)
 - Switch: `?sky=0` restores the look before (flat background, old far sea, black tunnel mouth, old wire); `?tunnel=0` only the tunnel
   (`lib/graphics/skySwitch.ts`, read once; default ON). The wheel fix is not switched (a geometry bug fix).

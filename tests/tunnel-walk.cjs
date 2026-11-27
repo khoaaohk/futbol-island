@@ -39,6 +39,10 @@ const ROOT=path.join(__dirname,'..');
    const c=tw.tunnelSpot(cam.x,cam.z,HW+12);assert(c,'camera near the line');if(c.u>-1){assert(c.d<=HW-tw.CAM_PAD+.01,`turning at ${ds.toFixed(0)}, ${v}: camera inside the bore (${c.d.toFixed(2)})`);
     assert(cam.y<=B+2.4+Math.sqrt(Math.max(0,(HW-tw.CAM_PAD)**2-c.d**2))+.01&&cam.y>=B+.59,'camera between the floor and the arch');}}}
  {const w=tw.createTunnelWalk(),c={x:0,y:0,z:0};const p=at(W.s+30,HW+3);Object.assign(c,p,{y:B+9});assert(w.clampCam(c));const g=tw.tunnelSpot(c.x,c.z);assert(g.d<=HW-tw.CAM_PAD+.01&&c.y<B+2.4+HW,'a camera out in the hill is pulled into the bore');}
+ // a train near: the camera leans over to the walker's walkway (beside the car, never in it) and stays in the bore
+ for(const side of [1,-1]){const w=tw.createTunnelWalk(),p=at(W.s+50,0);w.tryEnter(p,B+.2,'walk');w.state.trainSide=side;const cam={x:0,y:0,z:0},look={x:0,y:0,z:0};
+  for(let i=0;i<120;i++)w.chase(p.x,B+.22,p.z,0,1/60,false,cam,look);const c=tw.tunnelSpot(cam.x,cam.z);const n=tt.leftNormal(c.tx,c.tz),v=(cam.x-c.cx)*n.x+(cam.z-c.cz)*n.z;
+  assert(v*side>car.HALF_W+.4&&c.d<=HW-tw.CAM_PAD+.01,`leaned to side ${side}: ${v.toFixed(2)}`);}
  // 4. the train
  const LEN=sch.TRAIN_LENGTH,mid=W.s+60;
  {const w=tw.createTunnelWalk(),tr=[{s:mid-30,v:12},{s:mid+50,v:12},{s:mid-200,v:12}];const r=w.warn(tr,mid);assert.equal(r.train,0);assert(Math.abs(r.gap-30)<1e-6&&Math.abs(r.eta-2.5)<1e-6,'the coming train: gap and time');}

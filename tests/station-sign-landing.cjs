@@ -6,7 +6,7 @@ const {loadIslandWorld}=require('../scripts/island-world-load.cjs');
  const {L,obstacles}=await loadIslandWorld(path.join(__dirname,'..'));const sim=L('lib/town/simulation.ts'),tw=L('lib/town/trainWorld.ts'),si=L('lib/town/summitBalls.ts');
  const F=tw.STATION_SIGN_FEET;assert(F.length>=2*5*8,`every station's two boards have footprints (${F.length/2} cells)`);
  const spots=[];for(let i=0;i<F.length;i+=2)spots.push([F[i],F[i+1]]);
- if(si.RIDDLE_BOARD)spots.push([si.RIDDLE_BOARD.x,si.RIDDLE_BOARD.z]);
+// (the Summit riddle board stays two posts: the sandbar ride path goes between them, tests/summit-arrival.cjs)
  let n=0;for(const [x,z] of spots)for(const r of [.34,.6]){const p={x,z};const inside=obstacles.some(o=>sim.insideObstacle(x,z,o,r));assert(inside,'the board is solid at its cells');
   assert(sim.landingSpot(p,obstacles,r),'moved');assert(Math.hypot(p.x-x,p.z-z)<=.75+r,`within ~1 m (plus the ride's radius) (${Math.hypot(p.x-x,p.z-z).toFixed(2)})`);
   assert(!obstacles.some(o=>sim.insideObstacle(p.x,p.z,o,r)),'free');
