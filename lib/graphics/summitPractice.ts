@@ -20,6 +20,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createClassicBallGeometry,CLASSIC_BALL} from './ballAppearance';
+import {puffGeo} from './softBox';
 import {SUMMIT_PITCH,PITCH_HEIGHT} from '../town/summitIsle';
 import {
  PRACTICE_LIMITS,PRACTICE_SAVE_KEY,PRACTICE_BALL,PRACTICE_BALL_WHITE,CONE_HEX,HALF_U,HALF_V,
@@ -68,7 +69,20 @@ const merged=(parts:T.BufferGeometry[])=>{const ns=parts.map(p=>p.index?p.toNonI
 /** A training cone (white body for the instance tint, a slightly darker square base). Origin at the ground. */
 /* Owner Nov 25 2026: "make the cones a little larger": 1.3x (0.43 m tall, 0.39 m base). */
 const CS=1.3;
-function coneGeometry(){return merged([paint(at(new T.CylinderGeometry(.022*CS,.13*CS,.3*CS,10),0,.03*CS+.15*CS,0),'#ffffff'),paint(at(new T.BoxGeometry(.3*CS,.03*CS,.3*CS),0,.015*CS,0),'#b8b8b8')]);}
+function coneGeometry(){return merged([paint(at(new T.CylinderGeometry(.022*CS,.13*CS,.3*CS,10),0,.03*CS+.15*CS,0),'#ffffff'),pbox(.3*CS,.03*CS,.3*CS,0,.015*CS,0,'#b8b8b8',0)]);}
+/**
+ * Arena inflatables (Nov 27 2026, owner shot 190: the minigame props were still boxes): the mannequins' body, chest band and arms and
+ * the cone pads are puffed soft boxes (softBox.ts puffGeo: rounded per axis, domed tops) with a baked pool-float light in their vertex
+ * colour (lit crown, shaded belly) so they read as inflatable training dummies. Same instanced meshes and draws; the physics radii
+ * (summitPractice.ts) are unchanged. Low tier / Battery saver: one rounding step less; `?soft=0` / `?puff=0`: the old boxes.
+ */
+function pbox(w:number,h:number,d:number,x:number,y:number,z:number,c:string,seg=1){
+ const g=puffGeo(w,h,d,{puff:2,seg,openBottom:y-h/2<.001});if(!g)return paint(at(new T.BoxGeometry(w,h,d),x,y,z),c);
+ paint(g,c);const col=g.getAttribute('color'),n=g.getAttribute('normal'),p=g.getAttribute('position');
+ for(let i=0;i<col.count;i++){const t=(n.getY(i)+1)/2,f=(.66+.42*Math.pow(t,1.2))*(.9+.1*Math.min(1,(p.getY(i)+h/2)/h*2)),gl=Math.max(0,n.getY(i)-.55)*.32;
+  col.setXYZ(i,col.getX(i)*f*(1-gl)+gl,col.getY(i)*f*(1-gl)+gl*.97,col.getZ(i)*f*(1-gl)+gl*.9);}
+ return at(g,x,y,z);
+}
 /** A free-kick wall mannequin, an original look: a sunny yellow silhouette with a navy chest band and a white chest disc (its
  *  front), on a pole and a spring base. Origin at the ground, facing +z, ~1.84 m tall. */
 function manGeometry(){
@@ -76,10 +90,10 @@ function manGeometry(){
  return merged([
   paint(at(new T.CylinderGeometry(.24,.28,.08,12),0,.04,0),'#3b3f46'),
   paint(at(new T.CylinderGeometry(.045,.045,.5,6),0,.33,0),'#9aa0a6'),
-  paint(at(new T.BoxGeometry(.36,.52,.12),0,.84,0),Y),
-  paint(at(new T.BoxGeometry(.48,.56,.14),0,1.36,0),Y),
-  paint(at(new T.BoxGeometry(.49,.08,.15),0,1.5,0),NAVY),
-  paint(at(new T.BoxGeometry(.1,.5,.1),-.3,1.3,0),Y),paint(at(new T.BoxGeometry(.1,.5,.1),.3,1.3,0),Y),
+  pbox(.36,.52,.12,0,.84,0,Y),
+  pbox(.48,.56,.14,0,1.36,0,Y),
+  pbox(.49,.08,.15,0,1.5,0,NAVY,0),
+  pbox(.1,.5,.1,-.3,1.3,0,Y,0),pbox(.1,.5,.1,.3,1.3,0,Y,0),
   paint(at(new T.SphereGeometry(.13,10,8),0,1.74,0),Y),
   paint(at(new T.CircleGeometry(.09,12),0,1.3,.071),'#ffffff'),
  ]);
