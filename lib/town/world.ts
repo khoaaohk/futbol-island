@@ -1475,7 +1475,8 @@ export function* buildTownSteps(scene: T.Scene) {
     }
   }
   // A shaded gathering strip at the southern entrance and a shared potting table.
-  bench(191,1);bench(222,1);table(207,0);
+  // Nov 27 2026 (owner shots 167 + 205: "remove this canopy thing"): the big lone table at (207, 0) by the benches is gone.
+  bench(191,1);bench(222,1);
   for(const [x,z] of [[186,-34],[230,-34],[230,4]])tree(x,z);
   // Soft sweep (Nov 27 2026, owner shot 167: "remove this thing next to the bench. out of place"): the lone potting table at (229, -15)
   // (a decorative slab + two pots, no feature) is gone with its collider; `?soft=0` keeps it for comparison.
