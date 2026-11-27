@@ -34,6 +34,7 @@ import {onLand} from './landmass';
 import {effectiveTier,LOWEST_TIER} from '../graphics/heatTier';
 import {stampById} from './islandStamps';
 import {groundingOn} from './grounding';
+import {softOn,SoftBoxGeometry} from '../graphics/softBox';
 
 type Surface=Obstacle&{height:number};
 export type TrainTools={
@@ -76,6 +77,26 @@ class Geo{
   this.quad(P(-1,-1,1),P(1,-1,1),P(1,1,1),P(-1,1,1),c);if(!skipBottom)this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,1,-1),P(-1,1,-1),c);
   if(ends){this.quad(P(-1,-1,-1),P(1,-1,-1),P(1,-1,1),P(-1,-1,1),c);this.quad(P(-1,1,-1),P(1,1,-1),P(1,1,1),P(-1,1,1),c);}
   this.quad(P(-1,-1,-1),P(-1,1,-1),P(-1,1,1),P(-1,-1,1),c);this.quad(P(1,-1,-1),P(1,1,-1),P(1,1,1),P(1,-1,1),c);}
+ /** Triangle with its own vertex normals (smooth-shaded rounds). */
+ triN(a:number[],b:number[],c:number[],na:number[],nb:number[],nc:number[]){this.p.push(...a,...b,...c);this.n.push(...na,...nb,...nc);}
+ /** Soft sweep 2 (Nov 27 2026): a rounded box in the same frame as box() (a smooth-shaded chamfer, lib/graphics/softBox.ts seg 0). */
+ sbox(cx:number,cy:number,cz:number,tx:number,tz:number,hl:number,hw:number,hh:number,r:number){
+  const g=new SoftBoxGeometry(hl*2,hh*2,hw*2,{radius:r,seg:0}),P=g.getAttribute('position'),N=g.getAttribute('normal'),I=g.index!.array,nx=tz,nz=-tx;
+  const w=(i:number,a:T.BufferAttribute|T.InterleavedBufferAttribute,o:number[])=>{const x=a.getX(i),y=a.getY(i),z=a.getZ(i);return [o[0]+tx*x+nx*z,o[1]+y,o[2]+tz*x+nz*z];};
+  const c=[cx,cy,cz],z0=[0,0,0];for(let k=0;k<I.length;k+=3)this.triN(w(I[k],P,c),w(I[k+1],P,c),w(I[k+2],P,c),w(I[k],N,z0),w(I[k+1],N,z0),w(I[k+2],N,z0));g.dispose();}
+ /** A quarter-round nosing along (tx,tz), half length hl: centre c (at the edge's inner top corner), radius r, from `out` (unit,
+  *  level) up to straight up, in `steps`; both ends capped. Smooth normals. */
+ nose(c:number[],tx:number,tz:number,hl:number,out:number[],r:number,steps=3){
+  const at=(k:number,a:number)=>{const t=k/steps*Math.PI/2,co=Math.cos(t),si=Math.sin(t);return {p:[c[0]+tx*hl*a+out[0]*r*co,c[1]+r*si,c[2]+tz*hl*a+out[2]*r*co],n:[out[0]*co,si,out[2]*co]};};
+  for(let k=0;k<steps;k++){const a0=at(k,-1),a1=at(k,1),b0=at(k+1,-1),b1=at(k+1,1);
+   // wind outward: (a0,a1,b1) faces away from the round's axis when out × up is along -t; test with the axis point
+   const m=[(a0.p[0]+b1.p[0])/2-c[0],0,(a0.p[2]+b1.p[2])/2-c[2]],e1=[a1.p[0]-a0.p[0],a1.p[1]-a0.p[1],a1.p[2]-a0.p[2]],e2=[b1.p[0]-a0.p[0],b1.p[1]-a0.p[1],b1.p[2]-a0.p[2]];
+   const fn=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]],my=(a0.p[1]+b1.p[1])/2-c[1];
+   if(fn[0]*m[0]+fn[1]*my+fn[2]*m[2]>=0){this.triN(a0.p,a1.p,b1.p,a0.n,a1.n,b1.n);this.triN(a0.p,b1.p,b0.p,a0.n,b1.n,b0.n);}
+   else{this.triN(a0.p,b1.p,a1.p,a0.n,b1.n,a1.n);this.triN(a0.p,b0.p,b1.p,a0.n,b0.n,b1.n);}}
+  for(const a of [-1,1]){const ax=[c[0]+tx*hl*a,c[1],c[2]+tz*hl*a],en=[tx*a,0,tz*a];for(let k=0;k<steps;k++){const p0=at(k,a).p,p1=at(k+1,a).p;
+   const e1=[p0[0]-ax[0],p0[1]-ax[1],p0[2]-ax[2]],e2=[p1[0]-ax[0],p1[1]-ax[1],p1[2]-ax[2]],f=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+   if(f[0]*en[0]+f[2]*en[2]>=0)this.triN(ax,p0,p1,en,en,en);else this.triN(ax,p1,p0,en,en,en);}}}
  /** Box between two points (a thin beam / post / wire piece), square section r. */
  beam(a:number[],b:number[],r:number,diamond=false){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1e-6,d=[dx/l,dy/l,dz/l];
   const up=Math.abs(d[1])>.9?[1,0,0]:[0,1,0],s1=[d[1]*up[2]-d[2]*up[1],d[2]*up[0]-d[0]*up[2],d[0]*up[1]-d[1]*up[0]],l1=Math.hypot(...s1);for(let i=0;i<3;i++)s1[i]/=l1;
@@ -307,7 +328,12 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // Platform in 5 m pieces along the curve (each on its own frame), with the yellow edge strip.
   for(let u=-STATION_HALF;u<STATION_HALF;u+=5){const f=trackAt(st.s+u+2.5),fn=leftNormal(f.tx,f.tz),Q=(v:number,y:number)=>[f.x+fn.x*sg*v,y,f.z+fn.z*sg*v];
    const m=Q(v0+depth/2,0),foot=bed-.05;
-   plat.box(m[0],top-.04,m[2],f.tx,f.tz,2.53,depth/2,.04);platSide.box(m[0],(top-.08+foot)/2,m[2],f.tx,f.tz,2.5,depth/2-.02,(top-.08-foot)/2);
+   // Soft sweep 2 (Nov 27 2026, owner: "less blocky"): the platform's track-side edge is a rounded nosing (a 6 cm quarter round,
+   // smooth-shaded, flush with the old edge: no clearance change); the slab starts behind it. ?soft=0: the square edge.
+   if(softOn()){const R=.06,mm=Q(v0+depth/2+R/2,0),o=[-fn.x*sg,0,-fn.z*sg],nc=Q(v0+R,top-R),lo=Q(v0,0);
+    plat.box(mm[0],top-.04,mm[2],f.tx,f.tz,2.53,depth/2-R/2,.04);plat.nose(nc,f.tx,f.tz,2.53,o,R);
+    plat.quad([lo[0]-f.tx*2.53,top-.08,lo[2]-f.tz*2.53],[lo[0]+f.tx*2.53,top-.08,lo[2]+f.tz*2.53],[lo[0]+f.tx*2.53,top-R,lo[2]+f.tz*2.53],[lo[0]-f.tx*2.53,top-R,lo[2]-f.tz*2.53],[mm[0],top-.04,mm[2]]);}
+   else plat.box(m[0],top-.04,m[2],f.tx,f.tz,2.53,depth/2,.04);platSide.box(m[0],(top-.08+foot)/2,m[2],f.tx,f.tz,2.5,depth/2-.02,(top-.08-foot)/2);
    // AAA 2 (owner image 58: "it shouldn't be light near the platform"): the island's shadow map keeps a 2-texel normal offset (no
    // acne on parapets), which leaves a light strip between a wall's foot and its shadow on the sand. A dark concrete footing slopes
    // from the platform's back wall 0.4 m out and into the ground (and round the two ends): the base reads grounded, in the same
@@ -352,7 +378,7 @@ export function buildTrainWorld(tools:TrainTools){catenaryFeet.length=0;
   // A bench on the platform, by the house's down-line end.
   // Phase 4 (Nov 23 2026): the island bench's own sizes (lib/graphics/npcSeatPose.ts BENCH: seat top .64, half depth .325, back face
   // .205 behind the centre, back .685…1.135), so a station islander sits on it exactly like on every other island bench.
-  {/* every tier (a station islander sits here; 3 boxes in the existing bench batch) */const a=P(-9,v0+2.2,0);bench.box(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04);const b=P(-9,v0+2.2+.25,0);bench.box(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225);
+  {/* every tier (a station islander sits here; 3 boxes in the existing bench batch) */const sb=softOn(),a=P(-9,v0+2.2,0);if(sb)bench.sbox(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04,.035);else bench.box(a[0],top+.6,a[2],c.tx,c.tz,1,.325,.04);const b=P(-9,v0+2.2+.25,0);if(sb)bench.sbox(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225,.035);else bench.box(b[0],top+.91,b[2],c.tx,c.tz,1,.045,.225);/* soft sweep 2: rounded seat + back */
    for(const u of [-9.8,-8.2]){const l=P(u,v0+2.2,0);timber.box(l[0],top+.28,l[2],c.tx,c.tz,.04,.26,.28);}}
   // The Island stamp book's stamp stand (trainLayout.ts STAMP_STAND_U): desk, shelf and apron, two posts carrying a roofed sign
   // (its face is in the shared sign mesh above), an ink pad and the rubber stamp on a short chain. ~30 boxes in existing batches.
