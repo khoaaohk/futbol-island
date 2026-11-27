@@ -21,18 +21,20 @@ let enabled=query===null?GROUND_DEFAULT:/[?&]ground=1(&|$)/.test(query)||(GROUND
 export function setGrounding(on:boolean){enabled=on;}
 export const groundingOn=()=>enabled;
 
-export type FootKind='building'|'house'|'platform'|'tree'|'palm'|'bush'|'prop'|'machine'|'post';
+export type FootKind='building'|'house'|'platform'|'tree'|'palm'|'bush'|'prop'|'machine'|'post'|'upright';
 /** A footprint in its own frame: half sizes along local x / z, turned by yaw (world = centre + R(yaw) local, as townDepth.ts).
  *  sides: which sides shade (bit 1 = local -z, 2 = +x, 4 = +z, 8 = -x; default all). fill: shade under it too (open props). */
 export type Foot={kind:FootKind;x:number;z:number;hw:number;hd:number;yaw?:number;round?:boolean;sides?:number;fill?:boolean;
  /** a flat base height (decks, platforms): the ring lies there instead of on the ground */base?:number;
  /** metres the thing runs on under the drawn ground (tests: uprights sink, never sit on top) */sink?:number;
- /** a perimeter of its own (curved platforms): replaces the rectangle; same shape as loop() returns */path?:Edge[]};
+ /** a perimeter of its own (curved platforms): replaces the rectangle; same shape as loop() returns */path?:Edge[];
+ /** its own ground (Summit Isle's slope): the ring follows this instead of the island's */at?:(x:number,z:number)=>number;
+ /** what stands here (uprights: 'mast', 'goal', 'fence', 'zip', 'leg') */what?:string};
 export type Edge={p:[number,number];o:[number,number];side:number};
 /** spread: metres of soft shade beyond the foot; k: the multiplier at the foot (1 = none); soil: the tree's leaf-litter tint. */
 export const CONTACT:Record<FootKind,{spread:number;k:number;soil?:boolean}>={
  building:{spread:.95,k:.6},house:{spread:.9,k:.6},platform:{spread:.75,k:.62},tree:{spread:1.25,k:.66,soil:true},palm:{spread:.7,k:.72},
- bush:{spread:.45,k:.7},prop:{spread:.38,k:.66},machine:{spread:.42,k:.6},post:{spread:.26,k:.7}};
+ bush:{spread:.45,k:.7},prop:{spread:.38,k:.66},machine:{spread:.42,k:.6},post:{spread:.26,k:.7},upright:{spread:.3,k:.68}};
 /** How much of the shade a side keeps when it faces away from the sun (it is in the real shadow already). */
 export const SHADOW_SIDE_KEEP=.5;
 /** A station platform's half length to its wall (trainWorld.ts: 5 m pieces, 2.53 m half boxes, STATION_HALF 15). */
@@ -77,7 +79,7 @@ export function contactDecal(feet:readonly Foot[],g:GroundQuery):DecalData{
  const positions:number[]=[],colors:number[]=[],indices:number[]=[];let triangles=0,made=0,skipped=0;
  for(const f of feet){const spec=CONTACT[f.kind];if(!spec)continue;const L=loop(f),n=L.length,mask=f.sides??15,base0=positions.length/3;
   // one ground query per foot (the layered ground is costly to ask); the slope comes from the cheap lift function
-  const y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>(g.lift&&f.base===undefined?y0+clampLift(g.lift(x,z)-l0):y0)+(f.base===undefined&&(sandDrifts.list.length||sandDrifts.mounds.length)?driftLift(x,z):0);
+  const own=f.at,y0=f.base!==undefined?f.base:g.y(f.x,f.z),l0=g.lift&&f.base===undefined?g.lift(f.x,f.z):0,hy=(x:number,z:number)=>own?own(x,z):(g.lift&&f.base===undefined?y0+clampLift(g.lift(x,z)-l0):y0)+(f.base===undefined&&(sandDrifts.list.length||sandDrifts.mounds.length)?driftLift(x,z):0);
   // three rings: at the foot (k), 30 % out (40 % of the shade left), the rim (none). Soil: the litter tint fades with the shade.
   const ring=(i:number,t:number,keep:number)=>{const q=L[i],x=q.p[0]+q.o[0]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5)),z=q.p[1]+q.o[1]*spec.spread*t*(1+.18*(spotHash(q.p[0],q.p[1],3)-.5));
    const away=-(q.o[0]*g.sun[0]+q.o[1]*g.sun[1]),sunK=away>0?1-(1-SHADOW_SIDE_KEEP)*away:1,d=(1-spec.k)*keep*sunK;
@@ -224,6 +226,21 @@ export function slab(P:Pieces,cx:number,cz:number,hw:number,hd:number,yaw:number
  P.add(colour,tris,[cx,(y0+y1)/2,cz],what);
 }
 
+// ---- Leftovers A (Nov 26 night): the uprights pass 2 left out -------------------------------------------------------------------
+// Field-light masts, goal posts, fence posts, the zipline tower's legs: their builders sink them 10-20 cm into the ground and
+// register them here; the island pass gives each a contact shade in the ONE decal (no new draw) and, where it fits, a footing
+// collar (paving / lawn) or a sand mound (beach) in the chunk batches. Goals take the shade only (nothing in or by the mouth).
+export type Upright={what:'mast'|'goal'|'fence'|'zip';x:number;z:number;/** half size of the post */r:number;/** metres under the ground */sink:number;
+ /** its own ground (Summit Isle, Coral Cay): the ring and footing follow this */at?:(x:number,z:number)=>number;detail?:'collar'|'mound'|'none';
+ /** a fence RUN (posts and rails along x or z): one long shade under the whole run instead of a ring per post (half sizes) */run?:{hw:number;hd:number}};
+export const uprights:{list:Upright[]}={list:[]};
+/** Builders call this while the town builds (a no-op with ?ground=0). buildGrounding takes and clears the list. */
+export function registerUpright(u:Upright){if(enabled)uprights.list.push(u);}
+/** How far uprights sink (tests read it): masts 0.15 (under their base block), goal posts 0.12, fence posts 0.15, zip legs 0.15. */
+export const UPRIGHT_SINK={mast:.15,goal:.12,fence:.15,zip:.15} as const;
+/** Bench / table legs run this far on under the ground (they stood ON it). */
+export const LEG_SINK=.12;
+
 // ---- The island pass (world.ts calls it once, after every prop has moved and before the batching pass) ----------------------------
 type Rect={x:number;z:number;w:number;d:number};
 export type GroundingInput={
@@ -293,12 +310,25 @@ export function buildGrounding(I:GroundingInput):{decal:T.Mesh|null;stats:Ground
    if(!long&&base===undefined&&g.tag!=='lamp'){const r=Math.max(.04,Math.min(hw,hd,.16)),kind=I.surface(x,z);
     if(kind==='sand'&&!I.keepClear(x,z)){sandMound(x,z,gy,r,Math.min(.5,r*2.6+.14),.055,7);P.counts.mound=(P.counts.mound??0)+1;}
     else if(!I.low)collar(P,x,z,gy,r,GROUND_COLOURS.pad);}}
-  else push({kind:'prop',x,z,hw,hd,fill:true,base});}
+  else{// Leftovers A: bench / table legs (the pieces standing on the lowest 3 cm, slimmer than 0.6 m) run on to LEG_SINK under the DRAWN
+   // ground (many stood on y 0 over a lawn drawn at -0.112: 11 cm in the air under their shade)
+   let sunk=0;if((g.tag==='bench'||g.tag==='table')&&base===undefined)for(const m of g.meshes){bb.setFromObject(m);if(bb.min.y>minY+.03||bb.max.x-bb.min.x>.6&&bb.max.z-bb.min.z>.6)continue;
+    const e=m.matrixWorld.elements;if(Math.abs(e[1])>1e-6||Math.abs(e[9])>1e-6||e[5]<=0)continue;/* upright meshes only (no tilt) */
+    const geo=m.geometry.clone(),p=geo.getAttribute('position') as T.BufferAttribute,sy=e[5],cut=minY+.03,foot0=Math.min(minY,gy)-LEG_SINK;let moved=0;
+    for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(m.matrixWorld);if(v.y<cut){p.setY(i,p.getY(i)-(v.y-foot0)/sy);moved++;}}
+    if(moved){p.needsUpdate=true;geo.computeBoundingBox();geo.computeBoundingSphere();m.geometry=geo;sunk++;}}
+   push({kind:'prop',x,z,hw,hd,fill:true,base,sink:sunk?gy-(Math.min(minY,gy)-LEG_SINK):undefined});if(sunk)P.counts.legs=(P.counts.legs??0)+sunk;}}
  // 1b. Catenary poles (train meshes are skipped above): the footing's shade, a sand mound on the beach.
  for(const m of I.masts??[]){const gy=I.ground(m.x,m.z);if(gy>m.r+5)continue;push({kind:'post',x:m.x,z:m.z,hw:m.r,hd:m.r,round:true});
   if(I.surface(m.x,m.z)==='sand'&&!I.keepClear(m.x,m.z)){sandMound(m.x,m.z,gy,m.r*1.3,.62,.07,8);P.counts.mound=(P.counts.mound??0)+1;}}
  for(const u of I.umbrellas??[]){const gy=I.ground(u.x,u.z);push({kind:'post',x:u.x,z:u.z,hw:.07,hd:.07,round:true});
   if(I.surface(u.x,u.z)==='sand'&&!I.keepClear(u.x,u.z)){sandMound(u.x,u.z,gy,.06,.36,.05,7);P.counts.mound=(P.counts.mound??0)+1;}}
+ // 1c. Leftovers A uprights (registered by their builders): shade on every one; a footing collar or a sand mound where it fits.
+ for(const u of uprights.list){const gy=u.at?u.at(u.x,u.z):I.ground(u.x,u.z);push(u.run?{kind:'upright',x:u.x,z:u.z,hw:u.run.hw,hd:u.run.hd,fill:true,sink:u.sink,at:u.at,what:u.what}:{kind:'upright',x:u.x,z:u.z,hw:u.r,hd:u.r,round:true,sink:u.sink,at:u.at,what:u.what});
+  if(I.low||u.run||u.detail==='none'||I.keepClear(u.x,u.z))continue;const kind=u.at?'other':I.surface(u.x,u.z);
+  if(kind==='sand'&&u.detail!=='collar'){const R=moundRim(u.x,u.z,Math.min(.6,u.r*2.5+.2),(px,pz)=>!I.keepClear(px,pz));if(R){sandMound(u.x,u.z,gy,u.r,R,.07,8);P.counts.mound=(P.counts.mound??0)+1;}}
+  else collar(P,u.x,u.z,gy,u.r,GROUND_COLOURS.pad,.07);}
+ uprights.list=[];
  // 2. Vending machines (their own meshes, Town.tsx): a pad on the ground, a ring round it.
  for(const m of I.machines){const hw=I.machineSize.w/2,hd=I.machineSize.d/2,gy=I.ground(m.x,m.z),on=m.y===undefined||m.y<gy+.25;
   push({kind:'machine',x:m.x,z:m.z,hw,hd,yaw:m.yaw,fill:true,base:on?undefined:m.y});

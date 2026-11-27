@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {takeSandDrifts,takeSandNormals} from './grounding';
+import {takeSandDrifts,takeSandNormals,groundingOn,UPRIGHT_SINK} from './grounding';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,SHORE_SAND,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
@@ -29,10 +29,11 @@ export function goalGeometry(v:Pick<Venue,'goalWidth'|'goalHeight'|'length'>&{id
  // Solid round posts and crossbar read independently from the finer netting.
  const tubes:T.BufferGeometry[]=[];
  const tube=(a:number[],b:number[],radius:number)=>{const from=new T.Vector3(...a),to=new T.Vector3(...b),g=new T.CylinderGeometry(radius,radius,from.distanceTo(to),10);g.applyMatrix4(new T.Matrix4().compose(from.clone().add(to).multiplyScalar(.5),new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),to.sub(from).normalize()),new T.Vector3(1,1,1)));tubes.push(g);};
- const radius=goalPostRadius(v.id);
+ const radius=goalPostRadius(v.id),sink=groundingOn()?UPRIGHT_SINK.goal:0;
  for(const x of [-gw,gw]){
-  tube([x,base,z],[x,h,z],radius);tube([x,base+.035,z],[x,base+.035,back],.035);
-  tube([x,base,back],[x,h-.12,back],.035);tube([x,h,z],[x,h-.12,back],.035);
+  // Leftovers A (Nov 26 night): the posts run GOAL_SINK on under the turf (the mouth, the crossbar and goalCollisions.ts unchanged)
+  tube([x,base-sink,z],[x,h,z],radius);tube([x,base+.035,z],[x,base+.035,back],.035);
+  tube([x,base-sink,back],[x,h-.12,back],.035);tube([x,h,z],[x,h-.12,back],.035);
  }
  tube([-gw,h,z],[gw,h,z],radius);tube([-gw,base+.035,back],[gw,base+.035,back],.035);
  tube([-gw,h-.12,back],[gw,h-.12,back],.035);

@@ -15,7 +15,7 @@ import {drapePieces,seatProps} from './elevationDrape';
 import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
 import {mergeLawnPatch} from './westTerrain';
 import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
-import {groundingOn,buildGrounding} from './grounding';
+import {groundingOn,buildGrounding,registerUpright,UPRIGHT_SINK} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
 import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
@@ -61,6 +61,7 @@ import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
+import {goalPostRadius} from './goalCollisions';
 import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,PALM_COAST_PROMENADE,onIsland,INTERIOR_GRASS} from './shoreline';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {createTrailMaterial} from '../graphics/pondWater';
@@ -1016,7 +1017,9 @@ export function* buildTownSteps(scene: T.Scene) {
     obstacles.push({x,z,w,d});arenaRails.push({x,z,w,d,floor:0,top:3.6});
     for(const y of [.16,3.6])box(vertical?.07:length,.07,vertical?length:.07,'#315b50',x,y,z);
     const count=Math.ceil(length/2.5);
-    for(let i=0;i<=count;i++)box(.09,3.6,.09,'#315b50',x+(vertical?0:-length/2+i*length/count),1.8,z+(vertical?-length/2+i*length/count:0));
+    const sk=groundingOn()?UPRIGHT_SINK.fence:0;/* Leftovers A: posts run on under the paving */
+    for(let i=0;i<=count;i++){const px=x+(vertical?0:-length/2+i*length/count),pz=z+(vertical?-length/2+i*length/count:0);box(.09,3.6+sk,.09,'#315b50',px,1.8-sk/2,pz);}
+    if(sk)registerUpright({what:'fence',x,z,r:.06,sink:sk,run:{hw:vertical?.06:length/2,hd:vertical?length/2:.06}});
     for(let t=-length/2;t<=length/2;t+=.4)box(.018,3.5,.018,'#536b65',x+(vertical?0:t),1.82,z+(vertical?t:0)).castShadow=false;
     for(let y=.4;y<3.6;y+=.4)box(vertical?.018:length,.018,vertical?length:.018,'#536b65',x,y,z).castShadow=false;
    };
@@ -1891,6 +1894,9 @@ export function* buildTownSteps(scene: T.Scene) {
    const townGround=(x:number,z:number)=>depth&&townDepthOn()&&x>depth.box.minX&&x<depth.box.maxX&&z>depth.box.minZ&&z<depth.box.maxZ?depthGroundAt(x,z):null;
    const grass=(x:number,z:number)=>x<450&&insidePolygon(INTERIOR_GRASS,x,z);
    const sunL=Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
+   // Leftovers A: the pitches' field-light masts and goal posts (fields.ts builds them outside the town group; same layout functions)
+   for(const v of VENUES){if((v.elevation??0)>0)continue;for(const p of fieldLightLayout(v).posts)registerUpright({what:'mast',x:v.x+p.x,z:v.z+p.z,r:.38,sink:UPRIGHT_SINK.mast,detail:'none'});
+    for(const side of [-1,1])for(const hand of [-1,1])registerUpright({what:'goal',x:v.x+hand*v.goalWidth/2,z:v.z+side*v.length/2,r:goalPostRadius(v.id),sink:UPRIGHT_SINK.goal,detail:'none'});}
    const g=buildGrounding({town,buildings,machines:VENDING_MACHINES,machineSize:VENDING_SIZE,
     masts:train?catenaryFeet:[],
     umbrellas:assets.filter(a=>a.kind==='beach-umbrella'),
@@ -1898,7 +1904,7 @@ export function* buildTownSteps(scene: T.Scene) {
     ground:(x,z)=>{const t=townGround(x,z);if(t)return t.y;const l=groundLift(x,z);return l+(inRects(x,z)?DRAWN.path:grass(x,z)?DRAWN.lawn:-.105);},
     surface:(x,z)=>{const t=townGround(x,z);if(t)return t.sort==='lawn'?'lawn':'other';if(x>=450||!onIsland(x,z))return 'other';return grass(x,z)?'lawn':'sand';},
     keepClear:(x,z)=>inRects(x,z)||townGround(x,z)?.sort==='asphalt'||!!trackNearest(x,z,2.4),
-    covered:(kind,x,z)=>kind!=='house'&&kind!=='platform'&&kind!=='bush'&&!!townGround(x,z),
+    covered:(kind,x,z)=>kind!=='house'&&kind!=='platform'&&kind!=='bush'&&kind!=='upright'&&!!townGround(x,z),
     sun:[ISLAND_SUN_POSITION[0]/sunL,ISLAND_SUN_POSITION[2]/sunL],lift:groundLift,low:depthLowTier(),put});
    if(g.decal)town.add(g.decal);town.updateMatrixWorld(true);
   }catch(error){console.error('Grounding failed to build',error);}

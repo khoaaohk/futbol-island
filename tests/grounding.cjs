@@ -16,7 +16,7 @@ const fresh=()=>{const cache=new Map(),gradient={addColorStop(){}};
   vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,r);cache.set(file,mod.exports);return mod.exports;}
  return load;};
 const build=(on)=>{const load=fresh(),G=load('lib/town/grounding.ts');G.setGrounding(on);const scene=new T.Scene(),world=load('lib/town/world.ts').buildTown(scene);
- let decal=null;scene.traverse(o=>{if(o.name==='island-grounding')decal=o;});return {G,world,decal,load};};
+ let decal=null;scene.traverse(o=>{if(o.name==='island-grounding')decal=o;});return {G,world,decal,load,scene};};
 const A=build(true),s=A.G.groundingStats.value;
 assert.ok(s,'stats recorded');assert.ok(A.decal,'one decal mesh');assert.equal(A.decal.userData.ownDraw,true,'decal keeps its own draw (not batched)');
 assert.equal(A.decal.castShadow,false,'decal casts no shadow');assert.equal(A.decal.material.depthWrite,false,'decal writes no depth');
@@ -29,7 +29,7 @@ for(const m of VM)assert.ok(feet.some(f=>f.kind==='machine'&&Math.hypot(f.x-m.x,
 const col=A.decal.geometry.getAttribute('color').array,pos=A.decal.geometry.getAttribute('position').array,idx=A.decal.geometry.index.array;
 for(let i=0;i<col.length;i++)assert.ok(col[i]>=.3&&col[i]<=1,'multiplier in range');
 for(let t=0;t<idx.length;t+=3){const a=idx[t]*3,b=idx[t+1]*3,c=idx[t+2]*3,ny=(pos[b+2]-pos[a+2])*(pos[c]-pos[a])-(pos[b]-pos[a])*(pos[c+2]-pos[a+2]);assert.ok(ny>=-1e-9,'faces up');}
-assert.ok(s.decalTriangles<32000,'decal budget '+s.decalTriangles);assert.ok(s.detailTriangles<6000,'detail budget '+s.detailTriangles);
+assert.ok(s.decalTriangles<34000,'decal budget '+s.decalTriangles);/* Leftovers A: +2.7k for masts, goals, fence runs, zip legs */assert.ok(s.detailTriangles<6000,'detail budget '+s.detailTriangles);
 // drifts: never on the track bed, never in front of a machine
 const track=load('lib/town/trainTrack.ts'),SP=load('lib/graphics/islandLighting.ts').ISLAND_SUN_POSITION,SL=Math.hypot(SP[0],SP[2]),SUN=[SP[0]/SL,SP[2]/SL];
 for(const d of A.G.sandDrifts.list)for(const t of [0,.5,1]){const x=d.ax+d.ux*d.len*t+d.ox*d.w*.5,z=d.az+d.uz*d.len*t+d.oz*d.w*.5;
@@ -50,6 +50,30 @@ for(const d of A.G.sandDrifts.list)assert.ok(d.ox*SUN[0]+d.oz*SUN[1]>A.G.DRIFT_S
  for(const m of masts)assert.ok(feet.some(f=>f.kind==='post'&&Math.hypot(f.x-m.x,f.z-m.z)<.01),'pole foot '+m.x.toFixed(1));
  assert.ok((s.pieces.mound??0)>=40&&(s.pieces.soil??0)>=10,'mounds / soil rings '+s.pieces.mound+' / '+s.pieces.soil);
  for(const m of A.G.sandDrifts.mounds)assert.ok(!track.trackNearest(m.x,m.z,1.9),'mound off the ballast '+m.x.toFixed(1)+','+m.z.toFixed(1));}
+// Leftovers A (Nov 26 night): every upright kind is registered, sinks 10-20 cm, has its contact shade (a decal foot), and no
+// footing / mound lands on a road, path, pitch or the track bed; goals take the shade only. Bench / table legs run under the ground.
+// Mounds: 14-19 cm, rim off every road / path / track / use spot. Root tips within ROOT_REACH. Lamps: every lamp has a far twin.
+{const U=feet.filter(f=>f.kind==='upright'),by={};for(const f of U)by[f.what]=(by[f.what]??0)+1;
+ assert.equal(by.mast,12,'field-light masts on the three ground pitches');assert.equal(by.goal,12,'goal posts (3 pitches x 2 goals x 2)');
+ assert.equal(by.zip,4,'zipline tower legs');assert.ok(by.fence>=30,'fence runs '+by.fence);
+ for(const f of U){assert.ok(f.sink>=.1&&f.sink<=.2,f.what+' sinks 10-20 cm: '+f.sink);}
+ const VEN=load('lib/town/venues.ts').VENUES,FL=load('lib/town/fieldLightLayout.ts').fieldLightLayout;
+ for(const v of VEN.filter(v=>!(v.elevation>0)))for(const p of FL(v).posts)assert.ok(U.some(f=>f.what==='mast'&&Math.hypot(f.x-v.x-p.x,f.z-v.z-p.z)<.01),'mast foot '+v.id);
+ const dpos=A.decal.geometry.getAttribute('position').array;const shaded=(x,z,r)=>{for(let i=0;i<dpos.length;i+=3)if(Math.hypot(dpos[i]-x,dpos[i+2]-z)<r)return true;return false;};
+ for(const f of U)assert.ok(shaded(f.x,f.z,Math.max(f.hw,f.hd)+.6),f.what+' has contact shade at '+f.x.toFixed(1)+','+f.z.toFixed(1));
+ const legs=feet.filter(f=>f.kind==='prop'&&f.sink!==undefined);assert.ok(legs.length>=60,'benches / tables with sunk legs '+legs.length);
+ for(const f of legs)assert.ok(f.sink>=A.G.LEG_SINK-1e-6,'legs under the ground '+f.sink);
+ for(const m of A.G.sandDrifts.mounds.filter(m=>m.r>=.45&&m.h>=.13))assert.ok(m.h<=.2,'palm mound 14-19 cm');
+ assert.ok(A.G.sandDrifts.mounds.filter(m=>m.h>=.13).length>=35,'palm mounds that read: '+A.G.sandDrifts.mounds.filter(m=>m.h>=.13).length);
+ for(const m of A.G.sandDrifts.mounds)for(let k=0;k<8;k++){const a=k/8*Math.PI*2,x=m.x+Math.cos(a)*m.r,z=m.z+Math.sin(a)*m.r;assert.ok(!track.trackNearest(x,z,1.5),'mound rim off the track bed');
+  for(const vm of VM)assert.ok(Math.hypot(x-(vm.x+Math.sin(vm.yaw)*.7),z-(vm.z+Math.cos(vm.yaw)*.7))>.5,'mound clear of '+vm.id);}
+ assert.equal(A.G.ROOT_REACH[1],.9,'root reach cap');
+ // lamps: a far twin of FAR_LAMP_TRIANGLES for each lamp, in the same chunk batch as its near pieces
+ const LP=load('lib/town/lampPost.ts');let lod=0,twins=0,near=0;A.world&&0;
+ const scene2=A.scene;if(scene2)scene2.traverse(o=>{const l=o.userData&&o.userData.lampLod;if(!l)return;lod++;twins+=l.farIdx/3;near+=l.nearIdx/3;});
+ if(scene2){assert.ok(lod>=40,'chunks with lamps '+lod);assert.ok(twins>=100*LP.FAR_LAMP_TRIANGLES&&twins%LP.FAR_LAMP_TRIANGLES===0,'far twins '+twins);assert.ok(near/(twins/LP.FAR_LAMP_TRIANGLES)>150,'near lamps keep their detail');}
+ else assert.fail('scene not kept');
+ console.log('  leftovers A',JSON.stringify(by),'legs',legs.length,'lamp chunks',lod,'twins',twins/LP.FAR_LAMP_TRIANGLES);}
 // deterministic
 const B=build(true);assert.deepEqual(Array.from(B.decal.geometry.getAttribute('position').array),Array.from(pos),'same decal every build');
 assert.equal(JSON.stringify(B.G.groundingStats.value.pieces),JSON.stringify(s.pieces),'same detail every build');

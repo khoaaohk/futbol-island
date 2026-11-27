@@ -1,6 +1,7 @@
 import {STADIUM_BASE} from './westElevation';
 import {fieldLightLayout} from './fieldLightLayout';
 import * as T from 'three';
+import {groundingOn,UPRIGHT_SINK} from './grounding';
 import type {PropSpec} from '../graphics/propReactions';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,STADIUM_VENUE,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
@@ -37,7 +38,9 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   const postPieces:{body:[number,number];glass:[number,number]}[]=[];
   for(const {x,z,hand} of posts){const body0=body.length,glass0=glass.length;
    const pole=new T.CylinderGeometry(.13,.22,height,8);pole.translate(x,FIELD_SURFACE_Y+height/2,z);body.push(pole);
-   box(body,.75,.28,.75,x,FIELD_SURFACE_Y+.14,z);
+   // Leftovers A (Nov 26 night): the base block runs on to 15 cm under the LAWN (the mast stands past the pitch's edge, where the
+   // lawn lies at -0.112: the block's foot hung ~22 cm over it). Rooftop posts keep theirs.
+   {const foot=v.id==='knockout'||(v.elevation??0)>0||!groundingOn()?FIELD_SURFACE_Y:-.112-UPRIGHT_SINK.mast,top=FIELD_SURFACE_Y+.28;box(body,.75,top-foot,.75,x,(top+foot)/2,z);}
    box(body,1.6,.14,.22,x-hand*.5,height+.08,z);
    // The bank tilts inward; its pale lower face visibly explains pitch illumination.
    const tilt=hand*.22,bankX=x-hand*.7;
