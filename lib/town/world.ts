@@ -78,6 +78,10 @@ import {broadleafTreesOn,broadleafTree,broadleafBush,spotHash,TREE_GREENS} from 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
 /** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
 export const DOCK_BEACH_GATE=[222.5,225.5] as const;
+/** Nov 26 2026 (owner: "connect the path to the walking board area"): the opening (z range) in the boardwalk's west end rail (x 49)
+ *  where the 4 m path from the north arrives, and the 1 m path piece that joins the path to the deck's edge over it. */
+export const BOARDWALK_WEST_GATE=[209,213] as const;
+export const BW_GATE_PATH={x:48.5,z:211,w:1,d:4} as const;
 /** Nov 23 2026: the two openings in the boardwalk's south rail onto the South station platform (either side of its house). */
 /** Nov 24 2026 (owner: a warmer, more inviting night): the four window-glass materials glow in slightly different warm tones at night
  *  (candle amber to soft cream) so lit streets are not one flat colour; the shared painted-window material keeps '#ffc176'. Colour
@@ -1239,7 +1243,10 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   for(const z of [193,205])line(new T.Vector3(237,.7,z),new T.Vector3(242,1,z),.045,'#9d805b');
   // Keep wide routes from both the beach and the school to the pier.
-  path(46,150.5,4,117);path(90,188,88,4);path(135,190,5,40);
+  // Path to deck (owner, Nov 26 2026: "connect the path to the walking board area"): the 4 m path ended at z 209 beside the boardwalk's
+  // west end, 1 m short of it across grass, with the end rail closed (the boardwalk moved 6 m east for the Island Line on Nov 23). It now
+  // runs on to z 213 and a 1 m piece meets the deck's edge (x 49) over the same 4 m; the end rail opens there (BOARDWALK_WEST_GATE).
+  path(46,152.5,4,121);path(BW_GATE_PATH.x,BW_GATE_PATH.z,BW_GATE_PATH.w,BW_GATE_PATH.d);path(90,188,88,4);path(135,190,5,40);
   // Nov 23 2026 (Island Line): the boardwalk starts 6 m further east (x 49, was 43) so the line's SW curve clears it, and its south
   // rail opens either side of the South station house (SOUTH_STATION_RAIL_GAPS) onto the platform.
   const BW0=49,railOpen=(x:number)=>SOUTH_STATION_RAIL_GAPS.some(([a,b])=>x>a&&x<b);
@@ -1254,7 +1261,9 @@ export function* buildTownSteps(scene: T.Scene) {
    line(new T.Vector3(x0,1.05,214.65),new T.Vector3(x1,1.05,214.65),.045,'#eddfbb');
    line(new T.Vector3(x0,.55,214.65),new T.Vector3(x1,.55,214.65),.032,'#eddfbb');}});
   for(const [x0,x1] of runs)obstacles.push({x:(x0+x1)/2,z:214.65,w:x1-x0,d:.16});}
-  for(const x of [BW0]){line(new T.Vector3(x,1.05,207),new T.Vector3(x,1.05,214.65),.045,'#eddfbb');obstacles.push({x,z:210.825,w:.16,d:7.65});}
+  // the west end rail, open where the path arrives (posts at the gap's ends, the same posts as the south rail)
+  {const [g0,g1]=BOARDWALK_WEST_GATE;for(const [z0,z1] of [[207,g0],[g1,214.65]]){line(new T.Vector3(BW0,1.05,z0),new T.Vector3(BW0,1.05,z1),.045,'#eddfbb');obstacles.push({x:BW0,z:(z0+z1)/2,w:.16,d:z1-z0});}
+   prop('fence',()=>{for(const z of [g0,g1])cylinder(.065,1.05,'#9d805b',BW0,.525,z);});}
   for(const x of [65,105,173,208.5])bench(x,208);
   districtSign('SOUTH PIER',146,203);
   // A sand court at the western pier approach; paths stay open on every side.
