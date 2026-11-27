@@ -1441,8 +1441,11 @@ export function* buildTownSteps(scene: T.Scene) {
   box(28,.035,19.3,'#7ba476',156,-.055,-19.65);
   for(const x of [142.4,169.6])box(.1,.008,18.5,'#f5eed5',x,-.022,-19.65);
   for(const z of [-28.9,-10.4])box(27.2,.008,.1,'#f5eed5',156,-.022,z);
-  box(26,2.3,.35,'#d6b58a',156,1.15,-29.5);
-  box(26.3,.15,.5,'#eddfbb',156,2.33,-29.5);
+  // Arena inflatables (Nov 27 2026): the rebound wall is an inflatable rebounder: a puffed wall (round ends and top edge; the long run and
+  // the kicking face stay flat for the target frames) under a fat piped bumper tube. Visual only: the obstacle below is unchanged.
+  {const wall=puffGeo(26,2.3,.35,{puff:2,openBottom:true,dome:-1,maxR:[.32,.3,.16]}),cap=puffGeo(26.3,.24,.52,{puff:2,openBottom:true,maxR:[.26,.12,.26]});
+   if(wall&&cap){put(wall,'#e3a35e',156,1.15,-29.5);put(cap,'#fff1d6',156,2.36,-29.5);}
+   else{box(26,2.3,.35,'#d6b58a',156,1.15,-29.5);box(26.3,.15,.5,'#eddfbb',156,2.33,-29.5);}}
   obstacles.push({x:156,z:-29.5,w:26,d:.35});
   for(const x of [150,162]){
     // Breakable quest targets fill these permanent practice-wall frames.
