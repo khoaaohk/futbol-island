@@ -92,7 +92,7 @@ console.log('train-talk picking ok');
  const states=[0,1,2].map(i=>({s:200+i*300,at:-1,next:1,t:60,doors:0,dwellLeft:0,v:10}));
  const carM=(k,c,out)=>{out.identity();if(c%2)out.makeRotationY(Math.PI);out.setPosition(states[k].s,1,-c*12.4);return out;};const run={states,carMatrixOf:carM};
  cam.position.set(200,3,4);cam.lookAt(200,1,0);cam.updateMatrixWorld();pax.update(run,60,cam,0,0,false);const {list,count}=pax.spots();assert(count>0,'riders this frame');
- const s=list[0];const opened=[];const talk=TK.createTrainPassengerTalk(scene,pax,{states:()=>states,open:n=>opened.push(n),blocked:()=>false});
+ const s=list[0];const opened=[];let viewOk=true;const talk=TK.createTrainPassengerTalk(scene,pax,{states:()=>states,carMatrix:carM,open:n=>opened.push(n),blocked:()=>false,viewOk:()=>viewOk});
  assert(!talk.hoverShown&&!talk.tagShown,'nothing drawn by default (no labels)');
  // stand next to the rider, facing them: Talk offered; at a stop with Get off up and not aiming: nothing
  const me={x:s.x-.9,z:s.z};cam.position.set(me.x,s.y+1.6,me.z);cam.lookAt(s.x+1,s.y+3,s.z+.6);cam.updateMatrixWorld();/* looking past them, up: not aimed, but in view */
@@ -101,8 +101,23 @@ console.log('train-talk picking ok');
  cam.position.set(s.x-2.5,s.y+1.6,s.z);cam.lookAt(s.x+1,s.y+3,s.z+.6);cam.updateMatrixWorld();{const c3=talk.candidate(cam,0,true,s.x-2.5,s.z,false);assert(!c3||c3.id!==PX.CAST[s.cast].id,'2.5 m away, not aiming: no prompt for them');}cam.position.set(me.x,s.y+1.6,me.z);
  cam.lookAt(s.x,s.y+1,s.z);cam.updateMatrixWorld();const c2=talk.candidate(cam,0,true,me.x,me.z,true);assert(c2&&talk.aimed,'Get off up, but aiming at them: Talk');
  cam.lookAt(me.x-5,s.y+1.6,me.z);cam.updateMatrixWorld();{const c4=talk.candidate(cam,0,true,me.x,me.z,true);assert(c4&&c4.id===PX.CAST[s.cast].id&&!talk.aimed,'POLISH 4: at a stop (Get off up), looking away: Talk still offered (island rules: proximity, any view)');}
- {const seat={x:s.x+1.1,z:s.z};cam.position.set(seat.x,s.y+1.2,seat.z);cam.lookAt(seat.x+3,s.y+1.2,seat.z);cam.updateMatrixWorld();const c5=talk.candidate(cam,0,false,seat.x,seat.z,false);assert(c5&&c5.id===PX.CAST[s.cast].id,'POLISH 4: seated, looking out: the neighbour is offered');talk.frame(cam,0,false,seat.x,seat.z,null);assert(talk.tagShown,'their near-only name tag shows');}
+ {const seat={x:s.x+Math.sign(states[0].s-s.x)*1.1,z:s.z};/* toward the aisle: the eye inside the car (shot 144) */cam.position.set(seat.x,s.y+1.2,seat.z);cam.lookAt(seat.x+3,s.y+1.2,seat.z);cam.updateMatrixWorld();const c5=talk.candidate(cam,0,false,seat.x,seat.z,false);assert(c5&&c5.id===PX.CAST[s.cast].id,'POLISH 4: seated, looking out: the neighbour is offered');talk.frame(cam,0,false,seat.x,seat.z,null);assert(talk.tagShown,'their near-only name tag shows');}
  assert.equal(talk.candidate(cam,-1,true,me.x,me.z,false),null,'not riding: nothing');
+ // shot 144 (owner Nov 26: "let's talk should not be displaying outside of the train. only inside"): an eye outside the car (the
+ // Seat view's window shot, any zoomed-out orbit, the outside views), standing or seated, moving or at a stop, Kenji too: no Talk,
+ // no tag, gone the very frame the view switches; inside again: back
+ {const kenji={...opened.length?opened[0]:{},id:'kenji',name:'Kenji'};const at={x:s.x,y:s.y,z:s.z};
+  const inEye=()=>{cam.position.set(me.x,s.y+1.6,me.z);cam.lookAt(s.x,s.y+1,s.z);cam.updateMatrixWorld();};
+  const outEye=()=>{cam.position.set(s.x-4,s.y+5,s.z+7);cam.lookAt(s.x,s.y+1,s.z);cam.updateMatrixWorld();};
+  assert.equal(TK.eyeInCar(0,TK.TAG_H+1.5,0),true,'eye in the aisle: inside');assert.equal(TK.eyeInCar(3,2,0),false,'beside the car: outside');assert.equal(TK.eyeInCar(0,6,0),false,'above the roof: outside');
+  for(const doors of [0,1]){states[0].doors=doors;
+   for(const standing of [true,false]){inEye();const ci=talk.candidate(cam,0,standing,me.x,me.z,!!doors);talk.frame(cam,0,standing,me.x,me.z,null);assert(ci&&talk.tagShown,`inside (standing ${standing}, doors ${doors}): Talk + tag`);
+    outEye();talk.frame(cam,0,standing,me.x,me.z,null);assert(!talk.tagShown,`switched outside (standing ${standing}, doors ${doors}): tag hidden that frame, before the HUD tick`);
+    assert.equal(talk.candidate(cam,0,standing,me.x,me.z,!!doors),null,`outside (standing ${standing}, doors ${doors}): no Talk`);talk.frame(cam,0,standing,me.x,me.z,null);assert(!talk.tagShown,'outside: no tag');
+    assert.equal(talk.offerOther(kenji,at,2,cam),null,'outside: no Kenji offer');talk.frame(cam,0,standing,me.x,me.z,null);assert(!talk.tagShown,'outside: no Kenji tag');
+    inEye();viewOk=false;talk.frame(cam,0,standing,me.x,me.z,null);assert.equal(talk.candidate(cam,0,standing,me.x,me.z,false),null,'an outside view name with the eye in a car (easing): no Talk');assert.equal(talk.offerOther(kenji,at,2,cam),null,'nor Kenji');viewOk=true;
+    talk.frame(cam,0,standing,me.x,me.z,null);assert(talk.offerOther(kenji,at,2,cam),'inside: Kenji offered (shot 81)');talk.frame(cam,0,standing,me.x,me.z,null);assert(talk.tagShown,'inside: Kenji tag');}}
+  states[0].doors=0;inEye();talk.candidate(cam,0,true,me.x,me.z,false);}
  // open via the runtime (tap path) then close: they face me while open
  const h={},el={style:{},addEventListener:(t,f)=>{h[t]=f;},removeEventListener(){},getBoundingClientRect:()=>({left:0,top:0,width:100,height:100})};talk.attach(el);
  cam.position.set(me.x,s.y+1.6,me.z);cam.lookAt(s.x,s.y+1,s.z);cam.updateMatrixWorld();
@@ -119,6 +134,7 @@ console.log('train-talk picking ok');
  const src=read('lib/town/trainPassengers.ts');assert(/faceCast===who\.cast&&k===ridingK/.test(src)&&/who=was;\/\/ train-talk/.test(src),'talked-to passenger turns and keeps their seat');
  talk.dispose();assert(!scene.getObjectByName('train-talk-hover'),'disposed');}
 {const town=read('components/Town.tsx');
+ assert(/viewOk:\(\)=>trainTalkView\(trainRide\.view\)/.test(town)&&/offerOther\(kenjiFig\.npc\(\),kenjiFig\.at,2\.05\*KENJI_SCALE,camera\)/.test(town),'shot 144: view + eye gate wired, Kenji too');
  assert(/!trainTalkView\(trainRide\.view\)\?trainTalk\.candidate\(camera,-1,/.test(town)&&/offerOther\(kenjiFig\.npc\(\),kenjiFig\.at,[^)]*\).*?\*\/:trainTalk\.candidate\(camera,trainRide\.train,trainRide\.standing,location\.x,location\.z,/.test(town),'riding: Talk only via trainTalk (close / aimed), inside views only (shot 80), Kenji via the tag (shot 81)');
  assert(/hudFocus==='talk'&&!trainRiding/.test(town),'shot 81: no Talk pill on the train');
  assert(/trainTalk\.frame\(camera,trainRide\.active\?trainRide\.train:-1/.test(town),'per-frame hook');

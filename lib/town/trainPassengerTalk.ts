@@ -95,6 +95,10 @@ export function pickRay(spots:readonly Readonly<TalkSpot>[],count:number,k:numbe
  *  (x across, y up from the rail top, z along; the body ±HALF_W × floor…roof × ±6). True when the line reaches p without passing a
  *  solid panel: the eye is inside that car, or the line enters it through a side's window band or an open doorway. The roof, the
  *  ends, the underframe and the side panels block. Pure (tests). */
+/** Owner Nov 26 2026 (shot 144: "let's talk should not be displaying outside of the train. only inside"): the eye (one car's local
+ *  frame, as carSightClear) is inside that car's body. The Seat view's camera sits OUTSIDE the window looking in (and the orbit
+ *  zooms out to 2.6x), so a view name is not enough: the tag, Talk and taps need the eye itself in a car. Pure (tests). */
+export function eyeInCar(ox:number,oy:number,oz:number):boolean{return Math.abs(ox)<HALF_W&&oy>CAR_FLOOR_Y-.15&&oy<ROOF_TOP&&Math.abs(oz)<6;}
 export function carSightClear(ox:number,oy:number,oz:number,px:number,py:number,pz:number,doorOpen:boolean):boolean{
  const X=HALF_W,Y0=CAR_FLOOR_Y-.15,Y1=ROOF_TOP-.1,Z=6;
  if(Math.abs(ox)<X&&oy>Y0&&oy<Y1&&Math.abs(oz)<Z)return true;
@@ -110,7 +114,7 @@ export function carSightClear(ox:number,oy:number,oz:number,px:number,py:number,
  return false;
 }
 
-type Ports={/** POLISH 4: the island's hover sound on a new hovered passenger */hoverSound?:()=>void;states:()=>readonly {next:number;doors?:number}[]|undefined;/** POLISH 3: car c of train k's matrix (occlusion by the car body) */carMatrix?:(k:number,c:number,out:T.Matrix4)=>T.Matrix4;open:(npc:NpcDefinition)=>void;blocked:()=>boolean};
+type Ports={/** POLISH 4: the island's hover sound on a new hovered passenger */hoverSound?:()=>void;states:()=>readonly {next:number;doors?:number}[]|undefined;/** POLISH 3: car c of train k's matrix (occlusion by the car body) */carMatrix?:(k:number,c:number,out:T.Matrix4)=>T.Matrix4;open:(npc:NpcDefinition)=>void;blocked:()=>boolean;/** shot 144: false in a view whose camera is not the rider's own inside eye (Town: trainTalkView) */viewOk?:()=>boolean};
 /** Owner Nov 25 2026 (shot 81: "remove the talk to btn. there's already the option to talk to the npc. but we need to make that a
  *  little larger"): on the train the name tag IS the Talk control: 1.6x the old .2 × .0625, and a tap on it opens the chat. */
 export const TAG_W=.32,TAG_H=.1;
@@ -140,7 +144,7 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
  const tagHit=(e:PointerEvent)=>{if(!tag.visible||!offerDef||!cam||!dom)return false;const r=dom.getBoundingClientRect(),P=cam.projectionMatrix.elements;tp.copy(tag.position).project(cam);if(tp.z>1)return false;
   const cx=r.left+(tp.x+1)/2*r.width,cy=r.top+(1-tp.y)/2*r.height,hw=TAG_W*P[0]*r.width/4+10,hh=TAG_H*P[5]*r.height/4+10;return Math.abs(e.clientX-cx)<hw&&Math.abs(e.clientY-cy)<hh;};
  const onUp=(e:PointerEvent)=>{const d=down;down=null;if(!d||d.id!==e.pointerId)return;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>TAP_PX||performance.now()-d.t>TAP_MS)return;
-  if(curK<0||!cam||curTalking)return;if(ports.blocked()){lastTap='blocked';return;}
+  if(curK<0||!cam||curTalking)return;if(ports.blocked()||!here(cam,curK)){lastTap='blocked';return;}
   if(tagHit(e)){lastTap='tag';e.stopImmediatePropagation();swallowClick=true;ports.open(offerDef!);return;}
   toNdc(e,tapV);const i=rayAt(cam,tapV,curK,curStanding?TALK_STAND+.5:SEAT_REACH);lastTap=i<0?'miss':'open';if(i<0)return;
   e.stopImmediatePropagation();swallowClick=true;const def=defOf(pax.spots().list[i],curK);if(def)ports.open(def);};
@@ -157,6 +161,11 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
   for(let c=0;c<TRAIN_CARS;c++){ports.carMatrix(rayK,c,cm);inv.copy(cm).invert();eo.copy(rc.ray.origin).applyMatrix4(inv);ep.set(s.x,s.y+(s.standing?1.45:1.15)*(s.kid?KID:1),s.z).applyMatrix4(inv);
    if(!carSightClear(eo.x,eo.y,eo.z,ep.x,ep.y,ep.z,open))return false;}
   return true;};
+ // shot 144: Talk, tag, hover and tap only while the camera's eye is inside one of train k's cars (and the view allows it)
+ const ei=new T.Vector3();
+ function eyeInside(camera:T.Camera,k:number){if(!ports.carMatrix)return true;camera.getWorldPosition(ei);
+  for(let c=0;c<TRAIN_CARS;c++){ports.carMatrix(k,c,cm);inv.copy(cm).invert();eo.copy(ei).applyMatrix4(inv);if(eyeInCar(eo.x,eo.y,eo.z))return true;}return false;}
+ const here=(camera:T.Camera,k:number)=>k>=0&&(ports.viewOk?.()??true)&&eyeInside(camera,k);
  function rayAt(camera:T.Camera,at:T.Vector2,k:number,reach:number){rc.setFromCamera(at,camera);rayK=k;const {list,count}=pax.spots();return pickRay(list,count,k,rc.ray.origin,rc.ray.direction,me,reach,sightClear);}
  // Town resets the canvas cursor every frame before this runs (its own hover targets), so a hovered passenger re-asserts it
  const setCursor=(on:boolean)=>{if(!dom)return;if(on){cursorSet=true;if(dom.style.cursor!=='pointer')dom.style.cursor='pointer';}else if(cursorSet){cursorSet=false;dom.style.cursor='';}};
@@ -172,6 +181,8 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
    if(talkingId!==lastTalkId){const was=castOf(lastTalkId);if(was>=0)defs.delete(was);lastTalkId=talkingId;talkCast=castOf(talkingId);if(talkCast<0)pax.face(-1);}
    if(talkCast>=0)pax.face(talkCast,x,z);
    if(talkingId){if(tag.visible)tag.visible=false;if(hovered>=0||hoverOn){hovered=hoveredCast=-1;hoverOn=false;setCursor(false);}glow.update(null,dt,reduced);return;}
+   // shot 144: an outside camera (or a view switch to one): nothing offered, no tag, no hover, this very frame
+   if(!here(camera,k)){candCast=-1;ext=null;offerDef=null;if(tag.visible)tag.visible=false;if(hovered>=0||hoverOn||hoveredCast>=0){hovered=hoveredCast=-1;hoverOn=false;setCursor(false);}if(glow.root.visible)glow.update(null,dt,reduced);return;}
    if(hoverDirty){hoverDirty=false;const i=mouseIn&&!ports.blocked()?rayAt(camera,ndc,k,reach):-1,was=hoveredCast;hoveredCast=i>=0?pax.spots().list[i].cast:-1;if(hoveredCast>=0&&hoveredCast!==was)ports.hoverSound?.();}
    // the hovered passenger moves with the train: follow their spot (found again by cast; gone = unhover)
    hovered=-1;if(hoveredCast>=0){const {list,count}=pax.spots();for(let i=0;i<count;i++)if(list[i].cast===hoveredCast&&list[i].k===k){hovered=i;break;}if(hovered<0)hoveredCast=-1;}
@@ -185,11 +196,11 @@ export function createTrainPassengerTalk(scene:T.Scene,pax:TrainPassengers,ports
   candidate(camera:T.Camera,k:number,standing:boolean,x:number,z:number,getOffPrimary:boolean):NpcDefinition|null{
    // POLISH 4: island NPC rules: the nearest within reach (train-relative), any camera view, seated or standing, at a stop too
    // (Talk in the NPC slot beside the Get off pill); aiming at someone in reach still picks them (desktop). getOffPrimary: unused now.
-   aimed=false;void getOffPrimary;ext=null;if(k<0){candCast=-1;offerDef=null;return null;}me.x=x;me.z=z;const {list,count}=pax.spots(),reach=standing?TALK_NEAR:SEAT_REACH;
+   aimed=false;void getOffPrimary;ext=null;if(!here(camera,k)){candCast=-1;offerDef=null;return null;}me.x=x;me.z=z;const {list,count}=pax.spots(),reach=standing?TALK_NEAR:SEAT_REACH;
    let i=rayAt(camera,centre.set(0,0),k,reach);if(i>=0)aimed=true;else i=pickNear(list,count,k,me,reach,candCast);
    candCast=i>=0?list[i].cast:-1;offerDef=i>=0?defOf(list[i],k):null;return offerDef;},
   /** Shot 81: someone who isn't a passenger (Conductor Kenji) is offered: the same tag over them (p: their seat base) and tap. */
-  offerOther(def:NpcDefinition,p:{readonly x:number;readonly y:number;readonly z:number},lift=1.62):NpcDefinition{candCast=-1;offerDef=def;ext={p,lift,name:def.name};return def;},
+  offerOther(def:NpcDefinition,p:{readonly x:number;readonly y:number;readonly z:number},lift=1.62,camera:T.Camera|null=cam):NpcDefinition|null{candCast=-1;if(!camera||!here(camera,curK)){ext=null;offerDef=null;return null;}offerDef=def;ext={p,lift,name:def.name};return def;},
   /** Owner shot 91 (Kenji's tag raced and jittered): `p` is his LIVE spot (kept by reference, not copied on the HUD tick), and Town
    *  calls this right after his figure moves each frame, so the tag sits exactly over his head with no lag. */
   syncTag(){if(ext&&tag.visible)tag.position.set(ext.p.x,ext.p.y+ext.lift,ext.p.z);},
