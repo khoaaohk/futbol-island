@@ -9,14 +9,16 @@ import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
-import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn} from './elevation';
+import {elevBuild,buildLift,groundLift,regionLift,anchored,unlifted,rigid,elevationOn,insidePolygon} from './elevation';
 import {drapePieces,seatProps} from './elevationDrape';
 import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
 import {mergeLawnPatch} from './westTerrain';
-import {trackNearest} from './trainTrack';
+import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
+import {groundingOn,buildGrounding} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
 import {clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
+import {groundAt as depthGroundAt,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,pavementCell,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
 import {VENDING_MACHINES,VENDING_SIZE} from './vendingCatalog';
 import {STADIUM_BASE} from './westElevation';
 import {buildWestWalls} from './westTerrain';
@@ -60,6 +62,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,PALM_COAST_PROMENADE,onIsland} from './shoreline';
+import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland,INTERIOR_GRASS} from './shoreline';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {createTrailMaterial} from '../graphics/pondWater';
 import {BK_SQUARE,squareEdge,squareSurfaces} from './beachKitchenSquare';
@@ -1851,6 +1854,23 @@ export function* buildTownSteps(scene: T.Scene) {
    train.addMoved(moved);}
   town.traverse(o=>{if(o instanceof T.Mesh&&o.geometry instanceof T.ConeGeometry&&o.geometry.parameters.radius>1.5&&o.geometry.parameters.height<=1){const b=buildings.find(b=>Math.abs(o.position.x-b.x)<b.w/2&&Math.abs(o.position.z-b.z)<b.d/2&&o.position.y>b.height);umbrellaReaction.register(o,b?.height??0,o.userData.umbrellaTargets??[]);}});
   town.updateMatrixWorld(true);
+  // Grounding (?ground=0 off; lib/town/grounding.ts): one soft contact-shade mesh under every foot (1 draw) and small detail pieces
+  // (skirting, sand drifts, tufts, root flares, machine pads) that join the chunk paint batches below (0 draws). After every move.
+  if(groundingOn())try{
+   const clear=[...roads.map(r=>({x:r.x,z:r.z,w:r.w+.6,d:r.d+.6})),...roadJunctions.map(j=>({x:j.x,z:j.z,w:12.6,d:12.6})),...surfaceAreas.filter(a=>a.kind!=='garden'&&a.kind!=='grass').map(a=>({x:a.x,z:a.z,w:a.w+.3,d:a.d+.3})),...VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6}))];
+   const inRects=(x:number,z:number)=>{for(const r of clear)if(Math.abs(x-r.x)<r.w/2&&Math.abs(z-r.z)<r.d/2)return true;return false;};
+   const townGround=(x:number,z:number)=>depth&&townDepthOn()&&x>depth.box.minX&&x<depth.box.maxX&&z>depth.box.minZ&&z<depth.box.maxZ?depthGroundAt(x,z):null;
+   const grass=(x:number,z:number)=>x<450&&insidePolygon(INTERIOR_GRASS,x,z);
+   const sunL=Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
+   const g=buildGrounding({town,buildings,machines:VENDING_MACHINES,machineSize:VENDING_SIZE,
+    stations:train?TRAIN_STATIONS.filter(s=>s.id!=='summit').map(s=>{const c=trackAt(s.s);return {id:s.id,x:c.x,z:c.z,tx:c.tx,tz:c.tz,side:s.side};}):[],
+    ground:(x,z)=>{const t=townGround(x,z);if(t)return t.y;const l=groundLift(x,z);return l+(inRects(x,z)?DRAWN.path:grass(x,z)?DRAWN.lawn:-.105);},
+    surface:(x,z)=>{const t=townGround(x,z);if(t)return t.sort==='lawn'?'lawn':'other';if(x>=450||!onIsland(x,z))return 'other';return grass(x,z)?'lawn':'sand';},
+    keepClear:(x,z)=>inRects(x,z)||townGround(x,z)?.sort==='asphalt'||!!trackNearest(x,z,2.4),
+    covered:(kind,x,z)=>kind!=='house'&&kind!=='platform'&&kind!=='bush'&&!!townGround(x,z),
+    sun:[ISLAND_SUN_POSITION[0]/sunL,ISLAND_SUN_POSITION[2]/sunL],lift:groundLift,low:depthLowTier(),put});
+   if(g.decal)town.add(g.decal);town.updateMatrixWorld(true);
+  }catch(error){console.error('Grounding failed to build',error);}
   const roofObstacles:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[...museumRails,...arenaRails,...ziplineRails,...stadiumRails];
   // Same layout as the visible lights; roof poles must not block the street below.
   for(const v of [...VENUES,{id:'knockout',x:KNOCKOUT_ROOF.x,z:KNOCKOUT_ROOF.z,elevation:KNOCKOUT_ROOF.height,width:24,length:44}]){
