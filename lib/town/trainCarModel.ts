@@ -55,10 +55,36 @@ export class VGeo{
  /** A wheel on the x axis (tread + outer cap), spinning about its own centre (PART.rearWheel, pivot in aPart). */
  wheel(x:number,az:number,color:string){const N=8,s=Math.sign(x),xo=x+s*.06,xi=x-s*.06,ctr:V=[x,WHEEL_R,az],R=(k:number,px:number):V=>{const t=(k+.5)/N*Math.PI*2;return [px,WHEEL_R+Math.cos(t)*WHEEL_R,az+Math.sin(t)*WHEEL_R];};
   for(let k=0;k<N;k++){this.quad(R(k,xi),R(k+1,xi),R(k+1,xo),R(k,xo),color,ctr,PART.rearWheel,ctr);if(k>0&&k<N-1)this.tri(R(0,xo),R(k,xo),R(k+1,xo),color,[xi,WHEEL_R,az],PART.rearWheel,ctr);}}
- /** One triangle with its own vertex normals (smooth shading; the bend still applies). */
+ /** One triangle with its own vertex normals (smooth shading; the bend still applies).
+ *  Wound to face along its vertex normals (front faces), whatever order the caller gives. With `shade` > 0 the TRUE normal also
+ *  bakes a soft top-lit tone into the vertex colour (tops a touch lighter, sides and undersides darker): Train interior (Nov 27):
+ *  the interior's bent normals (INNER_BEND) light every face almost alike, so rounded edges were invisible; the baked tone makes
+ *  a rounded cushion, pole or diffuser read round under any light. */
  triN(v:[V,V,V],nn:[V,V,V],color:string|((v:V)=>T.Color),part=0,ctr:V=[0,0,0]){if(typeof color==='string')this.col.set(color);
-  for(let i=0;i<3;i++){let [nx,ny,nz]=nn[i];if(this.bend>0){const b=this.bend;nx*=1-b;ny=ny*(1-b)+b;nz*=1-b;const m=Math.hypot(nx,ny,nz)||1;nx/=m;ny/=m;nz/=m;}
-   const c=typeof color==='string'?this.col:color(v[i]);this.p.push(v[i][0],v[i][1],v[i][2]);this.n.push(nx,ny,nz);this.c.push(c.r,c.g,c.b);this.a.push(ctr[0],ctr[1],ctr[2],part||this.defPart);}}
+  {const ux=v[1][0]-v[0][0],uy=v[1][1]-v[0][1],uz=v[1][2]-v[0][2],wx=v[2][0]-v[0][0],wy=v[2][1]-v[0][1],wz=v[2][2]-v[0][2];
+   const fx=uy*wz-uz*wy,fy=uz*wx-ux*wz,fz=ux*wy-uy*wx,ax=nn[0][0]+nn[1][0]+nn[2][0],ay=nn[0][1]+nn[1][1]+nn[2][1],az=nn[0][2]+nn[1][2]+nn[2][2];
+   if(fx*ax+fy*ay+fz*az<0){v=[v[0],v[2],v[1]];nn=[nn[0],nn[2],nn[1]];}}
+  for(let i=0;i<3;i++){let [nx,ny,nz]=nn[i];const ty=ny;if(this.bend>0){const b=this.bend;nx*=1-b;ny=ny*(1-b)+b;nz*=1-b;const m=Math.hypot(nx,ny,nz)||1;nx/=m;ny/=m;nz/=m;}
+   let c=typeof color==='string'?this.col:color(v[i]);
+   if(this.shade>0){const k=1+this.shade*((ty>=0?.8+.26*ty:.8+.16*ty)-1);c=this.sc.copy(c).multiplyScalar(k);}
+   this.p.push(v[i][0],v[i][1],v[i][2]);this.n.push(nx,ny,nz);this.c.push(c.r,c.g,c.b);this.a.push(ctr[0],ctr[1],ctr[2],part||this.defPart);}}
+ /** Baked soft tone strength for triN (0 off; see triN). */
+ shade=0;private sc=new T.Color();
+ /** A rounded-rectangle slab (smooth normals): centre c, in-plane axes U (half width hw) and Vv (half height hh), face normal W,
+  *  thickness t; corners of radius R in the plane and a half-round rim all round (cs steps per corner, rs across the rim).
+  *  4(cs+1)·(2rs+2) tris (cs 4, rs 3: 160). Seat end screens, poster frames. */
+ rslab(c:V,U:V,Vv:V,W:V,hw:number,hh:number,t:number,R:number,color:string|((v:V)=>T.Color),part=0,cs=4,rs=3,back=true){
+  const h=t/2,iw=hw-h,ih=hh-h,rr=Math.max(0,Math.min(R-h,iw,ih)),M=(u:number,v:number,w:number):V=>[c[0]+U[0]*u+Vv[0]*v+W[0]*w,c[1]+U[1]*u+Vv[1]*v+W[1]*w,c[2]+U[2]*u+Vv[2]*v+W[2]*w],
+   D=(u:number,v:number,w:number):V=>[U[0]*u+Vv[0]*v+W[0]*w,U[1]*u+Vv[1]*v+W[1]*w,U[2]*u+Vv[2]*v+W[2]*w],O:[number,number,number,number][]=[];
+  for(let q=0;q<4;q++){const sx=q===0||q===3?1:-1,sy=q<2?1:-1;for(let j=0;j<=cs;j++){const a=(q+j/cs)*Math.PI/2,ca=Math.cos(a),sa=Math.sin(a);O.push([sx*(iw-rr)+rr*ca,sy*(ih-rr)+rr*sa,ca,sa]);}}
+  const n=O.length,rim=(i:number,k:number):[V,V]=>{const [u,v,mu,mv]=O[i%n],th=-Math.PI/2+k*Math.PI/rs,co=Math.cos(th),si=Math.sin(th);return [M(u+mu*h*co,v+mv*h*co,h*si),D(mu*co,mv*co,si)];};
+  for(let i=0;i<n;i++)for(let k=0;k<rs;k++){const [p0,n0]=rim(i,k),[p1,n1]=rim(i+1,k),[p2,n2]=rim(i+1,k+1),[p3,n3]=rim(i,k+1);this.triN([p0,p1,p2],[n0,n1,n2],color,part);this.triN([p0,p2,p3],[n0,n2,n3],color,part);}
+  for(const sd of back?[1,-1]:[1]){const nW=D(0,0,sd),C=M(0,0,sd*h);for(let i=0;i<n;i++){const [u0,v0]=O[i],[u1,v1]=O[(i+1)%n];this.triN([C,M(u0,v0,sd*h),M(u1,v1,sd*h)],[nW,nW,nW],color,part);}}}
+ /** A rounded inner corner for a rectangular opening: fills between the corner P0 and a quarter arc of radius r (A, B: unit
+  *  directions along the two edges, into the opening). Flat, facing away from `inside`. n tris. */
+ fillet(P0:V,A:V,B:V,r:number,color:string|((v:V)=>T.Color),inside:V,n=4){const C:V=[P0[0]+(A[0]+B[0])*r,P0[1]+(A[1]+B[1])*r,P0[2]+(A[2]+B[2])*r],
+  at=(k:number):V=>{const f=k/n*Math.PI/2,cb=Math.cos(f)*r,sa=Math.sin(f)*r;return [C[0]-B[0]*cb-A[0]*sa,C[1]-B[1]*cb-A[1]*sa,C[2]-B[2]*cb-A[2]*sa];};
+  for(let k=0;k<n;k++)this.tri(P0,at(k),at(k+1),color,inside);}
  /** A rounded box (lib/graphics/softBox.ts) with smooth edge normals: centre, half sizes, corner radius, 0 chamfer / 1 / 2 segments. */
  rbox(x:number,y:number,z:number,hx:number,hy:number,hz:number,color:string|((v:V)=>T.Color),r:number,seg=1,part=0,ctr?:V,dome=0){
   const g=new SoftBoxGeometry(hx*2,hy*2,hz*2,{radius:r,seg,dome}),P=g.getAttribute('position'),N=g.getAttribute('normal'),I=g.index!.array;
@@ -188,7 +214,9 @@ function coveQuad(g:VGeo,s:number,u0:number,u1:number,z0:number,z1:number,off:nu
 /** Four football posters for the ad frames over the windows (vertex colour blocks, no texture). */
 function poster(g:VGeo,s:number,z0:number,z1:number,kind:number){
  const q=(u0:number,u1:number,a:number,b:number,c:string,o=.008)=>coveQuad(g,s,u0,u1,z0+(z1-z0)*a,z0+(z1-z0)*b,o,c);
- q(.08,.92,0,1,'#f4f1e8',.004);// the frame
+ if(SOFT_ON){const dx=(COVE_X-IW)*s,dy=CEIL_Y-SIDE_TOP,l=Math.hypot(dx,dy);g.shade=.5;// Train interior (Nov 27): a rounded, padded frame
+  g.rslab(coveCorner(s,.5,(z0+z1)/2,-.002),[dx/l,dy/l,0],[0,0,1],coveNormal(s),.42*l,(z1-z0)/2,.014,.07,'#f4f1e8',0,3,2,false);g.shade=0;}
+ else q(.08,.92,0,1,'#f4f1e8',.004);// the frame
  if(kind===0){q(.14,.86,.03,.97,'#2f7d4f');q(.68,.82,.08,.92,'#f6e9b8',.012);// Island League fixtures: green, a header, three fixture rows
   for(let r=0;r<3;r++){const u=.2+r*.15;q(u,u+.09,.1,.24,['#d6343a','#f5c21b','#5aa8de'][r],.012);q(u,u+.09,.3,.7,'#f4f1e8',.012);q(u,u+.09,.76,.9,['#1f5c9c','#8c2a2f','#f2e9d2'][r],.012);}}
  else if(kind===1){q(.14,.86,.03,.97,'#efe3c4');q(.68,.82,.08,.92,'#7a4b2f',.012);// Visit the History Museum: a columned front
@@ -230,6 +258,9 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  for(const s of [-1,1]){const x=s*HALF_W,xi=s*IW;
   wallCells(Z0,Z1,[BODY_Y0,SPLIT_Y,SIDE_TOP],holes,(a,b,y0,y1)=>g.panelX(x,a,b,y0,y1,s,(y0+y1)/2<SPLIT_Y?lv.lower:lv.upper));
   g.bend=INNER_BEND;g.defPart=PART.left;wallCells(ZI0,Z1,[CAR_FLOOR_Y,SIDE_TOP],holes,(a,b,y0,y1)=>g.panelX(xi,a,b,y0,y1,-s,wallRamp),[CAB_Z]);
+  // Train interior (Nov 27): rounded inner corners on every window and door opening (wall-coloured fillets just proud of the wall)
+  {const xf=xi-s*.003,IN:V=[s*(IW+1),2,0];if(closeUp)for(const w of WINDOWS)for(const [zz,yy,dz,dy] of [[w.z0,w.y0,1,1],[w.z1,w.y0,-1,1],[w.z0,w.y1,1,-1],[w.z1,w.y1,-1,-1]] as const)g.fillet([xf,yy,zz],[0,0,dz],[0,dy,0],.09,wallRamp,IN,4);
+   if(closeUp)for(const d of DOOR_HOLES)for(const [zz,dz] of [[d.z0,1],[d.z1,-1]] as const)g.fillet([xf,d.y1,zz],[0,0,dz],[0,-1,0],.16,wallRamp,IN,closeUp?5:2);}
   g.quad([xi,CAR_FLOOR_Y,Z1],[xi*CAB_K,CAR_FLOOR_Y,ZI1],[xi*CAB_K,SIDE_TOP,ZI1],[xi,SIDE_TOP,Z1],K.cab,[0,2,Z1]);g.bend=0;g.defPart=0;// the cab's narrowing corner
   for(const w of WINDOWS){reveal(g,w,x,xi,K.frame);frameX(g,s*(HALF_W+.004),s,w,.045,K.frame);}
   for(const d of DOOR_HOLES){reveal(g,d,x,xi,K.yellow,true,true);// the door-edge strip: yellow jambs, a silver head
@@ -251,6 +282,7 @@ export function buildCarGeometry(lv:Livery,closeUp=false){
  {const z=-6,w=HALF_W*.985,gw:Hole={z0:-GANGWAY_HALF,z1:GANGWAY_HALF,y0:CAR_FLOOR_Y,y1:GANGWAY_TOP};
   wallCells(-w,w,[BODY_Y0,SPLIT_Y,SIDE_TOP],[gw],(a,b,y0,y1)=>endQuad(g,z,-1,a,b,y0,y1,(y0+y1)/2<SPLIT_Y?lv.lower:lv.upper));
   g.bend=INNER_BEND;g.defPart=PART.left;wallCells(-IW,IW,[CAR_FLOOR_Y,SIDE_TOP],[gw],(a,b,y0,y1)=>endQuad(g,ZI0,1,a,b,y0,y1,wallRamp));
+  if(closeUp)for(const sx of [-1,1])g.fillet([sx*GANGWAY_HALF,GANGWAY_TOP,ZI0+.003],[-sx,0,0],[0,-1,0],.14,wallRamp,[0,2,ZI0-1],closeUp?5:1);// rounded gangway corners
   for(const s of [-1,1])g.quad([s*IW,SIDE_TOP,ZI0],[s*COVE_X,CEIL_Y,ZI0],[0,CEIL_Y,ZI0],[0,SIDE_TOP,ZI0],K.wall,[0,3.2,ZI0-1]);
   g.bend=0;g.defPart=0;reveal(g,gw,z,ZI0,K.frame,false,true);
   for(let i=SIDE0;i<SIDE1;i++)g.tri([0,SIDE_TOP,z],[prof[i][0]*.985,prof[i][1],z],[prof[i+1][0]*.985,prof[i+1][1],z],lv.roof,[0,2.4,z+1]);
@@ -320,50 +352,64 @@ function interior(g:VGeo,lv:Livery,closeUp:boolean){
    g.quad([A(x0),CEIL_Y,za],[A(x1),CEIL_Y,za],[B(x1),CEIL_Y,zb],[B(x0),CEIL_Y,zb],c,[0,CEIL_Y+1,0]);}
   for(const s of [-1,1])g.quad([s*IW*ka,SIDE_TOP,za],[s*COVE_X*ka,CEIL_Y,za],[s*COVE_X*kb,CEIL_Y,zb],[s*IW*kb,SIDE_TOP,zb],ramp(K.ceil,SIDE_TOP,CEIL_Y,.9),[s*3,5,(za+zb)/2]);}
  for(const s of [-1,1]){
-  if(SOFT)g.rbox(s*.58,CEIL_Y-.02,(-5.6+CAB_Z-.2)/2,.12,.025,(CAB_Z-.2+5.6)/2,K.light,.024,0,PART.head);// a rounded diffuser
+  if(SOFT){const lc=new T.Color(K.light),xc=s*.58;g.shade=1;// a rounded (pill-section) diffuser, its edges falling off (the glow saturates a flat colour)
+   g.rbox(xc,CEIL_Y-.04,(-5.6+CAB_Z-.2)/2,.13,.045,(CAB_Z-.2+5.6)/2,(v:V)=>{const u=Math.min(1,Math.abs(v[0]-xc)/.13);return _c.copy(lc).multiplyScalar(1-.45*u*u);},.044,1,PART.head);g.shade=0;}
   else g.quad([s*.46,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,-5.6],[s*.7,CEIL_Y-.006,CAB_Z-.2],[s*.46,CEIL_Y-.006,CAB_Z-.2],K.light,[0,CEIL_Y+1,0],PART.head);}
  // the cab partition (cream on the passenger side, grey in the cab) with its window, the cab desk
  {const hs=PART_WINS;wallCells(-IW,IW,[F,SIDE_TOP],hs,(a,b,y0,y1)=>{endQuad(g,CAB_Z,-1,a,b,y0,y1,ramp(K.wall,F,F+1.1,.74));endQuad(g,CAB_Z+.05,1,a,b,y0,y1,K.cab);});
   for(const s of [-1,1]){g.quad([s*IW,SIDE_TOP,CAB_Z],[s*COVE_X,CEIL_Y,CAB_Z],[0,CEIL_Y,CAB_Z],[0,SIDE_TOP,CAB_Z],K.wall,[0,3.2,CAB_Z+1]);}
   for(const h of PART_WINS)reveal(g,h,CAB_Z,CAB_Z+.05,K.frame,false);
+  if(closeUp)for(const h of PART_WINS)for(const [xx,yy,dx,dy] of [[h.z0,h.y0,1,1],[h.z1,h.y0,-1,1],[h.z0,h.y1,1,-1],[h.z1,h.y1,-1,-1]] as const)g.fillet([xx,yy,CAB_Z-.003],[dx,0,0],[0,dy,0],.08,ramp(K.wall,F,F+1.1,.74),[0,2,CAB_Z+1],closeUp?4:1);
   g.box(0,F+.42,5.62,1.02,.42,.3,K.desk);g.quad([-1.02,F+.84,5.32],[1.02,F+.84,5.32],[1.02,F+1.0,5.9],[-1.02,F+1.0,5.9],col(K.desk,1.15).getStyle(),[0,0,6]);}
  for(const s of [-1,1]){
   // benches: stainless kick panel, a moquette cushion (lighter top, darker sides) and a two-tone backrest
   for(const [a,b] of BENCHES){const zc=(a+b)/2,hz=(b-a)/2;
-   g.box(s*1.06,F+.26,zc,.28,.26,hz,ramp(K.kick,F,F+.5,.7));
-   if(SOFT){// cushioned seat: a pillowed moquette cushion per bench, seams between the slots, a rounded two-part backrest
-    {const n=Math.max(1,SEAT_SLOTS_Z.filter(sz=>sz>a&&sz<b).length),w=(b-a)/n;for(let k=0;k<n;k++)g.rbox(s*(BENCH_FRONT+.31),F+.575,a+w*(k+.5),.31,.07,w/2-.012,seat,.06,0,0,undefined,.025);}// one cushion per seat: soft seams
-    g.rbox(s*(BENCH_BACK+.07),F+.75,zc,.075,.11,hz-.01,seatDark,.06,0);g.rbox(s*(BENCH_BACK+.07),F+.95,zc,.075,.11,hz-.01,seat,.06,0,0,undefined,.015);}
+   if(SOFT){g.shade=.5;g.rbox(s*1.06,F+.26,zc,.28,.26,hz-.02,ramp(K.kick,F,F+.5,.7),.08,0);g.shade=0;}// a rounded seat base
+   else g.box(s*1.06,F+.26,zc,.28,.26,hz,ramp(K.kick,F,F+.5,.7));
+   if(SOFT){// Train interior (Nov 27): a puffy cushion per seat (seat + backrest), round edges (~40% of the thickness), seam dips
+    g.shade=1;const n=Math.max(1,SEAT_SLOTS_Z.filter(sz=>sz>a&&sz<b).length),w=(b-a)/n;
+    for(let k=0;k<n;k++){const z=a+w*(k+.5),hz2=w/2-.035;g.rbox(s*(BENCH_FRONT+.31),F+.56,z,.3,.085,hz2,seat,.07,1,0,undefined,.025);// the seat cushion (top F+.645 + dome)
+     g.rbox(s*(BENCH_BACK+.08),F+.87,z,.08,.2,hz2,seat,.075,1,0,undefined,.02);}// the backrest cushion
+    g.shade=0;}
+   else if(SOFT_ON){g.shade=.8;g.rbox(s*(BENCH_FRONT+.31),F+.57,zc,.31,.072,hz-.02,seat,.06,0);g.shade=0;g.box(s*(BENCH_BACK+.07),F+.84,zc,.07,.2,hz-.02,seatDark);}// normal tier: one soft (chamfered, toned) cushion per bench
    else{g.box(s*(BENCH_FRONT+.31),F+.575,zc,.31,.065,hz,seatDark);g.quad([s*(BENCH_FRONT+.03),F+.642,a+.02],[s*(IW-.02),F+.642,a+.02],[s*(IW-.02),F+.642,b-.02],[s*(BENCH_FRONT+.03),F+.642,b-.02],seat,[0,F,zc]);
    g.box(s*(BENCH_BACK+.07),F+.74,zc,.07,.1,hz,seatDark);g.box(s*(BENCH_BACK+.07),F+.94,zc,.07,.1,hz,seat);}
    if(closeUp){if(!SOFT)g.quad([s*BENCH_FRONT,F+.6,a],[s*(BENCH_FRONT+.04),F+.642,a],[s*(BENCH_FRONT+.04),F+.642,b],[s*BENCH_FRONT,F+.6,b],seatLite,[0,F+.3,zc]);// a bevel on the cushion's front edge
-    for(const ze of [a,b])SOFT?g.rbox(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.014,K.pole,.013,0):g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
+    if(SOFT){g.shade=.6;for(const ze of [a,b])g.rslab([s*(BENCH_FRONT+.32),F+.52,ze],[1,0,0],[0,1,0],[0,0,1],.3,.44,.05,.16,K.pole,0,2,2);g.shade=0;}// padded end screens, round corners
+    else for(const ze of [a,b])g.box(s*(BENCH_FRONT+.32),F+.52,ze,.3,.44,.012,K.pole);// stainless end screens
     // POLISH 3 (owner shot 68: "remove this divider bar between seats, it's weird just sticking out"): no upright posts between slots
-    if(SOFT){g.rbox(s*1.17,3.06,zc,.17,.012,hz,K.rack,.011,0);g.rbeam([s*1.0,3.04,a],[s*1.0,3.04,b],.014,K.pole);}
+    if(SOFT){g.shade=.6;g.rbox(s*1.17,3.06,zc,.17,.014,hz,K.rack,.013,0);g.rbeam([s*1.0,3.04,a+.03],[s*1.0,3.04,b-.03],.016,K.pole,0,undefined,10);g.shade=0;}
     else{g.box(s*1.17,3.06,zc,.17,.008,hz,K.rack);g.beam([s*1.0,3.04,a],[s*1.0,3.04,b],.012,K.pole);}}}// luggage rack over the bench
   // grab poles at the door bays (bench ends), the strap rail
-  const pole=SOFT?g.rbeam.bind(g):g.beam.bind(g);
-  for(const zc of DOORS)for(const d of [-1,1])pole([s*.78,F,zc+d*(DOOR_HALF+.12)],[s*.78,CEIL_Y,zc+d*(DOOR_HALF+.12)],.022,K.pole);
-  pole([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.018,K.pole);
+  // Train interior (Nov 27): round poles (10 sides near, 6 far) with soft collars where they meet the floor and the ceiling
+  const SIDES=SOFT?10:6,pole=SOFT?(a:V,b:V,r:number,c:string)=>g.rbeam(a,b,r,c,0,undefined,SIDES):g.beam.bind(g),knob=(x:number,y:number,z:number,r:number)=>{const d=y<2?1:-1;g.rbeam([x,y-d*.03,z],[x,y+d*.04,z],r*.8,K.pole,0,undefined,SIDES);};// a soft collar
+  if(SOFT_ON)g.shade=.8;
+  for(const zc of DOORS)for(const d of [-1,1]){const z=zc+d*(DOOR_HALF+.12);pole([s*.78,F,z],[s*.78,CEIL_Y,z],.024,K.pole);if(SOFT){knob(s*.78,F+.03,z,.045);knob(s*.78,CEIL_Y-.03,z,.04);}}
+  pole([s*STRAP_X,STRAP_RAIL_Y,-5.7],[s*STRAP_X,STRAP_RAIL_Y,CAB_Z-.15],.02,K.pole);
+  if(SOFT)for(const z of [-5.7,CAB_Z-.15]){pole([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.02,K.pole);}// the rail's ends bend up into the ceiling
+  g.shade=0;
   if(closeUp){
    // hangers and strap handles (a strap and a triangular grip), over the bench fronts
-   for(const z of [-5.5,-2.5,0,2.5,4.4])pole([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.01,K.pole);
+   if(SOFT)g.shade=.8;for(const z of [-5.5,-2.5,0,2.5,4.4]){pole([s*STRAP_X,STRAP_RAIL_Y,z],[s*STRAP_X,CEIL_Y,z],.012,K.pole);}g.shade=0;
    // the straps swing about the rail in the vehicle shader (PART.strap, pivot in aPart): with the car's curve lean and a soft pendulum
    // after starts / stops (trafficVehicles.ts uSway). No per-strap CPU work; rigid with prefers-reduced-motion.
    for(const [a,b] of BENCHES){const n=Math.max(1,Math.round((b-a)/.6));for(let k=0;k<n;k++){const z=a+(k+.5)*(b-a)/n,x=s*STRAP_X,yb=STRAP_GRIP_Y+.1,P:V=[x,STRAP_RAIL_Y,z],S=PART.strap;
-    g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);
-    if(SOFT)g.ring([x,(yb+STRAP_GRIP_Y)/2,z],[0,1,0],[0,0,1],(yb-STRAP_GRIP_Y)/2+.012,.011,'#f2efe6',S,P,6,3);// a round loop handle
-    else{g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}}
+    if(SOFT){g.shade=.8;g.rbeam(P,[x,yb+.005,z],.012,'#e9e4d6',S,P,6);// a short round stem and a fat round loop handle
+     g.ring([x,(yb+STRAP_GRIP_Y)/2-.01,z],[0,1,0],[0,0,1],(yb-STRAP_GRIP_Y)/2+.02,.016,'#f2efe6',S,P,8,4);g.shade=0;}
+    else g.beam(P,[x,yb,z],.012,'#e9e4d6',S,P);
+    if(!SOFT){g.beam([x,yb,z-.06],[x,yb,z+.06],.01,'#f2efe6',S,P);g.beam([x,yb,z-.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);g.beam([x,yb,z+.06],[x,STRAP_GRIP_Y,z],.01,'#f2efe6',S,P);}}}
    // posters on the cove over the windows, door chime lamps (amber), the floor's yellow door edge and the aisle line, blinds
    for(const ps of POSTERS)if(ps.s===s)poster(g,s,ps.z0,ps.z1,ps.kind);
-   for(const zc of DOORS){g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);
+   for(const zc of DOORS){if(SOFT)g.rbox(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime,.024,0);else g.box(s*(IW-.025),DOOR_Y1+.04,zc,.025,.025,.09,K.chime);
     g.quad([s*(IW-.16),F+.004,zc-DOOR_HALF],[s*IW,F+.004,zc-DOOR_HALF],[s*IW,F+.004,zc+DOOR_HALF],[s*(IW-.16),F+.004,zc+DOOR_HALF],K.yellow,[0,F-1,zc]);}
    for(const k of [0,3]){const w=WINDOWS[k];for(const d of [1,-1])g.panelX(s*(IW+.012),w.z0,w.z1,w.y1-.2,w.y1,d*s,K.blind);}}}
  if(closeUp){for(const x of [-.47,.43])g.quad([x,F+.002,ZI0+.05],[x+.04,F+.002,ZI0+.05],[x+.04,F+.002,CAB_Z-.05],[x,F+.002,CAB_Z-.05],K.floor2,[0,F-1,0]);
   // ceiling vents (a pale strip with dark slots) and the driver's seat
-  g.quad([-.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,CAB_Z-.2],[-.2,CEIL_Y-.004,CAB_Z-.2],K.vent,[0,CEIL_Y+1,0]);
-  for(let z=-5.2;z<CAB_Z-.4;z+=1.3)g.quad([-.1,CEIL_Y-.008,z],[.1,CEIL_Y-.008,z],[.1,CEIL_Y-.008,z+.36],[-.1,CEIL_Y-.008,z+.36],K.slot,[0,CEIL_Y+1,0]);
-  g.box(-.45,F+.3,5.05,.24,.3,.22,K.desk);g.box(-.45,F+.75,4.86,.24,.25,.04,K.desk);}
+  if(SOFT_ON){g.shade=.5;g.rbox(0,CEIL_Y-.012,(-5.6+CAB_Z-.2)/2,.2,.014,(CAB_Z-.2+5.6)/2,K.vent,.013,1);g.shade=0;}// a soft-edged ceiling panel
+  else g.quad([-.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,-5.6],[.2,CEIL_Y-.004,CAB_Z-.2],[-.2,CEIL_Y-.004,CAB_Z-.2],K.vent,[0,CEIL_Y+1,0]);
+  const VY=CEIL_Y-(SOFT_ON?.028:.008);for(let z=-5.2;z<CAB_Z-.4;z+=1.3)g.quad([-.1,VY,z],[.1,VY,z],[.1,VY,z+.36],[-.1,VY,z+.36],K.slot,[0,CEIL_Y+1,0]);
+  if(SOFT_ON){g.shade=.7;g.rbox(-.45,F+.3,5.05,.24,.3,.22,K.desk,.08,1);g.rbox(-.45,F+.75,4.86,.24,.25,.05,K.desk,.045,1);g.shade=0;}
+  else{g.box(-.45,F+.3,5.05,.24,.3,.22,K.desk);g.box(-.45,F+.75,4.86,.24,.25,.04,K.desk);}}
 }
 /** The far tier: one box per car (12 triangles): the lower livery colour low, the upper high, the roof colour on top. */
 export function buildCarBox(lv:Livery){
