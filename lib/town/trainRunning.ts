@@ -41,6 +41,8 @@ const sparkCar=(i:number,clock:number)=>{const b=Math.floor(clock*2.5),h=Math.im
 const tunnelLamps=(s:number)=>{const a=wrapS(s-TUNNEL.west.s+20);return a<TUNNEL.east.s-TUNNEL.west.s+20+TRAIN_LENGTH;};
 
 /** Phase 4: wheel clack within CLACK_RANGE m (one per CLACK_STEP m run), door chime within DOOR_SOUND m, arrival melody within ARRIVE_SOUND m. */
+/** The headlamp beam (Nov 27 2026): pools from BEAM_FROM m ahead of the train's s, BEAM_STEP apart (trainNightGlow GLOW_PER_TRAIN). */
+export const BEAM_N=8,BEAM_FROM=7,BEAM_STEP=4;
 export const CLACK_RANGE=45,CLACK_STEP=CAR_LENGTH+CAR_GAP,DOOR_SOUND=35,ARRIVE_SOUND=70;
 /** Platform announcements (Nov 24 polish): within ON_PLATFORM m of the platform's middle, ANNOUNCE_S s before the train pulls in. */
 export const ON_PLATFORM=22,ANNOUNCE_S=10;
@@ -511,8 +513,11 @@ export function createTrainRunning(scene:T.Scene,obstacles:Obstacle[]|null=null)
      // AAA 4: the headlamps flicker for ~0.5 s as they switch up / down at the tunnel mouth (a cheap channel multiply; not reduced motion)
      const fk=animate&&!f.reduced&&clock-tr.flick<.5?(Math.sin(clock*71+i)*Math.sin(clock*43)>.15?.5:1):1;tr.look.lamp.x=(1+.6*night+1.4*tr.tun)*fk;tr.look.lamp.y=.9+.5*tr.tun;}
     if(glow){// POLISH 3: the headlamp beam on the track ahead of the leading cab (on the curve's own tangent) and on the tunnel walls
-     for(let b=0;b<3;b++){const sb=st.s+9+b*5;trackAt(sb,gp);const y=bedAt(L.profile,sb)+RAIL_TOP,w=(.85-b*.2)*(1+.4*tr.tun);nightGlow.beam(gp.x,y,gp.z,gp.tx,gp.tz,w);
-      if(sb>TUNNEL.west.s&&sb<TUNNEL.east.s){nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,TUNNEL_HALF_WIDTH-.06,w);nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,-(TUNNEL_HALF_WIDTH-.06),w);}}}
+     // Nov 27 2026 (owner 201: "the lights in front of the train should be more gradual and one, not three separate lights"): ONE beam,
+     // BEAM_N long soft pools overlapping 3x along the track (each on the curve's own tangent), narrow + bright at the nose, wider and
+     // fading to nothing by ~35 m: they sum into one continuous cone with no gaps. The wall wash on every other pool in the bore.
+     for(let b=0;b<BEAM_N;b++){const t=b/(BEAM_N-1),sb=st.s+BEAM_FROM+b*BEAM_STEP;trackAt(sb,gp);const y=bedAt(L.profile,sb)+RAIL_TOP,w=.4*(1-t)**1.25*(1+.4*tr.tun)+.02;nightGlow.beam(gp.x,y,gp.z,gp.tx,gp.tz,w,2.4+3.4*t,BEAM_STEP*3);
+      if(b%2===0&&sb>TUNNEL.west.s&&sb<TUNNEL.east.s){nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,TUNNEL_HALF_WIDTH-.06,w);nightGlow.wall(gp.x,y,gp.z,gp.tx,gp.tz,-(TUNNEL_HALF_WIDTH-.06),w);}}}
     for(let c=0;c<TRAIN_CARS;c++){const rev=c%2===1?-1:1;carMatrix(st.s,c,m4,st.v,i);tr.mesh.setMatrixAt(c,m4);glass.shadow(m4);
      if(glow){const sc=st.s-c*(CAR_LENGTH+CAR_GAP)-CAR_LENGTH/2,kind=L.profile.kind[Math.round(wrapS(sc)/TRACK_DS)%TRACK.n];let ps=0;
       for(const ts of TRAIN_STATIONS){const ds=Math.abs(((sc-ts.s)%TRACK.length+TRACK.length*1.5)%TRACK.length-TRACK.length/2);if(ds<STATION_HALF){ps=ts.side*rev;break;}}
