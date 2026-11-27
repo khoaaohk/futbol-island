@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {takeSandDrifts} from './grounding';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,SHORE_SAND,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
@@ -45,6 +46,16 @@ export function goalGeometry(v:Pick<Venue,'goalWidth'|'goalHeight'|'length'>&{id
 }
 /** Triangles the west side's raised ground added to the main lawn (0 with elevation off): the heat notes read it. */
 export let westLawnTriangles=0;
+/** Grounding (lib/town/grounding.ts): sand drifted against the beach's walls and platforms joins the sand ribbon (its own material,
+ *  ripples and shadow; 0 draws). aShore 40 = dry sand (no wet band). Nothing to add with ?ground=0 or on the lowest tier. */
+function withSandDrifts(g:T.BufferGeometry){const d=takeSandDrifts();if(!d.length)return g;const base=g.getAttribute('position').count,n=d.length/3;
+ const pos=new Float32Array((base+n)*3),shore=new Float32Array(base+n),idx:number[]=Array.from(g.index!.array as ArrayLike<number>);
+ pos.set(g.getAttribute('position').array as Float32Array);pos.set(d,base*3);shore.set(g.getAttribute('aShore').array as Float32Array);shore.fill(40,base);for(let i=0;i<n;i++)idx.push(base+i);
+ const out=new T.BufferGeometry();out.setAttribute('position',new T.BufferAttribute(pos,3));out.setAttribute('aShore',new T.BufferAttribute(shore,1));out.setIndex(idx);out.computeVertexNormals();
+ // drift normals lean only a little off vertical: the shadow map's normal offset (2 texels, ~0.5-1 m here) pushed a sloped drift's
+ // lookup out of the eave / wall shadow and the drift glowed as a pale apron (shots/north-close-a3); near-up normals keep the shadow
+ {const nr=out.getAttribute('normal') as T.BufferAttribute;for(let i=base;i<base+n;i++){const x=nr.getX(i)*.3,y=nr.getY(i)*.3+.7,z=nr.getZ(i)*.3,l=Math.hypot(x,y,z);nr.setXYZ(i,x/l,y/l,z/l);}}
+ g.dispose();return out;}
 export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  const roots=new Map<string,T.Group>(),goalSpecs:PropSpec[]=[];const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
  const cream=new T.LineBasicMaterial({color:'#f5eed5'});owned.push(cream);
@@ -115,7 +126,7 @@ export function buildFormatFields(scene:T.Scene,lawnCell:2|4=2){
  {const q=SHORE_SAND[i].inner;sandPositions.push(q.x,-.105,q.z);sandShore.push(Math.min(width,Math.hypot(q.x-p.x,q.z-p.z)));}// the untangled inner edge (shoreline.ts): no fold, no coplanar layers// aShore: metres inland of the outline, for the wet band (groundTint.ts 'beach')
  const a=i*SAND_ROWS,b=((i+1)%n)*SAND_ROWS;for(let r=0;r<SAND_ROWS-1;r++)sandIndices.push(a+r,b+r,a+r+1,b+r,b+r+1,a+r+1);
  });
- const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setAttribute('aShore',new T.Float32BufferAttribute(sandShore,1));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'beach');owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
+ const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setAttribute('aShore',new T.Float32BufferAttribute(sandShore,1));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'beach');owned.push(sandGeo,sandMat);const sand=new T.Mesh(withSandDrifts(sandGeo),sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
  const floodlights=createFieldLighting(scene,roots,surfaces,frameMaterial,cream);
  return {roots,propSpecs:[...goalSpecs,...floodlights.propSpecs],updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
 }
