@@ -44,6 +44,8 @@ export const BROADLEAF_SHAPES:BroadleafShape[]=[
 /** The kit's radii were drawn for the 3.6 m ball's outline; a 20-face clump holds ~60 % of its sphere, so they grow to keep the mass. */
 export const LOBE_GROW=1.17;
 /** top / reach: the canopy's highest point and widest half-width (tree space): the tree's asset (leaf debris hit test) is sized from them. */
+/** The merged canopy's geometry type: keeps 'Icosahedron' in it, so every foliage test (NOT_ROOF) still reads it as a crown. */
+export const FOLIAGE_TYPE='BroadleafIcosahedronClumps';
 export type BroadleafTree={leaves:T.BufferGeometry;shade:Float32Array;bark:T.BufferGeometry;shape:string;triangles:number;top:number;reach:number};
 const up=new T.Vector3(0,1,0);
 /** A low-poly clump: icosahedron corners pushed in / out by up to `jag` (a hash of the corner's direction, so shared corners stay shut). */
@@ -62,7 +64,10 @@ export function broadleafTree(x:number,z:number,s:number,o:{trunkTop?:number;tru
   const m=new T.Matrix4().compose(new T.Vector3(lx,ly,lz),new T.Quaternion().setFromEuler(new T.Euler(h(10+k)*.6,h(20+k)*6.28,h(30+k)*.6)),new T.Vector3(r*sqxz,r*sqy,r*sqxz));
   g.applyMatrix4(m.premultiply(pose));parts.push(g);
   const c=new T.Vector3(lx,ly,lz).applyMatrix4(pose);centres.push({c,r:r*Math.max(sqy,sqxz)*(sx+sy)/2});});
- const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();// non-indexed: one flat normal per facet
+ const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();
+ // Nov 26 2026: still foliage to the landing code (canopySurfaces.ts / tests/roof-landing.cjs NOT_ROOF match 'Icosahedron', as the old single
+ // IcosahedronGeometry crown did): a merged crown's level facets are not a roof; parachute / jetpack landings pass through to the ground.
+ (leaves as unknown as {type:string}).type=FOLIAGE_TYPE;// non-indexed: one flat normal per facet
  // Occlusion (rgb multiplier per vertex): the canopy's core and underside darker, the creases between clumps darker, the outer tops full;
  // a per-tree value / warmth shift so neighbours of the same colour still differ.
  const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3);
@@ -97,7 +102,7 @@ export function broadleafBush(x:number,z:number,r:number):{leaves:T.BufferGeomet
  const h=(k:number)=>spotHash(x,z,40+k),parts:T.BufferGeometry[]=[],yaw=h(0)*6.28;
  const L:Lobe[]=[[0,0,0,.82],[.48,-.12,.22,.62],[-.38,.1,-.32,.6]];
  for(const [k,[lx,ly,lz,lr]] of L.entries()){const g=clump(k*7+Math.floor(h(1)*50),.09,k===0);g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(lx*r,ly*r,lz*r).applyAxisAngle(up,yaw),new T.Quaternion().setFromEuler(new T.Euler(h(2+k),h(5+k)*6.28,0)),new T.Vector3(lr*r,lr*r*.9,lr*r)));parts.push(g);}
- const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();
+ const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
  const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3);leaves.computeBoundingBox();const bb=leaves.boundingBox!,hy=Math.max(.01,bb.max.y-bb.min.y),value=.94+.12*h(9);
  for(let i=0;i<n;i++){const t=(P.getY(i)-bb.min.y)/hy,f=(.68+.32*Math.min(1,t*1.2))*value;shade[i*3]=f;shade[i*3+1]=f;shade[i*3+2]=f;}
  return {leaves,shade};
