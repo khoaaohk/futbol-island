@@ -135,8 +135,35 @@ export function meshLinks(path:string,{skip=[],lang='en'}:{skip?:Iterable<string
  });
  return out;
 }
-/** The "Keep reading" groups with the mesh group added after them (id `similar`, mixed kinds: each card takes its own tag). */
+/**
+ * Hand-picked links to the Nov 26 2026 gap pages (lib/site/gapPages.ts), from the closest strong pages (SEO striking pass,
+ * Nov 26 2026, owner approved: 2-4 links per new page, both languages). English source path -> target English path with the
+ * English and Spanish anchor text and line. Shown first in the page's "Keep reading" grid (group `gap-guide`), so it gets a visible
+ * slot; the Spanish page links the Spanish twin (lib/i18n/esPaths.ts ES_GAP_SLUGS).
+ */
+type GapIn={path:string;en:[string,string];es:[string,string]};
+const ABBR:GapIn={path:'/learn/soccer-positions/abbreviations',en:['Soccer position abbreviations: CB, CDM, CAM, ST','What every set of letters on a lineup means'],es:['Abreviaturas de posiciones: DFC, MCD, MCO, DC','Qué significa cada sigla de una alineación']};
+const SOLO:GapIn={path:'/learn/soccer-drills/solo-soccer-drills',en:['Solo soccer drills to do by yourself','Wall passes, juggling and dribbling with one ball'],es:['Ejercicios de fútbol para hacer solo','Pases a la pared, toques y regate con un balón']};
+const FUTSAL:GapIn={path:'/learn/soccer-rules/futsal-vs-soccer',en:['Futsal vs soccer: every difference','Ball, court, clock, kick-ins and fouls side by side'],es:['Futsal vs fútbol: todas las diferencias','Balón, pista, reloj, saques de banda y faltas, lado a lado']};
+const DRIB:GapIn={path:'/learn/soccer-terms/types-of-dribbling',en:['Types of dribbling in soccer','Close control, speed dribbling, shielding and moves'],es:['Tipos de regate en el fútbol','Conducción, regate en velocidad, protección y amagues']};
+const POSS:GapIn={path:'/learn/soccer-drills/teaching-kids-possession',en:['How to teach kids possession','Rondos and keep-away games by age, step by step'],es:['Cómo enseñar la posesión a los niños','Rondos y juegos de mantener el balón por edad, paso a paso']};
+export const GAP_INLINKS:Readonly<Record<string,readonly GapIn[]>>={
+ '/learn/soccer-positions/center-back':[ABBR],'/learn/soccer-positions/striker':[ABBR],
+ '/learn/soccer-drills/at-home':[SOLO],'/learn/soccer-drills/u8':[SOLO],'/learn/soccer-drills/u10':[SOLO],
+ '/learn/soccer-formations/futsal-3-1':[FUTSAL],'/learn/soccer-formations/futsal-2-2':[FUTSAL],
+ '/learn/soccer-terms/dribble':[DRIB],'/learn/soccer-drills/dribbling':[DRIB],'/learn/soccer-terms/step-over':[DRIB],
+ '/learn/soccer-terms/possession':[POSS],'/learn/soccer-practice-plans/u12-possession-practice-plan':[POSS],'/learn/soccer-practice-plans/u10-passing-practice-plan':[POSS],
+};
+function gapInLinks(path:string,lang:'en'|'es',taken:ReadonlySet<string>):MeshLink[]{
+ const en=path.startsWith('/es')?toEn(path)??path:path;
+ return (GAP_INLINKS[en]??[]).filter(g=>!taken.has(g.path)&&!taken.has(toEs(g.path))&&(lang==='en'||(hasEs(en)&&hasEs(g.path))))
+  .map(g=>{const [name,line]=g[lang];return {path:lang==='en'?g.path:toEs(g.path),name,line};});
+}
+/** The "Keep reading" groups with the mesh group added after them (id `similar`, mixed kinds: each card takes its own tag),
+ *  and the hand-picked gap-page links (GAP_INLINKS, group `gap-guide`) before them. */
 export function withMesh<G extends {id:string;links:readonly {path:string}[]}>(groups:readonly G[],path:string,lang:'en'|'es'='en'):(G|{id:string;links:MeshLink[]})[]{
- const links=meshLinks(path,{skip:groups.flatMap(g=>g.links.map(l=>l.path)),lang});
- return links.length?[...groups,{id:'similar',links}]:[...groups];
+ const given=groups.flatMap(g=>g.links.map(l=>l.path.split('#')[0])),gap=gapInLinks(path,lang,new Set(given));
+ const links=meshLinks(path,{skip:[...given,...gap.map(l=>l.path)],lang});
+ const out:(G|{id:string;links:MeshLink[]})[]=gap.length?[{id:'gap-guide',links:gap},...groups]:[...groups];
+ return links.length?[...out,{id:'similar',links}]:out;
 }
