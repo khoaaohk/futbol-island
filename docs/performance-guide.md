@@ -7305,3 +7305,14 @@ Switch: `lib/graphics/vehicleSwitch.ts` (read once per page; picks geometry, con
   van 212 -> 328, jeep 200 -> 316, pickups 258 / 270 -> 348 / 360 (cap ROUND_TRIANGLES 330 / 370); all 11: ~2,400 -> 3,474 (x2 with the
   shadow pass), still under the Nov 17 box cars' 3,580. Busiest street view: 120 draws both, +306 triangles.
 - Tests: tests/vehicles-round.cjs (new, in the chain), traffic-signals (caps), boat-hull, fishing-fight (source pins), ground-shader-cost.
+### Leftovers A (Nov 26 2026 night, branch `leftovers-a`): far lamps, uprights grounded, mounds, lawn edge
+- Far lamps (`lib/town/lampPost.ts` LAMP_LOD, `world.ts` batching): each lamp also builds a 72-tri twin; a chunk paint batch with lamps is ordered
+  [twins | rest | kerb | near lamps] and `onBeforeRender` picks ONE contiguous draw range (near lamps while any lamp of the chunk is within 60 m,
+  32 m on heat tier >= 2; twins beyond). 0 draws, 0 materials, no shader change; per frame ~66 chunk meshes x 1-4 distance checks. The shadow pass
+  draws the twins (shadowCount = all minus kerb minus near lamps). `?lamplod=0|far`, `window.__lampLod.force`. Tris in view, all-near vs shipped:
+  town street (70,6) 355.3k -> 351.6k, island overview 681.0k -> 672.7k, pier row 229.5k -> 227.6k (desktop, sunset). Memory: +8.6k tris of twins.
+- Uprights (`grounding.ts` registerUpright): 12 field-light masts, 12 goal posts, 34 fence runs, 4 zipline legs get a contact shade in the one decal
+  (29.9k -> 32.6k tris, 0 draws), zip legs a footing collar; 189 bench / table legs (84 props) lengthened in place (0 tris). Detail 5.3k tris.
+- Palm mounds: 40 -> 4n tris each (10 sides: 40 tris), smooth normals, in the sand mesh (0 draws). Lawn edge: no new geometry (patch vertices dive,
+  fringe on 12 more coast stretches: + a few hundred tris in the existing lawn-edge mesh).
+- No phone perf run this pass (no thermal claim): the costs are build-time geometry plus the per-chunk range pick.

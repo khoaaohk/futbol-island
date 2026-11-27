@@ -1,5 +1,5 @@
 import type {SignalHead} from './trafficSignals';
-import {lampPost,lampStyleFor} from './lampPost';
+import {lampPost,lampStyleFor,lampNear2} from './lampPost';
 import {SIGN_POST_SET} from './signPosts';
 import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
@@ -19,7 +19,7 @@ import {drapePieces,seatProps} from './elevationDrape';
 import {surfOn,setSurfaceInput,surfaceStats,cayLawnEdges} from './surfaceEdges';
 import {mergeLawnPatch} from './westTerrain';
 import {trackNearest,TRAIN_STATIONS,trackAt} from './trainTrack';
-import {groundingOn,buildGrounding} from './grounding';
+import {groundingOn,buildGrounding,registerUpright,UPRIGHT_SINK} from './grounding';
 import {cayGround} from './coralCayElevation';
 import {CAY_BOULEVARD,ROUNDABOUT,CAUSEWAY} from './coralCay';
 import {groundAt as depthGroundAt,clipToStreets,pathClips,sheetCrossings,townDepthOn,depthLowTier,setDepthStreets,depthLift,depthStreets,asphaltBand,asphaltKnots,asphaltCorners,pavementCell,pavementTrim,depthStats,depthNormal,kerbStrips,contactShade,smallObjects,depthLawn,depthWeight,Sink,DRAWN,KERB,type Crossing,type GroundedObject} from './townDepth';// town kerb depth (?depth=1, default off)
@@ -65,6 +65,7 @@ import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
+import {goalPostRadius} from './goalCollisions';
 import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,PALM_COAST_PROMENADE,onIsland,INTERIOR_GRASS} from './shoreline';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {createTrailMaterial} from '../graphics/pondWater';
@@ -1020,7 +1021,9 @@ export function* buildTownSteps(scene: T.Scene) {
     obstacles.push({x,z,w,d});arenaRails.push({x,z,w,d,floor:0,top:3.6});
     for(const y of [.16,3.6])box(vertical?.07:length,.07,vertical?length:.07,'#315b50',x,y,z);
     const count=Math.ceil(length/2.5);
-    for(let i=0;i<=count;i++)box(.09,3.6,.09,'#315b50',x+(vertical?0:-length/2+i*length/count),1.8,z+(vertical?-length/2+i*length/count:0));
+    const sk=groundingOn()?UPRIGHT_SINK.fence:0;/* Leftovers A: posts run on under the paving */
+    for(let i=0;i<=count;i++){const px=x+(vertical?0:-length/2+i*length/count),pz=z+(vertical?-length/2+i*length/count:0);box(.09,3.6+sk,.09,'#315b50',px,1.8-sk/2,pz);}
+    if(sk)registerUpright({what:'fence',x,z,r:.06,sink:sk,run:{hw:vertical?.06:length/2,hd:vertical?length/2:.06}});
     for(let t=-length/2;t<=length/2;t+=.4)box(.018,3.5,.018,'#536b65',x+(vertical?0:t),1.82,z+(vertical?t:0)).castShadow=false;
     for(let y=.4;y<3.6;y+=.4)box(vertical?.018:length,.018,vertical?length:.018,'#536b65',x,y,z).castShadow=false;
    };
@@ -1911,6 +1914,9 @@ export function* buildTownSteps(scene: T.Scene) {
    const townGround=(x:number,z:number)=>depth&&townDepthOn()&&x>depth.box.minX&&x<depth.box.maxX&&z>depth.box.minZ&&z<depth.box.maxZ?depthGroundAt(x,z):null;
    const grass=(x:number,z:number)=>x<450&&insidePolygon(INTERIOR_GRASS,x,z);
    const sunL=Math.hypot(ISLAND_SUN_POSITION[0],ISLAND_SUN_POSITION[2]);
+   // Leftovers A: the pitches' field-light masts and goal posts (fields.ts builds them outside the town group; same layout functions)
+   for(const v of VENUES){if((v.elevation??0)>0)continue;for(const p of fieldLightLayout(v).posts)registerUpright({what:'mast',x:v.x+p.x,z:v.z+p.z,r:.38,sink:UPRIGHT_SINK.mast,detail:'none'});
+    for(const side of [-1,1])for(const hand of [-1,1])registerUpright({what:'goal',x:v.x+hand*v.goalWidth/2,z:v.z+side*v.length/2,r:goalPostRadius(v.id),sink:UPRIGHT_SINK.goal,detail:'none'});}
    const g=buildGrounding({town,buildings,machines:VENDING_MACHINES,machineSize:VENDING_SIZE,
     masts:train?catenaryFeet:[],
     umbrellas:assets.filter(a=>a.kind==='beach-umbrella'),
@@ -1918,7 +1924,7 @@ export function* buildTownSteps(scene: T.Scene) {
     ground:(x,z)=>{const t=townGround(x,z);if(t)return t.y;const l=groundLift(x,z);return l+(inRects(x,z)?DRAWN.path:grass(x,z)?DRAWN.lawn:-.105);},
     surface:(x,z)=>{const t=townGround(x,z);if(t)return t.sort==='lawn'?'lawn':'other';if(x>=450||!onIsland(x,z))return 'other';return grass(x,z)?'lawn':'sand';},
     keepClear:(x,z)=>inRects(x,z)||townGround(x,z)?.sort==='asphalt'||!!trackNearest(x,z,2.4),
-    covered:(kind,x,z)=>kind!=='house'&&kind!=='platform'&&kind!=='bush'&&!!townGround(x,z),
+    covered:(kind,x,z)=>kind!=='house'&&kind!=='platform'&&kind!=='bush'&&kind!=='upright'&&!!townGround(x,z),
     sun:[ISLAND_SUN_POSITION[0]/sunL,ISLAND_SUN_POSITION[2]/sunL],lift:groundLift,low:depthLowTier(),put});
    if(g.decal)town.add(g.decal);town.updateMatrixWorld(true);
   }catch(error){console.error('Grounding failed to build',error);}
@@ -1948,7 +1954,7 @@ export function* buildTownSteps(scene: T.Scene) {
   });
   const canopies=canopyCollector.finish();canopies.push(...stadiumRoofCanopies);// the stadium roofs (own meshes, stadiumWorld.ts): landable slabs
   yield;
-  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[];depthPiece?:number};
+  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[];depthPiece?:number;/** lampPost.ts far / near lamp pieces: 1 far, 2 near, 0 neither */lod?:number[];lamps?:number[]};
   // Where each tagged prop's pieces go: batch + index in that batch (→ vertex start once merged) + world bounds.
   const gashaponPieces=new Map<string,{batch:Batch;index:number}[]>();
   const propRecords=new Map<PropTag,{pieces:{batch:Batch;index:number}[];bounds:T.Box3}>();
@@ -2038,11 +2044,23 @@ export function* buildTownSteps(scene: T.Scene) {
     {const glow=object.userData.machineGlow as [number,boolean]|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);if(object.userData.depthColors)batch.depthPiece=batch.geometries.length-1;
+    {const far=object.userData.lampFar as number[]|undefined,near=object.userData.lampNear as number[]|undefined,lod=far?1:near?2:0;if(lod||batch.lod){batch.lod??=new Array(batch.geometries.length-1).fill(0);batch.lod.push(lod);}
+     if(near){batch.lamps??=[];const L=batch.lamps;let seen=false;for(let i=0;i<L.length;i+=3)if(L[i]===near[0]&&L[i+2]===near[2]){seen=true;break;}if(!seen)L.push(near[0],near[1],near[2]);}}
     const tag=object.userData.propTag as PropTag|undefined;
     const gid=object.userData.gashaponId as string|undefined;if(gid){let list=gashaponPieces.get(gid);if(!list)gashaponPieces.set(gid,list=[]);list.push({batch,index:batch.geometries.length-1});}// gashapon live swap (gashaponStatic)
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
   };
   {const all:T.Object3D[]=[];town.traverse(o=>{all.push(o);});for(let i=0;i<all.length;i++){batchObject(all[i]);if(i%500===499)yield;}}
+  // Far lamps (Leftovers A, Nov 26 night; lampPost.ts LAMP_LOD): a batch holding lamps is ordered [far twins | the rest | kerb piece |
+  // near lamps], so each frame draws ONE contiguous range: the near lamps (from the end of the twins) or the twins (up to the near
+  // lamps). Every reference to a piece's index (prop records, gashapon pieces, kinds, the kerb piece) moves with it.
+  {const moved=new Map<Batch,number[]>();
+   for(const batch of batches.values()){const lod=batch.lod;if(!lod||!lod.some(v=>v))continue;const n=batch.geometries.length,order:number[]=[];
+    for(let i=0;i<n;i++)if(lod[i]===1)order.push(i);for(let i=0;i<n;i++)if(!lod[i]&&i!==batch.depthPiece)order.push(i);if(batch.depthPiece!==undefined&&!lod[batch.depthPiece])order.push(batch.depthPiece);for(let i=0;i<n;i++)if(lod[i]===2)order.push(i);
+    const at=new Array(n);order.forEach((old,i)=>{at[old]=i;});batch.geometries=order.map(i=>batch.geometries[i]);batch.kinds=order.map(i=>batch.kinds[i]);batch.lod=order.map(i=>lod[i]);
+    if(batch.depthPiece!==undefined)batch.depthPiece=at[batch.depthPiece];moved.set(batch,at);}
+   if(moved.size){const fix=(list:{batch:Batch;index:number}[])=>{for(const p of list){const at=moved.get(p.batch);if(at)p.index=at[p.index];}};
+    for(const r of propRecords.values())fix(r.pieces);for(const l of gashaponPieces.values())fix(l);}}
   // Island wind (Nov 8 2026, lib/graphics/islandWind.ts): trees, palms and bushes in the plain-paint chunks get per-vertex sway
   // weights (UV slot, unused there) from their own height; no new material, mesh or draw call.
   {const shared=new Set<T.Material>(paintBatches.values());for(const [tag,record] of propRecords){const amp=WIND_SWAY_KINDS[tag.kind];if(!amp)continue;
@@ -2057,8 +2075,13 @@ export function* buildTownSteps(scene: T.Scene) {
     // Kerb depth (townDepth.ts): the chunk's kerb / contact-shade piece is the LAST piece of its paint batch and is left out of the
     // shadow pass (a 15 cm kerb or a pebble is below the shadow map's resolution; its shade is baked): drawRange for the depth
     // draw only (three's onBeforeShadow / onAfterShadow), and the phone's merged shadow proxies read userData.shadowCount.
-    const depthIndices=batch.depthPiece===geometries.length-1&&merged?.index?geometries[batch.depthPiece].index!.count:0;
-    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(depthIndices){const count=merged.index!.count-depthIndices;mesh.userData.shadowCount=count;mesh.onBeforeShadow=()=>{merged.setDrawRange(0,count);};mesh.onAfterShadow=()=>{merged.setDrawRange(0,Infinity);};}if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
+    const lod=batch.lod,icount=(i:number)=>geometries[i].index!.count,farIdx=lod?lod.reduce((a,v,i)=>v===1?a+icount(i):a,0):0,nearIdx=lod?lod.reduce((a,v,i)=>v===2?a+icount(i):a,0):0;
+    const depthIndices=batch.depthPiece!==undefined&&batch.depthPiece===geometries.length-1-(lod?lod.filter(v=>v===2).length:0)&&merged?.index?icount(batch.depthPiece):0;
+    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(depthIndices||nearIdx){const count=merged.index!.count-depthIndices-nearIdx;mesh.userData.shadowCount=count;mesh.onBeforeShadow=()=>{merged.setDrawRange(0,count);};mesh.onAfterShadow=()=>{merged.setDrawRange(0,Infinity);};}
+    // far lamps (lampPost.ts): near range [far twins' end, all] while a lamp of this chunk is within LAMP_LOD m, else [0, near lamps' start]
+    if(nearIdx&&batch.lamps){const L=new Float32Array(batch.lamps),total=merged.index!.count,farEnd=total-nearIdx;mesh.userData.lampLod={farIdx,nearIdx,lamps:L.length/3};
+     mesh.onBeforeRender=(_r,_s,camera)=>{const e=camera.matrixWorld.elements,r2=lampNear2();let near=false;for(let i=0;i<L.length;i+=3){const dx=L[i]-e[12],dy=L[i+1]-e[13],dz=L[i+2]-e[14];if(dx*dx+dy*dy+dz*dz<r2){near=true;break;}}
+      if(near)merged.setDrawRange(farIdx,total-farIdx);else merged.setDrawRange(0,farEnd);};}if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
     if(++merges%12===0)yield;
   }

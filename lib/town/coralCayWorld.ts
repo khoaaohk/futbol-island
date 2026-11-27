@@ -2,7 +2,7 @@
 // irregular tropical cay with its beach-soccer court. Built inside buildTown with the island's own helpers
 // (box/palm/house/sign…), so every mesh joins the existing 50 m spatial paint batches: no new materials beyond palette
 // colours, no animation, no per-frame work. Shapes come from coralCay.ts, which movement, flight and the maps also read.
-import {groundingOn} from './grounding';
+import {groundingOn,registerUpright,UPRIGHT_SINK} from './grounding';
 import {lampPost} from './lampPost';
 import * as T from 'three';
 import {trunkCollider,type Obstacle} from './simulation';
@@ -507,9 +507,10 @@ export function buildCoralCay(t:CayTools){
   {const C=F.scarecrow;cylinder(.06,2.2,'#9d805b',C.x,1.1,C.z);box(1.6,.08,.08,'#9d805b',C.x,1.75,C.z);box(.8,.75,.3,'#477c6a',C.x,1.55,C.z);box(.36,.32,.02,'#fff0cf',C.x,1.6,C.z+.16);
    box(.7,.36,.28,'#eddfbb',C.x,1.05,C.z);put(new T.IcosahedronGeometry(.26,0),'#e8d5a3',C.x,2.2,C.z);put(new T.ConeGeometry(.42,.3,8),'#d7ad62',C.x,2.46,C.z);obstacles.push({x:C.x,z:C.z,w:.4,d:.4});}
   // Fence: timber posts and rails, open at the gates (same pieces as the causeway rails; collision in FARM_FENCE_OBSTACLES).
-  for(const o of FARM_FENCE_OBSTACLES){const horizontal=o.w>=o.d,len=Math.max(o.w,o.d);if(len<1){cylinder(.06,1,'#9d805b',o.x,.5,o.z);obstacles.push(o);continue;}
+  for(const o of FARM_FENCE_OBSTACLES){const horizontal=o.w>=o.d,len=Math.max(o.w,o.d);if(len<1){const k=groundingOn()?UPRIGHT_SINK.fence:0;cylinder(.06,1+k,'#9d805b',o.x,.5-k/2,o.z);if(k)registerUpright({what:'fence',x:o.x,z:o.z,r:.06,sink:k});obstacles.push(o);continue;}
    for(const y of [.45,.85]){const r=box(horizontal?len:.06,.07,horizontal?.06:len,'#a67d55',o.x,y,o.z);r.castShadow=false;}
-   const posts=Math.max(1,Math.round(len/2.4));for(let k=0;k<=posts;k++){const t=-len/2+k*len/posts;cylinder(.07,1.05,'#9d805b',o.x+(horizontal?t:0),.525,o.z+(horizontal?0:t));}
+   const posts=Math.max(1,Math.round(len/2.4)),sk=groundingOn()?UPRIGHT_SINK.fence:0;for(let k=0;k<=posts;k++){const t=-len/2+k*len/posts,px=o.x+(horizontal?t:0),pz=o.z+(horizontal?0:t);cylinder(.07,1.05+sk,'#9d805b',px,.525-sk/2,pz);}
+   if(sk)registerUpright({what:'fence',x:o.x,z:o.z,r:.07,sink:sk,run:{hw:horizontal?len/2:.07,hd:horizontal?.07:len/2}});
    obstacles.push(o);}
   // Lush tropical planting (Sep 29 2026): sugar cane along the west fence, taro and hibiscus by the stand, bird-of-paradise
   // at the farmhouse steps, bougainvillea on the fences, monstera and ferns under the orchard, two breadfruit trees and

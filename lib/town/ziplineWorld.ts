@@ -13,6 +13,7 @@
  * on the ground, as colliders; rails and the masts are roof-prop barriers (floor/top), so the deck and the stair hold you.
  */
 import * as T from 'three';
+import {registerUpright} from './grounding';
 import {behindSign} from './signPosts';
 import type {Obstacle} from './simulation';
 import {summitGround} from './summitIsle';
@@ -53,7 +54,7 @@ export function buildZiplineProps(t:ZiplineTools){
  const P=ZIP_TOWER,h=ZIP_PLATFORM.size/2,deck=P.deck;
  // Deck boards on four corner posts that reach down to the slope (the downhill corner stands ~1.7 m tall).
  skip(box(ZIP_PLATFORM.size,.16,ZIP_PLATFORM.size,DECK,P.x,deck-.08,P.z));
- for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]] as const){const px=P.x+a*(h-.12),pz=P.z+b*(h-.12),g=summitGround(px,pz)-.15,len=deck-.16-g;if(len>.05)skip(box(.2,len,.2,TIMBER,px,g+len/2,pz));}
+ for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]] as const){const px=P.x+a*(h-.12),pz=P.z+b*(h-.12),g=summitGround(px,pz)-.15,len=deck-.16-g;if(len>.05)skip(box(.2,len,.2,TIMBER,px,g+len/2,pz));registerUpright({what:'zip',x:px,z:pz,r:.1,sink:.15,at:summitGround});}
  // Cross braces under the deck on the two downhill sides (north and west).
  {const gN=Math.min(summitGround(P.x-h,P.z-h),summitGround(P.x+h,P.z-h)),gW=Math.min(summitGround(P.x-h,P.z+h),summitGround(P.x-h,P.z-h));
   if(deck-gN>.9)skip(line(V(P.x-h+.12,gN+.1,P.z-h+.1),V(P.x+h-.12,deck-.25,P.z-h+.1),.05,DARK));

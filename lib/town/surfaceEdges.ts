@@ -145,8 +145,12 @@ export function pathWear(out:EdgePatch,low=false,zone:Zone=MAIN_ZONE){const s=in
  return (out.index.length-start)/3;
 }
 /** Everything the main island's lawn gains (fields.ts joins it to the lawn mesh). null with the flag off. */
+/** The coast's torn fringe is left out only where the raised west side really stands up at the lawn's edge. Leftovers A (owner shot
+ *  142, Nov 26 night): at > 0.4 cm the 2 m lift lattice's 1 cm bleed past the coast cut the fringe from 12 coast segments (-238,-187,
+ *  -223,-188, -179..-138,-189, -315,-22..-55, -291,-174 ...): hard straight lawn edges on the beach. */
+export const FRINGE_LIFT=.05;
 export function mainLawnEdges(low=false){if(!enabled)return null;const out:EdgePatch={position:[],index:[],edge:[]};
- const fringe=lawnFringe(INTERIOR_GRASS,out,low,0,(x,z)=>regionLift(x,z)>.004),lips=pathLips(out,low),wear=pathWear(out,low);
+ const fringe=lawnFringe(INTERIOR_GRASS,out,low,0,(x,z)=>regionLift(x,z)>FRINGE_LIFT),lips=pathLips(out,low),wear=pathWear(out,low);
  // Review (Nov 28 2026): the raised west side (?elev=1) gets the same lips and wear, laid on its ground (as on Coral Cay); not on the simpler edge.
  const wide=(input?.paths??[]).filter(r=>Math.min(r.w,r.d)>WEAR.max),square=(x:number,z:number)=>wide.some(r=>Math.abs(x-r.x)<r.w/2+1.6&&Math.abs(z-r.z)<r.d/2+1.6);// a raised square (the stadium plaza) keeps a crisp edge: its border course (groundTint PLAZA_CREST), no grass lip under its garden walls
  const west:Zone={poly:INTERIOR_GRASS,ground:regionLift,only:(x,z)=>regionLift(x,z)>=.004&&!square(x,z)},at=out.position.length,westLips=low?0:pathLips(out,low,west),westWear=low?0:pathWear(out,low,west);
