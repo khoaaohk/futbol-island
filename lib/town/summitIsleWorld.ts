@@ -6,6 +6,8 @@
 // No animation, no per-frame work; world.ts hides the island's chunks with one frustum-box test when it is out of view.
 // Shapes: summitIsle.ts.
 import * as T from 'three';
+import {broadleafTreesOn,broadleafTree} from './broadleafTrees';
+import {depthLowTier} from './townDepth';
 import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,TUNNEL_BED,MOUTH_IN,drawnPlane} from './trainTrack';
 const TRAIN_CUT_DRAW=17;
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
@@ -338,6 +340,11 @@ export function buildSummitIsle(t:SummitTools){
  function bake(piece:Piece,g:T.BufferGeometry,hex:string,m:T.Matrix4){const c=col(hex),p=g.getAttribute('position'),n=g.getAttribute('normal'),base=piece.pos.length/3;NM.getNormalMatrix(m);
   for(let i=0;i<p.count;i++){A.fromBufferAttribute(p,i).applyMatrix4(m);B.fromBufferAttribute(n,i).applyMatrix3(NM).normalize();piece.vertex(A.x,A.y,A.z,c,[B.x,B.y,B.z]);}
   if(g.index)for(let i=0;i<g.index.count;i++)piece.idx.push(base+g.index.getX(i));else for(let i=0;i<p.count;i++)piece.idx.push(base+i);g.dispose();}
+ /** A canopy with its own occlusion (broadleafTrees.ts shade, rgb per vertex) and a soft top-lit / under-dark facet light. */
+ function bakeShaded(piece:Piece,g:T.BufferGeometry,hex:string,shade:Float32Array,m:T.Matrix4){const c=col(hex),p=g.getAttribute('position'),n=g.getAttribute('normal'),base=piece.pos.length/3,k=new T.Color();NM.getNormalMatrix(m);
+  for(let i=0;i<p.count;i++){A.fromBufferAttribute(p,i).applyMatrix4(m);B.fromBufferAttribute(n,i).applyMatrix3(NM).normalize();const f=1.14+.2*B.y;// lit tops up to 1.34, undersides down to 0.94 (the island bake: leafUnder 0.74 / leafTop 1.22)
+   k.setRGB(c.r*shade[i*3]*f,c.g*shade[i*3+1]*f,c.b*shade[i*3+2]*f);piece.vertex(A.x,A.y,A.z,k,[B.x,B.y,B.z]);}
+  if(g.index)for(let i=0;i<g.index.count;i++)piece.idx.push(base+g.index.getX(i));else for(let i=0;i<p.count;i++)piece.idx.push(base+i);g.dispose();}
  const at=(x:number,y:number,z:number,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>M.compose(VP.set(x,y,z),Q.setFromEuler(E.set(rx,ry,rz)),VS.set(sx,sy,sz));
  const bakeBox=(piece:Piece,w:number,h:number,d:number,hex:string,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>bake(piece,new T.BoxGeometry(w,h,d),hex,at(x,y,z,rx,ry,rz));
  /** A round rod from a to b (open ends: thin cords never show them). */
@@ -379,9 +386,11 @@ export function buildSummitIsle(t:SummitTools){
   piece.tid=0;
   obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz},tid,rig:palmRig(x,z,y,{x:tx,y:ty,z:tz})});}
  function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
-  bake(piece,new T.CylinderGeometry(.2*s,.2*s,2.2*s,6),'#8a6a48',at(x,y+1.1*s,z));
+  if(broadleafTreesOn()){// Leftovers B (Nov 26 2026 night): the main island's broadleaf kit (clumps, forked trunk, per-vertex occlusion)
+   const t=broadleafTree(x,z,s,{trunkFoot:.2,trunkTop:.13,sides:6,low:depthLowTier()});bake(piece,t.bark,'#8a6a48',at(x,y,z));bakeShaded(piece,t.leaves,i%3?'#5b895e':'#4f7f55',t.shade,at(x,y,z));}
+  else{bake(piece,new T.CylinderGeometry(.2*s,.2*s,2.2*s,6),'#8a6a48',at(x,y+1.1*s,z));
   bake(piece,new T.IcosahedronGeometry(1.7*s,0),i%3?'#5b895e':'#4f7f55',at(x,y+2.9*s,z,0,i));
-  bake(piece,new T.IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2));
+  bake(piece,new T.IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2));}
   piece.tid=0;
   obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s,i)});}
  function rock(x:number,z:number,r:number,i:number,piece=propsAt(x,z)){const y=yAt(x,z),sx=1+jitter(i,3)*.4,sy=.55+jitter(i,8)*.3,sz=1+jitter(i,4)*.3;

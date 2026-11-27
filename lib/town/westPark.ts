@@ -18,7 +18,7 @@ import {LAWN_TILT} from './westTerrain';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
-import {broadleafTreesOn,broadleafTree} from './broadleafTrees';
+import {broadleafTreesOn,broadleafTree,pineTiers} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
 import {stadiumOrchardTrees,orchardPlanOf,ORCHARD_LEGACY,type StadiumOrchardTree} from './stadiumOrchard';
 import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial,pondSeaDistance} from '../graphics/pondWater';
@@ -40,7 +40,7 @@ type Tools={
 };
 export type WestParkStats={trees:number;palms:number;flags:number;hedges:number;beds:number;lilyPads:number;pondFlowers:number;pondRocks:number;pondReeds:number;
  /** The fruit orchards' trees (stadiumOrchard.ts), baked here; the fruit runtime (stadiumOrchardFruit.ts) reads this list. */
- orchard:StadiumOrchardTree[];orchardTriangles:number;broadleafTriangles:number};
+ orchard:StadiumOrchardTree[];orchardTriangles:number;broadleafTriangles:number;pineTriangles:number};
 /** A park tree on the sand, or within this distance inland of the grass / sand line, is a palm (Nov 13 2026, owner: the sand and
  *  the row along the grass edge; the West Beach's grass edge is ~17 m in from the waterline, the north shore's up to ~40 m). */
 export const PALM_EDGE_M=9;
@@ -56,7 +56,7 @@ const smooth=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/
 
 export function buildWestPark(t:Tools):WestParkStats{
  const {box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials}=t,prop=t.prop??untaggedProp;
- const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0,pondFlowers:0,pondRocks:0,pondReeds:0,orchard:[],orchardTriangles:0,broadleafTriangles:0};
+ const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0,pondFlowers:0,pondRocks:0,pondReeds:0,orchard:[],orchardTriangles:0,broadleafTriangles:0,pineTriangles:0};
  const trailMat=createTrailMaterial();materials.push(trailMat);
  const pathC=new T.Color(PATH_C),sandC=new T.Color(SAND_COLOR),tmpC=new T.Color();
  /** A flat mesh in the trail paving (vertex colours), placed at its own centre so the batching pass files it under its own
@@ -277,7 +277,8 @@ export function buildWestPark(t:Tools):WestParkStats{
     assets.push({kind:'tree',x,z,w:.45*s,d:.45*s,visualW:2*t.reach,visualD:2*t.reach,canopyHeight:t.top-.7*s/* as the ball: 0.7 m under its top */});put(t.bark,'#9d805b',x,0,z);put(t.leaves,colour,x,0,z).userData.leafShade=t.shade;stats.broadleafTriangles+=t.triangles;return;}
    assets.push({kind:'tree',x,z,w:.45*s,d:.45*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:4.4*s});
    put(new T.CylinderGeometry(.13*s,.2*s,2.4*s,6),'#9d805b',x,1.2*s,z);
-   if(conifer)put(new T.ConeGeometry(1.6*s,4.2*s,8),'#4a7552',x,2.4*s+1.6*s,z);
+   if(conifer&&broadleafTreesOn()){const p=pineTiers(x,z,s,{low:depthLowTier()});put(p.leaves,'#4a7552',x,0,z).userData.leafShade=p.shade;stats.pineTriangles+=p.triangles;}// Leftovers B: 3 offset tiers
+   else if(conifer)put(new T.ConeGeometry(1.6*s,4.2*s,8),'#4a7552',x,2.4*s+1.6*s,z);
    else{put(new T.IcosahedronGeometry(1.8*s,1),colour,x,3.3*s,z);stats.broadleafTriangles+=104;}
   });
   obstacles.push(trunkCollider(x,z,.2*s));

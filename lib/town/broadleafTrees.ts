@@ -12,7 +12,7 @@
 // Heat: same meshes per tree (bark + leaves), baked into the same chunk paint batches: 0 draw calls, 0 materials, 0 textures, 0
 // passes. Triangles per tree 104-120 -> 112-150 (+~25 % on the park's trees); `?trees=0` restores today's trees exactly.
 import * as T from 'three';
-import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {mergeGeometries,mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export const TREES_DEFAULT=true;// `?trees=0` switches the new trees off (before / after)
 const query=(()=>{try{return typeof window!=='undefined'&&window.location&&typeof window.location.search==='string'?window.location.search:null;}catch{return null;}})();
@@ -97,13 +97,55 @@ export function broadleafTree(x:number,z:number,s:number,o:{trunkTop?:number;tru
  return {leaves,shade,bark:barkGeo,shape:shape.name,triangles:tri(leaves)+tri(barkGeo),top:bb.max.y,reach:rad};
 }
 
-/** A round bush / planter shrub: 3 overlapping clumps in place of one ball (radius r, centre height y0 above its foot). */
-export function broadleafBush(x:number,z:number,r:number):{leaves:T.BufferGeometry;shade:Float32Array}{
- const h=(k:number)=>spotHash(x,z,40+k),parts:T.BufferGeometry[]=[],yaw=h(0)*6.28;
- const L:Lobe[]=[[0,0,0,.82],[.48,-.12,.22,.62],[-.38,.1,-.32,.6]];
- for(const [k,[lx,ly,lz,lr]] of L.entries()){const g=clump(k*7+Math.floor(h(1)*50),.09,k===0);g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(lx*r,ly*r,lz*r).applyAxisAngle(up,yaw),new T.Quaternion().setFromEuler(new T.Euler(h(2+k),h(5+k)*6.28,0)),new T.Vector3(lr*r,lr*r*.9,lr*r)));parts.push(g);}
- const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
- const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3);leaves.computeBoundingBox();const bb=leaves.boundingBox!,hy=Math.max(.01,bb.max.y-bb.min.y),value=.94+.12*h(9);
- for(let i=0;i<n;i++){const t=(P.getY(i)-bb.min.y)/hy,f=(.68+.32*Math.min(1,t*1.2))*value;shade[i*3]=f;shade[i*3+1]=f;shade[i*3+2]=f;}
- return {leaves,shade};
+/** A round bush / planter shrub: 3 overlapping clumps in place of one ball (radius r, centre height y0 above its foot).
+ *  Leftovers B (Nov 26 2026 night): `soft` = rounder clumps for the bushes the owner sees up close (a detail-1 icosahedron each, corners
+ *  jittered 4 %, smooth normals: no "rock" facets); `lobes` / `stretch` shape it (a tall ramp bush, a long planter row); `low` = the
+ *  battery-saver tier (detail-0 clumps). The creases between clumps and the underside are darker (per-vertex shade, as the trees). */
+export const BUSH_LOBES:Lobe[]=[[0,0,0,.82],[.48,-.12,.22,.62],[-.38,.1,-.32,.6]];
+/** The plaza planters' shrub row (r 1: the three 0.6 m balls it replaces stood at dx -0.7 / 0 / 0.7). */
+export const PLANTER_LOBES:Lobe[]=[[-.7,0,.02,.6,.8],[0,.06,-.03,.64,.82],[.7,0,.03,.58,.8]];
+/** The tall bushes at the landing ramp's high end (r 0.7, stretch 0.85 / 1.9 / 0.95: the old pair of stretched balls' envelope). */
+export const RAMP_BUSH_LOBES:Lobe[]=[[0,-.35,0,.95,.9],[.2,.45,.12,.78,.9],[-.15,.08,-.2,.7,.9]];
+/** A Coral Cay shrub pair / trio (r 1; the old balls were 0.6-0.8 m, squashed 0.75 tall). */
+export const CAY_PAIR_LOBES:Lobe[]=[[-.6,0,0,.7,.75],[.5,-.03,.05,.6,.75],[-.05,.12,-.2,.5,.8]];
+export const CAY_TRIO_LOBES:Lobe[]=[[-.9,0,0,.55,.75],[0,0,.5,.67,.75],[.9,0,0,.79,.75]];
+export function broadleafBush(x:number,z:number,r:number,o:{soft?:boolean;low?:boolean;lobes?:Lobe[];stretch?:readonly [number,number,number]}={}):{leaves:T.BufferGeometry;shade:Float32Array;triangles:number}{
+ const h=(k:number)=>spotHash(x,z,40+k),parts:T.BufferGeometry[]=[],yaw=o.lobes?0:h(0)*6.28,L=o.lobes??BUSH_LOBES,soft=!!o.soft&&!o.low,st=o.stretch??[1,1,1],centres:{c:T.Vector3;r:number}[]=[];
+ for(const [k,[lx,ly,lz,lr,sqy=.9,sqxz=1]] of L.entries()){const g=soft?softClump(k*7+Math.floor(h(1)*50)):clump(k*7+Math.floor(h(1)*50),.09,k===0);
+  const c=new T.Vector3(lx*r*st[0],ly*r*st[1],lz*r*st[2]).applyAxisAngle(up,yaw),q=1+.12*(h(12+k)-.5);
+  g.applyMatrix4(new T.Matrix4().compose(c,new T.Quaternion().setFromEuler(new T.Euler(soft?0:h(2+k),h(5+k)*6.28,0)),new T.Vector3(lr*r*sqxz*st[0]*q,lr*r*sqy*st[1]*q,lr*r*sqxz*st[2]*q)));parts.push(g);
+  centres.push({c,r:lr*r*q*Math.max(st[0],st[1],st[2])});}
+ const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());if(!soft)leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
+ const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3);leaves.computeBoundingBox();const bb=leaves.boundingBox!,hy=Math.max(.01,bb.max.y-bb.min.y),value=.94+.12*h(9),v=new T.Vector3();
+ for(let i=0;i<n;i++){v.fromBufferAttribute(P,i);const t=(v.y-bb.min.y)/hy;let f=(.68+.32*Math.min(1,t*1.2))*value;
+  if(soft){let near=9,second=9;for(const C of centres){const d=v.distanceTo(C.c)/C.r;if(d<near){second=near;near=d;}else if(d<second)second=d;}if(second<1.2)f*=.8+.2*Math.max(0,(second-.85)/.35);}
+  shade[i*3]=f;shade[i*3+1]=f;shade[i*3+2]=f;}
+ const triangles=(leaves.index?leaves.index.count:P.count)/3;
+ return {leaves,shade,triangles};
 }
+/** A soft clump: detail-1 icosahedron (80 faces), corners pushed in / out 4 % by direction (shared corners stay shut), smooth normals. */
+function softClump(seed:number){const ico=new T.IcosahedronGeometry(1,1);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=1+.04*(spotHash(x*7.1+seed,z*5.3+y*3.7,seed)*2-1);p.setXYZ(i,x*k,y*k,z*k);}
+ g.computeVertexNormals();const flat=g.toNonIndexed();g.dispose();return flat;}// non-indexed like every polyhedron (smooth normals kept)
+
+/** Pine (Leftovers B, Nov 26 2026 night): the one cone becomes 3 stacked tiers (2 on the low tier), each a little offset and turned,
+ *  narrower going up, with a dark underside and the lit tip (per-vertex shade). Tree space: trunk foot at 0; `s` = the old cone's
+ *  scale (radius 1.6 s, 4.2 s tall from 1.9 s), so the silhouette's envelope, the asset and the collider stay where they were. */
+export function pineTiers(x:number,z:number,s:number,o:{low?:boolean;base?:number}={}):{leaves:T.BufferGeometry;shade:Float32Array;triangles:number;top:number}{
+ const h=(k:number)=>spotHash(x,z,60+k),base=(o.base??1.9)*s,parts:T.BufferGeometry[]=[];
+ // [bottom (above base), height, radius] in units of s: the tiers overlap by ~40 % so no trunk shows between them
+ const tiers:[number,number,number][]=o.low?[[0,2.4,1.6],[1.6,2.6,1.05]]:[[0,1.9,1.62],[1.05,1.75,1.25],[2.05,2.15,.85]];
+ tiers.forEach(([b,ht,rr],k)=>{const g=new T.ConeGeometry(rr*s*(.94+.12*h(k)),ht*s,6,1,false).toNonIndexed();const ox=(h(10+k)-.5)*.22*s*(k?1:0),oz=(h(20+k)-.5)*.22*s*(k?1:0);
+  g.rotateY(h(30+k)*6.28);g.rotateZ((h(40+k)-.5)*.06);g.translate(ox,base+b*s+ht*s/2,oz);parts.push(g);});
+ const leaves=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());leaves.computeVertexNormals();(leaves as unknown as {type:string}).type=FOLIAGE_TYPE;
+ const P=leaves.getAttribute('position') as T.BufferAttribute,n=P.count,shade=new Float32Array(n*3),value=.95+.1*h(9),N=leaves.getAttribute('normal') as T.BufferAttribute;
+ leaves.computeBoundingBox();const bb=leaves.boundingBox!,hy=Math.max(.01,bb.max.y-bb.min.y);
+ for(let i=0;i<n;i++){const t=(P.getY(i)-bb.min.y)/hy,under=N.getY(i)<-.5;let f=(.74+.3*t)*value;if(under)f*=.62;shade[i*3]=f*1.02;shade[i*3+1]=f;shade[i*3+2]=f*.98;}
+ return {leaves,shade,triangles:n/3,top:bb.max.y};
+}
+
+/** A hedge-top swell (Leftovers B): an octahedron (8 faces: the west stadium's triangle budget), corners jittered 6 %, smooth normals
+ *  (flattened and stretched along the hedge it reads as a soft swell, not a rock). Unit radius. */
+export function hedgeClump(seed:number){const ico=new T.OctahedronGeometry(1,0);ico.deleteAttribute('uv');ico.deleteAttribute('normal');const g=mergeVertices(ico),p=g.getAttribute('position') as T.BufferAttribute;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),k=1+.06*(spotHash(x*7.1+seed,z*5.3+y*3.7,seed)*2-1);p.setXYZ(i,x*k,y*k,z*k);}
+ g.computeVertexNormals();const flat=g.toNonIndexed();g.dispose();(flat as unknown as {type:string}).type=FOLIAGE_TYPE;return flat;}

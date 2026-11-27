@@ -124,7 +124,9 @@ export type StreetInput={roads:(Rect&{vertical:boolean;carriageway:number})[];ju
  *  zebras are 2 m off the corner and their dropped kerbs already meet at it, so the curve is one long dropped kerb: the stripes end
  *  0.7 m short of the kerb and the curve only moves the kerb back from them), and the smallest worth drawing. A corner shrinks in
  *  0.25 m steps until it clears its signal pole / lamp / bench (`clear`) and stays on paving. */
-export const CORNER={radius:3,zebra:3,zebraNear:6,min:1,clear:.45} as const;
+export const CORNER={radius:3,zebra:3,zebraNear:6,min:1,clear:.45,innerMin:1} as const;
+/** The pavement band (m): footprint (12 m) minus carriageway (8 m), halved. */
+const PAVE_BAND=2;
 /** Paving sheets laid ACROSS a carriageway (a path that comes over a kerb at least 1.5 m onto the asphalt, at most 14 m along the street) are crossings too:
  *  each gets dropped kerbs like a zebra (reviewer pass: two of them met a full kerb). Skips one within 5 m of a known crossing. */
 export function sheetCrossings(roads:StreetInput['roads'],paths:Rect[],known:Crossing[]){const out:Crossing[]=[];
@@ -179,7 +181,16 @@ export function setDepthStreets(input:StreetInput|null){
     if(u>-CORNER.clear&&w>-CORNER.clear&&u<r+CORNER.clear&&w<r+CORNER.clear&&Math.hypot(px-cx,pz-cz)>r-CORNER.clear){ok=false;break;}}}
    if(ok)return r;}
   return 0;};
- S={asphalt:buildOutline(asphaltRects,radius),foot:buildOutline(footRects),crossings:input.crossings,landings,paths:binRects(input.hard.filter(h=>h.kind==='path'),1),solid:binRects(input.hard.filter(h=>h.kind!=='path'),1),solidAll:input.hard.filter(h=>h.kind!=='path'),
+ const asphalt=buildOutline(asphaltRects,radius);
+ // Inner (lawn-side) corners (owner, Nov 26 2026 night): the pavement's back edge rounds about the SAME centre as its kerb's curve,
+ // so the band stays even round the bend (3 m kerb -> 1 m back edge on the 2 m pavement); 1 m at least (the 2.25 m pole corners).
+ // The pavement grows into the block's corner: only over open lawn with nothing standing there (a hard area / kept object).
+ const inner:FilletRadius=(v,nz,nx)=>{const f=asphalt.fillets.find(f=>f.az===nz&&f.bx===nx&&Math.abs(v.x-f.vx-PAVE_BAND*nx)<.01&&Math.abs(v.z-f.vz-PAVE_BAND*nz)<.01);if(!f)return 0;
+  const r=Math.max(CORNER.innerMin,(f.cx-v.x)*nx);if(!(r>0))return 0;
+  for(let i=0;i<=5;i++)for(let j=0;j<=5;j++){const x=v.x+nx*r*(i+.5)/6,z=v.z+nz*r*(j+.5)/6;
+   if(solids.some(h=>Math.abs(x-h.x)<h.w/2+.1&&Math.abs(z-h.z)<h.d/2+.1)||keep.some(k=>Math.abs(x-k.x)<k.w/2+CORNER.clear&&Math.abs(z-k.z)<k.d/2+CORNER.clear))return 0;}
+  return r;};
+ S={asphalt,foot:buildOutline(footRects,inner),crossings:input.crossings,landings,paths:binRects(input.hard.filter(h=>h.kind==='path'),1),solid:binRects(input.hard.filter(h=>h.kind!=='path'),1),solidAll:input.hard.filter(h=>h.kind!=='path'),
   box:{minX,maxX,minZ,maxZ},wx0,wz0,wnx,wnz,w,ends};
 }
 /** 0 on pinned ground (rails, dead ends, outside the town), 1 where the full depth applies. */
@@ -347,6 +358,12 @@ export function pavementTrim(x0:number,x1:number,z0:number,z1:number,tris:number
   polys=next;}
  const out:number[]=[];for(const p of polys)for(let i=1;i+1<p.length;i++){let a=p[0],b=p[i],c=p[i+1];if((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2])<0){const q=b;b=c;c=q;}if(Math.abs((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]))<1e-9)continue;out.push(...a,...b,...c);}
  return out;}
+/** Inner (lawn-side) rounded corners: the paving the pavement gains in each block corner, a fan from the old square corner V to the
+ *  back edge's arc (the same FILLET_STEPS angles as the kerb's), at the pavement's drawn height. */
+export function pavementCorners():{x:number;z:number;tris:number[]}[]{const s=S;if(!s)return [];const y=DRAWN.pave;
+ return s.foot.fillets.map(f=>{const tris:number[]=[];for(let k=0;k<FILLET_STEPS;k++){const [ax,az]=filletPoint(f,k,f.r),[bx,bz]=filletPoint(f,k+1,f.r);
+   let p=[ax,az],q=[bx,bz];if((p[1]-f.vz)*(q[0]-f.vx)-(p[0]-f.vx)*(q[1]-f.vz)<0){const t=p;p=q;q=t;}tris.push(f.vx,y,f.vz,p[0],y,p[1],q[0],y,q[1]);}
+  return {x:(f.vx+f.cx)/2,z:(f.vz+f.cz)/2,tris};});}
 /** A pavement cell [x0, x1] x [z0, z1]: null when flat, else the triangles (world x, y, z) with the dropped kerb's ramp cut in. */
 export function pavementCell(x0:number,x1:number,z0:number,z1:number):number[]|null{const s=S;if(!s)return null;
  const hit=s.landings.filter(l=>l.x-l.w/2<x1-1e-6&&l.x+l.w/2>x0+1e-6&&l.z-l.d/2<z1-1e-6&&l.z+l.d/2>z0+1e-6);if(!hit.length)return null;
@@ -395,6 +412,25 @@ export function depthLawn(sink:Sink|null,low=false,soft=false){const s=S;if(!s)r
       const [x,z]=rowPoint(seg,len,along,side?-o+.025:-o-wd,first&&e===0,last&&e===2),g=groundColor('lawn',x,z,.5+.12*hash(x*5.3+z*1.9));v.push([x,DRAWN.pave+.006,z,(g[0]+SOIL[0])/2,(g[1]+SOIL[1])/2,(g[2]+SOIL[2])/2]);}
      sink.grid(2,2,v);soil+=2;}}
   }}
+ // Inner rounded corners: the verge follows the pavement's curved back edge. Row u at arc step k: on the circle of radius r - u about
+ // the corner's centre while u < r, beyond that the rows' own square corner at (u, u) (the lawn's inner offset); the grass's creep
+ // (row 0) runs from the straight edge's value at one tangent point to the other's, so the rim joins them without a notch.
+ const creepAt=(x:number,z:number)=>{for(const seg of s.foot.segs)for(const end of [0,1] as const){const ex=end?seg.bx:seg.ax,ez=end?seg.bz:seg.az;if(Math.abs(ex-x)>1e-3||Math.abs(ez-z)>1e-3)continue;
+   const fx=ex+seg.nx*.2,fz=ez+seg.nz*.2;if(rectIn(s.paths.get(fx,fz),fx,fz,.55))return 0;return -((soft?.2:.02)+(soft?.34:.07)*hash(Math.round((seg.nx?fz:fx)*2)*1.37+seg.ax+seg.az));}
+  return soft?-.37:-.055;};
+ const steps=low?FILLET_STEPS/2:FILLET_STEPS;
+ for(const f of s.foot.fillets){const r=f.r,at=(k:number,u:number):readonly [number,number]=>{const t=k/steps;if(u<r)return filletPoint(f,t*FILLET_STEPS,r-u);
+   const b=t<=.5?r+(u-r)*t*2:u,w=t<=.5?u:u+(r-u)*(t-.5)*2;return [f.vx+f.bx*b+f.ax*w,f.vz+f.bz*b+f.az*w] as const;};
+  const [t0x,t0z]=filletPoint(f,0,r),[t1x,t1z]=filletPoint(f,FILLET_STEPS,r),c0=creepAt(t0x,t0z),c1=creepAt(t1x,t1z);
+  for(let j=0;j<steps;j++){let open=true;for(const u of [.3,1.2,2.4,VERGE.reach]){const [x,z]=at(j+.5,u);if(!isLawn(s,x,z)){open=false;break;}}
+   {const [x,z]=at(j+.5,.3);if(depthWeight(x,z)<.02)open=false;}if(!open)continue;
+   const base=position.length/3;
+   for(let q=0;q<rows.length;q++)for(const e of [j,j+1]){let u=rows[q];const [fx,fz]=at(e,.2),onPath=rectIn(s.paths.get(fx,fz),fx,fz,.55);
+    if(q===0){const t=e/steps;u=onPath?0:c0+(c1-c0)*t+(soft?.08:.02)*Math.sin(Math.PI*t)*(hash(f.vx*1.7+f.vz*.3+e)-.5);if(!onPath)rim.push(position.length/3);}
+    else if(soft&&!onPath&&q<3)(q===1?rimMid:rimIn).push(position.length/3);
+    const [x,z]=at(e,u),w=depthWeight(x,z);position.push(x,q===0?(onPath?lawnRise(x+(f.cx-x)*.01,z+(f.cz-z)*.01):.08*w+.021*Math.min(1,w*4)):q===rows.length-1?0:lawnRise(x,z),z);}
+   const A=base*3,up=(position[A+5]-position[A+2])*(position[A+6]-position[A])-(position[A+3]-position[A])*(position[A+8]-position[A+2])>0;
+   for(let q=0;q<rows.length-1;q++){const i=base+q*2,k=i+1,m=i+2,n=i+3;if(up)index.push(i,k,m,k,n,m);else index.push(i,m,k,k,m,n);}}}
  return {holes:ok?loops.filter(l=>!l.block).map(l=>l.pts):[],blocks:ok?loops.filter(l=>l.block).map(l=>l.pts):[],holesOk:ok,patch:{position,index,triangles:index.length/3},soil,rim,rimMid,rimIn};
 }
 

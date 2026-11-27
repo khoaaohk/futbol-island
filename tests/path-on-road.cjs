@@ -49,6 +49,16 @@ const inRect=(r,x,z,m=0)=>Math.abs(x-r.x)<r.w/2-m&&Math.abs(z-r.z)<r.d/2-m;
    for(const [x,z] of [[48.9,209.2],[48.9,212.8],[46,212.5],[95,206.9],[118,206.9],[95,203.7],[118,203.7]])assert.ok(pathAt(x,z),'paved up to the deck at '+x+','+z);
    for(let z=209.1;z<213;z+=.2)assert.ok(!world.obstacles.some(o=>Math.abs(49-o.x)<o.w/2+.2&&Math.abs(z-o.z)<o.d/2),'the boardwalk west rail is open at z '+z.toFixed(1));
    assert.ok(world.obstacles.some(o=>Math.abs(49-o.x)<.1&&Math.abs(208-o.z)<.1)&&world.obstacles.some(o=>Math.abs(49-o.x)<.1&&o.z>213),'the rest of the west rail still blocks');
+   // Leftovers B (Nov 26 2026 night): the pavements' inner (lawn-side) corners round too: the corner they gain is paving at the
+   // pavement's height (no lawn or hole showing through), and most of the 44 block corners take it (a corner with something standing there stays square)
+   {const FF=D.depthStreets().foot.fillets,ibad=[];assert.ok(FF.length>=30,'inner rounded corners in the town: '+FF.length);
+    for(const f of FF)for(const q of [.12,.25]){const x=f.vx+(f.bx+f.ax)*f.r*q,z=f.vz+(f.bz+f.az)*f.r*q;rc.set(new T.Vector3(x,5,z),down);const top=rc.intersectObjects(meshes,false).find(h=>h.point.y<.1);
+     const want=D.DRAWN.pave+D.depthLift(x,z)+EL.regionLift(x,z)+(EL.regionLift(x,z)>0?up:0);if(!top||Math.abs(top.point.y-want)>.03)ibad.push(`${x.toFixed(2)},${z.toFixed(2)}: ${top?top.point.y.toFixed(3):'none'} want ${want.toFixed(3)}`);}
+    assert.deepEqual(ibad.slice(0,6),[],label+': inner corners paved');report.push(label+': '+FF.length+' inner rounded corners');}
+   // ... and the Coral Cay sandbar spurs' boardwalks open onto the causeway with nothing on their first metres (the rail-end boulders sat there)
+   {const CC=load(base+'/lib/town/coralCay.ts'),sbad=[];for(const sb of CC.SANDBARS){const zr=sb.spur.roadZ+sb.side*CC.CAUSEWAY.railHalf;
+     for(let dx=-1.7;dx<=1.7;dx+=.34)for(const dz of [.2,.6,1,1.4]){const x=sb.spur.x+dx,z=zr+sb.side*dz;rc.set(new T.Vector3(x,5,z),down);const top=rc.intersectObjects(meshes,false).find(h=>h.point.y<.9);if(top&&top.point.y>.06)sbad.push(`${x.toFixed(1)},${z.toFixed(1)} ${top.point.y.toFixed(2)}`);}}
+    assert.deepEqual(sbad.slice(0,6),[],label+': spur openings clear');}
    report.push(label+': '+cp+' rounded-corner probes');}
   // 2. the lawn's wear sheets and lips stay off the streets
   let edgeTris=0,onStreet=0;if(surf&&surfIn){SE.setSurfaceInput(surfIn);const e=SE.mainLawnEdges();const P=e.position;
