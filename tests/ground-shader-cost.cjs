@@ -58,7 +58,9 @@ const SKY_SEA_ALU=210;
 // Nov 26 2026 (rounded vehicles: the boats' water rings, lib/graphics/boatSwell.ts BOAT_RING_GLSL; `?vehicles=0` compiles without it): static
 // worst case +145 (far 1291 -> 1436: all three slots lit and every branch counted). A pixel away from every boat pays the detail test and
 // three slot rejects (~15 ALU); a ring pixel ~+50. Off on the still path (uWaterDetail < .5). No texture read.
-const BOAT_RING_ALU=150;
+// Polish Nov 27 2026: a 4th slot for the nearest floating buoy (boatSwell.ts BUOY_RING_SLOT): static worst case 1436 -> 1484 (+48: one more
+// slot's body); a pixel away from every ring pays one more reject (~4 ALU).
+const BOAT_RING_ALU=200;
 ok('ocean: every phone path costs less than before, same texture reads',()=>{
  const now=oceanNow(),rows=[];
  for(const p of Object.keys(BASE.ocean)){const a=BASE.ocean[p],b=now[p];rows.push(`ocean.${p} ${a.alu}/${a.tex} -> ${b.alu}/${b.tex}`);

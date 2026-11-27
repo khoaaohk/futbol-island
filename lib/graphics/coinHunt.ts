@@ -6,6 +6,8 @@ import {CORAL_CAY_BALL_IDS} from '../town/coralCayBalls';
 /** Coral Cay parcels (Sep 29 2026) stay out of the shadow pass: 15 more casters for small boxes far from the main island (heat). */
 const CORAL_CAY_IDS=new Set(CORAL_CAY_BALL_IDS);
 import {createManholeCovers} from './manholeCovers';
+import {BUOY_RING_SLOT,BUOY_SWELL,setBoatRing,swellPose,type SwellPose} from './boatSwell';
+import {WATER_UNIFORMS} from './waterSurface';
 import {RIDDLE_BOARD,RIDDLE_REACH,riddleBoardText} from '../town/summitBalls';
 import {countSummitBall} from '../analytics/summitEvents';
 import {readCoinProgress,recordCoin,subscribeCoins} from '../town/coinProgress';
@@ -98,10 +100,24 @@ export function createCoinHunt(scene:T.Scene,onCollect:(coin:CoinSpot)=>void,onN
  // The buoys (Sep 29 2026): a red float on the sea and a white collar the ball rests in (ball bottom 0.91 m, collar top 0.89 m),
  // with a gold rim round the ball. Street scenery like the manhole covers: outside the hunt root, kept after the ball is found,
  // all buoys baked into one packed draw with no animation.
- const BUOY_SEA=-.43,buoyScenery=new T.Group();buoyScenery.name='coin-buoy-scenery';
- for(const s of COIN_QUEST.filter(s=>s.buoy)){const g=new T.Group();g.position.set(s.x,0,s.z);buoyScenery.add(g);
-  mesh(disc,10,g,0,BUOY_SEA+.55,0,2.3,1.35,2.3);mesh(disc,5,g,0,BUOY_SEA+1.13,0,1.35,.55,1.35);const rim=mesh(ring,1,g,0,.9,0,.95,.95,.95);rim.rotation.x=-Math.PI/2;}
- if(buoyScenery.children.length){pack(buoyScenery,false);scene.add(buoyScenery);}
+ // Polish Nov 27 2026 (owner shot 196: "add ripples and movements to make it look like it's floating on water"): each buoy is its
+ // own packed draw (2 in all, was 1) riding the boats' swell (boatSwell.ts swellPose, BUOY_SWELL, its own spot's phase: heave, pitch,
+ // roll; still for reduced motion), sat BUOY_SINK lower so the waterline cuts the float, with the boats' foam ring and lapping
+ // ripples in the sea round the nearest one (ring slot BUOY_RING_SLOT; off on the still water path: Battery saver, hot tiers,
+ // reduced motion). The ball on top rides with it. ~30 float ops a buoy a frame, only within BUOY_LIVE m.
+ const BUOY_SEA=-.43,BUOY_SINK=.12,BUOY_LIVE=90,buoyScenery=new T.Group();buoyScenery.name='coin-buoy-scenery';const buoys:{g:T.Group;x:number;z:number;id:string}[]=[];
+ for(const s of COIN_QUEST.filter(s=>s.buoy)){const g=new T.Group();g.position.set(s.x,-BUOY_SINK,s.z);buoyScenery.add(g);
+  mesh(disc,10,g,0,BUOY_SEA+.55,0,2.3,1.35,2.3);mesh(disc,5,g,0,BUOY_SEA+1.13,0,1.35,.55,1.35);const rim=mesh(ring,1,g,0,.9,0,.95,.95,.95);rim.rotation.x=-Math.PI/2;
+  pack(g,false);buoys.push({g,x:s.x,z:s.z,id:s.id});}
+ if(buoyScenery.children.length)scene.add(buoyScenery);
+ const buoyPose:SwellPose={heave:0,pitch:0,roll:0},buoyHeave=new Map<string,number>();
+ /** The buoys ride the swell (closed form, own phase); the nearest one lights the sea's foam ring. */
+ function floatBuoys(p:Point,reduced:boolean){let best=-1,bd=BUOY_LIVE*BUOY_LIVE;const t=WATER_UNIFORMS.uWaterTime.value;
+  for(let i=0;i<buoys.length;i++){const b=buoys[i],d=(p.x-b.x)**2+(p.z-b.z)**2;if(d>BUOY_LIVE*BUOY_LIVE){buoyHeave.set(b.id,0);continue;}if(d<bd){bd=d;best=i;}
+   if(reduced){b.g.position.y=-BUOY_SINK;b.g.rotation.set(0,0,0);buoyHeave.set(b.id,0);continue;}
+   swellPose(b.x,b.z,t,0,BUOY_SWELL,buoyPose);const h=buoyPose.heave+.025*Math.sin(t*1.9+b.x);// + a short chop on the long swell
+   b.g.position.y=h-BUOY_SINK;b.g.rotation.set(buoyPose.roll,0,buoyPose.pitch);buoyHeave.set(b.id,h);}
+  if(best>=0)setBoatRing(BUOY_RING_SLOT,buoys[best].x,buoys[best].z,0,.62,.62,1);else setBoatRing(BUOY_RING_SLOT,0,0,0,.62,.62,0);}
  const effects=createCoinEffects(ballGeometry);root.add(effects.root);let time=0,nearText='',enabled=false,lastReduced=false,overManhole:{x:number;z:number}|null=null;
  // Forgiving manholes (user, Sep 26 2026: "finicky, make it easier"). The drop target locks on within RING_ENTER m of an unopened
  // cover while flying, holds while the flyer stays within RING_KEEP m (a released jetpack drifts a few metres) and lingers briefly
@@ -136,12 +152,12 @@ export function createCoinHunt(scene:T.Scene,onCollect:(coin:CoinSpot)=>void,onN
  // fromFlight: a jetpack or parachute touchdown. Manholes open only for a flight that first passed over them.
  function land(p:Point,fromFlight=false){if(!enabled)return;for(const e of entries)if(e.spot.kind==='landing'&&(e.spot.manhole?fromFlight&&e.dropArmed:!e.spot.grass||e.dropArmed)&&!revealedIds.has(e.spot.id)&&Math.abs(p.y-e.spot.y)<.8&&Math.hypot(p.x-e.spot.x,p.z-e.spot.z)<(e.spot.manhole?LAND_RADIUS:1.8))reveal(e);}
  function aim(p:Point,yaw:number,clear:(x:number,z:number)=>boolean){let best:typeof entries[number]|undefined,dist=9;for(const e of entries){const s=e.spot,dx=s.x-p.x,dz=s.z-p.z,d=Math.hypot(dx,dz);const buoy=!!s.buoy&&!collected.has(s.id);if(!buoy&&(s.kind==='hidden'||s.grass||s.manhole||s.reveal||revealedIds.has(s.id))||Math.abs(s.y-p.y)>.7||d>(buoy?BUOY_REACH:dist)||d<.5)continue;const angle=Math.atan2(dx,dz)-yaw;if(Math.cos(angle)<(buoy?.5:.82))continue;if(buoy){/* a wide ±60° assist: at a rail a child rarely faces the buoy squarely */dist=Math.min(dist,d);best=e;continue;}let visible=true;const steps=Math.ceil(d/.3);for(let i=1;i<=steps;i++)if(!clear(p.x+dx*i/steps,p.z+dz*i/steps)){visible=false;break;}if(!visible)continue;dist=d;best=e;}return best?Math.atan2(best.spot.x-p.x,best.spot.z-p.z):null;}
- function update(dt:number,p:Point,active:boolean,reduced:boolean,airRamp:string|null=null,parachuting=false,flying=parachuting){enabled=active;lastReduced=reduced;root.visible=active;covers.update(dt);if(!active){lock=null;overManhole=null;covers.clearGlints();if(nearText){nearText='';onNear('');}return;}time+=dt;stats.animated=0;let near:typeof entries[number]|undefined,nearest=5;const held=lingering;lingering=0;
+ function update(dt:number,p:Point,active:boolean,reduced:boolean,airRamp:string|null=null,parachuting=false,flying=parachuting){enabled=active;lastReduced=reduced;root.visible=active;covers.update(dt);if(!active){setBoatRing(BUOY_RING_SLOT,0,0,0,.62,.62,0);lock=null;overManhole=null;covers.clearGlints();if(nearText){nearText='';onNear('');}return;}time+=dt;stats.animated=0;floatBuoys(p,reduced);let near:typeof entries[number]|undefined,nearest=5;const held=lingering;lingering=0;
   for(const e of entries){const s=e.spot,done=collected.has(s.id),revealed=s.kind==='hidden'||revealedIds.has(s.id);e.group.visible=!done;if(done)continue;const distanceSquared=(p.x-s.x)**2+(p.z-s.z)**2;if(e.aerialHighlight){const show=parachuting&&distanceSquared<150*150&&Math.abs(p.y-s.y)<160;e.aerialHighlight.visible=show;const size=show?1.65:1;if(e.coin.scale.x!==size)e.coin.scale.setScalar(size);if(show)e.aerialHighlight.scale.setScalar(reduced?1:1+Math.sin(time*3+s.x)*.07);}
    e.revealAge+=dt;e.parcel.visible=!revealed||s.kind==='hidden'||!!s.grass&&e.revealAge<.6;if(s.grass){e.parcel.rotation.x=revealed?-Math.min(1,e.revealAge/.6)*1.5:0;if(Math.hypot(p.x-s.x,p.z-s.z)<6&&p.y>s.y+2)e.dropArmed=true;if(Math.hypot(p.x-s.x,p.z-s.z)>8)e.dropArmed=false;}
    if(s.manhole){const across=Math.hypot(p.x-s.x,p.z-s.z);if(flying&&across<RING_ENTER&&p.y>s.y+2.5)e.dropArmed=true;else if(across>12)e.dropArmed=false;
     if(!revealed){if(flying&&p.y>s.y+1&&(across<RING_ENTER||lock===e&&across<RING_KEEP)){lock=e;lingering=RING_LINGER;}}/* No glint: finding manholes from the air is part of the challenge (user, Sep 25). */covers.setGlint(e.cover,false);}
-   e.coin.visible=revealed;if(revealed&&distanceSquared<64*64){stats.animated++;e.coin.rotation.y=reduced?0:time*1.8;e.coin.position.y=e.base+(s.wall?.high&&!reduced?Math.max(0,1-e.revealAge/.6)*(s.wall.y-1.25):0)+(s.tree&&!reduced?Math.max(0,1-e.revealAge/.6)**2*(s.tree.top-s.y-e.base):0)+(s.reveal==='score'&&!reduced?-Math.max(0,1-e.revealAge/.6)*1.6:0)+(s.manhole&&!reduced?-((1-Math.min(1,e.revealAge/.6))**2)*1.55:0)+(reduced?0:Math.sin(time*2+s.x)*.09);}
+   e.coin.visible=revealed;if(revealed&&distanceSquared<64*64){stats.animated++;e.coin.rotation.y=reduced?0:time*1.8;e.coin.position.y=e.base+(s.wall?.high&&!reduced?Math.max(0,1-e.revealAge/.6)*(s.wall.y-1.25):0)+(s.tree&&!reduced?Math.max(0,1-e.revealAge/.6)**2*(s.tree.top-s.y-e.base):0)+(s.reveal==='score'&&!reduced?-Math.max(0,1-e.revealAge/.6)*1.6:0)+(s.manhole&&!reduced?-((1-Math.min(1,e.revealAge/.6))**2)*1.55:0)+(s.buoy?(buoyHeave.get(s.id)??0)-BUOY_SINK:reduced?0:Math.sin(time*2+s.x)*.09);}// a buoy's ball rides its buoy (no hover of its own)
    const d=Math.sqrt(distanceSquared),sameFloor=Math.abs(p.y-s.y)<(s.buoy?6:s.parachute?2.5:s.ramp||s.summit?2.5:.75);
    // Summit Isle: a gentle twinkle within a few metres (a hint for a ball tucked into a cave, hut or rocks). Scale only, no new draw.
    if(e.loose){const k=revealed&&d<8&&!reduced?1+.12*Math.max(0,Math.sin(time*4+s.z)):1;if(e.coin.scale.x!==k)e.coin.scale.setScalar(k);}if((sameFloor||!!s.manhole&&flying&&!revealed&&Math.hypot(p.x-s.x,p.z-s.z)<6)&&(s.kickFrom?Math.hypot(p.x-s.kickFrom.x,p.z-s.kickFrom.z):d)<nearest){nearest=s.kickFrom?Math.hypot(p.x-s.kickFrom.x,p.z-s.kickFrom.z):d;near=e;}const pickupDistance=s.kind==='hidden'&&!s.parachute&&!s.ramp&&s.truck===undefined&&!e.loose?Math.hypot(p.x-s.x,p.z-(s.z-1.35)):d;if(revealed&&(!s.parachute||parachuting||s.perch&&Math.abs(p.y-s.y)<.8)&&s.truck===undefined&&(!s.ramp||airRamp===s.ramp)&&sameFloor&&pickupDistance<(s.buoy?4.5:s.parachute?3:s.ramp?2:s.reveal==='score'?4:e.loose?1.1:s.kind==='hidden'?.7:1.3)&&e.revealAge>.6&&(!s.manhole||!collected.has(s.id)&&(covers.settle(e.cover,reduced),true))&&recordCoin(s.id,'collect')){stats.collections++;if(s.summit)countSummitBall();/* manhole: the cover settles back as a plain one, started before the save so the listener does not snap it */effects.collect(s);pendingLessons.push(s);onCollect(s);}
