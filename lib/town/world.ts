@@ -1635,7 +1635,7 @@ export function* buildTownSteps(scene: T.Scene) {
   try{summitIsle=buildSummitIsle({box,cylinder,sign,town,obstacles,assets,surfaceAreas,prop});}catch(error){console.error('Summit Isle scenery failed to build',error);}
   materials.push(...summitIsle.materials);
   // Summit Isle activities (summitActivitiesWorld.ts): the Summit Kick post (and the Ball Cannon), static and batched.
-  try{buildSummitActivityProps({box,cylinder,put,sign,obstacles});}catch(error){console.error('Summit Isle activity props failed to build',error);}
+  try{/* arena inflatables (Nov 27 2026): the kick crate, cannon seat, crate and launchers come out puffed (visual only) */softly(softOn()?{r:.3}:null,()=>buildSummitActivityProps({box,cylinder,put,sign,obstacles}));}catch(error){console.error('Summit Isle activity props failed to build',error);}
   // The zipline (ziplineWorld.ts): the launch platform, the cable, the hostel roof deck and its outside stair (static, batched).
   const ziplineRails:ZiplineRail[]=[];try{unlifted(()=>buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails}));/* its heights are absolute (zipline.ts HOSTEL_BASE) */}catch(error){console.error('Zipline props failed to build',error);}
   // The Island Line (trainWorld.ts, train Phase 1): all static pieces join the paint batches below; the tunnel tube is its own mesh.
