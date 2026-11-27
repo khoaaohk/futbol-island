@@ -49,7 +49,7 @@ export function thatchRoof(Rb:number,H:number,seed:number,low=false):{geo:T.Buff
    if(k===1)return {r:cone(t0)+th*.35+rag*.08,y:t0*H-droop-th*.15};
    if(k===2)return {r:cone(t)+th*.85,y:t*H+th*.35};
    return {r:cone(t)+.02,y:t*H+.04};},
-  (c,k)=>{const s=hash(c*3.1+seed,L*7),v=.84+.3*s,f=k===0?.55:k===1?.92+.12*hash(c,L+3):k===2?1.06:.8;return [v*f*1.03,v*f*(.96+.06*s),v*f*(.84+.14*s)];}));
+  (c,k)=>{const s=hash(c*3.1+seed,L*7),v=s<.2?.64:.78+.42*s/* inflate pass 2: straw streaks that read (were +-15%) */,f=k===0?.55:k===1?.92+.12*hash(c,L+3):k===2?1.06:.8;return [v*f*1.03,v*f*(.96+.06*s),v*f*(.84+.14*s)];}));
  });
  // the top knot: a bound bundle of straw over the apex
  const kn=low?8:12,prof:[number,number][]=[[.3,H*.9],[.36,H*.95],[.24,H+.05],[.16,H+.12],[.2,H+.26],[.08,H+.38],[.01,H+.42]];
