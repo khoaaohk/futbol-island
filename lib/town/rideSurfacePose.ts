@@ -20,14 +20,18 @@ export const rideWheelbase=(mode:TravelMode)=>mode==='scooter'?{front:.5*1.12,re
 /** Most the ride (and rider) roll with the slope across it: a light lean, never a tilt. */
 export const RIDE_SLOPE_ROLL_MAX=8*Math.PI/180;
 /** A ride on open ground (Oct 15 2026, user: "riding on the mountain, the bike is in the island"). `sample` is the ground the
- *  tyres meet (on Summit Isle the drawn terrain, not only the smooth walked height); it is read twice, under the front and rear
- *  contacts. The pitch is the chord between them and the root sits on that chord, so on any even slope both tyres touch it
+ *  tyres meet (on Summit Isle the drawn terrain, not only the smooth walked height); it is read under the front and rear
+ *  contacts (and once at the root, see below). The pitch is the chord between them and the root sits on that chord, so on any even slope both tyres touch it
  *  (the wheels are drawn with their contact at the root's level). The roll is half the slope across the ride (`lateralGrade`,
  *  rise per metre to the ride's left, +x), capped at RIDE_SLOPE_ROLL_MAX. On level ground: height + 0.005, no pitch, no roll. */
 export function rideSlopePose(mode:TravelMode,x:number,z:number,yaw:number,sample:(x:number,z:number)=>number,lateralGrade:number,out:{height:number;pitch:number;roll:number}){
  const {front,rear}=mode==='scooter'?SCOOTER_BASE:RIDE_BASE,sx=Math.sin(yaw),sz=Math.cos(yaw);
  const hf=sample(x+sx*front,z+sz*front),hr=sample(x-sx*rear,z-sz*rear);
- out.pitch=Math.atan2(hr-hf,front+rear);out.height=(hf*rear+hr*front)/(front+rear)+.005;
+ // Nov 26 2026 (ride-slope, east portal on the line): a crest between the tyres (the drawn hill folds over the tube's cover just
+ // inside a portal) stood up through the chord; the root's own spot is read too and the ride lifts by any rise over the chord
+ // (0 on any even slope, so both tyres still touch it there).
+ const hc=(hf*rear+hr*front)/(front+rear),hm=sample(x,z);
+ out.pitch=Math.atan2(hr-hf,front+rear);out.height=(hm>hc?hm:hc)+.005;
  out.roll=Math.max(-RIDE_SLOPE_ROLL_MAX,Math.min(RIDE_SLOPE_ROLL_MAX,Math.atan(lateralGrade)*.5));return out;
 }
 const SCOOTER_BASE=rideWheelbase('scooter'),RIDE_BASE=rideWheelbase('bike');
