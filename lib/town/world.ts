@@ -297,6 +297,10 @@ export function* buildTownSteps(scene: T.Scene) {
   const buildingRadius=(label:string)=>label==='HALF-TIME CAFÉ'?4:softBuildings.has(label)?1.5:0;
   // Paint schemes (lib/town/buildingStyles.ts): recolour only plain palette boxes, which the batching pass folds into the
   // same vertex-colour chunk draws, so varied streets cost no draw call, triangle or texture. Landmarks get null (as before).
+  // Soft sweep 2 (Nov 27 2026, owner: "less blocky"): building trims (sills, balcony slabs, awnings, doorsteps, window boxes, the
+  // roof unit) take the smooth-shaded chamfer (seg 0, 44 tris); the building masses keep their own shapes. ?soft=0: boxes.
+  const TRIM:SoftOpts={r:.35,seg:0};
+  const trimBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>softly(TRIM,()=>box(w,h,d,c,x,y,z));
   function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657',scheme:BuildingScheme|null=null){
     const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
     const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
@@ -316,7 +320,7 @@ export function* buildTownSteps(scene: T.Scene) {
       // Signs audit (Nov 25 2026): no first-floor balcony behind the Coaches Centre's NOW OPEN board (its rail's balusters stood
       // 0.4 m in front of the words).
       const nowOpen=label==='PLAYER DEVELOPMENT'&&floor===1&&Math.abs(xx-x)<3.2;
-      if(!knockout&&!nowOpen&&floor>0&&col%2===(scheme?.balconyOdd&&columns>2?1:0)){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
+      if(!knockout&&!nowOpen&&floor>0&&col%2===(scheme?.balconyOdd&&columns>2?1:0)){trimBox(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
     }
     // Side windows remain visible from the follow camera.
     for(let floor=0;floor<floors;floor++)for(let k=0;k<3;k++)if(!knockout||k!==1)box(.065,1.22,.86,'#3d625c',x+w/2+.035,1.4+floor*2.45,z-d/2+(k+.5)*d/3);
@@ -325,11 +329,11 @@ export function* buildTownSteps(scene: T.Scene) {
     // Signs audit (Nov 25 2026): the Coral Cay hostel's ground-floor name sat 3 m behind its verandah's columns (one stood across the
     // words); the big lit sign on its roof names it.
     if(label&&!arcade&&label!=='CORAL CAY HOSTEL')sign(label,front*.86,.62,x,2.45,z+d/2+.1,scheme?.sign);
-    if(arcade)for(const side of [-1,1])for(let col=0;col<3;col++){const inner=2.35,span=(front/2-inner)/3,awning=box(span,.10,1.3,col%2?'#ecdcb8':accent,x+side*(inner+(col+.5)*span),2.08,z+d/2+.58);awning.rotation.x=.14;}
-    else for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,scheme?awningColour(scheme,col,8):col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
+    if(arcade)for(const side of [-1,1])for(let col=0;col<3;col++){const inner=2.35,span=(front/2-inner)/3,awning=trimBox(span,.10,1.3,col%2?'#ecdcb8':accent,x+side*(inner+(col+.5)*span),2.08,z+d/2+.58);awning.rotation.x=.14;}
+    else for(let col=0;col<8;col++){const awning=trimBox(front/8,.10,1.3,scheme?awningColour(scheme,col,8):col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
     box(front-.6,1.65,.06,'#274c48',x,.97,z+d/2+.07);
     for(let col=1;col<3;col++)box(.055,1.7,.09,mullion,x-front/2+col*front/3,.96,z+d/2+.13);
-    if(label!=='ROOFTOP KNOCKOUT')box(1.2,1.1,1.1,'#dbccaa',x+w*.22,h+.7,z-d*.2);
+    if(label!=='ROOFTOP KNOCKOUT')softly({r:.22,seg:1},()=>box(1.2,1.1,1.1,'#dbccaa',x+w*.22,h+.7,z-d*.2));
   }
 
   // The four towns surround the island's civic square. No district changes lighting.
@@ -346,7 +350,7 @@ export function* buildTownSteps(scene: T.Scene) {
     if(scheme&&shape){
       const radius=buildingRadius(label);
       obstacles.push({x,z,w,d,...(radius?{cornerRadius:radius}:{})});
-      buildSoftHouse({put,box,cylinder,sign},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
+      buildSoftHouse({put,box,cylinder,sign,trimBox},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
       buildings.push({x,z,w,d,height:h+.23,name:label,...(radius?{cornerRadius:radius}:{})});
       return;
     }
@@ -370,9 +374,9 @@ export function* buildTownSteps(scene: T.Scene) {
     cylinder(.045,h,'#9d805b',x+w/2-.18,h/2,z+d/2+.14);
     // Doors, doorstep, number plaque and shutters make ordinary homes readable too.
     box(1.15,1.95,.13,scheme?.door??'#365b56',x-w*.26,1.02,z+d/2+.2);
-    box(1.65,.15,.8,'#d2bc94',x-w*.26,.1,z+d/2+.45);
+    trimBox(1.65,.15,.8,'#d2bc94',x-w*.26,.1,z+d/2+.45);
     box(.18,.07,.05,'#f8d9a2',x-w*.26+.34,1.01,z+d/2+.29);
-    if(index%2===0){box(1.1,.34,.42,'#b88472',x+w*.25,3.1,z+d/2+.45);for(const dx of [-.3,0,.3])put(new T.IcosahedronGeometry(.22,0),'#739568',x+w*.25+dx,3.38,z+d/2+.45);}
+    if(index%2===0){trimBox(1.1,.34,.42,'#b88472',x+w*.25,3.1,z+d/2+.45);for(const dx of [-.3,0,.3])put(new T.IcosahedronGeometry(.22,0),'#739568',x+w*.25+dx,3.38,z+d/2+.45);}
   }
   function street(x:number,z:number,length:number,vertical=true,boulevard=false){
     const carriageway=8,footprint=12;

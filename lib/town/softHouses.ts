@@ -25,6 +25,8 @@ export function roofDeckColour(roof:string){const c=new T.Color(roof);return '#'
 export type SoftKit={
   put:(g:T.BufferGeometry,color:string,x:number,y:number,z:number)=>T.Mesh;
   box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
+  /** Soft sweep 2: the trims' box (sills, balcony slabs, awnings, doorstep, window boxes), rounded by world.ts; default `box`. */
+  trimBox?:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
   cylinder:(r:number,h:number,c:string,x:number,y:number,z:number)=>T.Mesh;
   sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string)=>T.Mesh;
 };
@@ -36,7 +38,7 @@ const GLASS='#365b56',SIDE_GLASS='#3d625c',SHOP_GLASS='#274c48',PLINTH='#d2bc94'
 const C=(r:number,seg?:number):Corner=>({r,seg:seg??(r>=1.4?3:2)});
 
 export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
-  const {put,box,cylinder,sign}=kit,{x,z,w,d,h,label,index,scheme,dataRadius}=o,{outline,detail}=o.shape;
+  const {put,box,cylinder,sign}=kit,tb=kit.trimBox??box,{x,z,w,d,h,label,index,scheme,dataRadius}=o,{outline,detail}=o.shape;
   const a=w/2,b=d/2,front=z+b;
   const deco=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;return m;};
   // ---- Corners per silhouette (never tighter than the collision radius).
@@ -98,7 +100,7 @@ export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
     deco(box(.88,1.25,.06,GLASS,xx,yy,front+.04));deco(box(1.04,.09,.21,sill,xx,yy-.65,front+.1));
     if(detail==='arches')deco(put(archSlab(.44,.06,6),GLASS,xx,yy+.625,front+.04));
     if(balcony){
-      deco(box(1.4,.11,.7,BALCONY,xx,yy-.64,front+.35));
+      deco(tb(1.4,.11,.7,BALCONY,xx,yy-.64,front+.35));
       for(let q=-2;q<=2;q++)deco(put(new T.CylinderGeometry(.018,.018,.55,5,1,true),BALUSTER,xx+q*.26,yy-.32,front+.65));
       deco(box(1.4,.04,.045,RAIL,xx,yy-.04,front+.65));
     }
@@ -112,7 +114,7 @@ export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
   for(let col=0;col<8;col++){
     const colour=awningColour(scheme,col,8),sx=cx-run/2+(col+.5)*run/8;
     if(barrel)deco(put(barrelStrip(run/8+.002,1.3,.4),colour,sx,2.12,front+.01));
-    else{const awning=deco(box(run/8,.10,1.3,colour,sx,2.08,front+.58));awning.rotation.x=.14;}
+    else{const awning=deco(tb(run/8,.10,1.3,colour,sx,2.08,front+.58));awning.rotation.x=.14;}
   }
   deco(box(run-.6,1.65,.06,SHOP_GLASS,cx,.97,front+.07));
   for(let col=1;col<3;col++)deco(box(.055,1.7,.09,sill,cx-run/2+col*run/3,.96,front+.13));
@@ -131,7 +133,7 @@ export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
   // Drainpipe on the facade's flat end, door, doorstep and plaque (same door position as before).
   deco(cylinder(.045,h,'#9d805b',tower?x+right:x+a-Math.max(rFR,.08)-.1,h/2,front+.14));
   box(1.15,1.95,.13,scheme.door,x-w*.26,1.02,front+.2);
-  box(1.65,.15,.8,PLINTH,x-w*.26,.1,front+.45);
+  tb(1.65,.15,.8,PLINTH,x-w*.26,.1,front+.45);
   box(.18,.07,.05,'#f8d9a2',x-w*.26+.34,1.01,front+.29);
-  if(index%2===0){const fx=Math.min(x+w*.25,cx+run/2-.65);deco(box(1.1,.34,.42,'#b88472',fx,3.1,front+.45));for(const dx of [-.3,0,.3])deco(put(new T.IcosahedronGeometry(.22,0),'#739568',fx+dx,3.38,front+.45));}
+  if(index%2===0){const fx=Math.min(x+w*.25,cx+run/2-.65);deco(tb(1.1,.34,.42,'#b88472',fx,3.1,front+.45));for(const dx of [-.3,0,.3])deco(put(new T.IcosahedronGeometry(.22,0),'#739568',fx+dx,3.38,front+.45));}
 }
