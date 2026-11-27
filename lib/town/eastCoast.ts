@@ -28,7 +28,7 @@ export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
   if(obstacles.some(o=>Math.abs(215-o.x)<o.w/2+1.7&&Math.abs(z-o.z)<o.d/2+2))continue;
   // inflate pass (owner shot 180): a rounded tub and soft round shrub clumps
   prop('planter',()=>{pbox(2.3,.25,4,'#d2bc94',215,.125,z,{openBottom:true});
-  for(const dz of [-1.2,0,1.2]){const ball=puffLevel()>0;const m=put(ball?puffBall(.6):new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);if(ball)m.scale.set(1,.82,1);}});
+  for(const dz of [-1.2,0,1.2]){const ball=puffLevel()>0;put(ball?puffBall(.6).scale(1,.82,1):new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);}});
   obstacles.push({x:215,z,w:2.3,d:4});
  }
  // Short joined segments trace the rounded coast, rather than a straight barrier.
