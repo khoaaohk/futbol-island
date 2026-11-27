@@ -1,5 +1,5 @@
 import type {SignalHead} from './trafficSignals';
-import {lampPost,lampStyleFor} from './lampPost';
+import {lampPost,lampStyleFor,lampNear2} from './lampPost';
 import {SIGN_POST_SET} from './signPosts';
 import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
@@ -1928,7 +1928,7 @@ export function* buildTownSteps(scene: T.Scene) {
   });
   const canopies=canopyCollector.finish();canopies.push(...stadiumRoofCanopies);// the stadium roofs (own meshes, stadiumWorld.ts): landable slabs
   yield;
-  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[];depthPiece?:number};
+  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[];depthPiece?:number;/** lampPost.ts far / near lamp pieces: 1 far, 2 near, 0 neither */lod?:number[];lamps?:number[]};
   // Where each tagged prop's pieces go: batch + index in that batch (→ vertex start once merged) + world bounds.
   const gashaponPieces=new Map<string,{batch:Batch;index:number}[]>();
   const propRecords=new Map<PropTag,{pieces:{batch:Batch;index:number}[];bounds:T.Box3}>();
@@ -2018,11 +2018,23 @@ export function* buildTownSteps(scene: T.Scene) {
     {const glow=object.userData.machineGlow as [number,boolean]|undefined;if(glow&&paint)markMachineGlow(geom,glow[0],glow[1]);}
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);if(object.userData.depthColors)batch.depthPiece=batch.geometries.length-1;
+    {const far=object.userData.lampFar as number[]|undefined,near=object.userData.lampNear as number[]|undefined,lod=far?1:near?2:0;if(lod||batch.lod){batch.lod??=new Array(batch.geometries.length-1).fill(0);batch.lod.push(lod);}
+     if(near){batch.lamps??=[];const L=batch.lamps;let seen=false;for(let i=0;i<L.length;i+=3)if(L[i]===near[0]&&L[i+2]===near[2]){seen=true;break;}if(!seen)L.push(near[0],near[1],near[2]);}}
     const tag=object.userData.propTag as PropTag|undefined;
     const gid=object.userData.gashaponId as string|undefined;if(gid){let list=gashaponPieces.get(gid);if(!list)gashaponPieces.set(gid,list=[]);list.push({batch,index:batch.geometries.length-1});}// gashapon live swap (gashaponStatic)
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
   };
   {const all:T.Object3D[]=[];town.traverse(o=>{all.push(o);});for(let i=0;i<all.length;i++){batchObject(all[i]);if(i%500===499)yield;}}
+  // Far lamps (Leftovers A, Nov 26 night; lampPost.ts LAMP_LOD): a batch holding lamps is ordered [far twins | the rest | kerb piece |
+  // near lamps], so each frame draws ONE contiguous range: the near lamps (from the end of the twins) or the twins (up to the near
+  // lamps). Every reference to a piece's index (prop records, gashapon pieces, kinds, the kerb piece) moves with it.
+  {const moved=new Map<Batch,number[]>();
+   for(const batch of batches.values()){const lod=batch.lod;if(!lod||!lod.some(v=>v))continue;const n=batch.geometries.length,order:number[]=[];
+    for(let i=0;i<n;i++)if(lod[i]===1)order.push(i);for(let i=0;i<n;i++)if(!lod[i]&&i!==batch.depthPiece)order.push(i);if(batch.depthPiece!==undefined&&!lod[batch.depthPiece])order.push(batch.depthPiece);for(let i=0;i<n;i++)if(lod[i]===2)order.push(i);
+    const at=new Array(n);order.forEach((old,i)=>{at[old]=i;});batch.geometries=order.map(i=>batch.geometries[i]);batch.kinds=order.map(i=>batch.kinds[i]);batch.lod=order.map(i=>lod[i]);
+    if(batch.depthPiece!==undefined)batch.depthPiece=at[batch.depthPiece];moved.set(batch,at);}
+   if(moved.size){const fix=(list:{batch:Batch;index:number}[])=>{for(const p of list){const at=moved.get(p.batch);if(at)p.index=at[p.index];}};
+    for(const r of propRecords.values())fix(r.pieces);for(const l of gashaponPieces.values())fix(l);}}
   // Island wind (Nov 8 2026, lib/graphics/islandWind.ts): trees, palms and bushes in the plain-paint chunks get per-vertex sway
   // weights (UV slot, unused there) from their own height; no new material, mesh or draw call.
   {const shared=new Set<T.Material>(paintBatches.values());for(const [tag,record] of propRecords){const amp=WIND_SWAY_KINDS[tag.kind];if(!amp)continue;
@@ -2037,8 +2049,13 @@ export function* buildTownSteps(scene: T.Scene) {
     // Kerb depth (townDepth.ts): the chunk's kerb / contact-shade piece is the LAST piece of its paint batch and is left out of the
     // shadow pass (a 15 cm kerb or a pebble is below the shadow map's resolution; its shade is baked): drawRange for the depth
     // draw only (three's onBeforeShadow / onAfterShadow), and the phone's merged shadow proxies read userData.shadowCount.
-    const depthIndices=batch.depthPiece===geometries.length-1&&merged?.index?geometries[batch.depthPiece].index!.count:0;
-    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(depthIndices){const count=merged.index!.count-depthIndices;mesh.userData.shadowCount=count;mesh.onBeforeShadow=()=>{merged.setDrawRange(0,count);};mesh.onAfterShadow=()=>{merged.setDrawRange(0,Infinity);};}if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
+    const lod=batch.lod,icount=(i:number)=>geometries[i].index!.count,farIdx=lod?lod.reduce((a,v,i)=>v===1?a+icount(i):a,0):0,nearIdx=lod?lod.reduce((a,v,i)=>v===2?a+icount(i):a,0):0;
+    const depthIndices=batch.depthPiece!==undefined&&batch.depthPiece===geometries.length-1-(lod?lod.filter(v=>v===2).length:0)&&merged?.index?icount(batch.depthPiece):0;
+    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;if(depthIndices||nearIdx){const count=merged.index!.count-depthIndices-nearIdx;mesh.userData.shadowCount=count;mesh.onBeforeShadow=()=>{merged.setDrawRange(0,count);};mesh.onAfterShadow=()=>{merged.setDrawRange(0,Infinity);};}
+    // far lamps (lampPost.ts): near range [far twins' end, all] while a lamp of this chunk is within LAMP_LOD m, else [0, near lamps' start]
+    if(nearIdx&&batch.lamps){const L=new Float32Array(batch.lamps),total=merged.index!.count,farEnd=total-nearIdx;mesh.userData.lampLod={farIdx,nearIdx,lamps:L.length/3};
+     mesh.onBeforeRender=(_r,_s,camera)=>{const e=camera.matrixWorld.elements,r2=lampNear2();let near=false;for(let i=0;i<L.length;i+=3){const dx=L[i]-e[12],dy=L[i+1]-e[13],dz=L[i+2]-e[14];if(dx*dx+dy*dy+dz*dz<r2){near=true;break;}}
+      if(near)merged.setDrawRange(farIdx,total-farIdx);else merged.setDrawRange(0,farEnd);};}if(material===arcadeNeonGlass){arcadeNeonTubes=mesh;arcadeNeonSphere.center.copy(merged.boundingSphere!.center);}mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
     if(++merges%12===0)yield;
   }
