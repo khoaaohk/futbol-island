@@ -64,7 +64,7 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour,roofSlab} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
+import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, sillGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -305,6 +305,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // roof unit) take the smooth-shaded chamfer (seg 0, 44 tris); the building masses keep their own shapes. ?soft=0: boxes.
   const TRIM:SoftOpts={r:.35,seg:0};
   const trimBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>softly(TRIM,()=>box(w,h,d,c,x,y,z));
+  // Leftovers B (Nov 27): window sills = a 14-tri bullnose strip (softBox.ts sillGeometry; +2 tris a sill). West of x -100 (the west
+  // stadium's 115k chunk cap) and ?soft=0 keep the plain box.
+  const sillBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>softOn()&&x>=-100?put(sillGeometry(w,h,d),c,x,y,z):box(w,h,d,c,x,y,z);
   function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657',scheme:BuildingScheme|null=null){
     const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
     const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
@@ -320,7 +323,7 @@ export function* buildTownSteps(scene: T.Scene) {
       if(knockout&&(floor===0||xx<x+w/2-5))continue;
       // Arcade: keep the wall above the double door clear of windows/balconies.
       if(arcade&&floor>0&&Math.abs(xx-x)<2.4)continue;
-      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
+      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);sillBox(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
       // Signs audit (Nov 25 2026): no first-floor balcony behind the Coaches Centre's NOW OPEN board (its rail's balusters stood
       // 0.4 m in front of the words).
       const nowOpen=label==='PLAYER DEVELOPMENT'&&floor===1&&Math.abs(xx-x)<3.2;
@@ -354,7 +357,7 @@ export function* buildTownSteps(scene: T.Scene) {
     if(scheme&&shape){
       const radius=buildingRadius(label);
       obstacles.push({x,z,w,d,...(radius?{cornerRadius:radius}:{})});
-      buildSoftHouse({put,box,cylinder,sign,trimBox},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
+      buildSoftHouse({put,box,cylinder,sign,trimBox,sillBox},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
       buildings.push({x,z,w,d,height:h+.23,name:label,...(radius?{cornerRadius:radius}:{})});
       return;
     }
