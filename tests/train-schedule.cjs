@@ -89,7 +89,9 @@ if(process.env.TRAIN_PURE_ONLY){console.log("train-schedule: pure ok");process.e
 // 6. the built trains (the real world in Node, no WebGL): one draw for every car, LOD, crossings, boards
 (async()=>{const {loadIslandWorld}=require('../scripts/island-world-load.cjs');const {T,L:LW}=await loadIslandWorld(require('node:path').join(__dirname,'..'));
  const scene=new T.Scene(),w=LW('lib/town/world.ts').buildTown(scene),run=w.trainRun,R=LW('lib/town/trainRunning.ts');assert(run,'trains built');
- assert(run.triangles<=2500,`one car is ${run.triangles} triangles (≤ 2.5k: Nov 24 visuals, real openings + the interior)`);
+ // Nov 26 2026 (island-sky, owner: "the train wheels are missing on one side"): +~96 tris per car (an inner face on all 8 wheels
+ // + 4 axles); was <=2500, measured 2589. Same pin as train-looks2.
+ assert(run.triangles<=2600,`one car is ${run.triangles} triangles (≤ 2.6k: Nov 24 visuals, real openings + the interior, Nov 26 wheel inner faces)`);
  let im=0;scene.traverse(o=>{if(o.isInstancedMesh&&/^train-/.test(o.name)){im++;assert(!o.castShadow,'no shadow');}});assert.equal(im,6,'3 trains + doors + one glass/shadow mesh (Nov 24 visuals) + the night glow (POLISH 3 trainNightGlow)');
  const cam=new T.PerspectiveCamera(50,1,1,500),player={x:0,y:0,z:0};const at=(x,y,z,lx,lz)=>{cam.position.set(x,y,z);cam.lookAt(lx,0,lz);cam.updateMatrixWorld(true);};
  // all three trains pinned at the North station (the gfx view): 6 cars in one draw
