@@ -85,6 +85,8 @@ for(const [island,caps] of Object.entries(D.DECAL_CAPS)){const p=plan1[island],t
 assert.ok(Math.max(D.DECAL_TRIS.stone,D.DECAL_TRIS.tuft,D.DECAL_TRIS.flower)<10);
 const idx=new D.RectIndex(world.obstacles.concat(world.buildings,world.roads,world.surfaceAreas),0);
 for(const s of [...plan1.main.stones,...plan1.main.tufts,...plan1.main.flowers])assert.ok(!idx.blocked(s.x,s.z),'a main-island decal sits in a blocked rect at '+s.x+','+s.z);
+// Leftovers A2 (owner 219): no tuft, clump, flower, pebble or shell on a timber deck (the south boardwalk, ferry dock, east deck)
+{const deck=new D.RectIndex(sites.DECK_RECTS,0);let n=0;for(const k of ['main','cay','summit'])for(const s of [...plan1[k].stones,...plan1[k].tufts,...plan1[k].flowers,...plan1[k].macro]){n++;assert.ok(!deck.blocked(s.x,s.z),'decal on a deck at '+s.x.toFixed(1)+','+s.z.toFixed(1));}console.log('deck-free decals: '+n);}
 // decals cover the whole main sand band (inner part too): some stones sit deeper than 60 % of the local band width. Since the Island Line
 // (Nov 23 2026) no decal lies within LINE_CLEAR m of the rails, and the line runs through the inner band on much of the coast, so the
 // ratio is taken where the shore point is clear of the line (band + LINE_CLEAR); beside the line the inner band still gets some.

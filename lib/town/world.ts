@@ -1344,7 +1344,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(let x=BW0;x<210;x+=6){
     const width=Math.min(6,210-x);box(width,.2,8,'#b98f62',x+width/2,-.1,211);
     for(let dx=.4;dx<width;dx+=.6)box(.025,.008,8,'#91704d',x+dx,.004,211);
-    for(const z of [207.4,214.6])cylinder(.12,1.8,'#9d805b',x+.3,-.6,z);
+    for(const z of [207.4,214.6])cylinder(.12,1.8,'#9d805b',x+.3,-1.08,z);// leftovers A2 (owner 219): the deck's piles end under the boards (their tops stood 0.3 m up as lone stumps)
   }
   {const runs:[number,number][]=[];let a=BW0;for(const [g0,g1] of SOUTH_STATION_RAIL_GAPS){runs.push([a,g0]);a=g1;}runs.push([a,210]);
   prop('fence',()=>{for(let x=BW0;x<=209;x+=3){if(!railOpen(x))cylinder(.065,1.05,'#9d805b',x,.525,214.65);}
