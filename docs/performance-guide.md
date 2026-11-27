@@ -1,5 +1,27 @@
 # Performance reference for future Futbol Island updates
 
+## Sky dome + clouds, far sea, lit see-through tunnel, wire and wheel fixes (Nov 26 2026, branch `island-sky`, local, not deployed, no phone test)
+- Switch: `?sky=0` restores the look before (flat background, old far sea, black tunnel mouth, old wire); `?tunnel=0` only the tunnel
+  (`lib/graphics/skySwitch.ts`, read once; default ON). The wheel fix is not switched (a geometry bug fix).
+- Sky (`lib/graphics/skyDome.ts`): ONE draw, no render target, no pass. A sphere drawn on the far plane (z = w) LAST among opaques with the
+  depth test on, so only pixels nothing else covered run it (no overdraw where island / sea are); layer 1 only (bakes with override
+  materials and the shadow map never see it). Horizon colour = the scene background / haze fog Color (sRGB, like the fog), so the
+  sea-to-sky seam is unchanged. Gradient + sun / moon glow on ISLAND_SUN_POSITION, stars at night (uniform branch), three cloud layers
+  on virtual planes 900 / 1500 / 3200 m (5 reads of one 128² RGBA noise texture built once, ~120 ALU per sky pixel), three far islet
+  silhouettes (azimuth function, west only). CPU: one uniform update a frame (a few Color lerps). Cloud drift frozen whenever the sea
+  glitter is off (heat tier >= 2, Battery saver, governor slow, reduced motion).
+- Far sea (`lib/graphics/waterSurface.ts` SKY_SEA_ALBEDO / SKY_SEA_FAR): in the existing ocean program, weighted to 0 inside ~40 m and
+  over the shallows (nearK), so the approved clear shallows / swim / reef window are unchanged. Static estimate +206 ALU on every path
+  (far 1085 -> 1291, tests/ground-shader-cost.cjs SKY_SEA_ALU pin, dated), no texture read, no new uniform loop. The road sparkle is
+  inside the uSunGlitter gate (dropped first on hot tiers / saver).
+- Tunnel (`lib/town/trainWorld.ts` buildLitTube): still one unlit vertex-colour mesh, one draw; 3,856 -> 7,708 tris; now also drawn
+  from outside within TUBE_SHOW (60 m) of a portal (was: inside only), with a fragment test keeping only what is seen through a mouth
+  (~30 ALU, tunnel pixels only) and gl_FragDepth on those pixels (no early-z there). The two black mouth caps are gone. No lights.
+- Wire: the contact wire fades where seen steeply above the camera (+1 vertex attribute, 1 smoothstep). Wheels: +~96 tris a car
+  (inner wheel faces + axles, tests/train-looks2.cjs pin 2500 -> 2600), no draws.
+- Lab: phone profile, 4x CPU throttle, rAF median 16.7 ms before and after at West Beach top-down, the train's West Beach view and the
+  tunnel (vsync-capped: no CPU regression visible; GPU cost not measurable here). Shots + NOTE: `.claude/worktrees/_recovery-nov20/sky/`.
+
 ## Reading pages: phone-sized posters on the home reel and the /games hero (Nov 23 2026, branch `seo-ai-speed-nov23`, not deployed)
 - Home "See it in action" reel: all 11 posters `loading="lazy"` (the first two were eager 1920 px stills, ~180 KB, below the fold) and a
   srcset with a 1080 px copy (`public/learn/sm/`, `lib/site/learnMedia.ts posterSrcSet`, sizes = the reel's `--cw`). /games hero
