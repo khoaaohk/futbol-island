@@ -28,6 +28,8 @@ export type SoftKit={
   box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
   /** Soft sweep 2: the trims' box (sills, balcony slabs, awnings, doorstep, window boxes), rounded by world.ts; default `box`. */
   trimBox?:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
+  /** Leftovers B: the window sill strip (a bullnose in world.ts); default `box`. */
+  sillBox?:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
   cylinder:(r:number,h:number,c:string,x:number,y:number,z:number)=>T.Mesh;
   sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string)=>T.Mesh;
 };
@@ -104,7 +106,7 @@ export function buildSoftHouse(kit:SoftKit,o:SoftHouse){
       const glass=deco(put(new T.CylinderGeometry(.42,.42,.07,10,1,false),GLASS,xx,yy+.05,front+.06));glass.rotation.x=Math.PI/2;
       continue;
     }
-    deco(box(.88,1.25,.06,GLASS,xx,yy,front+.04));deco(box(1.04,.09,.21,sill,xx,yy-.65,front+.1));
+    deco(box(.88,1.25,.06,GLASS,xx,yy,front+.04));deco((kit.sillBox??box)(1.04,.09,.21,sill,xx,yy-.65,front+.1));
     if(detail==='arches')deco(put(archSlab(.44,.06,6),GLASS,xx,yy+.625,front+.04));
     if(balcony){
       deco(tb(1.4,.11,.7,BALCONY,xx,yy-.64,front+.35));

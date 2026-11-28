@@ -117,7 +117,9 @@ export function createCoinHunt(scene:T.Scene,onCollect:(coin:CoinSpot)=>void,onN
    if(reduced){b.g.position.y=-BUOY_SINK;b.g.rotation.set(0,0,0);buoyHeave.set(b.id,0);continue;}
    swellPose(b.x,b.z,t,0,BUOY_SWELL,buoyPose);const h=buoyPose.heave+.025*Math.sin(t*1.9+b.x);// + a short chop on the long swell
    b.g.position.y=h-BUOY_SINK;b.g.rotation.set(buoyPose.roll,0,buoyPose.pitch);buoyHeave.set(b.id,h);}
-  if(best>=0)setBoatRing(BUOY_RING_SLOT,buoys[best].x,buoys[best].z,0,.62,.62,1);else setBoatRing(BUOY_RING_SLOT,0,0,0,.62,.62,0);}
+  // leftovers B (Nov 27): strength 1.8 (was 1): the foam ring hits the shader's 0.5 cap at the float and the lapping ripples read
+  // at the play camera; 0.7 m outline. Same ring code, 0 ALU.
+  if(best>=0)setBoatRing(BUOY_RING_SLOT,buoys[best].x,buoys[best].z,0,.7,.7,1.8);else setBoatRing(BUOY_RING_SLOT,0,0,0,.62,.62,0);}
  const effects=createCoinEffects(ballGeometry);root.add(effects.root);let time=0,nearText='',enabled=false,lastReduced=false,overManhole:{x:number;z:number}|null=null;
  // Forgiving manholes (user, Sep 26 2026: "finicky, make it easier"). The drop target locks on within RING_ENTER m of an unopened
  // cover while flying, holds while the flyer stays within RING_KEEP m (a released jetpack drifts a few metres) and lingers briefly

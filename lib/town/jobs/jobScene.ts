@@ -6,6 +6,7 @@
  */
 import {newWorkCam,stepWorkCam} from './workCamera';
 import * as T from 'three';
+import {puffGeo} from '../../graphics/softBox';
 import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,jobVariant,bugJobFor,type JobDef} from './jobCatalog';
 import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId,type BugSpot} from './bugScout';
 import {createBugGeometry,mergeColoured} from './bugShape';
@@ -123,6 +124,13 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const fx=createJobFx(root);let lastP={x:0,y:0,z:0},reducedMotion=false;
  const disposables:{dispose:()=>void}[]=[];const keep=<X extends {dispose:()=>void}>(x:X)=>{disposables.push(x);return x;};
  const box=keep(new T.BoxGeometry(1,1,1)),cyl=keep(new T.CylinderGeometry(1,1,1,10));
+ // Leftovers B (Nov 27 2026, owner: "inflatable, less blocky"): crates were the unit box scaled, which a soft box cannot be (its
+ // radii would stretch). A few cached puffed sizes (softBox.ts puffGeo, open bottom, flat top so goods sit in) at unit scale; the
+ // merge bakes their pool-float light (bugShape.ts mergeColoured). ?soft=0 / ?puff=0: the scaled box as before. Same draws.
+ const softSizes=new Map<string,T.BufferGeometry|null>();
+ const crate=(x:number,y:number,z:number,yaw:number,w:number,h:number,d:number,color:string)=>{const k=`${w},${h},${d}`;
+  if(!softSizes.has(k)){const g=puffGeo(w,h,d,{openBottom:true,dome:-1});softSizes.set(k,g?keep(g):null);}
+  const g=softSizes.get(k);return g?{geometry:g,matrix:m4(x,y,z,yaw),color}:{geometry:box,matrix:m4(x,y,z,yaw,w,h,d),color};};
  // ---- Static signs, bins, rebound-wall paint: one merged mesh. ----
  const parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]=[];
  // The Bug squad's night drop-off (one job since Oct 20 2026: the fireflies set is let go here): white posts and bar, a warm lamp on
@@ -138,10 +146,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   }
   if(job.deliver){const d=job.deliver,dy=floor(d.x,d.z),bin=job.id==='court-cleanup'?'#3d7f56':job.id==='leaf-rake'?'#7a5a3a':job.id==='farm-harvest'?'#a67d55':'#2f5c8a';
    if(job.kind==='garden'){// The garden crate (Garden shift drop-off): slatted timber, a darker rim, produce peeking over the top.
-    parts.push({geometry:box,matrix:m4(d.x,dy+.3,d.z,.2,1,.6,.7),color:'#a67d55'});parts.push({geometry:box,matrix:m4(d.x,dy+.61,d.z,.2,1.06,.06,.76),color:'#7a5a3e'});
-    for(const y of [.16,.42])parts.push({geometry:box,matrix:m4(d.x,dy+y,d.z,.2,1.03,.05,.73),color:'#8a6a45'});
+    parts.push(crate(d.x,dy+.3,d.z,.2,1,.6,.7,'#a67d55'));parts.push(crate(d.x,dy+.61,d.z,.2,1.06,.06,.76,'#7a5a3e'));
+    for(const y of [.16,.42])parts.push(crate(d.x,dy+y,d.z,.2,1.03,.05,.73,'#8a6a45'));
     for(const [dx,c] of [[-.25,'#e0413f'],[0,'#f08a2c'],[.25,'#ee9a3a']] as const)parts.push({geometry:box,matrix:m4(d.x+Math.cos(.2)*dx,dy+.62,d.z-Math.sin(.2)*dx,.2,.22,.12,.22),color:c});}
-   else if(job.kind==='sort'){parts.push({geometry:box,matrix:m4(d.x,dy+.4,d.z,.3,1.1,.8,.75),color:'#a67d55'});parts.push({geometry:box,matrix:m4(d.x,dy+.83,d.z,.3,1,.08,.65),color:'#f5eed5'});parts.push({geometry:box,matrix:m4(d.x,dy+.5,d.z,.3,1.14,.08,.79),color:'#7a5a3e'});}
+   else if(job.kind==='sort'){parts.push(crate(d.x,dy+.4,d.z,.3,1.1,.8,.75,'#a67d55'));parts.push(crate(d.x,dy+.83,d.z,.3,1,.08,.65,'#f5eed5'));parts.push(crate(d.x,dy+.5,d.z,.3,1.14,.08,.79,'#7a5a3e'));}
    // Ball kid (Oct 1 2026): an open-topped ball box beside the halfway line (floor, four walls, a white rim); returned balls sit in it.
    else if(job.kind==='carry'){parts.push({geometry:box,matrix:m4(d.x,dy+.04,d.z,0,1.2,.08,.8),color:'#244d40'});
     for(const sz of [-1,1])parts.push({geometry:box,matrix:m4(d.x,dy+.26,d.z+sz*.37,0,1.2,.44,.06),color:'#2f5c8a'},{geometry:box,matrix:m4(d.x+sz*.57,dy+.26,d.z,0,.06,.44,.8),color:'#2f5c8a'});
@@ -211,11 +219,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const basic=(color:string,extra:T.MeshBasicMaterialParameters={})=>own(new T.MeshBasicMaterial({color,...extra}));
  function canvasTexture(w:number,h:number,draw:(g:CanvasRenderingContext2D)=>void){if(typeof document==='undefined')return null;const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');if(!g)return null;draw(g);const t=own(new T.CanvasTexture(c));t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t;}
  /** Painted lines as one merged vertex-colour mesh (static, one draw). */
- type Line={x:number;z:number;w:number;d:number;color?:string;
+ type Line={x:number;z:number;w:number;d:number;color?:string;/** a puffed crate piece (leftovers B) */soft?:boolean;
   /** Height of the box (default: a 2 cm painted line) and the height of its centre above the ground (default: resting on it). */
   h?:number;y?:number};
  function paintLines(group:T.Group,lines:Line[]){
-  const parts=lines.map(l=>{const h=l.h??.02;return {geometry:box,matrix:m4(l.x,floor(l.x,l.z)+(l.y??h/2)+(l.h?0:.005),l.z,0,l.w,h,l.d),color:l.color??'#f5eed5'};});
+  const parts=lines.map(l=>{const h=l.h??.02,y=floor(l.x,l.z)+(l.y??h/2)+(l.h?0:.005);return l.soft?crate(l.x,y,l.z,0,l.w,h,l.d,l.color??'#f5eed5'):{geometry:box,matrix:m4(l.x,y,l.z,0,l.w,h,l.d),color:l.color??'#f5eed5'};});
   const mesh=new T.Mesh(own(mergeColoured(parts)),own(new T.MeshStandardMaterial({vertexColors:true,roughness:.85})));mesh.matrixAutoUpdate=false;group.add(mesh);return mesh;}
  function buildSort(def:JobDef,group:T.Group){
   if(def.task?.type!=='sort')return;const t=def.task,items=t.items;
@@ -243,7 +251,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   *  Built on start, disposed with the other job props; the carried card follows the player, like the kit room's shirts. */
  function buildCrates(def:JobDef,t:{slots:string[];items:{label?:string;color?:string;number:number}[]},group:T.Group){
   const n=Math.max(t.slots.length,t.items.length),cw=Math.floor(1024/n);
-  paintLines(group,def.targets.flatMap(p=>[{x:p.x,z:p.z,w:1.3,d:.9,h:.6,color:'#a67d55'},{x:p.x,z:p.z,w:1.36,d:.96,h:.08,y:.6,color:'#7a5a3e'},{x:p.x,z:p.z,w:1.1,d:.7,h:.02,y:.61,color:'#5b4630'}]));
+  paintLines(group,def.targets.flatMap(p=>[{x:p.x,z:p.z,w:1.3,d:.9,h:.6,color:'#a67d55',soft:true},{x:p.x,z:p.z,w:1.36,d:.96,h:.08,y:.6,color:'#7a5a3e',soft:true},{x:p.x,z:p.z,w:1.1,d:.7,h:.02,y:.61,color:'#5b4630'}]));
   const tex=canvasTexture(1024,256,g=>{g.textAlign='center';g.textBaseline='middle';
    t.slots.forEach((name,i)=>{const x=i*cw;g.fillStyle='#244d40';g.fillRect(x+2,2,cw-4,60);g.fillStyle='#fff1d3';g.font='800 24px Arial, sans-serif';g.fillText(name,x+cw/2,33,cw-12);});
    t.items.forEach((it,i)=>{const x=i*cw,y=72;g.fillStyle='#fff8e5';roundedRect(g,x+6,y,cw-12,176,18);g.fill();g.fillStyle=it.color??'#e8be71';g.beginPath();g.arc(x+cw/2,y+62,44,0,Math.PI*2);g.fill();
@@ -351,7 +359,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    const bar=new T.Mesh(own(new T.CylinderGeometry(.025,.025,.9,6)),std('#244d40'));bar.position.set(-.35,.6,0);bar.rotation.z=-.9;mk.add(body,wheel,bar);mk.visible=false;mk.name='line-marker';group.add(mk);gear.marker=mk;
    gear.trail=new T.InstancedMesh(own(new T.PlaneGeometry(.13,.42)),own(new T.MeshBasicMaterial({color:'#ffffff'})),TRAIL_MAX);gear.trail.name='line-paint';gear.trail.frustumCulled=false;gear.trail.count=0;group.add(gear.trail);}
   if(def.kind==='pump'&&def.task?.type==='pump'){const s=def.targets[0];gear.handle=new T.Mesh(own(new T.BoxGeometry(.8,.08,.08)),std('#244d40'));gear.handle.position.set(s.x,floor(s.x,s.z)+.72,s.z-1);gear.handle.name='pump-handle';group.add(gear.handle);}
-  if(def.kind==='sort'&&def.task?.type==='sort'&&def.task.style==='crates'){const g=own(new T.BoxGeometry(1.3,.06,.9));g.translate(0,0,.45);
+  if(def.kind==='sort'&&def.task?.type==='sort'&&def.task.style==='crates'){const g=own(puffGeo(1.3,.07,.9,{maxR:[.3,.035,.3]})??new T.BoxGeometry(1.3,.06,.9));g.translate(0,0,.45);
    gear.lids=new T.InstancedMesh(g,std('#8a6a45'),def.targets.length);gear.lids.name='snack-crate-lids';gear.lids.frustumCulled=false;gear.lidTilt=def.targets.map(()=>-.35);group.add(gear.lids);paintLids(def);}
   if(def.kind!=='harvest'){gear.pulse=new T.Mesh(own(new T.RingGeometry(.42,.6,32)),own(new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide})));gear.pulse.visible=false;gear.pulse.name='job-pulse';group.add(gear.pulse);}
   if(def.kind==='rebound'){const t=REBOUND_WALL.target;gear.flash=new T.Mesh(own(new T.PlaneGeometry(t.halfWidth*2,t.top-t.bottom)),own(new T.MeshBasicMaterial({color:'#ffe38a',transparent:true,opacity:0,depthWrite:false})));

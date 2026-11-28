@@ -189,7 +189,7 @@ export function buildWestPark(t:Tools):WestParkStats{
    surfaceAreas.push({kind:'path',x,z,w:(rx+POND_RIM)*2*(1+POND_LOBE_MAX),d:(rz+POND_RIM)*2*(1+POND_LOBE_MAX)});}
   // The bed: sandy at the edge, the shelf's olive, then the drop-off down to a dark deep middle (its colour follows the depth profile).
   {const bedMat=createPondBedMaterial();materials.push(bedMat);
-   const ramp=[[0,c('#b3a57a')],[.35,c('#8e8a63')],[POND_DEPTH.shelf,c('#5f6f4c')],[1.4,c('#3a5440')],[2.4,c('#29412f')],[POND_DEPTH.deep,c('#1d3127')]] as const;
+   const ramp=[[0,c('#b3a57a')],[.35,c('#a39870')],[POND_DEPTH.shelf,c('#8f8b64')],[1.4,c('#7d7e5b')],[2.4,c('#6c7253')],[POND_DEPTH.deep,c('#5f684d')]] as const;// owner Nov 27 (shot 220): the sandy, pebbly floor carries on to the middle (was dark green-brown)
    const bedAt=(d:number,a:number)=>{let k=0;while(k<ramp.length-2&&d>ramp[k+1][0])k++;const [d0,c0]=ramp[k],[d1,c1]=ramp[k+1];tc.copy(c0).lerp(c1,Math.min(1,Math.max(0,(d-d0)/(d1-d0))));
     return tc.lerp(sandRimC,sandK(a)*.7*(1-smooth(.2,1.2,d))).clone();};
    const g=rings([{out:.05},{out:-.8},{out:-2},{out:-3.2},{out:-5},{out:-7},{out:-9},{out:-12},{f:.35},{f:0}],(px,pz,a)=>{const d=pondDepthForInset(Math.max(0,pondInset(px,pz)));return {c:bedAt(d,a),v:d};},'aBedDepth');flat(g,bedMat,-.085,'park-pond-bed');}// aBedDepth: the bed shader's pebbles / weed / caustics / fish fade with it (pondWater.ts)

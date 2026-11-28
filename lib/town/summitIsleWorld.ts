@@ -7,7 +7,8 @@
 // Shapes: summitIsle.ts.
 import * as T from 'three';
 import {hutWall,thatchRoof,hutDoor,onDrum} from './thatchHut';
-import {softOn,softLow} from '../graphics/softBox';
+import {PALM_CROWNS} from './palmCrown';
+import {softOn,softLow,puffGeo,type SoftOpts} from '../graphics/softBox';
 import {broadleafTreesOn,broadleafTree} from './broadleafTrees';
 import {depthLowTier} from './townDepth';
 import {trainCutDistance,trackNearest,inTunnelS,trackAt,TUNNEL,TUNNEL_HALF_WIDTH,TUNNEL_BED,MOUTH_IN,drawnPlane} from './trainTrack';
@@ -353,6 +354,14 @@ export function buildSummitIsle(t:SummitTools){
   if(g.index)for(let i=0;i<g.index.count;i++)piece.idx.push(base+g.index.getX(i));else for(let i=0;i<p.count;i++)piece.idx.push(base+i);g.dispose();}
  const at=(x:number,y:number,z:number,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>M.compose(VP.set(x,y,z),Q.setFromEuler(E.set(rx,ry,rz)),VS.set(sx,sy,sz));
  const bakeBox=(piece:Piece,w:number,h:number,d:number,hex:string,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>bake(piece,new T.BoxGeometry(w,h,d),hex,at(x,y,z,rx,ry,rz));
+ /** Leftovers B (Nov 27 2026, owner: the Summit kiosk / booth bits "inflatable"): a puffed soft box (softBox.ts puffGeo) baked with its
+  *  pool-float crown light (lit crown, shaded belly) in the sector piece; ?soft=0 / ?puff=0: the plain bakeBox. Same draw. */
+ const puffBake=(piece:Piece,w:number,h:number,d:number,hex:string,x:number,y:number,z:number,ry=0,o:SoftOpts={})=>{const g=puffGeo(w,h,d,{openBottom:false,...o});
+  if(!g){bakeBox(piece,w,h,d,hex,x,y,z,0,ry,0);return;}
+  const cr=(g.userData.puff as {crown?:Float32Array}|undefined)?.crown,n=g.getAttribute('position').count,sh=new Float32Array(n*3);
+  const py=g.getAttribute('position');// darker belly toward the foot, lit crown (the island bake's puff light, simplified)
+  for(let i=0;i<n;i++){const t=py.getY(i)/h+.5,v=.66+.16*t+.16*(cr&&cr.length===n?cr[i]:0);sh[i*3]=v;sh[i*3+1]=v;sh[i*3+2]=v*.98;}
+  bakeShaded(piece,g,hex,sh,at(x,y,z,0,ry,0));};
  /** A round rod from a to b (open ends: thin cords never show them). */
  const bakeRod=(piece:Piece,a:T.Vector3,b:T.Vector3,r:number,hex:string,seg=6)=>{const l=a.distanceTo(b);Q.setFromUnitVectors(UP,VS.copy(b).sub(a).normalize());M.compose(VP.copy(a).add(b).multiplyScalar(.5),Q,VS.set(1,1,1));bake(piece,new T.CylinderGeometry(r,r,l,seg,1,seg>4),hex,M);};
  const propsAt=(x:number,z:number)=>sectorProps[sectors.indexOf(sectorOf(x,z))];
@@ -385,10 +394,12 @@ export function buildSummitIsle(t:SummitTools){
  const F=SUMMIT_FENCE,PI=SUMMIT_PITCH;
  const nearPitch=(x:number,z:number,r:number)=>Math.abs(x-PI.x)<F.halfX+r&&Math.abs(z-PI.z)<F.halfZ+r;
  function palm(x:number,z:number,h:number,i:number){const y=yAt(x,z),lean=.12+jitter(i,4)*.12,yaw=jitter(i,6)*Math.PI*2,piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
-  bake(piece,new T.CylinderGeometry(.11,.21,h,6),'#9d805b',at(x+Math.cos(yaw)*lean*h/2,y+h/2,z+Math.sin(yaw)*lean*h/2,Math.sin(yaw)*lean,0,-Math.cos(yaw)*lean));
-  const tx=x+Math.cos(yaw)*lean*h,tz=z+Math.sin(yaw)*lean*h,ty=y+h;
+  // Owner shot 212 (Nov 27): the crown hangs from the trunk's REAL tip (its own matrix), not the small-angle estimate (~9 cm low).
+  const TM=at(x+Math.cos(yaw)*lean*h/2,y+h/2,z+Math.sin(yaw)*lean*h/2,Math.sin(yaw)*lean,0,-Math.cos(yaw)*lean),TIP=new T.Vector3(0,h/2,0).applyMatrix4(TM);
+  bake(piece,new T.CylinderGeometry(.11,.21,h,6),'#9d805b',TM);
+  const tx=TIP.x,tz=TIP.z,ty=TIP.y;PALM_CROWNS.push({x,z,where:'summit',gap:0});
   for(let k=0;k<6;k++){const a=k/6*Math.PI*2+i;bakeBox(piece,2.6,.06,.5,k%2?'#5b895e':'#3f7a4f',tx+Math.cos(a)*1.15,ty-.25,tz+Math.sin(a)*1.15,0,-a,-.42);}
-  bake(piece,new T.IcosahedronGeometry(.28,0),'#7a5a3a',at(tx,ty-.35,tz));
+  bake(piece,new T.IcosahedronGeometry(.28,0),'#7a5a3a',at(tx,ty-.14,tz));// the knob covers the trunk's tip
   piece.tid=0;
   obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz},tid,rig:palmRig(x,z,y,{x:tx,y:ty,z:tz})});}
  function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
@@ -524,18 +535,18 @@ export function buildSummitIsle(t:SummitTools){
    if(h.window){// The beach hut: a window on the sea side with a shelf below it (the ball sits on the shelf).
     const wg=yAt(h.x+h.window.x*R,h.z+h.window.z*R);
     bakeBox(piece,.85,.7,.16,'#2c302e',h.x+h.window.x*(R-.02),wg+1.6,h.z+h.window.z*(R-.02),0,yaw(h.window),0);
-    bakeBox(piece,1.05,.07,.42,'#9d805b',h.x+h.window.x*(R+.14),wg+1.02,h.z+h.window.z*(R+.14),0,yaw(h.window),0);
+    puffBake(piece,1.05,.09,.42,'#9d805b',h.x+h.window.x*(R+.14),wg+1.01,h.z+h.window.z*(R+.14),yaw(h.window),{dome:-1});
     for(const s2 of [-.42,.42])bakeBox(piece,.06,.3,.06,'#8a6a48',h.x+h.window.x*(R+.2)-h.window.z*s2,wg+.85,h.z+h.window.z*(R+.2)+h.window.x*s2,0,yaw(h.window),0);}
    if(h.porch){// The rest hut: a thatched porch on two posts and a bench (the ball rolled under it).
     for(const s2 of [-1.25,1.25]){const p=out(R+1.55,s2),y=yAt(p.x,p.z);bakeRod(piece,V(p.x,y-.2,p.z),V(p.x,dg+2.3,p.z),.08,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.26,d:.26});}
-    {const p=out(R+.8);bakeBox(piece,3.1,.16,1.9,'#d7ad62',p.x,dg+2.38,p.z,0,yaw(h.door),0);}
-    {const p=out(R+.75),y=yAt(p.x,p.z);bakeBox(piece,1.7,.08,.44,'#a67d55',p.x,y+.96,p.z,0,yaw(h.door),0);
-     for(const s2 of [-.72,.72]){const q=out(R+.75,s2);bakeBox(piece,.08,.96,.4,'#6b5238',q.x,yAt(q.x,q.z)+.46,q.z,0,yaw(h.door),0);}}}
+    {const p=out(R+.8);puffBake(piece,3.1,.24,1.9,'#d7ad62',p.x,dg+2.4,p.z,yaw(h.door),{seg:2});}
+    {const p=out(R+.75),y=yAt(p.x,p.z);puffBake(piece,1.7,.12,.46,'#a67d55',p.x,y+.94,p.z,yaw(h.door),{dome:-1});
+     for(const s2 of [-.72,.72]){const q=out(R+.75,s2);puffBake(piece,.1,.96,.4,'#6b5238',q.x,yAt(q.x,q.z)+.46,q.z,yaw(h.door),{openBottom:true});}}}
    if(h.id==='fisher'){// A drying rack with a net and a crate beside the door.
     const a=out(.6,R+1.3),b=out(-.9,R+1.6);for(const p of [a,b]){bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,yAt(p.x,p.z)+1.7,p.z),.06,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.22,d:.22});}
     const ay=yAt(a.x,a.z)+1.6,by=yAt(b.x,b.z)+1.6;bakeRod(piece,V(a.x,ay,a.z),V(b.x,by,b.z),.04,'#9d805b',5);
     bake(piece,new T.BoxGeometry(1.5,.9,.04),'#5f7f86',at((a.x+b.x)/2,(ay+by)/2-.48,(a.z+b.z)/2,0,Math.atan2(b.x-a.x,b.z-a.z)+Math.PI/2,0));
-    const c=out(R+.5,-1.35);bakeBox(piece,.7,.55,.6,'#9d805b',c.x,yAt(c.x,c.z)+.27,c.z,0,yaw(h.door)+.3,0);obstacles.push({x:c.x,z:c.z,w:.8,d:.8});}}
+    const c=out(R+.5,-1.35);puffBake(piece,.7,.55,.6,'#9d805b',c.x,yAt(c.x,c.z)+.27,c.z,yaw(h.door)+.3,{openBottom:true});obstacles.push({x:c.x,z:c.z,w:.8,d:.8});}}
   // Caves: two boulders frame the mouth, two more and a big back boulder close the sides and the back, a dark rock fills the
   // recess and a flat capstone overhangs the back half only, so the follow camera (behind a walker coming up to the mouth) sees in.
   // Every part comes from SUMMIT_CAVES, so moving a cave there (the sea cave to the north-west beach, Oct 15 2026) moves its
@@ -554,7 +565,7 @@ export function buildSummitIsle(t:SummitTools){
   // The riddle board at the sandbar landing: two posts, a little roof and three paper notes (the riddles show in the hunt hint).
   {const B=RIDDLE_BOARD,y=yAt(B.x,B.z),ax={x:Math.cos(B.yaw),z:-Math.sin(B.yaw)},n={x:Math.sin(B.yaw),z:Math.cos(B.yaw)},piece=propsAt(B.x,B.z);
    for(const s2 of [-1.05,1.05]){const p={x:B.x+ax.x*s2,z:B.z+ax.z*s2};bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,y+2.45,p.z),.07,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.22,d:.22});}
-   bakeBox(piece,2.3,1.25,.1,'#7a5a3a',B.x,y+1.65,B.z,0,B.yaw,0);bakeBox(piece,2.6,.1,.6,'#b9955a',B.x,y+2.45,B.z,0,B.yaw,0);
+   bakeBox(piece,2.3,1.25,.1,'#7a5a3a',B.x,y+1.65,B.z,0,B.yaw,0);puffBake(piece,2.6,.14,.62,'#b9955a',B.x,y+2.46,B.z,B.yaw);
    for(const [s2,dy,tilt] of [[-.68,.1,.06],[0,-.08,-.04],[.68,.12,.05]] as [number,number,number][])bakeBox(piece,.55,.7,.02,'#f6ecd2',B.x+ax.x*s2+n.x*.06,y+1.65+dy,B.z+ax.z*s2+n.z*.06,0,B.yaw,tilt);
    bake(piece,new T.IcosahedronGeometry(.13,0),'#f4f1e6',at(B.x+n.x*.12,y+2.1,B.z+n.z*.12));}}
  sectorProps.forEach((p,i)=>props(p,'summit-isle-props-'+i));props(SP,'summit-isle-summit-props');

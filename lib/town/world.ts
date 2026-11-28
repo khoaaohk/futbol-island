@@ -65,7 +65,8 @@ import {createShapePicker} from './buildingShapes';
 import {buildSoftHouse,roofDeckColour,roofSlab} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
+import {PALM_CROWNS,PALM_KNOB_COLOR} from './palmCrown';
+import { propBox, puffGeo, puffLevel, softLow, softOn, softPatchGeometry, sillGeometry, SoftBoxGeometry, pebbleGeometry, puffBall, type SoftOpts } from '../graphics/softBox';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {goalPostRadius} from './goalCollisions';
@@ -276,14 +277,21 @@ export function* buildTownSteps(scene: T.Scene) {
     // Soft sweep 2 (west-stadium triangle budget): the rib-less palms (the West Beach's many, seen from the stadium) bend each frond in 6
     // steps, not 8 (its back face doubles every step): 56 triangles less a palm, the same arc at beach distance.
     const FS=ribs||!softOn()?8:6;
+    // Owner shot 212 (Nov 27): the crown hangs from the trunk's REAL tip (the leaning cylinder's top centre: up to ~0.3 m off the axis
+    // on the taller palms), with a knob over the joint; was hung on the axis at y = height (palmCrown.ts, tests/palm-crown.cjs).
+    const tipY=(height+sunk)/2,tip=new T.Vector3(0,tipY,0).applyEuler(trunk.rotation).add(trunk.position),hubX=tip.x,hubY=tip.y-height;
+    // knob: 20 / 8 tris; none on the West Beach's rib-less palms west of x -100 (the west stadium's 115k cap is full; there the
+    // fronds' roots meet over the tip on their own now)
+    if(ribs||x>=-100)put(ribs?new T.IcosahedronGeometry(.17,0):new T.OctahedronGeometry(.16,0),PALM_KNOB_COLOR,tip.x,tip.y-.02,0,group).scale.y=.75;
     for(let i=0;i<7;i++){
       const angle=i/7*Math.PI*2, points:T.Vector3[]=[];
       const positions:number[]=[],indices:number[]=[];
-      for(let j=0;j<=FS;j++){const t=j/FS,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r,y,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<FS){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
+      for(let j=0;j<=FS;j++){const t=j/FS,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r+hubX,y+hubY,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<FS){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
       // Without ribs the frond carries its own back face (a mirrored copy) in a one-step-off palette shade, so it joins the chunk's
       // ordinary front-sided paint batch instead of adding the double-sided one to every West Beach chunk (a draw call each).
       if(!ribs){const n=positions.length/3;positions.push(...positions);for(let k=0,m=indices.length;k<m;k+=3)indices.push(indices[k]+n,indices[k+2]+n,indices[k+1]+n);}
-      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();(geo as unknown as {type:string}).type=PALM_FROND_TYPE;const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),0,0,0,group);if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
+      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();(geo as unknown as {type:string}).type=PALM_FROND_TYPE;const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),hubX,hubY,0,group);
+      if(i===0){group.updateMatrixWorld(true);const hub=new T.Vector3(0,height,0).applyMatrix4(m.matrixWorld),tw=tip.clone().applyMatrix4(group.matrixWorld);PALM_CROWNS.push({x,z,where:'world',gap:hub.distanceTo(tw)});}if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
       if(ribs)for(let j=0;j<points.length-1;j++)line(points[j],points[j+1],.019,'#a1ac6d',group);
     }
     obstacles.push(trunkCollider(x,z,.22));
@@ -307,6 +315,9 @@ export function* buildTownSteps(scene: T.Scene) {
   // roof unit) take the smooth-shaded chamfer (seg 0, 44 tris); the building masses keep their own shapes. ?soft=0: boxes.
   const TRIM:SoftOpts={r:.35,seg:0};
   const trimBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>softly(TRIM,()=>box(w,h,d,c,x,y,z));
+  // Leftovers B (Nov 27): window sills = a 14-tri bullnose strip (softBox.ts sillGeometry; +2 tris a sill). West of x -100 (the west
+  // stadium's 115k chunk cap) and ?soft=0 keep the plain box.
+  const sillBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>softOn()&&x>=-100?put(sillGeometry(w,h,d),c,x,y,z):box(w,h,d,c,x,y,z);
   function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657',scheme:BuildingScheme|null=null){
     const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
     const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
@@ -322,7 +333,7 @@ export function* buildTownSteps(scene: T.Scene) {
       if(knockout&&(floor===0||xx<x+w/2-5))continue;
       // Arcade: keep the wall above the double door clear of windows/balconies.
       if(arcade&&floor>0&&Math.abs(xx-x)<2.4)continue;
-      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
+      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);sillBox(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
       // Signs audit (Nov 25 2026): no first-floor balcony behind the Coaches Centre's NOW OPEN board (its rail's balusters stood
       // 0.4 m in front of the words).
       const nowOpen=label==='PLAYER DEVELOPMENT'&&floor===1&&Math.abs(xx-x)<3.2;
@@ -356,7 +367,7 @@ export function* buildTownSteps(scene: T.Scene) {
     if(scheme&&shape){
       const radius=buildingRadius(label);
       obstacles.push({x,z,w,d,...(radius?{cornerRadius:radius}:{})});
-      buildSoftHouse({put,box,cylinder,sign,trimBox},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
+      buildSoftHouse({put,box,cylinder,sign,trimBox,sillBox},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
       buildings.push({x,z,w,d,height:h+.23,name:label,...(radius?{cornerRadius:radius}:{})});
       return;
     }
@@ -2258,9 +2269,12 @@ export function* buildTownSteps(scene: T.Scene) {
   // A station lantern hangs 0.7 m in front of the house wall: its halo is a soft disc just behind it (never over the lit paper) and a
   // warm wash on the wall; a lantern in the open (the arch) has two crossed discs, each both ways round (the glow is front-sided).
   {type Spot={x:number;y:number;z:number;floor:number;r:number;wx?:number;wz?:number};const spots:Spot[]=STATION_LANTERNS.map(l=>({...l,r:1}));for(const a of CAY_ARCH_LANTERNS)spots.push({...a,r:.8});
-   const n=spots.reduce((s,l)=>s+(l.wx!==undefined?3:5),0);
+   const n=spots.reduce((s,l)=>s+(l.wx!==undefined?4:6),0);
    if(spots.length){const glows=new T.InstancedMesh(poolGeometry,lanternGlowMaterial,n);glows.name='lantern-glows';const q=new T.Quaternion(),yawQ=new T.Quaternion(),up=new T.Vector3(0,1,0),out=new T.Vector3();let k=0;
-    for(const l of spots){poolPosition.set(l.x,l.floor+.03,l.z);poolScale.set(2.8*l.r,1,2.8*l.r);poolMatrix.compose(poolPosition,poolRotation,poolScale);glows.setMatrixAt(k++,poolMatrix);
+    // Leftovers B (Nov 27, "the platform pool is faint"): the floor pool is two stacked discs of the same glow, a wide soft falloff
+    // (3.4 m) plus a tight warm core (1.5 m) right under the lantern: the centre reads ~2x, the edge stays soft (not a brighter flat
+    // disc; the lantern's own emission stays as it was, no peach). +2 triangles a lantern, same draw.
+    for(const l of spots){for(const [size,lift] of [[3.4,.03],[1.5,.035]] as const){poolPosition.set(l.x,l.floor+lift,l.z);poolScale.set(size*l.r,1,size*l.r);poolMatrix.compose(poolPosition,poolRotation,poolScale);glows.setMatrixAt(k++,poolMatrix);}
      if(l.wx!==undefined&&l.wz!==undefined){q.setFromUnitVectors(up,out.set(-l.wx,0,-l.wz));
       for(const [back,size,dy] of [[.3,1.25,0],[.66,2.1,-.25]] as const){poolPosition.set(l.x+l.wx*back,l.y+dy,l.z+l.wz*back);poolScale.set(size,1,size);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}continue;}
      for(const [yaw,tilt] of [[Math.PI/4,1],[-Math.PI/4,1],[Math.PI/4,-1],[-Math.PI/4,-1]]){q.setFromAxisAngle(new T.Vector3(1,0,0),tilt*Math.PI/2);yawQ.setFromAxisAngle(up,yaw);q.premultiply(yawQ);poolPosition.set(l.x,l.y,l.z);poolScale.set(1.35*l.r,1,1.35*l.r);poolMatrix.compose(poolPosition,q,poolScale);glows.setMatrixAt(k++,poolMatrix);}}

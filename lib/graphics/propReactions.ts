@@ -50,6 +50,11 @@ export type PropReactionStyle={
  flicker?:boolean;
  /** Pinned at the base: displacement grows with height (a net billows, its pegs and post feet stay put). */
  anchor?:boolean;
+ /** Owner Nov 27 2026 (shot 218, a ball into a boardwalk rope fence: "the poles come up"): a long prop's rigid tilt about the
+  *  bottom centre of its WHOLE bounds lifted posts metres along it out of the deck (y = base - along x tilt). Planted: every vertex
+  *  leans about the ground right under it (posts stay in the deck, their tops sway a few degrees), and the sway travels out from
+  *  the hit along the fence (`wave` rad/m of phase lag) so the rope / rails ripple like a twanged line, with a small sag. */
+ planted?:boolean;wave?:number;
 };
 
 const S=(o:Partial<PropReactionStyle>&Pick<PropReactionStyle,'freq'|'duration'|'cue'>):PropReactionStyle=>({tilt:0,shake:0,rustle:0,jolt:0,bob:0,damping:4,radius:0,cooldown:1.2,minSpeed:4,...o});
@@ -68,7 +73,7 @@ export const PROP_REACTIONS:Record<PropReactionKind,PropReactionStyle>={
  palm:    S({shake:1.05,rustle:.18,freq:2.2,damping:3,duration:.95,cue:'rustle',minSpeed:1.2}),
  bush:    S({shake:.32,rustle:.12,freq:5,damping:5.5,duration:.6,cue:'rustle',minSpeed:1.2}),
  planter: S({shake:.26,rustle:.1,freq:5,damping:5.5,duration:.6,cue:'rustle',minSpeed:1.2}),
- fence:   S({tilt:.26,freq:5,damping:5,duration:.65,radius:2.4,cue:'tap'}),
+ fence:   S({tilt:.09,freq:5,damping:4.5,duration:.8,radius:2.6,cue:'tap',planted:true,wave:2.2}),
  net:     S({anchor:true,jolt:.4,freq:4,damping:5,duration:.7,radius:1.4,cue:'tap',minSpeed:2}),
  goal:    S({anchor:true,jolt:.42,freq:4.5,damping:5,duration:.7,radius:1.3,cue:'clank',minSpeed:2,cooldown:.6}),
  post:    S({tilt:.08,jolt:.055,freq:6,damping:6.5,duration:.5,cue:'tap'}),
@@ -133,7 +138,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
  let capacity=props.reduce((n,p)=>p.animatable?Math.max(n,p.verts):n,0);
  type Slot={prop:number;age:number;strength:number;gentle:boolean;ux:number;uz:number;hx:number;hz:number;orig:Float32Array|null;lo:Int32Array;hi:Int32Array;light0:number;light2:number};
  const slots:Slot[]=Array.from({length:MAX_ACTIVE},()=>({prop:-1,age:0,strength:0,gentle:false,ux:0,uz:1,hx:0,hz:0,orig:null,lo:new Int32Array(MAX_PARTS),hi:new Int32Array(MAX_PARTS),light0:1,light2:1}));
- let clock=0,active=0;
+ let clock=0,active=0,lastStart:{kind:PropReactionKind;x:number;y:number;z:number}|null=null;
  const stats={hits:0,started:0,reducedHits:0,dropped:0,idleUpdates:0,activeUpdates:0,vertexWrites:0,uploads:0};
 
  /** Which prop (index) a ball at (x,y,z) is touching, or -1: inside its padded bounds, nearest base wins. */
@@ -189,7 +194,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
    if(style.radius>0){const r2=(style.radius*1.6)**2;lo=part.count;hi=0;
     for(let v=0;v<part.count;v++){const j=o+v*3,dx=s.orig![j]-s.hx,dz=s.orig![j+2]-s.hz;if(dx*dx+dz*dz<r2){if(v<lo)lo=v;hi=v+1;}}}
    s.lo[k]=lo;s.hi[k]=hi;o+=part.count*3;}
-  stats.started++;return style.cue;
+  stats.started++;lastStart={kind:p.kind,x,y,z};return style.cue;
  }
 
  function update(dt:number,reduced=false){
@@ -205,7 +210,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
    const env=s.strength*Math.exp(-st.damping*t)*fade*fade,osc=Math.sin(phase);
    const theta=st.tilt*env*osc,shakeA=st.shake*env,sA=osc,sB=.45*Math.sin(phase*1.63+1.1),rustleA=s.gentle?0:st.rustle*env,rs=Math.sin(phase*2.3),rc=Math.cos(phase*2.3);
    const jolt=st.jolt*env*osc,bob=st.bob*env*Math.sin(phase+.6),ux=s.ux,uz=s.uz,px=p.pivot.x,py=p.pivot.y,pz=p.pivot.z,invH=1/p.height;
-   const invR2=st.radius>0?1/(st.radius*st.radius):0,orig=s.orig!,anchor=!!st.anchor,exp=Math.exp;
+   const invR2=st.radius>0?1/(st.radius*st.radius):0,orig=s.orig!,anchor=!!st.anchor,exp=Math.exp,planted=!!st.planted,wave=st.wave??0,amp=st.tilt*env;
    let o=0;
    for(let k=0;k<p.parts.length;k++){const part=p.parts[k],arr=part.attribute.array as Float32Array,lo=s.lo[k],hi=s.hi[k];
     const gain=part.gain??1;
@@ -214,8 +219,12 @@ export function createPropReactions(specs:readonly PropSpec[]){
      let w=gain;if(invR2){const dx=ox-s.hx,dz=oz-s.hz;w*=exp(-(dx*dx+dz*dz)*invR2);}
      if(anchor)w*=h<.6?h/.6:1;
      // Rigid small-angle tilt about the base, toward the ball's travel.
-     const th=theta*w,c=1-th*th*.5,along=rx*ux+rz*uz,moved=along*c+ry*th-along;
-     let x=ox+moved*ux,y=py+ry*c-along*th,z=oz+moved*uz;
+     let x:number,y:number,z:number;
+     if(planted){// lean about the ground under this vertex; the phase lags with distance from the hit (a travelling ripple)
+      const dx=ox-s.hx,dz=oz-s.hz,d=Math.sqrt(dx*dx+dz*dz),th=amp*w*Math.sin(phase-d*wave),hy=ry<0?0:ry;
+      x=ox+hy*th*ux;z=oz+hy*th*uz;y=oy-hy*th*th*.5-.06*Math.abs(th)/(st.tilt||1)*w*(hy>.3?1:hy/.3);}
+     else{const th=theta*w,c=1-th*th*.5,along=rx*ux+rz*uz,moved=along*c+ry*th-along;
+     x=ox+moved*ux;y=py+ry*c-along*th;z=oz+moved*uz;}
      if(shakeA){const sh=shakeA*h*h*w;x+=sh*(ux*sA-uz*sB);z+=sh*(uz*sA+ux*sB);}
      // Leaf shimmer: a position-keyed triangle wave mixed by one sin/cos pair per frame (no trig per vertex; duplicated
      // corners of non-indexed geometry get the same offset, so faces never tear).
@@ -233,6 +242,8 @@ export function createPropReactions(specs:readonly PropSpec[]){
  }
  return {
   hit,find,update,stats,
+  /** The prop kind and hit point of the reaction the last hit() started (null: none yet); read right after hit() (fence dust). */
+  get lastStart(){return lastStart;},
   get count(){return props.length;},
   get active(){return active>0;},
   /**

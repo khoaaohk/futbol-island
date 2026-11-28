@@ -339,7 +339,7 @@ export function puffRun(pts: readonly RunPt[], o: RunOpts): { geo: T.BufferGeome
   const outer: Row[] = [[h, p => p.foot, 0, 0, o.courses ? () => [.74, .8, .7] : undefined]];// courses: a damp, mossy foot
   const nc = o.courses ?? 0;
   if (nc) for (let k = 1; k <= nc; k++) { const f = k / (nc + 1), sway = bel * Math.sin(Math.PI * f);
-    outer.push([h + sway, p => p.foot + (p.top - capH - p.foot) * f, 0, 0, i => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, r = v - Math.floor(v), d = k % 2 ? .97 + .1 * r : .76 + .06 * r; return [d * 1.02, d, d * .96]; }]); }// odd rows: a block's face (each a little lighter / darker), even: the bed line between courses
+    outer.push([h + sway, p => p.foot + (p.top - capH - p.foot) * f, 0, 0, i => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, r = v - Math.floor(v), d = k % 2 ? .98 + .2 * r : .5 + .06 * r; return k % 2 ? [d * 1.03, d, d * .95] : [d * .96, d, d * 1.02]; }]); }// leftovers B: bed lines .5 (were .76) cool mortar grey, block faces .98-1.18 warm (each a little different): bands read at the play camera// odd rows: a block's face (each a little lighter / darker), even: the bed line between courses
   else if (bel > 0) outer.push([h + bel, p => (p.foot + p.top - capH) / 2, 0, 0]);
   outer.push([h, p => p.top - capH, 0, 0, o.courses ? () => [.8, .8, .8] : undefined], [h + lip, p => p.top - capH * .55, 1, 0], [h + lip * .55, p => p.top - capH * .04, 1, .25],
     [h * .5, p => p.top + dome * .75, 1, .7], [0, p => p.top + dome, 1, 1]);
@@ -420,4 +420,32 @@ export function roundCyl(rt: number, rb: number, h: number, n = 8, e = Math.min(
 export function domeCap(r: number, h: number, n = 8) {
   const pts = [new T.Vector2(r, 0), new T.Vector2(r * .86, h * .42), new T.Vector2(r * .55, h * .82), new T.Vector2(r * .2, h * .98), new T.Vector2(0, h)];
   const g = new T.LatheGeometry(pts.reverse(), n); g.computeVertexNormals(); return g;
+}
+/**
+ * Leftovers B (Nov 27 2026, window sills "still boxy"; a full puff costs +23k island-wide): a bullnose sill strip, w (x) x h x d (z),
+ * centred like a box, front = +z. Profile (back top, front-top shoulder, nose, front-bottom shoulder, back bottom), back face left out
+ * (it sits on the wall), smooth normals up -> forward -> down round the nose so the lit edge reads round from the play camera.
+ * 14 triangles (a box is 12). The caller keeps plain boxes where a budget is full (west stadium cap).
+ */
+export function sillGeometry(w: number, h: number, d: number) {
+  const hx = w / 2, hy = h / 2, hz = d / 2, r = Math.min(hy, hz * .8);
+  const prof: [number, number, number, number][] = [[hy, -hz, 1, 0], [hy, hz - r, 1, 0], [0, hz, 0, 1], [-hy, hz - r, -1, 0], [-hy, -hz, -1, 0]]; // y, z, ny, nz
+  const pos: number[] = [], nor: number[] = [], idx: number[] = [];
+  for (const [y, z, ny, nz] of prof) for (const x of [-hx, hx]) { const l = Math.hypot(ny, nz); pos.push(x, y, z); nor.push(0, ny / l, nz / l); }
+  const tri = (a: number, b: number, c: number, nx: number, ny: number, nz: number) => {
+    const A = a * 3, B = b * 3, C = c * 3, ux = pos[B] - pos[A], uy = pos[B + 1] - pos[A + 1], uz = pos[B + 2] - pos[A + 2], vx = pos[C] - pos[A], vy = pos[C + 1] - pos[A + 1], vz = pos[C + 2] - pos[A + 2];
+    const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+    (cx * nx + cy * ny + cz * nz >= 0) ? idx.push(a, b, c) : idx.push(a, c, b);
+  };
+  for (let i = 0; i < prof.length - 1; i++) {
+    const a = i * 2, b = a + 1, c = a + 2, e = a + 3, mny = prof[i][2] + prof[i + 1][2], mnz = prof[i][3] + prof[i + 1][3];
+    tri(a, b, e, 0, mny, mnz); tri(a, e, c, 0, mny, mnz);
+  }
+  for (const s of [-1, 1]) {
+    const base = pos.length / 3;
+    for (const [y, z] of prof) { pos.push(s * hx, y, z); nor.push(s, 0, 0); }
+    for (let i = 1; i < prof.length - 1; i++) tri(base, base + i, base + i + 1, s, 0, 0);
+  }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(nor, 3)); g.setIndex(idx);
+  return g;
 }

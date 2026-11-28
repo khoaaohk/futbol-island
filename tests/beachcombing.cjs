@@ -56,6 +56,14 @@ const world=load('lib/town/world.ts').buildTown(new T.Scene());
 const obstacles=[...world.obstacles,...world.buildings],paved=[...world.surfaceAreas,...world.roads];
 const W=RT.beachWorld(obstacles,paved);
 const valid={};for(const z of B.BEACH_ZONES){valid[z.id]=B.zoneCandidates(z).filter(c=>B.spotOk(c,W));assert(valid[z.id].length>=z.perDay*4,`${z.id}: plenty of valid spots (${valid[z.id].length})`);}
+// Owner Nov 27 2026 (shots 210 / 211: a find's marker over the Island Line's ballast): no valid spot within FIND_LINE_CLEAR of the line
+// (outside the tunnel) or FIND_PAVED_CLEAR of a laid surface; and a candidate the test moves onto the track is refused.
+{const Tk=load('lib/town/trainTrack.ts');let checked=0;
+ for(const id in valid)for(const c of valid[id]){checked++;const h=Tk.trackNearest(c.x,c.z,8);
+  assert(!h||h.d>=B.FIND_LINE_CLEAR||Tk.inTunnelS(h.s),`${c.key} sits ${h&&h.d.toFixed(2)} m from the track`);
+  assert(!paved.some(r=>Math.abs(c.x-r.x)<r.w/2+B.FIND_PAVED_CLEAR-1e-6&&Math.abs(c.z-r.z)<r.d/2+B.FIND_PAVED_CLEAR-1e-6&&!(r.kind==='sand'&&Math.max(r.w,r.d)>60)),`${c.key} within 2 m of a laid surface`);}
+ const onLine={key:'t',zone:'north-beach',x:Tk.TRACK.x[40],z:Tk.TRACK.z[40],y:0,sx:1,sz:0};assert(B.nearLine(onLine.x,onLine.z),'a point on the line is near it');
+ console.log(`finds clear of the line and paths: ${checked} valid spots`);}
 const sandCheck=s=>{
  if(s.zone==='north-beach'||s.zone==='south-beach'){const p=shore.ISLAND_SHORE.reduce((b,q)=>Math.hypot(q.x-s.x,q.z-s.z)<Math.hypot(b.x-s.x,b.z-s.z)?q:b);
   return shore.onIsland(s.x,s.z)&&shore.distanceToShore(s.x,s.z)<=shore.shoreSandWidth(p)+.5&&shore.distanceToShore(s.x,s.z)>=1;}

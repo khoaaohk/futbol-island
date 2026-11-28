@@ -15,6 +15,7 @@
  *    box tests. `?beach=0` turns it all off (A/B heat runs).
  */
 import * as T from 'three';
+import {createPickupGlints,GLINT_LIFT} from './pickupGlint';
 import {BEACH_ZONES,BEACHCOMB,beachFindById,zoneCandidates,spotOk,zoneSpots,localBeachDay,readBeach,writeBeach,recordFind,takenToday,promptLabel,findNote,beachStore,beachActions,
  type BeachCandidate,type BeachIsland,type BeachSave,type BeachSpot,type BeachShape,type BeachWorld} from '../town/beachcombing';
 import {insideObstacle,type Obstacle} from '../town/simulation';
@@ -118,9 +119,10 @@ export function createBeachFinds(scene:T.Scene,ports:Ports){
  const stats={islands:0,spots:0,checks:0,taken:0,putBack:0,looked:0,busyFrames:0,idleFrames:0,get drawn(){return isles.filter(i=>i.mesh?.visible).length+(sparkles.visible?1:0)+anims.length;}};
 
  // ---- sparkles: one instanced mesh, the nearest finds only
- const sparkGeo=new T.OctahedronGeometry(.16,0),sparkMat=new T.MeshBasicMaterial({color:'#fff4c4'});
- const sparkles=new T.InstancedMesh(sparkGeo,sparkMat,BEACHCOMB.maxSparkles);sparkles.name='beach-sparkles';sparkles.frustumCulled=false;sparkles.visible=false;sparkles.count=0;root.add(sparkles);
- const D=new T.Object3D();let sparkTime=0,sparkList:BeachSpot[]=[],sparkPick=0;
+ // Owner Nov 27 (shots 210 / 211): a small camera-facing glint just over the find + a faint glow on the sand (pickupGlint.ts), not a
+ // white diamond card hanging 0.75 m up. Same one draw.
+ const glints=createPickupGlints(BEACHCOMB.maxSparkles,'beach-sparkles'),sparkles=glints.mesh;sparkles.visible=false;root.add(sparkles);
+ let sparkTime=0,sparkList:BeachSpot[]=[],sparkPick=0;
 
  /** Build one island: check its candidates (a zone per call) and, when all are checked, draw today's untaken finds. */
  function step(isle:Isle){
@@ -203,8 +205,8 @@ export function createBeachFinds(scene:T.Scene,ports:Ports){
     sparkList.sort((a,b)=>Math.hypot(a.x-c.x,a.z-c.z)-Math.hypot(b.x-c.x,b.z-c.z));sparkList.length=Math.min(sparkList.length,BEACHCOMB.maxSparkles);}
    if(sparkList.length){work=true;sparkTime+=c.reduced?0:c.dt;
     sparkList.forEach((s,i)=>{const ph=(s.x*1.7+s.z*.9)%6.28,tw=c.reduced?1:.55+.45*Math.max(0,Math.sin(sparkTime*2.6+ph));
-     D.position.set(s.x,s.y+.75+.06*Math.sin(sparkTime*1.4+ph),s.z);D.rotation.set(0,sparkTime*1.5+ph,0);D.scale.set(tw*.8,tw*1.5,tw*.8);D.updateMatrix();sparkles.setMatrixAt(i,D.matrix);});
-    sparkles.count=sparkList.length;sparkles.instanceMatrix.needsUpdate=true;if(!sparkles.visible)sparkles.visible=true;}
+     glints.set(i,s.x,s.y,s.z,GLINT_LIFT+(c.reduced?0:.04*Math.sin(sparkTime*1.4+ph)),tw);});
+    glints.commit(sparkList.length);if(!sparkles.visible)sparkles.visible=true;}
    else if(sparkles.visible){sparkles.visible=false;sparkles.count=0;}
    // ---- pickups under way
    for(let i=anims.length-1;i>=0;i--){const a=anims[i];work=true;a.t+=c.dt;const k=Math.min(1,a.t/a.dur);
@@ -227,7 +229,7 @@ export function createBeachFinds(scene:T.Scene,ports:Ports){
   dispose(){if(typeof window!=='undefined')window.removeEventListener('keydown',onKey);beachActions.take=()=>{};beachStore.reset();
    for(const a of anims){a.mesh.geometry.dispose();}anims.length=0;
    for(const i of isles){if(i.mesh){i.mesh.geometry.dispose();i.mesh=null;}}
-   root.removeFromParent();sparkles.dispose();sparkGeo.dispose();sparkMat.dispose();mat.dispose();},
+   root.removeFromParent();sparkles.dispose();glints.dispose();mat.dispose();},
  };
 }
 export type BeachFinds=ReturnType<typeof createBeachFinds>;
