@@ -53,8 +53,10 @@ uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPon
    .replace('#include <color_fragment>',`#include <color_fragment>
 {float dd=vSea,e=smoothstep(0.,1.,vEdge);
  vec3 shallowC=mix(${SEA_GLSL.lagoon},${SEA_GLSL.aqua},smoothstep(.3,5.,dd));diffuseColor.rgb=mix(diffuseColor.rgb,shallowC,(1.-smoothstep(3.,24.,dd))*.7);
- diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep}*.8,smoothstep(8.,30.,dd)*.92);
- diffuseColor.rgb=mix(vec3(.5,.62,.52),diffuseColor.rgb,e)*uWaterNight;diffuseColor.a*=mix(.18,1.,e)*mix(.38,1.,smoothstep(1.5,22.,dd));
+ // owner Nov 27 (shot 220: "the water in the middle is too different ... more see-through"): the middle continues the shallow
+ // ring's clear look with a gentle teal shift (was the sea's deep blue at 92 %, nearly opaque), so the bed, stones and koi show.
+ diffuseColor.rgb=mix(diffuseColor.rgb,mix(${SEA_GLSL.aqua},${SEA_GLSL.deep},.35),smoothstep(6.,30.,dd)*.42);
+ diffuseColor.rgb=mix(vec3(.5,.62,.52),diffuseColor.rgb,e)*uWaterNight;diffuseColor.a*=mix(.18,1.,e)*mix(.38,.6,smoothstep(1.5,22.,dd));
  // polish Nov 27 2026 (owner: "more depth and visually more appealing"): a soft broken foam ring a little in from the bank
  // (vEdge .1-.5 = ~0.2-0.8 m out) that breathes with the ripple clock.
  {vec2 p=vPondXZ;float t=uWaterTime,band=smoothstep(.04,.18,vEdge)*(1.-smoothstep(.3,.62,vEdge));
@@ -72,7 +74,7 @@ uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPon
  {vec2 c=floor(vPondXZ*3.3),f=fract(vPondXZ*3.3)-.5;float h=fract(sin(dot(c,vec2(127.1,311.7)))*43758.55),tw=sin(uWaterTime*2.6+h*40.+(pRip.x+pRip.y)*30.);
   float day=smoothstep(.55,.95,dot(uWaterNight,vec3(.3333)));totalEmissiveRadiance+=vec3(1.,.97,.88)*step(.82,h)*smoothstep(.9,1.,tw)*smoothstep(.16,.04,length(f))*day*.9*smoothstep(.35,.8,vEdge);}}`);
  };
- m.customProgramCacheKey=()=>'park-pond-water-v3-foam';
+ m.customProgramCacheKey=()=>'park-pond-water-v4-clear';
  return m;
 }
 
@@ -92,6 +94,8 @@ export function createPondPadMaterial(){
  *  water on their own closed loops. ~40 ALU + 6 sin a fragment over the bed only (the pond's chunk, behind the west gate).
  *  The clock is the island's water clock (held still for reduced motion and the static heat tiers). */
 export const POND_FISH=3;
+/** Underwater boulder clusters drawn on the pond bed (owner Nov 27 shot 220), 3 rounded stones each, 0 triangles. */
+export const POND_ROCKS=6;
 /** After the albedo is final: the ground tint swaps the bed to its own Lambert program (no roughness chunk there). */
 const BED_HOOK=(frag:string)=>frag.includes('#include <specularmap_fragment>')?'#include <specularmap_fragment>':'#include <roughnessmap_fragment>';
 export function createPondBedMaterial(){
@@ -103,7 +107,7 @@ export function createPondBedMaterial(){
   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nuniform float uWaterTime;uniform vec3 uWaterNight;varying float vBedDepth;varying vec2 vBedXZ;')
    .replace(BED_HOOK(s.fragmentShader),`${BED_HOOK(s.fragmentShader)}
 {float dep=vBedDepth,t=uWaterTime;vec2 p=vBedXZ;
- float near=1.-smoothstep(.5,2.6,dep);
+ float near=1.-.45*smoothstep(.5,2.6,dep);// the pebbles carry on into the middle (owner shot 220: one clear pond)
  vec2 ce=floor(p*1.35),fc=fract(p*1.35)-.5;float h=fract(sin(dot(ce,vec2(127.1,311.7)))*43758.55);vec2 o=vec2(fract(h*13.1),fract(h*7.7))-.5;
  vec2 sd=(fc-o*.4)*vec2(1.,1.3);float sl=length(sd),sr=.2+.14*h,st=smoothstep(sr,sr-.07,sl)*step(.4,h);
  // leftovers B: bigger (0.74 m cells), more contrasted stones with a lit top-left rim and a dark contact edge: read at the play camera
@@ -119,8 +123,15 @@ export function createPondBedMaterial(){
   diffuseColor.rgb*=1.-.62*clamp(body,0.,1.)*smoothstep(.3,1.1,dep);}
  vec2 q=p*.95;q+=.45*vec2(sin(q.y*1.3+t*.7),sin(q.x*1.2-t*.6));q+=.25*vec2(sin(q.y*2.7-t*.9),sin(q.x*2.5+t*.8));
  float ca=pow(1.-.5*abs(sin(q.x*2.4)+sin(q.y*2.4)),9.);float day=smoothstep(.55,.95,dot(uWaterNight,vec3(.3333)));
- diffuseColor.rgb+=vec3(.95,1.,.86)*ca*day*(.03+.3*(1.-smoothstep(.3,2.2,dep)))*smoothstep(.02,.25,dep);}`);};
- m.customProgramCacheKey=()=>key.call(m)+'-pondbed-v2';
+ diffuseColor.rgb+=vec3(.95,1.,.86)*ca*day*(.17+.16*(1.-smoothstep(.3,2.2,dep)))*smoothstep(.02,.25,dep);
+ // Underwater boulders (owner shot 220): ${POND_ROCKS} clusters of rounded stones drawn on the bed (0 triangles): a lit crown toward the
+ // sun, a dark rim and a soft contact shadow, a little bluer with depth. One bounding test a cluster; stones only inside it.
+ for(int i=0;i<${POND_ROCKS};i++){float fi=float(i),a=fi*2.39+.7;vec2 c=vec2(${F(P.x)},${F(P.z)})+vec2(cos(a)*${F(P.rx)},sin(a)*${F(P.rz)})*(.3+.09*mod(fi*3.,4.));
+  vec2 d=p-c;if(dot(d,d)<4.){for(int j=0;j<3;j++){float fj=float(j);vec2 o=vec2(cos(fi*1.7+fj*2.1),sin(fi*1.3+fj*2.1))*(.25+.35*fj)*step(.5,fj);float r=.75-.18*fj;
+    vec2 q=(d-o)/r;float l=length(q*vec2(1.,1.15));if(l<1.25){float body=smoothstep(1.,.88,l),sh=smoothstep(1.25,.95,length(q-vec2(.18,.22)))*(1.-body);
+     float lit=clamp(.55-.75*dot(q,vec2(-.6,-.55)),0.,1.);vec3 st=vec3(.5,.49,.44)*(.55+.75*(1.-l*l)*lit)*mix(vec3(1.),vec3(.82,.95,1.),smoothstep(.6,2.6,dep));
+     diffuseColor.rgb=mix(diffuseColor.rgb*(1.-.35*sh),st,body);}}}}}`);};
+ m.customProgramCacheKey=()=>key.call(m)+'-pondbed-v3';
  return m;}
 /** The trails' paving: vertex colours (the cream path, blending to the beach sand where a trail runs onto the beach). */
 export function createTrailMaterial(){return applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85}),'trail');}

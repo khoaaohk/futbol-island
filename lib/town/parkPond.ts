@@ -23,7 +23,7 @@ import {POND_NET} from './pondBugs';
  * no dragonflies, sparser ripples. Still mode (reduced motion, static ambience): everything holds still (no ripples, no splashes).
  * No allocation per frame.
  */
-export const POND_LIFE={near:90,koi:[7,4] as const,flies:2,scatter:6,flyFlee:3.2,stepEvery:.42,ballDrop:.35} as const;
+export const POND_LIFE={near:90,koi:[10,5] as const,flies:2,scatter:6,flyFlee:3.2,stepEvery:.42,ballDrop:.35} as const;
 /**
  * The player in the water (Nov 13 2026, owner N5): landing in the pond, footsteps through it and riding through it.
  *  - Landing (a jump, the jetpack's or the parachute's touchdown, a fall): the shared splash-down crown (ballEffects.splashDown via
@@ -180,7 +180,9 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
    // Koi: cruise to a wander point, keep inside the water, bolt from a walker or a fresh splash.
    const n=i.mode===1||o.phone?POND_LIFE.koi[1]:cap;
    for(let k=0;k<n;k++){let ax=F.tx[k]-F.x[k],az=F.tz[k]-F.z[k];const d=Math.hypot(ax,az);
-    if(d<1.2){inside(.75);F.tx[k]=pick.x;F.tz[k]=pick.z;}
+    // owner Nov 27 ("need to see some fish moving"): koi swim in loose groups of ~3: a group's leader picks the spot, the others
+    // follow a little to one side (the water is see-through over the middle now, so they read from the play camera)
+    if(d<1.2){if(k%3===0){inside(.75);F.tx[k]=pick.x;F.tz[k]=pick.z;}else{const L=k-k%3,o=k%3===1?1:-1;F.tx[k]=F.x[L]+o*.9-F.vx[L]*.4;F.tz[k]=F.z[L]+o*.6-F.vz[L]*.4;}}
     const dp=Math.hypot(F.x[k]-i.x,F.z[k]-i.z),ds=splashAge<1?Math.hypot(F.x[k]-sx,F.z[k]-sz):99;
     if(dp<POND_LIFE.scatter&&(i.onGround||dp<2)||ds<POND_LIFE.scatter+1){const fx=dp<ds?i.x:sx,fz=dp<ds?i.z:sz,l=Math.hypot(F.x[k]-fx,F.z[k]-fz)||1;F.flee[k]=1.2;
      const ex=cx+(F.x[k]-fx)/l*rx*.7,ez=cz+(F.z[k]-fz)/l*rz*.7;F.tx[k]=ex;F.tz[k]=ez;ax=ex-F.x[k];az=ez-F.z[k];}
