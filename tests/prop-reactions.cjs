@@ -95,6 +95,14 @@ function merged(){
  const fence=utils.mergeGeometries(posts),fa=fence.getAttribute('position'),f=R.createPropReactions([{kind:'fence',parts:[{attribute:fa,start:0,count:fa.count}],min:{x:0,y:0,z:-.1},max:{x:19,y:1,z:.1}}]);
  f.hit(10,.6,.3,0,-20);f.update(.03,false);const fr=fa.updateRanges[fa.updateRanges.length-1];assert(fr.count<fa.count*3*.5,'ripple uploads a local range only');
  for(let i=0;i<60;i++)f.update(1/60,false);
+ // Owner Nov 27 2026 (shot 218, "the poles come up"): a hit far from a long fence's middle (the old pivot) never lifts a post out of
+ // the ground: every foot stays put (< 1 cm) and nothing rises (< 1 cm), while the tops near the hit still sway (> 2 cm).
+ {const orig=Float32Array.from(fa.array);let foot=0,rise=0,sway=0;f.update(.5,false);f.hit(2,.6,.3,0,-28);
+  for(let i=0;i<40;i++){f.update(1/60,false);const a=fa.array;for(let v=0;v<fa.count;v++){const y0=orig[v*3+1],dy=a[v*3+1]-y0,dz=Math.abs(a[v*3+2]-orig[v*3+2]);
+   if(y0<.01)foot=Math.max(foot,Math.abs(dy),dz,Math.abs(a[v*3]-orig[v*3]));rise=Math.max(rise,dy);if(y0>.9)sway=Math.max(sway,dz);}}
+  for(let i=0;i<60;i++)f.update(1/60,false);
+  assert(foot<.01&&rise<.01&&sway>.02,`fence planted: foot ${foot.toFixed(3)} rise ${rise.toFixed(3)} sway ${sway.toFixed(3)}`);
+  console.log(`PASS fence planted: feet move ${foot.toFixed(4)} m, nothing rises (${rise.toFixed(4)} m), tops sway ${sway.toFixed(3)} m`);}
  console.log('PASS at most '+R.MAX_ACTIVE+' animate at once (extra hits sound only), ripple rewrites a local range');
 }
 
