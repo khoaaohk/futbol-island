@@ -122,10 +122,6 @@ export function buildCoralCay(t:CayTools){
   strip(a,b,()=>-4,()=>4,-.01,-.01,'#737c75',false,12,'asphalt');// Nov 10 2026: tinted like the main island's carriageways
   for(const side of [-1,1])strip(a,b,()=>side*4,p=>side*paveHalf(p),-.02,-.02,'#eddfbb',false,12,'path');
  }
- // Leftovers A2 (paths NOTE item 176: a faint pale hairline at the junction / causeway joint, dotted lines in the eased junction): the
- // town's eased junction grid and this ribbon meet on a T (their vertices do not match), so pixel cracks showed what lay behind. One
- // asphalt underlay 0.2 m under both (the junction + the joint) makes any crack read as road. 2 triangles, batched (no draw).
- {const u=new T.PlaneGeometry(12,9);u.rotateX(-Math.PI/2);tintGroundMesh(put(u,'#737c75',CAUSEWAY.roadStart-3,-.2,z0),'asphalt');}
  // Over the water the embankment slopes gently into the sea (no vertical cliff): a stone skirt, then — wherever sand or
  // stone meets the sea — a soft foam line (the main coast's pale waterline colour) and two shallow-water tints.
  // Shoreline widths: `contact` is where each side reaches the water. Long pieces keep these extra colours to a few batches.
