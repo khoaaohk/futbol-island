@@ -26,11 +26,15 @@ const centroid=(ring:Pt[])=>({x:ring.reduce((a,p)=>a+p.x,0)/ring.length,z:ring.r
 
 export type OpenSummary={openCells:number;openArea:number;regions:number;largestCells:number;largestKind:string;largestAt:number[];grassLargest:number[];sandCells:number;grassCells:number;coverageBefore:number;coverageAfter:number;macro:number};
 /** The three islands' ground, bounds and shore, shared by the decal plan and the open-space scan (tests call `scanIslands`). */
+/** Leftovers A2 (owner 219, Nov 27 2026: "remove ... any grass on the boardwalk"): timber decks on land (the south boardwalk, the
+ *  ferry dock, the east promenade deck) keep every tuft, clump, flower, pebble and shell off them (+0.5 m: blades lean). Decks over
+ *  open water (piers, jetties) never get ground scatter (the scan only seeds sand and lawn). */
+export const DECK_RECTS:readonly Rect[]=[{x:129.5,z:211,w:162,d:9},{x:224,z:202.5,w:29,d:26},{x:224,z:110,w:29,d:161}];
 function setups(w:DecalWorld){
  const venues:Rect[]=VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6}));
  const fixed:Rect[]=[...venues,{x:BEACH_COURT.x,z:BEACH_COURT.z,w:BEACH_COURT.length+6,d:BEACH_COURT.width+6},
   {x:ROUNDABOUT.x,z:ROUNDABOUT.z,w:(ROUNDABOUT.roadOuter+2)*2,d:(ROUNDABOUT.roadOuter+2)*2},{x:(CAY_BOULEVARD.x0+CAY_BOULEVARD.x1)/2,z:CAY_BOULEVARD.z,w:CAY_BOULEVARD.x1-CAY_BOULEVARD.x0+4,d:CAY_BOULEVARD.half*2+4},
-  {x:SUMMIT_PITCH.x,z:SUMMIT_PITCH.z,w:SUMMIT_PITCH.length+16,d:SUMMIT_PITCH.width+16}];
+  {x:SUMMIT_PITCH.x,z:SUMMIT_PITCH.z,w:SUMMIT_PITCH.length+16,d:SUMMIT_PITCH.width+16},...DECK_RECTS];
  const rects=[...w.obstacles,...w.buildings,...w.roads,...w.surfaceAreas,...fixed];
  const wide=new RectIndex(rects,OPEN_MARGIN),macroBlocked=new RectIndex(rects,.9);
  const bbox=(ring:Pt[])=>({minX:Math.min(...ring.map(p=>p.x)),maxX:Math.max(...ring.map(p=>p.x)),minZ:Math.min(...ring.map(p=>p.z)),maxZ:Math.max(...ring.map(p=>p.z))});
@@ -68,7 +72,7 @@ function planSmallDecals(w:DecalWorld):{main:DecalPlan;cay:DecalPlan;summit:Deca
  const venues:Rect[]=VENUES.map(v=>({x:v.x,z:v.z,w:v.width+6,d:v.length+6}));
  const fixed:Rect[]=[...venues,{x:BEACH_COURT.x,z:BEACH_COURT.z,w:BEACH_COURT.length+6,d:BEACH_COURT.width+6},
   {x:ROUNDABOUT.x,z:ROUNDABOUT.z,w:(ROUNDABOUT.roadOuter+2)*2,d:(ROUNDABOUT.roadOuter+2)*2},{x:(CAY_BOULEVARD.x0+CAY_BOULEVARD.x1)/2,z:CAY_BOULEVARD.z,w:CAY_BOULEVARD.x1-CAY_BOULEVARD.x0+4,d:CAY_BOULEVARD.half*2+4},
-  {x:SUMMIT_PITCH.x,z:SUMMIT_PITCH.z,w:SUMMIT_PITCH.length+16,d:SUMMIT_PITCH.width+16}];
+  {x:SUMMIT_PITCH.x,z:SUMMIT_PITCH.z,w:SUMMIT_PITCH.length+16,d:SUMMIT_PITCH.width+16},...DECK_RECTS];
  const blocked=new RectIndex([...w.obstacles,...w.buildings,...w.roads,...w.surfaceAreas,...fixed],.45);
  const near=[...w.roads,...w.buildings,...w.surfaceAreas.filter(s=>s.w>=1&&s.d>=1)];
  // ---- main island: the coast ring's sand band; the lawn beside paths, roads and buildings

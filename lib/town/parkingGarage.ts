@@ -121,9 +121,12 @@ export function buildParkingGarage(o:{doc:Document;textures:T.Texture[];material
  for(let i=0;i<8;i++){const seg=GARAGE_ENTRANCE.w/8;parts.push(rounded(seg,.2,.2,.07,i%2?BLACK:YELLOW,doorL+seg*(i+.5),hy,hz,1));}
  for(const x of [doorL+.4,doorR-.4])parts.push(rounded(.06,5.4-hy,.06,.025,BLACK,x,(5.4+hy)/2,hz,1));
  // Ceiling paint (a plane facing down, never a landable canopy) and the strip lights' channels
- const ceil=new T.PlaneGeometry(wid,len);ceil.rotateX(Math.PI/2);ceil.translate(11,G.ceilingY,(G.minZ+G.maxZ)/2);parts.push({g:ceil,color:CEILING});
+ const ceil=new T.PlaneGeometry(wid,len);ceil.rotateX(Math.PI/2);ceil.translate(11,G.ceilingY,(G.minZ+G.maxZ)/2);
+ // Leftovers A2 (garage NOTE: "the ceiling reads brown"): a downward face only took the hemisphere's GROUND colour (brown). Its light
+ // normals now face up (the sky term: a pale concrete underside), shading is unchanged geometry; 0 triangles, 0 draws.
+ {const N=ceil.getAttribute('normal');for(let i=0;i<N.count;i++)N.setXYZ(i,0,1,0);}parts.push({g:ceil,color:CEILING});
  const strips:T.BufferGeometry[]=[];
- for(const x of [5.9,21.9])for(let z=-7.5;z<=43.5;z+=4.25){const s=softBox(.26,.07,1.8,1,.03);s.translate(x,G.ceilingY-.06,z);strips.push(s.toNonIndexed());}// over the two aisles
+ for(const x of [5.9,21.9])for(let z=-7.5;z<=43.5;z+=4.25){const s=softBox(.7,.05,2.4,1,.03);/* leftovers A2: wider lit panels (were .26 x 1.8 strips) */s.translate(x,G.ceilingY-.06,z);strips.push(s.toNonIndexed());}// over the two aisles
  for(const [x,z] of [[21.9,44.2],[GARAGE_ENTRANCE.x,41.61]])for(const dx of [-.55,.55])parts.push(rounded(.05,.62,.05,.02,BLACK,x+dx,G.ceilingY-.3,z,1));// EXIT sign hangers
  // Cars (the street kit as-is, vertex colours; the wheel / lamp tags are dropped: these never move)
  const cars:T.BufferGeometry[]=[];
@@ -147,7 +150,7 @@ export function buildParkingGarage(o:{doc:Document;textures:T.Texture[];material
  ])!;
  const signs=new T.Mesh(sg,signMat);signs.name='parking-garage-signs';root.add(signs);
  // Strip lights: soft by day, brighter at night (world.ts night sign pass: userData.nightGlow)
- const stripMat=new T.MeshStandardMaterial({color:'#fff8e6',emissive:'#fff0c8',emissiveIntensity:.45,roughness:.6});stripMat.userData.nightGlow=1.5;o.materials.push(stripMat);o.nightSigns.push(stripMat);
+ const stripMat=new T.MeshStandardMaterial({color:'#fff8e6',emissive:'#fff0c8',emissiveIntensity:.85,roughness:.6});stripMat.userData.nightGlow=1.6;o.materials.push(stripMat);o.nightSigns.push(stripMat);
  const lights=new T.Mesh(mergeGeometries(strips,false)!,stripMat);lights.name='parking-garage-lights';root.add(lights);
  for(const m of [mesh,floor,signs,lights])m.castShadow=false;
  const tri=(g:T.BufferGeometry)=>(g.index?g.index.count:g.getAttribute('position').count)/3;

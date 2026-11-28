@@ -9,7 +9,7 @@ import {lampPost} from './lampPost';
 import * as T from 'three';
 import {puffGeo,softOn,softLow} from '../graphics/softBox';
 import {islandArch} from './islandArch';
-import {seawallX} from './eastCoast';
+import {seawallX,seawallPier} from './eastCoast';
 import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
@@ -113,7 +113,7 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
  // ---- Gate piers close the two cut ends of the seawall (eastCoast.ts gap), like the causeway's; short kerb footprints on the
  // island strip stop walkers stepping round the kerb ends (out over the water the walkway edge itself holds).
  const pierBox=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>{const g=puffGeo(w,h,d,{openBottom:true,dome:h<.5?.06:0});return g?put(g,c,x,y,z):box(w,h,d,c,x,y,z);};// inflate pass: soft gate piers (owner shot 175)
- for(const s of [-1,1]){const z=P.z+s*(P.railHalf+.55),px=softOn()?seawallX(z)??P.wallX:P.wallX;/* on the wall's line (owner shot 178) */pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);obstacles.push({x:px,z,w:1,d:1});
+ for(const s of [-1,1]){const z=P.z+s*(P.railHalf+.55),px=softOn()?seawallX(z)??P.wallX:P.wallX;/* on the wall's line (owner shot 178) */if(!softOn()||!seawallPier(put,px,z)){pierBox(1,1.5,1,'#bca987',px,.55,z);pierBox(1.25,.24,1.25,'#eddfbb',px,1.4,z);}/* leftovers A2: one body with the wall */obstacles.push({x:px,z,w:1,d:1});
   for(let x=P.wallX+.6;x<=P.shoreX+.6;x+=.5)obstacles.push({x,z:P.z+s*(P.railHalf+.15),w:.55,d:.3});}
  // ---- "EAST JETTY" arch just past the seawall, signed both ways (market-green boards).
  {const x=P.wallX+1.4,pz=P.railHalf+.35,isle=softOn();

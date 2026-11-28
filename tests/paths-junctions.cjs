@@ -47,6 +47,13 @@ const inRect=(r,x,z,m=0)=>Math.abs(x-r.x)<r.w/2+m&&Math.abs(z-r.z)<r.d/2+m;
  for(const a of [-1,0,1])ends.push(['museum foot',211.5+a,164.6],['knockout foot',73.6,179+a*1.3],['futsal ramp foot',31+a*2,45.6]);
  const off=ends.filter(([,x,z])=>!paved(x,z)).map(([k,x,z])=>`${k} (${x.toFixed(1)}, ${z.toFixed(1)})`);
  assert.deepEqual(off,[],'stair / ramp ends on the grass');report.push(`stair ends on paving: ${ends.length}`);
+ // Leftovers A2 (paths NOTE 174): the station flight's foot is paved: from above, the first surface hit 0.4-2 m out from its last tread
+ // across the flight is the apron (6 cm over the natural ground), never a lawn standing over it
+ {const st=WE.WEST_STAIRS.find(s=>s.id==='station'),EL2=load(base+'/lib/town/elevation.ts');let len=st.len;for(let d=st.inset+.25;d<st.len;d+=.25)if(WE.WEST.terrace-st.slope*d<=WE.westNatural(st.x+st.dx*d,st.z+st.dz*d)+.02){len=d;break;}
+  if(EL2.elevationOn&&EL2.elevationOn()){const rc2=new T.Raycaster(),dn=new T.Vector3(0,-1,0),bad=[];let n=0;
+   for(const d of [.4,1.2,2])for(const a of [-3.5,0,3.5]){const x=st.x+st.dx*(len+d)-st.dz*a,z=st.z+st.dz*(len+d)+st.dx*a,g=WE.westNatural(x,z);rc2.set(new T.Vector3(x,g+8,z),dn);
+    const h=rc2.intersectObjects(meshes,false).find(h=>h.point.y<g+1.5);n++;if(!h||Math.abs(h.point.y-(g+.06))>.03)bad.push(`(${x.toFixed(1)}, ${z.toFixed(1)}) ${h?(h.point.y-g).toFixed(3):'none'}`);}
+   assert.deepEqual(bad,[],'station stair foot: the apron is the top surface');report.push(`station foot apron: ${n} points`);}}
  // 3. grass slivers on the main island's lawn
  const S=load(base+'/lib/town/shoreline.ts'),surf=[...foot,...hard.filter(h=>['path','sand','plaza','patio'].includes(h.kind))/* paving and paths (a pitch's or a court's run-off is turf / a fenced slab) */];
  const surfAt=(x,z)=>surf.some(r=>inRect(r,x,z));let sx0=Infinity,sx1=-Infinity,sz0=Infinity,sz1=-Infinity;for(const p of S.INTERIOR_GRASS){sx0=Math.min(sx0,p.x);sx1=Math.max(sx1,p.x);sz0=Math.min(sz0,p.z);sz1=Math.max(sz1,p.z);}

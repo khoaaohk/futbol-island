@@ -213,7 +213,7 @@ import {createKnockdownFace,knockdownLift} from '@/lib/graphics/knockdown';
 import {planRoofRamps,planRideRamps,rampSurface,createRampMotion} from '@/lib/town/rideRamps';
 import {createRideRampVisuals} from '@/lib/graphics/rideRamps';
 import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
-import {inBore,boreStep,boreSweep,trainKnock} from '@/lib/town/tunnelBall';import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink,strayAfterKeepUpPress} from '@/lib/town/walkBall';
+import {inBore,boreStep,boreSweep,boreResolve,trainKnock} from '@/lib/town/tunnelBall';import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink,strayAfterKeepUpPress} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';import {createSwimFx} from '@/lib/graphics/swimFx';
 import {NPC_SWIM} from '@/lib/town/npcSwim';
@@ -2025,6 +2025,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Tunnel ball (Nov 27 2026): a passing train knocks a free ball on the track on ahead and off to the walkway (cartoon; a few float ops, near the Summit only)
       {const m=walkBall.state.mode,bs=walkBall.state;if((m==='shot'||m==='drop'||m==='sky')&&world.trainRun&&nearSummit(bs.x,bs.z)){const k=trainKnock(world.trainRun.states,bs.x,bs.y,bs.z,TRAIN_LENGTH);if(k){walkBall.knock(k.vx,k.vy,k.vz);ballEffects.impact(bs.x,bs.y,bs.z);sound.ball('bounce');}}}
       if(party){knockTargets=targets;party.eachFastFriendBall(friendBallKnock);knockTargets=NO_TARGETS;}/* friends' kicked balls knock MY townspeople over (each screen its own; lib/town/ballKnock.ts) */// a busy friend's force field bounces the ball (and shakes)
+      if(nearSummit(walkBall.state.x,walkBall.state.z))boreResolve(walkBall.state);/* leftovers A2 (owner 214 / 215): never in the lining or the kerb face */
       Object.assign(orb,{x:walkBall.state.x,z:walkBall.state.z,vx:walkBall.state.vx,vz:walkBall.state.vz});
       summitFun.ball(walkBall.state,ballPlayer);// Summit Kick: kicks and hoops
       if(goalTimer===0&&walkBall.state.mode==='shot'&&(VENUES.some(v=>[-1,1].some(side=>{const plane=v.z+side*v.length/2;if((previousBall.z-plane)*side>=0||(orb.z-plane)*side<0||Math.abs(walkBall.state.y-(v.elevation??0))>v.goalHeight)return false;const t=(plane-previousBall.z)/(orb.z-previousBall.z);return Math.abs(previousBall.x+(orb.x-previousBall.x)*t-v.x)<v.goalWidth/2-.1;}))||summitGoalCrossed(previousBall,orb,walkBall.state.y))){setGoals(n=>n+1);setScored(true);goalTimer=2.5;walkBall.recall();}
@@ -2428,7 +2429,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const walkingBall=rideRef.current==='walk'&&!lessonRef.current&&!liveKnockout.joined&&!liveJoin.joined&&!trainRide.active;/* riding the Island Line (seated or walking the aisle): no ball, no ball trail or sparkles in the car (owner shot 28) */
       if(walkingBall&&walkBall.state.mode==='attached'&&!jobFrame.ball&&!water.inWater){
         player.dribbleContact(airBallFrom);dribblePlayer.x=visualLocation.x;dribblePlayer.z=visualLocation.z;dribblePlayer.y=groundY;dribblePlayer.yaw=player.root.rotation.y;
-        walkBall.syncDribble(dribblePlayer,airBallFrom,tunnelWalk.state.active?tunnelFloorSample:rooftop.surface);/* Nov 27 2026 (owner 169: "when standing the ball is moving"): in the bore the dribble's footprint read the HILL over it (always > 1.1 m up), so the touch shrank to the feet and sprang back every frame: the bore's own floor there */orb.x=walkBall.state.x;orb.z=walkBall.state.z;
+        walkBall.syncDribble(dribblePlayer,airBallFrom,tunnelWalk.state.active?tunnelFloorSample:rooftop.surface);/* Nov 27 2026 (owner 169: "when standing the ball is moving"): in the bore the dribble's footprint read the HILL over it (always > 1.1 m up), so the touch shrank to the feet and sprang back every frame: the bore's own floor there */if(tunnelWalk.state.active)boreResolve(walkBall.state);orb.x=walkBall.state.x;orb.z=walkBall.state.z;
       }
       ball.position.set(orb.x,walkingBall?walkBall.state.y:.25+fieldSurfaceHeight(orb.x,orb.z),orb.z);if(tunnelWalk.state.active&&!walkingBall)ball.position.y=tunnelWalk.state.height+.25;/* riding in the tunnel: at the rider's feet (the hill's ground is overhead); walking: the ball's own flight (Tunnel ball, Nov 27 2026) */
       if(walkingBall&&jobFrame.ball){ball.position.set(jobFrame.ball.x,jobFrame.ball.y,jobFrame.ball.z);orb.x=jobFrame.ball.x;orb.z=jobFrame.ball.z;}

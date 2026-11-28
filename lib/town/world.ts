@@ -1,3 +1,4 @@
+import {stairTint} from './stairShade';
 import type {SignalHead} from './trafficSignals';
 import {lampPost,lampStyleFor,lampNear2} from './lampPost';
 import {SIGN_POST_SET} from './signPosts';
@@ -143,6 +144,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // ground at its own spot (0 outside the regions), whole props at one height (anchored), and drapePieces lays the flat layers after.
   elevBuild.active=elevationOn();elevBuild.anchor=null;elevBuild.group=0;elevBuild.pieces.length=0;
   // inflate pass: a soft piece standing on the ground (foot within 3 cm of it) leaves out its never-seen underside (budget for the puff)
+  const shadeStair=(m:T.Mesh,dx:number,dz:number,k:number)=>{m.userData.vertexTint=stairTint(m.geometry,dx,dz,k);return m;};// Leftovers A2 (owner 206): stairs read as steps
   const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(softBoxOpts?propBox(w,h,d,p===town&&y-h/2<.03&&!softBoxOpts.openBottom?{...softBoxOpts,openBottom:true}:softBoxOpts,softLowTier||softFar):new T.BoxGeometry(w,h,d),c,x,y,z,p);
   /** Tree pit (soft sweep, owner shot 163): a round irregular lawn patch fading into the lawn instead of a square tile; `?soft=0` = the tile. */
   const PIT_LIN=new T.Color('#7a9e67');
@@ -692,7 +694,7 @@ export function* buildTownSteps(scene: T.Scene) {
     const count=Math.ceil((top-base)/.30),run=.5,start=-69,width=2.6;
     const tread=(xx:number,z:number,w:number,d:number,height:number,visualX=xx,visualW=w)=>{
       const m=box(visualW,height-base,d,'#d2bc94',visualX,base+(height-base)/2,z);m.userData.skipRoofObstacle=true;
-      walkSurfaces.push({x:xx-230,z:z+80,w,d,height,stepAccess:true});obstacles.push({x:xx,z,w,d});
+      walkSurfaces.push({x:xx-230,z:z+80,w,d,height,stepAccess:true});obstacles.push({x:xx,z,w,d});return m;
     };
     // The receiving roof already draws the inner part of the landing. Stop
     // this mesh at its cornice edge so no two top faces occupy the same plane.
@@ -704,7 +706,7 @@ export function* buildTownSteps(scene: T.Scene) {
       const height=top-(i+1)*(top-base)/count,z=start+(i+.5)*run;
       // Last tread is raised one rise: the top landing provides the final step.
       const y=height+(top-base)/count;
-      tread(x,z,width,run,y);
+      shadeStair(tread(x,z,width,run,y),0,1,i);// lit nosing, shaded back and riser (stairShade.ts, owner 206)
       const lip=box(width,.025,.075,'#eddfbb',x,y+.015,z+run/2-.04);lip.userData.skipRoofObstacle=true;
       if(i%2===0)for(const side of [-1,1]){
         const post=box(.07,1.05,.07,'#477c6a',x+side*width/2,y+.525,z);post.userData.skipRoofObstacle=true;
@@ -771,13 +773,13 @@ export function* buildTownSteps(scene: T.Scene) {
   function stairSurface(x:number,z:number,w:number,d:number,height:number){
     const mesh=box(w,height,d,'#d2bc94',x,height/2,z);mesh.userData.skipRoofObstacle=true;
     const surface={x:x-230,z:z+80,w,d,height,stepAccess:true};walkSurfaces.push(surface);
-    obstacles.push({x,z,w,d});
+    obstacles.push({x,z,w,d});return mesh;
   }
   stairSurface(440.5,68.75,5,2.5,9.23);
   const stairCount=31,stairRun=.45,stairRise=9.23/stairCount;
   for(let i=0;i<stairCount;i++){
     const top=9.23-i*stairRise,z=70+(i+.5)*stairRun;
-    stairSurface(441.5,z,3,stairRun,top);
+    shadeStair(stairSurface(441.5,z,3,stairRun,top),0,1,i);
     const nosing=box(3,.035,.08,'#eddfbb',441.5,top+.012,z+stairRun/2-.04);nosing.userData.skipRoofObstacle=true;
     for(const x of [440,443]){
       const post=cylinder(.035,1.1,'#477c6a',x,top+.55,z);post.userData.skipRoofObstacle=true;
@@ -797,7 +799,7 @@ export function* buildTownSteps(scene: T.Scene) {
   stairSurface(424.3,66.5,3,2,18.23);
   for(let i=0;i<stairCount;i++){
     const top=18.23-i*9/stairCount,z=67.5+(i+.5)*stairRun;
-    stairSurface(424.3,z,3,stairRun,top);
+    shadeStair(stairSurface(424.3,z,3,stairRun,top),0,1,i);
     const nosing=box(3,.035,.08,'#eddfbb',424.3,top+.012,z+stairRun/2-.04);nosing.userData.skipRoofObstacle=true;
     for(const x of [422.8,425.8]){
       const post=cylinder(.035,1.1,'#477c6a',x,top+.55,z);post.userData.skipRoofObstacle=true;
@@ -969,7 +971,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const q of ARENA_QUEUES){const floor=new T.Mesh(new T.PlaneGeometry(q.w,q.d),queueFloorMaterial);floor.rotation.x=-Math.PI/2;floor.position.set(ar.x+q.x,ar.height+.065,ar.z+q.z);floor.receiveShadow=true;town.add(floor);}
   // South stair runs parallel to the facade, rising west into the cage landing.
   for(let i=0;i<=40;i++){const height=i===0?ar.height:ar.height*(41-i)/41,x=i===0?55:57+(i-.5)*.4,z=i===0?178.2:179,w=i===0?4:.4,d=i===0?5.4:4;
-    const mesh=box(w,height,d,'#d2bc94',x,height/2,z);mesh.userData.skipRoofObstacle=true;
+    const mesh=box(w,height,d,'#d2bc94',x,height/2,z);mesh.userData.skipRoofObstacle=true;if(i>0)shadeStair(mesh,1,0,i);
     walkSurfaces.push({x,z,w,d,height,stepAccess:true});obstacles.push({x,z,w,d});
     if(i>0)for(const rz of KNOCKOUT_STAIR_RAILS){box(.07,1.15,.07,'#315b50',x,height+.575,rz);line(new T.Vector3(x-.2,height+1.15,rz),new T.Vector3(x+.2,height+1.15-ar.height/41,rz),.04,'#315b50');}
   }
@@ -1342,7 +1344,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(let x=BW0;x<210;x+=6){
     const width=Math.min(6,210-x);box(width,.2,8,'#b98f62',x+width/2,-.1,211);
     for(let dx=.4;dx<width;dx+=.6)box(.025,.008,8,'#91704d',x+dx,.004,211);
-    for(const z of [207.4,214.6])cylinder(.12,1.8,'#9d805b',x+.3,-.6,z);
+    for(const z of [207.4,214.6])cylinder(.12,1.8,'#9d805b',x+.3,-1.08,z);// leftovers A2 (owner 219): the deck's piles end under the boards (their tops stood 0.3 m up as lone stumps)
   }
   {const runs:[number,number][]=[];let a=BW0;for(const [g0,g1] of SOUTH_STATION_RAIL_GAPS){runs.push([a,g0]);a=g1;}runs.push([a,210]);
   prop('fence',()=>{for(let x=BW0;x<=209;x+=3){if(!railOpen(x))cylinder(.065,1.05,'#9d805b',x,.525,214.65);}

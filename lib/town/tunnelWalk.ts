@@ -23,9 +23,11 @@ import {TUNNEL,TUNNEL_BED,TUNNEL_HALF_WIDTH,trackAt,trackNearest,leftNormal,wrap
 export const WALKWAY_KERB=2.45,WALKWAY_TOP=.3;
 /** The walkway lane (Nov 26): kerb + radius … wall less radius. Still where the bump puts you (clear of a car by 1 m+). */
 export const LANE_MIN=WALKWAY_KERB+.3;
-export const LANE_MAX=TUNNEL_HALF_WIDTH-.34;
+export const LANE_MAX=TUNNEL_HALF_WIDTH-.44;// leftovers A2 (owner 214): the body's radius at shoulder height (cap brim, arms, backpack), was .34
 /** A ride keeps this far off the wall (its collision radius). */
-export const RIDE_LANE_MAX=TUNNEL_HALF_WIDTH-.62;
+export const RIDE_LANE_MAX=TUNNEL_HALF_WIDTH-.72;// leftovers A2: was .62
+/** Leftovers A2 (owner 215: feet in the ledge): the foot's reach; a walker this close to the kerb stands on the walkway (auto-step). */
+export const FOOT_R=.3;
 /** The arch springs SPRING m over the bed (buildLitTube); the camera keeps CAM_PAD m inside the lining. */
 export const SPRING=2.4,CAM_PAD=.5;
 /** In from a mouth (m along the line, negative = outside): the walk begins at the sleeve's outer end, ends just past it. */
@@ -109,7 +111,8 @@ export function createTunnelWalk(){
   const before=f.d,max=mode==='walk'?LANE_MAX:RIDE_LANE_MAX,side=f.side;keep(p,f,mode);
   if(before>max){const n=leftNormal(f.tx,f.tz),vn=(v.x*n.x+v.z*n.z)*side;if(vn>0){v.x-=n.x*side*vn;v.z-=n.z*side*vn;}}
   // the floor under them, eased (the kerb is a 0.36 m step, a rail a 0.14 m hump): a quick ease, never a snap
-  const want=TUNNEL_BED+floorAt(Math.min(before,max));state.height+=(want-state.height)*(reduced?1:1-Math.exp(-dt*(want>state.height?16:12)));
+  const dd=Math.min(before,max),want=TUNNEL_BED+(dd>=WALKWAY_KERB-FOOT_R?WALKWAY_TOP:floorAt(dd));// the highest floor under the feet: never standing in the kerb face
+  state.height+=(want-state.height)*(reduced?1:1-Math.exp(-dt*(want>state.height?16:12)));
   state.k=smooth(-7,-1.5,f.u);return 'in' as const;}
  /** Outside (not in the tunnel yet): the chase view eases in down the cutting toward a mouth. */
  function approach(x:number,z:number,ok:boolean){if(state.active)return state.k;const f=ok?tunnelSpot(x,z):null;state.k=f&&f.d<TUNNEL_HALF_WIDTH+.5&&f.u<0?smooth(-7,-1.5,f.u):0;return state.k;}
