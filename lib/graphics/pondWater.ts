@@ -129,8 +129,8 @@ export function createPondBedMaterial(){
  for(int i=0;i<${POND_ROCKS};i++){float fi=float(i),a=fi*2.39+.7;vec2 c=vec2(${F(P.x)},${F(P.z)})+vec2(cos(a)*${F(P.rx)},sin(a)*${F(P.rz)})*(.3+.09*mod(fi*3.,4.));
   vec2 d=p-c;if(dot(d,d)<4.){for(int j=0;j<3;j++){float fj=float(j);vec2 o=vec2(cos(fi*1.7+fj*2.1),sin(fi*1.3+fj*2.1))*(.25+.35*fj)*step(.5,fj);float r=.75-.18*fj;
     vec2 q=(d-o)/r;float l=length(q*vec2(1.,1.15));if(l<1.25){float body=smoothstep(1.,.88,l),sh=smoothstep(1.25,.95,length(q-vec2(.18,.22)))*(1.-body);
-     float lit=clamp(.55-.75*dot(q,vec2(-.6,-.55)),0.,1.);vec3 st=vec3(.5,.49,.44)*(.55+.75*(1.-l*l)*lit)*mix(vec3(1.),vec3(.82,.95,1.),smoothstep(.6,2.6,dep));
-     diffuseColor.rgb=mix(diffuseColor.rgb*(1.-.35*sh),st,body);}}}}}`);};
+     float lit=clamp(.55-.75*dot(q,vec2(-.6,-.55)),0.,1.);vec3 st=vec3(.46,.42,.36)*(.32+1.25*(1.-l*l)*lit)*mix(vec3(1.),vec3(.82,.95,1.),smoothstep(.6,2.6,dep));
+     diffuseColor.rgb=mix(diffuseColor.rgb*(1.-.55*sh),st,body);}}}}}`);};
  m.customProgramCacheKey=()=>key.call(m)+'-pondbed-v3';
  return m;}
 /** The trails' paving: vertex colours (the cream path, blending to the beach sand where a trail runs onto the beach). */
